@@ -7,7 +7,7 @@ interface VPColumnSettingsProviderProps {
   children: React.ReactNode
 }
 
-const DEFAULT_COLUMN_VISIBILITY = DEFAULT_COLUMNS_VERSION
+export const DEFAULT_COLUMN_VISIBILITY = DEFAULT_COLUMNS_VERSION
 
 export const VPColumnSettingsProvider: FC<VPColumnSettingsProviderProps> = ({ children }) => {
   const { columns, onUpdateColumns } = useVPViewsContext()

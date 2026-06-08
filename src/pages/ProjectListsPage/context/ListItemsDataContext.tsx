@@ -85,7 +85,7 @@ const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
   tags: true,
 }
 
-const DEFAULT_COLUMNS_BY_TYPE: Record<string, VisibilityState> = {
+export const DEFAULT_COLUMNS_BY_TYPE: Record<string, VisibilityState> = {
   folder: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_FOLDER },
   task: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_TASK },
   version: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_VERSION },

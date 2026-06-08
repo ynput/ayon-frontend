@@ -43,7 +43,7 @@ interface ProjectsPageProps {
   onNewProject: () => void
 }
 
-const DEFAULT_COLUMN_VISIBILITY = DEFAULT_COLUMNS_PROJECT
+export const DEFAULT_COLUMN_VISIBILITY = DEFAULT_COLUMNS_PROJECT
 
 const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   const { powerLicense } = usePowerpack()

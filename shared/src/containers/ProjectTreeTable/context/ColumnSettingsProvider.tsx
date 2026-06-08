@@ -42,7 +42,23 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
   }
-  const onChangeWithColumns = (next: ColumnsConfig) => onChange(next, allColumnsRef.current)
+  const onChangeWithColumns = (next: ColumnsConfig) => {
+    const allKnownIds = allColumnsRef.current
+    // Expand sparse columnVisibility to explicit values for all known columns so that
+    // "undefined" is never ambiguous when columns are saved and reloaded.
+    const specialIds = new Set([DRAG_HANDLE_COLUMN_ID, ROW_SELECTION_COLUMN_ID])
+    if (allKnownIds.length > 0) {
+      const resolvedVisibility = { ...next.columnVisibility }
+      allKnownIds.forEach((id) => {
+        if (!specialIds.has(id) && resolvedVisibility[id] === undefined) {
+          resolvedVisibility[id] = checkColumnVisibility({}, id, defaultColumnVisibility)
+        }
+      })
+      onChange({ ...next, columnVisibility: resolvedVisibility }, allKnownIds)
+    } else {
+      onChange(next, allKnownIds)
+    }
+  }
   const columnsConfig = config as ColumnsConfig
 
   const {
@@ -183,8 +199,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     // ensure that any columns that are now hidden are removed from the pinning
     const newPinning = { ...columnPinning }
     const pinnedColumns = newPinning.left || []
-    const hiddenColumns = Object.keys(visibility).filter((col) => visibility[col] === false)
-    const newPinnedColumns = pinnedColumns.filter((col) => !hiddenColumns.includes(col))
+
+    const newPinnedColumns = pinnedColumns.filter((col) =>
+      checkColumnVisibility(visibility, col, defaultColumnVisibility),
+    )
 
     return {
       ...newPinning,

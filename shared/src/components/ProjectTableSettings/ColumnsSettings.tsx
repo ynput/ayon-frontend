@@ -183,6 +183,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   const toggleVisibility = (columnId: string) => {
     const isVisible = checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)
     const newState = { ...columnVisibility, [columnId]: !isVisible }
+    console.log('Toggling visibility for', columnId, 'to', !isVisible)
     updateColumnVisibility(newState)
   }
 
@@ -198,7 +199,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
       // If column is currently unpinned, pin it
       newState.left = [...(newState.left || []), columnId]
       // If column is hidden, show it
-      if (newVisibility[columnId] === false) {
+      if (!checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)) {
         newVisibility[columnId] = true
         updateColumnVisibility(newVisibility)
       }
@@ -483,7 +484,13 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
             <ColumnItem
               column={activeColumn}
               isPinned={columnPinning.left?.includes(activeColumn.value) || false}
-              isHidden={columnVisibility[activeColumn.value] === false}
+              isHidden={
+                !checkColumnVisibility(
+                  columnVisibility,
+                  activeColumn.value,
+                  defaultColumnVisibility,
+                )
+              }
               isHighlighted={highlighted === activeColumn.value}
               dragOverlay={true}
             />

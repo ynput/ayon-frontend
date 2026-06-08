@@ -2,14 +2,14 @@ import { VisibilityState } from '@tanstack/react-table'
 
 // checks column visibility for fields matching a given field name
 // Also support partial matching like `name_*` to check all columns starting with `name_`
-// note: if visibly is undefined or null it will be treated as hidden (false) unless in core defaults
+// note: if visibility is undefined or null it will be treated as hidden (false) unless in core defaults
 export const checkColumnVisibility = (
   columns: VisibilityState,
   fieldName: string,
   defaultVisibility?: VisibilityState,
 ): boolean => {
   // 1. Check exact match in columns
-  if (columns[fieldName] !== undefined) {
+  if (columns[fieldName] !== undefined && columns[fieldName] !== null) {
     return columns[fieldName]
   }
 
@@ -26,7 +26,7 @@ export const checkColumnVisibility = (
 
   if (partialMatchKey !== undefined) {
     // If we have explicit keys that match the prefix, see if any are visible
-    return Object.keys(columns).some((key) => key.startsWith(baseName) && columns[key] !== false)
+    return Object.keys(columns).some((key) => key.startsWith(baseName) && columns[key] === true)
   }
 
   // 4. Partial match in defaults (e.g., if defaultVisibility has 'link_*')

@@ -421,10 +421,7 @@ export const ProjectTreeTable = ({
     const merged = { ...columnVisibility }
     columns.forEach((col) => {
       if (col.id && merged[col.id] === undefined) {
-        const defaultVal = checkColumnVisibility({}, col.id, defaultColumnVisibility)
-        if (defaultVal === false) {
-          merged[col.id] = false
-        }
+        merged[col.id] = checkColumnVisibility({}, col.id, defaultColumnVisibility)
       }
     })
     return merged
