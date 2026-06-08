@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback, useContext, UIEventHandler, FC } from 'react' // Added useCallback
+import { useMemo, useRef, useEffect, CSSProperties, useCallback, useContext, UIEventHandler, FC } from 'react' // Added useCallback
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
