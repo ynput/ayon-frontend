@@ -55,6 +55,20 @@ const FooterCell = styled.td`
   }
 `
 
+// Shimmer placeholder shown per cell while the footer stats are loading.
+// Reuses the global `.loading.shimmer-dark` effect (loadingShimmer.scss) used
+// by the table header/body.
+const CellSkeleton = styled.div`
+  width: calc(100% - 1px);
+  height: calc(100% - 3px);
+  margin-left: 1px;
+
+  &.selection {
+    width: calc(100% - 3px);
+    margin-left: 1px;
+  }
+`
+
 export interface TableFooterRowProps {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
   table: Table<TableRow>
@@ -64,6 +78,8 @@ export interface TableFooterRowProps {
   renderCellContent?: (columnId: string) => ReactNode
   // when set, the whole row is clickable (used for the locked/upsell state)
   onClick?: () => void
+  // show a shimmer skeleton in each cell while the footer stats load
+  isLoading?: boolean
 }
 
 // Structural summary footer: the host owns the row, cell borders, widths and
@@ -75,6 +91,7 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
   virtualPaddingRight,
   renderCellContent,
   onClick,
+  isLoading,
 }) => {
   const visibleColumns = [
     ...table.getLeftVisibleLeafColumns(),
@@ -104,7 +121,15 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
               className={clsx(column.id, { 'last-pinned-left': isLastPinnedLeft })}
               style={{ ...getCommonPinningStyles(column), width: getColumnWidth(column.id) }}
             >
-              {!isUtility && renderCellContent?.(column.id)}
+              {isLoading ? (
+                <CellSkeleton
+                  className={clsx('loading', 'shimmer-dark', {
+                    selection: column.id === ROW_SELECTION_COLUMN_ID,
+                  })}
+                />
+              ) : (
+                !isUtility && renderCellContent?.(column.id)
+              )}
             </FooterCell>
           )
         })}

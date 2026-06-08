@@ -59,7 +59,7 @@ const ProjectOverviewTable = ({}: Props) => {
     [attribFields, columnVisibility],
   )
 
-  const { data: folderStats } = useGetFolderColumnStatsQuery(
+  const { data: folderStats, isFetching: folderStatsLoading } = useGetFolderColumnStatsQuery(
     {
       projectName,
       filter: folderFilters?.filterString || undefined,
@@ -69,7 +69,7 @@ const ProjectOverviewTable = ({}: Props) => {
     },
     { skip: !projectName || isLoadingViews || !powerLicense },
   )
-  const { data: taskStats } = useGetTaskColumnStatsQuery(
+  const { data: taskStats, isFetching: taskStatsLoading } = useGetTaskColumnStatsQuery(
     {
       projectName,
       filter: taskFilters?.filterString || undefined,
@@ -120,6 +120,7 @@ const ProjectOverviewTable = ({}: Props) => {
         showColumnSummaries
         fieldStats={fieldStats}
         groupFieldStats={folderStats}
+        fieldStatsLoading={folderStatsLoading || taskStatsLoading}
       />
     </Section>
   )

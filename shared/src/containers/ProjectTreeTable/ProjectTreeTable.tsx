@@ -144,6 +144,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   showColumnSummaries?: boolean // render the fixed summary footer row
   fieldStats?: FieldStats[] // primary-entity stats (tasks/versions) feeding the footer
   groupFieldStats?: FieldStats[] // group-entity stats (folders/products) for the 'all' row scope
+  fieldStatsLoading?: boolean // footer stats still loading -> show skeletons
   mainCountLabels?: MainCountLabels // labels for the main cell dual count (defaults folders/tasks)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
@@ -175,6 +176,7 @@ export const ProjectTreeTable = ({
   showColumnSummaries = false,
   fieldStats,
   groupFieldStats,
+  fieldStatsLoading,
   mainCountLabels,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
@@ -503,20 +505,26 @@ export const ProjectTreeTable = ({
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
   // Summary footer is a powerpack feature.
-  const { powerLicense, setPowerpackDialog, isLoading: isLicenseLoading } = usePowerpack()
-  const [RemoteSummaryCellContent, { isLoaded: isFooterLoaded }] = useLoadModule<
-    FC<SummaryCellContentProps>
-  >({
-    addon: 'powerpack',
-    remote: 'views',
-    module: 'SummaryCellContent',
-    fallback: SummaryCellContentFallback,
-    skip: !showColumnSummaries || !powerLicense,
-  })
-  const summariesEnabled = showColumnSummaries
+  // upsell (hidden for now): also expose `setPowerpackDialog, isLoading: isLicenseLoading`
+  const { powerLicense } = usePowerpack()
+  const [RemoteSummaryCellContent, { isLoaded: isFooterLoaded, isLoading: isFooterModuleLoading }] =
+    useLoadModule<FC<SummaryCellContentProps>>({
+      addon: 'powerpack',
+      remote: 'views',
+      module: 'SummaryCellContent',
+      fallback: SummaryCellContentFallback,
+      skip: !showColumnSummaries || !powerLicense,
+    })
+  // Free-user upsell row hidden for now (too many power-feature prompts); keep for later.
+  // Render the row as soon as the module is loading or loaded (not on load failure),
+  // so skeletons show during the load instead of the row popping in late.
+  const summariesEnabled =
+    showColumnSummaries && powerLicense && (isFooterLoaded || isFooterModuleLoading)
+  // shimmer while the remote module or the footer stats are still loading
+  const summariesLoading = isFooterModuleLoading || !isFooterLoaded || !!fieldStatsLoading
   // only show the upsell once the license check resolves, so licensed users
   // don't see the bolt flash before the addon loads
-  const showSummaryUpsell = !isLicenseLoading && !powerLicense
+  // const showSummaryUpsell = !isLicenseLoading && !powerLicense
 
   // Calculate dynamic row height based on user setting from Customize panel
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
@@ -684,35 +692,34 @@ export const ProjectTreeTable = ({
                 table={table}
                 virtualPaddingLeft={virtualPaddingLeft}
                 virtualPaddingRight={virtualPaddingRight}
-                onClick={
-                  showSummaryUpsell ? () => setPowerpackDialog('columnSummaries') : undefined
-                }
-                renderCellContent={
-                  powerLicense && isFooterLoaded
-                    ? (columnId) => (
-                        <RemoteSummaryCellContent
-                          columnId={columnId}
-                          attribs={attribFields}
-                          fieldStats={fieldStats}
-                          groupFieldStats={groupFieldStats}
-                          calc={columnSummaries[columnId]}
-                          onCalcChange={(calc) => updateColumnSummary(columnId, calc)}
-                          format={columnSummaryFormats[columnId]}
-                          onFormatChange={(format) => updateColumnSummaryFormat(columnId, format)}
-                          scope={columnSummaryScopes[columnId]}
-                          onScopeChange={(scope) => updateColumnSummaryScope(columnId, scope)}
-                          mainCountLabels={mainCountLabels}
-                          fieldOptions={options}
-                        />
-                      )
-                    : (columnId) =>
-                        showSummaryUpsell && columnId === 'name' ? (
-                          <Styled.SummaryUpsellHint>
-                            <Icon icon="bolt" filled />
-                            Summaries
-                          </Styled.SummaryUpsellHint>
-                        ) : null
-                }
+                isLoading={summariesLoading}
+                // Free-user upsell hidden for now; keep for later:
+                // onClick={showSummaryUpsell ? () => setPowerpackDialog('columnSummaries') : undefined}
+                renderCellContent={(columnId) => (
+                  <RemoteSummaryCellContent
+                    columnId={columnId}
+                    attribs={attribFields}
+                    fieldStats={fieldStats}
+                    groupFieldStats={groupFieldStats}
+                    calc={columnSummaries[columnId]}
+                    onCalcChange={(calc) => updateColumnSummary(columnId, calc)}
+                    format={columnSummaryFormats[columnId]}
+                    onFormatChange={(format) => updateColumnSummaryFormat(columnId, format)}
+                    scope={columnSummaryScopes[columnId]}
+                    onScopeChange={(scope) => updateColumnSummaryScope(columnId, scope)}
+                    mainCountLabels={mainCountLabels}
+                    fieldOptions={options}
+                  />
+                )}
+                // Upsell cell for free users (hidden for now), shows a bolt hint in the name column:
+                // renderCellContent={(columnId) =>
+                //   showSummaryUpsell && columnId === 'name' ? (
+                //     <Styled.SummaryUpsellHint>
+                //       <Icon icon="bolt" filled />
+                //       Summaries
+                //     </Styled.SummaryUpsellHint>
+                //   ) : null
+                // }
               />
             )}
           </table>
