@@ -1,4 +1,8 @@
-import { ActivityFragmentFragment, GetEntitiesChecklistsQuery, PageInfo } from '@shared/api'
+import type {
+  ActivityFragmentFragment,
+  GetEntitiesChecklistsQuery,
+  PageInfo,
+} from '@shared/api/generated'
 import { ChecklistCount, FeedActivity, FeedActivityData } from '../types'
 import { BaseTypes, EntityTooltipQuery, TaskTypes, VersionTypes } from '../activityQueries'
 import { FeedFilter } from '@shared/context'

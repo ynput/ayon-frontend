@@ -1,11 +1,11 @@
 import { GetCurrentUserApiResponse, gqlApi, usersApi } from '@shared/api/generated'
-import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { parseAllAttribs } from '@shared/api'
-import {
+import type {
   GetActiveUsersCountQuery,
   GetAllAssigneesQuery,
   GetAllProjectUsersAsAssigneeQuery,
-} from '@shared/api'
+} from '@shared/api/generated'
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import { parseAllAttribs } from '../overview'
 
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {

@@ -11,6 +11,7 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { useNewEntityContext } from '@context/NewEntityContext'
 import { useProjectContext, usePowerpack } from '@shared/context'
+import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
 import { useViewsContext } from '@shared/containers'
 import {
   mergeFieldStats,
@@ -26,6 +27,7 @@ type Props = {}
 
 const ProjectOverviewTable = ({}: Props) => {
   const { projectName } = useProjectContext()
+  const { setLinksVisible } = useProjectOverviewContext()
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
   const { showHierarchy, isFlatFolderView, isLoading, fetchNextPage, attribFields } =
     useProjectTableContext()
@@ -117,6 +119,14 @@ const ProjectOverviewTable = ({}: Props) => {
         // metadata
         onOpenNew={onOpenNew}
         clientSorting={showHierarchy || isFlatFolderView}
+        onColumnVisibleChangeSubscribed={['link_*']}
+        onColumnVisibleChange={(changes) => {
+          if (Object.values(changes).some((v) => v)) {
+            setLinksVisible(true)
+          } else {
+            setLinksVisible(false)
+          }
+        }}
         showColumnSummaries
         fieldStats={fieldStats}
         groupFieldStats={folderStats}

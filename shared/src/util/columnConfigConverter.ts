@@ -49,8 +49,8 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
     const { name, visible, pinned, width, summary, summaryScope, summaryFormat } =
       column as ColumnItem
 
-    // Column visibility: if visible is undefined, default to true
-    columnVisibility[name] = visible !== false
+    // Column visibility: undefined means hidden (opt-in model)
+    columnVisibility[name] = visible ?? false
 
     // Column order: maintain the order from the settings
     columnOrder.push(name)

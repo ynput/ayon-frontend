@@ -10,6 +10,14 @@ import { useAppSelector } from '@state/store'
 import { ProjectOverviewProvider } from '../context/ProjectOverviewContext'
 import ProjectOverviewTableProvider from './ProjectOverviewTableProvider'
 import { useOverviewViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers'
+import { DEFAULT_COLUMNS_FOLDER, DEFAULT_COLUMNS_TASK } from '@pages/ProjectsPage/constants'
+
+// thumbnail, name, type, status are there by default unless specified
+const DEFAULT_COLUMN_VISIBILITY = {
+  ...DEFAULT_COLUMNS_TASK,
+  ...DEFAULT_COLUMNS_FOLDER,
+  entityType: true,
+}
 
 const ProjectOverviewDataProvider: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -26,7 +34,11 @@ const ProjectOverviewDataProvider: FC = () => {
 
   return (
     <ProjectDataProvider projectName={projectName}>
-      <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
+      <ColumnSettingsProvider
+        config={columns}
+        onChange={onUpdateColumns}
+        defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
+      >
         <ColumnDndProvider>
           <MoveEntityProvider>
             <ProjectOverviewProvider modules={modules}>

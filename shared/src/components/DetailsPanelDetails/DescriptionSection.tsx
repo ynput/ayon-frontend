@@ -45,7 +45,9 @@ interface DescriptionSectionProps {
   isLarge: boolean
   isMixed: boolean
   enableEditing: boolean
+  initialEdit?: boolean
   onChange: (description: string) => void
+  onCancel?: () => void
   isLoading: boolean
 }
 
@@ -54,7 +56,9 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
   isLarge = true,
   isMixed,
   enableEditing,
+  initialEdit,
   onChange,
+  onCancel,
   isLoading,
 }) => {
   const markdownRef = useRef<HTMLDivElement>(null)
@@ -89,6 +93,12 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
     onChange,
   })
 
+  useEffect(() => {
+    if (initialEdit && !isEditing) {
+      handleStartEditing()
+    }
+  }, [initialEdit])
+
   const conditionalFormats = useQuillFormats()
 
   if (isLoading) {
@@ -122,6 +132,11 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
     }
   }
 
+  const handleCancelEdit = () => {
+    handleCancel()
+    onCancel?.()
+  }
+
   const quillValue = isEditing ? editorValue : descriptionHtml
 
   return (
@@ -149,7 +164,13 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
                     : { toolbar: false }
                 }
                 formats={conditionalFormats}
-                onKeyDown={handleKeyDown}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    handleCancelEdit()
+                  } else {
+                    handleKeyDown(e)
+                  }
+                }}
                 readOnly={!isEditing}
               />
             </StyledQuillContainer>
@@ -158,7 +179,7 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
         {isEditing && (
           <StyledFooter>
             <StyledButtonContainer>
-              <Button variant="text" label="Cancel" onClick={handleCancel} />
+              <Button variant="text" label="Cancel" onClick={handleCancelEdit} />
               <Button variant="filled" label="Save" onClick={handleSave} />
             </StyledButtonContainer>
           </StyledFooter>

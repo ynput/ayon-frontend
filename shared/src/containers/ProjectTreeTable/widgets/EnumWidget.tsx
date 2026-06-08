@@ -3,8 +3,8 @@ import clsx from 'clsx'
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 import type { WidgetBaseProps } from './CellWidget'
-import { AttributeData, AttributeEnumItem } from '../types'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
+import { AttributeData, EnumItem } from '@shared/api'
 
 const StyledDropdown = styled(Dropdown)`
   height: 100%;
@@ -15,7 +15,7 @@ export interface EnumWidgetProps
   extends Omit<DropdownProps, 'onChange' | 'value' | 'pt'>,
     WidgetBaseProps {
   value: (string | number | boolean)[]
-  options: AttributeEnumItem[]
+  options: EnumItem[]
   type?: AttributeData['type']
   autoOpen?: boolean
   isReadOnly?: boolean
@@ -53,7 +53,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     )
 
     // Check if all values are present in options, if not, add a warning
-    const invalidOptions: AttributeEnumItem[] = []
+    const invalidOptions: EnumItem[] = []
     valueAsStrings.forEach((val) => {
       if (!options.find((option) => option.value === val)) {
         const invalidOption = {

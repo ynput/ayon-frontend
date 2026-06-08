@@ -10,7 +10,7 @@ const StyledFieldLabel = styled.div`
   font-size: 14px;
 `
 
-interface FieldLabelProps {
+interface FieldLabelProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string
   data: {
     title?: string
@@ -23,6 +23,7 @@ export const FieldLabel: React.FC<FieldLabelProps> = ({
   name,
   data,
   showDetailedTooltip = false,
+  ...props
 }) => {
   const displayTitle = data.title ? humanizeField(data.title) : humanizeField(name)
   const tooltipText = showDetailedTooltip
@@ -33,6 +34,7 @@ export const FieldLabel: React.FC<FieldLabelProps> = ({
     <StyledFieldLabel
       data-tooltip={showDetailedTooltip ? tooltipText : undefined}
       data-tooltip-delay={700}
+      {...props}
     >
       {displayTitle}
     </StyledFieldLabel>

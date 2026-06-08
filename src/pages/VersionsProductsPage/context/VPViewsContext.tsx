@@ -116,8 +116,10 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   const serverViewGroupBy = useMemo(() => {
     // Server → client translation
     // 'hierarchy' when showProducts is true, otherwise groupBy value (or undefined)
-    const result = versionsSettings?.showProducts ? 'hierarchy' : (versionsSettings?.groupBy ?? undefined)
-      return result
+    const result = versionsSettings?.showProducts
+      ? 'hierarchy'
+      : versionsSettings?.groupBy ?? undefined
+    return result
   }, [versionsSettings?.showProducts, versionsSettings?.groupBy])
 
   const serverShowGrid = useMemo(
@@ -175,17 +177,13 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [localFilters, serverFilters],
   )
   const slicerType = serverSlicerType
-  const viewGroupBy = useMemo(
-    () => {
-      const result = localViewGroupBy !== null ? localViewGroupBy : serverViewGroupBy
-      return result
-    },
-    [localViewGroupBy, serverViewGroupBy],
-  )
+  const viewGroupBy = useMemo(() => {
+    const result = localViewGroupBy !== null ? localViewGroupBy : serverViewGroupBy
+    return result
+  }, [localViewGroupBy, serverViewGroupBy])
   // Compute showProducts and groupBy from viewGroupBy
   const showProducts = viewGroupBy === 'hierarchy'
   const groupBy = viewGroupBy !== 'hierarchy' ? viewGroupBy : undefined
-
 
   const showGrid = useMemo(
     () => (localShowGrid !== null ? localShowGrid : serverShowGrid),
@@ -273,14 +271,9 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
         }
       })
 
-      await updateViewSettings(
-        serverSettings,
-        () => {},
-        newViewGroupBy,
-        {
-          errorMessage: 'Failed to update group by setting',
-        },
-      )
+      await updateViewSettings(serverSettings, () => {}, newViewGroupBy, {
+        errorMessage: 'Failed to update group by setting',
+      })
     },
     [updateViewSettings],
   )
@@ -288,7 +281,19 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   // Column update handler
   const onUpdateColumns = useCallback(
     async (tableSettings: ColumnsConfig, allColumnIds?: string[]) => {
-      const settings = convertTanstackStatesToColumnConfig(tableSettings, allColumnIds)
+      // Derive a stable allColumnIds if not provided to preserve order and grouping on server
+      const derivedAll =
+        allColumnIds ||
+        [
+          ...(tableSettings.columnOrder || []),
+          ...Object.keys(tableSettings.columnVisibility || {}),
+          ...((tableSettings.columnPinning?.left as string[]) || []),
+          ...((tableSettings.columnPinning?.right as string[]) || []),
+        ]
+          .filter(Boolean)
+          .filter((v, i, a) => a.indexOf(v) === i)
+
+      const settings = convertTanstackStatesToColumnConfig(tableSettings, derivedAll)
       const currentGroupBy = groupBy // capture current value
 
       // Track whether we delegated groupBy to the unified handler
@@ -310,7 +315,9 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
 
       // Persist only the fields that changed to server
       // Skip groupBy if it was already persisted by onUpdateViewGroupBy above
-      const persistSettings: Record<string, any> = {}
+      const persistSettings: Record<string, any> = {
+        columns: settings.columns,
+      }
       if (settings.groupBy !== undefined && !groupByHandledByViewGroupBy) {
         persistSettings.groupBy = settings.groupBy
       }
@@ -319,7 +326,8 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
       }
       // columns carry the summary footer choices (calc/scope/format) so they save with the view
       if (settings.columns !== undefined) persistSettings.columns = settings.columns
-      if (settings.showEmptyGroups !== undefined) persistSettings.showEmptyGroups = settings.showEmptyGroups
+      if (settings.showEmptyGroups !== undefined)
+        persistSettings.showEmptyGroups = settings.showEmptyGroups
       if (settings.sortBy !== undefined) persistSettings.sortBy = settings.sortBy
       if (settings.sortDesc !== undefined) persistSettings.sortDesc = settings.sortDesc
       if (settings.rowHeight !== undefined) persistSettings.rowHeight = settings.rowHeight

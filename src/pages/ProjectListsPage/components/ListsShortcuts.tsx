@@ -52,23 +52,15 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
         selectedRowIds.every((selected) => parseListFolderRowId(selected))
       const hasMultipleSelected = selectedRowIds.length > 1
       const firstSelectedRow = selectedRowIds[0]
-      const isFirstRowFolder = !!parseListFolderRowId(firstSelectedRow)
+      const selectedFolderId = parseListFolderRowId(firstSelectedRow)
+      const isFirstRowFolder = !!selectedFolderId
 
       // Handle different key combinations
       if (key === 'n' && !isMeta && !isShift && !isAlt) {
         // 'n' - Create new list
-        // Only allow if no selection, single folder selected, or only folders selected
-        if (selectedRowIds.length === 0) {
-          // No selection, create list at root level
-          e.preventDefault()
-          openNewList()
-          actionExecuted = true
-        } else if (allSelectedRowsAreFolders && !hasMultipleSelected) {
-          // Single folder selected, create list inside that folder
-          e.preventDefault()
-          openNewList({ entityListFolderId: selectedFolderIds[0] })
-          actionExecuted = true
-        }
+        e.preventDefault()
+        openNewList()
+        actionExecuted = true
       } else if (key === 'f' && !isMeta && !isShift && !isAlt) {
         // 'f' - Create folder
         e.preventDefault()

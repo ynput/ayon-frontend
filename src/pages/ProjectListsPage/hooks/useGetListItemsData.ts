@@ -22,6 +22,7 @@ interface UseGetListItemsDataProps {
   filters?: QueryFilter
   skip?: boolean
   entityType?: string
+  skipLinks?: boolean
 }
 
 export interface UseGetListItemsDataReturn {
@@ -29,6 +30,7 @@ export interface UseGetListItemsDataReturn {
   isLoading: boolean
   isFetchingNextPage: boolean
   isError: boolean
+  error?: unknown
   fetchNextPage: () => void
   refetch: () => void
 }
@@ -40,6 +42,7 @@ const useGetListItemsData = ({
   sorting,
   filters = { conditions: [], operator: 'and' },
   skip,
+  skipLinks = true,
 }: UseGetListItemsDataProps): UseGetListItemsDataReturn => {
   const queryFilterString = filters.conditions?.length ? JSON.stringify(filters) : ''
 
@@ -72,6 +75,7 @@ const useGetListItemsData = ({
     fetchNextPage,
     hasNextPage,
     isError,
+    error,
     refetch,
   } = useGetListItemsInfiniteInfiniteQuery(
     {
@@ -163,7 +167,7 @@ const useGetListItemsData = ({
         | 'workfile',
     },
     {
-      skip: visibleEntityIds.size === 0 || !entityType,
+      skip: visibleEntityIds.size === 0 || !entityType || skip || skipLinks, // Skip if no visible entities, no entity type, or if skipLinks is true
     },
   )
 
@@ -185,6 +189,7 @@ const useGetListItemsData = ({
     isLoading,
     isFetchingNextPage,
     isError,
+    error,
     fetchNextPage: handleFetchNextPage,
     refetch,
   }

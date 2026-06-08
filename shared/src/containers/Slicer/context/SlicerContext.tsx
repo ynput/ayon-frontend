@@ -9,7 +9,7 @@ import {
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { SelectionData, SliceDataItem, SliceType } from '@shared/containers/Slicer'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
-import { useLoadModule } from '@shared/hooks'
+import { useLoadModule, useLocalStorage } from '@shared/hooks'
 import type { ProjectModel, Assignees, AttributeModel, ProductType } from '@shared/api'
 import SlicerDropdownFallback, {
   SlicerDropdownFallbackProps,
@@ -79,6 +79,7 @@ interface SlicerProviderProps {
   onExpandedChange?: (expanded: ExpandedState) => void
   sliceType?: SliceType
   onSliceTypeChange?: OnSliceTypeChange
+  scope?: string // scope for persisting state, e.g. project, user, etc.
 }
 
 export const SlicerProvider = ({
@@ -91,10 +92,20 @@ export const SlicerProvider = ({
   onExpandedChange: onExpandedChangeProp,
   sliceType: sliceTypeProp,
   onSliceTypeChange: onSliceTypeChangeProp,
+  scope = 'project',
 }: SlicerProviderProps) => {
-  const [internalRowSelection, setInternalRowSelection] = useState<RowSelectionState>({})
-  const [internalExpanded, setInternalExpanded] = useState<ExpandedState>({})
-  const [internalSliceType, setInternalSliceType] = useState<SliceType>('hierarchy')
+  const [internalRowSelection, setInternalRowSelection] = useLocalStorage<RowSelectionState>(
+    `${scope}-slicer-rowSelection`,
+    {},
+  )
+  const [internalExpanded, setInternalExpanded] = useLocalStorage<ExpandedState>(
+    `${scope}-slicer-expanded`,
+    {},
+  )
+  const [internalSliceType, setInternalSliceType] = useLocalStorage<SliceType>(
+    `${scope}-slicer-sliceType`,
+    'hierarchy',
+  )
 
   const rowSelection = rowSelectionProp ?? internalRowSelection
   const setRowSelection = setRowSelectionProp ?? setInternalRowSelection

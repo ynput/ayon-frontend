@@ -34,11 +34,7 @@ import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import { TableFooterRow } from './components/TableFooterRow'
 import type { FieldStats } from '@shared/api'
-import {
-  DRAG_HANDLE_COLUMN_ID,
-  getCommonPinningStyles,
-  getColumnWidth,
-} from './utils/pinningUtils'
+import { DRAG_HANDLE_COLUMN_ID, getCommonPinningStyles, getColumnWidth } from './utils/pinningUtils'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 import HeaderActionButton from './components/HeaderActionButton'
 
@@ -74,14 +70,19 @@ import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import {
-  AttributeEnumItem,
   ProjectTableAttribute,
   BuiltInFieldOptions,
   MainCountLabels,
   SummaryCellContentProps,
 } from './types'
+import { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
-import { getEntityViewierIds, getReadOnlyLists, getTableFieldOptions } from './utils'
+import {
+  checkColumnVisibility,
+  getEntityViewierIds,
+  getReadOnlyLists,
+  getTableFieldOptions,
+} from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
 
 // dnd-kit imports
@@ -92,7 +93,12 @@ import {
   // Removed: DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, DragEndEvent, DragStartEvent, Active, Over, useSensor, useSensors
 } from '@dnd-kit/core'
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import { SortableContext, verticalListSortingStrategy, useSortable, horizontalListSortingStrategy, } from '@dnd-kit/sortable'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  horizontalListSortingStrategy,
+} from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
 import { useProjectContext, usePowerpack } from '@shared/context'
@@ -123,6 +129,43 @@ declare module '@tanstack/react-table' {
   }
 }
 
+//These are the important styles to make sticky column pinning work!
+//Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
+//View the index.css file for more needed styles such as border-collapse: separate
+const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
+  const isPinned = column.getIsPinned()
+  const offset =
+    column.id !== ROW_SELECTION_COLUMN_ID && column.id !== DRAG_HANDLE_COLUMN_ID ? -30 : 0
+
+  return {
+    left: isPinned === 'left' ? `${column.getStart('left') + offset}px` : undefined, // Removed offset
+    right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+    position: isPinned ? 'sticky' : 'relative',
+    width: column.getSize(),
+    zIndex: isPinned ? 100 : 0,
+  }
+}
+
+const getColumnWidth = (rowId: string, columnId: string) => {
+  return `calc(var(--col-${columnId}-size) * 1px)`
+}
+
+const matchesColumnId = (id: string, subscribers: string[]) => {
+  return subscribers.some((sub) => {
+    if (sub.includes('*')) {
+      // Escape all regex special characters
+      const escaped = sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      // Replace escaped '*' (\*) with regex '.*'
+      const pattern = '^' + escaped.replace(/\\\*/g, '.*') + '$'
+      const regex = new RegExp(pattern)
+      return regex.test(id)
+    }
+    return id === sub
+  })
+}
+
+export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
+
 export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
   sliceId: string
@@ -148,6 +191,8 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   mainCountLabels?: MainCountLabels // labels for the main cell dual count (defaults folders/tasks)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
+  onColumnVisibleChange?: (changes: Record<string, boolean>) => void
+  onColumnVisibleChangeSubscribed?: string[]
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -180,6 +225,8 @@ export const ProjectTreeTable = ({
   mainCountLabels,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
+  onColumnVisibleChange,
+  onColumnVisibleChangeSubscribed,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -193,6 +240,7 @@ export const ProjectTreeTable = ({
     sortingOnChange,
     columnPinningOnChange,
     columnSizingOnChange,
+    defaultColumnVisibility,
     columnVisibilityOnChange,
     columnOrderOnChange,
     groupBy,
@@ -397,6 +445,16 @@ export const ProjectTreeTable = ({
     setAllColumns(ids)
   }, [columns, setAllColumns])
 
+  const resolvedColumnVisibility = useMemo(() => {
+    const merged = { ...columnVisibility }
+    columns.forEach((col) => {
+      if (col.id && merged[col.id] === undefined) {
+        merged[col.id] = checkColumnVisibility({}, col.id, defaultColumnVisibility)
+      }
+    })
+    return merged
+  }, [columnVisibility, defaultColumnVisibility, columns])
+
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
     columns,
@@ -452,7 +510,7 @@ export const ProjectTreeTable = ({
         }
       })(),
       columnSizing,
-      columnVisibility,
+      columnVisibility: resolvedColumnVisibility,
       columnOrder,
     },
     meta: {
@@ -502,6 +560,37 @@ export const ProjectTreeTable = ({
     columnOrder,
   })
 
+  // Track column visibility changes for subscribed columns
+  const prevVisibleRef = useRef<Record<string, boolean>>({})
+  const virtualItems = columnVirtualizer.getVirtualItems()
+
+  // Subscribe to column visibility changes
+  useEffect(() => {
+    if (!onColumnVisibleChange || !onColumnVisibleChangeSubscribed?.length) return
+
+    const visibleColumnIds = new Set(virtualItems.map((item) => visibleColumns[item.index]?.id))
+    const changes: Record<string, boolean> = {}
+    let hasChanged = false
+
+    // We only care about columns that match the subscription patterns
+    const subscribedColumns = table
+      .getAllLeafColumns()
+      .filter((col) => matchesColumnId(col.id, onColumnVisibleChangeSubscribed))
+
+    subscribedColumns.forEach((col) => {
+      const isVisible = visibleColumnIds.has(col.id)
+      if (prevVisibleRef.current[col.id] !== isVisible) {
+        changes[col.id] = isVisible
+        hasChanged = true
+        prevVisibleRef.current[col.id] = isVisible
+      }
+    })
+
+    if (hasChanged) {
+      onColumnVisibleChange(changes)
+    }
+  }, [virtualItems, onColumnVisibleChange, onColumnVisibleChangeSubscribed, visibleColumns, table])
+
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
   // Summary footer is a powerpack feature.
@@ -530,7 +619,7 @@ export const ProjectTreeTable = ({
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
 
   const attribByField = useMemo(() => {
-    return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
+    return attribFields.reduce((acc: Record<string, EnumItem[]>, attrib) => {
       if (attrib.data?.enum?.length) {
         acc[attrib.name] = attrib.data?.enum
       }
@@ -543,7 +632,7 @@ export const ProjectTreeTable = ({
   // This ensures SortableContext items match what the drag handlers use
   const columnOrderIds = useMemo(() => {
     return columnOrder.filter(
-      (id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID
+      (id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID,
     )
   }, [columnOrder])
 
@@ -1042,11 +1131,18 @@ const TableHeadCell = ({
   // Build drag styles
   const getDragStyle = (): CSSProperties => {
     if (isDragging) {
-      return { transform: CSS.Translate.toString(transform!), transition, visibility: 'hidden', zIndex: 200 }
+      return {
+        transform: CSS.Translate.toString(transform!),
+        transition,
+        visibility: 'hidden',
+        zIndex: 200,
+      }
     }
     if (isDraggingInSameSection && transform) {
       // For pinned columns, temporarily remove sticky positioning during drag animation
-      const pinnedOverride = isThisColumnPinned ? { position: 'relative' as const, left: 'auto' } : {}
+      const pinnedOverride = isThisColumnPinned
+        ? { position: 'relative' as const, left: 'auto' }
+        : {}
       return { transform: CSS.Translate.toString(transform), transition, ...pinnedOverride }
     }
     return {}
@@ -1076,7 +1172,10 @@ const TableHeadCell = ({
       }}
     >
       {header.isPlaceholder ? null : (
-        <Styled.TableCellContent className={clsx('bold', 'header')}  {...(isDraggable ? { ...attributes, ...listeners } : {})}>
+        <Styled.TableCellContent
+          className={clsx('bold', 'header')}
+          {...(isDraggable ? { ...attributes, ...listeners } : {})}
+        >
           {flexRender(column.columnDef.header, header.getContext())}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
@@ -1250,9 +1349,7 @@ const TableBody = ({
     for (let i = 0; i < visibleLeafColumns.length - 1; i++) {
       const column = visibleLeafColumns[i]
       // selection column is forced to 20px in CSS while its size var reports defaultColumn.minSize
-      sizeVars.push(
-        column.id === ROW_SELECTION_COLUMN_ID ? '20' : `var(--col-${column.id}-size)`,
-      )
+      sizeVars.push(column.id === ROW_SELECTION_COLUMN_ID ? '20' : `var(--col-${column.id}-size)`)
       lefts.push(`calc((${sizeVars.join(' + ')}) * 1px)`)
     }
     return lefts
