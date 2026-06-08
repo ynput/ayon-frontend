@@ -1,4 +1,4 @@
-import { AttributeEnumItem, ProjectModel } from '@shared/api'
+import { EnumItem, ProjectModel } from '@shared/api'
 import { useAppSelector } from '@state/store'
 import { FC, useEffect } from 'react'
 import { useDetailsPanelContext } from '@shared/context'
@@ -8,7 +8,7 @@ import { useUserDashboardContext } from '@pages/UserDashboardPage/context/UserDa
 interface RelatedTasksModuleProps {
   isPanelOpen: boolean
   projectsInfo?: Record<string, ProjectModel>
-  priorities?: AttributeEnumItem[]
+  priorities?: EnumItem[]
   onOpenViewer?: (state: Partial<ViewerState>) => void
   outsideSelection?: string[]
 }

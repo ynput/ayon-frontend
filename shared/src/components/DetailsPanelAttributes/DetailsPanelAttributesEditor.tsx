@@ -11,26 +11,37 @@ import { FieldLabel } from '../DetailsPanelDetails/FieldLabel'
 
 const FormRow = styled.div`
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) 1fr 32px;
+  grid-template-columns: minmax(150px, 1fr) minmax(0, 1fr) 32px;
   row-gap: 2px;
   column-gap: 4px;
+  overflow: hidden;
   align-items: center;
   min-height: 32px;
   position: relative;
 
-  .copy-icon {
+  .field-tools {
     opacity: 0;
-    width: 32px;
-    height: 32px;
-    padding: 2px;
-
-    &:hover {
-      background-color: transparent !important;
-    }
   }
 
-  &:hover .copy-icon {
+  &:hover .field-tools {
     opacity: 1;
+  }
+
+  &.multi-line {
+    align-items: start;
+    .field-value {
+      height: auto;
+      min-height: 32px;
+      max-height: 112px;
+      padding-top: 0;
+      padding-bottom: 0;
+      display: block;
+      overflow: visible;
+    }
+    .field-label {
+      /* move down to make it feel more centered */
+      margin-top: 6px;
+    }
   }
 `
 
@@ -69,6 +80,18 @@ const FieldValue = styled.div`
 
   &.readonly {
     pointer-events: none;
+  }
+`
+
+const FieldTools = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--base-gap-small);
+
+  .tool {
+    width: 32px;
+    height: 32px;
+    padding: 2px;
   }
 `
 
@@ -177,10 +200,21 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
           const isMixed = mixedFields?.includes(field.name) || false
 
           return (
-            <FormRow key={field.name}>
-              <FieldLabel name={field.name} data={field.data} showDetailedTooltip />
+            <FormRow
+              key={field.name}
+              className={clsx('field-row', { 'multi-line': field.data.widget === 'markdown' })}
+            >
+              <FieldLabel
+                name={field.name}
+                data={field.data}
+                showDetailedTooltip
+                className="field-label"
+              />
               <FieldValue
-                className={clsx({ editing: isEditing, readonly: isReadOnly })}
+                className={clsx('field-value', {
+                  editing: isEditing,
+                  readonly: isReadOnly,
+                })}
                 onClick={(e) => {
                   // Allow links to work normally - don't intercept clicks on anchor elements
                   if ((e.target as HTMLElement).closest('a')) {
@@ -200,22 +234,27 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
                   isMixed={isMixed}
                   onChange={handleValueChange}
                   onCancelEdit={handleCancelEdit}
+                  onExpand={() => {
+                    // opens full markdown text editor dialog
+                  }}
                   entities={entities}
                   entityType={entityType}
                 />
               </FieldValue>
-              <Button
-                className="copy-icon"
-                variant="text"
-                icon="content_copy"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  const valueToDisplay =
-                    fieldValue === null || fieldValue === undefined ? '' : fieldValue
-                  copyToClipboard(valueToDisplay.toString(), true)
-                }}
-              />
+              <FieldTools className="field-tools">
+                <Button
+                  className="tool"
+                  variant="text"
+                  icon="content_copy"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    const valueToDisplay =
+                      fieldValue === null || fieldValue === undefined ? '' : fieldValue
+                    copyToClipboard(valueToDisplay.toString(), true)
+                  }}
+                />
+              </FieldTools>
             </FormRow>
           )
         })}

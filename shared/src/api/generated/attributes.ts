@@ -81,6 +81,11 @@ export type EnumItem = {
   /** Icon name (material symbol) or IconModel object */
   icon?: string | IconModel
   color?: string
+  shortName?: string
+  /** Enum item is visible, but not selectable */
+  disabled?: boolean
+  /** Message to show when the option is disabled */
+  disabledMessage?: string
 }
 export type AttributeData = {
   /** Type of attribute value */
@@ -122,6 +127,10 @@ export type AttributeData = {
   enumResolverSettings?: object
   /** Inherit the attribute value from the parent entity. */
   inherit?: boolean
+  /** Specific widget style this field should use. */
+  widget?: string
+  /** Any additional config specific for the widget style.(Date formats, precision etc.) */
+  widgetSettings?: object
 }
 export type AttributeModel = {
   name: string

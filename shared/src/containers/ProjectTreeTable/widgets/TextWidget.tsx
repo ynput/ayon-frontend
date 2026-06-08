@@ -5,8 +5,7 @@ import rehypeRaw from 'rehype-raw'
 import { TextWidgetInput } from './TextWidgetInput'
 import { WidgetBaseProps } from './CellWidget'
 import styled from 'styled-components'
-import { AttributeData } from '../types'
-import { AttributeEnumItem } from '@shared/api'
+import { EnumItem, AttributeData } from '@shared/api'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { parseHtmlToPlainTextWithLinks } from '@shared/util'
@@ -139,7 +138,8 @@ export interface TextWidgetProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'>,
     WidgetBaseProps {
   value: string
-  option?: AttributeEnumItem
+  isMarkdown?: boolean
+  option?: EnumItem
   isInherited?: boolean
   type?: TextWidgetType
   columnId?: string
@@ -154,6 +154,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     {
       value,
       option,
+      isMarkdown,
       isEditing,
       isInherited,
       onChange,
@@ -187,10 +188,9 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
 
     const displayText = option?.label || value
     const textValue = typeof displayText === 'string' ? displayText : String(displayText ?? '')
-    const isDescriptionColumn = columnId === 'attrib_description' || columnId === 'description'
     // does the content contain only regular text?
     const isRegularText =
-      !isDescriptionColumn && !containsHtml(textValue) && !textValue.match(/(https?:\/\/\S+)/gi)
+      !isMarkdown && !containsHtml(textValue) && !textValue.match(/(https?:\/\/\S+)/gi)
 
     useEffect(() => {
       const el = textRef.current
@@ -202,7 +202,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         if (rafId !== null) cancelAnimationFrame(rafId)
         rafId = requestAnimationFrame(() => {
           rafId = null
-          if (isDescriptionColumn) {
+          if (isMarkdown) {
             // Vertical overflow (text wraps but exceeds cell height)
             setIsOverflowing(el.scrollHeight > el.clientHeight + 1)
           } else {
@@ -220,7 +220,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         if (rafId !== null) cancelAnimationFrame(rafId)
         observer.disconnect()
       }
-    }, [textValue, isDescriptionColumn])
+    }, [textValue, isMarkdown])
 
     // ── Hover tracking on parent <td>
     useEffect(() => {
@@ -308,7 +308,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     // ── Render content
     const renderContent = () => {
       // For description columns, keep markdown rendering
-      if (isDescriptionColumn) {
+      if (isMarkdown) {
         return (
           <Markdown
             remarkPlugins={[remarkGfm]}
@@ -386,7 +386,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     }
 
     // ── Non-description editing: inline TextWidgetInput
-    if (isEditing && !isDescriptionColumn) {
+    if (isEditing && !isMarkdown) {
       return (
         <TextWidgetInput
           value={value}
@@ -399,7 +399,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
 
     // ── Render: display content + any overlays ───────────────────
     const combinedClassName = clsx(className, {
-      markdown: isDescriptionColumn,
+      markdown: isMarkdown,
       regular: isRegularText,
     })
 
@@ -413,13 +413,12 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             // Merge external ref with internal ref
             ;(textRef as React.MutableRefObject<HTMLSpanElement | null>).current = node
             if (typeof ref === 'function') ref(node)
-            else if (ref)
-              (ref as React.MutableRefObject<HTMLSpanElement | null>).current = node
+            else if (ref) (ref as React.MutableRefObject<HTMLSpanElement | null>).current = node
           }}
         >
           {option?.icon && (
             <Icon
-              icon={option.icon}
+              icon={option.icon as string}
               style={{
                 color: option.color,
               }}
@@ -429,7 +428,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         </StyledBaseTextWidget>
 
         {/* Description column editing (Quill editor in popup) */}
-        {isEditing && isDescriptionColumn && cellId && (
+        {isEditing && isMarkdown && cellId && (
           <TextContentWidget
             value={value}
             cellId={cellId}
@@ -446,7 +445,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         )}
 
         {/* Description column hover preview (markdown in popup) */}
-        {showPreview && !isEditing && isDescriptionColumn && cellId && (
+        {showPreview && !isEditing && isMarkdown && cellId && (
           <TextContentWidget
             value={value}
             cellId={cellId}
@@ -462,7 +461,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         )}
 
         {/* Non-description column hover preview (plain text in popup) */}
-        {showPreview && !isEditing && !isDescriptionColumn && cellId && (
+        {showPreview && !isEditing && !isMarkdown && cellId && (
           <CellEditingDialog
             isEditing={true}
             anchorId={cellId}

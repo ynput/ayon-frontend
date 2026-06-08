@@ -1,4 +1,4 @@
-import { AttributeEnumItem } from '@shared/api'
+import { EnumItem } from '@shared/api'
 import { getTextColor, Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
@@ -115,7 +115,7 @@ const StyledExpandIcon = styled(Icon)`
 `
 
 export interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
-  selectedOptions: AttributeEnumItem[]
+  selectedOptions: EnumItem[]
   placeholder?: string
   hasMultipleValues?: boolean
   isMultiSelect?: boolean
