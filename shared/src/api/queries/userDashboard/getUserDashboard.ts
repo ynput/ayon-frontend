@@ -20,6 +20,30 @@ export type KanbanProjectUserNode = Omit<
 > & { accessGroups: AccessGroups; projects: string[]; avatarUrl: string }
 export type GetKanbanProjectUsersResponse = KanbanProjectUserNode[]
 
+export interface MessageSummary {
+  entityId: string
+  entityPath: string
+  parentId: string
+  value: any
+}
+
+export interface Message {
+  id: string
+  topic: string
+  project: string
+  user: string
+  sender: string
+  senderType: string
+  description: string
+  status: string
+  progress: number
+  store: boolean
+  createdAt: string
+  updatedAt: string
+  dependsOn: string | null
+  summary: MessageSummary
+}
+
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import getUserProjectsAccess from './getUserProjectsAccess'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
@@ -106,7 +130,7 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
       providesTags: provideKanbanTags,
       async onCacheEntryAdded(
         { assignees = [], projects = [] } = {},
-        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch },
+        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
       ) {
         let token
         try {
@@ -116,10 +140,43 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
           const patchKanbanTask = async ({
             projects = [],
             taskIds = [],
+            payload,
           }: {
             projects: string[]
             taskIds: string[]
+            payload?: Partial<KanbanNode>
           }) => {
+            let needsFetch = false
+
+            if (payload) {
+              updateCachedData((draft) => {
+                taskIds.forEach((id) => {
+                  const index = draft.findIndex((t) => t.id === id)
+                  if (index !== -1) {
+                    // update the task
+                    Object.assign(draft[index], payload)
+
+                    // if assignees changed, check if it should be removed
+                    if (payload.assignees) {
+                      const isStillAssigned = payload.assignees.some((a) => assignees?.includes(a))
+                      if (!isStillAssigned) {
+                        draft.splice(index, 1)
+                      }
+                    }
+                  } else {
+                    // task not in cache, if it's now assigned to us, we need to fetch
+                    if (payload.assignees?.some((a) => assignees?.includes(a))) {
+                      needsFetch = true
+                    }
+                  }
+                })
+              })
+            } else {
+              needsFetch = true
+            }
+
+            if (!needsFetch) return
+
             const tasks = await getKanbanTasks({ projects, taskIds }, dispatch)
 
             // get all tasks that have been ADDED to the assignees
@@ -153,18 +210,43 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
             })
           }
 
-          const handlePubSub = async (_topic: string, message: any) => {
-            const project = message.project as string
+          const handlePubSub = async (_topic: string, message: Message) => {
+            const project = message.project
             // first check the project name as selected
             if (!projects?.includes(project)) return console.log('project not selected')
             // then get entity id
             const entityId = message.summary.entityId
             if (!entityId) return console.log('no entity id found')
 
+            // current tasks on the board
+            const cacheTasks = getCacheEntry().data ?? []
+            // entity.task.status_changed
+            const field = message.topic.split('.')[2].split('_changed')[0]
+
+            // Only patch the task for the fields status and assignees.
+            if (!['status', 'assignees'].includes(field)) return
+
+            const value = message.summary.value
+            // cast the correct type onto value based on the field
+            let castValue: any = value
+            if (field === 'status') {
+              castValue = String(value)
+            } else if (field === 'assignees') {
+              castValue = Array.isArray(value) ? (value as string[]) : []
+            }
+
+            // check this task is actually on the board
+            const isTaskOnMyBoard = cacheTasks.some((t) => t.id === entityId)
+            // if the field is assignees AND the value includes current assignees then we patch
+            const isValueMe =
+              field === 'assignees' && (castValue as string[]).some((a) => assignees?.includes(a))
+
+            if (!isTaskOnMyBoard && !isValueMe) return
             // patch task updates into kanban cache
             patchKanbanTask({
               taskIds: [entityId],
               projects: [project],
+              payload: { [field]: castValue } as Partial<KanbanNode>,
             })
           }
 
