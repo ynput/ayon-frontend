@@ -144,20 +144,22 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   )
 
   // setting of default views
-  const [selectedView, setSelectedView, previousSelectedViewId] = useSelectedView({
-    viewType: viewType as string,
-    projectName: projectName,
-  })
+  const [selectedView, setSelectedView, previousSelectedViewId, isLoadingSelectedView] =
+    useSelectedView({
+      viewType: viewType as string,
+      projectName: projectName,
+    })
 
   const [viewSettingsChanged, setViewSettingsChanged] = useViewSettingsChanged({
     viewType: viewType as ViewType,
   })
 
   // Fetch views data and filter out base views
-  const { currentData: viewsListRaw = [], isLoading: isLoadingViews } = useListViewsQuery(
+  const { currentData: viewsListRaw = [], isLoading: isLoadingViewsList } = useListViewsQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
+  const isLoadingViews = isLoadingViewsList || isLoadingSelectedView
 
   // Filter out base views from the list
   // Filter out studio working view if in project scope

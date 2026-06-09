@@ -5,22 +5,17 @@ import { SliceType } from '../types'
 /**
  * Syncs the slicer's active slice type with view settings (server-side).
  *
- * - Sets isViewSyncPending=true on mount so the slicer shows loading until views are ready
+ * - Sets isViewSyncPending=true on mount so the slicer shows loading until view settings are ready
  * - On view load: silently restores sliceType from view
  * - On user-initiated slice type change: saves the new sliceType to the view
  */
 export const useSlicerViewSync = (
   viewSliceType: string | undefined,
   onUpdateSliceType: (sliceType: string) => void,
-  isLoadingViews?: boolean,
+  isLoadingViewSettings?: boolean,
 ) => {
-  const {
-    sliceType,
-    setSliceType,
-    setIsViewSyncPending,
-    setRowSelection,
-    setRowSelectionData,
-  } = useSlicerContext()
+  const { sliceType, setSliceType, setIsViewSyncPending, setRowSelection, setRowSelectionData } =
+    useSlicerContext()
   const initializedRef = useRef(false)
   const isRestoringTypeRef = useRef(false)
 
@@ -39,9 +34,9 @@ export const useSlicerViewSync = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Restore: view → slicer (only when views finish loading, not on save-triggered updates)
+  // Restore: view → slicer (only when view settings finish loading, not on save-triggered updates)
   useEffect(() => {
-    if (isLoadingViews) return
+    if (isLoadingViewSettings) return
     if (initializedRef.current) return
 
     initializedRef.current = true
@@ -55,7 +50,7 @@ export const useSlicerViewSync = (
       setRowSelectionData({})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoadingViews])
+  }, [isLoadingViewSettings])
 
   // Save: slicer slice type → view (on user change)
   useEffect(() => {

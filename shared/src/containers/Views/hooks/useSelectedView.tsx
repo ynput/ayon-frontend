@@ -17,13 +17,16 @@ type Return = [
   selectedView: GetDefaultViewApiResponse | undefined,
   setSelectedView: (viewId: string) => void,
   previousSelectedViewId: string | undefined,
+  isLoadingSelectedView: boolean,
 ]
 
 export const useSelectedView = ({ viewType, projectName }: Props): Return => {
-  const { currentData: defaultView } = useGetDefaultViewQuery(
-    { viewType, projectName },
-    { skip: !viewType },
-  )
+  const {
+    currentData: defaultView,
+    isFetching,
+    isLoading,
+  } = useGetDefaultViewQuery({ viewType, projectName }, { skip: !viewType })
+  const isLoadingSelectedView = isLoading || (isFetching && !defaultView)
 
   const [setDefaultView] = useSetDefaultViewMutation()
 
@@ -53,5 +56,5 @@ export const useSelectedView = ({ viewType, projectName }: Props): Return => {
     }
   }
 
-  return [defaultView, setSelectedView, previousSelectedViewId]
+  return [defaultView, setSelectedView, previousSelectedViewId, isLoadingSelectedView]
 }
