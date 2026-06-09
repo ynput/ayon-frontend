@@ -144,17 +144,18 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   )
 
   // setting of default views
-  const [selectedView, setSelectedView, previousSelectedViewId] = useSelectedView({
-    viewType: viewType as string,
-    projectName: projectName,
-  })
+  const [selectedView, setSelectedView, previousSelectedViewId, isLoadingDefaultView] =
+    useSelectedView({
+      viewType: viewType as string,
+      projectName: projectName,
+    })
 
   const [viewSettingsChanged, setViewSettingsChanged] = useViewSettingsChanged({
     viewType: viewType as ViewType,
   })
 
   // Fetch views data and filter out base views
-  const { currentData: viewsListRaw = [], isLoading: isLoadingViews } = useListViewsQuery(
+  const { currentData: viewsListRaw = [], isFetching: isLoadingViewsList } = useListViewsQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
@@ -178,20 +179,28 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   //   always get your working view
-  const { currentData: workingView } = useGetWorkingViewQuery(
+  const { currentData: workingView, isFetching: isLoadingWorkingView } = useGetWorkingViewQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
 
   // Fetch both project and studio base views
-  const { currentData: projectBaseView } = useGetBaseViewQuery(
-    { projectName: projectName, viewType: viewType as string },
-    { skip: !viewType },
-  )
-  const { currentData: studioBaseView } = useGetBaseViewQuery(
+  const { currentData: projectBaseView, isFetching: isLoadingProjectBaseView } =
+    useGetBaseViewQuery(
+      { projectName: projectName, viewType: viewType as string },
+      { skip: !viewType },
+    )
+  const { currentData: studioBaseView, isFetching: isLoadingStudioBaseView } = useGetBaseViewQuery(
     { projectName: undefined, viewType: viewType as string },
     { skip: !viewType },
   )
+
+  const isLoadingViews =
+    isLoadingViewsList ||
+    isLoadingDefaultView ||
+    isLoadingWorkingView ||
+    isLoadingProjectBaseView ||
+    isLoadingStudioBaseView
 
   const workingSettings = workingView?.settings
 

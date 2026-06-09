@@ -88,6 +88,14 @@ export const updateViewSettings = async (
     // Fallback to closure-captured value if cache has nothing (first render, etc.).
     const latestSettings = getLatestSettings() ?? viewSettings
 
+    if (!latestSettings && viewContext.isLoadingViews) {
+      toast.warn('Views are still loading. Please wait a moment and try again.')
+      console.warn(
+        'updateViewSettings called while views are still loading. Aborting to prevent data loss.',
+      )
+      return
+    }
+
     // Create settings with updates
     const newSettings = { ...latestSettings, ...updatedSettings }
 
