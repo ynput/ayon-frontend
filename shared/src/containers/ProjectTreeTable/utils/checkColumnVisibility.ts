@@ -44,18 +44,6 @@ export const checkColumnVisibility = (
     }
   }
 
-  // 5. Hardcoded core defaults (always show if not explicitly hidden)
-  const CORE_DEFAULTS: Record<string, boolean> = {
-    thumbnail: true,
-    name: true,
-    status: true,
-    subType: true,
-  }
-
-  if (CORE_DEFAULTS[fieldName] !== undefined) {
-    return CORE_DEFAULTS[fieldName]
-  }
-
-  // 6. Fallback to false (new behavior: opt-in)
+  // 5. Fallback to false (new behavior: opt-in)
   return false
 }
