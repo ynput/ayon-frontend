@@ -155,7 +155,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   // Fetch views data and filter out base views
-  const { currentData: viewsListRaw = [], isFetching: isLoadingViewsList } = useListViewsQuery(
+  const { currentData: viewsListRaw = [], isLoading: isLoadingViewsList } = useListViewsQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
@@ -179,22 +179,24 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   //   always get your working view
-  const { currentData: workingView, isFetching: isLoadingWorkingView } = useGetWorkingViewQuery(
+  const { currentData: workingView, isLoading: isLoadingWorkingView } = useGetWorkingViewQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
 
   // Fetch both project and studio base views
-  const { currentData: projectBaseView, isFetching: isLoadingProjectBaseView } =
-    useGetBaseViewQuery(
-      { projectName: projectName, viewType: viewType as string },
-      { skip: !viewType },
-    )
-  const { currentData: studioBaseView, isFetching: isLoadingStudioBaseView } = useGetBaseViewQuery(
+  const { currentData: projectBaseView, isLoading: isLoadingProjectBaseView } = useGetBaseViewQuery(
+    { projectName: projectName, viewType: viewType as string },
+    { skip: !viewType },
+  )
+  const { currentData: studioBaseView, isLoading: isLoadingStudioBaseView } = useGetBaseViewQuery(
     { projectName: undefined, viewType: viewType as string },
     { skip: !viewType },
   )
 
+  // isLoadingViews is true ONLY on the very first fetch (no cached data yet).
+  // It does NOT flip back to true during background re-fetches (e.g. after a save),
+  // which prevents UI flickering in consumers like ProjectOverviewContext.
   const isLoadingViews =
     isLoadingViewsList ||
     isLoadingDefaultView ||
