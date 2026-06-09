@@ -203,7 +203,8 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
 
                     // if assignees changed, check if it should be removed
                     if (payload.assignees) {
-                      const isStillAssigned = payload.assignees.some((a) => assignees?.includes(a))
+                      const isStillAssigned =
+                        !assignees?.length || payload.assignees.some((a) => assignees?.includes(a))
                       if (!isStillAssigned) {
                         draft.splice(index, 1)
                       }
@@ -358,19 +359,11 @@ const injectedDashboardRestApi = enhancedDashboardGraphqlApi.injectEndpoints({
             // hopefully this will be cached
             // it also allows for different combination of projects but still use the cache
             const responses = [
-              dispatch(
-                projectQueries.endpoints.getProject.initiate(
-                  { projectName },
-                  { forceRefetch: true },
-                ),
-              ).unwrap(),
+              dispatch(projectQueries.endpoints.getProject.initiate({ projectName })).unwrap(),
               ...(anatomy
                 ? [
                     dispatch(
-                      projectQueries.endpoints.getProjectAnatomy.initiate(
-                        { projectName },
-                        { forceRefetch: true },
-                      ),
+                      projectQueries.endpoints.getProjectAnatomy.initiate({ projectName }),
                     ).unwrap(),
                   ]
                 : []),
