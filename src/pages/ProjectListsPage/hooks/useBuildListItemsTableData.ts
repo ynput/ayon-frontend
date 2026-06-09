@@ -60,6 +60,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         icon: isRestricted ? RESTRICTED_ENTITY_ICON : entityTypeData?.icon,
         color: isRestricted ? '' : entityTypeData?.color,
         folderId: extractFolderId(item, item.entityType),
+        folder: extractFolder(item, item.entityType),
         parents: item.parents || [],
         tags: item.tags,
         status: item.status,
@@ -109,6 +110,28 @@ const extractSubTypes = (
       }
     default:
       return {}
+  }
+}
+
+// Parent folder name shown in the "Folder name" column. Prefer the fetched
+// folder label/name (matches the Products page); fall back to the parents path
+// so it still renders before graphql codegen adds the label/name fields.
+const extractFolder = (
+  item: EntityListItemWithLinks,
+  entityType: string,
+): string | undefined => {
+  const fromParents = item.parents?.[item.parents.length - 1] || undefined
+  const pickName = (folder?: { name?: string; label?: string } | null) =>
+    folder?.label || folder?.name || undefined
+
+  switch (entityType) {
+    case 'task':
+    case 'product':
+      return pickName(item.folder) || fromParents
+    case 'version':
+      return pickName(item.product?.folder) || fromParents
+    default:
+      return fromParents
   }
 }
 

@@ -91,28 +91,32 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
     [extraTypeColumns],
   )
 
-  // some extra columns are added in the buildTeeTableColumns based on the entity type
-  // so we just need to add them to the settings so they show up in the column manager
-  const versionExtraColumns = [
-    {
-      value: 'author',
-      label: 'Author',
-      position: 6,
-      readonly: true,
-    },
-    {
-      value: 'version',
-      label: 'Version',
-      position: 7,
-      readonly: true,
-    },
-    {
-      value: 'product',
-      label: 'Product',
-      position: 8,
-      readonly: true,
-    },
-  ]
+  // some extra columns are added in buildTreeTableColumns based on the entity type
+  // (author/version/product are only built for version scope) so only offer them in the
+  // column manager for version lists — otherwise the toggle is a no-op (column never builds).
+  const versionExtraColumns =
+    entityType === 'version'
+      ? [
+          {
+            value: 'author',
+            label: 'Author',
+            position: 6,
+            readonly: true,
+          },
+          {
+            value: 'version',
+            label: 'Version',
+            position: 7,
+            readonly: true,
+          },
+          {
+            value: 'product',
+            label: 'Product',
+            position: 8,
+            readonly: true,
+          },
+        ]
+      : []
 
   const extraColumnsSettings = [...extraTypeColumns, ...versionExtraColumns]
 
