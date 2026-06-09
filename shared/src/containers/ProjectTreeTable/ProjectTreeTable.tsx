@@ -129,27 +129,6 @@ declare module '@tanstack/react-table' {
   }
 }
 
-//These are the important styles to make sticky column pinning work!
-//Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
-//View the index.css file for more needed styles such as border-collapse: separate
-const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
-  const isPinned = column.getIsPinned()
-  const offset =
-    column.id !== ROW_SELECTION_COLUMN_ID && column.id !== DRAG_HANDLE_COLUMN_ID ? -30 : 0
-
-  return {
-    left: isPinned === 'left' ? `${column.getStart('left') + offset}px` : undefined, // Removed offset
-    right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-    position: isPinned ? 'sticky' : 'relative',
-    width: column.getSize(),
-    zIndex: isPinned ? 100 : 0,
-  }
-}
-
-const getColumnWidth = (rowId: string, columnId: string) => {
-  return `calc(var(--col-${columnId}-size) * 1px)`
-}
-
 const matchesColumnId = (id: string, subscribers: string[]) => {
   return subscribers.some((sub) => {
     if (sub.includes('*')) {
@@ -163,8 +142,6 @@ const matchesColumnId = (id: string, subscribers: string[]) => {
     return id === sub
   })
 }
-
-export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 
 export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
