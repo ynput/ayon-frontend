@@ -144,11 +144,7 @@ function createColumnItem(
 ): ColumnItemModel {
   const column: ColumnItemModel = {
     name: columnName,
-  }
-
-  // Set visibility if defined in state
-  if (columnVisibility.hasOwnProperty(columnName)) {
-    column.visible = columnVisibility[columnName]
+    visible: !!columnVisibility[columnName],
   }
 
   // Set pinning if column is pinned

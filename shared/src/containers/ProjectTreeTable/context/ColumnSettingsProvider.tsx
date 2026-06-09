@@ -8,12 +8,11 @@ import {
   ColumnSizingState,
   SortingState,
 } from '@tanstack/react-table'
-import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
-import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
 import { ColumnsConfig, ColumnSettingsContext, TableGroupBy } from './ColumnSettingsContext'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
 import { isEqual } from 'lodash'
 import { checkColumnVisibility } from '../utils'
+import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
 
 interface ColumnSettingsProviderProps {
   children: ReactNode

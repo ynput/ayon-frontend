@@ -1,4 +1,7 @@
 import { VisibilityState } from '@tanstack/react-table'
+import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
+
+const ALWAYS_VISIBLE_COLUMNS = [ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID]
 
 // checks column visibility for fields matching a given field name
 // Also support partial matching like `name_*` to check all columns starting with `name_`
@@ -45,15 +48,8 @@ export const checkColumnVisibility = (
   }
 
   // 5. Hardcoded core defaults (always show if not explicitly hidden)
-  const CORE_DEFAULTS: Record<string, boolean> = {
-    thumbnail: true,
-    name: true,
-    status: true,
-    subType: true,
-  }
-
-  if (CORE_DEFAULTS[fieldName] !== undefined) {
-    return CORE_DEFAULTS[fieldName]
+  if (ALWAYS_VISIBLE_COLUMNS.includes(fieldName)) {
+    return true
   }
 
   // 6. Fallback to false (new behavior: opt-in)
