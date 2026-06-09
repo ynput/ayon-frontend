@@ -1,7 +1,7 @@
 import { VisibilityState } from '@tanstack/react-table'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
 
-const ALWAYS_VISIBLE_COLUMNS = [ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID]
+export const ALWAYS_VISIBLE_COLUMNS = [ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID]
 
 // checks column visibility for fields matching a given field name
 // Also support partial matching like `name_*` to check all columns starting with `name_`
@@ -11,6 +11,13 @@ export const checkColumnVisibility = (
   fieldName: string,
   defaultVisibility?: VisibilityState,
 ): boolean => {
+  // 0. Always-visible columns (e.g. row-selection, drag-handle) are unconditionally visible.
+  //    They can only be removed from the table via the `excludedColumns` prop on ProjectTreeTable,
+  //    never by setting visibility to false in saved settings.
+  if (ALWAYS_VISIBLE_COLUMNS.includes(fieldName)) {
+    return true
+  }
+
   // 1. Check exact match in columns
   if (columns[fieldName] !== undefined && columns[fieldName] !== null) {
     return columns[fieldName]
@@ -47,11 +54,6 @@ export const checkColumnVisibility = (
     }
   }
 
-  // 5. Hardcoded core defaults (always show if not explicitly hidden)
-  if (ALWAYS_VISIBLE_COLUMNS.includes(fieldName)) {
-    return true
-  }
-
-  // 6. Fallback to false (new behavior: opt-in)
+  // 5. Fallback to false (new behavior: opt-in)
   return false
 }

@@ -377,7 +377,7 @@ export const ProjectTreeTable = ({
       nameLabel: getNameLabelHeader(),
     })
 
-    if (sortableRows) {
+    if (sortableRows && enableSorting) {
       return [
         {
           id: DRAG_HANDLE_COLUMN_ID,
@@ -408,6 +408,7 @@ export const ProjectTreeTable = ({
     excludedColumns,
     excludedSorting,
     sortableRows,
+    enableSorting,
     groupBy,
   ])
 
