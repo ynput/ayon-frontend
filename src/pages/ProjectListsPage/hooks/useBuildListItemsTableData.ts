@@ -116,13 +116,10 @@ const extractSubTypes = (
 // Parent folder name shown in the "Folder name" column. Prefer the fetched
 // folder label/name (matches the Products page); fall back to the parents path
 // so it still renders before graphql codegen adds the label/name fields.
-const extractFolder = (
-  item: EntityListItemWithLinks,
-  entityType: string,
-): string | undefined => {
-  const fromParents = item.parents?.[item.parents.length - 1] || undefined
+const extractFolder = (item: EntityListItemWithLinks, entityType: string): string => {
+  const fromParents = item.parents?.[item.parents.length - 1] || ''
   const pickName = (folder?: { name?: string; label?: string } | null) =>
-    folder?.label || folder?.name || undefined
+    folder?.label || folder?.name || ''
 
   switch (entityType) {
     case 'task':
