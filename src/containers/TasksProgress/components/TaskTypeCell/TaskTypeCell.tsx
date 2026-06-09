@@ -2,6 +2,7 @@ import { FC } from 'react'
 import * as Styled from './TaskTypeCell.styled'
 import clsx from 'clsx'
 import { EntityCard } from '@ynput/ayon-react-components'
+import { getEntityThumbnailUrl } from '@shared/util'
 
 // types
 import type { EntityCardProps } from '@ynput/ayon-react-components'
@@ -39,7 +40,12 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
 }) => {
   const status = statuses.find((s) => s.name === task.status)
 
-  const thumbnailUrl = `/api/projects/${task.projectName}/tasks/${task.id}/thumbnail?updatedAt=${task.updatedAt}`
+  const thumbnailUrl = getEntityThumbnailUrl({
+    projectName: task.projectName,
+    entityType: 'task',
+    entityId: task.id,
+    thumbnailHash: task.thumbnailHash,
+  })
 
   let changeProps: {
     onAssigneeChange: EntityCardProps['onAssigneeChange']
@@ -72,7 +78,7 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
         title={task.label || task.name}
         titleIcon={taskIcon}
         imageIcon={taskIcon}
-        imageUrl={isExpanded ? thumbnailUrl : undefined}
+        imageUrl={isExpanded ? thumbnailUrl ?? undefined : undefined}
         users={task.assignees.map((assignee: string) => ({ name: assignee }))}
         assigneeOptions={assigneeOptions}
         status={status}

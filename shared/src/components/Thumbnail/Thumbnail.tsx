@@ -2,6 +2,7 @@ import { HTMLAttributes, useEffect, useState } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import * as Styled from './Thumbnail.styled'
+import { getEntityThumbnailUrl } from '@shared/util'
 
 export interface ThumbnailProps extends Omit<HTMLAttributes<HTMLDivElement>, 'color'> {
   projectName?: string
@@ -9,7 +10,7 @@ export interface ThumbnailProps extends Omit<HTMLAttributes<HTMLDivElement>, 'co
   entityId?: string
   icon?: string | null
   color?: string | null
-  entityUpdatedAt?: string
+  thumbnailHash?: string
   isLoading?: boolean
   shimmer?: boolean
   className?: string
@@ -25,7 +26,7 @@ export const Thumbnail = ({
   entityId = '',
   icon,
   color,
-  entityUpdatedAt,
+  thumbnailHash,
   isLoading,
   shimmer,
   className,
@@ -40,16 +41,11 @@ export const Thumbnail = ({
   const hasIdentity = isProject ? !!projectName : !!entityId
 
   let url = ''
-  if (entityType && entityUpdatedAt && hasIdentity) {
+  if (entityType && thumbnailHash && hasIdentity) {
     if (src) {
       url = src
-    } else if (projectName) {
-      url = isProject
-        ? `/api/projects/${projectName}/thumbnail`
-        : `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
-    }
-    if (url && !/[?&]updatedAt=/.test(url)) {
-      url += (url.includes('?') ? '&' : '?') + `updatedAt=${entityUpdatedAt}`
+    } else {
+      url = getEntityThumbnailUrl({ projectName, entityType, entityId, thumbnailHash }) ?? ''
     }
   }
 

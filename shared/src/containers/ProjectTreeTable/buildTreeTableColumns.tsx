@@ -187,7 +187,7 @@ const buildTreeTableColumns = ({
         let thumbnail = {
           entityId: row.original.entityId || row.id,
           entityType: row.original.entityType,
-          updatedAt: row.original.updatedAt,
+          thumbnailHash: row.original.thumbnailHash,
         }
         // check for thumbnail override
         if (row.original.thumbnail) {
@@ -198,7 +198,7 @@ const buildTreeTableColumns = ({
             id={cellId}
             entityId={thumbnail.entityId}
             entityType={thumbnail.entityType}
-            updatedAt={thumbnail.updatedAt}
+            thumbnailHash={thumbnail.thumbnailHash}
             icon={row.original.icon}
             projectName={meta?.projectName as string}
             className={clsx('thumbnail', {
