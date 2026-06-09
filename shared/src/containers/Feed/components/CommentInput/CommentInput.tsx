@@ -54,6 +54,11 @@ export const mentionTypeOptions = {
     id: 'user',
     isCircle: true,
   },
+};
+
+export enum GuestReviewFeedback {
+  APPROVE = "approve",
+  REQUEST_CHANGES = "request_changes"
 }
 
 interface CommentInputProps {
@@ -61,7 +66,9 @@ interface CommentInputProps {
   initFiles?: any[]
   initCategory?: string | null
   data?: any
+  guestReview: boolean
   onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
+  onReview?: (feedback: GuestReviewFeedback) => void
   isEditing?: boolean
   disabled?: boolean
   isLoading?: boolean
@@ -75,6 +82,7 @@ const CommentInput: FC<CommentInputProps> = ({
   initFiles = [],
   initCategory = null,
   data = {},
+  guestReview,
   onSubmit,
   isEditing,
   disabled,
@@ -82,6 +90,7 @@ const CommentInput: FC<CommentInputProps> = ({
   isOpen,
   onOpen,
   onClose,
+  onReview,
 }) => {
   const {
     projectName,
@@ -737,6 +746,35 @@ const CommentInput: FC<CommentInputProps> = ({
               </Styled.Buttons>
             )}
             <Styled.Buttons style={{ marginLeft: 'auto' }}>
+              {
+                // guestReview && onReview && (
+                isGuest && guestReview && onReview && (
+                  <>
+                    <Styled.GuestReviewButton
+                      icon="check"
+                      variant="tertiary"
+                      data-tooltip="Approve"
+                      onClick={() => {
+                        handleSubmit()
+                        onReview(GuestReviewFeedback.APPROVE)
+                      }}
+                    >
+                      <span className="label">Approve</span>
+                    </Styled.GuestReviewButton>
+                    <Styled.GuestReviewButton
+                      icon="sync"
+                      variant="danger"
+                      data-tooltip="Request changes"
+                      onClick={() => {
+                        handleSubmit()
+                        onReview(GuestReviewFeedback.REQUEST_CHANGES)
+                      }}
+                    >
+                      <span className="label">Request changes</span>
+                    </Styled.GuestReviewButton>
+                  </>
+                )
+              }
               {isEditing && (
                 <Button variant="text" onClick={handleClose}>
                   Cancel

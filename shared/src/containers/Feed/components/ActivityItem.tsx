@@ -5,6 +5,7 @@ import ActivityAssigneeChange from './ActivityAssigneeChange/ActivityAssigneeCha
 import ActivityVersions from './ActivityVersions/ActivityVersions'
 import ActivityGroup from './ActivityGroup/ActivityGroup'
 import { Status } from '../../ProjectTreeTable/types/project'
+import ActivityGuestReview from './ActivityGuestReview/ActivityGuestReview'
 
 interface ActivityItemProps {
   activity: {
@@ -61,6 +62,9 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
       return <ActivityAssigneeChange activity={activity} {...props} />
     case 'version.publish':
       return <ActivityVersions {...{ activity, projectInfo, filter }} {...props} />
+    case 'guest_review':
+      console.log(activity)
+      return <ActivityGuestReview activity={activity} {...props} />
     case 'group':
       // fromGroup prevents infinite recursion
       return (

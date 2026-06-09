@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import ActivityItem from './components/ActivityItem'
-import CommentInput from './components/CommentInput/CommentInput'
+import CommentInput, { GuestReviewFeedback } from './components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
 import useCommentMutations, { Activity } from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
@@ -55,6 +55,7 @@ export type FeedProps = {
   statuses: Status[]
   entityListId?: string | undefined
   isSlideOut?: boolean
+  guestReview?: boolean
 }
 
 export const Feed = ({
@@ -63,6 +64,7 @@ export const Feed = ({
   statuses = [],
   entityListId,
   isSlideOut,
+  guestReview = false,
 }: FeedProps) => {
   const {
     projectName,
@@ -186,6 +188,7 @@ export const Feed = ({
     submitComment: submitCommentMutation,
     updateComment,
     deleteComment,
+    submitReview: submitReviewMutation,
     isSaving,
   } = useCommentMutations({
     projectName,
@@ -206,6 +209,11 @@ export const Feed = ({
     },
     [submitCommentMutation, feedRef],
   )
+
+  const submitReview = useCallback(async (feedback: GuestReviewFeedback) => {
+    console.log('feedback', feedback)
+    await submitReviewMutation(feedback)
+  }, [submitReviewMutation])
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
   // Then update comment with new body
@@ -369,6 +377,8 @@ export const Feed = ({
             onOpen={() => setEditingId(FEED_NEW_COMMENT)}
             disabled={disabled}
             isLoading={isLoadingNew || !entities.length || isSaving}
+            guestReview={guestReview}
+            onReview={submitReview}
           />
         )}
       </Styled.FeedContainer>

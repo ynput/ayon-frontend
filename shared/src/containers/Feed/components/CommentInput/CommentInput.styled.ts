@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { getTextColor } from '@ynput/ayon-react-components'
+import { Button, getTextColor } from '@ynput/ayon-react-components'
 
 export const AutoHeight = styled.div`
   /* use grid tick for auto height transition */
@@ -401,6 +401,9 @@ export const Footer = styled.footer`
   border-top: 1px solid var(--md-sys-color-surface-container-hover);
   background-color: var(--background-color);
   z-index: 100;
+  gap: var(--base-gap-small);
+  container-type: inline-size;
+  container-name: comment-input-footer;
 
   /* remove save button icon */
   .comment {
@@ -462,4 +465,29 @@ export const Placeholder = styled.span`
   /* italic */
   font-style: italic;
   opacity: 0.4;
+`
+
+export const GuestReviewButton = styled(Button)`
+  background: transparent;
+  border: solid 1px currentColor;
+
+  &.danger {
+    color: var(--md-sys-color-error);
+  }
+
+  &.tertiary {
+    color: var(--md-sys-color-tertiary);
+  }
+
+  &:hover {
+    background: rgb(from currentColor r g b / 0.25)
+  }
+
+  @container comment-input-footer (max-width: 345px) {
+    .label {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+    }
+  }
 `

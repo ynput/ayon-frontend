@@ -17,6 +17,7 @@ import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
   projectName: string
+  entityListId?: string
   isOpen?: boolean
   onUriOpen?: (entity: DetailsPanelEntityData, source: 'uri' | 'url') => void
   onClose?: () => void
@@ -31,6 +32,7 @@ type EntitySelection = {
 const ProjectOverviewDetailsPanel = ({
   projectInfo,
   projectName,
+  entityListId,
   isOpen,
   onUriOpen,
   onClose,
@@ -78,6 +80,7 @@ const ProjectOverviewDetailsPanel = ({
           <DetailsPanel
             isOpen={isPanelOpen}
             entityType={entityType}
+            entityListId={entityListId}
             entities={entities}
             projectsInfo={projectsInfo}
             projectNames={[projectName]}

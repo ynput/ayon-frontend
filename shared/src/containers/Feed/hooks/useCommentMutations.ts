@@ -3,6 +3,7 @@ import { formatISO } from 'date-fns'
 import { toast } from 'react-toastify'
 import { useFeedContext } from '../context/FeedContext'
 import { SavedAnnotationMetadata } from '..'
+import { GuestReviewFeedback } from '../components/CommentInput/CommentInput'
 
 // Type definitions
 interface Entity {
@@ -233,10 +234,44 @@ const useCommentMutations = ({
     }
   }
 
+  const submitReview = async (
+    feedback: GuestReviewFeedback
+  ): Promise<void> => {
+    // map over all the entities and create a new comment for each
+    let patchId: string | null = null
+    const promises = entities.map(({ id: entityId, subTitle }) => {
+      const newId = getEntityId()
+      if (!patchId) patchId = newId
+
+      const data = { feedback, entityList: entityListId }
+      const newReview = {
+        body: '',
+        activityType: 'guest_review',
+        id: newId,
+        data,
+      }
+
+      // create a new patch for optimistic update
+      const patch = createPatch({ entityId, newId, subTitle, value: '', data })
+
+      return createEntityActivity({
+        projectName,
+        entityType,
+        entityId,
+        data: newReview,
+        patch,
+        filter,
+      })
+    })
+
+    await Promise.all(promises)
+  }
+
   return {
     submitComment,
     updateComment,
     deleteComment,
+    submitReview,
     isSaving: isUpdatingActivity,
   }
 }
