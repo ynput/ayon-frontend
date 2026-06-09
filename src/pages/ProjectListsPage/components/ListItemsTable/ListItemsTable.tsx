@@ -22,6 +22,7 @@ interface ListItemsTableProps {
 const ListItemsTable: FC<ListItemsTableProps> = ({
   extraColumns,
   isLoading,
+  isReview,
   dndActiveId, // Destructure new prop
   viewOnly,
 }) => {
@@ -69,6 +70,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         extraColumns={extraColumns}
         isLoading={isLoading}
         sortableRows={!viewOnly}
+        enableSorting={!isReview}
         dndActiveId={dndActiveId} // Pass prop
         onColumnVisibleChangeSubscribed={['link_*']}
         onColumnVisibleChange={(changes) => {
