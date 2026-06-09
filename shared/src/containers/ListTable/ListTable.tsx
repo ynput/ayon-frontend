@@ -11,7 +11,7 @@ import {
   ColumnSizingState,
   useReactTable,
 } from '@tanstack/react-table'
-import { checkColumnVisibility } from '../ProjectTreeTable/utils'
+import { checkColumnVisibility, ensureAtLeastOneVisibleColumn } from '../ProjectTreeTable/utils'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   closestCenter,
@@ -141,7 +141,10 @@ export function ListTable<TData extends RowData>({
         }
       }
     })
-    return resolved
+    return ensureAtLeastOneVisibleColumn(
+      resolved,
+      columns.map((c) => (c.id || (c as any).accessorKey) as string).filter(Boolean),
+    )
   }, [columnVisibility, defaultColumnVisibility, columns])
 
   // Use controlled column sizing if provided, otherwise internal state

@@ -1,33 +1,32 @@
 export const GROUP_BY_FOLDER_KEY = 'projectFolder'
 
-export const DEFAULT_COLUMNS_FOLDER = {
+const CORE_DEFAULT_COLUMNS = {
   thumbnail: true,
   name: true,
+  label: true,
   status: true,
+  subType: true,
+}
+
+export const DEFAULT_COLUMNS_FOLDER = {
+  ...CORE_DEFAULT_COLUMNS,
   attrib_priority: true,
   attrib_description: true,
 }
 export const DEFAULT_COLUMNS_TASK = {
-  thumbnail: true,
-  name: true,
-  status: true,
-  assignees: true,
+  ...CORE_DEFAULT_COLUMNS,
   attrib_priority: true,
   attrib_description: true,
 }
 export const DEFAULT_COLUMNS_VERSION = {
-  thumbnail: true,
-  name: true,
-  status: true,
+  ...CORE_DEFAULT_COLUMNS,
   author: true,
   folder: true,
   version: true,
 }
 
 export const DEFAULT_COLUMNS_PRODUCT = {
-  thumbnail: true,
-  name: true,
-  status: true,
+  ...CORE_DEFAULT_COLUMNS,
   productType: true,
 }
 

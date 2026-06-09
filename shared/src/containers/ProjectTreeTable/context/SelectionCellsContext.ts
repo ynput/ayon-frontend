@@ -1,12 +1,5 @@
 import React, { createContext, useContext } from 'react'
-import {
-  CellId,
-  RowId,
-  ColId,
-  CellPosition,
-} from '../utils/cellUtils'
-
-export const ROW_SELECTION_COLUMN_ID = '__row_selection__' // ID for the row selection column
+import { CellId, RowId, ColId, CellPosition } from '../utils/cellUtils'
 
 // Structure to map row/column IDs to their positions in the grid
 export interface GridMap {
