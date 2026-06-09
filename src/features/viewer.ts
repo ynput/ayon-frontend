@@ -43,23 +43,73 @@ const initialState: ViewerState = {
   goToFrame: null,
 }
 
+const normalizeOpenViewerPayload = (payload: Partial<ViewerState>): Partial<ViewerState> => {
+  const next = { ...payload }
+  const hasVersionSelection = payload.versionIds !== undefined
+
+  if (hasVersionSelection) {
+    next.reviewableIds = payload.reviewableIds || []
+  }
+
+  if (payload.productId !== undefined) {
+    next.taskId = null
+    next.folderId = null
+    next.selectedProductId = payload.selectedProductId ?? null
+    if (!hasVersionSelection) {
+      next.versionIds = []
+      next.reviewableIds = []
+    }
+    return next
+  }
+
+  if (payload.taskId !== undefined) {
+    next.productId = null
+    next.selectedProductId = null
+    next.folderId = payload.folderId ?? null
+    if (!hasVersionSelection) {
+      next.versionIds = []
+      next.reviewableIds = []
+    }
+    return next
+  }
+
+  if (payload.folderId !== undefined) {
+    next.productId = null
+    next.taskId = null
+    next.selectedProductId = hasVersionSelection ? payload.selectedProductId ?? null : null
+    if (!hasVersionSelection) {
+      next.versionIds = []
+      next.reviewableIds = []
+    }
+    return next
+  }
+
+  return next
+}
+
 const viewerSlice = createSlice({
   name: 'viewer',
   initialState,
   reducers: {
-    openViewer: (state: ViewerState, { payload }: PayloadAction<Partial<ViewerState>>) => {
-      state.projectName = payload.projectName || state.projectName
-      state.quickView = !!payload.quickView
+    openViewer: {
+      reducer: (state: ViewerState, { payload }: PayloadAction<Partial<ViewerState>>) => {
+        state.projectName = payload.projectName || state.projectName
+        state.quickView = !!payload.quickView
 
-      if (payload.productId) state.productId = payload.productId
-      if (payload.selectedProductId) state.selectedProductId = payload.selectedProductId
-      if (payload.taskId) state.taskId = payload.taskId
-      if (payload.folderId) state.folderId = payload.folderId
+        if (payload.productId !== undefined) state.productId = payload.productId
+        if (payload.selectedProductId !== undefined)
+          state.selectedProductId = payload.selectedProductId
+        if (payload.taskId !== undefined) state.taskId = payload.taskId
+        if (payload.folderId !== undefined) state.folderId = payload.folderId
 
-      if (payload.productId || payload.taskId || payload.folderId) state.isOpen = true
+        if (payload.productId || payload.taskId || payload.folderId) state.isOpen = true
 
-      if (payload.versionIds) state.versionIds = payload.versionIds
-      if (payload.reviewableIds) state.reviewableIds = payload.reviewableIds || []
+        if (payload.versionIds !== undefined) state.versionIds = payload.versionIds
+        if (payload.reviewableIds !== undefined) state.reviewableIds = payload.reviewableIds || []
+      },
+      prepare: (payload: Partial<ViewerState>) => ({
+        payload: normalizeOpenViewerPayload(payload),
+      }),
     },
     updateProduct: (
       state: ViewerState,
