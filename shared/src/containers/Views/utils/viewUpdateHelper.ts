@@ -21,7 +21,7 @@ import { generateWorkingView } from './generateWorkingView'
 import { toast } from 'react-toastify'
 import { useCallback } from 'react'
 import { useStore } from 'react-redux'
-import { useViewsContext, ViewsContextValue, ViewSettings } from '../context/ViewsContext'
+import { useViewsContext, ViewsContextValue } from '../context/ViewsContext'
 
 interface UpdateOptions {
   successMessage?: string
@@ -50,6 +50,11 @@ export type UpdateViewSettingsFn = (
   options: UpdateOptions,
 ) => Promise<void>
 
+export interface LatestSettingsResult {
+  settings?: any
+  workingViewId?: string
+}
+
 export const updateViewSettings = async (
   updatedSettings: any,
   localStateSetter: (value: any) => void,
@@ -59,7 +64,7 @@ export const updateViewSettings = async (
   onApplyViewChanges: (arg: any, viewId?: string) => Promise<EntityIdResponse | void>,
   // Reads latest effective settings from RTK Query cache at call time. Required to
   // prevent stale-closure races when two updates fire in the same tick.
-  getLatestSettings: () => ViewSettings | undefined,
+  getLatest: () => LatestSettingsResult,
   // Invoked synchronously right after the mutation is dispatched. The caller
   // uses this to flip a "cache is fresh this tick" flag so subsequent sync
   // calls in the same tick read the just-updated cache instead of stale state.
@@ -73,6 +78,7 @@ export const updateViewSettings = async (
     setSelectedView,
     workingView,
     onSettingsChanged,
+    isLoadingViews,
   } = viewContext
 
   if (!viewType) throw new Error('No view type provided for updating view settings')
@@ -86,9 +92,11 @@ export const updateViewSettings = async (
 
     // Read latest settings from RTK cache (includes prior same-tick optimistic writes).
     // Fallback to closure-captured value if cache has nothing (first render, etc.).
-    const latestSettings = getLatestSettings() ?? viewSettings
+    const { settings: latestSettingsFromCache, workingViewId: latestWorkingViewIdFromCache } =
+      getLatest()
+    const latestSettings = latestSettingsFromCache ?? viewSettings
 
-    if (!latestSettings && viewContext.isLoadingViews) {
+    if (!latestSettings && isLoadingViews) {
       toast.warn('Views are still loading. Please wait a moment and try again.')
       console.warn(
         'updateViewSettings called while views are still loading. Aborting to prevent data loss.',
@@ -103,7 +111,7 @@ export const updateViewSettings = async (
     const newWorkingView = generateWorkingView(newSettings)
 
     // Ensure the payload uses the consistent ID if we already have a working view
-    const viewId = workingView?.id
+    const viewId = latestWorkingViewIdFromCache ?? workingView?.id
     if (viewId) {
       newWorkingView.id = viewId
     }
@@ -128,7 +136,8 @@ export const updateViewSettings = async (
     markCacheDirty()
 
     // if not already on the working view: set that the settings have been changed to show the little blue save button and switch to the working view
-    if (!wasWorking) {
+    // Note: selectedView?.id is always a real UUID from the server, never the WORKING_VIEW_ID sentinel.
+    if (!wasWorking || selectedView?.id !== viewId) {
       if (selectedView) {
         onSettingsChanged(true)
       }
@@ -199,35 +208,69 @@ export const useViewUpdateHelper = () => {
   // cache. Otherwise returns undefined and the caller falls back to the
   // closure-captured viewSettings (correct baseline for the first write in a
   // tick, including the named-view → working-view fork).
-  const getLatestSettings = useCallback((): ViewSettings | undefined => {
-    if (!cacheDirtyThisTick) return undefined
-    const { viewType, projectName } = viewContext
-    if (!viewType) return undefined
-    // RTK selector state is typed against the full RootState; we don't have that
-    // type in @shared and the store is project-specific. Cast is safe: the
-    // selector only touches the api slice, which exists in every consumer app.
-    const entry = viewsQueries.endpoints.getWorkingView.select({ viewType, projectName })(
-      store.getState() as any,
-    )
-    return entry?.data?.settings
+  const getLatest = useCallback((): LatestSettingsResult => {
+    const { viewType, projectName, selectedView, workingView } = viewContext
+    if (!viewType) return {}
+
+    const state = store.getState() as any
+
+    // 1. Get the working view from the store — most authoritative after optimistic writes.
+    const workingViewEntry = viewsQueries.endpoints.getWorkingView.select({
+      viewType,
+      projectName,
+    })(state)
+    const storeWorkingViewId = workingViewEntry?.data?.id
+    // Prefer the store's working view ID over the potentially stale context closure value.
+    const resolvedWorkingViewId = storeWorkingViewId || workingView?.id
+
+    // 2. Determine the currently targeted view ID.
+    // Use the store's getDefaultView cache (updated optimistically by setSelectedView) so that
+    // an in-flight selection change is visible before React re-renders the context.
+    const defaultViewEntry = viewsQueries.endpoints.getDefaultView.select({
+      viewType,
+      projectName,
+    })(state)
+    const targetViewId = defaultViewEntry?.data?.id || selectedView?.id
+
+    // 3. Determine if the working view is active.
+    // IMPORTANT: use !!resolvedWorkingViewId to avoid the undefined === undefined false-positive
+    // that would occur on a new project before any working view exists.
+    // Note: WORKING_VIEW_ID ('_working_') is a UI-only sentinel; it never appears in
+    // server-side cache IDs, so there is no point checking for it here.
+    const isWorkingViewActive =
+      (!!resolvedWorkingViewId && targetViewId === resolvedWorkingViewId) || cacheDirtyThisTick
+
+    // 4. If the working view is active, use its cache as the baseline to prevent stale merges.
+    if (isWorkingViewActive && workingViewEntry?.data?.settings) {
+      return {
+        settings: workingViewEntry.data.settings,
+        workingViewId: resolvedWorkingViewId,
+      }
+    }
+
+    // 5. For named views: use the defaultView cache settings as the baseline.
+    // This is populated by the initial useGetDefaultViewQuery fetch and is more reliable
+    // than the getView endpoint cache (which is only fetched on-demand when editing).
+    if (defaultViewEntry?.data?.settings) {
+      return {
+        settings: defaultViewEntry.data.settings,
+        workingViewId: resolvedWorkingViewId,
+      }
+    }
+
+    return { workingViewId: resolvedWorkingViewId }
   }, [store, viewContext])
 
   const updateViewSettingsHandler = useCallback<UpdateViewSettingsFn>(
     async (...args) =>
-      await updateViewSettings(
-        ...args,
-        viewContext,
-        onApplyViewChanges,
-        getLatestSettings,
-        markCacheDirty,
-      ),
-    [viewContext, onApplyViewChanges, getLatestSettings],
+      await updateViewSettings(...args, viewContext, onApplyViewChanges, getLatest, markCacheDirty),
+    [viewContext, onApplyViewChanges, getLatest],
   )
 
   return {
     updateViewSettings: updateViewSettingsHandler,
     onCreateView: onApplyViewChanges,
-    getLatestSettings,
+    getLatestSettings: getLatest,
     markCacheDirty,
   }
 }
