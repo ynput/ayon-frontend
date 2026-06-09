@@ -55,6 +55,7 @@ export type FeedProps = {
   statuses: Status[]
   entityListId?: string | undefined
   isSlideOut?: boolean
+  showHeader?: boolean
 }
 
 export const Feed = ({
@@ -63,6 +64,7 @@ export const Feed = ({
   statuses = [],
   entityListId,
   isSlideOut,
+  showHeader = true,
 }: FeedProps) => {
   const {
     projectName,
@@ -303,13 +305,17 @@ export const Feed = ({
             {warningMessage}
           </Styled.Warning>
         )}
-        <TabHeaderAndFilters
-          label="Activity Feed"
-          filters={feedFilters}
-          currentFilter={feedFilter}
-          onFilterChange={setFeedFilter}
-          isLoading={isLoadingNew}
-        />
+        {
+          showHeader ? (
+            <TabHeaderAndFilters
+              label="Activity Feed"
+              filters={feedFilters}
+              currentFilter={feedFilter}
+              onFilterChange={setFeedFilter}
+              isLoading={isLoadingNew}
+            />
+          ) : (<div></div>) // empty div to fill grid row
+        }
         <Styled.FeedContent ref={feedRef} className={clsx({ loading: isLoadingNew }, 'no-shimmer')}>
           {isLoadingNew
             ? loadingPlaceholders
