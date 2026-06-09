@@ -73,6 +73,7 @@ import { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
 import {
   checkColumnVisibility,
+  ensureAtLeastOneVisibleColumn,
   getEntityViewierIds,
   getReadOnlyLists,
   getTableFieldOptions,
@@ -425,7 +426,7 @@ export const ProjectTreeTable = ({
         merged[col.id] = checkColumnVisibility({}, col.id, defaultColumnVisibility)
       }
     })
-    return merged
+    return ensureAtLeastOneVisibleColumn(merged, columns.map((c) => c.id as string).filter(Boolean))
   }, [columnVisibility, defaultColumnVisibility, columns])
 
   const table = useReactTable({

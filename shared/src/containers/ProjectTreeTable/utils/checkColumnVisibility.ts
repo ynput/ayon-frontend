@@ -57,3 +57,23 @@ export const checkColumnVisibility = (
   // 5. Fallback to false (new behavior: opt-in)
   return false
 }
+
+// ensures that at least one column is visible
+// if none are visible, it will fallback to showing the `name` column
+export const ensureAtLeastOneVisibleColumn = (
+  resolvedVisibility: VisibilityState,
+  columnIds: string[],
+): VisibilityState => {
+  const visibleCount = columnIds.filter(
+    (id) => !ALWAYS_VISIBLE_COLUMNS.includes(id) && resolvedVisibility[id],
+  ).length
+
+  if (visibleCount === 0 && columnIds.includes('name')) {
+    return {
+      ...resolvedVisibility,
+      name: true,
+    }
+  }
+
+  return resolvedVisibility
+}
