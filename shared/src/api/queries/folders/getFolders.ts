@@ -19,15 +19,26 @@ const enhancedApi = foldersApi.enhanceEndpoints({
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
       ) {
         const { projectName } = args || {}
+        const patchFields = (args as any)?.patch as string[] | undefined
+
+        const topicFieldMap: Record<string, string> = {
+          'entity.folder.label_changed': 'label',
+          'entity.folder.renamed': 'name',
+          'entity.folder.type_changed': 'folderType',
+          'entity.folder.status_changed': 'status',
+          'entity.folder.tags_changed': 'tags',
+          'entity.folder.attrib_changed': 'attrib',
+        }
+
         const topics = ['entity.folder', 'entity.folder.created', 'entity.folder.deleted']
         const tokens: (string | undefined)[] = []
 
-        // Simplified trailing throttle approach:
-        // - Collect updated folder IDs for 1000ms window
-        // - If a creation topic appears, perform one full list refetch (within throttle window)
+        // Simplified trailing debounce approach:
+        // - Collect updated folder IDs for 2000ms window
+        // - If a creation topic appears, perform one full list refetch (within debounce window)
         // - Otherwise, fetch each pending event and patch existing cache entries only
-        const MIN_INTERVAL = 1000
-        const pendingEventIds = new Set<string>()
+        const MIN_INTERVAL = 2000
+        const pendingMessages = new Map<string, any>()
         let resyncFlag = false // full list refetch needed (created or deleted)
         let timer: ReturnType<typeof setTimeout> | null = null
         let processing = false
@@ -40,9 +51,8 @@ const enhancedApi = foldersApi.enhanceEndpoints({
         }
 
         const schedule = () => {
-          if (!timer) {
-            timer = setTimeout(run, MIN_INTERVAL)
-          }
+          clearTimer()
+          timer = setTimeout(run, MIN_INTERVAL)
         }
 
         // All non-created/deleted events are treated as incremental updates.
@@ -67,14 +77,14 @@ const enhancedApi = foldersApi.enhanceEndpoints({
                 /* ignore */
                 console.warn('Failed to refetch folder list on resync')
               } finally {
-                pendingEventIds.clear()
+                pendingMessages.clear()
               }
               return
             }
 
-            if (pendingEventIds.size === 0) return
-            const eventIds = Array.from(pendingEventIds)
-            pendingEventIds.clear()
+            if (pendingMessages.size === 0) return
+            const messages = Array.from(pendingMessages.values())
+            pendingMessages.clear()
             type Patch = {
               folderId: string
               partial?: Record<string, any>
@@ -82,28 +92,45 @@ const enhancedApi = foldersApi.enhanceEndpoints({
               updatedAt?: string
             }
             const patches: Patch[] = []
-            const topicFieldMap: Record<string, string> = {
-              'entity.folder.label_changed': 'label',
-              'entity.folder.renamed': 'name',
-              'entity.folder.type_changed': 'folderType',
-              'entity.folder.status_changed': 'status',
-              'entity.folder.tags_changed': 'tags',
-              'entity.folder.attrib_changed': 'attrib',
-            }
             await Promise.all(
-              eventIds.map(async (eventId) => {
+              messages.map(async (message) => {
                 try {
-                  // Fetch each event and apply incremental updates
-                  const event = await dispatch(
-                    eventsApi.endpoints.getEvent.initiate({ eventId }, { forceRefetch: true }),
-                  ).unwrap()
-                  const topic: string = event?.topic || ''
-                  const payload: any = event?.payload || {}
-                  const summary: any = event?.summary || {}
-                  const folderId: string | undefined = summary.entityId
+                  const topic = message.topic
+                  const summary = message.summary || {}
+                  const folderId = summary.entityId
                   if (!folderId) return
                   const fieldName = topicFieldMap[topic]
                   if (!fieldName) return
+
+                  // OPTIMIZATION: use value from summary if available (for root level fields)
+                  if (summary.value !== undefined && fieldName !== 'attrib') {
+                    let value = summary.value
+
+                    // Cast value to proper type
+                    if (fieldName === 'tags') {
+                      if (!Array.isArray(value)) {
+                        value = typeof value === 'string' ? value.split(',').filter(Boolean) : []
+                      }
+                    } else if (value !== null && typeof value !== 'string') {
+                      value = String(value)
+                    }
+
+                    const partial: Record<string, any> = {
+                      [fieldName]: value,
+                      updatedAt: message.updatedAt,
+                    }
+                    if (summary.parentId !== undefined) partial.parentId = summary.parentId
+                    patches.push({ folderId, partial })
+                    return
+                  }
+
+                  // Fallback: Fetch each event and apply incremental updates
+                  const eventId = message.id
+                  const event = await dispatch(
+                    eventsApi.endpoints.getEvent.initiate({ eventId }, { forceRefetch: true }),
+                  ).unwrap()
+                  const payload: any = event?.payload || {}
+                  const eventSummary: any = event?.summary || {}
                   if (
                     fieldName === 'attrib' &&
                     payload?.newValue &&
@@ -120,7 +147,8 @@ const enhancedApi = foldersApi.enhanceEndpoints({
                     const partial: Record<string, any> = { updatedAt: event.updatedAt }
                     partial[fieldName] = value
                     // parentId might accompany some changes in summary
-                    if (summary.parentId !== undefined) partial.parentId = summary.parentId
+                    if (eventSummary.parentId !== undefined)
+                      partial.parentId = eventSummary.parentId
                     patches.push({ folderId, partial })
                   }
                 } catch {
@@ -153,6 +181,10 @@ const enhancedApi = foldersApi.enhanceEndpoints({
             })
           } finally {
             processing = false
+            // If new events came in while we were processing, schedule another run
+            if (pendingMessages.size > 0 || resyncFlag) {
+              schedule()
+            }
           }
         }
 
@@ -160,16 +192,30 @@ const enhancedApi = foldersApi.enhanceEndpoints({
           await cacheDataLoaded
 
           const handlePubSub = (_topic: string, _message: any) => {
-            if (_topic.endsWith('.created') || _topic.endsWith('.deleted')) {
+            const isMembership = _topic.endsWith('.created') || _topic.endsWith('.deleted')
+
+            if (isMembership) {
+              const eventType = _topic.endsWith('.created') ? 'created' : 'deleted'
+              // Backward compatibility: If no patch filters are provided, always sync membership.
+              // If patch filters ARE provided, only sync if 'created'/'deleted' tokens are present.
+              if (patchFields && !patchFields.includes(eventType)) return
+
               resyncFlag = true
-              schedule()
-              return
+            } else {
+              const fieldName = topicFieldMap[_topic]
+              // Backward compatibility: If no patch filters are provided, allow all updates (that we have mapping for).
+              // If patch filters ARE provided, only allow fields explicitly listed in the patch array.
+              if (patchFields && (!fieldName || !patchFields.includes(fieldName))) {
+                return
+              }
+
+              const eventId = _message?.id
+              if (eventId) {
+                pendingMessages.set(eventId, _message)
+              }
             }
-            const eventId = _message?.id
-            if (eventId) {
-              pendingEventIds.add(eventId)
-              schedule()
-            }
+
+            schedule()
           }
 
           topics.forEach((t) => tokens.push(PubSub.subscribe(t, handlePubSub)))
