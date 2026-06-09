@@ -17,7 +17,6 @@ export const DEFAULT_COLUMNS_TASK = {
   ...CORE_DEFAULT_COLUMNS,
   attrib_priority: true,
   attrib_description: true,
-  assignees: true,
 }
 export const DEFAULT_COLUMNS_VERSION = {
   ...CORE_DEFAULT_COLUMNS,
@@ -32,6 +31,7 @@ export const DEFAULT_COLUMNS_PRODUCT = {
 }
 
 export const DEFAULT_COLUMNS_PROJECT = {
+  thumbnail: true,
   label: true,
   name: false,
   code: true,

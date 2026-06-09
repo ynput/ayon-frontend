@@ -11,13 +11,16 @@ import ProjectHeartbeat from '../components/ProjectDetailsPanel/components/Proje
 import type { ProjectFolderModel } from '@shared/api'
 import { isEmptyFolderPlaceholderRow, ProjectTableRow } from './useProjectTableRows'
 import { useGlobalContext } from '@shared/context'
+import { DEFAULT_COLUMNS_PROJECT } from '../constants'
 
 const columnHelper = createColumnHelper<ProjectTableRow>()
 
 export type ProjectTableColumnAttributeData = Record<string, AttributeData>
 type FolderMap = Map<string, ProjectFolderModel>
 
-// Padding constants matching ListTable cell indent calculation:
+export type ProjectColumn = ColumnDef<ProjectTableRow, any> & {
+  visible?: boolean
+}
 // TDInner left = var(--padding-m) + depth * 16 = 8 + depth * 16
 // TDInner internal padding = 8px each side
 // Minimum column size for thumbnail: 8 + maxDepth * 16 + 8 + THUMBNAIL_WIDTH + 8 = 24 + maxDepth * 16 + THUMBNAIL_WIDTH
@@ -83,8 +86,6 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
 ]
 
 const isProjectScopedAttribute = (attribute: AttributeModel) => attribute.scope?.includes('project')
-
-export type ProjectColumn = ColumnDef<ProjectTableRow, any>
 
 export const useProjectColumns = (
   foldersMap: FolderMap = new Map(),
@@ -231,29 +232,36 @@ export const useProjectColumns = (
   }, [maxGroupDepth])
 
   const columns = useMemo(
-    () => [
-      thumbnailColumn,
-      ...STATIC_COLUMNS_AFTER_THUMBNAIL,
-      heartbeatColumn,
-      ...STATIC_COLUMNS_AFTER_HEARTBEAT.map((column) =>
-        column.id === 'projectFolder'
-          ? {
-              ...column,
-              sortingFn: (
-                rowA: { original: ProjectTableRow },
-                rowB: { original: ProjectTableRow },
-              ) => {
-                const labelA =
-                  foldersMap.get(rowA.original.projectFolder ?? '')?.label ?? 'No folder'
-                const labelB =
-                  foldersMap.get(rowB.original.projectFolder ?? '')?.label ?? 'No folder'
-                return labelA.localeCompare(labelB, undefined, { sensitivity: 'base' })
-              },
-            }
-          : column,
-      ),
-      ...attribColumns,
-    ],
+    () =>
+      (
+        [
+          thumbnailColumn,
+          ...STATIC_COLUMNS_AFTER_THUMBNAIL,
+          heartbeatColumn,
+          ...STATIC_COLUMNS_AFTER_HEARTBEAT.map((column) =>
+            column.id === 'projectFolder'
+              ? {
+                  ...column,
+                  sortingFn: (
+                    rowA: { original: ProjectTableRow },
+                    rowB: { original: ProjectTableRow },
+                  ) => {
+                    const labelA =
+                      foldersMap.get(rowA.original.projectFolder ?? '')?.label ?? 'No folder'
+                    const labelB =
+                      foldersMap.get(rowB.original.projectFolder ?? '')?.label ?? 'No folder'
+                    return labelA.localeCompare(labelB, undefined, { sensitivity: 'base' })
+                  },
+                }
+              : column,
+          ),
+          ...attribColumns,
+        ] as ProjectColumn[]
+      ).map((col) => ({
+        ...col,
+        visible:
+          col.visible ?? (DEFAULT_COLUMNS_PROJECT as Record<string, boolean>)[col.id!] ?? false,
+      })),
     [attribColumns, foldersMap, heartbeatColumn, thumbnailColumn],
   )
 

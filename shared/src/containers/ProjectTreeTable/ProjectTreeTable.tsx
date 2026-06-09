@@ -422,8 +422,14 @@ export const ProjectTreeTable = ({
   const resolvedColumnVisibility = useMemo(() => {
     const merged = { ...columnVisibility }
     columns.forEach((col) => {
+      // @ts-ignore
+      const explicitVisible = col.visible
       if (col.id && merged[col.id] === undefined) {
-        merged[col.id] = checkColumnVisibility({}, col.id, defaultColumnVisibility)
+        if (explicitVisible !== undefined) {
+          merged[col.id] = explicitVisible
+        } else {
+          merged[col.id] = checkColumnVisibility({}, col.id, defaultColumnVisibility)
+        }
       }
     })
     return ensureAtLeastOneVisibleColumn(merged, columns.map((c) => c.id as string).filter(Boolean))

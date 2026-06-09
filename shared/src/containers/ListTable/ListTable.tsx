@@ -130,7 +130,15 @@ export function ListTable<TData extends RowData>({
       // @ts-ignore
       const colId = col.id || col.accessorKey
       if (colId) {
-        resolved[colId] = checkColumnVisibility(columnVisibility, colId, defaultColumnVisibility)
+        const isVisible = checkColumnVisibility(columnVisibility, colId, defaultColumnVisibility)
+        // if col has an explicit visible property, use it as a fallback
+        // @ts-ignore
+        const explicitVisible = col.visible
+        if (explicitVisible !== undefined && columnVisibility[colId] === undefined) {
+          resolved[colId] = explicitVisible
+        } else {
+          resolved[colId] = isVisible
+        }
       }
     })
     return ensureAtLeastOneVisibleColumn(
