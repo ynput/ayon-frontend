@@ -1388,43 +1388,49 @@ const TableBody = ({
 
   if (error) {
     return (
-      tableContainerRef.current &&
-      createPortal(
-        <Styled.AnimatedEmptyPlaceholder>
-          <EmptyPlaceholder message="No items found" error={error}>
-            {onResetView && (
-              <Button
-                variant="filled"
-                label="Reset working view"
-                icon="restart_alt"
-                onClick={onResetView}
-              />
-            )}
-          </EmptyPlaceholder>
-        </Styled.AnimatedEmptyPlaceholder>,
-        tableContainerRef.current,
-      )
+      <>
+        {tbodyContent}
+        {tableContainerRef.current &&
+          createPortal(
+            <Styled.AnimatedEmptyPlaceholder>
+              <EmptyPlaceholder message="No items found" error={error}>
+                {onResetView && (
+                  <Button
+                    variant="filled"
+                    label="Reset working view"
+                    icon="restart_alt"
+                    onClick={onResetView}
+                  />
+                )}
+              </EmptyPlaceholder>
+            </Styled.AnimatedEmptyPlaceholder>,
+            tableContainerRef.current,
+          )}
+      </>
     )
   }
 
   if (!rows.length && !isLoading) {
     return (
-      tableContainerRef.current &&
-      createPortal(
-        <Styled.AnimatedEmptyPlaceholder>
-          <EmptyPlaceholder message="No items found">
-            {onResetView && (
-              <Button
-                variant="filled"
-                label="Reset working view"
-                icon="restart_alt"
-                onClick={onResetView}
-              />
-            )}
-          </EmptyPlaceholder>
-        </Styled.AnimatedEmptyPlaceholder>,
-        tableContainerRef.current,
-      )
+      <>
+        {tbodyContent}
+        {tableContainerRef.current &&
+          createPortal(
+            <Styled.AnimatedEmptyPlaceholder>
+              <EmptyPlaceholder message="No items found">
+                {onResetView && (
+                  <Button
+                    variant="filled"
+                    label="Reset working view"
+                    icon="restart_alt"
+                    onClick={onResetView}
+                  />
+                )}
+              </EmptyPlaceholder>
+            </Styled.AnimatedEmptyPlaceholder>,
+            tableContainerRef.current,
+          )}
+      </>
     )
   }
 
