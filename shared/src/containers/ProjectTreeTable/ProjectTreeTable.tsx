@@ -594,7 +594,10 @@ export const ProjectTreeTable = ({
   // Render the row as soon as the module is loading or loaded (not on load failure),
   // so skeletons show during the load instead of the row popping in late.
   const summariesEnabled =
-    showColumnSummaries && powerLicense && (isFooterLoaded || isFooterModuleLoading)
+    showColumnSummaries &&
+    powerLicense &&
+    (isFooterLoaded || isFooterModuleLoading) &&
+    !!rows.length
   // shimmer while the remote module or the footer stats are still loading
   const summariesLoading = isFooterModuleLoading || !isFooterLoaded || !!fieldStatsLoading
   // only show the upsell once the license check resolves, so licensed users
