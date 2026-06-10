@@ -107,6 +107,7 @@ export type EntityTooltip = {
   subTitle: string
   status?: string
   thumbnailId?: string
+  thumbnailHash?: string
   updatedAt?: string
   taskType?: string
   users?: { name: string; avatarUrl: string }[]
@@ -115,8 +116,18 @@ export type EntityTooltip = {
 type TransformTaskTooltip = (data: BaseTypes & TaskTypes) => EntityTooltip
 
 const transformTaskTooltip: TransformTaskTooltip = (data) => {
-  const { id, label, name, status, thumbnailId, assignees, taskType, updatedAt, folder } =
-    data || {}
+  const {
+    id,
+    label,
+    name,
+    status,
+    thumbnailId,
+    thumbnailHash,
+    assignees,
+    taskType,
+    updatedAt,
+    folder,
+  } = data || {}
   const tooltip = {
     id,
     name,
@@ -125,6 +136,7 @@ const transformTaskTooltip: TransformTaskTooltip = (data) => {
     subTitle: folder?.label || folder?.name || '',
     status,
     thumbnailId,
+    thumbnailHash,
     updatedAt,
     taskType,
     users: assignees?.map((name) => ({ name, avatarUrl: `/api/users/${name}/avatar` })) || [],

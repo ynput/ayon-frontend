@@ -1,5 +1,5 @@
 query GetAllProjectUsersAsAssignee($projectName: String) {
-  users(last: 2000, projectName: $projectName) {
+  users(last: 2000, projectName: $projectName, isSupport: false) {
     edges {
       node {
         name

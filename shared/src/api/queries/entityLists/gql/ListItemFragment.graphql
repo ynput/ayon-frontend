@@ -13,6 +13,7 @@ fragment ListItemFragment on BaseNode {
     ownAttrib
     hasReviewables
     folderId
+    thumbnailHash
     folder {
       name
       label
@@ -31,6 +32,7 @@ fragment ListItemFragment on BaseNode {
     path
     ownAttrib
     hasReviewables
+    thumbnailHash
     folderId: id
   }
   ... on ProductNode {
@@ -51,6 +53,7 @@ fragment ListItemFragment on BaseNode {
     hasReviewables
     author
     version
+    thumbnailHash
     product {
       id
       name

@@ -1,5 +1,5 @@
 // What data do we need?
-import { PubSub } from '@shared/util'
+import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import { gqlApi } from '@shared/api'
 import { GetProgressTaskQuery, GetTasksProgressQuery } from '@shared/api'
 
@@ -71,9 +71,41 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
       ) {
         let token
+        let unsubscribeThumbnails: (() => void) | undefined
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
+
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              const draftData = getCacheEntry().data
+              if (!draftData?.length) return
+
+              const relevantMessages = messages.filter((m) => m.project === projectName)
+              if (!relevantMessages.length) return
+
+              updateCachedData((draft) => {
+                relevantMessages.forEach((message) => {
+                  if (message.summary.entityType === 'task') {
+                    draft.forEach((folder) => {
+                      const taskIndex = folder.tasks.findIndex(
+                        (t) => t.id === message.summary.entityId,
+                      )
+                      if (taskIndex !== -1) {
+                        folder.tasks[taskIndex].thumbnailHash = message.summary.thumbnailHash || ''
+                      }
+                    })
+                  } else if (message.summary.entityType === 'folder') {
+                    const folderIndex = draft.findIndex((f) => f.id === message.summary.entityId)
+                    if (folderIndex !== -1) {
+                      draft[folderIndex].thumbnailHash = message.summary.thumbnailHash || ''
+                    }
+                  }
+                })
+              })
+            },
+            ['task', 'folder'],
+          )
 
           const handlePubSub = async (topic: string, message: any) => {
             console.log('PubSub message received', message)
@@ -183,6 +215,9 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
+        if (unsubscribeThumbnails) {
+          unsubscribeThumbnails()
+        }
       },
     },
     // GetProgressTask: a single task for the tasks progress table

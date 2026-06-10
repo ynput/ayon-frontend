@@ -324,6 +324,8 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
       if (settings.groupSortByDesc !== undefined && !groupByHandledByViewGroupBy) {
         persistSettings.groupSortByDesc = settings.groupSortByDesc
       }
+      // columns carry the summary footer choices (calc/scope/format) so they save with the view
+      if (settings.columns !== undefined) persistSettings.columns = settings.columns
       if (settings.showEmptyGroups !== undefined)
         persistSettings.showEmptyGroups = settings.showEmptyGroups
       if (settings.sortBy !== undefined) persistSettings.sortBy = settings.sortBy

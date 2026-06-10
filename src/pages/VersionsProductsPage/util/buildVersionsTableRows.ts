@@ -1,6 +1,6 @@
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { ProductsMap } from './buildVPMaps'
-import { getThumbnailUrl } from './buildVPGrid'
+import { getEntityThumbnailUrl } from '@shared/util'
 import { HERO_SYMBOL } from './buildVPRows'
 
 type Props = {
@@ -22,7 +22,12 @@ export const buildVersionsTableRows = ({
       id: version.id,
       name: version.name,
       label: `${version.name} ${version.heroVersionId ? HERO_SYMBOL : ''}`,
-      img: getThumbnailUrl(projectName, { id: version.id, updatedAt: product.updatedAt }),
+      img:
+        getEntityThumbnailUrl({
+          projectName,
+          entityType: 'version',
+          entityId: version.id,
+        }) ?? undefined,
       parents:
         array.length > 1
           ? [[...product.parents].pop(), product.name].filter((p): p is string => p !== undefined)

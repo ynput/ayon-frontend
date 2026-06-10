@@ -23,6 +23,8 @@ export * from './buildHierarchicalTableRows'
 export * from './folderHierarchy'
 export * from './folderOperations'
 export * from './getProjectDisplayName'
+export * from './getThumbnailUrl'
+export * from './thumbnailWebsocket'
 
 import isHTMLElement from './isHTMLElement'
 export { isHTMLElement }

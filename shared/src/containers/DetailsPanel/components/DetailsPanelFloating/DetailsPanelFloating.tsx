@@ -141,6 +141,7 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
               entityType={entityType}
               // @ts-ignore
               entities={entitiesData}
+              thumbnailHash={firstEntity?.thumbnailHash}
               activeUsers={[]}
               // selectedTasksProjects={{}}
               projectInfo={projectsInfo[projectName]}

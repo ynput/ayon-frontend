@@ -21,6 +21,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 
 // Import the internal QueryFilter type that the app uses
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import {
+  SummaryCalc,
+  SummaryFormat,
+  RowScope,
+} from '@shared/containers/ProjectTreeTable/types/summaryTypes'
 
 type Return = {
   // Filter management
@@ -51,6 +56,26 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
   const [localHierarchy, setLocalHierarchy] = useState<boolean | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
+
+  // Backend drops summary/summaryScope/summaryFormat from ColumnItemModel, so
+  // the post-save refetch would revert them — hold the selections here, session only.
+  const { selectedView, workingView, isViewWorking, editingViewId } = useViewsContext()
+  const [summaryOverrides, setSummaryOverrides] = useState<{
+    summaries: Record<string, SummaryCalc>
+    scopes: Record<string, RowScope>
+    formats: Record<string, SummaryFormat>
+  }>({ summaries: {}, scopes: {}, formats: {} })
+
+  // Editing a named view forks to the working view (selectedView.id flips), but
+  // editingViewId keeps pointing at the origin, so the key stays stable while editing.
+  const viewKey = isViewWorking
+    ? editingViewId || workingView?.id || 'working'
+    : selectedView?.id
+
+  // Reset overrides when a different view's settings come on screen
+  useEffect(() => {
+    setSummaryOverrides({ summaries: {}, scopes: {}, formats: {} })
+  }, [viewKey])
 
   // Get server settings
   const overviewSettings = viewSettings as OverviewSettings
@@ -88,7 +113,26 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   // Use local state if available, otherwise use server state
   const filters = localFilters !== null ? localFilters : serverFilters
   const showHierarchy = localHierarchy !== null ? localHierarchy : serverHierarchy
-  const columns = localColumns || serverColumns
+  const columnsBase = localColumns || serverColumns
+  const columns = useMemo(() => {
+    const hasOverrides =
+      Object.keys(summaryOverrides.summaries).length ||
+      Object.keys(summaryOverrides.scopes).length ||
+      Object.keys(summaryOverrides.formats).length
+    if (!hasOverrides) return columnsBase
+    return {
+      ...columnsBase,
+      columnSummaries: { ...columnsBase.columnSummaries, ...summaryOverrides.summaries },
+      columnSummaryScopes: {
+        ...columnsBase.columnSummaryScopes,
+        ...summaryOverrides.scopes,
+      },
+      columnSummaryFormats: {
+        ...columnsBase.columnSummaryFormats,
+        ...summaryOverrides.formats,
+      },
+    }
+  }, [columnsBase, summaryOverrides])
 
   // Slice type update handler
   const noop = useCallback(() => {}, [])
@@ -142,6 +186,20 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   // Column update handler
   const onUpdateColumns = useCallback(
     async (tableSettings: ColumnsConfig, allColumnIds?: string[]) => {
+      // Keep the summary footer choices alive across the working-view refetch
+      // (backend drops these fields, so server state can't be trusted for them).
+      if (
+        tableSettings.columnSummaries ||
+        tableSettings.columnSummaryScopes ||
+        tableSettings.columnSummaryFormats
+      ) {
+        setSummaryOverrides((prev) => ({
+          summaries: { ...prev.summaries, ...(tableSettings.columnSummaries || {}) },
+          scopes: { ...prev.scopes, ...(tableSettings.columnSummaryScopes || {}) },
+          formats: { ...prev.formats, ...(tableSettings.columnSummaryFormats || {}) },
+        }))
+      }
+
       // Derive a stable allColumnIds if not provided to preserve order and grouping on server
       const derivedAll =
         allColumnIds ||

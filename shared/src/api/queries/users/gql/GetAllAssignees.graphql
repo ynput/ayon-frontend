@@ -1,5 +1,5 @@
 query GetAllAssignees {
-  users(last: 2000) {
+  users(last: 2000, isSupport: false) {
     edges {
       node {
         name

@@ -2,7 +2,7 @@ import { FC } from 'react'
 import * as Styled from './FolderBody.styled'
 import clsx from 'clsx'
 import { EntityCard } from '@ynput/ayon-react-components'
-import { getEntityTypeIcon } from '@shared/util'
+import { getEntityTypeIcon, getEntityThumbnailUrl } from '@shared/util'
 import type { Status } from '@shared/api'
 import { useProjectContext } from '@shared/context'
 
@@ -13,6 +13,7 @@ interface FolderBodyProps {
     folderType?: string
     status?: Status
     updatedAt: string
+    thumbnailHash?: string
   }
   isSelected: boolean
   isExpanded: boolean
@@ -36,8 +37,12 @@ export const FolderBody: FC<FolderBodyProps> = ({
   const icon = folderTypeData?.icon ?? getEntityTypeIcon('folder')
   const color = folderTypeData?.color
 
-  const thumbnailUrl = `/api/projects/${projectName}/folders/${folder.id}/thumbnail?updatedAt=${folder.updatedAt}`
-
+  const thumbnailUrl = getEntityThumbnailUrl({
+    projectName,
+    entityType: 'folder',
+    entityId: folder.id,
+    thumbnailHash: folder.thumbnailHash,
+  })
   // handle hitting enter or space on the cell
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === ' ') {
@@ -62,7 +67,7 @@ export const FolderBody: FC<FolderBodyProps> = ({
             title={folder.name}
             titleIcon={icon}
             titleColor={color}
-            imageUrl={thumbnailUrl}
+            imageUrl={thumbnailUrl ?? undefined}
             imageIcon={icon}
             status={folder.status}
             onClick={() => onFolderOpen?.(folder.id)}
@@ -74,11 +79,11 @@ export const FolderBody: FC<FolderBodyProps> = ({
             entityId={folder.id}
             entityType="folder"
             projectName={projectName}
-            entityUpdatedAt={folder.updatedAt}
+            thumbnailHash={folder.thumbnailHash}
             icon={icon}
             color={color}
             showBorder={false}
-            src={thumbnailUrl}
+            src={thumbnailUrl ?? undefined}
             hoverIcon="expand_all"
             onClick={() => !isExpanded && onExpandToggle()}
           />

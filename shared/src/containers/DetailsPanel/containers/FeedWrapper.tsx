@@ -11,6 +11,7 @@ interface FeedWrapperProps {
   projectInfo: any
   projectName: string
   entityType: string
+  thumbnailHash?: string // thumbnailHash from entity
   disabled: boolean
   readOnly: boolean
   isSlideOut?: boolean
@@ -27,6 +28,7 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   scope = 'dashboard',
   entities,
   entityType,
+  thumbnailHash,
   projectName,
   projectInfo,
   annotations,

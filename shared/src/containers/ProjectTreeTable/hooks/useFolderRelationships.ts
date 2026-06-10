@@ -3,7 +3,6 @@ import {
   EditorTaskNode,
   EMapResult,
   EntitiesMap,
-  FolderNodeMap,
   MatchingFolder,
   TaskNodeMap,
 } from '../types/table'
