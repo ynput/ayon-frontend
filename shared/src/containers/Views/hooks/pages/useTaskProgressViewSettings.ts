@@ -46,11 +46,19 @@ export const useTaskProgressViewSettings = (): Return => {
   const serverColumns = (taskProgressSettings?.columns as ColumnItemModel[]) ?? []
   const serverSliceType = taskProgressSettings?.sliceType
 
-  // Sync local state with server when viewSettings change
+  // Sync local state with server when the relevant setting fields change.
+  // Use per-field deps (not JSON.stringify(viewSettings)) so a change to one
+  // field does not clear in-flight local state for unrelated fields, which
+  // would cause a visible flicker during rapid sequential updates.
   useEffect(() => {
     setLocalFilters(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify((viewSettings as TaskProgressSettings)?.filter)])
+
+  useEffect(() => {
     setLocalColumns(null)
-  }, [JSON.stringify(viewSettings)])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify((viewSettings as TaskProgressSettings)?.columns)])
 
   // Use local state if available, otherwise use server state
   const filters = localFilters !== null ? localFilters : serverFilters

@@ -15,6 +15,8 @@ export const DEFAULT_COLUMNS_FOLDER = {
 }
 export const DEFAULT_COLUMNS_TASK = {
   ...CORE_DEFAULT_COLUMNS,
+  assignees: true,
+  folder: true,
   attrib_priority: true,
   attrib_description: true,
 }
