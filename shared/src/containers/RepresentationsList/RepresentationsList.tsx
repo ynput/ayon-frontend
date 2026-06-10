@@ -88,6 +88,8 @@ export const RepresentationsList = ({ entities = [] }: Props) => {
         <TreeTable
           scrollable
           scrollHeight="100%"
+          resizableColumns
+          columnResizeMode="fit"
           value={data}
           emptyMessage="No representation found"
           selectionMode="single"
@@ -102,7 +104,7 @@ export const RepresentationsList = ({ entities = [] }: Props) => {
                 field={col.field}
                 header={col.header}
                 expander={col.expander}
-                style={{ width: col.width }}
+                style={{ width: `${col.width}px` }}
               />
             )
           })}
