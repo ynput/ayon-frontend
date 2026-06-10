@@ -51,6 +51,10 @@ export interface ProjectOverviewContextType {
   // Query Filters - separate filters for tasks and folders
   taskFilters: QueryFilterParams
   folderFilters: QueryFilterParams
+  // folder ids selected in the slicer (selection roots, not expanded to subtree)
+  selectedFolders: string[]
+  // task ids selected via an entity-list slice
+  selectedTaskIds: string[]
   // Backward compatibility for ProjectTableProvider (uses taskFilters)
   queryFilters: QueryFilterParams
   setQueryFilters: (queryFilters: QueryFilter) => void

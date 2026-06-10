@@ -23,7 +23,9 @@ import {
 import {
   GetProductsQuery,
   GetProductsQueryVariables,
+  GetProductsColumnStatsQuery,
   GetVersionsByProductIdQueryVariables,
+  GetVersionsColumnStatsQuery,
   GetVersionsQuery,
   GetVersionsQueryVariables,
   gqlApi,
@@ -40,6 +42,8 @@ import {
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
 import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
+import type { FieldStats } from '../columnStats'
+import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
 
 // SHARED CACHE UPDATE HELPERS
 // These helpers are used by PubSub handlers to update cached data in real-time
@@ -224,6 +228,8 @@ type UpdatedDefinitions = Omit<Definitions, 'GetVersions'> & {
   GetVersions: OverrideResultType<Definitions['GetVersions'], GetVersionsResult>
   GetVersionsByProductId: OverrideResultType<Definitions['GetVersions'], GetVersionsResult>
   GetProducts: OverrideResultType<Definitions['GetProducts'], GetProductsResult>
+  GetProductsColumnStats: OverrideResultType<Definitions['GetProductsColumnStats'], FieldStats[]>
+  GetVersionsColumnStats: OverrideResultType<Definitions['GetVersionsColumnStats'], FieldStats[]>
 }
 
 const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -242,6 +248,24 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
     GetProducts: {
       transformResponse: transformProductsResponse,
       providesTags: provideTagsForProductsResult,
+    },
+    // footer stats: `targets` excluded from cache key + responses merged,
+    // so column toggles reuse cache and only added targets refetch
+    GetProductsColumnStats: {
+      transformResponse: (res: GetProductsColumnStatsQuery) =>
+        normalizeFieldStats(res?.project?.products?.fieldStats ?? []),
+      serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
+      merge: (cache, incoming) => mergeFieldStats(incoming, cache),
+      forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
+      providesTags: (_r, _e, { projectName }) => [{ type: 'productColumnStats', id: projectName }],
+    },
+    GetVersionsColumnStats: {
+      transformResponse: (res: GetVersionsColumnStatsQuery) =>
+        normalizeFieldStats(res?.project?.versions?.fieldStats ?? []),
+      serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
+      merge: (cache, incoming) => mergeFieldStats(incoming, cache),
+      forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
+      providesTags: (_r, _e, { projectName }) => [{ type: 'versionColumnStats', id: projectName }],
     },
   },
 })
@@ -1026,7 +1050,11 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 })
 
 // export gql endpoints
-export const { useGetVersionsQuery } = enhancedVersionsPageApi
+export const {
+  useGetVersionsQuery,
+  useGetProductsColumnStatsQuery,
+  useGetVersionsColumnStatsQuery,
+} = enhancedVersionsPageApi
 // export custom queries
 export const {
   useGetVersionsInfiniteInfiniteQuery: useGetVersionsInfiniteQuery,

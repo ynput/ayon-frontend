@@ -9,6 +9,11 @@ import { ColumnItemModel, OverviewSettings } from '@shared/api/generated/views'
 import { ColumnsConfig, TableGroupBy } from '@shared/containers'
 import { GroupByConfig } from '@shared/containers/ProjectTreeTable/components/GroupSettingsFallback'
 import {
+  SummaryCalc,
+  SummaryFormat,
+  RowScope,
+} from '@shared/containers/ProjectTreeTable/types/summaryTypes'
+import {
   ROW_SELECTION_COLUMN_ID,
   DRAG_HANDLE_COLUMN_ID,
 } from '@shared/containers/ProjectTreeTable/constants'
@@ -16,6 +21,13 @@ import {
 // These columns are always injected by ColumnSettingsProvider and must never be
 // persisted or loaded from saved view settings.
 const INTERNAL_COLUMN_IDS = new Set([ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID])
+
+// Backend doesn't store summary/summaryScope/summaryFormat on ColumnItemModel yet
+type ColumnItem = ColumnItemModel & {
+  summary?: SummaryCalc
+  summaryScope?: RowScope
+  summaryFormat?: SummaryFormat
+}
 
 /**
  * Converts ColumnItemModel array from OverviewSettings to TanStack table states
@@ -36,10 +48,14 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
   const columnPinning: ColumnPinningState = { left: [], right: [] }
   const columnOrder: ColumnOrderState = []
   const columnSizing: ColumnSizingState = {}
+  const columnSummaries: Record<string, SummaryCalc> = {}
+  const columnSummaryScopes: Record<string, RowScope> = {}
+  const columnSummaryFormats: Record<string, SummaryFormat> = {}
 
   // Process each column from the settings
   columns.forEach((column) => {
-    const { name, visible, pinned, width } = column
+    const { name, visible, pinned, width, summary, summaryScope, summaryFormat } =
+      column as ColumnItem
 
     // Skip internal columns — they are always injected by ColumnSettingsProvider
     if (INTERNAL_COLUMN_IDS.has(name)) return
@@ -58,6 +74,21 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
     // Column sizing: set width if provided
     if (width !== undefined) {
       columnSizing[name] = width
+    }
+
+    // Column summary calc type
+    if (summary) {
+      columnSummaries[name] = summary
+    }
+
+    // Column summary row scope
+    if (summaryScope) {
+      columnSummaryScopes[name] = summaryScope
+    }
+
+    // Column summary display format
+    if (summaryFormat) {
+      columnSummaryFormats[name] = summaryFormat
     }
   })
 
@@ -89,6 +120,9 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
     columnPinning,
     columnOrder,
     columnSizing,
+    columnSummaries,
+    columnSummaryScopes,
+    columnSummaryFormats,
     sorting,
     groupBy,
     groupByConfig,
@@ -152,10 +186,33 @@ function createColumnItem(
   columnVisibility: VisibilityState,
   columnPinning: ColumnPinningState,
   columnSizing: ColumnSizingState,
-): ColumnItemModel {
-  const column: ColumnItemModel = {
+  columnSummaries: Record<string, SummaryCalc>,
+  columnSummaryScopes: Record<string, RowScope>,
+  columnSummaryFormats: Record<string, SummaryFormat>,
+): ColumnItem {
+  const column: ColumnItem = {
     name: columnName,
     visible: !!columnVisibility[columnName],
+  }
+
+  // Set summary calc type if chosen for this column
+  if (columnSummaries[columnName]) {
+    column.summary = columnSummaries[columnName]
+  }
+
+  // Set summary row scope if chosen for this column
+  if (columnSummaryScopes[columnName]) {
+    column.summaryScope = columnSummaryScopes[columnName]
+  }
+
+  // Set summary display format if chosen for this column
+  if (columnSummaryFormats[columnName]) {
+    column.summaryFormat = columnSummaryFormats[columnName]
+  }
+
+  // Set visibility if defined in state
+  if (columnVisibility.hasOwnProperty(columnName)) {
+    column.visible = columnVisibility[columnName]
   }
 
   // Set pinning if column is pinned
@@ -191,6 +248,9 @@ export function convertTanstackStatesToColumnConfig(
     columnPinning,
     columnOrder,
     columnSizing,
+    columnSummaries = {},
+    columnSummaryScopes = {},
+    columnSummaryFormats = {},
     sorting,
     groupBy,
     groupByConfig,
@@ -213,8 +273,16 @@ export function convertTanstackStatesToColumnConfig(
   ).filter((id) => !INTERNAL_COLUMN_IDS.has(id))
 
   // Create ColumnItemModel for each column in the determined order
-  const columns: ColumnItemModel[] = finalColumnOrder.map((columnName) =>
-    createColumnItem(columnName, columnVisibility, columnPinning, columnSizing),
+  const columns: ColumnItem[] = finalColumnOrder.map((columnName) =>
+    createColumnItem(
+      columnName,
+      columnVisibility,
+      columnPinning,
+      columnSizing,
+      columnSummaries,
+      columnSummaryScopes,
+      columnSummaryFormats,
+    ),
   )
 
   // Build the result object

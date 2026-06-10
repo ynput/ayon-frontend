@@ -2,12 +2,16 @@ import {
   gqlApi,
   GetTasksByParentQuery,
   GetTasksListQuery,
+  GetFolderColumnStatsQuery,
+  GetTaskColumnStatsQuery,
   foldersApi,
   SearchFoldersApiArg,
   GetTasksListQueryVariables,
 } from '@shared/api/generated'
 import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
+import type { FieldStats } from '../columnStats'
+import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,
@@ -108,6 +112,8 @@ type TagTypes = TagTypesFromApi<typeof gqlApi>
 type UpdatedDefinitions = Omit<Definitions, 'GetFilteredEntities'> & {
   GetTasksByParent: OverrideResultType<Definitions['GetTasksByParent'], EditorTaskNode[]>
   GetTasksList: OverrideResultType<Definitions['GetTasksList'], GetTasksListResult>
+  GetFolderColumnStats: OverrideResultType<Definitions['GetFolderColumnStats'], FieldStats[]>
+  GetTaskColumnStats: OverrideResultType<Definitions['GetTaskColumnStats'], FieldStats[]>
 }
 
 // GRAPHQL API
@@ -128,6 +134,24 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       }),
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.tasks || [], projectName),
+    },
+    // footer stats: `targets` excluded from cache key + responses merged,
+    // so column toggles reuse cache and only added targets refetch
+    GetFolderColumnStats: {
+      transformResponse: (res: GetFolderColumnStatsQuery) =>
+        normalizeFieldStats(res?.project?.folders?.fieldStats ?? []),
+      serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
+      merge: (cache, incoming) => mergeFieldStats(incoming, cache),
+      forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
+      providesTags: (_r, _e, { projectName }) => [{ type: 'folderColumnStats', id: projectName }],
+    },
+    GetTaskColumnStats: {
+      transformResponse: (res: GetTaskColumnStatsQuery) =>
+        normalizeFieldStats(res?.project?.tasks?.fieldStats ?? []),
+      serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
+      merge: (cache, incoming) => mergeFieldStats(incoming, cache),
+      forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
+      providesTags: (_r, _e, { projectName }) => [{ type: 'taskColumnStats', id: projectName }],
     },
   },
 })
@@ -652,5 +676,7 @@ export const {
   useGetTasksListInfiniteInfiniteQuery,
   useLazyGetTasksByParentQuery,
   useGetGroupedTasksListQuery,
+  useGetFolderColumnStatsQuery,
+  useGetTaskColumnStatsQuery,
 } = injectedApi
 export default injectedApi

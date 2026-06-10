@@ -129,7 +129,6 @@ export const HeaderCell = styled.th`
     .actions .header-menu {
       display: flex !important;
     }
-
   }
 
   /* Hide action buttons when resizing */
@@ -191,7 +190,6 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
     cursor: col-resize !important;
   }
 
-
   &:has(.sort-button.visible),
   &:has(.sort-button.selected),
   &:has(.pin-button.visible),
@@ -212,8 +210,8 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
   .pin-button.selected {
     display: flex !important;
   }
-  .pin-button{
-    font-variation-settings: 'FILL' 1,'wght' 200,'GRAD' 200,'opsz' 10;
+  .pin-button {
+    font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 10;
   }
 
   .header-menu {
@@ -456,6 +454,20 @@ export const TD = styled.td<TableCellProps>`
   }
 `
 
+export const ColumnDividers = styled.div`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  div {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--md-sys-color-surface-container);
+  }
+`
+
 export const TableHeader = styled.thead`
   display: grid !important;
   position: sticky;
@@ -543,5 +555,19 @@ export const AnimatedEmptyPlaceholder = styled.div`
     to {
       opacity: 1;
     }
+  }
+`
+
+export const SummaryPowerFeature = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  color: var(--md-sys-color-on-surface);
+  white-space: nowrap;
+
+  .icon {
+    font-size: 18px;
+    color: var(--md-sys-color-tertiary);
   }
 `

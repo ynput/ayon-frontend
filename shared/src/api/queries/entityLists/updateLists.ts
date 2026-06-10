@@ -185,6 +185,7 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         const tags = [
           { type: 'entityList', id: listId },
           { type: 'entityListItem', id: listId },
+          { type: 'entityListItemsColumnStats', id: listId },
           ...(items || []).flatMap((i) =>
             (i.id ? [{ type: 'entityListItem', id: i.id }] : []).concat(
               i.entityId ? [{ type: 'entityListItem', id: i.entityId }] : [],
@@ -244,18 +245,21 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
       invalidatesTags: (_s, _e, { listId, listItemId }) => [
         { type: 'entityListItem', id: listId },
         { type: 'entityListItem', id: listItemId },
+        { type: 'entityListItemsColumnStats', id: listId },
       ],
     },
     createEntityListItem: {
       invalidatesTags: (_s, _e, { listId }) => [
         { type: 'entityList', id: listId },
         { type: 'entityListItem', id: listId },
+        { type: 'entityListItemsColumnStats', id: listId },
       ],
     },
     deleteEntityListItem: {
       invalidatesTags: (_s, _e, { listId }) => [
         { type: 'entityList', id: listId },
         { type: 'entityListItem', id: listId },
+        { type: 'entityListItemsColumnStats', id: listId },
       ],
     },
   },

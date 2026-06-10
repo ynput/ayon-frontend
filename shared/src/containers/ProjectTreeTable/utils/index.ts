@@ -1,4 +1,5 @@
 export * from '../types/table'
+export * from './pinningUtils'
 export * from './clientFilterToQueryFilter'
 export * from './queryFilterToClientFilter'
 export * from './loadingUtils'

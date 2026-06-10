@@ -1816,6 +1816,16 @@ export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 
                 | { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> }
                | null }> } } }> } } };
 
+export type GetListItemsColumnStatsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  listId: Scalars['String']['input'];
+  filter?: InputMaybe<Scalars['String']['input']>;
+  targets?: InputMaybe<Array<MetricTargetInput> | MetricTargetInput>;
+}>;
+
+
+export type GetListItemsColumnStatsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, entityLists: { __typename?: 'EntityListsConnection', edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, items: { __typename?: 'EntityListItemsConnection', fieldStats: Array<{ __typename?: 'ColumnStats', columnName: string, min?: number | null, max?: number | null, avg?: number | null, sum?: number | null, count?: number | null, valueFilledCount?: number | null, percentageFilled?: number | null, valueNotFilledCount?: number | null, percentageNotFilled?: number | null, checkedCount?: number | null, checkedPercentage?: number | null, notCheckedCount?: number | null, notCheckedPercentage?: number | null, distribution?: any | null }> } } }> } } };
+
 export type GetListsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   first: Scalars['Int']['input'];
@@ -1857,6 +1867,19 @@ export type ListItemFragmentFragment =
   | ListItemFragment_WorkfileNode_Fragment
 ;
 
+export type ColumnStatsFragmentFragment = { __typename?: 'ColumnStats', columnName: string, min?: number | null, max?: number | null, avg?: number | null, sum?: number | null, count?: number | null, valueFilledCount?: number | null, percentageFilled?: number | null, valueNotFilledCount?: number | null, percentageNotFilled?: number | null, checkedCount?: number | null, checkedPercentage?: number | null, notCheckedCount?: number | null, notCheckedPercentage?: number | null, distribution?: any | null };
+
+export type GetFolderColumnStatsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  filter?: InputMaybe<Scalars['String']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  targets?: InputMaybe<Array<MetricTargetInput> | MetricTargetInput>;
+}>;
+
+
+export type GetFolderColumnStatsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', fieldStats: Array<{ __typename?: 'ColumnStats', columnName: string, min?: number | null, max?: number | null, avg?: number | null, sum?: number | null, count?: number | null, valueFilledCount?: number | null, percentageFilled?: number | null, valueNotFilledCount?: number | null, percentageNotFilled?: number | null, checkedCount?: number | null, checkedPercentage?: number | null, notCheckedCount?: number | null, notCheckedPercentage?: number | null, distribution?: any | null }> } } };
+
 export type GetFolderDeleteInfoQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   folderIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -1864,6 +1887,19 @@ export type GetFolderDeleteInfoQueryVariables = Exact<{
 
 
 export type GetFolderDeleteInfoQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, totalFolderCount: number, totalTaskCount: number, totalProductCount: number, totalVersionCount: number } }> } } };
+
+export type GetTaskColumnStatsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  filter?: InputMaybe<Scalars['String']['input']>;
+  folderFilter?: InputMaybe<Scalars['String']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  taskIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  targets?: InputMaybe<Array<MetricTargetInput> | MetricTargetInput>;
+}>;
+
+
+export type GetTaskColumnStatsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', fieldStats: Array<{ __typename?: 'ColumnStats', columnName: string, min?: number | null, max?: number | null, avg?: number | null, sum?: number | null, count?: number | null, valueFilledCount?: number | null, percentageFilled?: number | null, valueNotFilledCount?: number | null, percentageNotFilled?: number | null, checkedCount?: number | null, checkedPercentage?: number | null, notCheckedCount?: number | null, notCheckedPercentage?: number | null, distribution?: any | null }> } } };
 
 export type GetTasksByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1994,6 +2030,19 @@ export type GetProductsQueryVariables = Exact<{
 
 export type GetProductsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', products: { __typename?: 'ProductsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'ProductEdge', cursor?: string | null, node: { __typename?: 'ProductNode', id: string, name: string, folderId: string, active: boolean, status: string, tags: Array<string>, type: string, productType: string, productBaseType?: string | null, allAttrib: string, parents: Array<string>, createdAt: any, updatedAt: any, featuredVersion?: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, thumbnailHash: string, version: number, featuredVersionType?: string | null, heroVersionId?: string | null } | null, versions: Array<{ __typename?: 'VersionListItem', id: string, name: string, version: number }>, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, allAttrib: string } } }> } } };
 
+export type GetProductsColumnStatsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  productFilter?: InputMaybe<Scalars['String']['input']>;
+  versionFilter?: InputMaybe<Scalars['String']['input']>;
+  taskFilter?: InputMaybe<Scalars['String']['input']>;
+  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  productIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  targets?: InputMaybe<Array<MetricTargetInput> | MetricTargetInput>;
+}>;
+
+
+export type GetProductsColumnStatsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', products: { __typename?: 'ProductsConnection', fieldStats: Array<{ __typename?: 'ColumnStats', columnName: string, min?: number | null, max?: number | null, avg?: number | null, sum?: number | null, count?: number | null, valueFilledCount?: number | null, percentageFilled?: number | null, valueNotFilledCount?: number | null, percentageNotFilled?: number | null, checkedCount?: number | null, checkedPercentage?: number | null, notCheckedCount?: number | null, notCheckedPercentage?: number | null, distribution?: any | null }> } } };
+
 export type GetVersionsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   productIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -2031,6 +2080,20 @@ export type GetVersionsByProductIdQueryVariables = Exact<{
 
 
 export type GetVersionsByProductIdQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, thumbnailHash: string, version: number, featuredVersionType?: string | null, heroVersionId?: string | null, task?: { __typename?: 'TaskNode', id: string, taskType: string, label?: string | null, name: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, productBaseType?: string | null, allAttrib: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, allAttrib: string } } } }> } } };
+
+export type GetVersionsColumnStatsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  versionFilter?: InputMaybe<Scalars['String']['input']>;
+  productFilter?: InputMaybe<Scalars['String']['input']>;
+  taskFilter?: InputMaybe<Scalars['String']['input']>;
+  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  versionIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  productIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  targets?: InputMaybe<Array<MetricTargetInput> | MetricTargetInput>;
+}>;
+
+
+export type GetVersionsColumnStatsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', fieldStats: Array<{ __typename?: 'ColumnStats', columnName: string, min?: number | null, max?: number | null, avg?: number | null, sum?: number | null, count?: number | null, valueFilledCount?: number | null, percentageFilled?: number | null, valueNotFilledCount?: number | null, percentageNotFilled?: number | null, checkedCount?: number | null, checkedPercentage?: number | null, notCheckedCount?: number | null, notCheckedPercentage?: number | null, distribution?: any | null }> } } };
 
 export type PageInfoFragment = { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean };
 
@@ -2295,6 +2358,25 @@ export const ListItemFragmentFragmentDoc = new TypedDocumentString(`
   endDate
   isDone
 }`, {"fragmentName":"ListItemFragment"});
+export const ColumnStatsFragmentFragmentDoc = new TypedDocumentString(`
+    fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}
+    `, {"fragmentName":"ColumnStatsFragment"});
 export const TaskPropsFragmentFragmentDoc = new TypedDocumentString(`
     fragment TaskPropsFragment on TaskNode {
   id
@@ -3069,6 +3151,41 @@ fragment SubTaskFragment on SubTaskNode {
   endDate
   isDone
 }`);
+export const GetListItemsColumnStatsDocument = new TypedDocumentString(`
+    query GetListItemsColumnStats($projectName: String!, $listId: String!, $filter: String, $targets: [MetricTargetInput!]) {
+  project(name: $projectName) {
+    name
+    entityLists(ids: [$listId]) {
+      edges {
+        node {
+          id
+          items(filter: $filter, calculateSpecificStatistics: $targets) {
+            fieldStats {
+              ...ColumnStatsFragment
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}`);
 export const GetListsDocument = new TypedDocumentString(`
     query GetLists($projectName: String!, $first: Int!, $after: String, $filter: String) {
   project(name: $projectName) {
@@ -3132,6 +3249,39 @@ export const GetListsItemsForReviewSessionDocument = new TypedDocumentString(`
   }
 }
     `);
+export const GetFolderColumnStatsDocument = new TypedDocumentString(`
+    query GetFolderColumnStats($projectName: String!, $filter: String, $search: String, $folderIds: [String!], $targets: [MetricTargetInput!]) {
+  project(name: $projectName) {
+    name
+    folders(
+      calculateSpecificStatistics: $targets
+      filter: $filter
+      search: $search
+      ids: $folderIds
+    ) {
+      fieldStats {
+        ...ColumnStatsFragment
+      }
+    }
+  }
+}
+    fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}`);
 export const GetFolderDeleteInfoDocument = new TypedDocumentString(`
     query GetFolderDeleteInfo($projectName: String!, $folderIds: [String!]!) {
   project(name: $projectName) {
@@ -3151,6 +3301,41 @@ export const GetFolderDeleteInfoDocument = new TypedDocumentString(`
   }
 }
     `);
+export const GetTaskColumnStatsDocument = new TypedDocumentString(`
+    query GetTaskColumnStats($projectName: String!, $filter: String, $folderFilter: String, $search: String, $folderIds: [String!], $taskIds: [String!], $targets: [MetricTargetInput!]) {
+  project(name: $projectName) {
+    name
+    tasks(
+      calculateSpecificStatistics: $targets
+      filter: $filter
+      folderFilter: $folderFilter
+      search: $search
+      folderIds: $folderIds
+      ids: $taskIds
+    ) {
+      fieldStats {
+        ...ColumnStatsFragment
+      }
+    }
+  }
+}
+    fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}`);
 export const GetTasksByParentDocument = new TypedDocumentString(`
     query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $folderFilter: String, $search: String) {
   project(name: $projectName) {
@@ -3556,6 +3741,41 @@ fragment VersionBase on VersionNode {
   featuredVersionType
   heroVersionId
 }`);
+export const GetProductsColumnStatsDocument = new TypedDocumentString(`
+    query GetProductsColumnStats($projectName: String!, $productFilter: String, $versionFilter: String, $taskFilter: String, $folderIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
+  project(name: $projectName) {
+    products(
+      calculateSpecificStatistics: $targets
+      ids: $productIds
+      filter: $productFilter
+      versionFilter: $versionFilter
+      taskFilter: $taskFilter
+      folderIds: $folderIds
+      includeFolderChildren: true
+    ) {
+      fieldStats {
+        ...ColumnStatsFragment
+      }
+    }
+  }
+}
+    fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}`);
 export const GetVersionsDocument = new TypedDocumentString(`
     query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
   project(name: $projectName) {
@@ -3714,6 +3934,42 @@ fragment VersionExtended on VersionNode {
       ...VPFolder
     }
   }
+}`);
+export const GetVersionsColumnStatsDocument = new TypedDocumentString(`
+    query GetVersionsColumnStats($projectName: String!, $versionFilter: String, $productFilter: String, $taskFilter: String, $folderIds: [String!], $versionIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
+  project(name: $projectName) {
+    versions(
+      calculateSpecificStatistics: $targets
+      ids: $versionIds
+      productIds: $productIds
+      filter: $versionFilter
+      productFilter: $productFilter
+      taskFilter: $taskFilter
+      folderIds: $folderIds
+      includeFolderChildren: true
+    ) {
+      fieldStats {
+        ...ColumnStatsFragment
+      }
+    }
+  }
+}
+    fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
 }`);
 export const GetInboxHasUnreadDocument = new TypedDocumentString(`
     query GetInboxHasUnread {
@@ -3968,14 +4224,23 @@ const injectedRtkApi = api.injectEndpoints({
     GetListItems: build.query<GetListItemsQuery, GetListItemsQueryVariables>({
       query: (variables) => ({ document: GetListItemsDocument, variables })
     }),
+    GetListItemsColumnStats: build.query<GetListItemsColumnStatsQuery, GetListItemsColumnStatsQueryVariables>({
+      query: (variables) => ({ document: GetListItemsColumnStatsDocument, variables })
+    }),
     GetLists: build.query<GetListsQuery, GetListsQueryVariables>({
       query: (variables) => ({ document: GetListsDocument, variables })
     }),
     GetListsItemsForReviewSession: build.query<GetListsItemsForReviewSessionQuery, GetListsItemsForReviewSessionQueryVariables>({
       query: (variables) => ({ document: GetListsItemsForReviewSessionDocument, variables })
     }),
+    GetFolderColumnStats: build.query<GetFolderColumnStatsQuery, GetFolderColumnStatsQueryVariables>({
+      query: (variables) => ({ document: GetFolderColumnStatsDocument, variables })
+    }),
     GetFolderDeleteInfo: build.query<GetFolderDeleteInfoQuery, GetFolderDeleteInfoQueryVariables>({
       query: (variables) => ({ document: GetFolderDeleteInfoDocument, variables })
+    }),
+    GetTaskColumnStats: build.query<GetTaskColumnStatsQuery, GetTaskColumnStatsQueryVariables>({
+      query: (variables) => ({ document: GetTaskColumnStatsDocument, variables })
     }),
     GetTasksByParent: build.query<GetTasksByParentQuery, GetTasksByParentQueryVariables>({
       query: (variables) => ({ document: GetTasksByParentDocument, variables })
@@ -4016,11 +4281,17 @@ const injectedRtkApi = api.injectEndpoints({
     GetProducts: build.query<GetProductsQuery, GetProductsQueryVariables>({
       query: (variables) => ({ document: GetProductsDocument, variables })
     }),
+    GetProductsColumnStats: build.query<GetProductsColumnStatsQuery, GetProductsColumnStatsQueryVariables>({
+      query: (variables) => ({ document: GetProductsColumnStatsDocument, variables })
+    }),
     GetVersions: build.query<GetVersionsQuery, GetVersionsQueryVariables>({
       query: (variables) => ({ document: GetVersionsDocument, variables })
     }),
     GetVersionsByProductId: build.query<GetVersionsByProductIdQuery, GetVersionsByProductIdQueryVariables>({
       query: (variables) => ({ document: GetVersionsByProductIdDocument, variables })
+    }),
+    GetVersionsColumnStats: build.query<GetVersionsColumnStatsQuery, GetVersionsColumnStatsQueryVariables>({
+      query: (variables) => ({ document: GetVersionsColumnStatsDocument, variables })
     }),
     GetInboxHasUnread: build.query<GetInboxHasUnreadQuery, GetInboxHasUnreadQueryVariables | void>({
       query: (variables) => ({ document: GetInboxHasUnreadDocument, variables })
