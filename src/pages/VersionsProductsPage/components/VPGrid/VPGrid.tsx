@@ -42,8 +42,16 @@ interface VPGridProps {
 
 const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
-  const { productsMap, versionsMap, isLoading, fetchNextPage, groups, expanded, updateExpanded } =
-    useVersionsDataContext()
+  const {
+    productsMap,
+    versionsMap,
+    isLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    groups,
+    expanded,
+    updateExpanded,
+  } = useVersionsDataContext()
   const { showProducts, gridHeight, groupBy, showEmptyGroups } = useVPViewsContext()
   const { selectedCells, setSelectedCells, setFocusedCellId, registerGrid } =
     useSelectionCellsContext()
@@ -449,6 +457,27 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
             </div>
           )
         })}
+        {isFetchingNextPage && (
+          <GridLayout
+            ratio={1.777777}
+            minWidth={gridHeight}
+            style={{ outline: 'none', marginTop: 16 }}
+          >
+            {Array.from({ length: 30 }).map((_, index) => (
+              <EntityCard
+                key={`loading-group-${index}`}
+                style={{
+                  minWidth: 'unset',
+                  maxHeight: 'unset',
+                  minHeight: 90,
+                  maxWidth: 'unset',
+                  aspectRatio: '16 / 10.5',
+                }}
+                isLoading
+              />
+            ))}
+          </GridLayout>
+        )}
       </GridContainer>
     )
   }
@@ -457,21 +486,38 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
   return (
     <GridContainer ref={gridContainerRef} onScroll={handleScroll} data-grid-container="true">
       <GridLayout ratio={1.777777} minWidth={gridHeight}>
-        {gridData.map((entity, index) => (
-          <VPGridCard
-            key={entity.id}
-            entity={entity}
-            index={index}
-            projectInfo={projectInfo}
-            root={gridContainerRef.current}
-            isEntitySelected={isEntitySelected}
-            handleCardClick={handleCardClick}
-            handleDoubleClick={handleDoubleClick}
-            handleContextMenu={handleGridContextMenu}
-            gridColumnId={GRID_COLUMN_ID}
-            rowSelectionColumnId={ROW_SELECTION_COLUMN_ID}
-          />
-        ))}
+        {[
+          ...gridData.map((entity, index) => (
+            <VPGridCard
+              key={entity.id}
+              entity={entity}
+              index={index}
+              projectInfo={projectInfo}
+              root={gridContainerRef.current}
+              isEntitySelected={isEntitySelected}
+              handleCardClick={handleCardClick}
+              handleDoubleClick={handleDoubleClick}
+              handleContextMenu={handleGridContextMenu}
+              gridColumnId={GRID_COLUMN_ID}
+              rowSelectionColumnId={ROW_SELECTION_COLUMN_ID}
+            />
+          )),
+          ...(isFetchingNextPage
+            ? Array.from({ length: 30 }).map((_, index) => (
+                <EntityCard
+                  key={`loading-grid-${index}`}
+                  style={{
+                    minWidth: 'unset',
+                    maxHeight: 'unset',
+                    minHeight: 90,
+                    maxWidth: 'unset',
+                    aspectRatio: '16 / 10.5',
+                  }}
+                  isLoading
+                />
+              ))
+            : []),
+        ]}
       </GridLayout>
     </GridContainer>
   )
