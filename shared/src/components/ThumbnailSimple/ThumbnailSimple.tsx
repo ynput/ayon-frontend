@@ -71,16 +71,18 @@ export const ThumbnailSimple: React.FC<ThumbnailSimpleProps> = ({
     projectName,
     entityType,
     entityId,
-    thumbnailHash: String(thumbnailHash),
+    thumbnailHash: thumbnailHash ? String(thumbnailHash) : undefined,
   })
+  const isProject = entityType === 'project'
   const isWrongEntity = ['product'].includes(entityType)
+  const hasIdentity = isProject ? !!projectName : !!entityId
 
   return (
     <ThumbnailStyled className={className + ' thumbnail'} {...props}>
       {!isLoading && !disabled && <Icon icon={icon || 'image'} />}
-      {((entityType && !(isWrongEntity || !entityId)) || src) && !iconOnly && (
+      {((entityType && !isWrongEntity && hasIdentity) || src) && !iconOnly && (
         <ImageStyled
-          alt={`Entity thumbnail ${entityId}`}
+          alt={`Entity thumbnail ${entityId || projectName}`}
           src={src || url || undefined}
           onLoad={onLoad}
           onError={onError}

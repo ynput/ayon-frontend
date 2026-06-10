@@ -41,7 +41,7 @@ export const Thumbnail = ({
   const hasIdentity = isProject ? !!projectName : !!entityId
 
   let url = ''
-  if (entityType && thumbnailHash && hasIdentity) {
+  if (entityType && (thumbnailHash || isProject) && hasIdentity) {
     if (src) {
       url = src
     } else {
