@@ -8,6 +8,14 @@ import {
 import { ColumnItemModel, OverviewSettings } from '@shared/api/generated/views'
 import { ColumnsConfig, TableGroupBy } from '@shared/containers'
 import { GroupByConfig } from '@shared/containers/ProjectTreeTable/components/GroupSettingsFallback'
+import {
+  ROW_SELECTION_COLUMN_ID,
+  DRAG_HANDLE_COLUMN_ID,
+} from '@shared/containers/ProjectTreeTable/constants'
+
+// These columns are always injected by ColumnSettingsProvider and must never be
+// persisted or loaded from saved view settings.
+const INTERNAL_COLUMN_IDS = new Set([ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID])
 
 /**
  * Converts ColumnItemModel array from OverviewSettings to TanStack table states
@@ -32,6 +40,9 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
   // Process each column from the settings
   columns.forEach((column) => {
     const { name, visible, pinned, width } = column
+
+    // Skip internal columns — they are always injected by ColumnSettingsProvider
+    if (INTERNAL_COLUMN_IDS.has(name)) return
 
     // Column visibility: undefined means hidden (opt-in model)
     columnVisibility[name] = visible ?? false
@@ -144,11 +155,7 @@ function createColumnItem(
 ): ColumnItemModel {
   const column: ColumnItemModel = {
     name: columnName,
-  }
-
-  // Set visibility if defined in state
-  if (columnVisibility.hasOwnProperty(columnName)) {
-    column.visible = columnVisibility[columnName]
+    visible: !!columnVisibility[columnName],
   }
 
   // Set pinning if column is pinned
@@ -198,8 +205,12 @@ export function convertTanstackStatesToColumnConfig(
     allColumnIds || [],
   )
 
-  // Determine the final column order
-  const finalColumnOrder = determineColumnOrder(columnOrder, allColumnIds || [], columnsWithState)
+  // Determine the final column order, excluding internal columns
+  const finalColumnOrder = determineColumnOrder(
+    columnOrder,
+    allColumnIds || [],
+    columnsWithState,
+  ).filter((id) => !INTERNAL_COLUMN_IDS.has(id))
 
   // Create ColumnItemModel for each column in the determined order
   const columns: ColumnItemModel[] = finalColumnOrder.map((columnName) =>

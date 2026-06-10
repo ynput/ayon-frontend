@@ -38,11 +38,12 @@ import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
 import { useCellEditing } from './context/CellEditingContext'
-import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/SelectionCellsContext'
+import { useSelectionCellsContext } from './context/SelectionCellsContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettingsContext } from './context/ColumnSettingsContext'
 import { useMenuContext } from '../../context/MenuContext'
+import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -72,6 +73,7 @@ import { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
 import {
   checkColumnVisibility,
+  ensureAtLeastOneVisibleColumn,
   getEntityViewierIds,
   getReadOnlyLists,
   getTableFieldOptions,
@@ -152,8 +154,6 @@ const matchesColumnId = (id: string, subscribers: string[]) => {
     return id === sub
   })
 }
-
-export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 
 export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
@@ -378,7 +378,7 @@ export const ProjectTreeTable = ({
       nameLabel: getNameLabelHeader(),
     })
 
-    if (sortableRows) {
+    if (sortableRows && enableSorting) {
       return [
         {
           id: DRAG_HANDLE_COLUMN_ID,
@@ -409,6 +409,7 @@ export const ProjectTreeTable = ({
     excludedColumns,
     excludedSorting,
     sortableRows,
+    enableSorting,
     groupBy,
   ])
 
@@ -421,11 +422,17 @@ export const ProjectTreeTable = ({
   const resolvedColumnVisibility = useMemo(() => {
     const merged = { ...columnVisibility }
     columns.forEach((col) => {
+      // @ts-ignore
+      const explicitVisible = col.visible
       if (col.id && merged[col.id] === undefined) {
-        merged[col.id] = checkColumnVisibility({}, col.id, defaultColumnVisibility)
+        if (explicitVisible !== undefined) {
+          merged[col.id] = explicitVisible
+        } else {
+          merged[col.id] = checkColumnVisibility({}, col.id, defaultColumnVisibility)
+        }
       }
     })
-    return merged
+    return ensureAtLeastOneVisibleColumn(merged, columns.map((c) => c.id as string).filter(Boolean))
   }, [columnVisibility, defaultColumnVisibility, columns])
 
   const table = useReactTable({
