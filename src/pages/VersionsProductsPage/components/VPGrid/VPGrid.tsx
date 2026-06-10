@@ -351,8 +351,8 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
   // return a pages worth of loading skeletons
   if (isLoading) {
     return (
-      <GridContainer>
-        <GridLayout ref={gridContainerRef} ratio={1.777777} minWidth={190} onScroll={handleScroll}>
+      <GridContainer ref={gridContainerRef} onScroll={handleScroll}>
+        <GridLayout ratio={1.777777} minWidth={190}>
           {Array.from({ length: 20 }).map((_, index) => (
             <EntityCard
               key={index}
@@ -455,14 +455,8 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
 
   // Render without grouping (original behavior)
   return (
-    <GridContainer>
-      <GridLayout
-        ref={gridContainerRef}
-        ratio={1.777777}
-        minWidth={gridHeight}
-        onScroll={handleScroll}
-        data-grid-container="true"
-      >
+    <GridContainer ref={gridContainerRef} onScroll={handleScroll} data-grid-container="true">
+      <GridLayout ratio={1.777777} minWidth={gridHeight}>
         {gridData.map((entity, index) => (
           <VPGridCard
             key={entity.id}
