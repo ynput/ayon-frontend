@@ -28,6 +28,7 @@ export type FolderRow = {
   __folderType?: string
   __folderId: string
   __folderUpdatedA?: string
+  __folderThumbnailHash?: string
   __folderStatus?: string
   __projectName: string
   _complete?: number
@@ -96,6 +97,7 @@ export const formatTaskProgressForTable = (
       __folderId: folder.id,
       __folderType: folder.folderType,
       __folderUpdatedAt: folder.updatedAt,
+      __folderThumbnailHash: folder.thumbnailHash,
       __folderStatus: folder.status,
       __projectName: folder.projectName,
       _complete: 0,

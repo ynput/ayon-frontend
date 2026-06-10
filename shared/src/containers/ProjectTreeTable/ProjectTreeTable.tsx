@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback, UIEventHandler } from 'react' // Added useCallback
+import { useMemo, useRef, useEffect, CSSProperties, useCallback, UIEventHandler, FC } from 'react' // Added useCallback
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -11,7 +11,6 @@ import {
   Row,
   getSortedRowModel,
   Cell,
-  Column,
   Table,
   Header,
   HeaderGroup,
@@ -33,6 +32,9 @@ import buildTreeTableColumns, {
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
+import { TableFooterRow } from './components/TableFooterRow'
+import type { FieldStats } from '@shared/api'
+import { getCommonPinningStyles, getColumnWidth } from './utils/pinningUtils'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 import HeaderActionButton from './components/HeaderActionButton'
 
@@ -68,7 +70,12 @@ import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUti
 import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
 import { Button, Icon } from '@ynput/ayon-react-components'
-import { ProjectTableAttribute, BuiltInFieldOptions } from './types'
+import {
+  ProjectTableAttribute,
+  BuiltInFieldOptions,
+  MainCountLabels,
+  SummaryCellContentProps,
+} from './types'
 import { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
 import {
@@ -96,7 +103,8 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, usePowerpack } from '@shared/context'
+import { useLoadModule } from '@shared/hooks'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
@@ -108,6 +116,9 @@ type CellUpdate = (
   config?: { selection?: string[] },
 ) => Promise<void>
 
+// rendered while the powerpack summaries remote is unavailable (no license / old addon)
+const SummaryCellContentFallback: FC<SummaryCellContentProps> = () => null
+
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     options?: BuiltInFieldOptions
@@ -118,27 +129,6 @@ declare module '@tanstack/react-table' {
     selection?: string[]
     columnsConfig?: ColumnsConfig
   }
-}
-
-//These are the important styles to make sticky column pinning work!
-//Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
-//View the index.css file for more needed styles such as border-collapse: separate
-const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
-  const isPinned = column.getIsPinned()
-  const offset =
-    column.id !== ROW_SELECTION_COLUMN_ID && column.id !== DRAG_HANDLE_COLUMN_ID ? -30 : 0
-
-  return {
-    left: isPinned === 'left' ? `${column.getStart('left') + offset}px` : undefined, // Removed offset
-    right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-    position: isPinned ? 'sticky' : 'relative',
-    width: column.getSize(),
-    zIndex: isPinned ? 100 : 0,
-  }
-}
-
-const getColumnWidth = (rowId: string, columnId: string) => {
-  return `calc(var(--col-${columnId}-size) * 1px)`
 }
 
 const matchesColumnId = (id: string, subscribers: string[]) => {
@@ -173,6 +163,11 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
   dndActiveId?: UniqueIdentifier | null // Added prop
   columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
+  showColumnSummaries?: boolean // render the fixed summary footer row
+  fieldStats?: FieldStats[] // primary-entity stats (tasks/versions) feeding the footer
+  groupFieldStats?: FieldStats[] // group-entity stats (folders/products) for the 'all' row scope
+  fieldStatsLoading?: boolean // footer stats still loading -> show skeletons
+  mainCountLabels?: MainCountLabels // labels for the main cell dual count (defaults folders/tasks)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
   onColumnVisibleChange?: (changes: Record<string, boolean>) => void
@@ -202,6 +197,11 @@ export const ProjectTreeTable = ({
   onRowReorder,
   dndActiveId, // Destructure new prop
   columnsConfig,
+  showColumnSummaries = false,
+  fieldStats,
+  groupFieldStats,
+  fieldStatsLoading,
+  mainCountLabels,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
   onColumnVisibleChange,
@@ -223,6 +223,12 @@ export const ProjectTreeTable = ({
     columnVisibilityOnChange,
     columnOrderOnChange,
     groupBy,
+    columnSummaries,
+    updateColumnSummary,
+    columnSummaryScopes,
+    updateColumnSummaryScope,
+    columnSummaryFormats,
+    updateColumnSummaryFormat,
   } = useColumnSettingsContext()
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
 
@@ -573,6 +579,28 @@ export const ProjectTreeTable = ({
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
+  // Summary footer is a powerpack feature.
+  // popup hidden for now: also expose `setPowerpackDialog, isLoading: isLicenseLoading`
+  const { powerLicense } = usePowerpack()
+  const [RemoteSummaryCellContent, { isLoaded: isFooterLoaded, isLoading: isFooterModuleLoading }] =
+    useLoadModule<FC<SummaryCellContentProps>>({
+      addon: 'powerpack',
+      remote: 'views',
+      module: 'SummaryCellContent',
+      fallback: SummaryCellContentFallback,
+      skip: !showColumnSummaries || !powerLicense,
+    })
+  // Free-user upsell row hidden for now (too many power-feature prompts); keep for later.
+  // Render the row as soon as the module is loading or loaded (not on load failure),
+  // so skeletons show during the load instead of the row popping in late.
+  const summariesEnabled =
+    showColumnSummaries && powerLicense && (isFooterLoaded || isFooterModuleLoading)
+  // shimmer while the remote module or the footer stats are still loading
+  const summariesLoading = isFooterModuleLoading || !isFooterLoaded || !!fieldStatsLoading
+  // only show the upsell once the license check resolves, so licensed users
+  // don't see the bolt flash before the addon loads
+  // const showSummaryPowerFeature = !isLicenseLoading && !powerLicense
+
   // Calculate dynamic row height based on user setting from Customize panel
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
 
@@ -697,6 +725,10 @@ export const ProjectTreeTable = ({
               ...columnSizeVars,
               width: table.getTotalSize(),
               cursor: table.getState().columnSizingInfo.isResizingColumn ? 'col-resize' : undefined,
+              // stretch tbody to the container so the column dividers fill the empty
+              // space below the rows; also pins the summary footer to the bottom
+              minHeight: '100%',
+              gridTemplateRows: 'auto 1fr auto',
             }}
           >
             <TableHead
@@ -729,6 +761,42 @@ export const ProjectTreeTable = ({
               onResetView={onResetView}
               contextMenuItems={propsContextMenuItems}
             />
+            {summariesEnabled && (
+              <TableFooterRow
+                columnVirtualizer={columnVirtualizer}
+                table={table}
+                virtualPaddingLeft={virtualPaddingLeft}
+                virtualPaddingRight={virtualPaddingRight}
+                isLoading={summariesLoading}
+                // Free-user upsell hidden for now; keep for later:
+                // onClick={showSummaryPowerFeature ? () => setPowerpackDialog('columnSummaries') : undefined}
+                renderCellContent={(columnId) => (
+                  <RemoteSummaryCellContent
+                    columnId={columnId}
+                    attribs={attribFields}
+                    fieldStats={fieldStats}
+                    groupFieldStats={groupFieldStats}
+                    calc={columnSummaries[columnId]}
+                    onCalcChange={(calc) => updateColumnSummary(columnId, calc)}
+                    format={columnSummaryFormats[columnId]}
+                    onFormatChange={(format) => updateColumnSummaryFormat(columnId, format)}
+                    scope={columnSummaryScopes[columnId]}
+                    onScopeChange={(scope) => updateColumnSummaryScope(columnId, scope)}
+                    mainCountLabels={mainCountLabels}
+                    fieldOptions={options}
+                  />
+                )}
+                // Power feature cell for community users (hidden for now), shows a bolt hint in the name column:
+                // renderCellContent={(columnId) =>
+                //   showSummaryPowerFeature && columnId === 'name' ? (
+                //     <Styled.SummaryPowerFeature>
+                //       <Icon icon="bolt" filled />
+                //       Summaries
+                //     </Styled.SummaryPowerFeature>
+                //   ) : null
+                // }
+              />
+            )}
           </table>
         </Styled.TableContainer>
       </Styled.TableWrapper>
@@ -787,7 +855,7 @@ export const ProjectTreeTable = ({
 
                         const cellStyleBase: CSSProperties = {
                           ...getCommonPinningStyles(cell.column),
-                          width: getColumnWidth(overlayRowInstance.id, cell.column.id),
+                          width: getColumnWidth(cell.column.id),
                           display: 'flex',
                           alignItems: 'center',
                           height: defaultRowHeight,
@@ -1085,7 +1153,7 @@ const TableHeadCell = ({
       key={header.id}
       style={{
         ...getCommonPinningStyles(column),
-        width: getColumnWidth('', column.id),
+        width: getColumnWidth(column.id),
         ...getDragStyle(),
       }}
     >
@@ -1258,10 +1326,25 @@ const TableBody = ({
 
   useKeyboardNavigation()
 
+  // vertical column lines painted behind the rows so they extend into the empty
+  // space between the last row and the summary footer
+  const visibleLeafColumns = table.getVisibleLeafColumns()
+  const columnDividerLefts = useMemo(() => {
+    const lefts: string[] = []
+    const sizeVars: string[] = []
+    for (let i = 0; i < visibleLeafColumns.length - 1; i++) {
+      const column = visibleLeafColumns[i]
+      // selection column is forced to 20px in CSS while its size var reports defaultColumn.minSize
+      sizeVars.push(column.id === ROW_SELECTION_COLUMN_ID ? '20' : `var(--col-${column.id}-size)`)
+      lefts.push(`calc((${sizeVars.join(' + ')}) * 1px)`)
+    }
+    return lefts
+  }, [visibleLeafColumns])
+
   const tbodyContent = (
     <tbody
       style={{
-        height: `${rowVirtualizer.getTotalSize()}px`,
+        minHeight: `${rowVirtualizer.getTotalSize()}px`,
         position: 'relative',
         display: 'grid',
       }}
@@ -1270,6 +1353,11 @@ const TableBody = ({
         handlePreFetchTasks(e)
       }}
     >
+      <Styled.ColumnDividers aria-hidden>
+        {columnDividerLefts.map((left, i) => (
+          <div key={i} style={{ left }} />
+        ))}
+      </Styled.ColumnDividers>
       {virtualRows.map((virtualRow, i) => {
         const row = rows[virtualRow.index] as Row<TableRow>
         // Add a check for row existence to prevent potential errors if data is out of sync
@@ -1434,7 +1522,7 @@ const TableBodyRow = ({
               key={cell.id + i.toString()}
               style={{
                 ...getCommonPinningStyles(cell.column),
-                width: getColumnWidth(row.id, cell.column.id),
+                width: getColumnWidth(cell.column.id),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1554,7 +1642,7 @@ const TD = ({
       )}
       style={{
         ...getCommonPinningStyles(cell.column),
-        width: getColumnWidth(cell.row.id, cell.column.id),
+        width: getColumnWidth(cell.column.id),
         height: rowHeight,
       }}
       onMouseDown={(e) => {

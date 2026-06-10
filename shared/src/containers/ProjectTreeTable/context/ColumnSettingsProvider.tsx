@@ -10,6 +10,7 @@ import {
 } from '@tanstack/react-table'
 import { ColumnsConfig, ColumnSettingsContext, TableGroupBy } from './ColumnSettingsContext'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
+import { SummaryCalc, SummaryFormat, RowScope } from '../types/summaryTypes'
 import { isEqual } from 'lodash'
 import { checkColumnVisibility } from '../utils'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
@@ -77,6 +78,9 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     groupBy,
     groupByConfig = {},
     rowHeight: configRowHeight = 34,
+    columnSummaries: columnSummariesInit = {},
+    columnSummaryScopes: columnSummaryScopesInit = {},
+    columnSummaryFormats: columnSummaryFormatsInit = {},
   } = columnsConfig || {}
 
   // Clear internal row height when config changes (e.g., when switching views)
@@ -292,6 +296,27 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  const updateColumnSummary = (columnId: string, calc: SummaryCalc) => {
+    onChangeWithColumns({
+      ...columnsConfig,
+      columnSummaries: { ...columnSummariesInit, [columnId]: calc },
+    })
+  }
+
+  const updateColumnSummaryScope = (columnId: string, scope: RowScope) => {
+    onChangeWithColumns({
+      ...columnsConfig,
+      columnSummaryScopes: { ...columnSummaryScopesInit, [columnId]: scope },
+    })
+  }
+
+  const updateColumnSummaryFormat = (columnId: string, format: SummaryFormat) => {
+    onChangeWithColumns({
+      ...columnsConfig,
+      columnSummaryFormats: { ...columnSummaryFormatsInit, [columnId]: format },
+    })
+  }
+
   const updateGroupBy = (groupBy: TableGroupBy | undefined) => {
     onChangeWithColumns({
       ...columnsConfig,
@@ -445,6 +470,15 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         columnSizing,
         setColumnSizing,
         columnSizingOnChange,
+        // column summary calc
+        columnSummaries: columnSummariesInit,
+        updateColumnSummary,
+        // column summary row scope
+        columnSummaryScopes: columnSummaryScopesInit,
+        updateColumnSummaryScope,
+        // column summary display format
+        columnSummaryFormats: columnSummaryFormatsInit,
+        updateColumnSummaryFormat,
         // sorting
         sorting,
         updateSorting,

@@ -36,6 +36,7 @@ export const buildProductRow = (
     entityId: product.featuredVersion?.id || product.id,
     entityType: product.featuredVersion ? 'version' : 'product',
     updatedAt: product.featuredVersion?.updatedAt || product.updatedAt,
+    thumbnailHash: product.featuredVersion?.thumbnailHash,
   },
   subRows,
   links: {}, // TODO add links
@@ -50,6 +51,7 @@ export const buildVersionRow = (version: VersionNode): TableRow => ({
   entityType: 'version',
   createdAt: version.createdAt,
   updatedAt: version.updatedAt,
+  thumbnailHash: version.thumbnailHash,
   version: version.version,
   versionName: version.name,
   status: version.status,

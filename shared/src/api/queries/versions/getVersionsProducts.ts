@@ -23,7 +23,9 @@ import {
 import {
   GetProductsQuery,
   GetProductsQueryVariables,
+  GetProductsColumnStatsQuery,
   GetVersionsByProductIdQueryVariables,
+  GetVersionsColumnStatsQuery,
   GetVersionsQuery,
   GetVersionsQueryVariables,
   gqlApi,
@@ -39,7 +41,9 @@ import {
   transformProductsResponse,
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
-import { PubSub } from '@shared/util'
+import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
+import type { FieldStats } from '../columnStats'
+import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
 
 // SHARED CACHE UPDATE HELPERS
 // These helpers are used by PubSub handlers to update cached data in real-time
@@ -224,6 +228,8 @@ type UpdatedDefinitions = Omit<Definitions, 'GetVersions'> & {
   GetVersions: OverrideResultType<Definitions['GetVersions'], GetVersionsResult>
   GetVersionsByProductId: OverrideResultType<Definitions['GetVersions'], GetVersionsResult>
   GetProducts: OverrideResultType<Definitions['GetProducts'], GetProductsResult>
+  GetProductsColumnStats: OverrideResultType<Definitions['GetProductsColumnStats'], FieldStats[]>
+  GetVersionsColumnStats: OverrideResultType<Definitions['GetVersionsColumnStats'], FieldStats[]>
 }
 
 const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -242,6 +248,24 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
     GetProducts: {
       transformResponse: transformProductsResponse,
       providesTags: provideTagsForProductsResult,
+    },
+    // footer stats: `targets` excluded from cache key + responses merged,
+    // so column toggles reuse cache and only added targets refetch
+    GetProductsColumnStats: {
+      transformResponse: (res: GetProductsColumnStatsQuery) =>
+        normalizeFieldStats(res?.project?.products?.fieldStats ?? []),
+      serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
+      merge: (cache, incoming) => mergeFieldStats(incoming, cache),
+      forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
+      providesTags: (_r, _e, { projectName }) => [{ type: 'productColumnStats', id: projectName }],
+    },
+    GetVersionsColumnStats: {
+      transformResponse: (res: GetVersionsColumnStatsQuery) =>
+        normalizeFieldStats(res?.project?.versions?.fieldStats ?? []),
+      serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
+      merge: (cache, incoming) => mergeFieldStats(incoming, cache),
+      forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
+      providesTags: (_r, _e, { projectName }) => [{ type: 'versionColumnStats', id: projectName }],
     },
   },
 })
@@ -338,6 +362,31 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         // Subscribes to version entity changes and updates cache accordingly
         // Handles: create, update, delete operations
         onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+          let unsubscribeThumbnails: (() => void) | undefined
+
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              const relevantMessages = messages.filter((m) => m.project === arg.projectName)
+              if (!relevantMessages.length) return
+
+              updateCachedData((draft) => {
+                relevantMessages.forEach((message) => {
+                  if (message.summary.entityType === 'version') {
+                    draft.pages.forEach((page) => {
+                      const vIndex = page.versions.findIndex(
+                        (v) => v.id === message.summary.entityId,
+                      )
+                      if (vIndex !== -1) {
+                        page.versions[vIndex].thumbnailHash = message.summary.thumbnailHash || ''
+                      }
+                    })
+                  }
+                })
+              })
+            },
+            ['version'],
+          )
+
           const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
             try {
               const entityId = message.summary?.entityId
@@ -384,6 +433,9 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           // Cleanup: unsubscribe when cache entry is removed
           await cacheEntryRemoved
           PubSub.unsubscribe(token)
+          if (unsubscribeThumbnails) {
+            unsubscribeThumbnails()
+          }
         },
       },
     ),
@@ -503,6 +555,27 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
       // Subscribes to version entity changes for expanded products
       // Only updates versions that belong to currently expanded products
       onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+        let unsubscribeThumbnails: (() => void) | undefined
+
+        unsubscribeThumbnails = subscribeToThumbnailUpdates(
+          (messages: ThumbnailUpdateMessage[]) => {
+            const relevantMessages = messages.filter((m) => m.project === arg.projectName)
+            if (!relevantMessages.length) return
+
+            updateCachedData((draft) => {
+              relevantMessages.forEach((message) => {
+                if (message.summary.entityType === 'version') {
+                  const vIndex = draft.versions.findIndex((v) => v.id === message.summary.entityId)
+                  if (vIndex !== -1) {
+                    draft.versions[vIndex].thumbnailHash = message.summary.thumbnailHash || ''
+                  }
+                }
+              })
+            })
+          },
+          ['version'],
+        )
+
         const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
           try {
             const entityId = message.summary?.entityId
@@ -546,6 +619,9 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         // Cleanup: unsubscribe when cache entry is removed
         await cacheEntryRemoved
         PubSub.unsubscribe(token)
+        if (unsubscribeThumbnails) {
+          unsubscribeThumbnails()
+        }
       },
       providesTags: provideTagsForVersionsResult,
     }),
@@ -640,6 +716,30 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         // Often triggered together with version changes (new product + version)
 
         onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+          let unsubscribeThumbnails: (() => void) | undefined
+
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              const relevantMessages = messages.filter((m) => m.project === arg.projectName)
+              if (!relevantMessages.length) return
+
+              updateCachedData((draft) => {
+                relevantMessages.forEach((message) => {
+                  if (message.summary.entityType === 'version') {
+                    draft.pages.forEach((page) => {
+                      page.products.forEach((p) => {
+                        if (p.featuredVersion?.id === message.summary.entityId) {
+                          p.featuredVersion.thumbnailHash = message.summary.thumbnailHash || ''
+                        }
+                      })
+                    })
+                  }
+                })
+              })
+            },
+            ['version'],
+          )
+
           // Helper to refetch and update a product in cache
           const refetchProduct = async (productId: string) => {
             const queryParams: any = {
@@ -720,6 +820,9 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           await cacheEntryRemoved
           PubSub.unsubscribe(productToken)
           PubSub.unsubscribe(versionToken)
+          if (unsubscribeThumbnails) {
+            unsubscribeThumbnails()
+          }
         },
       },
     ),
@@ -823,6 +926,27 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
       // Subscribes to version entity changes and updates cache accordingly
       // Handles: create, update, delete operations for grouped versions view
       onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+        let unsubscribeThumbnails: (() => void) | undefined
+
+        unsubscribeThumbnails = subscribeToThumbnailUpdates(
+          (messages: ThumbnailUpdateMessage[]) => {
+            const relevantMessages = messages.filter((m) => m.project === arg.projectName)
+            if (!relevantMessages.length) return
+
+            updateCachedData((draft) => {
+              relevantMessages.forEach((message) => {
+                if (message.summary.entityType === 'version') {
+                  const vIndex = draft.versions.findIndex((v) => v.id === message.summary.entityId)
+                  if (vIndex !== -1) {
+                    draft.versions[vIndex].thumbnailHash = message.summary.thumbnailHash || ''
+                  }
+                }
+              })
+            })
+          },
+          ['version'],
+        )
+
         const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
           try {
             const entityId = message.summary?.entityId
@@ -899,7 +1023,12 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                   // New version not in cache yet - add at sorted position with matched groups
                   const newVersion = { ...latestVersionData, groups: matchedGroups }
                   const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
-                  const insertIndex = findSortedInsertIndex(draft.versions, newVersion, sortKey, arg.desc || false)
+                  const insertIndex = findSortedInsertIndex(
+                    draft.versions,
+                    newVersion,
+                    sortKey,
+                    arg.desc || false,
+                  )
                   draft.versions.splice(insertIndex, 0, newVersion)
                 }
               }
@@ -912,13 +1041,20 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         // Cleanup: unsubscribe when cache entry is removed
         await cacheEntryRemoved
         PubSub.unsubscribe(token)
+        if (unsubscribeThumbnails) {
+          unsubscribeThumbnails()
+        }
       },
     }),
   }),
 })
 
 // export gql endpoints
-export const { useGetVersionsQuery } = enhancedVersionsPageApi
+export const {
+  useGetVersionsQuery,
+  useGetProductsColumnStatsQuery,
+  useGetVersionsColumnStatsQuery,
+} = enhancedVersionsPageApi
 // export custom queries
 export const {
   useGetVersionsInfiniteInfiniteQuery: useGetVersionsInfiniteQuery,

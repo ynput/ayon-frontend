@@ -28,7 +28,17 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
 }) => {
   const { projectName } = useProjectContext()
   const { selectedLists, selectedList } = useListsContext()
-  const { isError, error, fetchNextPage, resetFilters, setLinksVisible } = useListItemsDataContext()
+  const {
+    isError,
+    error,
+    fetchNextPage,
+    resetFilters,
+    setLinksVisible,
+    fieldStats,
+    fieldStatsLoading,
+    fieldStatsError,
+    mainCountLabels,
+  } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
   const [hiddenColumns, readOnly] = useMemo(
@@ -81,6 +91,12 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
             setLinksVisible(false)
           }
         }}
+        // hidden while the backend doesn't support list item stats yet —
+        // renders automatically once the query stops erroring
+        showColumnSummaries={!fieldStatsError}
+        fieldStats={fieldStats}
+        fieldStatsLoading={fieldStatsLoading}
+        mainCountLabels={mainCountLabels}
       />
       <ListItemsShortcuts />
       <ListsAttributesShortcutButton />

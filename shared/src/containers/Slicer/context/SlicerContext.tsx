@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
   ReactNode,
   ForwardRefExoticComponent,
   RefAttributes,
@@ -94,29 +95,36 @@ export const SlicerProvider = ({
   onSliceTypeChange: onSliceTypeChangeProp,
   scope = 'project',
 }: SlicerProviderProps) => {
-  const [internalRowSelection, setInternalRowSelection] = useLocalStorage<RowSelectionState>(
-    `${scope}-slicer-rowSelection`,
-    {},
-  )
-  const [internalExpanded, setInternalExpanded] = useLocalStorage<ExpandedState>(
-    `${scope}-slicer-expanded`,
-    {},
-  )
   const [internalSliceType, setInternalSliceType] = useLocalStorage<SliceType>(
     `${scope}-slicer-sliceType`,
     'hierarchy',
+  )
+  const sliceType = sliceTypeProp ?? internalSliceType
+
+  const [internalRowSelection, setInternalRowSelection] = useLocalStorage<RowSelectionState>(
+    `${scope}-slicer-rowSelection-${sliceType}`,
+    {},
+  )
+  const [internalExpanded, setInternalExpanded] = useLocalStorage<ExpandedState>(
+    `${scope}-slicer-expanded-${sliceType}`,
+    {},
   )
 
   const rowSelection = rowSelectionProp ?? internalRowSelection
   const setRowSelection = setRowSelectionProp ?? setInternalRowSelection
   const expanded = expandedProp ?? internalExpanded
   const setExpanded = setExpandedProp ?? setInternalExpanded
-  const sliceType = sliceTypeProp ?? internalSliceType
 
   const [isViewSyncPending, setIsViewSyncPending] = useState(false)
   const [rowSelectionData, setRowSelectionData] = useState<SelectionData>({})
   // if there is a need to leavePersistentSlice row selection data between slice changes (like the hierarchy)
   const [persistentRowSelectionData, setPersistentRowSelectionData] = useState<SelectionData>({})
+
+  // in-memory selection data must not survive scope (project/page) changes
+  useEffect(() => {
+    setRowSelectionData({})
+    setPersistentRowSelectionData({})
+  }, [scope])
   const config: SlicerConfig = {
     progress: {
       fields: [
@@ -189,31 +197,21 @@ export const SlicerProvider = ({
     leavePersistentSlice,
     returnToPersistentSlice,
   ) => {
-    // reset selection
-    setRowSelection({})
-    // set slice type
+    // set slice type — selection is NOT reset, each slice type loads from its own storage key
     if (onSliceTypeChangeProp) {
       onSliceTypeChangeProp(newSliceType, leavePersistentSlice, returnToPersistentSlice)
     } else {
       setInternalSliceType(newSliceType)
     }
-    // reset selection data
+    // clear stale in-memory data, Slicer rebuilds it from the restored selection once rows load
     setRowSelectionData({})
     // set persistent selection data
     if (leavePersistentSlice) setPersistentRowSelectionData(rowSelectionData)
     // we returned to the persisted slice type
-
     if (returnToPersistentSlice) {
-      // clear the persisted selection data
+      // clear the persisted selection data and restore data instantly while rows load
       setPersistentRowSelectionData({})
-      // restore the selection data and selection
       setRowSelectionData(persistentRowSelectionData)
-      setRowSelection(
-        Object.keys(persistentRowSelectionData).reduce((acc, id) => {
-          acc[id] = true
-          return acc
-        }, {} as RowSelectionState),
-      )
     }
   }
 

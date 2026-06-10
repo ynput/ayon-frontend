@@ -14,7 +14,7 @@ type Entity = {
   product?: {
     productType: string
   }
-  updatedAt: string
+  thumbnailHash: string
 }
 
 const getThumbnails = (
@@ -48,7 +48,7 @@ const getThumbnails = (
     icon: getIcon(entity),
     id: entity.id,
     type: entityType,
-    updatedAt: entity.updatedAt,
+    thumbnailHash: entity.thumbnailHash,
     projectName: entity.projectName,
   }))
 }

@@ -2,12 +2,16 @@ import {
   gqlApi,
   GetTasksByParentQuery,
   GetTasksListQuery,
+  GetFolderColumnStatsQuery,
+  GetTaskColumnStatsQuery,
   foldersApi,
   SearchFoldersApiArg,
   GetTasksListQueryVariables,
 } from '@shared/api/generated'
-import { PubSub } from '@shared/util'
+import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
+import type { FieldStats } from '../columnStats'
+import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,
@@ -108,6 +112,8 @@ type TagTypes = TagTypesFromApi<typeof gqlApi>
 type UpdatedDefinitions = Omit<Definitions, 'GetFilteredEntities'> & {
   GetTasksByParent: OverrideResultType<Definitions['GetTasksByParent'], EditorTaskNode[]>
   GetTasksList: OverrideResultType<Definitions['GetTasksList'], GetTasksListResult>
+  GetFolderColumnStats: OverrideResultType<Definitions['GetFolderColumnStats'], FieldStats[]>
+  GetTaskColumnStats: OverrideResultType<Definitions['GetTaskColumnStats'], FieldStats[]>
 }
 
 // GRAPHQL API
@@ -128,6 +134,24 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       }),
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.tasks || [], projectName),
+    },
+    // footer stats: `targets` excluded from cache key + responses merged,
+    // so column toggles reuse cache and only added targets refetch
+    GetFolderColumnStats: {
+      transformResponse: (res: GetFolderColumnStatsQuery) =>
+        normalizeFieldStats(res?.project?.folders?.fieldStats ?? []),
+      serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
+      merge: (cache, incoming) => mergeFieldStats(incoming, cache),
+      forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
+      providesTags: (_r, _e, { projectName }) => [{ type: 'folderColumnStats', id: projectName }],
+    },
+    GetTaskColumnStats: {
+      transformResponse: (res: GetTaskColumnStatsQuery) =>
+        normalizeFieldStats(res?.project?.tasks?.fieldStats ?? []),
+      serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
+      merge: (cache, incoming) => mergeFieldStats(incoming, cache),
+      forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
+      providesTags: (_r, _e, { projectName }) => [{ type: 'taskColumnStats', id: projectName }],
     },
   },
 })
@@ -270,8 +294,25 @@ const injectedApi = enhancedApi.injectEndpoints({
             if (pendingTaskIds.size) schedule()
           }
         }
+        let unsubscribeThumbnails: (() => void) | undefined
         try {
           await cacheDataLoaded
+
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              updateCachedData((draft: EditorTaskNode[]) => {
+                messages.forEach((message) => {
+                  if (message.summary.entityType === 'task' && message.summary.thumbnailHash) {
+                    const idx = draft.findIndex((t) => t.id === message.summary.entityId)
+                    if (idx > -1) {
+                      draft[idx].thumbnailHash = message.summary.thumbnailHash
+                    }
+                  }
+                })
+              })
+            },
+            ['task'],
+          )
 
           const handlePubSub = async (_topic: string, message: any) => {
             const taskId = message?.summary?.entityId
@@ -293,6 +334,7 @@ const injectedApi = enhancedApi.injectEndpoints({
 
         await cacheEntryRemoved
         if (token) PubSub.unsubscribe(token)
+        if (unsubscribeThumbnails) unsubscribeThumbnails()
       },
     }),
     // searchFolders is a post so it's a bit annoying to consume
@@ -343,7 +385,8 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
-          const { projectName, filter, folderFilter, search, folderIds, taskIds, sortBy, desc } = queryArg
+          const { projectName, filter, folderFilter, search, folderIds, taskIds, sortBy, desc } =
+            queryArg
           const { cursor } = pageParam
 
           // Build the query parameters for GetTasksList
@@ -478,8 +521,28 @@ const injectedApi = enhancedApi.injectEndpoints({
             if (pendingTaskIds.size) schedule()
           }
         }
+        let unsubscribeThumbnails: (() => void) | undefined
         try {
           await cacheDataLoaded
+
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              updateCachedData((draft: { pages: GetTasksListResult[]; pageParams: any[] }) => {
+                messages.forEach((message) => {
+                  if (message.summary.entityType === 'task' && message.summary.thumbnailHash) {
+                    for (const page of draft.pages) {
+                      const idx = page.tasks.findIndex((t) => t.id === message.summary.entityId)
+                      if (idx > -1) {
+                        page.tasks[idx].thumbnailHash = message.summary.thumbnailHash
+                        break
+                      }
+                    }
+                  }
+                })
+              })
+            },
+            ['task'],
+          )
 
           const handlePubSub = async (_topic: string, message: any) => {
             const taskId = message?.summary?.entityId
@@ -494,6 +557,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
         await cacheEntryRemoved
         if (token) PubSub.unsubscribe(token)
+        if (unsubscribeThumbnails) unsubscribeThumbnails()
       },
     }),
     getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
@@ -517,12 +581,8 @@ const injectedApi = enhancedApi.injectEndpoints({
               try {
                 const parsed = JSON.parse(group.filter)
                 const conditions = parsed.conditions || []
-                const taskConditions = conditions.filter(
-                  (c: any) => !folderFilterKeys.has(c.key),
-                )
-                const folderConditions = conditions.filter((c: any) =>
-                  folderFilterKeys.has(c.key),
-                )
+                const taskConditions = conditions.filter((c: any) => !folderFilterKeys.has(c.key))
+                const folderConditions = conditions.filter((c: any) => folderFilterKeys.has(c.key))
 
                 if (folderConditions.length > 0) {
                   taskFilter = taskConditions.length
@@ -616,5 +676,7 @@ export const {
   useGetTasksListInfiniteInfiniteQuery,
   useLazyGetTasksByParentQuery,
   useGetGroupedTasksListQuery,
+  useGetFolderColumnStatsQuery,
+  useGetTaskColumnStatsQuery,
 } = injectedApi
 export default injectedApi

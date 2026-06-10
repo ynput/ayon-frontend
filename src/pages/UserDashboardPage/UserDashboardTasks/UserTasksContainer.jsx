@@ -23,24 +23,6 @@ import RelatedTasksModule from './RelatedTasks'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 
-export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {
-  // If projectName is not provided or neither thumbnailId nor entityId and entityType are provided, return null
-  if (!projectName || (!thumbnailId && (!entityId || !entityType))) return null
-
-  // Construct the updatedAt query parameter if updatedAt is provided
-  const updatedAtQueryParam = updatedAt ? `?updatedAt=${updatedAt}` : ''
-
-  // If entityId and entityType are provided, construct the URL using them
-  if (entityId && entityType) {
-    const entityUrl = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
-    return `${entityUrl}${updatedAtQueryParam}`
-  }
-
-  // If entityId and entityType are not provided, fallback on thumbnailId
-  const thumbnailUrl = `/api/projects/${projectName}/thumbnails/${thumbnailId}`
-  return `${thumbnailUrl}${updatedAtQueryParam}`
-}
-
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const dispatch = useDispatch()
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)

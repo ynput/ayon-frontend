@@ -271,6 +271,35 @@ const invalidateOverviewTasks = (
   dispatch(getOverviewApi.util.invalidateTags(getOverviewTaskTags(tasks)))
 }
 
+// Debounced, per-project invalidation of the footer stats caches after entity ops.
+type StatsTagType =
+  | 'folderColumnStats'
+  | 'taskColumnStats'
+  | 'productColumnStats'
+  | 'versionColumnStats'
+  | 'entityListItemsColumnStats'
+const statsRefetchTimers = new Map<string, ReturnType<typeof setTimeout>>()
+const scheduleStatsRefetch = (
+  dispatch: ThunkDispatch<any, any, UnknownAction>,
+  projectName: string,
+  tagTypes: StatsTagType[],
+) => {
+  const key = `${projectName}:${tagTypes.join()}`
+  const existing = statsRefetchTimers.get(key)
+  if (existing) clearTimeout(existing)
+  statsRefetchTimers.set(
+    key,
+    setTimeout(() => {
+      statsRefetchTimers.delete(key)
+      dispatch(
+        getOverviewApi.util.invalidateTags(
+          tagTypes.map((type) => ({ type, id: projectName })),
+        ),
+      )
+    }, 500),
+  )
+}
+
 export const patchOverviewFolders = (
   folders: PatchOperation[],
   {
@@ -571,6 +600,25 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
 
           const taskOperations = operationsByType.task || []
           const folderOperations = operationsByType.folder || []
+          const versionOperations = operationsByType.version || []
+          const productOperations = operationsByType.product || []
+
+          if (projectName) {
+            if (taskOperations.length || folderOperations.length) {
+              scheduleStatsRefetch(dispatch, projectName, [
+                'folderColumnStats',
+                'taskColumnStats',
+                'entityListItemsColumnStats',
+              ])
+            }
+            if (versionOperations.length || productOperations.length) {
+              scheduleStatsRefetch(dispatch, projectName, [
+                'productColumnStats',
+                'versionColumnStats',
+                'entityListItemsColumnStats',
+              ])
+            }
+          }
 
           // Early exit if no operations
           if (taskOperations.length === 0 && folderOperations.length === 0) {

@@ -77,6 +77,17 @@ interface VersionsDataContextValue {
   // separate filters
   versionFilter: QueryFilter
   productFilter: QueryFilter
+  // combined filter strings (incl. slicer + entity-list selection) for the
+  // column-summary stats queries
+  columnStatsArgs: {
+    projectName: string
+    productFilter?: string
+    versionFilter?: string
+    taskFilter?: string
+    folderIds?: string[]
+    versionIds?: string[]
+    productIds?: string[]
+  }
   // data
   versionsTableData: TableRow[]
   versionsMap: VersionMap // root versions only
@@ -539,6 +550,16 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const value: VersionsDataContextValue = {
     versionFilter,
     productFilter,
+    columnStatsArgs: {
+      projectName,
+      productFilter: combinedProductFilter.filterString,
+      versionFilter: combinedVersionFilter.filterString,
+      taskFilter: entityListTaskFilterString,
+      // empty array means "match nothing" backend-side — omit when no slice
+      folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
+      versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
+      productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
+    },
     // expanded
     expanded,
     setExpanded,
