@@ -11,7 +11,6 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { useNewEntityContext } from '@context/NewEntityContext'
 import { useProjectContext, usePowerpack } from '@shared/context'
-import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
 import { useViewsContext } from '@shared/containers'
 import {
   mergeFieldStats,

@@ -5,7 +5,7 @@ import type { Virtualizer } from '@tanstack/react-virtual'
 import clsx from 'clsx'
 
 import type { TableRow } from '../types/table'
-import { ROW_SELECTION_COLUMN_ID } from '../context/SelectionCellsContext'
+import { ROW_SELECTION_COLUMN_ID } from '../constants'
 import {
   DRAG_HANDLE_COLUMN_ID,
   getCommonPinningStyles,
@@ -113,8 +113,7 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
           if (!column) return null
           const isUtility =
             column.id === DRAG_HANDLE_COLUMN_ID || column.id === ROW_SELECTION_COLUMN_ID
-          const isLastPinnedLeft =
-            column.getIsPinned() === 'left' && column.getIsLastColumn('left')
+          const isLastPinnedLeft = column.getIsPinned() === 'left' && column.getIsLastColumn('left')
           return (
             <FooterCell
               key={column.id}

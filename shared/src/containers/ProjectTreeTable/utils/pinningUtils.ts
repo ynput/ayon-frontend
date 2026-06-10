@@ -1,6 +1,6 @@
 import { CSSProperties } from 'react'
 import { Column } from '@tanstack/react-table'
-import { ROW_SELECTION_COLUMN_ID } from '../context/SelectionCellsContext'
+import { ROW_SELECTION_COLUMN_ID } from '../constants'
 import type { TableRow } from '../types/table'
 
 export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'

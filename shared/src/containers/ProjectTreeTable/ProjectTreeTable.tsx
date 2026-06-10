@@ -34,7 +34,7 @@ import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import { TableFooterRow } from './components/TableFooterRow'
 import type { FieldStats } from '@shared/api'
-import { DRAG_HANDLE_COLUMN_ID, getCommonPinningStyles, getColumnWidth } from './utils/pinningUtils'
+import { getCommonPinningStyles, getColumnWidth } from './utils/pinningUtils'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 import HeaderActionButton from './components/HeaderActionButton'
 
@@ -580,7 +580,7 @@ export const ProjectTreeTable = ({
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
   // Summary footer is a powerpack feature.
-  // upsell (hidden for now): also expose `setPowerpackDialog, isLoading: isLicenseLoading`
+  // popup hidden for now: also expose `setPowerpackDialog, isLoading: isLicenseLoading`
   const { powerLicense } = usePowerpack()
   const [RemoteSummaryCellContent, { isLoaded: isFooterLoaded, isLoading: isFooterModuleLoading }] =
     useLoadModule<FC<SummaryCellContentProps>>({
@@ -599,7 +599,7 @@ export const ProjectTreeTable = ({
   const summariesLoading = isFooterModuleLoading || !isFooterLoaded || !!fieldStatsLoading
   // only show the upsell once the license check resolves, so licensed users
   // don't see the bolt flash before the addon loads
-  // const showSummaryUpsell = !isLicenseLoading && !powerLicense
+  // const showSummaryPowerFeature = !isLicenseLoading && !powerLicense
 
   // Calculate dynamic row height based on user setting from Customize panel
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
@@ -769,7 +769,7 @@ export const ProjectTreeTable = ({
                 virtualPaddingRight={virtualPaddingRight}
                 isLoading={summariesLoading}
                 // Free-user upsell hidden for now; keep for later:
-                // onClick={showSummaryUpsell ? () => setPowerpackDialog('columnSummaries') : undefined}
+                // onClick={showSummaryPowerFeature ? () => setPowerpackDialog('columnSummaries') : undefined}
                 renderCellContent={(columnId) => (
                   <RemoteSummaryCellContent
                     columnId={columnId}
@@ -786,13 +786,13 @@ export const ProjectTreeTable = ({
                     fieldOptions={options}
                   />
                 )}
-                // Upsell cell for free users (hidden for now), shows a bolt hint in the name column:
+                // Power feature cell for community users (hidden for now), shows a bolt hint in the name column:
                 // renderCellContent={(columnId) =>
-                //   showSummaryUpsell && columnId === 'name' ? (
-                //     <Styled.SummaryUpsellHint>
+                //   showSummaryPowerFeature && columnId === 'name' ? (
+                //     <Styled.SummaryPowerFeature>
                 //       <Icon icon="bolt" filled />
                 //       Summaries
-                //     </Styled.SummaryUpsellHint>
+                //     </Styled.SummaryPowerFeature>
                 //   ) : null
                 // }
               />

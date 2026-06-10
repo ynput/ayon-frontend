@@ -129,7 +129,6 @@ export const HeaderCell = styled.th`
     .actions .header-menu {
       display: flex !important;
     }
-
   }
 
   /* Hide action buttons when resizing */
@@ -191,7 +190,6 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
     cursor: col-resize !important;
   }
 
-
   &:has(.sort-button.visible),
   &:has(.sort-button.selected),
   &:has(.pin-button.visible),
@@ -212,8 +210,8 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
   .pin-button.selected {
     display: flex !important;
   }
-  .pin-button{
-    font-variation-settings: 'FILL' 1,'wght' 200,'GRAD' 200,'opsz' 10;
+  .pin-button {
+    font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 10;
   }
 
   .header-menu {
@@ -560,7 +558,7 @@ export const AnimatedEmptyPlaceholder = styled.div`
   }
 `
 
-export const SummaryUpsellHint = styled.span`
+export const SummaryPowerFeature = styled.span`
   display: flex;
   align-items: center;
   gap: 4px;
