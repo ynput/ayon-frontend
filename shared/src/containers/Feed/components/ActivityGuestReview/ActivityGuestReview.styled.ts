@@ -8,21 +8,20 @@ export const GuestReview = styled.li`
   display: flex;
   gap: var(--base-gap-small);
 
-  border-radius: var(--border-radius-m);
+  border: solid 1px currentColor;
+  border-radius: var(--border-radius-l);
   user-select: none;
 
   &.approve,
   &.approve .icon,
   &.approve .date, {
-    background: var(--md-sys-color-tertiary);
-    color: var(--md-sys-color-on-tertiary);
+    color: var(--md-sys-color-tertiary);
   }
 
   &.request_changes,
   &.request_changes .icon,
   &.request_changes .date, {
-    background: var(--md-sys-color-error);
-    color: var(--md-sys-color-on-error);
+    color: var(--md-sys-color-error);
   }
 `
 

@@ -63,7 +63,6 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
     case 'version.publish':
       return <ActivityVersions {...{ activity, projectInfo, filter }} {...props} />
     case 'guest_review':
-      console.log(activity)
       return <ActivityGuestReview activity={activity} {...props} />
     case 'group':
       // fromGroup prevents infinite recursion

@@ -467,9 +467,19 @@ export const Placeholder = styled.span`
   opacity: 0.4;
 `
 
+export const GuestReviewButtons = styled.div`
+  display: flex;
+  gap: var(--base-gap-medium);
+`
+
+export const GuestReviewButtonsSpacer = styled.div`
+  margin-top: var(--padding-m);
+`
+
 export const GuestReviewButton = styled(Button)`
   background: transparent;
   border: solid 1px currentColor;
+  flex-grow: 1;
 
   &.danger {
     color: var(--md-sys-color-error);
@@ -489,5 +499,36 @@ export const GuestReviewButton = styled(Button)`
       opacity: 0;
       width: 0;
     }
+  }
+`
+
+export const LastGuestReview = styled.div`
+  border-top-left-radius: var(--border-radius-l);
+  border-top-right-radius: var(--border-radius-l);
+  user-select: none;
+  display: flex;
+  gap: var(--base-gap-small);
+  overflow: hidden;
+  padding: var(--padding-m) var(--padding-s);
+  align-items: center;
+  line-height: 1;
+
+  &.approve,
+  &.approve .icon,
+  &.approve .date, {
+    background-color: var(--md-sys-color-tertiary);
+    color: var(--md-sys-color-on-tertiary);
+  }
+
+  &.request_changes,
+  &.request_changes .icon,
+  &.request_changes .date, {
+    background-color: var(--md-sys-color-error);
+    color: var(--md-sys-color-on-error);
+  }
+
+  &.separate {
+    border-radius: var(--border-radius-l);
+    margin-bottom: var(--padding-m);
   }
 `

@@ -214,6 +214,7 @@ export const {
   useGetEntityTooltipQuery,
   useLazyGetActivitiesByIdQuery,
   useGetEntitiesChecklistsQuery,
+  useGetActivitiesQuery,
   useGetActivitiesInfiniteInfiniteQuery,
   useGetActivityUsersQuery,
 } = getActivitiesGQLApi

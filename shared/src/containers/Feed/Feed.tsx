@@ -22,6 +22,7 @@ import { SavedAnnotationMetadata } from '.'
 import TabHeaderAndFilters, {
   FilterItem,
 } from '../DetailsPanel/components/TabHeaderAndFilters/TabHeaderAndFilters'
+import { useLastGuestReview } from './hooks/useLastGuestReview'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -64,7 +65,7 @@ export const Feed = ({
   statuses = [],
   entityListId,
   isSlideOut,
-  guestReview = false,
+  guestReview = true,
 }: FeedProps) => {
   const {
     projectName,
@@ -300,6 +301,15 @@ export const Feed = ({
 
   const loadingPlaceholders = useMemo(() => getLoadingPlaceholders(10), [])
 
+  const lastGuestReview = useLastGuestReview({
+    projectName,
+    guestReview,
+    entityIds: entities.map(e => e.id),
+    activities: transformedActivitiesData,
+    loadingActivities: isLoadingNew,
+    userName,
+  })
+
   let warningMessage
 
   return (
@@ -378,6 +388,7 @@ export const Feed = ({
             disabled={disabled}
             isLoading={isLoadingNew || !entities.length || isSaving}
             guestReview={guestReview}
+            lastGuestReview={lastGuestReview}
             onReview={submitReview}
           />
         )}

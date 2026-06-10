@@ -10,8 +10,10 @@ import {
 } from 'date-fns'
 import clsx from 'clsx'
 import styled from 'styled-components'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { theme } from '@ynput/ayon-react-components'
+
+export const REFRESH_INTERVAL_MS = 10_000
 
 const DateStyled = styled.span`
   margin-left: auto;
@@ -53,16 +55,27 @@ interface ActivityDateProps extends React.HTMLAttributes<HTMLElement> {
 
 const ActivityDate = ({ date, isExact, ...props }: ActivityDateProps) => {
   const [isFuzzy, setIsFuzzy] = useState(true)
+  const [now, setNow] = useState(new Date())
   if (!date) return null
+
   const dateObj = new Date(date)
   if (!isValid(dateObj)) return null
 
+  useEffect(() => {
+    const interval = setInterval(
+      () => setNow(new Date()),
+      REFRESH_INTERVAL_MS,
+    )
+
+    return () => clearInterval(interval)
+  }, [])
+
   // is date over a day old?
   const today = isToday(dateObj)
-  const sameYear = isSameYear(dateObj, new Date())
-  const yesterday = isSameDay(dateObj, new Date(new Date().setDate(new Date().getDate() - 1)))
-  const sameWeek = isSameWeek(dateObj, new Date())
-  const sameMin = isSameMinute(dateObj, new Date())
+  const sameYear = isSameYear(dateObj, now)
+  const yesterday = isSameDay(dateObj, new Date(now.setDate(now.getDate() - 1)))
+  const sameWeek = isSameWeek(dateObj, now)
+  const sameMin = isSameMinute(dateObj, now)
 
   const dateFormat = yesterday ? '' : sameYear ? (sameWeek ? 'E' : 'MMM d') : 'MMM d yyyy'
   const timeFormat = 'h:mm a'

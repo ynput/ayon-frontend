@@ -39,6 +39,9 @@ import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } fro
 import { useDetailsPanelContext } from '@shared/context'
 import { useProjectContext } from '@shared/context'
 import { parseFilename } from '@shared/components'
+import { getFuzzyDate, REFRESH_INTERVAL_MS } from '../ActivityDate'
+import { FeedActivity } from '@shared/api'
+import { GuestReviewPill } from './GuestReviewPill'
 
 var Delta = Quill.import('delta')
 
@@ -67,6 +70,7 @@ interface CommentInputProps {
   initCategory?: string | null
   data?: any
   guestReview: boolean
+  lastGuestReview?: FeedActivity
   onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
   onReview?: (feedback: GuestReviewFeedback) => void
   isEditing?: boolean
@@ -83,6 +87,7 @@ const CommentInput: FC<CommentInputProps> = ({
   initCategory = null,
   data = {},
   guestReview,
+  lastGuestReview,
   onSubmit,
   isEditing,
   disabled,
@@ -627,6 +632,35 @@ const CommentInput: FC<CommentInputProps> = ({
     return 'Comment or mention with @user, @@version, @@@task...'
   }
 
+  const guestReviewButtons = guestReview && onReview && (
+    <Styled.GuestReviewButtons>
+      <Styled.GuestReviewButton
+        icon="check"
+        variant="tertiary"
+        data-tooltip="Approve"
+        onClick={() => {
+          handleSubmit()
+          onReview(GuestReviewFeedback.APPROVE)
+        }}
+      >
+        <span className="label">Approve</span>
+      </Styled.GuestReviewButton>
+      <Styled.GuestReviewButton
+        icon="sync"
+        variant="danger"
+        data-tooltip="Request changes"
+        onClick={() => {
+          handleSubmit()
+          onReview(GuestReviewFeedback.REQUEST_CHANGES)
+        }}
+      >
+        <span className="label">Request changes</span>
+      </Styled.GuestReviewButton>
+    </Styled.GuestReviewButtons>
+  )
+
+
+
   return (
     <>
       <Styled.AutoHeight
@@ -637,6 +671,13 @@ const CommentInput: FC<CommentInputProps> = ({
         onClick={() => setIsDropping(false)}
         onKeyDown={(e) => e.stopPropagation()}
       >
+        {!isOpen && lastGuestReview && (
+          <GuestReviewPill
+            separate={true}
+            lastGuestReview={lastGuestReview}
+          />
+        )}
+
         <Styled.Comment
           className={clsx('block-shortcuts', {
             isOpen,
@@ -654,6 +695,12 @@ const CommentInput: FC<CommentInputProps> = ({
           $categoryTertiary={blendedCategoryColor.primary}
           $categorySecondary={blendedCategoryColor.secondary}
         >
+          {isOpen && lastGuestReview && (
+            <GuestReviewPill
+              separate={false}
+              lastGuestReview={lastGuestReview}
+            />
+          )}
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
             <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={initValue} />
@@ -746,35 +793,7 @@ const CommentInput: FC<CommentInputProps> = ({
               </Styled.Buttons>
             )}
             <Styled.Buttons style={{ marginLeft: 'auto' }}>
-              {
-                // guestReview && onReview && (
-                isGuest && guestReview && onReview && (
-                  <>
-                    <Styled.GuestReviewButton
-                      icon="check"
-                      variant="tertiary"
-                      data-tooltip="Approve"
-                      onClick={() => {
-                        handleSubmit()
-                        onReview(GuestReviewFeedback.APPROVE)
-                      }}
-                    >
-                      <span className="label">Approve</span>
-                    </Styled.GuestReviewButton>
-                    <Styled.GuestReviewButton
-                      icon="sync"
-                      variant="danger"
-                      data-tooltip="Request changes"
-                      onClick={() => {
-                        handleSubmit()
-                        onReview(GuestReviewFeedback.REQUEST_CHANGES)
-                      }}
-                    >
-                      <span className="label">Request changes</span>
-                    </Styled.GuestReviewButton>
-                  </>
-                )
-              }
+              {isOpen && guestReviewButtons}
               {isEditing && (
                 <Button variant="text" onClick={handleClose}>
                   Cancel
@@ -813,6 +832,13 @@ const CommentInput: FC<CommentInputProps> = ({
           error={mentionsError}
           isGuest={isGuest}
         />
+
+        {!isOpen && (
+          <>
+            <Styled.GuestReviewButtonsSpacer />
+            {guestReviewButtons}
+          </>
+        )}
       </Styled.AutoHeight>
     </>
   )

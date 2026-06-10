@@ -290,7 +290,6 @@ export type FolderAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
-  internal?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -299,7 +298,6 @@ export type FolderAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  vendors?: Maybe<Scalars['String']['output']>;
 };
 
 export type FolderEdge = {
@@ -536,6 +534,8 @@ export type ProductAttribType = {
 
 export type ProductBaseType = {
   __typename?: 'ProductBaseType';
+  color: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
   name: Scalars['String']['output'];
 };
 
@@ -662,7 +662,6 @@ export type ProjectAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
-  internal?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -794,6 +793,7 @@ export type ProjectNodeActivitiesArgs = {
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  mine?: Scalars['Boolean']['input'];
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
@@ -1252,7 +1252,6 @@ export type TaskAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  vendors?: Maybe<Scalars['String']['output']>;
 };
 
 export type TaskEdge = {
@@ -1654,6 +1653,7 @@ export type GetActivitiesQueryVariables = Exact<{
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   activityTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  mine?: InputMaybe<Scalars['Boolean']['input']>;
 }>;
 
 
@@ -1840,9 +1840,9 @@ export type GetProjectsQueryVariables = Exact<{
 }>;
 
 
-export type GetProjectsQuery = { __typename?: 'Query', projects: { __typename?: 'ProjectsConnection', edges: Array<{ __typename?: 'ProjectEdge', cursor?: string | null, node: { __typename?: 'ProjectNode', allAttrib: string, active: boolean, code: string, color?: string | null, createdAt: any, label?: string | null, library: boolean, name: string, projectFolder?: string | null, projectName: string, skeleton: boolean, updatedAt: any } }>, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null } } };
+export type GetProjectsQuery = { __typename?: 'Query', projects: { __typename?: 'ProjectsConnection', edges: Array<{ __typename?: 'ProjectEdge', cursor?: string | null, node: { __typename?: 'ProjectNode', allAttrib: string, active: boolean, code: string, color?: string | null, createdAt: any, updatedAt: any, label?: string | null, library: boolean, name: string, projectFolder?: string | null, projectName: string, skeleton: boolean } }>, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null } } };
 
-export type ProjectFragmentFragment = { __typename?: 'ProjectNode', allAttrib: string, active: boolean, code: string, color?: string | null, createdAt: any, label?: string | null, library: boolean, name: string, projectFolder?: string | null, projectName: string, skeleton: boolean, updatedAt: any };
+export type ProjectFragmentFragment = { __typename?: 'ProjectNode', allAttrib: string, active: boolean, code: string, color?: string | null, createdAt: any, updatedAt: any, label?: string | null, library: boolean, name: string, projectFolder?: string | null, projectName: string, skeleton: boolean };
 
 export type GetKanbanQueryVariables = Exact<{
   projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -2254,13 +2254,13 @@ export const ProjectFragmentFragmentDoc = new TypedDocumentString(`
   code
   color
   createdAt
+  updatedAt
   label
   library
   name
   projectFolder
   projectName
   skeleton
-  updatedAt
 }
     `, {"fragmentName":"ProjectFragment"});
 export const KanbanFragmentFragmentDoc = new TypedDocumentString(`
@@ -2516,7 +2516,7 @@ export const GetActivityUsersDocument = new TypedDocumentString(`
 }
     `);
 export const GetActivitiesDocument = new TypedDocumentString(`
-    query GetActivities($projectName: String!, $entityIds: [String!]!, $after: String, $first: Int, $before: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!]) {
+    query GetActivities($projectName: String!, $entityIds: [String!]!, $after: String, $first: Int, $before: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!], $mine: Boolean) {
   project(name: $projectName) {
     name
     activities(
@@ -2527,6 +2527,7 @@ export const GetActivitiesDocument = new TypedDocumentString(`
       last: $last
       referenceTypes: $referenceTypes
       activityTypes: $activityTypes
+      mine: $mine
     ) {
       pageInfo {
         hasPreviousPage
@@ -3225,13 +3226,13 @@ export const GetProjectsDocument = new TypedDocumentString(`
   code
   color
   createdAt
+  updatedAt
   label
   library
   name
   projectFolder
   projectName
   skeleton
-  updatedAt
 }`);
 export const GetKanbanDocument = new TypedDocumentString(`
     query GetKanban($projects: [String!], $assignees: [String!]) {
