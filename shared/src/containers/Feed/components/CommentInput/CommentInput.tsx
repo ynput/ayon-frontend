@@ -668,7 +668,7 @@ const CommentInput: FC<CommentInputProps> = ({
         onClick={() => setIsDropping(false)}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        {!isOpen && lastOwnVersionReview && (
+        {!isOpen && versionReview && lastOwnVersionReview && (
           <VersionReviewPill
             separate={true}
             lastOwnVersionReview={lastOwnVersionReview}
@@ -692,7 +692,7 @@ const CommentInput: FC<CommentInputProps> = ({
           $categoryTertiary={blendedCategoryColor.primary}
           $categorySecondary={blendedCategoryColor.secondary}
         >
-          {isOpen && lastOwnVersionReview && (
+          {isOpen && versionReview && lastOwnVersionReview && (
             <VersionReviewPill
               separate={false}
               lastOwnVersionReview={lastOwnVersionReview}
