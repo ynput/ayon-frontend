@@ -20,6 +20,7 @@ import {
   buildMetricTargets,
   mergeFieldStats,
   totalRowsFromStats,
+  toListItemsStatsTargets,
   useGetListItemsColumnStatsQuery,
 } from '@shared/api'
 import type { FieldStats, StatsEntity } from '@shared/api'
@@ -78,7 +79,9 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   const statsTargets = useMemo(
     () =>
       statsEntity
-        ? buildMetricTargets({ entity: statsEntity, attribs: attribFields, columnVisibility })
+        ? toListItemsStatsTargets(
+            buildMetricTargets({ entity: statsEntity, attribs: attribFields, columnVisibility }),
+          )
         : [],
     [statsEntity, attribFields, columnVisibility],
   )
