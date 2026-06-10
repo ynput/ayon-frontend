@@ -12,13 +12,14 @@ export const DEFAULT_COLUMNS_FOLDER = {
   ...CORE_DEFAULT_COLUMNS,
   attrib_priority: true,
   attrib_description: true,
+  folder: true,
 }
 export const DEFAULT_COLUMNS_TASK = {
   ...CORE_DEFAULT_COLUMNS,
   assignees: true,
-  folder: true,
   attrib_priority: true,
   attrib_description: true,
+  folder: true,
 }
 export const DEFAULT_COLUMNS_VERSION = {
   ...CORE_DEFAULT_COLUMNS,
@@ -30,6 +31,7 @@ export const DEFAULT_COLUMNS_VERSION = {
 export const DEFAULT_COLUMNS_PRODUCT = {
   ...CORE_DEFAULT_COLUMNS,
   productType: true,
+  folder: true,
 }
 
 export const DEFAULT_COLUMNS_PROJECT = {

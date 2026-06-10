@@ -15,6 +15,8 @@ fragment ListItemFragment on BaseNode {
     folderId
     thumbnailHash
     folder {
+      name
+      label
       path
       folderType
     }
@@ -39,6 +41,8 @@ fragment ListItemFragment on BaseNode {
     productType
     folderId
     folder {
+      name
+      label
       path
       folderType
     }
@@ -54,15 +58,19 @@ fragment ListItemFragment on BaseNode {
       id
       name
       productType
+      productBaseType
       folderId
       folder {
         id
+        name
+        label
         path
         folderType
       }
     }
     task {
       name
+      label
       taskType
     }
   }

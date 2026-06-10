@@ -163,6 +163,34 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         {
           position: 11,
           column: {
+            id: 'folderType',
+            accessorKey: 'folderType',
+            header: 'Folder type',
+            minSize: COLUMN_MIN_SIZE,
+            enableResizing: true,
+            enablePinning: true,
+            enableHiding: true,
+            cell: ({ row, column, table }) => {
+              const { value, id, type } = getValueIdType(row, column.id)
+              if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+              const meta = table.options.meta as any
+              return (
+                <CellWidget
+                  rowId={id}
+                  className={clsx('folderType', { loading: row.original.isLoading })}
+                  columnId={column.id}
+                  value={value}
+                  options={meta?.options?.folderType}
+                  attributeData={{ type: 'string' }}
+                  isReadOnly={true}
+                />
+              )
+            },
+          },
+        },
+        {
+          position: 12,
+          column: {
             id: 'taskLabel',
             accessorKey: 'taskLabel',
             header: 'Task',

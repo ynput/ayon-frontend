@@ -2,5 +2,6 @@ fragment VPFolder on FolderNode {
   id
   name
   label
+  folderType
   allAttrib
 }

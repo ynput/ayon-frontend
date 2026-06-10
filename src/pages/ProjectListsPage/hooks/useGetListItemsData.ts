@@ -8,6 +8,8 @@ import {
   RESTRICTED_ENTITY_TYPE,
   RESTRICTED_ENTITY_NAME,
 } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
+import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
+import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 
 // Extend EntityListItem to include links
@@ -44,7 +46,9 @@ const useGetListItemsData = ({
   skip,
   skipLinks = true,
 }: UseGetListItemsDataProps): UseGetListItemsDataReturn => {
-  const queryFilterString = filters.conditions?.length ? JSON.stringify(filters) : ''
+  const queryFilterString = filters.conditions?.length
+    ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(filters)))
+    : ''
 
   // Create sort params for infinite query
   const singleSort = { ...sorting[0] }
