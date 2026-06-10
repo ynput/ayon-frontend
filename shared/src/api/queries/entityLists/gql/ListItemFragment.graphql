@@ -55,6 +55,7 @@ fragment ListItemFragment on BaseNode {
       id
       name
       productType
+      productBaseType
       folderId
       folder {
         id
@@ -66,6 +67,7 @@ fragment ListItemFragment on BaseNode {
     }
     task {
       name
+      label
       taskType
     }
   }

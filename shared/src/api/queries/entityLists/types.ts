@@ -61,6 +61,7 @@ type ItemNodeData = {
   product?: {
     folderId?: string
     productType: string
+    productBaseType?: string
     folder: {
       folderType: string
     }
@@ -68,6 +69,8 @@ type ItemNodeData = {
   task?: {
     folderId?: string
     taskType: string
+    name?: string
+    label?: string
   }
 }
 

@@ -50,6 +50,8 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         author: extractAuthor(item, item.entityType),
         version: extractVersion(item, item.entityType),
         product: extractProduct(item, item.entityType),
+        productBaseType: extractProductBaseType(item, item.entityType),
+        taskLabel: extractTaskLabel(item, item.entityType),
         // metadata
         updatedAt: item.updatedAt,
         createdAt: item.createdAt,
@@ -173,6 +175,24 @@ const extractProduct = (item: EntityListItemWithLinks, entityType: string): stri
       return item.product?.name || ''
     case 'product':
       return item.name || ''
+    default:
+      return ''
+  }
+}
+
+const extractProductBaseType = (item: EntityListItemWithLinks, entityType: string): string => {
+  switch (entityType) {
+    case 'version':
+      return item.product?.productBaseType || ''
+    default:
+      return ''
+  }
+}
+
+const extractTaskLabel = (item: EntityListItemWithLinks, entityType: string): string => {
+  switch (entityType) {
+    case 'version':
+      return item.task?.label || item.task?.name || ''
     default:
       return ''
   }

@@ -40,6 +40,10 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
       label: 'Task type',
     },
     {
+      value: 'folderType',
+      label: 'Folder type',
+    },
+    {
       value: 'taskLabel',
       label: 'Task label',
     },
