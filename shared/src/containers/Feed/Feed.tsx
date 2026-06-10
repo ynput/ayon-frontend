@@ -65,7 +65,7 @@ export const Feed = ({
   statuses = [],
   entityListId,
   isSlideOut,
-  versionReview = true,
+  versionReview = false,
 }: FeedProps) => {
   const {
     projectName,
