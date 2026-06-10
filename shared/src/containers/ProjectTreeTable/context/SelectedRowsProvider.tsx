@@ -1,8 +1,9 @@
 import { ReactNode, useCallback, useMemo, useRef, useEffect } from 'react'
-import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './SelectionCellsContext'
+import { useSelectionCellsContext } from './SelectionCellsContext'
 import { CellId, getCellId, parseCellId, RowId } from '../utils/cellUtils'
 import { SelectedRowsContext } from './SelectedRowsContext'
 import { useDetailsPanelEntityContext } from './DetailsPanelEntityContext'
+import { ROW_SELECTION_COLUMN_ID } from '../constants'
 
 interface SelectedRowsProviderProps {
   children: ReactNode
@@ -33,10 +34,12 @@ export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) =>
             parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID && parseCellId(cellId)?.rowId,
         )
         .map((cellId) => parseCellId(cellId)?.rowId)
-        .filter((rowId): rowId is string =>
-          rowId !== undefined
-          // in case the grid map hasn't been initialised, we ignore it
-          && (gridMap.rowIdToIndex.size === 0 || gridMap.rowIdToIndex.has(rowId))),
+        .filter(
+          (rowId): rowId is string =>
+            rowId !== undefined &&
+            // in case the grid map hasn't been initialised, we ignore it
+            (gridMap.rowIdToIndex.size === 0 || gridMap.rowIdToIndex.has(rowId)),
+        ),
     [selectedCells, gridMap],
   )
 

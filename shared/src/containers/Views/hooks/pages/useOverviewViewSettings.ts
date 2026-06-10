@@ -88,12 +88,27 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
     [JSON.stringify(viewSettings)],
   )
 
-  // Sync local state with server when viewSettings change
+  // Sync local state with server when the relevant setting fields change.
+  // Use per-field deps (not JSON.stringify(viewSettings)) so a change to one
+  // field does not clear in-flight local state for unrelated fields, which
+  // would cause a visible flicker during rapid sequential updates.
   useEffect(() => {
     setLocalFilters(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify((viewSettings as OverviewSettings)?.filter)])
+
+  useEffect(() => {
     setLocalHierarchy(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    (viewSettings as OverviewSettings)?.showHierarchy,
+    (viewSettings as OverviewSettings)?.groupBy,
+  ])
+
+  useEffect(() => {
     setLocalColumns(null)
-  }, [JSON.stringify(viewSettings)])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify((viewSettings as OverviewSettings)?.columns)])
 
   // Use local state if available, otherwise use server state
   const filters = localFilters !== null ? localFilters : serverFilters
@@ -236,9 +251,7 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
 
       // Combined setter lets updateViewSettings manage optimism/reset for both
       // local states atomically (so error paths don't leave one stale).
-      const combinedSetter = (
-        value: { showHierarchy: boolean; columns: ColumnsConfig } | null,
-      ) => {
+      const combinedSetter = (value: { showHierarchy: boolean; columns: ColumnsConfig } | null) => {
         if (value === null) {
           setLocalHierarchy(null)
           setLocalColumns(null)

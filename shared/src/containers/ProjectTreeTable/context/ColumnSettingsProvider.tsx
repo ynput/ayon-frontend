@@ -8,13 +8,12 @@ import {
   ColumnSizingState,
   SortingState,
 } from '@tanstack/react-table'
-import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
-import { DRAG_HANDLE_COLUMN_ID } from '../utils/pinningUtils'
 import { ColumnsConfig, ColumnSettingsContext, TableGroupBy } from './ColumnSettingsContext'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
 import { SummaryCalc, SummaryFormat, RowScope } from '../types/summaryTypes'
 import { isEqual } from 'lodash'
 import { checkColumnVisibility } from '../utils'
+import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
@@ -47,6 +46,8 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     const allKnownIds = allColumnsRef.current
     // Expand sparse columnVisibility to explicit values for all known columns so that
     // "undefined" is never ambiguous when columns are saved and reloaded.
+    // Special columns (drag-handle, row-selection) are always injected by the provider,
+    // so they must never be persisted — strip them from visibility and order entirely.
     const specialIds = new Set([DRAG_HANDLE_COLUMN_ID, ROW_SELECTION_COLUMN_ID])
     if (allKnownIds.length > 0) {
       const resolvedVisibility = { ...next.columnVisibility }
@@ -55,7 +56,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
           resolvedVisibility[id] = checkColumnVisibility({}, id, defaultColumnVisibility)
         }
       })
-      onChange({ ...next, columnVisibility: resolvedVisibility }, allKnownIds)
+      // Remove special columns from visibility and order before persisting
+      specialIds.forEach((id) => delete resolvedVisibility[id])
+      const resolvedOrder = (next.columnOrder ?? []).filter((id) => !specialIds.has(id))
+      onChange(
+        { ...next, columnVisibility: resolvedVisibility, columnOrder: resolvedOrder },
+        allKnownIds,
+      )
     } else {
       onChange(next, allKnownIds)
     }

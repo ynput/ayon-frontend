@@ -13,6 +13,14 @@ import {
   SummaryFormat,
   RowScope,
 } from '@shared/containers/ProjectTreeTable/types/summaryTypes'
+import {
+  ROW_SELECTION_COLUMN_ID,
+  DRAG_HANDLE_COLUMN_ID,
+} from '@shared/containers/ProjectTreeTable/constants'
+
+// These columns are always injected by ColumnSettingsProvider and must never be
+// persisted or loaded from saved view settings.
+const INTERNAL_COLUMN_IDS = new Set([ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID])
 
 // Backend doesn't store summary/summaryScope/summaryFormat on ColumnItemModel yet
 type ColumnItem = ColumnItemModel & {
@@ -48,6 +56,9 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
   columns.forEach((column) => {
     const { name, visible, pinned, width, summary, summaryScope, summaryFormat } =
       column as ColumnItem
+
+    // Skip internal columns — they are always injected by ColumnSettingsProvider
+    if (INTERNAL_COLUMN_IDS.has(name)) return
 
     // Column visibility: undefined means hidden (opt-in model)
     columnVisibility[name] = visible ?? false
@@ -181,6 +192,7 @@ function createColumnItem(
 ): ColumnItem {
   const column: ColumnItem = {
     name: columnName,
+    visible: !!columnVisibility[columnName],
   }
 
   // Set summary calc type if chosen for this column
@@ -253,8 +265,12 @@ export function convertTanstackStatesToColumnConfig(
     allColumnIds || [],
   )
 
-  // Determine the final column order
-  const finalColumnOrder = determineColumnOrder(columnOrder, allColumnIds || [], columnsWithState)
+  // Determine the final column order, excluding internal columns
+  const finalColumnOrder = determineColumnOrder(
+    columnOrder,
+    allColumnIds || [],
+    columnsWithState,
+  ).filter((id) => !INTERNAL_COLUMN_IDS.has(id))
 
   // Create ColumnItemModel for each column in the determined order
   const columns: ColumnItem[] = finalColumnOrder.map((columnName) =>
