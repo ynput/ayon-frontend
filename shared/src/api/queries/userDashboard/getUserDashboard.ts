@@ -7,7 +7,7 @@ import {
   Anatomy,
 } from '@shared/api/generated'
 import { projectQueries } from '@shared/api/queries/project'
-import { PubSub } from '@shared/util'
+import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import convertAccessGroupsData, { AccessGroups } from './convertAccessGroupsData'
 
 // GetKanban response type
@@ -133,11 +133,34 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
       ) {
         let token
+        let unsubscribeThumbnails: (() => void) | undefined
         let fetchQueue: { taskIds: string[]; projects: string[] }[] = []
         let fetchTimeout: any = null
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
+
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              const cacheTasks = getCacheEntry().data ?? []
+              if (!cacheTasks.length) return
+
+              const matchedMessages = messages.filter((m) =>
+                cacheTasks.some((t) => t.id === m.summary.entityId && t.projectName === m.project),
+              )
+              if (matchedMessages.length === 0) return
+
+              updateCachedData((draft) => {
+                matchedMessages.forEach((message) => {
+                  const entityIndex = draft.findIndex((t) => t.id === message.summary.entityId)
+                  if (entityIndex !== -1 && draft[entityIndex] && message.summary.thumbnailHash) {
+                    draft[entityIndex].thumbnailHash = message.summary.thumbnailHash
+                  }
+                })
+              })
+            },
+            ['task'],
+          )
 
           const processFetchQueue = async () => {
             const batch = [...fetchQueue]
@@ -284,6 +307,9 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
+        if (unsubscribeThumbnails) {
+          unsubscribeThumbnails()
+        }
         if (fetchTimeout) clearTimeout(fetchTimeout)
       },
       // // there is only one cache for kanban

@@ -1,4 +1,4 @@
-import { PubSub } from '@shared/util'
+import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import { ActivitiesResult } from './activitiesHelpers'
 import type { GetActivitiesQueryVariables } from '@shared/api'
 import { getActivitiesGQLApi as gqlApi } from '../getActivities'
@@ -58,10 +58,60 @@ export const handleActivityRealtimeUpdates = async (
   }: CacheLifecycleApi,
 ) => {
   let token: string | undefined
+  let unsubscribeThumbnails: (() => void) | undefined
 
   try {
     // Wait for the initial query to resolve before proceeding
     await cacheDataLoaded
+
+    unsubscribeThumbnails = subscribeToThumbnailUpdates(
+      (messages: ThumbnailUpdateMessage[]) => {
+        const draftData = getCacheEntry().data
+        if (!draftData?.pages?.length) return
+
+        // Map version ids/entity ids to their new thumbnail hashes
+        const versionHashesData = messages.reduce((acc, message) => {
+          if (message.summary.entityType === 'version') {
+            acc[message.summary.entityId] = message.summary.thumbnailHash || '' // Use empty string if undefined
+          }
+          return acc
+        }, {} as Record<string, string>)
+
+        if (Object.keys(versionHashesData).length === 0) return
+
+        updateCachedData((draft) => {
+          if (!draft || !draft.pages) return
+          draft.pages.forEach((page) => {
+            page.activities?.forEach((activity) => {
+              // Version hashes in activities exist when Activity is on a version.
+              // Or the referenceId points to the version entity.
+              if (
+                activity.referenceType === 'version' &&
+                activity.referenceId &&
+                versionHashesData[activity.referenceId] !== undefined
+              ) {
+                if (!activity.version) {
+                  activity.version = {} as any
+                }
+                activity.version!.thumbnailHash = versionHashesData[activity.referenceId]
+              }
+              // Add check for entityId as well
+              if (
+                activity.origin.type === 'version' &&
+                activity.origin.id &&
+                versionHashesData[activity.origin.id] !== undefined
+              ) {
+                if (!activity.version) {
+                  activity.version = {} as any
+                }
+                activity.version!.thumbnailHash = versionHashesData[activity.origin.id]
+              }
+            })
+          })
+        })
+      },
+      ['version'],
+    )
 
     const handlePubSub = async (topic: string, message: ActivityMessage) => {
       const activityId = message.summary?.activity_id
@@ -239,5 +289,8 @@ export const handleActivityRealtimeUpdates = async (
   // Cleanup: unsubscribe from PubSub
   if (token) {
     PubSub.unsubscribe(token)
+  }
+  if (unsubscribeThumbnails) {
+    unsubscribeThumbnails()
   }
 }
