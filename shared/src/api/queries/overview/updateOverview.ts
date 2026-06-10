@@ -277,6 +277,7 @@ type StatsTagType =
   | 'taskColumnStats'
   | 'productColumnStats'
   | 'versionColumnStats'
+  | 'entityListItemsColumnStats'
 const statsRefetchTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const scheduleStatsRefetch = (
   dispatch: ThunkDispatch<any, any, UnknownAction>,
@@ -604,12 +605,17 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
 
           if (projectName) {
             if (taskOperations.length || folderOperations.length) {
-              scheduleStatsRefetch(dispatch, projectName, ['folderColumnStats', 'taskColumnStats'])
+              scheduleStatsRefetch(dispatch, projectName, [
+                'folderColumnStats',
+                'taskColumnStats',
+                'entityListItemsColumnStats',
+              ])
             }
             if (versionOperations.length || productOperations.length) {
               scheduleStatsRefetch(dispatch, projectName, [
                 'productColumnStats',
                 'versionColumnStats',
+                'entityListItemsColumnStats',
               ])
             }
           }

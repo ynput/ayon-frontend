@@ -78,6 +78,7 @@ const tagTypes = [
   'entityActivities',
   'entityList',
   'entityListItem',
+  'entityListItemsColumnStats',
   'entityListAttribute',
   'entityListFolder',
   'feedback',
