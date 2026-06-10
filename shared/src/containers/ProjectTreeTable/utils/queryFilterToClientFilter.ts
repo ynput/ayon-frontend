@@ -172,8 +172,13 @@ const convertConditionToFilter = (
   // Convert the condition values to FilterValue objects
   const filterValues = convertConditionValueToFilterValues(value, operator, filterOption)
 
+  // hasValue/noValue chips encode the null-check in the value itself — marking them
+  // inverted would flip the operator back on the next conversion (notnull <-> isnull)
+  const isNullnessCheck =
+    filterValues.length === 1 && ['hasValue', 'noValue'].includes(String(filterValues[0].id))
+
   // Determine if the filter is inverted based on the operator
-  const inverted = isInvertedOperator(operator, filterOption.type)
+  const inverted = isNullnessCheck ? false : isInvertedOperator(operator, filterOption.type)
 
   // Determine the filter operator (AND/OR)
   const filterOperator = getFilterOperator(operator, filterOption.type)

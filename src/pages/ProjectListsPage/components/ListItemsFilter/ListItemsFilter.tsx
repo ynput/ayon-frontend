@@ -1,9 +1,15 @@
 import { FC } from 'react'
 import SearchFilterWrapper from '@pages/ProjectOverviewPage/containers/SearchFilterWrapper'
 import { ListEntityType } from '../NewListDialog/NewListDialog'
-import { buildScopes } from '@shared/components'
+import { buildScopes, FilterFieldType } from '@shared/components'
 import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
 import { useProjectContext } from '@shared/context'
+
+// list items endpoint whitelists entity/parent columns; versions have no name
+// column and the endpoint knows no productBaseType/hasReviewables at all
+const UNSUPPORTED_BY_LIST_ITEMS: Partial<Record<ListEntityType, FilterFieldType[]>> = {
+  version: ['name', 'productBaseType', 'hasReviewables'],
+}
 
 interface ListItemsFilterProps {
   entityType: ListEntityType
@@ -18,7 +24,7 @@ const ListItemsFilter: FC<ListItemsFilterProps> = ({ entityType, projectName }) 
     <SearchFilterWrapper
       queryFilters={listItemsFilters}
       onChange={setListItemsFilters}
-      scopes={buildScopes([entityType])}
+      scopes={buildScopes([entityType], UNSUPPORTED_BY_LIST_ITEMS)}
       projectNames={[projectName]}
       projectInfo={projectInfo}
       enableGlobalSearch={false}
@@ -27,6 +33,9 @@ const ListItemsFilter: FC<ListItemsFilterProps> = ({ entityType, projectName }) 
           assignees: 'entity_',
           tags: 'entity_',
           status: 'entity_',
+          name: 'entity_',
+          author: 'entity_',
+          version: 'entity_',
           attributes: 'attrib.',
         },
         keys: {

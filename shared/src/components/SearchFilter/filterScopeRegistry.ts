@@ -1,4 +1,4 @@
-import { FilterFieldType, ScopeWithFilterTypes } from './useBuildFilterOptions'
+import type { FilterFieldType, ScopeWithFilterTypes } from '@shared/components'
 
 type ScopeType = ScopeWithFilterTypes['scope']
 
@@ -23,5 +23,13 @@ export const FILTER_TYPES_BY_SCOPE: Record<ScopeType, FilterFieldType[]> = {
   user: [...BASE],
 }
 
-export const buildScopes = (scopes: ScopeType[]): ScopeWithFilterTypes[] =>
-  scopes.map((scope) => ({ scope, filterTypes: FILTER_TYPES_BY_SCOPE[scope] }))
+// exclude lets a page subtract fields its backend endpoint cannot filter by,
+// but never add page-specific ones — additions belong in FILTER_TYPES_BY_SCOPE.
+export const buildScopes = (
+  scopes: ScopeType[],
+  exclude?: Partial<Record<ScopeType, FilterFieldType[]>>,
+): ScopeWithFilterTypes[] =>
+  scopes.map((scope) => ({
+    scope,
+    filterTypes: FILTER_TYPES_BY_SCOPE[scope].filter((t) => !exclude?.[scope]?.includes(t)),
+  }))
