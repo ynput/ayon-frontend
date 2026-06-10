@@ -39,9 +39,8 @@ import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } fro
 import { useDetailsPanelContext } from '@shared/context'
 import { useProjectContext } from '@shared/context'
 import { parseFilename } from '@shared/components'
-import { getFuzzyDate, REFRESH_INTERVAL_MS } from '../ActivityDate'
 import { FeedActivity } from '@shared/api'
-import { GuestReviewPill } from './GuestReviewPill'
+import { VersionReviewPill } from './VersionReviewPill'
 
 var Delta = Quill.import('delta')
 
@@ -59,7 +58,7 @@ export const mentionTypeOptions = {
   },
 };
 
-export enum GuestReviewFeedback {
+export enum VersionReviewFeedback {
   APPROVE = "approve",
   REQUEST_CHANGES = "request_changes"
 }
@@ -69,10 +68,10 @@ interface CommentInputProps {
   initFiles?: any[]
   initCategory?: string | null
   data?: any
-  guestReview: boolean
-  lastGuestReview?: FeedActivity
+  versionReview: boolean
+  lastOwnVersionReview?: FeedActivity
   onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
-  onReview?: (feedback: GuestReviewFeedback) => void
+  onReview?: (feedback: VersionReviewFeedback) => void
   isEditing?: boolean
   disabled?: boolean
   isLoading?: boolean
@@ -86,8 +85,8 @@ const CommentInput: FC<CommentInputProps> = ({
   initFiles = [],
   initCategory = null,
   data = {},
-  guestReview,
-  lastGuestReview,
+  versionReview,
+  lastOwnVersionReview,
   onSubmit,
   isEditing,
   disabled,
@@ -632,34 +631,32 @@ const CommentInput: FC<CommentInputProps> = ({
     return 'Comment or mention with @user, @@version, @@@task...'
   }
 
-  const guestReviewButtons = guestReview && onReview && (
-    <Styled.GuestReviewButtons>
-      <Styled.GuestReviewButton
+  const versionReviewButtons = versionReview && onReview && (
+    <Styled.VersionReviewButtons>
+      <Styled.VersionReviewButton
         icon="check"
         variant="tertiary"
         data-tooltip="Approve"
         onClick={() => {
           handleSubmit()
-          onReview(GuestReviewFeedback.APPROVE)
+          onReview(VersionReviewFeedback.APPROVE)
         }}
       >
         <span className="label">Approve</span>
-      </Styled.GuestReviewButton>
-      <Styled.GuestReviewButton
+      </Styled.VersionReviewButton>
+      <Styled.VersionReviewButton
         icon="sync"
         variant="danger"
         data-tooltip="Request changes"
         onClick={() => {
           handleSubmit()
-          onReview(GuestReviewFeedback.REQUEST_CHANGES)
+          onReview(VersionReviewFeedback.REQUEST_CHANGES)
         }}
       >
         <span className="label">Request changes</span>
-      </Styled.GuestReviewButton>
-    </Styled.GuestReviewButtons>
+      </Styled.VersionReviewButton>
+    </Styled.VersionReviewButtons>
   )
-
-
 
   return (
     <>
@@ -671,10 +668,10 @@ const CommentInput: FC<CommentInputProps> = ({
         onClick={() => setIsDropping(false)}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        {!isOpen && lastGuestReview && (
-          <GuestReviewPill
+        {!isOpen && lastOwnVersionReview && (
+          <VersionReviewPill
             separate={true}
-            lastGuestReview={lastGuestReview}
+            lastOwnVersionReview={lastOwnVersionReview}
           />
         )}
 
@@ -695,10 +692,10 @@ const CommentInput: FC<CommentInputProps> = ({
           $categoryTertiary={blendedCategoryColor.primary}
           $categorySecondary={blendedCategoryColor.secondary}
         >
-          {isOpen && lastGuestReview && (
-            <GuestReviewPill
+          {isOpen && lastOwnVersionReview && (
+            <VersionReviewPill
               separate={false}
-              lastGuestReview={lastGuestReview}
+              lastOwnVersionReview={lastOwnVersionReview}
             />
           )}
           <Styled.Markdown ref={markdownRef}>
@@ -793,7 +790,7 @@ const CommentInput: FC<CommentInputProps> = ({
               </Styled.Buttons>
             )}
             <Styled.Buttons style={{ marginLeft: 'auto' }}>
-              {isOpen && guestReviewButtons}
+              {isOpen && versionReviewButtons}
               {isEditing && (
                 <Button variant="text" onClick={handleClose}>
                   Cancel
@@ -835,8 +832,8 @@ const CommentInput: FC<CommentInputProps> = ({
 
         {!isOpen && (
           <>
-            <Styled.GuestReviewButtonsSpacer />
-            {guestReviewButtons}
+            <Styled.VersionReviewButtonsSpacer />
+            {versionReviewButtons}
           </>
         )}
       </Styled.AutoHeight>

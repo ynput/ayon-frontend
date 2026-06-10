@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-export const GuestReview = styled.li`
+export const VersionReview = styled.li`
   list-style: none;
   margin: var(--padding-s) var(--padding-m);
   padding: var(--padding-s) var(--padding-m) var(--padding-s) 0;

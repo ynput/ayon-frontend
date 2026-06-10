@@ -467,16 +467,16 @@ export const Placeholder = styled.span`
   opacity: 0.4;
 `
 
-export const GuestReviewButtons = styled.div`
+export const VersionReviewButtons = styled.div`
   display: flex;
   gap: var(--base-gap-medium);
 `
 
-export const GuestReviewButtonsSpacer = styled.div`
+export const VersionReviewButtonsSpacer = styled.div`
   margin-top: var(--padding-m);
 `
 
-export const GuestReviewButton = styled(Button)`
+export const VersionReviewButton = styled(Button)`
   background: transparent;
   border: solid 1px currentColor;
   flex-grow: 1;
@@ -502,7 +502,7 @@ export const GuestReviewButton = styled(Button)`
   }
 `
 
-export const LastGuestReview = styled.div`
+export const LastOwnVersionReview = styled.div`
   border-top-left-radius: var(--border-radius-l);
   border-top-right-radius: var(--border-radius-l);
   user-select: none;
