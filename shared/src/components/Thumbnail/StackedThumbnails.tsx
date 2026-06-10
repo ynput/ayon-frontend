@@ -56,12 +56,12 @@ type Thumbnail = {
   projectName?: string
   icon?: string
   color?: string
-  updatedAt?: string
+  thumbnailHash?: string
   src?: string
 }
 
 export interface StackedThumbnailsProps
-  extends Omit<ThumbnailProps, 'entityType' | 'entityId' | 'projectName'> {
+  extends Omit<ThumbnailProps, 'entityType' | 'entityId' | 'projectName' | 'thumbnailHash'> {
   thumbnails?: Thumbnail[]
   isLoading?: boolean
   className?: string
@@ -97,7 +97,7 @@ export const StackedThumbnails = ({
             color={thumb.color}
             key={thumb.id || thumb.src || i}
             style={{ ...style, zIndex: -i }}
-            entityUpdatedAt={thumb.updatedAt}
+            thumbnailHash={thumb.thumbnailHash}
             isLoading={isLoading}
             src={thumb.src}
             // @ts-ignore — Thumbnail forwards onContextMenu to its root element

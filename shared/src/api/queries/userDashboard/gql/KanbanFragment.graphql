@@ -10,6 +10,7 @@ fragment KanbanFragment on KanbanNode {
   assignees
   updatedAt
   createdAt
+  thumbnailHash
   dueDate
   thumbnailId
   folderId

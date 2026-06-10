@@ -12,6 +12,7 @@ interface Version {
   productId: string
   productName: string
   updatedAt: string
+  thumbnailHash?: string
   comment?: string
 }
 
@@ -65,7 +66,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
         onReferenceClick={onReferenceClick}
       />
       {versions.flatMap((version, index) => {
-        const { name, id, productId, productName, updatedAt, comment } = version
+        const { name, id, productId, productName, thumbnailHash, comment } = version
         return (
           (index < limit || showAll) && (
             <Styled.Card onClick={() => handleClick(id, productId)} key={id}>
@@ -83,7 +84,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
                   entityType="version"
                   onError={() => setThumbnailError(true)}
                   iconOnly={thumbnailError}
-                  entityUpdatedAt={updatedAt}
+                  thumbnailHash={thumbnailHash}
                   icon={'play_circle'}
                 />
               </Styled.Content>
