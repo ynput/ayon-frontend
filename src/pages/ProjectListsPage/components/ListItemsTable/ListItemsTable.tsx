@@ -3,34 +3,13 @@ import { useListsContext } from '@pages/ProjectListsPage/context'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
 import { EmptyPlaceholder } from '@shared/components'
-import {
-  BuildTreeTableColumnsProps,
-  ProjectTreeTable,
-  useColumnSettingsContext,
-  useProjectTableContext,
-} from '@shared/containers/ProjectTreeTable'
-import { useViewsContext } from '@shared/containers'
+import { BuildTreeTableColumnsProps, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
 import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributesShortcutButton'
 import { UniqueIdentifier } from '@dnd-kit/core'
-import { useProjectContext, usePowerpack } from '@shared/context'
+import { useProjectContext } from '@shared/context'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
-import {
-  buildMetricTargets,
-  mergeFieldStats,
-  totalRowsFromStats,
-  toListItemsStatsTargets,
-  useGetListItemsColumnStatsQuery,
-} from '@shared/api'
-import type { FieldStats, StatsEntity } from '@shared/api'
-
-const STATS_ENTITIES: Record<string, StatsEntity> = {
-  folder: 'folder',
-  task: 'task',
-  product: 'product',
-  version: 'version',
-}
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
@@ -55,67 +34,16 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
     fetchNextPage,
     resetFilters,
     setLinksVisible,
-    selectedListId,
-    listItemsFilters,
+    fieldStats,
+    fieldStatsLoading,
+    fieldStatsError,
+    mainCountLabels,
   } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
   const [hiddenColumns, readOnly] = useMemo(
     () => getColumnConfigFromType(selectedList?.entityType),
     [selectedList],
-  )
-
-  // column summaries footer (powerpack) — stats query is a no-op until the
-  // backend supports calculateSpecificStatistics on entity list items
-  const { attribFields } = useProjectTableContext()
-  const { columnVisibility } = useColumnSettingsContext()
-  const { isLoadingViews } = useViewsContext()
-  const { powerLicense } = usePowerpack()
-
-  const statsEntity = selectedList?.entityType
-    ? STATS_ENTITIES[selectedList.entityType]
-    : undefined
-
-  const statsTargets = useMemo(
-    () =>
-      statsEntity
-        ? toListItemsStatsTargets(
-            buildMetricTargets({ entity: statsEntity, attribs: attribFields, columnVisibility }),
-          )
-        : [],
-    [statsEntity, attribFields, columnVisibility],
-  )
-
-  const statsFilter = listItemsFilters?.conditions?.length
-    ? JSON.stringify(listItemsFilters)
-    : undefined
-
-  const {
-    data: itemStats,
-    isFetching: itemStatsLoading,
-    isError: itemStatsError,
-  } = useGetListItemsColumnStatsQuery(
-    {
-      projectName,
-      listId: selectedListId || '',
-      filter: statsFilter,
-      targets: statsTargets,
-    },
-    { skip: !projectName || !selectedListId || !statsEntity || isLoadingViews || !powerLicense },
-  )
-
-  const fieldStats = useMemo(() => {
-    const items = itemStats ?? []
-    const mainCount: FieldStats = {
-      columnName: 'name',
-      primaryCount: itemStats ? totalRowsFromStats(items) : undefined,
-    }
-    return mergeFieldStats([...items, mainCount])
-  }, [itemStats])
-
-  const mainCountLabels = useMemo(
-    () => ({ primary: statsEntity ? `${statsEntity}s` : 'items' }),
-    [statsEntity],
   )
 
   if (!selectedList)
@@ -165,9 +93,9 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         }}
         // hidden while the backend doesn't support list item stats yet —
         // renders automatically once the query stops erroring
-        showColumnSummaries={!itemStatsError}
+        showColumnSummaries={!fieldStatsError}
         fieldStats={fieldStats}
-        fieldStatsLoading={itemStatsLoading}
+        fieldStatsLoading={fieldStatsLoading}
         mainCountLabels={mainCountLabels}
       />
       <ListItemsShortcuts />

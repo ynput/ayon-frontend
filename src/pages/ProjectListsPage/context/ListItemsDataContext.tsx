@@ -15,7 +15,15 @@ import useBuildListItemsTableData from '../hooks/useBuildListItemsTableData'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { ListsViewSettings, useListsViewSettings } from '@shared/containers'
 import { SortingState, VisibilityState } from '@tanstack/react-table'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, usePowerpack } from '@shared/context'
+import {
+  buildMetricTargets,
+  mergeFieldStats,
+  totalRowsFromStats,
+  toListItemsStatsTargets,
+  useGetListItemsColumnStatsQuery,
+} from '@shared/api'
+import type { FieldStats, StatsEntity } from '@shared/api'
 import { useReviewCardsSettingsContext } from './ReviewCardsSettingsContext'
 import {
   DEFAULT_COLUMNS_FOLDER,
@@ -66,6 +74,11 @@ export interface ListItemsDataContextValue {
   refetch: () => void
   // links visibility
   setLinksVisible: (visible: boolean) => void
+  // column summaries footer (powerpack)
+  fieldStats: FieldStats[]
+  fieldStatsLoading: boolean
+  fieldStatsError: boolean
+  mainCountLabels: { primary: string }
 }
 
 const ListItemsDataContext = createContext<ListItemsDataContextValue | undefined>(undefined)
@@ -91,6 +104,13 @@ export const DEFAULT_COLUMNS_BY_TYPE: Record<string, VisibilityState> = {
   task: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_TASK },
   version: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_VERSION },
   product: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_PRODUCT },
+}
+
+const STATS_ENTITIES: Record<string, StatsEntity> = {
+  folder: 'folder',
+  task: 'task',
+  product: 'product',
+  version: 'version',
 }
 
 // fetch all items and provide methods to update the items
@@ -193,6 +213,60 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     [attribFields, selectedList?.entityType],
   )
 
+  // column summaries footer (powerpack) — queried here, above the review
+  // addon's remote provider, so it works on the Review page too
+  const { powerLicense } = usePowerpack()
+  const statsEntity = listEntityType ? STATS_ENTITIES[listEntityType] : undefined
+
+  const statsTargets = useMemo(
+    () =>
+      statsEntity
+        ? toListItemsStatsTargets(
+            buildMetricTargets({
+              entity: statsEntity,
+              attribs: scopedAttribFields,
+              columnVisibility: {
+                ...defaultColumnVisibility,
+                ...columns.columnVisibility,
+              },
+            }),
+          )
+        : [],
+    [statsEntity, scopedAttribFields, defaultColumnVisibility, columns.columnVisibility],
+  )
+
+  const statsFilter = listItemsFilters?.conditions?.length
+    ? JSON.stringify(listItemsFilters)
+    : undefined
+
+  const {
+    data: itemStats,
+    isFetching: fieldStatsLoading,
+    isError: fieldStatsError,
+  } = useGetListItemsColumnStatsQuery(
+    {
+      projectName,
+      listId: selectedListId || '',
+      filter: statsFilter,
+      targets: statsTargets,
+    },
+    { skip: !projectName || !selectedListId || !statsEntity || !powerLicense },
+  )
+
+  const fieldStats = useMemo(() => {
+    const items = itemStats ?? []
+    const mainCount: FieldStats = {
+      columnName: 'name',
+      primaryCount: itemStats ? totalRowsFromStats(items) : undefined,
+    }
+    return mergeFieldStats([...items, mainCount])
+  }, [itemStats])
+
+  const mainCountLabels = useMemo(
+    () => ({ primary: statsEntity ? `${statsEntity}s` : 'items' }),
+    [statsEntity],
+  )
+
   // convert listItemsData into tableData
   const listItemsTableData = useBuildListItemsTableData({
     listItemsData,
@@ -274,6 +348,10 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         resetFilters,
         refetch,
         setLinksVisible,
+        fieldStats,
+        fieldStatsLoading,
+        fieldStatsError,
+        mainCountLabels,
       }}
     >
       {children}
