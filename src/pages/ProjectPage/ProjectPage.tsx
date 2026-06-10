@@ -411,7 +411,7 @@ const ProjectPageInner = () => {
         onVersionCreated={handleNewVersionUploaded}
       >
         <EntityListsProvider projectName={projectName}>
-          <SlicerProvider scope={`${projectName}-${module}`}>
+          <SlicerProvider scope={`${projectName}-${addonName ?? module}`}>
             <WithViews viewType={page.viewType} projectName={projectName}>
               {page.component}
             </WithViews>
