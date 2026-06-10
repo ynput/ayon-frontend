@@ -15,7 +15,7 @@ import type {
   GetListsQueryVariables,
 } from '@shared/api'
 import { parseAllAttribs } from '../overview'
-import { PubSub } from '@shared/util'
+import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import {
   GetListItemsResult,
   GetListsResult,
@@ -371,8 +371,12 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             },
           ]),
       ],
-      async onCacheEntryAdded(_args, { cacheDataLoaded, cacheEntryRemoved, dispatch }) {
+      async onCacheEntryAdded(
+        _args,
+        { cacheDataLoaded, cacheEntryRemoved, dispatch, updateCachedData },
+      ) {
         let token, token2
+        let unsubscribeThumbnails: (() => void) | undefined
         try {
           // wait for the initial query to resolve before proceeding
           const cache = await cacheDataLoaded
@@ -380,6 +384,28 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           const items = pages.flatMap((page) => page.items)
           // get entityType of first item
           const entityType = items[0]?.entityType
+
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              updateCachedData((draft: any) => {
+                if (!draft?.pages) return
+                messages.forEach((message) => {
+                  draft.pages.forEach((page: any) => {
+                    const pageItems = page.items || []
+                    pageItems.forEach((item: any) => {
+                      if (
+                        item.entityId === message.summary.entityId &&
+                        item.entityType === message.summary.entityType &&
+                        message.summary.thumbnailHash
+                      ) {
+                        item.thumbnailHash = message.summary.thumbnailHash
+                      }
+                    })
+                  })
+                })
+              })
+            },
+          )
 
           const listTopic = `entity_list.changed`
           const entityTypeTopic = `entity.${entityType}`
@@ -417,6 +443,9 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
         PubSub.unsubscribe(token2)
+        if (unsubscribeThumbnails) {
+          unsubscribeThumbnails()
+        }
       },
     }),
     getListsItemsForReviewSession: build.infiniteQuery<

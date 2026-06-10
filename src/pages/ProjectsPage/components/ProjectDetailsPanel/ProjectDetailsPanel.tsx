@@ -87,7 +87,7 @@ export const ProjectDetailsPanel: FC<ProjectDetailsPanelProps> = ({
           <Thumbnail
             projectName={pn}
             entityType="project"
-            entityUpdatedAt={updatedAt}
+            thumbnailHash={updatedAt}
             isLoading={fetching || (isFetching && !project)}
             showBorder={false}
             style={{ width: 120, height: 68, flexShrink: 0, borderRadius: 8 }}

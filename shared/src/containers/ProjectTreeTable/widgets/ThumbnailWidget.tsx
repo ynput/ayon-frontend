@@ -1,6 +1,7 @@
 import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
 import { FC, memo } from 'react'
 import styled from 'styled-components'
+import { getEntityThumbnailUrl } from '@shared/util'
 
 const Wrapper = styled.div`
   position: absolute;
@@ -36,7 +37,7 @@ interface ThumbnailWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
   projectName: string
   entityType: string
   entityId: string
-  updatedAt?: string
+  thumbnailHash?: string
   icon?: string | null
   isPlayable?: boolean
   url?: string // override url for specific thumbnail urls
@@ -46,21 +47,19 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
   projectName,
   entityType,
   entityId,
-  updatedAt,
+  thumbnailHash,
   icon,
   isPlayable,
   url,
   id,
   ...props
 }) => {
-  const valid = projectName && entityType && entityId && updatedAt
-  const thumbnailUrl =
-    projectName &&
-    `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail?updatedAt=${updatedAt}`
+  const valid = projectName && entityType && entityId
+  const thumbnailUrl = getEntityThumbnailUrl({ projectName, entityType, entityId, thumbnailHash })
 
   return (
     <Wrapper className="thumbnail-widget" key={url || thumbnailUrl} id={id}>
-      <Inner {...props}>{valid && <Image src={url || thumbnailUrl} />}</Inner>
+      <Inner {...props}>{valid && <Image src={url || thumbnailUrl || undefined} />}</Inner>
       {isPlayable && <StyledPlayableIcon />}
     </Wrapper>
   )

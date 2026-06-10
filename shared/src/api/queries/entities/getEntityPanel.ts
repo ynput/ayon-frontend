@@ -5,7 +5,7 @@ import {
   GetDetailsPanelTaskQuery,
   GetDetailsPanelVersionQuery,
 } from '@shared/api/generated'
-import { PubSub } from '@shared/util'
+import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import {
   detailsPanelEntityTypes,
@@ -165,9 +165,29 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch },
       ) {
         let token
+        let unsubscribeThumbnails: (() => void) | undefined
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
+
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              const matchedMessages = messages.filter((m) =>
+                entities.some((e) => e.id === m.summary.entityId && e.projectName === m.project),
+              )
+              if (matchedMessages.length === 0) return
+
+              updateCachedData((draft) => {
+                matchedMessages.forEach((message) => {
+                  const entityIndex = draft.findIndex((e: any) => e.id === message.summary.entityId)
+                  if (entityIndex !== -1 && draft[entityIndex] && message.summary.thumbnailHash) {
+                    draft[entityIndex].thumbnailHash = message.summary.thumbnailHash
+                  }
+                })
+              })
+            },
+            [entityType],
+          )
 
           const handlePubSub = async (_topic: string, message: any) => {
             const messageEntityId = message.summary?.entityId
@@ -229,6 +249,9 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
+        if (unsubscribeThumbnails) {
+          unsubscribeThumbnails()
+        }
       },
       providesTags: (_res, _error, { entities, entityType }) => [
         ...entities.map(({ id }: { id: string }) => ({ id, type: 'entities' })),

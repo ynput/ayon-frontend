@@ -4,6 +4,7 @@
 
 import type { GetKanbanResponse, KanbanNode, Status, TaskType, EnumItem } from '@shared/api'
 import { $Any } from '@/types'
+import { getEntityThumbnailUrl } from '@shared/util'
 
 type ProjectsInfo = {
   [key: string]: $Any
@@ -52,7 +53,12 @@ const transformKanbanTasks = (
 
     return {
       ...task,
-      thumbnailUrl: `/api/projects/${task.projectName}/tasks/${task.id}/thumbnail?updatedAt=${task.updatedAt}`,
+      thumbnailUrl: getEntityThumbnailUrl({
+        projectName: task.projectName,
+        entityType: 'task',
+        entityId: task.id,
+        thumbnailHash: task.thumbnailHash,
+      }),
       statusInfo,
       taskInfo,
       priorityInfo,
