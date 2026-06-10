@@ -3,7 +3,9 @@ export const GROUP_BY_FOLDER_KEY = 'projectFolder'
 const CORE_DEFAULT_COLUMNS = {
   thumbnail: true,
   name: true,
+  label: true,
   status: true,
+  subType: true,
 }
 
 export const DEFAULT_COLUMNS_FOLDER = {
