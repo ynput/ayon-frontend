@@ -40,6 +40,7 @@ export type Scalars = {
 export type ActivitiesConnection = {
   __typename?: 'ActivitiesConnection';
   edges: Array<ActivityEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -155,6 +156,25 @@ export type BaseNodeLinksArgs = {
   names?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+export type ColumnStats = {
+  __typename?: 'ColumnStats';
+  avg?: Maybe<Scalars['Float']['output']>;
+  checkedCount?: Maybe<Scalars['Int']['output']>;
+  checkedPercentage?: Maybe<Scalars['Float']['output']>;
+  columnName: Scalars['String']['output'];
+  count?: Maybe<Scalars['Float']['output']>;
+  distribution?: Maybe<Scalars['JSON']['output']>;
+  max?: Maybe<Scalars['Float']['output']>;
+  min?: Maybe<Scalars['Float']['output']>;
+  notCheckedCount?: Maybe<Scalars['Int']['output']>;
+  notCheckedPercentage?: Maybe<Scalars['Float']['output']>;
+  percentageFilled?: Maybe<Scalars['Float']['output']>;
+  percentageNotFilled?: Maybe<Scalars['Float']['output']>;
+  sum?: Maybe<Scalars['Float']['output']>;
+  valueFilledCount?: Maybe<Scalars['Int']['output']>;
+  valueNotFilledCount?: Maybe<Scalars['Int']['output']>;
+};
+
 export type EntityListEdge = {
   __typename?: 'EntityListEdge';
   cursor?: Maybe<Scalars['String']['output']>;
@@ -188,6 +208,7 @@ export type EntityListItemEdge = {
 export type EntityListItemsConnection = {
   __typename?: 'EntityListItemsConnection';
   edges: Array<EntityListItemEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -221,6 +242,8 @@ export type EntityListNodeItemsArgs = {
   accessibleOnly?: Scalars['Boolean']['input'];
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
@@ -230,6 +253,7 @@ export type EntityListNodeItemsArgs = {
 export type EntityListsConnection = {
   __typename?: 'EntityListsConnection';
   edges: Array<EntityListEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -262,6 +286,7 @@ export type EventNode = {
 export type EventsConnection = {
   __typename?: 'EventsConnection';
   edges: Array<EventEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -376,6 +401,8 @@ export type FolderNodeLinksArgs = {
 export type FolderNodeProductsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -404,6 +431,8 @@ export type FolderNodeTasksArgs = {
   assigneesAny?: InputMaybe<Array<Scalars['String']['input']>>;
   attributes?: InputMaybe<Array<AttributeFilterInput>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderFilter?: InputMaybe<Scalars['String']['input']>;
@@ -432,6 +461,7 @@ export type FolderType = {
 export type FoldersConnection = {
   __typename?: 'FoldersConnection';
   edges: Array<FolderEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -447,6 +477,7 @@ export enum HasLinksFilter {
 export type KanbanConnection = {
   __typename?: 'KanbanConnection';
   edges: Array<KanbanEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -519,8 +550,16 @@ export type LinksConnection = {
   pageInfo: PageInfo;
 };
 
+export type MetricTargetInput = {
+  /** List of statistical calculations to run */
+  aggregations: Array<StatsOperation>;
+  /** The attribute path, e.g., 'attrib.fps' */
+  field: Scalars['String']['input'];
+};
+
 export type PageInfo = {
   __typename?: 'PageInfo';
+  columnMetadata?: Maybe<Array<ColumnStats>>;
   endCursor?: Maybe<Scalars['String']['output']>;
   hasNextPage: Scalars['Boolean']['output'];
   hasPreviousPage: Scalars['Boolean']['output'];
@@ -612,6 +651,8 @@ export type ProductNodeVersionsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -646,6 +687,7 @@ export type ProductType = {
 export type ProductsConnection = {
   __typename?: 'ProductsConnection';
   edges: Array<ProductEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -831,6 +873,8 @@ export type ProjectNodeFoldersArgs = {
   assignees?: InputMaybe<Array<Scalars['String']['input']>>;
   attributes?: InputMaybe<Array<AttributeFilterInput>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderTypes?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -882,6 +926,8 @@ export type ProjectNodeProductArgs = {
 export type ProjectNodeProductsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -941,6 +987,8 @@ export type ProjectNodeTasksArgs = {
   assigneesAny?: InputMaybe<Array<Scalars['String']['input']>>;
   attributes?: InputMaybe<Array<AttributeFilterInput>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderFilter?: InputMaybe<Scalars['String']['input']>;
@@ -968,6 +1016,8 @@ export type ProjectNodeVersionsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1017,6 +1067,7 @@ export type ProjectNodeWorkfilesArgs = {
 export type ProjectsConnection = {
   __typename?: 'ProjectsConnection';
   edges: Array<ProjectEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -1199,9 +1250,27 @@ export type RepresentationNodeLinksArgs = {
 export type RepresentationsConnection = {
   __typename?: 'RepresentationsConnection';
   edges: Array<RepresentationEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
+
+export enum StatsOperation {
+  Avg = 'AVG',
+  Checked = 'CHECKED',
+  Count = 'COUNT',
+  Distribution = 'DISTRIBUTION',
+  Filled = 'FILLED',
+  Max = 'MAX',
+  Min = 'MIN',
+  NotChecked = 'NOT_CHECKED',
+  NotFilled = 'NOT_FILLED',
+  PercentageChecked = 'PERCENTAGE_CHECKED',
+  PercentageFilled = 'PERCENTAGE_FILLED',
+  PercentageNotChecked = 'PERCENTAGE_NOT_CHECKED',
+  PercentageNotFilled = 'PERCENTAGE_NOT_FILLED',
+  Sum = 'SUM'
+}
 
 export type Status = {
   __typename?: 'Status';
@@ -1325,6 +1394,8 @@ export type TaskNodeVersionsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1377,6 +1448,7 @@ export type TaskType = {
 export type TasksConnection = {
   __typename?: 'TasksConnection';
   edges: Array<TaskEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -1436,6 +1508,7 @@ export type UserNodeTasksArgs = {
 export type UsersConnection = {
   __typename?: 'UsersConnection';
   edges: Array<UserEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -1558,6 +1631,7 @@ export type VersionNodeRepresentationsArgs = {
 export type VersionsConnection = {
   __typename?: 'VersionsConnection';
   edges: Array<VersionEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -1626,6 +1700,7 @@ export type WorkfileNodeLinksArgs = {
 export type WorkfilesConnection = {
   __typename?: 'WorkfilesConnection';
   edges: Array<WorkfileEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -2517,7 +2592,7 @@ export const GetActivitiesByIdDocument = new TypedDocumentString(`
 }`);
 export const GetActivityUsersDocument = new TypedDocumentString(`
     query GetActivityUsers($projects: [String!]) {
-  users(last: 2000, projects: $projects) {
+  users(last: 2000, projects: $projects, isSupport: false) {
     edges {
       node {
         name
@@ -3290,7 +3365,7 @@ export const GetKanbanDocument = new TypedDocumentString(`
 }`);
 export const GetKanbanProjectUsersDocument = new TypedDocumentString(`
     query GetKanbanProjectUsers($projects: [String!]) {
-  users(last: 2000, projects: $projects) {
+  users(last: 2000, projects: $projects, isSupport: false) {
     edges {
       node {
         name
@@ -3339,7 +3414,7 @@ export const GetKanbanTasksDocument = new TypedDocumentString(`
 }`);
 export const GetActiveUsersCountDocument = new TypedDocumentString(`
     query GetActiveUsersCount {
-  users(last: 2000) {
+  users(last: 2000, isSupport: false) {
     edges {
       node {
         active
@@ -3351,7 +3426,7 @@ export const GetActiveUsersCountDocument = new TypedDocumentString(`
     `);
 export const GetAllAssigneesDocument = new TypedDocumentString(`
     query GetAllAssignees {
-  users(last: 2000) {
+  users(last: 2000, isSupport: false) {
     edges {
       node {
         name
@@ -3366,7 +3441,7 @@ export const GetAllAssigneesDocument = new TypedDocumentString(`
     `);
 export const GetAllProjectUsersAsAssigneeDocument = new TypedDocumentString(`
     query GetAllProjectUsersAsAssignee($projectName: String) {
-  users(last: 2000, projectName: $projectName) {
+  users(last: 2000, projectName: $projectName, isSupport: false) {
     edges {
       node {
         name
