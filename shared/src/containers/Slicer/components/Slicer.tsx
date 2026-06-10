@@ -59,6 +59,15 @@ export const Slicer: FC<SlicerProps> = ({
     onRowSelectionChange?.(s, sliceMap)
   }
 
+  // selection ids are persisted, selection data is not — rebuild it once slice rows are loaded
+  // keyed on sliceMap so it only fires when loaded rows actually match the current slice type
+  useEffect(() => {
+    if (isViewSyncPending || isLoadingSliceTableData) return
+    if (!Object.keys(rowSelection).some((id) => rowSelection[id])) return
+    onRowSelectionChange?.(rowSelection, sliceMap)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sliceMap, isViewSyncPending, isLoadingSliceTableData])
+
   // on first mount, check that current sliceType is in sliceFields, if not, change to first option
   // Skip if view sync is pending — the view will set the correct type once loaded
   useEffect(() => {
