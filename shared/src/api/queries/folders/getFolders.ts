@@ -1,6 +1,6 @@
 import { foldersApi } from '@shared/api/generated'
 import { api as eventsApi } from '@shared/api/generated/events'
-import { PubSub } from '@shared/util'
+import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 
 const enhancedApi = foldersApi.enhanceEndpoints({
   endpoints: {
@@ -188,8 +188,29 @@ const enhancedApi = foldersApi.enhanceEndpoints({
           }
         }
 
+        let unsubscribeThumbnails: (() => void) | undefined
+
         try {
           await cacheDataLoaded
+
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              updateCachedData((draft: any) => {
+                if (!draft || !Array.isArray(draft.folders)) return
+                messages.forEach((message) => {
+                  if (message.summary.entityType === 'folder' && message.summary.thumbnailHash) {
+                    const idx = draft.folders.findIndex(
+                      (f: any) => f.id === message.summary.entityId,
+                    )
+                    if (idx !== -1) {
+                      draft.folders[idx].thumbnailHash = message.summary.thumbnailHash
+                    }
+                  }
+                })
+              })
+            },
+            ['folder'],
+          )
 
           const handlePubSub = (_topic: string, _message: any) => {
             const isMembership = _topic.endsWith('.created') || _topic.endsWith('.deleted')
@@ -225,6 +246,7 @@ const enhancedApi = foldersApi.enhanceEndpoints({
 
         await cacheEntryRemoved
         tokens.forEach((t) => PubSub.unsubscribe(t))
+        if (unsubscribeThumbnails) unsubscribeThumbnails()
         clearTimer()
       },
     },
