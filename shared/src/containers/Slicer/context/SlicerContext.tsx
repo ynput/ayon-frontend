@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
   ReactNode,
   ForwardRefExoticComponent,
   RefAttributes,
@@ -118,6 +119,12 @@ export const SlicerProvider = ({
   const [rowSelectionData, setRowSelectionData] = useState<SelectionData>({})
   // if there is a need to leavePersistentSlice row selection data between slice changes (like the hierarchy)
   const [persistentRowSelectionData, setPersistentRowSelectionData] = useState<SelectionData>({})
+
+  // in-memory selection data must not survive scope (project/page) changes
+  useEffect(() => {
+    setRowSelectionData({})
+    setPersistentRowSelectionData({})
+  }, [scope])
   const config: SlicerConfig = {
     progress: {
       fields: [
