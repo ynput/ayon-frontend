@@ -3,11 +3,13 @@ export const GROUP_BY_FOLDER_KEY = 'projectFolder'
 export const DEFAULT_COLUMNS_FOLDER = {
   attrib_priority: true,
   attrib_description: true,
+  folder: true
 }
 export const DEFAULT_COLUMNS_TASK = {
   attrib_priority: true,
   attrib_description: true,
   assignees: true,
+  folder:true
 }
 export const DEFAULT_COLUMNS_VERSION = {
   author: true,
@@ -17,6 +19,7 @@ export const DEFAULT_COLUMNS_VERSION = {
 
 export const DEFAULT_COLUMNS_PRODUCT = {
   productType: true,
+  folder:true
 }
 
 export const DEFAULT_COLUMNS_PROJECT = {

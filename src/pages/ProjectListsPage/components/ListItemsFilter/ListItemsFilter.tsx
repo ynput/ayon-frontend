@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import SearchFilterWrapper from '@pages/ProjectOverviewPage/containers/SearchFilterWrapper'
 import { ListEntityType } from '../NewListDialog/NewListDialog'
-import { BuildFilterOptions } from '@shared/components'
+import { buildScopes } from '@shared/components'
 import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
 import { useProjectContext } from '@shared/context'
 
@@ -18,10 +18,9 @@ const ListItemsFilter: FC<ListItemsFilterProps> = ({ entityType, projectName }) 
     <SearchFilterWrapper
       queryFilters={listItemsFilters}
       onChange={setListItemsFilters}
-      scope={entityType}
+      scopes={buildScopes([entityType])}
       projectNames={[projectName]}
       projectInfo={projectInfo}
-      filterTypes={getFilterTypesByScope(entityType)}
       enableGlobalSearch={false}
       config={{
         prefixes: {
@@ -43,18 +42,3 @@ const ListItemsFilter: FC<ListItemsFilterProps> = ({ entityType, projectName }) 
 }
 
 export default ListItemsFilter
-
-const getFilterTypesByScope = (entityType: ListEntityType): BuildFilterOptions['filterTypes'] => {
-  const base: BuildFilterOptions['filterTypes'] = ['status', 'tags', 'attributes']
-  switch (entityType) {
-    case 'folder':
-      return [...base, 'folderType']
-    case 'task':
-      return [...base, 'taskType', 'folderType', 'assignees']
-    case 'version':
-      return [...base, 'taskType', 'productType', 'folderType']
-
-    default:
-      return []
-  }
-}

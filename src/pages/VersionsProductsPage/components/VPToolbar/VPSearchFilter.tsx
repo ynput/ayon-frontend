@@ -1,51 +1,11 @@
 import { FC, useMemo } from 'react'
 import SearchFilterWrapper from '@pages/ProjectOverviewPage/containers/SearchFilterWrapper'
 import { useProjectContext } from '@shared/context'
-import { ScopeWithFilterTypes } from '@shared/components/SearchFilter/useBuildFilterOptions'
+import { buildScopes } from '@shared/components'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
 import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContext'
 
-const SCOPES: ScopeWithFilterTypes[] = [
-  {
-    scope: 'version',
-    filterTypes: [
-      'status',
-      'tags',
-      'productType',
-      'productBaseType',
-      'author',
-      'attributes',
-      'version',
-      'hasReviewables',
-      'createdAt',
-      'updatedAt',
-    ],
-  },
-  {
-    scope: 'product',
-    filterTypes: [
-      'status',
-      'tags',
-      'attributes',
-      'productName',
-      'productBaseType',
-      'createdAt',
-      'updatedAt',
-    ],
-  },
-  {
-    scope: 'task',
-    filterTypes: [
-      'status',
-      'tags',
-      'taskType',
-      'assignees',
-      'attributes',
-      'createdAt',
-      'updatedAt',
-    ],
-  },
-]
+const SCOPES = buildScopes(['version', 'product', 'task'])
 
 interface VPSearchFilterProps {}
 
