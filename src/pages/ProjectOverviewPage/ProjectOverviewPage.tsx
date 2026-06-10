@@ -34,7 +34,9 @@ import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 
-const SCOPES = buildScopes(['task', 'folder'])
+// the tasks resolver task filter does not whitelist folder_type — use the
+// folder-scope folderType chip instead (goes through folderFilter)
+const SCOPES = buildScopes(['task', 'folder'], { task: ['folderType'] })
 
 const GroupByDropdown = styled(SortingDropdown)<{
   $disableSortOrder?: boolean
