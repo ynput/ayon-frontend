@@ -14,6 +14,7 @@ import {
 import { arrayMove } from '@dnd-kit/sortable'
 import { useColumnSettingsContext } from '@shared/containers'
 import { useColumnDragRestriction } from '../hooks/useColumnDragRestriction'
+import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
 
 interface ColumnDndProviderProps {
   children: ReactNode
@@ -22,12 +23,17 @@ interface ColumnDndProviderProps {
 const SCROLL_SPEED = 60
 const SCROLL_ZONE = 150
 const DROP_THRESHOLD = 50
-const SPECIAL_COLUMNS = ['drag-handle', '__row_selection__']
+const SPECIAL_COLUMNS = [DRAG_HANDLE_COLUMN_ID, ROW_SELECTION_COLUMN_ID]
 
 const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
   const { columnOrder, updateColumnOrder, columnPinning, columnSizing } = useColumnSettingsContext()
-  const { restrictToSection, setDragPinnedState, clearDragPinnedState, activePinnedState, setCachedBoundary } =
-    useColumnDragRestriction({ columnPinning, columnSizing })
+  const {
+    restrictToSection,
+    setDragPinnedState,
+    clearDragPinnedState,
+    activePinnedState,
+    setCachedBoundary,
+  } = useColumnDragRestriction({ columnPinning, columnSizing })
 
   const dragCache = useRef({
     cursorX: 0,
@@ -60,7 +66,9 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
   }, [pinnedColumns, columnSizing])
 
   const getFirstUnpinnedIndex = useCallback(() => {
-    return columnOrder.findIndex((id) => !pinnedColumns.includes(id) && !SPECIAL_COLUMNS.includes(id))
+    return columnOrder.findIndex(
+      (id) => !pinnedColumns.includes(id) && !SPECIAL_COLUMNS.includes(id),
+    )
   }, [columnOrder, pinnedColumns])
 
   const customCollisionDetection: CollisionDetection = useCallback(
@@ -99,7 +107,10 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
         const progress = Math.min((leftScrollStart - cache.cursorX) / SCROLL_ZONE, 1)
         scrollDelta = -SCROLL_SPEED * (0.3 + progress * 0.7)
       } else if (cache.cursorX >= cache.containerRight - SCROLL_ZONE) {
-        const progress = Math.min((cache.cursorX - (cache.containerRight - SCROLL_ZONE)) / SCROLL_ZONE, 1)
+        const progress = Math.min(
+          (cache.cursorX - (cache.containerRight - SCROLL_ZONE)) / SCROLL_ZONE,
+          1,
+        )
         scrollDelta = SCROLL_SPEED * (0.3 + progress * 0.7)
       }
 
@@ -144,7 +155,7 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
       isScrolling: false,
       isColumnDrag: false,
       isPinnedDrag: null,
-      }
+    }
   }
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -178,8 +189,15 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
     const activeId = active.id as string
     const isActivePinned = pinnedColumns.includes(activeId)
 
-    if ((!over || active.id === over.id) && !isActivePinned && event.active.rect.current.translated) {
-      if (event.active.rect.current.translated.left <= dragCache.current.boundaryX + DROP_THRESHOLD) {
+    if (
+      (!over || active.id === over.id) &&
+      !isActivePinned &&
+      event.active.rect.current.translated
+    ) {
+      if (
+        event.active.rect.current.translated.left <=
+        dragCache.current.boundaryX + DROP_THRESHOLD
+      ) {
         const firstIdx = getFirstUnpinnedIndex()
         const oldIdx = columnOrder.indexOf(activeId)
         if (firstIdx !== -1 && oldIdx !== -1 && oldIdx !== firstIdx) {

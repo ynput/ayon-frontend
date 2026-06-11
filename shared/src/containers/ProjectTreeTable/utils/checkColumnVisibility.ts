@@ -1,4 +1,7 @@
 import { VisibilityState } from '@tanstack/react-table'
+import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
+
+export const ALWAYS_VISIBLE_COLUMNS = [ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID]
 
 // checks column visibility for fields matching a given field name
 // Also support partial matching like `name_*` to check all columns starting with `name_`
@@ -8,6 +11,13 @@ export const checkColumnVisibility = (
   fieldName: string,
   defaultVisibility?: VisibilityState,
 ): boolean => {
+  // 0. Always-visible columns (e.g. row-selection, drag-handle) are unconditionally visible.
+  //    They can only be removed from the table via the `excludedColumns` prop on ProjectTreeTable,
+  //    never by setting visibility to false in saved settings.
+  if (ALWAYS_VISIBLE_COLUMNS.includes(fieldName)) {
+    return true
+  }
+
   // 1. Check exact match in columns
   if (columns[fieldName] !== undefined && columns[fieldName] !== null) {
     return columns[fieldName]
@@ -44,18 +54,26 @@ export const checkColumnVisibility = (
     }
   }
 
-  // 5. Hardcoded core defaults (always show if not explicitly hidden)
-  const CORE_DEFAULTS: Record<string, boolean> = {
-    thumbnail: true,
-    name: true,
-    status: true,
-    subType: true,
-  }
-
-  if (CORE_DEFAULTS[fieldName] !== undefined) {
-    return CORE_DEFAULTS[fieldName]
-  }
-
-  // 6. Fallback to false (new behavior: opt-in)
+  // 5. Fallback to false (new behavior: opt-in)
   return false
+}
+
+// ensures that at least one column is visible
+// if none are visible, it will fallback to showing the `name` column
+export const ensureAtLeastOneVisibleColumn = (
+  resolvedVisibility: VisibilityState,
+  columnIds: string[],
+): VisibilityState => {
+  const visibleCount = columnIds.filter(
+    (id) => !ALWAYS_VISIBLE_COLUMNS.includes(id) && resolvedVisibility[id],
+  ).length
+
+  if (visibleCount === 0 && columnIds.includes('name')) {
+    return {
+      ...resolvedVisibility,
+      name: true,
+    }
+  }
+
+  return resolvedVisibility
 }

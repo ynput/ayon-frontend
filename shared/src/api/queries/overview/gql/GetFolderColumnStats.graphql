@@ -1,0 +1,24 @@
+# Column summary stats over the full filtered folder set (Overview footer).
+# Targets are built from the visible columns so the backend only aggregates
+# what the footer shows.
+query GetFolderColumnStats(
+  $projectName: String!
+  $filter: String
+  $search: String
+  $folderIds: [String!]
+  $targets: [MetricTargetInput!]
+) {
+  project(name: $projectName) {
+    name
+    folders(
+      calculateSpecificStatistics: $targets
+      filter: $filter
+      search: $search
+      ids: $folderIds
+    ) {
+      fieldStats {
+        ...ColumnStatsFragment
+      }
+    }
+  }
+}

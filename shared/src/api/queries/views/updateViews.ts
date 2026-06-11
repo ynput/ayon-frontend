@@ -202,9 +202,13 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
       },
       transformErrorResponse: (error: any) => error.data?.detail,
       invalidatesTags: (_r, _e, { viewType, projectName, viewId, payload }) => {
-        const tags: any[] = [{ type: 'view', id: viewId }]
+        const tags: any[] = []
 
-        // Only invalidate the full list if metadata fields (like label) have changed
+        // Only invalidate when metadata fields (label, owner, etc.) change.
+        // For settings-only updates the optimistic cache patches are sufficient —
+        // emitting the view ID tag here would trigger a background refetch that races
+        // with any other in-flight rapid mutations and temporarily reverts the cache
+        // to a stale server response, causing a visible "previous view" flicker.
         const metadataFields = [
           'label',
           'owner',
@@ -217,6 +221,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
         const hasMetadataChanges = Object.keys(payload).some((key) => metadataFields.includes(key))
 
         if (hasMetadataChanges) {
+          tags.push({ type: 'view', id: viewId })
           tags.push(getScopeTag(viewType, projectName))
         }
 

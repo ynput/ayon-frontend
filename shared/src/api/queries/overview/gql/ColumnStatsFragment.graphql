@@ -1,0 +1,18 @@
+# Column summary stats returned by calculateSpecificStatistics
+fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}

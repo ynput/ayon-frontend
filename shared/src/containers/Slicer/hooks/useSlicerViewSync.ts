@@ -14,13 +14,7 @@ export const useSlicerViewSync = (
   onUpdateSliceType: (sliceType: string) => void,
   isLoadingViews?: boolean,
 ) => {
-  const {
-    sliceType,
-    setSliceType,
-    setIsViewSyncPending,
-    setRowSelection,
-    setRowSelectionData,
-  } = useSlicerContext()
+  const { sliceType, setSliceType, setIsViewSyncPending } = useSlicerContext()
   const initializedRef = useRef(false)
   const isRestoringTypeRef = useRef(false)
 
@@ -48,11 +42,10 @@ export const useSlicerViewSync = (
     setIsViewSyncPending(false)
 
     // Restore saved slice type if present.
+    // Selection is keyed per slice type in storage, so no reset is needed here.
     if (viewSliceType && viewSliceType !== sliceType) {
       isRestoringTypeRef.current = true
       setSliceType(viewSliceType as SliceType)
-      setRowSelection({})
-      setRowSelectionData({})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoadingViews])

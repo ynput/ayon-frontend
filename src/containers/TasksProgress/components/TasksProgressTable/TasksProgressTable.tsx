@@ -396,6 +396,7 @@ export const TasksProgressTable = ({
                 folderType: row.__folderType,
                 status: folderStatuses.find((s) => s.name === row.__folderStatus),
                 updatedAt: row.__folderUpdatedAt,
+                thumbnailHash: row.__folderThumbnailHash,
               }}
               isSelected={
                 progressSelected.type === 'folder' && progressSelected.ids.includes(row.__folderId)

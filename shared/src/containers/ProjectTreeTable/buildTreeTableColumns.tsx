@@ -13,8 +13,8 @@ import { LinkColumnHeader, TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
-import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
 import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './context'
+import { ROW_SELECTION_COLUMN_ID } from './constants'
 import { NEXT_PAGE_ID, parseGroupId } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { AttributeData, LinkTypeModel } from '@shared/api'
@@ -187,7 +187,7 @@ const buildTreeTableColumns = ({
         let thumbnail = {
           entityId: row.original.entityId || row.id,
           entityType: row.original.entityType,
-          updatedAt: row.original.updatedAt,
+          thumbnailHash: row.original.thumbnailHash,
         }
         // check for thumbnail override
         if (row.original.thumbnail) {
@@ -198,7 +198,7 @@ const buildTreeTableColumns = ({
             id={cellId}
             entityId={thumbnail.entityId}
             entityType={thumbnail.entityType}
-            updatedAt={thumbnail.updatedAt}
+            thumbnailHash={thumbnail.thumbnailHash}
             icon={row.original.icon}
             projectName={meta?.projectName as string}
             className={clsx('thumbnail', {

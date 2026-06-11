@@ -33,7 +33,6 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
   return (
     <ProjectTableSettings
       extraColumns={extraColumns}
-      hiddenColumns={['folder']}
       highlighted={highlightedSetting}
       hiddenSettings={['group-by']}
       hideSortBy={isReview}

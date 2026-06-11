@@ -20,6 +20,7 @@ export type FolderListItem = {
   ownAttrib?: string[]
   updatedAt: string
   createdAt: string
+  thumbnailHash?: string
   hasReviewables?: boolean
   hasVersions?: boolean
   links: EntityLink[]
@@ -36,6 +37,7 @@ export type TableRow = {
   tags?: string[]
   status?: string
   updatedAt?: string
+  thumbnailHash?: string
   createdAt?: string
   parentId?: string
   folderId?: string | null // all entities have a folder except root folders which will be null
@@ -46,6 +48,7 @@ export type TableRow = {
   productBaseType?: string // product base type category
   taskType?: string // linked task type
   taskLabel?: string // linked task label/name
+  folderType?: string // parent folder type
   subRows?: TableRow[]
   icon?: string | null
   color?: string | null
@@ -71,6 +74,7 @@ export type TableRow = {
     entityId: string
     entityType: string
     updatedAt: string | undefined
+    thumbnailHash?: string
   }
 }
 

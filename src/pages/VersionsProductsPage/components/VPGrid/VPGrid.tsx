@@ -42,8 +42,16 @@ interface VPGridProps {
 
 const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
-  const { productsMap, versionsMap, isLoading, fetchNextPage, groups, expanded, updateExpanded } =
-    useVersionsDataContext()
+  const {
+    productsMap,
+    versionsMap,
+    isLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    groups,
+    expanded,
+    updateExpanded,
+  } = useVersionsDataContext()
   const { showProducts, gridHeight, groupBy, showEmptyGroups } = useVPViewsContext()
   const { selectedCells, setSelectedCells, setFocusedCellId, registerGrid } =
     useSelectionCellsContext()
@@ -351,8 +359,8 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
   // return a pages worth of loading skeletons
   if (isLoading) {
     return (
-      <GridContainer>
-        <GridLayout ref={gridContainerRef} ratio={1.777777} minWidth={190} onScroll={handleScroll}>
+      <GridContainer ref={gridContainerRef} onScroll={handleScroll}>
+        <GridLayout ratio={1.777777} minWidth={190}>
           {Array.from({ length: 20 }).map((_, index) => (
             <EntityCard
               key={index}
@@ -449,35 +457,67 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
             </div>
           )
         })}
+        {isFetchingNextPage && (
+          <GridLayout
+            ratio={1.777777}
+            minWidth={gridHeight}
+            style={{ outline: 'none', marginTop: 16 }}
+          >
+            {Array.from({ length: 30 }).map((_, index) => (
+              <EntityCard
+                key={`loading-group-${index}`}
+                style={{
+                  minWidth: 'unset',
+                  maxHeight: 'unset',
+                  minHeight: 90,
+                  maxWidth: 'unset',
+                  aspectRatio: '16 / 10.5',
+                }}
+                isLoading
+              />
+            ))}
+          </GridLayout>
+        )}
       </GridContainer>
     )
   }
 
   // Render without grouping (original behavior)
   return (
-    <GridContainer>
-      <GridLayout
-        ref={gridContainerRef}
-        ratio={1.777777}
-        minWidth={gridHeight}
-        onScroll={handleScroll}
-        data-grid-container="true"
-      >
-        {gridData.map((entity, index) => (
-          <VPGridCard
-            key={entity.id}
-            entity={entity}
-            index={index}
-            projectInfo={projectInfo}
-            root={gridContainerRef.current}
-            isEntitySelected={isEntitySelected}
-            handleCardClick={handleCardClick}
-            handleDoubleClick={handleDoubleClick}
-            handleContextMenu={handleGridContextMenu}
-            gridColumnId={GRID_COLUMN_ID}
-            rowSelectionColumnId={ROW_SELECTION_COLUMN_ID}
-          />
-        ))}
+    <GridContainer ref={gridContainerRef} onScroll={handleScroll} data-grid-container="true">
+      <GridLayout ratio={1.777777} minWidth={gridHeight}>
+        {[
+          ...gridData.map((entity, index) => (
+            <VPGridCard
+              key={entity.id}
+              entity={entity}
+              index={index}
+              projectInfo={projectInfo}
+              root={gridContainerRef.current}
+              isEntitySelected={isEntitySelected}
+              handleCardClick={handleCardClick}
+              handleDoubleClick={handleDoubleClick}
+              handleContextMenu={handleGridContextMenu}
+              gridColumnId={GRID_COLUMN_ID}
+              rowSelectionColumnId={ROW_SELECTION_COLUMN_ID}
+            />
+          )),
+          ...(isFetchingNextPage
+            ? Array.from({ length: 30 }).map((_, index) => (
+                <EntityCard
+                  key={`loading-grid-${index}`}
+                  style={{
+                    minWidth: 'unset',
+                    maxHeight: 'unset',
+                    minHeight: 90,
+                    maxWidth: 'unset',
+                    aspectRatio: '16 / 10.5',
+                  }}
+                  isLoading
+                />
+              ))
+            : []),
+        ]}
       </GridLayout>
     </GridContainer>
   )

@@ -22,7 +22,10 @@ const useGetEntityPath = ({
   // get the folders list for the project
   const { data: { folders: projectFolders = [] } = {}, isFetching: isFetchingRaw } =
     useGetFolderListQuery(
-      { projectName: projectName, attrib: true },
+      // TODO: this is major overkill, we are only using label, name and id
+      //  We add a patch field that allows us to specify what ws message changes should cause an update to this query
+      // @ts-expect-error - patch is not part of the query args
+      { projectName: projectName, patch: ['id', 'name', 'label'] },
       { skip: !projectName || isLoading },
     )
 

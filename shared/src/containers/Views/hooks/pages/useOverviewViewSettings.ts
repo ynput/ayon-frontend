@@ -21,6 +21,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 
 // Import the internal QueryFilter type that the app uses
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import {
+  SummaryCalc,
+  SummaryFormat,
+  RowScope,
+} from '@shared/containers/ProjectTreeTable/types/summaryTypes'
 
 type Return = {
   // Filter management
@@ -52,6 +57,26 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   const [localHierarchy, setLocalHierarchy] = useState<boolean | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
 
+  // Backend drops summary/summaryScope/summaryFormat from ColumnItemModel, so
+  // the post-save refetch would revert them — hold the selections here, session only.
+  const { selectedView, workingView, isViewWorking, editingViewId } = useViewsContext()
+  const [summaryOverrides, setSummaryOverrides] = useState<{
+    summaries: Record<string, SummaryCalc>
+    scopes: Record<string, RowScope>
+    formats: Record<string, SummaryFormat>
+  }>({ summaries: {}, scopes: {}, formats: {} })
+
+  // Editing a named view forks to the working view (selectedView.id flips), but
+  // editingViewId keeps pointing at the origin, so the key stays stable while editing.
+  const viewKey = isViewWorking
+    ? editingViewId || workingView?.id || 'working'
+    : selectedView?.id
+
+  // Reset overrides when a different view's settings come on screen
+  useEffect(() => {
+    setSummaryOverrides({ summaries: {}, scopes: {}, formats: {} })
+  }, [viewKey])
+
   // Get server settings
   const overviewSettings = viewSettings as OverviewSettings
   const serverFilters = (overviewSettings?.filter as any) ?? {}
@@ -63,17 +88,51 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
     [JSON.stringify(viewSettings)],
   )
 
-  // Sync local state with server when viewSettings change
+  // Sync local state with server when the relevant setting fields change.
+  // Use per-field deps (not JSON.stringify(viewSettings)) so a change to one
+  // field does not clear in-flight local state for unrelated fields, which
+  // would cause a visible flicker during rapid sequential updates.
   useEffect(() => {
     setLocalFilters(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify((viewSettings as OverviewSettings)?.filter)])
+
+  useEffect(() => {
     setLocalHierarchy(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    (viewSettings as OverviewSettings)?.showHierarchy,
+    (viewSettings as OverviewSettings)?.groupBy,
+  ])
+
+  useEffect(() => {
     setLocalColumns(null)
-  }, [JSON.stringify(viewSettings)])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify((viewSettings as OverviewSettings)?.columns)])
 
   // Use local state if available, otherwise use server state
   const filters = localFilters !== null ? localFilters : serverFilters
   const showHierarchy = localHierarchy !== null ? localHierarchy : serverHierarchy
-  const columns = localColumns || serverColumns
+  const columnsBase = localColumns || serverColumns
+  const columns = useMemo(() => {
+    const hasOverrides =
+      Object.keys(summaryOverrides.summaries).length ||
+      Object.keys(summaryOverrides.scopes).length ||
+      Object.keys(summaryOverrides.formats).length
+    if (!hasOverrides) return columnsBase
+    return {
+      ...columnsBase,
+      columnSummaries: { ...columnsBase.columnSummaries, ...summaryOverrides.summaries },
+      columnSummaryScopes: {
+        ...columnsBase.columnSummaryScopes,
+        ...summaryOverrides.scopes,
+      },
+      columnSummaryFormats: {
+        ...columnsBase.columnSummaryFormats,
+        ...summaryOverrides.formats,
+      },
+    }
+  }, [columnsBase, summaryOverrides])
 
   // Slice type update handler
   const noop = useCallback(() => {}, [])
@@ -127,6 +186,20 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   // Column update handler
   const onUpdateColumns = useCallback(
     async (tableSettings: ColumnsConfig, allColumnIds?: string[]) => {
+      // Keep the summary footer choices alive across the working-view refetch
+      // (backend drops these fields, so server state can't be trusted for them).
+      if (
+        tableSettings.columnSummaries ||
+        tableSettings.columnSummaryScopes ||
+        tableSettings.columnSummaryFormats
+      ) {
+        setSummaryOverrides((prev) => ({
+          summaries: { ...prev.summaries, ...(tableSettings.columnSummaries || {}) },
+          scopes: { ...prev.scopes, ...(tableSettings.columnSummaryScopes || {}) },
+          formats: { ...prev.formats, ...(tableSettings.columnSummaryFormats || {}) },
+        }))
+      }
+
       // Derive a stable allColumnIds if not provided to preserve order and grouping on server
       const derivedAll =
         allColumnIds ||
@@ -178,9 +251,7 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
 
       // Combined setter lets updateViewSettings manage optimism/reset for both
       // local states atomically (so error paths don't leave one stale).
-      const combinedSetter = (
-        value: { showHierarchy: boolean; columns: ColumnsConfig } | null,
-      ) => {
+      const combinedSetter = (value: { showHierarchy: boolean; columns: ColumnsConfig } | null) => {
         if (value === null) {
           setLocalHierarchy(null)
           setLocalColumns(null)

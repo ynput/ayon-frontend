@@ -2,7 +2,7 @@
 import { HERO_SYMBOL } from './buildVPRows'
 import { ProductsMap, VersionsMap } from './buildVPMaps'
 import { ProductType } from '@shared/api'
-import { getEntityTypeIcon } from '@shared/util'
+import { getEntityTypeIcon, getEntityThumbnailUrl } from '@shared/util'
 
 type EntityGridNode = {
   id: string
@@ -18,9 +18,6 @@ type EntityGridNode = {
   versions?: string[]
   groups?: { value?: string; hasNextPage?: string }[] // grouping metadata
 }
-
-export const getThumbnailUrl = (projectName: string, entity: { id: string; updatedAt: string }) =>
-  `/api/projects/${projectName}/versions/${entity.id}/thumbnail?updatedAt=${entity?.updatedAt}`
 
 const buildProductsGrid = (
   productsMap: ProductsMap,
@@ -49,7 +46,12 @@ const buildProductsGrid = (
         .map((v) => `${v.name} ${v.heroVersionId ? HERO_SYMBOL : ''}`),
       isPlayable: product.featuredVersion?.hasReviewables || false,
       thumbnailUrl: product.featuredVersion
-        ? getThumbnailUrl(projectName, product.featuredVersion)
+        ? getEntityThumbnailUrl({
+            projectName,
+            entityType: 'version',
+            entityId: product.featuredVersion.id,
+            thumbnailHash: product.featuredVersion.thumbnailHash,
+          }) ?? undefined
         : undefined,
     }
   })
@@ -73,7 +75,13 @@ const buildVersionsGrid = (
       status: version.status,
       versions: [`${version.name} ${version.heroVersionId ? HERO_SYMBOL : ''}`],
       isPlayable: version.hasReviewables,
-      thumbnailUrl: getThumbnailUrl(projectName, version),
+      thumbnailUrl:
+        getEntityThumbnailUrl({
+          projectName,
+          entityType: 'version',
+          entityId: version.id,
+          thumbnailHash: version.thumbnailHash,
+        }) ?? undefined,
       groups: version.groups,
     }
   })

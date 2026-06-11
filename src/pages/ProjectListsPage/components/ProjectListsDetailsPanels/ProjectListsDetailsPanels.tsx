@@ -1,6 +1,6 @@
-import { useListsContext } from "@pages/ProjectListsPage/context"
-import { useListItemsDataContext } from "@pages/ProjectListsPage/context/ListItemsDataContext"
-import ProjectOverviewDetailsPanel from "@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel"
+import { useListsContext } from '@pages/ProjectListsPage/context'
+import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
+import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 import {
   getCellId,
   isEntityRestricted,
@@ -9,21 +9,27 @@ import {
   useProjectTableContext,
   useSelectedRowsContext,
   useSelectionCellsContext,
-} from "@shared/containers"
-import { useProjectContext } from "@shared/context"
-import { useEffect, useMemo, useState } from "react"
-import ListDetailsPanel from "../ListDetailsPanel/ListDetailsPanel"
-import useReviewSessionCardsModules from "@pages/ProjectListsPage/hooks/useReviewSessionCardsModules"
-import useStoryboardsCardsModules from "@pages/ProjectListsPage/hooks/useStoryboardsCardsModules"
-import { ReviewsSettings } from "@shared/api"
+} from '@shared/containers'
+import { useProjectContext } from '@shared/context'
+import { useEffect, useMemo, useState } from 'react'
+import ListDetailsPanel from '../ListDetailsPanel/ListDetailsPanel'
+import useReviewSessionCardsModules from '@pages/ProjectListsPage/hooks/useReviewSessionCardsModules'
+import useStoryboardsCardsModules from '@pages/ProjectListsPage/hooks/useStoryboardsCardsModules'
+import { ReviewsSettings } from '@shared/api'
 
 type Props = {
   isReview: boolean
   isStoryboards: boolean
   displayStyle: ReviewsSettings['displayStyle']
+  dispatch: any // if we need to provide explicit dispatch context (for review)
 }
 
-export default function ProjectListsDetailsPanels({ isReview, isStoryboards, displayStyle }: Props) {
+export default function ProjectListsDetailsPanels({
+  isReview,
+  isStoryboards,
+  displayStyle,
+  dispatch,
+}: Props) {
   const { projectName, ...projectInfo } = useProjectContext()
   const { getEntityById } = useProjectTableContext()
   const { selectedList, listDetailsOpen } = useListsContext()
@@ -90,21 +96,16 @@ export default function ProjectListsDetailsPanels({ isReview, isStoryboards, dis
     (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
   const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
 
+  const useModules = isStoryboards ? useStoryboardsCardsModules : useReviewSessionCardsModules
 
-  const useModules = isStoryboards
-    ? useStoryboardsCardsModules
-    : useReviewSessionCardsModules
-
-  const {
-    useReviewSessionCards
-  } = useModules({ skip: !isReview })
+  const { useReviewSessionCards } = useModules({ skip: !isReview })
 
   const { clearHighlighted } = useReviewSessionCards()
 
   // For review session lists, closing the details panel
   // should also clear the state in the addon component.
   const onClose = useMemo(() => {
-    if (!clearHighlighted || displayStyle !== "cards") return
+    if (!clearHighlighted || displayStyle !== 'cards') return
 
     return () => {
       clearHighlighted()
@@ -120,12 +121,11 @@ export default function ProjectListsDetailsPanels({ isReview, isStoryboards, dis
         onUriOpen={(entity) => setUriEntityId(entity.id)}
         onClose={onClose}
         entityListId={selectedList?.id}
+        dispatch={dispatch}
       />
-      {selectedList &&
-        !shouldShowEntityDetailsPanel &&
-        shouldShowListDetailsPanel && (
-          <ListDetailsPanel listId={selectedList.id} projectName={projectName} />
-        )}
+      {selectedList && !shouldShowEntityDetailsPanel && shouldShowListDetailsPanel && (
+        <ListDetailsPanel listId={selectedList.id} projectName={projectName} />
+      )}
     </>
   )
 }

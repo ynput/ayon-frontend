@@ -8,12 +8,12 @@ import {
   ColumnSizingState,
   SortingState,
 } from '@tanstack/react-table'
-import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
-import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
 import { ColumnsConfig, ColumnSettingsContext, TableGroupBy } from './ColumnSettingsContext'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
+import { SummaryCalc, SummaryFormat, RowScope } from '../types/summaryTypes'
 import { isEqual } from 'lodash'
 import { checkColumnVisibility } from '../utils'
+import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
@@ -46,6 +46,8 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     const allKnownIds = allColumnsRef.current
     // Expand sparse columnVisibility to explicit values for all known columns so that
     // "undefined" is never ambiguous when columns are saved and reloaded.
+    // Special columns (drag-handle, row-selection) are always injected by the provider,
+    // so they must never be persisted — strip them from visibility and order entirely.
     const specialIds = new Set([DRAG_HANDLE_COLUMN_ID, ROW_SELECTION_COLUMN_ID])
     if (allKnownIds.length > 0) {
       const resolvedVisibility = { ...next.columnVisibility }
@@ -54,7 +56,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
           resolvedVisibility[id] = checkColumnVisibility({}, id, defaultColumnVisibility)
         }
       })
-      onChange({ ...next, columnVisibility: resolvedVisibility }, allKnownIds)
+      // Remove special columns from visibility and order before persisting
+      specialIds.forEach((id) => delete resolvedVisibility[id])
+      const resolvedOrder = (next.columnOrder ?? []).filter((id) => !specialIds.has(id))
+      onChange(
+        { ...next, columnVisibility: resolvedVisibility, columnOrder: resolvedOrder },
+        allKnownIds,
+      )
     } else {
       onChange(next, allKnownIds)
     }
@@ -70,6 +78,9 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     groupBy,
     groupByConfig = {},
     rowHeight: configRowHeight = 34,
+    columnSummaries: columnSummariesInit = {},
+    columnSummaryScopes: columnSummaryScopesInit = {},
+    columnSummaryFormats: columnSummaryFormatsInit = {},
   } = columnsConfig || {}
 
   // Clear internal row height when config changes (e.g., when switching views)
@@ -285,6 +296,27 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  const updateColumnSummary = (columnId: string, calc: SummaryCalc) => {
+    onChangeWithColumns({
+      ...columnsConfig,
+      columnSummaries: { ...columnSummariesInit, [columnId]: calc },
+    })
+  }
+
+  const updateColumnSummaryScope = (columnId: string, scope: RowScope) => {
+    onChangeWithColumns({
+      ...columnsConfig,
+      columnSummaryScopes: { ...columnSummaryScopesInit, [columnId]: scope },
+    })
+  }
+
+  const updateColumnSummaryFormat = (columnId: string, format: SummaryFormat) => {
+    onChangeWithColumns({
+      ...columnsConfig,
+      columnSummaryFormats: { ...columnSummaryFormatsInit, [columnId]: format },
+    })
+  }
+
   const updateGroupBy = (groupBy: TableGroupBy | undefined) => {
     onChangeWithColumns({
       ...columnsConfig,
@@ -438,6 +470,15 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         columnSizing,
         setColumnSizing,
         columnSizingOnChange,
+        // column summary calc
+        columnSummaries: columnSummariesInit,
+        updateColumnSummary,
+        // column summary row scope
+        columnSummaryScopes: columnSummaryScopesInit,
+        updateColumnSummaryScope,
+        // column summary display format
+        columnSummaryFormats: columnSummaryFormatsInit,
+        updateColumnSummaryFormat,
         // sorting
         sorting,
         updateSorting,

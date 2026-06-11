@@ -267,6 +267,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
+    excludeSelectedFolders: sliceType !== 'entityList',
     taskIds: rawEntityIds.taskIds,
     taskFilters: {
       filter: combinedTaskFilter.filter,
@@ -324,6 +325,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
           filterString: combinedFolderFilter.filterString,
           search: combinedFolderFilter.search,
         },
+        selectedFolders,
+        selectedTaskIds: rawEntityIds.taskIds,
         // Backward compatibility for ProjectTableProvider (uses taskFilters)
         queryFilters: {
           filter: combinedTaskFilter.filter,

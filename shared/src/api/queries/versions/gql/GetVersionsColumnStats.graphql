@@ -1,0 +1,29 @@
+# Column summary stats over the filtered version set (Versions/Products footer).
+# Filters mirror GetVersions so the aggregation matches the visible set.
+query GetVersionsColumnStats(
+  $projectName: String!
+  $versionFilter: String
+  $productFilter: String
+  $taskFilter: String
+  $folderIds: [String!]
+  $versionIds: [String!]
+  $productIds: [String!]
+  $targets: [MetricTargetInput!]
+) {
+  project(name: $projectName) {
+    versions(
+      calculateSpecificStatistics: $targets
+      ids: $versionIds
+      productIds: $productIds
+      filter: $versionFilter
+      productFilter: $productFilter
+      taskFilter: $taskFilter
+      folderIds: $folderIds
+      includeFolderChildren: true
+    ) {
+      fieldStats {
+        ...ColumnStatsFragment
+      }
+    }
+  }
+}

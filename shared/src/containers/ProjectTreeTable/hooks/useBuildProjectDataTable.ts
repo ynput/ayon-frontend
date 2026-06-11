@@ -27,6 +27,7 @@ type Params = {
   loadingTasks?: LoadingTasks
   isLoadingMore?: boolean
   groupBy?: TableGroupBy
+  selectedFolders?: string[]
 }
 
 export default function useBuildProjectDataTable({
@@ -40,6 +41,7 @@ export default function useBuildProjectDataTable({
   showEmptyFolders = false,
   loadingTasks = {},
   isLoadingMore = false,
+  selectedFolders = [],
 }: Params): TableRow[] {
   const project = useProjectContext()
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
@@ -149,10 +151,24 @@ export default function useBuildProjectDataTable({
         folder: task.parents[task.parents.length - 1] || undefined,
         updatedAt: task.updatedAt,
         createdAt: task.createdAt,
+        thumbnailHash: task.thumbnailHash,
         hasReviewables: task.hasReviewables || false,
         links: links,
         subtasks: task.subtasks || [],
       }
+    }
+
+    const createRootTaskRows = (): TableRow[] => {
+      const rootTaskRows: TableRow[] = []
+      for (const folderId of selectedFolders) {
+        if (foldersMap.has(folderId)) continue
+        const folderTaskIds = tasksByFolderMap.get(folderId) || []
+        for (const taskId of folderTaskIds) {
+          const task = tasksMap.get(taskId)
+          if (task) rootTaskRows.push(createTaskRow(task))
+        }
+      }
+      return rootTaskRows
     }
 
     // Flat folder view: all folders at root level, each expandable to show tasks
@@ -191,6 +207,7 @@ export default function useBuildProjectDataTable({
           childOnlyMatch: folder.childOnlyMatch || false,
           updatedAt: folder.updatedAt,
           createdAt: folder.createdAt,
+          thumbnailHash: folder.thumbnailHash,
           hasReviewables: folder.hasReviewables || false,
           hasVersions: folder.hasVersions || false,
           links: links,
@@ -217,6 +234,8 @@ export default function useBuildProjectDataTable({
 
         flatFolderRows.push(row)
       }
+
+      flatFolderRows.push(...createRootTaskRows())
 
       return flatFolderRows
     }
@@ -287,6 +306,7 @@ export default function useBuildProjectDataTable({
         childOnlyMatch: folder.childOnlyMatch || false,
         updatedAt: folder.updatedAt,
         createdAt: folder.createdAt,
+        thumbnailHash: folder.thumbnailHash,
         hasReviewables: folder.hasReviewables || false,
         hasVersions: folder.hasVersions || false,
         links: links,
@@ -344,6 +364,8 @@ export default function useBuildProjectDataTable({
       parentRow.subRows?.push(childRow)
     }
 
+    rootRows.push(...createRootTaskRows())
+
     // Add any extra rows to the root rows
     for (const row of rows || []) {
       rootRows.push(row)
@@ -353,6 +375,7 @@ export default function useBuildProjectDataTable({
   }, [
     foldersMap,
     tasksMap,
+    tasksByFolderMap,
     rows,
     visibleFolders,
     childToParentMap,
@@ -362,5 +385,6 @@ export default function useBuildProjectDataTable({
     showEmptyFolders,
     loadingTasks,
     isLoadingMore,
+    selectedFolders,
   ])
 }

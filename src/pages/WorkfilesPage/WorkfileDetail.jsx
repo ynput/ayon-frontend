@@ -56,7 +56,6 @@ const WorkfileDetail = ({ style }) => {
               projectName={projectName}
               entityType="workfile"
               entityId={firstFocusedWorkfile}
-              entityUpdatedAt={data?.updatedAt}
             />
 
             <AttributeTable
