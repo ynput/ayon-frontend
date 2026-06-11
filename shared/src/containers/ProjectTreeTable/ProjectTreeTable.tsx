@@ -1672,7 +1672,8 @@ const TD = ({
           }
 
           // name column: select row to open details panel
-          if (cell.column.id === 'name' && !target.closest('.expander')) {
+          // comments column: same — comments are read and written in the details panel feed
+          if (['name', 'comments'].includes(cell.column.id) && !target.closest('.expander')) {
             const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
             const additive = e.metaKey || e.ctrlKey
             const position = parseCellId(rowSelectionCellId)

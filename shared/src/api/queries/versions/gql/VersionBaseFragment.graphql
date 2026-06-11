@@ -15,4 +15,10 @@ fragment VersionBase on VersionNode {
   version
   featuredVersionType
   heroVersionId
+  latestComments {
+    activityId
+    body
+    author
+    createdAt
+  }
 }

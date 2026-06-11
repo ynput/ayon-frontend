@@ -175,6 +175,14 @@ export type ColumnStats = {
   valueNotFilledCount?: Maybe<Scalars['Int']['output']>;
 };
 
+export type EntityComment = {
+  __typename?: 'EntityComment';
+  activityId: Scalars['String']['output'];
+  author?: Maybe<Scalars['String']['output']>;
+  body: Scalars['String']['output'];
+  createdAt: Scalars['String']['output'];
+};
+
 export type EntityListEdge = {
   __typename?: 'EntityListEdge';
   cursor?: Maybe<Scalars['String']['output']>;
@@ -349,6 +357,7 @@ export type FolderNode = BaseNode & {
   hasVersions: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
+  latestComments?: Maybe<Array<EntityComment>>;
   links: LinksConnection;
   name: Scalars['String']['output'];
   ownAttrib: Array<Scalars['String']['output']>;
@@ -1347,6 +1356,7 @@ export type TaskNode = BaseNode & {
   hasReviewables: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
+  latestComments?: Maybe<Array<EntityComment>>;
   links: LinksConnection;
   name: Scalars['String']['output'];
   ownAttrib: Array<Scalars['String']['output']>;
@@ -1569,6 +1579,7 @@ export type VersionNode = BaseNode & {
   id: Scalars['String']['output'];
   isLatest: Scalars['Boolean']['output'];
   isLatestDone: Scalars['Boolean']['output'];
+  latestComments?: Maybe<Array<EntityComment>>;
   links: LinksConnection;
   name: Scalars['String']['output'];
   parents: Array<Scalars['String']['output']>;
@@ -1910,7 +1921,7 @@ export type GetTasksByParentQueryVariables = Exact<{
 }>;
 
 
-export type GetTasksByParentQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, createdAt: any, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }>, folder: { __typename?: 'FolderNode', folderType: string } } }> } } };
+export type GetTasksByParentQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, createdAt: any, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }>, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null, folder: { __typename?: 'FolderNode', folderType: string } } }> } } };
 
 export type GetTasksListQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1927,11 +1938,11 @@ export type GetTasksListQueryVariables = Exact<{
 }>;
 
 
-export type GetTasksListQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, createdAt: any, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }>, folder: { __typename?: 'FolderNode', folderType: string } } }> } } };
+export type GetTasksListQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, createdAt: any, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }>, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null, folder: { __typename?: 'FolderNode', folderType: string } } }> } } };
 
 export type SubTaskFragmentFragment = { __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean };
 
-export type TaskPropsFragmentFragment = { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, createdAt: any, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }>, folder: { __typename?: 'FolderNode', folderType: string } };
+export type TaskPropsFragmentFragment = { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, createdAt: any, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }>, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null, folder: { __typename?: 'FolderNode', folderType: string } };
 
 export type GetFolderProductsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -2028,7 +2039,7 @@ export type GetProductsQueryVariables = Exact<{
 }>;
 
 
-export type GetProductsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', products: { __typename?: 'ProductsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'ProductEdge', cursor?: string | null, node: { __typename?: 'ProductNode', id: string, name: string, folderId: string, active: boolean, status: string, tags: Array<string>, type: string, productType: string, productBaseType?: string | null, allAttrib: string, parents: Array<string>, createdAt: any, updatedAt: any, featuredVersion?: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, thumbnailHash: string, version: number, featuredVersionType?: string | null, heroVersionId?: string | null } | null, versions: Array<{ __typename?: 'VersionListItem', id: string, name: string, version: number }>, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, allAttrib: string } } }> } } };
+export type GetProductsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', products: { __typename?: 'ProductsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'ProductEdge', cursor?: string | null, node: { __typename?: 'ProductNode', id: string, name: string, folderId: string, active: boolean, status: string, tags: Array<string>, type: string, productType: string, productBaseType?: string | null, allAttrib: string, parents: Array<string>, createdAt: any, updatedAt: any, featuredVersion?: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, thumbnailHash: string, version: number, featuredVersionType?: string | null, heroVersionId?: string | null, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null } | null, versions: Array<{ __typename?: 'VersionListItem', id: string, name: string, version: number }>, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, allAttrib: string } } }> } } };
 
 export type GetProductsColumnStatsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -2062,7 +2073,7 @@ export type GetVersionsQueryVariables = Exact<{
 }>;
 
 
-export type GetVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, thumbnailHash: string, version: number, featuredVersionType?: string | null, heroVersionId?: string | null, task?: { __typename?: 'TaskNode', id: string, taskType: string, label?: string | null, name: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, productBaseType?: string | null, allAttrib: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, allAttrib: string } } } }> } } };
+export type GetVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, thumbnailHash: string, version: number, featuredVersionType?: string | null, heroVersionId?: string | null, task?: { __typename?: 'TaskNode', id: string, taskType: string, label?: string | null, name: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, productBaseType?: string | null, allAttrib: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, allAttrib: string } }, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null } }> } } };
 
 export type GetVersionsByProductIdQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -2079,7 +2090,7 @@ export type GetVersionsByProductIdQueryVariables = Exact<{
 }>;
 
 
-export type GetVersionsByProductIdQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, thumbnailHash: string, version: number, featuredVersionType?: string | null, heroVersionId?: string | null, task?: { __typename?: 'TaskNode', id: string, taskType: string, label?: string | null, name: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, productBaseType?: string | null, allAttrib: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, allAttrib: string } } } }> } } };
+export type GetVersionsByProductIdQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, thumbnailHash: string, version: number, featuredVersionType?: string | null, heroVersionId?: string | null, task?: { __typename?: 'TaskNode', id: string, taskType: string, label?: string | null, name: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, productBaseType?: string | null, allAttrib: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, allAttrib: string } }, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null } }> } } };
 
 export type GetVersionsColumnStatsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -2097,9 +2108,9 @@ export type GetVersionsColumnStatsQuery = { __typename?: 'Query', project: { __t
 
 export type PageInfoFragment = { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean };
 
-export type VersionBaseFragment = { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, thumbnailHash: string, version: number, featuredVersionType?: string | null, heroVersionId?: string | null };
+export type VersionBaseFragment = { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, thumbnailHash: string, version: number, featuredVersionType?: string | null, heroVersionId?: string | null, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null };
 
-export type VersionExtendedFragment = { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, thumbnailHash: string, version: number, featuredVersionType?: string | null, heroVersionId?: string | null, task?: { __typename?: 'TaskNode', id: string, taskType: string, label?: string | null, name: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, productBaseType?: string | null, allAttrib: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, allAttrib: string } } };
+export type VersionExtendedFragment = { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, thumbnailHash: string, version: number, featuredVersionType?: string | null, heroVersionId?: string | null, task?: { __typename?: 'TaskNode', id: string, taskType: string, label?: string | null, name: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, productBaseType?: string | null, allAttrib: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, allAttrib: string } }, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null };
 
 export type GetInboxHasUnreadQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2406,6 +2417,12 @@ export const TaskPropsFragmentFragmentDoc = new TypedDocumentString(`
   subtasks {
     ...SubTaskFragment
   }
+  latestComments {
+    activityId
+    body
+    author
+    createdAt
+  }
   folder {
     folderType
   }
@@ -2486,6 +2503,12 @@ export const VersionBaseFragmentDoc = new TypedDocumentString(`
   version
   featuredVersionType
   heroVersionId
+  latestComments {
+    activityId
+    body
+    author
+    createdAt
+  }
 }
     `, {"fragmentName":"VersionBase"});
 export const VpFolderFragmentDoc = new TypedDocumentString(`
@@ -2542,6 +2565,12 @@ fragment VersionBase on VersionNode {
   version
   featuredVersionType
   heroVersionId
+  latestComments {
+    activityId
+    body
+    author
+    createdAt
+  }
 }`, {"fragmentName":"VersionExtended"});
 export const MessageFragmentFragmentDoc = new TypedDocumentString(`
     fragment MessageFragment on ActivityNode {
@@ -3402,6 +3431,12 @@ fragment TaskPropsFragment on TaskNode {
   subtasks {
     ...SubTaskFragment
   }
+  latestComments {
+    activityId
+    body
+    author
+    createdAt
+  }
   folder {
     folderType
   }
@@ -3466,6 +3501,12 @@ fragment TaskPropsFragment on TaskNode {
   parents
   subtasks {
     ...SubTaskFragment
+  }
+  latestComments {
+    activityId
+    body
+    author
+    createdAt
   }
   folder {
     folderType
@@ -3759,6 +3800,12 @@ fragment VersionBase on VersionNode {
   version
   featuredVersionType
   heroVersionId
+  latestComments {
+    activityId
+    body
+    author
+    createdAt
+  }
 }`);
 export const GetProductsColumnStatsDocument = new TypedDocumentString(`
     query GetProductsColumnStats($projectName: String!, $productFilter: String, $versionFilter: String, $taskFilter: String, $folderIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
@@ -3857,6 +3904,12 @@ fragment VersionBase on VersionNode {
   version
   featuredVersionType
   heroVersionId
+  latestComments {
+    activityId
+    body
+    author
+    createdAt
+  }
 }
 fragment VersionExtended on VersionNode {
   ...VersionBase
@@ -3935,6 +3988,12 @@ fragment VersionBase on VersionNode {
   version
   featuredVersionType
   heroVersionId
+  latestComments {
+    activityId
+    body
+    author
+    createdAt
+  }
 }
 fragment VersionExtended on VersionNode {
   ...VersionBase

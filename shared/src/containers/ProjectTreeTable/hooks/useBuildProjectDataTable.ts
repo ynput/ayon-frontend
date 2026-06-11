@@ -153,6 +153,7 @@ export default function useBuildProjectDataTable({
         hasReviewables: task.hasReviewables || false,
         links: links,
         subtasks: task.subtasks || [],
+        latestComments: task.latestComments || [],
       }
     }
 

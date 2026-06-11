@@ -68,6 +68,7 @@ export const buildVersionRow = (version: VersionNode): TableRow => ({
   taskLabel: version.task?.label || version.task?.name,
   hasReviewables: version.hasReviewables,
   author: version.author || '',
+  latestComments: version.latestComments || [],
   links: {}, // TODO add links
 })
 

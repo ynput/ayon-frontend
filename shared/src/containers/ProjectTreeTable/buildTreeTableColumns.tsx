@@ -115,6 +115,7 @@ export type DefaultColumns =
   | 'tags'
   | 'createdAt'
   | 'updatedAt'
+  | 'comments'
 
 export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
 
@@ -806,6 +807,37 @@ const buildTreeTableColumns = ({
             valueData={subtasksData}
             attributeData={{ type: 'subtasks' }}
             isReadOnly={meta?.readOnly?.includes(column.id)}
+          />
+        )
+      },
+    })
+  }
+
+  if (isIncluded('comments') && scopes.some((s) => ['task', 'version'].includes(s))) {
+    staticColumns.push({
+      id: 'comments',
+      accessorKey: 'latestComments',
+      header: 'Comments',
+      minSize: COLUMN_MIN_SIZE,
+      enableSorting: false,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      cell: ({ row, column }) => {
+        const { value, id, type } = getValueIdType(row, 'latestComments')
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+
+        // comments only exist on tasks and versions
+        if (!['task', 'version'].includes(type)) return <div className="readonly"></div>
+
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('comments', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={''}
+            valueData={value || []}
+            attributeData={{ type: 'comments' }}
           />
         )
       },

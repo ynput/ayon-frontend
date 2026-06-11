@@ -18,6 +18,12 @@ fragment TaskPropsFragment on TaskNode {
   subtasks {
     ...SubTaskFragment
   }
+  latestComments {
+    activityId
+    body
+    author
+    createdAt
+  }
   folder {
     folderType
   }
