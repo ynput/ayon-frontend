@@ -25,32 +25,43 @@ interface ActivityVersionReviewProps {
 export const getVerbForFeedback = (feedback: VersionReviewFeedback) => {
   switch (feedback) {
     case VersionReviewFeedback.REQUEST_CHANGES:
-      return "requested changes"
+      return 'requested changes'
     case VersionReviewFeedback.APPROVE:
     default:
-      return "approved this"
+      return 'approved this'
+  }
+}
+export const getVerbForFeedbackBody = (feedback: VersionReviewFeedback, entityType: string) => {
+  switch (feedback) {
+    case VersionReviewFeedback.REQUEST_CHANGES:
+      return 'Requested changes on ' + entityType
+    case VersionReviewFeedback.APPROVE:
+    default:
+      return 'Approved ' + entityType
   }
 }
 
 export const getIconForFeedback = (feedback: VersionReviewFeedback) => {
   switch (feedback) {
     case VersionReviewFeedback.REQUEST_CHANGES:
-      return "refresh"
+      return 'refresh'
     case VersionReviewFeedback.APPROVE:
     default:
-      return "task_alt"
+      return 'task_alt'
   }
 }
 
-const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({
-  activity = {},
-}) => {
+const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ activity = {} }) => {
   const { authorName, authorFullName, createdAt, activityData } = activity
 
-  const label = useMemo(() => [
-    authorFullName || authorName,
-    getVerbForFeedback(activityData?.feedback ?? VersionReviewFeedback.APPROVE),
-  ].join(' '), [authorFullName, authorName, activityData?.feedback, createdAt])
+  const label = useMemo(
+    () =>
+      [
+        authorFullName || authorName,
+        getVerbForFeedback(activityData?.feedback ?? VersionReviewFeedback.APPROVE),
+      ].join(' '),
+    [authorFullName, authorName, activityData?.feedback, createdAt],
+  )
 
   const { categoryData, categoryNotFound } = useCategoryData(activityData?.category)
 
@@ -61,23 +72,21 @@ const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({
       <Styled.Body>
         {authorName && <UserImage name={authorName} size={22} />}
         <Icon icon={getIconForFeedback(activityData.feedback)} />
-        {
-          categoryData && (
-            <CategoryTag
-              value={categoryData.name}
-              color={categoryData.color}
-              style={{
-                top: -4,
-                left: -4,
-              }}
-              isCompact
-              data-tooltip={
-                categoryNotFound ? 'Category not found. It may have been deleted.' : undefined
-              }
-              data-tooltip-delay={0}
-            />
-          )
-        }
+        {categoryData && (
+          <CategoryTag
+            value={categoryData.name}
+            color={categoryData.color}
+            style={{
+              top: -4,
+              left: -4,
+            }}
+            isCompact
+            data-tooltip={
+              categoryNotFound ? 'Category not found. It may have been deleted.' : undefined
+            }
+            data-tooltip-delay={0}
+          />
+        )}
         {label}
         <ActivityDate date={createdAt} />
       </Styled.Body>

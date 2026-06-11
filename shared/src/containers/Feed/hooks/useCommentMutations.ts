@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 import { useFeedContext } from '../context/FeedContext'
 import { SavedAnnotationMetadata } from '..'
 import { VersionReviewFeedback } from '../components/CommentInput/CommentInput'
-import { getVerbForFeedback } from '../components/ActivityVersionReview/ActivityVersionReview'
+import { getVerbForFeedbackBody } from '../components/ActivityVersionReview/ActivityVersionReview'
 
 // Type definitions
 interface Entity {
@@ -246,7 +246,7 @@ const useCommentMutations = ({
 
       const data = { feedback, entityList: entityListId }
       const newReview = {
-        body: `${getVerbForFeedback(feedback)}`,
+        body: getVerbForFeedbackBody(feedback, entityType),
         activityType: 'version.review',
         id: newId,
         data,
