@@ -246,7 +246,7 @@ const useCommentMutations = ({
 
       const data = { feedback, entityList: entityListId }
       const newReview = {
-        body: `(${getVerbForFeedback(feedback)})`,
+        body: `${getVerbForFeedback(feedback)}`,
         activityType: 'version.review',
         id: newId,
         data,
