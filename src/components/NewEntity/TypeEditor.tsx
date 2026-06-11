@@ -43,7 +43,6 @@ const TypeEditor = forwardRef<DropdownRef, TypeEditorProps>(
         disabled={disabled}
         isChanged={isChanged}
         placeholder={placeholder}
-        valueIcon={options[value]?.icon}
         widthExpand
         search
         searchFields={['name']}
