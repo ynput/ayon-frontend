@@ -652,7 +652,7 @@ const CommentInput: FC<CommentInputProps> = ({
         <span className="label">Approve</span>
       </Styled.VersionReviewButton>
       <Styled.VersionReviewButton
-        icon="sync"
+        icon="refresh"
         variant="danger"
         data-tooltip="Request changes"
         onClick={() => {
