@@ -44,6 +44,8 @@ import { VersionReviewPill } from './VersionReviewPill'
 
 var Delta = Quill.import('delta')
 
+const EMPTY_EDITOR_VALUE = '<p><br></p>'
+
 const mentionTypes = ['@', '@@', '@@@']
 export const mentionTypeOptions = {
   '@@@': {
@@ -632,13 +634,18 @@ const CommentInput: FC<CommentInputProps> = ({
   }
 
   const versionReviewButtons = versionReview && onReview && (
-    <Styled.VersionReviewButtons>
+    <Styled.VersionReviewButtons className={clsx("version-review-buttons", { guest: isGuest })}>
       <Styled.VersionReviewButton
         icon="check"
         variant="tertiary"
         data-tooltip="Approve"
         onClick={() => {
-          handleSubmit()
+          // the editor value contains some empty tags
+          // so take those into account
+          if (editorValue && editorValue !== EMPTY_EDITOR_VALUE) {
+            handleSubmit()
+          }
+
           onReview(VersionReviewFeedback.APPROVE)
         }}
       >
@@ -649,7 +656,12 @@ const CommentInput: FC<CommentInputProps> = ({
         variant="danger"
         data-tooltip="Request changes"
         onClick={() => {
-          handleSubmit()
+          // the editor value contains some empty tags
+          // so take those into account
+          if (editorValue && editorValue !== EMPTY_EDITOR_VALUE) {
+            handleSubmit()
+          }
+
           onReview(VersionReviewFeedback.REQUEST_CHANGES)
         }}
       >
@@ -789,7 +801,7 @@ const CommentInput: FC<CommentInputProps> = ({
                 />
               </Styled.Buttons>
             )}
-            <Styled.Buttons style={{ marginLeft: 'auto' }}>
+            <Styled.SubmitButtons>
               {isOpen && versionReviewButtons}
               {isEditing && (
                 <Button variant="text" onClick={handleClose}>
@@ -803,7 +815,7 @@ const CommentInput: FC<CommentInputProps> = ({
                 onClick={handleSubmit}
                 disabled={isLoading}
               />
-            </Styled.Buttons>
+            </Styled.SubmitButtons>
           </Styled.Footer>
 
           <Styled.Dropzone className={clsx({ show: isDropping && isOpen })}>

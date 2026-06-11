@@ -429,6 +429,12 @@ export const Buttons = styled.div`
   }
 `
 
+export const SubmitButtons = styled(Buttons)`
+  margin-left: auto;
+  flex-shrink: 1;
+  overflow: hidden;
+`
+
 export const Markdown = styled.div`
   position: fixed;
   visibility: hidden;
@@ -468,8 +474,9 @@ export const Placeholder = styled.span`
 `
 
 export const VersionReviewButtons = styled.div`
-  display: flex;
+  display: grid;
   gap: var(--base-gap-medium);
+  grid-template-columns: 1fr 1fr;
 `
 
 export const VersionReviewButtonsSpacer = styled.div`
@@ -480,6 +487,7 @@ export const VersionReviewButton = styled(Button)`
   background: transparent;
   border: solid 1px currentColor;
   flex-grow: 1;
+  height: 32px;
 
   &.danger {
     color: var(--md-sys-color-error);
@@ -494,7 +502,15 @@ export const VersionReviewButton = styled(Button)`
   }
 
   @container comment-input-footer (max-width: 345px) {
-    .label {
+    .version-review-buttons.guest & .label {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+    }
+  }
+
+  @container comment-input-footer (max-width: 510px) {
+    .version-review-buttons:not(.guest) & .label {
       position: absolute;
       opacity: 0;
       width: 0;
