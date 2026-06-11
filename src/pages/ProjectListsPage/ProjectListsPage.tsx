@@ -8,6 +8,7 @@ import { FC, useEffect, useMemo } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import styled from 'styled-components'
 import { ListsDataProvider, useListsDataContext } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
@@ -73,6 +74,24 @@ type ProjectListsPageProps = {
   isReview?: boolean
   isStoryboards?: boolean
 }
+
+// The review-addon provider renders a wrapper that doesn't fill the flex column,
+// collapsing the table and hiding its scrollbar. Force its root to fill the height.
+const ProviderFill = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+
+  & > *:only-child {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+  }
+`
 
 const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
   projectName,
@@ -306,6 +325,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
         </SplitterPanel>
         <SplitterPanel size={88}>
           <Section wrap direction="column" style={{ height: '100%' }}>
+            <ProviderFill>
             <ReviewSessionCardsProvider
               projectName={projectName}
               router={{
@@ -419,7 +439,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                 layout="horizontal"
                 stateKey="overview-splitter-settings"
                 stateStorage="local"
-                style={{ width: '100%', height: '100%', overflow: 'hidden' }}
+                style={{ width: '100%', flex: 1, minHeight: 0, overflow: 'hidden' }}
                 gutterSize={isPanelOpen && selectedList ? 4 : 0}
               >
                 <SplitterPanel size={82}>
@@ -479,6 +499,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                 )}
               </Splitter>
             </ReviewSessionCardsProvider>
+            </ProviderFill>
           </Section>
         </SplitterPanel>
       </Splitter>
