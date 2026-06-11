@@ -4,7 +4,6 @@ import { theme } from '@ynput/ayon-react-components'
 import { type EntityComment } from '@shared/api'
 import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDate'
 import { WidgetBaseProps } from './CellWidget'
-import { useColumnSettingsContext } from '../context/ColumnSettingsContext'
 
 const CommentsList = styled.div`
   display: flex;
@@ -16,23 +15,15 @@ const CommentsList = styled.div`
 `
 
 const CommentRow = styled.div`
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
   min-width: 0;
   line-height: 20px;
-  flex-shrink: 0;
+  overflow-wrap: anywhere;
 
   .meta {
-    flex-shrink: 0;
     color: var(--md-sys-color-outline);
-    ${theme.bodySmall}
-  }
-
-  .body {
-    overflow: hidden;
+    margin-right: 6px;
     white-space: nowrap;
-    text-overflow: ellipsis;
+    ${theme.bodySmall}
   }
 `
 
@@ -78,28 +69,18 @@ export interface CommentsWidgetProps extends WidgetBaseProps {
   value?: EntityComment[]
 }
 
-const ROW_LINE_HEIGHT = 20
-const ROW_GAP = 2
-const CELL_PADDING = 8
-
 export const CommentsWidget: FC<CommentsWidgetProps> = ({ value }) => {
-  const { rowHeight = 24 } = useColumnSettingsContext()
   const comments = value || []
   if (!comments.length) return null
 
-  const visibleCount = Math.max(
-    1,
-    Math.floor((rowHeight - CELL_PADDING + ROW_GAP) / (ROW_LINE_HEIGHT + ROW_GAP)),
-  )
-
   return (
     <CommentsList className="comments-list">
-      {comments.slice(0, visibleCount).map((comment) => (
+      {comments.map((comment) => (
         <CommentRow key={comment.activityId}>
           <span className="meta">
             {comment.author} · {getFuzzyDate(new Date(comment.createdAt))}
           </span>
-          <span className="body">{renderBody(comment.body)}</span>
+          {renderBody(comment.body)}
         </CommentRow>
       ))}
     </CommentsList>
