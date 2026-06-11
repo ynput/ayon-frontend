@@ -289,6 +289,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     setEntityForm(initData)
     setSequenceForm((prev) => ({ ...prev, active: false }))
     setNameManuallyEdited(false)
+    setManuallySelectedParents(null)
   }
 
   // open dropdown - delay to wait for dialog opening
