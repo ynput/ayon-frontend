@@ -72,14 +72,10 @@ const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ activity 
       <Styled.Body>
         {authorName && <UserImage name={authorName} size={22} />}
         <Icon icon={getIconForFeedback(activityData.feedback)} />
-        {categoryData && (
+        {(
           <CategoryTag
-            value={categoryData.name}
-            color={categoryData.color}
-            style={{
-              top: -4,
-              left: -4,
-            }}
+            value={"TEST"}
+            color={"red"}
             isCompact
             data-tooltip={
               categoryNotFound ? 'Category not found. It may have been deleted.' : undefined
@@ -87,8 +83,19 @@ const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ activity 
             data-tooltip-delay={0}
           />
         )}
-        {label}
-        <ActivityDate date={createdAt} />
+        {/*{categoryData && (
+          <CategoryTag
+            value={categoryData.name}
+            color={categoryData.color}
+            isCompact
+            data-tooltip={
+              categoryNotFound ? 'Category not found. It may have been deleted.' : undefined
+            }
+            data-tooltip-delay={0}
+          />
+        )}*/}
+        <Styled.Text>{label}</Styled.Text>
+        <ActivityDate date={createdAt} exactTooltip />
       </Styled.Body>
     </Styled.VersionReview>
   )

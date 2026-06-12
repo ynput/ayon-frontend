@@ -12,6 +12,10 @@ export const VersionReview = styled.li`
   border-radius: var(--border-radius-l);
   user-select: none;
 
+  .date, .user-image {
+    flex-shrink: 0;
+  }
+
   &.approve,
   &.approve .icon,
   &.approve .date, {
@@ -27,11 +31,13 @@ export const VersionReview = styled.li`
 
 export const Body = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   flex: 1;
   gap: var(--base-gap-medium);
   padding: 0px 4px;
+  overflow: hidden;
+  width: 100%;
 
   .icon {
     font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
@@ -47,6 +53,9 @@ export const Body = styled.div`
 export const Text = styled.span`
   white-space: nowrap;
   font-size: 12px;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  overflow: hidden;
 
   strong {
     font-size: 12px;

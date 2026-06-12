@@ -10,7 +10,7 @@ import {
 } from 'date-fns'
 import clsx from 'clsx'
 import styled from 'styled-components'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { theme } from '@ynput/ayon-react-components'
 
 export const REFRESH_INTERVAL_MS = 10_000
@@ -51,9 +51,10 @@ export const getFuzzyDate = (date: Date) => {
 interface ActivityDateProps extends React.HTMLAttributes<HTMLElement> {
   date?: string
   isExact?: boolean
+  exactTooltip?: boolean
 }
 
-const ActivityDate = ({ date, isExact, ...props }: ActivityDateProps) => {
+const ActivityDate = ({ date, isExact, exactTooltip = false, ...props }: ActivityDateProps) => {
   const [isFuzzy, setIsFuzzy] = useState(true)
   const [now, setNow] = useState(new Date())
   if (!date) return null
@@ -80,12 +81,16 @@ const ActivityDate = ({ date, isExact, ...props }: ActivityDateProps) => {
   const dateFormat = yesterday ? '' : sameYear ? (sameWeek ? 'E' : 'MMM d') : 'MMM d yyyy'
   const timeFormat = 'h:mm a'
 
+  const fuzzyDate = useMemo(() => getFuzzyDate(dateObj), [dateObj])
+  const exactDate = useMemo(() => {
+    if (today) return format(dateObj, `${dateFormat}, ${timeFormat}`)
+    return format(dateObj, `EEEE, dd MMM yyyy ${timeFormat}`)
+  }, [dateObj, today])
+
   let dateString =
     isFuzzy && !isExact
-      ? today
-        ? getFuzzyDate(dateObj)
-        : format(dateObj, `${dateFormat}, ${timeFormat}`)
-      : format(dateObj, `EEEE, dd MMM yyyy ${timeFormat}`)
+      ? fuzzyDate
+      : exactDate
 
   if (yesterday && isFuzzy && !isExact) dateString = `Yesterday${dateString}`
 
@@ -101,8 +106,10 @@ const ActivityDate = ({ date, isExact, ...props }: ActivityDateProps) => {
       className={clsx('date')}
       {...props}
       onClick={toggleFuzzy}
-      onMouseOver={() => setIsFuzzy(false)}
-      onMouseOut={() => setIsFuzzy(true)}
+      onMouseOver={() => !exactTooltip && setIsFuzzy(false)}
+      onMouseOut={() => !exactTooltip && setIsFuzzy(true)}
+      data-tooltip={exactTooltip ? exactDate : null}
+      data-tooltip-delay={0}
     >
       {dateString}
     </DateStyled>
