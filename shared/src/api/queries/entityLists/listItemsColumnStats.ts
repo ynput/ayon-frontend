@@ -1,20 +1,21 @@
 import { gqlApi } from '@shared/api/generated'
 import type { GetListItemsColumnStatsQuery } from '@shared/api/generated'
-import {
-  DefinitionsFromApi,
-  OverrideResultType,
-  TagTypesFromApi,
-} from '@reduxjs/toolkit/query'
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import type { FieldStats, MetricTarget } from '../columnStats'
 import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
 
 // The list items query aliases entity columns `_entity_{col}` and merges
 // entity+item attribs into `_all_attrib`, so canonical target fields must be
 // translated out and stat column names translated back (ayon-backend#943).
-const toBackendField = (field: string): string =>
-  field.startsWith('attrib.')
-    ? `_all_attrib.${field.slice('attrib.'.length)}`
-    : `_entity_${field}`
+const toBackendField = (field: string): string => {
+  if (field.startsWith('attrib.')) {
+    return `_all_attrib.${field.slice('attrib.'.length)}`
+  }
+  if (field.startsWith('inherited_attributes.')) {
+    return `_all_attrib.${field.slice('inherited_attributes.'.length)}`
+  }
+  return `_entity_${field}`
+}
 
 const toCanonicalColumn = (name: string): string => {
   if (name.startsWith('_all_attrib_')) return `attrib_${name.slice('_all_attrib_'.length)}`
@@ -28,10 +29,7 @@ export const toListItemsStatsTargets = (targets: MetricTarget[]): MetricTarget[]
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
 type UpdatedDefinitions = Definitions & {
-  GetListItemsColumnStats: OverrideResultType<
-    Definitions['GetListItemsColumnStats'],
-    FieldStats[]
-  >
+  GetListItemsColumnStats: OverrideResultType<Definitions['GetListItemsColumnStats'], FieldStats[]>
 }
 
 const listItemsColumnStatsApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({

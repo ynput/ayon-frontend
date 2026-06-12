@@ -106,7 +106,7 @@ export const buildMetricTargets = ({
     if (attrib.scope && !attrib.scope.includes(entity)) continue
     if (!isVisible(`attrib_${attrib.name}`)) continue
 
-    const field = `attrib.${attrib.name}`
+    const field = `inherited_attributes.${attrib.name}`
     const type = attrib.data?.type
     if (type === 'integer' || type === 'float') {
       targets.push({ field, aggregations: NUMERIC })
