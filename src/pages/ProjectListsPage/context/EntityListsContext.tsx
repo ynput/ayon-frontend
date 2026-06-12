@@ -10,6 +10,7 @@ import {
   useCreateEntityListMutation,
   EntityListFolderModel,
   useGetEntityListFoldersQuery,
+  useExecuteActionMutation,
 } from '@shared/api'
 import { upperFirst } from 'lodash'
 import { useSearchParams } from 'react-router-dom'
@@ -154,8 +155,10 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
   const { getProductionAddon } = useGetProductionAddon()
 
   const hasReviewAddon = !!getProductionAddon('review', { minVersion: MIN_REVIEW_VERSION })
+  const reviewAddonVersion = getProductionAddon('review')?.productionVersion
 
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
+  const [executeAction] = useExecuteActionMutation()
 
   // add an item to a list
   const addToList: EntityListsContextType['addToList'] = useCallback(
@@ -503,6 +506,49 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       )
       const reviewSubMenuItems = buildHierarchicalMenuItems(reviews, versionEntities, () => true)
 
+      const OPEN_REVIEW_SESSION_ACTION_ID = 'review-create-session-from-versions'
+      const openReviewSession = async () => {
+        if (!reviewAddonVersion) return toast.error('Review addon not available')
+        const loadingToast = toast.loading('Opening review session...')
+        try {
+          const result = await executeAction({
+            identifier: OPEN_REVIEW_SESSION_ACTION_ID,
+            actionContext: {
+              projectName,
+              entityType: 'version',
+              entityIds: versionEntities.map((v) => v.entityId),
+            },
+            addonName: 'review',
+            addonVersion: reviewAddonVersion,
+          }).unwrap()
+          const payload = result.payload as { uri?: string; new_tab?: boolean } | undefined
+          if (result.success && result?.type === 'redirect' && payload?.uri) {
+            toast.update(loadingToast, {
+              render: 'Review session created, redirecting...',
+              type: 'success',
+              isLoading: false,
+              autoClose: 3000,
+            })
+            window.open(payload.uri, '_blank')
+          } else {
+            toast.update(loadingToast, {
+              render: 'Unexpected response from review addon',
+              type: 'error',
+              isLoading: false,
+              autoClose: 5000,
+            })
+          }
+        } catch (error) {
+          console.error('Error creating review session', error)
+          toast.update(loadingToast, {
+            render: 'Error creating review session',
+            type: 'error',
+            isLoading: false,
+            autoClose: 5000,
+          })
+        }
+      }
+
       subMenuItems.push(newListMenuItem('version', versionEntities))
 
       const menu: any[] = [buildAddToListMenu(subMenuItems, { label })]
@@ -527,7 +573,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
             id: 'open-session',
             label: 'Open in review',
             icon: 'subscriptions',
-            command: () => toast.info('Open session not implemented yet'),
+            command: () => openReviewSession(),
           },
         ]
 
