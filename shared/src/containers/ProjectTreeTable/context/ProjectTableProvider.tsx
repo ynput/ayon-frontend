@@ -77,6 +77,7 @@ export interface ProjectTableProviderProps {
   entitiesMap: EntitiesMap
   tasksByFolderMap: TasksByFolderMap
   tableRows?: TableRow[] // any extra rows that we want to add to the table
+  selectedFolders?: string[]
 
   // grouping
   groups: EntityGroup[]
@@ -156,6 +157,7 @@ export const ProjectTableProvider = ({
   tasksMap,
   entitiesMap,
   tasksByFolderMap,
+  selectedFolders,
   expanded,
   showHierarchy,
   loadingTasks,
@@ -210,6 +212,7 @@ export const ProjectTableProvider = ({
     showEmptyFolders: showEmptyGroups,
     loadingTasks,
     isLoadingMore,
+    selectedFolders,
   })
 
   // overrideGroupBy (from view dropdown) takes priority over Customize panel's groupBy.
