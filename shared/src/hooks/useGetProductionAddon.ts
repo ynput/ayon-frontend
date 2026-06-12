@@ -27,7 +27,7 @@ export const useGetProductionAddon = () => {
         try {
           const isCompatible =
             semver.gte(productionVersion, options.minVersion) ||
-            productionVersion === options.minVersion + '-dev'
+            semver.gte(semver.coerce(productionVersion) || '0.0.0', options.minVersion)
           if (!isCompatible) return undefined
         } catch (e) {
           return undefined

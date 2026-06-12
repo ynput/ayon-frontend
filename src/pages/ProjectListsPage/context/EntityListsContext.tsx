@@ -18,6 +18,7 @@ import { usePowerpack } from '@shared/context'
 import { useGetProductionAddon } from '@shared/hooks'
 
 const MIN_REVIEW_VERSION = '0.0.3'
+const MIN_REVIEW_ACTIONS_VERSION = '0.5.0'
 
 interface EntityListsContextProps {
   projectName: string
@@ -162,6 +163,9 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
   const { getProductionAddon } = useGetProductionAddon()
 
   const hasReviewAddon = !!getProductionAddon('review', { minVersion: MIN_REVIEW_VERSION })
+  const hasReviewActionsVersion = !!getProductionAddon('review', {
+    minVersion: MIN_REVIEW_ACTIONS_VERSION,
+  })
   const reviewAddonVersion = getProductionAddon('review')?.productionVersion
 
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
@@ -187,6 +191,13 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
         if (!reviewAddonVersion) {
           toast.error('Review addon not available')
           return Promise.reject(new Error('Review addon not available'))
+        }
+
+        if (!hasReviewActionsVersion) {
+          toast.error(
+            `Please upgrade Review addon to at least ${MIN_REVIEW_ACTIONS_VERSION} to use this feature with folders and tasks`,
+          )
+          return Promise.reject(new Error('Review addon version too low'))
         }
 
         try {
@@ -265,7 +276,14 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
         return Promise.reject(error)
       }
     },
-    [projectName, allLists.data, reviewAddonVersion, executeAction, updateEntityListItems],
+    [
+      projectName,
+      allLists.data,
+      reviewAddonVersion,
+      hasReviewActionsVersion,
+      executeAction,
+      updateEntityListItems,
+    ],
   )
 
   // Update the state type and initialize as null
@@ -311,6 +329,13 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           if (!reviewAddonVersion) {
             toast.error('Review addon not available')
             return Promise.reject(new Error('Review addon not available'))
+          }
+
+          if (!hasReviewActionsVersion) {
+            toast.error(
+              `Please upgrade Review addon to at least ${MIN_REVIEW_ACTIONS_VERSION} to use this feature with folders and tasks`,
+            )
+            return Promise.reject(new Error('Review addon version too low'))
           }
 
           const actionIdentifier = `review-save-session-from-${entityType}`
@@ -380,6 +405,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       createNewListMutation,
       executeAction,
       reviewAddonVersion,
+      hasReviewActionsVersion,
     ],
   )
 
@@ -636,6 +662,14 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       const OPEN_REVIEW_SESSION_ACTION_ID_BASE = 'review-create-session-from'
       const openReviewSession = async () => {
         if (!reviewAddonVersion) return toast.error('Review addon not available')
+
+        if ((entityType === 'folder' || entityType === 'task') && !hasReviewActionsVersion) {
+          toast.error(
+            `Please upgrade Review addon to at least ${MIN_REVIEW_ACTIONS_VERSION} to use this feature with folders and tasks`,
+          )
+          return
+        }
+
         const loadingToast = toast.loading('Opening review session...')
         try {
           const result = await executeAction({
@@ -693,7 +727,15 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
             id: 'create-session',
             label: 'Create new session',
             icon: 'add',
-            command: () => openCreateNewList(entityType, entities, 'review-session'),
+            command: () => {
+              if ((entityType === 'folder' || entityType === 'task') && !hasReviewActionsVersion) {
+                toast.error(
+                  `Please upgrade Review addon to at least ${MIN_REVIEW_ACTIONS_VERSION} to use this feature with folders and tasks`,
+                )
+                return
+              }
+              openCreateNewList(entityType, entities, 'review-session')
+            },
           },
           {
             id: 'add-to-session',
@@ -728,6 +770,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       versions,
       reviews,
       hasReviewAddon,
+      hasReviewActionsVersion,
       executeAction,
       projectName,
       reviewAddonVersion,
