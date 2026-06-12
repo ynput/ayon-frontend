@@ -842,6 +842,8 @@ const buildTreeTableColumns = ({
             value={''}
             valueData={value || []}
             attributeData={{ type: 'comments' }}
+            isCollapsed={!!row.original.childOnlyMatch}
+            isReadOnly
           />
         )
       },

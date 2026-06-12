@@ -223,7 +223,7 @@ export const taskProvideTags = (result: Task[], type = 'task', entityType = 'tas
     : [{ type, id: entityType.toUpperCase() + 'S' }]
 
 export const filterKey = (filter: any): string =>
-  typeof filter === 'string' ? filter : JSON.stringify(filter)
+  typeof filter === 'string' ? filter : JSON.stringify(filter) ?? ''
 
 export const filterActivityTypes: Record<string, string[]> = {
   activity: ['comment', 'version.publish', 'status.change', 'assignee.add', 'assignee.remove'],

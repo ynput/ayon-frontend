@@ -133,6 +133,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     {
       value: 'comments',
       label: 'Latest comments',
+      hidden: !scopes.some((scope) => ['task', 'version', 'product', 'folder'].includes(scope)),
     },
     ...attribFields
       .filter((field) => field.scope?.some((scope) => scopes.includes(scope)))

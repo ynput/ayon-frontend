@@ -1665,7 +1665,8 @@ const TD = ({
         // because the 1st mousedown triggers React state updates that can replace
         // the DOM node, preventing the native dblclick event from firing.
         if (e.detail === 2) {
-          const isReadOnly = isTargetReadOnly(e)
+          // comments cells are read-only but their double-click opens the details panel, so don't block them here
+          const isReadOnly = isTargetReadOnly(e) && cell.column.id !== 'comments'
           if (isReadOnly || isEntityRestricted(cell.row.original.entityType) || isGroup) {
             e.preventDefault()
             return

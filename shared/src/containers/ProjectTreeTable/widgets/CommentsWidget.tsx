@@ -2,10 +2,9 @@ import { FC, memo, ReactNode } from 'react'
 import styled from 'styled-components'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Icon, theme } from '@ynput/ayon-react-components'
-import { DoneCheckbox } from '@shared/components'
+import { Icon } from '@ynput/ayon-react-components'
+import { DoneCheckbox, UserImage } from '@shared/components'
 import { type EntityComment } from '@shared/api'
-import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDate'
 import { allowedRefTypes } from '@shared/containers/Feed/components/ActivityComment/ActivityMarkdownComponents'
 import { getEntityTypeIcon } from '@shared/util'
 import { WidgetBaseProps } from './CellWidget'
@@ -13,25 +12,65 @@ import { WidgetBaseProps } from './CellWidget'
 const CommentsList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
   width: 100%;
   max-height: 100%;
   overflow: hidden;
 `
 
 const CommentRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
   min-width: 0;
-  line-height: 20px;
-  overflow-wrap: anywhere;
+  line-height: 18px;
 
-  .meta {
-    color: var(--md-sys-color-outline);
-    margin-right: 6px;
-    white-space: nowrap;
-    ${theme.bodySmall}
+  .author {
+    flex-shrink: 0;
+    margin-top: 1px;
   }
 
-  code {
+  /* preserve the comment's own line breaks (collapsing them makes feedback unreadable) */
+  .body {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .body p,
+  .body ul,
+  .body ol,
+  .body h1,
+  .body h2,
+  .body h3,
+  .body h4,
+  .body h5,
+  .body h6 {
+    margin: 0;
+    font-size: 1em;
+  }
+
+  .body h1,
+  .body h2,
+  .body h3,
+  .body h4,
+  .body h5,
+  .body h6 {
+    font-weight: 700;
+  }
+
+  .body ul,
+  .body ol {
+    padding-left: 1.2em;
+  }
+
+  .body ul.contains-task-list,
+  .body .task-list-item {
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .body code {
     background-color: var(--md-sys-color-surface-container-high);
     border-radius: var(--border-radius-m);
     padding: 0 2px;
@@ -58,25 +97,7 @@ const Mention = styled.span`
 const mentionIcon = (type: string) =>
   type === 'user' ? 'alternate_email' : type === 'team' ? 'group' : getEntityTypeIcon(type, 'link')
 
-// flatten block elements to inline spans so the comment flows as one wrapping line
-const inline = ({ children }: { children?: ReactNode }) => <span>{children} </span>
-// editor produces h2 only (header button); render headings bold to keep the hint
-const heading = ({ children }: { children?: ReactNode }) => <strong>{children} </strong>
-
 const markdownComponents = {
-  p: inline,
-  h1: heading,
-  h2: heading,
-  h3: heading,
-  h4: heading,
-  h5: heading,
-  h6: heading,
-  blockquote: inline,
-  pre: inline,
-  ul: inline,
-  ol: inline,
-  li: inline,
-  br: () => <> </>,
   hr: () => null,
   img: () => null,
   input: ({ checked }: { checked?: boolean }) => (
@@ -102,13 +123,15 @@ const markdownComponents = {
 }
 
 const CommentBody = memo(({ body }: { body: string }) => (
-  <ReactMarkdown
-    remarkPlugins={[remarkGfm]}
-    urlTransform={(url) => url}
-    components={markdownComponents}
-  >
-    {body}
-  </ReactMarkdown>
+  <div className="body">
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      urlTransform={(url) => url}
+      components={markdownComponents}
+    >
+      {body}
+    </ReactMarkdown>
+  </div>
 ))
 
 export interface CommentsWidgetProps extends WidgetBaseProps {
@@ -123,9 +146,7 @@ export const CommentsWidget: FC<CommentsWidgetProps> = ({ value }) => {
     <CommentsList className="comments-list">
       {comments.map((comment) => (
         <CommentRow key={comment.activityId}>
-          <span className="meta">
-            {comment.author} · {getFuzzyDate(new Date(comment.createdAt))}
-          </span>
+          <UserImage className="author" name={comment.author || ''} size={20} />
           <CommentBody body={comment.body} />
         </CommentRow>
       ))}
