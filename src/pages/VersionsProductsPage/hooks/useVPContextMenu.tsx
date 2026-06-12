@@ -32,7 +32,7 @@ export const useVPContextMenu = (callbacks?: {
 }): VPContextMenuItems => {
   const { selectedCells, setSelectedCells, selectCell } = useSelectionCellsContext()
   const { entitiesMap } = useVersionsDataContext()
-  const { buildVersionsContextMenu } = useEntityListsContext()
+  const { buildReviewContextMenu } = useEntityListsContext()
   const { onOpenPlayer } = useProjectTableContext()
   const { projectName } = useProjectContext()
   const [deleteVersion] = useDeleteVersionMutation()
@@ -321,9 +321,9 @@ export const useVPContextMenu = (callbacks?: {
           ? `Add to list (${singleVersionName})`
           : undefined
 
-      return buildVersionsContextMenu(versionEntities, label)
+      return buildReviewContextMenu('version', versionEntities, label)
     },
-    [entitiesMap, buildVersionsContextMenu],
+    [entitiesMap, buildReviewContextMenu],
   )
 
   // Delete version context menu item
