@@ -1918,6 +1918,7 @@ export type GetTasksByParentQueryVariables = Exact<{
   filter?: InputMaybe<Scalars['String']['input']>;
   folderFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
+  showComments?: InputMaybe<Scalars['Boolean']['input']>;
 }>;
 
 
@@ -1935,6 +1936,7 @@ export type GetTasksListQueryVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
+  showComments?: InputMaybe<Scalars['Boolean']['input']>;
 }>;
 
 
@@ -2435,7 +2437,7 @@ export const TaskPropsFragmentFragmentDoc = new TypedDocumentString(`
   subtasks {
     ...SubTaskFragment
   }
-  latestComments {
+  latestComments @include(if: $showComments) {
     activityId
     body
     author
@@ -3420,7 +3422,7 @@ export const GetTaskColumnStatsDocument = new TypedDocumentString(`
   distribution
 }`);
 export const GetTasksByParentDocument = new TypedDocumentString(`
-    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $folderFilter: String, $search: String) {
+    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $folderFilter: String, $search: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     name
     tasks(
@@ -3467,7 +3469,7 @@ fragment TaskPropsFragment on TaskNode {
   subtasks {
     ...SubTaskFragment
   }
-  latestComments {
+  latestComments @include(if: $showComments) {
     activityId
     body
     author
@@ -3478,7 +3480,7 @@ fragment TaskPropsFragment on TaskNode {
   }
 }`);
 export const GetTasksListDocument = new TypedDocumentString(`
-    query GetTasksList($projectName: String!, $folderIds: [String!], $taskIds: [String!], $filter: String, $folderFilter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    query GetTasksList($projectName: String!, $folderIds: [String!], $taskIds: [String!], $filter: String, $folderFilter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     name
     tasks(
@@ -3538,7 +3540,7 @@ fragment TaskPropsFragment on TaskNode {
   subtasks {
     ...SubTaskFragment
   }
-  latestComments {
+  latestComments @include(if: $showComments) {
     activityId
     body
     author

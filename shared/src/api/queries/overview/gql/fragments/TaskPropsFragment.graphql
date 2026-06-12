@@ -18,7 +18,7 @@ fragment TaskPropsFragment on TaskNode {
   subtasks {
     ...SubTaskFragment
   }
-  latestComments {
+  latestComments @include(if: $showComments) {
     activityId
     body
     author

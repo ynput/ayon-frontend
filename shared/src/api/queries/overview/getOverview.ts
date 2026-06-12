@@ -99,6 +99,7 @@ export type GetGroupedTasksListArgs = {
   desc?: boolean
   sortBy?: string
   groupCount?: number // optional override for all groups
+  showComments?: boolean
 }
 
 // Define the page param type for infinite query
@@ -180,10 +181,11 @@ const injectedApi = enhancedApi.injectEndpoints({
         filter?: string
         folderFilter?: string
         search?: string
+        showComments?: boolean
       }
     >({
       async queryFn(
-        { projectName, parentIds, filter, folderFilter, search },
+        { projectName, parentIds, filter, folderFilter, search, showComments },
         { dispatch, forced },
       ) {
         try {
@@ -206,6 +208,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                       filter,
                       folderFilter,
                       search,
+                      showComments: !!showComments,
                     },
                     { forceRefetch: forced },
                   ),
@@ -240,7 +243,7 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
       async onCacheEntryAdded(
-        { projectName, parentIds, filter, search },
+        { projectName, parentIds, filter, search, showComments },
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
       ) {
         let token: any
@@ -266,6 +269,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                 {
                   projectName,
                   taskIds: batchIds,
+                  showComments: !!showComments,
                 } as any,
                 { forceRefetch: true },
               ),
@@ -385,8 +389,17 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
-          const { projectName, filter, folderFilter, search, folderIds, taskIds, sortBy, desc } =
-            queryArg
+          const {
+            projectName,
+            filter,
+            folderFilter,
+            search,
+            folderIds,
+            taskIds,
+            sortBy,
+            desc,
+            showComments,
+          } = queryArg
           const { cursor } = pageParam
 
           // Build the query parameters for GetTasksList
@@ -397,6 +410,7 @@ const injectedApi = enhancedApi.injectEndpoints({
             search,
             folderIds,
             taskIds,
+            showComments: !!showComments,
           }
 
           // Add cursor-based pagination
@@ -469,6 +483,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                   projectName: arg.projectName,
                   taskIds: batchIds,
                   folderIds: arg.folderIds,
+                  showComments: !!arg.showComments,
                 } as any,
                 { forceRefetch: true },
               ),
@@ -562,7 +577,17 @@ const injectedApi = enhancedApi.injectEndpoints({
     }),
     getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
       queryFn: async (
-        { projectName, groups, search, folderFilter, folderIds, desc, sortBy, groupCount },
+        {
+          projectName,
+          groups,
+          search,
+          folderFilter,
+          folderIds,
+          desc,
+          sortBy,
+          groupCount,
+          showComments,
+        },
         api,
       ) => {
         try {
@@ -613,6 +638,7 @@ const injectedApi = enhancedApi.injectEndpoints({
               search,
               folderIds,
               sortBy: sortBy,
+              showComments: !!showComments,
               // @ts-expect-error - we know group does not exist on query variables but we need it for later
               group: group.value,
             }

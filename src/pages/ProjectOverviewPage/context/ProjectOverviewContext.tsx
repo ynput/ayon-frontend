@@ -53,7 +53,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { rowSelection, rowSelectionData, sliceType, persistentRowSelectionData } =
     useSlicerContext()
 
-  const { sorting, groupBy: panelGroupBy, defaultColumnVisibility } = useColumnSettingsContext()
+  const {
+    sorting,
+    groupBy: panelGroupBy,
+    defaultColumnVisibility,
+    columnVisibility,
+  } = useColumnSettingsContext()
 
   const sliceFilter = createFilterFromSlicer({
     type: sliceType,
@@ -122,6 +127,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   )
 
   const skipLinks = !hasLinkColumn || !linksVisible
+
+  // comments are the heaviest field to resolve, so only fetch them when the column is shown
+  const showComments = useMemo(
+    () => checkColumnVisibility(columnVisibility, 'comments', defaultColumnVisibility),
+    [columnVisibility, defaultColumnVisibility],
+  )
 
   // Sync slicer slice type with view settings (selection is in-memory, project-scoped)
   useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews)
@@ -287,6 +298,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     attribFields,
     modules,
     skipLinks,
+    showComments,
   })
 
   // combine foldersMap and tasksMap into a single map
