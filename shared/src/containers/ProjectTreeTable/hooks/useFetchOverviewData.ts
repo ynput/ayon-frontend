@@ -40,6 +40,7 @@ type useFetchOverviewDataData = {
 type Params = {
   projectName: string
   selectedFolders: string[] // folders selected in the slicer (hierarchy)
+  excludeSelectedFolders?: boolean
   taskIds?: string[] // specific task IDs to filter by (from entity list slicer)
   taskFilters: QueryFilterParams // filters for tasks
   folderFilters: QueryFilterParams // filters for folders
@@ -59,6 +60,7 @@ type Params = {
 export const useFetchOverviewData = ({
   projectName,
   selectedFolders, // comes from the slicer
+  excludeSelectedFolders = false,
   taskIds, // specific task IDs from entity list slicer
   taskFilters,
   folderFilters,
@@ -88,6 +90,10 @@ export const useFetchOverviewData = ({
     .filter(([id]) => !isGroupId(id)) // filter out the root folder
     .map(([id]) => id)
 
+  const taskParentIds = excludeSelectedFolders
+    ? Array.from(new Set([...expandedParentIds, ...selectedFolders]))
+    : expandedParentIds
+
   const {
     data: expandedFoldersTasks = [],
     isFetching: isFetchingExpandedFoldersTasks,
@@ -96,13 +102,13 @@ export const useFetchOverviewData = ({
   } = useGetOverviewTasksByFoldersQuery(
     {
       projectName,
-      parentIds: expandedParentIds,
+      parentIds: taskParentIds,
       filter: taskFilters.filterString,
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
       showComments,
     },
-    { skip: !expandedParentIds.length || (!showHierarchy && !isFlatFolderView) },
+    { skip: !taskParentIds.length || (!showHierarchy && !isFlatFolderView) },
   )
 
   const skipFoldersByTaskFilter =
@@ -149,15 +155,24 @@ export const useFetchOverviewData = ({
 
       // Check if parent is expanded
       const parentId = folder.parentId as string
-      const isSelectedInSlicer = selectedFolders.includes(folder.id as string)
+      const isRootFromSlicer = excludeSelectedFolders
+        ? selectedFolders.includes(parentId)
+        : selectedFolders.includes(folder.id as string)
       const expandedMap = expanded as Record<string, boolean>
-      if (expandedMap[parentId] === true || isSelectedInSlicer) {
+      if (expandedMap[parentId] === true || isRootFromSlicer) {
         visibleSet.add(folder.id)
       }
     })
 
     return visibleSet
-  }, [folders, foldersByTaskFilter, skipFoldersByTaskFilter, expanded, selectedFolders])
+  }, [
+    folders,
+    foldersByTaskFilter,
+    skipFoldersByTaskFilter,
+    expanded,
+    selectedFolders,
+    excludeSelectedFolders,
+  ])
 
   // get all links for visible folders
   const {
@@ -250,24 +265,14 @@ export const useFetchOverviewData = ({
       map.forEach((folder, folderId) => {
         const folderPath = folder.path as string
 
-        // Include if it's a parent or the folder itself
-        const folderPathParts = folderPath.split('/')
-        let isParentOrSelf = false
-
-        for (let i = 0; i < folderPathParts.length; i++) {
-          const partialPath = folderPathParts.slice(0, i + 1).join('/')
-          if (selectedPaths.some((p) => p === partialPath)) {
-            isParentOrSelf = true
-            break
-          }
-        }
+        const isSelected = selectedPaths.includes(folderPath)
 
         // Include if it's a child of any selected folder
         const isChild = selectedPaths.some((selectedPath) =>
           folderPath.startsWith(selectedPath + '/'),
         )
 
-        if (isParentOrSelf || isChild) {
+        if (isChild || (isSelected && !excludeSelectedFolders)) {
           filteredMap.set(folderId, addExtraDataToFolder(folder))
         }
       })
@@ -281,6 +286,7 @@ export const useFetchOverviewData = ({
     foldersByTaskFilter,
     isUninitialized,
     selectedFolders,
+    excludeSelectedFolders,
     foldersLinks,
     isFlatFolderView,
   ])
@@ -308,7 +314,11 @@ export const useFetchOverviewData = ({
   // if task list and sorting by name, sort by path instead
   const sortByPath = singleSort?.id === 'name' && !showHierarchy
   const sortId = sortByPath ? 'path' : singleSort?.id === 'subType' ? 'taskType' : singleSort?.id
-  const tasksFolderIdsParams = selectedFolders.length ? Array.from(foldersMap.keys()) : undefined
+  const tasksFolderIdsParams = selectedFolders.length
+    ? Array.from(
+        new Set([...foldersMap.keys(), ...(excludeSelectedFolders ? selectedFolders : [])]),
+      )
+    : undefined
 
   // Use the new infinite query hook for tasks list with correct name
   const {

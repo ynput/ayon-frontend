@@ -278,6 +278,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
+    excludeSelectedFolders: sliceType !== 'entityList',
     taskIds: rawEntityIds.taskIds,
     taskFilters: {
       filter: combinedTaskFilter.filter,

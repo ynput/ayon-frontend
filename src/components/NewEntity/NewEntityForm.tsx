@@ -57,7 +57,6 @@ export const InputsContainer = styled.div`
   flex-direction: column;
   align-items: flex-start;
   gap: var(--base-gap-small);
-  margin-bottom: calc(var(--base-gap-large) - 16px);
 
   label {
     white-space: nowrap;
@@ -169,7 +168,7 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
   }
 
   return (
-    <InputsContainer>
+    <InputsContainer style={{ flex: 1 }}>
       <InputLabel>Label</InputLabel>
       <InputText
         value={entityForm.label}
@@ -177,7 +176,7 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
         ref={labelRef}
         onFocus={() => setNameFocused(true)}
         onKeyDown={handleLabelKeydown}
-        style={{ flex: 1 }}
+        style={{ flex: 1, width: '100%' }}
       />
       <NameRow onKeyDown={handleNameKeydown}>
         <InputLabel>Name</InputLabel>
