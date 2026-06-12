@@ -827,6 +827,7 @@ export type ProjectNodeActivitiesArgs = {
   activityIds?: InputMaybe<Array<Scalars['String']['input']>>;
   activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   after?: InputMaybe<Scalars['String']['input']>;
+  authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
   categories?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   changedAfter?: InputMaybe<Scalars['String']['input']>;
@@ -837,7 +838,6 @@ export type ProjectNodeActivitiesArgs = {
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
-  mine?: Scalars['Boolean']['input'];
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
@@ -1495,6 +1495,7 @@ export type UserNode = {
   isGuest: Scalars['Boolean']['output'];
   isManager: Scalars['Boolean']['output'];
   isService: Scalars['Boolean']['output'];
+  isStagingAllowed: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   tasks: TasksConnection;
   updatedAt: Scalars['DateTime']['output'];

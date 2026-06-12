@@ -23,7 +23,7 @@ export function useLastVersionReview({ projectName, enabled, entityIds, activiti
     entityIds,
     activityTypes: ["version.review"],
     last: 1,
-    mine: true,
+    authors: [userName],
   }, { skip })
 
 

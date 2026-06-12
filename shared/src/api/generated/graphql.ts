@@ -827,6 +827,7 @@ export type ProjectNodeActivitiesArgs = {
   activityIds?: InputMaybe<Array<Scalars['String']['input']>>;
   activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   after?: InputMaybe<Scalars['String']['input']>;
+  authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
   categories?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   changedAfter?: InputMaybe<Scalars['String']['input']>;
@@ -837,7 +838,6 @@ export type ProjectNodeActivitiesArgs = {
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
-  mine?: Scalars['Boolean']['input'];
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
@@ -1495,6 +1495,7 @@ export type UserNode = {
   isGuest: Scalars['Boolean']['output'];
   isManager: Scalars['Boolean']['output'];
   isService: Scalars['Boolean']['output'];
+  isStagingAllowed: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   tasks: TasksConnection;
   updatedAt: Scalars['DateTime']['output'];
@@ -1733,7 +1734,7 @@ export type GetActivitiesQueryVariables = Exact<{
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   activityTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  mine?: InputMaybe<Scalars['Boolean']['input']>;
+  authors?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
 }>;
 
 
@@ -2699,7 +2700,7 @@ export const GetActivityUsersDocument = new TypedDocumentString(`
 }
     `);
 export const GetActivitiesDocument = new TypedDocumentString(`
-    query GetActivities($projectName: String!, $entityIds: [String!]!, $after: String, $first: Int, $before: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!], $mine: Boolean) {
+    query GetActivities($projectName: String!, $entityIds: [String!]!, $after: String, $first: Int, $before: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!], $authors: [String!]) {
   project(name: $projectName) {
     name
     activities(
@@ -2710,7 +2711,7 @@ export const GetActivitiesDocument = new TypedDocumentString(`
       last: $last
       referenceTypes: $referenceTypes
       activityTypes: $activityTypes
-      mine: $mine
+      authors: $authors
     ) {
       pageInfo {
         hasPreviousPage

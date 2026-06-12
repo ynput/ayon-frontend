@@ -506,6 +506,7 @@ export const VersionReviewButton = styled(Button)`
       position: absolute;
       opacity: 0;
       width: 0;
+      pointer-events: none;
     }
   }
 
@@ -514,6 +515,7 @@ export const VersionReviewButton = styled(Button)`
       position: absolute;
       opacity: 0;
       width: 0;
+      pointer-events: none;
     }
   }
 `
