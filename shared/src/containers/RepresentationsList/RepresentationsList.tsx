@@ -88,6 +88,8 @@ export const RepresentationsList = ({ entities = [] }: Props) => {
         <TreeTable
           scrollable
           scrollHeight="100%"
+          resizableColumns
+          columnResizeMode="fit"
           value={data}
           emptyMessage="No representation found"
           selectionMode="single"
