@@ -14,6 +14,9 @@ import {
 import { upperFirst } from 'lodash'
 import { useSearchParams } from 'react-router-dom'
 import { usePowerpack } from '@shared/context'
+import { useGetProductionAddon } from '@shared/hooks'
+
+const MIN_REVIEW_VERSION = '0.0.3'
 
 interface EntityListsContextProps {
   projectName: string
@@ -142,6 +145,10 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
 
   // no filtering by scope here (UI using this context is overview page)
   const listFolders = listFoldersAll as EntityListFolderModel[]
+
+  const { getProductionAddon } = useGetProductionAddon()
+
+  const hasReviewAddon = !!getProductionAddon('review', { minVersion: MIN_REVIEW_VERSION })
 
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
 
@@ -497,9 +504,10 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
 
       subMenuItems.push(newListMenuItem('version', versionEntities))
 
-      return [
-        buildAddToListMenu(subMenuItems, { label }),
-        {
+      const menu: any[] = [buildAddToListMenu(subMenuItems, { label })]
+
+      if (hasReviewAddon) {
+        menu.push({
           id: 'review',
           label: 'Review',
           icon: 'subscriptions',
@@ -507,25 +515,34 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
             {
               id: 'add-to-session',
               label: 'Add to session',
-              icon: 'add_to_queue',
+              icon: 'list_alt_add',
               items: reviewSubMenuItems,
               disabled: reviewSubMenuItems.length === 0,
             },
-            // {
-            //   id: 'create-session',
-            //   label: 'Create session',
-            //   command: () => toast.info('Create session not implemented yet'),
-            // },
-            // {
-            //   id: 'open-session',
-            //   label: 'Open session',
-            //   command: () => toast.info('Open session not implemented yet'),
-            // },
+            {
+              id: 'create-session',
+              label: 'Create session list',
+              command: () => toast.info('Create session not implemented yet'),
+            },
+            {
+              id: 'open-session',
+              label: 'Open in review',
+              command: () => toast.info('Open session not implemented yet'),
+            },
           ],
-        },
-      ]
+        })
+      }
+
+      return menu
     },
-    [buildHierarchicalMenuItems, buildAddToListMenu, newListMenuItem, versions, reviews],
+    [
+      buildHierarchicalMenuItems,
+      buildAddToListMenu,
+      newListMenuItem,
+      versions,
+      reviews,
+      hasReviewAddon,
+    ],
   )
 
   const menuItems: EntityListsContextType['menuItems'] = useCallback(

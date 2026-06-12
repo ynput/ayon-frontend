@@ -12,7 +12,7 @@ import useUpdateList from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
 import ListsContext, { ListDetailsOpenState, OnOpenFolderListParams } from './ListsContext'
-import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
+import { useGetProductionAddon } from '@shared/hooks'
 import { useLocalStorage } from '@shared/hooks'
 import { buildListFolderRowId, parseListFolderRowId } from '../util/buildListsTableData'
 import useInitialListsExpanded from '../hooks/useInitialListsExpanded'
@@ -71,8 +71,8 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
   )
 
   // find out if and what version of the review addon is installed
-  const { addonVersions: matchedAddons } = useGetBundleAddonVersions({ addons: ['review'] })
-  const reviewVersion = matchedAddons.get('review')
+  const { getProductionAddon } = useGetProductionAddon()
+  const reviewVersion = getProductionAddon('review')?.productionVersion
 
   const rowSelection = useMemo(
     () =>
