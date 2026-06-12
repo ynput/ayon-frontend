@@ -104,7 +104,7 @@ export const RepresentationsList = ({ entities = [] }: Props) => {
                 field={col.field}
                 header={col.header}
                 expander={col.expander}
-                style={{ width: `${col.width}px` }}
+                style={{ width: col.width }}
               />
             )
           })}
