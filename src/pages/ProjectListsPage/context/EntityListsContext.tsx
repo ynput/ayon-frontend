@@ -11,11 +11,13 @@ import {
   EntityListFolderModel,
   useGetEntityListFoldersQuery,
   useExecuteActionMutation,
+  entityListsQueriesGql,
 } from '@shared/api'
 import { upperFirst } from 'lodash'
 import { useSearchParams } from 'react-router-dom'
 import { usePowerpack } from '@shared/context'
 import { useGetProductionAddon } from '@shared/hooks'
+import { useAppDispatch } from '@state/store'
 
 const MIN_REVIEW_VERSION = '0.0.3'
 const MIN_REVIEW_ACTIONS_VERSION = '0.5.0'
@@ -109,6 +111,7 @@ interface EntityListsProviderProps extends EntityListsContextProps {
 }
 
 export const EntityListsProvider = ({ children, projectName }: EntityListsProviderProps) => {
+  const dispatch = useAppDispatch()
   const { powerLicense } = usePowerpack()
   const [, setSearchParams] = useSearchParams()
 
@@ -216,6 +219,15 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           }).unwrap()
 
           if (result.success) {
+            if (result.payload) {
+              // invalidate the list caches
+              const tags = [
+                { type: 'entityList', id: listId },
+                { type: 'entityListItem', id: listId },
+                { type: 'entityListItemsColumnStats', id: listId },
+              ]
+              dispatch(entityListsQueriesGql.util.invalidateTags(tags))
+            }
             toast.success(`Item${filteredEntities.length > 1 ? 's' : ''} added to session`)
             return Promise.resolve()
           } else {
@@ -356,8 +368,18 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
             throw new Error(result.message || 'Error creating review session from action')
           }
 
+          const payloadData = (result.payload as any)?.data
           // Try to extract created ID if provided, though standard behavior might vary
-          listId = (result.payload as any)?.id
+          listId = payloadData?.id
+
+          if (payloadData) {
+            // invalidate the list caches
+            const tags = [
+              { type: 'entityList', id: listId },
+              { type: 'entityListItemsColumnStats', id: listId },
+            ]
+            dispatch(entityListsQueriesGql.util.invalidateTags(tags))
+          }
 
           toast.success(`Review session ${label} created`)
         } else {

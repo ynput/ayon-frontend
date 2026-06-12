@@ -78,8 +78,6 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
         }
       : labels
 
-    console.log(isReview, form)
-
     if (!form) return null
     const handleChange = <K extends keyof NewListForm>(value: NewListForm[K], field: K) => {
       onChange({
