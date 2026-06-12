@@ -34,6 +34,9 @@ const updateCache = (activitiesDraft: any, patch: any, isDelete: boolean) => {
   }
 }
 
+// feed filter is a QueryFilter object; tags are keyed by its stringified form (see getActivitiesInfinite providesTags)
+const filterKey = (filter: any) => (typeof filter === 'string' ? filter : JSON.stringify(filter))
+
 const patchActivities = async (
   { patch, entityIds = [], filter, refs = [] }: any,
   { dispatch, queryFulfilled, getState }: any,
@@ -43,7 +46,7 @@ const patchActivities = async (
   // build tags that would be affected by this activity
   const invalidatingTags = [...entityIds, ...refIds].map((id) => ({
     type: 'entityActivities',
-    id: id + '-' + filter,
+    id: id + '-' + filterKey(filter),
   }))
 
   const state = getState()

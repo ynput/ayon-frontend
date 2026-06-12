@@ -358,16 +358,13 @@ export const useScopedDetailsPanel = (scope: string) => {
     {},
   )
 
-  const [currentTab, setTab] = useState<DetailsPanelTab>(() => {
-    const tab = tabsByScope[scope]
-    return isDetailsPanelTab(tab) ? tab : getTabForScope(scope)
-  })
+  // derived from localStorage state, which useLocalStorage keeps in sync across hook instances
+  const storedTab = tabsByScope[scope]
+  const currentTab = isDetailsPanelTab(storedTab) ? storedTab : getTabForScope(scope)
 
-  // Keep localStorage and local state in sync
   const updateTab = useCallback(
     (newTab: DetailsPanelTab) => {
-      setTab(newTab)
-      setTabsByScope({ ...tabsByScope, [scope]: newTab })
+      setTabsByScope((prev) => ({ ...prev, [scope]: newTab }))
     },
     [scope, setTabsByScope],
   )
