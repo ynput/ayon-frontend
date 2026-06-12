@@ -26,6 +26,7 @@ interface EntityListsContextProps {
 interface NewListData {
   entityType: ListEntityType
   selectedEntities: ListEntityInput[]
+  entityListType?: string
 }
 
 type ListSubMenuItem = {
@@ -72,7 +73,11 @@ export interface EntityListsContextType {
   // Update the type of newListData
   newListData: NewListData | null
   // Update the signature of openCreateNewList
-  openCreateNewList: (entityType: ListEntityType, selectedEntities: ListEntityInput[]) => void
+  openCreateNewList: (
+    entityType: ListEntityType,
+    selectedEntities: ListEntityInput[],
+    entityListType?: string,
+  ) => void
   closeCreateNewList: () => void
   // Remove entities parameter as it will be stored in newListData
   createNewList: (label: string) => Promise<void>
@@ -221,8 +226,8 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
 
   // Update openCreateNewList to store selected entities
   const openCreateNewList = useCallback(
-    (entityType: ListEntityType, selectedEntities: ListEntityInput[]) =>
-      setNewListData({ entityType, selectedEntities }),
+    (entityType: ListEntityType, selectedEntities: ListEntityInput[], entityListType?: string) =>
+      setNewListData({ entityType, selectedEntities, entityListType }),
     [setNewListData],
   )
   const closeCreateNewList = useCallback(() => setNewListData(null), [setNewListData])
@@ -240,7 +245,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           return Promise.reject(new Error('No entities selected'))
         }
 
-        const { selectedEntities, entityType } = newListData
+        const { selectedEntities, entityType, entityListType } = newListData
 
         // filter out entities that do not match entityType
         const filteredEntities = selectedEntities.filter(
@@ -254,6 +259,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           entityListPostModel: {
             label,
             entityType,
+            entityListType,
             items: entitiesToAdd,
           },
         }).unwrap()
@@ -495,41 +501,45 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
         () => false,
         () => false,
       )
-      const reviewSubMenuItems = buildHierarchicalMenuItems(
-        reviews,
-        versionEntities,
-        () => true,
-        () => hasAnyNonReviewable,
-      )
+      const reviewSubMenuItems = buildHierarchicalMenuItems(reviews, versionEntities, () => true)
 
       subMenuItems.push(newListMenuItem('version', versionEntities))
 
       const menu: any[] = [buildAddToListMenu(subMenuItems, { label })]
 
       if (hasReviewAddon) {
+        // Build review menu items and add a disabled note if any selected version lacks reviewables
+        const reviewItems: ListSubMenuItem[] = [
+          {
+            id: 'add-to-session',
+            label: 'Add to session',
+            icon: 'list_alt_add',
+            items: reviewSubMenuItems,
+            disabled: reviewSubMenuItems.length === 0,
+          },
+          {
+            id: 'create-session',
+            label: 'Create review session list',
+            icon: 'add',
+            command: () => openCreateNewList('version', versionEntities, 'review-session'),
+          },
+          {
+            id: 'open-session',
+            label: 'Open in review',
+            icon: 'subscriptions',
+            command: () => toast.info('Open session not implemented yet'),
+          },
+        ]
+
+        const disabledLabel = ' (all versions need reviewable)'
+        const getLabel = (base: string) => (hasAnyNonReviewable ? base + disabledLabel : base)
+
         menu.push({
           id: 'review',
-          label: 'Review',
+          label: getLabel('Review'),
           icon: 'subscriptions',
-          items: [
-            {
-              id: 'add-to-session',
-              label: 'Add to session',
-              icon: 'list_alt_add',
-              items: reviewSubMenuItems,
-              disabled: reviewSubMenuItems.length === 0,
-            },
-            {
-              id: 'create-session',
-              label: 'Create session list',
-              command: () => toast.info('Create session not implemented yet'),
-            },
-            {
-              id: 'open-session',
-              label: 'Open in review',
-              command: () => toast.info('Open session not implemented yet'),
-            },
-          ],
+          items: hasAnyNonReviewable ? [] : reviewItems,
+          disabled: hasAnyNonReviewable,
         })
       }
 
