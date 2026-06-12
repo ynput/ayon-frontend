@@ -6,6 +6,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import { DoneCheckbox, UserImage } from '@shared/components'
 import { type EntityComment } from '@shared/api'
 import { allowedRefTypes } from '@shared/containers/Feed/components/ActivityComment/ActivityMarkdownComponents'
+import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDate'
 import { getEntityTypeIcon } from '@shared/util'
 import { WidgetBaseProps } from './CellWidget'
 
@@ -28,6 +29,7 @@ const CommentRow = styled.div`
   .author {
     flex-shrink: 0;
     margin-top: 1px;
+    display: inline-flex;
   }
 
   /* preserve the comment's own line breaks (collapsing them makes feedback unreadable) */
@@ -155,6 +157,11 @@ const CommentBody = memo(({ body }: { body: string }) => (
   </div>
 ))
 
+const commentTooltip = (comment: EntityComment) => {
+  const date = comment.createdAt ? getFuzzyDate(new Date(comment.createdAt)) : ''
+  return [comment.author, date].filter(Boolean).join(' • ')
+}
+
 export interface CommentsWidgetProps extends WidgetBaseProps {
   value?: EntityComment[]
   isLoading?: boolean
@@ -182,7 +189,9 @@ export const CommentsWidget: FC<CommentsWidgetProps> = ({ value, isLoading }) =>
     <CommentsList className="comments-list">
       {comments.map((comment) => (
         <CommentRow key={comment.activityId}>
-          <UserImage className="author" name={comment.author || ''} size={20} />
+          <span className="author" data-tooltip={commentTooltip(comment)} data-tooltip-delay={200}>
+            <UserImage name={comment.author || ''} size={20} />
+          </span>
           <CommentBody body={comment.body} />
         </CommentRow>
       ))}

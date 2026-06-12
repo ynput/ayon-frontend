@@ -830,8 +830,9 @@ const buildTreeTableColumns = ({
         const { value, id, type } = getValueIdType(row, 'latestComments')
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
 
+        // loading placeholder rows have no entityType yet — let them through so the skeleton shows
         // products borrow their featured version's comments; folders only have data on GQL-fed pages (Lists)
-        if (!['task', 'version', 'product', 'folder'].includes(type))
+        if (!row.original.isLoading && !['task', 'version', 'product', 'folder'].includes(type))
           return <div className="readonly"></div>
 
         return (
