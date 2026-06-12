@@ -89,6 +89,10 @@ const getTags = ({ entityId, filter }: { entityId: string; filter: string }) => 
 
   tags.push({ type: 'watchers', id: entityId })
 
+  // refetch table queries so latestComments cells update (overviewTask = tasks, version covers VP versions + products via featuredVersion)
+  tags.push({ type: 'overviewTask', id: entityId })
+  tags.push({ type: 'version', id: entityId })
+
   return tags
 }
 

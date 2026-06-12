@@ -813,11 +813,14 @@ const buildTreeTableColumns = ({
     })
   }
 
-  if (isIncluded('comments') && scopes.some((s) => ['task', 'version'].includes(s))) {
+  if (
+    isIncluded('comments') &&
+    scopes.some((s) => ['task', 'version', 'product', 'folder'].includes(s))
+  ) {
     staticColumns.push({
       id: 'comments',
       accessorKey: 'latestComments',
-      header: 'Comments',
+      header: 'Latest comments',
       minSize: COLUMN_MIN_SIZE,
       enableSorting: false,
       enableResizing: true,
@@ -827,8 +830,9 @@ const buildTreeTableColumns = ({
         const { value, id, type } = getValueIdType(row, 'latestComments')
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
 
-        // comments only exist on tasks and versions
-        if (!['task', 'version'].includes(type)) return <div className="readonly"></div>
+        // products borrow their featured version's comments; folders only have data on GQL-fed pages (Lists)
+        if (!['task', 'version', 'product', 'folder'].includes(type))
+          return <div className="readonly"></div>
 
         return (
           <CellWidget

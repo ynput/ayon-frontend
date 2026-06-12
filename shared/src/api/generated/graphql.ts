@@ -1819,11 +1819,11 @@ export type GetListItemsQueryVariables = Exact<{
 
 
 export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, allAttrib: string, position: number, ownItemAttrib: Array<string>, node?:
-                | { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, thumbnailHash: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string }
+                | { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, thumbnailHash: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null }
                 | { __typename?: 'ProductNode', status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', name: string, label?: string | null, path?: string | null, folderType: string } }
                 | { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> }
-                | { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, thumbnailHash: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', name: string, label?: string | null, path?: string | null, folderType: string }, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> }
-                | { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, author?: string | null, version: number, thumbnailHash: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, productBaseType?: string | null, folderId: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, label?: string | null, taskType: string } | null }
+                | { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, thumbnailHash: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', name: string, label?: string | null, path?: string | null, folderType: string }, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }>, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null }
+                | { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, author?: string | null, version: number, thumbnailHash: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, productBaseType?: string | null, folderId: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, label?: string | null, taskType: string } | null, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null }
                 | { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> }
                | null }> } } }> } } };
 
@@ -1857,15 +1857,15 @@ export type GetListsItemsForReviewSessionQueryVariables = Exact<{
 
 export type GetListsItemsForReviewSessionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, active: boolean, entityType: string, updatedAt: any, count: number, accessLevel: number } }> } } };
 
-type ListItemFragment_FolderNode_Fragment = { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, thumbnailHash: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string };
+type ListItemFragment_FolderNode_Fragment = { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, thumbnailHash: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null };
 
 type ListItemFragment_ProductNode_Fragment = { __typename?: 'ProductNode', status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', name: string, label?: string | null, path?: string | null, folderType: string } };
 
 type ListItemFragment_RepresentationNode_Fragment = { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> };
 
-type ListItemFragment_TaskNode_Fragment = { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, thumbnailHash: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', name: string, label?: string | null, path?: string | null, folderType: string }, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> };
+type ListItemFragment_TaskNode_Fragment = { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, thumbnailHash: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', name: string, label?: string | null, path?: string | null, folderType: string }, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }>, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null };
 
-type ListItemFragment_VersionNode_Fragment = { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, author?: string | null, version: number, thumbnailHash: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, productBaseType?: string | null, folderId: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, label?: string | null, taskType: string } | null };
+type ListItemFragment_VersionNode_Fragment = { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, author?: string | null, version: number, thumbnailHash: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, productBaseType?: string | null, folderId: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, label?: string | null, taskType: string } | null, latestComments?: Array<{ __typename?: 'EntityComment', activityId: string, body: string, author?: string | null, createdAt: string }> | null };
 
 type ListItemFragment_WorkfileNode_Fragment = { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> };
 
@@ -2315,6 +2315,12 @@ export const ListItemFragmentFragmentDoc = new TypedDocumentString(`
     subtasks {
       ...SubTaskFragment
     }
+    latestComments {
+      activityId
+      body
+      author
+      createdAt
+    }
   }
   ... on FolderNode {
     label
@@ -2326,6 +2332,12 @@ export const ListItemFragmentFragmentDoc = new TypedDocumentString(`
     hasReviewables
     thumbnailHash
     folderId: id
+    latestComments {
+      activityId
+      body
+      author
+      createdAt
+    }
   }
   ... on ProductNode {
     status
@@ -2364,6 +2376,12 @@ export const ListItemFragmentFragmentDoc = new TypedDocumentString(`
       name
       label
       taskType
+    }
+    latestComments {
+      activityId
+      body
+      author
+      createdAt
     }
   }
 }
@@ -3136,6 +3154,12 @@ export const GetListItemsDocument = new TypedDocumentString(`
     subtasks {
       ...SubTaskFragment
     }
+    latestComments {
+      activityId
+      body
+      author
+      createdAt
+    }
   }
   ... on FolderNode {
     label
@@ -3147,6 +3171,12 @@ export const GetListItemsDocument = new TypedDocumentString(`
     hasReviewables
     thumbnailHash
     folderId: id
+    latestComments {
+      activityId
+      body
+      author
+      createdAt
+    }
   }
   ... on ProductNode {
     status
@@ -3185,6 +3215,12 @@ export const GetListItemsDocument = new TypedDocumentString(`
       name
       label
       taskType
+    }
+    latestComments {
+      activityId
+      body
+      author
+      createdAt
     }
   }
 }

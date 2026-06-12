@@ -32,6 +32,7 @@ export const buildProductRow = (
   versionsCount: product.versions.length,
   versionName: product.featuredVersion?.name || '',
   author: product.featuredVersion?.author || '',
+  latestComments: product.featuredVersion?.latestComments || [],
   thumbnail: {
     entityId: product.featuredVersion?.id || product.id,
     entityType: product.featuredVersion ? 'version' : 'product',

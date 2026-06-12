@@ -72,6 +72,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         subRows: [],
         links: links, // Add processed links
         subtasks: item.subtasks || [], // Add subtasks if they exist
+        latestComments: item.latestComments || [],
       }
     })
   }
