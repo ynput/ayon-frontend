@@ -83,6 +83,7 @@ export const Feed = ({
     users,
     feedFilter,
     setFeedFilter,
+    isGuest,
   } = useFeedContext()
 
   const {
@@ -356,6 +357,7 @@ export const Feed = ({
                   readOnly={readOnly}
                   statuses={statuses}
                   isSlideOut={isSlideOut}
+                  isGuest={isGuest}
                 />
               ))}
           {/* message when no versions published */}

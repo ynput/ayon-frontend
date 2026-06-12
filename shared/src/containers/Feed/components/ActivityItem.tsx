@@ -31,6 +31,7 @@ interface ActivityItemProps {
   onCheckChange?: (e: React.ChangeEvent<HTMLInputElement>, activity: any) => void
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
   onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
+  isGuest?: boolean
 }
 
 const ActivityItem: React.FC<ActivityItemProps> = ({
@@ -43,6 +44,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
   readOnly,
   statuses,
   isSlideOut,
+  isGuest,
   ...props
 }) => {
   switch (activity.activityType) {
@@ -63,7 +65,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
     case 'version.publish':
       return <ActivityVersions {...{ activity, projectInfo, filter }} {...props} />
     case 'version.review':
-      return <ActivityVersionReview activity={activity} {...props} />
+      return <ActivityVersionReview activity={activity} isGuest={isGuest} {...props} />
     case 'group':
       // fromGroup prevents infinite recursion
       return (

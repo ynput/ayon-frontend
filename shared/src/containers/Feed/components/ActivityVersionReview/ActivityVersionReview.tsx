@@ -10,6 +10,7 @@ import { useCategoryData } from '../../hooks/useCategoryData'
 
 interface ActivityVersionReviewProps {
   entityType?: string
+  isGuest?: boolean
   activity: {
     authorName?: string
     authorFullName?: string
@@ -51,7 +52,7 @@ export const getIconForFeedback = (feedback: VersionReviewFeedback) => {
   }
 }
 
-const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ activity = {} }) => {
+const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ isGuest, activity = {} }) => {
   const { authorName, authorFullName, createdAt, activityData } = activity
 
   const label = useMemo(
@@ -72,18 +73,7 @@ const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ activity 
       <Styled.Body>
         {authorName && <UserImage name={authorName} size={22} />}
         <Icon icon={getIconForFeedback(activityData.feedback)} />
-        {(
-          <CategoryTag
-            value={"TEST"}
-            color={"red"}
-            isCompact
-            data-tooltip={
-              categoryNotFound ? 'Category not found. It may have been deleted.' : undefined
-            }
-            data-tooltip-delay={0}
-          />
-        )}
-        {/*{categoryData && (
+        {categoryData && !isGuest && (
           <CategoryTag
             value={categoryData.name}
             color={categoryData.color}
@@ -93,7 +83,7 @@ const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ activity 
             }
             data-tooltip-delay={0}
           />
-        )}*/}
+        )}
         <Styled.Text>{label}</Styled.Text>
         <ActivityDate date={createdAt} exactTooltip />
       </Styled.Body>
