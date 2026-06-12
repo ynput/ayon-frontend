@@ -836,6 +836,7 @@ export type ProjectNodeActivitiesArgs = {
   activityIds?: InputMaybe<Array<Scalars['String']['input']>>;
   activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   after?: InputMaybe<Scalars['String']['input']>;
+  authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
   categories?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   changedAfter?: InputMaybe<Scalars['String']['input']>;
@@ -1504,6 +1505,7 @@ export type UserNode = {
   isGuest: Scalars['Boolean']['output'];
   isManager: Scalars['Boolean']['output'];
   isService: Scalars['Boolean']['output'];
+  isStagingAllowed: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   tasks: TasksConnection;
   updatedAt: Scalars['DateTime']['output'];
@@ -1918,7 +1920,7 @@ export type GetTasksByParentQueryVariables = Exact<{
   filter?: InputMaybe<Scalars['String']['input']>;
   folderFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
-  showComments?: InputMaybe<Scalars['Boolean']['input']>;
+  showComments?: Scalars['Boolean']['input'];
 }>;
 
 
@@ -1936,7 +1938,7 @@ export type GetTasksListQueryVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
-  showComments?: InputMaybe<Scalars['Boolean']['input']>;
+  showComments?: Scalars['Boolean']['input'];
 }>;
 
 
