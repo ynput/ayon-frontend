@@ -78,6 +78,27 @@ const CommentRow = styled.div`
   }
 `
 
+const SkeletonAvatar = styled.div`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 1px;
+`
+
+const SkeletonLines = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`
+
+const SkeletonLine = styled.div`
+  height: 12px;
+  border-radius: var(--border-radius-m);
+`
+
 const Mention = styled.span`
   display: inline-flex;
   align-items: center;
@@ -136,9 +157,24 @@ const CommentBody = memo(({ body }: { body: string }) => (
 
 export interface CommentsWidgetProps extends WidgetBaseProps {
   value?: EntityComment[]
+  isLoading?: boolean
 }
 
-export const CommentsWidget: FC<CommentsWidgetProps> = ({ value }) => {
+export const CommentsWidget: FC<CommentsWidgetProps> = ({ value, isLoading }) => {
+  if (isLoading) {
+    return (
+      <CommentsList className="comments-list">
+        <CommentRow>
+          <SkeletonAvatar className="loading" />
+          <SkeletonLines>
+            <SkeletonLine className="loading" style={{ width: '90%' }} />
+            <SkeletonLine className="loading" style={{ width: '60%' }} />
+          </SkeletonLines>
+        </CommentRow>
+      </CommentsList>
+    )
+  }
+
   const comments = value || []
   if (!comments.length) return null
 

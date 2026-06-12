@@ -77,6 +77,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isPlaceholder?: boolean
   isFocused?: boolean
   isReadOnly?: boolean
+  loading?: boolean
   enableCustomValues?: boolean
   folderId?: string | null
   tooltip?: string
@@ -114,6 +115,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   tooltip,
   onChange,
   entityType,
+  loading,
   pt,
   ...props
 }) => {
@@ -244,7 +246,13 @@ export const CellWidget: FC<EditorCellProps> = ({
       }
 
       case type === 'comments': {
-        return <CommentsWidget value={valueData as EntityComment[] | undefined} {...sharedProps} />
+        return (
+          <CommentsWidget
+            value={valueData as EntityComment[] | undefined}
+            isLoading={loading}
+            {...sharedProps}
+          />
+        )
       }
 
       case !!options.length: {
@@ -342,7 +350,7 @@ export const CellWidget: FC<EditorCellProps> = ({
         //console.log(`Unrecognized type "${type}" for cell ${cellId}.`)
         return null
     }
-  }, [cellId, value, type, isCurrentCellEditing, options, isCollapsed])
+  }, [cellId, value, type, isCurrentCellEditing, options, isCollapsed, loading])
 
   return (
     <Cell
