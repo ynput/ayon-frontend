@@ -65,10 +65,7 @@ export interface EntityListsContextType {
     icon: string
     items: ListSubMenuItem[]
   }
-  newListMenuItem: (
-    entityType: ListEntityType,
-    selected: ListEntityInput[],
-  ) => ListSubMenuItem
+  newListMenuItem: (entityType: ListEntityType, selected: ListEntityInput[]) => ListSubMenuItem
   // Update the type of newListData
   newListData: NewListData | null
   // Update the signature of openCreateNewList
@@ -84,6 +81,8 @@ export interface EntityListsContextType {
     getShowIcon?: (list: EntityList) => boolean,
     getDisabled?: (list: EntityList) => boolean,
   ) => ListSubMenuItem[]
+  // Build the full ["Add to list", "Review"] top-level menu items for version entities
+  buildVersionsContextMenu: (versionEntities: ListEntityInput[], label?: string) => any[]
 }
 
 const EntityListsContext = createContext<EntityListsContextType | undefined>(undefined)
@@ -479,6 +478,56 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
     [buildListMenuItem, listFolders, powerLicense],
   )
 
+  const buildVersionsContextMenu: EntityListsContextType['buildVersionsContextMenu'] = useCallback(
+    (versionEntities, label) => {
+      const hasAnyNonReviewable = versionEntities.some((v) => v.hasReviewables === false)
+
+      const subMenuItems = buildHierarchicalMenuItems(
+        versions,
+        versionEntities,
+        () => false,
+        () => false,
+      )
+      const reviewSubMenuItems = buildHierarchicalMenuItems(
+        reviews,
+        versionEntities,
+        () => true,
+        () => hasAnyNonReviewable,
+      )
+
+      subMenuItems.push(newListMenuItem('version', versionEntities))
+
+      return [
+        buildAddToListMenu(subMenuItems, { label }),
+        {
+          id: 'review',
+          label: 'Review',
+          icon: 'subscriptions',
+          items: [
+            {
+              id: 'add-to-session',
+              label: 'Add to session',
+              icon: 'add_to_queue',
+              items: reviewSubMenuItems,
+              disabled: reviewSubMenuItems.length === 0,
+            },
+            // {
+            //   id: 'create-session',
+            //   label: 'Create session',
+            //   command: () => toast.info('Create session not implemented yet'),
+            // },
+            // {
+            //   id: 'open-session',
+            //   label: 'Open session',
+            //   command: () => toast.info('Open session not implemented yet'),
+            // },
+          ],
+        },
+      ]
+    },
+    [buildHierarchicalMenuItems, buildAddToListMenu, newListMenuItem, versions, reviews],
+  )
+
   const menuItems: EntityListsContextType['menuItems'] = useCallback(
     (filter) => (_e, cell, selected, _meta) => {
       const isMultipleEntityTypes = selected.some(
@@ -489,8 +538,6 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
 
       // helpers to decide icon visibility
       const getShowIconMultiple = () => isMultipleEntityTypes
-      const getShowIconVersion = (list: EntityList) =>
-        list.entityListType === 'review-session' ? true : !!reviews.length
 
       let subMenuItems: ListSubMenuItem[] = []
 
@@ -514,20 +561,13 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           subMenuItems = buildHierarchicalMenuItems(products, selected, () => getShowIconMultiple())
         }
       } else if (cell.entityType === 'version') {
-        const combined = [...versions, ...reviews]
         // Cells expose hasReviewables on .data — propagate so addToList + UI gating can consume it
         const selectedWithReviewable: ListEntityInput[] = selected.map((s) => ({
           entityId: s.entityId,
           entityType: s.entityType,
           hasReviewables: (s.data as any)?.hasReviewables,
         }))
-        const hasAnyNonReviewable = selectedWithReviewable.some((s) => s.hasReviewables === false)
-        subMenuItems = buildHierarchicalMenuItems(
-          combined,
-          selectedWithReviewable,
-          (l) => getShowIconVersion(l),
-          (l) => l.entityListType === 'review-session' && hasAnyNonReviewable,
-        )
+        return buildVersionsContextMenu(selectedWithReviewable)
       }
 
       // Apply filter if provided
@@ -541,23 +581,23 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
         subMenuItems.push(newListMenuItem(cell.entityType as ListEntityType, selected))
       }
 
-      return buildAddToListMenu(subMenuItems, {
-        // @ts-expect-error - featuredVersion is not supported in typings
-        label: cell.data?.featuredVersion?.id
-          ? // @ts-expect-error - featuredVersion is not supported in typings
-            `Add to list (${cell.data.featuredVersion.name})`
-          : undefined,
-      })
+      // @ts-expect-error - featuredVersion is not supported in typings
+      const listLabel = cell.data?.featuredVersion?.id
+        ? // @ts-expect-error - featuredVersion is not supported in typings
+          `Add to list (${cell.data.featuredVersion.name})`
+        : undefined
+
+      return buildAddToListMenu(subMenuItems, { label: listLabel })
     },
     [
       folders,
       tasks,
       products,
       versions,
-      reviews,
       buildHierarchicalMenuItems,
       newListMenuItem,
       buildAddToListMenu,
+      buildVersionsContextMenu,
     ],
   )
 
@@ -580,6 +620,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       createNewList,
       newListErrorMessage,
       buildHierarchicalMenuItems,
+      buildVersionsContextMenu,
     }),
     [
       allLists,
@@ -599,6 +640,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       createNewList,
       newListErrorMessage,
       buildHierarchicalMenuItems,
+      buildVersionsContextMenu,
     ],
   )
 
