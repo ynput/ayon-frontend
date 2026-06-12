@@ -838,14 +838,13 @@ const buildTreeTableColumns = ({
         return (
           <CellWidget
             rowId={id}
-            className="comments"
+            className={clsx('comments', { loading: row.original.isLoading })}
             columnId={column.id}
             value={''}
             valueData={value || []}
             attributeData={{ type: 'comments' }}
             isCollapsed={!!row.original.childOnlyMatch}
             isReadOnly
-            loading={row.original.isLoading}
           />
         )
       },
