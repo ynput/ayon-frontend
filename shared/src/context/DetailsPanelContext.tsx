@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
 import { useURIContext } from './UriContext'
-import { useLocalStorage } from '@shared/hooks'
+import { useLocalStorage, readLocalStorage, writeLocalStorage } from '@shared/hooks'
 import type { SubtasksManagerProps } from '@shared/components'
 import { DetailsPanelContext } from './DetailsPanelContextInstance'
 
@@ -176,7 +176,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   )
 
   // Use localStorage to persist tab preferences by scope
-  const [tabsByScope, setTabByScope] = useLocalStorage<TabStateByScope>('details/tabs-by-scope', {})
+  const [tabsByScope, setTabByScope] = useLocalStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
 
   // Get the current tab for a specific scope
   const getTabForScope = useCallback(
@@ -349,14 +349,18 @@ export const useDetailsPanelContext = (): DetailsPanelContextType => {
   return context
 }
 
+const TABS_BY_SCOPE_KEY = 'details/tabs-by-scope'
+
+export const setDetailsPanelTabForScope = (scope: string, tab: DetailsPanelTab) => {
+  const current = readLocalStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
+  writeLocalStorage(TABS_BY_SCOPE_KEY, { ...current, [scope]: tab })
+}
+
 // Add a specialized hook for using a panel in a specific scope
 export const useScopedDetailsPanel = (scope: string) => {
   const { getOpenForScope, setPanelOpen, getTabForScope } = useDetailsPanelContext()
 
-  const [tabsByScope, setTabsByScope] = useLocalStorage<TabStateByScope>(
-    'details/tabs-by-scope',
-    {},
-  )
+  const [tabsByScope, setTabsByScope] = useLocalStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
 
   // derived from localStorage state, which useLocalStorage keeps in sync across hook instances
   const storedTab = tabsByScope[scope]

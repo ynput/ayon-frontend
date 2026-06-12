@@ -6,6 +6,7 @@ import { Icon, theme } from '@ynput/ayon-react-components'
 import { DoneCheckbox } from '@shared/components'
 import { type EntityComment } from '@shared/api'
 import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDate'
+import { allowedRefTypes } from '@shared/containers/Feed/components/ActivityComment/ActivityMarkdownComponents'
 import { getEntityTypeIcon } from '@shared/util'
 import { WidgetBaseProps } from './CellWidget'
 
@@ -54,18 +55,6 @@ const Mention = styled.span`
   }
 `
 
-// matches allowedRefTypes in Feed's ActivityMarkdownComponents
-const MENTION_TYPES = [
-  'user',
-  'team',
-  'task',
-  'folder',
-  'version',
-  'representation',
-  'workfile',
-  'product',
-]
-
 const mentionIcon = (type: string) =>
   type === 'user' ? 'alternate_email' : type === 'team' ? 'group' : getEntityTypeIcon(type, 'link')
 
@@ -99,7 +88,7 @@ const markdownComponents = {
   ),
   a: ({ href, children }: { href?: string; children?: ReactNode }) => {
     const [type, id] = href?.split(':') ?? []
-    if (type && id && MENTION_TYPES.includes(type)) {
+    if (type && id && allowedRefTypes.includes(type)) {
       const label = String(children ?? '').replace('@', '')
       return (
         <Mention>

@@ -16,6 +16,16 @@ const parseJSONString = (value: string | null, fallback: any = null) => {
   }
 }
 
+export const readLocalStorage = <T>(key: string, fallback: T): T =>
+  parseJSONString(localStorage.getItem(key), fallback)
+
+// Write-only counterpart of useLocalStorage for non-render contexts (event handlers in hot components, plain modules). Dispatches the same storage event the hook listens to,
+// so every mounted useLocalStorage(key) instance picks the change up.
+export const writeLocalStorage = <T>(key: string, value: T): void => {
+  localStorage.setItem(key, JSON.stringify(value))
+  window.dispatchEvent(new StorageEvent('storage', { key }))
+}
+
 export function useLocalStorage<T>(key: string, defaultValue: T): [T, Dispatch<SetStateAction<T>>] {
   // Use a ref to hold the defaultValue to avoid dependency changes
   const defaultValueRef = useRef(defaultValue)

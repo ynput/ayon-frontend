@@ -103,7 +103,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { useProjectContext, usePowerpack, useScopedDetailsPanel } from '@shared/context'
+import { useProjectContext, usePowerpack, setDetailsPanelTabForScope } from '@shared/context'
 import { useLoadModule } from '@shared/hooks'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
@@ -1615,9 +1615,6 @@ const TD = ({
 
   const { isEditing, setEditingCellId, editingCellId } = useCellEditing()
 
-  // all ProjectTreeTable pages render their details panel under the 'overview' scope
-  const { setTab: setDetailsPanelTab } = useScopedDetailsPanel('overview')
-
   const borderClasses = getCellBorderClasses(cellId)
 
   const isPinned = cell.column.getIsPinned()
@@ -1677,7 +1674,8 @@ const TD = ({
           // name column: select row to open details panel
           // comments column: same — comments are read and written in the details panel feed
           if (['name', 'comments'].includes(cell.column.id) && !target.closest('.expander')) {
-            if (cell.column.id === 'comments') setDetailsPanelTab('feed')
+            // all ProjectTreeTable pages render their details panel under the 'overview' scope
+            if (cell.column.id === 'comments') setDetailsPanelTabForScope('overview', 'feed')
             const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
             const additive = e.metaKey || e.ctrlKey
             const position = parseCellId(rowSelectionCellId)

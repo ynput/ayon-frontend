@@ -1,6 +1,6 @@
 import { getActivitiesGQLApi } from './getActivities'
 import { toast } from 'react-toastify'
-import { filterActivityTypes } from './util/activitiesHelpers'
+import { filterActivityTypes, filterKey } from './util/activitiesHelpers'
 
 const updateCache = (activitiesDraft: any, patch: any, isDelete: boolean) => {
   // Handle paginated structure
@@ -33,9 +33,6 @@ const updateCache = (activitiesDraft: any, patch: any, isDelete: boolean) => {
     }
   }
 }
-
-// feed filter is a QueryFilter object; tags are keyed by its stringified form (see getActivitiesInfinite providesTags)
-const filterKey = (filter: any) => (typeof filter === 'string' ? filter : JSON.stringify(filter))
 
 const patchActivities = async (
   { patch, entityIds = [], filter, refs = [] }: any,
@@ -92,9 +89,10 @@ const getTags = ({ entityId, filter }: { entityId: string; filter: string }) => 
 
   tags.push({ type: 'watchers', id: entityId })
 
-  // refetch table queries so latestComments cells update (overviewTask = tasks, version covers VP versions + products via featuredVersion)
+  // refetch table queries so latestComments cells update (overviewTask = tasks, version covers VP versions + products via featuredVersion, entityListItem = Lists rows)
   tags.push({ type: 'overviewTask', id: entityId })
   tags.push({ type: 'version', id: entityId })
+  tags.push({ type: 'entityListItem', id: entityId })
 
   return tags
 }

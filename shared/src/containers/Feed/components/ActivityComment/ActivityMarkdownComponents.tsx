@@ -2,7 +2,7 @@ import { isArray } from 'lodash'
 import ActivityCheckbox from '../ActivityCheckbox/ActivityCheckbox'
 import ActivityReference from '../ActivityReference/ActivityReference'
 
-const allowedRefTypes = [
+export const allowedRefTypes = [
   'user',
   'team',
   'task',
