@@ -46,7 +46,7 @@ import { Actions } from '@shared/containers/Actions/Actions'
 import { ListsModuleProvider } from './context/ListsModulesContext.tsx'
 import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
 import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
-import { useAppSelector } from '@state/store.ts'
+import { useAppDispatch, useAppSelector } from '@state/store.ts'
 import { UniqueIdentifier } from '@dnd-kit/core'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
@@ -264,6 +264,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   isStoryboards,
   dndActiveId, // Destructure new prop
 }) => {
+  const dispatch = useAppDispatch()
   const user = useAppSelector((state) => state.user?.attrib)
   const isDeveloperMode = user?.developerMode ?? false
   const navigate = useNavigate()
@@ -480,6 +481,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                           isReview={!!isReview}
                           isStoryboards={!!isStoryboards}
                           displayStyle={pageDisplayStyle}
+                          dispatch={dispatch}
                         />
                       </SplitterPanel>
                     </DetailsPanelSplitter>

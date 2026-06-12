@@ -20,6 +20,7 @@ type ProjectOverviewDetailsPanelProps = {
   isOpen?: boolean
   onUriOpen?: (entity: DetailsPanelEntityData, source: 'uri' | 'url') => void
   onClose?: () => void
+  dispatch: any // if we need to provide explicit dispatch context (for review)
 }
 
 type EntitySelection = {
@@ -34,8 +35,9 @@ const ProjectOverviewDetailsPanel = ({
   isOpen,
   onUriOpen,
   onClose,
+  dispatch: dispatchProp,
 }: ProjectOverviewDetailsPanelProps) => {
-  const dispatch = useAppDispatch()
+  const dispatch = dispatchProp || useAppDispatch()
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))
 
   const { getEntityById } = useProjectTableContext()
