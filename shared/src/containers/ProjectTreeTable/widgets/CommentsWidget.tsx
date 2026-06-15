@@ -28,7 +28,6 @@ const CommentRow = styled.div`
 
   .author {
     flex-shrink: 0;
-    margin-top: 1px;
     display: inline-flex;
   }
 
@@ -124,6 +123,10 @@ const markdownComponents = {
   },
 }
 
+// Quill stores line breaks as literal <br>; react-markdown drops raw HTML, so
+// turn them into CommonMark hard breaks (rendered natively, no raw-HTML plugin).
+const normalizeBreaks = (body: string) => body.replace(/<br\s*\/?>/gi, '  \n')
+
 const CommentBody = memo(({ body }: { body: string }) => (
   <div className="body">
     <ReactMarkdown
@@ -131,7 +134,7 @@ const CommentBody = memo(({ body }: { body: string }) => (
       urlTransform={(url) => url}
       components={markdownComponents}
     >
-      {body}
+      {normalizeBreaks(body)}
     </ReactMarkdown>
   </div>
 ))
@@ -154,7 +157,7 @@ export const CommentsWidget: FC<CommentsWidgetProps> = ({ value }) => {
       {comments.map((comment) => (
         <CommentRow key={comment.activityId}>
           <span className="author" data-tooltip={commentTooltip(comment)} data-tooltip-delay={200}>
-            <UserImage name={comment.author || ''} size={20} />
+            <UserImage name={comment.author || ''} size={18} />
           </span>
           <CommentBody body={comment.body} />
         </CommentRow>

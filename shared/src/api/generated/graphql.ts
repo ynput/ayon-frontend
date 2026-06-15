@@ -1817,6 +1817,7 @@ export type GetListItemsQueryVariables = Exact<{
   last?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
+  showComments?: Scalars['Boolean']['input'];
 }>;
 
 
@@ -2040,6 +2041,7 @@ export type GetProductsQueryVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
+  showComments?: Scalars['Boolean']['input'];
 }>;
 
 
@@ -2074,6 +2076,7 @@ export type GetVersionsQueryVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
+  showComments?: Scalars['Boolean']['input'];
 }>;
 
 
@@ -2091,6 +2094,7 @@ export type GetVersionsByProductIdQueryVariables = Exact<{
   last?: InputMaybe<Scalars['Int']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  showComments?: Scalars['Boolean']['input'];
 }>;
 
 
@@ -2319,7 +2323,7 @@ export const ListItemFragmentFragmentDoc = new TypedDocumentString(`
     subtasks {
       ...SubTaskFragment
     }
-    latestComments {
+    latestComments @include(if: $showComments) {
       activityId
       body
       author
@@ -2336,7 +2340,7 @@ export const ListItemFragmentFragmentDoc = new TypedDocumentString(`
     hasReviewables
     thumbnailHash
     folderId: id
-    latestComments {
+    latestComments @include(if: $showComments) {
       activityId
       body
       author
@@ -2381,7 +2385,7 @@ export const ListItemFragmentFragmentDoc = new TypedDocumentString(`
       label
       taskType
     }
-    latestComments {
+    latestComments @include(if: $showComments) {
       activityId
       body
       author
@@ -2525,7 +2529,7 @@ export const VersionBaseFragmentDoc = new TypedDocumentString(`
   version
   featuredVersionType
   heroVersionId
-  latestComments {
+  latestComments @include(if: $showComments) {
     activityId
     body
     author
@@ -2587,7 +2591,7 @@ fragment VersionBase on VersionNode {
   version
   featuredVersionType
   heroVersionId
-  latestComments {
+  latestComments @include(if: $showComments) {
     activityId
     body
     author
@@ -3093,7 +3097,7 @@ export const GetProductVersionsDocument = new TypedDocumentString(`
 }
     `);
 export const GetListItemsDocument = new TypedDocumentString(`
-    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String) {
+    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     entityLists(ids: [$listId]) {
       pageInfo {
@@ -3158,7 +3162,7 @@ export const GetListItemsDocument = new TypedDocumentString(`
     subtasks {
       ...SubTaskFragment
     }
-    latestComments {
+    latestComments @include(if: $showComments) {
       activityId
       body
       author
@@ -3175,7 +3179,7 @@ export const GetListItemsDocument = new TypedDocumentString(`
     hasReviewables
     thumbnailHash
     folderId: id
-    latestComments {
+    latestComments @include(if: $showComments) {
       activityId
       body
       author
@@ -3220,7 +3224,7 @@ export const GetListItemsDocument = new TypedDocumentString(`
       label
       taskType
     }
-    latestComments {
+    latestComments @include(if: $showComments) {
       activityId
       body
       author
@@ -3759,7 +3763,7 @@ export const GetLatestProductVersionDocument = new TypedDocumentString(`
 }
     `);
 export const GetProductsDocument = new TypedDocumentString(`
-    query GetProducts($projectName: String!, $productIds: [String!], $productFilter: String, $versionFilter: String, $taskFilter: String, $featuredVersionOrder: [String!], $search: String, $folderIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    query GetProducts($projectName: String!, $productIds: [String!], $productFilter: String, $versionFilter: String, $taskFilter: String, $featuredVersionOrder: [String!], $search: String, $folderIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     products(
       ids: $productIds
@@ -3840,7 +3844,7 @@ fragment VersionBase on VersionNode {
   version
   featuredVersionType
   heroVersionId
-  latestComments {
+  latestComments @include(if: $showComments) {
     activityId
     body
     author
@@ -3883,7 +3887,7 @@ export const GetProductsColumnStatsDocument = new TypedDocumentString(`
   distribution
 }`);
 export const GetVersionsDocument = new TypedDocumentString(`
-    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     versions(
       ids: $versionIds
@@ -3944,7 +3948,7 @@ fragment VersionBase on VersionNode {
   version
   featuredVersionType
   heroVersionId
-  latestComments {
+  latestComments @include(if: $showComments) {
     activityId
     body
     author
@@ -3972,7 +3976,7 @@ fragment VersionExtended on VersionNode {
   }
 }`);
 export const GetVersionsByProductIdDocument = new TypedDocumentString(`
-    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String) {
+    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     versions(
       productIds: $productIds
@@ -4028,7 +4032,7 @@ fragment VersionBase on VersionNode {
   version
   featuredVersionType
   heroVersionId
-  latestComments {
+  latestComments @include(if: $showComments) {
     activityId
     body
     author
