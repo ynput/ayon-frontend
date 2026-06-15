@@ -241,7 +241,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   const {
     data: itemStats,
-    isFetching: fieldStatsLoading,
+    isLoading: fieldStatsLoading,
     isError: fieldStatsError,
   } = useGetListItemsColumnStatsQuery(
     {

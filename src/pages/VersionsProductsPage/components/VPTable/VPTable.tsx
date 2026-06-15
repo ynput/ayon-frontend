@@ -52,11 +52,11 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     [attribFields, columnVisibility],
   )
 
-  const { data: productStats, isFetching: productStatsLoading } = useGetProductsColumnStatsQuery(
+  const { data: productStats, isLoading: productStatsLoading } = useGetProductsColumnStatsQuery(
     { ...columnStatsArgs, targets: productTargets },
     { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense },
   )
-  const { data: versionStats, isFetching: versionStatsLoading } = useGetVersionsColumnStatsQuery(
+  const { data: versionStats, isLoading: versionStatsLoading } = useGetVersionsColumnStatsQuery(
     { ...columnStatsArgs, targets: versionTargets },
     { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense },
   )
