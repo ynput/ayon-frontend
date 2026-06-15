@@ -2,6 +2,7 @@ import { toast } from 'react-toastify'
 import styled from 'styled-components'
 import { useSelector } from 'react-redux'
 import { useEffect, useMemo, useState } from 'react'
+import { matchSorter } from 'match-sorter'
 import { $Any } from '@types'
 import { Button, Filter, Toolbar } from '@ynput/ayon-react-components'
 import Shortcuts from '@containers/Shortcuts'
@@ -92,6 +93,7 @@ const ProjectUserAccess = () => {
   )
   const mappedUsers = mapUsersByAccessGroups(projectUsers)
 
+  const [searchText, setSearchText] = useState<string>('')
   const [actionedUsers, setActionedUsers] = useState<string[]>([])
   const [showDialog, setShowDialog] = useState<boolean>(false)
   const [selectedAccessGroupUsers, setSelectedAccessGroupUsers] = useState<
@@ -118,7 +120,12 @@ const ProjectUserAccess = () => {
 
   const userFilter = filters?.filter((el: Filter) => el.label === 'User')
   const filteredNonManagerUsers = getFilteredEntities<UserNode>(users, userFilter)
-  const filteredUsers = getFilteredEntities<UserNode>(users, userFilter)
+  const filterAndSearchUsers = (baseUsers: UserNode[]) => {
+    const byFilter = getFilteredEntities<UserNode>(baseUsers, userFilter)
+    if (!searchText) return byFilter
+    return matchSorter(byFilter, searchText, { keys: ['name', 'attrib.fullName'] })
+  }
+  const filteredUsers = filterAndSearchUsers(users)
   const filteredUsersWithAccessGroups = getUserAccessGroups(
     filteredUsers,
     filteredSelectedProjects,
@@ -436,6 +443,7 @@ const ProjectUserAccess = () => {
           projects={filteredProjects}
           users={users}
           onChange={(results: $Any) => setFilters(results)}
+          onSearchChange={setSearchText}
         />
         <StyledButton
           className="action"
