@@ -498,7 +498,7 @@ export const VersionReviewButton = styled(Button)`
   }
 
   &:hover {
-    background: rgb(from currentColor r g b / 0.25)
+    background: rgb(from currentColor r g b / 0.25);
   }
 
   @container comment-input-footer (max-width: 345px) {
@@ -521,8 +521,8 @@ export const VersionReviewButton = styled(Button)`
 `
 
 export const LastOwnVersionReview = styled.div`
-  border-top-left-radius: var(--border-radius-l);
-  border-top-right-radius: var(--border-radius-l);
+  border-radius: var(--border-radius-l);
+  margin-bottom: var(--padding-m);
   user-select: none;
   display: flex;
   gap: var(--base-gap-small);
@@ -533,20 +533,15 @@ export const LastOwnVersionReview = styled.div`
 
   &.approve,
   &.approve .icon,
-  &.approve .date, {
+  &.approve .date {
     background-color: var(--md-sys-color-tertiary);
     color: var(--md-sys-color-on-tertiary);
   }
 
   &.request_changes,
   &.request_changes .icon,
-  &.request_changes .date, {
+  &.request_changes .date {
     background-color: var(--md-sys-color-error);
     color: var(--md-sys-color-on-error);
-  }
-
-  &.separate {
-    border-radius: var(--border-radius-l);
-    margin-bottom: var(--padding-m);
   }
 `

@@ -58,11 +58,11 @@ export const mentionTypeOptions = {
     id: 'user',
     isCircle: true,
   },
-};
+}
 
 export enum VersionReviewFeedback {
-  APPROVE = "approve",
-  REQUEST_CHANGES = "request_changes"
+  APPROVE = 'approve',
+  REQUEST_CHANGES = 'request_changes',
 }
 
 interface CommentInputProps {
@@ -203,7 +203,14 @@ const CommentInput: FC<CommentInputProps> = ({
         },
         mentionSearchWithPrefix || undefined,
       ),
-    [mentionTasks, mentionVersions, mentionUsers, mentionTeams, mention?.type, mentionSearchWithPrefix],
+    [
+      mentionTasks,
+      mentionVersions,
+      mentionUsers,
+      mentionTeams,
+      mention?.type,
+      mentionSearchWithPrefix,
+    ],
   )
 
   // show first 5 and filter itself out
@@ -634,7 +641,7 @@ const CommentInput: FC<CommentInputProps> = ({
   }
 
   const versionReviewButtons = versionReview && onReview && (
-    <Styled.VersionReviewButtons className={clsx("version-review-buttons", { guest: isGuest })}>
+    <Styled.VersionReviewButtons className={clsx('version-review-buttons', { guest: isGuest })}>
       <Styled.VersionReviewButton
         icon="check"
         variant="tertiary"
@@ -680,11 +687,8 @@ const CommentInput: FC<CommentInputProps> = ({
         onClick={() => setIsDropping(false)}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        {!isOpen && versionReview && lastOwnVersionReview && (
-          <VersionReviewPill
-            separate={true}
-            lastOwnVersionReview={lastOwnVersionReview}
-          />
+        {versionReview && lastOwnVersionReview && (
+          <VersionReviewPill lastOwnVersionReview={lastOwnVersionReview} />
         )}
 
         <Styled.Comment
@@ -704,12 +708,6 @@ const CommentInput: FC<CommentInputProps> = ({
           $categoryTertiary={blendedCategoryColor.primary}
           $categorySecondary={blendedCategoryColor.secondary}
         >
-          {isOpen && versionReview && lastOwnVersionReview && (
-            <VersionReviewPill
-              separate={false}
-              lastOwnVersionReview={lastOwnVersionReview}
-            />
-          )}
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
             <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={initValue} />
@@ -802,7 +800,6 @@ const CommentInput: FC<CommentInputProps> = ({
               </Styled.Buttons>
             )}
             <Styled.SubmitButtons>
-              {isOpen && versionReviewButtons}
               {isEditing && (
                 <Button variant="text" onClick={handleClose}>
                   Cancel
@@ -842,12 +839,8 @@ const CommentInput: FC<CommentInputProps> = ({
           isGuest={isGuest}
         />
 
-        {!isOpen && (
-          <>
-            <Styled.VersionReviewButtonsSpacer />
-            {versionReviewButtons}
-          </>
-        )}
+        <Styled.VersionReviewButtonsSpacer />
+        {versionReviewButtons}
       </Styled.AutoHeight>
     </>
   )

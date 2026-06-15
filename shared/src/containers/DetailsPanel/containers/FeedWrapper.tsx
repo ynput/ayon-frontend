@@ -64,7 +64,7 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
       {...annotationsProps}
       {...props}
     >
-      <Feed {...props} statuses={props.statuses} />
+      <Feed {...props} statuses={props.statuses} versionReview />
       <ActivityReferenceTooltip />
     </FeedProvider>
   )
