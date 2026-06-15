@@ -2,7 +2,6 @@ import { createContext, useContext, ReactNode, useCallback, useMemo, useState } 
 import useGetListsData, { UseGetListsDataReturn } from '../hooks/useGetListsData'
 import { ListEntityType, listEntityTypes } from '../components/NewListDialog/NewListDialog'
 import { toast } from 'react-toastify'
-import { getEntityTypeIcon } from '@shared/util'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import {
   useUpdateEntityListItemsMutation,
@@ -19,6 +18,12 @@ import { usePowerpack } from '@shared/context'
 import { useGetProductionAddon } from '@shared/hooks'
 import { useAppDispatch } from '@state/store'
 
+import {
+  useBuildListMenuItems,
+  ListSubMenuItem,
+  ListEntityInput,
+} from '../hooks/useBuildListMenuItems'
+
 const MIN_REVIEW_VERSION = '0.0.3'
 const MIN_REVIEW_ACTIONS_VERSION = '0.5.0'
 
@@ -33,21 +38,7 @@ interface NewListData {
   entityListType?: string
 }
 
-type ListSubMenuItem = {
-  id: string
-  label: string
-  icon?: string
-  command?: () => void
-  items?: ListSubMenuItem[]
-  disabled?: boolean
-  hidden?: boolean
-}
-
-export type ListEntityInput = {
-  entityId: string
-  entityType: string | undefined
-  hasReviewables?: boolean
-}
+export type { ListEntityInput, ListSubMenuItem }
 
 export interface EntityListsContextType {
   allLists: UseGetListsDataReturn
@@ -431,446 +422,29 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
     ],
   )
 
-  const newListMenuItem = useCallback<EntityListsContextType['newListMenuItem']>(
-    (entityType, selected) => ({
-      id: '__new-list__',
-      label: 'New list',
-      icon: 'add',
-      command: () => openCreateNewList(entityType, selected),
-    }),
-    [openCreateNewList],
-  )
-
-  const getListIcon = (entityType: string, entityListType: string) => {
-    if (entityListType === 'review-session') {
-      return 'subscriptions'
-    } else {
-      return getEntityTypeIcon(entityType)
-    }
-  }
-
-  const buildListMenuItem: EntityListsContextType['buildListMenuItem'] = useCallback(
-    (list, selected, showIcon?, disabled?, overrideEntityType?) => ({
-      id: list.id,
-      label: list.label,
-      icon: showIcon ? getListIcon(list.entityType, list.entityListType) : undefined,
-      disabled,
-      command: disabled
-        ? undefined
-        : () =>
-            addToList(
-              list.id,
-              overrideEntityType || list.entityType,
-              selected.map((i) => ({
-                entityId: i.entityId,
-                entityType: i.entityType,
-                hasReviewables: i.hasReviewables,
-              })),
-            ),
-    }),
-    [addToList],
-  )
-
-  const buildAddToListMenu: EntityListsContextType['buildAddToListMenu'] = useCallback(
-    (items, menu) => {
-      return {
-        id: 'add-to-list',
-        label: menu?.label || 'Add to list',
-        icon: 'list_alt_add',
-        items: items,
-      }
-    },
-    [],
-  )
-
-  // Build a hierarchical structure of folders -> lists (lists only actionable)
-  const buildHierarchicalMenuItems = useCallback(
-    (
-      lists: EntityList[],
-      selected: ListEntityInput[],
-      getShowIcon?: (list: EntityList) => boolean,
-      getDisabled?: (list: EntityList) => boolean,
-      overrideEntityType?: string,
-    ): ListSubMenuItem[] => {
-      // Simple cache keyed by folder+list ids + selection length + powerLicense flag
-      // This prevents rebuilding identical structures across repeated context menu openings.
-      // (Selection identities beyond length don't affect structure of destination list tree).
-      type CacheValue = {
-        items: ListSubMenuItem[]
-        selectedRef: ListEntityInput[]
-      }
-      const staticCache = (buildHierarchicalMenuItems as any)._cache as
-        | Map<string, CacheValue>
-        | undefined
-      const cache: Map<string, CacheValue> = staticCache || new Map()
-      if (!(buildHierarchicalMenuItems as any)._cache) {
-        ;(buildHierarchicalMenuItems as any)._cache = cache
-      }
-
-      // When getDisabled is supplied, results depend on per-call selection state — skip cache
-      const useCache = !getDisabled && !overrideEntityType
-      const folderSig = powerLicense
-        ? listFolders.map((f) => `${f.id}:${f.parentId || ''}:${f.label}`).join('|')
-        : 'nofolders'
-      const listSig = lists.map((l) => `${l.id}:${l.entityListFolderId || ''}`).join('|')
-      const key = `${folderSig}::${listSig}::${selected.length}::${powerLicense}`
-
-      const cached = useCache ? cache.get(key) : undefined
-      if (cached) {
-        // Recreate command closures with current selection (list items carry command depending on selected)
-        const rebindCommands = (items: ListSubMenuItem[]): ListSubMenuItem[] => {
-          return items.map((item) => {
-            // Skip special items like '__new-list__' which should not be in the cache
-            if (item.id.startsWith('__')) {
-              return item
-            }
-            // If this is a list item (has command), rebind it with current selection
-            if (item.command) {
-              const list = lists.find((l) => l.id === item.id)
-              if (list) {
-                return buildListMenuItem(
-                  list,
-                  selected,
-                  item.icon !== undefined,
-                  false,
-                  overrideEntityType,
-                )
-              }
-            }
-            // If this is a folder (has nested items), recursively rebind children
-            if (item.items) {
-              return {
-                ...item,
-                items: rebindCommands(item.items),
-              }
-            }
-            return item
-          })
-        }
-        // Filter out any special items that shouldn't be in cache (like __new-list__)
-        const filteredItems = cached.items.filter((item) => !item.id.startsWith('__'))
-        return rebindCommands(filteredItems)
-      }
-
-      const resolveShowIcon = getShowIcon || (() => false)
-      const resolveDisabled = getDisabled || (() => false)
-
-      // Filter lists to only include those with editor access (accessLevel >= 20)
-      const editableLists = lists.filter((list) => (list.accessLevel ?? 0) >= 20)
-
-      if (!powerLicense || !listFolders.length) {
-        return editableLists.map((l) =>
-          buildListMenuItem(
-            l,
-            selected,
-            resolveShowIcon(l),
-            resolveDisabled(l),
-            overrideEntityType,
-          ),
-        )
-      }
-
-      // folder node structure
-      interface FolderNode {
-        folder: EntityListFolderModel
-        children: FolderNode[]
-        lists: EntityList[]
-      }
-      const nodeMap = new Map<string, FolderNode>()
-
-      // init nodes
-      listFolders.forEach((f) => {
-        nodeMap.set(f.id, { folder: f, children: [], lists: [] })
-      })
-
-      // link children
-      listFolders.forEach((f) => {
-        if (f.parentId && nodeMap.has(f.parentId)) {
-          nodeMap.get(f.parentId)!.children.push(nodeMap.get(f.id)!)
-        }
-      })
-
-      // assign lists (only editable ones)
-      editableLists.forEach((list) => {
-        if (list.entityListFolderId && nodeMap.has(list.entityListFolderId)) {
-          nodeMap.get(list.entityListFolderId)!.lists.push(list)
-        }
-      })
-
-      // determine which folders (and ancestors) actually contain lists
-      const folderHasListCache = new Map<string, boolean>()
-      const hasAnyLists = (folderId: string): boolean => {
-        if (folderHasListCache.has(folderId)) return folderHasListCache.get(folderId)!
-        const node = nodeMap.get(folderId)
-        if (!node) return false
-        const value =
-          node.lists.length > 0 || node.children.some((child) => hasAnyLists(child.folder.id))
-        folderHasListCache.set(folderId, value)
-        return value
-      }
-
-      const buildFolderItems = (nodes: FolderNode[]): ListSubMenuItem[] => {
-        return nodes
-          .filter((n) => hasAnyLists(n.folder.id))
-          .map((n) => {
-            const childFolders = buildFolderItems(n.children)
-            const listItems = n.lists.map((l) =>
-              buildListMenuItem(
-                l,
-                selected,
-                resolveShowIcon(l),
-                resolveDisabled(l),
-                overrideEntityType,
-              ),
-            )
-            return {
-              id: `folder-${n.folder.id}`,
-              label: n.folder.label,
-              icon: n.folder.data?.icon || 'snippet_folder',
-              // Folders themselves are not actionable, only their items
-              items: [...childFolders, ...listItems],
-            }
-          })
-      }
-
-      // root folders (no parentId)
-      const rootNodes = listFolders
-        .filter((f) => !f.parentId)
-        .map((f) => nodeMap.get(f.id)!)
-        .filter(Boolean)
-
-      const folderItems = buildFolderItems(rootNodes)
-
-      // lists without a folder (root lists)
-      const rootLists = editableLists.filter((l) => !l.entityListFolderId)
-      const rootListItems = rootLists.map((l) =>
-        buildListMenuItem(l, selected, resolveShowIcon(l), resolveDisabled(l), overrideEntityType),
-      )
-
-      const result = [...folderItems, ...rootListItems]
-      if (useCache) cache.set(key, { items: result, selectedRef: selected })
-      return result
-    },
-    [buildListMenuItem, listFolders, powerLicense],
-  )
-
-  const buildReviewContextMenu: EntityListsContextType['buildReviewContextMenu'] = useCallback(
-    (entityType, entities, label, filter) => {
-      const hasAnyNonReviewable =
-        entityType === 'version' ? entities.some((v) => v.hasReviewables === false) : false
-
-      let targetLists = versions
-      if (entityType === 'folder') targetLists = folders
-      else if (entityType === 'task') targetLists = tasks
-
-      let subMenuItems = buildHierarchicalMenuItems(
-        targetLists,
-        entities,
-        () => false,
-        () => false,
-      )
-      const reviewSubMenuItems = buildHierarchicalMenuItems(
-        reviews,
-        entities,
-        () => true,
-        undefined,
-        entityType,
-      )
-
-      if (filter && typeof filter === 'function') {
-        subMenuItems = subMenuItems.filter(filter)
-      }
-
-      const OPEN_REVIEW_SESSION_ACTION_ID_BASE = 'review-create-session-from'
-      const openReviewSession = async () => {
-        if (!reviewAddonVersion) return toast.error('Review addon not available')
-
-        if ((entityType === 'folder' || entityType === 'task') && !hasReviewActionsVersion) {
-          toast.error(
-            `Please upgrade Review addon to at least ${MIN_REVIEW_ACTIONS_VERSION} to use this feature with folders and tasks`,
-          )
-          return
-        }
-
-        const loadingToast = toast.loading('Opening review session...')
-        try {
-          const result = await executeAction({
-            identifier: `${OPEN_REVIEW_SESSION_ACTION_ID_BASE}-${entityType}s`,
-            actionContext: {
-              projectName,
-              entityType,
-              entityIds: entities.map((v) => v.entityId),
-            },
-            addonName: 'review',
-            addonVersion: reviewAddonVersion,
-          }).unwrap()
-          const payload = result.payload as { uri?: string; new_tab?: boolean } | undefined
-          if (result.success && result?.type === 'redirect' && payload?.uri) {
-            toast.update(loadingToast, {
-              render: 'Review session created, redirecting...',
-              type: 'success',
-              isLoading: false,
-              autoClose: 3000,
-            })
-            window.open(payload.uri, '_blank')
-          } else {
-            toast.update(loadingToast, {
-              render: 'Unexpected response from review addon',
-              type: 'error',
-              isLoading: false,
-              autoClose: 5000,
-            })
-          }
-        } catch (error) {
-          console.error('Error creating review session', error)
-          toast.update(loadingToast, {
-            render: 'Error creating review session',
-            type: 'error',
-            isLoading: false,
-            autoClose: 5000,
-          })
-        }
-      }
-
-      subMenuItems.push(newListMenuItem(entityType, entities))
-
-      const menu: any[] = [buildAddToListMenu(subMenuItems, { label })]
-
-      if (hasReviewAddon) {
-        // Build review menu items and add a disabled note if any selected version lacks reviewables
-        const reviewItems: ListSubMenuItem[] = [
-          {
-            id: 'open-session',
-            label: 'Open in review',
-            icon: 'subscriptions',
-            command: () => openReviewSession(),
-          },
-          {
-            id: 'create-session',
-            label: 'Create new session',
-            icon: 'add',
-            command: () => {
-              if ((entityType === 'folder' || entityType === 'task') && !hasReviewActionsVersion) {
-                toast.error(
-                  `Please upgrade Review addon to at least ${MIN_REVIEW_ACTIONS_VERSION} to use this feature with folders and tasks`,
-                )
-                return
-              }
-              openCreateNewList(entityType, entities, 'review-session')
-            },
-          },
-          {
-            id: 'add-to-session',
-            label: 'Add to session',
-            icon: 'list_alt_add',
-            items: reviewSubMenuItems,
-            disabled: reviewSubMenuItems.length === 0,
-          },
-        ]
-
-        const disabledLabel =
-          entityType === 'version' ? ' (all versions need reviewable)' : ' (need reviewable)'
-        const getLabel = (base: string) => (hasAnyNonReviewable ? base + disabledLabel : base)
-
-        menu.push({
-          id: 'review',
-          label: getLabel('Review'),
-          icon: 'subscriptions',
-          items: hasAnyNonReviewable ? [] : reviewItems,
-          disabled: hasAnyNonReviewable,
-        })
-      }
-
-      return menu
-    },
-    [
-      folders,
-      tasks,
-      buildHierarchicalMenuItems,
-      buildAddToListMenu,
-      newListMenuItem,
-      versions,
-      reviews,
-      hasReviewAddon,
-      hasReviewActionsVersion,
-      executeAction,
-      projectName,
-      reviewAddonVersion,
-      openCreateNewList,
-    ],
-  )
-
-  const menuItems: EntityListsContextType['menuItems'] = useCallback(
-    (filter) => (_e, cell, selected, _meta) => {
-      const isMultipleEntityTypes = selected.some(
-        (item) => item.entityType !== selected[0].entityType,
-      )
-
-      if (cell.isGroup) return []
-
-      // helpers to decide icon visibility
-      const getShowIconMultiple = () => isMultipleEntityTypes
-
-      let subMenuItems: ListSubMenuItem[] = []
-
-      if (isMultipleEntityTypes) {
-        const combined = [...folders, ...tasks]
-        subMenuItems = buildHierarchicalMenuItems(combined, selected, () => getShowIconMultiple())
-      } else if (cell.entityType === 'folder') {
-        return buildReviewContextMenu('folder', selected, undefined, filter)
-      } else if (cell.entityType === 'task') {
-        return buildReviewContextMenu('task', selected, undefined, filter)
-      } else if (cell.entityType === 'product') {
-        // if the product has a featured version, only allow adding that version to lists
-        // @ts-expect-error- just don't worry about it
-        if (cell.data?.featuredVersion?.id) {
-          // @ts-expect-error - featuredVersion is not supported in typings
-          const versionEntity = { entityId: cell.data.featuredVersion.id, entityType: 'version' }
-          // Pass down the filter here too
-          return buildReviewContextMenu('version', [versionEntity], undefined, filter)
-        } else {
-          subMenuItems = buildHierarchicalMenuItems(products, selected, () => getShowIconMultiple())
-        }
-      } else if (cell.entityType === 'version') {
-        // Cells expose hasReviewables on .data — propagate so addToList + UI gating can consume it
-        const selectedWithReviewable: ListEntityInput[] = selected.map((s) => ({
-          entityId: s.entityId,
-          entityType: s.entityType,
-          hasReviewables: (s.data as any)?.hasReviewables,
-        }))
-        return buildReviewContextMenu('version', selectedWithReviewable, undefined, filter)
-      }
-
-      // Apply filter if provided
-      if (filter && typeof filter === 'function') {
-        subMenuItems = subMenuItems.filter(filter)
-      }
-
-      // Add new list item at end
-      // @ts-expect-error - product is not supported in typings
-      if (cell.entityType && listEntityTypes.includes(cell.entityType)) {
-        subMenuItems.push(newListMenuItem(cell.entityType as ListEntityType, selected))
-      }
-
-      // @ts-expect-error - featuredVersion is not supported in typings
-      const listLabel = cell.data?.featuredVersion?.id
-        ? // @ts-expect-error - featuredVersion is not supported in typings
-          `Add to list (${cell.data.featuredVersion.name})`
-        : undefined
-
-      return [buildAddToListMenu(subMenuItems, { label: listLabel })]
-    },
-    [
-      folders,
-      tasks,
-      products,
-      versions,
-      buildHierarchicalMenuItems,
-      newListMenuItem,
-      buildAddToListMenu,
-      buildReviewContextMenu,
-    ],
-  )
+  const {
+    newListMenuItem,
+    buildListMenuItem,
+    buildAddToListMenu,
+    buildHierarchicalMenuItems,
+    buildReviewContextMenu,
+    menuItems,
+  } = useBuildListMenuItems({
+    projectName,
+    powerLicense,
+    hasReviewAddon,
+    hasReviewActionsVersion,
+    reviewAddonVersion,
+    listFolders,
+    folders,
+    tasks,
+    products,
+    versions,
+    reviews,
+    addToList,
+    openCreateNewList,
+    executeAction,
+  })
 
   const value = useMemo(
     () => ({
