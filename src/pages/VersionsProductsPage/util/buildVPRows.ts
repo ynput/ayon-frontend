@@ -32,6 +32,7 @@ export const buildProductRow = (
   versionsCount: product.versions.length,
   versionName: product.featuredVersion?.name || '',
   author: product.featuredVersion?.author || '',
+  latestComments: product.featuredVersion?.latestComments || [],
   thumbnail: {
     entityId: product.featuredVersion?.id || product.id,
     entityType: product.featuredVersion ? 'version' : 'product',
@@ -68,6 +69,7 @@ export const buildVersionRow = (version: VersionNode): TableRow => ({
   taskLabel: version.task?.label || version.task?.name,
   hasReviewables: version.hasReviewables,
   author: version.author || '',
+  latestComments: version.latestComments || [],
   links: {}, // TODO add links
 })
 

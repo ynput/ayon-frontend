@@ -103,7 +103,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { useProjectContext, usePowerpack } from '@shared/context'
+import { useProjectContext, usePowerpack, setDetailsPanelTabForScope } from '@shared/context'
 import { useLoadModule } from '@shared/hooks'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
@@ -1665,14 +1665,18 @@ const TD = ({
         // because the 1st mousedown triggers React state updates that can replace
         // the DOM node, preventing the native dblclick event from firing.
         if (e.detail === 2) {
-          const isReadOnly = isTargetReadOnly(e)
+          // comments cells are read-only but their double-click opens the details panel, so don't block them here
+          const isReadOnly = isTargetReadOnly(e) && cell.column.id !== 'comments'
           if (isReadOnly || isEntityRestricted(cell.row.original.entityType) || isGroup) {
             e.preventDefault()
             return
           }
 
           // name column: select row to open details panel
-          if (cell.column.id === 'name' && !target.closest('.expander')) {
+          // comments column: same — comments are read and written in the details panel feed
+          if (['name', 'comments'].includes(cell.column.id) && !target.closest('.expander')) {
+            // all ProjectTreeTable pages render their details panel under the 'overview' scope
+            if (cell.column.id === 'comments') setDetailsPanelTabForScope('overview', 'feed')
             const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
             const additive = e.metaKey || e.ctrlKey
             const position = parseCellId(rowSelectionCellId)

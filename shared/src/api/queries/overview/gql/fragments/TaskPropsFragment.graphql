@@ -18,6 +18,12 @@ fragment TaskPropsFragment on TaskNode {
   subtasks {
     ...SubTaskFragment
   }
+  latestComments @include(if: $showComments) {
+    activityId
+    body
+    author
+    createdAt
+  }
   folder {
     folderType
   }

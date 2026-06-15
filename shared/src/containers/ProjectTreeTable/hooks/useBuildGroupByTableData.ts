@@ -132,6 +132,7 @@ const defaultEntityToGroupRow = (
       taskTypes: project?.taskTypes || [],
     }),
     subtasks: task.subtasks || [],
+    latestComments: task.latestComments || [],
   }
 }
 

@@ -115,6 +115,7 @@ export type DefaultColumns =
   | 'tags'
   | 'createdAt'
   | 'updatedAt'
+  | 'comments'
 
 export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
 
@@ -806,6 +807,44 @@ const buildTreeTableColumns = ({
             valueData={subtasksData}
             attributeData={{ type: 'subtasks' }}
             isReadOnly={meta?.readOnly?.includes(column.id)}
+          />
+        )
+      },
+    })
+  }
+
+  if (
+    isIncluded('comments') &&
+    scopes.some((s) => ['task', 'version', 'product', 'folder'].includes(s))
+  ) {
+    staticColumns.push({
+      id: 'comments',
+      accessorKey: 'latestComments',
+      header: 'Latest comments',
+      minSize: COLUMN_MIN_SIZE,
+      enableSorting: false,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      cell: ({ row, column }) => {
+        const { value, id, type } = getValueIdType(row, 'latestComments')
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+
+        // loading placeholder rows have no entityType yet — let them through so the skeleton shows
+        // products borrow their featured version's comments; folders only have data on GQL-fed pages (Lists)
+        if (!row.original.isLoading && !['task', 'version', 'product', 'folder'].includes(type))
+          return <div className="readonly"></div>
+
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('comments', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={''}
+            valueData={value || []}
+            attributeData={{ type: 'comments' }}
+            isCollapsed={!!row.original.childOnlyMatch}
+            isReadOnly
           />
         )
       },

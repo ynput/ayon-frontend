@@ -146,6 +146,12 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   const skipLinks = displayStyle !== 'table' || !hasLinkColumn || !linksVisible
 
+  // comments are the heaviest field to resolve, so only fetch them when the column is shown
+  const showComments = useMemo(
+    () => checkColumnVisibility(columns.columnVisibility, 'comments', defaultColumnVisibility),
+    [columns, defaultColumnVisibility],
+  )
+
   const updateSorting = (sorting: SortingState) => {
     onUpdateColumns(
       {
@@ -197,6 +203,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     sorting: reviewSorting ?? columns.sorting ?? [],
     filters: listItemsFilters,
     skipLinks: skipLinks,
+    showComments,
   })
 
   // convert to a Map for easier access

@@ -1,4 +1,5 @@
 import {
+  EntityComment,
   GetListItemsQuery,
   GetListsItemsForReviewSessionQuery,
   GetListsQuery,
@@ -55,6 +56,7 @@ type ItemNodeData = {
   ownAttrib: string[]
   parents?: string[]
   subtasks?: string[]
+  latestComments?: EntityComment[]
   folder?: {
     folderType: string
   }

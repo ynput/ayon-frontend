@@ -7,6 +7,7 @@ query GetTasksByParent(
   $filter: String
   $folderFilter: String
   $search: String
+  $showComments: Boolean! = false
 ) {
   project(name: $projectName) {
     name

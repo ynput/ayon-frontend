@@ -10,6 +10,7 @@ query GetVersionsByProductId(
   $last: Int
   $after: String
   $before: String
+  $showComments: Boolean! = false
 ) {
   project(name: $projectName) {
     versions(

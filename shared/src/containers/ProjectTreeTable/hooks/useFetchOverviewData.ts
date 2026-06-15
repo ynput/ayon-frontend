@@ -54,6 +54,7 @@ type Params = {
   attribFields: ProjectTableAttribute[]
   modules: ProjectTableModulesType
   skipLinks?: boolean
+  showComments?: boolean // only fetch latestComments when the comments column is visible
 }
 
 export const useFetchOverviewData = ({
@@ -73,6 +74,7 @@ export const useFetchOverviewData = ({
   attribFields,
   modules,
   skipLinks,
+  showComments = false,
 }: Params): useFetchOverviewDataData => {
   const { getGroupQueries, isLoading: isLoadingModules } = modules
 
@@ -104,6 +106,7 @@ export const useFetchOverviewData = ({
       filter: taskFilters.filterString,
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
+      showComments,
     },
     { skip: !taskParentIds.length || (!showHierarchy && !isFlatFolderView) },
   )
@@ -337,6 +340,7 @@ export const useFetchOverviewData = ({
       taskIds: taskIds?.length ? taskIds : undefined,
       sortBy: sortId ? sortId.replace('_', '.') : undefined,
       desc: !!singleSort?.desc,
+      showComments,
     },
     {
       // Use flat task list when entity list provides specific task IDs, even in hierarchy mode
@@ -410,6 +414,7 @@ export const useFetchOverviewData = ({
       folderFilter: folderFilters.filterString,
       folderIds: tasksFolderIdsParams,
       groupCount: taskGroupsCount,
+      showComments,
     },
     {
       skip: !groupBy || !groupQueries.length || isLoadingModules,

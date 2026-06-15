@@ -9,6 +9,7 @@ import { EnumWidget, EnumWidgetProps } from './EnumWidget'
 import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
 import { isLinkEditable, LinksWidget, LinkWidgetData } from './LinksWidget'
 import { SubtasksWidget, SubtasksWidgetData } from './SubtasksWidget'
+import { CommentsWidget } from './CommentsWidget'
 
 // Contexts
 import { useCellEditing } from '../context/CellEditingContext'
@@ -22,7 +23,7 @@ import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
 import { NameWidgetData } from '@shared/components/RenameForm'
 import { READ_ONLY } from '../utils'
-import { AttributeData, EnumItem } from '@shared/api'
+import { AttributeData, EnumItem, type EntityComment } from '@shared/api'
 
 const Cell = styled.div`
   position: absolute;
@@ -32,7 +33,8 @@ const Cell = styled.div`
   align-items: center;
   overflow: hidden;
 
-  &:has(.markdown) {
+  &:has(.markdown),
+  &:has(.comments-list) {
     align-items: flex-start;
   }
 
@@ -56,7 +58,7 @@ const Cell = styled.div`
 export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
 type WidgetAttributeData = {
-  type: AttributeData['type'] | 'links' | 'name' | 'subtasks'
+  type: AttributeData['type'] | 'links' | 'name' | 'subtasks' | 'comments'
   widget?: AttributeData['widget']
 }
 
@@ -239,6 +241,10 @@ export const CellWidget: FC<EditorCellProps> = ({
             {...sharedProps}
           />
         )
+      }
+
+      case type === 'comments': {
+        return <CommentsWidget value={valueData as EntityComment[] | undefined} {...sharedProps} />
       }
 
       case !!options.length: {
