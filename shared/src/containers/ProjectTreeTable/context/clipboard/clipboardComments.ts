@@ -44,7 +44,7 @@ const bodyToPlainText = (body?: string | null): string => {
   t = t.replace(/^\s*\d+\.\s+/gm, '') // ordered-list markers
   t = t.replace(/\*\*|__|~~/g, '') // bold / strikethrough
   t = decodeEntities(t)
-  t = t.replace(/<[^>]+>/g, '') // any leftover html tags
+  t = t.replace(/[<>]/g, '') // remove angle brackets to prevent HTML tag/script re-formation
   return t.replace(/\s+/g, ' ').trim()
 }
 
