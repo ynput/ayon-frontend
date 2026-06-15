@@ -74,13 +74,13 @@ const CommentInput: FC<CommentInputProps> = ({
   versionReview,
   lastOwnVersionReview,
   onSubmit,
+  onReview,
   isEditing,
   disabled,
   isLoading,
   isOpen,
   onOpen,
   onClose,
-  onReview,
 }) => {
   const {
     projectName,
@@ -624,21 +624,26 @@ const CommentInput: FC<CommentInputProps> = ({
     return 'Comment or mention with @user, @@version, @@@task...'
   }
 
+  const handleReviewSubmit = async (status: VersionReviewFeedback) => {
+    if (!onReview) return
+    // if the editor value is valid, also submit the comment first
+    if (editorValue && editorValue !== EMPTY_EDITOR_VALUE) {
+      handleSubmit()
+      // create a small timeout so that there is a big enough gap between the comment and the review in the feed
+      // This is a server bug that if the activities are posted too close together, it's possible that the comment will be posted after the review
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+
+    onReview(status)
+  }
+
   const versionReviewButtons = versionReview && onReview && (
     <Styled.VersionReviewButtons className={clsx('version-review-buttons', { guest: isGuest })}>
       <Styled.VersionReviewButton
         icon="check"
         variant="tertiary"
         data-tooltip="Approve"
-        onClick={() => {
-          // the editor value contains some empty tags
-          // so take those into account
-          if (editorValue && editorValue !== EMPTY_EDITOR_VALUE) {
-            handleSubmit()
-          }
-
-          onReview(VersionReviewFeedback.APPROVE)
-        }}
+        onClick={() => handleReviewSubmit(VersionReviewFeedback.APPROVE)}
       >
         <span className="label">Approve</span>
       </Styled.VersionReviewButton>
@@ -646,15 +651,7 @@ const CommentInput: FC<CommentInputProps> = ({
         icon="refresh"
         variant="danger"
         data-tooltip="Request changes"
-        onClick={() => {
-          // the editor value contains some empty tags
-          // so take those into account
-          if (editorValue && editorValue !== EMPTY_EDITOR_VALUE) {
-            handleSubmit()
-          }
-
-          onReview(VersionReviewFeedback.REQUEST_CHANGES)
-        }}
+        onClick={() => handleReviewSubmit(VersionReviewFeedback.REQUEST_CHANGES)}
       >
         <span className="label">Request changes</span>
       </Styled.VersionReviewButton>
