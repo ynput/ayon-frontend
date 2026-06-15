@@ -41,6 +41,9 @@ export const canonicalColumnId = (name: string): string => {
   if (name.startsWith('project_attributes_')) {
     return 'attrib_' + name.slice('project_attributes_'.length)
   }
+  if (name.startsWith('inherited_attributes_')) {
+    return 'attrib_' + name.slice('inherited_attributes_'.length)
+  }
   if (name.startsWith('attrib_')) return name
   return snakeToCamel(name)
 }
@@ -78,34 +81,11 @@ const normalizeDistribution = (raw: unknown): FieldStats['distribution'] => {
   return undefined
 }
 
-// Normalize a raw fieldStats response (apply in transformResponse).
-export const normalizeFieldStats = (stats: FieldStats[]): FieldStats[] =>
-  stats.map((s) => ({ ...s, distribution: normalizeDistribution(s.distribution) }))
-
-// Merge stats lists by canonical column id, field-wise: overlay's non-null values
-// win, base fills the gaps. A single list also dedupes its own repeated columns.
-export const mergeFieldStats = (
-  overlay: FieldStats[] = [],
-  base: FieldStats[] = [],
-): FieldStats[] => {
-  const byId = new Map<string, FieldStats>()
-  for (const s of base) byId.set(canonicalColumnId(s.columnName), { ...s })
-  for (const s of overlay) {
-    const id = canonicalColumnId(s.columnName)
-    const merged: FieldStats = { ...(byId.get(id) || { columnName: s.columnName }) }
-    for (const [k, v] of Object.entries(s)) {
-      if (v !== null && v !== undefined) (merged as any)[k] = v
-    }
-    byId.set(id, merged)
-  }
-  return [...byId.values()]
-}
-
 const sumN = (a?: number | null, b?: number | null): number | undefined =>
   a == null && b == null ? undefined : (a ?? 0) + (b ?? 0)
-const lowest = <T,>(a?: T | null, b?: T | null): T | undefined =>
+const lowest = <T>(a?: T | null, b?: T | null): T | undefined =>
   a == null ? b ?? undefined : b == null ? a : a < b ? a : b
-const highest = <T,>(a?: T | null, b?: T | null): T | undefined =>
+const highest = <T>(a?: T | null, b?: T | null): T | undefined =>
   a == null ? b ?? undefined : b == null ? a : a > b ? a : b
 const pct = (part?: number, rest?: number): number | undefined =>
   part != null && rest != null && part + rest > 0
@@ -162,6 +142,33 @@ const combineTwo = (a: FieldStats, b: FieldStats): FieldStats => {
     primaryCount: a.primaryCount ?? b.primaryCount,
     secondaryCount: a.secondaryCount ?? b.secondaryCount,
   }
+}
+
+// Normalize a raw fieldStats response (apply in transformResponse).
+export const normalizeFieldStats = (stats: FieldStats[]): FieldStats[] =>
+  stats.map((s) => ({
+    ...s,
+    columnName: canonicalColumnId(s.columnName),
+    distribution: normalizeDistribution(s.distribution),
+  }))
+
+// Merge stats lists by canonical column id, field-wise: overlay's non-null values
+// win, base fills the gaps. A single list also dedupes its own repeated columns.
+export const mergeFieldStats = (
+  overlay: FieldStats[] = [],
+  base: FieldStats[] = [],
+): FieldStats[] => {
+  const byId = new Map<string, FieldStats>()
+  for (const s of base) byId.set(canonicalColumnId(s.columnName), { ...s })
+  for (const s of overlay) {
+    const id = canonicalColumnId(s.columnName)
+    const merged: FieldStats = { ...(byId.get(id) || { columnName: s.columnName }) }
+    for (const [k, v] of Object.entries(s)) {
+      if (v !== null && v !== undefined) (merged as any)[k] = v
+    }
+    byId.set(id, merged)
+  }
+  return [...byId.values()]
 }
 
 // Total row count for an entity set = max(filled + not-filled) across its
