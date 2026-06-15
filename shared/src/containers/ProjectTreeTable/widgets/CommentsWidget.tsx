@@ -13,7 +13,7 @@ import { WidgetBaseProps } from './CellWidget'
 const CommentsList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
   width: 100%;
   max-height: 100%;
   overflow: hidden;
@@ -156,7 +156,7 @@ export const CommentsWidget: FC<CommentsWidgetProps> = ({ value }) => {
     <CommentsList className="comments-list">
       {comments.map((comment) => (
         <CommentRow key={comment.activityId}>
-          <span className="author" data-tooltip={commentTooltip(comment)} data-tooltip-delay={200}>
+          <span className="author" data-tooltip={commentTooltip(comment)} data-tooltip-delay={0}>
             <UserImage name={comment.author || ''} size={18} />
           </span>
           <CommentBody body={comment.body} />

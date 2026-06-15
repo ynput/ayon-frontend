@@ -31,7 +31,7 @@ export const writeLocalStorage = <T>(key: string, value: T): void => {
   if (typeof window === 'undefined') return
   try {
     localStorage.setItem(key, JSON.stringify(value))
-    window.dispatchEvent(new StorageEvent('storage', { key }))
+    window.dispatchEvent(new Event('storage'))
   } catch (e) {
     console.error(e)
   }
@@ -57,7 +57,8 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, Dispatch<S
     }
 
     function handler(e: StorageEvent) {
-      if (e.key !== key) return
+      // Same-tab writes dispatch a plain Event (no key); only filter real cross-tab events.
+      if (e.key && e.key !== key) return
 
       const lsi = localStorage.getItem(key)
       setValue(parseJSONString(lsi, defaultValueRef.current))
@@ -81,7 +82,7 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, Dispatch<S
 
           localStorage.setItem(key, JSON.stringify(nextValue))
           if (typeof window !== 'undefined') {
-            window.dispatchEvent(new StorageEvent('storage', { key }))
+            window.dispatchEvent(new Event('storage'))
           }
           return nextValue
         })
