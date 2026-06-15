@@ -626,15 +626,21 @@ const CommentInput: FC<CommentInputProps> = ({
 
   const handleReviewSubmit = async (status: VersionReviewFeedback) => {
     if (!onReview) return
-    // if the editor value is valid, also submit the comment first
-    if (editorValue && editorValue !== EMPTY_EDITOR_VALUE) {
-      handleSubmit()
-      // create a small timeout so that there is a big enough gap between the comment and the review in the feed
-      // This is a server bug that if the activities are posted too close together, it's possible that the comment will be posted after the review
-      await new Promise((resolve) => setTimeout(resolve, 100))
-    }
+    try {
+      const postComment =
+        (editorValue && editorValue !== EMPTY_EDITOR_VALUE) ||
+        files.length > 0 ||
+        annotations.length > 0
+      // if the editor value is valid, also submit the comment first
+      if (postComment) {
+        await handleSubmit()
+      }
 
-    onReview(status)
+      onReview(status)
+    } catch (error) {
+      console.error(error)
+      toast.error('Something went wrong while submitting the review')
+    }
   }
 
   const versionReviewButtons = versionReview && onReview && (
