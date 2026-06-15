@@ -7,6 +7,7 @@ query GetListItems(
   $last: Int
   $sortBy: String
   $filter: String
+  $showComments: Boolean! = false
 ) {
   project(name: $projectName) {
     entityLists(ids: [$listId]) {

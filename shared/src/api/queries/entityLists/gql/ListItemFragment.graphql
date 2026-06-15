@@ -23,7 +23,7 @@ fragment ListItemFragment on BaseNode {
     subtasks {
       ...SubTaskFragment
     }
-    latestComments {
+    latestComments @include(if: $showComments) {
       activityId
       body
       author
@@ -40,7 +40,7 @@ fragment ListItemFragment on BaseNode {
     hasReviewables
     thumbnailHash
     folderId: id
-    latestComments {
+    latestComments @include(if: $showComments) {
       activityId
       body
       author
@@ -85,7 +85,7 @@ fragment ListItemFragment on BaseNode {
       label
       taskType
     }
-    latestComments {
+    latestComments @include(if: $showComments) {
       activityId
       body
       author

@@ -25,6 +25,7 @@ interface UseGetListItemsDataProps {
   skip?: boolean
   entityType?: string
   skipLinks?: boolean
+  showComments?: boolean
 }
 
 export interface UseGetListItemsDataReturn {
@@ -45,6 +46,7 @@ const useGetListItemsData = ({
   filters = { conditions: [], operator: 'and' },
   skip,
   skipLinks = true,
+  showComments = false,
 }: UseGetListItemsDataProps): UseGetListItemsDataReturn => {
   const queryFilterString = filters.conditions?.length
     ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(filters)))
@@ -88,6 +90,7 @@ const useGetListItemsData = ({
       sortBy: parseSorting(singleSort?.id),
       desc: singleSort?.desc,
       filter: queryFilterString || undefined,
+      showComments,
     },
     {
       initialPageParam: { cursor: '' },

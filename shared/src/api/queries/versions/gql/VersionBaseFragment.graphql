@@ -15,7 +15,7 @@ fragment VersionBase on VersionNode {
   version
   featuredVersionType
   heroVersionId
-  latestComments {
+  latestComments @include(if: $showComments) {
     activityId
     body
     author
