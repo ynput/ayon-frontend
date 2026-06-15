@@ -120,6 +120,7 @@ export default function ProjectListsDetailsPanels({
         isOpen={shouldShowEntityDetailsPanel}
         onUriOpen={(entity) => setUriEntityId(entity.id)}
         onClose={onClose}
+        entityListId={selectedList?.id}
         dispatch={dispatch}
       />
       {selectedList && !shouldShowEntityDetailsPanel && shouldShowListDetailsPanel && (

@@ -39,8 +39,12 @@ import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } fro
 import { useDetailsPanelContext } from '@shared/context'
 import { useProjectContext } from '@shared/context'
 import { parseFilename } from '@shared/components'
+import { FeedActivity } from '@shared/api'
+import { VersionReviewPill } from './VersionReviewPill'
 
 var Delta = Quill.import('delta')
+
+const EMPTY_EDITOR_VALUE = '<p><br></p>'
 
 const mentionTypes = ['@', '@@', '@@@']
 export const mentionTypeOptions = {
@@ -54,6 +58,11 @@ export const mentionTypeOptions = {
     id: 'user',
     isCircle: true,
   },
+};
+
+export enum VersionReviewFeedback {
+  APPROVE = "approve",
+  REQUEST_CHANGES = "request_changes"
 }
 
 interface CommentInputProps {
@@ -61,7 +70,10 @@ interface CommentInputProps {
   initFiles?: any[]
   initCategory?: string | null
   data?: any
+  versionReview: boolean
+  lastOwnVersionReview?: FeedActivity
   onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
+  onReview?: (feedback: VersionReviewFeedback) => void
   isEditing?: boolean
   disabled?: boolean
   isLoading?: boolean
@@ -75,6 +87,8 @@ const CommentInput: FC<CommentInputProps> = ({
   initFiles = [],
   initCategory = null,
   data = {},
+  versionReview,
+  lastOwnVersionReview,
   onSubmit,
   isEditing,
   disabled,
@@ -82,6 +96,7 @@ const CommentInput: FC<CommentInputProps> = ({
   isOpen,
   onOpen,
   onClose,
+  onReview,
 }) => {
   const {
     projectName,
@@ -618,6 +633,43 @@ const CommentInput: FC<CommentInputProps> = ({
     return 'Comment or mention with @user, @@version, @@@task...'
   }
 
+  const versionReviewButtons = versionReview && onReview && (
+    <Styled.VersionReviewButtons className={clsx("version-review-buttons", { guest: isGuest })}>
+      <Styled.VersionReviewButton
+        icon="check"
+        variant="tertiary"
+        data-tooltip="Approve"
+        onClick={() => {
+          // the editor value contains some empty tags
+          // so take those into account
+          if (editorValue && editorValue !== EMPTY_EDITOR_VALUE) {
+            handleSubmit()
+          }
+
+          onReview(VersionReviewFeedback.APPROVE)
+        }}
+      >
+        <span className="label">Approve</span>
+      </Styled.VersionReviewButton>
+      <Styled.VersionReviewButton
+        icon="refresh"
+        variant="danger"
+        data-tooltip="Request changes"
+        onClick={() => {
+          // the editor value contains some empty tags
+          // so take those into account
+          if (editorValue && editorValue !== EMPTY_EDITOR_VALUE) {
+            handleSubmit()
+          }
+
+          onReview(VersionReviewFeedback.REQUEST_CHANGES)
+        }}
+      >
+        <span className="label">Request changes</span>
+      </Styled.VersionReviewButton>
+    </Styled.VersionReviewButtons>
+  )
+
   return (
     <>
       <Styled.AutoHeight
@@ -628,6 +680,13 @@ const CommentInput: FC<CommentInputProps> = ({
         onClick={() => setIsDropping(false)}
         onKeyDown={(e) => e.stopPropagation()}
       >
+        {!isOpen && versionReview && lastOwnVersionReview && (
+          <VersionReviewPill
+            separate={true}
+            lastOwnVersionReview={lastOwnVersionReview}
+          />
+        )}
+
         <Styled.Comment
           className={clsx('block-shortcuts', {
             isOpen,
@@ -645,6 +704,12 @@ const CommentInput: FC<CommentInputProps> = ({
           $categoryTertiary={blendedCategoryColor.primary}
           $categorySecondary={blendedCategoryColor.secondary}
         >
+          {isOpen && versionReview && lastOwnVersionReview && (
+            <VersionReviewPill
+              separate={false}
+              lastOwnVersionReview={lastOwnVersionReview}
+            />
+          )}
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
             <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={initValue} />
@@ -736,7 +801,8 @@ const CommentInput: FC<CommentInputProps> = ({
                 />
               </Styled.Buttons>
             )}
-            <Styled.Buttons style={{ marginLeft: 'auto' }}>
+            <Styled.SubmitButtons>
+              {isOpen && versionReviewButtons}
               {isEditing && (
                 <Button variant="text" onClick={handleClose}>
                   Cancel
@@ -749,7 +815,7 @@ const CommentInput: FC<CommentInputProps> = ({
                 onClick={handleSubmit}
                 disabled={isLoading}
               />
-            </Styled.Buttons>
+            </Styled.SubmitButtons>
           </Styled.Footer>
 
           <Styled.Dropzone className={clsx({ show: isDropping && isOpen })}>
@@ -775,6 +841,13 @@ const CommentInput: FC<CommentInputProps> = ({
           error={mentionsError}
           isGuest={isGuest}
         />
+
+        {!isOpen && (
+          <>
+            <Styled.VersionReviewButtonsSpacer />
+            {versionReviewButtons}
+          </>
+        )}
       </Styled.AutoHeight>
     </>
   )

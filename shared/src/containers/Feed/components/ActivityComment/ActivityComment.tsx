@@ -31,6 +31,7 @@ import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategor
 import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
 import ActivityCommentMenu from './ActivityCommentMenu'
 import { checkForEmptyLine } from '../CommentInput/InputMarkdownConvert'
+import { useCategoryData } from '../../hooks/useCategoryData'
 
 type Props = {
   activity: any
@@ -70,32 +71,12 @@ const ActivityComment = ({
   isSlideOut,
   statuses = [],
 }: Props) => {
-  const {userName, createReaction, deleteReaction, editingId, setEditingId, categories, isGuest, userTeamNames,} = useFeedContext()
+  const {userName, createReaction, deleteReaction, editingId, setEditingId, isGuest, userTeamNames,} = useFeedContext()
 
   const moreRef = useRef<HTMLButtonElement>(null)
   const { toggleMenuOpen, menuOpen } = useMenuContext()
 
-  const { categoryData, categoryNotFound } = useMemo(() => {
-    let categoryNotFound = false
-    if (activity.activityData?.category) {
-      const foundCategory = categories.find((cat) => cat.name === activity.activityData?.category)
-      if (!foundCategory) {
-        categoryNotFound = true
-      }
-      return {
-        categoryData: foundCategory || {
-          name: activity.activityData?.category,
-          color: '#c5c5c5',
-        },
-        categoryNotFound,
-      }
-    } else {
-      return {
-        categoryData: null,
-        categoryNotFound,
-      }
-    }
-  }, [activity?.activityData?.category, categories])
+  const { categoryData, categoryNotFound } = useCategoryData(activity?.activityData?.category)
   // Compute blended background color for category
   const blendedCategoryColor = useBlendedCategoryColor(categoryData?.color)
 
