@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import * as Styled from './ActivityVersionReview.styled'
 import ActivityDate from '../ActivityDate'
 import { Icon } from '@ynput/ayon-react-components'
-import { VersionReviewFeedback } from '../CommentInput/CommentInput'
+import { VersionReviewFeedback } from '../CommentInput/types'
 import { clsx } from 'clsx'
 import { UserImage } from '@shared/components'
 import { CategoryTag } from '../ActivityCategorySelect'
@@ -52,7 +52,10 @@ export const getIconForFeedback = (feedback: VersionReviewFeedback) => {
   }
 }
 
-const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ isGuest, activity = {} }) => {
+const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({
+  isGuest,
+  activity = {},
+}) => {
   const { authorName, authorFullName, createdAt, activityData } = activity
 
   const label = useMemo(

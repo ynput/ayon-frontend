@@ -41,29 +41,13 @@ import { useProjectContext } from '@shared/context'
 import { parseFilename } from '@shared/components'
 import { FeedActivity } from '@shared/api'
 import { VersionReviewPill } from './VersionReviewPill'
+import { VersionReviewFeedback, mentionTypeOptions } from './types'
 
 var Delta = Quill.import('delta')
 
 const EMPTY_EDITOR_VALUE = '<p><br></p>'
 
 const mentionTypes = ['@', '@@', '@@@']
-export const mentionTypeOptions = {
-  '@@@': {
-    id: 'task',
-  },
-  '@@': {
-    id: 'version',
-  },
-  '@': {
-    id: 'user',
-    isCircle: true,
-  },
-};
-
-export enum VersionReviewFeedback {
-  APPROVE = "approve",
-  REQUEST_CHANGES = "request_changes"
-}
 
 interface CommentInputProps {
   initValue: string | null
@@ -90,13 +74,13 @@ const CommentInput: FC<CommentInputProps> = ({
   versionReview,
   lastOwnVersionReview,
   onSubmit,
+  onReview,
   isEditing,
   disabled,
   isLoading,
   isOpen,
   onOpen,
   onClose,
-  onReview,
 }) => {
   const {
     projectName,
@@ -203,7 +187,14 @@ const CommentInput: FC<CommentInputProps> = ({
         },
         mentionSearchWithPrefix || undefined,
       ),
-    [mentionTasks, mentionVersions, mentionUsers, mentionTeams, mention?.type, mentionSearchWithPrefix],
+    [
+      mentionTasks,
+      mentionVersions,
+      mentionUsers,
+      mentionTeams,
+      mention?.type,
+      mentionSearchWithPrefix,
+    ],
   )
 
   // show first 5 and filter itself out
@@ -633,21 +624,32 @@ const CommentInput: FC<CommentInputProps> = ({
     return 'Comment or mention with @user, @@version, @@@task...'
   }
 
+  const handleReviewSubmit = async (status: VersionReviewFeedback) => {
+    if (!onReview) return
+    try {
+      const postComment =
+        (editorValue && editorValue !== EMPTY_EDITOR_VALUE) ||
+        files.length > 0 ||
+        annotations.length > 0
+      // if the editor value is valid, also submit the comment first
+      if (postComment) {
+        await handleSubmit()
+      }
+
+      onReview(status)
+    } catch (error) {
+      console.error(error)
+      toast.error('Something went wrong while submitting the review')
+    }
+  }
+
   const versionReviewButtons = versionReview && onReview && (
-    <Styled.VersionReviewButtons className={clsx("version-review-buttons", { guest: isGuest })}>
+    <Styled.VersionReviewButtons className={clsx('version-review-buttons', { guest: isGuest })}>
       <Styled.VersionReviewButton
         icon="check"
         variant="tertiary"
         data-tooltip="Approve"
-        onClick={() => {
-          // the editor value contains some empty tags
-          // so take those into account
-          if (editorValue && editorValue !== EMPTY_EDITOR_VALUE) {
-            handleSubmit()
-          }
-
-          onReview(VersionReviewFeedback.APPROVE)
-        }}
+        onClick={() => handleReviewSubmit(VersionReviewFeedback.APPROVE)}
       >
         <span className="label">Approve</span>
       </Styled.VersionReviewButton>
@@ -655,15 +657,7 @@ const CommentInput: FC<CommentInputProps> = ({
         icon="refresh"
         variant="danger"
         data-tooltip="Request changes"
-        onClick={() => {
-          // the editor value contains some empty tags
-          // so take those into account
-          if (editorValue && editorValue !== EMPTY_EDITOR_VALUE) {
-            handleSubmit()
-          }
-
-          onReview(VersionReviewFeedback.REQUEST_CHANGES)
-        }}
+        onClick={() => handleReviewSubmit(VersionReviewFeedback.REQUEST_CHANGES)}
       >
         <span className="label">Request changes</span>
       </Styled.VersionReviewButton>
@@ -680,11 +674,8 @@ const CommentInput: FC<CommentInputProps> = ({
         onClick={() => setIsDropping(false)}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        {!isOpen && versionReview && lastOwnVersionReview && (
-          <VersionReviewPill
-            separate={true}
-            lastOwnVersionReview={lastOwnVersionReview}
-          />
+        {versionReview && lastOwnVersionReview && (
+          <VersionReviewPill lastOwnVersionReview={lastOwnVersionReview} />
         )}
 
         <Styled.Comment
@@ -704,12 +695,6 @@ const CommentInput: FC<CommentInputProps> = ({
           $categoryTertiary={blendedCategoryColor.primary}
           $categorySecondary={blendedCategoryColor.secondary}
         >
-          {isOpen && versionReview && lastOwnVersionReview && (
-            <VersionReviewPill
-              separate={false}
-              lastOwnVersionReview={lastOwnVersionReview}
-            />
-          )}
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
             <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={initValue} />
@@ -802,7 +787,6 @@ const CommentInput: FC<CommentInputProps> = ({
               </Styled.Buttons>
             )}
             <Styled.SubmitButtons>
-              {isOpen && versionReviewButtons}
               {isEditing && (
                 <Button variant="text" onClick={handleClose}>
                   Cancel
@@ -842,12 +826,8 @@ const CommentInput: FC<CommentInputProps> = ({
           isGuest={isGuest}
         />
 
-        {!isOpen && (
-          <>
-            <Styled.VersionReviewButtonsSpacer />
-            {versionReviewButtons}
-          </>
-        )}
+        <Styled.VersionReviewButtonsSpacer />
+        {versionReviewButtons}
       </Styled.AutoHeight>
     </>
   )

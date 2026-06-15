@@ -3,7 +3,7 @@ import { formatISO } from 'date-fns'
 import { toast } from 'react-toastify'
 import { useFeedContext } from '../context/FeedContext'
 import { SavedAnnotationMetadata } from '..'
-import { VersionReviewFeedback } from '../components/CommentInput/CommentInput'
+import { VersionReviewFeedback } from '../components/CommentInput/types'
 import { getVerbForFeedbackBody } from '../components/ActivityVersionReview/ActivityVersionReview'
 
 // Type definitions
@@ -235,9 +235,7 @@ const useCommentMutations = ({
     }
   }
 
-  const submitReview = async (
-    feedback: VersionReviewFeedback
-  ): Promise<void> => {
+  const submitReview = async (feedback: VersionReviewFeedback): Promise<void> => {
     // map over all the entities and create a new comment for each
     let patchId: string | null = null
     const promises = entities.map(({ id: entityId, subTitle }) => {

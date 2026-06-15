@@ -14,7 +14,7 @@ import Typography from '@/theme/typography.module.css'
 import { getEntityTypeIcon } from '@shared/util'
 import type { InboxMessage as InboxMessageType } from '@/services/inbox/inboxTransform'
 import type { InboxActivityType, InboxStatusChange, ProjectsInfo } from '../types'
-import { VersionReviewFeedback } from '@shared/containers/Feed/components/CommentInput/CommentInput'
+import { VersionReviewFeedback } from '@shared/containers/Feed/components/CommentInput/types'
 
 interface MessageForBody {
   isRead?: boolean
@@ -143,7 +143,6 @@ const InboxMessage = ({
   customBody, // custom body for special message types (e.g. reassignment)
   ...props
 }: InboxMessageProps) => {
-
   const typeIcon = useMemo(() => {
     if (!type || !messages || messages.length === 0) {
       return 'notifications'
@@ -154,7 +153,7 @@ const InboxMessage = ({
     }
 
     const icon = activityTypeIcons[type]
-    if (typeof icon === "function") {
+    if (typeof icon === 'function') {
       return icon(messages[0])
     }
 
@@ -162,7 +161,7 @@ const InboxMessage = ({
   }, [type])
 
   const iconColor = useMemo(() => {
-    if (type !== "version.review" || !messages || messages.length === 0) {
+    if (type !== 'version.review' || !messages || messages.length === 0) {
       return 'inherit'
     }
 
