@@ -41,29 +41,13 @@ import { useProjectContext } from '@shared/context'
 import { parseFilename } from '@shared/components'
 import { FeedActivity } from '@shared/api'
 import { VersionReviewPill } from './VersionReviewPill'
+import { VersionReviewFeedback, mentionTypeOptions } from './types'
 
 var Delta = Quill.import('delta')
 
 const EMPTY_EDITOR_VALUE = '<p><br></p>'
 
 const mentionTypes = ['@', '@@', '@@@']
-export const mentionTypeOptions = {
-  '@@@': {
-    id: 'task',
-  },
-  '@@': {
-    id: 'version',
-  },
-  '@': {
-    id: 'user',
-    isCircle: true,
-  },
-}
-
-export enum VersionReviewFeedback {
-  APPROVE = 'approve',
-  REQUEST_CHANGES = 'request_changes',
-}
 
 interface CommentInputProps {
   initValue: string | null

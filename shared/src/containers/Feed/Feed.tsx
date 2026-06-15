@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import ActivityItem from './components/ActivityItem'
-import CommentInput, { VersionReviewFeedback } from './components/CommentInput/CommentInput'
+import CommentInput from './components/CommentInput/CommentInput'
+import { VersionReviewFeedback } from './components/CommentInput/types'
 import * as Styled from './Feed.styled'
 import useCommentMutations, { Activity } from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
@@ -99,20 +100,18 @@ export const Feed = ({
     (c) => 'key' in c && c.key === 'versions' && c.value === true,
   )
   const hasActiveFilters = feedFilter.conditions?.some(
-    (c) => 'key' in c && ['comments', 'checklists', 'versions', 'updates'].includes(c.key) && c.value === true,
+    (c) =>
+      'key' in c &&
+      ['comments', 'checklists', 'versions', 'updates'].includes(c.key) &&
+      c.value === true,
   )
   const hasCommentLikeFilter = feedFilter.conditions?.some(
     (c) => 'key' in c && (c.key === 'comments' || c.key === 'checklists') && c.value === true,
   )
 
   // check activities permission for commenting
-  const {
-    data: projectPermissions,
-    isLoading: isLoadingPermissions,
-  } = useGetMyProjectPermissionsQuery(
-    { projectName },
-    { skip: !projectName },
-  )
+  const { data: projectPermissions, isLoading: isLoadingPermissions } =
+    useGetMyProjectPermissionsQuery({ projectName }, { skip: !projectName })
   const isCommentRestricted =
     !user.data?.isManager &&
     !user.data?.isAdmin &&
@@ -212,9 +211,12 @@ export const Feed = ({
     [submitCommentMutation, feedRef],
   )
 
-  const submitReview = useCallback(async (feedback: VersionReviewFeedback) => {
-    await submitReviewMutation(feedback)
-  }, [submitReviewMutation])
+  const submitReview = useCallback(
+    async (feedback: VersionReviewFeedback) => {
+      await submitReviewMutation(feedback)
+    },
+    [submitReviewMutation],
+  )
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
   // Then update comment with new body
@@ -304,7 +306,7 @@ export const Feed = ({
   const lastVersionReview = useLastVersionReview({
     projectName,
     enabled: versionReview,
-    entityIds: entities.map(e => e.id),
+    entityIds: entities.map((e) => e.id),
     activities: transformedActivitiesData,
     loadingActivities: isLoadingNew,
     userName,
@@ -364,9 +366,7 @@ export const Feed = ({
           {transformedActivitiesData.length === 0 &&
             isVersionsFilter &&
             !hasCommentLikeFilter &&
-            !isLoadingNew && (
-            <EmptyPlaceholder message="No versions published yet" icon="layers" />
-          )}
+            !isLoadingNew && <EmptyPlaceholder message="No versions published yet" icon="layers" />}
           {hasNextPage && loadNextPage && (
             <InView
               root={feedRef.current}
