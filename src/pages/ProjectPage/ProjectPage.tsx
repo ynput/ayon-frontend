@@ -29,7 +29,7 @@ import {
 } from '@shared/context'
 import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
-import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
+import { useGetProductionAddon } from '@shared/hooks'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
@@ -118,10 +118,11 @@ const ProjectPageInner = () => {
     isError: addonsIsError,
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
 
-  // find out if and what version of the review addon is installed
-  const { isLoading: isLoadingAddons, addonVersions: matchedAddons } = useGetBundleAddonVersions({
-    addons: ['review', 'planner', 'reports', 'storyboards'],
-  })
+  const { getProductionAddon, isLoading: addonsListLoading } = useGetProductionAddon()
+  // Try checking multiple addons in one go if we wanted, or just call on demand
+  const hasReview = !!getProductionAddon('review')
+  const hasReports = !!getProductionAddon('reports')
+  const hasStoryboards = !!getProductionAddon('storyboards')
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
@@ -142,8 +143,6 @@ const ProjectPageInner = () => {
     remotePages: RemoteAddonProject[]
     isLoading: boolean
   }
-
-  const hasStoryboards = useMemo(() => matchedAddons.has('storyboards'), [matchedAddons])
 
   // get remote project module pages
   const links: NavLinkItem[] = useMemo(
@@ -252,7 +251,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, matchedAddons, module, hasStoryboards],
+    [addonsData, projectName, remotePages, module, hasStoryboards],
   )
 
   const activeLink = useMemo(() => {
@@ -295,16 +294,16 @@ const ProjectPageInner = () => {
       component = (
         <ProjectReviewsPage
           projectName={projectName}
-          isLoadingAccess={isLoadingAddons}
-          hasReviewAddon={!!matchedAddons.has('review')}
+          isLoadingAccess={addonsListLoading}
+          hasReviewAddon={hasReview}
         />
       )
     } else if (module === 'storyboards' && hasStoryboards) {
       component = (
         <ProjectStoryboardsPage
           projectName={projectName}
-          isLoadingAccess={isLoadingAddons}
-          hasStoryboardsAddon={!!matchedAddons.has('storyboards')}
+          isLoadingAccess={addonsListLoading}
+          hasStoryboardsAddon={hasStoryboards}
         />
       )
     } else if (module === 'workfiles') {
@@ -313,8 +312,8 @@ const ProjectPageInner = () => {
       component = (
         <ProjectReportsPage
           projectName={projectName}
-          isLoadingAccess={isLoadingAddons}
-          hasReportsAddon={!!matchedAddons.has('reports')}
+          isLoadingAccess={addonsListLoading}
+          hasReportsAddon={hasReports}
         />
       )
     } else if (foundAddon) {

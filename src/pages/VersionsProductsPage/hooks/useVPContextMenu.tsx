@@ -32,8 +32,7 @@ export const useVPContextMenu = (callbacks?: {
 }): VPContextMenuItems => {
   const { selectedCells, setSelectedCells, selectCell } = useSelectionCellsContext()
   const { entitiesMap } = useVersionsDataContext()
-  const { buildAddToListMenu, buildHierarchicalMenuItems, newListMenuItem, versions, reviews } =
-    useEntityListsContext()
+  const { buildReviewContextMenu } = useEntityListsContext()
   const { onOpenPlayer } = useProjectTableContext()
   const { projectName } = useProjectContext()
   const [deleteVersion] = useDeleteVersionMutation()
@@ -169,7 +168,9 @@ export const useVPContextMenu = (callbacks?: {
 
       let productId: string | undefined
       let folderId: string | undefined
-      let linkedTask: { id: string; name: string; label?: string | null; taskType: string } | undefined
+      let linkedTask:
+        | { id: string; name: string; label?: string | null; taskType: string }
+        | undefined
       let latestVersionNumber: number | undefined
       let latestVersionId: string | undefined
       if (entity.entityType === 'product') {
@@ -195,14 +196,15 @@ export const useVPContextMenu = (callbacks?: {
       return {
         label: 'Upload version',
         icon: 'upload',
-        command: () => onOpenVersionUpload({
-          productId,
-          folderId,
-          taskId: linkedTask?.id,
-          linkedTask,
-          latestVersionNumber,
-          latestVersionId,
-        }),
+        command: () =>
+          onOpenVersionUpload({
+            productId,
+            folderId,
+            taskId: linkedTask?.id,
+            linkedTask,
+            latestVersionNumber,
+            latestVersionId,
+          }),
         hidden: cell.isGroup,
       }
     },
@@ -281,12 +283,9 @@ export const useVPContextMenu = (callbacks?: {
       // Get selected entity IDs from meta
       const selectedEntityIds = meta.selectedRows.length > 0 ? meta.selectedRows : [cell.entityId]
 
-      // Filter to only version entities, converting products to their featuredVersion
-      const versionEntities: {
-        entityId: string
-        entityType: string | undefined
-        hasReviewables?: boolean
-      }[] = []
+      // Transform to ListEntityInput[], resolving products to their featuredVersion
+      const versionEntities: { entityId: string; entityType: string; hasReviewables?: boolean }[] =
+        []
       let singleVersionName: string | undefined
 
       for (const entityId of selectedEntityIds) {
@@ -299,9 +298,7 @@ export const useVPContextMenu = (callbacks?: {
             entityType: 'version',
             hasReviewables: (entity as any).hasReviewables,
           })
-          if (versionEntities.length === 1) {
-            singleVersionName = entity.name
-          }
+          if (versionEntities.length === 1) singleVersionName = entity.name
         } else if (entity.entityType === 'product' && 'featuredVersion' in entity) {
           const product = entity as any
           if (product.featuredVersion?.id) {
@@ -310,53 +307,23 @@ export const useVPContextMenu = (callbacks?: {
               entityType: 'version',
               hasReviewables: product.featuredVersion.hasReviewables,
             })
-            if (versionEntities.length === 1) {
-              singleVersionName = product.featuredVersion.name
-            }
+            if (versionEntities.length === 1) singleVersionName = product.featuredVersion.name
           }
         }
       }
 
-      // If no version entities, disable the menu
       if (versionEntities.length === 0) {
-        return {
-          id: 'add-to-list',
-          label: 'Add to list',
-          icon: 'list',
-          disabled: true,
-          items: [],
-        }
+        return { id: 'add-to-list', label: 'Add to list', icon: 'list', disabled: true, items: [] }
       }
 
-      // Review sessions only accept versions with reviewables — disable when any selected lacks them
-      const hasAnyNonReviewable = versionEntities.some((v) => v.hasReviewables === false)
-
-      // Build the menu items for add to list using versions and reviews data
-      const combined = [...versions, ...reviews]
-      const menuItems = buildHierarchicalMenuItems(
-        combined,
-        versionEntities,
-        (list) => (list.entityListType === 'review-session' ? true : !!reviews.length),
-        (list) => list.entityListType === 'review-session' && hasAnyNonReviewable,
-      )
-      menuItems.push(newListMenuItem('version', versionEntities))
-
-      // Include version name in label if only one version
       const label =
         versionEntities.length === 1 && singleVersionName
           ? `Add to list (${singleVersionName})`
-          : 'Add to list'
+          : undefined
 
-      return buildAddToListMenu(menuItems, { label })
+      return buildReviewContextMenu('version', versionEntities, label)
     },
-    [
-      entitiesMap,
-      buildAddToListMenu,
-      buildHierarchicalMenuItems,
-      newListMenuItem,
-      versions,
-      reviews,
-    ],
+    [entitiesMap, buildReviewContextMenu],
   )
 
   // Delete version context menu item
