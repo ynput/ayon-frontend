@@ -100,7 +100,7 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
       },
       {
         id: 'createdAt',
-        label: 'Posted',
+        label: 'Posted date',
         icon: 'calendar_today',
         type: 'datetime',
         values: generateDateOptions(),

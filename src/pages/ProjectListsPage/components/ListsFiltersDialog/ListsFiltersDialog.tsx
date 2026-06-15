@@ -268,6 +268,7 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
           setListsFilters(v) // update the filters in the context
           setListsFiltersOpen(false) // close the dialog
         }}
+        enableAutosuggestion={true}
         ref={filtersRef}
       />
     </Dialog>,

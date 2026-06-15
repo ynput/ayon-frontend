@@ -20,9 +20,7 @@ import { useDetailsPanelContext } from '@shared/context'
 import { DetailsPanelEntityType, useGetMyProjectPermissionsQuery } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import { SavedAnnotationMetadata } from '.'
-import TabHeaderAndFilters, {
-  FilterItem,
-} from '../DetailsPanel/components/TabHeaderAndFilters/TabHeaderAndFilters'
+import FeedSearchFilter from './components/FeedSearchFilter'
 import { useLastVersionReview } from './hooks/useLastVersionReview'
 
 // number of activities to get

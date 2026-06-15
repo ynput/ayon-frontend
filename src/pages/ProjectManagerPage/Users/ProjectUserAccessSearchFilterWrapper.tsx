@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Filter } from '@components/SearchFilter/types'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { $Any } from '@types'
-import { getProjectAccessSearchFilterBuiler } from './mappers'
+import { getProjectAccessSearchFilterBuilder } from './mappers'
 import { SearchFilter } from '@ynput/ayon-react-components'
 import { getProjectDisplayName } from '@shared/util'
 
@@ -24,7 +24,7 @@ const ProjectUserAccessSearchFilterWrapper = ({
     projectName: '_',
   })
 
-  const options = getProjectAccessSearchFilterBuiler({
+  const options = getProjectAccessSearchFilterBuilder({
     projects: projects.map((project: $Any) => ({
       id: project.name,
       label: getProjectDisplayName(project),
@@ -56,6 +56,8 @@ const ProjectUserAccessSearchFilterWrapper = ({
       filters={filters}
       onChange={setFilters}
       onFinish={(v) => onChange(v)}
+      enableAutosuggestion={true}
+      enableGlobalSearch={true}
     />
   )
 }

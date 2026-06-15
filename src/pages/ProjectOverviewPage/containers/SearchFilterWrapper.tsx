@@ -397,6 +397,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         enableGlobalSearch={true}
         disabledFilters={disabledFilters}
         onPasteCapture={handleDropdownPaste}
+        enableAutosuggestion={true}
         pt={{
           searchBar: {
             style: {
