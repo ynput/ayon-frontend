@@ -16,8 +16,13 @@ import { useDateRangeFilter, CustomDateRangeDialog } from '@shared/components/Se
 const Wrapper = styled.div`
   padding: 4px 8px;
   padding-bottom: 0;
-  /* filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.25)); */
-  /* z-index: 1; */
+  filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.25));
+  z-index: 10;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
 
   &.loading {
     opacity: 0.5;

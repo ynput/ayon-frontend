@@ -57,7 +57,6 @@ const ProjectUserAccessSearchFilterWrapper = ({
       onChange={setFilters}
       onFinish={(v) => onChange(v)}
       enableAutosuggestion={true}
-      enableGlobalSearch={true}
     />
   )
 }

@@ -10,6 +10,23 @@ export const FeedContainer = styled.section`
   display: grid;
   grid-template-rows: auto 1fr auto;
   background-color: var(--md-sys-color-surface-container-low);
+
+  padding-top: 4px;
+  /* fade out the content at the top with a gradient */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 45px;
+    background: linear-gradient(
+      to bottom,
+      var(--md-sys-color-surface-container-low) 20%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    z-index: 1;
+  }
 `
 
 export const Warning = styled.div`
@@ -48,6 +65,11 @@ export const FeedContent = styled.ul`
 
   &.loading {
     overflow: hidden;
+  }
+
+  /* first (last in dom) has margin to separate from filter */
+  & > *:last-child {
+    margin-top: 32px;
   }
 `
 
