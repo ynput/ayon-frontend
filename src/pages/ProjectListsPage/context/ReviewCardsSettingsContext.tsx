@@ -1,4 +1,4 @@
-import { ReviewsSettings } from '@shared/api'
+import { ReviewsSettings } from '@shared/api/viewSettings'
 import { useViewsContext } from '@shared/containers'
 import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHelper'
 import {

@@ -1,4 +1,5 @@
-import { QueryFilter, VersionsSettings } from '@shared/api'
+import { QueryFilter } from '@shared/api'
+import { VersionsSettings } from '@shared/api/viewSettings'
 import { ColumnsConfig, useViewsContext } from '@shared/containers'
 import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHelper'
 import {

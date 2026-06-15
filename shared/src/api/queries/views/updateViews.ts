@@ -1,10 +1,55 @@
-import { ViewListItemModel } from '@shared/api/generated'
+import { GenericViewPostModel, GenericViewPatchModel, ViewListItemModel } from '@shared/api/generated'
+import type {
+  DefinitionsFromApi,
+  MutationDefinition,
+  TagTypesFromApi,
+} from '@reduxjs/toolkit/query'
 import { getScopeTag, getViewsApi } from './getViews'
 import { v4 as uuidv4 } from 'uuid'
 
-const updateViewsApi = getViewsApi.enhanceEndpoints({
+type Definitions = DefinitionsFromApi<typeof getViewsApi>
+type TagTypes = TagTypesFromApi<typeof getViewsApi>
+
+// Codegen names the create/update body arg after its request model
+// (genericViewPostModel / genericViewPatchModel). We keep the whole FE on
+// `payload` via the query overrides below, and re-type the mutation args here
+// so callers stay decoupled from whatever codegen names the field next time.
+type OverrideMutationArg<D, NewArg> = D extends MutationDefinition<
+  any,
+  infer BaseQuery,
+  infer Tag,
+  infer Result,
+  infer ReducerPath,
+  infer RawResult
+>
+  ? MutationDefinition<NewArg, BaseQuery, Tag, Result, ReducerPath, RawResult>
+  : never
+
+type CreateViewArg = { viewType: string; projectName?: string; payload: GenericViewPostModel }
+type UpdateViewArg = {
+  viewType: string
+  projectName?: string
+  viewId: string
+  payload: GenericViewPatchModel
+}
+
+type UpdatedDefinitions = Omit<Definitions, 'createView' | 'updateView'> & {
+  createView: OverrideMutationArg<Definitions['createView'], CreateViewArg>
+  updateView: OverrideMutationArg<Definitions['updateView'], UpdateViewArg>
+}
+
+const updateViewsApi = getViewsApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     createView: {
+      // Codegen names the request body arg after its model (genericViewPostModel).
+      // Override the query so the whole FE keeps passing `payload`, regardless of
+      // how codegen names the arg on the next regen.
+      query: ({ viewType, projectName, payload }: any) => ({
+        url: `/api/views/${viewType}`,
+        method: 'POST',
+        body: payload,
+        params: { project_name: projectName },
+      }),
       onQueryStarted: async (arg, { dispatch, queryFulfilled, getState }) => {
         const { payload } = arg
         const state = getState()
@@ -132,6 +177,13 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
       ],
     },
     updateView: {
+      // See createView note — keep the FE on `payload` despite codegen renaming the arg.
+      query: ({ viewType, projectName, viewId, payload }: any) => ({
+        url: `/api/views/${viewType}/${viewId}`,
+        method: 'PATCH',
+        body: payload,
+        params: { project_name: projectName },
+      }),
       onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
         const { viewId, payload, viewType, projectName } = arg
 

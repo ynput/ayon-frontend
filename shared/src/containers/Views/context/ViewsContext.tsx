@@ -21,9 +21,10 @@ import { useBaseViewMutations } from '../hooks/useBaseViewMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
 import { useViewSettingsChanged } from '../hooks/useViewSettingsChanged'
 import { useLocalStorage } from '@shared/hooks'
+import type { ViewSettings } from '@shared/api/viewSettings'
 
 export type ViewData = GetDefaultViewApiResponse
-export type ViewSettings = GetDefaultViewApiResponse['settings']
+export type { ViewSettings }
 export type SelectedViewState = ViewData | undefined // id of view otherwise null with use working
 export type EditingViewState = string | true | null // id of view being edited otherwise null
 

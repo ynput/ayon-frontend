@@ -1,5 +1,5 @@
 import {
-  CreateViewApiArg,
+  GenericViewPostModel,
   useCreateViewMutation,
   useDeleteViewMutation,
   useUpdateViewMutation,
@@ -24,7 +24,7 @@ type Props = {
 }
 
 export type UseViewMutations = {
-  onCreateView: (payload: CreateViewApiArg['payload'], isStudioScope: boolean) => Promise<void>
+  onCreateView: (payload: GenericViewPostModel, isStudioScope: boolean) => Promise<void>
   onDeleteView: (viewId: string, isStudioScope: boolean) => Promise<void>
   onUpdateView: (
     viewId: string,

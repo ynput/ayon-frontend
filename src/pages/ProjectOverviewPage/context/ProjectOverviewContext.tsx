@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from 'react
 
 // Third-party libraries
 import { ExpandedState } from '@tanstack/react-table'
-import { OverviewSettings } from '@shared/api'
+import { OverviewSettings } from '@shared/api/viewSettings'
 
 // Shared components and hooks
 import { useLocalStorage, useGetEntityGroups } from '@shared/hooks'

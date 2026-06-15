@@ -1,6 +1,6 @@
 import { useViewsContext } from '@shared/containers'
 import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHelper'
-import type { OverviewSettings } from '@shared/api/generated/views'
+import type { OverviewSettings } from '@shared/api/viewSettings'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { useCallback, useMemo, useState } from 'react'
 

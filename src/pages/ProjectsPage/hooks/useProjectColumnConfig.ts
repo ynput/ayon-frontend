@@ -4,7 +4,7 @@ import {
   convertColumnConfigToTanstackStates,
   convertTanstackStatesToColumnConfig,
 } from '@shared/util'
-import type { OverviewSettings } from '@shared/api/generated/views'
+import type { OverviewSettings } from '@shared/api/viewSettings'
 import { ColumnOrderState, ColumnSizingState, VisibilityState } from '@tanstack/react-table'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { ProjectColumn } from './useProjectColumns'

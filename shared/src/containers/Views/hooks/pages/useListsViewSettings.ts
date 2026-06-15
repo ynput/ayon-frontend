@@ -9,7 +9,7 @@
  */
 
 import { useViewsContext } from '../../context/ViewsContext'
-import { OverviewSettings } from '@shared/api'
+import { OverviewSettings } from '@shared/api/viewSettings'
 import { ColumnsConfig } from '@shared/containers/ProjectTreeTable'
 import {
   convertColumnConfigToTanstackStates,

@@ -1,6 +1,6 @@
 import { forwardRef, useEffect } from 'react'
 import * as Styled from './TableGridPlaylistSwitch.styled'
-import { ReviewsSettings } from '@shared/api'
+import { ReviewsSettings } from '@shared/api/viewSettings'
 
 interface TableGridPlaylistSwitchProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   value: ReviewsSettings['displayStyle']

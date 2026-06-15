@@ -5,7 +5,7 @@ import {
   ColumnSizingState,
   SortingState,
 } from '@tanstack/react-table'
-import { ColumnItemModel, OverviewSettings } from '@shared/api/generated/views'
+import { ColumnItemModel, OverviewSettings } from '@shared/api/viewSettings'
 import { ColumnsConfig, TableGroupBy } from '@shared/containers'
 import { GroupByConfig } from '@shared/containers/ProjectTreeTable/components/GroupSettingsFallback'
 import {

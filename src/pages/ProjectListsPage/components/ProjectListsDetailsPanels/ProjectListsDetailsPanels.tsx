@@ -15,7 +15,7 @@ import { useEffect, useMemo, useState } from 'react'
 import ListDetailsPanel from '../ListDetailsPanel/ListDetailsPanel'
 import useReviewSessionCardsModules from '@pages/ProjectListsPage/hooks/useReviewSessionCardsModules'
 import useStoryboardsCardsModules from '@pages/ProjectListsPage/hooks/useStoryboardsCardsModules'
-import { ReviewsSettings } from '@shared/api'
+import { ReviewsSettings } from '@shared/api/viewSettings'
 
 type Props = {
   isReview: boolean

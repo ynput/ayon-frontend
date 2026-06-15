@@ -9,7 +9,7 @@
  */
 
 import { useViewsContext } from '../../context/ViewsContext'
-import { TaskProgressSettings, ColumnItemModel } from '@shared/api'
+import { ColumnItemModel, TaskProgressSettings } from '@shared/api/viewSettings'
 import { useViewUpdateHelper } from '../../utils/viewUpdateHelper'
 import { useState, useEffect, useCallback } from 'react'
 
