@@ -44,6 +44,19 @@ export const useProjectColumnConfig = ({ columns }: Props) => {
   columnVisibilityRef.current = columnVisibility
   columnSizingRef.current = columnSizing
 
+  const getFinalVisibility = useCallback(
+    (overrides: VisibilityState) => {
+      const final: VisibilityState = {}
+      columns.forEach((col) => {
+        if (col.id) {
+          final[col.id] = overrides[col.id] ?? col.visible ?? false
+        }
+      })
+      return final
+    },
+    [columns],
+  )
+
   const allColumnIds = useMemo(() => columns.map((c) => c.id as string), [columns])
 
   const handleColumnOrderChange = useCallback(
@@ -51,7 +64,7 @@ export const useProjectColumnConfig = ({ columns }: Props) => {
       const columnConfig = convertTanstackStatesToColumnConfig(
         {
           columnOrder: newOrder,
-          columnVisibility: columnVisibilityRef.current,
+          columnVisibility: getFinalVisibility(columnVisibilityRef.current),
           columnPinning: {},
           columnSizing: columnSizingRef.current,
         },
@@ -59,7 +72,7 @@ export const useProjectColumnConfig = ({ columns }: Props) => {
       )
       await updateViewSettings({ columns: columnConfig.columns }, setLocalColumnOrder, newOrder, {})
     },
-    [allColumnIds, updateViewSettings],
+    [allColumnIds, updateViewSettings, getFinalVisibility],
   )
 
   const handleColumnVisibilityChange = useCallback(
@@ -67,7 +80,7 @@ export const useProjectColumnConfig = ({ columns }: Props) => {
       const columnConfig = convertTanstackStatesToColumnConfig(
         {
           columnOrder: columnOrderRef.current,
-          columnVisibility: newVisibility,
+          columnVisibility: getFinalVisibility(newVisibility),
           columnPinning: {},
           columnSizing: columnSizingRef.current,
         },
@@ -80,7 +93,7 @@ export const useProjectColumnConfig = ({ columns }: Props) => {
         {},
       )
     },
-    [allColumnIds, updateViewSettings],
+    [allColumnIds, updateViewSettings, getFinalVisibility],
   )
 
   const handleColumnSizingChange = useCallback(
@@ -88,7 +101,7 @@ export const useProjectColumnConfig = ({ columns }: Props) => {
       const columnConfig = convertTanstackStatesToColumnConfig(
         {
           columnOrder: columnOrderRef.current,
-          columnVisibility: columnVisibilityRef.current,
+          columnVisibility: getFinalVisibility(columnVisibilityRef.current),
           columnPinning: {},
           columnSizing: newSizing,
         },
@@ -101,7 +114,7 @@ export const useProjectColumnConfig = ({ columns }: Props) => {
         {},
       )
     },
-    [allColumnIds, updateViewSettings],
+    [allColumnIds, updateViewSettings, getFinalVisibility],
   )
 
   /**
@@ -114,7 +127,7 @@ export const useProjectColumnConfig = ({ columns }: Props) => {
       const columnConfig = convertTanstackStatesToColumnConfig(
         {
           columnOrder: newOrder,
-          columnVisibility: newVisibility,
+          columnVisibility: getFinalVisibility(newVisibility),
           columnPinning: {},
           columnSizing: columnSizingRef.current,
         },
@@ -132,7 +145,7 @@ export const useProjectColumnConfig = ({ columns }: Props) => {
         {},
       )
     },
-    [allColumnIds, updateViewSettings],
+    [allColumnIds, updateViewSettings, getFinalVisibility],
   )
 
   return {

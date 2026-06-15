@@ -6,6 +6,7 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import type {
+  EntityList,
   GetListItemsQuery,
   GetListItemsQueryVariables,
   GetListsItemsForReviewSessionQuery,
@@ -14,7 +15,7 @@ import type {
   GetListsQueryVariables,
 } from '@shared/api'
 import { parseAllAttribs } from '../overview'
-import { PubSub } from '@shared/util'
+import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import {
   GetListItemsResult,
   GetListsResult,
@@ -22,6 +23,40 @@ import {
   ListItemsPageParam,
   ListsPageParam,
 } from './types'
+
+// Helper function to batch pub/sub messages to avoid constant cache updates
+export function createBatchedCacheUpdater<TMessage, TDraft>(
+  updateCachedData: (updater: (draft: TDraft) => void) => void,
+  applyBatch: (draft: TDraft, batch: { topic: string; message: TMessage }[]) => void,
+  delay = 5000,
+) {
+  let queue: { topic: string; message: TMessage }[] = []
+  let timeout: ReturnType<typeof setTimeout> | null = null
+
+  const handler = (topic: string, message: TMessage) => {
+    queue.push({ topic, message })
+    if (!timeout) {
+      timeout = setTimeout(() => {
+        const batch = [...queue]
+        queue = []
+        timeout = null
+        if (batch.length > 0) {
+          updateCachedData((draft) => applyBatch(draft, batch))
+        }
+      }, delay)
+    }
+  }
+
+  handler.clear = () => {
+    if (timeout) {
+      clearTimeout(timeout)
+      timeout = null
+    }
+    queue = []
+  }
+
+  return handler
+}
 
 // Helper function to safely parse entity list data field from JSON string to object
 const parseJSON = (data: string | null | undefined): Record<string, any> => {
@@ -72,6 +107,10 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
     },
     GetListItems: {
       transformResponse: (response: GetListItemsQuery): GetListItemsResult => {
+        const firstEdge = response.project.entityLists.edges[0]
+        if (!firstEdge) {
+          throw new Error('List does not exist, was it deleted?')
+        }
         return {
           items: response.project.entityLists.edges.flatMap((listEdge) =>
             listEdge.node.items.edges.map(({ node, ...edge }) => {
@@ -82,7 +121,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
               } as GetListItemsResult['items'][number]
             }),
           ),
-          pageInfo: response.project.entityLists.edges[0].node.items.pageInfo,
+          pageInfo: firstEdge.node.items.pageInfo,
         }
       },
     },
@@ -166,41 +205,75 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         ]
       },
       async onCacheEntryAdded(
-        _args,
-        { cacheDataLoaded, cacheEntryRemoved, dispatch, updateCachedData },
+        { projectName },
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData },
       ) {
-        let token
+        const topics = ['entity_list.changed', 'entity_list.created', 'entity_list.deleted']
+        let handlePubSub: any = null
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
-          const handlePubSub = (topic: string, message: ListItemMessage) => {
-            if (topic !== 'entity_list.changed') return
-            const summary = message.summary
-            const id = summary.id
-            if (!id) return
+          handlePubSub = createBatchedCacheUpdater<ListItemMessage, any>(
+            updateCachedData,
+            (draft, batch) => {
+              batch.forEach(({ topic, message }) => {
+                const summary = message.summary
+                const id = summary.id
+                if (!id) return
 
-            // We have all the data we need to update the cache
-            updateCachedData((draft) => {
-              const list = draft.pages.flatMap((page) => page.lists).find((l) => l.id === id)
-              if (!list) return
-              const newList = {
-                ...list,
-                label: summary.label,
-                entityType: summary.entity_type,
-                entityListType: summary.entity_list_type,
-                count: summary.count,
-              }
+                const getListFromSummary = (list?: EntityList): EntityList => {
+                  return {
+                    // defaults
+                    projectName: projectName,
+                    tags: [],
+                    data: {},
+                    allAttrib: '',
+                    attrib: {},
+                    createdAt: new Date().toISOString(),
+                    updatedAt: '',
+                    active: true,
+                    access: '',
+                    accessLevel: 30, // default admin
+                    // existing data
+                    ...(list || {}),
+                    // new data
+                    id: summary.id as string,
+                    label: summary.label,
+                    entityType: summary.entity_type,
+                    entityListType: summary.entity_list_type,
+                    count: summary.count,
+                  }
+                }
 
-              Object.assign(list, newList)
-            })
-            // NOTE: We have to invalidate here as we don't know if other fields are updated not included in the updateCachedData
-            // invalidates lists list cache
-            dispatch(gqlApi.util.invalidateTags([{ type: 'entityList', id: `LIST` }]))
-          }
+                if (topic === 'entity_list.changed') {
+                  // update the data of existing list in cache
+                  const list = draft.pages
+                    .flatMap((page: any) => page.lists)
+                    .find((l: any) => l.id === id)
+                  if (!list) return
+                  const newList = getListFromSummary(list)
 
-          // sub to websocket topic
-          token = PubSub.subscribe('entity_list.changed', handlePubSub)
+                  Object.assign(list, newList)
+                } else if (topic === 'entity_list.created') {
+                  // Add new list to the cache using basic summary
+                  const newList = getListFromSummary()
+                  // Insert the new list at the beginning of the first page
+                  if (draft.pages.length !== 0) {
+                    draft.pages[0].lists.unshift(newList)
+                  }
+                } else if (topic === 'entity_list.deleted') {
+                  // delete the list from the cache
+                  draft.pages.forEach((page: any) => {
+                    page.lists = page.lists.filter((l: any) => l.id !== id)
+                  })
+                }
+              })
+            },
+            10000, // 10 seconds debounce/batch window
+          )
+
+          topics.forEach((topic) => PubSub.subscribe(topic, handlePubSub))
         } catch {
           // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
           // in which case `cacheDataLoaded` will throw
@@ -208,7 +281,8 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         // cacheEntryRemoved will resolve when the cache subscription is no longer active
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
-        PubSub.unsubscribe(token)
+        topics.forEach((t) => PubSub.unsubscribe(t))
+        if (handlePubSub && typeof handlePubSub.clear === 'function') handlePubSub.clear()
       },
     }),
     getListItemsInfinite: build.infiniteQuery<
@@ -297,8 +371,12 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             },
           ]),
       ],
-      async onCacheEntryAdded(_args, { cacheDataLoaded, cacheEntryRemoved, dispatch }) {
+      async onCacheEntryAdded(
+        _args,
+        { cacheDataLoaded, cacheEntryRemoved, dispatch, updateCachedData },
+      ) {
         let token, token2
+        let unsubscribeThumbnails: (() => void) | undefined
         try {
           // wait for the initial query to resolve before proceeding
           const cache = await cacheDataLoaded
@@ -306,6 +384,28 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           const items = pages.flatMap((page) => page.items)
           // get entityType of first item
           const entityType = items[0]?.entityType
+
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              updateCachedData((draft: any) => {
+                if (!draft?.pages) return
+                messages.forEach((message) => {
+                  draft.pages.forEach((page: any) => {
+                    const pageItems = page.items || []
+                    pageItems.forEach((item: any) => {
+                      if (
+                        item.entityId === message.summary.entityId &&
+                        item.entityType === message.summary.entityType &&
+                        message.summary.thumbnailHash
+                      ) {
+                        item.thumbnailHash = message.summary.thumbnailHash
+                      }
+                    })
+                  })
+                })
+              })
+            },
+          )
 
           const listTopic = `entity_list.changed`
           const entityTypeTopic = `entity.${entityType}`
@@ -343,6 +443,9 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
         PubSub.unsubscribe(token2)
+        if (unsubscribeThumbnails) {
+          unsubscribeThumbnails()
+        }
       },
     }),
     getListsItemsForReviewSession: build.infiniteQuery<

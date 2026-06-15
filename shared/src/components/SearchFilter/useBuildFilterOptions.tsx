@@ -12,7 +12,7 @@ import type {
   Tag,
   TaskType,
   AttributeModel,
-  AttributeEnumItem,
+  EnumItem,
   AttributeData,
   EntityGroup,
 } from '@shared/api'
@@ -996,7 +996,7 @@ const getAttributeFieldOptionRoot = (
 
 const getAttributeOptions = (
   values?: AttributeDataValue[],
-  enums?: AttributeEnumItem[],
+  enums?: EnumItem[],
   type?: AttributeData['type'],
 ): Option[] => {
   const enumOptions: Option[] = []

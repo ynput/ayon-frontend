@@ -9,9 +9,9 @@ import {
   parseCellId,
   RowId,
 } from '../utils/cellUtils'
-import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
-import { GridMap, ROW_SELECTION_COLUMN_ID, SelectionCellsContext } from './SelectionCellsContext'
+import { GridMap, SelectionCellsContext } from './SelectionCellsContext'
 import { useCheckSelectedCellsVisible } from '../hooks'
+import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
 
 export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [selectedCells, setSelectedCells] = useState<Set<CellId>>(new Set())
@@ -215,7 +215,11 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
       } else {
         if (isAdditiveSelectionRef.current) return
         // For normal cells - ALWAYS does range selection
-        const newSelection = selectCellRange(anchorCell, currentPosition, isAdditiveSelectionRef.current,)
+        const newSelection = selectCellRange(
+          anchorCell,
+          currentPosition,
+          isAdditiveSelectionRef.current,
+        )
         updateSelection(newSelection, currentPosition)
       }
     },

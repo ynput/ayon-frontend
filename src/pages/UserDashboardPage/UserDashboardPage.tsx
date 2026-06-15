@@ -29,7 +29,7 @@ import LoadingPage from '@pages/LoadingPage'
 import { WithViews } from '@/hoc/WithViews'
 import { ViewType } from '@shared/containers'
 import { ProjectsPage } from '@pages/ProjectsPage'
-import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
+import { useGetProductionAddon } from '@shared/hooks'
 import BookingsSplashscreen from '../BookingsPage/BookingsSplashscreen'
 
 interface DashboardAddon {
@@ -84,10 +84,8 @@ const UserDashboardPage: React.FC = () => {
     skip: false,
   })
 
-  const { addonVersions: matchedDashboardAddons } = useGetBundleAddonVersions({
-    addons: ['planner'],
-  })
-  const hasPlanner = matchedDashboardAddons.has('planner')
+  const { getProductionAddon } = useGetProductionAddon()
+  const hasPlanner = !!getProductionAddon('planner')
 
   const navigate = useNavigate()
   const [showNewProject, setShowNewProject] = useState<boolean>(false)

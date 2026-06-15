@@ -3,9 +3,7 @@
 
 import { Spacer } from '@ynput/ayon-react-components'
 import * as Styled from './TabHeaderAndFilters.styled'
-import { QueryFilter, QueryCondition } from '@shared/api'
-import { AttributeEnumItem } from '../../../../containers/ProjectTreeTable/types'
-import { EnumWidget } from '../../../../containers/ProjectTreeTable/widgets/EnumWidget'
+import { QueryFilter, QueryCondition, EnumItem } from '@shared/api'
 import { useState, useRef, useEffect } from 'react'
 import clsx from 'clsx'
 
@@ -14,7 +12,7 @@ export interface FilterItem<T = string> {
   tooltip: string
   icon: string
   type?: 'boolean' | 'enum' | 'search'
-  options?: AttributeEnumItem[]
+  options?: EnumItem[]
   placeholder?: string
   operator?: QueryCondition['operator']
 }

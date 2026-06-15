@@ -1,5 +1,5 @@
 query GetKanbanProjectUsers($projects: [String!]) {
-  users(last: 2000, projects: $projects) {
+  users(last: 2000, projects: $projects, isSupport: false) {
     edges {
       node {
         name

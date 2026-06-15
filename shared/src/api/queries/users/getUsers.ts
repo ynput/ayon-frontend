@@ -1,11 +1,11 @@
 import { GetCurrentUserApiResponse, gqlApi, usersApi } from '@shared/api/generated'
-import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { parseAllAttribs } from '@shared/api'
-import {
+import type {
   GetActiveUsersCountQuery,
   GetAllAssigneesQuery,
   GetAllProjectUsersAsAssigneeQuery,
-} from '@shared/api'
+} from '@shared/api/generated'
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import { parseAllAttribs } from '../overview'
 
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {
@@ -31,7 +31,7 @@ const USER_BY_NAME_QUERY = `
 `
 const USERS_QUERY = `
   query UserList {
-    users(last: 2000) {
+    users(last: 2000, isSupport: false) {
       edges {
         node {
           name
@@ -60,7 +60,7 @@ const USERS_QUERY = `
 
 const ASSIGNEES_BY_NAME_QUERY = `
 query Assignees($names: [String!]!){
-  users(names: $names) {
+  users(names: $names, isSupport: false) {
   edges {
     node {
       name
@@ -73,7 +73,7 @@ query Assignees($names: [String!]!){
 }`
 const ASSIGNEES_QUERY = `
 query Assignees($projectName: String) {
-  users(last: 2000 projectName: $projectName) {
+  users(last: 2000 projectName: $projectName, isSupport: false) {
   edges {
     node {
       name

@@ -1,18 +1,14 @@
-import {
-  foldersQueries,
-  detailsPanelQueries,
-  operationsApi,
-  entityListsQueriesGql,
-  api,
-} from '@shared/api'
-import type { OperationsResponseModel, OperationModel, OperationsApiArg } from '@shared/api'
+import { foldersQueries } from '../folders'
+import { detailsPanelQueries } from '../entities/getEntityPanel'
+import { operationsApi } from '@shared/api/generated'
+import { entityListsQueriesGql } from '../entityLists/updateLists'
+import type {
+  OperationsResponseModel,
+  OperationModel,
+  OperationsApiArg,
+} from '@shared/api/generated'
 import getOverviewApi from './getOverview'
-import {
-  DetailsPanelEntityData,
-  DetailsPanelEntityType,
-  patchDetailsPanel,
-  patchDetailsPanelEntity,
-} from '@shared/api/queries/entities'
+import { patchDetailsPanelEntity } from '@shared/api/queries/entities'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
@@ -273,6 +269,35 @@ const invalidateOverviewTasks = (
 ) => {
   if (!tasks.length) return
   dispatch(getOverviewApi.util.invalidateTags(getOverviewTaskTags(tasks)))
+}
+
+// Debounced, per-project invalidation of the footer stats caches after entity ops.
+type StatsTagType =
+  | 'folderColumnStats'
+  | 'taskColumnStats'
+  | 'productColumnStats'
+  | 'versionColumnStats'
+  | 'entityListItemsColumnStats'
+const statsRefetchTimers = new Map<string, ReturnType<typeof setTimeout>>()
+const scheduleStatsRefetch = (
+  dispatch: ThunkDispatch<any, any, UnknownAction>,
+  projectName: string,
+  tagTypes: StatsTagType[],
+) => {
+  const key = `${projectName}:${tagTypes.join()}`
+  const existing = statsRefetchTimers.get(key)
+  if (existing) clearTimeout(existing)
+  statsRefetchTimers.set(
+    key,
+    setTimeout(() => {
+      statsRefetchTimers.delete(key)
+      dispatch(
+        getOverviewApi.util.invalidateTags(
+          tagTypes.map((type) => ({ type, id: projectName })),
+        ),
+      )
+    }, 500),
+  )
 }
 
 export const patchOverviewFolders = (
@@ -575,6 +600,25 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
 
           const taskOperations = operationsByType.task || []
           const folderOperations = operationsByType.folder || []
+          const versionOperations = operationsByType.version || []
+          const productOperations = operationsByType.product || []
+
+          if (projectName) {
+            if (taskOperations.length || folderOperations.length) {
+              scheduleStatsRefetch(dispatch, projectName, [
+                'folderColumnStats',
+                'taskColumnStats',
+                'entityListItemsColumnStats',
+              ])
+            }
+            if (versionOperations.length || productOperations.length) {
+              scheduleStatsRefetch(dispatch, projectName, [
+                'productColumnStats',
+                'versionColumnStats',
+                'entityListItemsColumnStats',
+              ])
+            }
+          }
 
           // Early exit if no operations
           if (taskOperations.length === 0 && folderOperations.length === 0) {
@@ -662,7 +706,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           }
           if ((op.data as any)?.attrib) hasAttribOp = true
         })
-        
+
         if (hasAttribOp) {
           tasksFolderTags.push({ type: 'tasksFolder', id: projectName })
         }

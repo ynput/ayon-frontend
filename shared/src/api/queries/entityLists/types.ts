@@ -1,4 +1,5 @@
 import {
+  EntityComment,
   GetListItemsQuery,
   GetListsItemsForReviewSessionQuery,
   GetListsQuery,
@@ -55,12 +56,14 @@ type ItemNodeData = {
   ownAttrib: string[]
   parents?: string[]
   subtasks?: string[]
+  latestComments?: EntityComment[]
   folder?: {
     folderType: string
   }
   product?: {
     folderId?: string
     productType: string
+    productBaseType?: string
     folder: {
       folderType: string
     }
@@ -68,6 +71,8 @@ type ItemNodeData = {
   task?: {
     folderId?: string
     taskType: string
+    name?: string
+    label?: string
   }
 }
 
@@ -93,12 +98,12 @@ export type ListItemsPageParam = {
 export type ListItemMessage = {
   project: string
   summary: {
-    count: number
-    entity_list_type: string
-    entity_type: string
+    count: EntityList['count']
+    entity_list_type: EntityList['entityListType']
+    entity_type: EntityList['entityType']
     id?: string
     entityId?: string
-    label: string
+    label: EntityList['label']
   }
 }
 

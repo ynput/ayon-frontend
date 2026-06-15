@@ -9,7 +9,7 @@ import {
   GetDetailsPanelTaskQuery,
   GetDetailsPanelVersionQuery,
 } from '@shared/api/generated'
-import { parseAllAttribs } from '@shared/api'
+import { parseAllAttribs } from '../overview'
 
 type DetailsPanelTask = NonNullable<GetDetailsPanelTaskQuery['project']['task']>
 type DetailsPanelRepresentation = NonNullable<
@@ -38,6 +38,7 @@ export type DetailsPanelEntityData = {
   status: string
   updatedAt: string
   createdAt: string
+  thumbnailHash: string
   attrib: Record<string, string | number>
   hasReviewables?: boolean
   thumbnailId?: string | null | undefined
@@ -75,6 +76,7 @@ export const transformDetailsPanelQueriesData = ({
         status: task.status,
         updatedAt: task.updatedAt,
         createdAt: task.createdAt,
+        thumbnailHash: task.thumbnailHash,
         attrib: parseAllAttribs(task.allAttrib),
         hasReviewables: task.hasReviewables,
         thumbnailId: task.thumbnailId,
@@ -105,6 +107,7 @@ export const transformDetailsPanelQueriesData = ({
         status: version.status,
         updatedAt: version.updatedAt,
         createdAt: version.createdAt,
+        thumbnailHash: version.thumbnailHash,
         attrib: parseAllAttribs(version.allAttrib),
         hasReviewables: version.hasReviewables,
         thumbnailId: version.thumbnailId,
@@ -142,6 +145,7 @@ export const transformDetailsPanelQueriesData = ({
         status: folder.status,
         updatedAt: folder.updatedAt,
         createdAt: folder.createdAt,
+        thumbnailHash: folder.thumbnailHash,
         attrib: parseAllAttribs(folder.allAttrib),
         hasReviewables: folder.hasReviewables,
         thumbnailId: folder.thumbnailId,
@@ -170,6 +174,7 @@ export const transformDetailsPanelQueriesData = ({
         status: representation.status,
         updatedAt: representation.updatedAt,
         createdAt: representation.createdAt,
+        thumbnailHash: 'not_supported',
         attrib: parseAllAttribs(representation.allAttrib),
         hasReviewables: undefined,
         thumbnailId: undefined,

@@ -239,14 +239,17 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     {
       id: 'new-list',
       label: isReview
-        ? isStoryboards ? 'Create storyboard' : 'Create review session'
+        ? isStoryboards
+          ? 'Create storyboard'
+          : 'Create review session'
         : 'Create list',
       icon: 'add',
       shortcut: 'N',
       onClick: async () => {
         if (isStoryboards) {
-          const label = prompt("What would you like to call the storyboard?")
-            || `Storyboard - ${new Date().toLocaleString()}`
+          const label =
+            prompt('What would you like to call the storyboard?') ||
+            `Storyboard - ${new Date().toLocaleString()}`
 
           const { data, error } = await createList({
             projectName,
@@ -254,7 +257,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
           })
 
           if (error) {
-            return toast.error("Error creating storyboard")
+            return toast.error('Error creating storyboard')
           }
 
           setSearchParams({
@@ -264,13 +267,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
 
           return
         }
-        // If a single folder is selected, create list inside that folder
-        if (selectedFolders.length === 1) {
-          openNewList({ entityListFolderId: selectedFolders[0] })
-        } else {
-          // No selection or multiple folders, create at root level
-          openNewList()
-        }
+        openNewList()
       },
       isPinned: true,
       buttonProps: {

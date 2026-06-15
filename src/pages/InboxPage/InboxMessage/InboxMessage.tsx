@@ -14,6 +14,7 @@ import Typography from '@/theme/typography.module.css'
 import { getEntityTypeIcon } from '@shared/util'
 import type { InboxMessage as InboxMessageType } from '@/services/inbox/inboxTransform'
 import type { InboxActivityType, InboxStatusChange, ProjectsInfo } from '../types'
+import { VersionReviewFeedback } from '@shared/containers/Feed/components/CommentInput/types'
 
 interface MessageForBody {
   isRead?: boolean
@@ -47,9 +48,22 @@ const getMessageBody = (messages: MessageForBody[] = []): string => {
     .join(' > ')
 }
 
-const activityTypeIcons: Record<string, string> = {
+type ActivityTypeIconResolver = (message: InboxMessageType) => string
+
+const activityTypeIcons: Record<string, string | ActivityTypeIconResolver> = {
   comment: 'chat',
   'version.publish': 'layers',
+  'version.review': (message: InboxMessageType) => {
+    const data = message.activityData as unknown as { feedback: VersionReviewFeedback }
+    switch (data.feedback) {
+      case VersionReviewFeedback.APPROVE:
+        return 'task_alt'
+      case VersionReviewFeedback.REQUEST_CHANGES:
+        return 'refresh'
+      default:
+        return 'forum'
+    }
+  },
   'assignee.add': 'person_add',
   'assignee.remove': 'person_remove',
   'assignee.reassign': 'swap_horiz',
@@ -58,7 +72,8 @@ const activityTypeIcons: Record<string, string> = {
 
 const activityTypeIconsMultiple: Record<string, string> = {
   comment: 'forum',
-  'version.publish': activityTypeIcons['version.publish'],
+  'version.publish': 'layers',
+  'version.review': 'forum',
   'assignee.add': 'group_add',
   'assignee.remove': 'group_remove',
   'assignee.reassign': 'swap_horiz',
@@ -128,12 +143,38 @@ const InboxMessage = ({
   customBody, // custom body for special message types (e.g. reassignment)
   ...props
 }: InboxMessageProps) => {
-  const typeIcon =
-    (isMultiple && type
-      ? activityTypeIconsMultiple[type]
-      : type
-      ? activityTypeIcons[type]
-      : undefined) || 'notifications'
+  const typeIcon = useMemo(() => {
+    if (!type || !messages || messages.length === 0) {
+      return 'notifications'
+    }
+
+    if (isMultiple) {
+      return activityTypeIconsMultiple[type]
+    }
+
+    const icon = activityTypeIcons[type]
+    if (typeof icon === 'function') {
+      return icon(messages[0])
+    }
+
+    return icon
+  }, [type])
+
+  const iconColor = useMemo(() => {
+    if (type !== 'version.review' || !messages || messages.length === 0) {
+      return 'inherit'
+    }
+
+    const data = messages[0].activityData as unknown as { feedback: VersionReviewFeedback }
+    switch (data.feedback) {
+      case VersionReviewFeedback.APPROVE:
+        return 'var(--md-sys-color-tertiary)'
+      case VersionReviewFeedback.REQUEST_CHANGES:
+        return 'var(--md-sys-color-error)'
+      default:
+        return 'inherit'
+    }
+  }, [messages])
 
   const handleOnClick = (e: MouseEvent<HTMLLIElement>): void => {
     // call the parent onClick if it exists
@@ -200,7 +241,7 @@ const InboxMessage = ({
         <Styled.Unread className={clsx(Typography.bodySmall, { hide: (unReadCount ?? 0) < 2 })}>
           {unReadCount}
         </Styled.Unread>
-        {!isStatusChange && <Icon icon={typeIcon} className="type" />}
+        {!isStatusChange && <Icon icon={typeIcon} className="type" style={{ color: iconColor }} />}
         {isStatusChange ? (
           <InboxMessageStatus statuses={statusChanges} />
         ) : (

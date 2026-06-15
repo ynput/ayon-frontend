@@ -185,6 +185,7 @@ export const RowCells = <TData extends RowData>({
             style={{
               width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
               paddingRight: cellIndex === visibleCells.length - 1 ? 'var(--padding-m)' : undefined,
+              flexGrow: cellIndex === visibleCells.length - 1 ? 1 : undefined,
             }}
             onDoubleClick={
               canStartTypedEdit

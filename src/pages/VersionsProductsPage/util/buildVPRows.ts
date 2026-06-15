@@ -22,6 +22,7 @@ export const buildProductRow = (
   folderId: product.folderId,
   parents: product.parents,
   folder: product.folder.label || product.folder.name,
+  folderType: product.folder.folderType,
   product: product.name,
   attrib: { ...product.attrib },
   ownAttrib: Object.keys(product.attrib || {}),
@@ -31,10 +32,12 @@ export const buildProductRow = (
   versionsCount: product.versions.length,
   versionName: product.featuredVersion?.name || '',
   author: product.featuredVersion?.author || '',
+  latestComments: product.featuredVersion?.latestComments || [],
   thumbnail: {
     entityId: product.featuredVersion?.id || product.id,
     entityType: product.featuredVersion ? 'version' : 'product',
     updatedAt: product.featuredVersion?.updatedAt || product.updatedAt,
+    thumbnailHash: product.featuredVersion?.thumbnailHash,
   },
   subRows,
   links: {}, // TODO add links
@@ -49,12 +52,14 @@ export const buildVersionRow = (version: VersionNode): TableRow => ({
   entityType: 'version',
   createdAt: version.createdAt,
   updatedAt: version.updatedAt,
+  thumbnailHash: version.thumbnailHash,
   version: version.version,
   versionName: version.name,
   status: version.status,
   tags: version.tags,
   parents: version.parents,
   folder: version.product.folder.label || version.product.folder.name,
+  folderType: version.product.folder.folderType,
   product: version.product.name,
   attrib: { ...version.product.attrib, ...version.attrib },
   ownAttrib: Object.keys(version.attrib || {}),
@@ -64,6 +69,7 @@ export const buildVersionRow = (version: VersionNode): TableRow => ({
   taskLabel: version.task?.label || version.task?.name,
   hasReviewables: version.hasReviewables,
   author: version.author || '',
+  latestComments: version.latestComments || [],
   links: {}, // TODO add links
 })
 

@@ -8,22 +8,25 @@ import {
   ColumnSizingState,
   SortingState,
 } from '@tanstack/react-table'
-import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
-import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
 import { ColumnsConfig, ColumnSettingsContext, TableGroupBy } from './ColumnSettingsContext'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
+import { SummaryCalc, SummaryFormat, RowScope } from '../types/summaryTypes'
 import { isEqual } from 'lodash'
+import { checkColumnVisibility } from '../utils'
+import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
   config?: Record<string, any>
   onChange: (config: ColumnsConfig, allColumnIds?: string[]) => void
+  defaultColumnVisibility?: VisibilityState
 }
 
 export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   children,
   config,
   onChange,
+  defaultColumnVisibility,
 }) => {
   const allColumnsRef = React.useRef<string[]>([])
   const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
@@ -39,7 +42,31 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
   }
-  const onChangeWithColumns = (next: ColumnsConfig) => onChange(next, allColumnsRef.current)
+  const onChangeWithColumns = (next: ColumnsConfig) => {
+    const allKnownIds = allColumnsRef.current
+    // Expand sparse columnVisibility to explicit values for all known columns so that
+    // "undefined" is never ambiguous when columns are saved and reloaded.
+    // Special columns (drag-handle, row-selection) are always injected by the provider,
+    // so they must never be persisted — strip them from visibility and order entirely.
+    const specialIds = new Set([DRAG_HANDLE_COLUMN_ID, ROW_SELECTION_COLUMN_ID])
+    if (allKnownIds.length > 0) {
+      const resolvedVisibility = { ...next.columnVisibility }
+      allKnownIds.forEach((id) => {
+        if (!specialIds.has(id) && resolvedVisibility[id] === undefined) {
+          resolvedVisibility[id] = checkColumnVisibility({}, id, defaultColumnVisibility)
+        }
+      })
+      // Remove special columns from visibility and order before persisting
+      specialIds.forEach((id) => delete resolvedVisibility[id])
+      const resolvedOrder = (next.columnOrder ?? []).filter((id) => !specialIds.has(id))
+      onChange(
+        { ...next, columnVisibility: resolvedVisibility, columnOrder: resolvedOrder },
+        allKnownIds,
+      )
+    } else {
+      onChange(next, allKnownIds)
+    }
+  }
   const columnsConfig = config as ColumnsConfig
 
   const {
@@ -51,6 +78,9 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     groupBy,
     groupByConfig = {},
     rowHeight: configRowHeight = 34,
+    columnSummaries: columnSummariesInit = {},
+    columnSummaryScopes: columnSummaryScopesInit = {},
+    columnSummaryFormats: columnSummaryFormatsInit = {},
   } = columnsConfig || {}
 
   // Clear internal row height when config changes (e.g., when switching views)
@@ -180,8 +210,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     // ensure that any columns that are now hidden are removed from the pinning
     const newPinning = { ...columnPinning }
     const pinnedColumns = newPinning.left || []
-    const hiddenColumns = Object.keys(visibility).filter((col) => visibility[col] === false)
-    const newPinnedColumns = pinnedColumns.filter((col) => !hiddenColumns.includes(col))
+
+    const newPinnedColumns = pinnedColumns.filter((col) =>
+      checkColumnVisibility(visibility, col, defaultColumnVisibility),
+    )
 
     return {
       ...newPinning,
@@ -223,7 +255,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const updateColumnOrder = (order: ColumnOrderState) => {
     // Filter out special columns that are added dynamically
     const filteredOrder = order.filter(
-      (id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID
+      (id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID,
     )
 
     const newPinning = updatePinningOrderOnOrderChange(filteredOrder)
@@ -264,6 +296,27 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  const updateColumnSummary = (columnId: string, calc: SummaryCalc) => {
+    onChangeWithColumns({
+      ...columnsConfig,
+      columnSummaries: { ...columnSummariesInit, [columnId]: calc },
+    })
+  }
+
+  const updateColumnSummaryScope = (columnId: string, scope: RowScope) => {
+    onChangeWithColumns({
+      ...columnsConfig,
+      columnSummaryScopes: { ...columnSummaryScopesInit, [columnId]: scope },
+    })
+  }
+
+  const updateColumnSummaryFormat = (columnId: string, format: SummaryFormat) => {
+    onChangeWithColumns({
+      ...columnsConfig,
+      columnSummaryFormats: { ...columnSummaryFormatsInit, [columnId]: format },
+    })
+  }
+
   const updateGroupBy = (groupBy: TableGroupBy | undefined) => {
     onChangeWithColumns({
       ...columnsConfig,
@@ -282,68 +335,90 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   }
 
   // Update row height for immediate UI feedback (no API call)
-  const updateRowHeight = React.useCallback((newRowHeight: number) => {
-    // Lock the aspect ratio on first call if not already locked
-    if (lockedAspectRatioRef.current === null) {
-      const currentThumbnailWidth = columnsSizingExternal.thumbnail || 63
-      const currentRowHeight = configRowHeight || 34
-      lockedAspectRatioRef.current = currentThumbnailWidth / currentRowHeight
-    }
-    const newThumbnailWidth = lockedAspectRatioRef.current * newRowHeight
+  const updateRowHeight = React.useCallback(
+    (newRowHeight: number) => {
+      // Lock the aspect ratio on first call if not already locked
+      if (lockedAspectRatioRef.current === null) {
+        const currentThumbnailWidth = columnsSizingExternal.thumbnail || 63
+        const currentRowHeight = configRowHeight || 34
+        lockedAspectRatioRef.current = currentThumbnailWidth / currentRowHeight
+      }
+      const newThumbnailWidth = lockedAspectRatioRef.current * newRowHeight
 
-    setInternalRowHeight(newRowHeight)
-    setInternalColumnSizing({
-      ...(internalColumnSizing || columnsSizingExternal),
-      thumbnail: newThumbnailWidth
-    })
-  }, [columnsSizingExternal, configRowHeight])
+      setInternalRowHeight(newRowHeight)
+      setInternalColumnSizing({
+        ...(internalColumnSizing || columnsSizingExternal),
+        thumbnail: newThumbnailWidth,
+      })
+    },
+    [columnsSizingExternal, configRowHeight],
+  )
 
   // Update row height and persist to API
-  const updateRowHeightWithPersistence = React.useCallback((newRowHeight: number) => {
-    const currentThumbnailWidth = columnsSizingExternal.thumbnail || 63
-    const currentRowHeight = configRowHeight || 34
-    const currentRatio = currentThumbnailWidth / currentRowHeight
+  const updateRowHeightWithPersistence = React.useCallback(
+    (newRowHeight: number) => {
+      const currentThumbnailWidth = columnsSizingExternal.thumbnail || 63
+      const currentRowHeight = configRowHeight || 34
+      const currentRatio = currentThumbnailWidth / currentRowHeight
 
-    const newThumbnailWidth = currentRatio * newRowHeight
+      const newThumbnailWidth = currentRatio * newRowHeight
 
-    // Update UI immediately
-    setInternalRowHeight(newRowHeight)
-    setInternalColumnSizing({
-      ...(internalColumnSizing || columnsSizingExternal),
-      thumbnail: newThumbnailWidth
-    })
-
-    // Clear any existing timeout to debounce API calls
-    if (rowHeightTimeoutRef.current) {
-      clearTimeout(rowHeightTimeoutRef.current)
-    }
-
-    // Debounce API call to avoid excessive requests
-    rowHeightTimeoutRef.current = setTimeout(() => {
-      // Persist to API
-      onChangeWithColumns({
-        ...columnsConfig,
-        rowHeight: newRowHeight,
-        columnSizing: {
-          ...columnsSizingExternal,
-          thumbnail: newThumbnailWidth
-        }
+      // Update UI immediately
+      setInternalRowHeight(newRowHeight)
+      setInternalColumnSizing({
+        ...(internalColumnSizing || columnsSizingExternal),
+        thumbnail: newThumbnailWidth,
       })
 
-      // Clean up internal state after API call completes
-      setInternalRowHeight(null)
-      setInternalColumnSizing(null)
-      lockedAspectRatioRef.current = null
-    }, 300)
-  }, [columnsConfig, onChangeWithColumns, columnsSizingExternal, configRowHeight, internalColumnSizing])
+      // Clear any existing timeout to debounce API calls
+      if (rowHeightTimeoutRef.current) {
+        clearTimeout(rowHeightTimeoutRef.current)
+      }
+
+      // Debounce API call to avoid excessive requests
+      rowHeightTimeoutRef.current = setTimeout(() => {
+        // Persist to API
+        onChangeWithColumns({
+          ...columnsConfig,
+          rowHeight: newRowHeight,
+          columnSizing: {
+            ...columnsSizingExternal,
+            thumbnail: newThumbnailWidth,
+          },
+        })
+
+        // Clean up internal state after API call completes
+        setInternalRowHeight(null)
+        setInternalColumnSizing(null)
+        lockedAspectRatioRef.current = null
+      }, 300)
+    },
+    [
+      columnsConfig,
+      onChangeWithColumns,
+      columnsSizingExternal,
+      configRowHeight,
+      internalColumnSizing,
+    ],
+  )
 
   // Remove redundant local updater functions in favor of unified updaters with all columns
 
   // ON-CHANGE HANDLERS (TanStack-compatible)
   const columnVisibilityOnChange: OnChangeFn<VisibilityState> = (updater) => {
-    const newVisibility = functionalUpdate(updater, columnVisibility)
-    if (isEqual(newVisibility, columnVisibility)) return
-    setColumnVisibility(newVisibility)
+    const nextFull = typeof updater === 'function' ? updater(columnVisibility) : updater
+
+    // Calculate sparse version: only keys that are different from defaults
+    const sparseNext: VisibilityState = {}
+    Object.keys(nextFull).forEach((key) => {
+      const defaultValue = checkColumnVisibility({}, key, defaultColumnVisibility)
+      if (nextFull[key] !== defaultValue) {
+        sparseNext[key] = nextFull[key]
+      }
+    })
+
+    if (isEqual(sparseNext, columnVisibility)) return
+    setColumnVisibility(sparseNext)
   }
 
   const columnPinningOnChange: OnChangeFn<ColumnPinningState> = (updater) => {
@@ -377,6 +452,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         setAllColumns,
         // column visibility
         columnVisibility,
+        defaultColumnVisibility,
         setColumnVisibility,
         updateColumnVisibility,
         columnVisibilityOnChange,
@@ -394,6 +470,15 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         columnSizing,
         setColumnSizing,
         columnSizingOnChange,
+        // column summary calc
+        columnSummaries: columnSummariesInit,
+        updateColumnSummary,
+        // column summary row scope
+        columnSummaryScopes: columnSummaryScopesInit,
+        updateColumnSummaryScope,
+        // column summary display format
+        columnSummaryFormats: columnSummaryFormatsInit,
+        updateColumnSummaryFormat,
         // sorting
         sorting,
         updateSorting,

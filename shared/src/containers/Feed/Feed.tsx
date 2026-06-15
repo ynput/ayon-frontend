@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import ActivityItem from './components/ActivityItem'
 import CommentInput from './components/CommentInput/CommentInput'
+import { VersionReviewFeedback } from './components/CommentInput/types'
 import * as Styled from './Feed.styled'
 import useCommentMutations, { Activity } from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
@@ -19,7 +20,10 @@ import { useDetailsPanelContext } from '@shared/context'
 import { DetailsPanelEntityType, useGetMyProjectPermissionsQuery } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import { SavedAnnotationMetadata } from '.'
-import FeedSearchFilter from './components/FeedSearchFilter'
+import TabHeaderAndFilters, {
+  FilterItem,
+} from '../DetailsPanel/components/TabHeaderAndFilters/TabHeaderAndFilters'
+import { useLastVersionReview } from './hooks/useLastVersionReview'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -30,6 +34,7 @@ export type FeedProps = {
   statuses: Status[]
   entityListId?: string | undefined
   isSlideOut?: boolean
+  versionReview?: boolean
 }
 
 export const Feed = ({
@@ -38,6 +43,7 @@ export const Feed = ({
   statuses = [],
   entityListId,
   isSlideOut,
+  versionReview = false,
 }: FeedProps) => {
   const {
     projectName,
@@ -57,6 +63,7 @@ export const Feed = ({
     checklistCount,
     feedFilter,
     setFeedFilter,
+    isGuest,
     searchText,
     setSearchText,
   } = useFeedContext()
@@ -174,6 +181,7 @@ export const Feed = ({
     submitComment: submitCommentMutation,
     updateComment,
     deleteComment,
+    submitReview: submitReviewMutation,
     isSaving,
   } = useCommentMutations({
     projectName,
@@ -193,6 +201,13 @@ export const Feed = ({
       }
     },
     [submitCommentMutation, feedRef],
+  )
+
+  const submitReview = useCallback(
+    async (feedback: VersionReviewFeedback) => {
+      await submitReviewMutation(feedback)
+    },
+    [submitReviewMutation],
   )
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
@@ -280,6 +295,15 @@ export const Feed = ({
 
   const loadingPlaceholders = useMemo(() => getLoadingPlaceholders(10), [])
 
+  const lastVersionReview = useLastVersionReview({
+    projectName,
+    enabled: versionReview,
+    entityIds: entities.map((e) => e.id),
+    activities: transformedActivitiesData,
+    loadingActivities: isLoadingNew,
+    userName,
+  })
+
   let warningMessage
 
   return (
@@ -330,6 +354,7 @@ export const Feed = ({
                   readOnly={readOnly}
                   statuses={statuses}
                   isSlideOut={isSlideOut}
+                  isGuest={isGuest}
                 />
               ))}
           {/* message when no versions published */}
@@ -337,12 +362,6 @@ export const Feed = ({
             isVersionsFilter &&
             !hasCommentLikeFilter &&
             !isLoadingNew && <EmptyPlaceholder message="No versions published yet" icon="layers" />}
-          {filteredActivitiesData.length === 0 &&
-            !isVersionsFilter &&
-            ((feedFilter.conditions?.length ?? 0) > 0 || !!searchText) &&
-            !isLoadingNew && (
-              <EmptyPlaceholder message="No activities match your filters" icon="search_off" />
-            )}
           {hasNextPage && loadNextPage && (
             <InView
               root={feedRef.current}
@@ -364,6 +383,9 @@ export const Feed = ({
             onOpen={() => setEditingId(FEED_NEW_COMMENT)}
             disabled={disabled}
             isLoading={isLoadingNew || !entities.length || isSaving}
+            versionReview={versionReview}
+            lastOwnVersionReview={lastVersionReview}
+            onReview={submitReview}
           />
         )}
       </Styled.FeedContainer>

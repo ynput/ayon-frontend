@@ -9,14 +9,42 @@ export type UIAttributeType =
   | 'checkbox'
   | 'datetime'
 
+export interface UITypeWidget {
+  isDefault?: boolean
+  value: string | undefined
+  label: string
+  icon?: string
+  tooltip?: string
+}
+
 export interface UITypeOption {
   value: UIAttributeType
   label: string
   icon: string
+  widgets?: UITypeWidget[]
 }
 
+export const WIDGET_UNDEFINED_KEY = '__undefined___'
+
 export const UI_TYPE_OPTIONS: UITypeOption[] = [
-  { value: 'text', label: 'Text', icon: getAttributeIcon('text', 'string') },
+  {
+    value: 'text',
+    label: 'Text',
+    icon: getAttributeIcon('text', 'string'),
+    widgets: [
+      {
+        value: WIDGET_UNDEFINED_KEY,
+        label: 'Short text',
+        isDefault: true,
+        tooltip: 'A short text input',
+      },
+      {
+        value: 'markdown',
+        label: 'Long text',
+        tooltip: 'A multi-line text input with markdown support',
+      },
+    ],
+  },
   { value: 'select', label: 'Select', icon: getAttributeIcon('select', 'string', true) },
   {
     value: 'multi_select',

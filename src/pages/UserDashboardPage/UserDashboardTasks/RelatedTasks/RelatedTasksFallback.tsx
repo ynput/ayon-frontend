@@ -1,10 +1,10 @@
-import { AttributeEnumItem, ProjectModel } from '@shared/api'
+import { EnumItem, ProjectModel } from '@shared/api'
 import { FC } from 'react'
 
 export interface RelatedTasksFallbackProps {
   isPanelOpen: boolean
   projectsInfo?: Record<string, ProjectModel>
-  priorities?: AttributeEnumItem[]
+  priorities?: EnumItem[]
   taskData: { id: string; taskType: string; projectName: string }
   selectedTasks?: string[]
   onSelectTasks: (tasks: { id: string; taskType: string }[], projectName: string) => void

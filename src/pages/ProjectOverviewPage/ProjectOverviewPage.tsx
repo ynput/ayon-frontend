@@ -10,7 +10,7 @@ import { Slicer, useSlicerContext } from '@shared/containers/Slicer'
 import { Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
-import { CustomizeButton, ScopeWithFilterTypes } from '@shared/components'
+import { CustomizeButton, buildScopes } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
@@ -34,26 +34,9 @@ import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 
-// Configure scope-specific filter types for the search filter
-const SCOPES: ScopeWithFilterTypes[] = [
-  {
-    scope: 'task',
-    filterTypes: [
-      'status',
-      'tags',
-      'taskType',
-      'assignees',
-      'attributes',
-      'name',
-      'createdAt',
-      'updatedAt',
-    ],
-  },
-  {
-    scope: 'folder',
-    filterTypes: ['status', 'tags', 'folderType', 'attributes', 'name', 'createdAt', 'updatedAt'],
-  },
-]
+// the tasks resolver task filter does not whitelist folder_type — use the
+// folder-scope folderType chip instead (goes through folderFilter)
+const SCOPES = buildScopes(['task', 'folder'], { task: ['folderType'] })
 
 const GroupByDropdown = styled(SortingDropdown)<{
   $disableSortOrder?: boolean

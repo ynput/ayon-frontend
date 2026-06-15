@@ -14,6 +14,7 @@ interface SortableTHProps<TData> {
   enableSorting?: boolean
   enableColumnVisibility?: boolean
   enableColumnResizing?: boolean
+  isLast?: boolean
 }
 
 export function SortableTHComponent<TData extends RowData>({
@@ -22,6 +23,7 @@ export function SortableTHComponent<TData extends RowData>({
   enableSorting = false,
   enableColumnVisibility = false,
   enableColumnResizing = false,
+  isLast = false,
 }: SortableTHProps<TData>) {
   const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
     id: header.id,
@@ -93,6 +95,7 @@ export function SortableTHComponent<TData extends RowData>({
         width: `calc(var(--header-${header.id}-size) * 1px)`,
         transform: CSS.Transform.toString(transform) ?? undefined,
         transition,
+        flexGrow: isLast ? 1 : undefined,
       }}
       className={clsx({
         grab: enabled,

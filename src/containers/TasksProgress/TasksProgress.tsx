@@ -13,7 +13,7 @@ import {
 import { useRootFolders } from './hooks'
 // shared
 import { useGetAllProjectUsersAsAssigneeQuery, useUpdateEntitiesMutation } from '@shared/api'
-import type { FolderType, Status, TaskType, AttributeEnumItem } from '@shared/api'
+import type { FolderType, Status, TaskType, EnumItem } from '@shared/api'
 import { EmptyPlaceholder, FilterFieldType } from '@shared/components'
 import {
   createFilterFromSlicer,
@@ -64,7 +64,7 @@ interface TasksProgressProps {
   folderStatuses?: Status[]
   taskTypes?: TaskType[]
   folderTypes?: FolderType[]
-  priorities?: AttributeEnumItem[]
+  priorities?: EnumItem[]
   projectName: string
 }
 
@@ -82,7 +82,12 @@ const TasksProgress: FC<TasksProgressProps> = ({
   // FILTERS
   //
   //
-  const { filters: queryFilters, onUpdateFilters: setQueryFilters, sliceType: viewSliceType, onUpdateSliceType } = useTaskProgressViewSettings()
+  const {
+    filters: queryFilters,
+    onUpdateFilters: setQueryFilters,
+    sliceType: viewSliceType,
+    onUpdateSliceType,
+  } = useTaskProgressViewSettings()
   const { isLoadingViews } = useViewsContext()
 
   // filter out by slice

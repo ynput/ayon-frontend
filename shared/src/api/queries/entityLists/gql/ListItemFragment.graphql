@@ -13,12 +13,21 @@ fragment ListItemFragment on BaseNode {
     ownAttrib
     hasReviewables
     folderId
+    thumbnailHash
     folder {
+      name
+      label
       path
       folderType
     }
     subtasks {
       ...SubTaskFragment
+    }
+    latestComments @include(if: $showComments) {
+      activityId
+      body
+      author
+      createdAt
     }
   }
   ... on FolderNode {
@@ -29,7 +38,14 @@ fragment ListItemFragment on BaseNode {
     path
     ownAttrib
     hasReviewables
+    thumbnailHash
     folderId: id
+    latestComments @include(if: $showComments) {
+      activityId
+      body
+      author
+      createdAt
+    }
   }
   ... on ProductNode {
     status
@@ -37,6 +53,8 @@ fragment ListItemFragment on BaseNode {
     productType
     folderId
     folder {
+      name
+      label
       path
       folderType
     }
@@ -47,20 +65,31 @@ fragment ListItemFragment on BaseNode {
     hasReviewables
     author
     version
+    thumbnailHash
     product {
       id
       name
       productType
+      productBaseType
       folderId
       folder {
         id
+        name
+        label
         path
         folderType
       }
     }
     task {
       name
+      label
       taskType
+    }
+    latestComments @include(if: $showComments) {
+      activityId
+      body
+      author
+      createdAt
     }
   }
 }

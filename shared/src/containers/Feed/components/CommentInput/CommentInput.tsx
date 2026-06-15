@@ -39,29 +39,25 @@ import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } fro
 import { useDetailsPanelContext } from '@shared/context'
 import { useProjectContext } from '@shared/context'
 import { parseFilename } from '@shared/components'
+import { FeedActivity } from '@shared/api'
+import { VersionReviewPill } from './VersionReviewPill'
+import { VersionReviewFeedback, mentionTypeOptions } from './types'
 
 var Delta = Quill.import('delta')
 
+const EMPTY_EDITOR_VALUE = '<p><br></p>'
+
 const mentionTypes = ['@', '@@', '@@@']
-export const mentionTypeOptions = {
-  '@@@': {
-    id: 'task',
-  },
-  '@@': {
-    id: 'version',
-  },
-  '@': {
-    id: 'user',
-    isCircle: true,
-  },
-}
 
 interface CommentInputProps {
   initValue: string | null
   initFiles?: any[]
   initCategory?: string | null
   data?: any
+  versionReview: boolean
+  lastOwnVersionReview?: FeedActivity
   onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
+  onReview?: (feedback: VersionReviewFeedback) => void
   isEditing?: boolean
   disabled?: boolean
   isLoading?: boolean
@@ -75,7 +71,10 @@ const CommentInput: FC<CommentInputProps> = ({
   initFiles = [],
   initCategory = null,
   data = {},
+  versionReview,
+  lastOwnVersionReview,
   onSubmit,
+  onReview,
   isEditing,
   disabled,
   isLoading,
@@ -188,7 +187,14 @@ const CommentInput: FC<CommentInputProps> = ({
         },
         mentionSearchWithPrefix || undefined,
       ),
-    [mentionTasks, mentionVersions, mentionUsers, mentionTeams, mention?.type, mentionSearchWithPrefix],
+    [
+      mentionTasks,
+      mentionVersions,
+      mentionUsers,
+      mentionTeams,
+      mention?.type,
+      mentionSearchWithPrefix,
+    ],
   )
 
   // show first 5 and filter itself out
@@ -618,6 +624,46 @@ const CommentInput: FC<CommentInputProps> = ({
     return 'Comment or mention with @user, @@version, @@@task...'
   }
 
+  const handleReviewSubmit = async (status: VersionReviewFeedback) => {
+    if (!onReview) return
+    try {
+      const postComment =
+        (editorValue && editorValue !== EMPTY_EDITOR_VALUE) ||
+        files.length > 0 ||
+        annotations.length > 0
+      // if the editor value is valid, also submit the comment first
+      if (postComment) {
+        await handleSubmit()
+      }
+
+      onReview(status)
+    } catch (error) {
+      console.error(error)
+      toast.error('Something went wrong while submitting the review')
+    }
+  }
+
+  const versionReviewButtons = versionReview && onReview && (
+    <Styled.VersionReviewButtons className={clsx('version-review-buttons', { guest: isGuest })}>
+      <Styled.VersionReviewButton
+        icon="check"
+        variant="tertiary"
+        data-tooltip="Approve"
+        onClick={() => handleReviewSubmit(VersionReviewFeedback.APPROVE)}
+      >
+        <span className="label">Approve</span>
+      </Styled.VersionReviewButton>
+      <Styled.VersionReviewButton
+        icon="refresh"
+        variant="danger"
+        data-tooltip="Request changes"
+        onClick={() => handleReviewSubmit(VersionReviewFeedback.REQUEST_CHANGES)}
+      >
+        <span className="label">Request changes</span>
+      </Styled.VersionReviewButton>
+    </Styled.VersionReviewButtons>
+  )
+
   return (
     <>
       <Styled.AutoHeight
@@ -628,6 +674,10 @@ const CommentInput: FC<CommentInputProps> = ({
         onClick={() => setIsDropping(false)}
         onKeyDown={(e) => e.stopPropagation()}
       >
+        {versionReview && lastOwnVersionReview && (
+          <VersionReviewPill lastOwnVersionReview={lastOwnVersionReview} />
+        )}
+
         <Styled.Comment
           className={clsx('block-shortcuts', {
             isOpen,
@@ -736,7 +786,7 @@ const CommentInput: FC<CommentInputProps> = ({
                 />
               </Styled.Buttons>
             )}
-            <Styled.Buttons style={{ marginLeft: 'auto' }}>
+            <Styled.SubmitButtons>
               {isEditing && (
                 <Button variant="text" onClick={handleClose}>
                   Cancel
@@ -749,7 +799,7 @@ const CommentInput: FC<CommentInputProps> = ({
                 onClick={handleSubmit}
                 disabled={isLoading}
               />
-            </Styled.Buttons>
+            </Styled.SubmitButtons>
           </Styled.Footer>
 
           <Styled.Dropzone className={clsx({ show: isDropping && isOpen })}>
@@ -775,6 +825,9 @@ const CommentInput: FC<CommentInputProps> = ({
           error={mentionsError}
           isGuest={isGuest}
         />
+
+        <Styled.VersionReviewButtonsSpacer />
+        {versionReviewButtons}
       </Styled.AutoHeight>
     </>
   )

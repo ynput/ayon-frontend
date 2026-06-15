@@ -5,6 +5,7 @@ import ActivityAssigneeChange from './ActivityAssigneeChange/ActivityAssigneeCha
 import ActivityVersions from './ActivityVersions/ActivityVersions'
 import ActivityGroup from './ActivityGroup/ActivityGroup'
 import { Status } from '../../ProjectTreeTable/types/project'
+import ActivityVersionReview from './ActivityVersionReview/ActivityVersionReview'
 
 interface ActivityItemProps {
   activity: {
@@ -30,6 +31,7 @@ interface ActivityItemProps {
   onCheckChange?: (e: React.ChangeEvent<HTMLInputElement>, activity: any) => void
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
   onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
+  isGuest?: boolean
 }
 
 const ActivityItem: React.FC<ActivityItemProps> = ({
@@ -42,6 +44,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
   readOnly,
   statuses,
   isSlideOut,
+  isGuest,
   ...props
 }) => {
   switch (activity.activityType) {
@@ -61,6 +64,8 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
       return <ActivityAssigneeChange activity={activity} {...props} />
     case 'version.publish':
       return <ActivityVersions {...{ activity, projectInfo, filter }} {...props} />
+    case 'version.review':
+      return <ActivityVersionReview activity={activity} isGuest={isGuest} {...props} />
     case 'group':
       // fromGroup prevents infinite recursion
       return (

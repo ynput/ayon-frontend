@@ -81,7 +81,7 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
   const [formData, setFormData] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState(null)
   const [isLibrary, setIsLibrary] = useState(false)
-  const [projectState, setProjectState] = useState('planning')
+  const [projectState, setProjectState] = useState('production')
   const isPlanningProject = projectState === 'planning'
   const isProductionProject = projectState === 'production'
 

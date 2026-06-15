@@ -11,6 +11,7 @@ import {
   ColumnSizingState,
   useReactTable,
 } from '@tanstack/react-table'
+import { checkColumnVisibility, ensureAtLeastOneVisibleColumn } from '../ProjectTreeTable/utils'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   closestCenter,
@@ -78,6 +79,7 @@ export function ListTable<TData extends RowData>({
   onColumnOrderChange,
   enableColumnVisibility = false,
   columnVisibility: columnVisibilityProp,
+  defaultColumnVisibility,
   onColumnVisibilityChange,
   enableColumnResizing = false,
   columnSizing: columnSizingProp,
@@ -107,10 +109,43 @@ export function ListTable<TData extends RowData>({
   const handleColumnVisibilityChange = (
     updater: VisibilityState | ((prev: VisibilityState) => VisibilityState),
   ) => {
-    const next = typeof updater === 'function' ? updater(columnVisibility) : updater
-    setColumnVisibilityLocal(next)
-    onColumnVisibilityChange?.(next)
+    const nextFull = typeof updater === 'function' ? updater(resolvedColumnVisibility) : updater
+
+    // Calculate sparse version: only keys that are different from defaults
+    const sparseNext: VisibilityState = {}
+    Object.keys(nextFull).forEach((key) => {
+      const defaultValue = checkColumnVisibility({}, key, defaultColumnVisibility)
+      if (nextFull[key] !== defaultValue) {
+        sparseNext[key] = nextFull[key]
+      }
+    })
+
+    setColumnVisibilityLocal(sparseNext)
+    onColumnVisibilityChange?.(sparseNext)
   }
+
+  const resolvedColumnVisibility = useMemo(() => {
+    const resolved: VisibilityState = {}
+    columns.forEach((col) => {
+      // @ts-ignore
+      const colId = col.id || col.accessorKey
+      if (colId) {
+        const isVisible = checkColumnVisibility(columnVisibility, colId, defaultColumnVisibility)
+        // if col has an explicit visible property, use it as a fallback
+        // @ts-ignore
+        const explicitVisible = col.visible
+        if (explicitVisible !== undefined && columnVisibility[colId] === undefined) {
+          resolved[colId] = explicitVisible
+        } else {
+          resolved[colId] = isVisible
+        }
+      }
+    })
+    return ensureAtLeastOneVisibleColumn(
+      resolved,
+      columns.map((c) => (c.id || (c as any).accessorKey) as string).filter(Boolean),
+    )
+  }, [columnVisibility, defaultColumnVisibility, columns])
 
   // Use controlled column sizing if provided, otherwise internal state
   const columnSizing = columnSizingProp ?? columnSizingLocal
@@ -133,7 +168,7 @@ export function ListTable<TData extends RowData>({
     state: {
       columnOrder,
       sorting,
-      columnVisibility,
+      columnVisibility: resolvedColumnVisibility,
       columnSizing,
     },
     filterFns: { fuzzy: () => true }, // Placeholder for fuzzy filtering
@@ -301,7 +336,7 @@ export function ListTable<TData extends RowData>({
                   items={headerGroup.headers.map((h) => h.id)}
                   strategy={horizontalListSortingStrategy}
                 >
-                  {headerGroup.headers.map((header) => (
+                  {headerGroup.headers.map((header, index) => (
                     <SortableTHComponent
                       key={header.id}
                       header={header}
@@ -309,6 +344,7 @@ export function ListTable<TData extends RowData>({
                       enableSorting={enableSorting}
                       enableColumnVisibility={enableColumnVisibility}
                       enableColumnResizing={enableColumnResizing}
+                      isLast={index === headerGroup.headers.length - 1}
                     />
                   ))}
                 </SortableContext>

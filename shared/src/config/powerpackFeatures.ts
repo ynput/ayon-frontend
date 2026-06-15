@@ -12,6 +12,7 @@ export type PowerpackFeature =
   | 'sharedViews'
   | 'commentCategories'
   | 'projectFolders'
+  | 'columnSummaries'
 
 export const powerpackFeatureOrder: PowerpackFeature[] = [
   'annotations',
@@ -25,6 +26,7 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'advancedFilters',
   'listAttributes',
   'commentCategories',
+  'columnSummaries',
 ]
 
 export const powerpackFeatures: {
@@ -85,5 +87,10 @@ export const powerpackFeatures: {
     label: 'List Access',
     description: 'Manage and control access to your lists with advanced sharing options.',
     bullet: 'Advanced list sharing options',
+  },
+  columnSummaries: {
+    label: 'Column Summaries',
+    description: 'Aggregate each column totals, averages, distributions in a summary footer.',
+    bullet: 'Per-column summary footer',
   },
 }

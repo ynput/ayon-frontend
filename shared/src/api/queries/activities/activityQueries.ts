@@ -3,6 +3,7 @@ export type BaseTypes = {
   name: string
   status: string
   thumbnailId: string
+  thumbnailHash?: string
   updatedAt: string
 }
 
@@ -75,6 +76,7 @@ query EntityTooltip($projectName: String!, $entityId: String!) {
       status
       thumbnailId
       updatedAt
+      thumbnailHash
       ${getTypeFields(type)}
     }
   }

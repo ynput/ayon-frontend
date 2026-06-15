@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback, UIEventHandler } from 'react' // Added useCallback
+import { useMemo, useRef, useEffect, CSSProperties, useCallback, UIEventHandler, FC } from 'react' // Added useCallback
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -11,7 +11,6 @@ import {
   Row,
   getSortedRowModel,
   Cell,
-  Column,
   Table,
   Header,
   HeaderGroup,
@@ -33,16 +32,20 @@ import buildTreeTableColumns, {
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
+import { TableFooterRow } from './components/TableFooterRow'
+import type { FieldStats } from '@shared/api'
+import { getCommonPinningStyles, getColumnWidth } from './utils/pinningUtils'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
 import { useCellEditing } from './context/CellEditingContext'
-import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/SelectionCellsContext'
+import { useSelectionCellsContext } from './context/SelectionCellsContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettingsContext } from './context/ColumnSettingsContext'
 import { useMenuContext } from '../../context/MenuContext'
+import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -67,9 +70,21 @@ import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUti
 import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
 import { Button, Icon } from '@ynput/ayon-react-components'
-import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
+import {
+  ProjectTableAttribute,
+  BuiltInFieldOptions,
+  MainCountLabels,
+  SummaryCellContentProps,
+} from './types'
+import { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
-import { getEntityViewierIds, getReadOnlyLists, getTableFieldOptions } from './utils'
+import {
+  checkColumnVisibility,
+  ensureAtLeastOneVisibleColumn,
+  getEntityViewierIds,
+  getReadOnlyLists,
+  getTableFieldOptions,
+} from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
 
 // dnd-kit imports
@@ -80,10 +95,16 @@ import {
   // Removed: DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, DragEndEvent, DragStartEvent, Active, Over, useSensor, useSensors
 } from '@dnd-kit/core'
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import { SortableContext, verticalListSortingStrategy, useSortable, horizontalListSortingStrategy, } from '@dnd-kit/sortable'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  horizontalListSortingStrategy,
+} from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, usePowerpack, setDetailsPanelTabForScope } from '@shared/context'
+import { useLoadModule } from '@shared/hooks'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
@@ -94,6 +115,9 @@ type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
   config?: { selection?: string[] },
 ) => Promise<void>
+
+// rendered while the powerpack summaries remote is unavailable (no license / old addon)
+const SummaryCellContentFallback: FC<SummaryCellContentProps> = () => null
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -107,29 +131,19 @@ declare module '@tanstack/react-table' {
   }
 }
 
-//These are the important styles to make sticky column pinning work!
-//Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
-//View the index.css file for more needed styles such as border-collapse: separate
-const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
-  const isPinned = column.getIsPinned()
-  const offset =
-    column.id !== ROW_SELECTION_COLUMN_ID && column.id !== DRAG_HANDLE_COLUMN_ID ? -30 : 0
-
-  return {
-    left: isPinned === 'left' ? `${column.getStart('left') + offset}px` : undefined, // Removed offset
-    right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-    position: isPinned ? 'sticky' : 'relative',
-    width: column.getSize(),
-    zIndex: isPinned ? 100 : 0,
-  }
+const matchesColumnId = (id: string, subscribers: string[]) => {
+  return subscribers.some((sub) => {
+    if (sub.includes('*')) {
+      // Escape all regex special characters
+      const escaped = sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      // Replace escaped '*' (\*) with regex '.*'
+      const pattern = '^' + escaped.replace(/\\\*/g, '.*') + '$'
+      const regex = new RegExp(pattern)
+      return regex.test(id)
+    }
+    return id === sub
+  })
 }
-
-const getColumnWidth = (rowId: string, columnId: string) => {
-  return `calc(var(--col-${columnId}-size) * 1px)`
-}
-// test
-
-export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 
 export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
@@ -149,8 +163,15 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
   dndActiveId?: UniqueIdentifier | null // Added prop
   columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
+  showColumnSummaries?: boolean // render the fixed summary footer row
+  fieldStats?: FieldStats[] // primary-entity stats (tasks/versions) feeding the footer
+  groupFieldStats?: FieldStats[] // group-entity stats (folders/products) for the 'all' row scope
+  fieldStatsLoading?: boolean // footer stats still loading -> show skeletons
+  mainCountLabels?: MainCountLabels // labels for the main cell dual count (defaults folders/tasks)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
+  onColumnVisibleChange?: (changes: Record<string, boolean>) => void
+  onColumnVisibleChangeSubscribed?: string[]
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -176,8 +197,15 @@ export const ProjectTreeTable = ({
   onRowReorder,
   dndActiveId, // Destructure new prop
   columnsConfig,
+  showColumnSummaries = false,
+  fieldStats,
+  groupFieldStats,
+  fieldStatsLoading,
+  mainCountLabels,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
+  onColumnVisibleChange,
+  onColumnVisibleChangeSubscribed,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -191,9 +219,16 @@ export const ProjectTreeTable = ({
     sortingOnChange,
     columnPinningOnChange,
     columnSizingOnChange,
+    defaultColumnVisibility,
     columnVisibilityOnChange,
     columnOrderOnChange,
     groupBy,
+    columnSummaries,
+    updateColumnSummary,
+    columnSummaryScopes,
+    updateColumnSummaryScope,
+    columnSummaryFormats,
+    updateColumnSummaryFormat,
   } = useColumnSettingsContext()
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
 
@@ -349,7 +384,7 @@ export const ProjectTreeTable = ({
       nameLabel: getNameLabelHeader(),
     })
 
-    if (sortableRows) {
+    if (sortableRows && enableSorting) {
       return [
         {
           id: DRAG_HANDLE_COLUMN_ID,
@@ -380,6 +415,7 @@ export const ProjectTreeTable = ({
     excludedColumns,
     excludedSorting,
     sortableRows,
+    enableSorting,
     groupBy,
   ])
 
@@ -388,6 +424,22 @@ export const ProjectTreeTable = ({
     const ids = columns.map((c) => c.id!).filter(Boolean)
     setAllColumns(ids)
   }, [columns, setAllColumns])
+
+  const resolvedColumnVisibility = useMemo(() => {
+    const merged = { ...columnVisibility }
+    columns.forEach((col) => {
+      // @ts-ignore
+      const explicitVisible = col.visible
+      if (col.id && merged[col.id] === undefined) {
+        if (explicitVisible !== undefined) {
+          merged[col.id] = explicitVisible
+        } else {
+          merged[col.id] = checkColumnVisibility({}, col.id, defaultColumnVisibility)
+        }
+      }
+    })
+    return ensureAtLeastOneVisibleColumn(merged, columns.map((c) => c.id as string).filter(Boolean))
+  }, [columnVisibility, defaultColumnVisibility, columns])
 
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
@@ -444,7 +496,7 @@ export const ProjectTreeTable = ({
         }
       })(),
       columnSizing,
-      columnVisibility,
+      columnVisibility: resolvedColumnVisibility,
       columnOrder,
     },
     meta: {
@@ -494,13 +546,69 @@ export const ProjectTreeTable = ({
     columnOrder,
   })
 
+  // Track column visibility changes for subscribed columns
+  const prevVisibleRef = useRef<Record<string, boolean>>({})
+  const virtualItems = columnVirtualizer.getVirtualItems()
+
+  // Subscribe to column visibility changes
+  useEffect(() => {
+    if (!onColumnVisibleChange || !onColumnVisibleChangeSubscribed?.length) return
+
+    const visibleColumnIds = new Set(virtualItems.map((item) => visibleColumns[item.index]?.id))
+    const changes: Record<string, boolean> = {}
+    let hasChanged = false
+
+    // We only care about columns that match the subscription patterns
+    const subscribedColumns = table
+      .getAllLeafColumns()
+      .filter((col) => matchesColumnId(col.id, onColumnVisibleChangeSubscribed))
+
+    subscribedColumns.forEach((col) => {
+      const isVisible = visibleColumnIds.has(col.id)
+      if (prevVisibleRef.current[col.id] !== isVisible) {
+        changes[col.id] = isVisible
+        hasChanged = true
+        prevVisibleRef.current[col.id] = isVisible
+      }
+    })
+
+    if (hasChanged) {
+      onColumnVisibleChange(changes)
+    }
+  }, [virtualItems, onColumnVisibleChange, onColumnVisibleChangeSubscribed, visibleColumns, table])
+
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
+
+  // Summary footer is a powerpack feature.
+  // popup hidden for now: also expose `setPowerpackDialog, isLoading: isLicenseLoading`
+  const { powerLicense } = usePowerpack()
+  const [RemoteSummaryCellContent, { isLoaded: isFooterLoaded, isLoading: isFooterModuleLoading }] =
+    useLoadModule<FC<SummaryCellContentProps>>({
+      addon: 'powerpack',
+      remote: 'views',
+      module: 'SummaryCellContent',
+      fallback: SummaryCellContentFallback,
+      skip: !showColumnSummaries || !powerLicense,
+    })
+  // Free-user upsell row hidden for now (too many power-feature prompts); keep for later.
+  // Render the row as soon as the module is loading or loaded (not on load failure),
+  // so skeletons show during the load instead of the row popping in late.
+  const summariesEnabled =
+    showColumnSummaries &&
+    powerLicense &&
+    (isFooterLoaded || isFooterModuleLoading) &&
+    !!rows.length
+  // shimmer while the remote module or the footer stats are still loading
+  const summariesLoading = isFooterModuleLoading || !isFooterLoaded || !!fieldStatsLoading
+  // only show the upsell once the license check resolves, so licensed users
+  // don't see the bolt flash before the addon loads
+  // const showSummaryPowerFeature = !isLicenseLoading && !powerLicense
 
   // Calculate dynamic row height based on user setting from Customize panel
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
 
   const attribByField = useMemo(() => {
-    return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
+    return attribFields.reduce((acc: Record<string, EnumItem[]>, attrib) => {
       if (attrib.data?.enum?.length) {
         acc[attrib.name] = attrib.data?.enum
       }
@@ -513,7 +621,7 @@ export const ProjectTreeTable = ({
   // This ensures SortableContext items match what the drag handlers use
   const columnOrderIds = useMemo(() => {
     return columnOrder.filter(
-      (id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID
+      (id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID,
     )
   }, [columnOrder])
 
@@ -620,6 +728,10 @@ export const ProjectTreeTable = ({
               ...columnSizeVars,
               width: table.getTotalSize(),
               cursor: table.getState().columnSizingInfo.isResizingColumn ? 'col-resize' : undefined,
+              // stretch tbody to the container so the column dividers fill the empty
+              // space below the rows; also pins the summary footer to the bottom
+              minHeight: '100%',
+              gridTemplateRows: 'auto 1fr auto',
             }}
           >
             <TableHead
@@ -652,6 +764,42 @@ export const ProjectTreeTable = ({
               onResetView={onResetView}
               contextMenuItems={propsContextMenuItems}
             />
+            {summariesEnabled && (
+              <TableFooterRow
+                columnVirtualizer={columnVirtualizer}
+                table={table}
+                virtualPaddingLeft={virtualPaddingLeft}
+                virtualPaddingRight={virtualPaddingRight}
+                isLoading={summariesLoading}
+                // Free-user upsell hidden for now; keep for later:
+                // onClick={showSummaryPowerFeature ? () => setPowerpackDialog('columnSummaries') : undefined}
+                renderCellContent={(columnId) => (
+                  <RemoteSummaryCellContent
+                    columnId={columnId}
+                    attribs={attribFields}
+                    fieldStats={fieldStats}
+                    groupFieldStats={groupFieldStats}
+                    calc={columnSummaries[columnId]}
+                    onCalcChange={(calc) => updateColumnSummary(columnId, calc)}
+                    format={columnSummaryFormats[columnId]}
+                    onFormatChange={(format) => updateColumnSummaryFormat(columnId, format)}
+                    scope={columnSummaryScopes[columnId]}
+                    onScopeChange={(scope) => updateColumnSummaryScope(columnId, scope)}
+                    mainCountLabels={mainCountLabels}
+                    fieldOptions={options}
+                  />
+                )}
+                // Power feature cell for community users (hidden for now), shows a bolt hint in the name column:
+                // renderCellContent={(columnId) =>
+                //   showSummaryPowerFeature && columnId === 'name' ? (
+                //     <Styled.SummaryPowerFeature>
+                //       <Icon icon="bolt" filled />
+                //       Summaries
+                //     </Styled.SummaryPowerFeature>
+                //   ) : null
+                // }
+              />
+            )}
           </table>
         </Styled.TableContainer>
       </Styled.TableWrapper>
@@ -710,7 +858,7 @@ export const ProjectTreeTable = ({
 
                         const cellStyleBase: CSSProperties = {
                           ...getCommonPinningStyles(cell.column),
-                          width: getColumnWidth(overlayRowInstance.id, cell.column.id),
+                          width: getColumnWidth(cell.column.id),
                           display: 'flex',
                           alignItems: 'center',
                           height: defaultRowHeight,
@@ -972,11 +1120,18 @@ const TableHeadCell = ({
   // Build drag styles
   const getDragStyle = (): CSSProperties => {
     if (isDragging) {
-      return { transform: CSS.Translate.toString(transform!), transition, visibility: 'hidden', zIndex: 200 }
+      return {
+        transform: CSS.Translate.toString(transform!),
+        transition,
+        visibility: 'hidden',
+        zIndex: 200,
+      }
     }
     if (isDraggingInSameSection && transform) {
       // For pinned columns, temporarily remove sticky positioning during drag animation
-      const pinnedOverride = isThisColumnPinned ? { position: 'relative' as const, left: 'auto' } : {}
+      const pinnedOverride = isThisColumnPinned
+        ? { position: 'relative' as const, left: 'auto' }
+        : {}
       return { transform: CSS.Translate.toString(transform), transition, ...pinnedOverride }
     }
     return {}
@@ -1001,12 +1156,15 @@ const TableHeadCell = ({
       key={header.id}
       style={{
         ...getCommonPinningStyles(column),
-        width: getColumnWidth('', column.id),
+        width: getColumnWidth(column.id),
         ...getDragStyle(),
       }}
     >
       {header.isPlaceholder ? null : (
-        <Styled.TableCellContent className={clsx('bold', 'header')}  {...(isDraggable ? { ...attributes, ...listeners } : {})}>
+        <Styled.TableCellContent
+          className={clsx('bold', 'header')}
+          {...(isDraggable ? { ...attributes, ...listeners } : {})}
+        >
           {flexRender(column.columnDef.header, header.getContext())}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
@@ -1171,10 +1329,25 @@ const TableBody = ({
 
   useKeyboardNavigation()
 
+  // vertical column lines painted behind the rows so they extend into the empty
+  // space between the last row and the summary footer
+  const visibleLeafColumns = table.getVisibleLeafColumns()
+  const columnDividerLefts = useMemo(() => {
+    const lefts: string[] = []
+    const sizeVars: string[] = []
+    for (let i = 0; i < visibleLeafColumns.length - 1; i++) {
+      const column = visibleLeafColumns[i]
+      // selection column is forced to 20px in CSS while its size var reports defaultColumn.minSize
+      sizeVars.push(column.id === ROW_SELECTION_COLUMN_ID ? '20' : `var(--col-${column.id}-size)`)
+      lefts.push(`calc((${sizeVars.join(' + ')}) * 1px)`)
+    }
+    return lefts
+  }, [visibleLeafColumns])
+
   const tbodyContent = (
     <tbody
       style={{
-        height: `${rowVirtualizer.getTotalSize()}px`,
+        minHeight: `${rowVirtualizer.getTotalSize()}px`,
         position: 'relative',
         display: 'grid',
       }}
@@ -1183,6 +1356,11 @@ const TableBody = ({
         handlePreFetchTasks(e)
       }}
     >
+      <Styled.ColumnDividers aria-hidden>
+        {columnDividerLefts.map((left, i) => (
+          <div key={i} style={{ left }} />
+        ))}
+      </Styled.ColumnDividers>
       {virtualRows.map((virtualRow, i) => {
         const row = rows[virtualRow.index] as Row<TableRow>
         // Add a check for row existence to prevent potential errors if data is out of sync
@@ -1347,7 +1525,7 @@ const TableBodyRow = ({
               key={cell.id + i.toString()}
               style={{
                 ...getCommonPinningStyles(cell.column),
-                width: getColumnWidth(row.id, cell.column.id),
+                width: getColumnWidth(cell.column.id),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1467,7 +1645,7 @@ const TD = ({
       )}
       style={{
         ...getCommonPinningStyles(cell.column),
-        width: getColumnWidth(cell.row.id, cell.column.id),
+        width: getColumnWidth(cell.column.id),
         height: rowHeight,
       }}
       onMouseDown={(e) => {
@@ -1487,14 +1665,18 @@ const TD = ({
         // because the 1st mousedown triggers React state updates that can replace
         // the DOM node, preventing the native dblclick event from firing.
         if (e.detail === 2) {
-          const isReadOnly = isTargetReadOnly(e)
+          // comments cells are read-only but their double-click opens the details panel, so don't block them here
+          const isReadOnly = isTargetReadOnly(e) && cell.column.id !== 'comments'
           if (isReadOnly || isEntityRestricted(cell.row.original.entityType) || isGroup) {
             e.preventDefault()
             return
           }
 
           // name column: select row to open details panel
-          if (cell.column.id === 'name' && !target.closest('.expander')) {
+          // comments column: same — comments are read and written in the details panel feed
+          if (['name', 'comments'].includes(cell.column.id) && !target.closest('.expander')) {
+            // all ProjectTreeTable pages render their details panel under the 'overview' scope
+            if (cell.column.id === 'comments') setDetailsPanelTabForScope('overview', 'feed')
             const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
             const additive = e.metaKey || e.ctrlKey
             const position = parseCellId(rowSelectionCellId)

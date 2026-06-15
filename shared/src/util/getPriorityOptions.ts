@@ -1,4 +1,4 @@
-import { AttributeEnumItem, AttributeModel } from '@shared/api'
+import { EnumItem, AttributeModel } from '@shared/api'
 
 type ScopeEntityType =
   | 'folder'
@@ -13,7 +13,7 @@ type ScopeEntityType =
 export const getPriorityOptions = (
   priority: AttributeModel | undefined,
   type: ScopeEntityType,
-): AttributeEnumItem[] | undefined => {
+): EnumItem[] | undefined => {
   // ensure the priority is in scope of
   if (!priority?.scope?.includes(type) || priority?.name !== 'priority') {
     return undefined

@@ -38,7 +38,6 @@ export type EntityPanelUploaderProps = {
   thumbnailInputRef: RefObject<HTMLInputElement>
   versionsInputRef: RefObject<HTMLInputElement>
   children?: JSX.Element | JSX.Element[]
-  onUploaded?: (operations: Operation[]) => void
   resetFileUploadState?: () => void
   onVersionCreated?: (versionId: string) => void
 }
@@ -56,7 +55,6 @@ export const EntityPanelUploader = ({
   projectName,
   thumbnailInputRef,
   versionsInputRef,
-  onUploaded,
   onVersionCreated,
 }: EntityPanelUploaderProps) => {
   const { dispatch } = useDetailsPanelContext()
@@ -242,52 +240,6 @@ export const EntityPanelUploader = ({
     }
   }
 
-  // once the file has been uploaded, we need to patch the entities with the new thumbnail
-  const handleThumbnailFileUploaded = async (thumbnails: any[] = []) => {
-    // always set isDragginle to false
-    setIsDraggingFile(false)
-
-    // check something was actually uploaded
-    if (!entities.length) {
-      return
-    }
-
-    // patching the updatedAt will force a refresh of the thumbnail url
-    const newUpdatedAt = new Date().toISOString()
-
-    let operations: Operation[] = []
-    let versionPatches = []
-
-    for (const entity of thumbnails) {
-      const entityToPatch = entities.find((e) => e.id === entity.id)
-      if (!entityToPatch) continue
-      const thumbnailId = entity.thumbnailId
-      const currentAssignees = entity.users || []
-
-      operations.push({
-        id: entityToPatch.id,
-        projectName: entityToPatch.projectName,
-        data: { updatedAt: newUpdatedAt },
-        currentAssignees,
-      })
-
-      const versionPatch = {
-        productId: entityToPatch.productId,
-        versionUpdatedAt: newUpdatedAt,
-        versionThumbnailId: thumbnailId,
-      }
-
-      versionPatches.push(versionPatch)
-    }
-
-    try {
-      await updateEntities({ operations, entityType })
-      onUploaded && onUploaded(operations)
-    } catch (error) {
-      console.error('Error uploading thumbnail:', error)
-    }
-  }
-
   const handleUploadThumbnail = async (file: File) => {
     if (!file) return resetState()
 
@@ -326,7 +278,7 @@ export const EntityPanelUploader = ({
         id: entities[i].id,
       }))
 
-      handleThumbnailFileUploaded(updatedEntities)
+      setIsDraggingFile(false)
       resetState()
     } catch (error: any) {
       console.error(error)

@@ -25,6 +25,7 @@ import {
 } from '../util'
 import { useBuildVersionsTableData } from '../hooks/useBuildVersionsTableData'
 import {
+  checkColumnVisibility,
   createFilterFromSlicer,
   TableRow,
   useExpandedState,
@@ -77,6 +78,17 @@ interface VersionsDataContextValue {
   // separate filters
   versionFilter: QueryFilter
   productFilter: QueryFilter
+  // combined filter strings (incl. slicer + entity-list selection) for the
+  // column-summary stats queries
+  columnStatsArgs: {
+    projectName: string
+    productFilter?: string
+    versionFilter?: string
+    taskFilter?: string
+    folderIds?: string[]
+    versionIds?: string[]
+    productIds?: string[]
+  }
   // data
   versionsTableData: TableRow[]
   versionsMap: VersionMap // root versions only
@@ -119,6 +131,7 @@ export type QueryArguments = {
   desc: boolean
   featuredOnly?: string[]
   hasReviewables?: boolean
+  showComments?: boolean
 }
 
 interface VersionsDataProviderProps {
@@ -133,9 +146,15 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   modules,
 }) => {
   const { attribFields } = useProjectDataContext()
-  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy, slicerType, onUpdateSlicerType } =
+  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy, slicerType, onUpdateSlicerType, columns } =
     useVPViewsContext()
   const { isLoadingViews } = useViewsContext()
+
+  // comments are the heaviest field to resolve, so only fetch them when the column is shown
+  const showComments = useMemo(
+    () => checkColumnVisibility(columns.columnVisibility || {}, 'comments'),
+    [columns.columnVisibility],
+  )
 
   // Sync slicer slice type with view settings (selection is in-memory, project-scoped)
   useSlicerViewSync(slicerType || undefined, onUpdateSlicerType, isLoadingViews)
@@ -277,6 +296,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
       sortBy: resolvedSortBy,
       desc: sortDesc,
+      showComments,
     }),
     [
       projectName,
@@ -288,6 +308,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       entityIds.productIds,
       resolvedSortBy,
       sortDesc,
+      showComments,
     ],
   )
 
@@ -428,6 +449,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     desc: versionArguments.desc,
     featuredOnly: versionArguments.featuredOnly,
     hasReviewables: versionArguments.hasReviewables,
+    showComments,
   }
 
   // QUERY: get child versions for expanded products
@@ -539,6 +561,16 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const value: VersionsDataContextValue = {
     versionFilter,
     productFilter,
+    columnStatsArgs: {
+      projectName,
+      productFilter: combinedProductFilter.filterString,
+      versionFilter: combinedVersionFilter.filterString,
+      taskFilter: entityListTaskFilterString,
+      // empty array means "match nothing" backend-side — omit when no slice
+      folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
+      versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
+      productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
+    },
     // expanded
     expanded,
     setExpanded,

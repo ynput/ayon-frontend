@@ -1,6 +1,6 @@
 import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
 import { TableRow } from './types/table'
-import { AttributeData, ProjectTableAttribute, BuiltInFieldOptions } from './types'
+import { ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import {
   CellWidget,
   MetaWidget,
@@ -13,11 +13,11 @@ import { LinkColumnHeader, TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
-import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
 import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './context'
+import { ROW_SELECTION_COLUMN_ID } from './constants'
 import { NEXT_PAGE_ID, parseGroupId } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
-import { LinkTypeModel } from '@shared/api'
+import { AttributeData, LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { SubtasksWidgetData } from './widgets/SubtasksWidget'
 import { Icon } from '@ynput/ayon-react-components'
@@ -115,6 +115,7 @@ export type DefaultColumns =
   | 'tags'
   | 'createdAt'
   | 'updatedAt'
+  | 'comments'
 
 export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
 
@@ -187,7 +188,7 @@ const buildTreeTableColumns = ({
         let thumbnail = {
           entityId: row.original.entityId || row.id,
           entityType: row.original.entityType,
-          updatedAt: row.original.updatedAt,
+          thumbnailHash: row.original.thumbnailHash,
         }
         // check for thumbnail override
         if (row.original.thumbnail) {
@@ -198,7 +199,7 @@ const buildTreeTableColumns = ({
             id={cellId}
             entityId={thumbnail.entityId}
             entityType={thumbnail.entityType}
-            updatedAt={thumbnail.updatedAt}
+            thumbnailHash={thumbnail.thumbnailHash}
             icon={row.original.icon}
             projectName={meta?.projectName as string}
             className={clsx('thumbnail', {
@@ -812,6 +813,44 @@ const buildTreeTableColumns = ({
     })
   }
 
+  if (
+    isIncluded('comments') &&
+    scopes.some((s) => ['task', 'version', 'product', 'folder'].includes(s))
+  ) {
+    staticColumns.push({
+      id: 'comments',
+      accessorKey: 'latestComments',
+      header: 'Latest comments',
+      minSize: COLUMN_MIN_SIZE,
+      enableSorting: false,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      cell: ({ row, column }) => {
+        const { value, id, type } = getValueIdType(row, 'latestComments')
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+
+        // loading placeholder rows have no entityType yet — let them through so the skeleton shows
+        // products borrow their featured version's comments; folders only have data on GQL-fed pages (Lists)
+        if (!row.original.isLoading && !['task', 'version', 'product', 'folder'].includes(type))
+          return <div className="readonly"></div>
+
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('comments', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={''}
+            valueData={value || []}
+            attributeData={{ type: 'comments' }}
+            isCollapsed={!!row.original.childOnlyMatch}
+            isReadOnly
+          />
+        )
+      },
+    })
+  }
+
   const attributeColumns: ColumnDef<TableRow>[] = attribs
     .filter((attrib) => {
       // filter out attributes that are out of scope
@@ -857,7 +896,7 @@ const buildTreeTableColumns = ({
               className={clsx('attrib', { loading: row.original.isLoading })}
               columnId={column.id}
               value={value}
-              attributeData={{ type: attrib.data.type || 'string' }}
+              attributeData={{ type: attrib.data.type || 'string', widget: attrib.data.widget }}
               options={attrib.data.enum || []}
               isCollapsed={!!row.original.childOnlyMatch}
               isInherited={isInherited}

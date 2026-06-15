@@ -8,6 +8,7 @@ import {
   SortingState,
 } from '@tanstack/react-table'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
+import { SummaryCalc, SummaryFormat, RowScope } from '../types/summaryTypes'
 
 export interface TableGroupBy {
   desc: boolean
@@ -19,12 +20,19 @@ export type ColumnsConfig = {
   columnOrder: ColumnOrderState
   columnPinning: ColumnPinningState
   columnSizing: ColumnSizingState
+  // per-column summary footer calc type, keyed by column id
+  columnSummaries?: Record<string, SummaryCalc>
+  // per-column summary row scope (folders/tasks toggles), keyed by column id
+  columnSummaryScopes?: Record<string, RowScope>
+  // per-column summary display format (count/percentage toggles), keyed by column id
+  columnSummaryFormats?: Record<string, SummaryFormat>
   sorting?: SortingState
   groupBy?: TableGroupBy
   groupByConfig?: {
     showEmpty?: boolean
   }
   rowHeight?: number
+  defaultColumnVisibility?: VisibilityState
 }
 
 export interface ColumnSettingsContextType {
@@ -33,6 +41,7 @@ export interface ColumnSettingsContextType {
 
   // Column Visibility
   columnVisibility: VisibilityState
+  defaultColumnVisibility?: VisibilityState
   setColumnVisibility: (columnVisibility: VisibilityState) => void
   updateColumnVisibility: (columnVisibility: VisibilityState) => void
   columnVisibilityOnChange: OnChangeFn<VisibilityState>
@@ -53,6 +62,18 @@ export interface ColumnSettingsContextType {
   columnSizing: ColumnSizingState
   setColumnSizing: (columnSizing: ColumnSizingState) => void
   columnSizingOnChange: OnChangeFn<ColumnSizingState>
+
+  // Column summary calc type (footer)
+  columnSummaries: Record<string, SummaryCalc>
+  updateColumnSummary: (columnId: string, calc: SummaryCalc) => void
+
+  // Column summary row scope (footer)
+  columnSummaryScopes: Record<string, RowScope>
+  updateColumnSummaryScope: (columnId: string, scope: RowScope) => void
+
+  // Column summary display format (footer)
+  columnSummaryFormats: Record<string, SummaryFormat>
+  updateColumnSummaryFormat: (columnId: string, format: SummaryFormat) => void
 
   // Sorting
   sorting: SortingState

@@ -1,7 +1,8 @@
 import { ReactNode } from 'react'
 import { Column } from '@tanstack/react-table'
 import { EntitiesMap, TableRow } from '../../types/table'
-import { AttributeEnumItem, BuiltInFieldOptions } from '../../types'
+import { BuiltInFieldOptions } from '../../types'
+import { EnumItem } from '@shared/api'
 
 // Constants for field mappings
 export const builtInFieldMappings = {
@@ -11,7 +12,7 @@ export const builtInFieldMappings = {
 }
 
 export interface ColumnEnums extends BuiltInFieldOptions {
-  [attrib: string]: AttributeEnumItem[]
+  [attrib: string]: EnumItem[]
 }
 export type PasteMethod = 'replace' | 'merge'
 export interface ClipboardContextType {

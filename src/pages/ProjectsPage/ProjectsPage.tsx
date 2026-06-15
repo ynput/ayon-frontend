@@ -34,7 +34,7 @@ import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useShortcuts from '@hooks/useShortcuts'
 import { SettingsPanelProvider, usePowerpack, useSettingsPanel } from '@shared/context'
 import { CustomizeButton, PowerpackButton } from '@shared/components'
-import { GROUP_BY_FOLDER_KEY } from './constants'
+import { DEFAULT_COLUMNS_PROJECT, GROUP_BY_FOLDER_KEY } from './constants'
 import useProjectMenuController from '@containers/ProjectsList/hooks/useProjectMenuController'
 import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
 import { getMaxDepth } from './utils'
@@ -42,6 +42,8 @@ import { getMaxDepth } from './utils'
 interface ProjectsPageProps {
   onNewProject: () => void
 }
+
+export const DEFAULT_COLUMN_VISIBILITY = DEFAULT_COLUMNS_PROJECT
 
 const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   const { powerLicense } = usePowerpack()
@@ -251,6 +253,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
                 onColumnOrderChange={handleColumnOrderChange}
                 enableColumnVisibility
                 columnVisibility={columnVisibility}
+                defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
                 onColumnVisibilityChange={handleColumnVisibilityChange}
                 enableColumnResizing
                 columnSizing={columnSizing}
@@ -276,6 +279,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
               columns={columns}
               columnOrder={columnOrder ?? []}
               columnVisibility={columnVisibility}
+              defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
               columnSizing={columnSizing}
               sorting={sorting}
               grouping={grouping}

@@ -1,0 +1,25 @@
+# Column stats for the Lists/Review footer. Targets use the list items query's
+# internal aliases (_entity_{col} / _all_attrib.{key}) — translated in
+# listItemsColumnStats.ts.
+query GetListItemsColumnStats(
+  $projectName: String!
+  $listId: String!
+  $filter: String
+  $targets: [MetricTargetInput!]
+) {
+  project(name: $projectName) {
+    name
+    entityLists(ids: [$listId]) {
+      edges {
+        node {
+          id
+          items(filter: $filter, calculateSpecificStatistics: $targets) {
+            fieldStats {
+              ...ColumnStatsFragment
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -8,6 +8,8 @@ import {
   RESTRICTED_ENTITY_TYPE,
   RESTRICTED_ENTITY_NAME,
 } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
+import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
+import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 
 // Extend EntityListItem to include links
@@ -22,6 +24,8 @@ interface UseGetListItemsDataProps {
   filters?: QueryFilter
   skip?: boolean
   entityType?: string
+  skipLinks?: boolean
+  showComments?: boolean
 }
 
 export interface UseGetListItemsDataReturn {
@@ -29,6 +33,7 @@ export interface UseGetListItemsDataReturn {
   isLoading: boolean
   isFetchingNextPage: boolean
   isError: boolean
+  error?: unknown
   fetchNextPage: () => void
   refetch: () => void
 }
@@ -40,8 +45,12 @@ const useGetListItemsData = ({
   sorting,
   filters = { conditions: [], operator: 'and' },
   skip,
+  skipLinks = true,
+  showComments = false,
 }: UseGetListItemsDataProps): UseGetListItemsDataReturn => {
-  const queryFilterString = filters.conditions?.length ? JSON.stringify(filters) : ''
+  const queryFilterString = filters.conditions?.length
+    ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(filters)))
+    : ''
 
   // Create sort params for infinite query
   const singleSort = { ...sorting[0] }
@@ -72,6 +81,7 @@ const useGetListItemsData = ({
     fetchNextPage,
     hasNextPage,
     isError,
+    error,
     refetch,
   } = useGetListItemsInfiniteInfiniteQuery(
     {
@@ -80,6 +90,7 @@ const useGetListItemsData = ({
       sortBy: parseSorting(singleSort?.id),
       desc: singleSort?.desc,
       filter: queryFilterString || undefined,
+      showComments,
     },
     {
       initialPageParam: { cursor: '' },
@@ -163,7 +174,7 @@ const useGetListItemsData = ({
         | 'workfile',
     },
     {
-      skip: visibleEntityIds.size === 0 || !entityType,
+      skip: visibleEntityIds.size === 0 || !entityType || skip || skipLinks, // Skip if no visible entities, no entity type, or if skipLinks is true
     },
   )
 
@@ -185,6 +196,7 @@ const useGetListItemsData = ({
     isLoading,
     isFetchingNextPage,
     isError,
+    error,
     fetchNextPage: handleFetchNextPage,
     refetch,
   }

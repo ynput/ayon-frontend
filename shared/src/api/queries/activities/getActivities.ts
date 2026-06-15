@@ -10,6 +10,7 @@ import { taskProvideTags } from './util/activitiesHelpers'
 import {
   ActivitiesResult,
   countChecklists,
+  filterKey,
   transformActivityData,
   transformTooltipData,
 } from './util/activitiesHelpers'
@@ -60,7 +61,7 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
               // filter is used when a comment is made, to refetch the activities of other filters
               ...(Array.isArray(entityIds) ? entityIds : [entityIds]).map((id) => ({
                 type: 'entityActivities',
-                id: id + '-' + filter,
+                id: id + '-' + filterKey(filter),
               })),
             ]
           : [{ type: 'activity', id: 'LIST' }],
@@ -187,7 +188,7 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
               // filter is used when a comment is made, to refetch the activities of other filters
               ...(Array.isArray(entityIds) ? entityIds : [entityIds]).filter(Boolean).map((id) => ({
                 type: 'entityActivities',
-                id: `${id}-${typeof filter === 'string' ? filter : JSON.stringify(filter)}`,
+                id: `${id}-${filterKey(filter)}`,
               })),
             ]
           : [{ type: 'activity', id: 'LIST' }],
@@ -214,6 +215,7 @@ export const {
   useGetEntityTooltipQuery,
   useLazyGetActivitiesByIdQuery,
   useGetEntitiesChecklistsQuery,
+  useGetActivitiesQuery,
   useGetActivitiesInfiniteInfiniteQuery,
   useGetActivityUsersQuery,
 } = getActivitiesGQLApi

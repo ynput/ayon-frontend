@@ -124,6 +124,7 @@ const ReviewablesSelector = forwardRef<ReviewablesSelectorHandle, ReviewablesSel
       >
         {reviewables.map(({ fileId, label, tag, selectionVariant, contextMenuItems }) => (
           <Card
+            key={fileId}
             projectName={projectName}
             fileId={fileId}
             label={label}
