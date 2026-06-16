@@ -44,7 +44,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints<TagTypes, UpdatedDefinitions
       // Codegen names the request body arg after its model (genericViewPostModel).
       // Override the query so the whole FE keeps passing `payload`, regardless of
       // how codegen names the arg on the next regen.
-      query: ({ viewType, projectName, payload }: any) => ({
+      query: ({ viewType, projectName, payload }: CreateViewArg) => ({
         url: `/api/views/${viewType}`,
         method: 'POST',
         body: payload,
