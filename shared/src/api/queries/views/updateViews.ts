@@ -178,7 +178,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints<TagTypes, UpdatedDefinitions
     },
     updateView: {
       // See createView note — keep the FE on `payload` despite codegen renaming the arg.
-      query: ({ viewType, projectName, viewId, payload }: any) => ({
+      query: ({ viewType, projectName, viewId, payload }: UpdateViewArg) => ({
         url: `/api/views/${viewType}/${viewId}`,
         method: 'PATCH',
         body: payload,
