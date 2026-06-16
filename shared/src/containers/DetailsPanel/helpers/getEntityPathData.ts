@@ -51,7 +51,7 @@ const getEntityPathData = (entity: DetailsPanelEntityData, folders: FoldersMap) 
   }
   if (entity.entityType === 'task') {
     // add task
-    segments.push({ type: 'task', label: entity.name, id: entity.id })
+    segments.push({ type: 'task', label: entity.label || entity.name, id: entity.id })
   }
 
   return segments
