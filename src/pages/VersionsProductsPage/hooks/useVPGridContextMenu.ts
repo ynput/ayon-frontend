@@ -139,7 +139,11 @@ export const useVPGridContextMenu = (contextMenuItems: VPContextMenuItems) => {
 
       const addToListMenuItem = addToListItem(e as any, mockCell as any, [], mockMeta, mockContext)
       if (addToListMenuItem) {
-        menuItems.push(addToListMenuItem)
+        if (Array.isArray(addToListMenuItem)) {
+          menuItems.push(...addToListMenuItem)
+        } else {
+          menuItems.push(addToListMenuItem)
+        }
       }
 
       const productDetailMenuItem = productDetailItem(
