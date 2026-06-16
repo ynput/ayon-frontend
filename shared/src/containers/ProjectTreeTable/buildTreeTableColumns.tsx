@@ -949,15 +949,17 @@ const buildTreeTableColumns = ({
               enableResizing: true,
               enablePinning: true,
               enableHiding: true,
-              cell: ({ row, column }) => {
+              cell: ({ row, column, table }) => {
                 const columnIdParsed = column.id.replace('link_', '')
 
                 const { id, value } = getValueIdType(row, columnIdParsed, 'links')
                 const cellValue = value?.map((v: any) => v.label)
+                const entityId = row.original.entityId || row.original.id
+                const isLinksLoading = !!table.options.meta?.loadingLinksEntityIds?.has(entityId)
                 const valueData: LinkWidgetData = {
                   links: value,
                   direction: direction,
-                  entityId: row.original.entityId || row.original.id,
+                  entityId: entityId,
                   entityType: row.original.entityType,
                   link: {
                     label: link.linkType,
@@ -975,6 +977,7 @@ const buildTreeTableColumns = ({
                     valueData={valueData}
                     folderId={row.original.folderId}
                     attributeData={{ type: 'links' }}
+                    isLinksLoading={isLinksLoading}
                   />
                 )
               },
