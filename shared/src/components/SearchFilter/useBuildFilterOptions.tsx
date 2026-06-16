@@ -264,11 +264,8 @@ export const useBuildFilterOptions = ({
           if (!productBaseTypeOption.values?.some((v) => v.id === value)) {
             productBaseTypeOption.values?.push({
               id: value,
-              type: 'string',
               label: label || value,
               icon: icon || getEntityTypeIcon('product'),
-              inverted: false,
-              values: [],
             })
           }
         })

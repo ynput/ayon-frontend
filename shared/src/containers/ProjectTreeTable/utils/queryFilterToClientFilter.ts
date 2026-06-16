@@ -65,16 +65,14 @@ export const queryFilterToClientFilter = (
  * Detects nested QueryFilters that represent datetime ranges (gte+lte on the same key)
  * and merges them into a single datetime Filter with proper range values.
  */
-const tryMergeDatetimeRange = (
+export const tryMergeDatetimeRange = (
   nestedFilter: QueryFilter,
   filterOptions: Option[],
 ): Filter | null => {
   if (!nestedFilter.conditions || nestedFilter.conditions.length < 1) return null
 
   // All conditions must be QueryConditions (not nested QueryFilters)
-  const conditions = nestedFilter.conditions.filter(
-    (c): c is QueryCondition => 'key' in c,
-  )
+  const conditions = nestedFilter.conditions.filter((c): c is QueryCondition => 'key' in c)
   if (conditions.length !== nestedFilter.conditions.length) return null
 
   // All conditions must share the same key
@@ -92,8 +90,14 @@ const tryMergeDatetimeRange = (
 
   const rawStartValue = gteCondition?.value as string | undefined
   const rawEndValue = lteCondition?.value as string | undefined
-  const startISO = rawStartValue && isRelativeDateValue(rawStartValue) ? resolveRelativeValue(rawStartValue) : rawStartValue
-  const endISO = rawEndValue && isRelativeDateValue(rawEndValue) ? resolveRelativeValue(rawEndValue) : rawEndValue
+  const startISO =
+    rawStartValue && isRelativeDateValue(rawStartValue)
+      ? resolveRelativeValue(rawStartValue)
+      : rawStartValue
+  const endISO =
+    rawEndValue && isRelativeDateValue(rawEndValue)
+      ? resolveRelativeValue(rawEndValue)
+      : rawEndValue
 
   // Build the range label
   let label = 'Custom range'
@@ -120,8 +124,24 @@ const tryMergeDatetimeRange = (
     id: `custom-${startISO || ''}-${endISO || ''}`,
     label,
     values: [
-      ...(startISO ? [{ id: startISO, label: isValid(parseISO(startISO)) ? format(parseISO(startISO), 'MMM d, yyyy') : startISO }] : []),
-      ...(endISO ? [{ id: endISO, label: isValid(parseISO(endISO)) ? format(parseISO(endISO), 'MMM d, yyyy') : endISO }] : []),
+      ...(startISO
+        ? [
+            {
+              id: startISO,
+              label: isValid(parseISO(startISO))
+                ? format(parseISO(startISO), 'MMM d, yyyy')
+                : startISO,
+            },
+          ]
+        : []),
+      ...(endISO
+        ? [
+            {
+              id: endISO,
+              label: isValid(parseISO(endISO)) ? format(parseISO(endISO), 'MMM d, yyyy') : endISO,
+            },
+          ]
+        : []),
     ],
   } as FilterValue
 

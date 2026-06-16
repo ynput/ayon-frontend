@@ -18,6 +18,7 @@ export type UseGetActivitiesInfiniteInfiniteQuery = (
 type Props = {
   entities: Array<{ id: string; projectName: string }>
   filter: any
+  backendFilter?: string
   activityTypes?: string[] | null
   projectName: string
   entityType: string
@@ -26,6 +27,7 @@ type Props = {
 const useGetFeedActivitiesData = ({
   entities,
   filter,
+  backendFilter,
   activityTypes,
   projectName,
   entityType,
@@ -45,6 +47,7 @@ const useGetFeedActivitiesData = ({
     projectName: projectName,
     referenceTypes: ['origin', 'mention', 'relation'],
     activityTypes: activityTypes,
+    activityFilter: backendFilter,
     filter,
   }
 

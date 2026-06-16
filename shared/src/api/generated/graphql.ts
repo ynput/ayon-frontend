@@ -1746,6 +1746,7 @@ export type GetActivitiesQueryVariables = Exact<{
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   activityTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   authors?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  activityFilter?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -2753,7 +2754,7 @@ export const GetActivityUsersDocument = new TypedDocumentString(`
 }
     `);
 export const GetActivitiesDocument = new TypedDocumentString(`
-    query GetActivities($projectName: String!, $entityIds: [String!]!, $after: String, $first: Int, $before: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!], $authors: [String!]) {
+    query GetActivities($projectName: String!, $entityIds: [String!]!, $after: String, $first: Int, $before: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!], $authors: [String!], $activityFilter: String) {
   project(name: $projectName) {
     name
     activities(
@@ -2765,6 +2766,7 @@ export const GetActivitiesDocument = new TypedDocumentString(`
       referenceTypes: $referenceTypes
       activityTypes: $activityTypes
       authors: $authors
+      filter: $activityFilter
     ) {
       pageInfo {
         hasPreviousPage

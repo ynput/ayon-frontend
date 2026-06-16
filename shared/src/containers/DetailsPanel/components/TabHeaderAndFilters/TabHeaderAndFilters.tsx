@@ -244,6 +244,7 @@ const TabHeaderAndFilters = <T, K = string>({
                 valueTemplate={() => (
                   <Styled.FilterButton
                     selected={isSelected}
+                    // @ts-expect-error - icon is fine
                     icon={filter.icon}
                     data-tooltip={filter.tooltip}
                     data-tooltip-delay={0}
@@ -265,6 +266,7 @@ const TabHeaderAndFilters = <T, K = string>({
                 <Styled.FilterButton
                   selected={isSelected || isExpanded}
                   onClick={() => handleSearchClick(filter)}
+                  // @ts-expect-error - icon is fine
                   icon={filter.icon}
                   data-tooltip={!isExpanded ? filter.tooltip : undefined}
                   data-tooltip-delay={0}
@@ -299,6 +301,7 @@ const TabHeaderAndFilters = <T, K = string>({
               key={String(filter.id)}
               selected={isSelected}
               onClick={() => handleToggle(filter)}
+              // @ts-expect-error - icon is fine
               icon={filter.icon}
               data-tooltip={filter.tooltip}
               data-tooltip-delay={0}

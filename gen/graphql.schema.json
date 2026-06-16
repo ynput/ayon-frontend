@@ -8089,6 +8089,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "filter",
+                "description": "Filter activities using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "first",
                 "description": "Pagination: first",
                 "type": {

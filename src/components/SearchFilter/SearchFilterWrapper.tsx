@@ -56,6 +56,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       enableMultipleSameFilters={ALLOW_MULTIPLE_SAME_FILTERS}
       enableGlobalSearch={ALLOW_GLOBAL_SEARCH}
       disabledFilters={disabledFilters}
+      enableAutosuggestion={true}
     />
   )
 }
