@@ -88,7 +88,8 @@ export interface ProjectOverviewContextType {
   // context menu items
   contextMenuItems: ContextMenuItemConstructors
 
-  // links visibility
+  // links
+  loadingLinksEntityIds: Set<string>
   setLinksVisible: (visible: boolean) => void
 
   // move dialog

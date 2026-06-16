@@ -128,6 +128,7 @@ declare module '@tanstack/react-table' {
     toggleExpandAll?: ToggleExpandAll
     selection?: string[]
     columnsConfig?: ColumnsConfig
+    loadingLinksEntityIds?: Set<string>
   }
 }
 
@@ -250,6 +251,7 @@ export const ProjectTreeTable = ({
     getEntityById,
     onResetView,
     overrideGroupBy,
+    loadingLinksEntityIds,
   } = useProjectTableContext()
   const isGrouping = !!groupBy || !!overrideGroupBy
 
@@ -508,6 +510,7 @@ export const ProjectTreeTable = ({
       loadMoreRows: fetchNextPage,
       selection: Array.from(selectedCells),
       columnsConfig,
+      loadingLinksEntityIds,
     },
   })
 

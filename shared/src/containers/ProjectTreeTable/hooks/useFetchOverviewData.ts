@@ -5,7 +5,7 @@ import {
   useGetTasksListInfiniteInfiniteQuery,
 } from '@shared/api'
 import type { FolderListItem, GetGroupedTasksListArgs, EntityGroup, QueryFilter } from '@shared/api'
-import { useGroupedPagination } from '@shared/hooks'
+import { useGroupedPagination, useQueryArgumentChangeLoading } from '@shared/hooks'
 import { getGroupByDataType } from '@shared/util'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
 import { useEffect, useMemo, useState } from 'react'
@@ -33,6 +33,7 @@ type useFetchOverviewDataData = {
   isLoadingAll: boolean // the whole table is a loading state
   isLoadingMore: boolean // loading more tasks
   loadingTasks: LoadingTasks // show number of loading tasks per folder or root
+  loadingLinksEntityIds: Set<string> // entity IDs whose links are currently being fetched (not yet cached)
   fetchNextPage: (value?: string) => void
   reloadTableData: () => void
 }
@@ -179,6 +180,7 @@ export const useFetchOverviewData = ({
     data: foldersLinks = [],
     refetch: refetchFoldersLinks,
     isUninitialized: isUninitializedFoldersLinks,
+    isFetching: isFetchingFoldersLinks,
   } = useGetEntityLinksQuery(
     {
       projectName,
@@ -186,6 +188,14 @@ export const useFetchOverviewData = ({
       entityType: 'folder',
     },
     { skip: skipLinks },
+  )
+
+  const isLoadingFolderLinks = useQueryArgumentChangeLoading(
+    {
+      isLoading: isFetchingFoldersLinks,
+      dependencies: [visibleFolders, projectName],
+    },
+    isFetchingFoldersLinks,
   )
 
   // create a map of folders by id for efficient lookups
@@ -448,6 +458,7 @@ export const useFetchOverviewData = ({
     data: tasksLinks = [],
     refetch: refetchTasksLinks,
     isUninitialized: isUninitializedTasksLinks,
+    isFetching: isFetchingTasksLinks,
   } = useGetEntityLinksQuery(
     {
       projectName,
@@ -458,6 +469,43 @@ export const useFetchOverviewData = ({
       skip: visibleTasks.size === 0 || skipLinks,
     },
   )
+
+  const isLoadingTaskLinks = useQueryArgumentChangeLoading(
+    {
+      isLoading: isFetchingTasksLinks,
+      dependencies: [visibleTasks, projectName],
+    },
+    isFetchingTasksLinks,
+  )
+
+  // Compute entity IDs whose links are currently loading (in query but not yet in the cache result)
+  const loadingLinksEntityIds = useMemo(() => {
+    const ids = new Set<string>()
+
+    if (isFetchingFoldersLinks && !skipLinks) {
+      const cachedIds = new Set(foldersLinks.map((l) => l.id))
+      for (const id of visibleFolders) {
+        if (!cachedIds.has(id)) ids.add(id)
+      }
+    }
+
+    if (isFetchingTasksLinks && !skipLinks) {
+      const cachedIds = new Set(tasksLinks.map((l) => l.id))
+      for (const id of visibleTasks) {
+        if (!cachedIds.has(id)) ids.add(id)
+      }
+    }
+
+    return ids
+  }, [
+    isFetchingFoldersLinks,
+    isFetchingTasksLinks,
+    foldersLinks,
+    tasksLinks,
+    visibleFolders,
+    visibleTasks,
+    skipLinks,
+  ])
 
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
@@ -571,6 +619,7 @@ export const useFetchOverviewData = ({
       isLoadingFolders || isLoadingTasksList || isLoadingTasksFolders || isLoadingModules, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
     loadingTasks: loadingTasksForParents,
+    loadingLinksEntityIds,
     fetchNextPage: handleFetchNextPage,
     reloadTableData,
   }

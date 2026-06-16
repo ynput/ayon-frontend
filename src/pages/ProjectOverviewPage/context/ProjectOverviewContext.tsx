@@ -275,6 +275,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     isLoadingAll,
     isLoadingMore,
     loadingTasks,
+    loadingLinksEntityIds,
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
@@ -367,6 +368,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         // context menu item
         contextMenuItems,
         setLinksVisible,
+        loadingLinksEntityIds,
       }}
     >
       {children}
