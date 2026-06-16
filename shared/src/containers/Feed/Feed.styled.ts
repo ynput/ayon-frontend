@@ -8,7 +8,7 @@ export const FeedContainer = styled.section`
   height: 100%;
 
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: 1fr auto;
   background-color: var(--md-sys-color-surface-container-low);
 
   padding-top: 4px;
