@@ -58,7 +58,31 @@ export const queryFilterToClientFilter = (
     }
   })
 
-  return filters
+  return mergeFiltersById(filters)
+}
+
+/**
+ * Merges filters that share the same id by combining their values.
+ * This handles the case where custom + non-custom values for the same field
+ * are stored as separate conditions in the query filter (e.g. `in` + `like`)
+ * but should be represented as a single filter with all values combined.
+ */
+const mergeFiltersById = (filters: Filter[]): Filter[] => {
+  const filterMap = new Map<string, Filter>()
+
+  for (const filter of filters) {
+    const existing = filterMap.get(filter.id)
+    if (existing) {
+      // Merge values, avoiding duplicates by id
+      const existingValueIds = new Set((existing.values || []).map((v) => v.id))
+      const newValues = (filter.values || []).filter((v) => !existingValueIds.has(v.id))
+      existing.values = [...(existing.values || []), ...newValues]
+    } else {
+      filterMap.set(filter.id, { ...filter, values: [...(filter.values || [])] })
+    }
+  }
+
+  return Array.from(filterMap.values())
 }
 
 /**

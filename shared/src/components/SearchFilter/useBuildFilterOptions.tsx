@@ -1130,12 +1130,12 @@ export const splitFiltersByScope = (
 ): Record<ScopeType | 'unscoped', Record<string, any>> => {
   // Initialize with all scopes having empty conditions, plus unscoped
   const result: Record<ScopeType | 'unscoped', Record<string, any>> = {
-    folder: { conditions: [] },
-    product: { conditions: [] },
-    task: { conditions: [] },
-    user: { conditions: [] },
-    version: { conditions: [] },
-    unscoped: { conditions: [] },
+    folder: { conditions: [], operator: combinedFilter?.operator || 'and' },
+    product: { conditions: [], operator: combinedFilter?.operator || 'and' },
+    task: { conditions: [], operator: combinedFilter?.operator || 'and' },
+    user: { conditions: [], operator: combinedFilter?.operator || 'and' },
+    version: { conditions: [], operator: combinedFilter?.operator || 'and' },
+    unscoped: { conditions: [], operator: combinedFilter?.operator || 'and' },
   }
 
   if (!combinedFilter?.conditions || combinedFilter?.conditions.length === 0) {
@@ -1145,7 +1145,6 @@ export const splitFiltersByScope = (
   // Helper to extract scope prefix from an ID
   const extractScopeAndRemovePrefix = (
     id: string,
-    currentConfig?: FilterConfig,
   ): { scope: ScopeType | null; cleanId: string } => {
     // Check if ID starts with any scope prefix
     const scopeMatch = scopes.find((scope) => id.startsWith(`${scope}_`))
@@ -1163,56 +1162,76 @@ export const splitFiltersByScope = (
     return { scope: null, cleanId: id }
   }
 
-  // Helper to process a filter recursively
-  const processConditions = (
-    conditions: any[] | undefined,
-    targetFilters: Record<ScopeType | 'unscoped', Record<string, any>>,
-  ) => {
-    if (!conditions || conditions.length === 0) return
+  // Helper to process a filter recursively and return results by scope
+  const processFilter = (filter: any): Record<ScopeType | 'unscoped', any[]> => {
+    const localResults: Record<ScopeType | 'unscoped', any[]> = {
+      folder: [],
+      product: [],
+      task: [],
+      user: [],
+      version: [],
+      unscoped: [],
+    }
 
-    conditions.forEach((condition) => {
-      // If this is a nested filter
-      if ('conditions' in condition && !('key' in condition)) {
-        processConditions(condition.conditions, targetFilters)
-      } else if ('key' in condition) {
-        // This is a QueryCondition
-        const { scope, cleanId } = extractScopeAndRemovePrefix(condition.key, config)
+    if ('conditions' in filter && !('key' in filter)) {
+      // Nested filter - process all children
+      const childResults = (filter.conditions || []).map((f: any) => processFilter(f))
 
-        if (scope && targetFilters[scope]) {
-          // Add the condition with cleaned ID to the appropriate scope
-          targetFilters[scope].conditions?.push({
-            ...condition,
-            key: cleanId,
-          })
-        } else if (!scope) {
-          // No explicit scope prefix found, check filterIdToScopeMap
-          const mappedScope = filterIdToScopeMap?.[condition.key]
+      // For each scope, group the results from children
+      Object.keys(localResults).forEach((s) => {
+        const scope = s as ScopeType | 'unscoped'
+        const scopeConditions = childResults.flatMap((res: any) => res[scope])
 
-          if (mappedScope && targetFilters[mappedScope]) {
-            // Found in the map, add to mapped scope
-            targetFilters[mappedScope].conditions?.push(condition)
-          } else if (
-            condition.key === SEARCH_FILTER_ID ||
-            condition.key === 'name' ||
-            condition.key?.endsWith('_name')
-          ) {
-            // Global search and name filters should be added to all scopes
-            scopes.forEach((scopeName) => {
-              if (targetFilters[scopeName]) {
-                targetFilters[scopeName].conditions?.push(condition)
-              }
-            })
+        if (scopeConditions.length > 0) {
+          // If there are multiple conditions, wrap them in the parent's operator
+          // If there's only one, we still wrap it if there was an operator to preserve structure
+          if (scopeConditions.length === 1 && !filter.operator) {
+            localResults[scope].push(scopeConditions[0])
           } else {
-            // Not in map, add to unscoped
-            targetFilters['unscoped']?.conditions?.push(condition)
+            localResults[scope].push({
+              conditions: scopeConditions,
+              operator: filter.operator,
+            })
           }
         }
+      })
+    } else if ('key' in filter) {
+      // QueryCondition
+      const { scope, cleanId } = extractScopeAndRemovePrefix(filter.key)
+
+      if (scope) {
+        localResults[scope].push({ ...filter, key: cleanId })
+      } else {
+        // No explicit scope prefix found, check filterIdToScopeMap
+        const mappedScope = filterIdToScopeMap?.[filter.key]
+
+        if (mappedScope) {
+          localResults[mappedScope].push(filter)
+        } else if (
+          filter.key === SEARCH_FILTER_ID ||
+          filter.key === 'name' ||
+          filter.key?.endsWith('_name')
+        ) {
+          // Global search and name filters should be added to all requested scopes
+          scopes.forEach((scopeName) => {
+            localResults[scopeName].push(filter)
+          })
+        } else {
+          localResults['unscoped'].push(filter)
+        }
       }
-    })
+    }
+
+    return localResults
   }
 
-  // Process the combined filter
-  processConditions(combinedFilter.conditions, result)
+  // Process all top-level conditions and populate the result
+  const finalResults = (combinedFilter.conditions || []).map((f: any) => processFilter(f))
+
+  Object.keys(result).forEach((s) => {
+    const scope = s as ScopeType | 'unscoped'
+    result[scope].conditions = finalResults.flatMap((res: any) => res[scope])
+  })
 
   return result
 }

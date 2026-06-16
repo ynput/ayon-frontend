@@ -40,7 +40,11 @@ import {
   splitClientFiltersByScope,
   splitFiltersByScope,
 } from '@shared/components/SearchFilter/useBuildFilterOptions'
-import { useSlicerContext, useSelectedEntityIds, useSlicerViewSync } from '@shared/containers/Slicer'
+import {
+  useSlicerContext,
+  useSelectedEntityIds,
+  useSlicerViewSync,
+} from '@shared/containers/Slicer'
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
@@ -146,8 +150,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   modules,
 }) => {
   const { attribFields } = useProjectDataContext()
-  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy, slicerType, onUpdateSlicerType, columns } =
-    useVPViewsContext()
+  const {
+    filters,
+    showProducts,
+    sortBy,
+    sortDesc,
+    featuredVersionOrder,
+    groupBy,
+    slicerType,
+    onUpdateSlicerType,
+    columns,
+  } = useVPViewsContext()
   const { isLoadingViews } = useViewsContext()
 
   // comments are the heaviest field to resolve, so only fetch them when the column is shown
@@ -226,18 +239,14 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     product: [slicerProductFilter],
     task: [slicerTaskFilter],
   } = useMemo(() => {
-    return splitClientFiltersByScope(
-      sliceFilter ? [sliceFilter] : null,
-      vpValidScopes,
-      {
-        status: 'version',
-        taskType: 'task',
-        productType: 'product',
-        assignees: 'task',
-        author: 'version',
-        ...attribScopeMap,
-      },
-    )
+    return splitClientFiltersByScope(sliceFilter ? [sliceFilter] : null, vpValidScopes, {
+      status: 'version',
+      taskType: 'task',
+      productType: 'product',
+      assignees: 'task',
+      author: 'version',
+      ...attribScopeMap,
+    })
   }, [sliceFilter, attribScopeMap])
   // Resolve entity list selections to IDs
   const { entityIds, rawEntityIds } = useSelectedEntityIds()

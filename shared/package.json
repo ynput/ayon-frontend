@@ -132,7 +132,7 @@
   "dependencies": {
     "@tanstack/match-sorter-utils": "8.19.4",
     "@tanstack/react-virtual": "3.13.23",
-    "@ynput/ayon-frontend-shared": "^0.3.36",
+    "@ynput/ayon-frontend-shared": "^0.3.37",
     "@ynput/ayon-react-components": "^1.18.8",
     "axios": "1.16.1",
     "clsx": "2.1.1",

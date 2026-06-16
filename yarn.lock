@@ -578,7 +578,7 @@
   resolved "https://registry.yarnpkg.com/@fastify/busboy/-/busboy-3.2.0.tgz#13ed8212f3b9ba697611529d15347f8528058cea"
   integrity sha512-m9FVDXU3GT2ITSe0UaMA5rU3QkfC/UXtCU8y0gSN/GugTqtVldOBWIB5V6V3sbmenVZUIpU6f+mPEO2+m5iTaA==
 
-"@graphql-codegen/add@^7.0.0", "@graphql-codegen/add@^7.0.1":
+"@graphql-codegen/add@7.0.1", "@graphql-codegen/add@^7.0.0", "@graphql-codegen/add@^7.0.1":
   version "7.0.1"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/add/-/add-7.0.1.tgz#9972c7944fced5fa2223474fb481308c20ec9f2c"
   integrity sha512-kWw6RMu9ysBw1wcgcgf9mOnswc5M3ekOApDTiaJC/UZNTEYins01srZHYTP7z3P/WlGGC844BRtjwh3U2kNd/A==
@@ -586,7 +586,7 @@
     "@graphql-codegen/plugin-helpers" "^7.0.1"
     tslib "^2.8.0"
 
-"@graphql-codegen/cli@^7.1.2":
+"@graphql-codegen/cli@7.1.2":
   version "7.1.2"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/cli/-/cli-7.1.2.tgz#4e9fac3981dc0919609a2f37009eea7e3da99db1"
   integrity sha512-RiXedOZhanodp8fCBlpciyic17kSv0hSMboDaE9/ZWXC6f4g1aQBTZmQJOsT9Dtxy0SxqmMY674NoTlJgELNeA==
@@ -667,7 +667,7 @@
     auto-bind "^5.0.0"
     tslib "^2.8.0"
 
-"@graphql-codegen/introspection@^6.0.1":
+"@graphql-codegen/introspection@6.0.1":
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/introspection/-/introspection-6.0.1.tgz#60135782afaaa9fe2b156c05bec1b3bc0763b092"
   integrity sha512-X8LdqTjWf6G1k1cqM1WpBMEarFWDRLxJxo5CfigoU1Aw3GHn8ToVoPvHd4wrQyS8WA+2ijsd6+jjzo5mXg9xuQ==
@@ -676,7 +676,7 @@
     "@graphql-codegen/visitor-plugin-common" "^7.0.3"
     tslib "^2.8.0"
 
-"@graphql-codegen/near-operation-file-preset@^5.2.1":
+"@graphql-codegen/near-operation-file-preset@5.2.1":
   version "5.2.1"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/near-operation-file-preset/-/near-operation-file-preset-5.2.1.tgz#18aaec7e781812965845b16a11ec52b2ef6be7f3"
   integrity sha512-F+9gln4QboYozcMfsXwOxsPDdqUmMBOQoGZww+9qegvpWNvQVcZXm1LbYibi1iWOfuM0TTXVtMsDDjMeyNJcHA==
@@ -708,7 +708,7 @@
     "@graphql-tools/utils" "^11.0.0"
     tslib "^2.8.0"
 
-"@graphql-codegen/typed-document-node@^7.0.1", "@graphql-codegen/typed-document-node@^7.0.3":
+"@graphql-codegen/typed-document-node@7.0.3", "@graphql-codegen/typed-document-node@^7.0.1":
   version "7.0.3"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/typed-document-node/-/typed-document-node-7.0.3.tgz#98df3887322e1ba945d13391f3815f79b4e64742"
   integrity sha512-l/4KenYJG5D8Aj6Aa2KPeS0fdMIIi04Qx28d4SLwMWuyFU9WXspU5mR9YMNDRZzaTgBtGR8aMIl9RzyiWf5uUw==
@@ -719,7 +719,7 @@
     change-case-all "^2.1.0"
     tslib "^2.8.0"
 
-"@graphql-codegen/typescript-operations@^6.0.3", "@graphql-codegen/typescript-operations@^6.0.4":
+"@graphql-codegen/typescript-operations@6.0.4", "@graphql-codegen/typescript-operations@^6.0.3":
   version "6.0.4"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/typescript-operations/-/typescript-operations-6.0.4.tgz#98a176d755372488c400ff4e49988eddfaa007bb"
   integrity sha512-YUmnmZcJ6wMcC2VmTE7gw18zoG4S1VF1aJmaupDrBnwfKGA5BmdKrA6k2Wj6ZkUDOduHI60l/cmZBRtqel4VtQ==
@@ -730,7 +730,7 @@
     auto-bind "^5.0.0"
     tslib "^2.8.0"
 
-"@graphql-codegen/typescript-rtk-query@^4.0.3":
+"@graphql-codegen/typescript-rtk-query@4.0.3":
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/typescript-rtk-query/-/typescript-rtk-query-4.0.3.tgz#8492a60a22d0185b66916425a0c169c51ebd22f9"
   integrity sha512-AYIhSwrGVtExGQKZcGp0qQiN2TUVRTuO3AOGOAtDvDuBEDy4P1uvjcEFl8cK0pw7Hs7BpDZzymKTO0h4QCyMUQ==
@@ -741,7 +741,7 @@
     change-case-all "1.0.15"
     tslib "^2.8.1"
 
-"@graphql-codegen/typescript@^6.0.2":
+"@graphql-codegen/typescript@6.0.2", "@graphql-codegen/typescript@^6.0.2":
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/typescript/-/typescript-6.0.2.tgz#5a076dc38b9727970aef0df9fa0b33d95ed39939"
   integrity sha512-zyLfKsFJ7TRkQ0PyaUVuiAek9TSbtVJwwBoOuaE9RAWr45+9Y5W1LYldpiSTcyfxKVSIniE7Gj0V87qzrpdyYw==
@@ -2315,10 +2315,10 @@
   dependencies:
     tslib "^2.6.3"
 
-"@ynput/ayon-react-components@^1.18.12":
-  version "1.18.12"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.18.12.tgz#74638d6a9f8d6df04fabacbd2febf6e8776fddaf"
-  integrity sha512-j6YaNaisglNvSlzk1iNqDqITVM0c3EbcVGmpcKSzoTQbxMPjJ9BD5JCQpplSmuzEknvxn5Dcg9Lavl3zY0xx0A==
+"@ynput/ayon-react-components@^1.18.13":
+  version "1.18.13"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.18.13.tgz#4a1a1878e8fe6da263b2ca254209f3c0d6529bbc"
+  integrity sha512-ItC03T0WJ8EHaNWnklxBLopx4E2kCfcTXdVolR/hiX32vA2PDEU7m5xP1Q0GssKwU9JK8Hmc56jNdS1k/OClDg==
   dependencies:
     short-uuid "^5.2.0"
 
