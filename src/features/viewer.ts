@@ -47,19 +47,33 @@ const viewerSlice = createSlice({
   name: 'viewer',
   initialState,
   reducers: {
-    openViewer: (state: ViewerState, { payload }: PayloadAction<Partial<ViewerState>>) => {
-      state.projectName = payload.projectName || state.projectName
-      state.quickView = !!payload.quickView
+    openViewer: {
+      reducer: (state: ViewerState, { payload }: PayloadAction<Partial<ViewerState>>) => {
+        state.projectName = payload.projectName || state.projectName
+        state.quickView = !!payload.quickView
 
-      if (payload.productId) state.productId = payload.productId
-      if (payload.selectedProductId) state.selectedProductId = payload.selectedProductId
-      if (payload.taskId) state.taskId = payload.taskId
-      if (payload.folderId) state.folderId = payload.folderId
+        state.productId = payload.productId ?? null
+        state.selectedProductId = payload.selectedProductId ?? null
+        state.taskId = payload.taskId ?? null
+        state.folderId = payload.folderId ?? null
+        state.versionIds = payload.versionIds ?? []
+        state.reviewableIds = payload.reviewableIds ?? []
 
-      if (payload.productId || payload.taskId || payload.folderId) state.isOpen = true
-
-      if (payload.versionIds) state.versionIds = payload.versionIds
-      if (payload.reviewableIds) state.reviewableIds = payload.reviewableIds || []
+        if (state.productId || state.taskId || state.folderId) state.isOpen = true
+      },
+      // a new target replaces the previous one — default every id so a stale
+      // product/task/folder can't leak through (e.g. opening from the slide-out)
+      prepare: (payload: Partial<ViewerState>) => ({
+        payload: {
+          productId: null,
+          selectedProductId: null,
+          taskId: null,
+          folderId: null,
+          versionIds: [],
+          reviewableIds: [],
+          ...payload,
+        },
+      }),
     },
     updateProduct: (
       state: ViewerState,
