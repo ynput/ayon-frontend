@@ -2,7 +2,16 @@ import { createContext, useContext, useCallback } from 'react'
 import { useGetProjectQuery, useGetProjectAnatomyQuery } from '@shared/api'
 import { getEntityTypeIcon } from '@shared/util'
 
-import type { FolderType, TaskType, ProductTypeListItem, ProjectModel, Anatomy } from '@shared/api'
+import type {
+  FolderType,
+  TaskType,
+  ProductTypeListItem,
+  ProjectModel,
+  Anatomy,
+  ProductType,
+  ProductTypesList,
+} from '@shared/api'
+import { useGetProductTypesQuery } from '@shared/api/queries/products/getProduct'
 
 export type ProjectModelWithProducts = ProjectModel & {
   // Extend project with product types
@@ -28,6 +37,31 @@ const emptyProject: ProjectModelWithProducts = {
   ownAttrib: [],
 }
 
+function getProductTypesData(sourceData: ProductTypesList | undefined) {
+  if (!sourceData) {
+    return { productTypes: [], productBaseTypes: [] }
+  }
+  const productTypes = sourceData.productTypes || []
+
+  // Create unique base types by mapping and filtering duplicates
+  const baseTypesMap = new Map<string, ProductType>()
+
+  productTypes.forEach((item: any) => {
+    if (!baseTypesMap.has(item.baseType)) {
+      baseTypesMap.set(item.baseType, {
+        name: item.baseType,
+        icon: item.icon,
+        color: item.color,
+      })
+    }
+  })
+
+  return {
+    productTypes,
+    productBaseTypes: Array.from(baseTypesMap.values()),
+  }
+}
+
 export interface ProjectContextValue extends ProjectModelWithProducts {
   projectName: string
   isLoading: boolean
@@ -35,6 +69,8 @@ export interface ProjectContextValue extends ProjectModelWithProducts {
   isUninitialized: boolean
   error: any
   anatomy: Anatomy
+  productBaseTypes: ProductType[]
+
   refetch: () => void
   getProductType: (productType: string) => {
     icon: string
@@ -80,19 +116,21 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
   // (we're referencing nested objects. no need to use useMemo for these)
 
   const defaultProductType = anatomy.product_base_types?.['default']
-  const productTypes: ProductTypeListItem[] = (anatomy.product_base_types?.definitions || []).map(
-    (t) => ({
-      name: t.name || '',
-      icon: t.icon,
-      color: t.color,
-    }),
+
+  const { data: productTypesAll } = useGetProductTypesQuery(
+    { projectName: projectName },
+    {
+      skip: !projectName,
+    },
   )
+
+  const { productTypes, productBaseTypes } = getProductTypesData(productTypesAll)
+
   //
   // Magic functions
   //
 
   // Folder types
-
   const getFolderType = useCallback(
     (name: string): FolderType | undefined => {
       return project?.folderTypes?.find((type: FolderType) => type.name === name)
@@ -101,7 +139,6 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
   )
 
   // Task types
-
   const getTaskType = useCallback(
     (name: string): TaskType | undefined => {
       return project?.taskTypes?.find((type: TaskType) => type.name === name)
@@ -110,7 +147,6 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
   )
 
   // Product types
-
   const getProductType = useCallback(
     (productType: string) => {
       const type = productTypes.find((t) => t.name === productType)
@@ -160,7 +196,8 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
         ...emptyProject,
         ...project,
         projectName,
-        productTypes: productTypes,
+        productTypes,
+        productBaseTypes,
         anatomy,
         isLoading: isLoading || isFetching,
         isSuccess: isSuccess,

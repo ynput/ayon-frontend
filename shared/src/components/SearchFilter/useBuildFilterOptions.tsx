@@ -1,10 +1,5 @@
 import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
-import {
-  ProductType,
-  useGetEntityGroupsQuery,
-  useGetKanbanProjectUsersQuery,
-  useGetProjectsInfoQuery,
-} from '@shared/api'
+import { ProductType, useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import type {
   GetProjectsInfoResponse,
   FolderType,
@@ -14,7 +9,6 @@ import type {
   AttributeModel,
   EnumItem,
   AttributeData,
-  EntityGroup,
 } from '@shared/api'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option, Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
@@ -79,7 +73,7 @@ export type BuildFilterOptions = {
     assignees?: string[]
     productTypes?: ProductType[]
     productNames?: string[]
-    productBaseTypes?: string[]
+    productBaseTypes?: ProductType[]
   }
   columnOrder?: ColumnOrderState
   config?: FilterConfig
@@ -96,6 +90,8 @@ export const useBuildFilterOptions = ({
   columnOrder = [],
   power,
 }: BuildFilterOptions): Option[] => {
+  const productTypes = data.productTypes || []
+  const productBaseTypes = data.productBaseTypes || []
   let options: Option[] = []
 
   // Determine which scopes to use
@@ -124,32 +120,6 @@ export const useBuildFilterOptions = ({
     ['assignees', 'users', 'author'].some((type) =>
       s.filterTypes.includes(type as FilterFieldType),
     ),
-  )
-  // find if any search field is in any of the scopesWithTypes
-  const fieldInScopes = (field: FilterFieldType): boolean => {
-    return scopesWithTypes.some((s) => s.filterTypes.includes(field))
-  }
-
-  // get grouping options for productTypes
-  // NOTE: We should revisit this to be used for all attribs and fields
-  const { data: { groups: productTypes = [] } = {} } = useGetEntityGroupsQuery(
-    {
-      entityType: 'product',
-      groupingKey: 'productType',
-      projectName: projectNames[0],
-      empty: true,
-    },
-    { skip: !projectNames?.length || !fieldInScopes('productType') },
-  )
-
-  const { data: { groups: productBaseTypes = [] } = {} } = useGetEntityGroupsQuery(
-    {
-      entityType: 'product',
-      groupingKey: 'productBaseType',
-      projectName: projectNames[0],
-      empty: true,
-    },
-    { skip: !projectNames?.length || !fieldInScopes('productBaseType') },
   )
 
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
@@ -260,20 +230,21 @@ export const useBuildFilterOptions = ({
         scopeLabel,
       )
       if (productBaseTypeOption) {
-        productBaseTypes.forEach(({ icon, label, value }) => {
-          if (!productBaseTypeOption.values?.some((v) => v.id === value)) {
-            productBaseTypeOption.values?.push({
-              id: value,
-              label: label || value,
-              icon: icon || getEntityTypeIcon('product'),
-            })
-          }
-        })
-        data.productBaseTypes?.forEach((name) => {
+        productBaseTypes.forEach(({ icon, name }) => {
           if (!productBaseTypeOption.values?.some((v) => v.id === name)) {
             productBaseTypeOption.values?.push({
               id: name,
               label: name,
+              icon: icon || getEntityTypeIcon('product'),
+            })
+          }
+        })
+        data.productBaseTypes?.forEach(({ icon, name }) => {
+          if (!productBaseTypeOption.values?.some((v) => v.id === name)) {
+            productBaseTypeOption.values?.push({
+              id: name,
+              label: name,
+              icon: icon || getEntityTypeIcon('product'),
             })
           }
         })
@@ -629,16 +600,16 @@ const getSubTypes = (
   {
     projectsInfo,
     productTypes,
-  }: { projectsInfo: GetProjectsInfoResponse; productTypes: EntityGroup[] },
+  }: { projectsInfo: GetProjectsInfoResponse; productTypes: ProductType[] },
   type: ScopeType,
 ): Option[] => {
   const options: Option[] = []
   if (type === 'product') {
-    productTypes.forEach(({ icon, label, value }) => {
+    productTypes.forEach(({ icon, name }) => {
       options.push({
-        id: value,
+        id: name,
         type: 'string',
-        label: label || value,
+        label: name,
         icon: icon || getEntityTypeIcon('product'),
         inverted: false,
         values: [],
@@ -1010,7 +981,7 @@ const getAttributeOptions = (
         type: type,
         label: enumItem.label,
         values: [],
-        icon: enumItem.icon,
+        icon: enumItem.icon as string,
         color: enumItem.color,
         pt: {
           style: { color: 'inherit' },
