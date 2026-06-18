@@ -361,7 +361,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         providesTags: provideTagsForVersionsInfinite,
         // Subscribes to version entity changes and updates cache accordingly
         // Handles: create, update, delete operations
-        onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+        onCacheEntryAdded: async (arg, { getCacheEntry, updateCachedData, cacheEntryRemoved }) => {
           let unsubscribeThumbnails: (() => void) | undefined
 
           unsubscribeThumbnails = subscribeToThumbnailUpdates(
@@ -387,48 +387,98 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             ['version'],
           )
 
-          const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
-            try {
-              const entityId = message.summary?.entityId
-              if (!entityId) return
+          const handleNewVersionData = (entityId: string) => {
+            // New version data is available either and update or a new version.
+            console.log('New data!')
+          }
 
-              // Re-fetch the specific version with current filters to check if it still matches
-              // If version was deleted or no longer matches filters, result will be empty
-              const result = await dispatch(
-                enhancedVersionsPageApi.endpoints.GetVersions.initiate(
-                  {
-                    projectName: arg.projectName,
-                    versionFilter: arg.versionFilter,
-                    productFilter: arg.productFilter,
-                    taskFilter: arg.taskFilter,
-                    folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
-                    versionIds: [entityId],
-                    first: 1,
-                  },
-                  {
-                    forceRefetch: true,
-                  },
-                ),
+          const handleVersionUpdate = (topic: string, message: any) => {
+            const project = message.project
+            // check we are on the same project
+            if (project !== arg.projectName) return
+            // then get entity id
+            const entityId = message.summary.entityId
+            if (!entityId) return console.log('no entity id found')
+
+            // NEW VERSION
+            if (topic === 'entity.version.created') {
+              console.log('new version created', entityId)
+              handleNewVersionData(entityId)
+            }
+            // DELETED VERSION
+            else if (topic === 'entity.version.deleted') {
+              // remove the version from the cache
+              updateCachedData((draft) => {
+                for (const page of draft?.pages || []) {
+                  const vIndex = page.versions.findIndex((v) => v.id === entityId)
+                  if (vIndex !== -1) {
+                    page.versions.splice(vIndex, 1)
+                    break
+                  }
+                }
+              })
+              return
+            }
+            // CHANGED VERSION
+            else if (topic.startsWith('entity.version.') && topic.endsWith('_changed')) {
+              // current versions on the page
+              const cacheVersions = getCacheEntry().data
+              console.log('cacheVersions', cacheVersions)
+
+              // EFFICIENTLY check if the version is in any of the pages
+              let versionFound = false
+              for (const page of cacheVersions?.pages || []) {
+                const vIndex = page.versions.findIndex((v) => v.id === entityId)
+                if (vIndex !== -1) {
+                  versionFound = true
+                  break
+                }
+              }
+
+              // not found or not on page, skip patch
+              if (!versionFound) {
+                console.log('version not found in cache, skipping patch', entityId)
+                return
+              }
+
+              // entity.task.status_changed
+              const field = topic.split('.')[2].split('_changed')[0]
+              const supportedFields = ['status', 'tags'] as const
+
+              // only patch if value AND field is supported
+              const value = message.summary.value
+              const isFieldSupported = supportedFields.includes(
+                field as (typeof supportedFields)[number],
               )
 
-              if (result.error) return
+              if (!value || !isFieldSupported) {
+                //  we cannot patch with summary data so we must get new data
+                return handleNewVersionData(entityId)
+              }
 
-              // Update the cache: update existing, delete if not found, or add new
+              // try to patch the cache with the summary value
+              // cast the correct type onto value based on the field
+              let castValue: any = value
+              if (field === 'status') {
+                castValue = String(value)
+              } else if (field === 'tags') {
+                castValue = Array.isArray(value) ? (value as string[]) : []
+              }
+
+              // update the cache with the new value
               updateCachedData((draft) => {
-                const updatedVersion = result.data?.versions?.[0]
-                updatePagedCache(
-                  draft.pages,
-                  entityId,
-                  updatedVersion,
-                  'versions',
-                  (arg.sortBy || 'createdAt') as keyof VersionNode,
-                  arg.desc || false,
-                )
+                for (const page of draft?.pages || []) {
+                  for (const version of page?.versions || []) {
+                    if (version && version.id === entityId) {
+                      version[field as (typeof supportedFields)[number]] = castValue
+                    }
+                  }
+                }
               })
-            } catch (error) {
-              // Silently handle errors to prevent UI disruption
             }
-          })
+          }
+
+          const token = PubSub.subscribe('entity.version', handleVersionUpdate)
 
           // Cleanup: unsubscribe when cache entry is removed
           await cacheEntryRemoved
