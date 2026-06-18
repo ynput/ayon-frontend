@@ -13,6 +13,7 @@ import { useScopedStatuses, useEntityUpdate } from '@shared/hooks'
 import { DetailsPanelTab, useDetailsPanelContext } from '@shared/context'
 
 import DetailsPanelTabs from '../DetailsPanelTabs/DetailsPanelTabs'
+import LinkedTaskRow from './LinkedTaskRow'
 import * as Styled from './DetailsPanelHeader.styled'
 import getThumbnails from '../../helpers/getThumbnails'
 import { buildDetailsPanelTitles } from '../../helpers/buildDetailsPanelTitles'
@@ -39,6 +40,7 @@ type DetailsPanelHeaderProps = {
   onOpenViewer: (args: any) => void
   onEntityFocus: DetailsPanelProps['onEntityFocus']
   entityTypeIcons: EntityTypeIcons
+  taskTypeColors: Record<string, string>
   thumbnailInputRef: RefObject<HTMLInputElement>
   versionsInputRef: RefObject<HTMLInputElement>
 }
@@ -56,6 +58,7 @@ const DetailsPanelHeader = ({
   currentTab,
   onTabChange,
   entityTypeIcons,
+  taskTypeColors,
   onOpenViewer,
   onEntityFocus,
   thumbnailInputRef,
@@ -203,7 +206,7 @@ const DetailsPanelHeader = ({
           <Styled.Header
             className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}
           >
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', alignSelf: 'stretch' }}>
               <StackedThumbnails
                 isLoading={isLoading}
                 shimmer={isLoading}
@@ -234,6 +237,15 @@ const DetailsPanelHeader = ({
                 <span className="entity-type">{upperFirst(entityType)} - </span>
                 <h3>{subTitle}</h3>
               </div>
+              {entityType === 'version' && !isMultiple && !isLoading && firstEntity && (
+                <LinkedTaskRow
+                  key={firstEntity.id}
+                  entity={firstEntity}
+                  taskTypeIcons={entityTypeIcons.task}
+                  taskTypeColors={taskTypeColors}
+                  onLinkTask={(taskId) => handleUpdate('taskId', taskId)}
+                />
+              )}
             </Styled.Content>
           </Styled.Header>
           <Styled.StatusSelect

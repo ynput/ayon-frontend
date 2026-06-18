@@ -176,6 +176,15 @@ DetailsPanelProps) => {
     [projectInfo],
   )
 
+  // task type colors, threaded alongside the icons (keeps the panel decoupled from ProjectContext)
+  const taskTypeColors = useMemo(
+    () =>
+      projectInfo.taskTypes
+        .filter((task) => !!task.color)
+        .reduce((acc, task) => ({ ...acc, [task.name]: task.color }), {}),
+    [projectInfo],
+  )
+
   // for example when switching from version to task, task doesn't have reps tab
   // if reps tab was selected, set default to feed
   useEffect(() => {
@@ -461,6 +470,7 @@ DetailsPanelProps) => {
           currentTab={currentTab}
           onTabChange={setTab}
           entityTypeIcons={entityTypeIcons}
+          taskTypeColors={taskTypeColors}
           onOpenViewer={(args) => onOpenViewer?.(args)}
           onEntityFocus={onEntityFocus}
           thumbnailInputRef={thumbnailInputRef}

@@ -37,14 +37,6 @@ const getEntityPathData = (entity: DetailsPanelEntityData, folders: FoldersMap) 
   })
 
   if (entity.entityType === 'version') {
-    // linked task sits between the folder hierarchy and the product/version
-    if (entity.task?.id) {
-      segments.push({
-        type: 'task',
-        label: entity.task.label || entity.task.name,
-        id: entity.task.id,
-      })
-    }
     const productVersion = `${entity.product?.name} - ${entity.name}`
     // add product - version
     segments.push({ type: 'version', label: productVersion, id: entity.id })
