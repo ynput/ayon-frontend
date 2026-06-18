@@ -11,1259 +11,1222 @@
 // @ts-nocheck
 export class TypedDocumentString<TResult, TVariables> extends String {
   constructor(private value: string, public __meta__?: Record<string, any>) {
-    super(value);
+    super(value)
   }
   toString(): string | any {
-    return this.value;
+    return this.value
   }
 }
 
-import { api } from '@shared/api/base';
-export type Maybe<T> = T | null;
-export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+/** Internal type. DO NOT USE DIRECTLY. */
+type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] }
+/** Internal type. DO NOT USE DIRECTLY. */
+export type Incremental<T> =
+  | T
+  | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never }
+import { DocumentTypeDecoration } from '@graphql-typed-document-node/core'
+import { api } from '@shared/api/base'
+export type Maybe<T> = T | null
+export type InputMaybe<T> = Maybe<T>
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string; }
-  String: { input: string; output: string; }
-  Boolean: { input: boolean; output: boolean; }
-  Int: { input: number; output: number; }
-  Float: { input: number; output: number; }
-  DateTime: { input: any; output: any; }
-  JSON: { input: any; output: any; }
-};
+  ID: { input: string; output: string }
+  String: { input: string; output: string }
+  Boolean: { input: boolean; output: boolean }
+  Int: { input: number; output: number }
+  Float: { input: number; output: number }
+  DateTime: { input: unknown; output: unknown }
+  JSON: { input: unknown; output: unknown }
+}
 
 export type ActivitiesConnection = {
-  __typename?: 'ActivitiesConnection';
-  edges: Array<ActivityEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'ActivitiesConnection'
+  edges: Array<ActivityEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type ActivityCategory = {
-  __typename?: 'ActivityCategory';
-  color: Scalars['String']['output'];
-  name: Scalars['String']['output'];
-};
+  __typename?: 'ActivityCategory'
+  color: Scalars['String']['output']
+  name: Scalars['String']['output']
+}
 
 export type ActivityEdge = {
-  __typename?: 'ActivityEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  node: ActivityNode;
-};
+  __typename?: 'ActivityEdge'
+  cursor?: Maybe<Scalars['String']['output']>
+  node: ActivityNode
+}
 
 export type ActivityFileNode = {
-  __typename?: 'ActivityFileNode';
-  author?: Maybe<Scalars['String']['output']>;
-  createdAt: Scalars['DateTime']['output'];
-  id: Scalars['String']['output'];
-  mime?: Maybe<Scalars['String']['output']>;
-  name?: Maybe<Scalars['String']['output']>;
-  size: Scalars['String']['output'];
-  updatedAt: Scalars['DateTime']['output'];
-};
+  __typename?: 'ActivityFileNode'
+  author?: Maybe<Scalars['String']['output']>
+  createdAt: Scalars['DateTime']['output']
+  id: Scalars['String']['output']
+  mime?: Maybe<Scalars['String']['output']>
+  name?: Maybe<Scalars['String']['output']>
+  size: Scalars['String']['output']
+  updatedAt: Scalars['DateTime']['output']
+}
 
 export type ActivityNode = {
-  __typename?: 'ActivityNode';
-  active: Scalars['Boolean']['output'];
-  activityData: Scalars['String']['output'];
-  activityId: Scalars['String']['output'];
-  activityType: Scalars['String']['output'];
-  assignee?: Maybe<UserNode>;
-  author?: Maybe<UserNode>;
-  body: Scalars['String']['output'];
-  category?: Maybe<ActivityCategory>;
-  createdAt: Scalars['DateTime']['output'];
-  creationOrder: Scalars['Int']['output'];
-  entityId?: Maybe<Scalars['String']['output']>;
-  entityName?: Maybe<Scalars['String']['output']>;
-  entityPath?: Maybe<Scalars['String']['output']>;
-  entityType: Scalars['String']['output'];
-  files: Array<ActivityFileNode>;
-  origin?: Maybe<ActivityOriginNode>;
-  parents: Array<ActivityOriginNode>;
-  projectName: Scalars['String']['output'];
-  reactions: Array<ActivityReactionNode>;
-  read: Scalars['Boolean']['output'];
-  referenceData: Scalars['String']['output'];
-  referenceId: Scalars['String']['output'];
-  referenceType: Scalars['String']['output'];
-  tags: Array<Scalars['String']['output']>;
-  updatedAt: Scalars['DateTime']['output'];
-  version?: Maybe<VersionNode>;
-};
+  __typename?: 'ActivityNode'
+  active: Scalars['Boolean']['output']
+  activityData: Scalars['String']['output']
+  activityId: Scalars['String']['output']
+  activityType: Scalars['String']['output']
+  assignee?: Maybe<UserNode>
+  author?: Maybe<UserNode>
+  body: Scalars['String']['output']
+  category?: Maybe<ActivityCategory>
+  createdAt: Scalars['DateTime']['output']
+  creationOrder: Scalars['Int']['output']
+  entityId?: Maybe<Scalars['String']['output']>
+  entityName?: Maybe<Scalars['String']['output']>
+  entityPath?: Maybe<Scalars['String']['output']>
+  entityType: Scalars['String']['output']
+  files: Array<ActivityFileNode>
+  origin?: Maybe<ActivityOriginNode>
+  parents: Array<ActivityOriginNode>
+  projectName: Scalars['String']['output']
+  reactions: Array<ActivityReactionNode>
+  read: Scalars['Boolean']['output']
+  referenceData: Scalars['String']['output']
+  referenceId: Scalars['String']['output']
+  referenceType: Scalars['String']['output']
+  tags: Array<Scalars['String']['output']>
+  updatedAt: Scalars['DateTime']['output']
+  version?: Maybe<VersionNode>
+}
 
 export type ActivityOriginNode = {
-  __typename?: 'ActivityOriginNode';
-  id: Scalars['String']['output'];
-  label?: Maybe<Scalars['String']['output']>;
-  link: Scalars['String']['output'];
-  name: Scalars['String']['output'];
-  subtype?: Maybe<Scalars['String']['output']>;
-  type: Scalars['String']['output'];
-};
+  __typename?: 'ActivityOriginNode'
+  id: Scalars['String']['output']
+  label?: Maybe<Scalars['String']['output']>
+  link: Scalars['String']['output']
+  name: Scalars['String']['output']
+  subtype?: Maybe<Scalars['String']['output']>
+  type: Scalars['String']['output']
+}
 
 export type ActivityReactionNode = {
-  __typename?: 'ActivityReactionNode';
-  fullName?: Maybe<Scalars['String']['output']>;
-  reaction: Scalars['String']['output'];
-  timestamp: Scalars['DateTime']['output'];
-  userName: Scalars['String']['output'];
-};
+  __typename?: 'ActivityReactionNode'
+  fullName?: Maybe<Scalars['String']['output']>
+  reaction: Scalars['String']['output']
+  timestamp: Scalars['DateTime']['output']
+  userName: Scalars['String']['output']
+}
 
 export type AttributeFilterInput = {
-  name: Scalars['String']['input'];
-  values: Array<Scalars['String']['input']>;
-};
+  name: Scalars['String']['input']
+  values: Array<Scalars['String']['input']>
+}
 
 export type BaseNode = {
-  active: Scalars['Boolean']['output'];
-  activities: ActivitiesConnection;
-  allAttrib: Scalars['String']['output'];
-  createdAt: Scalars['DateTime']['output'];
-  createdBy?: Maybe<Scalars['String']['output']>;
-  id: Scalars['String']['output'];
-  links: LinksConnection;
-  name: Scalars['String']['output'];
-  parents: Array<Scalars['String']['output']>;
-  projectName: Scalars['String']['output'];
-  updatedAt: Scalars['DateTime']['output'];
-  updatedBy?: Maybe<Scalars['String']['output']>;
-};
-
+  active: Scalars['Boolean']['output']
+  activities: ActivitiesConnection
+  allAttrib: Scalars['String']['output']
+  createdAt: Scalars['DateTime']['output']
+  createdBy?: Maybe<Scalars['String']['output']>
+  id: Scalars['String']['output']
+  links: LinksConnection
+  name: Scalars['String']['output']
+  parents: Array<Scalars['String']['output']>
+  projectName: Scalars['String']['output']
+  updatedAt: Scalars['DateTime']['output']
+  updatedBy?: Maybe<Scalars['String']['output']>
+}
 
 export type BaseNodeActivitiesArgs = {
-  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  last?: InputMaybe<Scalars['Int']['input']>
+  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type BaseNodeLinksArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  direction?: InputMaybe<Scalars['String']['input']>;
-  first?: Scalars['Int']['input'];
-  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  nameEx?: InputMaybe<Scalars['String']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-};
+  after?: InputMaybe<Scalars['String']['input']>
+  direction?: InputMaybe<Scalars['String']['input']>
+  first?: Scalars['Int']['input']
+  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  nameEx?: InputMaybe<Scalars['String']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type ColumnStats = {
-  __typename?: 'ColumnStats';
-  avg?: Maybe<Scalars['Float']['output']>;
-  checkedCount?: Maybe<Scalars['Int']['output']>;
-  checkedPercentage?: Maybe<Scalars['Float']['output']>;
-  columnName: Scalars['String']['output'];
-  count?: Maybe<Scalars['Float']['output']>;
-  distribution?: Maybe<Scalars['JSON']['output']>;
-  max?: Maybe<Scalars['Float']['output']>;
-  min?: Maybe<Scalars['Float']['output']>;
-  notCheckedCount?: Maybe<Scalars['Int']['output']>;
-  notCheckedPercentage?: Maybe<Scalars['Float']['output']>;
-  percentageFilled?: Maybe<Scalars['Float']['output']>;
-  percentageNotFilled?: Maybe<Scalars['Float']['output']>;
-  sum?: Maybe<Scalars['Float']['output']>;
-  valueFilledCount?: Maybe<Scalars['Int']['output']>;
-  valueNotFilledCount?: Maybe<Scalars['Int']['output']>;
-};
+  __typename?: 'ColumnStats'
+  avg?: Maybe<Scalars['Float']['output']>
+  checkedCount?: Maybe<Scalars['Int']['output']>
+  checkedPercentage?: Maybe<Scalars['Float']['output']>
+  columnName: Scalars['String']['output']
+  count?: Maybe<Scalars['Float']['output']>
+  distribution?: Maybe<Scalars['JSON']['output']>
+  max?: Maybe<Scalars['Float']['output']>
+  min?: Maybe<Scalars['Float']['output']>
+  notCheckedCount?: Maybe<Scalars['Int']['output']>
+  notCheckedPercentage?: Maybe<Scalars['Float']['output']>
+  percentageFilled?: Maybe<Scalars['Float']['output']>
+  percentageNotFilled?: Maybe<Scalars['Float']['output']>
+  sum?: Maybe<Scalars['Float']['output']>
+  valueFilledCount?: Maybe<Scalars['Int']['output']>
+  valueNotFilledCount?: Maybe<Scalars['Int']['output']>
+}
 
 export type EntityComment = {
-  __typename?: 'EntityComment';
-  activityId: Scalars['String']['output'];
-  author?: Maybe<Scalars['String']['output']>;
-  body: Scalars['String']['output'];
-  createdAt: Scalars['String']['output'];
-};
+  __typename?: 'EntityComment'
+  activityId: Scalars['String']['output']
+  author?: Maybe<Scalars['String']['output']>
+  body: Scalars['String']['output']
+  createdAt: Scalars['String']['output']
+}
 
 export type EntityListEdge = {
-  __typename?: 'EntityListEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  node: EntityListNode;
-};
+  __typename?: 'EntityListEdge'
+  cursor?: Maybe<Scalars['String']['output']>
+  node: EntityListNode
+}
 
 export type EntityListItemEdge = {
-  __typename?: 'EntityListItemEdge';
-  Entity?: Maybe<BaseNode>;
-  Forbidden: Scalars['Boolean']['output'];
-  allAttrib: Scalars['String']['output'];
-  attrib: Scalars['String']['output'];
-  createdAt: Scalars['DateTime']['output'];
-  createdBy?: Maybe<Scalars['String']['output']>;
-  cursor?: Maybe<Scalars['String']['output']>;
-  data: Scalars['String']['output'];
-  entityId: Scalars['String']['output'];
-  entityType: Scalars['String']['output'];
-  folderPath: Scalars['String']['output'];
-  id: Scalars['String']['output'];
+  __typename?: 'EntityListItemEdge'
+  Entity?: Maybe<BaseNode>
+  Forbidden: Scalars['Boolean']['output']
+  allAttrib: Scalars['String']['output']
+  attrib: Scalars['String']['output']
+  createdAt: Scalars['DateTime']['output']
+  createdBy?: Maybe<Scalars['String']['output']>
+  cursor?: Maybe<Scalars['String']['output']>
+  data: Scalars['String']['output']
+  entityId: Scalars['String']['output']
+  entityType: Scalars['String']['output']
+  folderPath: Scalars['String']['output']
+  id: Scalars['String']['output']
   /** Item node */
-  node?: Maybe<BaseNode>;
-  ownAttrib: Array<Scalars['String']['output']>;
-  position: Scalars['Int']['output'];
-  projectName: Scalars['String']['output'];
-  tags: Array<Scalars['String']['output']>;
-  updatedAt: Scalars['DateTime']['output'];
-  updatedBy?: Maybe<Scalars['String']['output']>;
-};
+  node?: Maybe<BaseNode>
+  ownAttrib: Array<Scalars['String']['output']>
+  position: Scalars['Int']['output']
+  projectName: Scalars['String']['output']
+  tags: Array<Scalars['String']['output']>
+  updatedAt: Scalars['DateTime']['output']
+  updatedBy?: Maybe<Scalars['String']['output']>
+}
 
 export type EntityListItemsConnection = {
-  __typename?: 'EntityListItemsConnection';
-  edges: Array<EntityListItemEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'EntityListItemsConnection'
+  edges: Array<EntityListItemEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type EntityListNode = {
-  __typename?: 'EntityListNode';
-  access: Scalars['String']['output'];
-  accessLevel: Scalars['Int']['output'];
-  active: Scalars['Boolean']['output'];
-  allAttrib: Scalars['String']['output'];
-  attributes: Scalars['String']['output'];
-  count: Scalars['Int']['output'];
-  createdAt: Scalars['DateTime']['output'];
-  createdBy?: Maybe<Scalars['String']['output']>;
-  data: Scalars['String']['output'];
-  entityListFolderId?: Maybe<Scalars['String']['output']>;
-  entityListType: Scalars['String']['output'];
-  entityType: Scalars['String']['output'];
-  id: Scalars['String']['output'];
-  items: EntityListItemsConnection;
-  label: Scalars['String']['output'];
-  owner?: Maybe<Scalars['String']['output']>;
-  projectName: Scalars['String']['output'];
-  tags: Array<Scalars['String']['output']>;
-  updatedAt: Scalars['DateTime']['output'];
-  updatedBy?: Maybe<Scalars['String']['output']>;
-};
-
+  __typename?: 'EntityListNode'
+  access: Scalars['String']['output']
+  accessLevel: Scalars['Int']['output']
+  active: Scalars['Boolean']['output']
+  allAttrib: Scalars['String']['output']
+  attributes: Scalars['String']['output']
+  count: Scalars['Int']['output']
+  createdAt: Scalars['DateTime']['output']
+  createdBy?: Maybe<Scalars['String']['output']>
+  data: Scalars['String']['output']
+  entityListFolderId?: Maybe<Scalars['String']['output']>
+  entityListType: Scalars['String']['output']
+  entityType: Scalars['String']['output']
+  id: Scalars['String']['output']
+  items: EntityListItemsConnection
+  label: Scalars['String']['output']
+  owner?: Maybe<Scalars['String']['output']>
+  projectName: Scalars['String']['output']
+  tags: Array<Scalars['String']['output']>
+  updatedAt: Scalars['DateTime']['output']
+  updatedBy?: Maybe<Scalars['String']['output']>
+}
 
 export type EntityListNodeItemsArgs = {
-  accessibleOnly?: Scalars['Boolean']['input'];
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
-  calculateStatistics?: Scalars['Boolean']['input'];
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-};
+  accessibleOnly?: Scalars['Boolean']['input']
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>
+  calculateStatistics?: Scalars['Boolean']['input']
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  last?: InputMaybe<Scalars['Int']['input']>
+  sortBy?: InputMaybe<Scalars['String']['input']>
+}
 
 export type EntityListsConnection = {
-  __typename?: 'EntityListsConnection';
-  edges: Array<EntityListEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'EntityListsConnection'
+  edges: Array<EntityListEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type EventEdge = {
-  __typename?: 'EventEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  node: EventNode;
-};
+  __typename?: 'EventEdge'
+  cursor?: Maybe<Scalars['String']['output']>
+  node: EventNode
+}
 
 export type EventNode = {
-  __typename?: 'EventNode';
-  createdAt: Scalars['DateTime']['output'];
-  data?: Maybe<Scalars['String']['output']>;
-  dependsOn?: Maybe<Scalars['String']['output']>;
-  description: Scalars['String']['output'];
-  hash: Scalars['String']['output'];
-  id: Scalars['String']['output'];
-  payload?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  retries: Scalars['Int']['output'];
-  sender?: Maybe<Scalars['String']['output']>;
-  status: Scalars['String']['output'];
-  summary: Scalars['String']['output'];
-  topic: Scalars['String']['output'];
-  updatedAt: Scalars['DateTime']['output'];
-  user?: Maybe<Scalars['String']['output']>;
-};
+  __typename?: 'EventNode'
+  createdAt: Scalars['DateTime']['output']
+  data?: Maybe<Scalars['String']['output']>
+  dependsOn?: Maybe<Scalars['String']['output']>
+  description: Scalars['String']['output']
+  hash: Scalars['String']['output']
+  id: Scalars['String']['output']
+  payload?: Maybe<Scalars['String']['output']>
+  project?: Maybe<Scalars['String']['output']>
+  retries: Scalars['Int']['output']
+  sender?: Maybe<Scalars['String']['output']>
+  status: Scalars['String']['output']
+  summary: Scalars['String']['output']
+  topic: Scalars['String']['output']
+  updatedAt: Scalars['DateTime']['output']
+  user?: Maybe<Scalars['String']['output']>
+}
 
 export type EventsConnection = {
-  __typename?: 'EventsConnection';
-  edges: Array<EventEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'EventsConnection'
+  edges: Array<EventEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type FileNode = {
-  __typename?: 'FileNode';
-  hash?: Maybe<Scalars['String']['output']>;
-  hashType: Scalars['String']['output'];
-  id: Scalars['String']['output'];
-  name: Scalars['String']['output'];
-  path: Scalars['String']['output'];
-  size: Scalars['String']['output'];
-};
+  __typename?: 'FileNode'
+  hash?: Maybe<Scalars['String']['output']>
+  hashType: Scalars['String']['output']
+  id: Scalars['String']['output']
+  name: Scalars['String']['output']
+  path: Scalars['String']['output']
+  size: Scalars['String']['output']
+}
 
 export type FolderAttribType = {
-  __typename?: 'FolderAttribType';
-  clipIn?: Maybe<Scalars['Int']['output']>;
-  clipOut?: Maybe<Scalars['Int']['output']>;
+  __typename?: 'FolderAttribType'
+  clipIn?: Maybe<Scalars['Int']['output']>
+  clipOut?: Maybe<Scalars['Int']['output']>
   /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>
   /** Deadline date and time */
-  endDate?: Maybe<Scalars['DateTime']['output']>;
+  endDate?: Maybe<Scalars['DateTime']['output']>
   /** Frame rate */
-  fps?: Maybe<Scalars['Float']['output']>;
-  frameEnd?: Maybe<Scalars['Int']['output']>;
-  frameStart?: Maybe<Scalars['Int']['output']>;
-  handleEnd?: Maybe<Scalars['Int']['output']>;
-  handleStart?: Maybe<Scalars['Int']['output']>;
-  pixelAspect?: Maybe<Scalars['Float']['output']>;
-  priority?: Maybe<Scalars['String']['output']>;
+  fps?: Maybe<Scalars['Float']['output']>
+  frameEnd?: Maybe<Scalars['Int']['output']>
+  frameStart?: Maybe<Scalars['Int']['output']>
+  handleEnd?: Maybe<Scalars['Int']['output']>
+  handleStart?: Maybe<Scalars['Int']['output']>
+  pixelAspect?: Maybe<Scalars['Float']['output']>
+  priority?: Maybe<Scalars['String']['output']>
   /** Vertical resolution */
-  resolutionHeight?: Maybe<Scalars['Int']['output']>;
+  resolutionHeight?: Maybe<Scalars['Int']['output']>
   /** Horizontal resolution */
-  resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  resolutionWidth?: Maybe<Scalars['Int']['output']>
   /** Date and time when the project or task or asset was started */
-  startDate?: Maybe<Scalars['DateTime']['output']>;
-};
+  startDate?: Maybe<Scalars['DateTime']['output']>
+}
 
 export type FolderEdge = {
-  __typename?: 'FolderEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  node: FolderNode;
-};
+  __typename?: 'FolderEdge'
+  cursor?: Maybe<Scalars['String']['output']>
+  node: FolderNode
+}
 
 export type FolderNode = BaseNode & {
-  __typename?: 'FolderNode';
-  active: Scalars['Boolean']['output'];
-  activities: ActivitiesConnection;
-  allAttrib: Scalars['String']['output'];
-  attrib: FolderAttribType;
-  childCount: Scalars['Int']['output'];
-  createdAt: Scalars['DateTime']['output'];
-  createdBy?: Maybe<Scalars['String']['output']>;
-  data?: Maybe<Scalars['String']['output']>;
-  folderType: Scalars['String']['output'];
-  hasChildren: Scalars['Boolean']['output'];
-  hasProducts: Scalars['Boolean']['output'];
-  hasReviewables: Scalars['Boolean']['output'];
-  hasTasks: Scalars['Boolean']['output'];
-  hasVersions: Scalars['Boolean']['output'];
-  id: Scalars['String']['output'];
-  label?: Maybe<Scalars['String']['output']>;
-  latestComments?: Maybe<Array<EntityComment>>;
-  links: LinksConnection;
-  name: Scalars['String']['output'];
-  ownAttrib: Array<Scalars['String']['output']>;
-  parent?: Maybe<FolderNode>;
-  parentId?: Maybe<Scalars['String']['output']>;
-  parents: Array<Scalars['String']['output']>;
-  path?: Maybe<Scalars['String']['output']>;
-  productCount: Scalars['Int']['output'];
+  __typename?: 'FolderNode'
+  active: Scalars['Boolean']['output']
+  activities: ActivitiesConnection
+  allAttrib: Scalars['String']['output']
+  attrib: FolderAttribType
+  childCount: Scalars['Int']['output']
+  createdAt: Scalars['DateTime']['output']
+  createdBy?: Maybe<Scalars['String']['output']>
+  data?: Maybe<Scalars['String']['output']>
+  folderType: Scalars['String']['output']
+  hasChildren: Scalars['Boolean']['output']
+  hasProducts: Scalars['Boolean']['output']
+  hasReviewables: Scalars['Boolean']['output']
+  hasTasks: Scalars['Boolean']['output']
+  hasVersions: Scalars['Boolean']['output']
+  id: Scalars['String']['output']
+  label?: Maybe<Scalars['String']['output']>
+  latestComments?: Maybe<Array<EntityComment>>
+  links: LinksConnection
+  name: Scalars['String']['output']
+  ownAttrib: Array<Scalars['String']['output']>
+  parent?: Maybe<FolderNode>
+  parentId?: Maybe<Scalars['String']['output']>
+  parents: Array<Scalars['String']['output']>
+  path?: Maybe<Scalars['String']['output']>
+  productCount: Scalars['Int']['output']
   /** Return a list of products. */
-  products: ProductsConnection;
-  projectName: Scalars['String']['output'];
-  status: Scalars['String']['output'];
-  tags: Array<Scalars['String']['output']>;
-  taskCount: Scalars['Int']['output'];
+  products: ProductsConnection
+  projectName: Scalars['String']['output']
+  status: Scalars['String']['output']
+  tags: Array<Scalars['String']['output']>
+  taskCount: Scalars['Int']['output']
   /** Return a list of tasks. */
-  tasks: TasksConnection;
-  thumbnail?: Maybe<ThumbnailInfo>;
-  thumbnailHash: Scalars['String']['output'];
-  thumbnailId?: Maybe<Scalars['String']['output']>;
-  totalFolderCount: Scalars['Int']['output'];
-  totalProductCount: Scalars['Int']['output'];
-  totalTaskCount: Scalars['Int']['output'];
-  totalVersionCount: Scalars['Int']['output'];
-  type: Scalars['String']['output'];
-  updatedAt: Scalars['DateTime']['output'];
-  updatedBy?: Maybe<Scalars['String']['output']>;
-};
-
+  tasks: TasksConnection
+  thumbnail?: Maybe<ThumbnailInfo>
+  thumbnailHash: Scalars['String']['output']
+  thumbnailId?: Maybe<Scalars['String']['output']>
+  totalFolderCount: Scalars['Int']['output']
+  totalProductCount: Scalars['Int']['output']
+  totalTaskCount: Scalars['Int']['output']
+  totalVersionCount: Scalars['Int']['output']
+  type: Scalars['String']['output']
+  updatedAt: Scalars['DateTime']['output']
+  updatedBy?: Maybe<Scalars['String']['output']>
+}
 
 export type FolderNodeActivitiesArgs = {
-  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  last?: InputMaybe<Scalars['Int']['input']>
+  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type FolderNodeLinksArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  direction?: InputMaybe<Scalars['String']['input']>;
-  first?: Scalars['Int']['input'];
-  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  nameEx?: InputMaybe<Scalars['String']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  direction?: InputMaybe<Scalars['String']['input']>
+  first?: Scalars['Int']['input']
+  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  nameEx?: InputMaybe<Scalars['String']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type FolderNodeProductsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
-  calculateStatistics?: Scalars['Boolean']['input'];
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  hasLinks?: InputMaybe<HasLinksFilter>;
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  includeFolderChildren?: Scalars['Boolean']['input'];
-  last?: InputMaybe<Scalars['Int']['input']>;
-  nameEx?: InputMaybe<Scalars['String']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-  namesCi?: InputMaybe<Array<Scalars['String']['input']>>;
-  pathEx?: InputMaybe<Scalars['String']['input']>;
-  productBaseTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  productTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  taskFilter?: InputMaybe<Scalars['String']['input']>;
-  versionFilter?: InputMaybe<Scalars['String']['input']>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>
+  calculateStatistics?: Scalars['Boolean']['input']
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  folderIds?: InputMaybe<Array<Scalars['String']['input']>>
+  hasLinks?: InputMaybe<HasLinksFilter>
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  includeFolderChildren?: Scalars['Boolean']['input']
+  last?: InputMaybe<Scalars['Int']['input']>
+  nameEx?: InputMaybe<Scalars['String']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+  namesCi?: InputMaybe<Array<Scalars['String']['input']>>
+  pathEx?: InputMaybe<Scalars['String']['input']>
+  productBaseTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  productTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  search?: InputMaybe<Scalars['String']['input']>
+  sortBy?: InputMaybe<Scalars['String']['input']>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+  taskFilter?: InputMaybe<Scalars['String']['input']>
+  versionFilter?: InputMaybe<Scalars['String']['input']>
+}
 
 export type FolderNodeTasksArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  assignees?: InputMaybe<Array<Scalars['String']['input']>>;
-  assigneesAny?: InputMaybe<Array<Scalars['String']['input']>>;
-  attributes?: InputMaybe<Array<AttributeFilterInput>>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
-  calculateStatistics?: Scalars['Boolean']['input'];
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  folderFilter?: InputMaybe<Scalars['String']['input']>;
-  folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  hasLinks?: InputMaybe<HasLinksFilter>;
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  includeFolderChildren?: Scalars['Boolean']['input'];
-  last?: InputMaybe<Scalars['Int']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  tagsAny?: InputMaybe<Array<Scalars['String']['input']>>;
-  taskTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-};
+  after?: InputMaybe<Scalars['String']['input']>
+  assignees?: InputMaybe<Array<Scalars['String']['input']>>
+  assigneesAny?: InputMaybe<Array<Scalars['String']['input']>>
+  attributes?: InputMaybe<Array<AttributeFilterInput>>
+  before?: InputMaybe<Scalars['String']['input']>
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>
+  calculateStatistics?: Scalars['Boolean']['input']
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  folderFilter?: InputMaybe<Scalars['String']['input']>
+  folderIds?: InputMaybe<Array<Scalars['String']['input']>>
+  hasLinks?: InputMaybe<HasLinksFilter>
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  includeFolderChildren?: Scalars['Boolean']['input']
+  last?: InputMaybe<Scalars['Int']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+  search?: InputMaybe<Scalars['String']['input']>
+  sortBy?: InputMaybe<Scalars['String']['input']>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+  tagsAny?: InputMaybe<Array<Scalars['String']['input']>>
+  taskTypes?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type FolderType = {
-  __typename?: 'FolderType';
-  color?: Maybe<Scalars['String']['output']>;
-  icon?: Maybe<Scalars['String']['output']>;
-  name: Scalars['String']['output'];
-  shortName?: Maybe<Scalars['String']['output']>;
-};
+  __typename?: 'FolderType'
+  color?: Maybe<Scalars['String']['output']>
+  icon?: Maybe<Scalars['String']['output']>
+  name: Scalars['String']['output']
+  shortName?: Maybe<Scalars['String']['output']>
+}
 
 export type FoldersConnection = {
-  __typename?: 'FoldersConnection';
-  edges: Array<FolderEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'FoldersConnection'
+  edges: Array<FolderEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export enum HasLinksFilter {
   Any = 'ANY',
   Both = 'BOTH',
   In = 'IN',
   None = 'NONE',
-  Out = 'OUT'
+  Out = 'OUT',
 }
 
 export type KanbanConnection = {
-  __typename?: 'KanbanConnection';
-  edges: Array<KanbanEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'KanbanConnection'
+  edges: Array<KanbanEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type KanbanEdge = {
-  __typename?: 'KanbanEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  node: KanbanNode;
-};
+  __typename?: 'KanbanEdge'
+  cursor?: Maybe<Scalars['String']['output']>
+  node: KanbanNode
+}
 
 export type KanbanNode = {
-  __typename?: 'KanbanNode';
-  assignees: Array<Scalars['String']['output']>;
-  createdAt: Scalars['DateTime']['output'];
-  dueDate?: Maybe<Scalars['DateTime']['output']>;
-  folderId: Scalars['String']['output'];
-  folderLabel?: Maybe<Scalars['String']['output']>;
-  folderName: Scalars['String']['output'];
-  folderPath: Scalars['String']['output'];
-  hasReviewables: Scalars['Boolean']['output'];
-  id: Scalars['String']['output'];
-  label?: Maybe<Scalars['String']['output']>;
-  lastVersionWithReviewableProductId?: Maybe<Scalars['String']['output']>;
-  lastVersionWithReviewableVersionId?: Maybe<Scalars['String']['output']>;
-  lastVersionWithThumbnailId?: Maybe<Scalars['String']['output']>;
-  name: Scalars['String']['output'];
-  priority?: Maybe<Scalars['String']['output']>;
-  projectCode: Scalars['String']['output'];
-  projectName: Scalars['String']['output'];
-  status: Scalars['String']['output'];
-  tags: Array<Scalars['String']['output']>;
-  taskType: Scalars['String']['output'];
-  thumbnail?: Maybe<ThumbnailInfo>;
-  thumbnailHash: Scalars['String']['output'];
-  thumbnailId?: Maybe<Scalars['String']['output']>;
-  updatedAt: Scalars['DateTime']['output'];
-};
+  __typename?: 'KanbanNode'
+  assignees: Array<Scalars['String']['output']>
+  createdAt: Scalars['DateTime']['output']
+  dueDate?: Maybe<Scalars['DateTime']['output']>
+  folderId: Scalars['String']['output']
+  folderLabel?: Maybe<Scalars['String']['output']>
+  folderName: Scalars['String']['output']
+  folderPath: Scalars['String']['output']
+  hasReviewables: Scalars['Boolean']['output']
+  id: Scalars['String']['output']
+  label?: Maybe<Scalars['String']['output']>
+  lastVersionWithReviewableProductId?: Maybe<Scalars['String']['output']>
+  lastVersionWithReviewableVersionId?: Maybe<Scalars['String']['output']>
+  lastVersionWithThumbnailId?: Maybe<Scalars['String']['output']>
+  name: Scalars['String']['output']
+  priority?: Maybe<Scalars['String']['output']>
+  projectCode: Scalars['String']['output']
+  projectName: Scalars['String']['output']
+  status: Scalars['String']['output']
+  tags: Array<Scalars['String']['output']>
+  taskType: Scalars['String']['output']
+  thumbnail?: Maybe<ThumbnailInfo>
+  thumbnailHash: Scalars['String']['output']
+  thumbnailId?: Maybe<Scalars['String']['output']>
+  updatedAt: Scalars['DateTime']['output']
+}
 
 export type LinkEdge = {
-  __typename?: 'LinkEdge';
-  author?: Maybe<Scalars['String']['output']>;
-  cursor?: Maybe<Scalars['String']['output']>;
-  data: Scalars['JSON']['output'];
-  description: Scalars['String']['output'];
-  direction: Scalars['String']['output'];
-  entityId: Scalars['String']['output'];
-  entityType: Scalars['String']['output'];
-  id: Scalars['String']['output'];
-  linkType: Scalars['String']['output'];
-  name?: Maybe<Scalars['String']['output']>;
+  __typename?: 'LinkEdge'
+  author?: Maybe<Scalars['String']['output']>
+  cursor?: Maybe<Scalars['String']['output']>
+  data: Scalars['JSON']['output']
+  description: Scalars['String']['output']
+  direction: Scalars['String']['output']
+  entityId: Scalars['String']['output']
+  entityType: Scalars['String']['output']
+  id: Scalars['String']['output']
+  linkType: Scalars['String']['output']
+  name?: Maybe<Scalars['String']['output']>
   /** Linked node */
-  node?: Maybe<BaseNode>;
-  projectName: Scalars['String']['output'];
-};
+  node?: Maybe<BaseNode>
+  projectName: Scalars['String']['output']
+}
 
 export type LinkType = {
-  __typename?: 'LinkType';
-  color?: Maybe<Scalars['String']['output']>;
-  inputType: Scalars['String']['output'];
-  linkType: Scalars['String']['output'];
-  name: Scalars['String']['output'];
-  outputType: Scalars['String']['output'];
-  style: Scalars['String']['output'];
-};
+  __typename?: 'LinkType'
+  color?: Maybe<Scalars['String']['output']>
+  inputType: Scalars['String']['output']
+  linkType: Scalars['String']['output']
+  name: Scalars['String']['output']
+  outputType: Scalars['String']['output']
+  style: Scalars['String']['output']
+}
 
 export type LinksConnection = {
-  __typename?: 'LinksConnection';
-  edges: Array<LinkEdge>;
+  __typename?: 'LinksConnection'
+  edges: Array<LinkEdge>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type MetricTargetInput = {
   /** List of statistical calculations to run */
-  aggregations: Array<StatsOperation>;
+  aggregations: Array<StatsOperation>
   /** The attribute path, e.g., 'attrib.fps' */
-  field: Scalars['String']['input'];
-};
+  field: Scalars['String']['input']
+}
 
 export type PageInfo = {
-  __typename?: 'PageInfo';
-  columnMetadata?: Maybe<Array<ColumnStats>>;
-  endCursor?: Maybe<Scalars['String']['output']>;
-  hasNextPage: Scalars['Boolean']['output'];
-  hasPreviousPage: Scalars['Boolean']['output'];
-  startCursor?: Maybe<Scalars['String']['output']>;
-};
+  __typename?: 'PageInfo'
+  columnMetadata?: Maybe<Array<ColumnStats>>
+  endCursor?: Maybe<Scalars['String']['output']>
+  hasNextPage: Scalars['Boolean']['output']
+  hasPreviousPage: Scalars['Boolean']['output']
+  startCursor?: Maybe<Scalars['String']['output']>
+}
 
 export type ProductAttribType = {
-  __typename?: 'ProductAttribType';
+  __typename?: 'ProductAttribType'
   /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
-  productGroup?: Maybe<Scalars['String']['output']>;
-};
+  description?: Maybe<Scalars['String']['output']>
+  productGroup?: Maybe<Scalars['String']['output']>
+}
 
 export type ProductBaseType = {
-  __typename?: 'ProductBaseType';
-  color: Scalars['String']['output'];
-  icon: Scalars['String']['output'];
-  name: Scalars['String']['output'];
-};
+  __typename?: 'ProductBaseType'
+  color: Scalars['String']['output']
+  icon: Scalars['String']['output']
+  name: Scalars['String']['output']
+}
 
 export type ProductEdge = {
-  __typename?: 'ProductEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  node: ProductNode;
-};
+  __typename?: 'ProductEdge'
+  cursor?: Maybe<Scalars['String']['output']>
+  node: ProductNode
+}
 
 export type ProductNode = BaseNode & {
-  __typename?: 'ProductNode';
-  Folder?: Maybe<FolderNode>;
-  active: Scalars['Boolean']['output'];
-  activities: ActivitiesConnection;
-  allAttrib: Scalars['String']['output'];
-  attrib: ProductAttribType;
-  createdAt: Scalars['DateTime']['output'];
-  createdBy?: Maybe<Scalars['String']['output']>;
-  data?: Maybe<Scalars['String']['output']>;
-  featuredVersion?: Maybe<VersionNode>;
+  __typename?: 'ProductNode'
+  Folder?: Maybe<FolderNode>
+  active: Scalars['Boolean']['output']
+  activities: ActivitiesConnection
+  allAttrib: Scalars['String']['output']
+  attrib: ProductAttribType
+  createdAt: Scalars['DateTime']['output']
+  createdBy?: Maybe<Scalars['String']['output']>
+  data?: Maybe<Scalars['String']['output']>
+  featuredVersion?: Maybe<VersionNode>
   /** Parent folder of the product */
-  folder: FolderNode;
-  folderId: Scalars['String']['output'];
-  id: Scalars['String']['output'];
+  folder: FolderNode
+  folderId: Scalars['String']['output']
+  id: Scalars['String']['output']
   /** Last version of the product */
-  latestVersion?: Maybe<VersionNode>;
-  links: LinksConnection;
-  name: Scalars['String']['output'];
-  parents: Array<Scalars['String']['output']>;
-  path?: Maybe<Scalars['String']['output']>;
-  productBaseType?: Maybe<Scalars['String']['output']>;
-  productType: Scalars['String']['output'];
-  projectName: Scalars['String']['output'];
-  status: Scalars['String']['output'];
-  tags: Array<Scalars['String']['output']>;
-  type: Scalars['String']['output'];
-  updatedAt: Scalars['DateTime']['output'];
-  updatedBy?: Maybe<Scalars['String']['output']>;
+  latestVersion?: Maybe<VersionNode>
+  links: LinksConnection
+  name: Scalars['String']['output']
+  parents: Array<Scalars['String']['output']>
+  path?: Maybe<Scalars['String']['output']>
+  productBaseType?: Maybe<Scalars['String']['output']>
+  productType: Scalars['String']['output']
+  projectName: Scalars['String']['output']
+  status: Scalars['String']['output']
+  tags: Array<Scalars['String']['output']>
+  type: Scalars['String']['output']
+  updatedAt: Scalars['DateTime']['output']
+  updatedBy?: Maybe<Scalars['String']['output']>
   /** Simple (id /version) list of versions in the product */
-  versionList: Array<VersionListItem>;
+  versionList: Array<VersionListItem>
   /** Return a list of versions. */
-  versions: VersionsConnection;
-};
-
+  versions: VersionsConnection
+}
 
 export type ProductNodeActivitiesArgs = {
-  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  last?: InputMaybe<Scalars['Int']['input']>
+  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type ProductNodeFeaturedVersionArgs = {
-  order?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  order?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type ProductNodeLinksArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  direction?: InputMaybe<Scalars['String']['input']>;
-  first?: Scalars['Int']['input'];
-  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  nameEx?: InputMaybe<Scalars['String']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  direction?: InputMaybe<Scalars['String']['input']>
+  first?: Scalars['Int']['input']
+  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  nameEx?: InputMaybe<Scalars['String']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type ProductNodeVersionsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  authors?: InputMaybe<Array<Scalars['String']['input']>>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
-  calculateStatistics?: Scalars['Boolean']['input'];
-  featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  hasLinks?: InputMaybe<HasLinksFilter>;
-  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
-  heroOnly?: Scalars['Boolean']['input'];
-  heroOrLatestOnly?: Scalars['Boolean']['input'];
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  includeFolderChildren?: Scalars['Boolean']['input'];
-  last?: InputMaybe<Scalars['Int']['input']>;
-  latestOnly?: Scalars['Boolean']['input'];
-  productFilter?: InputMaybe<Scalars['String']['input']>;
-  productIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  taskFilter?: InputMaybe<Scalars['String']['input']>;
-  taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  version?: InputMaybe<Scalars['Int']['input']>;
-  versions?: InputMaybe<Array<Scalars['Int']['input']>>;
-};
+  after?: InputMaybe<Scalars['String']['input']>
+  authors?: InputMaybe<Array<Scalars['String']['input']>>
+  before?: InputMaybe<Scalars['String']['input']>
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>
+  calculateStatistics?: Scalars['Boolean']['input']
+  featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  folderIds?: InputMaybe<Array<Scalars['String']['input']>>
+  hasLinks?: InputMaybe<HasLinksFilter>
+  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>
+  heroOnly?: Scalars['Boolean']['input']
+  heroOrLatestOnly?: Scalars['Boolean']['input']
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  includeFolderChildren?: Scalars['Boolean']['input']
+  last?: InputMaybe<Scalars['Int']['input']>
+  latestOnly?: Scalars['Boolean']['input']
+  productFilter?: InputMaybe<Scalars['String']['input']>
+  productIds?: InputMaybe<Array<Scalars['String']['input']>>
+  search?: InputMaybe<Scalars['String']['input']>
+  sortBy?: InputMaybe<Scalars['String']['input']>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+  taskFilter?: InputMaybe<Scalars['String']['input']>
+  taskIds?: InputMaybe<Array<Scalars['String']['input']>>
+  version?: InputMaybe<Scalars['Int']['input']>
+  versions?: InputMaybe<Array<Scalars['Int']['input']>>
+}
 
 export type ProductType = {
-  __typename?: 'ProductType';
-  color?: Maybe<Scalars['String']['output']>;
-  icon?: Maybe<Scalars['String']['output']>;
-  name: Scalars['String']['output'];
-};
+  __typename?: 'ProductType'
+  color?: Maybe<Scalars['String']['output']>
+  icon?: Maybe<Scalars['String']['output']>
+  name: Scalars['String']['output']
+}
 
 export type ProductsConnection = {
-  __typename?: 'ProductsConnection';
-  edges: Array<ProductEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'ProductsConnection'
+  edges: Array<ProductEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type ProjectAttribType = {
-  __typename?: 'ProjectAttribType';
-  clipIn?: Maybe<Scalars['Int']['output']>;
-  clipOut?: Maybe<Scalars['Int']['output']>;
+  __typename?: 'ProjectAttribType'
+  clipIn?: Maybe<Scalars['Int']['output']>
+  clipOut?: Maybe<Scalars['Int']['output']>
   /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>
   /** Deadline date and time */
-  endDate?: Maybe<Scalars['DateTime']['output']>;
+  endDate?: Maybe<Scalars['DateTime']['output']>
   /** Frame rate */
-  fps?: Maybe<Scalars['Float']['output']>;
-  frameEnd?: Maybe<Scalars['Int']['output']>;
-  frameStart?: Maybe<Scalars['Int']['output']>;
-  handleEnd?: Maybe<Scalars['Int']['output']>;
-  handleStart?: Maybe<Scalars['Int']['output']>;
-  pixelAspect?: Maybe<Scalars['Float']['output']>;
-  priority?: Maybe<Scalars['String']['output']>;
+  fps?: Maybe<Scalars['Float']['output']>
+  frameEnd?: Maybe<Scalars['Int']['output']>
+  frameStart?: Maybe<Scalars['Int']['output']>
+  handleEnd?: Maybe<Scalars['Int']['output']>
+  handleStart?: Maybe<Scalars['Int']['output']>
+  pixelAspect?: Maybe<Scalars['Float']['output']>
+  priority?: Maybe<Scalars['String']['output']>
   /** Vertical resolution */
-  resolutionHeight?: Maybe<Scalars['Int']['output']>;
+  resolutionHeight?: Maybe<Scalars['Int']['output']>
   /** Horizontal resolution */
-  resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  resolutionWidth?: Maybe<Scalars['Int']['output']>
   /** Date and time when the project or task or asset was started */
-  startDate?: Maybe<Scalars['DateTime']['output']>;
-};
+  startDate?: Maybe<Scalars['DateTime']['output']>
+}
 
 export type ProjectBundleType = {
-  __typename?: 'ProjectBundleType';
-  production?: Maybe<Scalars['String']['output']>;
-  staging?: Maybe<Scalars['String']['output']>;
-};
+  __typename?: 'ProjectBundleType'
+  production?: Maybe<Scalars['String']['output']>
+  staging?: Maybe<Scalars['String']['output']>
+}
 
 export type ProjectEdge = {
-  __typename?: 'ProjectEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  node: ProjectNode;
-};
+  __typename?: 'ProjectEdge'
+  cursor?: Maybe<Scalars['String']['output']>
+  node: ProjectNode
+}
 
 export type ProjectLinkEdge = {
-  __typename?: 'ProjectLinkEdge';
-  author?: Maybe<Scalars['String']['output']>;
-  createdAt: Scalars['DateTime']['output'];
-  cursor?: Maybe<Scalars['String']['output']>;
-  data: Scalars['JSON']['output'];
-  id: Scalars['String']['output'];
-  inputId: Scalars['String']['output'];
+  __typename?: 'ProjectLinkEdge'
+  author?: Maybe<Scalars['String']['output']>
+  createdAt: Scalars['DateTime']['output']
+  cursor?: Maybe<Scalars['String']['output']>
+  data: Scalars['JSON']['output']
+  id: Scalars['String']['output']
+  inputId: Scalars['String']['output']
   /** Input node */
-  inputNode?: Maybe<BaseNode>;
-  inputType: Scalars['String']['output'];
-  linkType: Scalars['String']['output'];
-  name?: Maybe<Scalars['String']['output']>;
-  outputId: Scalars['String']['output'];
+  inputNode?: Maybe<BaseNode>
+  inputType: Scalars['String']['output']
+  linkType: Scalars['String']['output']
+  name?: Maybe<Scalars['String']['output']>
+  outputId: Scalars['String']['output']
   /** Output node */
-  outputNode?: Maybe<BaseNode>;
-  outputType: Scalars['String']['output'];
-  projectName: Scalars['String']['output'];
-};
+  outputNode?: Maybe<BaseNode>
+  outputType: Scalars['String']['output']
+  projectName: Scalars['String']['output']
+}
 
 export type ProjectLinksConnection = {
-  __typename?: 'ProjectLinksConnection';
-  edges: Array<ProjectLinkEdge>;
+  __typename?: 'ProjectLinksConnection'
+  edges: Array<ProjectLinkEdge>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type ProjectNode = {
-  __typename?: 'ProjectNode';
-  active: Scalars['Boolean']['output'];
-  activities: ActivitiesConnection;
-  allAttrib: Scalars['String']['output'];
-  attrib: ProjectAttribType;
-  bundle: ProjectBundleType;
-  code: Scalars['String']['output'];
-  color?: Maybe<Scalars['String']['output']>;
-  config?: Maybe<Scalars['String']['output']>;
-  createdAt: Scalars['DateTime']['output'];
-  data?: Maybe<Scalars['String']['output']>;
+  __typename?: 'ProjectNode'
+  active: Scalars['Boolean']['output']
+  activities: ActivitiesConnection
+  allAttrib: Scalars['String']['output']
+  attrib: ProjectAttribType
+  bundle: ProjectBundleType
+  code: Scalars['String']['output']
+  color?: Maybe<Scalars['String']['output']>
+  config?: Maybe<Scalars['String']['output']>
+  createdAt: Scalars['DateTime']['output']
+  data?: Maybe<Scalars['String']['output']>
   /** Return a folder node based on its ID */
-  entityList: EntityListNode;
-  entityLists: EntityListsConnection;
+  entityList: EntityListNode
+  entityLists: EntityListsConnection
   /** Return a folder node based on its ID */
-  folder?: Maybe<FolderNode>;
+  folder?: Maybe<FolderNode>
   /** List of project's folder types */
-  folderTypes: Array<FolderType>;
+  folderTypes: Array<FolderType>
   /** Return a list of folders. */
-  folders: FoldersConnection;
-  label?: Maybe<Scalars['String']['output']>;
-  library: Scalars['Boolean']['output'];
+  folders: FoldersConnection
+  label?: Maybe<Scalars['String']['output']>
+  library: Scalars['Boolean']['output']
   /** List of project's link types */
-  linkTypes: Array<LinkType>;
+  linkTypes: Array<LinkType>
   /** List all links in the project, with optional filters. */
-  links: ProjectLinksConnection;
-  name: Scalars['String']['output'];
+  links: ProjectLinksConnection
+  name: Scalars['String']['output']
   /** Return a representation node based on its ID */
-  product?: Maybe<ProductNode>;
+  product?: Maybe<ProductNode>
   /** List of project's product base types */
-  productBaseTypes: Array<ProductBaseType>;
+  productBaseTypes: Array<ProductBaseType>
   /** List of project's product types */
-  productTypes: Array<ProductType>;
+  productTypes: Array<ProductType>
   /** Return a list of products. */
-  products: ProductsConnection;
-  projectFolder?: Maybe<Scalars['String']['output']>;
-  projectName: Scalars['String']['output'];
+  products: ProductsConnection
+  projectFolder?: Maybe<Scalars['String']['output']>
+  projectName: Scalars['String']['output']
   /** Return a representation node based on its ID */
-  representation?: Maybe<RepresentationNode>;
+  representation?: Maybe<RepresentationNode>
   /** Return a list of representations. */
-  representations: RepresentationsConnection;
-  skeleton: Scalars['Boolean']['output'];
+  representations: RepresentationsConnection
+  skeleton: Scalars['Boolean']['output']
   /** List of project's statuses */
-  statuses: Array<Status>;
+  statuses: Array<Status>
   /** List of tags in the project */
-  tags: Array<Tag>;
+  tags: Array<Tag>
   /** Return a task node based on its ID */
-  task?: Maybe<TaskNode>;
+  task?: Maybe<TaskNode>
   /** List of project's task types */
-  taskTypes: Array<TaskType>;
+  taskTypes: Array<TaskType>
   /** Return a list of tasks. */
-  tasks: TasksConnection;
-  thumbnail?: Maybe<ThumbnailInfo>;
-  updatedAt: Scalars['DateTime']['output'];
+  tasks: TasksConnection
+  thumbnail?: Maybe<ThumbnailInfo>
+  updatedAt: Scalars['DateTime']['output']
   /** List of tags used in the project */
-  usedTags: Array<Scalars['String']['output']>;
+  usedTags: Array<Scalars['String']['output']>
   /** Return a task node based on its ID */
-  version?: Maybe<VersionNode>;
+  version?: Maybe<VersionNode>
   /** Return a list of versions. */
-  versions: VersionsConnection;
+  versions: VersionsConnection
   /** Return a task node based on its ID */
-  workfile?: Maybe<WorkfileNode>;
+  workfile?: Maybe<WorkfileNode>
   /** Return a list of workfiles. */
-  workfiles: WorkfilesConnection;
-};
-
+  workfiles: WorkfilesConnection
+}
 
 export type ProjectNodeActivitiesArgs = {
-  activityIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  authors?: InputMaybe<Array<Scalars['String']['input']>>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  categories?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-  changedAfter?: InputMaybe<Scalars['String']['input']>;
-  changedBefore?: InputMaybe<Scalars['String']['input']>;
-  entityIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  entityNames?: InputMaybe<Array<Scalars['String']['input']>>;
-  entityType?: InputMaybe<Scalars['String']['input']>;
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  activityIds?: InputMaybe<Array<Scalars['String']['input']>>
+  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  after?: InputMaybe<Scalars['String']['input']>
+  authors?: InputMaybe<Array<Scalars['String']['input']>>
+  before?: InputMaybe<Scalars['String']['input']>
+  categories?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  changedAfter?: InputMaybe<Scalars['String']['input']>
+  changedBefore?: InputMaybe<Scalars['String']['input']>
+  entityIds?: InputMaybe<Array<Scalars['String']['input']>>
+  entityNames?: InputMaybe<Array<Scalars['String']['input']>>
+  entityType?: InputMaybe<Scalars['String']['input']>
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  last?: InputMaybe<Scalars['Int']['input']>
+  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type ProjectNodeEntityListArgs = {
-  id: Scalars['String']['input'];
-};
-
+  id: Scalars['String']['input']
+}
 
 export type ProjectNodeEntityListsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  last?: InputMaybe<Scalars['Int']['input']>
+  sortBy?: InputMaybe<Scalars['String']['input']>
+}
 
 export type ProjectNodeFolderArgs = {
-  id: Scalars['String']['input'];
-};
-
+  id: Scalars['String']['input']
+}
 
 export type ProjectNodeFolderTypesArgs = {
-  activeOnly?: Scalars['Boolean']['input'];
-};
-
+  activeOnly?: Scalars['Boolean']['input']
+}
 
 export type ProjectNodeFoldersArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  assignees?: InputMaybe<Array<Scalars['String']['input']>>;
-  attributes?: InputMaybe<Array<AttributeFilterInput>>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
-  calculateStatistics?: Scalars['Boolean']['input'];
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  folderTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  hasChildren?: InputMaybe<Scalars['Boolean']['input']>;
-  hasLinks?: InputMaybe<HasLinksFilter>;
-  hasProducts?: InputMaybe<Scalars['Boolean']['input']>;
-  hasTasks?: InputMaybe<Scalars['Boolean']['input']>;
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  name?: InputMaybe<Scalars['String']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-  parentId?: InputMaybe<Scalars['String']['input']>;
-  parentIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  pathEx?: InputMaybe<Scalars['String']['input']>;
-  paths?: InputMaybe<Array<Scalars['String']['input']>>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  taskFilter?: InputMaybe<Scalars['String']['input']>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  assignees?: InputMaybe<Array<Scalars['String']['input']>>
+  attributes?: InputMaybe<Array<AttributeFilterInput>>
+  before?: InputMaybe<Scalars['String']['input']>
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>
+  calculateStatistics?: Scalars['Boolean']['input']
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  folderTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  hasChildren?: InputMaybe<Scalars['Boolean']['input']>
+  hasLinks?: InputMaybe<HasLinksFilter>
+  hasProducts?: InputMaybe<Scalars['Boolean']['input']>
+  hasTasks?: InputMaybe<Scalars['Boolean']['input']>
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  last?: InputMaybe<Scalars['Int']['input']>
+  name?: InputMaybe<Scalars['String']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+  parentId?: InputMaybe<Scalars['String']['input']>
+  parentIds?: InputMaybe<Array<Scalars['String']['input']>>
+  pathEx?: InputMaybe<Scalars['String']['input']>
+  paths?: InputMaybe<Array<Scalars['String']['input']>>
+  search?: InputMaybe<Scalars['String']['input']>
+  sortBy?: InputMaybe<Scalars['String']['input']>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+  taskFilter?: InputMaybe<Scalars['String']['input']>
+}
 
 export type ProjectNodeLinkTypesArgs = {
-  activeOnly?: Scalars['Boolean']['input'];
-};
-
+  activeOnly?: Scalars['Boolean']['input']
+}
 
 export type ProjectNodeLinksArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  entityIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  first?: Scalars['Int']['input'];
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  inputIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  inputTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  nameEx?: InputMaybe<Scalars['String']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-  outputIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  outputTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  entityIds?: InputMaybe<Array<Scalars['String']['input']>>
+  first?: Scalars['Int']['input']
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  inputIds?: InputMaybe<Array<Scalars['String']['input']>>
+  inputTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  nameEx?: InputMaybe<Scalars['String']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+  outputIds?: InputMaybe<Array<Scalars['String']['input']>>
+  outputTypes?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type ProjectNodeProductArgs = {
-  id: Scalars['String']['input'];
-};
-
+  id: Scalars['String']['input']
+}
 
 export type ProjectNodeProductsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
-  calculateStatistics?: Scalars['Boolean']['input'];
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  hasLinks?: InputMaybe<HasLinksFilter>;
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  includeFolderChildren?: Scalars['Boolean']['input'];
-  last?: InputMaybe<Scalars['Int']['input']>;
-  nameEx?: InputMaybe<Scalars['String']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-  namesCi?: InputMaybe<Array<Scalars['String']['input']>>;
-  pathEx?: InputMaybe<Scalars['String']['input']>;
-  productBaseTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  productTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  taskFilter?: InputMaybe<Scalars['String']['input']>;
-  versionFilter?: InputMaybe<Scalars['String']['input']>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>
+  calculateStatistics?: Scalars['Boolean']['input']
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  folderIds?: InputMaybe<Array<Scalars['String']['input']>>
+  hasLinks?: InputMaybe<HasLinksFilter>
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  includeFolderChildren?: Scalars['Boolean']['input']
+  last?: InputMaybe<Scalars['Int']['input']>
+  nameEx?: InputMaybe<Scalars['String']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+  namesCi?: InputMaybe<Array<Scalars['String']['input']>>
+  pathEx?: InputMaybe<Scalars['String']['input']>
+  productBaseTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  productTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  search?: InputMaybe<Scalars['String']['input']>
+  sortBy?: InputMaybe<Scalars['String']['input']>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+  taskFilter?: InputMaybe<Scalars['String']['input']>
+  versionFilter?: InputMaybe<Scalars['String']['input']>
+}
 
 export type ProjectNodeRepresentationArgs = {
-  id: Scalars['String']['input'];
-};
-
+  id: Scalars['String']['input']
+}
 
 export type ProjectNodeRepresentationsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  hasLinks?: InputMaybe<HasLinksFilter>;
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  versionIds?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  hasLinks?: InputMaybe<HasLinksFilter>
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  last?: InputMaybe<Scalars['Int']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+  search?: InputMaybe<Scalars['String']['input']>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+  versionIds?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type ProjectNodeTaskArgs = {
-  id: Scalars['String']['input'];
-};
-
+  id: Scalars['String']['input']
+}
 
 export type ProjectNodeTaskTypesArgs = {
-  activeOnly?: Scalars['Boolean']['input'];
-};
-
+  activeOnly?: Scalars['Boolean']['input']
+}
 
 export type ProjectNodeTasksArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  assignees?: InputMaybe<Array<Scalars['String']['input']>>;
-  assigneesAny?: InputMaybe<Array<Scalars['String']['input']>>;
-  attributes?: InputMaybe<Array<AttributeFilterInput>>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
-  calculateStatistics?: Scalars['Boolean']['input'];
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  folderFilter?: InputMaybe<Scalars['String']['input']>;
-  folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  hasLinks?: InputMaybe<HasLinksFilter>;
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  includeFolderChildren?: Scalars['Boolean']['input'];
-  last?: InputMaybe<Scalars['Int']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  tagsAny?: InputMaybe<Array<Scalars['String']['input']>>;
-  taskTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  assignees?: InputMaybe<Array<Scalars['String']['input']>>
+  assigneesAny?: InputMaybe<Array<Scalars['String']['input']>>
+  attributes?: InputMaybe<Array<AttributeFilterInput>>
+  before?: InputMaybe<Scalars['String']['input']>
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>
+  calculateStatistics?: Scalars['Boolean']['input']
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  folderFilter?: InputMaybe<Scalars['String']['input']>
+  folderIds?: InputMaybe<Array<Scalars['String']['input']>>
+  hasLinks?: InputMaybe<HasLinksFilter>
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  includeFolderChildren?: Scalars['Boolean']['input']
+  last?: InputMaybe<Scalars['Int']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+  search?: InputMaybe<Scalars['String']['input']>
+  sortBy?: InputMaybe<Scalars['String']['input']>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+  tagsAny?: InputMaybe<Array<Scalars['String']['input']>>
+  taskTypes?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type ProjectNodeVersionArgs = {
-  id: Scalars['String']['input'];
-};
-
+  id: Scalars['String']['input']
+}
 
 export type ProjectNodeVersionsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  authors?: InputMaybe<Array<Scalars['String']['input']>>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
-  calculateStatistics?: Scalars['Boolean']['input'];
-  featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  hasLinks?: InputMaybe<HasLinksFilter>;
-  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
-  heroOnly?: Scalars['Boolean']['input'];
-  heroOrLatestOnly?: Scalars['Boolean']['input'];
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  includeFolderChildren?: Scalars['Boolean']['input'];
-  last?: InputMaybe<Scalars['Int']['input']>;
-  latestOnly?: Scalars['Boolean']['input'];
-  productFilter?: InputMaybe<Scalars['String']['input']>;
-  productIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  taskFilter?: InputMaybe<Scalars['String']['input']>;
-  taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  version?: InputMaybe<Scalars['Int']['input']>;
-  versions?: InputMaybe<Array<Scalars['Int']['input']>>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  authors?: InputMaybe<Array<Scalars['String']['input']>>
+  before?: InputMaybe<Scalars['String']['input']>
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>
+  calculateStatistics?: Scalars['Boolean']['input']
+  featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  folderIds?: InputMaybe<Array<Scalars['String']['input']>>
+  hasLinks?: InputMaybe<HasLinksFilter>
+  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>
+  heroOnly?: Scalars['Boolean']['input']
+  heroOrLatestOnly?: Scalars['Boolean']['input']
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  includeFolderChildren?: Scalars['Boolean']['input']
+  last?: InputMaybe<Scalars['Int']['input']>
+  latestOnly?: Scalars['Boolean']['input']
+  productFilter?: InputMaybe<Scalars['String']['input']>
+  productIds?: InputMaybe<Array<Scalars['String']['input']>>
+  search?: InputMaybe<Scalars['String']['input']>
+  sortBy?: InputMaybe<Scalars['String']['input']>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+  taskFilter?: InputMaybe<Scalars['String']['input']>
+  taskIds?: InputMaybe<Array<Scalars['String']['input']>>
+  version?: InputMaybe<Scalars['Int']['input']>
+  versions?: InputMaybe<Array<Scalars['Int']['input']>>
+}
 
 export type ProjectNodeWorkfileArgs = {
-  id: Scalars['String']['input'];
-};
-
+  id: Scalars['String']['input']
+}
 
 export type ProjectNodeWorkfilesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  hasLinks?: InputMaybe<HasLinksFilter>;
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  pathEx?: InputMaybe<Scalars['String']['input']>;
-  paths?: InputMaybe<Array<Scalars['String']['input']>>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
-};
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  hasLinks?: InputMaybe<HasLinksFilter>
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  last?: InputMaybe<Scalars['Int']['input']>
+  pathEx?: InputMaybe<Scalars['String']['input']>
+  paths?: InputMaybe<Array<Scalars['String']['input']>>
+  search?: InputMaybe<Scalars['String']['input']>
+  sortBy?: InputMaybe<Scalars['String']['input']>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+  taskIds?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type ProjectsConnection = {
-  __typename?: 'ProjectsConnection';
-  edges: Array<ProjectEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'ProjectsConnection'
+  edges: Array<ProjectEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type Query = {
-  __typename?: 'Query';
+  __typename?: 'Query'
   /** Get a list of recorded events */
-  events: EventsConnection;
+  events: EventsConnection
   /** Get user inbox */
-  inbox: ActivitiesConnection;
+  inbox: ActivitiesConnection
   /** Get kanban board */
-  kanban: KanbanConnection;
+  kanban: KanbanConnection
   /** Current user */
-  me: UserNode;
+  me: UserNode
   /** Studio-wide product type configuration */
-  productTypes: Array<ProductType>;
+  productTypes: Array<ProductType>
   /** Get a project by name */
-  project: ProjectNode;
+  project: ProjectNode
   /** Get a list of projects */
-  projects: ProjectsConnection;
+  projects: ProjectsConnection
   /** Get a user by name */
-  user: UserNode;
+  user: UserNode
   /** Get a list of users */
-  users: UsersConnection;
-};
-
+  users: UsersConnection
+}
 
 export type QueryEventsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  hasChildren?: InputMaybe<Scalars['Boolean']['input']>;
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  includeLogs?: Scalars['Boolean']['input'];
-  last?: InputMaybe<Scalars['Int']['input']>;
-  newerThan?: InputMaybe<Scalars['String']['input']>;
-  olderThan?: InputMaybe<Scalars['String']['input']>;
-  projects?: InputMaybe<Array<Scalars['String']['input']>>;
-  states?: InputMaybe<Array<Scalars['String']['input']>>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  topics?: InputMaybe<Array<Scalars['String']['input']>>;
-  users?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  hasChildren?: InputMaybe<Scalars['Boolean']['input']>
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  includeLogs?: Scalars['Boolean']['input']
+  last?: InputMaybe<Scalars['Int']['input']>
+  newerThan?: InputMaybe<Scalars['String']['input']>
+  olderThan?: InputMaybe<Scalars['String']['input']>
+  projects?: InputMaybe<Array<Scalars['String']['input']>>
+  states?: InputMaybe<Array<Scalars['String']['input']>>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  topics?: InputMaybe<Array<Scalars['String']['input']>>
+  users?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type QueryInboxArgs = {
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  showActiveMessages?: InputMaybe<Scalars['Boolean']['input']>;
-  showActiveProjects?: InputMaybe<Scalars['Boolean']['input']>;
-  showImportantMessages?: InputMaybe<Scalars['Boolean']['input']>;
-  showUnreadMessages?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
+  before?: InputMaybe<Scalars['String']['input']>
+  last?: InputMaybe<Scalars['Int']['input']>
+  showActiveMessages?: InputMaybe<Scalars['Boolean']['input']>
+  showActiveProjects?: InputMaybe<Scalars['Boolean']['input']>
+  showImportantMessages?: InputMaybe<Scalars['Boolean']['input']>
+  showUnreadMessages?: InputMaybe<Scalars['Boolean']['input']>
+}
 
 export type QueryKanbanArgs = {
-  assigneesAny?: InputMaybe<Array<Scalars['String']['input']>>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  projects?: InputMaybe<Array<Scalars['String']['input']>>;
-  taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  assigneesAny?: InputMaybe<Array<Scalars['String']['input']>>
+  before?: InputMaybe<Scalars['String']['input']>
+  last?: InputMaybe<Scalars['Int']['input']>
+  projects?: InputMaybe<Array<Scalars['String']['input']>>
+  taskIds?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type QueryProjectArgs = {
-  code?: InputMaybe<Scalars['String']['input']>;
-  name?: InputMaybe<Scalars['String']['input']>;
-};
-
+  code?: InputMaybe<Scalars['String']['input']>
+  name?: InputMaybe<Scalars['String']['input']>
+}
 
 export type QueryProjectsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  code?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  includeSkeleton?: Scalars['Boolean']['input'];
-  last?: InputMaybe<Scalars['Int']['input']>;
-  name?: InputMaybe<Scalars['String']['input']>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  code?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  includeSkeleton?: Scalars['Boolean']['input']
+  last?: InputMaybe<Scalars['Int']['input']>
+  name?: InputMaybe<Scalars['String']['input']>
+}
 
 export type QueryUserArgs = {
-  name: Scalars['String']['input'];
-};
-
+  name: Scalars['String']['input']
+}
 
 export type QueryUsersArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  emails?: InputMaybe<Array<Scalars['String']['input']>>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  isSupport?: InputMaybe<Scalars['Boolean']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  name?: InputMaybe<Scalars['String']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-  projectName?: InputMaybe<Scalars['String']['input']>;
-  projects?: InputMaybe<Array<Scalars['String']['input']>>;
-};
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  emails?: InputMaybe<Array<Scalars['String']['input']>>
+  first?: InputMaybe<Scalars['Int']['input']>
+  isSupport?: InputMaybe<Scalars['Boolean']['input']>
+  last?: InputMaybe<Scalars['Int']['input']>
+  name?: InputMaybe<Scalars['String']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+  projectName?: InputMaybe<Scalars['String']['input']>
+  projects?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type RepresentationAttribType = {
-  __typename?: 'RepresentationAttribType';
-  clipIn?: Maybe<Scalars['Int']['output']>;
-  clipOut?: Maybe<Scalars['Int']['output']>;
+  __typename?: 'RepresentationAttribType'
+  clipIn?: Maybe<Scalars['Int']['output']>
+  clipOut?: Maybe<Scalars['Int']['output']>
   /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
-  extension?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>
+  extension?: Maybe<Scalars['String']['output']>
   /** Frame rate */
-  fps?: Maybe<Scalars['Float']['output']>;
-  frameEnd?: Maybe<Scalars['Int']['output']>;
-  frameStart?: Maybe<Scalars['Int']['output']>;
-  handleEnd?: Maybe<Scalars['Int']['output']>;
-  handleStart?: Maybe<Scalars['Int']['output']>;
-  path?: Maybe<Scalars['String']['output']>;
-  pixelAspect?: Maybe<Scalars['Float']['output']>;
+  fps?: Maybe<Scalars['Float']['output']>
+  frameEnd?: Maybe<Scalars['Int']['output']>
+  frameStart?: Maybe<Scalars['Int']['output']>
+  handleEnd?: Maybe<Scalars['Int']['output']>
+  handleStart?: Maybe<Scalars['Int']['output']>
+  path?: Maybe<Scalars['String']['output']>
+  pixelAspect?: Maybe<Scalars['Float']['output']>
   /** Vertical resolution */
-  resolutionHeight?: Maybe<Scalars['Int']['output']>;
+  resolutionHeight?: Maybe<Scalars['Int']['output']>
   /** Horizontal resolution */
-  resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  template?: Maybe<Scalars['String']['output']>;
-};
+  resolutionWidth?: Maybe<Scalars['Int']['output']>
+  template?: Maybe<Scalars['String']['output']>
+}
 
 export type RepresentationEdge = {
-  __typename?: 'RepresentationEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  node: RepresentationNode;
-};
+  __typename?: 'RepresentationEdge'
+  cursor?: Maybe<Scalars['String']['output']>
+  node: RepresentationNode
+}
 
 export type RepresentationNode = BaseNode & {
-  __typename?: 'RepresentationNode';
-  active: Scalars['Boolean']['output'];
-  activities: ActivitiesConnection;
-  allAttrib: Scalars['String']['output'];
-  attrib: RepresentationAttribType;
+  __typename?: 'RepresentationNode'
+  active: Scalars['Boolean']['output']
+  activities: ActivitiesConnection
+  allAttrib: Scalars['String']['output']
+  attrib: RepresentationAttribType
   /** JSON serialized context data */
-  context?: Maybe<Scalars['String']['output']>;
-  createdAt: Scalars['DateTime']['output'];
-  createdBy?: Maybe<Scalars['String']['output']>;
-  data?: Maybe<Scalars['String']['output']>;
+  context?: Maybe<Scalars['String']['output']>
+  createdAt: Scalars['DateTime']['output']
+  createdBy?: Maybe<Scalars['String']['output']>
+  data?: Maybe<Scalars['String']['output']>
   /** Number of files of the representation */
-  fileCount: Scalars['Int']['output'];
+  fileCount: Scalars['Int']['output']
   /** Files in the representation */
-  files: Array<FileNode>;
-  id: Scalars['String']['output'];
-  links: LinksConnection;
-  name: Scalars['String']['output'];
-  parents: Array<Scalars['String']['output']>;
-  path?: Maybe<Scalars['String']['output']>;
-  projectName: Scalars['String']['output'];
-  status: Scalars['String']['output'];
-  tags: Array<Scalars['String']['output']>;
-  traits?: Maybe<Scalars['String']['output']>;
-  updatedAt: Scalars['DateTime']['output'];
-  updatedBy?: Maybe<Scalars['String']['output']>;
+  files: Array<FileNode>
+  id: Scalars['String']['output']
+  links: LinksConnection
+  name: Scalars['String']['output']
+  parents: Array<Scalars['String']['output']>
+  path?: Maybe<Scalars['String']['output']>
+  projectName: Scalars['String']['output']
+  status: Scalars['String']['output']
+  tags: Array<Scalars['String']['output']>
+  traits?: Maybe<Scalars['String']['output']>
+  updatedAt: Scalars['DateTime']['output']
+  updatedBy?: Maybe<Scalars['String']['output']>
   /** Parent version of the representation */
-  version: VersionNode;
-  versionId: Scalars['String']['output'];
-};
-
+  version: VersionNode
+  versionId: Scalars['String']['output']
+}
 
 export type RepresentationNodeActivitiesArgs = {
-  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  last?: InputMaybe<Scalars['Int']['input']>
+  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type RepresentationNodeLinksArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  direction?: InputMaybe<Scalars['String']['input']>;
-  first?: Scalars['Int']['input'];
-  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  nameEx?: InputMaybe<Scalars['String']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-};
+  after?: InputMaybe<Scalars['String']['input']>
+  direction?: InputMaybe<Scalars['String']['input']>
+  first?: Scalars['Int']['input']
+  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  nameEx?: InputMaybe<Scalars['String']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type RepresentationsConnection = {
-  __typename?: 'RepresentationsConnection';
-  edges: Array<RepresentationEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'RepresentationsConnection'
+  edges: Array<RepresentationEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export enum StatsOperation {
   Avg = 'AVG',
@@ -1279,680 +1242,1153 @@ export enum StatsOperation {
   PercentageFilled = 'PERCENTAGE_FILLED',
   PercentageNotChecked = 'PERCENTAGE_NOT_CHECKED',
   PercentageNotFilled = 'PERCENTAGE_NOT_FILLED',
-  Sum = 'SUM'
+  Sum = 'SUM',
 }
 
 export type Status = {
-  __typename?: 'Status';
-  color?: Maybe<Scalars['String']['output']>;
-  icon?: Maybe<Scalars['String']['output']>;
-  name: Scalars['String']['output'];
-  scope?: Maybe<Array<Scalars['String']['output']>>;
-  shortName?: Maybe<Scalars['String']['output']>;
-  state?: Maybe<Scalars['String']['output']>;
-};
+  __typename?: 'Status'
+  color?: Maybe<Scalars['String']['output']>
+  icon?: Maybe<Scalars['String']['output']>
+  name: Scalars['String']['output']
+  scope?: Maybe<Array<Scalars['String']['output']>>
+  shortName?: Maybe<Scalars['String']['output']>
+  state?: Maybe<Scalars['String']['output']>
+}
 
 export type SubTaskNode = {
-  __typename?: 'SubTaskNode';
-  assignees: Array<Scalars['String']['output']>;
-  description?: Maybe<Scalars['String']['output']>;
-  endDate?: Maybe<Scalars['DateTime']['output']>;
-  id: Scalars['String']['output'];
-  isDone: Scalars['Boolean']['output'];
-  label: Scalars['String']['output'];
-  name: Scalars['String']['output'];
-  startDate?: Maybe<Scalars['DateTime']['output']>;
-};
+  __typename?: 'SubTaskNode'
+  assignees: Array<Scalars['String']['output']>
+  description?: Maybe<Scalars['String']['output']>
+  endDate?: Maybe<Scalars['DateTime']['output']>
+  id: Scalars['String']['output']
+  isDone: Scalars['Boolean']['output']
+  label: Scalars['String']['output']
+  name: Scalars['String']['output']
+  startDate?: Maybe<Scalars['DateTime']['output']>
+}
 
 export type Tag = {
-  __typename?: 'Tag';
-  color?: Maybe<Scalars['String']['output']>;
-  name: Scalars['String']['output'];
-};
+  __typename?: 'Tag'
+  color?: Maybe<Scalars['String']['output']>
+  name: Scalars['String']['output']
+}
 
 export type TaskAttribType = {
-  __typename?: 'TaskAttribType';
-  clipIn?: Maybe<Scalars['Int']['output']>;
-  clipOut?: Maybe<Scalars['Int']['output']>;
+  __typename?: 'TaskAttribType'
+  clipIn?: Maybe<Scalars['Int']['output']>
+  clipOut?: Maybe<Scalars['Int']['output']>
   /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>
   /** Deadline date and time */
-  endDate?: Maybe<Scalars['DateTime']['output']>;
+  endDate?: Maybe<Scalars['DateTime']['output']>
   /** Frame rate */
-  fps?: Maybe<Scalars['Float']['output']>;
-  frameEnd?: Maybe<Scalars['Int']['output']>;
-  frameStart?: Maybe<Scalars['Int']['output']>;
-  handleEnd?: Maybe<Scalars['Int']['output']>;
-  handleStart?: Maybe<Scalars['Int']['output']>;
-  pixelAspect?: Maybe<Scalars['Float']['output']>;
-  priority?: Maybe<Scalars['String']['output']>;
+  fps?: Maybe<Scalars['Float']['output']>
+  frameEnd?: Maybe<Scalars['Int']['output']>
+  frameStart?: Maybe<Scalars['Int']['output']>
+  handleEnd?: Maybe<Scalars['Int']['output']>
+  handleStart?: Maybe<Scalars['Int']['output']>
+  pixelAspect?: Maybe<Scalars['Float']['output']>
+  priority?: Maybe<Scalars['String']['output']>
   /** Vertical resolution */
-  resolutionHeight?: Maybe<Scalars['Int']['output']>;
+  resolutionHeight?: Maybe<Scalars['Int']['output']>
   /** Horizontal resolution */
-  resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  resolutionWidth?: Maybe<Scalars['Int']['output']>
   /** Date and time when the project or task or asset was started */
-  startDate?: Maybe<Scalars['DateTime']['output']>;
-};
+  startDate?: Maybe<Scalars['DateTime']['output']>
+}
 
 export type TaskEdge = {
-  __typename?: 'TaskEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  node: TaskNode;
-};
+  __typename?: 'TaskEdge'
+  cursor?: Maybe<Scalars['String']['output']>
+  node: TaskNode
+}
 
 export type TaskNode = BaseNode & {
-  __typename?: 'TaskNode';
-  Folder?: Maybe<FolderNode>;
-  active: Scalars['Boolean']['output'];
-  activities: ActivitiesConnection;
-  allAttrib: Scalars['String']['output'];
-  assignees: Array<Scalars['String']['output']>;
-  attrib: TaskAttribType;
-  createdAt: Scalars['DateTime']['output'];
-  createdBy?: Maybe<Scalars['String']['output']>;
-  data?: Maybe<Scalars['String']['output']>;
+  __typename?: 'TaskNode'
+  Folder?: Maybe<FolderNode>
+  active: Scalars['Boolean']['output']
+  activities: ActivitiesConnection
+  allAttrib: Scalars['String']['output']
+  assignees: Array<Scalars['String']['output']>
+  attrib: TaskAttribType
+  createdAt: Scalars['DateTime']['output']
+  createdBy?: Maybe<Scalars['String']['output']>
+  data?: Maybe<Scalars['String']['output']>
   /** Parent folder of the task */
-  folder: FolderNode;
-  folderId: Scalars['String']['output'];
-  hasReviewables: Scalars['Boolean']['output'];
-  id: Scalars['String']['output'];
-  label?: Maybe<Scalars['String']['output']>;
-  latestComments?: Maybe<Array<EntityComment>>;
-  links: LinksConnection;
-  name: Scalars['String']['output'];
-  ownAttrib: Array<Scalars['String']['output']>;
-  parents: Array<Scalars['String']['output']>;
-  path?: Maybe<Scalars['String']['output']>;
-  projectName: Scalars['String']['output'];
-  status: Scalars['String']['output'];
-  subtasks: Array<SubTaskNode>;
-  tags: Array<Scalars['String']['output']>;
-  taskType: Scalars['String']['output'];
-  thumbnail?: Maybe<ThumbnailInfo>;
-  thumbnailHash: Scalars['String']['output'];
-  thumbnailId?: Maybe<Scalars['String']['output']>;
-  type: Scalars['String']['output'];
-  updatedAt: Scalars['DateTime']['output'];
-  updatedBy?: Maybe<Scalars['String']['output']>;
+  folder: FolderNode
+  folderId: Scalars['String']['output']
+  hasReviewables: Scalars['Boolean']['output']
+  id: Scalars['String']['output']
+  label?: Maybe<Scalars['String']['output']>
+  latestComments?: Maybe<Array<EntityComment>>
+  links: LinksConnection
+  name: Scalars['String']['output']
+  ownAttrib: Array<Scalars['String']['output']>
+  parents: Array<Scalars['String']['output']>
+  path?: Maybe<Scalars['String']['output']>
+  projectName: Scalars['String']['output']
+  status: Scalars['String']['output']
+  subtasks: Array<SubTaskNode>
+  tags: Array<Scalars['String']['output']>
+  taskType: Scalars['String']['output']
+  thumbnail?: Maybe<ThumbnailInfo>
+  thumbnailHash: Scalars['String']['output']
+  thumbnailId?: Maybe<Scalars['String']['output']>
+  type: Scalars['String']['output']
+  updatedAt: Scalars['DateTime']['output']
+  updatedBy?: Maybe<Scalars['String']['output']>
   /** Return a list of versions. */
-  versions: VersionsConnection;
+  versions: VersionsConnection
   /** Return a list of workfiles. */
-  workfiles: WorkfilesConnection;
-};
-
+  workfiles: WorkfilesConnection
+}
 
 export type TaskNodeActivitiesArgs = {
-  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  last?: InputMaybe<Scalars['Int']['input']>
+  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type TaskNodeLinksArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  direction?: InputMaybe<Scalars['String']['input']>;
-  first?: Scalars['Int']['input'];
-  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  nameEx?: InputMaybe<Scalars['String']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  direction?: InputMaybe<Scalars['String']['input']>
+  first?: Scalars['Int']['input']
+  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  nameEx?: InputMaybe<Scalars['String']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type TaskNodeVersionsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  authors?: InputMaybe<Array<Scalars['String']['input']>>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
-  calculateStatistics?: Scalars['Boolean']['input'];
-  featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  hasLinks?: InputMaybe<HasLinksFilter>;
-  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
-  heroOnly?: Scalars['Boolean']['input'];
-  heroOrLatestOnly?: Scalars['Boolean']['input'];
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  includeFolderChildren?: Scalars['Boolean']['input'];
-  last?: InputMaybe<Scalars['Int']['input']>;
-  latestOnly?: Scalars['Boolean']['input'];
-  productFilter?: InputMaybe<Scalars['String']['input']>;
-  productIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  taskFilter?: InputMaybe<Scalars['String']['input']>;
-  taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  version?: InputMaybe<Scalars['Int']['input']>;
-  versions?: InputMaybe<Array<Scalars['Int']['input']>>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  authors?: InputMaybe<Array<Scalars['String']['input']>>
+  before?: InputMaybe<Scalars['String']['input']>
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>
+  calculateStatistics?: Scalars['Boolean']['input']
+  featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  folderIds?: InputMaybe<Array<Scalars['String']['input']>>
+  hasLinks?: InputMaybe<HasLinksFilter>
+  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>
+  heroOnly?: Scalars['Boolean']['input']
+  heroOrLatestOnly?: Scalars['Boolean']['input']
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  includeFolderChildren?: Scalars['Boolean']['input']
+  last?: InputMaybe<Scalars['Int']['input']>
+  latestOnly?: Scalars['Boolean']['input']
+  productFilter?: InputMaybe<Scalars['String']['input']>
+  productIds?: InputMaybe<Array<Scalars['String']['input']>>
+  search?: InputMaybe<Scalars['String']['input']>
+  sortBy?: InputMaybe<Scalars['String']['input']>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+  taskFilter?: InputMaybe<Scalars['String']['input']>
+  taskIds?: InputMaybe<Array<Scalars['String']['input']>>
+  version?: InputMaybe<Scalars['Int']['input']>
+  versions?: InputMaybe<Array<Scalars['Int']['input']>>
+}
 
 export type TaskNodeWorkfilesArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  hasLinks?: InputMaybe<HasLinksFilter>;
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  pathEx?: InputMaybe<Scalars['String']['input']>;
-  paths?: InputMaybe<Array<Scalars['String']['input']>>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
-};
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  hasLinks?: InputMaybe<HasLinksFilter>
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  last?: InputMaybe<Scalars['Int']['input']>
+  pathEx?: InputMaybe<Scalars['String']['input']>
+  paths?: InputMaybe<Array<Scalars['String']['input']>>
+  search?: InputMaybe<Scalars['String']['input']>
+  sortBy?: InputMaybe<Scalars['String']['input']>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+  taskIds?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type TaskType = {
-  __typename?: 'TaskType';
-  color?: Maybe<Scalars['String']['output']>;
-  icon?: Maybe<Scalars['String']['output']>;
-  name: Scalars['String']['output'];
-  shortName?: Maybe<Scalars['String']['output']>;
-};
+  __typename?: 'TaskType'
+  color?: Maybe<Scalars['String']['output']>
+  icon?: Maybe<Scalars['String']['output']>
+  name: Scalars['String']['output']
+  shortName?: Maybe<Scalars['String']['output']>
+}
 
 export type TasksConnection = {
-  __typename?: 'TasksConnection';
-  edges: Array<TaskEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'TasksConnection'
+  edges: Array<TaskEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type ThumbnailInfo = {
-  __typename?: 'ThumbnailInfo';
-  id: Scalars['String']['output'];
-  relation?: Maybe<Scalars['String']['output']>;
-  sourceEntityId?: Maybe<Scalars['String']['output']>;
-  sourceEntityType?: Maybe<Scalars['String']['output']>;
-};
+  __typename?: 'ThumbnailInfo'
+  id: Scalars['String']['output']
+  relation?: Maybe<Scalars['String']['output']>
+  sourceEntityId?: Maybe<Scalars['String']['output']>
+  sourceEntityType?: Maybe<Scalars['String']['output']>
+}
 
 export type UserAttribType = {
-  __typename?: 'UserAttribType';
-  avatarUrl?: Maybe<Scalars['String']['output']>;
-  developerMode?: Maybe<Scalars['Boolean']['output']>;
-  email?: Maybe<Scalars['String']['output']>;
-  fullName?: Maybe<Scalars['String']['output']>;
-};
+  __typename?: 'UserAttribType'
+  avatarUrl?: Maybe<Scalars['String']['output']>
+  developerMode?: Maybe<Scalars['Boolean']['output']>
+  email?: Maybe<Scalars['String']['output']>
+  fullName?: Maybe<Scalars['String']['output']>
+}
 
 export type UserEdge = {
-  __typename?: 'UserEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  node: UserNode;
-};
+  __typename?: 'UserEdge'
+  cursor?: Maybe<Scalars['String']['output']>
+  node: UserNode
+}
 
 export type UserNode = {
-  __typename?: 'UserNode';
-  accessGroups: Scalars['String']['output'];
-  active: Scalars['Boolean']['output'];
-  allAttrib: Scalars['String']['output'];
-  apiKeyPreview?: Maybe<Scalars['String']['output']>;
-  attrib: UserAttribType;
-  createdAt: Scalars['DateTime']['output'];
-  defaultAccessGroups: Array<Scalars['String']['output']>;
-  deleted: Scalars['Boolean']['output'];
-  disablePasswordLogin: Scalars['Boolean']['output'];
-  hasPassword: Scalars['Boolean']['output'];
-  inviteAcceptedAt?: Maybe<Scalars['DateTime']['output']>;
-  inviteSentAt?: Maybe<Scalars['DateTime']['output']>;
-  isAdmin: Scalars['Boolean']['output'];
-  isDeveloper: Scalars['Boolean']['output'];
-  isGuest: Scalars['Boolean']['output'];
-  isManager: Scalars['Boolean']['output'];
-  isService: Scalars['Boolean']['output'];
-  isStagingAllowed: Scalars['Boolean']['output'];
-  name: Scalars['String']['output'];
-  tasks: TasksConnection;
-  updatedAt: Scalars['DateTime']['output'];
-  userPool?: Maybe<Scalars['String']['output']>;
-};
-
+  __typename?: 'UserNode'
+  accessGroups: Scalars['String']['output']
+  active: Scalars['Boolean']['output']
+  allAttrib: Scalars['String']['output']
+  apiKeyPreview?: Maybe<Scalars['String']['output']>
+  attrib: UserAttribType
+  createdAt: Scalars['DateTime']['output']
+  defaultAccessGroups: Array<Scalars['String']['output']>
+  deleted: Scalars['Boolean']['output']
+  disablePasswordLogin: Scalars['Boolean']['output']
+  hasPassword: Scalars['Boolean']['output']
+  inviteAcceptedAt?: Maybe<Scalars['DateTime']['output']>
+  inviteSentAt?: Maybe<Scalars['DateTime']['output']>
+  isAdmin: Scalars['Boolean']['output']
+  isDeveloper: Scalars['Boolean']['output']
+  isGuest: Scalars['Boolean']['output']
+  isManager: Scalars['Boolean']['output']
+  isService: Scalars['Boolean']['output']
+  isStagingAllowed: Scalars['Boolean']['output']
+  name: Scalars['String']['output']
+  tasks: TasksConnection
+  updatedAt: Scalars['DateTime']['output']
+  userPool?: Maybe<Scalars['String']['output']>
+}
 
 export type UserNodeTasksArgs = {
-  projectName: Scalars['String']['input'];
-};
+  projectName: Scalars['String']['input']
+}
 
 export type UsersConnection = {
-  __typename?: 'UsersConnection';
-  edges: Array<UserEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'UsersConnection'
+  edges: Array<UserEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type VersionAttribType = {
-  __typename?: 'VersionAttribType';
-  clipIn?: Maybe<Scalars['Int']['output']>;
-  clipOut?: Maybe<Scalars['Int']['output']>;
-  colorSpace?: Maybe<Scalars['String']['output']>;
-  comment?: Maybe<Scalars['String']['output']>;
+  __typename?: 'VersionAttribType'
+  clipIn?: Maybe<Scalars['Int']['output']>
+  clipOut?: Maybe<Scalars['Int']['output']>
+  colorSpace?: Maybe<Scalars['String']['output']>
+  comment?: Maybe<Scalars['String']['output']>
   /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
-  families?: Maybe<Array<Scalars['String']['output']>>;
+  description?: Maybe<Scalars['String']['output']>
+  families?: Maybe<Array<Scalars['String']['output']>>
   /** Frame rate */
-  fps?: Maybe<Scalars['Float']['output']>;
-  frameEnd?: Maybe<Scalars['Int']['output']>;
-  frameStart?: Maybe<Scalars['Int']['output']>;
-  handleEnd?: Maybe<Scalars['Int']['output']>;
-  handleStart?: Maybe<Scalars['Int']['output']>;
-  intent?: Maybe<Scalars['String']['output']>;
-  machine?: Maybe<Scalars['String']['output']>;
-  pixelAspect?: Maybe<Scalars['Float']['output']>;
+  fps?: Maybe<Scalars['Float']['output']>
+  frameEnd?: Maybe<Scalars['Int']['output']>
+  frameStart?: Maybe<Scalars['Int']['output']>
+  handleEnd?: Maybe<Scalars['Int']['output']>
+  handleStart?: Maybe<Scalars['Int']['output']>
+  intent?: Maybe<Scalars['String']['output']>
+  machine?: Maybe<Scalars['String']['output']>
+  pixelAspect?: Maybe<Scalars['Float']['output']>
   /** Vertical resolution */
-  resolutionHeight?: Maybe<Scalars['Int']['output']>;
+  resolutionHeight?: Maybe<Scalars['Int']['output']>
   /** Horizontal resolution */
-  resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  site?: Maybe<Scalars['String']['output']>;
-  source?: Maybe<Scalars['String']['output']>;
-};
+  resolutionWidth?: Maybe<Scalars['Int']['output']>
+  site?: Maybe<Scalars['String']['output']>
+  source?: Maybe<Scalars['String']['output']>
+}
 
 export type VersionEdge = {
-  __typename?: 'VersionEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  node: VersionNode;
-};
+  __typename?: 'VersionEdge'
+  cursor?: Maybe<Scalars['String']['output']>
+  node: VersionNode
+}
 
 export type VersionListItem = {
-  __typename?: 'VersionListItem';
-  id: Scalars['String']['output'];
+  __typename?: 'VersionListItem'
+  id: Scalars['String']['output']
   /** Version name */
-  name: Scalars['String']['output'];
-  version: Scalars['Int']['output'];
-};
+  name: Scalars['String']['output']
+  version: Scalars['Int']['output']
+}
 
 export type VersionNode = BaseNode & {
-  __typename?: 'VersionNode';
-  active: Scalars['Boolean']['output'];
-  activities: ActivitiesConnection;
-  allAttrib: Scalars['String']['output'];
-  attrib: VersionAttribType;
-  author?: Maybe<Scalars['String']['output']>;
-  createdAt: Scalars['DateTime']['output'];
-  createdBy?: Maybe<Scalars['String']['output']>;
-  data?: Maybe<Scalars['String']['output']>;
-  featuredVersionType?: Maybe<Scalars['String']['output']>;
-  hasReviewables: Scalars['Boolean']['output'];
-  heroVersionId?: Maybe<Scalars['String']['output']>;
-  id: Scalars['String']['output'];
-  isLatest: Scalars['Boolean']['output'];
-  isLatestDone: Scalars['Boolean']['output'];
-  latestComments?: Maybe<Array<EntityComment>>;
-  links: LinksConnection;
-  name: Scalars['String']['output'];
-  parents: Array<Scalars['String']['output']>;
-  path?: Maybe<Scalars['String']['output']>;
+  __typename?: 'VersionNode'
+  active: Scalars['Boolean']['output']
+  activities: ActivitiesConnection
+  allAttrib: Scalars['String']['output']
+  attrib: VersionAttribType
+  author?: Maybe<Scalars['String']['output']>
+  createdAt: Scalars['DateTime']['output']
+  createdBy?: Maybe<Scalars['String']['output']>
+  data?: Maybe<Scalars['String']['output']>
+  featuredVersionType?: Maybe<Scalars['String']['output']>
+  hasReviewables: Scalars['Boolean']['output']
+  heroVersionId?: Maybe<Scalars['String']['output']>
+  id: Scalars['String']['output']
+  isLatest: Scalars['Boolean']['output']
+  isLatestDone: Scalars['Boolean']['output']
+  latestComments?: Maybe<Array<EntityComment>>
+  links: LinksConnection
+  name: Scalars['String']['output']
+  parents: Array<Scalars['String']['output']>
+  path?: Maybe<Scalars['String']['output']>
   /** Parent product of the version */
-  product: ProductNode;
-  productId: Scalars['String']['output'];
-  projectName: Scalars['String']['output'];
+  product: ProductNode
+  productId: Scalars['String']['output']
+  projectName: Scalars['String']['output']
   /** Return a list of representations. */
-  representations: RepresentationsConnection;
-  status: Scalars['String']['output'];
-  tags: Array<Scalars['String']['output']>;
+  representations: RepresentationsConnection
+  status: Scalars['String']['output']
+  tags: Array<Scalars['String']['output']>
   /** Task */
-  task?: Maybe<TaskNode>;
-  taskId?: Maybe<Scalars['String']['output']>;
-  thumbnail?: Maybe<ThumbnailInfo>;
-  thumbnailHash: Scalars['String']['output'];
-  thumbnailId?: Maybe<Scalars['String']['output']>;
-  updatedAt: Scalars['DateTime']['output'];
-  updatedBy?: Maybe<Scalars['String']['output']>;
-  version: Scalars['Int']['output'];
-};
-
+  task?: Maybe<TaskNode>
+  taskId?: Maybe<Scalars['String']['output']>
+  thumbnail?: Maybe<ThumbnailInfo>
+  thumbnailHash: Scalars['String']['output']
+  thumbnailId?: Maybe<Scalars['String']['output']>
+  updatedAt: Scalars['DateTime']['output']
+  updatedBy?: Maybe<Scalars['String']['output']>
+  version: Scalars['Int']['output']
+}
 
 export type VersionNodeActivitiesArgs = {
-  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  last?: InputMaybe<Scalars['Int']['input']>
+  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type VersionNodeLinksArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  direction?: InputMaybe<Scalars['String']['input']>;
-  first?: Scalars['Int']['input'];
-  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  nameEx?: InputMaybe<Scalars['String']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  after?: InputMaybe<Scalars['String']['input']>
+  direction?: InputMaybe<Scalars['String']['input']>
+  first?: Scalars['Int']['input']
+  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  nameEx?: InputMaybe<Scalars['String']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type VersionNodeRepresentationsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  filter?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  hasLinks?: InputMaybe<HasLinksFilter>;
-  ids?: InputMaybe<Array<Scalars['String']['input']>>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  versionIds?: InputMaybe<Array<Scalars['String']['input']>>;
-};
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  filter?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  hasLinks?: InputMaybe<HasLinksFilter>
+  ids?: InputMaybe<Array<Scalars['String']['input']>>
+  last?: InputMaybe<Scalars['Int']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+  search?: InputMaybe<Scalars['String']['input']>
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>
+  tags?: InputMaybe<Array<Scalars['String']['input']>>
+  versionIds?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type VersionsConnection = {
-  __typename?: 'VersionsConnection';
-  edges: Array<VersionEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'VersionsConnection'
+  edges: Array<VersionEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type WorkfileAttribType = {
-  __typename?: 'WorkfileAttribType';
+  __typename?: 'WorkfileAttribType'
   /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
-  extension?: Maybe<Scalars['String']['output']>;
-};
+  description?: Maybe<Scalars['String']['output']>
+  extension?: Maybe<Scalars['String']['output']>
+}
 
 export type WorkfileEdge = {
-  __typename?: 'WorkfileEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  node: WorkfileNode;
-};
+  __typename?: 'WorkfileEdge'
+  cursor?: Maybe<Scalars['String']['output']>
+  node: WorkfileNode
+}
 
 export type WorkfileNode = BaseNode & {
-  __typename?: 'WorkfileNode';
-  Parents?: Maybe<Array<Scalars['String']['output']>>;
-  active: Scalars['Boolean']['output'];
-  activities: ActivitiesConnection;
-  allAttrib: Scalars['String']['output'];
-  attrib: WorkfileAttribType;
-  createdAt: Scalars['DateTime']['output'];
-  createdBy?: Maybe<Scalars['String']['output']>;
-  data?: Maybe<Scalars['String']['output']>;
-  id: Scalars['String']['output'];
-  links: LinksConnection;
-  name: Scalars['String']['output'];
-  parents: Array<Scalars['String']['output']>;
-  path: Scalars['String']['output'];
-  projectName: Scalars['String']['output'];
-  status: Scalars['String']['output'];
-  tags: Array<Scalars['String']['output']>;
+  __typename?: 'WorkfileNode'
+  Parents?: Maybe<Array<Scalars['String']['output']>>
+  active: Scalars['Boolean']['output']
+  activities: ActivitiesConnection
+  allAttrib: Scalars['String']['output']
+  attrib: WorkfileAttribType
+  createdAt: Scalars['DateTime']['output']
+  createdBy?: Maybe<Scalars['String']['output']>
+  data?: Maybe<Scalars['String']['output']>
+  id: Scalars['String']['output']
+  links: LinksConnection
+  name: Scalars['String']['output']
+  parents: Array<Scalars['String']['output']>
+  path: Scalars['String']['output']
+  projectName: Scalars['String']['output']
+  status: Scalars['String']['output']
+  tags: Array<Scalars['String']['output']>
   /** Parent task of the workfile */
-  task: TaskNode;
-  taskId?: Maybe<Scalars['String']['output']>;
-  thumbnail?: Maybe<ThumbnailInfo>;
-  thumbnailHash: Scalars['String']['output'];
-  thumbnailId?: Maybe<Scalars['String']['output']>;
-  updatedAt: Scalars['DateTime']['output'];
-  updatedBy?: Maybe<Scalars['String']['output']>;
-};
-
+  task: TaskNode
+  taskId?: Maybe<Scalars['String']['output']>
+  thumbnail?: Maybe<ThumbnailInfo>
+  thumbnailHash: Scalars['String']['output']
+  thumbnailId?: Maybe<Scalars['String']['output']>
+  updatedAt: Scalars['DateTime']['output']
+  updatedBy?: Maybe<Scalars['String']['output']>
+}
 
 export type WorkfileNodeActivitiesArgs = {
-  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
+  activityTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  after?: InputMaybe<Scalars['String']['input']>
+  before?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  last?: InputMaybe<Scalars['Int']['input']>
+  referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type WorkfileNodeLinksArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  direction?: InputMaybe<Scalars['String']['input']>;
-  first?: Scalars['Int']['input'];
-  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  nameEx?: InputMaybe<Scalars['String']['input']>;
-  names?: InputMaybe<Array<Scalars['String']['input']>>;
-};
+  after?: InputMaybe<Scalars['String']['input']>
+  direction?: InputMaybe<Scalars['String']['input']>
+  first?: Scalars['Int']['input']
+  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>
+  nameEx?: InputMaybe<Scalars['String']['input']>
+  names?: InputMaybe<Array<Scalars['String']['input']>>
+}
 
 export type WorkfilesConnection = {
-  __typename?: 'WorkfilesConnection';
-  edges: Array<WorkfileEdge>;
-  fieldStats: Array<ColumnStats>;
+  __typename?: 'WorkfilesConnection'
+  edges: Array<WorkfileEdge>
+  fieldStats: Array<ColumnStats>
   /** Pagination information */
-  pageInfo: PageInfo;
-};
+  pageInfo: PageInfo
+}
 
 export type GetFolderLinkDataQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  folderId: Scalars['String']['input'];
-}>;
+  projectName: string
+  folderId: string
+}>
 
-
-export type GetFolderLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folder?: { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | null } };
+export type GetFolderLinkDataQuery = {
+  project: {
+    folder: {
+      __typename: 'FolderNode'
+      label: string | null
+      id: string
+      name: string
+      parents: Array<string>
+      subType: string
+    } | null
+  }
+}
 
 export type GetProductLinkDataQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  productId: Scalars['String']['input'];
-}>;
+  projectName: string
+  productId: string
+}>
 
-
-export type GetProductLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', product?: { __typename: 'ProductNode', id: string, name: string, parents: Array<string> } | null } };
+export type GetProductLinkDataQuery = {
+  project: {
+    product: { __typename: 'ProductNode'; id: string; name: string; parents: Array<string> } | null
+  }
+}
 
 export type GetRepresentationLinkDataQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  representationId: Scalars['String']['input'];
-}>;
+  projectName: string
+  representationId: string
+}>
 
-
-export type GetRepresentationLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', representation?: { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> } | null } };
+export type GetRepresentationLinkDataQuery = {
+  project: {
+    representation: {
+      __typename: 'RepresentationNode'
+      id: string
+      name: string
+      parents: Array<string>
+    } | null
+  }
+}
 
 export type GetTaskLinkDataQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  taskId: Scalars['String']['input'];
-}>;
+  projectName: string
+  taskId: string
+}>
 
-
-export type GetTaskLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', task?: { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | null } };
+export type GetTaskLinkDataQuery = {
+  project: {
+    task: {
+      __typename: 'TaskNode'
+      label: string | null
+      id: string
+      name: string
+      parents: Array<string>
+      subType: string
+    } | null
+  }
+}
 
 export type GetVersionLinkDataQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  versionId: Scalars['String']['input'];
-}>;
+  projectName: string
+  versionId: string
+}>
 
-
-export type GetVersionLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', version?: { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> } | null } };
+export type GetVersionLinkDataQuery = {
+  project: {
+    version: {
+      __typename: 'VersionNode'
+      hasReviewables: boolean
+      id: string
+      name: string
+      parents: Array<string>
+    } | null
+  }
+}
 
 export type GetWorkfileLinkDataQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  workfileId: Scalars['String']['input'];
-}>;
+  projectName: string
+  workfileId: string
+}>
 
-
-export type GetWorkfileLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', workfile?: { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> } | null } };
+export type GetWorkfileLinkDataQuery = {
+  project: {
+    workfile: {
+      __typename: 'WorkfileNode'
+      id: string
+      name: string
+      parents: Array<string>
+    } | null
+  }
+}
 
 export type GetFoldersLinksQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-}>;
+  projectName: string
+  entityIds?: Array<string> | string | null | undefined
+}>
 
-
-export type GetFoldersLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-                | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
-                | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetFoldersLinksQuery = {
+  project: {
+    folders: {
+      edges: Array<{
+        node: {
+          id: string
+          links: {
+            edges: Array<{
+              id: string
+              direction: string
+              linkType: string
+              entityType: string
+              node:
+                | {
+                    __typename: 'FolderNode'
+                    label: string | null
+                    id: string
+                    name: string
+                    parents: Array<string>
+                    subType: string
+                  }
+                | { __typename: 'ProductNode'; id: string; name: string; parents: Array<string> }
+                | {
+                    __typename: 'RepresentationNode'
+                    id: string
+                    name: string
+                    parents: Array<string>
+                  }
+                | {
+                    __typename: 'TaskNode'
+                    label: string | null
+                    id: string
+                    name: string
+                    parents: Array<string>
+                    subType: string
+                  }
+                | {
+                    __typename: 'VersionNode'
+                    hasReviewables: boolean
+                    id: string
+                    name: string
+                    parents: Array<string>
+                  }
+                | { __typename: 'WorkfileNode'; id: string; name: string; parents: Array<string> }
+                | null
+            }>
+          }
+        }
+      }>
+    }
+  }
+}
 
 export type GetProductsLinksQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-}>;
+  projectName: string
+  entityIds?: Array<string> | string | null | undefined
+}>
 
-
-export type GetProductsLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', products: { __typename?: 'ProductsConnection', edges: Array<{ __typename?: 'ProductEdge', node: { __typename?: 'ProductNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-                | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
-                | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetProductsLinksQuery = {
+  project: {
+    products: {
+      edges: Array<{
+        node: {
+          id: string
+          links: {
+            edges: Array<{
+              id: string
+              direction: string
+              linkType: string
+              entityType: string
+              node:
+                | {
+                    __typename: 'FolderNode'
+                    label: string | null
+                    id: string
+                    name: string
+                    parents: Array<string>
+                    subType: string
+                  }
+                | { __typename: 'ProductNode'; id: string; name: string; parents: Array<string> }
+                | {
+                    __typename: 'RepresentationNode'
+                    id: string
+                    name: string
+                    parents: Array<string>
+                  }
+                | {
+                    __typename: 'TaskNode'
+                    label: string | null
+                    id: string
+                    name: string
+                    parents: Array<string>
+                    subType: string
+                  }
+                | {
+                    __typename: 'VersionNode'
+                    hasReviewables: boolean
+                    id: string
+                    name: string
+                    parents: Array<string>
+                  }
+                | { __typename: 'WorkfileNode'; id: string; name: string; parents: Array<string> }
+                | null
+            }>
+          }
+        }
+      }>
+    }
+  }
+}
 
 export type GetTasksLinksQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-}>;
+  projectName: string
+  entityIds?: Array<string> | string | null | undefined
+}>
 
-
-export type GetTasksLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-                | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
-                | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetTasksLinksQuery = {
+  project: {
+    tasks: {
+      edges: Array<{
+        node: {
+          id: string
+          links: {
+            edges: Array<{
+              id: string
+              direction: string
+              linkType: string
+              entityType: string
+              node:
+                | {
+                    __typename: 'FolderNode'
+                    label: string | null
+                    id: string
+                    name: string
+                    parents: Array<string>
+                    subType: string
+                  }
+                | { __typename: 'ProductNode'; id: string; name: string; parents: Array<string> }
+                | {
+                    __typename: 'RepresentationNode'
+                    id: string
+                    name: string
+                    parents: Array<string>
+                  }
+                | {
+                    __typename: 'TaskNode'
+                    label: string | null
+                    id: string
+                    name: string
+                    parents: Array<string>
+                    subType: string
+                  }
+                | {
+                    __typename: 'VersionNode'
+                    hasReviewables: boolean
+                    id: string
+                    name: string
+                    parents: Array<string>
+                  }
+                | { __typename: 'WorkfileNode'; id: string; name: string; parents: Array<string> }
+                | null
+            }>
+          }
+        }
+      }>
+    }
+  }
+}
 
 export type GetVersionsLinksQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-}>;
+  projectName: string
+  entityIds?: Array<string> | string | null | undefined
+}>
 
-
-export type GetVersionsLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-                | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
-                | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetVersionsLinksQuery = {
+  project: {
+    versions: {
+      edges: Array<{
+        node: {
+          id: string
+          links: {
+            edges: Array<{
+              id: string
+              direction: string
+              linkType: string
+              entityType: string
+              node:
+                | {
+                    __typename: 'FolderNode'
+                    label: string | null
+                    id: string
+                    name: string
+                    parents: Array<string>
+                    subType: string
+                  }
+                | { __typename: 'ProductNode'; id: string; name: string; parents: Array<string> }
+                | {
+                    __typename: 'RepresentationNode'
+                    id: string
+                    name: string
+                    parents: Array<string>
+                  }
+                | {
+                    __typename: 'TaskNode'
+                    label: string | null
+                    id: string
+                    name: string
+                    parents: Array<string>
+                    subType: string
+                  }
+                | {
+                    __typename: 'VersionNode'
+                    hasReviewables: boolean
+                    id: string
+                    name: string
+                    parents: Array<string>
+                  }
+                | { __typename: 'WorkfileNode'; id: string; name: string; parents: Array<string> }
+                | null
+            }>
+          }
+        }
+      }>
+    }
+  }
+}
 
 export type GetWorkfilesLinksQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-}>;
+  projectName: string
+  entityIds?: Array<string> | string | null | undefined
+}>
 
-
-export type GetWorkfilesLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', workfiles: { __typename?: 'WorkfilesConnection', edges: Array<{ __typename?: 'WorkfileEdge', node: { __typename?: 'WorkfileNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-                | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
-                | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetWorkfilesLinksQuery = {
+  project: {
+    workfiles: {
+      edges: Array<{
+        node: {
+          id: string
+          links: {
+            edges: Array<{
+              id: string
+              direction: string
+              linkType: string
+              entityType: string
+              node:
+                | {
+                    __typename: 'FolderNode'
+                    label: string | null
+                    id: string
+                    name: string
+                    parents: Array<string>
+                    subType: string
+                  }
+                | { __typename: 'ProductNode'; id: string; name: string; parents: Array<string> }
+                | {
+                    __typename: 'RepresentationNode'
+                    id: string
+                    name: string
+                    parents: Array<string>
+                  }
+                | {
+                    __typename: 'TaskNode'
+                    label: string | null
+                    id: string
+                    name: string
+                    parents: Array<string>
+                    subType: string
+                  }
+                | {
+                    __typename: 'VersionNode'
+                    hasReviewables: boolean
+                    id: string
+                    name: string
+                    parents: Array<string>
+                  }
+                | { __typename: 'WorkfileNode'; id: string; name: string; parents: Array<string> }
+                | null
+            }>
+          }
+        }
+      }>
+    }
+  }
+}
 
 export type GetRepresentationsLinksQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-}>;
+  projectName: string
+  entityIds?: Array<string> | string | null | undefined
+}>
 
-
-export type GetRepresentationsLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', representations: { __typename?: 'RepresentationsConnection', edges: Array<{ __typename?: 'RepresentationEdge', node: { __typename?: 'RepresentationNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-                | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
-                | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetRepresentationsLinksQuery = {
+  project: {
+    representations: {
+      edges: Array<{
+        node: {
+          id: string
+          links: {
+            edges: Array<{
+              id: string
+              direction: string
+              linkType: string
+              entityType: string
+              node:
+                | {
+                    __typename: 'FolderNode'
+                    label: string | null
+                    id: string
+                    name: string
+                    parents: Array<string>
+                    subType: string
+                  }
+                | { __typename: 'ProductNode'; id: string; name: string; parents: Array<string> }
+                | {
+                    __typename: 'RepresentationNode'
+                    id: string
+                    name: string
+                    parents: Array<string>
+                  }
+                | {
+                    __typename: 'TaskNode'
+                    label: string | null
+                    id: string
+                    name: string
+                    parents: Array<string>
+                    subType: string
+                  }
+                | {
+                    __typename: 'VersionNode'
+                    hasReviewables: boolean
+                    id: string
+                    name: string
+                    parents: Array<string>
+                  }
+                | { __typename: 'WorkfileNode'; id: string; name: string; parents: Array<string> }
+                | null
+            }>
+          }
+        }
+      }>
+    }
+  }
+}
 
 export type GetSearchedFoldersQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  search?: InputMaybe<Scalars['String']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-}>;
+  projectName: string
+  search?: string | null | undefined
+  after?: string | null | undefined
+  first?: number | null | undefined
+  before?: string | null | undefined
+  last?: number | null | undefined
+}>
 
-
-export type GetSearchedFoldersQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'FolderEdge', cursor?: string | null, node: { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } }> } } };
+export type GetSearchedFoldersQuery = {
+  project: {
+    name: string
+    folders: {
+      pageInfo: {
+        startCursor: string | null
+        endCursor: string | null
+        hasNextPage: boolean
+        hasPreviousPage: boolean
+      }
+      edges: Array<{
+        cursor: string | null
+        node: {
+          __typename: 'FolderNode'
+          label: string | null
+          id: string
+          name: string
+          parents: Array<string>
+          subType: string
+        }
+      }>
+    }
+  }
+}
 
 export type GetSearchedProductsQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  search?: InputMaybe<Scalars['String']['input']>;
-  parentIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-}>;
+  projectName: string
+  search?: string | null | undefined
+  parentIds?: Array<string> | string | null | undefined
+  after?: string | null | undefined
+  first?: number | null | undefined
+  before?: string | null | undefined
+  last?: number | null | undefined
+}>
 
-
-export type GetSearchedProductsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, products: { __typename?: 'ProductsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'ProductEdge', cursor?: string | null, node: { __typename: 'ProductNode', id: string, name: string, parents: Array<string>, subType: string } }> } } };
+export type GetSearchedProductsQuery = {
+  project: {
+    name: string
+    products: {
+      pageInfo: {
+        startCursor: string | null
+        endCursor: string | null
+        hasNextPage: boolean
+        hasPreviousPage: boolean
+      }
+      edges: Array<{
+        cursor: string | null
+        node: {
+          __typename: 'ProductNode'
+          id: string
+          name: string
+          parents: Array<string>
+          subType: string
+        }
+      }>
+    }
+  }
+}
 
 export type GetSearchedRepresentationsQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  search?: InputMaybe<Scalars['String']['input']>;
-  parentIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-}>;
+  projectName: string
+  search?: string | null | undefined
+  parentIds?: Array<string> | string | null | undefined
+  after?: string | null | undefined
+  first?: number | null | undefined
+  before?: string | null | undefined
+  last?: number | null | undefined
+}>
 
-
-export type GetSearchedRepresentationsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, representations: { __typename?: 'RepresentationsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'RepresentationEdge', cursor?: string | null, node: { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> } }> } } };
+export type GetSearchedRepresentationsQuery = {
+  project: {
+    name: string
+    representations: {
+      pageInfo: {
+        startCursor: string | null
+        endCursor: string | null
+        hasNextPage: boolean
+        hasPreviousPage: boolean
+      }
+      edges: Array<{
+        cursor: string | null
+        node: { __typename: 'RepresentationNode'; id: string; name: string; parents: Array<string> }
+      }>
+    }
+  }
+}
 
 export type GetSearchedTasksQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  search?: InputMaybe<Scalars['String']['input']>;
-  parentIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-}>;
+  projectName: string
+  search?: string | null | undefined
+  parentIds?: Array<string> | string | null | undefined
+  after?: string | null | undefined
+  first?: number | null | undefined
+  before?: string | null | undefined
+  last?: number | null | undefined
+}>
 
-
-export type GetSearchedTasksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } }> } } };
+export type GetSearchedTasksQuery = {
+  project: {
+    name: string
+    tasks: {
+      pageInfo: {
+        startCursor: string | null
+        endCursor: string | null
+        hasNextPage: boolean
+        hasPreviousPage: boolean
+      }
+      edges: Array<{
+        cursor: string | null
+        node: {
+          __typename: 'TaskNode'
+          label: string | null
+          id: string
+          name: string
+          parents: Array<string>
+          subType: string
+        }
+      }>
+    }
+  }
+}
 
 export type GetSearchedVersionsQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  search?: InputMaybe<Scalars['String']['input']>;
-  parentIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-}>;
+  projectName: string
+  search?: string | null | undefined
+  parentIds?: Array<string> | string | null | undefined
+  after?: string | null | undefined
+  first?: number | null | undefined
+  before?: string | null | undefined
+  last?: number | null | undefined
+}>
 
-
-export type GetSearchedVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> } }> } } };
+export type GetSearchedVersionsQuery = {
+  project: {
+    name: string
+    versions: {
+      pageInfo: {
+        startCursor: string | null
+        endCursor: string | null
+        hasNextPage: boolean
+        hasPreviousPage: boolean
+      }
+      edges: Array<{
+        cursor: string | null
+        node: {
+          __typename: 'VersionNode'
+          hasReviewables: boolean
+          id: string
+          name: string
+          parents: Array<string>
+        }
+      }>
+    }
+  }
+}
 
 export type GetSearchedWorkfilesQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  search?: InputMaybe<Scalars['String']['input']>;
-  parentIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-}>;
+  projectName: string
+  search?: string | null | undefined
+  parentIds?: Array<string> | string | null | undefined
+  after?: string | null | undefined
+  first?: number | null | undefined
+  before?: string | null | undefined
+  last?: number | null | undefined
+}>
 
+export type GetSearchedWorkfilesQuery = {
+  project: {
+    name: string
+    workfiles: {
+      pageInfo: {
+        startCursor: string | null
+        endCursor: string | null
+        hasNextPage: boolean
+        hasPreviousPage: boolean
+      }
+      edges: Array<{
+        cursor: string | null
+        node: { __typename: 'WorkfileNode'; id: string; name: string; parents: Array<string> }
+      }>
+    }
+  }
+}
 
-export type GetSearchedWorkfilesQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, workfiles: { __typename?: 'WorkfilesConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'WorkfileEdge', cursor?: string | null, node: { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> } }> } } };
+export type OverviewEntityLinkFragmentFragment = {
+  id: string
+  direction: string
+  linkType: string
+  entityType: string
+  node:
+    | {
+        __typename: 'FolderNode'
+        label: string | null
+        id: string
+        name: string
+        parents: Array<string>
+        subType: string
+      }
+    | { __typename: 'ProductNode'; id: string; name: string; parents: Array<string> }
+    | { __typename: 'RepresentationNode'; id: string; name: string; parents: Array<string> }
+    | {
+        __typename: 'TaskNode'
+        label: string | null
+        id: string
+        name: string
+        parents: Array<string>
+        subType: string
+      }
+    | {
+        __typename: 'VersionNode'
+        hasReviewables: boolean
+        id: string
+        name: string
+        parents: Array<string>
+      }
+    | { __typename: 'WorkfileNode'; id: string; name: string; parents: Array<string> }
+    | null
+}
 
-export type OverviewEntityLinkFragmentFragment = { __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-    | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-    | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-    | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-    | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-    | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
-    | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-   | null };
+type OverviewEntityLinkNodeFragment_FolderNode_Fragment = {
+  __typename: 'FolderNode'
+  label: string | null
+  id: string
+  name: string
+  parents: Array<string>
+  subType: string
+}
 
-type OverviewEntityLinkNodeFragment_FolderNode_Fragment = { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string };
+type OverviewEntityLinkNodeFragment_ProductNode_Fragment = {
+  __typename: 'ProductNode'
+  id: string
+  name: string
+  parents: Array<string>
+}
 
-type OverviewEntityLinkNodeFragment_ProductNode_Fragment = { __typename: 'ProductNode', id: string, name: string, parents: Array<string> };
+type OverviewEntityLinkNodeFragment_RepresentationNode_Fragment = {
+  __typename: 'RepresentationNode'
+  id: string
+  name: string
+  parents: Array<string>
+}
 
-type OverviewEntityLinkNodeFragment_RepresentationNode_Fragment = { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> };
+type OverviewEntityLinkNodeFragment_TaskNode_Fragment = {
+  __typename: 'TaskNode'
+  label: string | null
+  id: string
+  name: string
+  parents: Array<string>
+  subType: string
+}
 
-type OverviewEntityLinkNodeFragment_TaskNode_Fragment = { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string };
+type OverviewEntityLinkNodeFragment_VersionNode_Fragment = {
+  __typename: 'VersionNode'
+  hasReviewables: boolean
+  id: string
+  name: string
+  parents: Array<string>
+}
 
-type OverviewEntityLinkNodeFragment_VersionNode_Fragment = { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> };
-
-type OverviewEntityLinkNodeFragment_WorkfileNode_Fragment = { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> };
+type OverviewEntityLinkNodeFragment_WorkfileNode_Fragment = {
+  __typename: 'WorkfileNode'
+  id: string
+  name: string
+  parents: Array<string>
+}
 
 export type OverviewEntityLinkNodeFragmentFragment =
   | OverviewEntityLinkNodeFragment_FolderNode_Fragment
@@ -1961,9 +2397,9 @@ export type OverviewEntityLinkNodeFragmentFragment =
   | OverviewEntityLinkNodeFragment_TaskNode_Fragment
   | OverviewEntityLinkNodeFragment_VersionNode_Fragment
   | OverviewEntityLinkNodeFragment_WorkfileNode_Fragment
-;
 
-export const OverviewEntityLinkNodeFragmentFragmentDoc = new TypedDocumentString(`
+export const OverviewEntityLinkNodeFragmentFragmentDoc = new TypedDocumentString(
+  `
     fragment OverviewEntityLinkNodeFragment on BaseNode {
   __typename
   id
@@ -1981,8 +2417,11 @@ export const OverviewEntityLinkNodeFragmentFragmentDoc = new TypedDocumentString
     hasReviewables
   }
 }
-    `, {"fragmentName":"OverviewEntityLinkNodeFragment"});
-export const OverviewEntityLinkFragmentFragmentDoc = new TypedDocumentString(`
+    `,
+  { fragmentName: 'OverviewEntityLinkNodeFragment' },
+)
+export const OverviewEntityLinkFragmentFragmentDoc = new TypedDocumentString(
+  `
     fragment OverviewEntityLinkFragment on LinkEdge {
   id
   direction
@@ -2008,7 +2447,9 @@ export const OverviewEntityLinkFragmentFragmentDoc = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`, {"fragmentName":"OverviewEntityLinkFragment"});
+}`,
+  { fragmentName: 'OverviewEntityLinkFragment' },
+)
 export const GetFolderLinkDataDocument = new TypedDocumentString(`
     query GetFolderLinkData($projectName: String!, $folderId: String!) {
   project(name: $projectName) {
@@ -2033,7 +2474,7 @@ export const GetFolderLinkDataDocument = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetProductLinkDataDocument = new TypedDocumentString(`
     query GetProductLinkData($projectName: String!, $productId: String!) {
   project(name: $projectName) {
@@ -2058,7 +2499,7 @@ export const GetProductLinkDataDocument = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetRepresentationLinkDataDocument = new TypedDocumentString(`
     query GetRepresentationLinkData($projectName: String!, $representationId: String!) {
   project(name: $projectName) {
@@ -2083,7 +2524,7 @@ export const GetRepresentationLinkDataDocument = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetTaskLinkDataDocument = new TypedDocumentString(`
     query GetTaskLinkData($projectName: String!, $taskId: String!) {
   project(name: $projectName) {
@@ -2108,7 +2549,7 @@ export const GetTaskLinkDataDocument = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetVersionLinkDataDocument = new TypedDocumentString(`
     query GetVersionLinkData($projectName: String!, $versionId: String!) {
   project(name: $projectName) {
@@ -2133,7 +2574,7 @@ export const GetVersionLinkDataDocument = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetWorkfileLinkDataDocument = new TypedDocumentString(`
     query GetWorkfileLinkData($projectName: String!, $workfileId: String!) {
   project(name: $projectName) {
@@ -2158,7 +2599,7 @@ export const GetWorkfileLinkDataDocument = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetFoldersLinksDocument = new TypedDocumentString(`
     query GetFoldersLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
@@ -2201,7 +2642,7 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetProductsLinksDocument = new TypedDocumentString(`
     query GetProductsLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
@@ -2244,7 +2685,7 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetTasksLinksDocument = new TypedDocumentString(`
     query GetTasksLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
@@ -2287,7 +2728,7 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetVersionsLinksDocument = new TypedDocumentString(`
     query GetVersionsLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
@@ -2330,7 +2771,7 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetWorkfilesLinksDocument = new TypedDocumentString(`
     query GetWorkfilesLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
@@ -2373,7 +2814,7 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetRepresentationsLinksDocument = new TypedDocumentString(`
     query GetRepresentationsLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
@@ -2416,7 +2857,7 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetSearchedFoldersDocument = new TypedDocumentString(`
     query GetSearchedFolders($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
@@ -2462,7 +2903,7 @@ export const GetSearchedFoldersDocument = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetSearchedProductsDocument = new TypedDocumentString(`
     query GetSearchedProducts($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
@@ -2508,7 +2949,7 @@ export const GetSearchedProductsDocument = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetSearchedRepresentationsDocument = new TypedDocumentString(`
     query GetSearchedRepresentations($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
@@ -2552,7 +2993,7 @@ export const GetSearchedRepresentationsDocument = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetSearchedTasksDocument = new TypedDocumentString(`
     query GetSearchedTasks($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
@@ -2599,7 +3040,7 @@ export const GetSearchedTasksDocument = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetSearchedVersionsDocument = new TypedDocumentString(`
     query GetSearchedVersions($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
@@ -2643,7 +3084,7 @@ export const GetSearchedVersionsDocument = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 export const GetSearchedWorkfilesDocument = new TypedDocumentString(`
     query GetSearchedWorkfiles($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
@@ -2687,67 +3128,122 @@ export const GetSearchedWorkfilesDocument = new TypedDocumentString(`
   ... on VersionNode {
     hasReviewables
   }
-}`);
+}`)
 
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     GetFolderLinkData: build.query<GetFolderLinkDataQuery, GetFolderLinkDataQueryVariables>({
-      query: (variables) => ({ document: GetFolderLinkDataDocument, variables })
+      query: (variables) => ({
+        document: GetFolderLinkDataDocument as unknown as string,
+        variables,
+      }),
     }),
     GetProductLinkData: build.query<GetProductLinkDataQuery, GetProductLinkDataQueryVariables>({
-      query: (variables) => ({ document: GetProductLinkDataDocument, variables })
+      query: (variables) => ({
+        document: GetProductLinkDataDocument as unknown as string,
+        variables,
+      }),
     }),
-    GetRepresentationLinkData: build.query<GetRepresentationLinkDataQuery, GetRepresentationLinkDataQueryVariables>({
-      query: (variables) => ({ document: GetRepresentationLinkDataDocument, variables })
+    GetRepresentationLinkData: build.query<
+      GetRepresentationLinkDataQuery,
+      GetRepresentationLinkDataQueryVariables
+    >({
+      query: (variables) => ({
+        document: GetRepresentationLinkDataDocument as unknown as string,
+        variables,
+      }),
     }),
     GetTaskLinkData: build.query<GetTaskLinkDataQuery, GetTaskLinkDataQueryVariables>({
-      query: (variables) => ({ document: GetTaskLinkDataDocument, variables })
+      query: (variables) => ({ document: GetTaskLinkDataDocument as unknown as string, variables }),
     }),
     GetVersionLinkData: build.query<GetVersionLinkDataQuery, GetVersionLinkDataQueryVariables>({
-      query: (variables) => ({ document: GetVersionLinkDataDocument, variables })
+      query: (variables) => ({
+        document: GetVersionLinkDataDocument as unknown as string,
+        variables,
+      }),
     }),
     GetWorkfileLinkData: build.query<GetWorkfileLinkDataQuery, GetWorkfileLinkDataQueryVariables>({
-      query: (variables) => ({ document: GetWorkfileLinkDataDocument, variables })
+      query: (variables) => ({
+        document: GetWorkfileLinkDataDocument as unknown as string,
+        variables,
+      }),
     }),
     GetFoldersLinks: build.query<GetFoldersLinksQuery, GetFoldersLinksQueryVariables>({
-      query: (variables) => ({ document: GetFoldersLinksDocument, variables })
+      query: (variables) => ({ document: GetFoldersLinksDocument as unknown as string, variables }),
     }),
     GetProductsLinks: build.query<GetProductsLinksQuery, GetProductsLinksQueryVariables>({
-      query: (variables) => ({ document: GetProductsLinksDocument, variables })
+      query: (variables) => ({
+        document: GetProductsLinksDocument as unknown as string,
+        variables,
+      }),
     }),
     GetTasksLinks: build.query<GetTasksLinksQuery, GetTasksLinksQueryVariables>({
-      query: (variables) => ({ document: GetTasksLinksDocument, variables })
+      query: (variables) => ({ document: GetTasksLinksDocument as unknown as string, variables }),
     }),
     GetVersionsLinks: build.query<GetVersionsLinksQuery, GetVersionsLinksQueryVariables>({
-      query: (variables) => ({ document: GetVersionsLinksDocument, variables })
+      query: (variables) => ({
+        document: GetVersionsLinksDocument as unknown as string,
+        variables,
+      }),
     }),
     GetWorkfilesLinks: build.query<GetWorkfilesLinksQuery, GetWorkfilesLinksQueryVariables>({
-      query: (variables) => ({ document: GetWorkfilesLinksDocument, variables })
+      query: (variables) => ({
+        document: GetWorkfilesLinksDocument as unknown as string,
+        variables,
+      }),
     }),
-    GetRepresentationsLinks: build.query<GetRepresentationsLinksQuery, GetRepresentationsLinksQueryVariables>({
-      query: (variables) => ({ document: GetRepresentationsLinksDocument, variables })
+    GetRepresentationsLinks: build.query<
+      GetRepresentationsLinksQuery,
+      GetRepresentationsLinksQueryVariables
+    >({
+      query: (variables) => ({
+        document: GetRepresentationsLinksDocument as unknown as string,
+        variables,
+      }),
     }),
     GetSearchedFolders: build.query<GetSearchedFoldersQuery, GetSearchedFoldersQueryVariables>({
-      query: (variables) => ({ document: GetSearchedFoldersDocument, variables })
+      query: (variables) => ({
+        document: GetSearchedFoldersDocument as unknown as string,
+        variables,
+      }),
     }),
     GetSearchedProducts: build.query<GetSearchedProductsQuery, GetSearchedProductsQueryVariables>({
-      query: (variables) => ({ document: GetSearchedProductsDocument, variables })
+      query: (variables) => ({
+        document: GetSearchedProductsDocument as unknown as string,
+        variables,
+      }),
     }),
-    GetSearchedRepresentations: build.query<GetSearchedRepresentationsQuery, GetSearchedRepresentationsQueryVariables>({
-      query: (variables) => ({ document: GetSearchedRepresentationsDocument, variables })
+    GetSearchedRepresentations: build.query<
+      GetSearchedRepresentationsQuery,
+      GetSearchedRepresentationsQueryVariables
+    >({
+      query: (variables) => ({
+        document: GetSearchedRepresentationsDocument as unknown as string,
+        variables,
+      }),
     }),
     GetSearchedTasks: build.query<GetSearchedTasksQuery, GetSearchedTasksQueryVariables>({
-      query: (variables) => ({ document: GetSearchedTasksDocument, variables })
+      query: (variables) => ({
+        document: GetSearchedTasksDocument as unknown as string,
+        variables,
+      }),
     }),
     GetSearchedVersions: build.query<GetSearchedVersionsQuery, GetSearchedVersionsQueryVariables>({
-      query: (variables) => ({ document: GetSearchedVersionsDocument, variables })
+      query: (variables) => ({
+        document: GetSearchedVersionsDocument as unknown as string,
+        variables,
+      }),
     }),
-    GetSearchedWorkfiles: build.query<GetSearchedWorkfilesQuery, GetSearchedWorkfilesQueryVariables>({
-      query: (variables) => ({ document: GetSearchedWorkfilesDocument, variables })
+    GetSearchedWorkfiles: build.query<
+      GetSearchedWorkfilesQuery,
+      GetSearchedWorkfilesQueryVariables
+    >({
+      query: (variables) => ({
+        document: GetSearchedWorkfilesDocument as unknown as string,
+        variables,
+      }),
     }),
   }),
-});
+})
 
-export { injectedRtkApi as api };
-
-
+export { injectedRtkApi as api }
