@@ -152,17 +152,6 @@ const ProjectOverviewPage: FC = () => {
   const handleFiltersChange = (newQueryFilters: QueryFilter) => {
     // Update the stored QueryFilter directly
     setQueryFilters(newQueryFilters)
-
-    // check if we need to clear hierarchy selection
-    // This is a simplified check - you might need to implement QueryFilter inspection
-    // to determine if hierarchy filter is present
-    if (
-      !newQueryFilters.conditions?.some(
-        (condition) => 'key' in condition && condition.key === 'hierarchy',
-      )
-    ) {
-      setPinnedSlice(null)
-    }
   }
 
   const expandAndSelectNewFolders = useExpandAndSelectNewFolders()

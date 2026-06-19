@@ -78,10 +78,8 @@ export interface SlicerContextValue {
   expanded: ExpandedState
   onExpandedChange: (expanded: ExpandedState) => void
   sliceType: SliceType
-  setSliceType: (sliceType: SliceType) => void
   onSliceTypeChange: OnSliceTypeChange
   isViewSyncPending: boolean
-  setIsViewSyncPending: React.Dispatch<React.SetStateAction<boolean>>
   pinnedSlice: PinnedSlice | null
   setPinnedSlice: React.Dispatch<React.SetStateAction<PinnedSlice | null>>
   useExtraSlices: UseExtraSlices
@@ -103,10 +101,11 @@ interface SlicerProviderProps {
 }
 
 export const SlicerProvider = ({ children, page, ...props }: SlicerProviderProps) => {
-  const { viewSettings } = useViewsContext()
+  const { viewSettings, isLoadingViews } = useViewsContext()
   // Get view update helper
   const { updateViewSettings } = useViewUpdateHelper()
 
+  // @ts-expect-error - sliceType can be on a view
   const sliceType = props.sliceType ?? viewSettings?.sliceType ?? 'hierarchy'
 
   const {
@@ -205,6 +204,8 @@ export const SlicerProvider = ({ children, page, ...props }: SlicerProviderProps
         setPinnedSlice,
         expanded,
         onExpandedChange,
+        // loading state
+        isViewSyncPending: isLoadingViews,
       }}
     >
       {children}

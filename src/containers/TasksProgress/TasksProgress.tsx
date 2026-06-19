@@ -83,8 +83,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   const { filters: queryFilters, onUpdateFilters: setQueryFilters } = useTaskProgressViewSettings()
 
   // filter out by slice
-  const { rowSelection, rowSelectionData, sliceType, pinnedSlice, setPinnedSlice } =
-    useSlicerContext()
+  const { rowSelection, rowSelectionData, sliceType, pinnedSlice } = useSlicerContext()
 
   const sliceFilter = createFilterFromSlicer({
     slice: { rowSelectionData, sliceType },
@@ -93,16 +92,6 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   const handleFiltersChange = (value: QueryFilter) => {
     setQueryFilters(value)
-
-    // check if we need to remove the hierarchy filter and clear hierarchy selection
-    // Convert QueryFilter to Filter[] to check for hierarchy
-    const hasHierarchyCondition = value.conditions?.some(
-      (condition) => 'key' in condition && condition.key === 'hierarchy',
-    )
-    if (!hasHierarchyCondition && pinnedSlice?.sliceType === 'hierarchy') {
-      // remove pinned hierarchy slice
-      setPinnedSlice(null)
-    }
   }
 
   // Convert slice filter to QueryFilter for processing
