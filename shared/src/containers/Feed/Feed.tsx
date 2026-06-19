@@ -20,36 +20,11 @@ import { useDetailsPanelContext } from '@shared/context'
 import { DetailsPanelEntityType, useGetMyProjectPermissionsQuery } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import { SavedAnnotationMetadata } from '.'
-import TabHeaderAndFilters, {
-  FilterItem,
-} from '../DetailsPanel/components/TabHeaderAndFilters/TabHeaderAndFilters'
+import FeedSearchFilter from './components/FeedSearchFilter'
 import { useLastVersionReview } from './hooks/useLastVersionReview'
 
 // number of activities to get
 export const activitiesLast = 30
-
-const feedFilters: FilterItem<string>[] = [
-  {
-    id: 'comments',
-    tooltip: 'Comments',
-    icon: 'chat',
-  },
-  {
-    id: 'checklists',
-    tooltip: 'Checklists',
-    icon: 'checklist',
-  },
-  {
-    id: 'versions',
-    tooltip: 'Published versions',
-    icon: 'layers',
-  },
-  {
-    id: 'updates',
-    tooltip: 'Entity updates',
-    icon: 'arrow_circle_right',
-  },
-]
 
 export type FeedProps = {
   disabled?: boolean
@@ -82,9 +57,13 @@ export const Feed = ({
     loadNextPage,
     hasNextPage,
     users,
+    categories,
+    checklistCount,
     feedFilter,
     setFeedFilter,
     isGuest,
+    searchText,
+    setSearchText,
   } = useFeedContext()
 
   const {
@@ -108,6 +87,8 @@ export const Feed = ({
   const hasCommentLikeFilter = feedFilter.conditions?.some(
     (c) => 'key' in c && (c.key === 'comments' || c.key === 'checklists') && c.value === true,
   )
+
+  const supportsReviewSession = entityType === 'version' || entityType === 'folder'
 
   // check activities permission for commenting
   const { data: projectPermissions, isLoading: isLoadingPermissions } =
@@ -158,6 +139,15 @@ export const Feed = ({
     userName,
     feedFilter,
   ) as any[]
+
+  // Filter activities by live text search (separate from feedFilter)
+  const filteredActivitiesData = useMemo(() => {
+    if (!searchText) return transformedActivitiesData
+    const lower = searchText.toLowerCase()
+    return transformedActivitiesData.filter((activity) =>
+      activity.body?.toLowerCase().includes(lower),
+    )
+  }, [transformedActivitiesData, searchText])
 
   // REFS
   const feedRef = useRef(null)
@@ -288,7 +278,7 @@ export const Feed = ({
   }
 
   const handleFileExpand = ({ index, activityId }: { index: number; activityId: string }) => {
-    const previewableFiles = Object.values(transformedActivitiesData)
+    const previewableFiles = Object.values(filteredActivitiesData)
       .reverse()
       .filter((a) => a.activityType == 'comment')
       .map((a) => ({
@@ -323,17 +313,20 @@ export const Feed = ({
             {warningMessage}
           </Styled.Warning>
         )}
-        <TabHeaderAndFilters
-          label="Activity Feed"
-          filters={feedFilters}
-          currentFilter={feedFilter}
-          onFilterChange={setFeedFilter}
+        <FeedSearchFilter
+          feedFilter={feedFilter}
+          setFeedFilter={setFeedFilter}
+          users={users}
+          categories={categories}
+          supportsReviewSession={supportsReviewSession}
           isLoading={isLoadingNew}
+          onSearchTextChange={setSearchText}
+          checklistCount={checklistCount}
         />
         <Styled.FeedContent ref={feedRef} className={clsx({ loading: isLoadingNew }, 'no-shimmer')}>
           {isLoadingNew
             ? loadingPlaceholders
-            : transformedActivitiesData.map((activity) => (
+            : filteredActivitiesData.map((activity) => (
                 <ActivityItem
                   key={activity.activityId}
                   activity={activity}
@@ -363,7 +356,7 @@ export const Feed = ({
                 />
               ))}
           {/* message when no versions published */}
-          {transformedActivitiesData.length === 0 &&
+          {filteredActivitiesData.length === 0 &&
             isVersionsFilter &&
             !hasCommentLikeFilter &&
             !isLoadingNew && <EmptyPlaceholder message="No versions published yet" icon="layers" />}

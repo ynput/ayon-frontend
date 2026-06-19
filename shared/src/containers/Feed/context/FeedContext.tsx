@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useState } from 'react'
 import useGetFeedActivitiesData from '../hooks/useGetFeedActivitiesData'
+import { buildBackendFilter } from '../helpers/buildBackendFilter'
 
 // Queries
 import {
@@ -13,8 +14,9 @@ import {
   useGetEntityTooltipQuery,
   useGetActivityCategoriesQuery,
   teamsApi,
+  useGetEntitiesChecklistsQuery,
 } from '@shared/api'
-import type { ActivityCategory, SuggestRequest, SuggestResponse } from '@shared/api'
+import type { ActivityCategory, ChecklistCount, SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
 import { FeedFilter, PowerpackFeature, useDetailsPanelContext } from '@shared/context'
 import { getFilterActivityTypes } from '@shared/api'
@@ -88,8 +90,13 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   mentionSuggestionsData: SuggestResponse
   // categories data
   categories: ActivityCategory[]
+  // checklists count
+  checklistCount: ChecklistCount | undefined
   feedFilter: FeedFilter
   setFeedFilter: (filter: FeedFilter) => void
+  backendFilter: string | undefined
+  searchText: string
+  setSearchText: (text: string) => void
 }
 
 const FeedContext = createContext<FeedContextType | undefined>(undefined)
@@ -104,10 +111,7 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
     { skip: !props.projectName },
   )
   const userTeamNames = useMemo(
-    () =>
-      teams
-        .filter((t) => t.members?.some((m) => m.name === props.userName))
-        .map((t) => t.name),
+    () => teams.filter((t) => t.members?.some((m) => m.name === props.userName)).map((t) => t.name),
     [teams, props.userName],
   )
 
@@ -115,6 +119,8 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
     operator: 'and',
     conditions: [],
   })
+
+  const [searchText, setSearchText] = useState<string>('')
 
   // use props if provided, otherwise use local state
   const feedFilter = props.feedFilter ?? feedFilterInternal
@@ -146,16 +152,21 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
     await deleteReactionToActivity(args).unwrap()
 
   const activityTypes = getFilterActivityTypes(feedFilter)
+  const backendFilter = useMemo(() => buildBackendFilter(feedFilter), [feedFilter])
 
   const activitiesDataProps = useGetFeedActivitiesData({
     entities: props.entities,
     filter: feedFilter,
+    backendFilter,
     activityTypes: activityTypes,
     projectName: props.projectName,
     entityType: props.entityType,
   })
   const skip =
-    !props.projectName || !refTooltip?.id || refTooltip.type === 'user' || refTooltip.type === 'team'
+    !props.projectName ||
+    !refTooltip?.id ||
+    refTooltip.type === 'user' ||
+    refTooltip.type === 'team'
   const { data: entityTooltipData, isFetching: isFetchingTooltip } = useGetEntityTooltipQuery(
     { entityType: refTooltip?.type, entityId: refTooltip?.id, projectName: props.projectName },
     { skip: skip },
@@ -178,6 +189,15 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
     projectName: props.projectName,
   })
 
+  // get checklists count
+  const { data: checklistCount } = useGetEntitiesChecklistsQuery(
+    {
+      projectName: props.projectName,
+      entityIds: props.entities.map((e) => e.id),
+    },
+    { skip: !props.projectName || !props.entities.length },
+  )
+
   return (
     <FeedContext.Provider
       value={{
@@ -185,6 +205,7 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         ...activitiesDataProps,
         mentionSuggestionsData,
         categories,
+        checklistCount,
         users,
         isUpdatingActivity,
         userTeamNames,
@@ -194,6 +215,9 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         activityTypes,
         feedFilter,
         setFeedFilter,
+        backendFilter,
+        searchText,
+        setSearchText,
         isGuest,
         editingId,
         setEditingId,

@@ -28,6 +28,7 @@ const ListItemsFilter: FC<ListItemsFilterProps> = ({ entityType, projectName }) 
       projectNames={[projectName]}
       projectInfo={projectInfo}
       enableGlobalSearch={false}
+      data={entityType === 'version' ? { productTypes: projectInfo.productTypes } : {}}
       config={{
         prefixes: {
           assignees: 'entity_',

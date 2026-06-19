@@ -84,6 +84,9 @@ export interface ProjectTableProviderProps {
   groupRowFunc?: (node: any) => TableRow
   overrideGroupBy?: TableGroupBy
 
+  // links loading
+  loadingLinksEntityIds?: Set<string>
+
   // data functions
   fetchNextPage: (value?: string) => void
   reloadTableData: () => void
@@ -181,6 +184,7 @@ export const ProjectTableProvider = ({
   contextMenuItems,
   powerpack,
   modules,
+  loadingLinksEntityIds,
   groupByConfig,
   hierarchyOptions,
   hierarchyActive,
@@ -197,8 +201,10 @@ export const ProjectTableProvider = ({
   useSearchParams,
 }: ProjectTableProviderProps) => {
   const { attrib: projectAttrib } = useProjectContext()
-  const { groupBy: columnSettingsGroupBy, groupByConfig: { showEmpty: showEmptyGroups = false } = {} } =
-    useColumnSettingsContext()
+  const {
+    groupBy: columnSettingsGroupBy,
+    groupByConfig: { showEmpty: showEmptyGroups = false } = {},
+  } = useColumnSettingsContext()
 
   // DATA TO TABLE
   const defaultTableData = useBuildProjectDataTable({
@@ -218,7 +224,7 @@ export const ProjectTableProvider = ({
   // overrideGroupBy (from view dropdown) takes priority over Customize panel's groupBy.
   // In flat folder view, ignore both — the 'folder' sentinel persisted on the server
   // must not leak into grouping logic (it's only used to distinguish the mode from 'none').
-  const effectiveGroupBy = isFlatFolderView ? undefined : (overrideGroupBy || columnSettingsGroupBy)
+  const effectiveGroupBy = isFlatFolderView ? undefined : overrideGroupBy || columnSettingsGroupBy
 
   const buildGroupByTableData = useBuildGroupByTableData({
     entities: entitiesMap,
@@ -240,7 +246,8 @@ export const ProjectTableProvider = ({
     [effectiveGroupBy, entitiesMap, groups],
   )
 
-  const tableData = effectiveGroupBy && !isFlatFolderView && groupedTableData ? groupedTableData : defaultTableData
+  const tableData =
+    effectiveGroupBy && !isFlatFolderView && groupedTableData ? groupedTableData : defaultTableData
 
   const getEntityById = useCallback(
     (id: string, field: string = 'entityId'): EntityMap | undefined => {
@@ -362,6 +369,7 @@ export const ProjectTableProvider = ({
         groups,
         overrideGroupBy,
         queryFilters,
+        loadingLinksEntityIds,
         // hierarchy
         showHierarchy,
         updateShowHierarchy,

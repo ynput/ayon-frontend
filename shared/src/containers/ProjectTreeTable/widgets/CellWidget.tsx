@@ -78,6 +78,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isFocused?: boolean
   isReadOnly?: boolean
   enableCustomValues?: boolean
+  isLinksLoading?: boolean
   folderId?: string | null
   tooltip?: string
   onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
@@ -110,6 +111,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   isPlaceholder,
   isReadOnly,
   enableCustomValues,
+  isLinksLoading,
   folderId,
   tooltip,
   onChange,
@@ -224,6 +226,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             projectName={projectName}
             disabled={!isEditable}
             folderId={folderId}
+            isLoading={isLinksLoading}
             {...sharedProps}
           />
         )

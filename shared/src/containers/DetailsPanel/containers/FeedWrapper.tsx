@@ -43,11 +43,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   const userName = user.name || ''
   const userFullName = user.attrib?.fullName || ''
 
-  const [feedFilter, setFeedFilter] = useLocalStorage<QueryFilter>(`feed-filters-${scope}`, {
-    operator: 'and',
-    conditions: [],
-  })
-
   return (
     <FeedProvider
       {...{
@@ -58,8 +53,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
         projectInfo,
         userName,
         userFullName,
-        feedFilter,
-        setFeedFilter,
       }}
       {...annotationsProps}
       {...props}

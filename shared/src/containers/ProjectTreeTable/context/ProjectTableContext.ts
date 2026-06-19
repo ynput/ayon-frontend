@@ -33,6 +33,7 @@ export interface ProjectTableContextType {
   fetchNextPage: ProjectTableProviderProps['fetchNextPage']
   reloadTableData: ProjectTableProviderProps['reloadTableData']
   getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
+  loadingLinksEntityIds?: Set<string>
 
   // grouping
   groups: ProjectTableProviderProps['groups']

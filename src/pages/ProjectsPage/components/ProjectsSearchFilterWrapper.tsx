@@ -6,8 +6,7 @@ import {
   queryFilterToClientFilter,
 } from '@shared/containers/ProjectTreeTable'
 import { useBuildProjectFilterOptions } from '../hooks/useBuildProjectFilterOptions'
-import { useDateRangeFilter } from '@components/SearchFilter/useDateRangeFilter'
-import { CustomDateRangeDialog } from '@components/SearchFilter/CustomDateRangeDialog'
+import { useDateRangeFilter, CustomDateRangeDialog } from '@shared/components/SearchFilter'
 
 interface ProjectsSearchFilterWrapperProps {
   queryFilters: QueryFilter
@@ -48,6 +47,7 @@ const ProjectsSearchFilterWrapper: FC<ProjectsSearchFilterWrapperProps> = ({
         onFinish={handleFinish}
         enableMultipleSameFilters={false}
         enableGlobalSearch={true}
+        enableAutosuggestion={true}
         pt={{
           searchBar: {
             onClickCapture: (e) => dateRange.handleSearchBarClickCapture(e, localFilters),

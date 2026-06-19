@@ -35,6 +35,11 @@ const updateCache = (activitiesDraft: any, patch: any, isDelete: boolean) => {
   }
 }
 
+const serializeFilter = (filter: unknown): string => {
+  if (filter === undefined || filter === null) return ''
+  return typeof filter === 'string' ? filter : JSON.stringify(filter)
+}
+
 const patchActivities = async (
   { patch, entityIds = [], filter, refs = [], ...rest }: any,
   api: any,
@@ -42,6 +47,7 @@ const patchActivities = async (
 ) => {
   const { dispatch, queryFulfilled, getState } = api
   const refIds = refs.map((ref: any) => ref.id) || []
+  const serializedFilter = serializeFilter(filter)
   // build tags that would be affected by this activity
   const invalidatingTags = [...entityIds, ...refIds].map((id) => ({
     type: 'entityActivities',
@@ -67,7 +73,11 @@ const patchActivities = async (
   )
 
   // patch latestComments in the table caches too (instead of refetching them)
-  const tablePatches = patchTableLatestComments({ patch, entityIds, filter, refs, ...rest }, api, method)
+  const tablePatches = patchTableLatestComments(
+    { patch, entityIds, filter, refs, ...rest },
+    api,
+    method,
+  )
 
   try {
     await queryFulfilled
@@ -93,7 +103,6 @@ const getTags = ({ entityId, filter }: { entityId: string; filter: string }) => 
   tags.push({ type: 'activity', id: 'LIST' })
 
   tags.push({ type: 'watchers', id: entityId })
-
 
   return tags
 }

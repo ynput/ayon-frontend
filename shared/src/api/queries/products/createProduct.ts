@@ -1,4 +1,4 @@
-import { productsApi } from '@shared/api/generated'
+import { enhancedProductsApi as productsApi } from './getProduct'
 
 const enhancedProductsApi = productsApi.enhanceEndpoints({
   endpoints: {

@@ -75,7 +75,7 @@ const parseJSON = (data: string | null | undefined): Record<string, any> => {
 
 // GRAPHQL API (getLists and getListItems)
 // Define the LISTS_PER_PAGE constant for pagination
-export const LISTS_PER_PAGE = 500
+export const LISTS_PER_PAGE = 10000
 export const LIST_ITEMS_PER_PAGE = 100
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
@@ -539,7 +539,6 @@ export const {
   useGetListsInfiniteInfiniteQuery,
   useGetListItemsInfiniteInfiniteQuery,
   useGetListsItemsForReviewSessionInfiniteQuery,
-  useLazyGetListsQuery,
   useLazyGetListsItemsForReviewSessionQuery,
   useLazyGetListItemsQuery,
 } = getListsGqlApiInjected

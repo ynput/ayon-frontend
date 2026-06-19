@@ -58,23 +58,45 @@ export const queryFilterToClientFilter = (
     }
   })
 
-  return filters
+  return mergeFiltersById(filters)
+}
+
+/**
+ * Merges filters that share the same id by combining their values.
+ * This handles the case where custom + non-custom values for the same field
+ * are stored as separate conditions in the query filter (e.g. `in` + `like`)
+ * but should be represented as a single filter with all values combined.
+ */
+const mergeFiltersById = (filters: Filter[]): Filter[] => {
+  const filterMap = new Map<string, Filter>()
+
+  for (const filter of filters) {
+    const existing = filterMap.get(filter.id)
+    if (existing) {
+      // Merge values, avoiding duplicates by id
+      const existingValueIds = new Set((existing.values || []).map((v) => v.id))
+      const newValues = (filter.values || []).filter((v) => !existingValueIds.has(v.id))
+      existing.values = [...(existing.values || []), ...newValues]
+    } else {
+      filterMap.set(filter.id, { ...filter, values: [...(filter.values || [])] })
+    }
+  }
+
+  return Array.from(filterMap.values())
 }
 
 /**
  * Detects nested QueryFilters that represent datetime ranges (gte+lte on the same key)
  * and merges them into a single datetime Filter with proper range values.
  */
-const tryMergeDatetimeRange = (
+export const tryMergeDatetimeRange = (
   nestedFilter: QueryFilter,
   filterOptions: Option[],
 ): Filter | null => {
   if (!nestedFilter.conditions || nestedFilter.conditions.length < 1) return null
 
   // All conditions must be QueryConditions (not nested QueryFilters)
-  const conditions = nestedFilter.conditions.filter(
-    (c): c is QueryCondition => 'key' in c,
-  )
+  const conditions = nestedFilter.conditions.filter((c): c is QueryCondition => 'key' in c)
   if (conditions.length !== nestedFilter.conditions.length) return null
 
   // All conditions must share the same key
@@ -92,8 +114,14 @@ const tryMergeDatetimeRange = (
 
   const rawStartValue = gteCondition?.value as string | undefined
   const rawEndValue = lteCondition?.value as string | undefined
-  const startISO = rawStartValue && isRelativeDateValue(rawStartValue) ? resolveRelativeValue(rawStartValue) : rawStartValue
-  const endISO = rawEndValue && isRelativeDateValue(rawEndValue) ? resolveRelativeValue(rawEndValue) : rawEndValue
+  const startISO =
+    rawStartValue && isRelativeDateValue(rawStartValue)
+      ? resolveRelativeValue(rawStartValue)
+      : rawStartValue
+  const endISO =
+    rawEndValue && isRelativeDateValue(rawEndValue)
+      ? resolveRelativeValue(rawEndValue)
+      : rawEndValue
 
   // Build the range label
   let label = 'Custom range'
@@ -120,8 +148,24 @@ const tryMergeDatetimeRange = (
     id: `custom-${startISO || ''}-${endISO || ''}`,
     label,
     values: [
-      ...(startISO ? [{ id: startISO, label: isValid(parseISO(startISO)) ? format(parseISO(startISO), 'MMM d, yyyy') : startISO }] : []),
-      ...(endISO ? [{ id: endISO, label: isValid(parseISO(endISO)) ? format(parseISO(endISO), 'MMM d, yyyy') : endISO }] : []),
+      ...(startISO
+        ? [
+            {
+              id: startISO,
+              label: isValid(parseISO(startISO))
+                ? format(parseISO(startISO), 'MMM d, yyyy')
+                : startISO,
+            },
+          ]
+        : []),
+      ...(endISO
+        ? [
+            {
+              id: endISO,
+              label: isValid(parseISO(endISO)) ? format(parseISO(endISO), 'MMM d, yyyy') : endISO,
+            },
+          ]
+        : []),
     ],
   } as FilterValue
 

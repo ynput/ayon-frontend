@@ -187,11 +187,34 @@ export const useBuildListMenuItems = ({
       const resolveShowIcon = getShowIcon || (() => false)
       const resolveDisabled = getDisabled || (() => false)
 
+      const PAGINATION_LIMIT = 18
+
+      const paginateItems = (
+        items: ListSubMenuItem[],
+        moreLabel: string,
+        icon: string,
+      ): ListSubMenuItem[] => {
+        if (items.length <= PAGINATION_LIMIT) return items
+
+        const firstChunk = items.slice(0, PAGINATION_LIMIT - 1)
+        const remaining = items.slice(PAGINATION_LIMIT - 1)
+
+        return [
+          ...firstChunk,
+          {
+            id: `__more_${moreLabel.replace(/\s+/g, '_')}_${remaining[0].id}__`,
+            label: moreLabel,
+            icon: icon,
+            items: paginateItems(remaining, moreLabel, icon),
+          },
+        ]
+      }
+
       // Filter lists to only include those with editor access (accessLevel >= 20)
       const editableLists = lists.filter((list) => (list.accessLevel ?? 0) >= 20)
 
       if (!powerLicense || !listFolders.length) {
-        return editableLists.map((l) =>
+        const flatItems = editableLists.map((l) =>
           buildListMenuItem(
             l,
             selected,
@@ -199,6 +222,12 @@ export const useBuildListMenuItems = ({
             resolveDisabled(l),
             overrideEntityType,
           ),
+        )
+        const isSession = editableLists.some((l) => l.entityListType === 'review-session')
+        return paginateItems(
+          flatItems,
+          isSession ? 'More sessions' : 'More lists',
+          isSession ? 'subscriptions' : 'list',
         )
       }
 
@@ -255,12 +284,20 @@ export const useBuildListMenuItems = ({
                 overrideEntityType,
               ),
             )
+            const isSession = n.lists.some((l) => l.entityListType === 'review-session')
+            const paginatedFolders = paginateItems(childFolders, 'More folders', 'snippet_folder')
+            const paginatedLists = paginateItems(
+              listItems,
+              isSession ? 'More sessions' : 'More lists',
+              isSession ? 'subscriptions' : 'list',
+            )
+
             return {
               id: `folder-${n.folder.id}`,
               label: n.folder.label,
               icon: n.folder.data?.icon || 'snippet_folder',
               // Folders themselves are not actionable, only their items
-              items: [...childFolders, ...listItems],
+              items: [...paginatedFolders, ...paginatedLists],
             }
           })
       }
@@ -279,7 +316,15 @@ export const useBuildListMenuItems = ({
         buildListMenuItem(l, selected, resolveShowIcon(l), resolveDisabled(l), overrideEntityType),
       )
 
-      const result = [...folderItems, ...rootListItems]
+      const isRootSession = rootLists.some((l) => l.entityListType === 'review-session')
+      const paginatedRootFolders = paginateItems(folderItems, 'More folders', 'snippet_folder')
+      const paginatedRootLists = paginateItems(
+        rootListItems,
+        isRootSession ? 'More sessions' : 'More lists',
+        isRootSession ? 'subscriptions' : 'list',
+      )
+
+      const result = [...paginatedRootFolders, ...paginatedRootLists]
       if (useCache) cache.set(key, { items: result, selectedRef: selected })
       return result
     },

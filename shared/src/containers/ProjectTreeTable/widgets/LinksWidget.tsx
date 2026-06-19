@@ -1,6 +1,7 @@
 import { Chips, LinkEntity, LinksManager } from '@shared/components'
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { FC } from 'react'
+import styled from 'styled-components'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
 import { useSelectedRowsContext } from '../context/SelectedRowsContext'
@@ -8,6 +9,22 @@ import { Container, CountBadge } from '@shared/components/LinksManager/LinksMana
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useGlobalContext } from '@shared/context'
 import { groupLinksByEntity } from '@shared/components/LinksManager/utils/groupLinks'
+
+const SHIMMER_WIDTHS = ['40px', '56px', '68px', '52px']
+
+const LoadingChipsContainer = styled.div`
+  display: flex;
+  gap: var(--base-gap-small);
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+`
+
+const LoadingChip = styled.span`
+  height: 24px;
+  border-radius: var(--border-radius-m);
+  flex-shrink: 0;
+`
 
 export const sortEntityLinksByPath = (links: LinkEntity[]) => {
   return [...links].sort((a, b) => {
@@ -50,6 +67,7 @@ export interface LinksWidgetProps extends WidgetBaseProps {
   cellId: string
   disabled?: boolean
   folderId?: string | null // the folder selected or the parent folder of the selected (used in EntityPickerDialog)
+  isLoading?: boolean
 }
 
 export const LinksWidget: FC<LinksWidgetProps> = ({
@@ -61,6 +79,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
   folderId,
   onChange: _onChange, // not used in this widget
   onCancelEdit,
+  isLoading,
 }) => {
   const { user } = useGlobalContext()
   const isManager = user?.data?.isAdmin || user?.data?.isManager
@@ -114,6 +133,24 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
 
   const sortedLinks = value?.links ? sortEntityLinksByPath(value.links) : []
   const groupedLinks = groupLinksByEntity(sortedLinks)
+
+  if (isLoading) {
+    const entityId = value?.entityId ?? ''
+    const chipCount = (entityId.charCodeAt(0) % 3) + 1
+    return (
+      <LoadingChipsContainer>
+        {Array.from({ length: chipCount }, (_, i) => (
+          <LoadingChip
+            key={i}
+            className="loading"
+            style={{
+              width: SHIMMER_WIDTHS[(entityId.charCodeAt(i) ?? i * 13) % SHIMMER_WIDTHS.length],
+            }}
+          />
+        ))}
+      </LoadingChipsContainer>
+    )
+  }
 
   return (
     <>
