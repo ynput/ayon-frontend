@@ -4,7 +4,12 @@ import { FC, useMemo } from 'react'
 import styled from 'styled-components'
 
 // state
-import { Slicer, useSlicerContext } from '@shared/containers/Slicer'
+import {
+  Slicer,
+  SLICER_SPLITTER_PANEL_CONFIG,
+  SLICER_SPLITTER_STATE_KEY,
+  useSlicerContext,
+} from '@shared/containers/Slicer'
 
 // arc
 import { Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
@@ -204,10 +209,10 @@ const ProjectOverviewPage: FC = () => {
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}
-        stateKey="overview-splitter-table"
+        stateKey={SLICER_SPLITTER_STATE_KEY}
         stateStorage="local"
       >
-        <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
+        <SplitterPanel {...SLICER_SPLITTER_PANEL_CONFIG}>
           <Section wrap>
             <Slicer
               sliceFields={overviewSliceFields}

@@ -2,7 +2,12 @@ import { FC, useState } from 'react'
 import VersionsProductsPageProviders from './providers'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { useSlicerContext, Slicer } from '@shared/containers/Slicer'
+import {
+  useSlicerContext,
+  Slicer,
+  SLICER_SPLITTER_STATE_KEY,
+  SLICER_SPLITTER_PANEL_CONFIG,
+} from '@shared/containers/Slicer'
 import { useProjectContext, useSettingsPanel } from '@shared/context'
 import VPToolbar from './components/VPToolbar/VPToolbar'
 // TABLES
@@ -56,10 +61,10 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}
-        stateKey="overview-splitter-table"
+        stateKey={SLICER_SPLITTER_STATE_KEY}
         stateStorage="local"
       >
-        <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
+        <SplitterPanel {...SLICER_SPLITTER_PANEL_CONFIG}>
           <Section wrap>
             <Slicer
               sliceFields={overviewSliceFields}

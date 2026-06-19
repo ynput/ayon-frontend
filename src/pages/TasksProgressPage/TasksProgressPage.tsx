@@ -7,13 +7,17 @@ import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
 import { useGetAttributeConfigQuery } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks'
-import { useSlicerContext, Slicer } from '@shared/containers/Slicer'
-import { useProjectContext, useScopedDetailsPanel } from '@shared/context'
+import {
+  useSlicerContext,
+  Slicer,
+  SLICER_SPLITTER_STATE_KEY,
+  SLICER_SPLITTER_PANEL_CONFIG,
+} from '@shared/containers/Slicer'
+import { useProjectContext } from '@shared/context'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
 const TasksProgressPage: FC = () => {
   const projectName = useAppSelector((state: any) => state.project.name) as string
-  const { isOpen: detailsOpen } = useScopedDetailsPanel('progress')
 
   // load slicer remote config
   const { config } = useSlicerContext()
@@ -29,13 +33,18 @@ const TasksProgressPage: FC = () => {
 
   return (
     <main>
-      <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
-        <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 100, maxWidth: 500 }}>
+      <Splitter
+        layout="horizontal"
+        stateKey={SLICER_SPLITTER_STATE_KEY}
+        stateStorage="local"
+        style={{ width: '100%', height: '100%' }}
+      >
+        <SplitterPanel {...SLICER_SPLITTER_PANEL_CONFIG}>
           <Section wrap>
             <Slicer sliceFields={taskProgressSliceFields} persistFieldId="hierarchy" />
           </Section>
         </SplitterPanel>
-        <SplitterPanel size={90} style={{ overflow: 'hidden' }}>
+        <SplitterPanel size={88} style={{ overflow: 'hidden' }}>
           <DetailsPanelSplitter layout="horizontal" style={{ height: '100%', overflow: 'hidden' }}>
             <SplitterPanel size={60} style={{ overflow: 'hidden' }}>
               <TasksProgress
