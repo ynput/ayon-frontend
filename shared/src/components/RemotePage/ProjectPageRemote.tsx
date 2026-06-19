@@ -31,7 +31,7 @@ const WithSlicer = ({ children, fields }: WithSlicerProps) => {
       >
         <SplitterPanel {...SLICER_SPLITTER_PANEL_CONFIG}>
           <Section wrap>
-            <Slicer sliceFields={slicerFields} persistFieldId="hierarchy" />
+            <Slicer sliceFields={slicerFields} pinnedSliceType="hierarchy" />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={80}>{children}</SplitterPanel>

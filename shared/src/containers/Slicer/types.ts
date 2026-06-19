@@ -1,7 +1,16 @@
 import { OnSliceTypeChange } from './context/SlicerContext'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
+import { RowSelectionState } from '@tanstack/react-table'
+import { ExpandedState } from '@tanstack/react-table'
 import { FilterValue } from '@ynput/ayon-react-components'
-export type SliceType = 'hierarchy' | 'assignees' | 'status' | 'type' | 'taskType' | 'entityList' | string
+export type SliceType =
+  | 'hierarchy'
+  | 'assignees'
+  | 'status'
+  | 'type'
+  | 'taskType'
+  | 'entityList'
+  | string
 
 export type SliceDataItem = {
   id: string
@@ -59,4 +68,11 @@ export interface TableData {
   isLoading: boolean
   sliceType: SliceType
   handleSliceTypeChange: OnSliceTypeChange
+}
+
+export interface PinnedSlice {
+  sliceType: SliceType
+  rowSelection: RowSelectionState
+  rowSelectionData: SelectionData
+  expanded: ExpandedState
 }

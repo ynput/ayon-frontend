@@ -6,6 +6,7 @@ import styled from 'styled-components'
 // state
 import {
   Slicer,
+  SLICER_PAGES_CONFIG,
   SLICER_SPLITTER_PANEL_CONFIG,
   SLICER_SPLITTER_STATE_KEY,
   useSlicerContext,
@@ -146,8 +147,7 @@ const ProjectOverviewPage: FC = () => {
   const { setSelectedCells } = useSelectionCellsContext()
 
   // load slicer remote config
-  const { config, sliceType, setPersistentRowSelectionData, ...slicer } = useSlicerContext()
-  const overviewSliceFields = config?.overview?.fields
+  const { sliceType, setPinnedSlice, ...slicer } = useSlicerContext()
 
   const handleFiltersChange = (newQueryFilters: QueryFilter) => {
     // Update the stored QueryFilter directly
@@ -161,7 +161,7 @@ const ProjectOverviewPage: FC = () => {
         (condition) => 'key' in condition && condition.key === 'hierarchy',
       )
     ) {
-      setPersistentRowSelectionData({})
+      setPinnedSlice(null)
     }
   }
 
@@ -192,8 +192,8 @@ const ProjectOverviewPage: FC = () => {
 
     // Expand folders in both table and slicer
     updateExpanded(data.expandedFolders)
-    slicer.setExpanded(data.expandedFolders)
-    slicer.setRowSelection(data.selectedFolders)
+    slicer.onExpandedChange?.(data.expandedFolders)
+    slicer.onRowSelectionChange(data.selectedFolders)
 
     // Select the entity in the table
     setSelectedCells(
@@ -215,9 +215,9 @@ const ProjectOverviewPage: FC = () => {
         <SplitterPanel {...SLICER_SPLITTER_PANEL_CONFIG}>
           <Section wrap>
             <Slicer
-              sliceFields={overviewSliceFields}
+              sliceFields={SLICER_PAGES_CONFIG.overview.fields}
               entityTypes={['task', 'folder']}
-              persistFieldId="hierarchy"
+              pinnedSliceType="hierarchy"
             />
           </Section>
         </SplitterPanel>

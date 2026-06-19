@@ -40,7 +40,7 @@ import {
   splitClientFiltersByScope,
   splitFiltersByScope,
 } from '@shared/components/SearchFilter/useBuildFilterOptions'
-import { useSlicerContext, useSelectedEntityIds, useSlicerViewSync } from '@shared/containers/Slicer'
+import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
@@ -146,7 +146,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   modules,
 }) => {
   const { attribFields } = useProjectDataContext()
-  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy, slicerType, onUpdateSlicerType, columns } =
+  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy, columns } =
     useVPViewsContext()
   const { isLoadingViews } = useViewsContext()
 
@@ -155,9 +155,6 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     () => checkColumnVisibility(columns.columnVisibility || {}, 'comments'),
     [columns.columnVisibility],
   )
-
-  // Sync slicer slice type with view settings (selection is in-memory, project-scoped)
-  useSlicerViewSync(slicerType || undefined, onUpdateSlicerType, isLoadingViews)
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
@@ -201,11 +198,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   })
 
   // SLICER
-  const { rowSelection, sliceType, rowSelectionData, persistentRowSelectionData } =
-    useSlicerContext()
+  const { rowSelection, rowSelectionData, sliceType, pinnedSlice } = useSlicerContext()
   const sliceFilter = createFilterFromSlicer({
-    type: sliceType,
-    selection: rowSelectionData,
+    slice: { rowSelectionData, sliceType },
     attribFields: attribFields,
   })
 
@@ -226,18 +221,14 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     product: [slicerProductFilter],
     task: [slicerTaskFilter],
   } = useMemo(() => {
-    return splitClientFiltersByScope(
-      sliceFilter ? [sliceFilter] : null,
-      vpValidScopes,
-      {
-        status: 'version',
-        taskType: 'task',
-        productType: 'product',
-        assignees: 'task',
-        author: 'version',
-        ...attribScopeMap,
-      },
-    )
+    return splitClientFiltersByScope(sliceFilter ? [sliceFilter] : null, vpValidScopes, {
+      status: 'version',
+      taskType: 'task',
+      productType: 'product',
+      assignees: 'task',
+      author: 'version',
+      ...attribScopeMap,
+    })
   }, [sliceFilter, attribScopeMap])
   // Resolve entity list selections to IDs
   const { entityIds, rawEntityIds } = useSelectedEntityIds()
@@ -246,7 +237,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const slicerFolderIds = useSelectedFolders({
     rowSelection,
     sliceType,
-    persistentRowSelectionData,
+    rowSelectionData: pinnedSlice?.rowSelectionData || null,
     entityListFolderIds: entityIds.folderIds,
   })
   // combine slicer filters with version/product filters

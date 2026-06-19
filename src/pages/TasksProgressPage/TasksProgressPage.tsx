@@ -8,20 +8,16 @@ import { useGetAttributeConfigQuery } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks'
 import {
-  useSlicerContext,
   Slicer,
   SLICER_SPLITTER_STATE_KEY,
   SLICER_SPLITTER_PANEL_CONFIG,
+  SLICER_PAGES_CONFIG,
 } from '@shared/containers/Slicer'
 import { useProjectContext } from '@shared/context'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
 const TasksProgressPage: FC = () => {
   const projectName = useAppSelector((state: any) => state.project.name) as string
-
-  // load slicer remote config
-  const { config } = useSlicerContext()
-  const taskProgressSliceFields = config?.progress?.fields
 
   //   GET PROJECT INFO FOR STATUS
   const { ...projectInfo } = useProjectContext()
@@ -41,7 +37,7 @@ const TasksProgressPage: FC = () => {
       >
         <SplitterPanel {...SLICER_SPLITTER_PANEL_CONFIG}>
           <Section wrap>
-            <Slicer sliceFields={taskProgressSliceFields} persistFieldId="hierarchy" />
+            <Slicer sliceFields={SLICER_PAGES_CONFIG.progress.fields} pinnedSliceType="hierarchy" />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={88} style={{ overflow: 'hidden' }}>

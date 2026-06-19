@@ -3,10 +3,10 @@ import VersionsProductsPageProviders from './providers'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import {
-  useSlicerContext,
   Slicer,
   SLICER_SPLITTER_STATE_KEY,
   SLICER_SPLITTER_PANEL_CONFIG,
+  SLICER_PAGES_CONFIG,
 } from '@shared/containers/Slicer'
 import { useProjectContext, useSettingsPanel } from '@shared/context'
 import VPToolbar from './components/VPToolbar/VPToolbar'
@@ -32,7 +32,6 @@ interface VersionsProductsPageProps {
 const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
   // contexts
   const { isPanelOpen } = useSettingsPanel()
-  const { config } = useSlicerContext()
   const { showGrid } = useVPViewsContext()
   const { showVersionsTable } = useVersionsSelectionContext()
   const { projectName } = useProjectContext()
@@ -53,9 +52,6 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
     },
   })
 
-  // load slicer remote config
-  const overviewSliceFields = config?.versions?.fields
-
   return (
     <main style={{ gap: 4 }}>
       <Splitter
@@ -67,8 +63,8 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
         <SplitterPanel {...SLICER_SPLITTER_PANEL_CONFIG}>
           <Section wrap>
             <Slicer
-              sliceFields={overviewSliceFields}
-              persistFieldId="hierarchy"
+              sliceFields={SLICER_PAGES_CONFIG.versions.fields}
+              pinnedSliceType="hierarchy"
               entityTypes={['version', 'task', 'folder']}
             />
           </Section>
