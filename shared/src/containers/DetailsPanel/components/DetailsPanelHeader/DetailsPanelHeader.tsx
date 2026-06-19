@@ -16,6 +16,8 @@ import DetailsPanelTabs from '../DetailsPanelTabs/DetailsPanelTabs'
 import LinkedTaskRow from './LinkedTaskRow'
 import * as Styled from './DetailsPanelHeader.styled'
 import getThumbnails from '../../helpers/getThumbnails'
+import buildEntityTypeIcons from '../../helpers/buildEntityTypeIcons'
+import type { ProjectInfo } from '../../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../../helpers/buildDetailsPanelTitles'
 import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
 
@@ -39,8 +41,7 @@ type DetailsPanelHeaderProps = {
   onTabChange: (tab: DetailsPanelTab) => void
   onOpenViewer: (args: any) => void
   onEntityFocus: DetailsPanelProps['onEntityFocus']
-  entityTypeIcons: EntityTypeIcons
-  taskTypeColors: Record<string, string>
+  projectInfo: ProjectInfo
   thumbnailInputRef: RefObject<HTMLInputElement>
   versionsInputRef: RefObject<HTMLInputElement>
 }
@@ -57,8 +58,7 @@ const DetailsPanelHeader = ({
   isCompact = false,
   currentTab,
   onTabChange,
-  entityTypeIcons,
-  taskTypeColors,
+  projectInfo,
   onOpenViewer,
   onEntityFocus,
   thumbnailInputRef,
@@ -68,6 +68,8 @@ const DetailsPanelHeader = ({
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const tagsSelectRef = useRef<DropdownRef>(null)
+
+  const entityTypeIcons = useMemo(() => buildEntityTypeIcons(projectInfo), [projectInfo])
 
   const statuses = useScopedStatuses(
     entities.map((entity) => entity.projectName),
@@ -241,9 +243,7 @@ const DetailsPanelHeader = ({
                 <LinkedTaskRow
                   key={firstEntity.id}
                   entity={firstEntity}
-                  taskTypeIcons={entityTypeIcons.task}
-                  taskTypeColors={taskTypeColors}
-                  onLinkTask={(taskId) => handleUpdate('taskId', taskId)}
+                  taskTypes={projectInfo.taskTypes}
                 />
               )}
             </Styled.Content>

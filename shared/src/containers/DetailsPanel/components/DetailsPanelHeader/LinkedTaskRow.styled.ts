@@ -31,10 +31,3 @@ export const TaskLink = styled.button`
     white-space: nowrap;
   }
 `
-
-export const Skeleton = styled.span`
-  display: inline-block;
-  width: 96px;
-  height: 18px;
-  border-radius: var(--border-radius-m);
-`
