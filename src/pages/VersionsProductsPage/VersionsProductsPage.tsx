@@ -2,12 +2,7 @@ import { FC, useState } from 'react'
 import VersionsProductsPageProviders from './providers'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import {
-  Slicer,
-  SLICER_SPLITTER_STATE_KEY,
-  SLICER_SPLITTER_PANEL_CONFIG,
-  SLICER_PAGES_CONFIG,
-} from '@shared/containers/Slicer'
+import { Slicer, SLICER_PAGES_CONFIG, useSlicerSplitter } from '@shared/containers/Slicer'
 import { useProjectContext, useSettingsPanel } from '@shared/context'
 import VPToolbar from './components/VPToolbar/VPToolbar'
 // TABLES
@@ -52,15 +47,16 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
     },
   })
 
+  const [slicerSize, handleResizeEnd] = useSlicerSplitter()
+
   return (
     <main style={{ gap: 4 }}>
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}
-        stateKey={SLICER_SPLITTER_STATE_KEY}
-        stateStorage="local"
+        onResizeEnd={handleResizeEnd}
       >
-        <SplitterPanel {...SLICER_SPLITTER_PANEL_CONFIG}>
+        <SplitterPanel size={slicerSize[0]} style={{ overflow: 'hidden' }}>
           <Section wrap>
             <Slicer
               sliceFields={SLICER_PAGES_CONFIG.versions.fields}
@@ -69,7 +65,7 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
             />
           </Section>
         </SplitterPanel>
-        <SplitterPanel size={88}>
+        <SplitterPanel size={slicerSize[1]}>
           <Section wrap direction="column" style={{ height: '100%' }}>
             <VPToolbar />
             <Splitter

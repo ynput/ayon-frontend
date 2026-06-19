@@ -7,9 +7,8 @@ import styled from 'styled-components'
 import {
   Slicer,
   SLICER_PAGES_CONFIG,
-  SLICER_SPLITTER_PANEL_CONFIG,
-  SLICER_SPLITTER_STATE_KEY,
   useSlicerContext,
+  useSlicerSplitter,
 } from '@shared/containers/Slicer'
 
 // arc
@@ -193,16 +192,17 @@ const ProjectOverviewPage: FC = () => {
     )
   }
 
+  const [slicerSize, handleResizeEnd] = useSlicerSplitter()
+
   return (
     <main style={{ gap: 4 }}>
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}
-        stateKey={SLICER_SPLITTER_STATE_KEY}
-        stateStorage="local"
+        onResizeEnd={handleResizeEnd}
       >
-        <SplitterPanel {...SLICER_SPLITTER_PANEL_CONFIG}>
-          <Section wrap>
+        <SplitterPanel size={slicerSize[0]} style={{ overflow: 'hidden' }}>
+          <Section wrap style={{ height: '100%' }}>
             <Slicer
               sliceFields={SLICER_PAGES_CONFIG.overview.fields}
               entityTypes={['task', 'folder']}
@@ -210,7 +210,7 @@ const ProjectOverviewPage: FC = () => {
             />
           </Section>
         </SplitterPanel>
-        <SplitterPanel size={88}>
+        <SplitterPanel size={slicerSize[1]}>
           <Section wrap direction="column" style={{ height: '100%' }}>
             <Toolbar>
               <NewEntity disabled={!showHierarchy} onNewEntities={handleNewEntities} />

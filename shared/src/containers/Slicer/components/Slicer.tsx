@@ -12,12 +12,6 @@ import { useSlicerContext } from '../context/SlicerContext'
 import styled from 'styled-components'
 import { ExpandedState } from '@tanstack/react-table'
 
-export const SLICER_SPLITTER_STATE_KEY = 'slicer-splitter'
-export const SLICER_SPLITTER_PANEL_CONFIG = {
-  minSize: 2,
-  size: 12,
-}
-
 const DropdownSkeleton = styled.div`
   height: 28px;
   border-radius: 4px;

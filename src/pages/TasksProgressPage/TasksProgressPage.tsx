@@ -7,12 +7,7 @@ import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
 import { useGetAttributeConfigQuery } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks'
-import {
-  Slicer,
-  SLICER_SPLITTER_STATE_KEY,
-  SLICER_SPLITTER_PANEL_CONFIG,
-  SLICER_PAGES_CONFIG,
-} from '@shared/containers/Slicer'
+import { Slicer, SLICER_PAGES_CONFIG, useSlicerSplitter } from '@shared/containers/Slicer'
 import { useProjectContext } from '@shared/context'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
@@ -27,22 +22,23 @@ const TasksProgressPage: FC = () => {
   const taskStatuses = useScopedStatuses([projectName], ['task'])
   const folderStatuses = useScopedStatuses([projectName], ['folder'])
 
+  const [slicerSize, handleResizeEnd] = useSlicerSplitter()
+
   return (
     <main>
       <Splitter
         layout="horizontal"
-        stateKey={SLICER_SPLITTER_STATE_KEY}
-        stateStorage="local"
         style={{ width: '100%', height: '100%' }}
+        onResizeEnd={handleResizeEnd}
       >
-        <SplitterPanel {...SLICER_SPLITTER_PANEL_CONFIG}>
+        <SplitterPanel size={slicerSize[0]}>
           <Section wrap>
             <Slicer sliceFields={SLICER_PAGES_CONFIG.progress.fields} pinnedSliceType="hierarchy" />
           </Section>
         </SplitterPanel>
-        <SplitterPanel size={88} style={{ overflow: 'hidden' }}>
+        <SplitterPanel size={slicerSize[1]} style={{ overflow: 'hidden' }}>
           <DetailsPanelSplitter layout="horizontal" style={{ height: '100%', overflow: 'hidden' }}>
-            <SplitterPanel size={60} style={{ overflow: 'hidden' }}>
+            <SplitterPanel size={80} style={{ overflow: 'hidden' }}>
               <TasksProgress
                 taskStatuses={taskStatuses}
                 folderStatuses={folderStatuses}
@@ -56,8 +52,6 @@ const TasksProgressPage: FC = () => {
             <SplitterPanel
               size={20}
               style={{
-                minWidth: 300,
-                maxWidth: 800,
                 zIndex: 500,
               }}
               className="details"
