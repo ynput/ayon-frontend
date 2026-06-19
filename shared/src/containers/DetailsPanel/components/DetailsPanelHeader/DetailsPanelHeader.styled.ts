@@ -55,7 +55,7 @@ export const CloseButton = styled(Button)`
 
 export const Header = styled.header`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--base-gap-large);
   z-index: 50;
 
