@@ -208,7 +208,7 @@ const DetailsPanelHeader = ({
           <Styled.Header
             className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}
           >
-            <div style={{ position: 'relative', alignSelf: 'stretch' }}>
+            <div style={{ position: 'relative' }}>
               <StackedThumbnails
                 isLoading={isLoading}
                 shimmer={isLoading}
