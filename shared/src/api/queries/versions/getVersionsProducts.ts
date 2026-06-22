@@ -41,6 +41,7 @@ import {
   transformProductsResponse,
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
+import { parseAllAttribs } from '../overview'
 import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import type { FieldStats } from '../columnStats'
 import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
@@ -363,19 +364,22 @@ function createVersionUpdateBatcher(
 
         const versionIds = Array.from(attribsToFetch)
         const result = await dispatch(
-          enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+          enhancedVersionsPageApi.endpoints.GetVersionsAttribs.initiate(
             { projectName, versionIds },
             { forceRefetch: true },
           ),
         )
 
-        if (result.data?.versions) {
-          for (const node of result.data.versions) {
-            attribPatched.push({
-              entityId: node.id,
-              allAttrib: node.allAttrib,
-              parsedAttrib: node.attrib,
-            })
+        if (result.data?.project?.versions?.edges) {
+          for (const edge of result.data.project.versions.edges) {
+            const node = edge.node
+            if (node) {
+              attribPatched.push({
+                entityId: node.id,
+                allAttrib: node.allAttrib,
+                parsedAttrib: parseAllAttribs(node.allAttrib),
+              })
+            }
           }
         }
       } catch (e) {
