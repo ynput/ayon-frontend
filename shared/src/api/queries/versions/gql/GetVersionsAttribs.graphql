@@ -1,0 +1,12 @@
+query GetVersionsAttribs($projectName: String!, $versionIds: [String!]!) {
+  project(name: $projectName) {
+    versions(ids: $versionIds) {
+      edges {
+        node {
+          id
+          allAttrib
+        }
+      }
+    }
+  }
+}
