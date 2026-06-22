@@ -132,10 +132,7 @@ const SelectWidget = (props: $Any) => {
   const [value, setValue] = useState<string[] | string | null>(null)
 
   const widget = props.schema?.widget
-  // TODO: remove ID check once backend addon adds widget="sortable_multiselect" to schema
-  const isSortableMultiselect =
-    widget === 'sortable_multiselect' ||
-    (props.multiple && /applications_profiles_\d+_applications$/.test(props.id))
+  const isSortableMultiselect = widget === 'sortable_multiselect'
 
   useEffect(() => {
     // Sync the local state with the formData
