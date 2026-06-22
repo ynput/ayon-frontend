@@ -30,6 +30,7 @@ import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
 import FeedWrapper from './containers/FeedWrapper'
 import FeedContextWrapper from './containers/FeedContextWrapper'
 import mergeProjectInfo from './helpers/mergeProjectInfo'
+import buildEntityTypeIcons from './helpers/buildEntityTypeIcons'
 import DetailsPanelSubtasks from './containers/DetailsPanelSubtasks'
 
 export const entitiesWithoutFeed = ['product', 'representation']
@@ -160,21 +161,8 @@ DetailsPanelProps) => {
     [projectsInfo, activeProjectNames],
   )
 
-  // build icons for entity types
-  const entityTypeIcons = useMemo(
-    () => ({
-      task: projectInfo.taskTypes
-        .filter((task) => !!task.icon)
-        .reduce((acc, task) => ({ ...acc, [task.name]: task.icon }), {}),
-      folder: projectInfo.folderTypes
-        .filter((folder) => !!folder.icon)
-        .reduce((acc, folder) => ({ ...acc, [folder.name]: folder.icon }), {}),
-      product: projectInfo.productTypes
-        .filter((product) => !!product.icon)
-        .reduce((acc, product) => ({ ...acc, [product.name]: product.icon }), {}),
-    }),
-    [projectInfo],
-  )
+  // build icons for entity types (used by the entity path breadcrumb)
+  const entityTypeIcons = useMemo(() => buildEntityTypeIcons(projectInfo), [projectInfo])
 
   // for example when switching from version to task, task doesn't have reps tab
   // if reps tab was selected, set default to feed
@@ -460,7 +448,7 @@ DetailsPanelProps) => {
           isCompact={isCompact}
           currentTab={currentTab}
           onTabChange={setTab}
-          entityTypeIcons={entityTypeIcons}
+          projectInfo={projectInfo}
           onOpenViewer={(args) => onOpenViewer?.(args)}
           onEntityFocus={onEntityFocus}
           thumbnailInputRef={thumbnailInputRef}

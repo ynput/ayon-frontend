@@ -13,8 +13,11 @@ import { useScopedStatuses, useEntityUpdate } from '@shared/hooks'
 import { DetailsPanelTab, useDetailsPanelContext } from '@shared/context'
 
 import DetailsPanelTabs from '../DetailsPanelTabs/DetailsPanelTabs'
+import LinkedTaskRow from './LinkedTaskRow'
 import * as Styled from './DetailsPanelHeader.styled'
 import getThumbnails from '../../helpers/getThumbnails'
+import buildEntityTypeIcons from '../../helpers/buildEntityTypeIcons'
+import type { ProjectInfo } from '../../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../../helpers/buildDetailsPanelTitles'
 import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
 
@@ -38,7 +41,7 @@ type DetailsPanelHeaderProps = {
   onTabChange: (tab: DetailsPanelTab) => void
   onOpenViewer: (args: any) => void
   onEntityFocus: DetailsPanelProps['onEntityFocus']
-  entityTypeIcons: EntityTypeIcons
+  projectInfo: ProjectInfo
   thumbnailInputRef: RefObject<HTMLInputElement>
   versionsInputRef: RefObject<HTMLInputElement>
 }
@@ -55,7 +58,7 @@ const DetailsPanelHeader = ({
   isCompact = false,
   currentTab,
   onTabChange,
-  entityTypeIcons,
+  projectInfo,
   onOpenViewer,
   onEntityFocus,
   thumbnailInputRef,
@@ -65,6 +68,8 @@ const DetailsPanelHeader = ({
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const tagsSelectRef = useRef<DropdownRef>(null)
+
+  const entityTypeIcons = useMemo(() => buildEntityTypeIcons(projectInfo), [projectInfo])
 
   const statuses = useScopedStatuses(
     entities.map((entity) => entity.projectName),
@@ -234,6 +239,13 @@ const DetailsPanelHeader = ({
                 <span className="entity-type">{upperFirst(entityType)} - </span>
                 <h3>{subTitle}</h3>
               </div>
+              {entityType === 'version' && !isMultiple && !isLoading && firstEntity && (
+                <LinkedTaskRow
+                  key={firstEntity.id}
+                  entity={firstEntity}
+                  taskTypes={projectInfo.taskTypes}
+                />
+              )}
             </Styled.Content>
           </Styled.Header>
           <Styled.StatusSelect
