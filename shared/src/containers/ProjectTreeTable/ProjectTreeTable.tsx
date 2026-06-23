@@ -255,6 +255,13 @@ export const ProjectTreeTable = ({
   } = useProjectTableContext()
   const isGrouping = !!groupBy || !!overrideGroupBy
 
+  // Parent (folder/product) summary scope only applies when those entities are
+  // actually on screen: hierarchy view, or grouping by a parent entity.
+  const groupField = overrideGroupBy?.id ?? groupBy?.id
+  const groupFieldId = Array.isArray(groupField) ? groupField[0] : groupField
+  const parentScopeApplicable =
+    showHierarchy || ['hierarchy', 'folder', 'product'].includes(groupFieldId ?? '')
+
   const { writableFields } = useProjectDataContext()
 
   const isLoading = isLoadingProp || isLoadingData
@@ -790,6 +797,7 @@ export const ProjectTreeTable = ({
                     onScopeChange={(scope) => updateColumnSummaryScope(columnId, scope)}
                     mainCountLabels={mainCountLabels}
                     fieldOptions={options}
+                    parentScopeApplicable={parentScopeApplicable}
                   />
                 )}
                 // Power feature cell for community users (hidden for now), shows a bolt hint in the name column:
