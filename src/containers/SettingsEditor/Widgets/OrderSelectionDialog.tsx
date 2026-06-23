@@ -12,6 +12,12 @@ import { CSS } from '@dnd-kit/utilities'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 
+const StyledDialog = styled(Dialog)`
+  && {
+    max-height: 85vh;
+  }
+`
+
 const List = styled.div`
   display: flex;
   flex-direction: column;
@@ -139,7 +145,13 @@ const OrderSelectionDialog = ({ value, options, onSubmit }: OrderSelectionDialog
   )
 
   return (
-    <Dialog header="Selection order" footer={footer} isOpen size="sm" onClose={() => onSubmit(null)}>
+    <StyledDialog
+      header="Selection order"
+      footer={footer}
+      isOpen
+      size="sm"
+      onClose={() => onSubmit(null)}
+    >
       <List>
         <DndContext
           collisionDetection={closestCenter}
@@ -175,7 +187,7 @@ const OrderSelectionDialog = ({ value, options, onSubmit }: OrderSelectionDialog
             )}
         </DndContext>
       </List>
-    </Dialog>
+    </StyledDialog>
   )
 }
 
