@@ -1,4 +1,4 @@
-import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
+import { Button, Dialog, Icon, SaveButton } from '@ynput/ayon-react-components'
 import { useEffect, useMemo, useState } from 'react'
 import * as Styled from './MarketDetails.styled'
 import Type from '@/theme/typography.module.css'
@@ -83,6 +83,9 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
   }, [name, setDownloadedByAddon])
 
   const [showAllVersions, setShowAllVersions] = useState(false)
+  const [showDocs, setShowDocs] = useState(false)
+
+  const documentationLink = links?.find((link) => link.type === 'documentation')
 
   const versionKeysSorted = downloaded.sort((a, b) => -1 * compareBuild(a, b))
   const versionsToShow = versionKeysSorted.length
@@ -130,6 +133,8 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
   }[] = []
   if (links) {
     links.forEach((link) => {
+      if (link.type === 'documentation') return
+
       let group = groupedLinks.find((el) => el.type == link.type)
       if (group != undefined) {
         group.links.push(link)
@@ -341,7 +346,35 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
                 ))}
               </Styled.MetaPanel>
             )}
+
+            {documentationLink && (
+              <Styled.MetaPanel className={clsx({ loading: isLoading })}>
+                <MetaPanelRow label="Documentation">
+                  <Button icon="menu_book" onClick={() => setShowDocs(true)} style={{ width: '100%' }}>
+                    Docs
+                  </Button>
+                </MetaPanelRow>
+              </Styled.MetaPanel>
+            )}
           </Styled.Right>
+
+          {documentationLink && (
+            <Dialog
+              header={`${title}`}
+              isOpen={showDocs}
+              onClose={() => setShowDocs(false)}
+              size="full"
+              footer={
+                <a href={documentationLink.url} target="_blank" rel="noreferrer">
+                  <Button variant="tonal" icon="open_in_new">
+                    Open in new tab
+                  </Button>
+                </a>
+              }
+            >
+              <Styled.DocsFrame src={documentationLink.url} title="Addon documentation" />
+            </Dialog>
+          )}
         </>
       )}
     </Styled.PanelContainer>
