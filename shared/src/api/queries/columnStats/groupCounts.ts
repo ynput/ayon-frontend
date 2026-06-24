@@ -5,7 +5,7 @@ import { StatsOperation } from '@shared/api/generated'
 import { canonicalColumnId, type FieldStats } from './columnStats'
 import type { MetricTarget, StatsEntity } from './metricTargets'
 
-export type GroupCount = { count: number; percentage: number }
+export type GroupCount = { count: number; percentage?: number }
 export type GroupCountsMap = Map<string, GroupCount>
 export type GroupCountsSelection = {
   counts: GroupCountsMap
@@ -57,6 +57,15 @@ export const groupByToStatsTarget = (
 // field's distribution. Denominator = all items (value buckets + not-filled).
 // Ungrouped count = not-filled; its percentage is the remainder so the column
 // sums to 100% (absorbs per-group rounding drift).
+// Map a stats target field to the canonical fieldStats columnName. Attribute
+// targets are dot-paths (inherited_attributes.x / attrib.x) that canonicalColumnId
+// (underscore-based) won't normalize, so resolve those to attrib_<name> here.
+const targetToColumnId = (field: string): string => {
+  const dot = field.indexOf('.')
+  if (dot !== -1) return 'attrib_' + field.slice(dot + 1)
+  return canonicalColumnId(field)
+}
+
 export const selectGroupCounts = (
   fieldStats: FieldStats[],
   target: MetricTarget | null,
@@ -65,7 +74,7 @@ export const selectGroupCounts = (
   const none: GroupCount = { count: 0, percentage: 0 }
   if (!target) return { counts, total: 0, ungrouped: none }
 
-  const columnId = canonicalColumnId(target.field)
+  const columnId = targetToColumnId(target.field)
   const stat = fieldStats.find((s) => s.columnName === columnId)
   const distribution = stat?.distribution ?? []
   const notFilled = stat?.valueNotFilledCount ?? 0
@@ -81,9 +90,11 @@ export const selectGroupCounts = (
     counts.set(String(d.value), { count, percentage })
   }
 
+  // No distribution (e.g. free-text fields like description) -> named groups carry
+  // no %, so the Ungrouped remainder would be a meaningless 100%. Show count only.
   const ungrouped: GroupCount = {
     count: notFilled,
-    percentage: notFilled > 0 && total > 0 ? Math.max(0, 100 - pctSum) : 0,
+    percentage: distSum > 0 && notFilled > 0 ? Math.max(0, 100 - pctSum) : undefined,
   }
   return { counts, total, ungrouped }
 }
