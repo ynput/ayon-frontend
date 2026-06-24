@@ -233,14 +233,6 @@ export const ExternalLInk = styled.a`
   }
 `
 
-export const DocsFrame = styled.iframe`
-  width: 100%;
-  height: 100%;
-  min-height: 75vh;
-  border: none;
-  border-radius: var(--border-radius-m);
-`
-
 export const ReleaseAddons = styled.div`
   display: flex;
   gap: var(--base-gap-small);
