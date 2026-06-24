@@ -3,6 +3,7 @@
 // any leftover items that do not match the groupBy field are added as a separate group ("Ungrouped")
 
 import { EntityGroup } from '@shared/api'
+import type { GroupCountsMap } from '@shared/api'
 import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
@@ -18,6 +19,7 @@ export type GroupData = {
   icon?: string
   img?: string
   count?: number
+  percentage?: number
 }
 
 export const NEXT_PAGE_ID = 'next-page'
@@ -27,30 +29,33 @@ export const ROW_ID_SEPARATOR = '__'
 const valueToStringArray = (value?: any): string[] =>
   value ? (Array.isArray(value) ? value.map((v) => v.toString()) : [value.toString()]) : []
 
-// get group label, color and icon
-const getGroupData = (groupById: string, groupValue: string, groups?: EntityGroup[]): GroupData => {
-  if (!groups)
-    return {
-      value: groupValue,
-      label: groupValue,
-    }
+// get group label, color and icon; overlay the filter-aware count + percentage
+// from groupCounts when available (falls back to the grouping endpoint count)
+const getGroupData = (
+  groupById: string,
+  groupValue: string,
+  groups?: EntityGroup[],
+  groupCounts?: GroupCountsMap,
+): GroupData => {
+  const stat = groupCounts?.get(groupValue)
+  const group = groups?.find((g) => g.value === groupValue)
 
-  const group = groups.find((g) => g.value === groupValue)
-  if (!group) {
-    return {
-      value: groupValue,
-      label: groupValue,
-    }
-  } else {
-    return {
-      value: group.value,
-      label: group.label || group.value,
-      color: group.color,
-      icon: group.icon,
-      count: group.count,
-      img: groupById === 'assignees' ? `/api/users/${group.value}/avatar` : undefined,
-    }
+  const base: GroupData = group
+    ? {
+        value: group.value,
+        label: group.label || group.value,
+        color: group.color,
+        icon: group.icon,
+        count: group.count,
+        img: groupById === 'assignees' ? `/api/users/${group.value}/avatar` : undefined,
+      }
+    : { value: groupValue, label: groupValue }
+
+  if (stat) {
+    base.count = stat.count
+    base.percentage = stat.percentage
   }
+  return base
 }
 
 export const GROUP_BY_ID = '_GROUP_'
@@ -68,6 +73,7 @@ type BuildGroupByTableProps = {
   attribFields: ProjectTableAttribute[]
   showEmpty?: boolean
   groupRowFunc?: (node: any) => TableRow
+  groupCounts?: GroupCountsMap
 }
 
 // get sorting ids based on the groupBy field
@@ -143,6 +149,7 @@ const useBuildGroupByTableData = ({
   attribFields,
   showEmpty,
   groupRowFunc, // for versions etc
+  groupCounts,
 }: BuildGroupByTableProps) => {
   const project = useProjectContext()
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
@@ -170,7 +177,7 @@ const useBuildGroupByTableData = ({
     for (const group of groups) {
       const groupValue = group.value?.toString() as string
       const groupId = buildGroupId(groupValue)
-      const groupData = getGroupData(groupBy.id, groupValue, groups)
+      const groupData = getGroupData(groupBy.id, groupValue, groups, groupCounts)
       groupsMap.set(groupValue, {
         id: groupId,
         name: groupValue,
@@ -187,13 +194,19 @@ const useBuildGroupByTableData = ({
     const getUnGroupedGroup = () => {
       let ungroupedGroup = groupsMap.get(UNGROUPED_VALUE)
       if (!ungroupedGroup) {
+        const stat = groupCounts?.get(UNGROUPED_VALUE)
         ungroupedGroup = {
           id: ungroupedId,
           name: 'Ungrouped',
           entityType: 'group',
           subRows: [],
           label: 'Ungrouped',
-          group: { value: UNGROUPED_VALUE, label: 'Ungrouped' },
+          group: {
+            value: UNGROUPED_VALUE,
+            label: 'Ungrouped',
+            count: stat?.count,
+            percentage: stat?.percentage,
+          },
           links: {},
         }
         // create ungrouped group if it doesn't exist
