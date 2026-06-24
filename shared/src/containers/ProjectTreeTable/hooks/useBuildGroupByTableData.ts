@@ -25,7 +25,11 @@ export const UNGROUPED_VALUE = '_ungrouped'
 export const ROW_ID_SEPARATOR = '__'
 
 const valueToStringArray = (value?: any): string[] =>
-  value ? (Array.isArray(value) ? value.map((v) => v.toString()) : [value.toString()]) : []
+  value
+    ? Array.isArray(value)
+      ? [...new Set(value.map((v) => v.toString()))] // dedup so an entity can't land in the same group twice (keeps row.id unique)
+      : [value.toString()]
+    : []
 
 // get group label, color and icon
 const getGroupData = (groupById: string, groupValue: string, groups?: EntityGroup[]): GroupData => {
