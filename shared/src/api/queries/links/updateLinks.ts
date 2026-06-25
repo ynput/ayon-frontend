@@ -1,7 +1,8 @@
 import { gqlLinksApi, linksApi } from '@shared/api/generated'
 import { RootState } from '@reduxjs/toolkit/query'
-import { current, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EntityLink, EntityWithLinks, entityLinksApi } from './getEntityLinks'
+import { registerPendingLink, unregisterPendingLink } from './pendingLinks'
 
 type Entity = {
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
@@ -113,6 +114,25 @@ const patchEntityLinksCache = (
     otherEntity: Entity,
     linkDirection: 'in' | 'out',
   ) => {
+    const newLink: EntityLink = {
+      id: linkId,
+      direction: linkDirection,
+      linkType,
+      entityType: otherEntity.entityType,
+      node: {
+        id: otherEntity.entityId,
+        name: otherEntity.name,
+        label: otherEntity.label,
+        parents: otherEntity.parents,
+        subType: otherEntity.subType,
+      },
+    }
+
+    // Keep the optimistic link alive through background reconciles until the server
+    // returns it; stop tracking it on delete so it isn't re-added.
+    if (isDelete) unregisterPendingLink(linkId)
+    else registerPendingLink(entityToPatch.entityId, newLink)
+
     // Get all cached query arguments for the getEntityLinks endpoint
     const cachedArgs = entityLinksApi.util.selectCachedArgsForQuery(state, 'getEntityLinks')
 
@@ -130,53 +150,19 @@ const patchEntityLinksCache = (
             'getEntityLinks',
             args,
             (draft: EntityWithLinks[]) => {
-              // Find the entity in the cache
               const entityInCache = draft.find((entity) => entity.id === entityToPatch.entityId)
-              if (!entityInCache) {
-                // Entity not in this specific cache, continue to next one
-                return
-              }
+              if (!entityInCache) return
 
               entityFoundInAnyCache = true
-              console.log(
-                `Found and patching ${entityToPatch.entityType} ${entityToPatch.entityId} in cache`,
-              )
 
               if (isDelete) {
-                // Remove the link from the entity
                 entityInCache.links = entityInCache.links.filter((link) => link.id !== linkId)
               } else {
-                console.log(`Adding new link to ${entityToPatch.entityType}`)
-                // Add the new link to the entity
-                const newLink: EntityLink = {
-                  id: linkId,
-                  direction: linkDirection,
-                  linkType,
-                  entityType: otherEntity.entityType,
-                  node: {
-                    id: otherEntity.entityId,
-                    name: otherEntity.name,
-                    label: otherEntity.label,
-                    parents: otherEntity.parents,
-                    subType: otherEntity.subType,
-                  },
-                }
-
-                // Check if link already exists and update it, or add new one
                 const existingLinkIndex = entityInCache.links.findIndex(
                   (link) => link.id === linkId,
                 )
-
-                if (existingLinkIndex !== -1) {
-                  entityInCache.links[existingLinkIndex] = newLink
-                } else {
-                  console.log(
-                    `Adding new link to ${entityToPatch.entityType} links cache`,
-                    newLink,
-                    current(entityInCache),
-                  )
-                  entityInCache.links.push(newLink)
-                }
+                if (existingLinkIndex !== -1) entityInCache.links[existingLinkIndex] = newLink
+                else entityInCache.links.push(newLink)
               }
             },
           ),
@@ -368,7 +354,8 @@ const enhancedApi = linksApi.enhanceEndpoints({
         } catch (error) {
           console.error(error)
 
-          // Undo patches if the mutation fails
+          // Stop preserving the optimistic link and undo patches if the mutation fails
+          unregisterPendingLink(linkId)
           for (const patch of patches) {
             patch.undo()
           }

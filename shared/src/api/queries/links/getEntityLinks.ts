@@ -10,6 +10,7 @@ import {
   foldersApi,
 } from '@shared/api/generated'
 import { formatEntityLabel } from './utils/formatEntityLinks'
+import { preservePendingLinks } from './pendingLinks'
 import { toast } from 'react-toastify'
 import { PubSub } from '@shared/util'
 
@@ -143,11 +144,9 @@ const injectedQueries = foldersApi.injectEndpoints({
                 )
               }
 
-              return {
-                id: node.id,
-                links:
-                  node.links.edges
-                    ?.map((linkEdge: EntityLinkQuery | null) => {
+              const mappedLinks =
+                node.links.edges
+                  ?.map((linkEdge: EntityLinkQuery | null) => {
                       if (!linkEdge?.node) {
                         // Restricted link - node is null
                         return {
@@ -168,8 +167,8 @@ const injectedQueries = foldersApi.injectEndpoints({
                         },
                         isRestricted: false,
                       } as EntityLink
-                    }) || [], // Flatten the edges structure
-              }
+                    }) || [] // Flatten the edges structure
+              return { id: node.id, links: preservePendingLinks(node.id, mappedLinks) }
             }) || []
 
           // Return the new entities - the merge function will handle combining with existing cache
@@ -266,11 +265,9 @@ const injectedQueries = foldersApi.injectEndpoints({
             const updatedEntities =
               result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => {
 
-                return {
-                  id: node.id,
-                  links:
-                    node.links.edges
-                      ?.map((linkEdge: EntityLinkQuery | null) => {
+                const mappedLinks =
+                  node.links.edges
+                    ?.map((linkEdge: EntityLinkQuery | null) => {
                         if (!linkEdge?.node) {
                           // Restricted link - node is null
                           return {
@@ -291,8 +288,8 @@ const injectedQueries = foldersApi.injectEndpoints({
                           },
                           isRestricted: false,
                         } as EntityLink
-                      }) || [],
-                }
+                      }) || []
+                return { id: node.id, links: preservePendingLinks(node.id, mappedLinks) }
               }) || []
 
             updateCachedData((draft: EntityWithLinks[]) => {
