@@ -17,6 +17,12 @@ export type EntityListItemWithLinks = EntityListItem & {
   links: EntityLink[]
 }
 
+// column ids that reference another entity sort by its foreign-key field, not the column id
+const ENTITY_REF_SORT_KEYS: Record<string, string> = {
+  product: 'product_id',
+  task: 'task_id',
+}
+
 interface UseGetListItemsDataProps {
   projectName: string
   listId?: string
@@ -65,6 +71,8 @@ const useGetListItemsData = ({
     } else if (sortId.endsWith('Type') && entityType && !sortId.startsWith(entityType)) {
       // if the type is not native to the entity, add the parent prefix
       sortId = 'parent' + sortId[0].toUpperCase() + sortId.slice(1)
+    } else if (ENTITY_REF_SORT_KEYS[sortId]) {
+      sortId = `entity_${ENTITY_REF_SORT_KEYS[sortId]}`
     } else {
       // add entity prefix to entity fields
       sortId = `entity_${sortId}`
