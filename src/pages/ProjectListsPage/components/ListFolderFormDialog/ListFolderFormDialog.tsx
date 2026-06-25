@@ -13,7 +13,7 @@ interface ListFolderFormDialogProps {}
 
 export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
   const {
-    listFolderOpen: { isOpen, initial, folderId },
+    listFolderOpen: { isOpen, initial, folderId, parentId },
     setListFolderOpen,
     onCreateListFolder,
     onUpdateListFolder,
@@ -45,10 +45,13 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
     .map((id) => parseListFolderRowId(id))
     .filter((id): id is string => !!id)
 
-  const listIdsToAdd = mode === 'create' && selectedFolderIds.length === 0 ? selectedListIds : []
+  const listIdsToAdd =
+    mode === 'create' && !parentId && selectedFolderIds.length === 0 ? selectedListIds : []
   const parentIdsToCreateIn =
     mode === 'create'
-      ? selectedFolderIds.length > 0
+      ? parentId
+        ? [parentId]
+        : selectedFolderIds.length > 0
         ? selectedFolderIds
         : selectedList?.entityListFolderId
         ? [selectedList.entityListFolderId]
