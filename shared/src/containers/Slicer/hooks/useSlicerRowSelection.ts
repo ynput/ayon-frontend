@@ -38,7 +38,7 @@ export const useSlicerRowSelection = ({
   )
 
   const [hierarchyExpanded, setHierarchyExpanded] = useLocalStorage<ExpandedState>(
-    'slicer-expanded-hierarchy',
+    'slicer-expanded-hierarchy-${projectName}',
     {},
   )
   const [otherExpanded, setOtherExpanded] = useLocalStorage<ExpandedState>(
