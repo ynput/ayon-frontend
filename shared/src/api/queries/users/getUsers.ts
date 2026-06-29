@@ -17,6 +17,7 @@ const USER_BY_NAME_QUERY = `
           isManager
           isService
           isDeveloper
+          isStagingAllowed
           isGuest
           active
           accessGroups
@@ -39,6 +40,7 @@ const USERS_QUERY = `
           isManager
           isService
           isDeveloper
+          isStagingAllowed
           isGuest
           active
           userPool

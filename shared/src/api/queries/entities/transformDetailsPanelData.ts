@@ -49,7 +49,8 @@ export type DetailsPanelEntityData = {
   entitySubType?: string
   projectName: string
   // type specific
-  task?: DetailsPanelTaskFragmentFragment
+  // subtasks aren't on the shared fragment (version/rep don't need them); the task entity adds them from its own query
+  task?: DetailsPanelTaskFragmentFragment & { subtasks?: DetailsPanelTask['subtasks'] }
   folder?: DetailsPanelFolderFragmentFragment
   product?: DetailsPanelProductFragmentFragment
   version?: DetailsPanelVersionFragmentFragment

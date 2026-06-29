@@ -4,7 +4,6 @@ export const Row = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
-  min-height: 28px;
   overflow: hidden;
 `
 
@@ -30,11 +29,4 @@ export const TaskLink = styled.button`
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-`
-
-export const Skeleton = styled.span`
-  display: inline-block;
-  width: 96px;
-  height: 18px;
-  border-radius: var(--border-radius-m);
 `

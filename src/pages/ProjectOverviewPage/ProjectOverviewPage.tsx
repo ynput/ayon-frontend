@@ -38,6 +38,7 @@ import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operation
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
+import { getBundleModeFromUser } from '@shared/util'
 
 // the tasks resolver task filter does not whitelist folder_type — use the
 // folder-scope folderType chip instead (goes through folderFilter)
@@ -70,7 +71,7 @@ const GroupByDropdown = styled(SortingDropdown)<{
 
 const ProjectOverviewPage: FC = () => {
   const { user } = useGlobalContext()
-  const isDeveloperMode = user?.attrib?.developerMode ?? false
+  const bundleMode = getBundleModeFromUser(user)
 
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -242,7 +243,7 @@ const ProjectOverviewPage: FC = () => {
                 onNavigate={navigate}
                 onSetSearchParams={setSearchParams}
                 searchParams={searchParams}
-                isDeveloperMode={isDeveloperMode}
+                bundleMode={bundleMode}
                 align="right"
               />
               <CustomizeButton />

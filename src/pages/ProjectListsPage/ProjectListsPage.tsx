@@ -67,6 +67,7 @@ import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
 import useStoryboardsCardsModules from './hooks/useStoryboardsCardsModules.tsx'
 import OpenStoryboardButton from '@pages/ReviewPage/OpenStoryboardButton.tsx'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
+import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -265,8 +266,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
   dndActiveId, // Destructure new prop
 }) => {
   const dispatch = useAppDispatch()
-  const user = useAppSelector((state) => state.user?.attrib)
-  const isDeveloperMode = user?.developerMode ?? false
+  const user = useAppSelector((state) => state.user)
+  const bundleMode = getBundleModeFromUser(user)
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName } = useProjectContext()
@@ -428,7 +429,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       onSetSearchParams={setSearchParams}
                       searchParams={searchParams}
                       featuredCount={0}
-                      isDeveloperMode={isDeveloperMode}
+                      bundleMode={bundleMode}
                       align="right"
                     />
                     {!reviewSessionCardsOutdated && isReview && !isStoryboards && (

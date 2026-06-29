@@ -1,16 +1,7 @@
-import { useState } from 'react'
-import { Icon, Dropdown, DropdownProps } from '@ynput/ayon-react-components'
+import { useMemo, useState } from 'react'
+import { Button, Dropdown, DropdownProps } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core'
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  useSortable,
-  arrayMove,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { createPortal } from 'react-dom'
-import clsx from 'clsx'
+import OrderSelectionDialog from './OrderSelectionDialog'
 
 const Container = styled.div`
   display: flex;
@@ -20,97 +11,24 @@ const Container = styled.div`
   max-width: 800px;
 `
 
+const Row = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`
+
 const StyledDropdown = styled(Dropdown)`
+  flex: 1;
   button > div > div:has(span) {
     width: 0;
   }
 `
 
-const ItemRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  border-radius: var(--border-radius-m);
-  cursor: pointer;
-
-  &:hover {
-    background: var(--md-sys-color-surface-container-hover);
-  }
-
-  &.dragging {
-    visibility: hidden;
-  }
-`
-
-const DragHandle = styled(Icon)`
-  cursor: grab;
-  opacity: 0.5;
-  &:hover {
-    opacity: 1;
-  }
-`
-
-const ItemLabel = styled.span`
-  flex: 1;
-  font-size: 13px;
-  user-select: none;
-`
-
-const ActionIcon = styled(Icon)`
-  cursor: pointer;
-  opacity: 0.5;
-  font-size: 18px;
-  &:hover {
-    opacity: 1;
-  }
-`
-
 const SectionLabel = styled.div`
   font-size: 11px;
-  text-transform: uppercase;
   color: var(--md-sys-color-outline);
   padding: 6px 8px 2px;
-  letter-spacing: 0.5px;
 `
-
-const SortableItem = ({
-  id,
-  label,
-  onRemove,
-  isDragging,
-}: {
-  id: string
-  label: string
-  isDragging: boolean
-  onRemove: () => void
-}) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id,
-    animateLayoutChanges: () => false,
-  })
-
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    transition,
-  }
-
-  return (
-    <div ref={setNodeRef} style={style} {...attributes}>
-      <ItemRow className={clsx({ dragging: isDragging })}>
-        <DragHandle {...listeners} icon="drag_indicator" />
-        <ItemLabel>{label}</ItemLabel>
-        <ActionIcon
-          icon="close"
-          onClick={(e: React.MouseEvent) => {
-            e.stopPropagation()
-            onRemove()
-          }}
-        />
-      </ItemRow>
-    </div>
-  )
-}
 
 export interface OrderedListWidgetProps {
   value: string[]
@@ -129,22 +47,13 @@ const OrderedListWidget = ({
   disabled,
   dropdownProps,
 }: OrderedListWidgetProps) => {
-  const [draggedId, setDraggedId] = useState<string | null>(null)
-
-  const getLabel = (val: string) => {
-    const opt = options.find((o) => o.value === val)
-    return opt?.label || val
-  }
+  const [isOpen, setIsOpen] = useState(false)
 
   const handleSelectionChange = (newSelection: string[]) => {
     // Preserve order of already-selected items, append new ones at end
     const kept = value.filter((v) => newSelection.includes(v))
     const added = newSelection.filter((v) => !value.includes(v))
     onChange([...kept, ...added])
-  }
-
-  const removeItem = (item: string) => {
-    onChange(value.filter((v) => v !== item))
   }
 
   const handleSelectAll = () => {
@@ -158,81 +67,51 @@ const OrderedListWidget = ({
     onChange([])
   }
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setDraggedId(event.active.id as string)
+  // Selected items first in their selection order, then the rest in enum order
+  const orderedOptions = useMemo(() => {
+    const byValue = new Map(options.map((o) => [o.value, o]))
+    const selected = value
+      .map((v) => byValue.get(v))
+      .filter((o): o is { label: string; value: string } => Boolean(o))
+    const rest = options.filter((o) => !value.includes(o.value))
+    return [...selected, ...rest]
+  }, [value, options])
+
+  const onDialogSubmit = (newOrder: string[] | null) => {
+    if (newOrder !== null) onChange(newOrder)
+    setIsOpen(false)
   }
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    setDraggedId(null)
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-
-    const oldIndex = value.indexOf(active.id as string)
-    const newIndex = value.indexOf(over.id as string)
-    if (oldIndex === -1 || newIndex === -1) return
-
-    onChange(arrayMove(value, oldIndex, newIndex))
-  }
-
-  const draggedLabel = draggedId ? getLabel(draggedId) : ''
 
   return (
     <Container data-tooltip="">
-      <StyledDropdown
-        widthExpand
-        options={options}
-        value={value}
-        onSelectionChange={handleSelectionChange}
-        multiSelect
-        placeholder={placeholder}
-        disabled={disabled}
-        search={options.length > 10}
-        onSelectAll={options.length > 10 ? handleSelectAll : undefined}
-        onClear={value.length > 0 ? handleClear : undefined}
-        clearTooltip="Clear selection"
-        {...dropdownProps}
-      />
-
-      {value.length > 0 && (
-        <>
-          <SectionLabel>Order selection</SectionLabel>
-          <DndContext
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext items={value} strategy={verticalListSortingStrategy}>
-              {value.map((item) => (
-                <SortableItem
-                  key={item}
-                  id={item}
-                  label={getLabel(item)}
-                  onRemove={() => removeItem(item)}
-                  isDragging={draggedId === item}
-                />
-              ))}
-            </SortableContext>
-            {draggedId &&
-              createPortal(
-                <DragOverlay>
-                  <ItemRow
-                    style={{
-                      background: 'var(--md-sys-color-surface-container-high)',
-                      boxShadow: '0 0 4px 1px rgba(0, 0, 0, 0.1)',
-                    }}
-                  >
-                    <DragHandle icon="drag_indicator" />
-                    <ItemLabel>{draggedLabel}</ItemLabel>
-                    <ActionIcon icon="close" style={{ opacity: 0.3 }} />
-                  </ItemRow>
-                </DragOverlay>,
-                document.body,
-              )}
-          </DndContext>
-        </>
-      )}
+      <Row>
+        <StyledDropdown
+          widthExpand
+          options={orderedOptions}
+          value={value}
+          onSelectionChange={handleSelectionChange}
+          multiSelect
+          placeholder={placeholder}
+          disabled={disabled}
+          search={options.length > 10}
+          onSelectAll={options.length > 10 ? handleSelectAll : undefined}
+          onClear={value.length > 0 ? handleClear : undefined}
+          clearTooltip="Clear selection"
+          {...dropdownProps}
+        />
+        <Button
+          icon="sort"
+          label="Set order"
+          onClick={() => setIsOpen(true)}
+          disabled={disabled || value.length < 2}
+        />
+      </Row>
 
       {options.length === 0 && <SectionLabel>No options available</SectionLabel>}
+
+      {isOpen && (
+        <OrderSelectionDialog value={value} options={options} onSubmit={onDialogSubmit} />
+      )}
     </Container>
   )
 }
