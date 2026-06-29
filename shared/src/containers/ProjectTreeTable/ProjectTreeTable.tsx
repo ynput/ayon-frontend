@@ -1364,7 +1364,7 @@ const TableBody = ({
           <div key={i} style={{ left }} />
         ))}
       </Styled.ColumnDividers>
-      {virtualRows.map((virtualRow, i) => {
+      {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index] as Row<TableRow>
         // Add a check for row existence to prevent potential errors if data is out of sync
         if (!row) {
@@ -1373,7 +1373,7 @@ const TableBody = ({
         }
         return (
           <TableBodyRow
-            key={row.id + i.toString()} // dnd-kit needs this key to be stable and match the id in useSortable
+            key={row.id} // stable per-row identity; dnd-kit matches on row.id via SortableContext, not this key
             row={row}
             showHierarchy={showHierarchy}
             visibleCells={row.getVisibleCells()}
@@ -1516,7 +1516,7 @@ const TableBodyRow = ({
         //fake empty column to the left for virtualization scroll padding
         <td style={{ display: 'flex', width: paddingLeft }} />
       ) : null}
-      {virtualColumns.map((vc, i) => {
+      {virtualColumns.map((vc) => {
         const cell = visibleCells[vc.index]
         if (!cell) return null // Should not happen in normal circumstances
 
@@ -1525,7 +1525,7 @@ const TableBodyRow = ({
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
           return (
             <Styled.TD
-              key={cell.id + i.toString()}
+              key={cell.id}
               style={{
                 ...getCommonPinningStyles(cell.column),
                 width: getColumnWidth(cell.column.id),
@@ -1560,7 +1560,7 @@ const TableBodyRow = ({
             cell={cell}
             cellId={cellId}
             rowId={row.id}
-            key={cell.id + i.toString()}
+            key={cell.id}
             showHierarchy={showHierarchy}
             sortableRows={sortableRows}
             rowHeight={rowHeight}
