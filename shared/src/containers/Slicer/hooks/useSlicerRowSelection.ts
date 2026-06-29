@@ -24,7 +24,7 @@ export const useSlicerRowSelection = ({
     {},
   )
   const [hierarchyRowSelectionData, setHierarchyRowSelectionData] = useLocalStorage<SelectionData>(
-    'slicer-selection-data-hierarchy',
+    'slicer-selection-data-hierarchy-${projectName}',
     {},
   )
   // other slicer type selections are stored per page with local storage
