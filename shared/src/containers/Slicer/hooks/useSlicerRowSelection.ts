@@ -29,7 +29,7 @@ export const useSlicerRowSelection = ({
   )
   // other slicer type selections are stored per page with local storage
   const [otherRowSelection, setOtherRowSelection] = useLocalStorage<RowSelectionState>(
-    `slicer-selection-${page}`,
+    `slicer-selection-${projectName}-${page}`,
     {},
   )
   const [otherRowSelectionData, setOtherRowSelectionData] = useLocalStorage<SelectionData>(
