@@ -98,9 +98,10 @@ interface SlicerProviderProps {
   sliceType?: SliceType
   onSliceTypeChange?: OnSliceTypeChange
   page: string
+  projectName: string
 }
 
-export const SlicerProvider = ({ children, page, ...props }: SlicerProviderProps) => {
+export const SlicerProvider = ({ children, page, projectName, ...props }: SlicerProviderProps) => {
   const { viewSettings, isLoadingViews } = useViewsContext()
   // Get view update helper
   const { updateViewSettings } = useViewUpdateHelper()
@@ -118,6 +119,7 @@ export const SlicerProvider = ({ children, page, ...props }: SlicerProviderProps
   } = useSlicerRowSelection({
     sliceType,
     page,
+    projectName,
     ...props,
   })
 

@@ -4,8 +4,9 @@ import { SelectionData, SliceType } from '../types'
 import { useCallback, useMemo } from 'react'
 
 type UseSlicerRowSelectionProps = {
-  page: string
   sliceType: SliceType
+  page: string
+  projectName: string
   // forwarded external state management
   rowSelection?: RowSelectionState
   setRowSelection?: React.Dispatch<React.SetStateAction<RowSelectionState>>
@@ -16,15 +17,16 @@ type UseSlicerRowSelectionProps = {
 export const useSlicerRowSelection = ({
   sliceType,
   page,
+  projectName,
   ...props
 }: UseSlicerRowSelectionProps) => {
   // hierarchy selection is shared across pages with local storage
   const [hierarchyRowSelection, setHierarchyRowSelection] = useLocalStorage<RowSelectionState>(
-    'slicer-selection-hierarchy-${projectName}',
+    `slicer-selection-hierarchy-${projectName}`,
     {},
   )
   const [hierarchyRowSelectionData, setHierarchyRowSelectionData] = useLocalStorage<SelectionData>(
-    'slicer-selection-data-hierarchy-${projectName}',
+    `slicer-selection-data-hierarchy-${projectName}`,
     {},
   )
   // other slicer type selections are stored per page with local storage
@@ -38,7 +40,7 @@ export const useSlicerRowSelection = ({
   )
 
   const [hierarchyExpanded, setHierarchyExpanded] = useLocalStorage<ExpandedState>(
-    'slicer-expanded-hierarchy-${projectName}',
+    `slicer-expanded-hierarchy-${projectName}`,
     {},
   )
   const [otherExpanded, setOtherExpanded] = useLocalStorage<ExpandedState>(

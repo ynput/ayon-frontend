@@ -411,7 +411,9 @@ const ProjectPageInner = () => {
       >
         <EntityListsProvider projectName={projectName}>
           <WithViews viewType={page.viewType} projectName={projectName}>
-            <SlicerProvider page={module}>{page.component}</SlicerProvider>
+            <SlicerProvider page={module} projectName={projectName}>
+              {page.component}
+            </SlicerProvider>
           </WithViews>
           <NewListFromContext />
         </EntityListsProvider>
