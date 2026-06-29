@@ -42,7 +42,7 @@ export const useSlicerRowSelection = ({
     {},
   )
   const [otherExpanded, setOtherExpanded] = useLocalStorage<ExpandedState>(
-    `slicer-expanded-${page}`,
+    `slicer-expanded-${projectName}-${page}`,
     {},
   )
 
