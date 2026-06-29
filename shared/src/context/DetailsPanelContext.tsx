@@ -7,6 +7,7 @@ import { useURIContext } from './UriContext'
 import { useLocalStorage, readLocalStorage, writeLocalStorage } from '@shared/hooks'
 import type { SubtasksManagerProps } from '@shared/components'
 import { DetailsPanelContext } from './DetailsPanelContextInstance'
+import { BundleMode, getBundleModeFromUser } from '@shared/util'
 
 // High-level tabs for the details panel
 export type DetailsPanelTab = 'feed' | 'subtasks' | 'details' | 'files'
@@ -82,7 +83,7 @@ export interface DetailsPanelContextProps {
 // Interface for our simplified context
 export interface DetailsPanelContextType extends DetailsPanelContextProps {
   // user
-  isDeveloperMode: boolean
+  bundleMode: BundleMode
   isGuest: boolean
   // Open state for the panel by scope
   panelOpenByScope: OpenStateByScope
@@ -134,10 +135,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   ...forwardedProps
 }) => {
   const user = forwardedProps.user
-  const isDeveloperMode =
-    'isDeveloperMode' in debug
-      ? (debug.isDeveloperMode as boolean)
-      : user?.attrib?.developerMode ?? false
+  const bundleMode = getBundleModeFromUser(user)
   const isGuest = 'isGuest' in debug ? (debug.isGuest as boolean) : user?.data?.isGuest
 
   // get license from powerpack or forwarded down from props
@@ -330,7 +328,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     setEntities,
     feedAnnotations,
     setFeedAnnotations,
-    isDeveloperMode,
+    bundleMode,
     isGuest,
     hasLicense,
     onPowerFeature: setPowerpackDialog,

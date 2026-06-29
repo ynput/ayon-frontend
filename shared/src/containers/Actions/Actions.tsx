@@ -9,6 +9,7 @@ import ActionIcon from './ActionIcon'
 import { ActionTriggersProps, useActionTriggers } from '@shared/hooks'
 import { ActionConfigDialog } from './ActionConfigDialog'
 import { InteractiveActionDialog, InteractiveForm } from './InteractiveActionDialog'
+import { BundleMode } from '@shared/util'
 
 const placeholder = {
   identifier: 'placeholder',
@@ -25,7 +26,7 @@ interface ActionsProps extends ActionTriggersProps {
   isLoadingEntity: boolean
   projectActionsProjectName?: string
   featuredCount?: number
-  isDeveloperMode: boolean
+  bundleMode: BundleMode
   align?: ActionsDropdownProps['align']
   pt?: {
     dropdown?: Partial<ActionsDropdownProps>
@@ -40,7 +41,7 @@ export const Actions = ({
   projectActionsProjectName,
   searchParams,
   featuredCount = 2,
-  isDeveloperMode,
+  bundleMode,
   onNavigate,
   onSetSearchParams,
   align,
@@ -93,7 +94,7 @@ export const Actions = ({
   }, [context])
 
   const { data, isFetching: isFetchingActions } = useGetActionsFromContextQuery(
-    { mode: 'simple', actionContext: context as ActionContext },
+    { mode: 'simple', variant: bundleMode, actionContext: context as ActionContext },
     { skip: !context },
   )
 
@@ -326,7 +327,7 @@ export const Actions = ({
         isLoading={isLoading && featuredCount > 0}
         onAction={handleExecuteAction}
         onConfig={handleConfigureAction}
-        isDeveloperMode={isDeveloperMode}
+        bundleMode={bundleMode}
         align={align}
         {...pt?.dropdown}
       />
