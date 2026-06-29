@@ -140,7 +140,11 @@ const useTableDataBySlice = ({
     useExtraSlices,
   })
   //   Entity Lists
-  const { getData: getEntityListsData, isLoading: isLoadingLists, isExpandable: isEntityListExpandable } = useEntityListsSlice(entityTypes)
+  const {
+    getData: getEntityListsData,
+    isLoading: isLoadingLists,
+    isExpandable: isEntityListExpandable,
+  } = useEntityListsSlice(entityTypes)
   const isLoadingData =
     isLoadingHierarchy ||
     isLoadingProject ||
@@ -206,11 +210,7 @@ const useTableDataBySlice = ({
   const [slice, setSlice] = useState<Slice>(initSlice)
   const sliceConfig = builtInSlices[sliceType]
 
-  const handleSliceTypeChange = (
-    sliceType: SliceType,
-    leavePersistentSlice: boolean,
-    returnToPersistentSlice: boolean,
-  ) => {
+  const handleSliceTypeChange = (sliceType: SliceType, pinCurrent?: boolean) => {
     // get slice data object
     const sliceConfig = builtInSlices[sliceType]
     if (!sliceConfig) {
@@ -222,7 +222,7 @@ const useTableDataBySlice = ({
       (sliceConfig.isAttribute && showAttributes) ||
       sliceFields.some((field) => field.value === sliceType)
     ) {
-      onSliceTypeChange(sliceType, leavePersistentSlice, returnToPersistentSlice)
+      onSliceTypeChange(sliceType, pinCurrent)
     }
   }
 
@@ -241,7 +241,7 @@ const useTableDataBySlice = ({
             'Slice options failed to load. This likely means the PowerFeatures addon is out of date. Please update to the latest version.',
           )
           // setSlice type to hierarchy
-          onSliceTypeChange('hierarchy', false, false)
+          onSliceTypeChange('hierarchy', false)
           throw new Error('Slice data is undefined')
         }
 

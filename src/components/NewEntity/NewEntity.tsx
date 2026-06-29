@@ -110,11 +110,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
 
   const [createMore, setCreateMore] = useState(false)
   const { selectedCells } = useSelectionCellsContext()
-  const {
-    rowSelectionData: slicerSelectionData,
-    persistentRowSelectionData,
-    sliceType,
-  } = useSlicerContext()
+  const { rowSelectionData: slicerSelectionData, pinnedSlice, sliceType } = useSlicerContext()
   const { getEntityById } = useProjectTableContext()
 
   const [allSelectedFolderIds, _allSelectedEntitiesLabels, parentTargetOptions] =
@@ -158,7 +154,8 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
       } else {
         // no table selection, use slicer selection
         const activeSlicerData =
-          sliceType === 'hierarchy' ? slicerSelectionData : persistentRowSelectionData
+          sliceType === 'hierarchy' ? slicerSelectionData : pinnedSlice?.rowSelectionData || null
+        if (!activeSlicerData) return [[], [], []]
         ids = Object.keys(activeSlicerData)
         labels = Object.entries(activeSlicerData)
           .map(([, data]) => data.label || data.name)
@@ -171,7 +168,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
       })
 
       return [ids, labels, options]
-    }, [selectedCells, slicerSelectionData, persistentRowSelectionData, sliceType, getEntityById])
+    }, [selectedCells, slicerSelectionData, pinnedSlice, sliceType, getEntityById])
 
   const [manuallySelectedParents, setManuallySelectedParents] = useState<string[] | null>(null)
 

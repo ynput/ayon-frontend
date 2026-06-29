@@ -101,8 +101,8 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
     }
 
     // Expand folders in slicer
-    slicer.setExpanded(data.expandedFolders)
-    slicer.setRowSelection(data.selectedFolders)
+    slicer.onExpandedChange(data.expandedFolders)
+    slicer.onRowSelectionChange(data.selectedFolders)
 
     // Select the entity in the table
     setSelectedCells(

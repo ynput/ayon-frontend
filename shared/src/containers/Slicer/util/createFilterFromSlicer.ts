@@ -3,20 +3,14 @@ import { ProjectTableAttribute } from '../../ProjectTreeTable/hooks/useAttribute
 import { SelectionData, SliceFilter, SliceType } from '../types'
 
 export type CreateFilterFromSlicer = ({
-  selection,
-  type,
+  slice,
   attribFields,
 }: {
-  selection: SelectionData
-  type: SliceType
+  slice: { sliceType: SliceType; rowSelectionData: SelectionData } | null
   attribFields: ProjectTableAttribute[]
 }) => SliceFilter | null
 
-export const createFilterFromSlicer: CreateFilterFromSlicer = ({
-  selection,
-  type,
-  attribFields,
-}) => {
+export const createFilterFromSlicer: CreateFilterFromSlicer = ({ slice, attribFields }) => {
   const sliceFilterTypes = {
     assignees: 'list_of_strings',
     status: 'string',
@@ -33,18 +27,18 @@ export const createFilterFromSlicer: CreateFilterFromSlicer = ({
   }
 
   const filter: SliceFilter | null = (() => {
-    const sliceType = sliceFilterTypes[type as keyof typeof sliceFilterTypes]
-    if (!sliceType) return null
+    if (!slice) return null
+    const sliceType = sliceFilterTypes[slice?.sliceType as keyof typeof sliceFilterTypes]
 
-    const selectedItems = Object.values(selection)
+    const selectedItems = Object.values(slice?.rowSelectionData)
     const values = selectedItems.map((item) => ({
       id: item.id,
       label: item.label || item.name || '',
     }))
 
     return {
-      id: type,
-      label: type,
+      id: slice?.sliceType,
+      label: slice?.sliceType,
       type: sliceType,
       inverted: false,
       operator: 'OR',

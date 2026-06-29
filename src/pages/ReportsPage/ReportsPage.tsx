@@ -19,8 +19,7 @@ const ReportsPage: FC<ReportsPageProps> = ({ projectName }) => {
     minVersion: '0.1.0-dev',
   })
 
-  const { sliceType, persistentRowSelectionData, setPersistentRowSelectionData, rowSelectionData } =
-    useSlicerContext()
+  const { sliceType, pinnedSlice, setPinnedSlice, rowSelectionData } = useSlicerContext()
 
   useEffect(() => {
     if (!isLoaded) {
@@ -49,8 +48,8 @@ const ReportsPage: FC<ReportsPageProps> = ({ projectName }) => {
         slicer: {
           selection: rowSelectionData,
           type: sliceType,
-          persistentRowSelectionData,
-          setPersistentRowSelectionData,
+          rowSelectionData: pinnedSlice?.rowSelectionData || null,
+          setPersistentRowSelectionData: () => setPinnedSlice(null),
         },
       }}
     />

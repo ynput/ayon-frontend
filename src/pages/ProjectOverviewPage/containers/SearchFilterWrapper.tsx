@@ -20,6 +20,7 @@ import {
 } from '@shared/containers/ProjectTreeTable/utils'
 import { useDateRangeFilter, CustomDateRangeDialog } from '@shared/components/SearchFilter'
 import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
+import { useSlicerContext } from '@shared/containers'
 
 interface SearchFilterWrapperProps
   extends Omit<BuildFilterOptions, 'scope' | 'scopes' | 'data' | 'power'>,
@@ -49,6 +50,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   ...props
 }) => {
   const { columnOrder } = useColumnSettingsContext()
+  const { pinnedSlice, setPinnedSlice } = useSlicerContext()
 
   // create a flat list of all the assignees (string[]) on all tasks (duplicated)
   // this is used to rank what assignees are shown in the filter first
@@ -93,7 +95,25 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   })
 
   // Convert QueryFilter to Filter[] for internal use
-  const filters = queryFilterToClientFilter(queryFilters, options)
+  const filters = useMemo(() => {
+    const filters = queryFilterToClientFilter(queryFilters, options)
+    const pinned: Filter | null = pinnedSlice
+      ? {
+          id: pinnedSlice.sliceType + '__pinned',
+          label: pinnedSlice.sliceType,
+          type: 'string',
+          inverted: false,
+          operator: 'OR',
+          values: Object.values(pinnedSlice.rowSelectionData).map((item) => ({
+            id: item.id,
+            label: item.label || item.name || '',
+          })),
+        }
+      : null
+    const filtersWithPinnedSlice = pinned ? [pinned, ...filters] : filters
+
+    return filtersWithPinnedSlice
+  }, [queryFilters, options])
 
   // keeps track of the filters whilst adding/removing filters
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
@@ -210,6 +230,23 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const handleFinish = (filters: Filter[]) => {
     // Dropdown closed (or filters committed) — search-chip edit session ends
     editingSearchChipRef.current = null
+
+    // Check if pinned slice was removed
+    const pinnedId = pinnedSlice ? pinnedSlice.sliceType + '__pinned' : null
+    const isPinnedRemoved = !!pinnedId && !filters.some((f) => f.id === pinnedId)
+
+    if (isPinnedRemoved) {
+      setPinnedSlice(null)
+
+      // Check if it's the only change
+      const otherFilters = filters.filter((f) => f.id !== pinnedId)
+      const originalOtherFilters = localFilters.filter((f) => f.id !== pinnedId)
+
+      if (JSON.stringify(otherFilters) === JSON.stringify(originalOtherFilters)) {
+        return
+      }
+    }
+
     validateFilters(filters, (validFilters) => {
       // Convert Filter[] back to QueryFilter and call onChange
       const queryFilter = clientFilterToQueryFilter(validFilters)

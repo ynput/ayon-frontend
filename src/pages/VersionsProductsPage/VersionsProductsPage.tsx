@@ -2,7 +2,7 @@ import { FC, useState } from 'react'
 import VersionsProductsPageProviders from './providers'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { useSlicerContext, Slicer } from '@shared/containers/Slicer'
+import { Slicer, SLICER_PAGES_CONFIG, useSlicerSplitter } from '@shared/containers/Slicer'
 import { useProjectContext, useSettingsPanel } from '@shared/context'
 import VPToolbar from './components/VPToolbar/VPToolbar'
 // TABLES
@@ -27,7 +27,6 @@ interface VersionsProductsPageProps {
 const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
   // contexts
   const { isPanelOpen } = useSettingsPanel()
-  const { config } = useSlicerContext()
   const { showGrid } = useVPViewsContext()
   const { showVersionsTable } = useVersionsSelectionContext()
   const { projectName } = useProjectContext()
@@ -48,27 +47,25 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
     },
   })
 
-  // load slicer remote config
-  const overviewSliceFields = config?.versions?.fields
+  const [slicerSize, handleResizeEnd] = useSlicerSplitter()
 
   return (
     <main style={{ gap: 4 }}>
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}
-        stateKey="overview-splitter-table"
-        stateStorage="local"
+        onResizeEnd={handleResizeEnd}
       >
-        <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
+        <SplitterPanel size={slicerSize[0]} style={{ overflow: 'hidden' }}>
           <Section wrap>
             <Slicer
-              sliceFields={overviewSliceFields}
-              persistFieldId="hierarchy"
+              sliceFields={SLICER_PAGES_CONFIG.versions.fields}
+              pinnedSliceType="hierarchy"
               entityTypes={['version', 'task', 'folder']}
             />
           </Section>
         </SplitterPanel>
-        <SplitterPanel size={88}>
+        <SplitterPanel size={slicerSize[1]}>
           <Section wrap direction="column" style={{ height: '100%' }}>
             <VPToolbar />
             <Splitter

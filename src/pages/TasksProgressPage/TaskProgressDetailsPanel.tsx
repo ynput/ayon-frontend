@@ -47,8 +47,8 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
     }
 
     // Expand folders in slicer
-    slicer.setExpanded(data.expandedFolders)
-    slicer.setRowSelection(data.selectedFolders)
+    slicer.onExpandedChange(data.expandedFolders)
+    slicer.onRowSelectionChange(data.selectedFolders)
 
     // Select the entity
     dispatch(selectProgress({ ids: [data.entityId], type: data.entityType as 'task' | 'folder' }))
