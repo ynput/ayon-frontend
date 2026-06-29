@@ -20,7 +20,7 @@ export const useSlicerRowSelection = ({
 }: UseSlicerRowSelectionProps) => {
   // hierarchy selection is shared across pages with local storage
   const [hierarchyRowSelection, setHierarchyRowSelection] = useLocalStorage<RowSelectionState>(
-    'slicer-selection-hierarchy',
+    'slicer-selection-hierarchy-${projectName}',
     {},
   )
   const [hierarchyRowSelectionData, setHierarchyRowSelectionData] = useLocalStorage<SelectionData>(
