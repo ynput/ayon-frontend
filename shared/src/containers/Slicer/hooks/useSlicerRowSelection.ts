@@ -33,7 +33,7 @@ export const useSlicerRowSelection = ({
     {},
   )
   const [otherRowSelectionData, setOtherRowSelectionData] = useLocalStorage<SelectionData>(
-    `slicer-selection-data-${page}`,
+    `slicer-selection-data-${projectName}-${page}`,
     {},
   )
 
