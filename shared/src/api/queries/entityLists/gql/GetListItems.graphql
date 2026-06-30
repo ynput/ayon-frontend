@@ -29,6 +29,7 @@ query GetListItems(
           ) {
             pageInfo {
               hasNextPage
+              hasPreviousPage
               endCursor
             }
             edges {

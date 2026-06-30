@@ -1106,7 +1106,19 @@ const TableHeadCell = ({
   const menuId = `column-header-menu-${column.id}`
   const { menuOpen } = useMenuContext()
   const isOpen = menuOpen === menuId
-  const { columnPinning } = useColumnSettingsContext()
+  const { columnPinning, sorting: sortingState, updateSorting } = useColumnSettingsContext()
+
+  // toggle sort via the same direct updateSorting call the Customize panel uses;
+  // routing through TanStack's onSortingChange did not apply under manualSorting.
+  const handleToggleSort = () => {
+    const current = sortingState?.find((s) => s.id === column.id)
+    const next = !current
+      ? [{ id: column.id, desc: false }]
+      : !current.desc
+      ? [{ id: column.id, desc: true }]
+      : []
+    updateSorting(next)
+  }
 
   // Check if this column is pinned
   const isThisColumnPinned = columnPinning.left?.includes(column.id) || false
@@ -1197,7 +1209,7 @@ const TableHeadCell = ({
                 style={{
                   transform: sorting === 'asc' ? 'rotate(180deg) scaleX(-1)' : 'none',
                 }}
-                onClick={column.getToggleSortingHandler()}
+                onClick={handleToggleSort}
                 selected={!!column.getIsSorted()}
               />
             )}
