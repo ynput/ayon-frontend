@@ -221,7 +221,7 @@ const useBuildGroupByTableData = ({
         groupBy.id === 'tags' || groupBy.id === 'assignees' || groupBy.id.startsWith('attrib.')
       if (canHaveUngrouped) getUnGroupedGroup()
 
-      for (const [id, entity] of entities) {
+      for (const [, entity] of entities) {
         // if the entity is not of the specified type, skip it
         if (entity.entityType !== entityType) continue
         // add entities to specific group
