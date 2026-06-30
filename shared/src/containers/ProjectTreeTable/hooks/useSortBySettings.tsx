@@ -12,7 +12,9 @@ const BUILT_IN_SORT_OPTIONS: { id: string; label: string; scopes?: string[] }[] 
   { id: 'updatedAt', label: 'Updated at' },
 ]
 
-export const useSortBySettings = () => {
+type SortColumn = { value: string; label: string }
+
+export const useSortBySettings = (columns: SortColumn[] = []) => {
   const { sorting, updateSorting } = useColumnSettingsContext()
   const { attribFields, scopes } = useProjectTableContext()
 
@@ -28,13 +30,25 @@ export const useSortBySettings = () => {
       })),
   ]
 
-  const value: SortCardType[] = sorting
-    .map((s) => {
-      const option = options.find((o) => o.id === s.id)
-      if (!option) return null
-      return { ...option, sortOrder: !s.desc }
-    })
-    .filter(Boolean) as SortCardType[]
+  const labelFor = (id: string) =>
+    options.find((o) => o.id === id)?.label ?? columns.find((c) => c.value === id)?.label ?? id
+
+  // Mirror the live sorting state so the panel stays in sync with the header
+  // sort icons, even for columns that aren't predefined sort options.
+  const value: SortCardType[] = sorting.map((s) => ({
+    id: s.id,
+    label: labelFor(s.id),
+    sortOrder: !s.desc,
+  }))
+
+  // The dropdown can only render a selected value whose option exists, so add
+  // any active-but-unlisted sort column to the option list.
+  const dropdownOptions = [
+    ...options,
+    ...value
+      .filter((v) => !options.some((o) => o.id === v.id))
+      .map((v) => ({ id: v.id, label: v.label })),
+  ]
 
   const handleChange = (v: SortCardType[]) => {
     updateSorting(v.map((item) => ({ id: item.id, desc: !item.sortOrder })))
@@ -47,7 +61,7 @@ export const useSortBySettings = () => {
         title="Sort by"
         icon="sort"
         value={value}
-        options={options}
+        options={dropdownOptions}
         onChange={handleChange}
         multiSelect={false}
       />
