@@ -47,4 +47,6 @@ export interface SummaryCellContentProps {
   onScopeChange: (scope: RowScope) => void
   mainCountLabels?: MainCountLabels
   fieldOptions?: BuiltInFieldOptions
+  // false when no parent entity (folder/product) is on screen; addon hides + disables the parent scope
+  parentScopeApplicable?: boolean
 }
