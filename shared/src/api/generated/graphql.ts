@@ -2201,7 +2201,7 @@ export type GetListItemsQuery = {
           id: string
           active: boolean
           items: {
-            pageInfo: { hasNextPage: boolean; endCursor: string | null }
+            pageInfo: { hasNextPage: boolean; hasPreviousPage: boolean; endCursor: string | null }
             edges: Array<{
               id: string
               entityId: string
@@ -4661,6 +4661,7 @@ export const GetListItemsDocument = new TypedDocumentString(`
           ) {
             pageInfo {
               hasNextPage
+              hasPreviousPage
               endCursor
             }
             edges {

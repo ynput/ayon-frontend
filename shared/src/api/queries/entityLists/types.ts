@@ -84,6 +84,8 @@ export type EntityListItem = NonNullable<QueryEntityListItemNode> &
 export type GetListItemsResult = {
   pageInfo: {
     hasNextPage: boolean
+    // set when paginating descending (last/before); see getListItemsInfinite
+    hasPreviousPage?: boolean | null
     endCursor?: string | null
   }
   items: (QueryEntityListItemNode &

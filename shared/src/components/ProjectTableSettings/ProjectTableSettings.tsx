@@ -167,7 +167,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   ).length
 
   const groupBySettings = useGroupBySettings({ scope })
-  const sortBySettings = useSortBySettings()
+  const sortBySettings = useSortBySettings(columns)
 
   const defaultSettings: (SettingConfig | undefined | null)[] = [
     {
