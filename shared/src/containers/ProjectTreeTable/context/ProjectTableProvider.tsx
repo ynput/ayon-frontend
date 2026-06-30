@@ -248,7 +248,7 @@ export const ProjectTableProvider = ({
   // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
   const groupedTableData = useMemo(
     () => !!effectiveGroupBy && buildGroupByTableData(effectiveGroupBy),
-    [effectiveGroupBy, entitiesMap, groups, groupCounts],
+    [effectiveGroupBy, buildGroupByTableData],
   )
 
   const tableData =
