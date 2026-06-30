@@ -2,14 +2,15 @@
 // each group is a root node with subItems as the grouped items
 // any leftover items that do not match the groupBy field are added as a separate group ("Ungrouped")
 
-import { EntityGroup } from '@shared/api'
 import type { GroupCountsMap } from '@shared/api'
+import { EntityGroup } from '@shared/api'
 import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
 import { linksToTableData } from '../utils'
 import { ProjectModelWithProducts, useProjectContext } from '@shared/context'
+
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 
 export type GroupData = {
@@ -171,151 +172,154 @@ const useBuildGroupByTableData = ({
     [groupRowFunc, getEntityTypeData, entityType, project],
   )
 
-  const buildGroupByTableData = (groupBy: TableGroupBy): TableRow[] => {
-    const groupsMap = new Map<string, TableRow>()
+  return useCallback(
+    (groupBy: TableGroupBy): TableRow[] => {
+      const groupsMap = new Map<string, TableRow>()
 
-    for (const group of groups) {
-      const groupValue = group.value?.toString() as string
-      const groupId = buildGroupId(groupValue)
-      const groupData = getGroupData(groupBy.id, groupValue, groups, groupCounts)
-      groupsMap.set(groupValue, {
-        id: groupId,
-        name: groupValue,
-        entityType: 'group',
-        subRows: [],
-        label: groupData.label,
-        group: groupData,
-        links: {},
-      })
-    }
-
-    const ungroupedId = buildGroupId(UNGROUPED_VALUE)
-    // gets the "Ungrouped" group, creating it if it doesn't exist
-    const getUnGroupedGroup = () => {
-      let ungroupedGroup = groupsMap.get(UNGROUPED_VALUE)
-      if (!ungroupedGroup) {
-        const stat = groupCounts?.get(UNGROUPED_VALUE)
-        ungroupedGroup = {
-          id: ungroupedId,
-          name: 'Ungrouped',
+      for (const group of groups) {
+        const groupValue = group.value?.toString() as string
+        const groupId = buildGroupId(groupValue)
+        const groupData = getGroupData(groupBy.id, groupValue, groups, groupCounts)
+        groupsMap.set(groupValue, {
+          id: groupId,
+          name: groupValue,
           entityType: 'group',
           subRows: [],
-          label: 'Ungrouped',
-          group: {
-            value: UNGROUPED_VALUE,
-            label: 'Ungrouped',
-            count: stat?.count,
-            percentage: stat?.percentage,
-          },
+          label: groupData.label,
+          group: groupData,
           links: {},
+        })
+      }
+
+      const ungroupedId = buildGroupId(UNGROUPED_VALUE)
+      // gets the "Ungrouped" group, creating it if it doesn't exist
+      const getUnGroupedGroup = () => {
+        let ungroupedGroup = groupsMap.get(UNGROUPED_VALUE)
+        if (!ungroupedGroup) {
+          const stat = groupCounts?.get(UNGROUPED_VALUE)
+          ungroupedGroup = {
+            id: ungroupedId,
+            name: 'Ungrouped',
+            entityType: 'group',
+            subRows: [],
+            label: 'Ungrouped',
+            group: {
+              value: UNGROUPED_VALUE,
+              label: 'Ungrouped',
+              count: stat?.count,
+              percentage: stat?.percentage,
+            },
+            links: {},
+          }
+          // create ungrouped group if it doesn't exist
+          groupsMap.set(UNGROUPED_VALUE, ungroupedGroup)
         }
-        // create ungrouped group if it doesn't exist
-        groupsMap.set(UNGROUPED_VALUE, ungroupedGroup)
-      }
-      return ungroupedGroup
-    }
-
-    const canHaveUngrouped =
-      groupBy.id === 'tags' || groupBy.id === 'assignees' || groupBy.id.startsWith('attrib.')
-    if (canHaveUngrouped) getUnGroupedGroup()
-
-    for (const [id, entity] of entities) {
-      // if the entity is not of the specified type, skip it
-      if (entity.entityType !== entityType) continue
-      // add entities to specific group
-      let groupValues: string[] = []
-      if (groupBy.id.startsWith('attrib.')) {
-        // for attribute based grouping, get the value of the attribute
-        const attributeId = groupBy.id.split('.')[1]
-        groupValues = valueToStringArray(entity.attrib?.[attributeId])
-      } else if (groupBy.id === 'folderType' && 'folder' in entity) {
-        // folderType is nested under folder for task entities (from TaskPropsFragment)
-        groupValues = valueToStringArray(
-          (entity as EditorTaskNode & { folder?: { folderType?: string } }).folder?.folderType,
-        )
-      } else {
-        groupValues = valueToStringArray(entity[groupBy.id as keyof EntityMap])
+        return ungroupedGroup
       }
 
-      // if there are no values, add to "Ungrouped" group
-      if (groupValues.length === 0) {
-        const ungroupedGroup = getUnGroupedGroup()
-        ungroupedGroup.subRows?.push(entityToGroupRow(entity as EditorTaskNode, UNGROUPED_VALUE))
-      }
-      // for each group value, find it's group and add the entity to it
-      // if we can't find the group, add it to "Ungrouped"
-      for (const groupValue of groupValues) {
-        const groupRow = groupsMap.get(groupValue)
-        if (groupRow) {
-          groupRow.subRows?.push(entityToGroupRow(entity as EditorTaskNode, groupValue))
+      const canHaveUngrouped =
+        groupBy.id === 'tags' || groupBy.id === 'assignees' || groupBy.id.startsWith('attrib.')
+      if (canHaveUngrouped) getUnGroupedGroup()
+
+      for (const [id, entity] of entities) {
+        // if the entity is not of the specified type, skip it
+        if (entity.entityType !== entityType) continue
+        // add entities to specific group
+        let groupValues: string[] = []
+        if (groupBy.id.startsWith('attrib.')) {
+          // for attribute based grouping, get the value of the attribute
+          const attributeId = groupBy.id.split('.')[1]
+          groupValues = valueToStringArray(entity.attrib?.[attributeId])
+        } else if (groupBy.id === 'folderType' && 'folder' in entity) {
+          // folderType is nested under folder for task entities (from TaskPropsFragment)
+          groupValues = valueToStringArray(
+            (entity as EditorTaskNode & { folder?: { folderType?: string } }).folder?.folderType,
+          )
         } else {
+          groupValues = valueToStringArray(entity[groupBy.id as keyof EntityMap])
+        }
+
+        // if there are no values, add to "Ungrouped" group
+        if (groupValues.length === 0) {
           const ungroupedGroup = getUnGroupedGroup()
           ungroupedGroup.subRows?.push(entityToGroupRow(entity as EditorTaskNode, UNGROUPED_VALUE))
         }
-      }
+        // for each group value, find it's group and add the entity to it
+        // if we can't find the group, add it to "Ungrouped"
+        for (const groupValue of groupValues) {
+          const groupRow = groupsMap.get(groupValue)
+          if (groupRow) {
+            groupRow.subRows?.push(entityToGroupRow(entity as EditorTaskNode, groupValue))
+          } else {
+            const ungroupedGroup = getUnGroupedGroup()
+            ungroupedGroup.subRows?.push(
+              entityToGroupRow(entity as EditorTaskNode, UNGROUPED_VALUE),
+            )
+          }
+        }
 
-      // for groups metadata on entity, check if there is a next page
-      if ('groups' in entity && Array.isArray(entity.groups)) {
-        for (const group of entity.groups) {
-          const hasNextPageGroup = group.hasNextPage
-          if (hasNextPageGroup && groupsMap.has(group.value)) {
-            // add a next page row to the group
-            const groupRow = groupsMap.get(group.value)
-            if (groupRow) {
-              groupRow.subRows?.push({
-                id: `${group.value}-next-page`,
-                name: `Load more tasks...`,
-                entityType: NEXT_PAGE_ID,
-                subRows: [],
-                label: `Next page for ${group.value}`,
-                group: { value: group.value, label: group.value },
-                links: {},
-              })
+        // for groups metadata on entity, check if there is a next page
+        if ('groups' in entity && Array.isArray(entity.groups)) {
+          for (const group of entity.groups) {
+            const hasNextPageGroup = group.hasNextPage
+            if (hasNextPageGroup && groupsMap.has(group.value)) {
+              // add a next page row to the group
+              const groupRow = groupsMap.get(group.value)
+              if (groupRow) {
+                groupRow.subRows?.push({
+                  id: `${group.value}-next-page`,
+                  name: `Load more tasks...`,
+                  entityType: NEXT_PAGE_ID,
+                  subRows: [],
+                  label: `Next page for ${group.value}`,
+                  group: { value: group.value, label: group.value },
+                  links: {},
+                })
+              }
             }
           }
         }
       }
-    }
 
-    const groupsList = Array.from(groupsMap.values())
+      const groupsList = Array.from(groupsMap.values())
 
-    const attribSortingIds = getSortingIds(groupBy, project, attribFields)
+      const attribSortingIds = getSortingIds(groupBy, project, attribFields)
 
-    // sort the groups by their label
-    // if the group is an attribute with enum values, sort by the enum values
-    const sortDirection = groupBy.desc ? -1 : 1
-    groupsList.sort((a, b) => {
-      if (a.group?.value === UNGROUPED_VALUE) return 1 // "Ungrouped" should always be last
-      if (b.group?.value === UNGROUPED_VALUE) return -1 // "Ungrouped" should always be last
-      if (attribSortingIds.length) {
-        // sort by index of the enum value
-        const indexA = attribSortingIds.indexOf(a.group?.value || '')
-        const indexB = attribSortingIds.indexOf(b.group?.value || '')
-        if (indexA !== -1 && indexB !== -1) {
-          return (indexA - indexB) * sortDirection
+      // sort the groups by their label
+      // if the group is an attribute with enum values, sort by the enum values
+      const sortDirection = groupBy.desc ? -1 : 1
+      groupsList.sort((a, b) => {
+        if (a.group?.value === UNGROUPED_VALUE) return 1 // "Ungrouped" should always be last
+        if (b.group?.value === UNGROUPED_VALUE) return -1 // "Ungrouped" should always be last
+        if (attribSortingIds.length) {
+          // sort by index of the enum value
+          const indexA = attribSortingIds.indexOf(a.group?.value || '')
+          const indexB = attribSortingIds.indexOf(b.group?.value || '')
+          if (indexA !== -1 && indexB !== -1) {
+            return (indexA - indexB) * sortDirection
+          }
+          if (indexA !== -1) return -1 // a is in the enum, b is not
+          if (indexB !== -1) return 1 // b is in the enum, a is not
+          // if both are not in the enum, sort by label
+          return (a.group?.label?.localeCompare(b.group?.label || '') || 0) * sortDirection
+        } else {
+          // for other groupings, sort by the group label
+          return (a.group?.label?.localeCompare(b.group?.label || '') || 0) * sortDirection
         }
-        if (indexA !== -1) return -1 // a is in the enum, b is not
-        if (indexB !== -1) return 1 // b is in the enum, a is not
-        // if both are not in the enum, sort by label
-        return (a.group?.label?.localeCompare(b.group?.label || '') || 0) * sortDirection
-      } else {
-        // for other groupings, sort by the group label
-        return (a.group?.label?.localeCompare(b.group?.label || '') || 0) * sortDirection
-      }
-    })
+      })
 
-    // filter out empty groups — Ungrouped has no server count, keep it reachable
-    const nonEmptyGroups = groupsList.filter(
-      (group) =>
-        (group.group?.count ?? 0) > 0 ||
-        (group.subRows?.length ?? 0) > 0 ||
-        group.group?.value === UNGROUPED_VALUE,
-    )
+      // filter out empty groups — Ungrouped has no server count, keep it reachable
+      const nonEmptyGroups = groupsList.filter(
+        (group) =>
+          (group.group?.count ?? 0) > 0 ||
+          (group.subRows?.length ?? 0) > 0 ||
+          group.group?.value === UNGROUPED_VALUE,
+      )
 
-    return showEmpty ? groupsList : nonEmptyGroups
-  }
-
-  return buildGroupByTableData
+      return showEmpty ? groupsList : nonEmptyGroups
+    },
+    [entities, entityType, groups, attribFields, showEmpty, groupCounts, entityToGroupRow, project],
+  )
 }
 
 export default useBuildGroupByTableData

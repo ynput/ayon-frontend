@@ -82,11 +82,9 @@ export const selectGroupCounts = (
   const distSum = distribution.reduce((sum, d) => sum + (d.count || 0), 0)
   const total = distSum + notFilled
 
-  let pctSum = 0
   for (const d of distribution) {
     const count = d.count || 0
     const percentage = total > 0 ? Math.round((count / total) * 100) : 0
-    pctSum += percentage
     counts.set(String(d.value), { count, percentage })
   }
 
@@ -94,7 +92,7 @@ export const selectGroupCounts = (
   // no %, so the Ungrouped remainder would be a meaningless 100%. Show count only.
   const ungrouped: GroupCount = {
     count: notFilled,
-    percentage: distSum > 0 && notFilled > 0 ? Math.max(0, 100 - pctSum) : undefined,
+    percentage: distSum > 0 && notFilled > 0 ? Math.round((notFilled / total) * 100) : undefined,
   }
   return { counts, total, ungrouped }
 }
