@@ -265,7 +265,7 @@ export const useFetchOverviewData = ({
     // Filter by selected folders if needed
     if (selectedFolders.length) {
       const selectedPaths = selectedFolders
-        .map((id) => map.get(id)?.path)
+        .map((id) => folders.find((folder) => folder.id === id)?.path)
         .filter(Boolean) as string[]
 
       // Create a new map that only contains selected folders and their children
