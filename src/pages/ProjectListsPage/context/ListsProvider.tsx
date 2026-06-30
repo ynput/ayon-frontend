@@ -256,17 +256,18 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
     onCreatedFolders: handleCreatedFolders,
   })
 
-  const onOpenFolderList: OnOpenFolderListParams = ({ folderId }) => {
+  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, parentId }) => {
     if (!powerLicense) {
       setPowerpackDialog('listFolders')
       return
     }
     // get folder data
     const folder = listFolders.find((f) => f.id === folderId)
-    // if no folderId, open create dialog
+    // if no folderId, open create dialog (optionally inside parentId)
     if (!folderId) {
       return setListFolderOpen({
         isOpen: true,
+        parentId,
       })
     }
 
