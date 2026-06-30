@@ -1,4 +1,5 @@
-import { Button, Section } from '@ynput/ayon-react-components'
+import { Button, Dialog, Section } from '@ynput/ayon-react-components'
+import { toast } from 'react-toastify'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useListAddonsQuery } from '@shared/api'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
@@ -59,6 +60,10 @@ const AddonsManager = (): JSX.Element => {
   const setSelectedVersions = (versions: string[]) => dispatch(onSelectedVersions(versions))
   const setSelectedBundles = (bundles: string[]) => dispatch(onSelectedBundles(bundles))
   const [deletedVersions, setDeletedVersions] = useState<string[]>([])
+
+  // "<addonName> <version>" of the version whose API docs dialog is open
+  const [docsVersion, setDocsVersion] = useState<string | null>(null)
+  const [docsAddonName, docsAddonVersion] = (docsVersion || '').split(' ')
 
   // different functions to transform the data for each table
   let { addonsTableData, versionsTableData, bundlesTableData, filteredVersionsMap, versionSort } =
@@ -151,6 +156,27 @@ const AddonsManager = (): JSX.Element => {
     },
   ]
 
+  // api-docs route only exists for addons that expose a REST API, so probe before opening
+  const openApiDocs = async (versionString: string) => {
+    const [addonName, addonVersion] = versionString.split(' ')
+    try {
+      const res = await fetch(`/api/addons/${addonName}/${addonVersion}/api-docs`)
+      if (!res.ok) throw new Error()
+      setDocsVersion(versionString)
+    } catch {
+      toast.error('This addon version has no API documentation')
+    }
+  }
+
+  const versionContext = (selected: string[]): ContextMenuItem[] => [
+    ...viewInMarket(selected),
+    {
+      label: 'API Docs',
+      command: () => openApiDocs(selected[0]),
+      icon: 'description',
+    },
+  ]
+
   const shortcuts: ShortcutItem[] = [
     {
       key: 'a',
@@ -225,7 +251,7 @@ const AddonsManager = (): JSX.Element => {
             sortFunction={versionSort}
             onDelete={handleDeleteVersions}
             onDeleteSuccess={handleDeleteVersionsSuccess}
-            extraContext={viewInMarket}
+            extraContext={versionContext}
             emptyMessage={selectedAddons.length ? 'No versions found' : 'Select an addon'}
             isLoading={isLoading}
             header={null}
@@ -266,6 +292,32 @@ const AddonsManager = (): JSX.Element => {
           </Section>
         </SplitterPanel> */}
       </Splitter>
+
+      {docsVersion && (
+        <Dialog
+          isOpen
+          onClose={() => setDocsVersion(null)}
+          size="full"
+          header={`${docsAddonName} ${docsAddonVersion} — API Docs`}
+          footer={
+            <a
+              href={`/api/addons/${docsAddonName}/${docsAddonVersion}/api-docs`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Button variant="tonal" icon="open_in_new">
+                Open in new tab
+              </Button>
+            </a>
+          }
+        >
+          <iframe
+            src={`/api/addons/${docsAddonName}/${docsAddonVersion}/api-docs`}
+            title="Addon API documentation"
+            style={{ width: '100%', height: '100%', minHeight: '75vh', border: 'none' }}
+          />
+        </Dialog>
+      )}
     </Section>
   )
 }
