@@ -103,6 +103,7 @@ export type ImportDataProcessSummary = {
   skipped: number
   failed: number
   failedItems?: Record<string, string>
+  phase: string
 }
 
 export type ImportDataMessage = {

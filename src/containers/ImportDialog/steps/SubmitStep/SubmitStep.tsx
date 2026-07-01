@@ -36,6 +36,8 @@ export default function SubmitStep({ data, importContext, onNext }: Props) {
   const [importProgress, setImportProgress] = useState(0)
   const [importDescription, setImportDescription] = useState<string | null>(null)
   const [importResult, setImportResult] = useState<ImportDataProcessSummary | null>(null)
+  type PhaseType = 'upload' | 'processing' | 'unsupported' | 'queued' | 'waiting' | 'importing' | 'validating';
+  const [importPhase, setImportPhase] = useState<PhaseType>("importing")
 
   usePubSub(
     "import.data",
@@ -44,6 +46,7 @@ export default function SubmitStep({ data, importContext, onNext }: Props) {
 
       setImportProgress(message.progress)
       setImportDescription(message.description || null)
+      setImportPhase(((message.summary as ImportDataProcessSummary)?.phase as PhaseType) ?? 'importing')
 
       if(message.status === "finished" || message.status === "failed") {
         setImportResult(message.summary as ImportDataProcessSummary)
@@ -104,7 +107,7 @@ export default function SubmitStep({ data, importContext, onNext }: Props) {
           !importResult && (
             <>
             <ProgressBar
-              type="importing"
+              type={importPhase}
               name={data.fileName}
               progress={importProgress}
             />
