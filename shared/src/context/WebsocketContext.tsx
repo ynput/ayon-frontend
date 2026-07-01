@@ -132,8 +132,11 @@ export const SocketProvider = ({
 
       if (topic === 'server.restart_requested') setServerRestartingVisible(true)
 
-      if (sender === window.senderId) {
-        return // my own message. ignore
+      
+      if (["import.data"].includes(topic)) {
+        if (sender !== window.senderId) return // ignore import.data messages from other users
+      } else if (sender === window.senderId) {
+        return // for other events, ignore my own messages
       }
 
       const now = Date.now()
@@ -143,11 +146,11 @@ export const SocketProvider = ({
         messageStatsRef.current.callCount = 0
       }
 
+      console.log('Event RX', data)
       messageStatsRef.current.lastCall = now
 
       if (topic === 'shout' && data?.summary?.text) toast.info(summary.text)
 
-      console.log('Event RX', data)
       PubSub.publish(topic, data)
     },
     [setServerRestartingVisible],

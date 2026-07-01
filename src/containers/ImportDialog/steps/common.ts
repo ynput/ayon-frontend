@@ -107,6 +107,9 @@ export type ImportDataProcessSummary = {
 
 export type ImportDataMessage = {
   summary: ImportDataStartSummary | ImportDataProcessSummary
+  progress: number
+  description?: string
+  status: string
 }
 
 export const formatFailedItems = (failedItems: Record<string, string>) => Object.entries(failedItems)

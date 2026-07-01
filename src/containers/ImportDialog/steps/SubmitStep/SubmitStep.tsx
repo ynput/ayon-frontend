@@ -34,6 +34,7 @@ const SuccessState = styled(EmptyPlaceholder)`
 
 export default function SubmitStep({ data, importContext, onNext }: Props) {
   const [importProgress, setImportProgress] = useState(0)
+  const [importDescription, setImportDescription] = useState<string | null>(null)
   const [importResult, setImportResult] = useState<ImportDataProcessSummary | null>(null)
 
   usePubSub(
@@ -41,23 +42,16 @@ export default function SubmitStep({ data, importContext, onNext }: Props) {
     (_: any, message: ImportDataMessage) => {
       if ((message.summary as ImportDataStartSummary).total) return
 
-      const processedCount = Object.values(message.summary as ImportDataProcessSummary)
-        .filter((value) => typeof value === "number")
-        .reduce((a, i) => a + i, 0)
+      setImportProgress(message.progress)
+      setImportDescription(message.description || null)
 
-      setImportProgress(Math.round(processedCount / data.rows.length * 100))
+      if(message.status == "finished") {
+        setImportResult(message.summary as ImportDataProcessSummary)
+      }
+
     },
     null,
     { disableDebounce: true },
-  )
-
-  usePubSub(
-    "import.data.finish",
-    (_: any, message: ImportDataMessage) => {
-      setImportResult(message.summary as ImportDataProcessSummary)
-    },
-    null,
-    { },
   )
 
   return (
@@ -108,11 +102,14 @@ export default function SubmitStep({ data, importContext, onNext }: Props) {
         }
         {
           !importResult && (
+            <>
             <ProgressBar
               type="importing"
               name={data.fileName}
               progress={importProgress}
             />
+            { importDescription && <p>{importDescription}</p>}
+            </>
           )
         }
       </StepContainer>
