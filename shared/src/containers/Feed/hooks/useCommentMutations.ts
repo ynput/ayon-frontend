@@ -126,7 +126,7 @@ const useCommentMutations = ({
   const submitComment = async (
     value: string,
     files: File[] = [],
-    data: any = {},
+    data: any = {}, // includes things like annotations and comment categories
   ): Promise<void> => {
     // map over all the entities and create a new comment for each
     let patchId: string | null = null
@@ -170,7 +170,16 @@ const useCommentMutations = ({
       })
     })
 
-    await Promise.all(promises)
+    const results = await Promise.all(promises)
+
+    // check if any of the results have errors and throw an error if so
+    const errors = results.filter((result) => result.error)
+    if (errors.length > 0) {
+      const errorMessage = errors[0].error?.data?.detail || 'Failed to create comment'
+      console.error(errorMessage, errors)
+      toast.error(errorMessage)
+      throw new Error(errorMessage)
+    }
   }
 
   const updateComment = async (
