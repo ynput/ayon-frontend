@@ -45,7 +45,7 @@ export default function SubmitStep({ data, importContext, onNext }: Props) {
       setImportProgress(message.progress)
       setImportDescription(message.description || null)
 
-      if(message.status == "finished") {
+      if(message.status === "finished" || message.status === "failed") {
         setImportResult(message.summary as ImportDataProcessSummary)
       }
 
@@ -62,7 +62,7 @@ export default function SubmitStep({ data, importContext, onNext }: Props) {
             <SuccessState
               icon="check"
               color="var(--md-sys-color-primary)"
-              message="Import successful"
+              message="Import finished"
             >
               <Stats
                 heading={data.fileName}
