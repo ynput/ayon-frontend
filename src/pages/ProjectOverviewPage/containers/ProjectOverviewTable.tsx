@@ -46,11 +46,6 @@ const ProjectOverviewTable = ({}: Props) => {
     () => (!statsTaskIds && selectedFolders.length ? Array.from(foldersMap.keys()) : undefined),
     [statsTaskIds, selectedFolders, foldersMap],
   )
-  const taskStatsFolderIds = useMemo(
-    () =>
-      statsFolderIds ? Array.from(new Set([...statsFolderIds, ...selectedFolders])) : undefined,
-    [statsFolderIds, selectedFolders],
-  )
 
   const { onOpenNew } = useNewEntityContext()
 
@@ -81,7 +76,7 @@ const ProjectOverviewTable = ({}: Props) => {
       filter: taskFilters?.filterString || undefined,
       folderFilter: folderFilters?.filterString || undefined,
       search: taskFilters?.search || undefined,
-      folderIds: taskStatsFolderIds,
+      folderIds: selectedFolders?.length ? selectedFolders : undefined,
       taskIds: statsTaskIds,
       targets: taskTargets,
     },

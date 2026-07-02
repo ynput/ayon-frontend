@@ -350,7 +350,9 @@ export const useFetchOverviewData = ({
       filter: taskFilters.filterString,
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
-      folderIds: taskIds?.length ? undefined : hierarchySlicerFolderIds ?? selectedFolders,
+      folderIds: taskIds?.length
+        ? undefined
+        : hierarchySlicerFolderIds ?? (selectedFolders?.length ? selectedFolders : undefined),
       taskIds: taskIds?.length ? taskIds : undefined,
       sortBy: sortId ? sortId.replace('_', '.') : undefined,
       desc: !!singleSort?.desc,

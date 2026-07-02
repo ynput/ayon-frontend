@@ -1933,6 +1933,7 @@ export type GetTaskColumnStatsQueryVariables = Exact<{
   folderIds?: Array<string> | string | null | undefined;
   taskIds?: Array<string> | string | null | undefined;
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
+  includeFolderChildren?: boolean;
 }>;
 
 
@@ -3408,7 +3409,7 @@ export const GetFolderDeleteInfoDocument = new TypedDocumentString(`
 }
     `);
 export const GetTaskColumnStatsDocument = new TypedDocumentString(`
-    query GetTaskColumnStats($projectName: String!, $filter: String, $folderFilter: String, $search: String, $folderIds: [String!], $taskIds: [String!], $targets: [MetricTargetInput!]) {
+    query GetTaskColumnStats($projectName: String!, $filter: String, $folderFilter: String, $search: String, $folderIds: [String!], $taskIds: [String!], $targets: [MetricTargetInput!], $includeFolderChildren: Boolean! = true) {
   project(name: $projectName) {
     name
     tasks(
@@ -3418,6 +3419,7 @@ export const GetTaskColumnStatsDocument = new TypedDocumentString(`
       search: $search
       folderIds: $folderIds
       ids: $taskIds
+      includeFolderChildren: $includeFolderChildren
     ) {
       fieldStats {
         ...ColumnStatsFragment
