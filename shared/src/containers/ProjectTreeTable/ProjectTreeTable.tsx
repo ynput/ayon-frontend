@@ -49,7 +49,6 @@ import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
-import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
 import useCellContextMenu, {
   HeaderLabel,
   ContextMenuItemConstructors,
@@ -1318,8 +1317,6 @@ const TableBody = ({
 
   const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
 
-  const { handlePreFetchTasks } = usePrefetchFolderTasks()
-
   const { rows } = table.getRowModel()
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
@@ -1375,9 +1372,6 @@ const TableBody = ({
         display: 'grid',
       }}
       onContextMenu={handleTableBodyContextMenu}
-      onMouseOver={(e) => {
-        handlePreFetchTasks(e)
-      }}
     >
       <Styled.ColumnDividers aria-hidden>
         {columnDividerLefts.map((left, i) => (
