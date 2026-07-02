@@ -13,7 +13,7 @@ import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
 import ListsContext, { ListDetailsOpenState, OnOpenFolderListParams } from './ListsContext'
 import { useGetProductionAddon } from '@shared/hooks'
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 import { buildListFolderRowId, parseListFolderRowId } from '../util/buildListsTableData'
 import useInitialListsExpanded from '../hooks/useInitialListsExpanded'
 import { usePowerpack, useProjectContext } from '@shared/context'
@@ -124,7 +124,10 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
   // dialogs
   const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
 
-  const [listDetailsOpen, setListDetailsOpen] = useLocalStorage<boolean>('list-details-open', true)
+  const [listDetailsOpen, setListDetailsOpen] = useSessionStorage<boolean>(
+    'list-details-open',
+    true,
+  )
 
   const [listFolderOpen, setListFolderOpen] = useState<ListDetailsOpenState>({ isOpen: false })
 

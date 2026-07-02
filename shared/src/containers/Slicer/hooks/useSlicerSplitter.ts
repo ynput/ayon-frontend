@@ -1,4 +1,4 @@
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 
 export const SLICER_SPLITTER_STATE_KEY = 'slicer-splitter'
 export const SLICER_SPLITTER_PANEL_CONFIG = {
@@ -7,7 +7,7 @@ export const SLICER_SPLITTER_PANEL_CONFIG = {
 }
 
 const useSlicerSplitter = () => {
-  const [slicerSize, setSlicerSize] = useLocalStorage<number[]>(SLICER_SPLITTER_STATE_KEY, [
+  const [slicerSize, setSlicerSize] = useSessionStorage<number[]>(SLICER_SPLITTER_STATE_KEY, [
     SLICER_SPLITTER_PANEL_CONFIG.size,
     100 - SLICER_SPLITTER_PANEL_CONFIG.size,
   ])

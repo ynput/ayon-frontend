@@ -5,7 +5,7 @@ import ProjectsListTableHeader from './ProjectsListTableHeader'
 import { useCreateContextMenu } from '@shared/containers'
 import { ProjectsSimpleTable } from './ProjectsSimpleTable'
 import { PinnedDivider } from './ProjectsListRow.styled'
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 import { usePowerpack } from '@shared/context'
 
 type ButtonType = 'delete' | 'add' | 'filter' | 'search' | 'select-all'
@@ -85,7 +85,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   const [ctxMenuShow] = useCreateContextMenu([], { powerLicense, setPowerpackDialog })
 
   // Track which table has active selection: 'pinned' | 'all'
-  const [activeTable, setActiveTable] = useLocalStorage<'pinned' | 'all'>(
+  const [activeTable, setActiveTable] = useSessionStorage<'pinned' | 'all'>(
     'project-list-selection',
     'all',
   )
