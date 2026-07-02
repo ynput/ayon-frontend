@@ -84,6 +84,8 @@ export type GetTasksListArgs = {
   taskIds?: string[]
   desc?: boolean
   sortBy?: string
+  showComments?: boolean
+  includeFolderChildren?: boolean
 }
 
 export type GetGroupedTasksListResult = {
@@ -399,6 +401,7 @@ const injectedApi = enhancedApi.injectEndpoints({
             sortBy,
             desc,
             showComments,
+            includeFolderChildren,
           } = queryArg
           const { cursor } = pageParam
 
@@ -411,6 +414,7 @@ const injectedApi = enhancedApi.injectEndpoints({
             folderIds,
             taskIds,
             showComments: !!showComments,
+            includeFolderChildren: includeFolderChildren !== false, // default to true
           }
 
           // Add cursor-based pagination

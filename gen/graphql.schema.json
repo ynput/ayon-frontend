@@ -8399,6 +8399,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "search",
+                "description": "Fuzzy text search filter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "sortBy",
                 "description": "Sort by one of label, owner, entityListType, createdAt, updatedAt, count, active",
                 "type": {

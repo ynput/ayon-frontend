@@ -350,11 +350,12 @@ export const useFetchOverviewData = ({
       filter: taskFilters.filterString,
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
-      folderIds: taskIds?.length ? undefined : hierarchySlicerFolderIds ?? tasksFolderIdsParams,
+      folderIds: taskIds?.length ? undefined : hierarchySlicerFolderIds ?? selectedFolders,
       taskIds: taskIds?.length ? taskIds : undefined,
       sortBy: sortId ? sortId.replace('_', '.') : undefined,
       desc: !!singleSort?.desc,
       showComments,
+      includeFolderChildren: !hierarchySlicerFolderIds, // Disable recursive task fetch for hierarchy+slicer mode
     },
     {
       // Skip flat task list for flat folder view (tasks loaded on folder expand).
