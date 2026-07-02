@@ -82,7 +82,10 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, Dispatch<S
 
           localStorage.setItem(key, JSON.stringify(nextValue))
           if (typeof window !== 'undefined') {
-            window.dispatchEvent(new Event('storage'))
+            // dispatch event on next tick to avoid updating other components during render
+            setTimeout(() => {
+              window.dispatchEvent(new Event('storage'))
+            }, 0)
           }
           return nextValue
         })

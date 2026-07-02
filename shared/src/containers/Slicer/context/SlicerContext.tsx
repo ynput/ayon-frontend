@@ -1,12 +1,13 @@
-import { useContext, ReactNode, ForwardRefExoticComponent, RefAttributes, useCallback } from 'react'
-import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import {
-  getSelectionDataState,
-  SelectionData,
-  SliceType,
-  useSlicerRemotes,
-  useSlicerRowSelection,
-} from '@shared/containers/Slicer'
+  useContext,
+  ReactNode,
+  ForwardRefExoticComponent,
+  RefAttributes,
+  useCallback,
+  useMemo,
+} from 'react'
+import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
+import { SelectionData, SliceType } from '@shared/containers/Slicer'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { useLocalStorage } from '@shared/hooks'
 import type { ProjectModel, Assignees, AttributeModel, ProductType } from '@shared/api'
@@ -15,6 +16,9 @@ import { DropdownRef } from '@ynput/ayon-react-components'
 import { PinnedSlice, SliceMap, SliceTypeField } from '../types'
 import { useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
 import { SlicerContext } from './SlicerContextInstance'
+import { getSelectionDataState } from '../util/getSelectionDataState'
+import { useSlicerRemotes } from '../hooks/useSlicerRemotes'
+import { useSlicerRowSelection } from '../hooks/useSlicerRowSelection'
 
 export const SLICER_PAGES_CONFIG: SlicerConfig = {
   progress: {
@@ -188,31 +192,44 @@ export const SlicerProvider = ({ children, page, projectName, ...props }: Slicer
   // extra slices are loaded from the powerpack remote module, with a fallback to default empty functions
   const { useExtraSlices, isLoadingExtraSlices, SlicerDropdown } = useSlicerRemotes()
 
-  return (
-    <SlicerContext.Provider
-      value={{
-        useExtraSlices,
-        isLoadingExtraSlices,
-        SlicerDropdown,
-        // SLICE TYPE
-        sliceType,
-        onSliceTypeChange,
-        // ROW SELECTION
-        rowSelection,
-        onRowSelectionChange,
-        rowSelectionData,
-        // PINNED SLICE
-        pinnedSlice,
-        setPinnedSlice,
-        expanded,
-        onExpandedChange,
-        // loading state
-        isViewSyncPending: isLoadingViews,
-      }}
-    >
-      {children}
-    </SlicerContext.Provider>
+  const value = useMemo(
+    () => ({
+      useExtraSlices,
+      isLoadingExtraSlices,
+      SlicerDropdown,
+      // SLICE TYPE
+      sliceType,
+      onSliceTypeChange,
+      // ROW SELECTION
+      rowSelection,
+      onRowSelectionChange,
+      rowSelectionData,
+      // PINNED SLICE
+      pinnedSlice,
+      setPinnedSlice,
+      expanded,
+      onExpandedChange,
+      // loading state
+      isViewSyncPending: isLoadingViews,
+    }),
+    [
+      useExtraSlices,
+      isLoadingExtraSlices,
+      SlicerDropdown,
+      sliceType,
+      onSliceTypeChange,
+      rowSelection,
+      onRowSelectionChange,
+      rowSelectionData,
+      pinnedSlice,
+      setPinnedSlice,
+      expanded,
+      onExpandedChange,
+      isLoadingViews,
+    ],
   )
+
+  return <SlicerContext.Provider value={value}>{children}</SlicerContext.Provider>
 }
 
 export const useSlicerContext = () => {
