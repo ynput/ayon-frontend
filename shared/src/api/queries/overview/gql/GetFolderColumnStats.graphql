@@ -5,8 +5,11 @@ query GetFolderColumnStats(
   $projectName: String!
   $filter: String
   $search: String
-  $folderIds: [String!]
+  $parentIds: [String!]
+  $ids: [String!]
   $targets: [MetricTargetInput!]
+  $includeFolderChildren: Boolean! = true
+  $hideEmptyFolders: Boolean
 ) {
   project(name: $projectName) {
     name
@@ -14,7 +17,10 @@ query GetFolderColumnStats(
       calculateSpecificStatistics: $targets
       filter: $filter
       search: $search
-      ids: $folderIds
+      parentIds: $parentIds
+      ids: $ids
+      includeFolderChildren: $includeFolderChildren
+      hasTasks: $hideEmptyFolders
     ) {
       fieldStats {
         ...ColumnStatsFragment

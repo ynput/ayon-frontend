@@ -8722,6 +8722,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeFolderChildren",
+                "description": "Include child folders when ids or parentIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {

@@ -886,6 +886,7 @@ export type ProjectNodeFoldersArgs = {
   hasProducts?: InputMaybe<Scalars['Boolean']['input']>;
   hasTasks?: InputMaybe<Scalars['Boolean']['input']>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1910,8 +1911,11 @@ export type GetFolderColumnStatsQueryVariables = Exact<{
   projectName: string;
   filter?: string | null | undefined;
   search?: string | null | undefined;
-  folderIds?: Array<string> | string | null | undefined;
+  parentIds?: Array<string> | string | null | undefined;
+  ids?: Array<string> | string | null | undefined;
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
+  includeFolderChildren?: boolean;
+  hideEmptyFolders?: boolean | null | undefined;
 }>;
 
 
@@ -3357,14 +3361,17 @@ export const GetListsItemsForReviewSessionDocument = new TypedDocumentString(`
 }
     `);
 export const GetFolderColumnStatsDocument = new TypedDocumentString(`
-    query GetFolderColumnStats($projectName: String!, $filter: String, $search: String, $folderIds: [String!], $targets: [MetricTargetInput!]) {
+    query GetFolderColumnStats($projectName: String!, $filter: String, $search: String, $parentIds: [String!], $ids: [String!], $targets: [MetricTargetInput!], $includeFolderChildren: Boolean! = true, $hideEmptyFolders: Boolean) {
   project(name: $projectName) {
     name
     folders(
       calculateSpecificStatistics: $targets
       filter: $filter
       search: $search
-      ids: $folderIds
+      parentIds: $parentIds
+      ids: $ids
+      includeFolderChildren: $includeFolderChildren
+      hasTasks: $hideEmptyFolders
     ) {
       fieldStats {
         ...ColumnStatsFragment

@@ -886,6 +886,7 @@ export type ProjectNodeFoldersArgs = {
   hasProducts?: InputMaybe<Scalars['Boolean']['input']>;
   hasTasks?: InputMaybe<Scalars['Boolean']['input']>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
