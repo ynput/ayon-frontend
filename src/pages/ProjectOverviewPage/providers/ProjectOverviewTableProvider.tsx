@@ -18,7 +18,7 @@ import { useAppSelector } from '@state/store'
 import { useViewsContext } from '@shared/containers'
 import { ProjectTableModulesType } from '@shared/hooks'
 
-const SCOPES = ["folder", "task"]
+const SCOPES = ['folder', 'task']
 
 const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = ({ modules }) => {
   const { taskGroups, viewGroupBy, viewGroupByDesc, isFlatFolderView, ...props } =
@@ -48,6 +48,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
 
   return (
     <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
+      {/* @ts-ignore */}
       <ProjectTableProvider
         {...props}
         groups={isFlatFolderView ? [] : taskGroups}

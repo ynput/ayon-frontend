@@ -646,7 +646,9 @@ export const ProjectTreeTable = ({
 
       if (onScrollBottom) {
         const containerRefElement = e.currentTarget
-        if (containerRefElement && !showHierarchy && !isFlatFolderView && !groupBy) {
+        // When not grouping (or when hierarchy+slicer relies on tasksList), we trigger standard fetchNextPage
+        // The table itself handles showing tasks.
+        if (containerRefElement && !groupBy && (!showHierarchy || !isFlatFolderView)) {
           const { scrollHeight, scrollTop, clientHeight } = containerRefElement
           //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
           if (scrollHeight - scrollTop - clientHeight < 500 && !isLoading) {

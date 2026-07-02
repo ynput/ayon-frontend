@@ -91,9 +91,7 @@ export const useFetchOverviewData = ({
     .filter(([id]) => !isGroupId(id)) // filter out the root folder
     .map(([id]) => id)
 
-  const taskParentIds = excludeSelectedFolders
-    ? Array.from(new Set([...expandedParentIds, ...selectedFolders]))
-    : expandedParentIds
+  const taskParentIds = expandedParentIds
 
   const {
     data: expandedFoldersTasks = [],
@@ -282,7 +280,7 @@ export const useFetchOverviewData = ({
           folderPath.startsWith(selectedPath + '/'),
         )
 
-        if (isChild || (isSelected && !excludeSelectedFolders)) {
+        if (isChild || (isSelected && (!excludeSelectedFolders || isFlatFolderView))) {
           filteredMap.set(folderId, addExtraDataToFolder(folder))
         }
       })
@@ -330,6 +328,12 @@ export const useFetchOverviewData = ({
       )
     : undefined
 
+  // In hierarchy mode with slicer-selected folders, use GetTasksList with folderIds to fetch
+  // tasks directly under those folders in a single paginated request, rather than firing one
+  // request per folder via getOverviewTasksByFolders.
+  const hierarchySlicerFolderIds =
+    showHierarchy && excludeSelectedFolders && selectedFolders.length ? selectedFolders : undefined
+
   // Use the new infinite query hook for tasks list with correct name
   const {
     data: tasksListInfiniteData,
@@ -346,15 +350,17 @@ export const useFetchOverviewData = ({
       filter: taskFilters.filterString,
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
-      folderIds: taskIds?.length ? undefined : tasksFolderIdsParams,
+      folderIds: taskIds?.length ? undefined : hierarchySlicerFolderIds ?? tasksFolderIdsParams,
       taskIds: taskIds?.length ? taskIds : undefined,
       sortBy: sortId ? sortId.replace('_', '.') : undefined,
       desc: !!singleSort?.desc,
       showComments,
     },
     {
-      // Use flat task list when entity list provides specific task IDs, even in hierarchy mode
-      skip: (showHierarchy || isFlatFolderView) && !taskIds?.length,
+      // Skip flat task list for flat folder view (tasks loaded on folder expand).
+      // In hierarchy+slicer mode, run it to fetch tasks under selected-but-hidden folders.
+      // Always run it when entity list provides specific task IDs.
+      skip: ((showHierarchy && !hierarchySlicerFolderIds) || isFlatFolderView) && !taskIds?.length,
       initialPageParam: {
         cursor: '',
         desc: !!singleSort?.desc,
@@ -435,12 +441,19 @@ export const useFetchOverviewData = ({
   // When entity list provides specific task IDs, use flat task list even in hierarchy mode
   const resolvedTasks = useMemo(() => {
     if (taskIds?.length) return tasksList
-    if (showHierarchy || isFlatFolderView) return expandedFoldersTasks
+    if (isFlatFolderView) return expandedFoldersTasks
+    if (showHierarchy) {
+      // In hierarchy+slicer mode, merge per-folder expanded tasks with tasks fetched via
+      // GetTasksList for the slicer-selected (but not displayed) folders.
+      if (hierarchySlicerFolderIds) return [...expandedFoldersTasks, ...tasksList]
+      return expandedFoldersTasks
+    }
     if (groupBy) return groupTasks
     return tasksList
   }, [
     taskIds,
     showHierarchy,
+    hierarchySlicerFolderIds,
     isFlatFolderView,
     groupBy,
     tasksList,
