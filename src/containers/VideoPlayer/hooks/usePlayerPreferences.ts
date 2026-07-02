@@ -1,9 +1,9 @@
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 
 const usePlayerPreferences = () => {
-  const [showOverlay, setShowOverlay] = useLocalStorage('videoPlayer-showOverlay', false)
-  const [loop, setLoop] = useLocalStorage('videoPlayer-loop', true)
-  const [muted, setMuted] = useLocalStorage('videoPlayer-muted', false)
+  const [showOverlay, setShowOverlay] = useSessionStorage('videoPlayer-showOverlay', false)
+  const [loop, setLoop] = useSessionStorage('videoPlayer-loop', true)
+  const [muted, setMuted] = useSessionStorage('videoPlayer-muted', false)
 
   return { showOverlay, setShowOverlay, loop, setLoop, muted, setMuted }
 }

@@ -51,7 +51,7 @@ import PerProjectBundleConfig, {
   FROZEN_BUNDLE_ICON,
   projectBundleFromName,
 } from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 import InfoMessage from '@components/InfoMessage'
 
 /*
@@ -121,7 +121,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
 
-  const [selectedBundle, setSelectedBundle] = useLocalStorage('variant-type', {
+  const [selectedBundle, setSelectedBundle] = useSessionStorage('variant-type', {
     variant: 'production',
     bundleName: null,
     projectBundleName: undefined,

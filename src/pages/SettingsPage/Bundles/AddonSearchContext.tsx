@@ -6,7 +6,7 @@ import React, {
   useCallback,
   ChangeEvent,
 } from 'react'
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 import type { Addon } from './types'
 import { matchSorter } from 'match-sorter'
 
@@ -26,7 +26,7 @@ interface AddonSearchProviderProps {
 }
 
 export const AddonSearchProvider: React.FC<AddonSearchProviderProps> = ({ addons, children }) => {
-  const [search, setSearch] = useLocalStorage('bundles-search', '')
+  const [search, setSearch] = useSessionStorage('bundles-search', '')
 
   const filteredAddons = useMemo(() => {
     if (!search) return addons
