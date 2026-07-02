@@ -9,7 +9,7 @@ import {
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { SelectionData, SliceType } from '@shared/containers/Slicer'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 import type { ProjectModel, Assignees, AttributeModel, ProductType } from '@shared/api'
 import { SlicerDropdownFallbackProps } from '../components/SlicerDropdownFallback'
 import { DropdownRef } from '@ynput/ayon-react-components'
@@ -129,7 +129,7 @@ export const SlicerProvider = ({ children, page, projectName, ...props }: Slicer
 
   // this is used to store another slice type whilst the user is viewing a different slice type
   // mostly used for preserving the hierarchy selection when switching to another slice type
-  const [pinnedSlice, setPinnedSlice] = useLocalStorage<PinnedSlice | null>(
+  const [pinnedSlice, setPinnedSlice] = useSessionStorage<PinnedSlice | null>(
     `slicer-pinned-slice-${page}`,
     null,
   )

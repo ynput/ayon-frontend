@@ -1,4 +1,4 @@
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { SelectionData, SliceType } from '../types'
 import { useCallback, useMemo } from 'react'
@@ -20,30 +20,28 @@ export const useSlicerRowSelection = ({
   projectName,
   ...props
 }: UseSlicerRowSelectionProps) => {
-  // hierarchy selection is shared across pages with local storage
-  const [hierarchyRowSelection, setHierarchyRowSelection] = useLocalStorage<RowSelectionState>(
+  // hierarchy selection is shared across pages with session storage
+  const [hierarchyRowSelection, setHierarchyRowSelection] = useSessionStorage<RowSelectionState>(
     `slicer-selection-hierarchy-${projectName}`,
     {},
   )
-  const [hierarchyRowSelectionData, setHierarchyRowSelectionData] = useLocalStorage<SelectionData>(
-    `slicer-selection-data-hierarchy-${projectName}`,
-    {},
-  )
+  const [hierarchyRowSelectionData, setHierarchyRowSelectionData] =
+    useSessionStorage<SelectionData>(`slicer-selection-data-hierarchy-${projectName}`, {})
   // other slicer type selections are stored per page with local storage
-  const [otherRowSelection, setOtherRowSelection] = useLocalStorage<RowSelectionState>(
+  const [otherRowSelection, setOtherRowSelection] = useSessionStorage<RowSelectionState>(
     `slicer-selection-${projectName}-${page}`,
     {},
   )
-  const [otherRowSelectionData, setOtherRowSelectionData] = useLocalStorage<SelectionData>(
+  const [otherRowSelectionData, setOtherRowSelectionData] = useSessionStorage<SelectionData>(
     `slicer-selection-data-${projectName}-${page}`,
     {},
   )
 
-  const [hierarchyExpanded, setHierarchyExpanded] = useLocalStorage<ExpandedState>(
+  const [hierarchyExpanded, setHierarchyExpanded] = useSessionStorage<ExpandedState>(
     `slicer-expanded-hierarchy-${projectName}`,
     {},
   )
-  const [otherExpanded, setOtherExpanded] = useLocalStorage<ExpandedState>(
+  const [otherExpanded, setOtherExpanded] = useSessionStorage<ExpandedState>(
     `slicer-expanded-${projectName}-${page}`,
     {},
   )

@@ -17,7 +17,7 @@ import {
   InstallMessage,
   useGetInstallEventsQuery,
 } from '@queries/releases/getReleases'
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 
 type Props = {
   releaseInfo: GetReleaseInfoApiResponse | undefined
@@ -48,7 +48,7 @@ export const useInstallRelease = ({
   const [downloadAddons] = useDownloadAddonsMutation()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [events, setEvents] = useLocalStorage<Event[]>('install-progress-event-ids', [])
+  const [events, setEvents] = useSessionStorage<Event[]>('install-progress-event-ids', [])
   const eventIds: string[] = events.map((event: any) => event.id)
   const [error, setError] = useState<null | string>(null)
 

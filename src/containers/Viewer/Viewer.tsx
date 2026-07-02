@@ -22,7 +22,7 @@ import {
 } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
 import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
-import { useLocalStorage, useReviewablesKeyboardNavigation } from '@shared/hooks'
+import { useSessionStorage, useReviewablesKeyboardNavigation } from '@shared/hooks'
 
 interface ViewerProps {
   onClose?: () => void
@@ -30,7 +30,7 @@ interface ViewerProps {
 }
 
 const ViewerBody = ({ onClose }: ViewerProps) => {
-  const [theater, setTheater] = useLocalStorage('viewer-theater-mode', false)
+  const [theater, setTheater] = useSessionStorage('viewer-theater-mode', false)
   const {
     productId,
     taskId,

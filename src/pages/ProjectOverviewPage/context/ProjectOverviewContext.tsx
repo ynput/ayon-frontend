@@ -6,7 +6,7 @@ import { ExpandedState } from '@tanstack/react-table'
 import { OverviewSettings } from '@shared/api'
 
 // Shared components and hooks
-import { useLocalStorage, useGetEntityGroups } from '@shared/hooks'
+import { useSessionStorage, useGetEntityGroups } from '@shared/hooks'
 
 // Shared ProjectTreeTable
 import {
@@ -70,7 +70,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
 
   const page = 'overview'
 
-  const [expanded, setExpanded] = useLocalStorage<ExpandedState>(
+  const [expanded, setExpanded] = useSessionStorage<ExpandedState>(
     createLocalStorageKey(page, 'expanded', projectName),
     {},
   )
