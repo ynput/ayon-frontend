@@ -103,10 +103,14 @@ export type ImportDataProcessSummary = {
   skipped: number
   failed: number
   failedItems?: Record<string, string>
+  phase: string
 }
 
 export type ImportDataMessage = {
   summary: ImportDataStartSummary | ImportDataProcessSummary
+  progress: number
+  description?: string
+  status: string
 }
 
 export const formatFailedItems = (failedItems: Record<string, string>) => Object.entries(failedItems)
