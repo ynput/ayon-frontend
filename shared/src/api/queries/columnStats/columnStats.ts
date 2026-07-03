@@ -178,3 +178,9 @@ export const combineFieldStats = (
   }
   return [...out.values()]
 }
+
+export const transformStatsError = (error: any, entityType: string): string => {
+  const message = error?.message ?? 'Unknown stats error'
+  console.error(`Error fetching ${entityType} stats:`, error)
+  return message
+}

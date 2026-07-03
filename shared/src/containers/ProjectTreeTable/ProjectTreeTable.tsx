@@ -167,6 +167,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   fieldStats?: FieldStats[] // primary-entity stats (tasks/versions) feeding the footer
   groupFieldStats?: FieldStats[] // group-entity stats (folders/products) for the 'all' row scope
   fieldStatsLoading?: boolean // footer stats still loading -> show skeletons
+  fieldStatsError?: any // error fetching footer stats
   mainCountLabels?: MainCountLabels // labels for the main cell dual count (defaults folders/tasks)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
@@ -201,6 +202,7 @@ export const ProjectTreeTable = ({
   fieldStats,
   groupFieldStats,
   fieldStatsLoading,
+  fieldStatsError,
   mainCountLabels,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
@@ -782,6 +784,7 @@ export const ProjectTreeTable = ({
                 virtualPaddingLeft={virtualPaddingLeft}
                 virtualPaddingRight={virtualPaddingRight}
                 isLoading={summariesLoading}
+                error={fieldStatsError}
                 // Free-user upsell hidden for now; keep for later:
                 // onClick={showSummaryPowerFeature ? () => setPowerpackDialog('columnSummaries') : undefined}
                 renderCellContent={(columnId) => (

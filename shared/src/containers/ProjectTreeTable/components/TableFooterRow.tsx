@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { Table } from '@tanstack/react-table'
 import type { Virtualizer } from '@tanstack/react-virtual'
 import clsx from 'clsx'
+import { Button, Icon } from '@ynput/ayon-react-components'
 
 import type { TableRow } from '../types/table'
 import { ROW_SELECTION_COLUMN_ID } from '../constants'
@@ -11,6 +12,7 @@ import {
   getCommonPinningStyles,
   getColumnWidth,
 } from '../utils/pinningUtils'
+import { copyToClipboard } from '@shared/util'
 
 const Footer = styled.tfoot`
   display: grid !important;
@@ -55,6 +57,27 @@ const FooterCell = styled.td`
   }
 `
 
+const CellContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  width: 100%;
+  height: 100%;
+  padding: 0 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface-variant);
+
+  .label {
+    color: var(--md-sys-color-outline);
+  }
+  .value {
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+  }
+`
+
 // Shimmer placeholder shown per cell while the footer stats are loading.
 // Reuses the global `.loading.shimmer-dark` effect (loadingShimmer.scss) used
 // by the table header/body.
@@ -80,6 +103,8 @@ export interface TableFooterRowProps {
   onClick?: () => void
   // show a shimmer skeleton in each cell while the footer stats load
   isLoading?: boolean
+  // error fetching stats
+  error?: any
 }
 
 // Structural summary footer: the host owns the row, cell borders, widths and
@@ -92,6 +117,7 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
   renderCellContent,
   onClick,
   isLoading,
+  error,
 }) => {
   const visibleColumns = [
     ...table.getLeftVisibleLeafColumns(),
@@ -99,6 +125,9 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
     ...table.getRightVisibleLeafColumns(),
   ]
   const virtualColumns = columnVirtualizer.getVirtualItems()
+
+  const errorMessage =
+    error instanceof Error ? error.message : typeof error === 'string' ? error : ''
 
   return (
     <Footer>
@@ -126,6 +155,26 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
                     selection: column.id === ROW_SELECTION_COLUMN_ID,
                   })}
                 />
+              ) : error ? (
+                column.id === 'name' ? (
+                  <CellContent style={{ color: 'var(--md-sys-color-error)' }}>
+                    Error loading stats
+                    <Icon
+                      icon="info"
+                      style={{ fontSize: 16, cursor: 'help' }}
+                      data-tooltip={errorMessage}
+                      data-tooltip-as="markdown"
+                    />
+                    <Button
+                      icon="content_copy"
+                      data-tooltip="Copy error message"
+                      onClick={() => copyToClipboard(errorMessage)}
+                      iconProps={{ style: { fontSize: 16 } }}
+                      style={{ padding: 2 }}
+                      variant="text"
+                    />
+                  </CellContent>
+                ) : null
               ) : (
                 !isUtility && renderCellContent?.(column.id)
               )}
