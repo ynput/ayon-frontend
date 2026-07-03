@@ -21,6 +21,7 @@ import {
 import { useDateRangeFilter, CustomDateRangeDialog } from '@shared/components/SearchFilter'
 import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
 import { useSlicerContext } from '@shared/containers'
+import { useProjectFoldersContext } from '@shared/context'
 
 interface SearchFilterWrapperProps
   extends Omit<BuildFilterOptions, 'scope' | 'scopes' | 'data' | 'power'>,
@@ -51,6 +52,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 }) => {
   const { columnOrder } = useColumnSettingsContext()
   const { pinnedSlice, setPinnedSlice } = useSlicerContext()
+  const { getFolderById } = useProjectFoldersContext()
 
   // create a flat list of all the assignees (string[]) on all tasks (duplicated)
   // this is used to rank what assignees are shown in the filter first
@@ -104,10 +106,12 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
           type: 'string',
           inverted: false,
           operator: 'OR',
-          values: Object.values(pinnedSlice.rowSelectionData).map((item) => ({
-            id: item.id,
-            label: item.label || item.name || '',
-          })),
+          values: Object.keys(pinnedSlice.rowSelection)
+            .filter((id) => pinnedSlice.rowSelection[id])
+            .map((id) => {
+              const folder = getFolderById(id)
+              return { id, label: folder?.label || folder?.name || id }
+            }),
         }
       : null
     const filtersWithPinnedSlice = pinned ? [pinned, ...filters] : filters

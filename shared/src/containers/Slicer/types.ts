@@ -12,17 +12,6 @@ export type SliceType =
   | 'entityList'
   | string
 
-export type SliceDataItem = {
-  id: string
-  name?: string | null
-  label?: string | null
-  subType?: string | null
-  path?: string | null // Full folder path (e.g., "editorial/storyboards/")
-  parents?: string[] | null // Array of parent folder names for path reconstruction
-}
-
-export type SelectionData = Record<string, SliceDataItem>
-
 export interface SliceFilter extends FilterValue {
   values: { id: string; label: string }[]
 }
@@ -73,6 +62,5 @@ export interface TableData {
 export interface PinnedSlice {
   sliceType: SliceType
   rowSelection: RowSelectionState
-  rowSelectionData: SelectionData
   expanded: ExpandedState
 }

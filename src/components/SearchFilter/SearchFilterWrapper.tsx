@@ -8,6 +8,7 @@ import {
   queryFilterToClientFilter,
 } from '@shared/containers/ProjectTreeTable'
 import { useSlicerContext } from '@shared/containers'
+import { useProjectFoldersContext } from '@shared/context'
 
 interface SearchFilterWrapperProps extends BuildFilterOptions {
   queryFilters: QueryFilter
@@ -25,6 +26,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   disabledFilters,
 }) => {
   const { pinnedSlice, setPinnedSlice } = useSlicerContext()
+  const { getFolderById } = useProjectFoldersContext()
 
   const options = useBuildFilterOptions({
     filterTypes,
@@ -43,15 +45,19 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
           type: 'string',
           inverted: false,
           operator: 'OR',
-          values: Object.values(pinnedSlice.rowSelectionData).map((item) => ({
-            id: item.id,
-            label: item.label || item.name || '',
-          })),
+          values: Object.keys(pinnedSlice.rowSelection)
+            .filter((id) => pinnedSlice.rowSelection[id])
+            .map((id) => {
+              const folder = getFolderById(id)
+              return { id, label: folder?.label || folder?.name || id }
+            }),
         }
       : null
 
     return pinned ? [pinned, ...filters] : filters
   }, [queryFilters, options, pinnedSlice])
+
+  console.log(filters)
 
   // Use filters directly as initial state and manage changes through onChange
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)

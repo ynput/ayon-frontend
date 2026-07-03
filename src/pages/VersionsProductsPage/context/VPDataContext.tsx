@@ -198,9 +198,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   })
 
   // SLICER
-  const { rowSelection, rowSelectionData, sliceType, pinnedSlice } = useSlicerContext()
+  const { rowSelection, sliceType, pinnedSlice } = useSlicerContext()
   const sliceFilter = createFilterFromSlicer({
-    slice: { rowSelectionData, sliceType },
+    slice: { rowSelection, sliceType },
     attribFields: attribFields,
   })
 
@@ -237,7 +237,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const slicerFolderIds = useSelectedFolders({
     rowSelection,
     sliceType,
-    rowSelectionData: pinnedSlice?.rowSelectionData || null,
+    pinnedRowSelection: pinnedSlice?.rowSelection || null,
     entityListFolderIds: entityIds.folderIds,
   })
   // combine slicer filters with version/product filters

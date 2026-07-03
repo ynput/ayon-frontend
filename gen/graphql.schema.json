@@ -8399,6 +8399,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "search",
+                "description": "Fuzzy text search filter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "sortBy",
                 "description": "Sort by one of label, owner, entityListType, createdAt, updatedAt, count, active",
                 "type": {
@@ -8706,6 +8718,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeFolderChildren",
+                "description": "Include child folders when ids or parentIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
                 "isDeprecated": false,
                 "deprecationReason": null
               },

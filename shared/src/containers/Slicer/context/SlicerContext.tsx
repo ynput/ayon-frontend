@@ -1,20 +1,23 @@
-import { useContext, ReactNode, ForwardRefExoticComponent, RefAttributes, useCallback } from 'react'
-import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import {
-  getSelectionDataState,
-  SelectionData,
-  SliceType,
-  useSlicerRemotes,
-  useSlicerRowSelection,
-} from '@shared/containers/Slicer'
+  useContext,
+  ReactNode,
+  ForwardRefExoticComponent,
+  RefAttributes,
+  useCallback,
+  useMemo,
+} from 'react'
+import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
+import { SliceType } from '@shared/containers/Slicer'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { useSessionStorage } from '@shared/hooks'
 import type { ProjectModel, Assignees, AttributeModel, ProductType } from '@shared/api'
 import { SlicerDropdownFallbackProps } from '../components/SlicerDropdownFallback'
 import { DropdownRef } from '@ynput/ayon-react-components'
-import { PinnedSlice, SliceMap, SliceTypeField } from '../types'
+import { PinnedSlice, SliceTypeField } from '../types'
 import { useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
 import { SlicerContext } from './SlicerContextInstance'
+import { useSlicerRemotes } from '../hooks/useSlicerRemotes'
+import { useSlicerRowSelection } from '../hooks/useSlicerRowSelection'
 
 export const SLICER_PAGES_CONFIG: SlicerConfig = {
   progress: {
@@ -69,12 +72,11 @@ type ExtraSlices = {
 
 export type UseExtraSlices = () => ExtraSlices
 
-type OnRowSelectionChange = (selection: RowSelectionState, rowData?: SliceMap) => void
+type OnRowSelectionChange = (selection: RowSelectionState) => void
 
 export interface SlicerContextValue {
   rowSelection: RowSelectionState
   onRowSelectionChange: OnRowSelectionChange
-  rowSelectionData: SelectionData
   expanded: ExpandedState
   onExpandedChange: (expanded: ExpandedState) => void
   sliceType: SliceType
@@ -109,14 +111,7 @@ export const SlicerProvider = ({ children, page, projectName, ...props }: Slicer
   // @ts-expect-error - sliceType can be on a view
   const sliceType = props.sliceType ?? viewSettings?.sliceType ?? 'hierarchy'
 
-  const {
-    rowSelection,
-    setRowSelection,
-    rowSelectionData,
-    setRowSelectionData,
-    expanded,
-    setExpanded,
-  } = useSlicerRowSelection({
+  const { rowSelection, setRowSelection, expanded, setExpanded } = useSlicerRowSelection({
     sliceType,
     page,
     projectName,
@@ -131,22 +126,21 @@ export const SlicerProvider = ({ children, page, projectName, ...props }: Slicer
   )
 
   const onRowSelectionChange = useCallback<OnRowSelectionChange>(
-    (selection, rowData) => {
+    (selection) => {
       setRowSelection(selection) // updates either hierarchy or other selection based on slice type
-      if (rowData) {
-        // convert the data into a selection data object keyed by slice type
-        const selectionData = getSelectionDataState(selection, rowData)
-        setRowSelectionData(selectionData)
-      }
     },
-    [setRowSelection, setRowSelectionData],
+    [setRowSelection],
   )
 
   const onSliceTypeChange = useCallback<OnSliceTypeChange>(
     (newSliceType, pinCurrent) => {
-      const noOp = () => {}
-      // update the view settings with the new slice type
-      updateViewSettings({ sliceType: newSliceType }, noOp, noOp, {})
+      if (props.onSliceTypeChange) {
+        props.onSliceTypeChange(newSliceType, pinCurrent)
+      } else {
+        const noOp = () => {}
+        // update the view settings with the new slice type
+        updateViewSettings({ sliceType: newSliceType }, noOp, noOp, {})
+      }
 
       // remove current row selection as it is no longer relevant to the new slice type
 
@@ -154,28 +148,34 @@ export const SlicerProvider = ({ children, page, projectName, ...props }: Slicer
       // and remove the pinned slice
       if (pinnedSlice && newSliceType === pinnedSlice.sliceType) {
         setRowSelection(pinnedSlice.rowSelection, newSliceType)
-        setRowSelectionData(pinnedSlice.rowSelectionData, newSliceType)
         setExpanded(pinnedSlice.expanded, newSliceType)
         setPinnedSlice(null)
       } else {
         // clear pinned slice if switching to a different slice type
-        console.log('Clearing pinned slice as switching to a different slice type')
+        console.log('Clearing current pinned slice as switching to a different slice type')
         setRowSelection({}, newSliceType)
-        setRowSelectionData({}, newSliceType)
         setExpanded({}, newSliceType)
       }
 
       // if pinCurrent is true, store the current slice type and selection data in local storage
       if (pinCurrent) {
+        console.log('Pinning current slice type and selection data', rowSelection)
         setPinnedSlice({
           sliceType,
           rowSelection,
           expanded,
-          rowSelectionData,
         })
       }
     },
-    [updateViewSettings, setRowSelection, pinnedSlice],
+    [
+      updateViewSettings,
+      rowSelection,
+      setRowSelection,
+      pinnedSlice,
+      setPinnedSlice,
+      expanded,
+      setExpanded,
+    ],
   )
 
   const onExpandedChange = useCallback(
@@ -188,31 +188,42 @@ export const SlicerProvider = ({ children, page, projectName, ...props }: Slicer
   // extra slices are loaded from the powerpack remote module, with a fallback to default empty functions
   const { useExtraSlices, isLoadingExtraSlices, SlicerDropdown } = useSlicerRemotes()
 
-  return (
-    <SlicerContext.Provider
-      value={{
-        useExtraSlices,
-        isLoadingExtraSlices,
-        SlicerDropdown,
-        // SLICE TYPE
-        sliceType,
-        onSliceTypeChange,
-        // ROW SELECTION
-        rowSelection,
-        onRowSelectionChange,
-        rowSelectionData,
-        // PINNED SLICE
-        pinnedSlice,
-        setPinnedSlice,
-        expanded,
-        onExpandedChange,
-        // loading state
-        isViewSyncPending: isLoadingViews,
-      }}
-    >
-      {children}
-    </SlicerContext.Provider>
+  const value = useMemo(
+    () => ({
+      useExtraSlices,
+      isLoadingExtraSlices,
+      SlicerDropdown,
+      // SLICE TYPE
+      sliceType,
+      onSliceTypeChange,
+      // ROW SELECTION
+      rowSelection,
+      onRowSelectionChange,
+      // PINNED SLICE
+      pinnedSlice,
+      setPinnedSlice,
+      expanded,
+      onExpandedChange,
+      // loading state
+      isViewSyncPending: isLoadingViews,
+    }),
+    [
+      useExtraSlices,
+      isLoadingExtraSlices,
+      SlicerDropdown,
+      sliceType,
+      onSliceTypeChange,
+      rowSelection,
+      onRowSelectionChange,
+      pinnedSlice,
+      setPinnedSlice,
+      expanded,
+      onExpandedChange,
+      isLoadingViews,
+    ],
   )
+
+  return <SlicerContext.Provider value={value}>{children}</SlicerContext.Provider>
 }
 
 export const useSlicerContext = () => {

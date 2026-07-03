@@ -52,11 +52,19 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     [attribFields, columnVisibility],
   )
 
-  const { data: productStats, isLoading: productStatsLoading } = useGetProductsColumnStatsQuery(
+  const {
+    data: productStats,
+    isLoading: productStatsLoading,
+    error: productStatsError,
+  } = useGetProductsColumnStatsQuery(
     { ...columnStatsArgs, targets: productTargets },
     { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense },
   )
-  const { data: versionStats, isLoading: versionStatsLoading } = useGetVersionsColumnStatsQuery(
+  const {
+    data: versionStats,
+    isLoading: versionStatsLoading,
+    error: versionStatsError,
+  } = useGetVersionsColumnStatsQuery(
     { ...columnStatsArgs, targets: versionTargets },
     { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense },
   )
@@ -96,6 +104,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
       fieldStats={fieldStats}
       groupFieldStats={productStats}
       fieldStatsLoading={productStatsLoading || versionStatsLoading}
+      fieldStatsError={productStatsError || versionStatsError}
       mainCountLabels={{ primary: 'products', secondary: 'versions' }}
       columnsConfig={{
         name: {

@@ -49,7 +49,6 @@ import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
-import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
 import useCellContextMenu, {
   HeaderLabel,
   ContextMenuItemConstructors,
@@ -168,6 +167,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   fieldStats?: FieldStats[] // primary-entity stats (tasks/versions) feeding the footer
   groupFieldStats?: FieldStats[] // group-entity stats (folders/products) for the 'all' row scope
   fieldStatsLoading?: boolean // footer stats still loading -> show skeletons
+  fieldStatsError?: any // error fetching footer stats
   mainCountLabels?: MainCountLabels // labels for the main cell dual count (defaults folders/tasks)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
@@ -202,6 +202,7 @@ export const ProjectTreeTable = ({
   fieldStats,
   groupFieldStats,
   fieldStatsLoading,
+  fieldStatsError,
   mainCountLabels,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
@@ -647,7 +648,9 @@ export const ProjectTreeTable = ({
 
       if (onScrollBottom) {
         const containerRefElement = e.currentTarget
-        if (containerRefElement && !showHierarchy && !isFlatFolderView && !groupBy) {
+        // When not grouping (or when hierarchy+slicer relies on tasksList), we trigger standard fetchNextPage
+        // The table itself handles showing tasks.
+        if (containerRefElement && !groupBy && (!showHierarchy || !isFlatFolderView)) {
           const { scrollHeight, scrollTop, clientHeight } = containerRefElement
           //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
           if (scrollHeight - scrollTop - clientHeight < 500 && !isLoading) {
@@ -781,6 +784,7 @@ export const ProjectTreeTable = ({
                 virtualPaddingLeft={virtualPaddingLeft}
                 virtualPaddingRight={virtualPaddingRight}
                 isLoading={summariesLoading}
+                error={fieldStatsError}
                 // Free-user upsell hidden for now; keep for later:
                 // onClick={showSummaryPowerFeature ? () => setPowerpackDialog('columnSummaries') : undefined}
                 renderCellContent={(columnId) => (
@@ -1318,8 +1322,6 @@ const TableBody = ({
 
   const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
 
-  const { handlePreFetchTasks } = usePrefetchFolderTasks()
-
   const { rows } = table.getRowModel()
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
@@ -1375,9 +1377,6 @@ const TableBody = ({
         display: 'grid',
       }}
       onContextMenu={handleTableBodyContextMenu}
-      onMouseOver={(e) => {
-        handlePreFetchTasks(e)
-      }}
     >
       <Styled.ColumnDividers aria-hidden>
         {columnDividerLefts.map((left, i) => (

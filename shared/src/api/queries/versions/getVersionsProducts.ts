@@ -44,7 +44,12 @@ import {
 import { parseAllAttribs } from '../overview'
 import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import type { FieldStats } from '../columnStats'
-import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
+import {
+  normalizeFieldStats,
+  mergeFieldStats,
+  hasNewTargetFields,
+  transformStatsError,
+} from '../columnStats'
 
 // SHARED CACHE UPDATE HELPERS
 // These helpers are used by PubSub handlers to update cached data in real-time
@@ -255,6 +260,7 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
     GetProductsColumnStats: {
       transformResponse: (res: GetProductsColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.products?.fieldStats ?? []),
+      transformErrorResponse: (error: any) => transformStatsError(error, 'product'),
       serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
@@ -263,6 +269,7 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
     GetVersionsColumnStats: {
       transformResponse: (res: GetVersionsColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.versions?.fieldStats ?? []),
+      transformErrorResponse: (error: any) => transformStatsError(error, 'version'),
       serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),

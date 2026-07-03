@@ -30,7 +30,7 @@ const ProjectOverviewTable = ({}: Props) => {
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
   const { showHierarchy, isFlatFolderView, isLoading, fetchNextPage, attribFields } =
     useProjectTableContext()
-  const { columnVisibility } = useColumnSettingsContext()
+  const { columnVisibility, groupByConfig } = useColumnSettingsContext()
   // hold stats queries until views load, otherwise targets cover every column
   const { isLoadingViews } = useViewsContext()
   // column summaries are a powerpack feature — don't fetch stats without a license
@@ -42,15 +42,6 @@ const ProjectOverviewTable = ({}: Props) => {
   // subtree (foldersMap is already subtree-filtered when a slice is active);
   // an entity-list task selection takes precedence over folder ids.
   const statsTaskIds = selectedTaskIds.length ? selectedTaskIds : undefined
-  const statsFolderIds = useMemo(
-    () => (!statsTaskIds && selectedFolders.length ? Array.from(foldersMap.keys()) : undefined),
-    [statsTaskIds, selectedFolders, foldersMap],
-  )
-  const taskStatsFolderIds = useMemo(
-    () =>
-      statsFolderIds ? Array.from(new Set([...statsFolderIds, ...selectedFolders])) : undefined,
-    [statsFolderIds, selectedFolders],
-  )
 
   const { onOpenNew } = useNewEntityContext()
 
@@ -65,23 +56,37 @@ const ProjectOverviewTable = ({}: Props) => {
     [attribFields, columnVisibility],
   )
 
-  const { data: folderStats, isLoading: folderStatsLoading } = useGetFolderColumnStatsQuery(
+  const {
+    data: folderStats,
+    isLoading: folderStatsLoading,
+    error: folderStatsError,
+  } = useGetFolderColumnStatsQuery(
     {
       projectName,
       filter: folderFilters?.filterString || undefined,
       search: folderFilters?.search || undefined,
-      folderIds: statsFolderIds,
+      // show hierarchy never includes it self and only children
+      [showHierarchy ? 'parentIds' : 'ids']: selectedFolders?.length ? selectedFolders : undefined,
       targets: folderTargets,
+      // always count all children, for grouping by folder this is a flat list. For hierarchy this is confusing AF as some folders will be hidden
+      includeFolderChildren: true,
+      // when grouping by folder, not having having "show empty" enabled means we do not count empty folder
+      hideEmptyFolders: groupByConfig?.showEmpty === false && !showHierarchy ? true : undefined,
     },
     { skip: !projectName || isLoadingViews || !powerLicense },
   )
-  const { data: taskStats, isLoading: taskStatsLoading } = useGetTaskColumnStatsQuery(
+
+  const {
+    data: taskStats,
+    isLoading: taskStatsLoading,
+    error: taskStatsError,
+  } = useGetTaskColumnStatsQuery(
     {
       projectName,
       filter: taskFilters?.filterString || undefined,
       folderFilter: folderFilters?.filterString || undefined,
       search: taskFilters?.search || undefined,
-      folderIds: taskStatsFolderIds,
+      folderIds: selectedFolders?.length ? selectedFolders : undefined,
       taskIds: statsTaskIds,
       targets: taskTargets,
     },
@@ -135,6 +140,7 @@ const ProjectOverviewTable = ({}: Props) => {
         fieldStats={fieldStats}
         groupFieldStats={folderStats}
         fieldStatsLoading={folderStatsLoading || taskStatsLoading}
+        fieldStatsError={folderStatsError || taskStatsError}
       />
     </Section>
   )
