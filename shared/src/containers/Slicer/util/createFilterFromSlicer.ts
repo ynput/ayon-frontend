@@ -1,12 +1,13 @@
-import { AttributeModel } from '@shared/api'
+import { AttributeModel, FolderListItem } from '@shared/api'
 import { ProjectTableAttribute } from '../../ProjectTreeTable/hooks/useAttributesList'
-import { SelectionData, SliceFilter, SliceType } from '../types'
+import { SliceFilter, SliceType } from '../types'
+import { RowSelectionState } from '@tanstack/react-table'
 
 export type CreateFilterFromSlicer = ({
   slice,
   attribFields,
 }: {
-  slice: { sliceType: SliceType; rowSelectionData: SelectionData } | null
+  slice: { sliceType: SliceType; rowSelection: RowSelectionState } | null
   attribFields: ProjectTableAttribute[]
 }) => SliceFilter | null
 
@@ -30,11 +31,12 @@ export const createFilterFromSlicer: CreateFilterFromSlicer = ({ slice, attribFi
     if (!slice) return null
     const sliceType = sliceFilterTypes[slice?.sliceType as keyof typeof sliceFilterTypes]
 
-    const selectedItems = Object.values(slice?.rowSelectionData)
-    const values = selectedItems.map((item) => ({
-      id: item.id,
-      label: item.label || item.name || '',
-    }))
+    const values = Object.keys(slice.rowSelection)
+      .filter((sliceId) => !!sliceId)
+      .map((sliceId) => ({
+        id: sliceId,
+        label: sliceId,
+      }))
 
     return {
       id: slice?.sliceType,

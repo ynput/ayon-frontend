@@ -1,6 +1,6 @@
 import { useSessionStorage } from '@shared/hooks'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
-import { SelectionData, SliceType } from '../types'
+import { SliceType } from '../types'
 import { useCallback, useMemo } from 'react'
 
 type UseSlicerRowSelectionProps = {
@@ -25,15 +25,9 @@ export const useSlicerRowSelection = ({
     `slicer-selection-hierarchy-${projectName}`,
     {},
   )
-  const [hierarchyRowSelectionData, setHierarchyRowSelectionData] =
-    useSessionStorage<SelectionData>(`slicer-selection-data-hierarchy-${projectName}`, {})
   // other slicer type selections are stored per page with local storage
   const [otherRowSelection, setOtherRowSelection] = useSessionStorage<RowSelectionState>(
     `slicer-selection-${projectName}-${page}`,
-    {},
-  )
-  const [otherRowSelectionData, setOtherRowSelectionData] = useSessionStorage<SelectionData>(
-    `slicer-selection-data-${projectName}-${page}`,
     {},
   )
 
@@ -65,21 +59,6 @@ export const useSlicerRowSelection = ({
     [props.setRowSelection, sliceType, setHierarchyRowSelection, setOtherRowSelection],
   )
 
-  const rowSelectionData = useMemo(
-    () => (sliceType === 'hierarchy' ? hierarchyRowSelectionData : otherRowSelectionData),
-    [sliceType, hierarchyRowSelectionData, otherRowSelectionData],
-  )
-  const setRowSelectionData = useCallback(
-    (value: React.SetStateAction<SelectionData>, targetSliceType: SliceType = sliceType) => {
-      if (targetSliceType === 'hierarchy') {
-        setHierarchyRowSelectionData(value)
-      } else {
-        setOtherRowSelectionData(value)
-      }
-    },
-    [sliceType, setHierarchyRowSelectionData, setOtherRowSelectionData],
-  )
-
   const expanded = useMemo(
     () => (sliceType === 'hierarchy' ? hierarchyExpanded : otherExpanded),
     [sliceType, hierarchyExpanded, otherExpanded],
@@ -100,8 +79,6 @@ export const useSlicerRowSelection = ({
   return {
     rowSelection,
     setRowSelection,
-    rowSelectionData,
-    setRowSelectionData,
     expanded,
     setExpanded,
   }

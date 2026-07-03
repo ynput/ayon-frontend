@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { Filter, FilterValue } from '@ynput/ayon-react-components'
-import { SelectionData } from '@shared/containers/Slicer'
+import { RowSelectionState } from '@tanstack/react-table'
 
 interface UseFiltersWithHierarchyProps {
   sliceFilter: FilterValue | null
-  persistedHierarchySelection: SelectionData | null
+  persistedHierarchySelection: RowSelectionState | null
   filters: Filter[]
   merge?: boolean
 }
@@ -16,14 +16,13 @@ export const useFiltersWithHierarchy = ({
   merge = true,
 }: UseFiltersWithHierarchyProps) => {
   const filtersWithHierarchy = useMemo(() => {
-    const buildHierarchyFilterOption = (hierarchy: SelectionData): Filter => ({
+    const buildHierarchyFilterOption = (hierarchy: RowSelectionState): Filter => ({
       id: 'hierarchy',
       label: 'Folder',
       type: 'list_of_strings',
-      values: Object.values(hierarchy).map((item) => ({
-        id: item.id,
-        label: item.label || item.name || item.id,
-      })),
+      values: Object.keys(hierarchy)
+        .filter((id) => hierarchy[id])
+        .map((id) => ({ id, label: id })),
       isCustom: true,
       singleSelect: true,
       fieldType: 'folder',

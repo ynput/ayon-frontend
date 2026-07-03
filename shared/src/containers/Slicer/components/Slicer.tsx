@@ -50,7 +50,7 @@ export const Slicer: FC<SlicerProps> = ({
   } = useTableDataBySlice({ sliceFields, entityTypes })
 
   const handleSelectionChange = (s: RowSelectionState) => {
-    onRowSelectionChange?.(s, sliceMap)
+    onRowSelectionChange?.(s)
   }
 
   return (

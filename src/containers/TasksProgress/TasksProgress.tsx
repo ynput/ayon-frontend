@@ -18,9 +18,9 @@ import { EmptyPlaceholder, FilterFieldType } from '@shared/components'
 import {
   createFilterFromSlicer,
   useTaskProgressViewSettings,
-  type SelectionData,
   type SliceType,
 } from '@shared/containers'
+import { useProjectFoldersContext } from '@shared/context'
 import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
@@ -83,10 +83,10 @@ const TasksProgress: FC<TasksProgressProps> = ({
   const { filters: queryFilters, onUpdateFilters: setQueryFilters } = useTaskProgressViewSettings()
 
   // filter out by slice
-  const { rowSelection, rowSelectionData, sliceType, pinnedSlice } = useSlicerContext()
+  const { rowSelection, sliceType, pinnedSlice } = useSlicerContext()
 
   const sliceFilter = createFilterFromSlicer({
-    slice: { rowSelectionData, sliceType },
+    slice: { rowSelection, sliceType },
     attribFields: [],
   })
 
@@ -133,14 +133,14 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   const resolveSelectedFolders = (
     rowSelection: RowSelectionState,
-    persistedHierarchySelection: SelectionData | null | undefined,
+    pinnedRowSelection: RowSelectionState | null | undefined,
     rootFolderIds: string[],
     sliceType: SliceType,
   ): string[] => {
     if (sliceType === 'hierarchy') {
       return Object.keys(rowSelection)
-    } else if (persistedHierarchySelection) {
-      return Object.keys(persistedHierarchySelection)
+    } else if (pinnedRowSelection) {
+      return Object.keys(pinnedRowSelection).filter((id) => pinnedRowSelection[id])
     } else {
       return rootFolderIds
     }
@@ -148,7 +148,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   const folderIdsToFetch = resolveSelectedFolders(
     rowSelection,
-    pinnedSlice?.rowSelectionData,
+    pinnedSlice?.rowSelection,
     rootFolderIds,
     sliceType,
   )

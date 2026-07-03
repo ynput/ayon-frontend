@@ -36,7 +36,7 @@ import {
 // Local context and hooks
 import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 
 const ProjectOverviewContext = createContext<ProjectOverviewContextType | undefined>(undefined)
@@ -46,7 +46,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { projectName, ...projectInfo } = useProjectContext()
   const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
 
-  const { rowSelection, rowSelectionData, sliceType, pinnedSlice } = useSlicerContext()
+  const { rowSelection, sliceType, pinnedSlice } = useSlicerContext()
 
   const {
     sorting,
@@ -56,7 +56,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useColumnSettingsContext()
 
   const sliceFilter = createFilterFromSlicer({
-    slice: { rowSelectionData, sliceType },
+    slice: { rowSelection, sliceType },
     attribFields: attribFields,
   })
 
@@ -250,7 +250,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const selectedFolders = useSelectedFolders({
     rowSelection,
     sliceType,
-    rowSelectionData: pinnedSlice?.rowSelectionData || null,
+    pinnedRowSelection: pinnedSlice?.rowSelection || null,
     entityListFolderIds: entityIds.folderIds,
   })
 

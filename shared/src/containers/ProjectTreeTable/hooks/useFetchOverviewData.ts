@@ -188,14 +188,6 @@ export const useFetchOverviewData = ({
     { skip: skipLinks },
   )
 
-  const isLoadingFolderLinks = useQueryArgumentChangeLoading(
-    {
-      isLoading: isFetchingFoldersLinks,
-      dependencies: [visibleFolders, projectName],
-    },
-    isFetchingFoldersLinks,
-  )
-
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {
     const map = new Map()
@@ -484,14 +476,6 @@ export const useFetchOverviewData = ({
     {
       skip: visibleTasks.size === 0 || skipLinks,
     },
-  )
-
-  const isLoadingTaskLinks = useQueryArgumentChangeLoading(
-    {
-      isLoading: isFetchingTasksLinks,
-      dependencies: [visibleTasks, projectName],
-    },
-    isFetchingTasksLinks,
   )
 
   // Compute entity IDs whose links are currently loading (in query but not yet in the cache result)
