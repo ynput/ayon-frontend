@@ -32,7 +32,7 @@ const SuccessState = styled(EmptyPlaceholder)`
   }
 `
 
-export default function SubmitStep({ data, importContext, onNext }: Props) {
+export default function SubmitStep({ data, importContext, onNext  }: Props) {
   const [importProgress, setImportProgress] = useState(0)
   const [importDescription, setImportDescription] = useState<string | null>(null)
   const [importResult, setImportResult] = useState<ImportDataProcessSummary | null>(null)
@@ -42,7 +42,6 @@ export default function SubmitStep({ data, importContext, onNext }: Props) {
   usePubSub(
     "import.data",
     (_: any, message: ImportDataMessage) => {
-      if ((message.summary as ImportDataStartSummary).total) return
 
       setImportProgress(message.progress)
       setImportDescription(message.description || null)
