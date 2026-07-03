@@ -25,11 +25,7 @@ import {
   mapUsersByAccessGroups,
 } from './mappers'
 import { SelectedAccessGroupUsers, SelectionStatus } from './types'
-import {
-  useUserPreferencesExpandedPanels,
-  useProjectAccessGroupData,
-  useUserPageFilters,
-} from './hooks'
+import { useUserPreferencesExpandedPanels, useProjectAccessGroupData } from './hooks'
 import ProjectUserAccessUserList from './ProjectUserAccessUserList'
 import ProjectUserAccessAssignDialog from './ProjectUserAccessAssignDialog'
 import ProjectUserAccessSearchFilterWrapper from './ProjectUserAccessSearchFilterWrapper'
@@ -50,6 +46,7 @@ import {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
 } from '@shared/components/EmptyPlaceholder'
+import { useSessionStorage } from '@shared/hooks'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -75,7 +72,7 @@ const ProjectUserAccess = () => {
     updateUserAccessGroups,
   } = useProjectAccessGroupData(selectedProject as string)
 
-  const [filters, setFilters] = useUserPageFilters()
+  const [filters, setFilters] = useSessionStorage<Filter[]>('projectUserAccessFilters', [])
 
   const [expandedAccessGroups, setExpandedAccessGroups] = useUserPreferencesExpandedPanels()
   const handleToggleExpandedAccessGroup = (accessGroupName: string, value: boolean) =>
