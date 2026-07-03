@@ -20,7 +20,6 @@ import {
   useTaskProgressViewSettings,
   type SliceType,
 } from '@shared/containers'
-import { useProjectFoldersContext } from '@shared/context'
 import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'

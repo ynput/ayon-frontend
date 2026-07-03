@@ -36,7 +36,7 @@ import {
 // Local context and hooks
 import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
-import { useProjectContext, useProjectFoldersContext } from '@shared/context'
+import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 
 const ProjectOverviewContext = createContext<ProjectOverviewContextType | undefined>(undefined)

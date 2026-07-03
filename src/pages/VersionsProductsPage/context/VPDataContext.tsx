@@ -5,7 +5,6 @@ import {
 } from '@shared/api'
 import { useGetProductsInfiniteQuery } from '@shared/api/queries'
 import { flattenInfiniteVersionsData, flattenInfiniteProductsData } from '@shared/api'
-import { useProjectFoldersContext } from '@shared/context'
 import {
   createContext,
   FC,
