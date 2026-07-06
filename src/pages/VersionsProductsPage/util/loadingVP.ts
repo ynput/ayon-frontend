@@ -1,4 +1,4 @@
-import { ProductMap } from '../context/VPDataContext'
+import type { ProductMap } from '../context/VPDataContext'
 import { VersionNode } from '@shared/api/queries'
 
 /**

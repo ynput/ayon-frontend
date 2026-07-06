@@ -33,9 +33,11 @@ export interface ProjectTableContextType {
   fetchNextPage: ProjectTableProviderProps['fetchNextPage']
   reloadTableData: ProjectTableProviderProps['reloadTableData']
   getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
+  loadingLinksEntityIds?: Set<string>
 
   // grouping
   groups: ProjectTableProviderProps['groups']
+  overrideGroupBy?: ProjectTableProviderProps['overrideGroupBy']
 
   // Filters
   queryFilters: ProjectTableProviderProps['queryFilters']
@@ -43,6 +45,11 @@ export interface ProjectTableContextType {
   // Hierarchy
   showHierarchy: ProjectTableProviderProps['showHierarchy']
   updateShowHierarchy: ProjectTableProviderProps['updateShowHierarchy']
+  hierarchyOptions?: ProjectTableProviderProps['hierarchyOptions']
+  hierarchyActive?: ProjectTableProviderProps['hierarchyActive']
+
+  // Flat folder view
+  isFlatFolderView?: boolean
 
   // Expanded state
   expanded: ProjectTableProviderProps['expanded']

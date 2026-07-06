@@ -54,10 +54,20 @@ export const ReviewableCard = styled.div`
     text-align: center;
   }
 
+  --selection-background: var(--md-sys-color-primary-container);
+  --selection-border-color: var(--md-sys-color-primary);
+  --selection-color: var(--md-sys-color-on-primary-container);
+
+  &.tertiary {
+    --selection-background: var(--md-sys-color-tertiary-container);
+    --selection-border-color: var(--md-sys-color-tertiary);
+    --selection-color: var(--md-sys-color-on-tertiary-container);
+  }
+
   &.selected {
-    background-color: var(--md-sys-color-primary-container);
-    border-color: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary-container);
+    background-color: var(--selection-background);
+    border-color: var(--selection-border-color);
+    color: var(--selection-color);
   }
 `
 
@@ -82,4 +92,13 @@ export const AddButton = styled(Button)`
   &:hover {
     background-color: var(--md-sys-color-surface-container-high-hover);
   }
+`
+
+export const Tag = styled.div`
+  border-radius: var(--border-radius-m);
+  background-color: var(--md-sys-color-surface-container-high);
+  position: absolute;
+  top: var(--padding-s);
+  right: var(--padding-s);
+  padding: var(--padding-s);
 `

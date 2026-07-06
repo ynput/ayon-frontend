@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { Dropdown } from '@ynput/ayon-react-components'
 import { useListAddonsQuery } from '@shared/api'
+import { compareBuild, coerce } from 'semver'
 
 const AddonDropdown = ({ addonName, addonVersion, setAddonVersion, disabled }) => {
   const { data: { addons = [] } = {}, isLoading, isError } = useListAddonsQuery({})
@@ -15,10 +16,9 @@ const AddonDropdown = ({ addonName, addonVersion, setAddonVersion, disabled }) =
       return []
     }
 
-    const result = []
-    for (const version in addon.versions) {
-      result.push({ value: version, label: `${addon.title} ${version}` })
-    }
+    const result = Object.keys(addon.versions)
+      .sort((a, b) => -1 * compareBuild(coerce(a) ?? a, coerce(b) ?? b))
+      .map((version) => ({ value: version, label: `${addon.title} ${version}` }))
 
     return result
   }, [addons, isLoading, isError, addonName])

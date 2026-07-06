@@ -33,6 +33,7 @@ const getPathnameLabel = (pathname: string): string => {
   return ''
 }
 
+// TODO(YN-0581 / issue #1940): swap project-name crumb to project label (label || name).
 const uri2crumbs = (uri: string = '', pathname: string): string[] => {
   const [scope, pathAndQuery = ''] = (uri || '').split('://')
   const [path, query] = pathAndQuery.split('?')

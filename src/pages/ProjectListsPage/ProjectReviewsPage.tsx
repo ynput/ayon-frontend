@@ -59,7 +59,7 @@ const ProjectReviewsPage: FC<ProjectReviewsPageProps> = ({
         label="Review Sessions"
         description="Powerful playlists, detailed annotations and streamlined feedback for efficient review and collaboration."
         isCloseable={false}
-        addon={{ icon: 'subscriptions' }}
+        addon={{ icon: 'subscriptions', name: 'review' }}
         features={{
           playback: {
             icon: 'speed',

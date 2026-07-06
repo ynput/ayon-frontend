@@ -1,7 +1,7 @@
 import type { FolderType, TaskType, Status, Tag, LinkTypeModel, ProductType } from '@shared/api'
 import { ProjectModelWithProducts } from '@shared/context'
 
-type ProjectInfo = {
+export type ProjectInfo = {
   folderTypes: FolderType[]
   taskTypes: TaskType[]
   statuses: Status[]

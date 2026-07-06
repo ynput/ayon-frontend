@@ -1,7 +1,13 @@
 // a hoc component that helps to wrap remote project pages
 // set up slicer
 
-import { useSlicerContext, Slicer, defaultSliceOptions } from '@shared/containers/Slicer'
+import {
+  useSlicerContext,
+  Slicer,
+  defaultSliceOptions,
+  SLICER_SPLITTER_STATE_KEY,
+  SLICER_SPLITTER_PANEL_CONFIG,
+} from '@shared/containers/Slicer'
 import { RemotePageWrapper, RemotePageWrapperProps } from '@shared/components'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -20,12 +26,12 @@ const WithSlicer = ({ children, fields }: WithSlicerProps) => {
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}
-        stateKey="overview-splitter-table"
+        stateKey={SLICER_SPLITTER_STATE_KEY}
         stateStorage="local"
       >
-        <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
+        <SplitterPanel {...SLICER_SPLITTER_PANEL_CONFIG}>
           <Section wrap>
-            <Slicer sliceFields={slicerFields} persistFieldId="hierarchy" />
+            <Slicer sliceFields={slicerFields} pinnedSliceType="hierarchy" />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={80}>{children}</SplitterPanel>

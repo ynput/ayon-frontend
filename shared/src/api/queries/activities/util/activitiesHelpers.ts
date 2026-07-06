@@ -1,7 +1,10 @@
-import { ActivityFragmentFragment, GetEntitiesChecklistsQuery, PageInfo } from '@shared/api'
+import type {
+  ActivityFragmentFragment,
+  GetEntitiesChecklistsQuery,
+  PageInfo,
+} from '@shared/api/generated'
 import { ChecklistCount, FeedActivity, FeedActivityData } from '../types'
 import { BaseTypes, EntityTooltipQuery, TaskTypes, VersionTypes } from '../activityQueries'
-import { FeedFilter } from '@shared/context'
 
 // Helper function to get a nested property of an object using a string path
 const getNestedProperty = <T extends Record<string, any>, R = any>(
@@ -103,6 +106,7 @@ export type EntityTooltip = {
   subTitle: string
   status?: string
   thumbnailId?: string
+  thumbnailHash?: string
   updatedAt?: string
   taskType?: string
   users?: { name: string; avatarUrl: string }[]
@@ -111,8 +115,18 @@ export type EntityTooltip = {
 type TransformTaskTooltip = (data: BaseTypes & TaskTypes) => EntityTooltip
 
 const transformTaskTooltip: TransformTaskTooltip = (data) => {
-  const { id, label, name, status, thumbnailId, assignees, taskType, updatedAt, folder } =
-    data || {}
+  const {
+    id,
+    label,
+    name,
+    status,
+    thumbnailId,
+    thumbnailHash,
+    assignees,
+    taskType,
+    updatedAt,
+    folder,
+  } = data || {}
   const tooltip = {
     id,
     name,
@@ -121,6 +135,7 @@ const transformTaskTooltip: TransformTaskTooltip = (data) => {
     subTitle: folder?.label || folder?.name || '',
     status,
     thumbnailId,
+    thumbnailHash,
     updatedAt,
     taskType,
     users: assignees?.map((name) => ({ name, avatarUrl: `/api/users/${name}/avatar` })) || [],
@@ -206,8 +221,24 @@ export const taskProvideTags = (result: Task[], type = 'task', entityType = 'tas
       ]
     : [{ type, id: entityType.toUpperCase() + 'S' }]
 
+export const filterKey = (filter: any): string => {
+  if (typeof filter === 'string') return filter
+  try {
+    return JSON.stringify(filter) ?? ''
+  } catch {
+    return ''
+  }
+}
+
 export const filterActivityTypes: Record<string, string[]> = {
-  activity: ['comment', 'version.publish', 'status.change', 'assignee.add', 'assignee.remove'],
+  activity: [
+    'comment',
+    'version.publish',
+    'status.change',
+    'assignee.add',
+    'assignee.remove',
+    'version.review',
+  ],
   comments: ['comment'],
   versions: ['version.publish'],
   updates: ['status.change', 'assignee.add', 'assignee.remove'],

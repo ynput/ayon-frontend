@@ -12,6 +12,7 @@ query GetProducts(
   $before: String
   $last: Int
   $sortBy: String
+  $showComments: Boolean! = false
 ) {
   project(name: $projectName) {
     products(
@@ -41,6 +42,7 @@ query GetProducts(
           tags
           type
           productType
+          productBaseType
           allAttrib
           parents
           createdAt

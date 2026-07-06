@@ -23,7 +23,9 @@ import {
 import {
   GetProductsQuery,
   GetProductsQueryVariables,
+  GetProductsColumnStatsQuery,
   GetVersionsByProductIdQueryVariables,
+  GetVersionsColumnStatsQuery,
   GetVersionsQuery,
   GetVersionsQueryVariables,
   gqlApi,
@@ -39,7 +41,16 @@ import {
   transformProductsResponse,
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
-import { PubSub } from '@shared/util'
+import { parseAllAttribs } from '../overview'
+import PubSub from '@shared/util/pubsub'
+import { subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
+import type { FieldStats } from '../columnStats'
+import {
+  normalizeFieldStats,
+  mergeFieldStats,
+  hasNewTargetFields,
+  transformStatsError,
+} from '../columnStats'
 
 // SHARED CACHE UPDATE HELPERS
 // These helpers are used by PubSub handlers to update cached data in real-time
@@ -224,6 +235,8 @@ type UpdatedDefinitions = Omit<Definitions, 'GetVersions'> & {
   GetVersions: OverrideResultType<Definitions['GetVersions'], GetVersionsResult>
   GetVersionsByProductId: OverrideResultType<Definitions['GetVersions'], GetVersionsResult>
   GetProducts: OverrideResultType<Definitions['GetProducts'], GetProductsResult>
+  GetProductsColumnStats: OverrideResultType<Definitions['GetProductsColumnStats'], FieldStats[]>
+  GetVersionsColumnStats: OverrideResultType<Definitions['GetVersionsColumnStats'], FieldStats[]>
 }
 
 const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -243,12 +256,199 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
       transformResponse: transformProductsResponse,
       providesTags: provideTagsForProductsResult,
     },
+    // footer stats: `targets` excluded from cache key + responses merged,
+    // so column toggles reuse cache and only added targets refetch
+    GetProductsColumnStats: {
+      transformResponse: (res: GetProductsColumnStatsQuery) =>
+        normalizeFieldStats(res?.project?.products?.fieldStats ?? []),
+      transformErrorResponse: (error: any) => transformStatsError(error, 'product'),
+      serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
+      merge: (cache, incoming) => mergeFieldStats(incoming, cache),
+      forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
+      providesTags: (_r, _e, { projectName }) => [{ type: 'productColumnStats', id: projectName }],
+    },
+    GetVersionsColumnStats: {
+      transformResponse: (res: GetVersionsColumnStatsQuery) =>
+        normalizeFieldStats(res?.project?.versions?.fieldStats ?? []),
+      transformErrorResponse: (error: any) => transformStatsError(error, 'version'),
+      serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
+      merge: (cache, incoming) => mergeFieldStats(incoming, cache),
+      forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
+      providesTags: (_r, _e, { projectName }) => [{ type: 'versionColumnStats', id: projectName }],
+    },
   },
 })
 
 export const VP_INFINITE_QUERY_COUNT = 250 // Number of items to fetch per page
 const VERSIONS_BY_PRODUCT_ID_QUERY_COUNT = 1000 // max number of versions to fetch per product id
 const MAX_PAGES_PER_PRODUCT = 10 // Hard cutoff to prevent infinite loops
+
+const VERSION_UPDATE_BATCH_DEBOUNCE = 5000 // ms to wait before processing batched updates
+const VERSION_UPDATE_ATTRIB_JITTER = 1000 // max ms of random jitter for attribute fetches
+const VERSION_UPDATE_NEW_DATA_DEBOUNCE = 30000 // ms to wait before fetching new version data in batch
+const VERSION_UPDATE_NEW_DATA_JITTER = 1500 // max ms of random jitter for new version data fetches
+
+/**
+ * Reusable handler for websocket version updates to perform efficient batched cache updates
+ */
+function createVersionUpdateBatcher(
+  projectName: string,
+  dispatch: any,
+  handlers: {
+    checkVersionInCache: (entityId: string, parentId?: string) => boolean
+    onBatchUpdate: (changes: {
+      deleted?: { entityId: string; parentId?: string }[]
+      patched?: { entityId: string; field: string; value: any; parentId?: string }[]
+      attribPatched?: { entityId: string; allAttrib: string; parsedAttrib: any }[]
+      fullUpdated?: VersionNode[]
+    }) => void
+    getBaseFilters?: () => any
+  },
+) {
+  let pendingPatchUpdates: { topic: string; message: any }[] = []
+  let patchTimeoutId: ReturnType<typeof setTimeout> | null = null
+
+  let pendingFullFetchIds = new Set<string>()
+  let fullFetchTimeoutId: ReturnType<typeof setTimeout> | null = null
+
+  const processPatches = async () => {
+    const updates = [...pendingPatchUpdates]
+    pendingPatchUpdates = []
+    patchTimeoutId = null
+
+    const deleted: { entityId: string; parentId?: string }[] = []
+    const patched: { entityId: string; field: string; value: any; parentId?: string }[] = []
+    const attribsToFetch = new Set<string>()
+
+    for (const { topic, message: msg } of updates) {
+      const entityId = msg.summary?.entityId
+      const parentId = msg.summary?.parentId
+      if (!entityId) continue
+
+      if (topic === 'entity.version.deleted') {
+        deleted.push({ entityId, parentId })
+      } else if (topic.startsWith('entity.version.') && topic.endsWith('_changed')) {
+        const versionFound = handlers.checkVersionInCache(entityId, parentId)
+        if (!versionFound) continue
+
+        const field = topic.split('.')[2].split('_changed')[0]
+
+        if (field === 'attrib') {
+          attribsToFetch.add(entityId)
+          continue
+        }
+
+        const supportedFields = ['status', 'tags'] as const
+        const isFieldSupported = supportedFields.includes(field as any)
+        const value = msg.summary?.value
+
+        if (!value || !isFieldSupported) {
+          pendingFullFetchIds.add(entityId)
+          continue
+        }
+
+        let castValue: any = value
+        if (field === 'status') {
+          castValue = String(value)
+        } else if (field === 'tags') {
+          castValue = Array.isArray(value) ? (value as string[]) : []
+        }
+
+        patched.push({ entityId, field, value: castValue, parentId })
+      }
+    }
+
+    // Trigger full fetch if any unsupported changes were moved there
+    if (pendingFullFetchIds.size > 0 && !fullFetchTimeoutId) {
+      fullFetchTimeoutId = setTimeout(processFullFetches, VERSION_UPDATE_NEW_DATA_DEBOUNCE)
+    }
+
+    const attribPatched: { entityId: string; allAttrib: string; parsedAttrib: any }[] = []
+    if (attribsToFetch.size > 0 && dispatch) {
+      try {
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.random() * VERSION_UPDATE_ATTRIB_JITTER),
+        )
+
+        const versionIds = Array.from(attribsToFetch)
+        const result = await dispatch(
+          enhancedVersionsPageApi.endpoints.GetVersionsAttribs.initiate(
+            { projectName, versionIds },
+            { forceRefetch: true },
+          ),
+        )
+
+        if (result.data?.project?.versions?.edges) {
+          for (const edge of result.data.project.versions.edges) {
+            const node = edge.node
+            if (node) {
+              attribPatched.push({
+                entityId: node.id,
+                allAttrib: node.allAttrib,
+                parsedAttrib: parseAllAttribs(node.allAttrib),
+              })
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch patched version attribs', e)
+      }
+    }
+
+    if (deleted.length > 0 || patched.length > 0 || attribPatched.length > 0) {
+      handlers.onBatchUpdate({ deleted, patched, attribPatched })
+    }
+  }
+
+  const processFullFetches = async () => {
+    const versionIds = Array.from(pendingFullFetchIds)
+    pendingFullFetchIds.clear()
+    fullFetchTimeoutId = null
+
+    if (versionIds.length === 0 || !dispatch) return
+
+    try {
+      // Jitter fetch to prevent thundering herd
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.random() * VERSION_UPDATE_NEW_DATA_JITTER),
+      )
+
+      const baseFilters = handlers.getBaseFilters?.() || {}
+      const result = await dispatch(
+        enhancedVersionsPageApi.endpoints.GetVersions.initiate({
+          ...baseFilters,
+          projectName,
+          versionIds,
+        }),
+      )
+
+      if (result.data?.versions) {
+        handlers.onBatchUpdate({ fullUpdated: result.data.versions })
+      }
+    } catch (e) {
+      console.error('Failed to fetch full version data batch', e)
+    }
+  }
+
+  return (topic: string, message: any) => {
+    const project = message.project
+    if (project !== projectName) return
+
+    const entityId = message.summary?.entityId
+    if (!entityId) return
+
+    if (topic === 'entity.version.created') {
+      pendingFullFetchIds.add(entityId)
+      if (!fullFetchTimeoutId) {
+        fullFetchTimeoutId = setTimeout(processFullFetches, VERSION_UPDATE_NEW_DATA_DEBOUNCE)
+      }
+    } else {
+      pendingPatchUpdates.push({ topic, message })
+      if (patchTimeoutId) clearTimeout(patchTimeoutId)
+      patchTimeoutId = setTimeout(processPatches, VERSION_UPDATE_BATCH_DEBOUNCE)
+    }
+  }
+}
 
 const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
   endpoints: (build) => ({
@@ -335,55 +535,123 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           }
         },
         providesTags: provideTagsForVersionsInfinite,
+        keepUnusedDataFor: 30,
         // Subscribes to version entity changes and updates cache accordingly
         // Handles: create, update, delete operations
-        onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
-          const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
-            try {
-              const entityId = message.summary?.entityId
-              if (!entityId) return
+        onCacheEntryAdded: async (
+          arg,
+          { getCacheEntry, updateCachedData, cacheEntryRemoved, dispatch },
+        ) => {
+          let unsubscribeThumbnails: (() => void) | undefined
 
-              // Re-fetch the specific version with current filters to check if it still matches
-              // If version was deleted or no longer matches filters, result will be empty
-              const result = await dispatch(
-                enhancedVersionsPageApi.endpoints.GetVersions.initiate(
-                  {
-                    projectName: arg.projectName,
-                    versionFilter: arg.versionFilter,
-                    productFilter: arg.productFilter,
-                    taskFilter: arg.taskFilter,
-                    folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
-                    versionIds: [entityId],
-                    first: 1,
-                  },
-                  {
-                    forceRefetch: true,
-                  },
-                ),
-              )
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              const relevantMessages = messages.filter((m) => m.project === arg.projectName)
+              if (!relevantMessages.length) return
 
-              if (result.error) return
-
-              // Update the cache: update existing, delete if not found, or add new
               updateCachedData((draft) => {
-                const updatedVersion = result.data?.versions?.[0]
-                updatePagedCache(
-                  draft.pages,
-                  entityId,
-                  updatedVersion,
-                  'versions',
-                  (arg.sortBy || 'createdAt') as keyof VersionNode,
-                  arg.desc || false,
-                )
+                relevantMessages.forEach((message) => {
+                  if (message.summary.entityType === 'version') {
+                    draft.pages.forEach((page) => {
+                      const vIndex = page.versions.findIndex(
+                        (v) => v.id === message.summary.entityId,
+                      )
+                      if (vIndex !== -1) {
+                        page.versions[vIndex].thumbnailHash = message.summary.thumbnailHash || ''
+                      }
+                    })
+                  }
+                })
               })
-            } catch (error) {
-              // Silently handle errors to prevent UI disruption
-            }
-          })
+            },
+            ['version'],
+          )
+
+          const token = PubSub.subscribe(
+            'entity.version',
+            createVersionUpdateBatcher(arg.projectName, dispatch, {
+              getBaseFilters: () => ({
+                versionFilter: arg.versionFilter,
+                productFilter: arg.productFilter,
+                taskFilter: arg.taskFilter,
+                folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+                featuredOnly: arg.featuredOnly,
+                hasReviewables: arg.hasReviewables,
+                sortBy: arg.sortBy,
+              }),
+              checkVersionInCache: (entityId) => {
+                const cacheVersions = getCacheEntry().data
+                if (!cacheVersions) return false
+                for (const page of cacheVersions.pages || []) {
+                  if (page.versions.some((v) => v.id === entityId)) return true
+                }
+                return false
+              },
+              onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
+                updateCachedData((draft) => {
+                  for (const page of draft?.pages || []) {
+                    // Handle deletes
+                    if (deleted) {
+                      for (const { entityId } of deleted) {
+                        const vIndex = page.versions.findIndex((v) => v.id === entityId)
+                        if (vIndex !== -1) page.versions.splice(vIndex, 1)
+                      }
+                    }
+                    // Handle simple patches
+                    if (patched) {
+                      for (const { entityId, field, value } of patched) {
+                        const version = page.versions.find((v) => v.id === entityId)
+                        if (version) {
+                          // @ts-expect-error valid field
+                          version[field] = value
+                        }
+                      }
+                    }
+                    // Handle attrib patched
+                    if (attribPatched) {
+                      for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
+                        const version = page.versions.find((v) => v.id === entityId)
+                        if (version) {
+                          version.allAttrib = allAttrib
+                          version.attrib = parsedAttrib
+                        }
+                      }
+                    }
+                    // Handle full updates
+                    if (fullUpdated) {
+                      for (const updatedNode of fullUpdated) {
+                        const vIndex = page.versions.findIndex((v) => v.id === updatedNode.id)
+                        if (vIndex !== -1) {
+                          page.versions[vIndex] = updatedNode
+                        } else {
+                          // New version not in cache, try to insert in first page if it fits sort
+                          // (This is a simplification, full refetch is usually better for new items in pagination)
+                          const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
+                          const insertIndex = findSortedInsertIndex(
+                            page.versions,
+                            updatedNode,
+                            sortKey,
+                            arg.desc || false,
+                          )
+                          // Only insert if it's within current page bounds or we are on first page
+                          if (page === draft.pages[0]) {
+                            page.versions.splice(insertIndex, 0, updatedNode)
+                          }
+                        }
+                      }
+                    }
+                  }
+                })
+              },
+            }),
+          )
 
           // Cleanup: unsubscribe when cache entry is removed
           await cacheEntryRemoved
           PubSub.unsubscribe(token)
+          if (unsubscribeThumbnails) {
+            unsubscribeThumbnails()
+          }
         },
       },
     ),
@@ -500,52 +768,106 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           },
         }
       },
+      keepUnusedDataFor: 30,
       // Subscribes to version entity changes for expanded products
       // Only updates versions that belong to currently expanded products
       onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
-        const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
-          try {
-            const entityId = message.summary?.entityId
-            const parentId = message.summary?.parentId // parentId is the product ID
-            if (!entityId || !parentId) return
+        let unsubscribeThumbnails: (() => void) | undefined
 
-            // Only handle versions belonging to currently expanded products
-            // This prevents unnecessary updates for versions in collapsed products
-            if (!arg.productIds.includes(parentId)) return
+        unsubscribeThumbnails = subscribeToThumbnailUpdates(
+          (messages: ThumbnailUpdateMessage[]) => {
+            const relevantMessages = messages.filter((m) => m.project === arg.projectName)
+            if (!relevantMessages.length) return
 
-            // Re-fetch the specific version using GetVersions (supports versionIds filter)
-            // Uses same filters as the base query to ensure consistency
-            const result = await dispatch(
-              enhancedVersionsPageApi.endpoints.GetVersions.initiate(
-                {
-                  projectName: arg.projectName,
-                  productIds: [parentId],
-                  versionIds: [entityId],
-                  versionFilter: arg.versionFilter,
-                  taskFilter: arg.taskFilter,
-                  first: 1,
-                  ...(arg.featuredOnly && { featuredOnly: arg.featuredOnly }),
-                  ...(arg.hasReviewables !== undefined && { hasReviewables: arg.hasReviewables }),
-                },
-                { forceRefetch: true },
-              ),
-            )
-
-            if (result.error) return
-
-            // Update flat versions array: update existing, delete if not found, or add new
             updateCachedData((draft) => {
-              const updatedVersion = result.data?.versions?.[0]
-              updateFlatCache(draft.versions, entityId, updatedVersion)
+              relevantMessages.forEach((message) => {
+                if (message.summary.entityType === 'version') {
+                  const vIndex = draft.versions.findIndex((v) => v.id === message.summary.entityId)
+                  if (vIndex !== -1) {
+                    draft.versions[vIndex].thumbnailHash = message.summary.thumbnailHash || ''
+                  }
+                }
+              })
             })
-          } catch (error) {
-            // Silently handle errors to prevent UI disruption
-          }
-        })
+          },
+          ['version'],
+        )
+
+        const token = PubSub.subscribe(
+          'entity.version',
+          createVersionUpdateBatcher(arg.projectName, dispatch, {
+            getBaseFilters: () => ({
+              versionFilter: arg.versionFilter,
+              taskFilter: arg.taskFilter,
+              productIds: arg.productIds,
+            }),
+            checkVersionInCache: (entityId, parentId) => {
+              if (!parentId || !arg.productIds.includes(parentId)) return false
+              let found = false
+              updateCachedData((draft) => {
+                found = draft.versions.some((v) => v.id === entityId)
+              })
+              return found
+            },
+            onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
+              updateCachedData((draft) => {
+                // Handle deletes
+                if (deleted) {
+                  for (const { entityId } of deleted) {
+                    const vIndex = draft.versions.findIndex((v) => v.id === entityId)
+                    if (vIndex !== -1) draft.versions.splice(vIndex, 1)
+                  }
+                }
+                // Handle simple patches
+                if (patched) {
+                  for (const { entityId, field, value } of patched) {
+                    const version = draft.versions.find((v) => v.id === entityId)
+                    if (version) {
+                      // @ts-expect-error valid field
+                      version[field] = value
+                    }
+                  }
+                }
+                // Handle attrib patches
+                if (attribPatched) {
+                  for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
+                    const version = draft.versions.find((v) => v.id === entityId)
+                    if (version) {
+                      version.allAttrib = allAttrib
+                      version.attrib = parsedAttrib
+                    }
+                  }
+                }
+                // Handle full updates
+                if (fullUpdated) {
+                  for (const updatedNode of fullUpdated) {
+                    const index = draft.versions.findIndex((v) => v.id === updatedNode.id)
+                    if (index !== -1) {
+                      draft.versions[index] = updatedNode
+                    } else {
+                      // Add at correct sorted position
+                      const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
+                      const insertIndex = findSortedInsertIndex(
+                        draft.versions,
+                        updatedNode,
+                        sortKey,
+                        arg.desc || false,
+                      )
+                      draft.versions.splice(insertIndex, 0, updatedNode)
+                    }
+                  }
+                }
+              })
+            },
+          }),
+        )
 
         // Cleanup: unsubscribe when cache entry is removed
         await cacheEntryRemoved
         PubSub.unsubscribe(token)
+        if (unsubscribeThumbnails) {
+          unsubscribeThumbnails()
+        }
       },
       providesTags: provideTagsForVersionsResult,
     }),
@@ -634,12 +956,37 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           }
         },
         providesTags: provideTagsForProductsInfinite,
+        keepUnusedDataFor: 30,
 
         // Subscribes to product entity changes and updates cache accordingly
         // Handles: create, update, delete operations
         // Often triggered together with version changes (new product + version)
 
         onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+          let unsubscribeThumbnails: (() => void) | undefined
+
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              const relevantMessages = messages.filter((m) => m.project === arg.projectName)
+              if (!relevantMessages.length) return
+
+              updateCachedData((draft) => {
+                relevantMessages.forEach((message) => {
+                  if (message.summary.entityType === 'version') {
+                    draft.pages.forEach((page) => {
+                      page.products.forEach((p) => {
+                        if (p.featuredVersion?.id === message.summary.entityId) {
+                          p.featuredVersion.thumbnailHash = message.summary.thumbnailHash || ''
+                        }
+                      })
+                    })
+                  }
+                })
+              })
+            },
+            ['version'],
+          )
+
           // Helper to refetch and update a product in cache
           const refetchProduct = async (productId: string) => {
             const queryParams: any = {
@@ -682,6 +1029,15 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                 const entityId = message.summary?.entityId
                 if (!entityId) return
 
+                let productExistsInCache = false
+                updateCachedData((draft) => {
+                  productExistsInCache = draft.pages.some((page) =>
+                    page.products.some((product: ProductNode) => product.id === entityId),
+                  )
+                })
+
+                if (!productExistsInCache && _topic !== 'entity.product.created') return
+
                 await refetchProduct(entityId)
               } catch (error) {
                 // Silently handle errors to prevent UI disruption
@@ -693,33 +1049,91 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           // This ensures product's versions list and featuredVersion stay up-to-date
           const versionToken = PubSub.subscribe(
             'entity.version',
-            async (_topic: string, message: any) => {
-              try {
-                const parentId = message.summary?.parentId // parentId is the product ID
-                if (!parentId) return
-
-                // Check if the product exists in our cache before refetching
-                // This prevents unnecessary API calls for products not in our view
-                let productExistsInCache = false
+            createVersionUpdateBatcher(arg.projectName, dispatch, {
+              getBaseFilters: () => ({
+                versionFilter: arg.versionFilter,
+                productFilter: arg.productFilter,
+                taskFilter: arg.taskFilter,
+                folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+              }),
+              checkVersionInCache: (entityId, parentId) => {
+                let found = false
                 updateCachedData((draft) => {
-                  productExistsInCache = draft.pages.some((page) =>
-                    page.products.some((product: ProductNode) => product.id === parentId),
+                  found = draft.pages.some((page) =>
+                    page.products.some(
+                      (p) => p.id === parentId && p.featuredVersion?.id === entityId,
+                    ),
                   )
                 })
+                return found
+              },
+              onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
+                updateCachedData((draft) => {
+                  for (const page of draft?.pages || []) {
+                    for (const p of page.products) {
+                      const featuredId = p.featuredVersion?.id
+                      if (!featuredId) continue
 
-                if (!productExistsInCache) return
+                      // Handle deletes
+                      if (deleted) {
+                        if (deleted.some((d) => d.entityId === featuredId && d.parentId === p.id)) {
+                          // Version deleted, need to refetch product to update featuredVersion
+                          // Using a set to track which products need refetch to avoid multiple calls
+                          productsToRefetch.add(p.id)
+                        }
+                      }
 
-                await refetchProduct(parentId)
-              } catch (error) {
-                // Silently handle errors to prevent UI disruption
-              }
-            },
+                      // Handle simple patches
+                      if (patched) {
+                        for (const { entityId, field, value, parentId } of patched) {
+                          if (p.id === parentId && featuredId === entityId && p.featuredVersion) {
+                            // @ts-expect-error valid field
+                            p.featuredVersion[field] = value
+                          }
+                        }
+                      }
+
+                      // Handle attrib patches
+                      if (attribPatched) {
+                        for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
+                          if (featuredId === entityId && p.featuredVersion) {
+                            p.featuredVersion.allAttrib = allAttrib
+                            p.featuredVersion.attrib = parsedAttrib
+                          }
+                        }
+                      }
+
+                      // Handle full updates
+                      if (fullUpdated) {
+                        for (const updatedNode of fullUpdated) {
+                          if (featuredId === updatedNode.id && p.featuredVersion) {
+                            p.featuredVersion = updatedNode
+                          }
+                        }
+                      }
+                    }
+                  }
+                })
+
+                // If any products need full refetch (due to deletes or new version becoming featured)
+                // we trigger that now
+                for (const productId of productsToRefetch) {
+                  refetchProduct(productId)
+                }
+                productsToRefetch.clear()
+              },
+            }),
           )
+
+          const productsToRefetch = new Set<string>()
 
           // Cleanup: unsubscribe when cache entry is removed
           await cacheEntryRemoved
           PubSub.unsubscribe(productToken)
           PubSub.unsubscribe(versionToken)
+          if (unsubscribeThumbnails) {
+            unsubscribeThumbnails()
+          }
         },
       },
     ),
@@ -820,105 +1234,112 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         }
       },
       providesTags: provideTagsForVersionsResult,
+      keepUnusedDataFor: 30,
       // Subscribes to version entity changes and updates cache accordingly
       // Handles: create, update, delete operations for grouped versions view
       onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
-        const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
-          try {
-            const entityId = message.summary?.entityId
-            if (!entityId) return
+        let unsubscribeThumbnails: (() => void) | undefined
 
-            // Re-fetch the specific version with current filters to check if it still matches
-            // If version was deleted or no longer matches filters, result will be empty
+        unsubscribeThumbnails = subscribeToThumbnailUpdates(
+          (messages: ThumbnailUpdateMessage[]) => {
+            const relevantMessages = messages.filter((m) => m.project === arg.projectName)
+            if (!relevantMessages.length) return
 
-            const baseFilters = {
-              projectName: arg.projectName,
+            updateCachedData((draft) => {
+              relevantMessages.forEach((message) => {
+                if (message.summary.entityType === 'version') {
+                  const vIndex = draft.versions.findIndex((v) => v.id === message.summary.entityId)
+                  if (vIndex !== -1) {
+                    draft.versions[vIndex].thumbnailHash = message.summary.thumbnailHash || ''
+                  }
+                }
+              })
+            })
+          },
+          ['version'],
+        )
+
+        const token = PubSub.subscribe(
+          'entity.version',
+          createVersionUpdateBatcher(arg.projectName, dispatch, {
+            getBaseFilters: () => ({
               versionFilter: arg.versionFilter,
               productFilter: arg.productFilter,
               taskFilter: arg.taskFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
-              versionIds: [entityId],
-              first: 1,
-              ...(arg.featuredOnly && { featuredOnly: arg.featuredOnly }),
-              ...(arg.hasReviewables !== undefined && { hasReviewables: arg.hasReviewables }),
-            }
-
-            // Track which groups the version belongs to after the update
-            const matchedGroups: { value: string; hasNextPage: undefined }[] = []
-            let latestVersionData: VersionNode | null = null
-
-            for (const group of arg.groups) {
-              const result = await dispatch(
-                enhancedVersionsPageApi.endpoints.GetVersions.initiate(
-                  {
-                    ...baseFilters,
-                    [arg.groupFilterKey as string]: group.filter, // group-specific filter
-                    versionIds: [entityId],
-                  },
-                  { forceRefetch: true }, // Force fresh data to detect group membership changes
-                ),
-              )
-
-              const fetchedVersion = result.data?.versions?.[0]
-              if (fetchedVersion) {
-                // Version matches this group's filter
-                matchedGroups.push({ value: group.value, hasNextPage: undefined })
-                latestVersionData = fetchedVersion
-              }
-            }
-
-            // Now update the cache based on collected results
-            updateCachedData((draft) => {
-              const index = draft.versions.findIndex((v) => v.id === entityId)
-              const versionExistsInCache = index !== -1
-
-              if (matchedGroups.length === 0) {
-                // Version was deleted or no longer matches any group filter - remove it
-                if (versionExistsInCache) {
-                  draft.versions.splice(index, 1)
-                }
-              } else if (latestVersionData) {
-                // Version matches at least one group
-                if (versionExistsInCache) {
-                  const originalGroups = draft.versions[index].groups || []
-                  // Check if group membership has changed (comparing group values)
-                  const originalGroupValues = originalGroups.map((g) => g.value).sort()
-                  const matchedGroupValues = matchedGroups.map((g) => g.value).sort()
-                  const groupsChanged =
-                    originalGroupValues.length !== matchedGroupValues.length ||
-                    originalGroupValues.some((v, i) => v !== matchedGroupValues[i])
-
-                  if (groupsChanged) {
-                    // Group membership changed - use new matched groups (version moved to different group)
-                    draft.versions[index] = { ...latestVersionData, groups: matchedGroups }
-                  } else {
-                    // Same groups - preserve original groups (keeps pagination state like hasNextPage)
-                    draft.versions[index] = { ...latestVersionData, groups: originalGroups }
+              sortBy: arg.sortBy,
+              featuredOnly: arg.featuredOnly,
+              hasReviewables: arg.hasReviewables,
+            }),
+            checkVersionInCache: (entityId) => {
+              let found = false
+              updateCachedData((draft) => {
+                found = draft.versions.some((v) => v.id === entityId)
+              })
+              return found
+            },
+            onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
+              updateCachedData((draft) => {
+                // Handle deletes
+                if (deleted) {
+                  for (const { entityId } of deleted) {
+                    const vIndex = draft.versions.findIndex((v) => v.id === entityId)
+                    if (vIndex !== -1) draft.versions.splice(vIndex, 1)
                   }
-                } else {
-                  // New version not in cache yet - add at sorted position with matched groups
-                  const newVersion = { ...latestVersionData, groups: matchedGroups }
-                  const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
-                  const insertIndex = findSortedInsertIndex(draft.versions, newVersion, sortKey, arg.desc || false)
-                  draft.versions.splice(insertIndex, 0, newVersion)
                 }
-              }
-            })
-          } catch (error) {
-            // Silently handle errors to prevent UI disruption
-          }
-        })
+                // Handle patches
+                if (patched) {
+                  for (const { entityId, field, value } of patched) {
+                    const version = draft.versions.find((v) => v.id === entityId)
+                    if (version) {
+                      // @ts-expect-error valid field
+                      version[field] = value
+                    }
+                  }
+                }
+                // Handle attrib patches
+                if (attribPatched) {
+                  for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
+                    const version = draft.versions.find((v) => v.id === entityId)
+                    if (version) {
+                      version.allAttrib = allAttrib
+                      version.attrib = parsedAttrib
+                    }
+                  }
+                }
+                // Handle full updates
+                if (fullUpdated) {
+                  for (const updatedNode of fullUpdated) {
+                    const index = draft.versions.findIndex((v) => v.id === updatedNode.id)
+                    if (index !== -1) {
+                      // Preserve groups when updating
+                      const originalGroups = draft.versions[index].groups
+                      draft.versions[index] = { ...updatedNode, groups: originalGroups }
+                    }
+                  }
+                }
+              })
+            },
+          }),
+        )
 
         // Cleanup: unsubscribe when cache entry is removed
         await cacheEntryRemoved
         PubSub.unsubscribe(token)
+        if (unsubscribeThumbnails) {
+          unsubscribeThumbnails()
+        }
       },
     }),
   }),
 })
 
 // export gql endpoints
-export const { useGetVersionsQuery } = enhancedVersionsPageApi
+export const {
+  useGetVersionsQuery,
+  useGetProductsColumnStatsQuery,
+  useGetVersionsColumnStatsQuery,
+} = enhancedVersionsPageApi
 // export custom queries
 export const {
   useGetVersionsInfiniteInfiniteQuery: useGetVersionsInfiniteQuery,

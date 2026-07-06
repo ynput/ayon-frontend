@@ -1,18 +1,13 @@
-import React, {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
+import React, { ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 import { QueryFilter, UserModel, DetailsPanelEntityType } from '@shared/api'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
 import { useURIContext } from './UriContext'
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage, readLocalStorage, writeLocalStorage } from '@shared/hooks'
 import type { SubtasksManagerProps } from '@shared/components'
+import { DetailsPanelContext } from './DetailsPanelContextInstance'
+import { BundleMode, getBundleModeFromUser } from '@shared/util'
 
 // High-level tabs for the details panel
 export type DetailsPanelTab = 'feed' | 'subtasks' | 'details' | 'files'
@@ -88,7 +83,7 @@ export interface DetailsPanelContextProps {
 // Interface for our simplified context
 export interface DetailsPanelContextType extends DetailsPanelContextProps {
   // user
-  isDeveloperMode: boolean
+  bundleMode: BundleMode
   isGuest: boolean
   // Open state for the panel by scope
   panelOpenByScope: OpenStateByScope
@@ -126,9 +121,6 @@ export interface DetailsPanelContextType extends DetailsPanelContextProps {
   onPowerFeature: (feature: PowerpackFeature) => void
 }
 
-// Create the context
-const DetailsPanelContext = createContext<DetailsPanelContextType | undefined>(undefined)
-
 // Provider component
 export interface DetailsPanelProviderProps extends DetailsPanelContextProps {
   children: ReactNode
@@ -143,10 +135,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   ...forwardedProps
 }) => {
   const user = forwardedProps.user
-  const isDeveloperMode =
-    'isDeveloperMode' in debug
-      ? (debug.isDeveloperMode as boolean)
-      : user?.attrib?.developerMode ?? false
+  const bundleMode = getBundleModeFromUser(user)
   const isGuest = 'isGuest' in debug ? (debug.isGuest as boolean) : user?.data?.isGuest
 
   // get license from powerpack or forwarded down from props
@@ -185,7 +174,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   )
 
   // Use localStorage to persist tab preferences by scope
-  const [tabsByScope, setTabByScope] = useLocalStorage<TabStateByScope>('details/tabs-by-scope', {})
+  const [tabsByScope, setTabByScope] = useSessionStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
 
   // Get the current tab for a specific scope
   const getTabForScope = useCallback(
@@ -339,7 +328,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     setEntities,
     feedAnnotations,
     setFeedAnnotations,
-    isDeveloperMode,
+    bundleMode,
     isGuest,
     hasLicense,
     onPowerFeature: setPowerpackDialog,
@@ -358,25 +347,26 @@ export const useDetailsPanelContext = (): DetailsPanelContextType => {
   return context
 }
 
+const TABS_BY_SCOPE_KEY = 'details/tabs-by-scope'
+
+export const setDetailsPanelTabForScope = (scope: string, tab: DetailsPanelTab) => {
+  const current = readLocalStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
+  writeLocalStorage(TABS_BY_SCOPE_KEY, { ...current, [scope]: tab })
+}
+
 // Add a specialized hook for using a panel in a specific scope
 export const useScopedDetailsPanel = (scope: string) => {
   const { getOpenForScope, setPanelOpen, getTabForScope } = useDetailsPanelContext()
 
-  const [tabsByScope, setTabsByScope] = useLocalStorage<TabStateByScope>(
-    'details/tabs-by-scope',
-    {},
-  )
+  const [tabsByScope, setTabsByScope] = useSessionStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
 
-  const [currentTab, setTab] = useState<DetailsPanelTab>(() => {
-    const tab = tabsByScope[scope]
-    return isDetailsPanelTab(tab) ? tab : getTabForScope(scope)
-  })
+  // derived from localStorage state, which useSessionStorage keeps in sync across hook instances
+  const storedTab = tabsByScope[scope]
+  const currentTab = isDetailsPanelTab(storedTab) ? storedTab : getTabForScope(scope)
 
-  // Keep localStorage and local state in sync
   const updateTab = useCallback(
     (newTab: DetailsPanelTab) => {
-      setTab(newTab)
-      setTabsByScope({ ...tabsByScope, [scope]: newTab })
+      setTabsByScope((prev) => ({ ...prev, [scope]: newTab }))
     },
     [scope, setTabsByScope],
   )

@@ -9,8 +9,8 @@ import {
 } from '@shared/api'
 import { toast } from 'react-toastify'
 import { getScopeTag } from '@shared/api/queries/views/getViews'
-import { BASE_VIEW_ID } from './useBuildViewMenuItems'
-import { ViewSettings } from '@shared/containers'
+import { BASE_VIEW_ID } from '../types'
+import type { ViewSettings } from '../context/ViewsContext'
 
 type Props = {
   viewType?: string

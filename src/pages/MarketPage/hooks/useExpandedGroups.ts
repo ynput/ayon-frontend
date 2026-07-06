@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MarketListItem } from '../MarketAddonsList'
+import type { MarketListItem } from '../MarketAddonsList'
 
 interface UseExpandedGroupsProps {
   items: MarketListItem[]

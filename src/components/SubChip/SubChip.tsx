@@ -1,10 +1,10 @@
-import { PricingLink } from '@shared/components/Powerpack/PricingLink'
+import { FreeTrialLink } from '@shared/components/Powerpack'
 import { theme } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { FC } from 'react'
 import styled from 'styled-components'
 
-const Chip = styled(PricingLink)`
+const Chip = styled(FreeTrialLink)`
   display: flex;
   user-select: none;
 

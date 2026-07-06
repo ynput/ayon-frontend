@@ -1,4 +1,4 @@
-import { ViewType } from '../index'
+import type { ViewType } from '../types'
 
 /**
  * Generate a consistent portal container ID for views

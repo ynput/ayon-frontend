@@ -15,7 +15,10 @@ const NewListFromContext: FC<NewListFromContextProps> = ({}) => {
     if (newListData) {
       setListForm({
         entityType: newListData.entityType,
-        label: listDefaultName(),
+        label: listDefaultName(
+          newListData.entityListType === 'review-session' ? 'Review' : undefined,
+        ),
+        entityListType: newListData.entityListType,
       })
     } else {
       setListForm(null)

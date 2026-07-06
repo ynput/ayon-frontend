@@ -9,6 +9,7 @@ import { EnumWidget, EnumWidgetProps } from './EnumWidget'
 import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
 import { isLinkEditable, LinksWidget, LinkWidgetData } from './LinksWidget'
 import { SubtasksWidget, SubtasksWidgetData } from './SubtasksWidget'
+import { CommentsWidget } from './CommentsWidget'
 
 // Contexts
 import { useCellEditing } from '../context/CellEditingContext'
@@ -17,12 +18,12 @@ import { useCellEditing } from '../context/CellEditingContext'
 import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
 import { useSelectionCellsContext } from '../context/SelectionCellsContext'
-import { AttributeData, AttributeEnumItem } from '../types'
 import { useProjectContext } from '@shared/context'
 import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
 import { NameWidgetData } from '@shared/components/RenameForm'
 import { READ_ONLY } from '../utils'
+import { AttributeData, EnumItem, type EntityComment } from '@shared/api'
 
 const Cell = styled.div`
   position: absolute;
@@ -30,6 +31,12 @@ const Cell = styled.div`
   padding: 4px 8px;
   display: flex;
   align-items: center;
+  overflow: hidden;
+
+  &:has(.markdown),
+  &:has(.comments-list) {
+    align-items: flex-start;
+  }
 
   &:focus-visible {
     outline: none;
@@ -50,7 +57,10 @@ const Cell = styled.div`
 // use this class to trigger the editing mode on a single click
 export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
-type WidgetAttributeData = { type: AttributeData['type'] | 'links' | 'name' | 'subtasks' }
+type WidgetAttributeData = {
+  type: AttributeData['type'] | 'links' | 'name' | 'subtasks' | 'comments'
+  widget?: AttributeData['widget']
+}
 
 export type CellValue = string | number | boolean
 export type CellValueData = Record<string, any>
@@ -61,13 +71,14 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   value: CellValue | CellValue[]
   valueData?: CellValueData | CellValueData[] // extra data for the value
   attributeData?: WidgetAttributeData
-  options?: AttributeEnumItem[]
+  options?: EnumItem[]
   isCollapsed?: boolean
   isInherited?: boolean
   isPlaceholder?: boolean
   isFocused?: boolean
   isReadOnly?: boolean
   enableCustomValues?: boolean
+  isLinksLoading?: boolean
   folderId?: string | null
   tooltip?: string
   onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
@@ -83,6 +94,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
 
 export interface WidgetBaseProps {
   isEditing?: boolean
+  isReadOnly?: boolean
   onChange: Required<EditorCellProps>['onChange']
   onCancelEdit?: () => void
 }
@@ -99,6 +111,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   isPlaceholder,
   isReadOnly,
   enableCustomValues,
+  isLinksLoading,
   folderId,
   tooltip,
   onChange,
@@ -110,7 +123,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   const type = attributeData?.type
 
   const { projectName } = useProjectContext()
-  const { isEditing, setEditingCellId } = useCellEditing()
+  const { isEditing, setEditingCellId, getEditingDraft, setEditingDraft } = useCellEditing()
   const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionCellsContext()
   const cellId = getCellId(rowId, columnId)
 
@@ -119,25 +132,36 @@ export const CellWidget: FC<EditorCellProps> = ({
 
   const moveToNextRow = () => {
     const rowIndex = gridMap.rowIdToIndex.get(rowId)
-    if (rowIndex === undefined) return
+    if (rowIndex === undefined) {
+      setEditingCellId(null)
+      return
+    }
     const newRowId = gridMap.indexToRowId.get(rowIndex + 1)
     if (newRowId) {
       const newCellId = getCellId(newRowId, columnId)
       selectCell(newCellId, false, false)
       focusCell(newCellId)
       setEditingCellId(newCellId)
+    } else {
+      setEditingCellId(null)
     }
   }
 
   const handleOnChange: WidgetBaseProps['onChange'] = (newValue, key) => {
-    setEditingCellId(null)
-    if (isReadOnly) return
-    // move to the next cell row
+    if (isReadOnly) {
+      setEditingCellId(null)
+      return
+    }
     if (key === 'Enter') {
+      // Move to next row first (sets new editing cell), then save value.
+      // This prevents the dialog from blinking between rows.
       moveToNextRow()
       onChange?.(newValue, key)
     } else if (key === 'Click' && newValue != value) {
+      setEditingCellId(null)
       onChange?.(newValue, key)
+    } else {
+      setEditingCellId(null)
     }
   }
 
@@ -154,6 +178,7 @@ export const CellWidget: FC<EditorCellProps> = ({
       onChange: handleOnChange,
       onCancelEdit: handleCancel,
       isEditing: isCurrentCellEditing,
+      isReadOnly: isReadOnly,
     }
 
     const textTypes: TextWidgetType[] = ['string', 'integer', 'float']
@@ -201,6 +226,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             projectName={projectName}
             disabled={!isEditable}
             folderId={folderId}
+            isLoading={isLinksLoading}
             {...sharedProps}
           />
         )
@@ -220,6 +246,10 @@ export const CellWidget: FC<EditorCellProps> = ({
         )
       }
 
+      case type === 'comments': {
+        return <CommentsWidget value={valueData as EntityComment[] | undefined} {...sharedProps} />
+      }
+
       case !!options.length: {
         const enumValue = Array.isArray(value) ? value : [value]
         if (isReadOnly) {
@@ -232,6 +262,11 @@ export const CellWidget: FC<EditorCellProps> = ({
                 value={enumValue.join(', ')}
                 isInherited={isInherited}
                 columnId={columnId}
+                cellId={cellId}
+                isMarkdown={attributeData?.widget === 'markdown'}
+                onRequestEdit={setEditingCellId}
+                getDraftValue={getEditingDraft}
+                setDraftValue={setEditingDraft}
                 {...sharedProps}
                 {...pt?.text}
               />
@@ -267,6 +302,17 @@ export const CellWidget: FC<EditorCellProps> = ({
             value={value as string}
             isInherited={isInherited}
             columnId={columnId}
+            cellId={cellId}
+            isMarkdown={
+              attributeData?.widget === 'markdown' ||
+              // description SHOULD be default markdown, but lets have this here just in case
+              columnId === 'attrib_description' ||
+              columnId === 'description'
+            }
+            type={type as TextWidgetType}
+            onRequestEdit={setEditingCellId}
+            getDraftValue={getEditingDraft}
+            setDraftValue={setEditingDraft}
             {...sharedProps}
             {...pt?.text}
           />

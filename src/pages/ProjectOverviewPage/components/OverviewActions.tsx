@@ -38,7 +38,7 @@ const ActionButton = styled(Button)`
     }
   }
 `
-type ActionType = 'undo' | 'redo' | 'delete'
+export type ActionType = 'undo' | 'redo' | 'delete'
 interface ActionItem extends ButtonProps {
   ['data-tooltip']?: string
   ['data-shortcut']?: string

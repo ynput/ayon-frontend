@@ -2,6 +2,7 @@ import { format } from 'date-fns'
 import { forwardRef } from 'react'
 import { DateWidgetInput } from './DateWidgetInput'
 import { WidgetBaseProps } from './CellWidget'
+import { formatUTCDate } from '../../../util/formatUTCDate'
 
 export interface DateWidgetProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'>,
@@ -30,7 +31,8 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
     if (value) {
       try {
         const formatString = showTime ? 'dd-MM-yyyy HH:mm:ss' : 'dd-MM-yyyy'
-        dateString = format(new Date(value), formatString)
+        const date = new Date(value)
+        dateString = showTime ? format(date, formatString) : formatUTCDate(date, formatString)
       } catch (error) {
         console.error('Invalid date value:', value)
         dateString = 'Invalid Date'

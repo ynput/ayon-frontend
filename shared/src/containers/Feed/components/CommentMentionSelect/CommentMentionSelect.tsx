@@ -4,7 +4,7 @@ import UserImage from '../../../../components/UserImage'
 import clsx from 'clsx'
 
 interface CommentMentionSelectProps {
-  mention: { type: string } | null
+  mention: { type: string; search?: string } | null
   options?: {
     id: string
     label: string
@@ -16,6 +16,8 @@ interface CommentMentionSelectProps {
   }[]
   selectedIndex: number | null
   onChange: (option: { id: string; label: string }) => void
+  onPrefixFilter?: (prefix: string) => void
+  activePrefix?: string
   types?: string[]
   config: { id?: string; isCircle?: boolean }
   noneFound?: boolean
@@ -29,6 +31,8 @@ const CommentMentionSelect = ({
   options = [],
   selectedIndex,
   onChange,
+  onPrefixFilter,
+  activePrefix,
   types = [],
   config = {},
   noneFound,
@@ -59,11 +63,36 @@ const CommentMentionSelect = ({
   let noOptionsString = `No ${config.id}s found`
   if (error) noOptionsString = error
 
+  const isUserMention = mention.type === '@'
+  const titleText = isUserMention
+    ? '@ Users & Teams'
+    : `${mention.type} ${config?.id ? config.id.charAt(0).toUpperCase() + config.id.slice(1) : ''}s`
+
   return (
     <>
       <Styled.MentionSelect tabIndex={0}>
         <Styled.Title>
-          {mention.type} {config?.id ? config.id.charAt(0).toUpperCase() + config.id.slice(1) : ''}s
+          <span>{titleText}</span>
+          {isUserMention && (
+            <Styled.PrefixFilters>
+              <Styled.PrefixButton
+                className={clsx({ active: activePrefix === 'user' })}
+                onClick={() => onPrefixFilter?.(activePrefix === 'user' ? '' : 'user:')}
+                data-tooltip="Filter users"
+                data-tooltip-delay={0}
+              >
+                <Icon icon="person" />
+              </Styled.PrefixButton>
+              <Styled.PrefixButton
+                className={clsx({ active: activePrefix === 'team' })}
+                onClick={() => onPrefixFilter?.(activePrefix === 'team' ? '' : 'team:')}
+                data-tooltip="Filter teams"
+                data-tooltip-delay={0}
+              >
+                <Icon icon="group" />
+              </Styled.PrefixButton>
+            </Styled.PrefixFilters>
+          )}
         </Styled.Title>
         {types.includes(mention.type) &&
           formattedOptions.map((option, i) => (

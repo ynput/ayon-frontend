@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { RefObject, useMemo, useRef } from 'react'
 import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
 import { DropdownRef, getTextColor } from '@ynput/ayon-react-components'
@@ -13,8 +13,11 @@ import { useScopedStatuses, useEntityUpdate } from '@shared/hooks'
 import { DetailsPanelTab, useDetailsPanelContext } from '@shared/context'
 
 import DetailsPanelTabs from '../DetailsPanelTabs/DetailsPanelTabs'
+import LinkedTaskRow from './LinkedTaskRow'
 import * as Styled from './DetailsPanelHeader.styled'
 import getThumbnails from '../../helpers/getThumbnails'
+import buildEntityTypeIcons from '../../helpers/buildEntityTypeIcons'
+import type { ProjectInfo } from '../../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../../helpers/buildDetailsPanelTitles'
 import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
 
@@ -38,7 +41,9 @@ type DetailsPanelHeaderProps = {
   onTabChange: (tab: DetailsPanelTab) => void
   onOpenViewer: (args: any) => void
   onEntityFocus: DetailsPanelProps['onEntityFocus']
-  entityTypeIcons: EntityTypeIcons
+  projectInfo: ProjectInfo
+  thumbnailInputRef: RefObject<HTMLInputElement>
+  versionsInputRef: RefObject<HTMLInputElement>
 }
 
 const DetailsPanelHeader = ({
@@ -53,14 +58,18 @@ const DetailsPanelHeader = ({
   isCompact = false,
   currentTab,
   onTabChange,
-  entityTypeIcons,
+  projectInfo,
   onOpenViewer,
   onEntityFocus,
+  thumbnailInputRef,
+  versionsInputRef,
 }: DetailsPanelHeaderProps) => {
-  const { useSearchParams, useNavigate, isDeveloperMode } = useDetailsPanelContext()
+  const { useSearchParams, useNavigate, bundleMode } = useDetailsPanelContext()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const tagsSelectRef = useRef<DropdownRef>(null)
+
+  const entityTypeIcons = useMemo(() => buildEntityTypeIcons(projectInfo), [projectInfo])
 
   const statuses = useScopedStatuses(
     entities.map((entity) => entity.projectName),
@@ -191,6 +200,8 @@ const DetailsPanelHeader = ({
         entities={entities}
         entityType={entityType}
         projectName={projectName}
+        thumbnailInputRef={thumbnailInputRef}
+        versionsInputRef={versionsInputRef}
         onVersionCreated={(id) => onEntityFocus?.(id, 'version')}
       >
         <Styled.Grid className={clsx('details-panel-header', { isCompact })}>
@@ -228,6 +239,13 @@ const DetailsPanelHeader = ({
                 <span className="entity-type">{upperFirst(entityType)} - </span>
                 <h3>{subTitle}</h3>
               </div>
+              {entityType === 'version' && !isMultiple && !isLoading && firstEntity && (
+                <LinkedTaskRow
+                  key={firstEntity.id}
+                  entity={firstEntity}
+                  taskTypes={projectInfo.taskTypes}
+                />
+              )}
             </Styled.Content>
           </Styled.Header>
           <Styled.StatusSelect
@@ -266,7 +284,7 @@ const DetailsPanelHeader = ({
             entitySubTypes={entitySubTypes}
             isLoadingEntity={!!isFetching || !!isLoading}
             searchParams={searchParams}
-            isDeveloperMode={isDeveloperMode}
+            bundleMode={bundleMode}
             onSetSearchParams={setSearchParams}
             onNavigate={navigate}
           />

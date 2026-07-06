@@ -52,6 +52,7 @@ export const SettingOption = styled(Button)`
   display: flex;
   gap: var(--base-gap-small);
   padding-right: var(--padding-s);
+  padding-left: var(--padding-m);
 
   .title {
     flex: 1;
@@ -106,8 +107,9 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings, order }) => {
             setting.title ? (
               <SettingOption
                 key={setting.id}
-                onClick={() => selectSetting(setting.id as string)}
+                onClick={() => selectSetting(setting.id)}
                 variant="text"
+                className="setting-option"
               >
                 {setting.icon && <Icon icon={setting.icon} />}
                 <span className="title">{setting.title}</span>

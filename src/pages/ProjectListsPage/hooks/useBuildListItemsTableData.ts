@@ -30,7 +30,10 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         taskTypes: project?.taskTypes || [],
       })
 
-      const entityTypeData = getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
+      const entityTypeData = getEntityTypeData(
+        item.entityType,
+        extractSubTypes(item, item.entityType).subType,
+      )
 
       return {
         id: item.id,
@@ -43,6 +46,13 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         entityType: item.entityType,
         assignees: item.assignees || [],
         ...extractSubTypes(item, item.entityType), // subType, folderType, taskType, productType
+        // version specific fields
+        author: extractAuthor(item, item.entityType),
+        version: extractVersion(item, item.entityType),
+        product: extractProduct(item, item.entityType),
+        productBaseType: extractProductBaseType(item, item.entityType),
+        taskLabel: extractTaskLabel(item, item.entityType),
+        // metadata
         updatedAt: item.updatedAt,
         createdAt: item.createdAt,
         attrib: item.attrib,
@@ -52,6 +62,9 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         icon: isRestricted ? RESTRICTED_ENTITY_ICON : entityTypeData?.icon,
         color: isRestricted ? '' : entityTypeData?.color,
         folderId: extractFolderId(item, item.entityType),
+        // @ts-expect-error - thumbnailHash does exist on products, that's it
+        thumbnailHash: item.thumbnailHash,
+        folder: extractFolder(item, item.entityType),
         parents: item.parents || [],
         tags: item.tags,
         status: item.status,
@@ -59,6 +72,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         subRows: [],
         links: links, // Add processed links
         subtasks: item.subtasks || [], // Add subtasks if they exist
+        latestComments: item.latestComments || [],
       }
     })
   }
@@ -104,6 +118,25 @@ const extractSubTypes = (
   }
 }
 
+// Parent folder name shown in the "Folder name" column. Prefer the fetched
+// folder label/name (matches the Products page); fall back to the parents path
+// so it still renders before graphql codegen adds the label/name fields.
+const extractFolder = (item: EntityListItemWithLinks, entityType: string): string => {
+  const fromParents = item.parents?.[item.parents.length - 1] || ''
+  const pickName = (folder?: { name?: string; label?: string } | null) =>
+    folder?.label || folder?.name || ''
+
+  switch (entityType) {
+    case 'task':
+    case 'product':
+      return pickName(item.folder) || fromParents
+    case 'version':
+      return pickName(item.product?.folder) || fromParents
+    default:
+      return fromParents
+  }
+}
+
 const extractFolderId = (item: EntityListItemWithLinks, entityType: string): string => {
   switch (entityType) {
     case 'folder':
@@ -114,6 +147,55 @@ const extractFolderId = (item: EntityListItemWithLinks, entityType: string): str
       return item.folderId || ''
     case 'version':
       return item.product?.folderId || ''
+    default:
+      return ''
+  }
+}
+
+const extractAuthor = (item: EntityListItemWithLinks, entityType: string): string => {
+  switch (entityType) {
+    case 'version':
+      // @ts-expect-error - author field does exist on version list items
+      return item.author || undefined
+    default:
+      return ''
+  }
+}
+
+const extractVersion = (item: EntityListItemWithLinks, entityType: string): string => {
+  switch (entityType) {
+    case 'version':
+      return item.name || ''
+    default:
+      return ''
+  }
+}
+
+const extractProduct = (item: EntityListItemWithLinks, entityType: string): string => {
+  switch (entityType) {
+    case 'version':
+      // @ts-expect-error = name does exist on product
+      return item.product?.name || ''
+    case 'product':
+      return item.name || ''
+    default:
+      return ''
+  }
+}
+
+const extractProductBaseType = (item: EntityListItemWithLinks, entityType: string): string => {
+  switch (entityType) {
+    case 'version':
+      return item.product?.productBaseType || ''
+    default:
+      return ''
+  }
+}
+
+const extractTaskLabel = (item: EntityListItemWithLinks, entityType: string): string => {
+  switch (entityType) {
+    case 'version':
+      return item.task?.label || item.task?.name || ''
     default:
       return ''
   }

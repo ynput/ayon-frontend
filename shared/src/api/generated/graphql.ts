@@ -10,14 +10,14 @@
  */
 // @ts-nocheck
 
+/** Internal type. DO NOT USE DIRECTLY. */
+type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+/** Internal type. DO NOT USE DIRECTLY. */
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+import { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { api } from '@shared/api/base';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -25,12 +25,14 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
-  DateTime: { input: any; output: any; }
+  DateTime: { input: unknown; output: unknown; }
+  JSON: { input: unknown; output: unknown; }
 };
 
 export type ActivitiesConnection = {
   __typename?: 'ActivitiesConnection';
   edges: Array<ActivityEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -44,7 +46,6 @@ export type ActivityCategory = {
 export type ActivityEdge = {
   __typename?: 'ActivityEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The activity node */
   node: ActivityNode;
 };
 
@@ -147,10 +148,36 @@ export type BaseNodeLinksArgs = {
   names?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+export type ColumnStats = {
+  __typename?: 'ColumnStats';
+  avg?: Maybe<Scalars['Float']['output']>;
+  checkedCount?: Maybe<Scalars['Int']['output']>;
+  checkedPercentage?: Maybe<Scalars['Float']['output']>;
+  columnName: Scalars['String']['output'];
+  count?: Maybe<Scalars['Float']['output']>;
+  distribution?: Maybe<Scalars['JSON']['output']>;
+  max?: Maybe<Scalars['Float']['output']>;
+  min?: Maybe<Scalars['Float']['output']>;
+  notCheckedCount?: Maybe<Scalars['Int']['output']>;
+  notCheckedPercentage?: Maybe<Scalars['Float']['output']>;
+  percentageFilled?: Maybe<Scalars['Float']['output']>;
+  percentageNotFilled?: Maybe<Scalars['Float']['output']>;
+  sum?: Maybe<Scalars['Float']['output']>;
+  valueFilledCount?: Maybe<Scalars['Int']['output']>;
+  valueNotFilledCount?: Maybe<Scalars['Int']['output']>;
+};
+
+export type EntityComment = {
+  __typename?: 'EntityComment';
+  activityId: Scalars['String']['output'];
+  author?: Maybe<Scalars['String']['output']>;
+  body: Scalars['String']['output'];
+  createdAt: Scalars['String']['output'];
+};
+
 export type EntityListEdge = {
   __typename?: 'EntityListEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The entity list node */
   node: EntityListNode;
 };
 
@@ -181,6 +208,7 @@ export type EntityListItemEdge = {
 export type EntityListItemsConnection = {
   __typename?: 'EntityListItemsConnection';
   edges: Array<EntityListItemEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -214,6 +242,8 @@ export type EntityListNodeItemsArgs = {
   accessibleOnly?: Scalars['Boolean']['input'];
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
@@ -223,6 +253,7 @@ export type EntityListNodeItemsArgs = {
 export type EntityListsConnection = {
   __typename?: 'EntityListsConnection';
   edges: Array<EntityListEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -230,7 +261,6 @@ export type EntityListsConnection = {
 export type EventEdge = {
   __typename?: 'EventEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** Event node */
   node: EventNode;
 };
 
@@ -256,6 +286,7 @@ export type EventNode = {
 export type EventsConnection = {
   __typename?: 'EventsConnection';
   edges: Array<EventEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -297,7 +328,6 @@ export type FolderAttribType = {
 export type FolderEdge = {
   __typename?: 'FolderEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The folder node */
   node: FolderNode;
 };
 
@@ -319,6 +349,7 @@ export type FolderNode = BaseNode & {
   hasVersions: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
+  latestComments?: Maybe<Array<EntityComment>>;
   links: LinksConnection;
   name: Scalars['String']['output'];
   ownAttrib: Array<Scalars['String']['output']>;
@@ -336,7 +367,12 @@ export type FolderNode = BaseNode & {
   /** Return a list of tasks. */
   tasks: TasksConnection;
   thumbnail?: Maybe<ThumbnailInfo>;
+  thumbnailHash: Scalars['String']['output'];
   thumbnailId?: Maybe<Scalars['String']['output']>;
+  totalFolderCount: Scalars['Int']['output'];
+  totalProductCount: Scalars['Int']['output'];
+  totalTaskCount: Scalars['Int']['output'];
+  totalVersionCount: Scalars['Int']['output'];
   type: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
   updatedBy?: Maybe<Scalars['String']['output']>;
@@ -366,6 +402,8 @@ export type FolderNodeLinksArgs = {
 export type FolderNodeProductsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -394,6 +432,8 @@ export type FolderNodeTasksArgs = {
   assigneesAny?: InputMaybe<Array<Scalars['String']['input']>>;
   attributes?: InputMaybe<Array<AttributeFilterInput>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderFilter?: InputMaybe<Scalars['String']['input']>;
@@ -422,6 +462,7 @@ export type FolderType = {
 export type FoldersConnection = {
   __typename?: 'FoldersConnection';
   edges: Array<FolderEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -437,6 +478,7 @@ export enum HasLinksFilter {
 export type KanbanConnection = {
   __typename?: 'KanbanConnection';
   edges: Array<KanbanEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -444,7 +486,6 @@ export type KanbanConnection = {
 export type KanbanEdge = {
   __typename?: 'KanbanEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The kanban node */
   node: KanbanNode;
 };
 
@@ -471,6 +512,7 @@ export type KanbanNode = {
   tags: Array<Scalars['String']['output']>;
   taskType: Scalars['String']['output'];
   thumbnail?: Maybe<ThumbnailInfo>;
+  thumbnailHash: Scalars['String']['output'];
   thumbnailId?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
@@ -479,6 +521,7 @@ export type LinkEdge = {
   __typename?: 'LinkEdge';
   author?: Maybe<Scalars['String']['output']>;
   cursor?: Maybe<Scalars['String']['output']>;
+  data: Scalars['JSON']['output'];
   description: Scalars['String']['output'];
   direction: Scalars['String']['output'];
   entityId: Scalars['String']['output'];
@@ -508,8 +551,16 @@ export type LinksConnection = {
   pageInfo: PageInfo;
 };
 
+export type MetricTargetInput = {
+  /** List of statistical calculations to run */
+  aggregations: Array<StatsOperation>;
+  /** The attribute path, e.g., 'attrib.fps' */
+  field: Scalars['String']['input'];
+};
+
 export type PageInfo = {
   __typename?: 'PageInfo';
+  columnMetadata?: Maybe<Array<ColumnStats>>;
   endCursor?: Maybe<Scalars['String']['output']>;
   hasNextPage: Scalars['Boolean']['output'];
   hasPreviousPage: Scalars['Boolean']['output'];
@@ -525,13 +576,14 @@ export type ProductAttribType = {
 
 export type ProductBaseType = {
   __typename?: 'ProductBaseType';
+  color: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
   name: Scalars['String']['output'];
 };
 
 export type ProductEdge = {
   __typename?: 'ProductEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** Product node */
   node: ProductNode;
 };
 
@@ -600,6 +652,8 @@ export type ProductNodeVersionsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -634,6 +688,7 @@ export type ProductType = {
 export type ProductsConnection = {
   __typename?: 'ProductsConnection';
   edges: Array<ProductEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -671,8 +726,34 @@ export type ProjectBundleType = {
 export type ProjectEdge = {
   __typename?: 'ProjectEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The project node */
   node: ProjectNode;
+};
+
+export type ProjectLinkEdge = {
+  __typename?: 'ProjectLinkEdge';
+  author?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  cursor?: Maybe<Scalars['String']['output']>;
+  data: Scalars['JSON']['output'];
+  id: Scalars['String']['output'];
+  inputId: Scalars['String']['output'];
+  /** Input node */
+  inputNode?: Maybe<BaseNode>;
+  inputType: Scalars['String']['output'];
+  linkType: Scalars['String']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  outputId: Scalars['String']['output'];
+  /** Output node */
+  outputNode?: Maybe<BaseNode>;
+  outputType: Scalars['String']['output'];
+  projectName: Scalars['String']['output'];
+};
+
+export type ProjectLinksConnection = {
+  __typename?: 'ProjectLinksConnection';
+  edges: Array<ProjectLinkEdge>;
+  /** Pagination information */
+  pageInfo: PageInfo;
 };
 
 export type ProjectNode = {
@@ -683,6 +764,7 @@ export type ProjectNode = {
   attrib: ProjectAttribType;
   bundle: ProjectBundleType;
   code: Scalars['String']['output'];
+  color?: Maybe<Scalars['String']['output']>;
   config?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   data?: Maybe<Scalars['String']['output']>;
@@ -695,9 +777,12 @@ export type ProjectNode = {
   folderTypes: Array<FolderType>;
   /** Return a list of folders. */
   folders: FoldersConnection;
+  label?: Maybe<Scalars['String']['output']>;
   library: Scalars['Boolean']['output'];
   /** List of project's link types */
   linkTypes: Array<LinkType>;
+  /** List all links in the project, with optional filters. */
+  links: ProjectLinksConnection;
   name: Scalars['String']['output'];
   /** Return a representation node based on its ID */
   product?: Maybe<ProductNode>;
@@ -713,6 +798,7 @@ export type ProjectNode = {
   representation?: Maybe<RepresentationNode>;
   /** Return a list of representations. */
   representations: RepresentationsConnection;
+  skeleton: Scalars['Boolean']['output'];
   /** List of project's statuses */
   statuses: Array<Status>;
   /** List of tags in the project */
@@ -742,6 +828,7 @@ export type ProjectNodeActivitiesArgs = {
   activityIds?: InputMaybe<Array<Scalars['String']['input']>>;
   activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   after?: InputMaybe<Scalars['String']['input']>;
+  authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
   categories?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   changedAfter?: InputMaybe<Scalars['String']['input']>;
@@ -749,6 +836,7 @@ export type ProjectNodeActivitiesArgs = {
   entityIds?: InputMaybe<Array<Scalars['String']['input']>>;
   entityNames?: InputMaybe<Array<Scalars['String']['input']>>;
   entityType?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -768,6 +856,7 @@ export type ProjectNodeEntityListsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -787,6 +876,8 @@ export type ProjectNodeFoldersArgs = {
   assignees?: InputMaybe<Array<Scalars['String']['input']>>;
   attributes?: InputMaybe<Array<AttributeFilterInput>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderTypes?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -795,6 +886,7 @@ export type ProjectNodeFoldersArgs = {
   hasProducts?: InputMaybe<Scalars['Boolean']['input']>;
   hasTasks?: InputMaybe<Scalars['Boolean']['input']>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -815,6 +907,21 @@ export type ProjectNodeLinkTypesArgs = {
 };
 
 
+export type ProjectNodeLinksArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  entityIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  first?: Scalars['Int']['input'];
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  inputIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  inputTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  nameEx?: InputMaybe<Scalars['String']['input']>;
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+  outputIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  outputTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
 export type ProjectNodeProductArgs = {
   id: Scalars['String']['input'];
 };
@@ -823,6 +930,8 @@ export type ProjectNodeProductArgs = {
 export type ProjectNodeProductsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -882,6 +991,8 @@ export type ProjectNodeTasksArgs = {
   assigneesAny?: InputMaybe<Array<Scalars['String']['input']>>;
   attributes?: InputMaybe<Array<AttributeFilterInput>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderFilter?: InputMaybe<Scalars['String']['input']>;
@@ -909,6 +1020,8 @@ export type ProjectNodeVersionsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -958,6 +1071,7 @@ export type ProjectNodeWorkfilesArgs = {
 export type ProjectsConnection = {
   __typename?: 'ProjectsConnection';
   edges: Array<ProjectEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -1034,6 +1148,7 @@ export type QueryProjectsArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   code?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  includeSkeleton?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
 };
@@ -1049,6 +1164,7 @@ export type QueryUsersArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   emails?: InputMaybe<Array<Scalars['String']['input']>>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  isSupport?: InputMaybe<Scalars['Boolean']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1081,7 +1197,6 @@ export type RepresentationAttribType = {
 export type RepresentationEdge = {
   __typename?: 'RepresentationEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** Representation node */
   node: RepresentationNode;
 };
 
@@ -1139,9 +1254,27 @@ export type RepresentationNodeLinksArgs = {
 export type RepresentationsConnection = {
   __typename?: 'RepresentationsConnection';
   edges: Array<RepresentationEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
+
+export enum StatsOperation {
+  Avg = 'AVG',
+  Checked = 'CHECKED',
+  Count = 'COUNT',
+  Distribution = 'DISTRIBUTION',
+  Filled = 'FILLED',
+  Max = 'MAX',
+  Min = 'MIN',
+  NotChecked = 'NOT_CHECKED',
+  NotFilled = 'NOT_FILLED',
+  PercentageChecked = 'PERCENTAGE_CHECKED',
+  PercentageFilled = 'PERCENTAGE_FILLED',
+  PercentageNotChecked = 'PERCENTAGE_NOT_CHECKED',
+  PercentageNotFilled = 'PERCENTAGE_NOT_FILLED',
+  Sum = 'SUM'
+}
 
 export type Status = {
   __typename?: 'Status';
@@ -1198,7 +1331,6 @@ export type TaskAttribType = {
 export type TaskEdge = {
   __typename?: 'TaskEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The task node */
   node: TaskNode;
 };
 
@@ -1219,6 +1351,7 @@ export type TaskNode = BaseNode & {
   hasReviewables: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
+  latestComments?: Maybe<Array<EntityComment>>;
   links: LinksConnection;
   name: Scalars['String']['output'];
   ownAttrib: Array<Scalars['String']['output']>;
@@ -1230,6 +1363,7 @@ export type TaskNode = BaseNode & {
   tags: Array<Scalars['String']['output']>;
   taskType: Scalars['String']['output'];
   thumbnail?: Maybe<ThumbnailInfo>;
+  thumbnailHash: Scalars['String']['output'];
   thumbnailId?: Maybe<Scalars['String']['output']>;
   type: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
@@ -1265,6 +1399,8 @@ export type TaskNodeVersionsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -1317,6 +1453,7 @@ export type TaskType = {
 export type TasksConnection = {
   __typename?: 'TasksConnection';
   edges: Array<TaskEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -1340,7 +1477,6 @@ export type UserAttribType = {
 export type UserEdge = {
   __typename?: 'UserEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The user node */
   node: UserNode;
 };
 
@@ -1356,11 +1492,14 @@ export type UserNode = {
   deleted: Scalars['Boolean']['output'];
   disablePasswordLogin: Scalars['Boolean']['output'];
   hasPassword: Scalars['Boolean']['output'];
+  inviteAcceptedAt?: Maybe<Scalars['DateTime']['output']>;
+  inviteSentAt?: Maybe<Scalars['DateTime']['output']>;
   isAdmin: Scalars['Boolean']['output'];
   isDeveloper: Scalars['Boolean']['output'];
   isGuest: Scalars['Boolean']['output'];
   isManager: Scalars['Boolean']['output'];
   isService: Scalars['Boolean']['output'];
+  isStagingAllowed: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   tasks: TasksConnection;
   updatedAt: Scalars['DateTime']['output'];
@@ -1375,6 +1514,7 @@ export type UserNodeTasksArgs = {
 export type UsersConnection = {
   __typename?: 'UsersConnection';
   edges: Array<UserEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -1408,7 +1548,6 @@ export type VersionAttribType = {
 export type VersionEdge = {
   __typename?: 'VersionEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** Version node */
   node: VersionNode;
 };
 
@@ -1436,6 +1575,7 @@ export type VersionNode = BaseNode & {
   id: Scalars['String']['output'];
   isLatest: Scalars['Boolean']['output'];
   isLatestDone: Scalars['Boolean']['output'];
+  latestComments?: Maybe<Array<EntityComment>>;
   links: LinksConnection;
   name: Scalars['String']['output'];
   parents: Array<Scalars['String']['output']>;
@@ -1452,6 +1592,7 @@ export type VersionNode = BaseNode & {
   task?: Maybe<TaskNode>;
   taskId?: Maybe<Scalars['String']['output']>;
   thumbnail?: Maybe<ThumbnailInfo>;
+  thumbnailHash: Scalars['String']['output'];
   thumbnailId?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   updatedBy?: Maybe<Scalars['String']['output']>;
@@ -1497,6 +1638,7 @@ export type VersionNodeRepresentationsArgs = {
 export type VersionsConnection = {
   __typename?: 'VersionsConnection';
   edges: Array<VersionEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -1511,7 +1653,6 @@ export type WorkfileAttribType = {
 export type WorkfileEdge = {
   __typename?: 'WorkfileEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** Workfile node */
   node: WorkfileNode;
 };
 
@@ -1537,6 +1678,7 @@ export type WorkfileNode = BaseNode & {
   task: TaskNode;
   taskId?: Maybe<Scalars['String']['output']>;
   thumbnail?: Maybe<ThumbnailInfo>;
+  thumbnailHash: Scalars['String']['output'];
   thumbnailId?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   updatedBy?: Maybe<Scalars['String']['output']>;
@@ -1565,152 +1707,194 @@ export type WorkfileNodeLinksArgs = {
 export type WorkfilesConnection = {
   __typename?: 'WorkfilesConnection';
   edges: Array<WorkfileEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
 
-export type ActivityFragmentFragment = { __typename?: 'ActivityNode', activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId?: string | null, body: string, createdAt: any, updatedAt: any, author?: { __typename?: 'UserNode', name: string, deleted: boolean, active: boolean, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, files: Array<{ __typename?: 'ActivityFileNode', id: string, name?: string | null, size: string, mime?: string | null }>, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string } | null, reactions: Array<{ __typename?: 'ActivityReactionNode', fullName?: string | null, userName: string, reaction: string, timestamp: any }>, version?: { __typename?: 'VersionNode', attrib: { __typename?: 'VersionAttribType', comment?: string | null } } | null };
+export type AttributeFilterInput = {
+  name: string;
+  values: Array<string>;
+};
+
+export type MetricTargetInput = {
+  /** List of statistical calculations to run */
+  aggregations: Array<StatsOperation>;
+  /** The attribute path, e.g., 'attrib.fps' */
+  field: string;
+};
+
+export type StatsOperation =
+  | 'AVG'
+  | 'CHECKED'
+  | 'COUNT'
+  | 'DISTRIBUTION'
+  | 'FILLED'
+  | 'MAX'
+  | 'MIN'
+  | 'NOT_CHECKED'
+  | 'NOT_FILLED'
+  | 'PERCENTAGE_CHECKED'
+  | 'PERCENTAGE_FILLED'
+  | 'PERCENTAGE_NOT_CHECKED'
+  | 'PERCENTAGE_NOT_FILLED'
+  | 'SUM';
+
+export type ActivityFragmentFragment = { activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId: string | null, body: string, createdAt: unknown, updatedAt: unknown, author: { name: string, deleted: boolean, active: boolean, attrib: { fullName: string | null } } | null, files: Array<{ id: string, name: string | null, size: string, mime: string | null }>, origin: { id: string, name: string, label: string | null, type: string } | null, reactions: Array<{ fullName: string | null, userName: string, reaction: string, timestamp: unknown }>, version: { thumbnailHash: string, attrib: { comment: string | null } } | null };
 
 export type GetActivitiesByIdQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  activityIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  projectName: string;
+  entityIds: Array<string> | string;
+  activityIds?: Array<string> | string | null | undefined;
 }>;
 
 
-export type GetActivitiesByIdQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, activities: { __typename?: 'ActivitiesConnection', pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, hasNextPage: boolean, startCursor?: string | null, endCursor?: string | null }, edges: Array<{ __typename?: 'ActivityEdge', cursor?: string | null, node: { __typename?: 'ActivityNode', activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId?: string | null, body: string, createdAt: any, updatedAt: any, author?: { __typename?: 'UserNode', name: string, deleted: boolean, active: boolean, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, files: Array<{ __typename?: 'ActivityFileNode', id: string, name?: string | null, size: string, mime?: string | null }>, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string } | null, reactions: Array<{ __typename?: 'ActivityReactionNode', fullName?: string | null, userName: string, reaction: string, timestamp: any }>, version?: { __typename?: 'VersionNode', attrib: { __typename?: 'VersionAttribType', comment?: string | null } } | null } }> } } };
+export type GetActivitiesByIdQuery = { project: { name: string, activities: { pageInfo: { hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string | null, endCursor: string | null }, edges: Array<{ cursor: string | null, node: { activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId: string | null, body: string, createdAt: unknown, updatedAt: unknown, author: { name: string, deleted: boolean, active: boolean, attrib: { fullName: string | null } } | null, files: Array<{ id: string, name: string | null, size: string, mime: string | null }>, origin: { id: string, name: string, label: string | null, type: string } | null, reactions: Array<{ fullName: string | null, userName: string, reaction: string, timestamp: unknown }>, version: { thumbnailHash: string, attrib: { comment: string | null } } | null } }> } } };
 
 export type GetActivityUsersQueryVariables = Exact<{
-  projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  projects?: Array<string> | string | null | undefined;
 }>;
 
 
-export type GetActivityUsersQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
+export type GetActivityUsersQuery = { users: { edges: Array<{ node: { name: string, attrib: { fullName: string | null } } }> } };
 
 export type GetActivitiesQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  after?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  referenceTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  activityTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  projectName: string;
+  entityIds: Array<string> | string;
+  after?: string | null | undefined;
+  first?: number | null | undefined;
+  before?: string | null | undefined;
+  last?: number | null | undefined;
+  referenceTypes?: Array<string> | string | null | undefined;
+  activityTypes?: Array<string> | string | null | undefined;
+  authors?: Array<string> | string | null | undefined;
+  activityFilter?: string | null | undefined;
 }>;
 
 
-export type GetActivitiesQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, activities: { __typename?: 'ActivitiesConnection', pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, hasNextPage: boolean, startCursor?: string | null, endCursor?: string | null }, edges: Array<{ __typename?: 'ActivityEdge', cursor?: string | null, node: { __typename?: 'ActivityNode', activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId?: string | null, body: string, createdAt: any, updatedAt: any, author?: { __typename?: 'UserNode', name: string, deleted: boolean, active: boolean, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, files: Array<{ __typename?: 'ActivityFileNode', id: string, name?: string | null, size: string, mime?: string | null }>, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string } | null, reactions: Array<{ __typename?: 'ActivityReactionNode', fullName?: string | null, userName: string, reaction: string, timestamp: any }>, version?: { __typename?: 'VersionNode', attrib: { __typename?: 'VersionAttribType', comment?: string | null } } | null } }> } } };
+export type GetActivitiesQuery = { project: { name: string, activities: { pageInfo: { hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string | null, endCursor: string | null }, edges: Array<{ cursor: string | null, node: { activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId: string | null, body: string, createdAt: unknown, updatedAt: unknown, author: { name: string, deleted: boolean, active: boolean, attrib: { fullName: string | null } } | null, files: Array<{ id: string, name: string | null, size: string, mime: string | null }>, origin: { id: string, name: string, label: string | null, type: string } | null, reactions: Array<{ fullName: string | null, userName: string, reaction: string, timestamp: unknown }>, version: { thumbnailHash: string, attrib: { comment: string | null } } | null } }> } } };
 
 export type GetEntitiesChecklistsQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
+  projectName: string;
+  entityIds: Array<string> | string;
 }>;
 
 
-export type GetEntitiesChecklistsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, activities: { __typename?: 'ActivitiesConnection', edges: Array<{ __typename?: 'ActivityEdge', cursor?: string | null, node: { __typename?: 'ActivityNode', activityId: string, body: string } }> } } };
+export type GetEntitiesChecklistsQuery = { project: { name: string, activities: { edges: Array<{ cursor: string | null, node: { activityId: string, body: string } }> } } };
 
 export type GetDetailsPanelFolderQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityId: Scalars['String']['input'];
+  projectName: string;
+  entityId: string;
 }>;
 
 
-export type GetDetailsPanelFolderQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, folder?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, status: string, tags: Array<string>, updatedAt: any, createdAt: any, thumbnailId?: string | null, folderType: string, path?: string | null, parents: Array<string>, hasReviewables: boolean, allAttrib: string } | null } };
+export type GetDetailsPanelFolderQuery = { project: { projectName: string, code: string, folder: { id: string, name: string, label: string | null, status: string, tags: Array<string>, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, thumbnailId: string | null, folderType: string, path: string | null, parents: Array<string>, hasReviewables: boolean, allAttrib: string } | null } };
 
 export type GetDetailsPanelRepresentationQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityId: Scalars['String']['input'];
+  projectName: string;
+  entityId: string;
 }>;
 
 
-export type GetDetailsPanelRepresentationQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', representation?: { __typename?: 'RepresentationNode', id: string, versionId: string, name: string, status: string, tags: Array<string>, updatedAt: any, createdAt: any, allAttrib: string, context?: string | null, parents: Array<string>, version: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, latestVersion?: { __typename?: 'VersionNode', version: number } | null } } } | null } };
+export type GetDetailsPanelRepresentationQuery = { project: { representation: { id: string, versionId: string, name: string, status: string, tags: Array<string>, updatedAt: unknown, createdAt: unknown, allAttrib: string, context: string | null, parents: Array<string>, version: { id: string, thumbnailId: string | null, name: string, updatedAt: unknown, createdAt: unknown, productId: string, version: number, author: string | null, task: { id: string, name: string, label: string | null, assignees: Array<string>, taskType: string } | null, product: { id: string, name: string, productType: string, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string }, latestVersion: { version: number } | null } } } | null } };
 
 export type GetDetailsPanelTaskQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityId: Scalars['String']['input'];
+  projectName: string;
+  entityId: string;
 }>;
 
 
-export type GetDetailsPanelTaskQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, status: string, tags: Array<string>, allAttrib: string, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, folderId: string, thumbnailId?: string | null, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }>, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null } }> } } | null } };
+export type GetDetailsPanelTaskQuery = { project: { projectName: string, code: string, task: { id: string, name: string, label: string | null, status: string, tags: Array<string>, allAttrib: string, taskType: string, assignees: Array<string>, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, folderId: string, thumbnailId: string | null, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string }, versions: { edges: Array<{ node: { id: string, thumbnailId: string | null, name: string, updatedAt: unknown, createdAt: unknown, productId: string, version: number, author: string | null } }> } } | null } };
 
 export type GetDetailsPanelVersionQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  entityId: Scalars['String']['input'];
+  projectName: string;
+  entityId: string;
 }>;
 
 
-export type GetDetailsPanelVersionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, version?: { __typename?: 'VersionNode', id: string, version: number, name: string, author?: string | null, status: string, tags: Array<string>, updatedAt: any, createdAt: any, thumbnailId?: string | null, hasReviewables: boolean, parents: Array<string>, allAttrib: string, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, latestVersion?: { __typename?: 'VersionNode', version: number } | null }, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> } | null, representations: { __typename?: 'RepresentationsConnection', edges: Array<{ __typename?: 'RepresentationEdge', node: { __typename?: 'RepresentationNode', id: string, name: string, fileCount: number } }> } } | null } };
+export type GetDetailsPanelVersionQuery = { project: { projectName: string, code: string, version: { id: string, version: number, name: string, author: string | null, status: string, tags: Array<string>, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, thumbnailId: string | null, hasReviewables: boolean, parents: Array<string>, allAttrib: string, product: { id: string, name: string, productType: string, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string }, latestVersion: { version: number } | null }, task: { id: string, name: string, label: string | null, assignees: Array<string>, taskType: string } | null, representations: { edges: Array<{ node: { id: string, name: string, fileCount: number } }> } } | null } };
 
 export type GetProductVersionsQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  productId: Scalars['String']['input'];
+  projectName: string;
+  productId: string;
 }>;
 
 
-export type GetProductVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', product?: { __typename?: 'ProductNode', versionList: Array<{ __typename?: 'VersionListItem', id: string, name: string, version: number }> } | null } };
+export type GetProductVersionsQuery = { project: { product: { versionList: Array<{ id: string, name: string, version: number }> } | null } };
 
-export type DetailsPanelFolderFragmentFragment = { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string };
+export type DetailsPanelFolderFragmentFragment = { id: string, name: string, label: string | null, path: string | null, folderType: string };
 
-export type DetailsPanelProductFragmentFragment = { __typename?: 'ProductNode', id: string, name: string, productType: string, latestVersion?: { __typename?: 'VersionNode', version: number } | null };
+export type DetailsPanelProductFragmentFragment = { id: string, name: string, productType: string, latestVersion: { version: number } | null };
 
-export type DetailsPanelRepresentationFragmentFragment = { __typename?: 'RepresentationNode', id: string, name: string, fileCount: number };
+export type DetailsPanelRepresentationFragmentFragment = { id: string, name: string, fileCount: number };
 
-export type DetailsPanelTaskFragmentFragment = { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> };
+export type DetailsPanelTaskFragmentFragment = { id: string, name: string, label: string | null, assignees: Array<string>, taskType: string };
 
-export type DetailsPanelVersionFragmentFragment = { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null };
+export type DetailsPanelVersionFragmentFragment = { id: string, thumbnailId: string | null, name: string, updatedAt: unknown, createdAt: unknown, productId: string, version: number, author: string | null };
 
 export type GetListItemsQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  listId: Scalars['String']['input'];
-  first?: InputMaybe<Scalars['Int']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-  filter?: InputMaybe<Scalars['String']['input']>;
+  projectName: string;
+  listId: string;
+  first?: number | null | undefined;
+  after?: string | null | undefined;
+  before?: string | null | undefined;
+  last?: number | null | undefined;
+  sortBy?: string | null | undefined;
+  filter?: string | null | undefined;
+  showComments?: boolean;
 }>;
 
 
-export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, allAttrib: string, position: number, ownItemAttrib: Array<string>, node?:
-                | { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string }
-                | { __typename?: 'ProductNode', status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } }
-                | { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> }
-                | { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string }, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> }
-                | { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folderId: string, folder: { __typename?: 'FolderNode', id: string, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null }
-                | { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> }
+export type GetListItemsQuery = { project: { entityLists: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ node: { id: string, active: boolean, items: { pageInfo: { hasNextPage: boolean, hasPreviousPage: boolean, endCursor: string | null }, edges: Array<{ id: string, entityId: string, entityType: string, allAttrib: string, position: number, ownItemAttrib: Array<string>, node:
+                | { label: string | null, status: string, tags: Array<string>, folderType: string, path: string | null, ownAttrib: Array<string>, hasReviewables: boolean, thumbnailHash: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folderId: string, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null }
+                | { status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folder: { name: string, label: string | null, path: string | null, folderType: string } }
+                | { active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string> }
+                | { label: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, thumbnailHash: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folder: { name: string, label: string | null, path: string | null, folderType: string }, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null }
+                | { status: string, tags: Array<string>, hasReviewables: boolean, author: string | null, version: number, thumbnailHash: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, product: { id: string, name: string, productType: string, productBaseType: string | null, folderId: string, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string } }, task: { name: string, label: string | null, taskType: string } | null, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null }
+                | { active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string> }
                | null }> } } }> } } };
 
-export type GetListsQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  first: Scalars['Int']['input'];
-  after?: InputMaybe<Scalars['String']['input']>;
-  filter?: InputMaybe<Scalars['String']['input']>;
+export type GetListItemsColumnStatsQueryVariables = Exact<{
+  projectName: string;
+  listId: string;
+  filter?: string | null | undefined;
+  targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
 }>;
 
 
-export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, entityListFolderId?: string | null, tags: Array<string>, data: string, allAttrib: string, entityType: string, active: boolean, createdAt: any, updatedAt: any, updatedBy?: string | null, projectName: string, owner?: string | null, accessLevel: number, access: string, count: number } }> } } };
+export type GetListItemsColumnStatsQuery = { project: { name: string, entityLists: { edges: Array<{ node: { id: string, items: { fieldStats: Array<{ columnName: string, min: number | null, max: number | null, avg: number | null, sum: number | null, count: number | null, valueFilledCount: number | null, percentageFilled: number | null, valueNotFilledCount: number | null, percentageNotFilled: number | null, checkedCount: number | null, checkedPercentage: number | null, notCheckedCount: number | null, notCheckedPercentage: number | null, distribution: unknown }> } } }> } } };
+
+export type GetListsQueryVariables = Exact<{
+  projectName: string;
+  first: number;
+  after?: string | null | undefined;
+  filter?: string | null | undefined;
+}>;
+
+
+export type GetListsQuery = { project: { entityLists: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ node: { id: string, label: string, entityListType: string, entityListFolderId: string | null, tags: Array<string>, data: string, allAttrib: string, entityType: string, active: boolean, createdAt: unknown, updatedAt: unknown, updatedBy: string | null, projectName: string, owner: string | null, accessLevel: number, access: string, count: number } }> } } };
 
 export type GetListsItemsForReviewSessionQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  first?: InputMaybe<Scalars['Int']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  ids?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  projectName: string;
+  first?: number | null | undefined;
+  after?: string | null | undefined;
+  ids?: Array<string> | string | null | undefined;
 }>;
 
 
-export type GetListsItemsForReviewSessionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, active: boolean, entityType: string, updatedAt: any, count: number, accessLevel: number } }> } } };
+export type GetListsItemsForReviewSessionQuery = { project: { entityLists: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ node: { id: string, label: string, active: boolean, entityType: string, updatedAt: unknown, count: number, accessLevel: number } }> } } };
 
-type ListItemFragment_FolderNode_Fragment = { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string };
+type ListItemFragment_FolderNode_Fragment = { label: string | null, status: string, tags: Array<string>, folderType: string, path: string | null, ownAttrib: Array<string>, hasReviewables: boolean, thumbnailHash: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folderId: string, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null };
 
-type ListItemFragment_ProductNode_Fragment = { __typename?: 'ProductNode', status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } };
+type ListItemFragment_ProductNode_Fragment = { status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folder: { name: string, label: string | null, path: string | null, folderType: string } };
 
-type ListItemFragment_RepresentationNode_Fragment = { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> };
+type ListItemFragment_RepresentationNode_Fragment = { active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string> };
 
-type ListItemFragment_TaskNode_Fragment = { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string }, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> };
+type ListItemFragment_TaskNode_Fragment = { label: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, thumbnailHash: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folder: { name: string, label: string | null, path: string | null, folderType: string }, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null };
 
-type ListItemFragment_VersionNode_Fragment = { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folderId: string, folder: { __typename?: 'FolderNode', id: string, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null };
+type ListItemFragment_VersionNode_Fragment = { status: string, tags: Array<string>, hasReviewables: boolean, author: string | null, version: number, thumbnailHash: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, product: { id: string, name: string, productType: string, productBaseType: string | null, folderId: string, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string } }, task: { name: string, label: string | null, taskType: string } | null, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null };
 
-type ListItemFragment_WorkfileNode_Fragment = { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> };
+type ListItemFragment_WorkfileNode_Fragment = { active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string> };
 
 export type ListItemFragmentFragment =
   | ListItemFragment_FolderNode_Fragment
@@ -1721,223 +1905,338 @@ export type ListItemFragmentFragment =
   | ListItemFragment_WorkfileNode_Fragment
 ;
 
-export type GetTasksByParentQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  parentIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  filter?: InputMaybe<Scalars['String']['input']>;
-  folderFilter?: InputMaybe<Scalars['String']['input']>;
-  search?: InputMaybe<Scalars['String']['input']>;
+export type ColumnStatsFragmentFragment = { columnName: string, min: number | null, max: number | null, avg: number | null, sum: number | null, count: number | null, valueFilledCount: number | null, percentageFilled: number | null, valueNotFilledCount: number | null, percentageNotFilled: number | null, checkedCount: number | null, checkedPercentage: number | null, notCheckedCount: number | null, notCheckedPercentage: number | null, distribution: unknown };
+
+export type GetFolderColumnStatsQueryVariables = Exact<{
+  projectName: string;
+  filter?: string | null | undefined;
+  search?: string | null | undefined;
+  parentIds?: Array<string> | string | null | undefined;
+  ids?: Array<string> | string | null | undefined;
+  targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
+  includeFolderChildren?: boolean;
+  hideEmptyFolders?: boolean | null | undefined;
 }>;
 
 
-export type GetTasksByParentQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, createdAt: any, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> } }> } } };
+export type GetFolderColumnStatsQuery = { project: { name: string, folders: { fieldStats: Array<{ columnName: string, min: number | null, max: number | null, avg: number | null, sum: number | null, count: number | null, valueFilledCount: number | null, percentageFilled: number | null, valueNotFilledCount: number | null, percentageNotFilled: number | null, checkedCount: number | null, checkedPercentage: number | null, notCheckedCount: number | null, notCheckedPercentage: number | null, distribution: unknown }> } } };
+
+export type GetFolderDeleteInfoQueryVariables = Exact<{
+  projectName: string;
+  folderIds: Array<string> | string;
+}>;
+
+
+export type GetFolderDeleteInfoQuery = { project: { folders: { edges: Array<{ node: { id: string, name: string, label: string | null, totalFolderCount: number, totalTaskCount: number, totalProductCount: number, totalVersionCount: number } }> } } };
+
+export type GetTaskColumnStatsQueryVariables = Exact<{
+  projectName: string;
+  filter?: string | null | undefined;
+  folderFilter?: string | null | undefined;
+  search?: string | null | undefined;
+  folderIds?: Array<string> | string | null | undefined;
+  taskIds?: Array<string> | string | null | undefined;
+  targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
+  includeFolderChildren?: boolean;
+}>;
+
+
+export type GetTaskColumnStatsQuery = { project: { name: string, tasks: { fieldStats: Array<{ columnName: string, min: number | null, max: number | null, avg: number | null, sum: number | null, count: number | null, valueFilledCount: number | null, percentageFilled: number | null, valueNotFilledCount: number | null, percentageNotFilled: number | null, checkedCount: number | null, checkedPercentage: number | null, notCheckedCount: number | null, notCheckedPercentage: number | null, distribution: unknown }> } } };
+
+export type GetTasksByParentQueryVariables = Exact<{
+  projectName: string;
+  parentIds: Array<string> | string;
+  filter?: string | null | undefined;
+  folderFilter?: string | null | undefined;
+  search?: string | null | undefined;
+  showComments?: boolean;
+}>;
+
+
+export type GetTasksByParentQuery = { project: { name: string, tasks: { edges: Array<{ node: { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string } } }> } } };
 
 export type GetTasksListQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  taskIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  filter?: InputMaybe<Scalars['String']['input']>;
-  folderFilter?: InputMaybe<Scalars['String']['input']>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  projectName: string;
+  folderIds?: Array<string> | string | null | undefined;
+  taskIds?: Array<string> | string | null | undefined;
+  filter?: string | null | undefined;
+  folderFilter?: string | null | undefined;
+  search?: string | null | undefined;
+  after?: string | null | undefined;
+  first?: number | null | undefined;
+  before?: string | null | undefined;
+  last?: number | null | undefined;
+  sortBy?: string | null | undefined;
+  showComments?: boolean;
+  includeFolderChildren?: boolean;
 }>;
 
 
-export type GetTasksListQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, createdAt: any, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> } }> } } };
+export type GetTasksListQuery = { project: { name: string, tasks: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string } } }> } } };
 
-export type SubTaskFragmentFragment = { __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean };
+export type SubTaskFragmentFragment = { id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean };
 
-export type TaskPropsFragmentFragment = { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, createdAt: any, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> };
+export type TaskPropsFragmentFragment = { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string } };
+
+export type GetFolderProductsQueryVariables = Exact<{
+  projectName: string;
+  folderId: string;
+}>;
+
+
+export type GetFolderProductsQuery = { project: { products: { edges: Array<{ node: { id: string, name: string, productType: string, latestVersion: { id: string, version: number, task: { id: string, name: string, label: string | null, taskType: string } | null } | null } }> } } };
 
 export type GetProjectLatestQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
+  projectName: string;
 }>;
 
 
-export type GetProjectLatestQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string } };
+export type GetProjectLatestQuery = { project: { name: string } };
+
+export type GetProjectsQueryVariables = Exact<{
+  last?: number | null | undefined;
+  before?: string | null | undefined;
+}>;
+
+
+export type GetProjectsQuery = { projects: { edges: Array<{ cursor: string | null, node: { allAttrib: string, active: boolean, code: string, color: string | null, createdAt: unknown, updatedAt: unknown, label: string | null, library: boolean, name: string, projectFolder: string | null, projectName: string, skeleton: boolean } }>, pageInfo: { endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string | null } } };
+
+export type ProjectFragmentFragment = { allAttrib: string, active: boolean, code: string, color: string | null, createdAt: unknown, updatedAt: unknown, label: string | null, library: boolean, name: string, projectFolder: string | null, projectName: string, skeleton: boolean };
 
 export type GetKanbanQueryVariables = Exact<{
-  projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  assignees?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  projects?: Array<string> | string | null | undefined;
+  assignees?: Array<string> | string | null | undefined;
 }>;
 
 
-export type GetKanbanQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, thumbnailId?: string | null, folderId: string, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean, priority?: string | null } }> } };
+export type GetKanbanQuery = { kanban: { edges: Array<{ node: { id: string, projectName: string, projectCode: string, name: string, label: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, dueDate: unknown, thumbnailId: string | null, folderId: string, folderLabel: string | null, folderName: string, folderPath: string, hasReviewables: boolean, priority: string | null } }> } };
 
 export type GetKanbanProjectUsersQueryVariables = Exact<{
-  projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  projects?: Array<string> | string | null | undefined;
 }>;
 
 
-export type GetKanbanProjectUsersQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, accessGroups: string, isManager: boolean, isAdmin: boolean, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
+export type GetKanbanProjectUsersQuery = { users: { edges: Array<{ node: { name: string, accessGroups: string, isManager: boolean, isAdmin: boolean, attrib: { fullName: string | null } } }> } };
 
 export type GetKanbanTasksQueryVariables = Exact<{
-  projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  taskIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
+  projects?: Array<string> | string | null | undefined;
+  taskIds?: Array<string> | string | null | undefined;
+  last?: number | null | undefined;
 }>;
 
 
-export type GetKanbanTasksQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, thumbnailId?: string | null, folderId: string, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean, priority?: string | null } }> } };
+export type GetKanbanTasksQuery = { kanban: { edges: Array<{ node: { id: string, projectName: string, projectCode: string, name: string, label: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, dueDate: unknown, thumbnailId: string | null, folderId: string, folderLabel: string | null, folderName: string, folderPath: string, hasReviewables: boolean, priority: string | null } }> } };
 
-export type KanbanFragmentFragment = { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, thumbnailId?: string | null, folderId: string, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean, priority?: string | null };
+export type KanbanFragmentFragment = { id: string, projectName: string, projectCode: string, name: string, label: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, dueDate: unknown, thumbnailId: string | null, folderId: string, folderLabel: string | null, folderName: string, folderPath: string, hasReviewables: boolean, priority: string | null };
 
 export type GetActiveUsersCountQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetActiveUsersCountQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', active: boolean, isGuest: boolean } }> } };
+export type GetActiveUsersCountQuery = { users: { edges: Array<{ node: { active: boolean, isGuest: boolean } }> } };
 
 export type GetAllAssigneesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllAssigneesQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, updatedAt: any, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
+export type GetAllAssigneesQuery = { users: { edges: Array<{ node: { name: string, updatedAt: unknown, attrib: { fullName: string | null } } }> } };
 
 export type GetAllProjectUsersAsAssigneeQueryVariables = Exact<{
-  projectName?: InputMaybe<Scalars['String']['input']>;
+  projectName?: string | null | undefined;
 }>;
 
 
-export type GetAllProjectUsersAsAssigneeQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, updatedAt: any, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
+export type GetAllProjectUsersAsAssigneeQuery = { users: { edges: Array<{ node: { name: string, updatedAt: unknown, attrib: { fullName: string | null } } }> } };
 
-export type VpFolderFragment = { __typename?: 'FolderNode', id: string, name: string, label?: string | null, allAttrib: string };
+export type VpFolderFragment = { id: string, name: string, label: string | null, folderType: string, allAttrib: string };
 
 export type GetLatestProductVersionQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  productId: Scalars['String']['input'];
+  projectName: string;
+  productId: string;
 }>;
 
 
-export type GetLatestProductVersionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, name: string, version: number, productId: string, createdAt: any, updatedAt: any, status: string, active: boolean } }> } } };
+export type GetLatestProductVersionQuery = { project: { versions: { edges: Array<{ node: { id: string, name: string, version: number, productId: string, createdAt: unknown, updatedAt: unknown, status: string, active: boolean } }> } } };
 
 export type GetProductsQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  productIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  productFilter?: InputMaybe<Scalars['String']['input']>;
-  versionFilter?: InputMaybe<Scalars['String']['input']>;
-  taskFilter?: InputMaybe<Scalars['String']['input']>;
-  featuredVersionOrder?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  projectName: string;
+  productIds?: Array<string> | string | null | undefined;
+  productFilter?: string | null | undefined;
+  versionFilter?: string | null | undefined;
+  taskFilter?: string | null | undefined;
+  featuredVersionOrder?: Array<string> | string | null | undefined;
+  search?: string | null | undefined;
+  folderIds?: Array<string> | string | null | undefined;
+  after?: string | null | undefined;
+  first?: number | null | undefined;
+  before?: string | null | undefined;
+  last?: number | null | undefined;
+  sortBy?: string | null | undefined;
+  showComments?: boolean;
 }>;
 
 
-export type GetProductsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', products: { __typename?: 'ProductsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'ProductEdge', cursor?: string | null, node: { __typename?: 'ProductNode', id: string, name: string, folderId: string, active: boolean, status: string, tags: Array<string>, type: string, productType: string, allAttrib: string, parents: Array<string>, createdAt: any, updatedAt: any, featuredVersion?: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, version: number, featuredVersionType?: string | null, heroVersionId?: string | null } | null, versions: Array<{ __typename?: 'VersionListItem', id: string, name: string, version: number }>, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, allAttrib: string } } }> } } };
+export type GetProductsQuery = { project: { products: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { id: string, name: string, folderId: string, active: boolean, status: string, tags: Array<string>, type: string, productType: string, productBaseType: string | null, allAttrib: string, parents: Array<string>, createdAt: unknown, updatedAt: unknown, featuredVersion: { name: string, id: string, hasReviewables: boolean, parents: Array<string>, path: string | null, active: boolean, allAttrib: string, author: string | null, createdAt: unknown, status: string, tags: Array<string>, updatedAt: unknown, thumbnailHash: string, version: number, featuredVersionType: string | null, heroVersionId: string | null, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null } | null, versions: Array<{ id: string, name: string, version: number }>, folder: { id: string, name: string, label: string | null, folderType: string, allAttrib: string } } }> } } };
+
+export type GetProductsColumnStatsQueryVariables = Exact<{
+  projectName: string;
+  productFilter?: string | null | undefined;
+  versionFilter?: string | null | undefined;
+  taskFilter?: string | null | undefined;
+  folderIds?: Array<string> | string | null | undefined;
+  productIds?: Array<string> | string | null | undefined;
+  targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
+}>;
+
+
+export type GetProductsColumnStatsQuery = { project: { products: { fieldStats: Array<{ columnName: string, min: number | null, max: number | null, avg: number | null, sum: number | null, count: number | null, valueFilledCount: number | null, percentageFilled: number | null, valueNotFilledCount: number | null, percentageNotFilled: number | null, checkedCount: number | null, checkedPercentage: number | null, notCheckedCount: number | null, notCheckedPercentage: number | null, distribution: unknown }> } } };
 
 export type GetVersionsQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  productIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  versionIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  versionFilter?: InputMaybe<Scalars['String']['input']>;
-  productFilter?: InputMaybe<Scalars['String']['input']>;
-  taskFilter?: InputMaybe<Scalars['String']['input']>;
-  featuredOnly?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
-  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  search?: InputMaybe<Scalars['String']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  projectName: string;
+  productIds?: Array<string> | string | null | undefined;
+  versionIds?: Array<string> | string | null | undefined;
+  versionFilter?: string | null | undefined;
+  productFilter?: string | null | undefined;
+  taskFilter?: string | null | undefined;
+  featuredOnly?: Array<string> | string | null | undefined;
+  hasReviewables?: boolean | null | undefined;
+  folderIds?: Array<string> | string | null | undefined;
+  search?: string | null | undefined;
+  after?: string | null | undefined;
+  first?: number | null | undefined;
+  before?: string | null | undefined;
+  last?: number | null | undefined;
+  sortBy?: string | null | undefined;
+  showComments?: boolean;
 }>;
 
 
-export type GetVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, version: number, featuredVersionType?: string | null, heroVersionId?: string | null, task?: { __typename?: 'TaskNode', id: string, taskType: string, label?: string | null, name: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, allAttrib: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, allAttrib: string } } } }> } } };
+export type GetVersionsQuery = { project: { versions: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { name: string, id: string, hasReviewables: boolean, parents: Array<string>, path: string | null, active: boolean, allAttrib: string, author: string | null, createdAt: unknown, status: string, tags: Array<string>, updatedAt: unknown, thumbnailHash: string, version: number, featuredVersionType: string | null, heroVersionId: string | null, task: { id: string, taskType: string, label: string | null, name: string } | null, product: { id: string, name: string, productType: string, productBaseType: string | null, allAttrib: string, folder: { id: string, name: string, label: string | null, folderType: string, allAttrib: string } }, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null } }> } } };
+
+export type GetVersionsAttribsQueryVariables = Exact<{
+  projectName: string;
+  versionIds: Array<string> | string;
+}>;
+
+
+export type GetVersionsAttribsQuery = { project: { versions: { edges: Array<{ node: { id: string, allAttrib: string } }> } } };
 
 export type GetVersionsByProductIdQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  productIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  versionFilter?: InputMaybe<Scalars['String']['input']>;
-  taskFilter?: InputMaybe<Scalars['String']['input']>;
-  featuredOnly?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
+  projectName: string;
+  productIds: Array<string> | string;
+  versionFilter?: string | null | undefined;
+  taskFilter?: string | null | undefined;
+  featuredOnly?: Array<string> | string | null | undefined;
+  hasReviewables?: boolean | null | undefined;
+  sortBy?: string | null | undefined;
+  first?: number | null | undefined;
+  last?: number | null | undefined;
+  after?: string | null | undefined;
+  before?: string | null | undefined;
+  showComments?: boolean;
 }>;
 
 
-export type GetVersionsByProductIdQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, version: number, featuredVersionType?: string | null, heroVersionId?: string | null, task?: { __typename?: 'TaskNode', id: string, taskType: string, label?: string | null, name: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, allAttrib: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, allAttrib: string } } } }> } } };
+export type GetVersionsByProductIdQuery = { project: { versions: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { name: string, id: string, hasReviewables: boolean, parents: Array<string>, path: string | null, active: boolean, allAttrib: string, author: string | null, createdAt: unknown, status: string, tags: Array<string>, updatedAt: unknown, thumbnailHash: string, version: number, featuredVersionType: string | null, heroVersionId: string | null, task: { id: string, taskType: string, label: string | null, name: string } | null, product: { id: string, name: string, productType: string, productBaseType: string | null, allAttrib: string, folder: { id: string, name: string, label: string | null, folderType: string, allAttrib: string } }, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null } }> } } };
 
-export type PageInfoFragment = { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean };
+export type GetVersionsColumnStatsQueryVariables = Exact<{
+  projectName: string;
+  versionFilter?: string | null | undefined;
+  productFilter?: string | null | undefined;
+  taskFilter?: string | null | undefined;
+  folderIds?: Array<string> | string | null | undefined;
+  versionIds?: Array<string> | string | null | undefined;
+  productIds?: Array<string> | string | null | undefined;
+  targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
+}>;
 
-export type VersionBaseFragment = { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, version: number, featuredVersionType?: string | null, heroVersionId?: string | null };
 
-export type VersionExtendedFragment = { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, version: number, featuredVersionType?: string | null, heroVersionId?: string | null, task?: { __typename?: 'TaskNode', id: string, taskType: string, label?: string | null, name: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, allAttrib: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, allAttrib: string } } };
+export type GetVersionsColumnStatsQuery = { project: { versions: { fieldStats: Array<{ columnName: string, min: number | null, max: number | null, avg: number | null, sum: number | null, count: number | null, valueFilledCount: number | null, percentageFilled: number | null, valueNotFilledCount: number | null, percentageNotFilled: number | null, checkedCount: number | null, checkedPercentage: number | null, notCheckedCount: number | null, notCheckedPercentage: number | null, distribution: unknown }> } } };
+
+export type PageInfoFragment = { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean };
+
+export type VersionBaseFragment = { name: string, id: string, hasReviewables: boolean, parents: Array<string>, path: string | null, active: boolean, allAttrib: string, author: string | null, createdAt: unknown, status: string, tags: Array<string>, updatedAt: unknown, thumbnailHash: string, version: number, featuredVersionType: string | null, heroVersionId: string | null, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null };
+
+export type VersionExtendedFragment = { name: string, id: string, hasReviewables: boolean, parents: Array<string>, path: string | null, active: boolean, allAttrib: string, author: string | null, createdAt: unknown, status: string, tags: Array<string>, updatedAt: unknown, thumbnailHash: string, version: number, featuredVersionType: string | null, heroVersionId: string | null, task: { id: string, taskType: string, label: string | null, name: string } | null, product: { id: string, name: string, productType: string, productBaseType: string | null, allAttrib: string, folder: { id: string, name: string, label: string | null, folderType: string, allAttrib: string } }, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null };
 
 export type GetInboxHasUnreadQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetInboxHasUnreadQuery = { __typename?: 'Query', inbox: { __typename?: 'ActivitiesConnection', edges: Array<{ __typename?: 'ActivityEdge', node: { __typename?: 'ActivityNode', referenceId: string, read: boolean } }> } };
+export type GetInboxHasUnreadQuery = { inbox: { edges: Array<{ node: { referenceId: string, read: boolean } }> } };
 
 export type GetInboxMessagesQueryVariables = Exact<{
-  last?: InputMaybe<Scalars['Int']['input']>;
-  active?: InputMaybe<Scalars['Boolean']['input']>;
-  important?: InputMaybe<Scalars['Boolean']['input']>;
-  cursor?: InputMaybe<Scalars['String']['input']>;
+  last?: number | null | undefined;
+  active?: boolean | null | undefined;
+  important?: boolean | null | undefined;
+  cursor?: string | null | undefined;
 }>;
 
 
-export type GetInboxMessagesQuery = { __typename?: 'Query', inbox: { __typename?: 'ActivitiesConnection', pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null }, edges: Array<{ __typename?: 'ActivityEdge', cursor?: string | null, node: { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string, subtype?: string | null } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> } }> } };
+export type GetInboxMessagesQuery = { inbox: { pageInfo: { hasPreviousPage: boolean, startCursor: string | null, endCursor: string | null }, edges: Array<{ cursor: string | null, node: { projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: unknown, updatedAt: unknown, active: boolean, read: boolean, author: { name: string, attrib: { fullName: string | null } } | null, origin: { id: string, name: string, label: string | null, type: string, subtype: string | null } | null, parents: Array<{ type: string, name: string, label: string | null }> } }> } };
 
-export type MessageFragmentFragment = { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string, subtype?: string | null } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> };
+export type MessageFragmentFragment = { projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: unknown, updatedAt: unknown, active: boolean, read: boolean, author: { name: string, attrib: { fullName: string | null } } | null, origin: { id: string, name: string, label: string | null, type: string, subtype: string | null } | null, parents: Array<{ type: string, name: string, label: string | null }> };
 
 export type GetInboxUnreadCountQueryVariables = Exact<{
-  important?: InputMaybe<Scalars['Boolean']['input']>;
+  important?: boolean | null | undefined;
 }>;
 
 
-export type GetInboxUnreadCountQuery = { __typename?: 'Query', inbox: { __typename?: 'ActivitiesConnection', edges: Array<{ __typename?: 'ActivityEdge', node: { __typename?: 'ActivityNode', referenceId: string, read: boolean } }> } };
+export type GetInboxUnreadCountQuery = { inbox: { edges: Array<{ node: { referenceId: string, read: boolean } }> } };
 
 export type GetMarketInstallEventsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetMarketInstallEventsQuery = { __typename?: 'Query', events: { __typename?: 'EventsConnection', edges: Array<{ __typename?: 'EventEdge', node: { __typename?: 'EventNode', id: string, status: string, description: string, summary: string } }> } };
+export type GetMarketInstallEventsQuery = { events: { edges: Array<{ node: { id: string, status: string, description: string, summary: string } }> } };
 
 export type GetInstallEventsQueryVariables = Exact<{
-  ids: Array<Scalars['String']['input']> | Scalars['String']['input'];
+  ids: Array<string> | string;
 }>;
 
 
-export type GetInstallEventsQuery = { __typename?: 'Query', events: { __typename?: 'EventsConnection', edges: Array<{ __typename?: 'EventEdge', node: { __typename?: 'EventNode', id: string, status: string, description: string } }> } };
+export type GetInstallEventsQuery = { events: { edges: Array<{ node: { id: string, status: string, description: string } }> } };
 
 export type GetProgressTaskQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  taskId: Scalars['String']['input'];
+  projectName: string;
+  taskId: string;
 }>;
 
 
-export type GetProgressTaskQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, task?: { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { __typename?: 'TaskAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null }, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, status: string, updatedAt: any, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } } | null } };
+export type GetProgressTaskQuery = { project: { name: string, task: { projectName: string, id: string, name: string, label: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: unknown, thumbnailHash: string, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { priority: string | null, endDate: unknown, resolutionHeight: number | null, resolutionWidth: number | null, fps: number | null }, folder: { id: string, name: string, label: string | null, folderType: string, parents: Array<string>, status: string, updatedAt: unknown, thumbnailHash: string, parent: { id: string, name: string, label: string | null, parents: Array<string> } | null } } | null } };
 
 export type GetTasksProgressQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  assignees?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  assigneesAny?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  tags?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  tagsAny?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  taskTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  attributes?: InputMaybe<Array<AttributeFilterInput> | AttributeFilterInput>;
+  projectName: string;
+  folderIds?: Array<string> | string | null | undefined;
+  assignees?: Array<string> | string | null | undefined;
+  assigneesAny?: Array<string> | string | null | undefined;
+  tags?: Array<string> | string | null | undefined;
+  tagsAny?: Array<string> | string | null | undefined;
+  statuses?: Array<string> | string | null | undefined;
+  taskTypes?: Array<string> | string | null | undefined;
+  attributes?: Array<AttributeFilterInput> | AttributeFilterInput | null | undefined;
 }>;
 
 
-export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { __typename?: 'TaskAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null }, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, status: string, updatedAt: any, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } } }> } } };
+export type GetTasksProgressQuery = { project: { name: string, tasks: { edges: Array<{ node: { projectName: string, id: string, name: string, label: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: unknown, thumbnailHash: string, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { priority: string | null, endDate: unknown, resolutionHeight: number | null, resolutionWidth: number | null, fps: number | null }, folder: { id: string, name: string, label: string | null, folderType: string, parents: Array<string>, status: string, updatedAt: unknown, thumbnailHash: string, parent: { id: string, name: string, label: string | null, parents: Array<string> } | null } } }> } } };
 
-export type ProgressTaskFragmentFragment = { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { __typename?: 'TaskAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null }, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, status: string, updatedAt: any, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } };
+export type ProgressTaskFragmentFragment = { projectName: string, id: string, name: string, label: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: unknown, thumbnailHash: string, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { priority: string | null, endDate: unknown, resolutionHeight: number | null, resolutionWidth: number | null, fps: number | null }, folder: { id: string, name: string, label: string | null, folderType: string, parents: Array<string>, status: string, updatedAt: unknown, thumbnailHash: string, parent: { id: string, name: string, label: string | null, parents: Array<string> } | null } };
 
-export const ActivityFragmentFragmentDoc = `
+export class TypedDocumentString<TResult, TVariables>
+  extends String
+  implements DocumentTypeDecoration<TResult, TVariables>
+{
+  __apiType?: NonNullable<DocumentTypeDecoration<TResult, TVariables>['__apiType']>;
+  private value: string;
+  public __meta__?: Record<string, any> | undefined;
+
+  constructor(value: string, __meta__?: Record<string, any> | undefined) {
+    super(value);
+    this.value = value;
+    this.__meta__ = __meta__;
+  }
+
+  override toString(): string & DocumentTypeDecoration<TResult, TVariables> {
+    return this.value;
+  }
+}
+export const ActivityFragmentFragmentDoc = new TypedDocumentString(`
     fragment ActivityFragment on ActivityNode {
   activityId
   activityType
@@ -1975,13 +2274,14 @@ export const ActivityFragmentFragmentDoc = `
     timestamp
   }
   version {
+    thumbnailHash
     attrib {
       comment
     }
   }
 }
-    `;
-export const DetailsPanelFolderFragmentFragmentDoc = `
+    `, {"fragmentName":"ActivityFragment"});
+export const DetailsPanelFolderFragmentFragmentDoc = new TypedDocumentString(`
     fragment DetailsPanelFolderFragment on FolderNode {
   id
   name
@@ -1989,8 +2289,8 @@ export const DetailsPanelFolderFragmentFragmentDoc = `
   path
   folderType
 }
-    `;
-export const DetailsPanelProductFragmentFragmentDoc = `
+    `, {"fragmentName":"DetailsPanelFolderFragment"});
+export const DetailsPanelProductFragmentFragmentDoc = new TypedDocumentString(`
     fragment DetailsPanelProductFragment on ProductNode {
   id
   name
@@ -1999,39 +2299,24 @@ export const DetailsPanelProductFragmentFragmentDoc = `
     version
   }
 }
-    `;
-export const DetailsPanelRepresentationFragmentFragmentDoc = `
+    `, {"fragmentName":"DetailsPanelProductFragment"});
+export const DetailsPanelRepresentationFragmentFragmentDoc = new TypedDocumentString(`
     fragment DetailsPanelRepresentationFragment on RepresentationNode {
   id
   name
   fileCount
 }
-    `;
-export const SubTaskFragmentFragmentDoc = `
-    fragment SubTaskFragment on SubTaskNode {
-  id
-  name
-  label
-  assignees
-  description
-  startDate
-  endDate
-  isDone
-}
-    `;
-export const DetailsPanelTaskFragmentFragmentDoc = `
+    `, {"fragmentName":"DetailsPanelRepresentationFragment"});
+export const DetailsPanelTaskFragmentFragmentDoc = new TypedDocumentString(`
     fragment DetailsPanelTaskFragment on TaskNode {
   id
   name
   label
   assignees
   taskType
-  subtasks {
-    ...SubTaskFragment
-  }
 }
-    ${SubTaskFragmentFragmentDoc}`;
-export const DetailsPanelVersionFragmentFragmentDoc = `
+    `, {"fragmentName":"DetailsPanelTaskFragment"});
+export const DetailsPanelVersionFragmentFragmentDoc = new TypedDocumentString(`
     fragment DetailsPanelVersionFragment on VersionNode {
   id
   thumbnailId
@@ -2042,8 +2327,20 @@ export const DetailsPanelVersionFragmentFragmentDoc = `
   version
   author
 }
-    `;
-export const ListItemFragmentFragmentDoc = `
+    `, {"fragmentName":"DetailsPanelVersionFragment"});
+export const SubTaskFragmentFragmentDoc = new TypedDocumentString(`
+    fragment SubTaskFragment on SubTaskNode {
+  id
+  name
+  label
+  assignees
+  description
+  startDate
+  endDate
+  isDone
+}
+    `, {"fragmentName":"SubTaskFragment"});
+export const ListItemFragmentFragmentDoc = new TypedDocumentString(`
     fragment ListItemFragment on BaseNode {
   active
   name
@@ -2059,12 +2356,21 @@ export const ListItemFragmentFragmentDoc = `
     ownAttrib
     hasReviewables
     folderId
+    thumbnailHash
     folder {
+      name
+      label
       path
       folderType
     }
     subtasks {
       ...SubTaskFragment
+    }
+    latestComments @include(if: $showComments) {
+      activityId
+      body
+      author
+      createdAt
     }
   }
   ... on FolderNode {
@@ -2075,7 +2381,14 @@ export const ListItemFragmentFragmentDoc = `
     path
     ownAttrib
     hasReviewables
+    thumbnailHash
     folderId: id
+    latestComments @include(if: $showComments) {
+      activityId
+      body
+      author
+      createdAt
+    }
   }
   ... on ProductNode {
     status
@@ -2083,6 +2396,8 @@ export const ListItemFragmentFragmentDoc = `
     productType
     folderId
     folder {
+      name
+      label
       path
       folderType
     }
@@ -2091,25 +2406,66 @@ export const ListItemFragmentFragmentDoc = `
     status
     tags
     hasReviewables
+    author
+    version
+    thumbnailHash
     product {
       id
       name
       productType
+      productBaseType
       folderId
       folder {
         id
+        name
+        label
         path
         folderType
       }
     }
     task {
       name
+      label
       taskType
+    }
+    latestComments @include(if: $showComments) {
+      activityId
+      body
+      author
+      createdAt
     }
   }
 }
-    ${SubTaskFragmentFragmentDoc}`;
-export const TaskPropsFragmentFragmentDoc = `
+    fragment SubTaskFragment on SubTaskNode {
+  id
+  name
+  label
+  assignees
+  description
+  startDate
+  endDate
+  isDone
+}`, {"fragmentName":"ListItemFragment"});
+export const ColumnStatsFragmentFragmentDoc = new TypedDocumentString(`
+    fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}
+    `, {"fragmentName":"ColumnStatsFragment"});
+export const TaskPropsFragmentFragmentDoc = new TypedDocumentString(`
     fragment TaskPropsFragment on TaskNode {
   id
   folderId
@@ -2121,6 +2477,7 @@ export const TaskPropsFragmentFragmentDoc = `
   taskType
   updatedAt
   createdAt
+  thumbnailHash
   active
   assignees
   allAttrib
@@ -2129,9 +2486,43 @@ export const TaskPropsFragmentFragmentDoc = `
   subtasks {
     ...SubTaskFragment
   }
+  latestComments @include(if: $showComments) {
+    activityId
+    body
+    author
+    createdAt
+  }
+  folder {
+    folderType
+  }
 }
-    ${SubTaskFragmentFragmentDoc}`;
-export const KanbanFragmentFragmentDoc = `
+    fragment SubTaskFragment on SubTaskNode {
+  id
+  name
+  label
+  assignees
+  description
+  startDate
+  endDate
+  isDone
+}`, {"fragmentName":"TaskPropsFragment"});
+export const ProjectFragmentFragmentDoc = new TypedDocumentString(`
+    fragment ProjectFragment on ProjectNode {
+  allAttrib
+  active
+  code
+  color
+  createdAt
+  updatedAt
+  label
+  library
+  name
+  projectFolder
+  projectName
+  skeleton
+}
+    `, {"fragmentName":"ProjectFragment"});
+export const KanbanFragmentFragmentDoc = new TypedDocumentString(`
     fragment KanbanFragment on KanbanNode {
   id
   projectName
@@ -2144,6 +2535,7 @@ export const KanbanFragmentFragmentDoc = `
   assignees
   updatedAt
   createdAt
+  thumbnailHash
   dueDate
   thumbnailId
   folderId
@@ -2153,16 +2545,16 @@ export const KanbanFragmentFragmentDoc = `
   hasReviewables
   priority
 }
-    `;
-export const PageInfoFragmentDoc = `
+    `, {"fragmentName":"KanbanFragment"});
+export const PageInfoFragmentDoc = new TypedDocumentString(`
     fragment PageInfo on PageInfo {
   startCursor
   endCursor
   hasNextPage
   hasPreviousPage
 }
-    `;
-export const VersionBaseFragmentDoc = `
+    `, {"fragmentName":"PageInfo"});
+export const VersionBaseFragmentDoc = new TypedDocumentString(`
     fragment VersionBase on VersionNode {
   name
   id
@@ -2176,20 +2568,28 @@ export const VersionBaseFragmentDoc = `
   status
   tags
   updatedAt
+  thumbnailHash
   version
   featuredVersionType
   heroVersionId
+  latestComments @include(if: $showComments) {
+    activityId
+    body
+    author
+    createdAt
+  }
 }
-    `;
-export const VpFolderFragmentDoc = `
+    `, {"fragmentName":"VersionBase"});
+export const VpFolderFragmentDoc = new TypedDocumentString(`
     fragment VPFolder on FolderNode {
   id
   name
   label
+  folderType
   allAttrib
 }
-    `;
-export const VersionExtendedFragmentDoc = `
+    `, {"fragmentName":"VPFolder"});
+export const VersionExtendedFragmentDoc = new TypedDocumentString(`
     fragment VersionExtended on VersionNode {
   ...VersionBase
   task {
@@ -2202,6 +2602,7 @@ export const VersionExtendedFragmentDoc = `
     id
     name
     productType
+    productBaseType
     allAttrib
     folder {
       id
@@ -2209,9 +2610,38 @@ export const VersionExtendedFragmentDoc = `
     }
   }
 }
-    ${VersionBaseFragmentDoc}
-${VpFolderFragmentDoc}`;
-export const MessageFragmentFragmentDoc = `
+    fragment VPFolder on FolderNode {
+  id
+  name
+  label
+  folderType
+  allAttrib
+}
+fragment VersionBase on VersionNode {
+  name
+  id
+  hasReviewables
+  parents
+  path
+  active
+  allAttrib
+  author
+  createdAt
+  status
+  tags
+  updatedAt
+  thumbnailHash
+  version
+  featuredVersionType
+  heroVersionId
+  latestComments @include(if: $showComments) {
+    activityId
+    body
+    author
+    createdAt
+  }
+}`, {"fragmentName":"VersionExtended"});
+export const MessageFragmentFragmentDoc = new TypedDocumentString(`
     fragment MessageFragment on ActivityNode {
   projectName
   activityId
@@ -2243,8 +2673,8 @@ export const MessageFragmentFragmentDoc = `
     label
   }
 }
-    `;
-export const ProgressTaskFragmentFragmentDoc = `
+    `, {"fragmentName":"MessageFragment"});
+export const ProgressTaskFragmentFragmentDoc = new TypedDocumentString(`
     fragment ProgressTaskFragment on TaskNode {
   projectName
   id
@@ -2254,6 +2684,7 @@ export const ProgressTaskFragmentFragmentDoc = `
   status
   assignees
   updatedAt
+  thumbnailHash
   active
   hasReviewables
   tags
@@ -2272,6 +2703,7 @@ export const ProgressTaskFragmentFragmentDoc = `
     parents
     status
     updatedAt
+    thumbnailHash
     parent {
       id
       name
@@ -2280,8 +2712,8 @@ export const ProgressTaskFragmentFragmentDoc = `
     }
   }
 }
-    `;
-export const GetActivitiesByIdDocument = `
+    `, {"fragmentName":"ProgressTaskFragment"});
+export const GetActivitiesByIdDocument = new TypedDocumentString(`
     query GetActivitiesById($projectName: String!, $entityIds: [String!]!, $activityIds: [String!]) {
   project(name: $projectName) {
     name
@@ -2305,10 +2737,52 @@ export const GetActivitiesByIdDocument = `
     }
   }
 }
-    ${ActivityFragmentFragmentDoc}`;
-export const GetActivityUsersDocument = `
+    fragment ActivityFragment on ActivityNode {
+  activityId
+  activityType
+  activityData
+  referenceType
+  referenceId
+  entityId
+  body
+  createdAt
+  updatedAt
+  author {
+    name
+    deleted
+    active
+    attrib {
+      fullName
+    }
+  }
+  files {
+    id
+    name
+    size
+    mime
+  }
+  origin {
+    id
+    name
+    label
+    type
+  }
+  reactions {
+    fullName
+    userName
+    reaction
+    timestamp
+  }
+  version {
+    thumbnailHash
+    attrib {
+      comment
+    }
+  }
+}`);
+export const GetActivityUsersDocument = new TypedDocumentString(`
     query GetActivityUsers($projects: [String!]) {
-  users(last: 2000, projects: $projects) {
+  users(last: 2000, projects: $projects, isSupport: false) {
     edges {
       node {
         name
@@ -2319,9 +2793,9 @@ export const GetActivityUsersDocument = `
     }
   }
 }
-    `;
-export const GetActivitiesDocument = `
-    query GetActivities($projectName: String!, $entityIds: [String!]!, $after: String, $first: Int, $before: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!]) {
+    `);
+export const GetActivitiesDocument = new TypedDocumentString(`
+    query GetActivities($projectName: String!, $entityIds: [String!]!, $after: String, $first: Int, $before: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!], $authors: [String!], $activityFilter: String) {
   project(name: $projectName) {
     name
     activities(
@@ -2332,6 +2806,8 @@ export const GetActivitiesDocument = `
       last: $last
       referenceTypes: $referenceTypes
       activityTypes: $activityTypes
+      authors: $authors
+      filter: $activityFilter
     ) {
       pageInfo {
         hasPreviousPage
@@ -2348,8 +2824,50 @@ export const GetActivitiesDocument = `
     }
   }
 }
-    ${ActivityFragmentFragmentDoc}`;
-export const GetEntitiesChecklistsDocument = `
+    fragment ActivityFragment on ActivityNode {
+  activityId
+  activityType
+  activityData
+  referenceType
+  referenceId
+  entityId
+  body
+  createdAt
+  updatedAt
+  author {
+    name
+    deleted
+    active
+    attrib {
+      fullName
+    }
+  }
+  files {
+    id
+    name
+    size
+    mime
+  }
+  origin {
+    id
+    name
+    label
+    type
+  }
+  reactions {
+    fullName
+    userName
+    reaction
+    timestamp
+  }
+  version {
+    thumbnailHash
+    attrib {
+      comment
+    }
+  }
+}`);
+export const GetEntitiesChecklistsDocument = new TypedDocumentString(`
     query GetEntitiesChecklists($projectName: String!, $entityIds: [String!]!) {
   project(name: $projectName) {
     name
@@ -2369,8 +2887,8 @@ export const GetEntitiesChecklistsDocument = `
     }
   }
 }
-    `;
-export const GetDetailsPanelFolderDocument = `
+    `);
+export const GetDetailsPanelFolderDocument = new TypedDocumentString(`
     query GetDetailsPanelFolder($projectName: String!, $entityId: String!) {
   project(name: $projectName) {
     projectName
@@ -2383,6 +2901,7 @@ export const GetDetailsPanelFolderDocument = `
       tags
       updatedAt
       createdAt
+      thumbnailHash
       thumbnailId
       folderType
       path
@@ -2392,8 +2911,8 @@ export const GetDetailsPanelFolderDocument = `
     }
   }
 }
-    `;
-export const GetDetailsPanelRepresentationDocument = `
+    `);
+export const GetDetailsPanelRepresentationDocument = new TypedDocumentString(`
     query GetDetailsPanelRepresentation($projectName: String!, $entityId: String!) {
   project(name: $projectName) {
     representation(id: $entityId) {
@@ -2422,11 +2941,39 @@ export const GetDetailsPanelRepresentationDocument = `
     }
   }
 }
-    ${DetailsPanelVersionFragmentFragmentDoc}
-${DetailsPanelTaskFragmentFragmentDoc}
-${DetailsPanelProductFragmentFragmentDoc}
-${DetailsPanelFolderFragmentFragmentDoc}`;
-export const GetDetailsPanelTaskDocument = `
+    fragment DetailsPanelFolderFragment on FolderNode {
+  id
+  name
+  label
+  path
+  folderType
+}
+fragment DetailsPanelProductFragment on ProductNode {
+  id
+  name
+  productType
+  latestVersion {
+    version
+  }
+}
+fragment DetailsPanelTaskFragment on TaskNode {
+  id
+  name
+  label
+  assignees
+  taskType
+}
+fragment DetailsPanelVersionFragment on VersionNode {
+  id
+  thumbnailId
+  name
+  updatedAt
+  createdAt
+  productId
+  version
+  author
+}`);
+export const GetDetailsPanelTaskDocument = new TypedDocumentString(`
     query GetDetailsPanelTask($projectName: String!, $entityId: String!) {
   project(name: $projectName) {
     projectName
@@ -2442,6 +2989,7 @@ export const GetDetailsPanelTaskDocument = `
       assignees
       updatedAt
       createdAt
+      thumbnailHash
       folderId
       thumbnailId
       hasReviewables
@@ -2462,10 +3010,34 @@ export const GetDetailsPanelTaskDocument = `
     }
   }
 }
-    ${SubTaskFragmentFragmentDoc}
-${DetailsPanelFolderFragmentFragmentDoc}
-${DetailsPanelVersionFragmentFragmentDoc}`;
-export const GetDetailsPanelVersionDocument = `
+    fragment DetailsPanelFolderFragment on FolderNode {
+  id
+  name
+  label
+  path
+  folderType
+}
+fragment DetailsPanelVersionFragment on VersionNode {
+  id
+  thumbnailId
+  name
+  updatedAt
+  createdAt
+  productId
+  version
+  author
+}
+fragment SubTaskFragment on SubTaskNode {
+  id
+  name
+  label
+  assignees
+  description
+  startDate
+  endDate
+  isDone
+}`);
+export const GetDetailsPanelVersionDocument = new TypedDocumentString(`
     query GetDetailsPanelVersion($projectName: String!, $entityId: String!) {
   project(name: $projectName) {
     projectName
@@ -2479,6 +3051,7 @@ export const GetDetailsPanelVersionDocument = `
       tags
       updatedAt
       createdAt
+      thumbnailHash
       thumbnailId
       hasReviewables
       parents
@@ -2502,11 +3075,34 @@ export const GetDetailsPanelVersionDocument = `
     }
   }
 }
-    ${DetailsPanelProductFragmentFragmentDoc}
-${DetailsPanelFolderFragmentFragmentDoc}
-${DetailsPanelTaskFragmentFragmentDoc}
-${DetailsPanelRepresentationFragmentFragmentDoc}`;
-export const GetProductVersionsDocument = `
+    fragment DetailsPanelFolderFragment on FolderNode {
+  id
+  name
+  label
+  path
+  folderType
+}
+fragment DetailsPanelProductFragment on ProductNode {
+  id
+  name
+  productType
+  latestVersion {
+    version
+  }
+}
+fragment DetailsPanelRepresentationFragment on RepresentationNode {
+  id
+  name
+  fileCount
+}
+fragment DetailsPanelTaskFragment on TaskNode {
+  id
+  name
+  label
+  assignees
+  taskType
+}`);
+export const GetProductVersionsDocument = new TypedDocumentString(`
     query GetProductVersions($projectName: String!, $productId: String!) {
   project(name: $projectName) {
     product(id: $productId) {
@@ -2518,9 +3114,9 @@ export const GetProductVersionsDocument = `
     }
   }
 }
-    `;
-export const GetListItemsDocument = `
-    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String) {
+    `);
+export const GetListItemsDocument = new TypedDocumentString(`
+    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     entityLists(ids: [$listId]) {
       pageInfo {
@@ -2541,6 +3137,7 @@ export const GetListItemsDocument = `
           ) {
             pageInfo {
               hasNextPage
+              hasPreviousPage
               endCursor
             }
             edges {
@@ -2560,8 +3157,147 @@ export const GetListItemsDocument = `
     }
   }
 }
-    ${ListItemFragmentFragmentDoc}`;
-export const GetListsDocument = `
+    fragment ListItemFragment on BaseNode {
+  active
+  name
+  updatedAt
+  createdAt
+  parents
+  ... on TaskNode {
+    label
+    status
+    tags
+    taskType
+    assignees
+    ownAttrib
+    hasReviewables
+    folderId
+    thumbnailHash
+    folder {
+      name
+      label
+      path
+      folderType
+    }
+    subtasks {
+      ...SubTaskFragment
+    }
+    latestComments @include(if: $showComments) {
+      activityId
+      body
+      author
+      createdAt
+    }
+  }
+  ... on FolderNode {
+    label
+    status
+    tags
+    folderType
+    path
+    ownAttrib
+    hasReviewables
+    thumbnailHash
+    folderId: id
+    latestComments @include(if: $showComments) {
+      activityId
+      body
+      author
+      createdAt
+    }
+  }
+  ... on ProductNode {
+    status
+    tags
+    productType
+    folderId
+    folder {
+      name
+      label
+      path
+      folderType
+    }
+  }
+  ... on VersionNode {
+    status
+    tags
+    hasReviewables
+    author
+    version
+    thumbnailHash
+    product {
+      id
+      name
+      productType
+      productBaseType
+      folderId
+      folder {
+        id
+        name
+        label
+        path
+        folderType
+      }
+    }
+    task {
+      name
+      label
+      taskType
+    }
+    latestComments @include(if: $showComments) {
+      activityId
+      body
+      author
+      createdAt
+    }
+  }
+}
+fragment SubTaskFragment on SubTaskNode {
+  id
+  name
+  label
+  assignees
+  description
+  startDate
+  endDate
+  isDone
+}`);
+export const GetListItemsColumnStatsDocument = new TypedDocumentString(`
+    query GetListItemsColumnStats($projectName: String!, $listId: String!, $filter: String, $targets: [MetricTargetInput!]) {
+  project(name: $projectName) {
+    name
+    entityLists(ids: [$listId]) {
+      edges {
+        node {
+          id
+          items(filter: $filter, calculateSpecificStatistics: $targets) {
+            fieldStats {
+              ...ColumnStatsFragment
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}`);
+export const GetListsDocument = new TypedDocumentString(`
     query GetLists($projectName: String!, $first: Int!, $after: String, $filter: String) {
   project(name: $projectName) {
     entityLists(first: $first, after: $after, filter: $filter) {
@@ -2594,8 +3330,8 @@ export const GetListsDocument = `
     }
   }
 }
-    `;
-export const GetListsItemsForReviewSessionDocument = `
+    `);
+export const GetListsItemsForReviewSessionDocument = new TypedDocumentString(`
     query GetListsItemsForReviewSession($projectName: String!, $first: Int, $after: String, $ids: [String!]) {
   project(name: $projectName) {
     entityLists(
@@ -2623,9 +3359,100 @@ export const GetListsItemsForReviewSessionDocument = `
     }
   }
 }
-    `;
-export const GetTasksByParentDocument = `
-    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $folderFilter: String, $search: String) {
+    `);
+export const GetFolderColumnStatsDocument = new TypedDocumentString(`
+    query GetFolderColumnStats($projectName: String!, $filter: String, $search: String, $parentIds: [String!], $ids: [String!], $targets: [MetricTargetInput!], $includeFolderChildren: Boolean! = true, $hideEmptyFolders: Boolean) {
+  project(name: $projectName) {
+    name
+    folders(
+      calculateSpecificStatistics: $targets
+      filter: $filter
+      search: $search
+      parentIds: $parentIds
+      ids: $ids
+      includeFolderChildren: $includeFolderChildren
+      hasTasks: $hideEmptyFolders
+    ) {
+      fieldStats {
+        ...ColumnStatsFragment
+      }
+    }
+  }
+}
+    fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}`);
+export const GetFolderDeleteInfoDocument = new TypedDocumentString(`
+    query GetFolderDeleteInfo($projectName: String!, $folderIds: [String!]!) {
+  project(name: $projectName) {
+    folders(ids: $folderIds) {
+      edges {
+        node {
+          id
+          name
+          label
+          totalFolderCount
+          totalTaskCount
+          totalProductCount
+          totalVersionCount
+        }
+      }
+    }
+  }
+}
+    `);
+export const GetTaskColumnStatsDocument = new TypedDocumentString(`
+    query GetTaskColumnStats($projectName: String!, $filter: String, $folderFilter: String, $search: String, $folderIds: [String!], $taskIds: [String!], $targets: [MetricTargetInput!], $includeFolderChildren: Boolean! = true) {
+  project(name: $projectName) {
+    name
+    tasks(
+      calculateSpecificStatistics: $targets
+      filter: $filter
+      folderFilter: $folderFilter
+      search: $search
+      folderIds: $folderIds
+      ids: $taskIds
+      includeFolderChildren: $includeFolderChildren
+    ) {
+      fieldStats {
+        ...ColumnStatsFragment
+      }
+    }
+  }
+}
+    fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}`);
+export const GetTasksByParentDocument = new TypedDocumentString(`
+    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $folderFilter: String, $search: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     name
     tasks(
@@ -2642,9 +3469,48 @@ export const GetTasksByParentDocument = `
     }
   }
 }
-    ${TaskPropsFragmentFragmentDoc}`;
-export const GetTasksListDocument = `
-    query GetTasksList($projectName: String!, $folderIds: [String!], $taskIds: [String!], $filter: String, $folderFilter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    fragment SubTaskFragment on SubTaskNode {
+  id
+  name
+  label
+  assignees
+  description
+  startDate
+  endDate
+  isDone
+}
+fragment TaskPropsFragment on TaskNode {
+  id
+  folderId
+  label
+  name
+  ownAttrib
+  status
+  tags
+  taskType
+  updatedAt
+  createdAt
+  thumbnailHash
+  active
+  assignees
+  allAttrib
+  hasReviewables
+  parents
+  subtasks {
+    ...SubTaskFragment
+  }
+  latestComments @include(if: $showComments) {
+    activityId
+    body
+    author
+    createdAt
+  }
+  folder {
+    folderType
+  }
+}`);
+export const GetTasksListDocument = new TypedDocumentString(`
+    query GetTasksList($projectName: String!, $folderIds: [String!], $taskIds: [String!], $filter: String, $folderFilter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false, $includeFolderChildren: Boolean! = true) {
   project(name: $projectName) {
     name
     tasks(
@@ -2658,6 +3524,7 @@ export const GetTasksListDocument = `
       last: $last
       sortBy: $sortBy
       ids: $taskIds
+      includeFolderChildren: $includeFolderChildren
     ) {
       pageInfo {
         startCursor
@@ -2674,15 +3541,110 @@ export const GetTasksListDocument = `
     }
   }
 }
-    ${TaskPropsFragmentFragmentDoc}`;
-export const GetProjectLatestDocument = `
+    fragment SubTaskFragment on SubTaskNode {
+  id
+  name
+  label
+  assignees
+  description
+  startDate
+  endDate
+  isDone
+}
+fragment TaskPropsFragment on TaskNode {
+  id
+  folderId
+  label
+  name
+  ownAttrib
+  status
+  tags
+  taskType
+  updatedAt
+  createdAt
+  thumbnailHash
+  active
+  assignees
+  allAttrib
+  hasReviewables
+  parents
+  subtasks {
+    ...SubTaskFragment
+  }
+  latestComments @include(if: $showComments) {
+    activityId
+    body
+    author
+    createdAt
+  }
+  folder {
+    folderType
+  }
+}`);
+export const GetFolderProductsDocument = new TypedDocumentString(`
+    query GetFolderProducts($projectName: String!, $folderId: String!) {
+  project(name: $projectName) {
+    products(folderIds: [$folderId], first: 1000) {
+      edges {
+        node {
+          id
+          name
+          productType
+          latestVersion {
+            id
+            version
+            task {
+              id
+              name
+              label
+              taskType
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `);
+export const GetProjectLatestDocument = new TypedDocumentString(`
     query GetProjectLatest($projectName: String!) {
   project(name: $projectName) {
     name
   }
 }
-    `;
-export const GetKanbanDocument = `
+    `);
+export const GetProjectsDocument = new TypedDocumentString(`
+    query GetProjects($last: Int, $before: String) {
+  projects(last: $last, before: $before, includeSkeleton: true) {
+    edges {
+      cursor
+      node {
+        ...ProjectFragment
+      }
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+      hasPreviousPage
+      startCursor
+    }
+  }
+}
+    fragment ProjectFragment on ProjectNode {
+  allAttrib
+  active
+  code
+  color
+  createdAt
+  updatedAt
+  label
+  library
+  name
+  projectFolder
+  projectName
+  skeleton
+}`);
+export const GetKanbanDocument = new TypedDocumentString(`
     query GetKanban($projects: [String!], $assignees: [String!]) {
   kanban(projects: $projects, assigneesAny: $assignees, last: 2000) {
     edges {
@@ -2692,10 +3654,31 @@ export const GetKanbanDocument = `
     }
   }
 }
-    ${KanbanFragmentFragmentDoc}`;
-export const GetKanbanProjectUsersDocument = `
+    fragment KanbanFragment on KanbanNode {
+  id
+  projectName
+  projectCode
+  name
+  label
+  status
+  tags
+  taskType
+  assignees
+  updatedAt
+  createdAt
+  thumbnailHash
+  dueDate
+  thumbnailId
+  folderId
+  folderLabel
+  folderName
+  folderPath
+  hasReviewables
+  priority
+}`);
+export const GetKanbanProjectUsersDocument = new TypedDocumentString(`
     query GetKanbanProjectUsers($projects: [String!]) {
-  users(last: 2000, projects: $projects) {
+  users(last: 2000, projects: $projects, isSupport: false) {
     edges {
       node {
         name
@@ -2709,8 +3692,8 @@ export const GetKanbanProjectUsersDocument = `
     }
   }
 }
-    `;
-export const GetKanbanTasksDocument = `
+    `);
+export const GetKanbanTasksDocument = new TypedDocumentString(`
     query GetKanbanTasks($projects: [String!], $taskIds: [String!], $last: Int) {
   kanban(projects: $projects, taskIds: $taskIds, last: $last) {
     edges {
@@ -2720,10 +3703,31 @@ export const GetKanbanTasksDocument = `
     }
   }
 }
-    ${KanbanFragmentFragmentDoc}`;
-export const GetActiveUsersCountDocument = `
+    fragment KanbanFragment on KanbanNode {
+  id
+  projectName
+  projectCode
+  name
+  label
+  status
+  tags
+  taskType
+  assignees
+  updatedAt
+  createdAt
+  thumbnailHash
+  dueDate
+  thumbnailId
+  folderId
+  folderLabel
+  folderName
+  folderPath
+  hasReviewables
+  priority
+}`);
+export const GetActiveUsersCountDocument = new TypedDocumentString(`
     query GetActiveUsersCount {
-  users(last: 2000) {
+  users(last: 2000, isSupport: false) {
     edges {
       node {
         active
@@ -2732,10 +3736,10 @@ export const GetActiveUsersCountDocument = `
     }
   }
 }
-    `;
-export const GetAllAssigneesDocument = `
+    `);
+export const GetAllAssigneesDocument = new TypedDocumentString(`
     query GetAllAssignees {
-  users(last: 2000) {
+  users(last: 2000, isSupport: false) {
     edges {
       node {
         name
@@ -2747,10 +3751,10 @@ export const GetAllAssigneesDocument = `
     }
   }
 }
-    `;
-export const GetAllProjectUsersAsAssigneeDocument = `
+    `);
+export const GetAllProjectUsersAsAssigneeDocument = new TypedDocumentString(`
     query GetAllProjectUsersAsAssignee($projectName: String) {
-  users(last: 2000, projectName: $projectName) {
+  users(last: 2000, projectName: $projectName, isSupport: false) {
     edges {
       node {
         name
@@ -2762,8 +3766,8 @@ export const GetAllProjectUsersAsAssigneeDocument = `
     }
   }
 }
-    `;
-export const GetLatestProductVersionDocument = `
+    `);
+export const GetLatestProductVersionDocument = new TypedDocumentString(`
     query GetLatestProductVersion($projectName: String!, $productId: String!) {
   project(name: $projectName) {
     versions(latestOnly: true, productIds: [$productId]) {
@@ -2782,9 +3786,9 @@ export const GetLatestProductVersionDocument = `
     }
   }
 }
-    `;
-export const GetProductsDocument = `
-    query GetProducts($projectName: String!, $productIds: [String!], $productFilter: String, $versionFilter: String, $taskFilter: String, $featuredVersionOrder: [String!], $search: String, $folderIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    `);
+export const GetProductsDocument = new TypedDocumentString(`
+    query GetProducts($projectName: String!, $productIds: [String!], $productFilter: String, $versionFilter: String, $taskFilter: String, $featuredVersionOrder: [String!], $search: String, $folderIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     products(
       ids: $productIds
@@ -2813,6 +3817,7 @@ export const GetProductsDocument = `
           tags
           type
           productType
+          productBaseType
           allAttrib
           parents
           createdAt
@@ -2834,11 +3839,80 @@ export const GetProductsDocument = `
     }
   }
 }
-    ${PageInfoFragmentDoc}
-${VersionBaseFragmentDoc}
-${VpFolderFragmentDoc}`;
-export const GetVersionsDocument = `
-    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    fragment VPFolder on FolderNode {
+  id
+  name
+  label
+  folderType
+  allAttrib
+}
+fragment PageInfo on PageInfo {
+  startCursor
+  endCursor
+  hasNextPage
+  hasPreviousPage
+}
+fragment VersionBase on VersionNode {
+  name
+  id
+  hasReviewables
+  parents
+  path
+  active
+  allAttrib
+  author
+  createdAt
+  status
+  tags
+  updatedAt
+  thumbnailHash
+  version
+  featuredVersionType
+  heroVersionId
+  latestComments @include(if: $showComments) {
+    activityId
+    body
+    author
+    createdAt
+  }
+}`);
+export const GetProductsColumnStatsDocument = new TypedDocumentString(`
+    query GetProductsColumnStats($projectName: String!, $productFilter: String, $versionFilter: String, $taskFilter: String, $folderIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
+  project(name: $projectName) {
+    products(
+      calculateSpecificStatistics: $targets
+      ids: $productIds
+      filter: $productFilter
+      versionFilter: $versionFilter
+      taskFilter: $taskFilter
+      folderIds: $folderIds
+      includeFolderChildren: true
+    ) {
+      fieldStats {
+        ...ColumnStatsFragment
+      }
+    }
+  }
+}
+    fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}`);
+export const GetVersionsDocument = new TypedDocumentString(`
+    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     versions(
       ids: $versionIds
@@ -2869,10 +3943,79 @@ export const GetVersionsDocument = `
     }
   }
 }
-    ${PageInfoFragmentDoc}
-${VersionExtendedFragmentDoc}`;
-export const GetVersionsByProductIdDocument = `
-    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String) {
+    fragment VPFolder on FolderNode {
+  id
+  name
+  label
+  folderType
+  allAttrib
+}
+fragment PageInfo on PageInfo {
+  startCursor
+  endCursor
+  hasNextPage
+  hasPreviousPage
+}
+fragment VersionBase on VersionNode {
+  name
+  id
+  hasReviewables
+  parents
+  path
+  active
+  allAttrib
+  author
+  createdAt
+  status
+  tags
+  updatedAt
+  thumbnailHash
+  version
+  featuredVersionType
+  heroVersionId
+  latestComments @include(if: $showComments) {
+    activityId
+    body
+    author
+    createdAt
+  }
+}
+fragment VersionExtended on VersionNode {
+  ...VersionBase
+  task {
+    id
+    taskType
+    label
+    name
+  }
+  product {
+    id
+    name
+    productType
+    productBaseType
+    allAttrib
+    folder {
+      id
+      ...VPFolder
+    }
+  }
+}`);
+export const GetVersionsAttribsDocument = new TypedDocumentString(`
+    query GetVersionsAttribs($projectName: String!, $versionIds: [String!]!) {
+  project(name: $projectName) {
+    versions(ids: $versionIds) {
+      edges {
+        node {
+          id
+          allAttrib
+        }
+      }
+    }
+  }
+}
+    `);
+export const GetVersionsByProductIdDocument = new TypedDocumentString(`
+    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     versions(
       productIds: $productIds
@@ -2898,9 +4041,100 @@ export const GetVersionsByProductIdDocument = `
     }
   }
 }
-    ${PageInfoFragmentDoc}
-${VersionExtendedFragmentDoc}`;
-export const GetInboxHasUnreadDocument = `
+    fragment VPFolder on FolderNode {
+  id
+  name
+  label
+  folderType
+  allAttrib
+}
+fragment PageInfo on PageInfo {
+  startCursor
+  endCursor
+  hasNextPage
+  hasPreviousPage
+}
+fragment VersionBase on VersionNode {
+  name
+  id
+  hasReviewables
+  parents
+  path
+  active
+  allAttrib
+  author
+  createdAt
+  status
+  tags
+  updatedAt
+  thumbnailHash
+  version
+  featuredVersionType
+  heroVersionId
+  latestComments @include(if: $showComments) {
+    activityId
+    body
+    author
+    createdAt
+  }
+}
+fragment VersionExtended on VersionNode {
+  ...VersionBase
+  task {
+    id
+    taskType
+    label
+    name
+  }
+  product {
+    id
+    name
+    productType
+    productBaseType
+    allAttrib
+    folder {
+      id
+      ...VPFolder
+    }
+  }
+}`);
+export const GetVersionsColumnStatsDocument = new TypedDocumentString(`
+    query GetVersionsColumnStats($projectName: String!, $versionFilter: String, $productFilter: String, $taskFilter: String, $folderIds: [String!], $versionIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
+  project(name: $projectName) {
+    versions(
+      calculateSpecificStatistics: $targets
+      ids: $versionIds
+      productIds: $productIds
+      filter: $versionFilter
+      productFilter: $productFilter
+      taskFilter: $taskFilter
+      folderIds: $folderIds
+      includeFolderChildren: true
+    ) {
+      fieldStats {
+        ...ColumnStatsFragment
+      }
+    }
+  }
+}
+    fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}`);
+export const GetInboxHasUnreadDocument = new TypedDocumentString(`
     query GetInboxHasUnread {
   inbox(
     last: 1
@@ -2916,8 +4150,8 @@ export const GetInboxHasUnreadDocument = `
     }
   }
 }
-    `;
-export const GetInboxMessagesDocument = `
+    `);
+export const GetInboxMessagesDocument = new TypedDocumentString(`
     query GetInboxMessages($last: Int, $active: Boolean, $important: Boolean, $cursor: String) {
   inbox(
     last: $last
@@ -2938,8 +4172,38 @@ export const GetInboxMessagesDocument = `
     }
   }
 }
-    ${MessageFragmentFragmentDoc}`;
-export const GetInboxUnreadCountDocument = `
+    fragment MessageFragment on ActivityNode {
+  projectName
+  activityId
+  activityType
+  activityData
+  referenceType
+  referenceId
+  body
+  createdAt
+  updatedAt
+  active
+  read
+  author {
+    name
+    attrib {
+      fullName
+    }
+  }
+  origin {
+    id
+    name
+    label
+    type
+    subtype
+  }
+  parents {
+    type
+    name
+    label
+  }
+}`);
+export const GetInboxUnreadCountDocument = new TypedDocumentString(`
     query GetInboxUnreadCount($important: Boolean) {
   inbox(
     last: 500
@@ -2955,8 +4219,8 @@ export const GetInboxUnreadCountDocument = `
     }
   }
 }
-    `;
-export const GetMarketInstallEventsDocument = `
+    `);
+export const GetMarketInstallEventsDocument = new TypedDocumentString(`
     query GetMarketInstallEvents {
   events(last: 100, topics: ["addon.install_from_url"]) {
     edges {
@@ -2969,8 +4233,8 @@ export const GetMarketInstallEventsDocument = `
     }
   }
 }
-    `;
-export const GetInstallEventsDocument = `
+    `);
+export const GetInstallEventsDocument = new TypedDocumentString(`
     query GetInstallEvents($ids: [String!]!) {
   events(last: 100, ids: $ids) {
     edges {
@@ -2982,8 +4246,8 @@ export const GetInstallEventsDocument = `
     }
   }
 }
-    `;
-export const GetProgressTaskDocument = `
+    `);
+export const GetProgressTaskDocument = new TypedDocumentString(`
     query GetProgressTask($projectName: String!, $taskId: String!) {
   project(name: $projectName) {
     name
@@ -2992,8 +4256,44 @@ export const GetProgressTaskDocument = `
     }
   }
 }
-    ${ProgressTaskFragmentFragmentDoc}`;
-export const GetTasksProgressDocument = `
+    fragment ProgressTaskFragment on TaskNode {
+  projectName
+  id
+  name
+  label
+  taskType
+  status
+  assignees
+  updatedAt
+  thumbnailHash
+  active
+  hasReviewables
+  tags
+  attrib {
+    priority
+    endDate
+    resolutionHeight
+    resolutionWidth
+    fps
+  }
+  folder {
+    id
+    name
+    label
+    folderType
+    parents
+    status
+    updatedAt
+    thumbnailHash
+    parent {
+      id
+      name
+      label
+      parents
+    }
+  }
+}`);
+export const GetTasksProgressDocument = new TypedDocumentString(`
     query GetTasksProgress($projectName: String!, $folderIds: [String!], $assignees: [String!], $assigneesAny: [String!], $tags: [String!], $tagsAny: [String!], $statuses: [String!], $taskTypes: [String!], $attributes: [AttributeFilterInput!]) {
   project(name: $projectName) {
     name
@@ -3017,105 +4317,168 @@ export const GetTasksProgressDocument = `
     }
   }
 }
-    ${ProgressTaskFragmentFragmentDoc}`;
+    fragment ProgressTaskFragment on TaskNode {
+  projectName
+  id
+  name
+  label
+  taskType
+  status
+  assignees
+  updatedAt
+  thumbnailHash
+  active
+  hasReviewables
+  tags
+  attrib {
+    priority
+    endDate
+    resolutionHeight
+    resolutionWidth
+    fps
+  }
+  folder {
+    id
+    name
+    label
+    folderType
+    parents
+    status
+    updatedAt
+    thumbnailHash
+    parent {
+      id
+      name
+      label
+      parents
+    }
+  }
+}`);
 
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     GetActivitiesById: build.query<GetActivitiesByIdQuery, GetActivitiesByIdQueryVariables>({
-      query: (variables) => ({ document: GetActivitiesByIdDocument, variables })
+      query: (variables) => ({ document: GetActivitiesByIdDocument as unknown as string, variables })
     }),
     GetActivityUsers: build.query<GetActivityUsersQuery, GetActivityUsersQueryVariables | void>({
-      query: (variables) => ({ document: GetActivityUsersDocument, variables })
+      query: (variables) => ({ document: GetActivityUsersDocument as unknown as string, variables })
     }),
     GetActivities: build.query<GetActivitiesQuery, GetActivitiesQueryVariables>({
-      query: (variables) => ({ document: GetActivitiesDocument, variables })
+      query: (variables) => ({ document: GetActivitiesDocument as unknown as string, variables })
     }),
     GetEntitiesChecklists: build.query<GetEntitiesChecklistsQuery, GetEntitiesChecklistsQueryVariables>({
-      query: (variables) => ({ document: GetEntitiesChecklistsDocument, variables })
+      query: (variables) => ({ document: GetEntitiesChecklistsDocument as unknown as string, variables })
     }),
     GetDetailsPanelFolder: build.query<GetDetailsPanelFolderQuery, GetDetailsPanelFolderQueryVariables>({
-      query: (variables) => ({ document: GetDetailsPanelFolderDocument, variables })
+      query: (variables) => ({ document: GetDetailsPanelFolderDocument as unknown as string, variables })
     }),
     GetDetailsPanelRepresentation: build.query<GetDetailsPanelRepresentationQuery, GetDetailsPanelRepresentationQueryVariables>({
-      query: (variables) => ({ document: GetDetailsPanelRepresentationDocument, variables })
+      query: (variables) => ({ document: GetDetailsPanelRepresentationDocument as unknown as string, variables })
     }),
     GetDetailsPanelTask: build.query<GetDetailsPanelTaskQuery, GetDetailsPanelTaskQueryVariables>({
-      query: (variables) => ({ document: GetDetailsPanelTaskDocument, variables })
+      query: (variables) => ({ document: GetDetailsPanelTaskDocument as unknown as string, variables })
     }),
     GetDetailsPanelVersion: build.query<GetDetailsPanelVersionQuery, GetDetailsPanelVersionQueryVariables>({
-      query: (variables) => ({ document: GetDetailsPanelVersionDocument, variables })
+      query: (variables) => ({ document: GetDetailsPanelVersionDocument as unknown as string, variables })
     }),
     GetProductVersions: build.query<GetProductVersionsQuery, GetProductVersionsQueryVariables>({
-      query: (variables) => ({ document: GetProductVersionsDocument, variables })
+      query: (variables) => ({ document: GetProductVersionsDocument as unknown as string, variables })
     }),
     GetListItems: build.query<GetListItemsQuery, GetListItemsQueryVariables>({
-      query: (variables) => ({ document: GetListItemsDocument, variables })
+      query: (variables) => ({ document: GetListItemsDocument as unknown as string, variables })
+    }),
+    GetListItemsColumnStats: build.query<GetListItemsColumnStatsQuery, GetListItemsColumnStatsQueryVariables>({
+      query: (variables) => ({ document: GetListItemsColumnStatsDocument as unknown as string, variables })
     }),
     GetLists: build.query<GetListsQuery, GetListsQueryVariables>({
-      query: (variables) => ({ document: GetListsDocument, variables })
+      query: (variables) => ({ document: GetListsDocument as unknown as string, variables })
     }),
     GetListsItemsForReviewSession: build.query<GetListsItemsForReviewSessionQuery, GetListsItemsForReviewSessionQueryVariables>({
-      query: (variables) => ({ document: GetListsItemsForReviewSessionDocument, variables })
+      query: (variables) => ({ document: GetListsItemsForReviewSessionDocument as unknown as string, variables })
+    }),
+    GetFolderColumnStats: build.query<GetFolderColumnStatsQuery, GetFolderColumnStatsQueryVariables>({
+      query: (variables) => ({ document: GetFolderColumnStatsDocument as unknown as string, variables })
+    }),
+    GetFolderDeleteInfo: build.query<GetFolderDeleteInfoQuery, GetFolderDeleteInfoQueryVariables>({
+      query: (variables) => ({ document: GetFolderDeleteInfoDocument as unknown as string, variables })
+    }),
+    GetTaskColumnStats: build.query<GetTaskColumnStatsQuery, GetTaskColumnStatsQueryVariables>({
+      query: (variables) => ({ document: GetTaskColumnStatsDocument as unknown as string, variables })
     }),
     GetTasksByParent: build.query<GetTasksByParentQuery, GetTasksByParentQueryVariables>({
-      query: (variables) => ({ document: GetTasksByParentDocument, variables })
+      query: (variables) => ({ document: GetTasksByParentDocument as unknown as string, variables })
     }),
     GetTasksList: build.query<GetTasksListQuery, GetTasksListQueryVariables>({
-      query: (variables) => ({ document: GetTasksListDocument, variables })
+      query: (variables) => ({ document: GetTasksListDocument as unknown as string, variables })
+    }),
+    GetFolderProducts: build.query<GetFolderProductsQuery, GetFolderProductsQueryVariables>({
+      query: (variables) => ({ document: GetFolderProductsDocument as unknown as string, variables })
     }),
     GetProjectLatest: build.query<GetProjectLatestQuery, GetProjectLatestQueryVariables>({
-      query: (variables) => ({ document: GetProjectLatestDocument, variables })
+      query: (variables) => ({ document: GetProjectLatestDocument as unknown as string, variables })
+    }),
+    GetProjects: build.query<GetProjectsQuery, GetProjectsQueryVariables | void>({
+      query: (variables) => ({ document: GetProjectsDocument as unknown as string, variables })
     }),
     GetKanban: build.query<GetKanbanQuery, GetKanbanQueryVariables | void>({
-      query: (variables) => ({ document: GetKanbanDocument, variables })
+      query: (variables) => ({ document: GetKanbanDocument as unknown as string, variables })
     }),
     GetKanbanProjectUsers: build.query<GetKanbanProjectUsersQuery, GetKanbanProjectUsersQueryVariables | void>({
-      query: (variables) => ({ document: GetKanbanProjectUsersDocument, variables })
+      query: (variables) => ({ document: GetKanbanProjectUsersDocument as unknown as string, variables })
     }),
     GetKanbanTasks: build.query<GetKanbanTasksQuery, GetKanbanTasksQueryVariables | void>({
-      query: (variables) => ({ document: GetKanbanTasksDocument, variables })
+      query: (variables) => ({ document: GetKanbanTasksDocument as unknown as string, variables })
     }),
     GetActiveUsersCount: build.query<GetActiveUsersCountQuery, GetActiveUsersCountQueryVariables | void>({
-      query: (variables) => ({ document: GetActiveUsersCountDocument, variables })
+      query: (variables) => ({ document: GetActiveUsersCountDocument as unknown as string, variables })
     }),
     GetAllAssignees: build.query<GetAllAssigneesQuery, GetAllAssigneesQueryVariables | void>({
-      query: (variables) => ({ document: GetAllAssigneesDocument, variables })
+      query: (variables) => ({ document: GetAllAssigneesDocument as unknown as string, variables })
     }),
     GetAllProjectUsersAsAssignee: build.query<GetAllProjectUsersAsAssigneeQuery, GetAllProjectUsersAsAssigneeQueryVariables | void>({
-      query: (variables) => ({ document: GetAllProjectUsersAsAssigneeDocument, variables })
+      query: (variables) => ({ document: GetAllProjectUsersAsAssigneeDocument as unknown as string, variables })
     }),
     GetLatestProductVersion: build.query<GetLatestProductVersionQuery, GetLatestProductVersionQueryVariables>({
-      query: (variables) => ({ document: GetLatestProductVersionDocument, variables })
+      query: (variables) => ({ document: GetLatestProductVersionDocument as unknown as string, variables })
     }),
     GetProducts: build.query<GetProductsQuery, GetProductsQueryVariables>({
-      query: (variables) => ({ document: GetProductsDocument, variables })
+      query: (variables) => ({ document: GetProductsDocument as unknown as string, variables })
+    }),
+    GetProductsColumnStats: build.query<GetProductsColumnStatsQuery, GetProductsColumnStatsQueryVariables>({
+      query: (variables) => ({ document: GetProductsColumnStatsDocument as unknown as string, variables })
     }),
     GetVersions: build.query<GetVersionsQuery, GetVersionsQueryVariables>({
-      query: (variables) => ({ document: GetVersionsDocument, variables })
+      query: (variables) => ({ document: GetVersionsDocument as unknown as string, variables })
+    }),
+    GetVersionsAttribs: build.query<GetVersionsAttribsQuery, GetVersionsAttribsQueryVariables>({
+      query: (variables) => ({ document: GetVersionsAttribsDocument as unknown as string, variables })
     }),
     GetVersionsByProductId: build.query<GetVersionsByProductIdQuery, GetVersionsByProductIdQueryVariables>({
-      query: (variables) => ({ document: GetVersionsByProductIdDocument, variables })
+      query: (variables) => ({ document: GetVersionsByProductIdDocument as unknown as string, variables })
+    }),
+    GetVersionsColumnStats: build.query<GetVersionsColumnStatsQuery, GetVersionsColumnStatsQueryVariables>({
+      query: (variables) => ({ document: GetVersionsColumnStatsDocument as unknown as string, variables })
     }),
     GetInboxHasUnread: build.query<GetInboxHasUnreadQuery, GetInboxHasUnreadQueryVariables | void>({
-      query: (variables) => ({ document: GetInboxHasUnreadDocument, variables })
+      query: (variables) => ({ document: GetInboxHasUnreadDocument as unknown as string, variables })
     }),
     GetInboxMessages: build.query<GetInboxMessagesQuery, GetInboxMessagesQueryVariables | void>({
-      query: (variables) => ({ document: GetInboxMessagesDocument, variables })
+      query: (variables) => ({ document: GetInboxMessagesDocument as unknown as string, variables })
     }),
     GetInboxUnreadCount: build.query<GetInboxUnreadCountQuery, GetInboxUnreadCountQueryVariables | void>({
-      query: (variables) => ({ document: GetInboxUnreadCountDocument, variables })
+      query: (variables) => ({ document: GetInboxUnreadCountDocument as unknown as string, variables })
     }),
     GetMarketInstallEvents: build.query<GetMarketInstallEventsQuery, GetMarketInstallEventsQueryVariables | void>({
-      query: (variables) => ({ document: GetMarketInstallEventsDocument, variables })
+      query: (variables) => ({ document: GetMarketInstallEventsDocument as unknown as string, variables })
     }),
     GetInstallEvents: build.query<GetInstallEventsQuery, GetInstallEventsQueryVariables>({
-      query: (variables) => ({ document: GetInstallEventsDocument, variables })
+      query: (variables) => ({ document: GetInstallEventsDocument as unknown as string, variables })
     }),
     GetProgressTask: build.query<GetProgressTaskQuery, GetProgressTaskQueryVariables>({
-      query: (variables) => ({ document: GetProgressTaskDocument, variables })
+      query: (variables) => ({ document: GetProgressTaskDocument as unknown as string, variables })
     }),
     GetTasksProgress: build.query<GetTasksProgressQuery, GetTasksProgressQueryVariables>({
-      query: (variables) => ({ document: GetTasksProgressDocument, variables })
+      query: (variables) => ({ document: GetTasksProgressDocument as unknown as string, variables })
     }),
   }),
 });

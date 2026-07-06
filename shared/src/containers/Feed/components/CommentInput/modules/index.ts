@@ -3,8 +3,10 @@
 import { Quill } from 'react-quill-ayon'
 import MagicUrl from 'quill-magic-url'
 import ImageUploader from './ImageUploader'
+import MentionClipboard from './MentionClipboard'
 Quill.register('modules/imageUploader', ImageUploader)
 Quill.register('modules/magicUrl', MagicUrl)
+Quill.register('modules/mentionClipboard', MentionClipboard)
 
 // override icons with material icons
 const getIcon = (icon) => '<span class="material-symbols-outlined icon">' + icon + '</span>'
@@ -17,7 +19,7 @@ icons['underline'] = getIcon('format_underlined')
 icons['link'] = getIcon('link')
 icons['list']['ordered'] = getIcon('format_list_numbered')
 icons['list']['bullet'] = getIcon('format_list_bulleted')
-icons['list']['check'] = getIcon('checklist')
+icons['list']['check'] = getIcon('check_circle')
 icons['image'] = getIcon('attach_file')
 icons['code-block'] = getIcon('code')
 
@@ -32,19 +34,20 @@ export const quillFormats = [
   'mention',
 ]
 
-export const getModules = ({ imageUploader, disableImageUpload = false }) => {
+export const getModules = ({ imageUploader, mentionTypeOptions, disableImageUpload = false }) => {
   const toolbar = [
     [{ header: 2 }, 'bold', 'italic', 'link', 'code-block'],
     [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
   ]
-  
+
   if (!disableImageUpload) {
     toolbar.push(['image'])
   }
-  
+
   return {
     toolbar,
     imageUploader,
     magicUrl: true,
+    mentionClipboard: { typeOptions: mentionTypeOptions },
   }
 }

@@ -12,8 +12,8 @@ import useUpdateList from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
 import ListsContext, { ListDetailsOpenState, OnOpenFolderListParams } from './ListsContext'
-import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
-import { useLocalStorage } from '@shared/hooks'
+import { useGetProductionAddon } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 import { buildListFolderRowId, parseListFolderRowId } from '../util/buildListsTableData'
 import useInitialListsExpanded from '../hooks/useInitialListsExpanded'
 import { usePowerpack, useProjectContext } from '@shared/context'
@@ -22,10 +22,13 @@ import { usePowerpack, useProjectContext } from '@shared/context'
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
   encode: (rowSelection: RowSelectionState | null | undefined) => {
     if (!rowSelection || Object.keys(rowSelection).length === 0) return undefined
-    // Convert to array of selected row ids
+    // Convert to array of selected row ids, excluding folder row IDs
+    // to prevent folder IDs from leaking into URL params where addons may read them as session IDs
     const selectedIds = Object.entries(rowSelection)
       .filter(([_, selected]) => selected)
+      .filter(([id]) => !parseListFolderRowId(id))
       .map(([id]) => id)
+    if (selectedIds.length === 0) return undefined
     return selectedIds.join(',')
   },
   decode: (input: string | (string | null)[] | null | undefined) => {
@@ -41,9 +44,10 @@ const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
 interface ListsProviderProps {
   children: ReactNode
   isReview?: boolean
+  isStoryboards?: boolean
 }
 
-export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
+export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProviderProps) => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
   const { projectName } = useProjectContext()
   const { listsMap, listsData, listFolders } = useListsDataContext()
@@ -51,6 +55,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   // Memoize the configurations for the query parameters
   const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
   const reviewParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
+  const storyboardParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
 
   const [unstableListSelection, setListSelection] = useQueryParam<RowSelectionState>(
     'list',
@@ -60,26 +65,43 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     'review',
     reviewParamConfig, // Use memoized config
   )
+  const [unstableStoryboardSelection, setStoryboardSelection] = useQueryParam<RowSelectionState>(
+    'storyboard',
+    storyboardParamConfig, // Use memoized config
+  )
 
   // find out if and what version of the review addon is installed
-  const { addonVersions: matchedAddons } = useGetBundleAddonVersions({ addons: ['review'] })
-  const reviewVersion = matchedAddons.get('review')
+  const { getProductionAddon } = useGetProductionAddon()
+  const reviewVersion = getProductionAddon('review')?.productionVersion
 
   const rowSelection = useMemo(
-    () => (isReview ? unstableReviewSelection : unstableListSelection),
+    () =>
+      isReview
+        ? isStoryboards
+          ? unstableStoryboardSelection
+          : unstableReviewSelection
+        : unstableListSelection,
     // Simpler dependencies: unstableListSelection and unstableReviewSelection are stable state references
-    [unstableListSelection, unstableReviewSelection, isReview],
+    [
+      unstableListSelection,
+      unstableReviewSelection,
+      unstableStoryboardSelection,
+      isReview,
+      isStoryboards,
+    ],
   )
 
   const setRowSelection = useCallback(
     (ids: RowSelectionState) => {
-      if (isReview) {
+      if (isStoryboards) {
+        setStoryboardSelection(ids)
+      } else if (isReview) {
         setReviewSelection(ids)
       } else {
         setListSelection(ids)
       }
     },
-    [isReview, setReviewSelection, setListSelection], // setReviewSelection and setListSelection are stable
+    [isReview, setReviewSelection, setStoryboardSelection, setListSelection], // setReviewSelection and setListSelection are stable
   )
 
   // only rows that are selected
@@ -91,7 +113,10 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     [JSON.stringify(rowSelection)],
   )
 
-  const selectedLists = selectedRows.map((id) => listsMap.get(id)).filter((list) => !!list)
+  const selectedLists = selectedRows
+    .filter((id) => !parseListFolderRowId(id))
+    .map((id) => listsMap.get(id))
+    .filter((list) => !!list)
 
   // we can only ever fetch one list at a time
   const selectedList = selectedLists[0]
@@ -99,7 +124,10 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   // dialogs
   const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
 
-  const [listDetailsOpen, setListDetailsOpen] = useLocalStorage<boolean>('list-details-open', true)
+  const [listDetailsOpen, setListDetailsOpen] = useSessionStorage<boolean>(
+    'list-details-open',
+    true,
+  )
 
   const [listFolderOpen, setListFolderOpen] = useState<ListDetailsOpenState>({ isOpen: false })
 
@@ -197,12 +225,15 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
           enhancedInit.entityListFolderIds = selectedFolderIds
           // also remove entityListFolderId if it exists
           delete enhancedInit.entityListFolderId
+        } else if (selectedList?.entityListFolderId) {
+          // If a list is selected, inherit its folder id
+          enhancedInit.entityListFolderId = selectedList.entityListFolderId || undefined
         }
       }
 
       rawOpenNewList(enhancedInit)
     },
-    [rawOpenNewList, selectedRows],
+    [rawOpenNewList, selectedRows, selectedList],
   )
 
   // UPDATE/EDIT LIST
@@ -228,17 +259,18 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     onCreatedFolders: handleCreatedFolders,
   })
 
-  const onOpenFolderList: OnOpenFolderListParams = ({ folderId }) => {
+  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, parentId }) => {
     if (!powerLicense) {
       setPowerpackDialog('listFolders')
       return
     }
     // get folder data
     const folder = listFolders.find((f) => f.id === folderId)
-    // if no folderId, open create dialog
+    // if no folderId, open create dialog (optionally inside parentId)
     if (!folderId) {
       return setListFolderOpen({
         isOpen: true,
+        parentId,
       })
     }
 
@@ -351,6 +383,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
         createReviewSessionList,
         isCreatingList,
         isReview,
+        isStoryboards,
         // expanded state
         expanded,
         setExpanded,

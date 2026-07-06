@@ -1,11 +1,11 @@
 import { GetCurrentUserApiResponse, gqlApi, usersApi } from '@shared/api/generated'
-import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { parseAllAttribs } from '@shared/api'
-import {
+import type {
   GetActiveUsersCountQuery,
   GetAllAssigneesQuery,
   GetAllProjectUsersAsAssigneeQuery,
-} from '@shared/api'
+} from '@shared/api/generated'
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import { parseAllAttribs } from '../overview'
 
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {
@@ -17,6 +17,7 @@ const USER_BY_NAME_QUERY = `
           isManager
           isService
           isDeveloper
+          isStagingAllowed
           isGuest
           active
           accessGroups
@@ -31,7 +32,7 @@ const USER_BY_NAME_QUERY = `
 `
 const USERS_QUERY = `
   query UserList {
-    users(last: 2000) {
+    users(last: 2000, isSupport: false) {
       edges {
         node {
           name
@@ -39,6 +40,7 @@ const USERS_QUERY = `
           isManager
           isService
           isDeveloper
+          isStagingAllowed
           isGuest
           active
           userPool
@@ -46,6 +48,8 @@ const USERS_QUERY = `
           defaultAccessGroups
           hasPassword
           disablePasswordLogin
+          inviteSentAt
+          inviteAcceptedAt
           createdAt
           updatedAt
           apiKeyPreview
@@ -58,7 +62,7 @@ const USERS_QUERY = `
 
 const ASSIGNEES_BY_NAME_QUERY = `
 query Assignees($names: [String!]!){
-  users(names: $names) {
+  users(names: $names, isSupport: false) {
   edges {
     node {
       name
@@ -71,7 +75,7 @@ query Assignees($names: [String!]!){
 }`
 const ASSIGNEES_QUERY = `
 query Assignees($projectName: String) {
-  users(last: 2000 projectName: $projectName) {
+  users(last: 2000 projectName: $projectName, isSupport: false) {
   edges {
     node {
       name
@@ -127,13 +131,15 @@ const injectedApi = gqlApi.injectEndpoints({
           throw new Error(res.errors[0].message)
         }
 
-        return res?.data?.users.edges.filter((e:any) => e.node.name !== 'CloudServiceWorker').map((e: any) => ({
-          ...e.node,
-          self: e.node.name === selfName,
-          avatarUrl: `/api/users/${e.node.name}/avatar`,
-          accessGroups: e.node.accessGroups ? JSON.parse(e.node.accessGroups) : {},
-          attrib: parseAllAttribs(e.node.allAttrib),
-        }))
+        return res?.data?.users.edges
+          .filter((e: any) => e.node.name !== 'CloudServiceWorker')
+          .map((e: any) => ({
+            ...e.node,
+            self: e.node.name === selfName,
+            avatarUrl: `/api/users/${e.node.name}/avatar`,
+            accessGroups: e.node.accessGroups ? JSON.parse(e.node.accessGroups) : {},
+            attrib: parseAllAttribs(e.node.allAttrib),
+          }))
       },
       providesTags: (users) =>
         users
@@ -194,11 +200,12 @@ const injectedApi = gqlApi.injectEndpoints({
 })
 
 type AssigneeNode = GetAllProjectUsersAsAssigneeQuery['users']['edges'][0]['node']
-export type Assignees = {
+export type Assignee = {
   name: AssigneeNode['name']
   fullName: AssigneeNode['attrib']['fullName']
   updatedAt: AssigneeNode['updatedAt']
-}[]
+}
+export type Assignees = Assignee[]
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>

@@ -7,6 +7,8 @@ query GetActivities(
   $last: Int
   $referenceTypes: [String!]
   $activityTypes: [String!]
+  $authors: [String!]
+  $activityFilter: String
 ) {
   project(name: $projectName) {
     name
@@ -18,6 +20,8 @@ query GetActivities(
       last: $last
       referenceTypes: $referenceTypes
       activityTypes: $activityTypes
+      authors: $authors
+      filter: $activityFilter
     ) {
       pageInfo {
         hasPreviousPage

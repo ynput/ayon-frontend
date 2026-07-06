@@ -10,6 +10,7 @@ interface ProjectsShortcutsProps {
   folders: ProjectFolderModel[]
   onOpenFolderDialog: () => void
   onRenameFolder: (folderId: string) => void
+  onRenameProject?: (projectName: string) => void
   disabled?: boolean
 }
 
@@ -18,11 +19,11 @@ const ProjectsShortcuts: FC<ProjectsShortcutsProps> = ({
   folders,
   onOpenFolderDialog,
   onRenameFolder,
+  onRenameProject,
   disabled,
 }) => {
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
-      if (disabled) return
       if (shouldBlockShortcuts(e)) return
 
       const key = e.key.toLowerCase()
@@ -42,22 +43,27 @@ const ProjectsShortcuts: FC<ProjectsShortcutsProps> = ({
 
       // Handle different key combinations
       if (key === 'f' && !isMeta && !isShift && !isAlt) {
-        // 'f' - Create folder
+        // 'f' - Create folder (powerpack-gated)
+        if (disabled) return
         e.preventDefault()
         onOpenFolderDialog()
         actionExecuted = true
       } else if (key === 'r' && !isMeta && !isShift && !isAlt) {
-        // 'r' - Rename folder (single folder selection only)
+        // 'r' - Rename folder (powerpack) OR edit project label (always)
         if (selectedRowIds.length === 0 || hasMultipleSelected) return
 
-        // Only allow renaming folders, not projects
         if (allSelectedRowsAreFolders) {
+          if (disabled) return
           e.preventDefault()
           const folderId = parseProjectFolderRowId(firstSelectedRow)
           if (folderId) {
             onRenameFolder(folderId)
             actionExecuted = true
           }
+        } else if (onRenameProject && !parseProjectFolderRowId(firstSelectedRow)) {
+          e.preventDefault()
+          onRenameProject(firstSelectedRow)
+          actionExecuted = true
         }
       }
 
@@ -65,7 +71,7 @@ const ProjectsShortcuts: FC<ProjectsShortcutsProps> = ({
         e.stopPropagation()
       }
     },
-    [disabled, rowSelection, folders, onOpenFolderDialog, onRenameFolder],
+    [disabled, rowSelection, folders, onOpenFolderDialog, onRenameFolder, onRenameProject],
   )
 
   useEffect(() => {

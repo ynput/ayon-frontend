@@ -16,6 +16,7 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
     isLoadingEditingViewData,
     setEditingView,
     viewType,
+    viewAlias,
     projectName,
     currentUser,
     viewSettings,
@@ -64,6 +65,7 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
       viewSettings={viewSettings}
       setEditingView={setEditingView}
       viewType={viewType}
+      viewAlias={viewAlias}
       projectName={projectName}
       shareOptions={shareOptions}
       setSelected={setSelectedView}

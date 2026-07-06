@@ -1,13 +1,14 @@
 import React from 'react'
 import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
+import { getEntityThumbnailUrl } from '@shared/util'
 
 export interface ThumbnailSimpleProps extends React.HTMLAttributes<HTMLDivElement> {
   projectName: string
   entityType: string
   entityId: string
   icon?: string
-  entityUpdatedAt: string | number
+  thumbnailHash?: string
   isLoading?: boolean
   disabled?: boolean
   src?: string
@@ -56,7 +57,7 @@ export const ThumbnailSimple: React.FC<ThumbnailSimpleProps> = ({
   entityType,
   entityId,
   icon,
-  entityUpdatedAt,
+  thumbnailHash,
   isLoading,
   className,
   disabled,
@@ -66,17 +67,23 @@ export const ThumbnailSimple: React.FC<ThumbnailSimpleProps> = ({
   iconOnly,
   ...props
 }) => {
-  const url = projectName && `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
-  const queryArgs = `?updatedAt=${entityUpdatedAt}`
+  const url = getEntityThumbnailUrl({
+    projectName,
+    entityType,
+    entityId,
+    thumbnailHash: thumbnailHash ? String(thumbnailHash) : undefined,
+  })
+  const isProject = entityType === 'project'
   const isWrongEntity = ['product'].includes(entityType)
+  const hasIdentity = isProject ? !!projectName : !!entityId
 
   return (
     <ThumbnailStyled className={className + ' thumbnail'} {...props}>
       {!isLoading && !disabled && <Icon icon={icon || 'image'} />}
-      {((entityType && !(isWrongEntity || !entityId)) || src) && !iconOnly && (
+      {((entityType && !isWrongEntity && hasIdentity) || src) && !iconOnly && (
         <ImageStyled
-          alt={`Entity thumbnail ${entityId}`}
-          src={src || `${url}${queryArgs}`}
+          alt={`Entity thumbnail ${entityId || projectName}`}
+          src={src || url || undefined}
           onLoad={onLoad}
           onError={onError}
         />

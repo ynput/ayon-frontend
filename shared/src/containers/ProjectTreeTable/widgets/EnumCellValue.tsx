@@ -1,4 +1,4 @@
-import { AttributeEnumItem } from '@shared/api'
+import { EnumItem } from '@shared/api'
 import { getTextColor, Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
@@ -74,6 +74,7 @@ const StyledValue = styled.span`
   padding: 0px 2px;
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
   max-width: 100%;
 
   &.placeholder {
@@ -114,7 +115,7 @@ const StyledExpandIcon = styled(Icon)`
 `
 
 export interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
-  selectedOptions: AttributeEnumItem[]
+  selectedOptions: EnumItem[]
   placeholder?: string
   hasMultipleValues?: boolean
   isMultiSelect?: boolean
@@ -204,9 +205,10 @@ export const EnumCellValue = ({
             {(showLabels || !option.icon) && (
               <StyledValue
                 style={{
-                  color: backgroundColor && option.color
-                    ? getTextColor(option.color)
-                    : iconOnlyColor && option.icon
+                  color:
+                    backgroundColor && option.color
+                      ? getTextColor(option.color)
+                      : iconOnlyColor && option.icon
                       ? undefined
                       : option.color,
                   backgroundColor: backgroundColor

@@ -38,15 +38,69 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
     [entityType],
   )
 
+  // plain readonly value columns only available on version lists
+
+  const versionValueColumns = useMemo<
+    { value: string; label: string; position: number; optionsKey?: TreeTableSubType }[]
+  >(
+    () =>
+      entityType === 'version'
+        ? [
+            {
+              value: 'productBaseType',
+              label: 'Base type',
+              position: 9,
+              optionsKey: 'productType',
+            },
+            { value: 'taskLabel', label: 'Task', position: 10 },
+          ]
+        : [],
+    [entityType],
+  )
+
   const extraColumns: TreeTableExtraColumn[] = useMemo(
     () => [
+      ...versionValueColumns.map(
+        (valueColumn): TreeTableExtraColumn => ({
+          column: {
+            id: valueColumn.value,
+            accessorKey: valueColumn.value,
+            header: valueColumn.label,
+            // reference value of a related entity — no valid backend sort key, would 400 the query
+            enableSorting: false,
+            enableResizing: true,
+            enablePinning: true,
+            enableHiding: true,
+            cell: ({ row, column, table }) => {
+              const meta = table.options.meta
+              const { value, id, type } = getValueIdType(row, column.id)
+              return (
+                <CellWidget
+                  rowId={id}
+                  className={clsx(valueColumn.value, { loading: row.original.isLoading })}
+                  columnId={column.id}
+                  value={isEntityRestricted(type) ? '' : value}
+                  options={
+                    valueColumn.optionsKey && !isEntityRestricted(type)
+                      ? meta?.options?.[valueColumn.optionsKey]
+                      : undefined
+                  }
+                  attributeData={{ type: 'string' }}
+                  isReadOnly={true}
+                />
+              )
+            },
+          },
+          position: valueColumn.position,
+        }),
+      ),
       ...extraTypeColumns.map(
         (typeColumn): TreeTableExtraColumn => ({
           column: {
             id: typeColumn.value,
             accessorKey: typeColumn.value,
-            header: typeColumn.label,
             enableSorting: true,
+            header: typeColumn.label,
             enableResizing: true,
             enablePinning: true,
             enableHiding: true,
@@ -88,10 +142,37 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
         }),
       ),
     ],
-    [extraTypeColumns],
+    [extraTypeColumns, versionValueColumns],
   )
 
-  const extraColumnsSettings = [...extraTypeColumns]
+  // some extra columns are added in buildTreeTableColumns based on the entity type
+  // (author/version/product are only built for version scope) so only offer them in the
+  // column manager for version lists — otherwise the toggle is a no-op (column never builds).
+  const versionExtraColumns =
+    entityType === 'version'
+      ? [
+          {
+            value: 'author',
+            label: 'Author',
+            position: 6,
+            readonly: true,
+          },
+          {
+            value: 'version',
+            label: 'Version',
+            position: 7,
+            readonly: true,
+          },
+          {
+            value: 'product',
+            label: 'Product',
+            position: 8,
+            readonly: true,
+          },
+        ]
+      : []
+
+  const extraColumnsSettings = [...extraTypeColumns, ...versionValueColumns, ...versionExtraColumns]
 
   return {
     extraColumns,

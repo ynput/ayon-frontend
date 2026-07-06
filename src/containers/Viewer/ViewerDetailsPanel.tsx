@@ -6,6 +6,7 @@ import { DetailsPanelSlideOut } from '@shared/containers'
 import { useGetProjectsInfoQuery } from '@shared/api'
 import { ViewerDetailsPanelWrapper } from './Viewer.styled'
 import { useViewer } from '@context/ViewerContext'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 
 type Props = {
   versionIds: string[]
@@ -33,30 +34,35 @@ const ViewerDetailsPanel = ({ versionIds = [], projectName, noVersions }: Props)
   const projectInfo = projectsInfo[projectName]
 
   return (
-    <ViewerDetailsPanelWrapper
-      className="viewer-details-panel"
-      style={{ display: noVersions ? 'none' : 'block' }}
-    >
-      {!!versionIds.length && (
-        <DetailsPanel
-          isOpen
-          entities={entities}
-          tagsOptions={projectInfo?.tags || []}
-          projectUsers={users}
-          activeProjectUsers={users}
-          disabledProjectUsers={[]}
-          projectsInfo={projectsInfo}
-          projectNames={[projectName]}
-          entityType={'version'}
-          scope="review"
-          style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
-          annotations={annotations}
-          removeAnnotation={removeAnnotation}
-          exportAnnotationComposite={exportAnnotationComposite}
-        />
+    <EntityListsContextBoundary projectName={projectName}>
+      {(entityListsContext) => (
+        <ViewerDetailsPanelWrapper
+          className="viewer-details-panel"
+          style={{ display: noVersions ? 'none' : 'block' }}
+        >
+          {!!versionIds.length && (
+            <DetailsPanel
+              isOpen
+              entities={entities}
+              tagsOptions={projectInfo?.tags || []}
+              projectUsers={users}
+              activeProjectUsers={users}
+              disabledProjectUsers={[]}
+              projectsInfo={projectsInfo}
+              projectNames={[projectName]}
+              entityType={'version'}
+              scope="review"
+              style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
+              entityListsContext={entityListsContext}
+              annotations={annotations}
+              removeAnnotation={removeAnnotation}
+              exportAnnotationComposite={exportAnnotationComposite}
+            />
+          )}
+          <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="review" />
+        </ViewerDetailsPanelWrapper>
       )}
-      <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="review" />
-    </ViewerDetailsPanelWrapper>
+    </EntityListsContextBoundary>
   )
 }
 

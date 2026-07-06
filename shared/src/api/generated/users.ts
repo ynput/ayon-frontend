@@ -36,6 +36,20 @@ const injectedRtkApi = api.injectEndpoints({
     deleteAvatar: build.mutation<DeleteAvatarApiResponse, DeleteAvatarApiArg>({
       query: (queryArg) => ({ url: `/api/users/${queryArg.userName}/avatar`, method: 'DELETE' }),
     }),
+    inviteUser: build.mutation<InviteUserApiResponse, InviteUserApiArg>({
+      query: (queryArg) => ({
+        url: `/api/users/${queryArg.userName}/invite`,
+        method: 'POST',
+        body: queryArg.inviteUserRequest,
+      }),
+    }),
+    acceptInvite: build.mutation<AcceptInviteApiResponse, AcceptInviteApiArg>({
+      query: (queryArg) => ({
+        url: `/api/users/acceptInvite`,
+        method: 'POST',
+        body: queryArg.acceptInviteRequest,
+      }),
+    }),
     passwordResetRequest: build.mutation<
       PasswordResetRequestApiResponse,
       PasswordResetRequestApiArg
@@ -199,6 +213,15 @@ export type DeleteAvatarApiResponse = /** status 200 Successful Response */ any
 export type DeleteAvatarApiArg = {
   userName: string
 }
+export type InviteUserApiResponse = /** status 200 Successful Response */ any
+export type InviteUserApiArg = {
+  userName: string
+  inviteUserRequest: InviteUserRequest
+}
+export type AcceptInviteApiResponse = /** status 200 Successful Response */ LoginResponseModel
+export type AcceptInviteApiArg = {
+  acceptInviteRequest: AcceptInviteRequest
+}
 export type PasswordResetRequestApiResponse = /** status 200 Successful Response */ any
 export type PasswordResetRequestApiArg = {
   passwordResetRequestModel: PasswordResetRequestModel
@@ -322,9 +345,11 @@ export type ApiKeyPatchModel = {
   label?: string
   expires?: number
 }
+export type InviteUserRequest = {
+  message?: string
+}
 export type PasswordResetRequestModel = {
   email: string
-  url: string
 }
 export type UserAttribModel = {
   fullName?: string
@@ -354,6 +379,10 @@ export type LoginResponseModel = {
   user?: UserModel
   /** URL to redirect the user after login */
   redirectUrl?: string
+}
+export type AcceptInviteRequest = {
+  token: string
+  password?: string
 }
 export type PasswordResetModel = {
   token: string
@@ -391,6 +420,10 @@ export type AttributeWriteAccessList = {
   attributes?: string[]
   fields?: string[]
 }
+export type ActivitiesAccessList = {
+  enabled?: boolean
+  activities?: string[]
+}
 export type ActionsAccessList = {
   enabled?: boolean
   actions?: string[]
@@ -424,6 +457,8 @@ export type Permissions = {
   attrib_read?: AttributeReadAccessList
   /** Whitelist attributes a user can write */
   attrib_write?: AttributeWriteAccessList
+  /** Whitelist activities a user can perform */
+  activities?: ActivitiesAccessList
   /** Whitelist actions a user can perform */
   actions?: ActionsAccessList
   /** Whitelist link types a user can create between entities */

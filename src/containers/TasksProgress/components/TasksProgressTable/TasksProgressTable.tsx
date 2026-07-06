@@ -7,13 +7,11 @@ import styled from 'styled-components'
 import './TaskProgressTable.scss'
 
 // Components
-import {
-  FolderBody,
-  TaskColumnHeader,
-  TasksProgressLoadingTable,
-  TaskStatusBar,
-  TaskTypeCell,
-} from '..'
+import { FolderBody } from '../FolderBody/FolderBody'
+import { TaskColumnHeader } from '../TaskColumnHeader/TaskColumnHeader'
+import { TasksProgressLoadingTable } from '../TasksProgressLoadingTable/TasksProgressLoadingTable'
+import { TaskStatusBar } from '../TaskStatusBar/TaskStatusBar'
+import { TaskTypeCell } from '../TaskTypeCell/TaskTypeCell'
 import ParentBody from '../ParentBody/ParentBody'
 import { Body } from '../FolderBody/FolderBody.styled'
 
@@ -28,7 +26,7 @@ import type {
   TaskTypeRow,
   TaskTypeStatusBar,
 } from '../../helpers/formatTaskProgressForTable'
-import type { Assignees, Status, TaskType, AttributeEnumItem } from '@shared/api'
+import type { Assignees, Status, TaskType, EnumItem } from '@shared/api'
 
 // Hooks
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
@@ -65,7 +63,7 @@ interface TasksProgressTableProps
   taskStatuses: Status[]
   folderStatuses: Status[]
   taskTypes: TaskType[]
-  priorities: AttributeEnumItem[]
+  priorities: EnumItem[]
   users: Assignees
   allExpanded: boolean
   expandedRows: string[]
@@ -398,6 +396,7 @@ export const TasksProgressTable = ({
                 folderType: row.__folderType,
                 status: folderStatuses.find((s) => s.name === row.__folderStatus),
                 updatedAt: row.__folderUpdatedAt,
+                thumbnailHash: row.__folderThumbnailHash,
               }}
               isSelected={
                 progressSelected.type === 'folder' && progressSelected.ids.includes(row.__folderId)

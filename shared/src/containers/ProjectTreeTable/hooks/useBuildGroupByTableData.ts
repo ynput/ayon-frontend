@@ -25,7 +25,11 @@ export const UNGROUPED_VALUE = '_ungrouped'
 export const ROW_ID_SEPARATOR = '__'
 
 const valueToStringArray = (value?: any): string[] =>
-  value ? (Array.isArray(value) ? value.map((v) => v.toString()) : [value.toString()]) : []
+  value
+    ? Array.isArray(value)
+      ? [...new Set(value.map((v) => v.toString()))] // dedup so an entity can't land in the same group twice (keeps row.id unique)
+      : [value.toString()]
+    : []
 
 // get group label, color and icon
 const getGroupData = (groupById: string, groupValue: string, groups?: EntityGroup[]): GroupData => {
@@ -108,6 +112,7 @@ const defaultEntityToGroupRow = (
     entityId: task.id,
     entityType: entityType,
     parentId: task.folderId,
+    folderId: task.folderId,
     name: task.name || '',
     label: task.label || task.name || '',
     icon: typeData?.icon || null,
@@ -121,13 +126,17 @@ const defaultEntityToGroupRow = (
     attrib: task.attrib,
     ownAttrib: task.ownAttrib,
     parents: task.parents || [],
+    folder: task.parents?.[task.parents.length - 1] || undefined,
+    createdAt: task.createdAt,
     updatedAt: task.updatedAt,
+    hasReviewables: task.hasReviewables || false,
     links: linksToTableData(task.links, entityType, {
       folderTypes: project?.folderTypes || [],
       productTypes: Object.values(project.productTypes) || [],
       taskTypes: project?.taskTypes || [],
     }),
     subtasks: task.subtasks || [],
+    latestComments: task.latestComments || [],
   }
 }
 
@@ -177,10 +186,10 @@ const useBuildGroupByTableData = ({
       })
     }
 
-    const ungroupedId = GROUP_BY_ID + '.' + UNGROUPED_VALUE // unique id for ungrouped group
+    const ungroupedId = buildGroupId(UNGROUPED_VALUE)
     // gets the "Ungrouped" group, creating it if it doesn't exist
     const getUnGroupedGroup = () => {
-      let ungroupedGroup = groupsMap.get(ungroupedId)
+      let ungroupedGroup = groupsMap.get(UNGROUPED_VALUE)
       if (!ungroupedGroup) {
         ungroupedGroup = {
           id: ungroupedId,
@@ -188,14 +197,18 @@ const useBuildGroupByTableData = ({
           entityType: 'group',
           subRows: [],
           label: 'Ungrouped',
-          group: { value: ungroupedId, label: 'Ungrouped' },
+          group: { value: UNGROUPED_VALUE, label: 'Ungrouped' },
           links: {},
         }
         // create ungrouped group if it doesn't exist
-        groupsMap.set(ungroupedId, ungroupedGroup)
+        groupsMap.set(UNGROUPED_VALUE, ungroupedGroup)
       }
       return ungroupedGroup
     }
+
+    const canHaveUngrouped =
+      groupBy.id === 'tags' || groupBy.id === 'assignees' || groupBy.id.startsWith('attrib.')
+    if (canHaveUngrouped) getUnGroupedGroup()
 
     for (const [id, entity] of entities) {
       // if the entity is not of the specified type, skip it
@@ -206,6 +219,11 @@ const useBuildGroupByTableData = ({
         // for attribute based grouping, get the value of the attribute
         const attributeId = groupBy.id.split('.')[1]
         groupValues = valueToStringArray(entity.attrib?.[attributeId])
+      } else if (groupBy.id === 'folderType' && 'folder' in entity) {
+        // folderType is nested under folder for task entities (from TaskPropsFragment)
+        groupValues = valueToStringArray(
+          (entity as EditorTaskNode & { folder?: { folderType?: string } }).folder?.folderType,
+        )
       } else {
         groupValues = valueToStringArray(entity[groupBy.id as keyof EntityMap])
       }
@@ -258,8 +276,8 @@ const useBuildGroupByTableData = ({
     // if the group is an attribute with enum values, sort by the enum values
     const sortDirection = groupBy.desc ? -1 : 1
     groupsList.sort((a, b) => {
-      if (a.group?.value === ungroupedId) return 1 // "Ungrouped" should always be last
-      if (b.group?.value === ungroupedId) return -1 // "Ungrouped" should always be last
+      if (a.group?.value === UNGROUPED_VALUE) return 1 // "Ungrouped" should always be last
+      if (b.group?.value === UNGROUPED_VALUE) return -1 // "Ungrouped" should always be last
       if (attribSortingIds.length) {
         // sort by index of the enum value
         const indexA = attribSortingIds.indexOf(a.group?.value || '')
@@ -277,8 +295,13 @@ const useBuildGroupByTableData = ({
       }
     })
 
-    // filter out empty groups
-    const nonEmptyGroups = groupsList.filter((group) => group.group?.count && group.group.count > 0)
+    // filter out empty groups — Ungrouped has no server count, keep it reachable
+    const nonEmptyGroups = groupsList.filter(
+      (group) =>
+        (group.group?.count ?? 0) > 0 ||
+        (group.subRows?.length ?? 0) > 0 ||
+        group.group?.value === UNGROUPED_VALUE,
+    )
 
     return showEmpty ? groupsList : nonEmptyGroups
   }

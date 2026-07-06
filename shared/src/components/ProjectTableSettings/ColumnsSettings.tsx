@@ -2,10 +2,18 @@
 import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 import * as Styled from './TableSettings.styled'
+import {
+  ColumnOrderState,
+  ColumnPinningState,
+  ColumnSizingState,
+  SortingState,
+  VisibilityState,
+} from '@tanstack/react-table'
 
 // Context and Components imports
 import {
   ColumnsConfig,
+  TableGroupBy,
   useColumnSettingsContext,
 } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
 import ColumnItem from './ColumnItem'
@@ -27,28 +35,41 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-ki
 
 // Notification imports
 import { toast } from 'react-toastify'
+import { checkColumnVisibility } from '../../containers/ProjectTreeTable/utils'
 import { SettingsPanelItem } from '../SettingsPanel/SettingsPanelItemTemplate'
 import { SettingHighlightedId } from '@shared/context'
 
 interface ColumnsSettingsProps {
   columns: SettingsPanelItem[]
   highlighted?: SettingHighlightedId
+  columnVisibility: VisibilityState
+  updateColumnVisibility: (visibility: VisibilityState) => void
+  columnPinning: ColumnPinningState
+  updateColumnPinning: (pinning: ColumnPinningState) => void
+  columnOrder: ColumnOrderState
+  setColumnsConfig: (config: ColumnsConfig) => void
+  columnSizing: ColumnSizingState
+  groupBy?: TableGroupBy
+  sorting: SortingState
+  rowHeight?: number
+  defaultColumnVisibility?: VisibilityState
 }
 
-const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => {
-  const {
-    columnVisibility,
-    updateColumnVisibility,
-    columnPinning,
-    updateColumnPinning,
-    columnOrder,
-    setColumnsConfig,
-    columnSizing,
-    groupBy,
-    sorting,
-    rowHeight,
-  } = useColumnSettingsContext()
-
+export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
+  columns,
+  highlighted,
+  columnVisibility,
+  updateColumnVisibility,
+  columnPinning,
+  updateColumnPinning,
+  columnOrder,
+  setColumnsConfig,
+  columnSizing,
+  groupBy,
+  sorting,
+  rowHeight,
+  defaultColumnVisibility,
+}) => {
   // State for the currently dragged column
   const [activeId, setActiveId] = useState<string | null>(null)
   const [isHiddenOverVisible, setIsHiddenOverVisible] = useState(false)
@@ -86,8 +107,12 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
   // Separate columns into visible, hidden, and pinned
   const { visibleColumns, hiddenColumns, pinnedColumns } = useMemo(() => {
     // First filter columns by visibility
-    const visible = columns.filter((col) => columnVisibility[col.value] !== false)
-    const hidden = columns.filter((col) => columnVisibility[col.value] === false)
+    const visible = columns.filter((col) =>
+      checkColumnVisibility(columnVisibility, col.value, defaultColumnVisibility),
+    )
+    const hidden = columns.filter(
+      (col) => !checkColumnVisibility(columnVisibility, col.value, defaultColumnVisibility),
+    )
 
     // Then separate out pinned columns from visible
     const pinned = visible.filter((col) => columnPinning.left?.includes(col.value))
@@ -98,7 +123,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
       hiddenColumns: hidden,
       pinnedColumns: pinned,
     }
-  }, [columns, columnVisibility, columnPinning])
+  }, [columns, columnVisibility, columnPinning, defaultColumnVisibility])
 
   // Sort columns based on columnOrder
   const sortedVisibleColumns = useMemo(() => {
@@ -156,14 +181,9 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
 
   // Toggle column visibility
   const toggleVisibility = (columnId: string) => {
-    const newState = { ...columnVisibility }
-    // If column is currently visible, hide it
-    if (newState[columnId] !== false) {
-      newState[columnId] = false
-    } else {
-      // If column is currently hidden, show it
-      newState[columnId] = true
-    }
+    const isVisible = checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)
+    const newState = { ...columnVisibility, [columnId]: !isVisible }
+    console.log('Toggling visibility for', columnId, 'to', !isVisible)
     updateColumnVisibility(newState)
   }
 
@@ -179,7 +199,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
       // If column is currently unpinned, pin it
       newState.left = [...(newState.left || []), columnId]
       // If column is hidden, show it
-      if (newVisibility[columnId] === false) {
+      if (!checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)) {
         newVisibility[columnId] = true
         updateColumnVisibility(newVisibility)
       }
@@ -200,12 +220,20 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
 
     if (over && active.id !== over.id) {
       // Check if we're dragging a hidden column over a visible column
-      const isActiveHidden = columnVisibility[active.id as string] === false
-      const isOverVisible = columnVisibility[over.id as string] !== false
+      const isActiveVisible = checkColumnVisibility(
+        columnVisibility,
+        active.id as string,
+        defaultColumnVisibility,
+      )
+      const isOverVisible = checkColumnVisibility(
+        columnVisibility,
+        over.id as string,
+        defaultColumnVisibility,
+      )
       const isOverPinned = columnPinning.left?.includes(over.id as string) || false
-      const isOverHidden = columnVisibility[over.id as string] === false
+      const isOverHidden = !isOverVisible
 
-      setIsHiddenOverVisible(isActiveHidden && isOverVisible && !isOverPinned)
+      setIsHiddenOverVisible(!isActiveVisible && isOverVisible && !isOverPinned)
       setIsDraggingOverPinned(isOverVisible && isOverPinned)
       setIsDraggingOverHidden(isOverHidden)
 
@@ -241,11 +269,19 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
       if (activeColumn && overColumn) {
         const activeId = active.id as string
         const overId = over.id as string
-        const isActiveVisible = columnVisibility[activeId] !== false
-        const isOverVisible = columnVisibility[overId] !== false
+        const isActiveVisible = checkColumnVisibility(
+          columnVisibility,
+          activeId,
+          defaultColumnVisibility,
+        )
+        const isOverVisible = checkColumnVisibility(
+          columnVisibility,
+          overId,
+          defaultColumnVisibility,
+        )
         const isActivePinned = columnPinning.left?.includes(activeId) || false
         const isOverPinned = columnPinning.left?.includes(overId) || false
-        const isOverHidden = columnVisibility[overId] === false
+        const isOverHidden = !isOverVisible
 
         // Create a new config object that we'll update and apply at the end
         const newConfig: ColumnsConfig = {
@@ -448,7 +484,13 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
             <ColumnItem
               column={activeColumn}
               isPinned={columnPinning.left?.includes(activeColumn.value) || false}
-              isHidden={columnVisibility[activeColumn.value] === false}
+              isHidden={
+                !checkColumnVisibility(
+                  columnVisibility,
+                  activeColumn.value,
+                  defaultColumnVisibility,
+                )
+              }
               isHighlighted={highlighted === activeColumn.value}
               dragOverlay={true}
             />
@@ -487,3 +529,39 @@ const SectionTitle = styled.div`
 `
 
 export default ColumnsSettings
+
+// Backward-compat wrapper that reads all data from ColumnSettingsContext
+type ColumnsSettingsWithContextProps = Pick<ColumnsSettingsProps, 'columns' | 'highlighted'>
+
+export const ColumnsSettingsWithContext: FC<ColumnsSettingsWithContextProps> = (props) => {
+  const {
+    columnVisibility,
+    defaultColumnVisibility,
+    updateColumnVisibility,
+    columnPinning,
+    updateColumnPinning,
+    columnOrder,
+    setColumnsConfig,
+    columnSizing,
+    groupBy,
+    sorting,
+    rowHeight,
+  } = useColumnSettingsContext()
+
+  return (
+    <ColumnsSettings
+      {...props}
+      columnVisibility={columnVisibility}
+      defaultColumnVisibility={defaultColumnVisibility}
+      updateColumnVisibility={updateColumnVisibility}
+      columnPinning={columnPinning}
+      updateColumnPinning={updateColumnPinning}
+      columnOrder={columnOrder}
+      setColumnsConfig={setColumnsConfig}
+      columnSizing={columnSizing}
+      groupBy={groupBy}
+      sorting={sorting}
+      rowHeight={rowHeight}
+    />
+  )
+}

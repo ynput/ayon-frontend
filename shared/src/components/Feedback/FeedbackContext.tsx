@@ -1,6 +1,7 @@
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import { useGetFeedbackVerificationQuery } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
+import { FeedbackContext } from './FeedbackContextInstance'
 
 export type FeedbackContextType = {
   loaded: boolean
@@ -18,8 +19,6 @@ export type FeedbackContextType = {
     articleId?: string,
   ) => void
 }
-
-const FeedbackContext = createContext<FeedbackContextType | undefined>(undefined)
 
 type FeedbackProviderProps = {
   children: ReactNode

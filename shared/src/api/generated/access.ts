@@ -127,6 +127,10 @@ export type AttributeWriteAccessList = {
   attributes?: string[]
   fields?: string[]
 }
+export type ActivitiesAccessList = {
+  enabled?: boolean
+  activities?: string[]
+}
 export type ActionsAccessList = {
   enabled?: boolean
   actions?: string[]
@@ -160,6 +164,8 @@ export type Permissions = {
   attrib_read?: AttributeReadAccessList
   /** Whitelist attributes a user can write */
   attrib_write?: AttributeWriteAccessList
+  /** Whitelist activities a user can perform */
+  activities?: ActivitiesAccessList
   /** Whitelist actions a user can perform */
   actions?: ActionsAccessList
   /** Whitelist link types a user can create between entities */

@@ -1,4 +1,4 @@
-import { useEffect, useState, createContext, useCallback, useRef, useContext } from 'react'
+import { useEffect, useState, useCallback, useRef, useContext } from 'react'
 import { toast } from 'react-toastify'
 import { PubSub } from '@shared/util'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
@@ -7,14 +7,13 @@ import api from '@shared/api'
 import { RefreshToast } from '@shared/components'
 import { useLazyGetSiteInfoQuery } from '@shared/api'
 import { WebSocketLike } from 'react-use-websocket/dist/lib/types'
+import { SocketContext } from './WebsocketContextInstance'
 
 export type WebsocketContextType = {
   getWebSocket: () => WebSocketLike | null
   readyState: ReadyState
   serverRestartingVisible: boolean
 }
-
-export const SocketContext = createContext<WebsocketContextType | undefined>(undefined)
 
 const proto = window.location.protocol.replace('http', 'ws')
 const wsAddress = `${proto}//${window.location.host}/ws`
@@ -133,8 +132,11 @@ export const SocketProvider = ({
 
       if (topic === 'server.restart_requested') setServerRestartingVisible(true)
 
-      if (sender === window.senderId) {
-        return // my own message. ignore
+      
+      if (["import.data"].includes(topic)) {
+        if (sender !== window.senderId) return // ignore import.data messages from other users
+      } else if (sender === window.senderId) {
+        return // for other events, ignore my own messages
       }
 
       const now = Date.now()
@@ -144,11 +146,11 @@ export const SocketProvider = ({
         messageStatsRef.current.callCount = 0
       }
 
+      console.log('Event RX', data)
       messageStatsRef.current.lastCall = now
 
       if (topic === 'shout' && data?.summary?.text) toast.info(summary.text)
 
-      console.log('Event RX', data)
       PubSub.publish(topic, data)
     },
     [setServerRestartingVisible],

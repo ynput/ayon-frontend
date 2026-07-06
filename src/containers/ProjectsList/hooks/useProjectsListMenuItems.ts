@@ -8,7 +8,7 @@ import {
 import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData.ts'
 
-type Hidden = {
+export type Hidden = {
   search?: boolean
   'add-project'?: boolean
   'manage-projects'?: boolean
@@ -17,6 +17,10 @@ type Hidden = {
   'select-all'?: boolean
   'archive-project'?: boolean
   'delete-project'?: boolean
+  'delete-folder'?: boolean
+  'edit-label'?: boolean
+  'edit-folder'?: boolean
+  'rename-folder'?: boolean
   'show-archived'?: boolean
   'create-folder'?: boolean
   'move-project'?: boolean
@@ -53,6 +57,7 @@ interface MenuItemProps {
   onDeleteFolder?: (folderId: string[]) => void
   onRenameFolder?: (folderId: string) => void
   onEditFolder?: (folderId: string) => void
+  onRenameProject?: (projectName: string) => void
 }
 
 type MenuItem = {
@@ -73,7 +78,7 @@ type MenuItem = {
   powerFeature?: string
 }
 
-type BuildMenuItems = (
+export type BuildMenuItems = (
   selection: string[],
   config?: { command?: boolean; dividers?: boolean; hidden?: Hidden },
 ) => MenuItem[]
@@ -103,6 +108,7 @@ const useProjectsListMenuItems = ({
   onDeleteFolder,
   onEditFolder,
   onRenameFolder,
+  onRenameProject,
 }: MenuItemProps): BuildMenuItems => {
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
   const handlePin = (allPinned: boolean, selection: string[]) => {
@@ -369,6 +375,16 @@ const useProjectsListMenuItems = ({
           hidden: !isSelectedRowFolder,
         },
         {
+          id: 'edit-label',
+          label: 'Edit label',
+          icon: 'edit',
+          shortcut: 'R',
+          [command ? 'command' : 'onClick']: () =>
+            singleProject && onRenameProject?.(singleProject.name),
+          disabled: selection.length !== 1,
+          hidden: !isSelectedProject,
+        },
+        {
           id: 'edit-folder',
           label: 'Edit folder',
           icon: 'folder_managed',
@@ -465,6 +481,7 @@ const useProjectsListMenuItems = ({
       wouldCreateCircularDependency,
       onRenameFolder,
       onEditFolder,
+      onRenameProject,
     ],
   )
 

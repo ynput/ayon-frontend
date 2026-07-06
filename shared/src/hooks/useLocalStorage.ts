@@ -16,6 +16,27 @@ const parseJSONString = (value: string | null, fallback: any = null) => {
   }
 }
 
+export const readLocalStorage = <T>(key: string, fallback: T): T => {
+  if (typeof window === 'undefined') return fallback
+  try {
+    return parseJSONString(localStorage.getItem(key), fallback)
+  } catch {
+    return fallback
+  }
+}
+
+// Write-only counterpart of useLocalStorage for non-render contexts (event handlers in hot components, plain modules). Dispatches the same storage event the hook listens to,
+// so every mounted useLocalStorage(key) instance picks the change up.
+export const writeLocalStorage = <T>(key: string, value: T): void => {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+    window.dispatchEvent(new Event('storage'))
+  } catch (e) {
+    console.error(e)
+  }
+}
+
 export function useLocalStorage<T>(key: string, defaultValue: T): [T, Dispatch<SetStateAction<T>>] {
   // Use a ref to hold the defaultValue to avoid dependency changes
   const defaultValueRef = useRef(defaultValue)
@@ -36,7 +57,8 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, Dispatch<S
     }
 
     function handler(e: StorageEvent) {
-      if (e.key !== key) return
+      // Same-tab writes dispatch a plain Event (no key); only filter real cross-tab events.
+      if (e.key && e.key !== key) return
 
       const lsi = localStorage.getItem(key)
       setValue(parseJSONString(lsi, defaultValueRef.current))
@@ -60,7 +82,10 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, Dispatch<S
 
           localStorage.setItem(key, JSON.stringify(nextValue))
           if (typeof window !== 'undefined') {
-            window.dispatchEvent(new StorageEvent('storage', { key }))
+            // dispatch event on next tick to avoid updating other components during render
+            setTimeout(() => {
+              window.dispatchEvent(new Event('storage'))
+            }, 0)
           }
           return nextValue
         })

@@ -326,7 +326,7 @@ const getUserAccessGroups = (
   return filteredUsersWithAccessGroups
 }
 
-const getProjectAccessSearchFilterBuiler = ({
+const getProjectAccessSearchFilterBuilder = ({
   projects,
   users,
   accessGroups,
@@ -373,5 +373,5 @@ export {
   mapInitialAccessGroupStates,
   getErrorInfo,
   getUserAccessGroups,
-  getProjectAccessSearchFilterBuiler,
+  getProjectAccessSearchFilterBuilder,
 }

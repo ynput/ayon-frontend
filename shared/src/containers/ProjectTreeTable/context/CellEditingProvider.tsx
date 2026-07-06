@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CellId, getTypeDefaultValue, parseCellId } from '../utils'
 import useHistory from '../hooks/useHistory'
 import { useSelectionCellsContext } from './SelectionCellsContext'
@@ -15,7 +15,20 @@ import { toast } from 'react-toastify'
 import { CellEditingContext } from './CellEditingContext'
 
 export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [editingCellId, setEditingCellId] = useState<CellId | null>(null)
+  const [editingCellId, setEditingCellIdRaw] = useState<CellId | null>(null)
+
+  // Ref-based draft storage to persist editing content across unmount/remount cycles
+  const editingDraftRef = useRef<string | null>(null)
+  const getEditingDraft = useCallback(() => editingDraftRef.current, [])
+  const setEditingDraft = useCallback((value: string | null) => {
+    editingDraftRef.current = value
+  }, [])
+
+  // Wrap setEditingCellId to clear draft synchronously (before next render reads it)
+  const setEditingCellId = useCallback((id: CellId | null) => {
+    editingDraftRef.current = null
+    setEditingCellIdRaw(id)
+  }, [])
 
   // Memoize these functions to prevent unnecessary re-renders
   const isEditing = useCallback((id: CellId) => id === editingCellId, [editingCellId])
@@ -294,6 +307,8 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       undo: handleUndo,
       redo: handleRedo,
       history,
+      getEditingDraft,
+      setEditingDraft,
     }),
     [
       editingCellId,
@@ -303,6 +318,8 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       handleUndo,
       handleRedo,
       history,
+      getEditingDraft,
+      setEditingDraft,
     ],
   )
 

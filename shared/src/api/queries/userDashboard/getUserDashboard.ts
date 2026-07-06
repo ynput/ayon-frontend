@@ -6,8 +6,9 @@ import {
   KanbanNode,
   Anatomy,
 } from '@shared/api/generated'
-import { projectQueries } from '@shared/api/queries/project'
-import { PubSub } from '@shared/util'
+import { projectQueries } from '../project'
+import PubSub from '@shared/util/pubsub'
+import { subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import convertAccessGroupsData, { AccessGroups } from './convertAccessGroupsData'
 
 // GetKanban response type
@@ -19,6 +20,30 @@ export type KanbanProjectUserNode = Omit<
   'accessGroups'
 > & { accessGroups: AccessGroups; projects: string[]; avatarUrl: string }
 export type GetKanbanProjectUsersResponse = KanbanProjectUserNode[]
+
+export interface MessageSummary {
+  entityId: string
+  entityPath: string
+  parentId: string
+  value: any
+}
+
+export interface Message {
+  id: string
+  topic: string
+  project: string
+  user: string
+  sender: string
+  senderType: string
+  description: string
+  status: string
+  progress: number
+  store: boolean
+  createdAt: string
+  updatedAt: string
+  dependsOn: string | null
+  summary: MessageSummary
+}
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import getUserProjectsAccess from './getUserProjectsAccess'
@@ -106,20 +131,48 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
       providesTags: provideKanbanTags,
       async onCacheEntryAdded(
         { assignees = [], projects = [] } = {},
-        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch },
+        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
       ) {
         let token
+        let unsubscribeThumbnails: (() => void) | undefined
+        let fetchQueue: { taskIds: string[]; projects: string[] }[] = []
+        let fetchTimeout: any = null
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
-          const patchKanbanTask = async ({
-            projects = [],
-            taskIds = [],
-          }: {
-            projects: string[]
-            taskIds: string[]
-          }) => {
+          unsubscribeThumbnails = subscribeToThumbnailUpdates(
+            (messages: ThumbnailUpdateMessage[]) => {
+              const cacheTasks = getCacheEntry().data ?? []
+              if (!cacheTasks.length) return
+
+              const matchedMessages = messages.filter((m) =>
+                cacheTasks.some((t) => t.id === m.summary.entityId && t.projectName === m.project),
+              )
+              if (matchedMessages.length === 0) return
+
+              updateCachedData((draft) => {
+                matchedMessages.forEach((message) => {
+                  const entityIndex = draft.findIndex((t) => t.id === message.summary.entityId)
+                  if (entityIndex !== -1 && draft[entityIndex] && message.summary.thumbnailHash) {
+                    draft[entityIndex].thumbnailHash = message.summary.thumbnailHash
+                  }
+                })
+              })
+            },
+            ['task'],
+          )
+
+          const processFetchQueue = async () => {
+            const batch = [...fetchQueue]
+            fetchQueue = []
+            fetchTimeout = null
+
+            const taskIds = Array.from(new Set(batch.flatMap((b) => b.taskIds)))
+            const projects = Array.from(new Set(batch.flatMap((b) => b.projects)))
+
+            if (taskIds.length === 0) return
+
             const tasks = await getKanbanTasks({ projects, taskIds }, dispatch)
 
             // get all tasks that have been ADDED to the assignees
@@ -153,18 +206,94 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
             })
           }
 
-          const handlePubSub = async (_topic: string, message: any) => {
-            const project = message.project as string
+          const patchKanbanTask = ({
+            projects = [],
+            taskIds = [],
+            payload,
+          }: {
+            projects: string[]
+            taskIds: string[]
+            payload?: Partial<KanbanNode>
+          }) => {
+            let needsFetch = false
+
+            if (payload) {
+              updateCachedData((draft) => {
+                taskIds.forEach((id) => {
+                  const index = draft.findIndex((t) => t.id === id)
+                  if (index !== -1) {
+                    // update the task
+                    Object.assign(draft[index], payload)
+
+                    // if assignees changed, check if it should be removed
+                    if (payload.assignees) {
+                      const isStillAssigned =
+                        !assignees?.length || payload.assignees.some((a) => assignees?.includes(a))
+                      if (!isStillAssigned) {
+                        draft.splice(index, 1)
+                      }
+                    }
+                  } else {
+                    // task not in cache, if it's now assigned to us, we need to fetch
+                    if (payload.assignees?.some((a) => assignees?.includes(a))) {
+                      needsFetch = true
+                    }
+                  }
+                })
+              })
+            } else {
+              needsFetch = true
+            }
+
+            if (!needsFetch) return
+
+            // add to queue
+            fetchQueue.push({ projects, taskIds })
+
+            // debounce the fetch with a random offset
+            if (!fetchTimeout) {
+              const delay = Math.random() * 5000
+              fetchTimeout = setTimeout(processFetchQueue, delay)
+            }
+          }
+
+          const handlePubSub = async (_topic: string, message: Message) => {
+            const project = message.project
             // first check the project name as selected
             if (!projects?.includes(project)) return console.log('project not selected')
             // then get entity id
             const entityId = message.summary.entityId
             if (!entityId) return console.log('no entity id found')
 
+            // current tasks on the board
+            const cacheTasks = getCacheEntry().data ?? []
+            // entity.task.status_changed
+            const field = message.topic.split('.')[2].split('_changed')[0]
+
+            // Only patch the task for the fields status and assignees.
+            if (!['status', 'assignees'].includes(field)) return
+
+            const value = message.summary.value
+            // cast the correct type onto value based on the field
+            let castValue: any = value
+            if (field === 'status') {
+              castValue = String(value)
+            } else if (field === 'assignees') {
+              castValue = Array.isArray(value) ? (value as string[]) : []
+            }
+
+            // check this task is actually on the board
+            const isTaskOnMyBoard = cacheTasks.some((t) => t.id === entityId)
+            // if the field is assignees AND the value includes current assignees then we patch
+            const isValueMe =
+              field === 'assignees' && (castValue as string[]).some((a) => assignees?.includes(a))
+
+            if (!isTaskOnMyBoard && !isValueMe) return
             // patch task updates into kanban cache
             patchKanbanTask({
               taskIds: [entityId],
               projects: [project],
+              payload: { [field]: castValue } as Partial<KanbanNode>,
             })
           }
 
@@ -179,6 +308,10 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
+        if (unsubscribeThumbnails) {
+          unsubscribeThumbnails()
+        }
+        if (fetchTimeout) clearTimeout(fetchTimeout)
       },
       // // there is only one cache for kanban
       // serializeQueryArgs: () => '',
@@ -253,19 +386,11 @@ const injectedDashboardRestApi = enhancedDashboardGraphqlApi.injectEndpoints({
             // hopefully this will be cached
             // it also allows for different combination of projects but still use the cache
             const responses = [
-              dispatch(
-                projectQueries.endpoints.getProject.initiate(
-                  { projectName },
-                  { forceRefetch: true },
-                ),
-              ).unwrap(),
+              dispatch(projectQueries.endpoints.getProject.initiate({ projectName })).unwrap(),
               ...(anatomy
                 ? [
                     dispatch(
-                      projectQueries.endpoints.getProjectAnatomy.initiate(
-                        { projectName },
-                        { forceRefetch: true },
-                      ),
+                      projectQueries.endpoints.getProjectAnatomy.initiate({ projectName }),
                     ).unwrap(),
                   ]
                 : []),

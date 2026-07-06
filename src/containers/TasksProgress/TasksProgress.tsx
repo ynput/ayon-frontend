@@ -13,12 +13,11 @@ import {
 import { useRootFolders } from './hooks'
 // shared
 import { useGetAllProjectUsersAsAssigneeQuery, useUpdateEntitiesMutation } from '@shared/api'
-import type { FolderType, Status, TaskType, AttributeEnumItem } from '@shared/api'
+import type { FolderType, Status, TaskType, EnumItem } from '@shared/api'
 import { EmptyPlaceholder, FilterFieldType } from '@shared/components'
 import {
   createFilterFromSlicer,
   useTaskProgressViewSettings,
-  type SelectionData,
   type SliceType,
 } from '@shared/containers'
 import { TaskFieldChange, TasksProgressTable } from './components'
@@ -37,7 +36,6 @@ import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
-import { isEmpty } from 'lodash'
 import { RowSelectionState } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
@@ -63,7 +61,7 @@ interface TasksProgressProps {
   folderStatuses?: Status[]
   taskTypes?: TaskType[]
   folderTypes?: FolderType[]
-  priorities?: AttributeEnumItem[]
+  priorities?: EnumItem[]
   projectName: string
 }
 
@@ -84,33 +82,15 @@ const TasksProgress: FC<TasksProgressProps> = ({
   const { filters: queryFilters, onUpdateFilters: setQueryFilters } = useTaskProgressViewSettings()
 
   // filter out by slice
-  const {
-    rowSelection,
-    sliceType,
-    rowSelectionData,
-    setPersistentRowSelectionData,
-    persistentRowSelectionData,
-  } = useSlicerContext()
-  const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
-    ? null
-    : persistentRowSelectionData
+  const { rowSelection, sliceType, pinnedSlice } = useSlicerContext()
+
   const sliceFilter = createFilterFromSlicer({
-    type: sliceType,
-    selection: rowSelectionData,
+    slice: { rowSelection, sliceType },
     attribFields: [],
   })
 
   const handleFiltersChange = (value: QueryFilter) => {
     setQueryFilters(value)
-
-    // check if we need to remove the hierarchy filter and clear hierarchy selection
-    // Convert QueryFilter to Filter[] to check for hierarchy
-    const hasHierarchyCondition = value.conditions?.some(
-      (condition) => 'key' in condition && condition.key === 'hierarchy',
-    )
-    if (!hasHierarchyCondition) {
-      setPersistentRowSelectionData({})
-    }
   }
 
   // Convert slice filter to QueryFilter for processing
@@ -152,14 +132,14 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   const resolveSelectedFolders = (
     rowSelection: RowSelectionState,
-    persistedHierarchySelection: SelectionData | null,
+    pinnedRowSelection: RowSelectionState | null | undefined,
     rootFolderIds: string[],
     sliceType: SliceType,
   ): string[] => {
     if (sliceType === 'hierarchy') {
       return Object.keys(rowSelection)
-    } else if (persistedHierarchySelection) {
-      return Object.keys(persistedHierarchySelection)
+    } else if (pinnedRowSelection) {
+      return Object.keys(pinnedRowSelection).filter((id) => pinnedRowSelection[id])
     } else {
       return rootFolderIds
     }
@@ -167,7 +147,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   const folderIdsToFetch = resolveSelectedFolders(
     rowSelection,
-    persistedHierarchySelection,
+    pinnedSlice?.rowSelection,
     rootFolderIds,
     sliceType,
   )

@@ -3,9 +3,9 @@ import {
   DeleteProjectActivityApiResponse,
   DeleteProjectActivityApiArg,
 } from '@shared/api/generated'
-import getReviewApi from './getReview'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { ReviewableResponse } from './types'
+import { getReviewApi } from './getReview'
 
 const injectedEndpoints = getReviewApi.injectEndpoints({
   endpoints: (build) => ({

@@ -11,6 +11,7 @@ import styled from 'styled-components'
 import { useGetEntityPickerData } from './hooks/useGetEntityPickerData'
 import { upperFirst } from 'lodash'
 import useExpandedWithInitialFolders from './hooks/useExpandedWithInitialFolders'
+import { usePreserveChildSelectionByName } from './hooks/usePreserveChildSelectionByName'
 
 const COL_MAX_WIDTH = 600
 
@@ -54,6 +55,7 @@ interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
   disabledIds?: string[] // IDs to display as disabled/unselectable
   disabledMessage?: string // Default tooltip message for disabled items
   getDisabledMessage?: (id: string) => string | undefined // Custom message per disabled item
+  reviewableRequired?: boolean // When entityType is 'version', disable versions without reviewables
 }
 
 export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
@@ -67,6 +69,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   disabledIds = [],
   disabledMessage = 'Cannot select this item',
   getDisabledMessage,
+  reviewableRequired,
   ...props
 }) => {
   const initSelectionState: PickerSelection = {
@@ -120,6 +123,27 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     selection: entitySelection,
   })
 
+  // When reviewableRequired is set and we're picking versions, disable any
+  // version returned by the query that does not have reviewables.
+  const nonReviewableVersionIds =
+    reviewableRequired && entityType === 'version'
+      ? entityData.version.data
+          .filter((v) => 'hasReviewables' in v && v.hasReviewables === false)
+          .map((v) => v.id)
+      : []
+
+  const effectiveDisabledIds =
+    nonReviewableVersionIds.length > 0
+      ? Array.from(new Set([...disabledIds, ...nonReviewableVersionIds]))
+      : disabledIds
+
+  const effectiveGetDisabledMessage = (id: string): string | undefined => {
+    if (nonReviewableVersionIds.includes(id)) {
+      return 'Version has no reviewables'
+    }
+    return getDisabledMessage?.(id)
+  }
+
   const handleFetchNextPage = (entityType: PickerEntityType) => {
     const entityDataForType = entityData[entityType]
     if (entityDataForType?.hasNextPage && !entityDataForType.isFetchingNextPage) {
@@ -135,6 +159,13 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   // Get the complete hierarchy for the target entity type!
   const entityHierarchy = entityHierarchies[entityType]
 
+  usePreserveChildSelectionByName({
+    entityHierarchy,
+    entityData,
+    rowSelection,
+    setEntityRowSelection,
+  })
+
   // Process table data to filter out excluded IDs and mark disabled rows
   const recursivelyProcessRows = (
     row: { id: string; subRows: any[] },
@@ -146,7 +177,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     // A row is disabled if its parent is disabled OR its own ID is in the disabledIds list.
     const isDisabled = parentIsDisabled || disabledIds.includes(row.id)
     const disabledRowMessage = isDisabled
-      ? getDisabledMessage?.(row.id) || disabledMessage
+      ? effectiveGetDisabledMessage(row.id) || disabledMessage
       : undefined
 
     // Create a new row object with the updated disabled state.
@@ -167,12 +198,12 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   }
 
   const processTableDataWithDisabled = (tableData: any) => {
-    if (!disabledIds || disabledIds.length === 0) {
+    if (!effectiveDisabledIds || effectiveDisabledIds.length === 0) {
       return tableData
     }
 
     // Iterate over the top-level rows and start the recursive processing.
-    return tableData.map((row: any) => recursivelyProcessRows(row, disabledIds, false))
+    return tableData.map((row: any) => recursivelyProcessRows(row, effectiveDisabledIds, false))
   }
 
   const handleSubmit = () => {

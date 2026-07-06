@@ -10,6 +10,7 @@ import { useScopedDetailsPanel } from '@shared/context'
 import useGoToEntity from '@hooks/useGoToEntity'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import { selectProgress } from '@state/progress'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 
 type TaskProgressDetailsPanelProps = {
   projectInfo: $Any
@@ -34,18 +35,20 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
 
   const { getGoToEntityData } = useGoToEntity()
 
-  const handleUriOpen = (entity: any) => {
+  const handleUriOpen = (entity: any, source: 'uri' | 'url') => {
     // Get the data needed to navigate to this entity
     const data = getGoToEntityData(entity.id, entity.entityType, {
       folder: entity.folder?.id,
     })
 
-    // Reset filters
-    setQueryFilters({})
+    // Only reset filters
+    if (source === 'uri') {
+      setQueryFilters({})
+    }
 
     // Expand folders in slicer
-    slicer.setExpanded(data.expandedFolders)
-    slicer.setRowSelection(data.selectedFolders)
+    slicer.onExpandedChange(data.expandedFolders)
+    slicer.onRowSelectionChange(data.selectedFolders)
 
     // Select the entity
     dispatch(selectProgress({ ids: [data.entityId], type: data.entityType as 'task' | 'folder' }))
@@ -53,26 +56,31 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
   }
 
   return (
-    <>
-      {/* @ts-ignore */}
-      <DetailsPanel
-        // entitySubTypes={subTypes}
-        isOpen={isOpen && !!entities.length}
-        entityType={selected.type}
-        entities={entities as any}
-        projectsInfo={projectsInfo}
-        projectNames={[projectName] as any}
-        tagsOptions={projectInfo.tags || []}
-        projectUsers={users}
-        activeProjectUsers={users}
-        style={{ boxShadow: 'none' }}
-        scope="progress"
-        onClose={() => setOpen(false)}
-        onOpenViewer={handleOpenViewer}
-        onUriOpen={handleUriOpen}
-      />
-      <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="progress" />
-    </>
+    <EntityListsContextBoundary projectName={projectName}>
+      {(entityListsContext) => (
+        <>
+          {/* @ts-ignore */}
+          <DetailsPanel
+            // entitySubTypes={subTypes}
+            isOpen={isOpen && !!entities.length}
+            entityType={selected.type}
+            entities={entities as any}
+            projectsInfo={projectsInfo}
+            projectNames={[projectName] as any}
+            tagsOptions={projectInfo.tags || []}
+            projectUsers={users}
+            activeProjectUsers={users}
+            style={{ boxShadow: 'none' }}
+            scope="progress"
+            entityListsContext={entityListsContext}
+            onClose={() => setOpen(false)}
+            onOpenViewer={handleOpenViewer}
+            onUriOpen={handleUriOpen}
+          />
+          <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="progress" />
+        </>
+      )}
+    </EntityListsContextBoundary>
   )
 }
 

@@ -6,7 +6,7 @@ import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils
 import { confirmDelete, getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { ConfirmDialogReturn } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
-import { ListItemsDataContextValue } from '../context/ListItemsDataContext'
+import type { ListItemsDataContextValue } from '../context/ListItemsDataContext'
 import { isEntityRestricted } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
 type UseDeleteListItemsProps = {

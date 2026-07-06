@@ -2,6 +2,7 @@ import { toast } from 'react-toastify'
 import styled from 'styled-components'
 import { useSelector } from 'react-redux'
 import { useEffect, useMemo, useState } from 'react'
+import { matchSorter } from 'match-sorter'
 import { $Any } from '@types'
 import { Button, Filter, Toolbar } from '@ynput/ayon-react-components'
 import Shortcuts from '@containers/Shortcuts'
@@ -10,7 +11,7 @@ import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { useGetUsersQuery } from '@shared/api'
-import { useListProjectsQuery } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 
 import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
 import {
@@ -24,11 +25,7 @@ import {
   mapUsersByAccessGroups,
 } from './mappers'
 import { SelectedAccessGroupUsers, SelectionStatus } from './types'
-import {
-  useUserPreferencesExpandedPanels,
-  useProjectAccessGroupData,
-  useUserPageFilters,
-} from './hooks'
+import { useUserPreferencesExpandedPanels, useProjectAccessGroupData } from './hooks'
 import ProjectUserAccessUserList from './ProjectUserAccessUserList'
 import ProjectUserAccessAssignDialog from './ProjectUserAccessAssignDialog'
 import ProjectUserAccessSearchFilterWrapper from './ProjectUserAccessSearchFilterWrapper'
@@ -49,6 +46,7 @@ import {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
 } from '@shared/components/EmptyPlaceholder'
+import { useSessionStorage } from '@shared/hooks'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -74,7 +72,7 @@ const ProjectUserAccess = () => {
     updateUserAccessGroups,
   } = useProjectAccessGroupData(selectedProject as string)
 
-  const [filters, setFilters] = useUserPageFilters()
+  const [filters, setFilters] = useSessionStorage<Filter[]>('projectUserAccessFilters', [])
 
   const [expandedAccessGroups, setExpandedAccessGroups] = useUserPreferencesExpandedPanels()
   const handleToggleExpandedAccessGroup = (accessGroupName: string, value: boolean) =>
@@ -87,19 +85,22 @@ const ProjectUserAccess = () => {
     isError: usersFetchError,
   } = useGetUsersQuery({ selfName })
 
-  const users = userList.filter((user: UserNode) => !user.isAdmin && !user.isManager && user.active && !user.isService)
+  const users = userList.filter(
+    (user: UserNode) => !user.isAdmin && !user.isManager && user.active && !user.isService,
+  )
   const mappedUsers = mapUsersByAccessGroups(projectUsers)
 
+  const [searchText, setSearchText] = useState<string>('')
   const [actionedUsers, setActionedUsers] = useState<string[]>([])
   const [showDialog, setShowDialog] = useState<boolean>(false)
   const [selectedAccessGroupUsers, setSelectedAccessGroupUsers] = useState<
     SelectedAccessGroupUsers | undefined
   >()
 
-  const { data: projects, isLoading: isLoadingProjects, isError, error } = useListProjectsQuery({})
-  if (isError) {
-    console.error(error)
-  }
+  const {
+    projects: { all: projects = [] },
+    isLoading,
+  } = useGlobalContext()
 
   const { setDisabled } = useShortcutsContext()
   const isUser = useSelector((state: $Any) => state.user.data.isUser)
@@ -116,7 +117,12 @@ const ProjectUserAccess = () => {
 
   const userFilter = filters?.filter((el: Filter) => el.label === 'User')
   const filteredNonManagerUsers = getFilteredEntities<UserNode>(users, userFilter)
-  const filteredUsers = getFilteredEntities<UserNode>(users, userFilter)
+  const filterAndSearchUsers = (baseUsers: UserNode[]) => {
+    const byFilter = getFilteredEntities<UserNode>(baseUsers, userFilter)
+    if (!searchText) return byFilter
+    return matchSorter(byFilter, searchText, { keys: ['name', 'attrib.fullName'] })
+  }
+  const filteredUsers = filterAndSearchUsers(users)
   const filteredUsersWithAccessGroups = getUserAccessGroups(
     filteredUsers,
     filteredSelectedProjects,
@@ -302,8 +308,7 @@ const ProjectUserAccess = () => {
       {
         key: 'a',
         action: () => {
-          if (
-            (!selectedAccessGroupUsers?.users || selectedAccessGroupUsers!.users.length == 0)) {
+          if (!selectedAccessGroupUsers?.users || selectedAccessGroupUsers!.users.length == 0) {
             return
           }
 
@@ -337,7 +342,7 @@ const ProjectUserAccess = () => {
       <ProjectUserAccessProjectList
         selection={filteredSelectedProjects}
         projects={filteredProjects}
-        isLoading={isLoadingProjects}
+        isLoading={isLoading.projects}
         // @ts-ignore
         userPermissions={userPermissions}
         onSelectionChange={setSelectedProjects}
@@ -415,7 +420,7 @@ const ProjectUserAccess = () => {
     </>
   )
 
-  if (permissionsLoading || isLoadingUsers || isLoadingProjects) {
+  if (permissionsLoading || isLoadingUsers || isLoading.projects) {
     return <LoadingPage message={''} children={''} />
   }
 
@@ -435,6 +440,7 @@ const ProjectUserAccess = () => {
           projects={filteredProjects}
           users={users}
           onChange={(results: $Any) => setFilters(results)}
+          onSearchChange={setSearchText}
         />
         <StyledButton
           className="action"

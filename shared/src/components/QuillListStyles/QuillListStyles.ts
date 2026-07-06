@@ -7,11 +7,16 @@ import styled from 'styled-components'
 export const QuillListStyles = styled.div`
   position: relative;
   height: 100%;
+  .ql-editor a {
+    display: inline !important;
+    vertical-align: baseline !important;
+  }
+
   /* Fix for unordered list showing as ordered list */
   .ql-editor ol,
   .ql-editor ul {
-    margin: 16px 0 !important;
-    padding-left: 20px;
+    margin: 4px 0 !important;
+    padding-left: 12px;
 
     li {
       padding-left: 0;

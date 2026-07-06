@@ -34,7 +34,7 @@ import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import NewEntityForm, { InputLabel, InputsContainer } from '@components/NewEntity/NewEntityForm.tsx'
 import { toast } from 'react-toastify'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 
 const StyledDialog = styled(Dialog)`
   .body {
@@ -110,61 +110,90 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
 
   const [createMore, setCreateMore] = useState(false)
   const { selectedCells } = useSelectionCellsContext()
-  const {
-    rowSelection: slicerSelection,
-    rowSelectionData: slicerSelectionData,
-    sliceType,
-  } = useSlicerContext()
+  const { rowSelection, pinnedSlice, sliceType } = useSlicerContext()
+  const { getFolderById } = useProjectFoldersContext()
   const { getEntityById } = useProjectTableContext()
 
-  const [selectedFolderIds, selectedEntitiesLabels] = React.useMemo(() => {
-    const selectedRowIds = Array.from(
-      new Set(
-        Array.from(selectedCells)
-          .map((cellId) => parseCellId(cellId))
-          .filter((cell) => cell && cell?.colId === 'name')
-          .map((cell) => cell?.rowId) as string[],
-      ),
-    )
+  const [allSelectedFolderIds, _allSelectedEntitiesLabels, parentTargetOptions] =
+    React.useMemo(() => {
+      const selectedRowIds = Array.from(
+        new Set(
+          Array.from(selectedCells)
+            .map((cellId) => parseCellId(cellId))
+            .filter((cell) => cell && cell?.colId === 'name')
+            .map((cell) => cell?.rowId) as string[],
+        ),
+      )
 
-    const selectedEntities = selectedRowIds.map((id) => getEntityById(id))
+      let ids: string[] = []
+      let labels: string[] = []
 
-    const selectedFolders = selectedEntities
-      .filter((entity) => entity?.entityType === 'folder')
-      .filter(Boolean) as MatchingFolder[]
-    const selectedTasks = selectedEntities
-      .filter((entity) => entity?.entityType === 'task')
-      .filter(Boolean) as EditorTaskNode[]
+      if (selectedRowIds.length > 0) {
+        const selectedEntities = selectedRowIds.map((id) => getEntityById(id))
 
-    // Extract folder IDs from selected folders and tasks
-    const folderIdsFromFolders = selectedFolders.map((folder) => folder.id)
-    // get parent folder ids from tasks
-    const folderIdsFromTasks = selectedTasks.map((task) => task.folderId)
+        const selectedFolders = selectedEntities
+          .filter((entity) => entity?.entityType === 'folder')
+          .filter(Boolean) as MatchingFolder[]
+        const selectedTasks = selectedEntities
+          .filter((entity) => entity?.entityType === 'task')
+          .filter(Boolean) as EditorTaskNode[]
 
-    // Combine and remove duplicate folder IDs
-    // These are the folders to create the new entity in
-    const selectedFolderIds = Array.from(new Set([...folderIdsFromFolders, ...folderIdsFromTasks]))
+        // Extract folder IDs from selected folders and tasks
+        const folderIdsFromFolders = selectedFolders.map((folder) => folder.id)
+        // get parent folder ids from tasks
+        const folderIdsFromTasks = selectedTasks.map((task) => task.folderId)
 
-    // if no folders or tasks are selected, try to get the selected folder from the slicer
-    if (!selectedFolderIds.length && sliceType === 'hierarchy') {
-      // add the selected folder ids from the slicer
-      const selectedFolderIdsFromSlicer = Object.keys(slicerSelection)
-      const selectedEntitiesLabels = Object.entries(slicerSelectionData)
-        .filter(([id]) => selectedFolderIdsFromSlicer.includes(id))
-        .map(([, data]) => data.label || data.name)
-        .filter(Boolean)
-      return [selectedFolderIdsFromSlicer, selectedEntitiesLabels]
-    } else {
-      const selectedEntitiesLabels = selectedEntities
-        .map((e) => e?.label || e?.name)
-        .filter(Boolean)
-      return [selectedFolderIds, selectedEntitiesLabels]
-    }
-  }, [selectedCells, slicerSelection, sliceType, entityType, getEntityById])
+        // Combine and remove duplicate folder IDs
+        ids = Array.from(new Set([...folderIdsFromFolders, ...folderIdsFromTasks]))
+
+        labels = ids
+          .map((id) => {
+            const entity = getEntityById(id)
+            return (entity?.label || entity?.name) as string
+          })
+          .filter(Boolean)
+      } else {
+        // no table selection, use slicer selection
+        const activeRowSelection =
+          sliceType === 'hierarchy' ? rowSelection : pinnedSlice?.rowSelection || null
+        if (!activeRowSelection) return [[], [], []]
+        ids = Object.keys(activeRowSelection).filter((id) => activeRowSelection[id])
+        labels = ids
+          .map((id) => {
+            const folder = getFolderById(id)
+            return folder?.label || folder?.name || null
+          })
+          .filter(Boolean) as string[]
+      }
+
+      const options: { value: string; label: string }[] = []
+      ids.forEach((id, index) => {
+        options.push({ value: id, label: labels[index] || id })
+      })
+
+      return [ids, labels, options]
+    }, [selectedCells, rowSelection, pinnedSlice, sliceType, getEntityById, getFolderById])
+
+  const [manuallySelectedParents, setManuallySelectedParents] = useState<string[] | null>(null)
+
+  let selectedFolderIds =
+    manuallySelectedParents !== null ? manuallySelectedParents : allSelectedFolderIds
+
+  // ensure we don't accidentally create things with invalid parents (e.g. selection changed)
+  selectedFolderIds = selectedFolderIds.filter((id) => allSelectedFolderIds.includes(id))
+
+  // if the filtering removed everything (e.g. selection completely changed or user deselected all), revert to full selection
+  if (selectedFolderIds.length === 0 && allSelectedFolderIds.length > 0) {
+    selectedFolderIds = allSelectedFolderIds
+  }
+
+  const selectedEntitiesLabels = selectedFolderIds
+    .map((id) => parentTargetOptions.find((o) => o.value === id)?.label || '')
+    .filter(Boolean)
 
   const parentLabel = selectedEntitiesLabels[0] || ''
 
-  const isRoot = isEmpty(selectedFolderIds)
+  const isRoot = isEmpty(allSelectedFolderIds)
 
   const [nameFocused, setNameFocused] = useState<boolean>(false)
   const [nameManuallyEdited, setNameManuallyEdited] = useState<boolean>(false)
@@ -261,6 +290,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     setEntityForm(initData)
     setSequenceForm((prev) => ({ ...prev, active: false }))
     setNameManuallyEdited(false)
+    setManuallySelectedParents(null)
   }
 
   // open dropdown - delay to wait for dialog opening
@@ -441,49 +471,70 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
             target.tagName !== 'INPUT' && setNameFocused(false)
           }}
         >
-          {sequenceForm.active ? (
-            // @ts-ignore
-            <FolderSequence
-              base={entityForm.label}
-              type={entityForm.subType}
-              increment={sequenceForm.increment}
-              length={sequenceForm.length}
-              prefix={sequenceForm.prefix}
-              prefixDepth={sequenceForm.prefixDepth}
-              parentLabel={parentLabel}
-              entityType="folder"
-              nesting={false}
-              onChange={handleSeqChange}
-              isRoot={isRoot}
-              typeSelectRef={typeSelectRef}
-              // @ts-ignore
-              onLastInputKeydown={(e) => handleKeyDown(e, true)}
-              folders={projectInfo?.folderTypes || []}
-            />
-          ) : (
-            <ContentStyled>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--base-gap-large)',
+            }}
+          >
+            {!isRoot && (
               <InputsContainer>
-                <InputLabel>Type</InputLabel>
-                <TypeEditor
-                  value={[entityForm.subType]}
-                  onChange={(v: string) => handleChange(v, 'subType')}
-                  options={typeOptions}
-                  style={{ width: 160 }}
-                  ref={typeSelectRef}
-                  onFocus={handleTypeSelectFocus}
-                  onClick={() => setNameFocused(false)}
+                <InputLabel>Parent folder</InputLabel>
+                <Dropdown
+                  value={selectedFolderIds}
+                  options={parentTargetOptions}
+                  onChange={(v) => setManuallySelectedParents(v)}
+                  disabled={parentTargetOptions.length <= 1}
+                  multiSelect={true}
+                  style={{ width: '100%', minHeight: 32 }}
                 />
               </InputsContainer>
-              <NewEntityForm
-                handleChange={handleChange}
-                entityForm={entityForm}
-                labelRef={labelRef}
-                setNameFocused={setNameFocused}
-                handleKeyDown={handleKeyDown}
-                nameInfo={`Names are auto generated from the label using the Entity Naming setting on the project anatomy. Capitalization: ${config.capitalization}. Separator: "${config.separator}"`}
+            )}
+            {sequenceForm.active ? (
+              // @ts-ignore
+              <FolderSequence
+                base={entityForm.label}
+                type={entityForm.subType}
+                increment={sequenceForm.increment}
+                length={sequenceForm.length}
+                prefix={sequenceForm.prefix}
+                prefixDepth={sequenceForm.prefixDepth}
+                parentLabel={parentLabel}
+                entityType="folder"
+                nesting={false}
+                onChange={handleSeqChange}
+                isRoot={isRoot}
+                typeSelectRef={typeSelectRef}
+                // @ts-ignore
+                onLastInputKeydown={(e) => handleKeyDown(e, true)}
+                folders={projectInfo?.folderTypes || []}
               />
-            </ContentStyled>
-          )}
+            ) : (
+              <ContentStyled>
+                <InputsContainer>
+                  <InputLabel>Type</InputLabel>
+                  <TypeEditor
+                    value={[entityForm.subType]}
+                    onChange={(v: string) => handleChange(v, 'subType')}
+                    options={typeOptions}
+                    style={{ width: 160 }}
+                    ref={typeSelectRef}
+                    onFocus={handleTypeSelectFocus}
+                    onClick={() => setNameFocused(false)}
+                  />
+                </InputsContainer>
+                <NewEntityForm
+                  handleChange={handleChange}
+                  entityForm={entityForm}
+                  labelRef={labelRef}
+                  setNameFocused={setNameFocused}
+                  handleKeyDown={handleKeyDown}
+                  nameInfo={`Names are auto generated from the label using the Entity Naming setting on the project anatomy. Capitalization: ${config.capitalization}. Separator: "${config.separator}"`}
+                />
+              </ContentStyled>
+            )}
+          </div>
         </StyledDialog>
       )}
     </>

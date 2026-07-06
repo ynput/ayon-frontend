@@ -13,6 +13,7 @@ query GetDetailsPanelTask($projectName: String!, $entityId: String!) {
       assignees
       updatedAt
       createdAt
+      thumbnailHash
       folderId
       thumbnailId
       hasReviewables

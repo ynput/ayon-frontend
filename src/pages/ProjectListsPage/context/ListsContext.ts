@@ -1,19 +1,19 @@
 import { createContext, useContext } from 'react'
 import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
-import { UseNewListReturn } from '../hooks/useNewList'
-
-import { UseDeleteListReturn } from '../hooks/useDeleteList'
-import { UseUpdateListReturn } from '../hooks/useUpdateList'
+import type { UseNewListReturn } from '../hooks/useNewList'
+import type { UseDeleteListReturn } from '../hooks/useDeleteList'
+import type { UseUpdateListReturn } from '../hooks/useUpdateList'
 import { EntityList } from '@shared/api'
 import { ListFolderFormData } from '../components/ListFolderFormDialog'
 
 export type ListDetailsOpenState = {
   isOpen: boolean
   folderId?: string // id of folder being edited, undefined for create
+  parentId?: string // parent folder to create the new folder inside (create mode)
   initial?: Partial<ListFolderFormData>
 }
 
-export type OnOpenFolderListParams = (params: { folderId?: string }) => void
+export type OnOpenFolderListParams = (params: { folderId?: string; parentId?: string }) => void
 
 export interface ListsContextType {
   rowSelection: RowSelectionState
@@ -23,6 +23,7 @@ export interface ListsContextType {
   selectedList: EntityList | undefined
   // meta
   isReview?: boolean
+  isStoryboards?: boolean
   // expanded state
   expanded: ExpandedState
   setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>

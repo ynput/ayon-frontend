@@ -22,9 +22,12 @@ type Params = {
   rows?: TableRow[]
   expanded: ExpandedState
   showHierarchy: boolean
+  isFlatFolderView?: boolean
+  showEmptyFolders?: boolean
   loadingTasks?: LoadingTasks
   isLoadingMore?: boolean
   groupBy?: TableGroupBy
+  selectedFolders?: string[]
 }
 
 export default function useBuildProjectDataTable({
@@ -34,8 +37,11 @@ export default function useBuildProjectDataTable({
   tasksByFolderMap,
   expanded,
   showHierarchy,
+  isFlatFolderView = false,
+  showEmptyFolders = false,
   loadingTasks = {},
   isLoadingMore = false,
+  selectedFolders = [],
 }: Params): TableRow[] {
   const project = useProjectContext()
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
@@ -145,10 +151,94 @@ export default function useBuildProjectDataTable({
         folder: task.parents[task.parents.length - 1] || undefined,
         updatedAt: task.updatedAt,
         createdAt: task.createdAt,
+        thumbnailHash: task.thumbnailHash,
         hasReviewables: task.hasReviewables || false,
         links: links,
         subtasks: task.subtasks || [],
+        latestComments: task.latestComments || [],
       }
+    }
+
+    const createRootTaskRows = (): TableRow[] => {
+      const rootTaskRows: TableRow[] = []
+      for (const folderId of selectedFolders) {
+        if (foldersMap.has(folderId)) continue
+        const folderTaskIds = tasksByFolderMap.get(folderId) || []
+        for (const taskId of folderTaskIds) {
+          const task = tasksMap.get(taskId)
+          if (task) rootTaskRows.push(createTaskRow(task))
+        }
+      }
+      return rootTaskRows
+    }
+
+    // Flat folder view: all folders at root level, each expandable to show tasks
+    if (isFlatFolderView) {
+      const flatFolderRows: TableRow[] = []
+
+      for (const folder of foldersMap.values()) {
+        if (!folder?.id) continue
+
+        // Use the folder's hasTasks flag (from REST data) to filter before tasks are loaded
+        const hasTasks = folder.hasTasks ?? tasksByFolderMap.has(folder.id)
+        // Skip folders without tasks when showEmptyFolders is off
+        if (!showEmptyFolders && !hasTasks) continue
+
+        const folderTypeData = getEntityTypeData('folder', folder.folderType)
+        const links = linksToTableData(folder.links, 'folder', project.anatomy)
+
+        const row: TableRow = {
+          id: folder.id,
+          entityType: 'folder',
+          parentId: undefined, // flat — no parent nesting
+          folderId: folder.id,
+          name: folder.name || '',
+          label: folder.label || folder.name || '',
+          icon: folderTypeData?.icon || null,
+          color: folderTypeData?.color || null,
+          img: null,
+          subRows: [],
+          status: folder.status,
+          tags: folder.tags || [],
+          subType: folder.folderType || null,
+          ownAttrib: folder.ownAttrib || [],
+          path: folder.path,
+          folder: folder.parents[folder.parents.length - 1] || undefined,
+          attrib: folder.attrib || {},
+          childOnlyMatch: folder.childOnlyMatch || false,
+          updatedAt: folder.updatedAt,
+          createdAt: folder.createdAt,
+          thumbnailHash: folder.thumbnailHash,
+          hasReviewables: folder.hasReviewables || false,
+          hasVersions: folder.hasVersions || false,
+          links: links,
+        }
+
+        // If folder is expanded, attach task subRows
+        if (expandedFolderIds.has(folder.id)) {
+          const folderTaskIds = tasksByFolderMap.get(folder.id) || []
+          const folderTasks = folderTaskIds.flatMap((taskId) => tasksMap.get(taskId) || [])
+
+          if (folderTasks.length || loadingTasks[folder.id]) {
+            const taskRows = folderTasks.map((task) => createTaskRow(task, folder.id))
+
+            if (loadingTasks[folder.id]) {
+              const count = loadingTasks[folder.id]
+              if (count > 0) {
+                taskRows.push(...generateLoadingRows(count, { parentId: folder.id }))
+              }
+            }
+
+            row.subRows = taskRows
+          }
+        }
+
+        flatFolderRows.push(row)
+      }
+
+      flatFolderRows.push(...createRootTaskRows())
+
+      return flatFolderRows
     }
 
     // If showHierarchy is false, create a flat list of task rows
@@ -217,6 +307,7 @@ export default function useBuildProjectDataTable({
         childOnlyMatch: folder.childOnlyMatch || false,
         updatedAt: folder.updatedAt,
         createdAt: folder.createdAt,
+        thumbnailHash: folder.thumbnailHash,
         hasReviewables: folder.hasReviewables || false,
         hasVersions: folder.hasVersions || false,
         links: links,
@@ -274,6 +365,17 @@ export default function useBuildProjectDataTable({
       parentRow.subRows?.push(childRow)
     }
 
+    rootRows.push(...createRootTaskRows())
+
+    // if we are loading more tasks, add loading rows at the root level
+    // this happens when in hierarchy mode but with a slicer selection that causes paginated tasks
+    if (showHierarchy && isLoadingMore) {
+      const count = TASKS_INFINITE_QUERY_COUNT
+      if (count > 0) {
+        rootRows.push(...generateLoadingRows(count, { type: 'task' }))
+      }
+    }
+
     // Add any extra rows to the root rows
     for (const row of rows || []) {
       rootRows.push(row)
@@ -283,12 +385,16 @@ export default function useBuildProjectDataTable({
   }, [
     foldersMap,
     tasksMap,
+    tasksByFolderMap,
     rows,
     visibleFolders,
     childToParentMap,
     expandedFolderIds,
     showHierarchy,
+    isFlatFolderView,
+    showEmptyFolders,
     loadingTasks,
     isLoadingMore,
+    selectedFolders,
   ])
 }

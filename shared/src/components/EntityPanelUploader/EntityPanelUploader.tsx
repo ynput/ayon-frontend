@@ -1,4 +1,4 @@
-import { ChangeEvent, useRef, useState } from 'react'
+import { ChangeEvent, RefObject, useRef, useState } from 'react'
 import clsx from 'clsx'
 
 import { ThumbnailWrapper } from '@shared/containers'
@@ -8,13 +8,13 @@ import {
   useCreateProductMutation,
 } from '@shared/api'
 import * as Styled from './EntityPanelUploader.styled'
-import { ThumbnailUploadProvider } from '../../context/ThumbnailUploaderContext'
 import Dropzone, { DropzoneType } from './Dropzone'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useReviewablesUpload } from '../ReviewablesList'
 import { useDetailsPanelContext } from '@shared/context'
 import EntityPanelUploaderDialog from './EntityPanelUploaderDialog'
+import { useOptionalVersionUploadContext } from '@shared/components'
 import {
   sanitizeProductName,
   createProductHelper,
@@ -33,8 +33,11 @@ export type EntityPanelUploaderProps = {
   entityType: string
   entities: any[]
   projectName: any
+  /** Hoisted by the parent so ThumbnailUploadProvider (also hoisted) and the
+   *  underlying <input> share the same ref identity. */
+  thumbnailInputRef: RefObject<HTMLInputElement>
+  versionsInputRef: RefObject<HTMLInputElement>
   children?: JSX.Element | JSX.Element[]
-  onUploaded?: (operations: Operation[]) => void
   resetFileUploadState?: () => void
   onVersionCreated?: (versionId: string) => void
 }
@@ -50,10 +53,12 @@ export const EntityPanelUploader = ({
   entityType,
   entities = [],
   projectName,
-  onUploaded,
+  thumbnailInputRef,
+  versionsInputRef,
   onVersionCreated,
 }: EntityPanelUploaderProps) => {
   const { dispatch } = useDetailsPanelContext()
+  const versionUploadCtx = useOptionalVersionUploadContext()
   // Dragging and dropping state
   const [isDraggingFile, setIsDraggingFile] = useState(false)
   const [draggingZone, setDraggingZone] = useState<UploadType | null>(null)
@@ -168,6 +173,37 @@ export const EntityPanelUploader = ({
       return resetState()
     }
 
+    if (versionUploadCtx) {
+      const fileArray = Array.from(files)
+      const pending = fileArray.map((file) => ({
+        file,
+        preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+      }))
+      versionUploadCtx.setPendingFiles((prev) => [...prev, ...pending])
+
+      const product = singleEntity.product
+      const linkedTask = singleEntity.task
+        ? {
+            id: singleEntity.task.id,
+            name: singleEntity.task.name,
+            label: singleEntity.task.label,
+            taskType: singleEntity.task.taskType,
+          }
+        : undefined
+
+      versionUploadCtx.onOpenVersionUpload({
+        productId: product?.id,
+        folderId: singleEntity.folder?.id,
+        taskId: singleEntity.task?.id,
+        linkedTask,
+        latestVersionNumber: product?.latestVersion?.version,
+        latestVersionId: product?.latestVersion?.id,
+      })
+      // Reset local upload UI; the dialog now drives the flow.
+      resetState()
+      return
+    }
+
     const productId = singleEntity.product?.id
     if (!productId) {
       // Show dialog to create product first
@@ -201,52 +237,6 @@ export const EntityPanelUploader = ({
     } catch (error: any) {
       handleUploadError(error, 'uploading version')
       resetState()
-    }
-  }
-
-  // once the file has been uploaded, we need to patch the entities with the new thumbnail
-  const handleThumbnailFileUploaded = async (thumbnails: any[] = []) => {
-    // always set isDragginle to false
-    setIsDraggingFile(false)
-
-    // check something was actually uploaded
-    if (!entities.length) {
-      return
-    }
-
-    // patching the updatedAt will force a refresh of the thumbnail url
-    const newUpdatedAt = new Date().toISOString()
-
-    let operations: Operation[] = []
-    let versionPatches = []
-
-    for (const entity of thumbnails) {
-      const entityToPatch = entities.find((e) => e.id === entity.id)
-      if (!entityToPatch) continue
-      const thumbnailId = entity.thumbnailId
-      const currentAssignees = entity.users || []
-
-      operations.push({
-        id: entityToPatch.id,
-        projectName: entityToPatch.projectName,
-        data: { updatedAt: newUpdatedAt },
-        currentAssignees,
-      })
-
-      const versionPatch = {
-        productId: entityToPatch.productId,
-        versionUpdatedAt: newUpdatedAt,
-        versionThumbnailId: thumbnailId,
-      }
-
-      versionPatches.push(versionPatch)
-    }
-
-    try {
-      await updateEntities({ operations, entityType })
-      onUploaded && onUploaded(operations)
-    } catch (error) {
-      console.error('Error uploading thumbnail:', error)
     }
   }
 
@@ -288,7 +278,7 @@ export const EntityPanelUploader = ({
         id: entities[i].id,
       }))
 
-      handleThumbnailFileUploaded(updatedEntities)
+      setIsDraggingFile(false)
       resetState()
     } catch (error: any) {
       console.error(error)
@@ -362,16 +352,8 @@ export const EntityPanelUploader = ({
     }
   }
 
-  const thumbnailInputRef = useRef<HTMLInputElement>(null)
-  const versionsInputRef = useRef<HTMLInputElement>(null)
-
   return (
-    <ThumbnailUploadProvider
-      entities={entities}
-      handleThumbnailUpload={handleThumbnailFileUploaded}
-      thumbnailInputRef={thumbnailInputRef}
-      versionsInputRef={canUploadVersions ? versionsInputRef : undefined}
-    >
+    <>
       <Styled.DragAndDropWrapper
         className={clsx({ dragging: isDraggingFile })}
         onDragEnter={handleDragEnter}
@@ -429,6 +411,6 @@ export const EntityPanelUploader = ({
         onSubmit={handleDialogSubmit}
         onCancel={handleDialogCancel}
       />
-    </ThumbnailUploadProvider>
+    </>
   )
 }

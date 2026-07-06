@@ -1,4 +1,4 @@
-import { FC, FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { FC, FormEvent, useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import styled from 'styled-components'
 import type { DropdownRef } from '@ynput/ayon-react-components'
 import {
@@ -58,6 +58,25 @@ const InlineButton = styled.button`
   &:hover {
     color: var(--md-sys-color-primary-dark);
   }
+`
+
+const NameInputRow = styled.div`
+  display: flex;
+  align-items: start;
+  gap: var(--base-gap-small);
+  width: 100%;
+
+  & > div:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+`
+
+const MatchNote = styled.div`
+  font-size: var(--font-size-xs);
+  color: var(--md-sys-color-primary);
+  margin-top: var(--base-gap-small);
+  line-height: 1.3;
 `
 
 const StyledUpload = styled.div`
@@ -141,9 +160,28 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
     setTaskId,
     setLinkedTask,
     folderId,
+    folderProducts,
+    isFolderProductsLoading,
+    matchedProduct,
   } = useVersionUploadContext()
 
   const [isTaskPickerOpen, setIsTaskPickerOpen] = useState(false)
+
+  const folderProductOptions = useMemo(
+    () => folderProducts.map((p) => ({ value: p.name, label: p.name })),
+    [folderProducts],
+  )
+
+  const handleProductPickerSelect = useCallback(
+    (value: string[]) => {
+      onChange('name', value.length > 0 ? value[0] : '')
+    },
+    [onChange],
+  )
+
+  const versionString = matchedProduct?.latestVersion
+    ? `v${String(matchedProduct.latestVersion.version).padStart(3, '0')}`
+    : ''
 
   // Fetch full task data for path; linkedTask provides instant name/type display
   const { data: taskData, isFetching: isFetchingTask } = useGetTaskQuery(
@@ -262,6 +300,63 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
       onKeyDown={handleKeyDown}
     >
       <StyledFormLayout>
+        {!hidden.includes('name') && (
+          <FormRow label="Product Name">
+            <NameInputRow>
+              <div>
+                <InputText
+                  value={formData.name}
+                  onChange={handleNameChange}
+                  placeholder="Enter product name"
+                  minLength={1}
+                  autoFocus
+                  aria-label="Product Name"
+                  aria-describedby={shouldShowRecommendation() ? 'name-recommendation' : undefined}
+                  disabled={isFormSubmitted}
+                />
+                {matchedProduct && (
+                  <MatchNote>
+                    {matchedProduct.latestVersion
+                      ? <>Matched existing product (latest: {versionString})</>
+                      : 'Matched existing product (no versions)'}
+                  </MatchNote>
+                )}
+                {!matchedProduct && shouldShowRecommendation() && (
+                  <RecommendationNote id="name-recommendation">
+                    We recommend prefixing with "{productTypes[formData.productType]?.name}".{' '}
+                    <InlineButton type="button" onClick={handleApplyPrefix}>
+                      Apply prefix
+                    </InlineButton>
+                  </RecommendationNote>
+                )}
+              </div>
+              {!productId && !isFormSubmitted && (
+                <Dropdown
+                  options={folderProductOptions}
+                  value={matchedProduct ? [matchedProduct.name] : []}
+                  onChange={handleProductPickerSelect}
+                  multiSelect={false}
+                  search
+                  widthExpand={false}
+                  disabled={isFolderProductsLoading || folderProducts.length === 0}
+                  aria-label="Select existing product"
+                  valueTemplate={(_v, _s, isOpen) => (
+                    <Button
+                      icon="inventory_2"
+                      variant="text"
+                      data-tooltip="Browse existing products"
+                      selected={isOpen}
+                      tabIndex={-1}
+                      disabled={isFolderProductsLoading || folderProducts.length === 0}
+                    />
+                  )}
+                  style={{ width: 'auto' }}
+                />
+              )}
+            </NameInputRow>
+          </FormRow>
+        )}
+
         {!hidden.includes('productType') && (
           <FormRow label="Product Type">
             <Dropdown
@@ -275,31 +370,6 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
               search
               disabled={isFormSubmitted}
             />
-          </FormRow>
-        )}
-
-        {!hidden.includes('name') && (
-          <FormRow label="Product Name">
-            <div>
-              <InputText
-                value={formData.name}
-                onChange={handleNameChange}
-                placeholder="Enter product name"
-                minLength={1}
-                autoFocus
-                aria-label="Product Name"
-                aria-describedby={shouldShowRecommendation() ? 'name-recommendation' : undefined}
-                disabled={isFormSubmitted}
-              />
-              {shouldShowRecommendation() && (
-                <RecommendationNote id="name-recommendation">
-                  We recommend prefixing with "{productTypes[formData.productType]?.name}".{' '}
-                  <InlineButton type="button" onClick={handleApplyPrefix}>
-                    Apply prefix
-                  </InlineButton>
-                </RecommendationNote>
-              )}
-            </div>
           </FormRow>
         )}
 

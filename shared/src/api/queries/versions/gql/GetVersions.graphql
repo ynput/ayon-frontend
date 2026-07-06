@@ -14,6 +14,7 @@ query GetVersions(
   $before: String
   $last: Int
   $sortBy: String
+  $showComments: Boolean! = false
 ) {
   project(name: $projectName) {
     versions(

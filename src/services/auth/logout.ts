@@ -18,6 +18,8 @@ const authApiInjected = authenticationApi.enhanceEndpoints({
             localStorage.removeItem(key)
           }
         })
+        // clear session storage
+        sessionStorage.clear()
         // clear dashboard state
         dispatch(onClearDashboard())
         // @ts-expect-error - no args are defined

@@ -42,17 +42,23 @@ const getDescriptionModules = ({
 
 interface DescriptionSectionProps {
   description: string
+  isLarge: boolean
   isMixed: boolean
   enableEditing: boolean
+  initialEdit?: boolean
   onChange: (description: string) => void
+  onCancel?: () => void
   isLoading: boolean
 }
 
 export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
   description,
+  isLarge = true,
   isMixed,
   enableEditing,
+  initialEdit,
   onChange,
+  onCancel,
   isLoading,
 }) => {
   const markdownRef = useRef<HTMLDivElement>(null)
@@ -87,6 +93,12 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
     onChange,
   })
 
+  useEffect(() => {
+    if (initialEdit && !isEditing) {
+      handleStartEditing()
+    }
+  }, [initialEdit])
+
   const conditionalFormats = useQuillFormats()
 
   if (isLoading) {
@@ -120,6 +132,11 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
     }
   }
 
+  const handleCancelEdit = () => {
+    handleCancel()
+    onCancel?.()
+  }
+
   const quillValue = isEditing ? editorValue : descriptionHtml
 
   return (
@@ -128,11 +145,9 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
       showHeader={!isEditing}
       enableHover={!isEditing}
       onClick={!isEditing ? handleStartEditing : undefined}
+      description={isLarge}
     >
-      <StyledContent
-        className={clsx({ editing: isEditing })}
-        onClick={handleContentClick}
-      >
+      <StyledContent className={clsx({ editing: isEditing })} onClick={handleContentClick}>
         <StyledEditor className="block-shortcuts">
           <QuillListStyles style={isEditing ? { height: 'auto' } : undefined}>
             <StyledQuillContainer style={isEditing ? { height: 'auto' } : undefined}>
@@ -149,7 +164,13 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
                     : { toolbar: false }
                 }
                 formats={conditionalFormats}
-                onKeyDown={handleKeyDown}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    handleCancelEdit()
+                  } else {
+                    handleKeyDown(e)
+                  }
+                }}
                 readOnly={!isEditing}
               />
             </StyledQuillContainer>
@@ -158,17 +179,14 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
         {isEditing && (
           <StyledFooter>
             <StyledButtonContainer>
-              <Button variant="text" label="Cancel" onClick={handleCancel} />
+              <Button variant="text" label="Cancel" onClick={handleCancelEdit} />
               <Button variant="filled" label="Save" onClick={handleSave} />
             </StyledButtonContainer>
           </StyledFooter>
         )}
       </StyledContent>
       <StyledHiddenMarkdown ref={markdownRef}>
-        <InputMarkdownConvert
-          typeOptions={mentionTypeOptions}
-          initValue={description || ''}
-        />
+        <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={description || ''} />
       </StyledHiddenMarkdown>
     </BorderedSection>
   )

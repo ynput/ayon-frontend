@@ -9,6 +9,7 @@ import {
   FormRow,
   InputNumber,
   InputText,
+  InputTextarea,
   InputSwitch,
   Dropdown,
   DefaultItemTemplate,
@@ -112,6 +113,15 @@ const DropdownItemTemplate = (option: FormSelectOption) => {
 const FormField = ({ field, value, onChange }: FormFieldProps) => {
   if (field.type === 'text') {
     const parsedValue = typeof value === 'string' ? value : ''
+    if (field.multiline) {
+      return (
+        <InputTextarea
+          value={parsedValue}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={field.placeholder || ''}
+        />
+      )
+    }
     return (
       <InputText
         value={parsedValue}

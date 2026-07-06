@@ -3,13 +3,14 @@ import {
   getLinkLabel,
   useColumnSettingsContext,
   useProjectTableContext,
+  checkColumnVisibility,
 } from '@shared/containers/ProjectTreeTable'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
 import { SettingHighlightedId, useProjectContext, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
-import ColumnsSettings from './ColumnsSettings'
+import { ColumnsSettingsWithContext } from './ColumnsSettings'
 import { SizeSlider } from '@shared/components'
 import { useGroupBySettings } from '@shared/containers/ProjectTreeTable/hooks/useGroupBySettings'
 import { useSortBySettings } from '@shared/containers/ProjectTreeTable/hooks/useSortBySettings'
@@ -46,6 +47,7 @@ export type ProjectTableSettingsProps = {
   hiddenSettings?: ('columns' | 'row-height' | 'group-by' | 'sort-by')[]
   highlighted?: SettingHighlightedId
   includeLinks?: boolean
+  hideSortBy?: boolean
   order?: string[]
   scope?: string
 }
@@ -57,6 +59,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   hiddenSettings = [],
   highlighted,
   includeLinks = true,
+  hideSortBy = false,
   order,
   scope,
 }) => {
@@ -64,6 +67,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   const { attribFields, scopes } = useProjectTableContext()
   const {
     columnVisibility,
+    defaultColumnVisibility,
     rowHeight = 34,
     updateRowHeight,
     updateRowHeightWithPersistence,
@@ -126,6 +130,11 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       label: 'Subtasks',
       hidden: !scopes.includes('task'),
     },
+    {
+      value: 'comments',
+      label: 'Latest comments',
+      hidden: !scopes.some((scope) => ['task', 'version', 'product', 'folder'].includes(scope)),
+    },
     ...attribFields
       .filter((field) => field.scope?.some((scope) => scopes.includes(scope)))
       .map((field) => ({
@@ -153,12 +162,12 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     (column) => !column.hidden && !hiddenColumns.includes(column.value),
   )
 
-  const visibleCount = visibleColumns.filter(
-    (column) => !(column.value in columnVisibility) || columnVisibility[column.value],
+  const visibleCount = visibleColumns.filter((column) =>
+    checkColumnVisibility(columnVisibility, column.value, defaultColumnVisibility),
   ).length
 
   const groupBySettings = useGroupBySettings({ scope })
-  const sortBySettings = useSortBySettings()
+  const sortBySettings = useSortBySettings(columns)
 
   const defaultSettings: (SettingConfig | undefined | null)[] = [
     {
@@ -166,9 +175,9 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       title: 'Columns',
       icon: 'view_column',
       preview: `${visibleCount}/${visibleColumns.length}`,
-      component: <ColumnsSettings columns={visibleColumns} highlighted={highlighted} />,
+      component: <ColumnsSettingsWithContext columns={visibleColumns} highlighted={highlighted} />,
     },
-    sortBySettings,
+    hideSortBy ? null : sortBySettings,
     groupBySettings,
     {
       id: 'row-height',

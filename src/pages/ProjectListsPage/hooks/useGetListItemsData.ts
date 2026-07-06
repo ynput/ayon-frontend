@@ -8,6 +8,8 @@ import {
   RESTRICTED_ENTITY_TYPE,
   RESTRICTED_ENTITY_NAME,
 } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
+import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
+import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 
 // Extend EntityListItem to include links
@@ -22,6 +24,8 @@ interface UseGetListItemsDataProps {
   filters?: QueryFilter
   skip?: boolean
   entityType?: string
+  skipLinks?: boolean
+  showComments?: boolean
 }
 
 export interface UseGetListItemsDataReturn {
@@ -29,7 +33,9 @@ export interface UseGetListItemsDataReturn {
   isLoading: boolean
   isFetchingNextPage: boolean
   isError: boolean
+  error?: unknown
   fetchNextPage: () => void
+  refetch: () => void
 }
 
 const useGetListItemsData = ({
@@ -39,8 +45,12 @@ const useGetListItemsData = ({
   sorting,
   filters = { conditions: [], operator: 'and' },
   skip,
+  skipLinks = true,
+  showComments = false,
 }: UseGetListItemsDataProps): UseGetListItemsDataReturn => {
-  const queryFilterString = filters.conditions?.length ? JSON.stringify(filters) : ''
+  const queryFilterString = filters.conditions?.length
+    ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(filters)))
+    : ''
 
   // Create sort params for infinite query
   const singleSort = { ...sorting[0] }
@@ -55,6 +65,11 @@ const useGetListItemsData = ({
     } else if (sortId.endsWith('Type') && entityType && !sortId.startsWith(entityType)) {
       // if the type is not native to the entity, add the parent prefix
       sortId = 'parent' + sortId[0].toUpperCase() + sortId.slice(1)
+    } else if (sortId === 'product') {
+      // backend resolves productName to the related product's name (per entity type)
+      sortId = 'productName'
+    } else if (sortId === 'folder') {
+      sortId = 'folderPath'
     } else {
       // add entity prefix to entity fields
       sortId = `entity_${sortId}`
@@ -71,6 +86,8 @@ const useGetListItemsData = ({
     fetchNextPage,
     hasNextPage,
     isError,
+    error,
+    refetch,
   } = useGetListItemsInfiniteInfiniteQuery(
     {
       projectName,
@@ -78,6 +95,7 @@ const useGetListItemsData = ({
       sortBy: parseSorting(singleSort?.id),
       desc: singleSort?.desc,
       filter: queryFilterString || undefined,
+      showComments,
     },
     {
       initialPageParam: { cursor: '' },
@@ -161,7 +179,7 @@ const useGetListItemsData = ({
         | 'workfile',
     },
     {
-      skip: visibleEntityIds.size === 0 || !entityType,
+      skip: visibleEntityIds.size === 0 || !entityType || skip || skipLinks, // Skip if no visible entities, no entity type, or if skipLinks is true
     },
   )
 
@@ -183,7 +201,9 @@ const useGetListItemsData = ({
     isLoading,
     isFetchingNextPage,
     isError,
+    error,
     fetchNextPage: handleFetchNextPage,
+    refetch,
   }
 }
 

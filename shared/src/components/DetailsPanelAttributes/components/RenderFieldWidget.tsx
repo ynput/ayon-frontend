@@ -1,15 +1,17 @@
 import { FC } from 'react'
 import styled from 'styled-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
-import { TextWidget } from '@shared/containers/ProjectTreeTable/widgets/TextWidget'
-import { BooleanWidget } from '@shared/containers/ProjectTreeTable/widgets/BooleanWidget'
-import { DateWidget } from '@shared/containers/ProjectTreeTable/widgets/DateWidget'
-import { EnumWidget } from '@shared/containers/ProjectTreeTable/widgets/EnumWidget'
-import type { AttributeEnumItem } from '@shared/containers/ProjectTreeTable/types'
+import {
+  TextWidget,
+  MarkdownWidget,
+  BooleanWidget,
+  DateWidget,
+  EnumWidget,
+} from '@shared/containers/ProjectTreeTable/widgets'
 import { useScopedStatuses, useScopedTypes } from '@shared/hooks'
 // Import AttributeField as a type to avoid runtime circular dependency with DetailsPanelAttributesEditor
 import type { AttributeField } from '../DetailsPanelAttributesEditor'
-import type { DetailsPanelEntityData } from '@shared/api'
+import type { DetailsPanelEntityData, EnumItem } from '@shared/api'
 
 const FieldValueText = styled.div`
   width: 100%;
@@ -43,6 +45,7 @@ interface RenderFieldWidgetProps {
   isMixed: boolean
   onChange: (fieldName: string, value: CellValue | CellValue[]) => void
   onCancelEdit: () => void
+  onExpand?: () => void
   entities?: DetailsPanelEntityData[]
   entityType?: string
 }
@@ -55,12 +58,14 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   isMixed,
   onChange,
   onCancelEdit,
+  onExpand,
   entities = [],
   entityType = 'task',
 }) => {
-  const { type } = field.data
+  const { type, widget } = field.data
   const widgetCommonProps = {
     isEditing: isEditing && !isReadOnly,
+    isReadOnly: isReadOnly,
     isInherited: false,
     onChange: (newValue: CellValue | CellValue[]) => onChange(field.name, newValue),
   }
@@ -78,12 +83,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   switch (true) {
     case type === 'boolean':
       return (
-        <BooleanWidget
-          value={Boolean(displayValue)}
-          {...widgetCommonProps}
-          style={{ margin: 0 }}
-          isReadOnly={isReadOnly}
-        />
+        <BooleanWidget value={Boolean(displayValue)} {...widgetCommonProps} style={{ margin: 0 }} />
       )
 
     case type === 'datetime':
@@ -111,13 +111,18 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
       }
 
       // Use scoped statuses/types based on field name
-      let enumOptions: AttributeEnumItem[] = (field.data.enum || []).map((item) => ({
+      let enumOptions: EnumItem[] = (field.data.enum || []).map((item) => ({
         value: item.value,
         label: item.label,
         icon: typeof item.icon === 'string' ? item.icon : undefined,
         color: item.color,
       }))
-      if (field.name === 'status' && entities.length > 0 && scopedStatuses && scopedStatuses.length > 0) {
+      if (
+        field.name === 'status' &&
+        entities.length > 0 &&
+        scopedStatuses &&
+        scopedStatuses.length > 0
+      ) {
         enumOptions = scopedStatuses.map((status) => ({
           value: status.name,
           label: status.name,
@@ -125,7 +130,12 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           color: status.color,
         }))
       }
-      if (field.name === 'taskType' && entities.length > 0 && scopedTypes && scopedTypes.length > 0) {
+      if (
+        field.name === 'taskType' &&
+        entities.length > 0 &&
+        scopedTypes &&
+        scopedTypes.length > 0
+      ) {
         enumOptions = scopedTypes.map((t) => ({
           value: t.name,
           label: t.name,
@@ -159,9 +169,8 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
           onCancelEdit={onCancelEdit}
           align="right"
-          isReadOnly={isReadOnly}
           enableCustomValues={field.enableCustomValues ?? false}
-          search={field.enableSearch ?? enumOptions.length>=5}
+          search={field.enableSearch ?? enumOptions.length >= 5}
           sortBySelected={!enumOptions}
           {...widgetCommonProps}
         />
@@ -170,16 +179,28 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
 
     case type === 'string' || type === 'integer' || type === 'float':
     default:
-      return (
-        <FieldValueText>
-          <TextWidget
+      if (widget === 'markdown') {
+        return (
+          <MarkdownWidget
             value={displayValue.toString()}
             onCancelEdit={onCancelEdit}
-            type={type as 'string' | 'integer' | 'float'}
+            onExpand={onExpand}
+            showExpand={!!onExpand}
             {...widgetCommonProps}
           />
-        </FieldValueText>
-      )
+        )
+      } else {
+        return (
+          <FieldValueText>
+            <TextWidget
+              value={displayValue.toString()}
+              onCancelEdit={onCancelEdit}
+              type={type as 'string' | 'integer' | 'float'}
+              {...widgetCommonProps}
+            />
+          </FieldValueText>
+        )
+      }
   }
 }
 

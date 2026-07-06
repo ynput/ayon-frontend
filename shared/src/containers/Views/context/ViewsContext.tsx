@@ -1,5 +1,5 @@
-import { createContext, useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
-import { ViewType, WORKING_VIEW_ID } from '../index'
+import { useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
+import { type ViewType, WORKING_VIEW_ID, BASE_VIEW_ID } from '../types'
 import {
   GetDefaultViewApiResponse,
   useGetWorkingViewQuery,
@@ -12,11 +12,11 @@ import {
   ShareOption,
   useGetBaseViewQuery,
 } from '@shared/api'
-import useBuildViewMenuItems, { BASE_VIEW_ID } from '../hooks/useBuildViewMenuItems'
+import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { useGlobalContext, usePowerpack } from '@shared/context'
 import { useSelectedView } from '../hooks/useSelectedView'
-import { UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
+import { type UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
 import { useBaseViewMutations } from '../hooks/useBaseViewMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
 import { useViewSettingsChanged } from '../hooks/useViewSettingsChanged'
@@ -32,6 +32,7 @@ export type CollapsedViewState = Record<string, boolean>
 export interface ViewsContextValue {
   // State
   viewType?: ViewType
+  viewAlias: string
   projectName?: string
   currentUser?: UserModel
   isMenuOpen: boolean
@@ -86,11 +87,12 @@ export interface ViewsContextValue {
   dispatch: any // dispatch is used to dispatch api mutations in pp like the share one.
 }
 
-const ViewsContext = createContext<ViewsContextValue | null>(null)
+const DEFAULT_VIEW_ALIAS = 'view'
 
 export interface ViewsProviderProps {
   children: ReactNode
   viewType?: string
+  viewAlias?: string
   projectName?: string
   dispatch?: any
   debug?: {
@@ -101,6 +103,7 @@ export interface ViewsProviderProps {
 export const ViewsProvider: FC<ViewsProviderProps> = ({
   children,
   viewType,
+  viewAlias = DEFAULT_VIEW_ALIAS,
   projectName,
   dispatch,
   debug,
@@ -141,17 +144,18 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   )
 
   // setting of default views
-  const [selectedView, setSelectedView, previousSelectedViewId] = useSelectedView({
-    viewType: viewType as string,
-    projectName: projectName,
-  })
+  const [selectedView, setSelectedView, previousSelectedViewId, isLoadingDefaultView] =
+    useSelectedView({
+      viewType: viewType as string,
+      projectName: projectName,
+    })
 
   const [viewSettingsChanged, setViewSettingsChanged] = useViewSettingsChanged({
     viewType: viewType as ViewType,
   })
 
   // Fetch views data and filter out base views
-  const { currentData: viewsListRaw = [], isLoading: isLoadingViews } = useListViewsQuery(
+  const { currentData: viewsListRaw = [], isLoading: isLoadingViewsList } = useListViewsQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
@@ -175,20 +179,30 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   //   always get your working view
-  const { currentData: workingView } = useGetWorkingViewQuery(
+  const { currentData: workingView, isLoading: isLoadingWorkingView } = useGetWorkingViewQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
 
   // Fetch both project and studio base views
-  const { currentData: projectBaseView } = useGetBaseViewQuery(
+  const { currentData: projectBaseView, isLoading: isLoadingProjectBaseView } = useGetBaseViewQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
-  const { currentData: studioBaseView } = useGetBaseViewQuery(
+  const { currentData: studioBaseView, isLoading: isLoadingStudioBaseView } = useGetBaseViewQuery(
     { projectName: undefined, viewType: viewType as string },
     { skip: !viewType },
   )
+
+  // isLoadingViews is true ONLY on the very first fetch (no cached data yet).
+  // It does NOT flip back to true during background re-fetches (e.g. after a save),
+  // which prevents UI flickering in consumers like ProjectOverviewContext.
+  const isLoadingViews =
+    isLoadingViewsList ||
+    isLoadingDefaultView ||
+    isLoadingWorkingView ||
+    isLoadingProjectBaseView ||
+    isLoadingStudioBaseView
 
   const workingSettings = workingView?.settings
 
@@ -275,6 +289,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     viewsList,
     workingView,
     viewType,
+    viewAlias,
     projectName,
     currentUser,
     useWorkingView: !powerLicense,
@@ -296,6 +311,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   const value: ViewsContextValue = {
     viewType,
+    viewAlias,
     projectName,
     isMenuOpen,
     editingView,
@@ -349,8 +365,6 @@ export const useViewsContext = (): ViewsContextValue => {
   return context
 }
 
-export const isViewStudioScope = (viewId: string | undefined, viewsList: ViewListItemModel[]) => {
-  if (!viewId) return true
-  const view = viewsList.find((v) => v.id === viewId)
-  return view?.scope === 'studio'
-}
+import { isViewStudioScope } from '../utils/isViewStudioScope'
+import { ViewsContext } from './ViewsContextInstance'
+export { isViewStudioScope }

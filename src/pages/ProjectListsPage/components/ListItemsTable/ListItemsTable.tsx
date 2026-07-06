@@ -9,6 +9,7 @@ import { FC, useMemo } from 'react'
 import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributesShortcutButton'
 import { UniqueIdentifier } from '@dnd-kit/core'
 import { useProjectContext } from '@shared/context'
+import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
@@ -21,13 +22,23 @@ interface ListItemsTableProps {
 const ListItemsTable: FC<ListItemsTableProps> = ({
   extraColumns,
   isLoading,
-  isReview: _,
+  isReview,
   dndActiveId, // Destructure new prop
   viewOnly,
 }) => {
   const { projectName } = useProjectContext()
   const { selectedLists, selectedList } = useListsContext()
-  const { isError, fetchNextPage, resetFilters } = useListItemsDataContext()
+  const {
+    isError,
+    error,
+    fetchNextPage,
+    resetFilters,
+    setLinksVisible,
+    fieldStats,
+    fieldStatsLoading,
+    fieldStatsError,
+    mainCountLabels,
+  } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
   const [hiddenColumns, readOnly] = useMemo(
@@ -35,17 +46,27 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
     [selectedList],
   )
 
-  if (!selectedList) return <EmptyPlaceholder message="Start by selecting a list." />
+  if (!selectedList)
+    return (
+      <EmptyPlaceholder message="Start by selecting or importing a list.">
+        <ImportDialogButton importContext="entity_list_item" projectName={projectName} />
+      </EmptyPlaceholder>
+    )
 
   if (selectedLists.length > 1)
     return <EmptyPlaceholder message="Please select one list to view its items." />
 
-  if (isError)
+  if (isError) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : (error as any)?.message ?? 'Error loading list items.'
     return (
-      <EmptyPlaceholder error={'Error loading list items.'}>
+      <EmptyPlaceholder error={errorMessage} ynputError={false}>
         <Button label="Reset" icon="replay" onClick={resetFilters} />
       </EmptyPlaceholder>
     )
+  }
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -59,7 +80,23 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         extraColumns={extraColumns}
         isLoading={isLoading}
         sortableRows={!viewOnly}
+        enableSorting={!isReview}
         dndActiveId={dndActiveId} // Pass prop
+        onColumnVisibleChangeSubscribed={['link_*']}
+        onColumnVisibleChange={(changes) => {
+          if (Object.values(changes).some((v) => v)) {
+            // If any link_ column is visible, we set linksVisible to true
+            setLinksVisible(true)
+          } else {
+            setLinksVisible(false)
+          }
+        }}
+        // hidden while the backend doesn't support list item stats yet —
+        // renders automatically once the query stops erroring
+        showColumnSummaries={!fieldStatsError}
+        fieldStats={fieldStats}
+        fieldStatsLoading={fieldStatsLoading}
+        mainCountLabels={mainCountLabels}
       />
       <ListItemsShortcuts />
       <ListsAttributesShortcutButton />

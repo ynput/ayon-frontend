@@ -375,6 +375,10 @@ export type AttributeData = {
   enumResolverSettings?: object
   /** Inherit the attribute value from the parent entity. */
   inherit?: boolean
+  /** Specific widget style this field should use. */
+  widget?: string
+  /** Any additional config specific for the widget style.(Date formats, precision etc.) */
+  widgetSettings?: object
 }
 export type EntityListAttributeDefinition = {
   name: string

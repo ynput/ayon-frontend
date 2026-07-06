@@ -21,8 +21,10 @@ import NewServiceUser from './newServiceUser'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import Shortcuts from '@containers/Shortcuts'
 import DeleteUserDialog from './DeleteUserDialog'
+import InviteUserDialog from './InviteUserDialog'
 import LicensesDialog from '@components/LicensesDialog/LicensesDialog'
 import { useQueryParam } from 'use-query-params'
+import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 
 // what to show in the access column
 const formatAccessGroups = (rowData) => {
@@ -76,6 +78,7 @@ const UsersSettings = () => {
   const [showNewServiceUser, setShowNewServiceUser] = useState(false)
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showDeleteUser, setShowDeleteUser] = useState(false)
+  const [showInviteUser, setShowInviteUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
   const [showLicenses, setShowLicenses] = useQueryParam('licenses', false)
 
@@ -224,8 +227,14 @@ const UsersSettings = () => {
       <main>
         <Section>
           <Toolbar>
-            <Button label="Licenses" onClick={() => setShowLicenses(true)} />
-            <UsersOverview users={userList} />
+            <Button
+              onClick={openNewUser}
+              label="Add New User"
+              icon="person_add"
+              variant="filled"
+              data-shortcut="n"
+            />
+            <Button onClick={openNewServiceUser} label="Add Service User" icon="person_add" />
             <form style={{ flex: 1 }} autoComplete="off" onSubmit={(e) => e.preventDefault()}>
               <InputText
                 style={{ width: '100%', minWidth: 150 }}
@@ -235,19 +244,15 @@ const UsersSettings = () => {
                 autoComplete="search-users"
               />
             </form>
+            <UsersOverview users={userList} />
             <Button
-              onClick={() => setShowDeleteUser(selectedUsers)}
-              label="Delete Users"
-              icon="person_remove"
-              disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
+              onClick={() => setShowInviteUser(true)}
+              label="Send Invite"
+              icon="mail"
+              disabled={!selectedUsers.length}
             />
-            <Button onClick={openNewServiceUser} label="Add Service User" icon="person_add" />
-            <Button
-              onClick={openNewUser}
-              label="Add New User"
-              icon="person_add"
-              data-shortcut="n"
-            />
+            <ImportDialogButton importContext="user" />
+            <Button label="Licenses" icon="groups" onClick={() => setShowLicenses(true)} />
           </Toolbar>
           <Splitter
             style={{ width: '100%', height: '100%' }}
@@ -267,8 +272,10 @@ const UsersSettings = () => {
                   setShowSetPassword,
                   setShowRenameUser,
                   setShowDeleteUser,
+                  setShowInviteUser,
                   isLoading,
                   isSelfSelected,
+                  managerDisabled,
                 }}
               />
             </SplitterPanel>
@@ -281,6 +288,8 @@ const UsersSettings = () => {
                   setShowRenameUser={setShowRenameUser}
                   selectedUsers={selectedUsers}
                   setShowSetPassword={setShowSetPassword}
+                  setShowDeleteUser={setShowDeleteUser}
+                  setShowInviteUser={setShowInviteUser}
                   setSelectedUsers={setSelectedUsers}
                   isSelfSelected={isSelfSelected}
                   selectedUserList={selectedUserList}
@@ -307,6 +316,14 @@ const UsersSettings = () => {
             onHide={() => setShowDeleteUser(false)}
             onDelete={() => handleDelete(selectedUsers)}
             onDisable={() => handleDisable(selectedUsers)}
+          />
+        )}
+
+        {showInviteUser && (
+          <InviteUserDialog
+            isOpen={showInviteUser}
+            selectedUserList={selectedUserList}
+            onHide={() => setShowInviteUser(false)}
           />
         )}
 

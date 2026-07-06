@@ -13,13 +13,14 @@ interface ListFolderFormDialogProps {}
 
 export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
   const {
-    listFolderOpen: { isOpen, initial, folderId },
+    listFolderOpen: { isOpen, initial, folderId, parentId },
     setListFolderOpen,
     onCreateListFolder,
     onUpdateListFolder,
     selectedRows,
     selectedList,
     isReview,
+    isStoryboards,
   } = useListsContext()
 
   const { listFolders } = useListsDataContext()
@@ -28,9 +29,11 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
 
   const editingFolder = listFolders?.find((f) => f.id === folderId)
 
+  const reviewScope = isStoryboards ? 'storyboard' : 'review-session'
+
   const initFolderForm: ListFolderFormData = {
     label: '',
-    scope: [isReview ? 'review-session' : 'generic'],
+    scope: [isReview ? reviewScope : 'generic'],
   }
   const [folderForm, setFolderForm] = useState<ListFolderFormData>(initFolderForm)
   const [isSaving, setIsSaving] = useState(false)
@@ -42,10 +45,13 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
     .map((id) => parseListFolderRowId(id))
     .filter((id): id is string => !!id)
 
-  const listIdsToAdd = mode === 'create' && selectedFolderIds.length === 0 ? selectedListIds : []
+  const listIdsToAdd =
+    mode === 'create' && !parentId && selectedFolderIds.length === 0 ? selectedListIds : []
   const parentIdsToCreateIn =
     mode === 'create'
-      ? selectedFolderIds.length > 0
+      ? parentId
+        ? [parentId]
+        : selectedFolderIds.length > 0
         ? selectedFolderIds
         : selectedList?.entityListFolderId
         ? [selectedList.entityListFolderId]
@@ -203,8 +209,11 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
           options: [
             { value: 'generic', label: 'Lists' },
             { value: 'review-session', label: 'Review Sessions' },
+            { value: 'storyboard', label: 'Storyboard' },
           ],
-          filter: isReview ? ['review-session'] : ['generic'],
+          filter: isReview
+            ? isStoryboards ? ['storyboard'] : ['review-session']
+            : ['generic'],
         }}
       />
       {error && <span style={{ color: 'var(--color-hl-error)', fontSize: '14px' }}>{error}</span>}

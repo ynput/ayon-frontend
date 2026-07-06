@@ -100,51 +100,6 @@ const useProjectAccessGroupData = (selectedProject: string) => {
   }
 }
 
-const useUserPageFilters = (): [filters: Filter[], setFilters: (value: Filter[]) => void] => {
-  const pageId = 'project.settings.user.access_groups'
-  const [updateUserPreferences] = useSetFrontendPreferencesMutation()
-  const { user } = useGlobalContext()
-  const userName = user?.name as string
-  const { data: { frontendPreferences = {} } = {} } = user || {}
-  const frontendPreferencesFilters: {
-    [pageId: string]: []
-  } = frontendPreferences?.filters
-
-  const filters = frontendPreferencesFilters?.[pageId] || []
-
-  const setFilters = (value: Filter[]) => {
-    const mergeTextFilters = (userFilters: Filter[], textFilter: Filter): Filter[] => {
-      if (userFilters.length === 0) {
-        return [{ icon: 'person', label: 'User', id: textFilter.id, values: textFilter.values }]
-      }
-
-      return [
-        ...userFilters,
-        { icon: 'person', label: 'User', id: textFilter.id, values: textFilter.values },
-      ]
-    }
-
-    const textFilter = value.find((filter) => filter.label === 'Text')
-    const textlessFilters = value.filter(
-      (filter) => filter.label !== 'Text' && filter.label !== 'User',
-    )
-    let userFilters = value.filter((filter) => filter.label === 'User')
-    let filteredValue = textlessFilters
-    if (!textFilter || textFilter.values!.length === 0) {
-      // No new filters, we return the existing ones
-      filteredValue = [...textlessFilters, ...userFilters]
-    } else {
-      // new text filters, we merge && convert them to user custom filters
-      filteredValue = [...textlessFilters, ...mergeTextFilters(userFilters, textFilter)]
-    }
-    const updatedUserFilters = { ...frontendPreferencesFilters, [pageId]: filteredValue }
-    const updatedFrontendPreferences = { ...frontendPreferences, filters: updatedUserFilters }
-    updateUserPreferences({ userName, patchData: updatedFrontendPreferences })
-  }
-
-  return [filters, setFilters]
-}
-
 const useUserPreferencesExpandedPanels = (): [
   expandedAccessGroups: { [key: string]: boolean },
   setExpandedAccessGroups: (values: { [key: string]: boolean }) => void,

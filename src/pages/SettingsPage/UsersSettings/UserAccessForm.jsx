@@ -106,6 +106,24 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled }) => {
           </div>
         </FormRowStyled>
 
+        <FormRowStyled label="Staging access">
+          <div
+            data-tooltip={
+              'Users can turn on staging mode to test staging bundles, like actions, before they are released.'
+            }
+            data-tooltip-delay={0}
+            style={{ width: 'fit-content' }}
+          >
+            <InputSwitch
+              checked={formData?.isStagingAllowed}
+              onChange={(e) => updateFormData('isStagingAllowed', e.target.checked)}
+              style={{
+                opacity: disabled ? 0.5 : 1,
+              }}
+            />
+          </div>
+        </FormRowStyled>
+
         <FormRowStyled label="Access level">
           <SelectButton
             unselectable={false}

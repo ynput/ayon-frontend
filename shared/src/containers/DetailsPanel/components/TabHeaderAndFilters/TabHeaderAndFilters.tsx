@@ -3,9 +3,7 @@
 
 import { Spacer } from '@ynput/ayon-react-components'
 import * as Styled from './TabHeaderAndFilters.styled'
-import { QueryFilter, QueryCondition } from '@shared/api'
-import { AttributeEnumItem } from '../../../../containers/ProjectTreeTable/types'
-import { EnumWidget } from '../../../../containers/ProjectTreeTable/widgets/EnumWidget'
+import { QueryFilter, QueryCondition, EnumItem } from '@shared/api'
 import { useState, useRef, useEffect } from 'react'
 import clsx from 'clsx'
 
@@ -14,7 +12,7 @@ export interface FilterItem<T = string> {
   tooltip: string
   icon: string
   type?: 'boolean' | 'enum' | 'search'
-  options?: AttributeEnumItem[]
+  options?: EnumItem[]
   placeholder?: string
   operator?: QueryCondition['operator']
 }
@@ -246,6 +244,7 @@ const TabHeaderAndFilters = <T, K = string>({
                 valueTemplate={() => (
                   <Styled.FilterButton
                     selected={isSelected}
+                    // @ts-expect-error - icon is fine
                     icon={filter.icon}
                     data-tooltip={filter.tooltip}
                     data-tooltip-delay={0}
@@ -267,6 +266,7 @@ const TabHeaderAndFilters = <T, K = string>({
                 <Styled.FilterButton
                   selected={isSelected || isExpanded}
                   onClick={() => handleSearchClick(filter)}
+                  // @ts-expect-error - icon is fine
                   icon={filter.icon}
                   data-tooltip={!isExpanded ? filter.tooltip : undefined}
                   data-tooltip-delay={0}
@@ -301,6 +301,7 @@ const TabHeaderAndFilters = <T, K = string>({
               key={String(filter.id)}
               selected={isSelected}
               onClick={() => handleToggle(filter)}
+              // @ts-expect-error - icon is fine
               icon={filter.icon}
               data-tooltip={filter.tooltip}
               data-tooltip-delay={0}

@@ -117,12 +117,13 @@ export type {
   WorkTemplate,
   FolderType,
   TaskType,
+  ProductBaseType,
 } from './anatomy'
 
 // attributes
 export * from './attributes'
 export { api as attributesApi } from './attributes'
-export type { AttributeData, AttributeEnumItem, AttributeModel } from './attributes'
+export type { AttributeData, EnumItem, AttributeModel, IconModel } from './attributes'
 
 // authentication
 export * from './authentication'
@@ -146,6 +147,9 @@ export { api as bundlesApi } from './bundles'
 // configuration
 export * from './configuration'
 export { api as configurationApi } from './configuration'
+
+// dataImport
+export { api as dataImportApi } from './dataImport'
 
 // desktop
 export * from './desktop'
@@ -274,11 +278,36 @@ export type {
   FileInfo,
   GetProjectFileInfoApiArg,
   GetProjectFileInfoApiResponse,
+  DefaultProductBaseType,
+  EntityNaming,
 } from './projects'
+export type { ProductBaseTypes } from './anatomy'
+export type {
+  DefaultProductType,
+  GetProductTypesApiArg,
+  GetProductTypesApiResponse,
+  ProductTypeListItem,
+  ProductTypesList,
+} from './products'
 
 // projectFolders
 export * from './projectFolders'
 export { api as projectFoldersApi } from './projectFolders'
+export type {
+  CreateProjectFolderApiArg,
+  CreateProjectFolderApiResponse,
+  DeleteProjectFolderApiArg,
+  DeleteProjectFolderApiResponse,
+  GetProjectFoldersApiArg,
+  GetProjectFoldersApiResponse,
+  ProjectFolderData,
+  ProjectFolderModel,
+  ProjectFolderPatchModel,
+  ProjectFolderPostModel,
+  ProjectFoldersResponseModel,
+  UpdateProjectFolderApiArg,
+  UpdateProjectFolderApiResponse,
+} from './projects'
 
 // reviewables
 export * from './reviewables'
@@ -328,6 +357,12 @@ export { api as uRIsApi } from './uRIs'
 export * from './users'
 export { api as usersApi } from './users'
 export type { Permissions } from './users'
+export type {
+  ActionsAccessList,
+  ActivitiesAccessList,
+  EntityLinksAccessList,
+  ProjectAdvancedPermissions,
+} from './access'
 
 // versions
 export * from './versions'

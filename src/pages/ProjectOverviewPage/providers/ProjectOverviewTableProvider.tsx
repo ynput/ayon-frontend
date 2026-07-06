@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   ProjectTableProvider,
@@ -18,8 +18,21 @@ import { useAppSelector } from '@state/store'
 import { useViewsContext } from '@shared/containers'
 import { ProjectTableModulesType } from '@shared/hooks'
 
+const SCOPES = ['folder', 'task']
+
 const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = ({ modules }) => {
-  const { taskGroups, ...props } = useProjectOverviewContext()
+  const { taskGroups, viewGroupBy, viewGroupByDesc, isFlatFolderView, ...props } =
+    useProjectOverviewContext()
+
+  // Convert view dropdown's groupBy string to TableGroupBy object for ProjectTableProvider
+  // For flat folder view, we don't set a groupBy — it uses hierarchy-style task fetching
+  const overrideGroupBy = useMemo(
+    () =>
+      viewGroupBy && viewGroupBy !== 'none' && !isFlatFolderView
+        ? { id: viewGroupBy, desc: viewGroupByDesc }
+        : undefined,
+    [viewGroupBy, isFlatFolderView, viewGroupByDesc],
+  )
 
   const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
     projectName: props.projectName,
@@ -35,13 +48,16 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
 
   return (
     <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
+      {/* @ts-ignore */}
       <ProjectTableProvider
         {...props}
-        groups={taskGroups}
+        groups={isFlatFolderView ? [] : taskGroups}
+        overrideGroupBy={overrideGroupBy}
+        isFlatFolderView={isFlatFolderView}
         powerpack={powerpack}
         modules={modules}
         groupByConfig={{ entityType: 'task' }}
-        scopes={['folder', 'task']}
+        scopes={SCOPES}
         playerOpen={viewerOpen}
         onOpenPlayer={handleOpenPlayer}
         onResetView={resetWorkingView}

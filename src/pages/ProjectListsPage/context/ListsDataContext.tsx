@@ -24,6 +24,7 @@ interface ListsDataContextValue {
   // show archived
   showArchived: boolean
   setShowArchived: (show: boolean) => void
+  refetch: () => void
 }
 
 const ListsDataContext = createContext<ListsDataContextValue | undefined>(undefined)
@@ -32,6 +33,7 @@ interface ListsDataProviderProps {
   children: ReactNode
   entityListTypes?: string[]
   isReview?: boolean
+  isStoryboards?: boolean
 }
 
 // fetch all lists and provide methods to update the lists
@@ -39,6 +41,7 @@ export const ListsDataProvider = ({
   children,
   entityListTypes,
   isReview,
+  isStoryboards,
 }: ListsDataProviderProps) => {
   const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
   const { projectName, isLoading: isFetchingProject } = useProjectContext()
@@ -58,9 +61,13 @@ export const ListsDataProvider = ({
         const scope = f.data?.scope
         if (!scope || scope.length === 0) return true // no scope means available for all
         const hasReviewScope = scope.includes('review-session')
-        return isReview ? hasReviewScope : !hasReviewScope
+        const hasStoryboardScope = scope.includes('storyboard');
+
+        return isReview
+          ? isStoryboards ? hasStoryboardScope : hasReviewScope
+          : !hasReviewScope
       }),
-    [isReview, listFoldersAll],
+    [isReview, isStoryboards, listFoldersAll],
   )
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({
@@ -85,6 +92,7 @@ export const ListsDataProvider = ({
     isFetchingNextPage,
     isError,
     fetchNextPage,
+    refetch,
   } = useGetListsData({
     projectName,
     filters: listsFilters,
@@ -124,6 +132,7 @@ export const ListsDataProvider = ({
         // show archived
         showArchived,
         setShowArchived,
+        refetch,
       }}
     >
       {children}

@@ -1,10 +1,10 @@
 // @ts-nocheck
 
 import api from './getEntity'
-import { detailsPanelQueries } from '@shared/api/queries'
 import { toast } from 'react-toastify'
-import { dashboardQueries, getKanbanTasks } from '@shared/api/queries/userDashboard'
-import { patchOverviewFolders, patchOverviewTasks } from '@shared/api/queries/overview'
+import { detailsPanelQueries } from './getEntityPanel'
+import { dashboardQueries, getKanbanTasks } from '../userDashboard'
+import { patchOverviewFolders, patchOverviewTasks } from '../overview'
 import { patchDetailsPanel } from './patchDetailsPanel'
 
 const patchKanban = (

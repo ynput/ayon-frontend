@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import ActivityItem from './components/ActivityItem'
 import CommentInput from './components/CommentInput/CommentInput'
+import { VersionReviewFeedback } from './components/CommentInput/types'
 import * as Styled from './Feed.styled'
 import useCommentMutations, { Activity } from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
@@ -15,39 +16,15 @@ import { isFilePreviewable } from './components/FileUploadPreview/FileUploadPrev
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { useFeedContext, FEED_NEW_COMMENT } from './context/FeedContext'
 import { Status } from '../ProjectTreeTable/types/project'
-import { useDetailsPanelContext, FeedFilter } from '@shared/context'
-import { DetailsPanelEntityType } from '@shared/api'
+import { useDetailsPanelContext } from '@shared/context'
+import { DetailsPanelEntityType, useGetMyProjectPermissionsQuery } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import { SavedAnnotationMetadata } from '.'
-import TabHeaderAndFilters, {
-  FilterItem,
-} from '../DetailsPanel/components/TabHeaderAndFilters/TabHeaderAndFilters'
+import FeedSearchFilter from './components/FeedSearchFilter'
+import { useLastVersionReview } from './hooks/useLastVersionReview'
 
 // number of activities to get
 export const activitiesLast = 30
-
-const feedFilters: FilterItem<string>[] = [
-  {
-    id: 'comments',
-    tooltip: 'Comments',
-    icon: 'chat',
-  },
-  {
-    id: 'checklists',
-    tooltip: 'Checklists',
-    icon: 'checklist',
-  },
-  {
-    id: 'versions',
-    tooltip: 'Published versions',
-    icon: 'layers',
-  },
-  {
-    id: 'updates',
-    tooltip: 'Entity updates',
-    icon: 'arrow_circle_right',
-  },
-]
 
 export type FeedProps = {
   disabled?: boolean
@@ -55,6 +32,7 @@ export type FeedProps = {
   statuses: Status[]
   entityListId?: string | undefined
   isSlideOut?: boolean
+  versionReview?: boolean
 }
 
 export const Feed = ({
@@ -63,6 +41,7 @@ export const Feed = ({
   statuses = [],
   entityListId,
   isSlideOut,
+  versionReview = false,
 }: FeedProps) => {
   const {
     projectName,
@@ -78,8 +57,13 @@ export const Feed = ({
     loadNextPage,
     hasNextPage,
     users,
+    categories,
+    checklistCount,
     feedFilter,
     setFeedFilter,
+    isGuest,
+    searchText,
+    setSearchText,
   } = useFeedContext()
 
   const {
@@ -88,20 +72,36 @@ export const Feed = ({
     setHighlightedActivities,
     onOpenImage,
     setFeedAnnotations,
+    user,
   } = useDetailsPanelContext()
 
   const isVersionsFilter = feedFilter.conditions?.some(
     (c) => 'key' in c && c.key === 'versions' && c.value === true,
   )
   const hasActiveFilters = feedFilter.conditions?.some(
-    (c) => 'key' in c && ['comments', 'checklists', 'versions', 'updates'].includes(c.key) && c.value === true,
+    (c) =>
+      'key' in c &&
+      ['comments', 'checklists', 'versions', 'updates'].includes(c.key) &&
+      c.value === true,
   )
   const hasCommentLikeFilter = feedFilter.conditions?.some(
     (c) => 'key' in c && (c.key === 'comments' || c.key === 'checklists') && c.value === true,
   )
 
-  // hide comment input for specific filters
-  const hideCommentInput = hasActiveFilters && !hasCommentLikeFilter
+  const supportsReviewSession = entityType === 'version' || entityType === 'folder'
+
+  // check activities permission for commenting
+  const { data: projectPermissions, isLoading: isLoadingPermissions } =
+    useGetMyProjectPermissionsQuery({ projectName }, { skip: !projectName })
+  const isCommentRestricted =
+    !user.data?.isManager &&
+    !user.data?.isAdmin &&
+    !isLoadingPermissions &&
+    projectPermissions?.activities?.enabled &&
+    !projectPermissions?.activities?.activities?.includes('comment')
+
+  // hide comment input for specific filters or when restricted by permissions
+  const hideCommentInput = isCommentRestricted || (hasActiveFilters && !hasCommentLikeFilter)
 
   const activitiesWithMergedAnnotations = useMemo(
     () => mergeAnnotationAttachments(activitiesData),
@@ -140,6 +140,15 @@ export const Feed = ({
     feedFilter,
   ) as any[]
 
+  // Filter activities by live text search (separate from feedFilter)
+  const filteredActivitiesData = useMemo(() => {
+    if (!searchText) return transformedActivitiesData
+    const lower = searchText.toLowerCase()
+    return transformedActivitiesData.filter((activity) =>
+      activity.body?.toLowerCase().includes(lower),
+    )
+  }, [transformedActivitiesData, searchText])
+
   // REFS
   const feedRef = useRef(null)
   // const commentInputRef = useRef(null)
@@ -170,6 +179,7 @@ export const Feed = ({
     submitComment: submitCommentMutation,
     updateComment,
     deleteComment,
+    submitReview: submitReviewMutation,
     isSaving,
   } = useCommentMutations({
     projectName,
@@ -189,6 +199,13 @@ export const Feed = ({
       }
     },
     [submitCommentMutation, feedRef],
+  )
+
+  const submitReview = useCallback(
+    async (feedback: VersionReviewFeedback) => {
+      await submitReviewMutation(feedback)
+    },
+    [submitReviewMutation],
   )
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
@@ -261,7 +278,7 @@ export const Feed = ({
   }
 
   const handleFileExpand = ({ index, activityId }: { index: number; activityId: string }) => {
-    const previewableFiles = Object.values(transformedActivitiesData)
+    const previewableFiles = Object.values(filteredActivitiesData)
       .reverse()
       .filter((a) => a.activityType == 'comment')
       .map((a) => ({
@@ -276,6 +293,15 @@ export const Feed = ({
 
   const loadingPlaceholders = useMemo(() => getLoadingPlaceholders(10), [])
 
+  const lastVersionReview = useLastVersionReview({
+    projectName,
+    enabled: versionReview,
+    entityIds: entities.map((e) => e.id),
+    activities: transformedActivitiesData,
+    loadingActivities: isLoadingNew,
+    userName,
+  })
+
   let warningMessage
 
   return (
@@ -287,17 +313,20 @@ export const Feed = ({
             {warningMessage}
           </Styled.Warning>
         )}
-        <TabHeaderAndFilters
-          label="Activity Feed"
-          filters={feedFilters}
-          currentFilter={feedFilter}
-          onFilterChange={setFeedFilter}
+        <FeedSearchFilter
+          feedFilter={feedFilter}
+          setFeedFilter={setFeedFilter}
+          users={users}
+          categories={categories}
+          supportsReviewSession={supportsReviewSession}
           isLoading={isLoadingNew}
+          onSearchTextChange={setSearchText}
+          checklistCount={checklistCount}
         />
         <Styled.FeedContent ref={feedRef} className={clsx({ loading: isLoadingNew }, 'no-shimmer')}>
           {isLoadingNew
             ? loadingPlaceholders
-            : transformedActivitiesData.map((activity) => (
+            : filteredActivitiesData.map((activity) => (
                 <ActivityItem
                   key={activity.activityId}
                   activity={activity}
@@ -323,12 +352,14 @@ export const Feed = ({
                   readOnly={readOnly}
                   statuses={statuses}
                   isSlideOut={isSlideOut}
+                  isGuest={isGuest}
                 />
               ))}
           {/* message when no versions published */}
-          {transformedActivitiesData.length === 1 && isVersionsFilter && !isLoadingNew && (
-            <EmptyPlaceholder message="No versions published yet" icon="layers" />
-          )}
+          {filteredActivitiesData.length === 0 &&
+            isVersionsFilter &&
+            !hasCommentLikeFilter &&
+            !isLoadingNew && <EmptyPlaceholder message="No versions published yet" icon="layers" />}
           {hasNextPage && loadNextPage && (
             <InView
               root={feedRef.current}
@@ -350,6 +381,9 @@ export const Feed = ({
             onOpen={() => setEditingId(FEED_NEW_COMMENT)}
             disabled={disabled}
             isLoading={isLoadingNew || !entities.length || isSaving}
+            versionReview={versionReview}
+            lastOwnVersionReview={lastVersionReview}
+            onReview={submitReview}
           />
         )}
       </Styled.FeedContainer>

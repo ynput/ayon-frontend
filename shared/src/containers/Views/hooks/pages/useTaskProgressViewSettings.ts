@@ -24,6 +24,10 @@ type Return = {
   // Column width management
   columns: ColumnItemModel[]
   onUpdateColumns: (columns: ColumnItemModel[]) => void
+
+  // Slicer type management
+  sliceType: string | undefined
+  onUpdateSliceType: (sliceType: string) => void
 }
 
 export const useTaskProgressViewSettings = (): Return => {
@@ -33,7 +37,6 @@ export const useTaskProgressViewSettings = (): Return => {
   // Local state for immediate updates
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnItemModel[] | null>(null)
-
   // Get view update helper
   const { updateViewSettings } = useViewUpdateHelper()
 
@@ -41,12 +44,21 @@ export const useTaskProgressViewSettings = (): Return => {
   const taskProgressSettings = viewSettings as TaskProgressSettings
   const serverFilters = (taskProgressSettings?.filter as any) ?? {}
   const serverColumns = (taskProgressSettings?.columns as ColumnItemModel[]) ?? []
+  const serverSliceType = taskProgressSettings?.sliceType
 
-  // Sync local state with server when viewSettings change
+  // Sync local state with server when the relevant setting fields change.
+  // Use per-field deps (not JSON.stringify(viewSettings)) so a change to one
+  // field does not clear in-flight local state for unrelated fields, which
+  // would cause a visible flicker during rapid sequential updates.
   useEffect(() => {
     setLocalFilters(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify((viewSettings as TaskProgressSettings)?.filter)])
+
+  useEffect(() => {
     setLocalColumns(null)
-  }, [JSON.stringify(viewSettings)])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify((viewSettings as TaskProgressSettings)?.columns)])
 
   // Use local state if available, otherwise use server state
   const filters = localFilters !== null ? localFilters : serverFilters
@@ -72,10 +84,23 @@ export const useTaskProgressViewSettings = (): Return => {
     [updateViewSettings],
   )
 
+  // Slice type update handler (no local state needed — slicer context is the optimistic state)
+  const noop = useCallback(() => {}, [])
+  const onUpdateSliceType = useCallback(
+    async (newSliceType: string) => {
+      await updateViewSettings({ sliceType: newSliceType }, noop, newSliceType, {
+        errorMessage: 'Failed to update slicer type',
+      })
+    },
+    [updateViewSettings],
+  )
+
   return {
     filters,
     onUpdateFilters,
     columns,
     onUpdateColumns,
+    sliceType: serverSliceType,
+    onUpdateSliceType,
   }
 }

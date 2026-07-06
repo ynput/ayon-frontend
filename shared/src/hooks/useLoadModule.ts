@@ -72,7 +72,6 @@ export const useLoadModule = <T>({
     }
 
     setIsOutdated(false)
-
     const initializedModule = initializedRemote.modules[remote]
 
     if (!initializedModule) {
@@ -91,7 +90,7 @@ export const useLoadModule = <T>({
       .then((remote) => {
         setIsLoaded(module)
         setIsLoading(false)
-        if (remote) loadedRemote.current = remote.default
+        if (remote) loadedRemote.current = remote['default']
       })
       .catch((e) => {
         setIsLoading(false)

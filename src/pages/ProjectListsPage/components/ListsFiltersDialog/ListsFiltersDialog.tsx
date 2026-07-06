@@ -5,7 +5,7 @@ import { entityTypeOptions } from '../NewListDialog/NewListDialog'
 import { createPortal } from 'react-dom'
 import styled from 'styled-components'
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { AttributeData, AttributeEnumItem, EntityList, useGetAttributeListQuery } from '@shared/api'
+import { AttributeData, EnumItem, EntityList, useGetAttributeListQuery } from '@shared/api'
 import { useProjectContext } from '@shared/context'
 import { getAttributeIcon } from '@shared/util'
 
@@ -13,7 +13,7 @@ import { getAttributeIcon } from '@shared/util'
 const getAttributeValuesFromLists = (
   lists: EntityList[],
   attributeName: string,
-  enums?: AttributeEnumItem[],
+  enums?: EnumItem[],
   type?: AttributeData['type'],
 ): Option[] => {
   const enumOptions: Option[] = []
@@ -200,12 +200,10 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
             {
               id: 'true',
               label: 'Yes',
-              icon: 'radio_button_checked',
             },
             {
               id: 'false',
               label: 'No',
-              icon: 'radio_button_unchecked',
             },
           ]
         } else {
@@ -270,6 +268,7 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
           setListsFilters(v) // update the filters in the context
           setListsFiltersOpen(false) // close the dialog
         }}
+        enableAutosuggestion={true}
         ref={filtersRef}
       />
     </Dialog>,

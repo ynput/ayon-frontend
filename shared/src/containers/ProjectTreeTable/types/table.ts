@@ -1,5 +1,5 @@
 import { GetTasksByParentQuery } from '@shared/api'
-import type { EntityLink, SubTaskNode } from '@shared/api'
+import type { EntityComment, EntityLink, SubTaskNode } from '@shared/api'
 import { GroupData } from '../hooks/useBuildGroupByTableData'
 import { LinkValue } from '../utils'
 
@@ -20,6 +20,7 @@ export type FolderListItem = {
   ownAttrib?: string[]
   updatedAt: string
   createdAt: string
+  thumbnailHash?: string
   hasReviewables?: boolean
   hasVersions?: boolean
   links: EntityLink[]
@@ -36,6 +37,7 @@ export type TableRow = {
   tags?: string[]
   status?: string
   updatedAt?: string
+  thumbnailHash?: string
   createdAt?: string
   parentId?: string
   folderId?: string | null // all entities have a folder except root folders which will be null
@@ -43,8 +45,10 @@ export type TableRow = {
   folder?: string // parent folder name
   product?: string // product name of product and version parent
   productType?: string // product name of product and version parent
+  productBaseType?: string // product base type category
   taskType?: string // linked task type
   taskLabel?: string // linked task label/name
+  folderType?: string // parent folder type
   subRows?: TableRow[]
   icon?: string | null
   color?: string | null
@@ -60,6 +64,7 @@ export type TableRow = {
   attrib?: Record<string, any>
   links?: Record<string, LinkValue> // links to other entities, e.g. tasks, versions, products
   subtasks?: SubTaskNode[]
+  latestComments?: EntityComment[]
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
   isLoading?: boolean
@@ -70,6 +75,7 @@ export type TableRow = {
     entityId: string
     entityType: string
     updatedAt: string | undefined
+    thumbnailHash?: string
   }
 }
 

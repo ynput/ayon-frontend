@@ -1,7 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react'
 
 // Contexts
-import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './SelectionCellsContext'
+import { ROW_SELECTION_COLUMN_ID } from '../constants'
+import { useSelectionCellsContext } from './SelectionCellsContext'
 import { useCellEditing } from './CellEditingContext'
 import { useProjectContext } from '@shared/context'
 
@@ -28,6 +29,7 @@ import {
   isSubtasksTSV,
   tsvToSubtasks,
   sanitizeSubtaskName,
+  commentsToText,
 } from './clipboard'
 import { validateClipboardData } from './clipboard/clipboardValidation'
 import { ClipboardContextType, ClipboardProviderProps } from './clipboard/clipboardTypes'
@@ -170,9 +172,22 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               // @ts-ignore
               const subtasks = getCellValue(entity, colId) || []
               cellValue = subtasksToTSV(subtasks, entity.id, entity.name)
+            } else if (colId === 'comments') {
+              // @ts-ignore
+              const comments = getCellValue(entity, 'latestComments') || []
+              cellValue = commentsToText(comments)
             } else {
               // @ts-ignore
               let foundValue = getCellValue(entity, colId)
+
+              // folder is an object on some entities (product/task) or nested under
+              // product (version) - copy the display name the cell shows,
+              // falling back to the last parent (parent folder name on tasks/folders)
+              if (colId === 'folder' && typeof foundValue !== 'string') {
+                const folder = foundValue || (entity as any).product?.folder
+                const parents = 'parents' in entity ? entity.parents : undefined
+                foundValue = folder?.label || folder?.name || parents?.[parents.length - 1] || ''
+              }
 
               if (!foundValue) {
                 // we should look for the default value set out in attribFields
@@ -203,8 +218,14 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               }
             }
 
-            // Escape double quotes in the cell value and wrap in quotes
-            rowValues.push(`${cellValue.replace(/"/g, '""')}`)
+            // Wrap multi-line / tab / quote values in quotes so spreadsheets keep them in one
+            // cell. Subtasks embed tabs+newlines as real grid structure for paste round-trips —
+            // leave them raw so they stay multi-row/column.
+            const escaped = cellValue.replace(/"/g, '""')
+            const needsQuoting =
+              colId !== 'subtasks' &&
+              (cellValue.includes('\n') || cellValue.includes('\t') || cellValue.includes('"'))
+            rowValues.push(needsQuoting ? `"${escaped}"` : escaped)
           }
 
           // Add row to clipboard text

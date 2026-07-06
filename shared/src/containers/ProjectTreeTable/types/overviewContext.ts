@@ -51,6 +51,10 @@ export interface ProjectOverviewContextType {
   // Query Filters - separate filters for tasks and folders
   taskFilters: QueryFilterParams
   folderFilters: QueryFilterParams
+  // folder ids selected in the slicer (selection roots, not expanded to subtree)
+  selectedFolders: string[]
+  // task ids selected via an entity-list slice
+  selectedTaskIds: string[]
   // Backward compatibility for ProjectTableProvider (uses taskFilters)
   queryFilters: QueryFilterParams
   setQueryFilters: (queryFilters: QueryFilter) => void
@@ -63,6 +67,17 @@ export interface ProjectOverviewContextType {
   showHierarchy: boolean
   updateShowHierarchy: (showHierarchy: boolean) => void
 
+  // View mode grouping (top-level dropdown, independent from Customize panel groupBy)
+  // undefined = view settings not loaded yet (dropdown shows empty)
+  // null = hierarchy mode
+  // string = groupBy field id (e.g. 'folderType', 'status', 'folder', 'none')
+  viewGroupBy: string | null | undefined
+  viewGroupByDesc: boolean // sort direction for grouping (true = descending)
+  updateViewGroupBy: (viewGroupBy: string | null, desc?: boolean) => void
+
+  // Flat folder view mode (viewGroupBy === 'folder')
+  isFlatFolderView: boolean
+
   // Expanded state
   expanded: ExpandedState
   expandedIds: string[]
@@ -72,6 +87,10 @@ export interface ProjectOverviewContextType {
 
   // context menu items
   contextMenuItems: ContextMenuItemConstructors
+
+  // links
+  loadingLinksEntityIds: Set<string>
+  setLinksVisible: (visible: boolean) => void
 
   // move dialog
   openMoveDialog?: (entityData: EntityMoveData) => void

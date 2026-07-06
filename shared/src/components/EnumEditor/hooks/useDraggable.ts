@@ -1,24 +1,48 @@
-import { DragEndEvent } from '@dnd-kit/core';
+import { DragEndEvent } from '@dnd-kit/core'
+import { isEqual } from 'lodash'
 import { uniqueId } from 'lodash'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const useDraggable = <T extends { id: string }, U>({
   creator,
   initialData,
   onChange,
+  onCommit,
   normalizer,
+  mergeIncomingData,
 }: {
   creator: () => T
   initialData: T[]
   onChange: (data: U[]) => void
+  onCommit?: (data: U[]) => void
   normalizer: (data: T[]) => U[]
+  mergeIncomingData?: (currentData: T[], incomingData: T[]) => T[]
 }) => {
   const [items, setItems] = useState<T[]>(initialData)
 
   const updateAndSync = (data: T[]) => {
-    onChange(normalizer(data))
     setItems(data)
+
+    const currentNormalized = normalizer(items)
+    const nextNormalized = normalizer(data)
+
+    if (!isEqual(currentNormalized, nextNormalized)) {
+      onChange(nextNormalized)
+    }
   }
+
+  useEffect(() => {
+    setItems((currentItems) => {
+      const currentNormalized = normalizer(currentItems)
+      const incomingNormalized = normalizer(initialData)
+
+      if (isEqual(currentNormalized, incomingNormalized)) {
+        return currentItems
+      }
+
+      return mergeIncomingData ? mergeIncomingData(currentItems, initialData) : initialData
+    })
+  }, [initialData, mergeIncomingData, normalizer])
 
   const handleAddItem = (overrides: Partial<T>) => {
     updateAndSync([...items, { ...creator(), ...overrides, id: uniqueId() }])
@@ -34,6 +58,16 @@ const useDraggable = <T extends { id: string }, U>({
       //@ts-ignore
       attrs.map((attr, index) => (updatedItem[attr] = values[index]))
       updateAndSync([...items.slice(0, idx), updatedItem, ...items.slice(idx + 1)])
+    }
+
+  const handleCommitItem =
+    (idx: number) => (attrs: (keyof T)[], values: (boolean | string | undefined)[]) => {
+      if (!onCommit) return
+      let updatedItem: T = { ...items[idx] }
+      //@ts-ignore
+      attrs.map((attr, index) => (updatedItem[attr] = values[index]))
+      const nextItems = [...items.slice(0, idx), updatedItem, ...items.slice(idx + 1)]
+      onCommit(normalizer(nextItems))
     }
 
   const handleDuplicateItem = (idx: number, overrides: Partial<T>) => {
@@ -76,6 +110,7 @@ const useDraggable = <T extends { id: string }, U>({
     handleAddItem,
     handleRemoveItem,
     handleChangeItem,
+    handleCommitItem,
     handleDuplicateItem,
     handleDraggableEnd,
   }

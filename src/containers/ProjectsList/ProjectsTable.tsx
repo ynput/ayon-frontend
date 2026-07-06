@@ -5,7 +5,7 @@ import ProjectsListTableHeader from './ProjectsListTableHeader'
 import { useCreateContextMenu } from '@shared/containers'
 import { ProjectsSimpleTable } from './ProjectsSimpleTable'
 import { PinnedDivider } from './ProjectsListRow.styled'
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 import { usePowerpack } from '@shared/context'
 
 type ButtonType = 'delete' | 'add' | 'filter' | 'search' | 'select-all'
@@ -38,6 +38,9 @@ interface ProjectsTableProps {
   renamingFolder?: string | null
   onSubmitRenameFolder?: (value: string) => void
   closeRenameFolder?: () => void
+  renamingProject?: string | null
+  onSubmitRenameProject?: (value: string) => void
+  closeRenameProject?: () => void
   containerClassName?: string
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
@@ -71,6 +74,9 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   renamingFolder,
   onSubmitRenameFolder,
   closeRenameFolder,
+  renamingProject,
+  onSubmitRenameProject,
+  closeRenameProject,
   containerClassName,
   pt,
 }) => {
@@ -79,7 +85,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   const [ctxMenuShow] = useCreateContextMenu([], { powerLicense, setPowerpackDialog })
 
   // Track which table has active selection: 'pinned' | 'all'
-  const [activeTable, setActiveTable] = useLocalStorage<'pinned' | 'all'>(
+  const [activeTable, setActiveTable] = useSessionStorage<'pinned' | 'all'>(
     'project-list-selection',
     'all',
   )
@@ -212,6 +218,9 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
             renamingFolder={renamingFolder}
             onSubmitRenameFolder={onSubmitRenameFolder}
             closeRenameFolder={closeRenameFolder}
+            renamingProject={renamingProject}
+            onSubmitRenameProject={onSubmitRenameProject}
+            closeRenameProject={closeRenameProject}
             onOpenProject={onOpenProject}
             onSettingsClick={onSettingsClick}
             fitContent
@@ -241,6 +250,9 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
           renamingFolder={renamingFolder}
           onSubmitRenameFolder={onSubmitRenameFolder}
           closeRenameFolder={closeRenameFolder}
+          renamingProject={renamingProject}
+          onSubmitRenameProject={onSubmitRenameProject}
+          closeRenameProject={closeRenameProject}
           onOpenProject={onOpenProject}
           onSettingsClick={onSettingsClick}
           hidePinned={!search}

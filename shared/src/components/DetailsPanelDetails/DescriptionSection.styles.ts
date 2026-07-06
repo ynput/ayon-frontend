@@ -148,6 +148,7 @@ export const StyledEditor = styled.div`
       white-space: normal;
       word-break: keep-all;
       overflow-wrap: normal;
+      padding-bottom: 12px;
 
       /* Consistent scrollbar styling across edit/read-only */
       scrollbar-width: thin;
@@ -248,8 +249,9 @@ export const StyledEditor = styled.div`
       h2 {
         a,
         em,
-        strong {
-          font-size: 20px;
+        strong,
+        u {
+          font-size: 24px;
         }
 
         p {
@@ -292,6 +294,12 @@ export const StyledEditor = styled.div`
       }
     }
   }
+
+  &.compact {
+    .ql-container.ql-snow {
+      padding: 6px var(--padding-s);
+    }
+  }
 `
 
 export const StyledFooter = styled.div`
@@ -304,10 +312,14 @@ export const StyledFooter = styled.div`
 `
 
 export const StyledMarkdown = styled.div`
+  min-width: 0;
   .markdown-content {
     color: var(--md-sys-color-on-surface);
     line-height: 1.5;
     white-space: pre-wrap; /* prevent preserved newlines from adding extra gaps compared to editor */
+    word-break: break-word;
+    overflow-wrap: break-word;
+    overflow-x: clip;
 
     /* Normalize spacing to match the editor */
     /* Match editor heading sizes: Quill uses ~1.5em for H2 */
@@ -357,7 +369,7 @@ export const StyledMarkdown = styled.div`
     ul,
     ol {
       white-space: nowrap;
-      margin: 16px 0;
+      margin: -8px 0;
       padding-left: 20px !important;
     }
 
@@ -397,10 +409,9 @@ export const StyledMarkdown = styled.div`
     h2 {
       a,
       em,
-      strong {
-        font-size: 20px;
-        margin-top: 16px;
-        margin-bottom: 8px;
+      strong,
+      u {
+        font-size: 24px;
       }
     }
   }

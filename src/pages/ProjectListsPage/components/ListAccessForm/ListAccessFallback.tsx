@@ -61,7 +61,7 @@ export const ListAccessFallback: FC<ListAccessFallbackProps> = ({
         <PowerpackButton
           feature="listAccess"
           label="Manage list access"
-          filled
+          variant="filled"
           style={{ marginTop: 8, width: '100%' }}
         />
       )}

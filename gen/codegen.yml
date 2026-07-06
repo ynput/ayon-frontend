@@ -1,14 +1,15 @@
 overwrite: true
 schema:
-  - http://localhost:3000/graphql:
-      headers:
-        Authorization: Bearer ${TOKEN}
+  - ./schema-loader.js:
+      loader: ./schema-loader.js
 generates:
   # Generate types + RTK Query hooks (excluding links)
   ../shared/src/api/generated/graphql.ts:
     documents:
       - '../**/*.graphql'
       - '!../shared/src/api/queries/links/**/*.graphql'
+    config:
+      documentMode: 'documentNode'
     plugins:
       - typescript
       - add:

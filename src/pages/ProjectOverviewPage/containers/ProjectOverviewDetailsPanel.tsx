@@ -12,12 +12,16 @@ import {
 import { EntityMap } from '@shared/containers/ProjectTreeTable'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
   projectName: string
+  entityListId?: string
   isOpen?: boolean
-  onUriOpen?: (entity: DetailsPanelEntityData) => void
+  onUriOpen?: (entity: DetailsPanelEntityData, source: 'uri' | 'url') => void
+  onClose?: () => void
+  dispatch: any // if we need to provide explicit dispatch context (for review)
 }
 
 type EntitySelection = {
@@ -29,10 +33,13 @@ type EntitySelection = {
 const ProjectOverviewDetailsPanel = ({
   projectInfo,
   projectName,
+  entityListId,
   isOpen,
   onUriOpen,
+  onClose,
+  dispatch: dispatchProp,
 }: ProjectOverviewDetailsPanelProps) => {
-  const dispatch = useAppDispatch()
+  const dispatch = dispatchProp || useAppDispatch()
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))
 
   const { getEntityById } = useProjectTableContext()
@@ -69,24 +76,33 @@ const ProjectOverviewDetailsPanel = ({
   const { entities, entityType, handleClose } = entitySelection || {}
 
   return (
-    <>
-      <DetailsPanel
-        isOpen={isPanelOpen}
-        entityType={entityType}
-        entities={entities}
-        projectsInfo={projectsInfo}
-        projectNames={[projectName]}
-        tagsOptions={projectInfo.tags || []}
-        projectUsers={users}
-        activeProjectUsers={users}
-        style={{ boxShadow: 'none' }}
-        scope="overview"
-        onClose={handleClose}
-        onOpenViewer={handleOpenViewer}
-        onUriOpen={onUriOpen}
-      />
-      <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
-    </>
+    <EntityListsContextBoundary projectName={projectName}>
+      {(entityListsContext) => (
+        <>
+          <DetailsPanel
+            isOpen={isPanelOpen}
+            entityType={entityType}
+            entityListId={entityListId}
+            entities={entities}
+            projectsInfo={projectsInfo}
+            projectNames={[projectName]}
+            tagsOptions={projectInfo.tags || []}
+            projectUsers={users}
+            activeProjectUsers={users}
+            style={{ boxShadow: 'none' }}
+            scope="overview"
+            entityListsContext={entityListsContext}
+            onClose={() => {
+              handleClose?.()
+              onClose?.()
+            }}
+            onOpenViewer={handleOpenViewer}
+            onUriOpen={onUriOpen}
+          />
+          <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
+        </>
+      )}
+    </EntityListsContextBoundary>
   )
 }
 

@@ -13,6 +13,9 @@ export interface CellEditingContextType {
   history: UseHistoryReturn
   undo: () => Promise<void>
   redo: () => Promise<void>
+  // Draft persistence for editing content across unmount/remount cycles
+  getEditingDraft: () => string | null
+  setEditingDraft: (value: string | null) => void
 }
 
 export const CellEditingContext = createContext<CellEditingContextType | undefined>(undefined)

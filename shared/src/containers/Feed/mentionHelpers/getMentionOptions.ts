@@ -39,6 +39,29 @@ const sortByRelevanceThenAlpha = (a, b) => {
   }
 }
 
+// Prefixes that filter the @ mention list to a specific type
+const TYPE_PREFIXES = ['team:', 'user:']
+
+/**
+ * Parse a search string for type prefix filtering.
+ * e.g. "team:comp" -> { typeFilter: 'team', search: 'comp' }
+ * e.g. "john"      -> { typeFilter: null, search: 'john' }
+ */
+export const parseMentionPrefix = (search?: string) => {
+  if (!search) return { typeFilter: null, search: undefined }
+
+  for (const prefix of TYPE_PREFIXES) {
+    if (search.startsWith(prefix)) {
+      return {
+        typeFilter: prefix.slice(0, -1), // 'team:' -> 'team'
+        search: search.slice(prefix.length) || undefined,
+      }
+    }
+  }
+
+  return { typeFilter: null, search }
+}
+
 const getMentionOptions = (type, values = {}, search) => {
   // values  = { users: function, tags: function }
 
@@ -52,9 +75,17 @@ const getMentionOptions = (type, values = {}, search) => {
   // versions should sort by version latest first
   if (type === '@@') baseSort = versionSorting
 
-  if (!search) return allOptions.sort(baseSort)
+  // Parse prefix filter (e.g. "team:comp" -> filter to teams, search "comp")
+  const { typeFilter, search: actualSearch } = parseMentionPrefix(search)
 
-  const filteredOptions = matchSorter(allOptions, search, {
+  // Filter by type prefix if present
+  const filteredByType = typeFilter
+    ? allOptions.filter((opt) => opt.type === typeFilter)
+    : allOptions
+
+  if (!actualSearch) return filteredByType.sort(baseSort)
+
+  const filteredOptions = matchSorter(filteredByType, actualSearch, {
     keys: ['label', 'context', 'keywords'],
     baseSort: baseSort,
   })

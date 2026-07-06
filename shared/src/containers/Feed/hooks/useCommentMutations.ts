@@ -3,6 +3,8 @@ import { formatISO } from 'date-fns'
 import { toast } from 'react-toastify'
 import { useFeedContext } from '../context/FeedContext'
 import { SavedAnnotationMetadata } from '..'
+import { VersionReviewFeedback } from '../components/CommentInput/types'
+import { getVerbForFeedbackBody } from '../components/ActivityVersionReview/ActivityVersionReview'
 
 // Type definitions
 interface Entity {
@@ -124,7 +126,7 @@ const useCommentMutations = ({
   const submitComment = async (
     value: string,
     files: File[] = [],
-    data: any = {},
+    data: any = {}, // includes things like annotations and comment categories
   ): Promise<void> => {
     // map over all the entities and create a new comment for each
     let patchId: string | null = null
@@ -168,7 +170,16 @@ const useCommentMutations = ({
       })
     })
 
-    await Promise.all(promises)
+    const results = await Promise.all(promises)
+
+    // check if any of the results have errors and throw an error if so
+    const errors = results.filter((result) => result.error)
+    if (errors.length > 0) {
+      const errorMessage = errors[0].error?.data?.detail || 'Failed to create comment'
+      console.error(errorMessage, errors)
+      toast.error(errorMessage)
+      throw new Error(errorMessage)
+    }
   }
 
   const updateComment = async (
@@ -233,10 +244,42 @@ const useCommentMutations = ({
     }
   }
 
+  const submitReview = async (feedback: VersionReviewFeedback): Promise<void> => {
+    // map over all the entities and create a new comment for each
+    let patchId: string | null = null
+    const promises = entities.map(({ id: entityId, subTitle }) => {
+      const newId = getEntityId()
+      if (!patchId) patchId = newId
+
+      const data = { feedback, entityList: entityListId }
+      const newReview = {
+        body: getVerbForFeedbackBody(feedback, entityType),
+        activityType: 'version.review',
+        id: newId,
+        data,
+      }
+
+      // create a new patch for optimistic update
+      const patch = createPatch({ entityId, newId, subTitle, value: '', data })
+
+      return createEntityActivity({
+        projectName,
+        entityType,
+        entityId,
+        data: newReview,
+        patch,
+        filter,
+      })
+    })
+
+    await Promise.all(promises)
+  }
+
   return {
     submitComment,
     updateComment,
     deleteComment,
+    submitReview,
     isSaving: isUpdatingActivity,
   }
 }

@@ -2,14 +2,9 @@
 // add icons
 // add thumbnailUrl
 
-import type {
-  GetKanbanResponse,
-  KanbanNode,
-  Status,
-  TaskType,
-  AttributeEnumItem,
-} from '@shared/api'
+import type { GetKanbanResponse, KanbanNode, Status, TaskType, EnumItem } from '@shared/api'
 import { $Any } from '@/types'
+import { getEntityThumbnailUrl } from '@shared/util'
 
 type ProjectsInfo = {
   [key: string]: $Any
@@ -18,11 +13,12 @@ type ProjectsInfo = {
 type ExtraInfo = {
   taskInfo: TaskType
   statusInfo: Status
-  priorityInfo: AttributeEnumItem | undefined
+  priorityInfo: EnumItem | undefined
 }
 
 export interface TransformedKanbanTask extends KanbanNode, ExtraInfo {
   thumbnailUrl: string | null
+  parentFolder: string
 }
 
 const transformKanbanTasks = (
@@ -31,7 +27,7 @@ const transformKanbanTasks = (
     projectsInfo,
     priorities,
     isLoadingTasks,
-  }: { projectsInfo: ProjectsInfo; priorities: AttributeEnumItem[]; isLoadingTasks: boolean },
+  }: { projectsInfo: ProjectsInfo; priorities: EnumItem[]; isLoadingTasks: boolean },
 ): TransformedKanbanTask[] => {
   // if is loading return an empty array
   if (isLoadingTasks) return []
@@ -47,17 +43,26 @@ const transformKanbanTasks = (
       (statusItem: $Any) => statusItem.name === task.status,
     )
 
-    const priorityInfo: AttributeEnumItem | undefined = priorities.find(
+    const priorityInfo: EnumItem | undefined = priorities.find(
       // TODO: fix this when real data is available
       (priorityItem) => priorityItem.value === task.priority,
     )
 
+    const pathParts = task.folderPath?.split('/').filter(Boolean) || []
+    const parentFolder = pathParts.length >= 2 ? pathParts[pathParts.length - 2] : 'Root'
+
     return {
       ...task,
-      thumbnailUrl: `/api/projects/${task.projectName}/tasks/${task.id}/thumbnail?updatedAt=${task.updatedAt}`,
+      thumbnailUrl: getEntityThumbnailUrl({
+        projectName: task.projectName,
+        entityType: 'task',
+        entityId: task.id,
+        thumbnailHash: task.thumbnailHash,
+      }),
       statusInfo,
       taskInfo,
       priorityInfo,
+      parentFolder,
     }
   })
 }

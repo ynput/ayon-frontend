@@ -1,0 +1,29 @@
+# Task-side column stats for the Overview footer. Filters mirror GetTasksList
+# so the aggregation matches the visible task set.
+query GetTaskColumnStats(
+  $projectName: String!
+  $filter: String
+  $folderFilter: String
+  $search: String
+  $folderIds: [String!]
+  $taskIds: [String!]
+  $targets: [MetricTargetInput!]
+  $includeFolderChildren: Boolean! = true
+) {
+  project(name: $projectName) {
+    name
+    tasks(
+      calculateSpecificStatistics: $targets
+      filter: $filter
+      folderFilter: $folderFilter
+      search: $search
+      folderIds: $folderIds
+      ids: $taskIds
+      includeFolderChildren: $includeFolderChildren
+    ) {
+      fieldStats {
+        ...ColumnStatsFragment
+      }
+    }
+  }
+}

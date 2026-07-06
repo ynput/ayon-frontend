@@ -1,0 +1,23 @@
+query GetFolderProducts($projectName: String!, $folderId: String!) {
+  project(name: $projectName) {
+    products(folderIds: [$folderId], first: 1000) {
+      edges {
+        node {
+          id
+          name
+          productType
+          latestVersion {
+            id
+            version
+            task {
+              id
+              name
+              label
+              taskType
+            }
+          }
+        }
+      }
+    }
+  }
+}

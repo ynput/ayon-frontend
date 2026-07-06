@@ -9,6 +9,7 @@ fragment TaskPropsFragment on TaskNode {
   taskType
   updatedAt
   createdAt
+  thumbnailHash
   active
   assignees
   allAttrib
@@ -16,5 +17,14 @@ fragment TaskPropsFragment on TaskNode {
   parents
   subtasks {
     ...SubTaskFragment
+  }
+  latestComments @include(if: $showComments) {
+    activityId
+    body
+    author
+    createdAt
+  }
+  folder {
+    folderType
   }
 }

@@ -1,4 +1,4 @@
-import { GetKanbanProjectUsersQuery } from '@shared/api'
+import type { GetKanbanProjectUsersQuery } from '@shared/api/generated'
 
 type AccessGroups = {
   [key: string]: string[]

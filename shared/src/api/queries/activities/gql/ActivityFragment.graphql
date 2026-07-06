@@ -35,6 +35,7 @@ fragment ActivityFragment on ActivityNode {
     timestamp
   }
   version {
+    thumbnailHash
     attrib {
       comment
     }

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -122,7 +122,7 @@ const SettingsPanel = ({
   onContextMenu,
   currentId,
 }) => {
-  const [expandedObjects, setExpandedObjects] = useLocalStorage('expanded-settings-keys', [])
+  const [expandedObjects, setExpandedObjects] = useSessionStorage('expanded-settings-keys', [])
 
   const onToggle = () => {
     if (expandedObjects.includes(objId)) {
@@ -136,7 +136,12 @@ const SettingsPanel = ({
 
   useEffect(() => {
     if (!currentId) return
-    if (currentId.startsWith(objId + '_') && !expandedObjects.includes(objId)) {
+    const isHeaderEnabledField = currentId === `${objId}_enabled`
+    if (
+      currentId.startsWith(objId + '_') &&
+      !isHeaderEnabledField &&
+      !expandedObjects.includes(objId)
+    ) {
       console.log('expanding', objId)
       setExpandedObjects([...expandedObjects, objId])
     }

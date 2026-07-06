@@ -1,17 +1,15 @@
 import {
+  parseCellId,
   ProjectDataProvider,
-  useDetailsPanelEntityContext,
-  useProjectTableContext,
-  isEntityRestricted,
-  useSelectionCellsContext,
-  getCellId,
   ROW_SELECTION_COLUMN_ID,
+  useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useEffect, useMemo } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { Section, Toolbar } from '@ynput/ayon-react-components'
-import { ListsDataProvider } from './context/ListsDataContext'
+import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import styled from 'styled-components'
+import { ListsDataProvider, useListsDataContext } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
 import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
@@ -39,9 +37,7 @@ import {
   SelectedRowsProvider,
   SelectionCellsProvider,
   TreeTableExtraColumn,
-  useSelectedRowsContext,
 } from '@shared/containers/ProjectTreeTable'
-import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
 import useExtraColumns from './hooks/useExtraColumns'
 import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
@@ -50,60 +46,115 @@ import { Actions } from '@shared/containers/Actions/Actions'
 import { ListsModuleProvider } from './context/ListsModulesContext.tsx'
 import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
 import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
-import { useAppSelector } from '@state/store.ts'
+import { useAppDispatch, useAppSelector } from '@state/store.ts'
 import { UniqueIdentifier } from '@dnd-kit/core'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
-import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
 import { useViewsContext } from '@shared/containers/index.ts'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
 import DndContextWrapper from './components/DndContextWrapper'
+import { toast } from 'react-toastify'
+import api from '@shared/api/index.ts'
+import useReviewSessionCardsModules from './hooks/useReviewSessionCardsModules.tsx'
+import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSettings.tsx'
+import {
+  ReviewCardsSettingsProvider,
+  useReviewCardsSettingsContext,
+} from './context/ReviewCardsSettingsContext.tsx'
+import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
+import { getCellIdForColumn } from './util/cellIds.ts'
+import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
+import useStoryboardsCardsModules from './hooks/useStoryboardsCardsModules.tsx'
+import OpenStoryboardButton from '@pages/ReviewPage/OpenStoryboardButton.tsx'
+import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
+import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
+import usePatchListsCaches from './hooks/usePatchListsCaches'
 
 type ProjectListsPageProps = {
   projectName: string
   entityListTypes?: string[]
   isReview?: boolean
+  isStoryboards?: boolean
 }
+
+// The review-addon provider renders a wrapper that doesn't fill the flex column,
+// collapsing the table and hiding its scrollbar. Force its root to fill the height.
+const ProviderFill = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: var(--base-gap-large);
+  width: 100%;
+
+  & > *:only-child {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+  }
+`
 
 const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
   projectName,
   entityListTypes,
   isReview,
+  isStoryboards,
 }) => {
   // lists page does not support grouping yet
   const modules = undefined
 
   return (
-    <ListsModuleProvider>
-      <ProjectDataProvider projectName={projectName}>
-        <ListsDataProvider entityListTypes={entityListTypes} isReview={isReview}>
-          <ListsProvider isReview={isReview}>
-            <ListItemsDataProvider>
-              <ListsAttributesProvider>
-                <MoveEntityProvider>
-                  <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
-                </MoveEntityProvider>
-              </ListsAttributesProvider>
-            </ListItemsDataProvider>
-          </ListsProvider>
-        </ListsDataProvider>
-      </ProjectDataProvider>
-    </ListsModuleProvider>
+    <ReviewCardsSettingsProvider>
+      <ListsModuleProvider>
+        <ProjectDataProvider projectName={projectName}>
+          <ListsDataProvider
+            entityListTypes={entityListTypes}
+            isReview={isReview}
+            isStoryboards={isStoryboards}
+          >
+            <ListsProvider isReview={isReview} isStoryboards={isStoryboards}>
+              <ListItemsDataProvider>
+                <ListsAttributesProvider>
+                  <MoveEntityProvider>
+                    <ProjectListsWithInnerProviders
+                      isReview={isReview}
+                      isStoryboards={isStoryboards}
+                      modules={modules}
+                    />
+                  </MoveEntityProvider>
+                </ListsAttributesProvider>
+              </ListItemsDataProvider>
+            </ListsProvider>
+          </ListsDataProvider>
+        </ProjectDataProvider>
+      </ListsModuleProvider>
+    </ReviewCardsSettingsProvider>
   )
 }
 
 type ProjectListsWithInnerProvidersProps = {
   isReview?: boolean
+  isStoryboards?: boolean
   modules?: any
 }
 
 const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = ({
   isReview,
+  isStoryboards,
   modules,
 }) => {
   const { projectName, ...projectInfo } = useProjectContext()
-  const { selectedListId, contextMenuItems, attribFields, columns, onUpdateColumns, ...props } =
-    useListItemsDataContext()
+  const {
+    selectedListId,
+    contextMenuItems,
+    attribFields,
+    columns,
+    onUpdateColumns,
+    defaultColumnVisibility,
+    ...props
+  } = useListItemsDataContext()
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
   const { resetWorkingView } = useViewsContext()
@@ -134,14 +185,24 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
 
+  const SCOPES = useMemo(
+    () => (selectedList?.entityType ? [selectedList.entityType] : []),
+    [selectedList],
+  )
+
   return (
     <SettingsPanelProvider>
-      <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
+      <ColumnSettingsProvider
+        config={columns}
+        onChange={onUpdateColumns}
+        defaultColumnVisibility={defaultColumnVisibility}
+      >
         <DndContextWrapper reorderListItem={reorderListItem}>
           {(dndActiveId) => (
             <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
               <ProjectTableProvider
                 projectName={projectName}
+                // @ts-ignore
                 attribFields={mergedAttribFields}
                 projectInfo={projectInfo}
                 users={props.users}
@@ -156,7 +217,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                 showHierarchy={false}
                 isLoading={props.isLoadingAll}
                 contextMenuItems={contextMenuItems}
-                scopes={[selectedList?.entityType]}
+                scopes={SCOPES}
                 playerOpen={viewerOpen}
                 onOpenPlayer={handleOpenPlayer}
                 onResetView={(selectedList?.count || 0) > 0 ? resetWorkingView : undefined}
@@ -174,6 +235,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                           extraColumns={extraColumns}
                           extraColumnsSettings={extraColumnsSettings}
                           isReview={isReview}
+                          isStoryboards={isStoryboards}
                           dndActiveId={dndActiveId}
                         />
                         <ListsShortcuts />
@@ -194,6 +256,7 @@ type ProjectListsProps = {
   extraColumns: TreeTableExtraColumn[]
   extraColumnsSettings: any[]
   isReview?: boolean
+  isStoryboards?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
 }
 
@@ -201,84 +264,58 @@ const ProjectLists: FC<ProjectListsProps> = ({
   extraColumns,
   extraColumnsSettings,
   isReview,
+  isStoryboards,
   dndActiveId, // Destructure new prop
 }) => {
-  const user = useAppSelector((state) => state.user?.attrib)
-  const isDeveloperMode = user?.developerMode ?? false
+  const dispatch = useAppDispatch()
+  const user = useAppSelector((state) => state.user)
+  const bundleMode = getBundleModeFromUser(user)
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { projectName, ...projectInfo } = useProjectContext()
-  const { getEntityById } = useProjectTableContext()
+  const { projectName } = useProjectContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
-  const { selectedList, listDetailsOpen } = useListsContext()
-  const { selectedRows } = useSelectedRowsContext()
-  const { setSelectedCells } = useSelectionCellsContext()
+  const { selectedList } = useListsContext()
+  const { refetch: refetchLists } = useListsDataContext()
   const {
-    deleteListItemAction,
     listItemsData,
-    isLoadingAll: isLoadingListItems,
-    listItemsFilters,
-    setListItemsFilters,
+    deleteListItemAction,
+    refetch: refetchListItems,
   } = useListItemsDataContext()
 
-  // Try to get the entity context, but it might not exist
-  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null
-  try {
-    const entityContext = useDetailsPanelEntityContext()
-    selectedEntity = entityContext.selectedEntity
-  } catch {
-    // Context not available, that's fine
-    selectedEntity = null
-  }
-
-  // Check if any selected rows are restricted entities
-  const hasNonRestrictedSelectedRows = selectedRows.some((rowId) => {
-    const entity = getEntityById(rowId)
-    return entity && !isEntityRestricted(entity.entityType)
-  })
-
-  // Check if we should show the details panel
-  // Don't show entity details panel if only selected entity is restricted
-  const shouldShowEntityDetailsPanel =
-    (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
-  const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
+  const { selectedCells, setSelectedCells, setFocusedCellId, setAnchorCell, clearSelection } =
+    useSelectionCellsContext()
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
     selectSetting('columns', attrib)
   }
 
-  // Handle URI opening to select list item
-  // We use state and effect because the uri callback can be called before data is loaded
-  const [uriEntityId, setUriEntityId] = useState<null | string>(null)
+  const { gridHeight, displayStyle, onUpdateDisplayStyle, onUpdateDisplayStyleWithPersistence } =
+    useReviewCardsSettingsContext()
+
+  const pageDisplayStyle = isReview ? displayStyle : 'table' // force table view for non-review pages, as we do not have cards modules for them
+
+  const useModules = isStoryboards ? useStoryboardsCardsModules : useReviewSessionCardsModules
+
+  const {
+    ReviewSessionCards,
+    ReviewSessionCardsProvider,
+    ReviewSessionCardsControlsLeft,
+    ReviewSessionCardsControlsRight,
+    outdated: reviewSessionCardsOutdated,
+    allModulesLoaded: reviewModulesLoaded,
+  } = useModules({ skip: !isReview })
+
+  const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
+
+  const patchListsCaches = usePatchListsCaches({ listId: selectedList?.id || '' })
+
+  // if the addon is outdated, make sure we land in table view
   useEffect(() => {
-    if (!uriEntityId) return
-
-    // if there are filters, we need to remove them first
-    if (listItemsFilters.conditions?.length) {
-      setListItemsFilters({})
-      return
-      // now the list items data will reload without filters, and the effect will run again
-    }
-
-    if (isLoadingListItems || !listItemsData.length) return
-
-    setUriEntityId(null)
-    console.debug('URI found, navigating to list item:', uriEntityId)
-
-    // find the list item by entity id
-    const listItem = listItemsData.find((item) => item.entityId === uriEntityId)
-    if (!listItem) {
-      console.warn('List item not found for entity ID:', uriEntityId)
-      return
-    }
-
-    // select the list item in the table
-    // Select the entity in the table
-    setSelectedCells(
-      new Set([getCellId(listItem.id, 'name'), getCellId(listItem.id, ROW_SELECTION_COLUMN_ID)]),
-    )
-  }, [uriEntityId, isLoadingListItems, listItemsData, listItemsFilters])
+    if (!reviewSessionCardsOutdated) return
+    onUpdateDisplayStyle('table')
+    onUpdateDisplayStyleWithPersistence('table')
+  }, [reviewSessionCardsOutdated])
 
   return (
     <main style={{ gap: 4 }}>
@@ -290,103 +327,206 @@ const ProjectLists: FC<ProjectListsProps> = ({
       >
         <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
           <Section wrap>
-            <ListsTable isReview={isReview} />
+            <ListsTable isReview={isReview} isStoryboards={isStoryboards} />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={88}>
           <Section wrap direction="column" style={{ height: '100%' }}>
-            {selectedList && (
-              <Toolbar>
-                <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
-                {/*@ts-expect-error - we do not support product right now*/}
-                <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
-                <OpenReviewSessionButton
-                  projectName={projectName}
-                  disabled={listItemsData.length === 0}
-                />
-                <Actions
-                  entities={[
-                    {
-                      id: selectedList.id,
-                      projectName,
-                      entitySubType: `${selectedList.entityType}:${selectedList.entityListType}`,
-                    },
-                  ]}
-                  entityType={'list'}
-                  isLoadingEntity={false}
-                  entitySubTypes={[`${selectedList.entityType}:${selectedList.entityListType}`]}
-                  onNavigate={navigate}
-                  onSetSearchParams={setSearchParams}
-                  searchParams={searchParams}
-                  featuredCount={0}
-                  isDeveloperMode={isDeveloperMode}
-                  align="right"
-                />
-                <CustomizeButton />
-              </Toolbar>
-            )}
-            <Splitter
-              layout="horizontal"
-              stateKey="overview-splitter-settings"
-              stateStorage="local"
-              style={{ width: '100%', height: '100%', overflow: 'hidden' }}
-              gutterSize={isPanelOpen && selectedList ? 4 : 0}
-            >
-              <SplitterPanel size={82}>
-                <DetailsPanelSplitter
-                  layout="horizontal"
-                  stateKey="overview-splitter-details"
-                  stateStorage="local"
-                  style={{ width: '100%', height: '100%' }}
-                >
-                  <SplitterPanel size={70}>
-                    {/* ITEMS TABLE */}
-                    <ListItemsTable
-                      extraColumns={extraColumns}
-                      isReview={isReview}
-                      dndActiveId={dndActiveId} // Pass prop
-                      viewOnly={(selectedList?.accessLevel || 0) < 20}
-                    />
-                  </SplitterPanel>
-                  <SplitterPanel
-                    size={30}
-                    style={{
-                      zIndex: 300,
-                      minWidth: 300,
-                    }}
-                    className="details"
-                  >
-                    <ProjectOverviewDetailsPanel
-                      projectInfo={projectInfo}
+            <ProviderFill>
+              <ReviewSessionCardsProvider
+                projectName={projectName}
+                router={{
+                  useParams,
+                  useNavigate,
+                  useLocation,
+                  useSearchParams,
+                }}
+                api={api}
+                toast={toast}
+                gridSize={gridHeight}
+                playlistView={pageDisplayStyle === 'playlist'}
+                onSelectionChange={(versionIds) => {
+                  if (versionIds.length === 0) return clearSelection()
+
+                  const areRowsSelected = Array.from(selectedCells).some(
+                    (cellId) => parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID,
+                  )
+
+                  const columnToSelect = areRowsSelected ? ROW_SELECTION_COLUMN_ID : 'name'
+
+                  const cellIds = versionIds
+                    .map((versionId) =>
+                      getCellIdForColumn(listItemsData, versionId, columnToSelect),
+                    )
+                    .filter((id) => id !== null)
+
+                  setSelectedCells(new Set(cellIds))
+                }}
+                onOpenDetails={(versionId) => {
+                  const cellId = getCellIdForColumn(
+                    listItemsData,
+                    versionId,
+                    ROW_SELECTION_COLUMN_ID,
+                  )
+                  if (!cellId) return
+
+                  const position = parseCellId(cellId)
+                  setSelectedCells(new Set([cellId]))
+                  setFocusedCellId(cellId)
+                  setAnchorCell(position)
+                }}
+                onOpenInViewer={(state) => {
+                  handleOpenPlayer(state, { quickView: true })
+                }}
+                onItemsChanged={(clips, promise, type) => {
+                  if (type === 'add') {
+                    void promise?.then(() => {
+                      refetchListItems()
+                      patchListsCaches(clips, 'add')
+                    })
+                  } else if (type === 'delete') {
+                    patchListsCaches(clips, 'delete')
+                  } else if (type === 'reorder') {
+                    patchListsCaches(clips, 'reorder')
+                  } else if (type === 'replace') {
+                    refetchListItems()
+                  } else if (type === 'update') {
+                    refetchListItems()
+                  }
+                }}
+              >
+                {selectedList && (
+                  <Toolbar>
+                    {isStoryboards ? (
+                      <OpenStoryboardButton projectName={projectName} />
+                    ) : (
+                      <OpenReviewSessionButton
+                        projectName={projectName}
+                        disabled={listItemsData.length === 0}
+                      />
+                    )}
+                    {reviewModulesLoaded && pageDisplayStyle !== 'table' && (
+                      <ReviewSessionCardsControlsLeft />
+                    )}
+                    {pageDisplayStyle === 'table' && (
+                      <>
+                        <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
+                        <ListItemsFilter
+                          // @ts-ignore
+                          entityType={selectedList.entityType}
+                          projectName={projectName}
+                        />
+                      </>
+                    )}
+                    {isReview && reviewModulesLoaded && (
+                      <>
+                        <Spacer />
+                        <ReviewSessionCardsControlsRight
+                          groupingDisabled={pageDisplayStyle === 'table'}
+                        />
+                      </>
+                    )}
+                    <ImportDialogButton
+                      importContext="entity_list_item"
                       projectName={projectName}
-                      isOpen={shouldShowEntityDetailsPanel}
-                      onUriOpen={(entity) => setUriEntityId(entity.id)}
+                      folderId={selectedList?.id}
                     />
-                    {selectedList &&
-                      !shouldShowEntityDetailsPanel &&
-                      shouldShowListDetailsPanel && (
-                        <ListDetailsPanel listId={selectedList.id} projectName={projectName} />
-                      )}
-                  </SplitterPanel>
-                </DetailsPanelSplitter>
-              </SplitterPanel>
-              {isPanelOpen && selectedList ? (
-                <SplitterPanel
-                  size={18}
-                  style={{
-                    zIndex: 500,
-                  }}
+                    <Actions
+                      entities={[
+                        {
+                          id: selectedList.id,
+                          projectName,
+                          entitySubType: `${selectedList.entityType}:${selectedList.entityListType}`,
+                        },
+                      ]}
+                      entityType={'list'}
+                      isLoadingEntity={false}
+                      entitySubTypes={[`${selectedList.entityType}:${selectedList.entityListType}`]}
+                      onNavigate={navigate}
+                      onSetSearchParams={setSearchParams}
+                      searchParams={searchParams}
+                      featuredCount={0}
+                      bundleMode={bundleMode}
+                      align="right"
+                    />
+                    {!reviewSessionCardsOutdated && isReview && !isStoryboards && (
+                      <TableGridPlaylistSwitch
+                        value={pageDisplayStyle}
+                        onChange={(style) => {
+                          onUpdateDisplayStyle(style)
+                          onUpdateDisplayStyleWithPersistence(style)
+                        }}
+                      />
+                    )}
+                    <CustomizeButton />
+                  </Toolbar>
+                )}
+                <Splitter
+                  layout="horizontal"
+                  stateKey="overview-splitter-settings"
+                  stateStorage="local"
+                  style={{ width: '100%', flex: 1, minHeight: 0, overflow: 'hidden' }}
+                  gutterSize={isPanelOpen && selectedList ? 4 : 0}
                 >
-                  <ListsTableSettings
-                    extraColumns={extraColumnsSettings}
-                    highlightedSetting={highlightedSetting}
-                    onGoTo={handleGoToCustomAttrib}
-                  />
-                </SplitterPanel>
-              ) : (
-                <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
-              )}
-            </Splitter>
+                  <SplitterPanel size={82}>
+                    <DetailsPanelSplitter
+                      layout="horizontal"
+                      stateKey="overview-splitter-details"
+                      stateStorage="local"
+                      style={{ width: '100%', height: '100%' }}
+                    >
+                      <SplitterPanel size={70}>
+                        {selectedList && isReview && pageDisplayStyle !== 'table' ? (
+                          reviewModulesLoaded && <ReviewSessionCards />
+                        ) : (
+                          <ListItemsTable
+                            extraColumns={extraColumns}
+                            isReview={isReview && !reviewSessionCardsOutdated}
+                            dndActiveId={dndActiveId} // Pass prop
+                            viewOnly={(selectedList?.accessLevel || 0) < 20}
+                          />
+                        )}
+                      </SplitterPanel>
+                      <SplitterPanel
+                        size={30}
+                        style={{
+                          zIndex: 300,
+                          minWidth: 300,
+                        }}
+                        className="details"
+                      >
+                        <ProjectListsDetailsPanels
+                          isReview={!!isReview}
+                          isStoryboards={!!isStoryboards}
+                          displayStyle={pageDisplayStyle}
+                          dispatch={dispatch}
+                        />
+                      </SplitterPanel>
+                    </DetailsPanelSplitter>
+                  </SplitterPanel>
+                  {isPanelOpen && selectedList ? (
+                    <SplitterPanel
+                      size={18}
+                      style={{
+                        zIndex: 500,
+                      }}
+                    >
+                      {pageDisplayStyle === 'table' ? (
+                        <ListsTableSettings
+                          extraColumns={extraColumnsSettings}
+                          highlightedSetting={highlightedSetting}
+                          onGoTo={handleGoToCustomAttrib}
+                        />
+                      ) : (
+                        <ReviewCardsSettings />
+                      )}
+                    </SplitterPanel>
+                  ) : (
+                    <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
+                  )}
+                </Splitter>
+              </ReviewSessionCardsProvider>
+            </ProviderFill>
           </Section>
         </SplitterPanel>
       </Splitter>

@@ -7,6 +7,7 @@ import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { SliceType } from '@shared/containers/Slicer'
 import { useSlicerContext } from '../context/SlicerContext'
 import useSlicerAttributesData from './useSlicerAttributesData'
+import { useEntityListsSlice } from './useEntityListsSlice'
 import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
 import { useProjectContext } from '@shared/context'
 
@@ -73,13 +74,18 @@ export const defaultSliceOptions: SliceTypeField[] = [
     value: 'author' as SliceType,
     icon: 'attribution',
   },
+  {
+    label: 'Lists',
+    value: 'entityList' as SliceType,
+    icon: 'list_alt',
+  },
 ]
 
 const useTableDataBySlice = ({
   sliceFields,
   entityTypes = [],
 }: TableDataBySliceProps): TableData => {
-  const { sliceType, onSliceTypeChange, useExtraSlices } = useSlicerContext()
+  const { sliceType, onSliceTypeChange, useExtraSlices, isLoadingExtraSlices } = useSlicerContext()
   const { projectName } = useProjectContext()
   const { formatAttribute } = useExtraSlices()
 
@@ -104,7 +110,7 @@ const useTableDataBySlice = ({
       sliceOptions.push({
         label: attr.data.title || attr.name,
         value: 'attrib.' + attr.name,
-        icon: getAttributeIcon(attr.name, attr.data.type, Boolean(attr.data.enum)),
+        icon: getAttributeIcon(attr.name, attr.data.type, !!attr.data.enum?.length),
       }),
     )
   }
@@ -133,7 +139,18 @@ const useTableDataBySlice = ({
     projectName,
     useExtraSlices,
   })
-  const isLoadingData = isLoadingHierarchy || isLoadingProject || isUsersLoading
+  //   Entity Lists
+  const {
+    getData: getEntityListsData,
+    isLoading: isLoadingLists,
+    isExpandable: isEntityListExpandable,
+  } = useEntityListsSlice(entityTypes)
+  const isLoadingData =
+    isLoadingHierarchy ||
+    isLoadingProject ||
+    isUsersLoading ||
+    isLoadingExtraSlices ||
+    isLoadingAttribs
 
   const builtInSlices: Record<SliceType, SliceData> = {
     hierarchy: {
@@ -173,6 +190,11 @@ const useTableDataBySlice = ({
       isLoading: false,
       isExpandable: false,
     },
+    entityList: {
+      getData: getEntityListsData,
+      isLoading: isLoadingLists,
+      isExpandable: isEntityListExpandable,
+    },
   }
 
   for (const attrib of slicerAttribs) {
@@ -188,11 +210,7 @@ const useTableDataBySlice = ({
   const [slice, setSlice] = useState<Slice>(initSlice)
   const sliceConfig = builtInSlices[sliceType]
 
-  const handleSliceTypeChange = (
-    sliceType: SliceType,
-    leavePersistentSlice: boolean,
-    returnToPersistentSlice: boolean,
-  ) => {
+  const handleSliceTypeChange = (sliceType: SliceType, pinCurrent?: boolean) => {
     // get slice data object
     const sliceConfig = builtInSlices[sliceType]
     if (!sliceConfig) {
@@ -204,7 +222,7 @@ const useTableDataBySlice = ({
       (sliceConfig.isAttribute && showAttributes) ||
       sliceFields.some((field) => field.value === sliceType)
     ) {
-      onSliceTypeChange(sliceType, leavePersistentSlice, returnToPersistentSlice)
+      onSliceTypeChange(sliceType, pinCurrent)
     }
   }
 
@@ -223,7 +241,7 @@ const useTableDataBySlice = ({
             'Slice options failed to load. This likely means the PowerFeatures addon is out of date. Please update to the latest version.',
           )
           // setSlice type to hierarchy
-          onSliceTypeChange('hierarchy', false, false)
+          onSliceTypeChange('hierarchy', false)
           throw new Error('Slice data is undefined')
         }
 
@@ -246,7 +264,7 @@ const useTableDataBySlice = ({
     }
 
     fetchData()
-  }, [sliceType, getHierarchyData, sliceFields, projectName, isLoadingData])
+  }, [sliceType, projectName, isLoadingData])
 
   // from slice data, flatten into a map of ids to rows
   const sliceMap = useMemo(() => {

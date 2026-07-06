@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { getTextColor } from '@ynput/ayon-react-components'
+import { Button, getTextColor } from '@ynput/ayon-react-components'
 
 export const AutoHeight = styled.div`
   /* use grid tick for auto height transition */
@@ -104,8 +104,9 @@ export const Comment = styled.div<CommentProps>`
   .ql-editor {
     .mention {
       border-radius: var(--border-radius-m);
-      user-select: none;
+      user-select: text;
       padding: 0 4px;
+      margin-right: -2px;
       /* remove underline */
       text-decoration: none;
 
@@ -387,6 +388,7 @@ export const Comment = styled.div<CommentProps>`
 
       .ql-editor {
         padding: 8px;
+        padding-top: 0px;
       }
     }
   }
@@ -399,6 +401,9 @@ export const Footer = styled.footer`
   border-top: 1px solid var(--md-sys-color-surface-container-hover);
   background-color: var(--background-color);
   z-index: 100;
+  gap: var(--base-gap-small);
+  container-type: inline-size;
+  container-name: comment-input-footer;
 
   /* remove save button icon */
   .comment {
@@ -422,6 +427,12 @@ export const Buttons = styled.div`
       }
     }
   }
+`
+
+export const SubmitButtons = styled(Buttons)`
+  margin-left: auto;
+  flex-shrink: 1;
+  overflow: hidden;
 `
 
 export const Markdown = styled.div`
@@ -460,4 +471,77 @@ export const Placeholder = styled.span`
   /* italic */
   font-style: italic;
   opacity: 0.4;
+`
+
+export const VersionReviewButtons = styled.div`
+  display: grid;
+  gap: var(--base-gap-medium);
+  grid-template-columns: 1fr 1fr;
+`
+
+export const VersionReviewButtonsSpacer = styled.div`
+  margin-top: var(--padding-m);
+`
+
+export const VersionReviewButton = styled(Button)`
+  background: transparent;
+  border: solid 1px currentColor;
+  flex-grow: 1;
+  height: 32px;
+
+  &.danger {
+    color: var(--md-sys-color-error);
+  }
+
+  &.tertiary {
+    color: var(--md-sys-color-tertiary);
+  }
+
+  &:hover {
+    background: rgb(from currentColor r g b / 0.25);
+  }
+
+  @container comment-input-footer (max-width: 345px) {
+    .version-review-buttons.guest & .label {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      pointer-events: none;
+    }
+  }
+
+  @container comment-input-footer (max-width: 510px) {
+    .version-review-buttons:not(.guest) & .label {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      pointer-events: none;
+    }
+  }
+`
+
+export const LastOwnVersionReview = styled.div`
+  border-radius: var(--border-radius-l);
+  margin-bottom: var(--padding-m);
+  user-select: none;
+  display: flex;
+  gap: var(--base-gap-small);
+  overflow: hidden;
+  padding: var(--padding-m) var(--padding-s);
+  align-items: center;
+  line-height: 1;
+
+  &.approve,
+  &.approve .icon,
+  &.approve .date {
+    background-color: var(--md-sys-color-tertiary);
+    color: var(--md-sys-color-on-tertiary);
+  }
+
+  &.request_changes,
+  &.request_changes .icon,
+  &.request_changes .date {
+    background-color: var(--md-sys-color-error);
+    color: var(--md-sys-color-on-error);
+  }
 `

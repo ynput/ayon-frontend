@@ -85,6 +85,13 @@ const fields = [
     },
   },
   {
+    name: 'isStagingAllowed',
+    label: 'Staging access',
+    data: {
+      type: 'boolean',
+    },
+  },
+  {
     name: 'defaultAccessGroups',
     label: 'Default access groups',
     data: {
@@ -133,6 +140,11 @@ const mergeMultipleUsers = (users = [], defaultForm = {}, initForm = {}) => {
     if (index !== 0 && initForm.isDeveloper !== user.isDeveloper)
       initForm.isDeveloper = defaultForm.isDeveloper
     else initForm.isDeveloper = user.isDeveloper
+
+    // isStagingAllowed
+    if (index !== 0 && initForm.isStagingAllowed !== user.isStagingAllowed)
+      initForm.isStagingAllowed = defaultForm.isStagingAllowed
+    else initForm.isStagingAllowed = user.isStagingAllowed
 
     // userLevel
     let userLevel = 'user'
@@ -195,6 +207,8 @@ const UserDetail = ({
   setShowRenameUser,
   selectedUsers,
   setShowSetPassword,
+  setShowDeleteUser,
+  setShowInviteUser,
   setSelectedUsers,
   isSelfSelected,
   selectedUserList,
@@ -273,7 +287,25 @@ const UserDetail = ({
   // check if any users have the userLevel of service
   const hasServiceUser = formUsers.some((user) => user.isService)
 
+  const deleteLabel = formUsers.length === 1 ? 'Delete user' : 'Delete users'
+
+  const headerMenuItems = [
+    {
+      id: 'delete',
+      label: deleteLabel,
+      icon: 'delete',
+      danger: true,
+      disabled: !selectedUsers.length || isSelfSelected || managerDisabled,
+      onClick: () => setShowDeleteUser?.(selectedUsers),
+    },
+  ]
+
   const [updateUsers, { isLoading: isUpdating }] = useUpdateUsersMutation()
+
+  const handleInvite = () => {
+    if (!singleUserEdit) return
+    setShowInviteUser?.(true)
+  }
 
   //
   // API
@@ -306,6 +338,9 @@ const UserDetail = ({
           data.isGuest = formData.isGuest
         } else if (field === 'isDeveloper') {
           data.isDeveloper = formData.isDeveloper && formData.userLevel === 'admin'
+        } else if (field === 'isStagingAllowed') {
+          // Note: for some reason backend expected isStagingEnabled and then return isStagingAllowed
+          data.isStagingEnabled = formData.isStagingAllowed
         } else if (singleUserEdit && attributes.find((a) => a.name === field)) {
           const value = formData[field]
           attrib[field] = typeof value === 'string' ? value.trim() : value
@@ -392,6 +427,7 @@ const UserDetail = ({
         users={formUsers}
         onClose={onClose}
         subTitle={headerAccessGroups.length ? headerAccessGroups.join(', ') : 'No AccessGroups'}
+        menuItems={headerMenuItems}
       />
       {hasServiceUser && singleUserEdit ? (
         <FormsStyled>
@@ -436,6 +472,9 @@ const UserDetail = ({
                 isPoolMixed={formData._mixedFields.includes('userPool')}
                 onPoolChange={(value) => setFormData({ ...formData, userPool: value })}
                 isDisabled={isSelfSelected}
+                user={singleUserEdit}
+                onInvite={handleInvite}
+                inviteDisabled={managerDisabled}
               />
             </Panel>
           )}

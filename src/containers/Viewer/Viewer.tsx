@@ -1,9 +1,10 @@
 import { compareDesc } from 'date-fns'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { useFullScreenHandle } from 'react-full-screen'
 import { Button } from '@ynput/ayon-react-components'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
+import useReviewShortcuts from '@components/VersionSelectorTool/hooks/useReviewShortcuts'
 import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
 import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '@state/viewer'
 import ViewerComponent from './ViewerComponent'
@@ -14,10 +15,14 @@ import { ViewerProvider } from '@context/ViewerContext'
 // shared
 import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import type { GetReviewablesResponse } from '@shared/api'
-import { getGroupedReviewables, ReviewablesSelector } from '@shared/components'
+import {
+  getGroupedReviewables,
+  ReviewablesSelector,
+  type ReviewablesSelectorHandle,
+} from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
 import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
-import { useLocalStorage } from '@shared/hooks'
+import { useSessionStorage, useReviewablesKeyboardNavigation } from '@shared/hooks'
 
 interface ViewerProps {
   onClose?: () => void
@@ -25,7 +30,7 @@ interface ViewerProps {
 }
 
 const ViewerBody = ({ onClose }: ViewerProps) => {
-  const [theater, setTheater] = useLocalStorage('viewer-theater-mode', false)
+  const [theater, setTheater] = useSessionStorage('viewer-theater-mode', false)
   const {
     productId,
     taskId,
@@ -333,6 +338,31 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
   const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
 
+  // Lifted here so A/D/R/E/H keep working in theatre (VersionSelectorTool unmounts).
+  const projectStatuses = useAppSelector((state) => state.project.statuses) || {}
+  const versionSelectorRef = useRef<HTMLDivElement>(null)
+  useReviewShortcuts({
+    versions: versionsAndReviewables,
+    selectedId: versionIds[0],
+    statuses: projectStatuses,
+    onChange: handleVersionChange,
+    toolsRef: versionSelectorRef,
+  })
+
+  // Keyboard nav lives here (not in ReviewablesSelector) so it keeps working
+  // in theatre mode, where the selector is unmounted.
+  const reviewablesSelectorRef = useRef<ReviewablesSelectorHandle>(null)
+  useReviewablesKeyboardNavigation({
+    reviewables: playable,
+    selected: reviewableIds,
+    onChange: handleReviewableChange,
+    onNavigate: (item) =>
+      reviewablesSelectorRef.current?.notifyNavigation({
+        fileId: item.fileId,
+        label: item.label ?? null,
+      }),
+  })
+
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 
   return (
@@ -342,6 +372,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
           <Styled.PlayerToolbar>
             <>
               <VersionSelectorTool
+                ref={versionSelectorRef}
                 versions={versionsAndReviewables}
                 selected={versionIds[0]}
                 onChange={handleVersionChange}
@@ -397,6 +428,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
         {!theater && (
           <Styled.RightToolBar style={{ zIndex: 1100 }}>
             <ReviewablesSelector
+              ref={reviewablesSelectorRef}
               reviewables={playable}
               selected={reviewableIds}
               onChange={handleReviewableChange}

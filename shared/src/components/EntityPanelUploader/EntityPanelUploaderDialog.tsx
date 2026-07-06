@@ -4,6 +4,7 @@
 import { Dialog, InputText, Button, FormRow } from '@ynput/ayon-react-components'
 import { camelCase, upperFirst } from 'lodash'
 import { FC, useState, useEffect, useRef } from 'react'
+import { parseFilename } from '../ReviewablesList'
 
 const prefix = 'review'
 const buildDefaultName = (file?: File | null) => {
@@ -12,7 +13,7 @@ const buildDefaultName = (file?: File | null) => {
   // first letter to uppercase
   // prefix with "review"
   if (!file) return ''
-  const name = file.name.replace(/\.[^/.]+$/, '') // remove file extension
+  const name = parseFilename(file.name).replace(/\.[^/.]+$/, '') // remove file extension
   const camelCaseName = camelCase(name)
   const pascalCaseName = upperFirst(camelCaseName)
   return `${prefix}${pascalCaseName}`

@@ -1,5 +1,7 @@
 import { getFilterFromId } from '@ynput/ayon-react-components'
 import { QueryCondition, QueryFilter } from '../types/operations'
+import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
+import { createRelativeValue } from './expandRelativeDates'
 const NO_DATE = 'no-date'
 
 // New type that cherry picks only the needed fields from Filter
@@ -10,6 +12,55 @@ export type FilterForQuery = {
   singleSelect?: boolean
   inverted?: boolean
   operator?: string
+}
+
+/**
+ * Converts a datetime Filter to a nested QueryFilter with gte/lte conditions.
+ * Returns null if no date conditions could be created.
+ * Shared with other filter adapters (e.g. subtasksFilterAdapter).
+ */
+export const convertDateFilterToQueryFilter = (
+  key: string,
+  filter: { values?: FilterForQuery['values']; inverted?: boolean },
+): QueryFilter | null => {
+  if (!filter.values || filter.values.length === 0) return null
+
+  const dateConditions: QueryCondition[] = filter.values.flatMap((filterValue) => {
+    const conditions: QueryCondition[] = []
+    const dateValues = filterValue.values
+
+    const startISO = dateValues?.[0]?.id
+    const endISO = dateValues?.[1]?.id
+    const relativePattern =
+      startISO && endISO && startISO !== NO_DATE && endISO !== NO_DATE
+        ? detectRelativeDatePattern(startISO, endISO)
+        : null
+
+    if (dateValues?.[0] !== undefined && dateValues?.[0].id !== NO_DATE) {
+      conditions.push({
+        key,
+        operator: filter.inverted ? 'lte' : 'gte',
+        value: relativePattern ? createRelativeValue(relativePattern.id, 0) : dateValues[0].id,
+      })
+    }
+
+    if (dateValues?.[1] !== undefined && dateValues?.[1].id !== NO_DATE) {
+      conditions.push({
+        key,
+        operator: filter.inverted ? 'gte' : 'lte',
+        value: relativePattern ? createRelativeValue(relativePattern.id, 1) : dateValues[1].id,
+      })
+    }
+
+    return conditions
+  })
+
+  if (dateConditions.length === 0) return null
+
+  return {
+    conditions: dateConditions,
+    operator: filter.inverted ? 'or' : 'and',
+  } as QueryFilter
 }
 
 export const clientFilterToQueryFilter = (filters: FilterForQuery[]): QueryFilter => {
@@ -104,45 +155,8 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
       operator = filter.operator === 'AND' ? 'includesall' : 'includesany'
     }
   } else if (isDateField) {
-    // For date filters, we need to return a complete query filter with conditions
-    if (filter.values && filter.values.length > 0) {
-      // Create a flat list of all date conditions from all filter values
-      const dateConditions: QueryCondition[] = filter.values.flatMap(
-        (filterValue: FilterForQuery) => {
-          const conditions: QueryCondition[] = []
-          const dateValues = filterValue.values
-
-          // First value is greater than (start date)
-          if (dateValues?.[0] !== undefined && dateValues?.[0].id !== NO_DATE) {
-            conditions.push({
-              key,
-              operator: filter.inverted ? 'lte' : 'gte',
-              value: dateValues[0].id,
-            })
-          }
-
-          // Second value is less than (end date)
-          if (dateValues?.[1] !== undefined && dateValues?.[1].id !== NO_DATE) {
-            conditions.push({
-              key,
-              operator: filter.inverted ? 'gte' : 'lte',
-              value: dateValues[1].id,
-            })
-          }
-
-          return conditions
-        },
-      )
-
-      // If we have date conditions, return them as a nested filter instead of continuing
-      if (dateConditions.length > 0) {
-        return {
-          conditions: dateConditions,
-          operator: filter.inverted ? 'or' : 'and',
-        } as QueryFilter
-      }
-    }
-
+    const dateQueryFilter = convertDateFilterToQueryFilter(key, filter)
+    if (dateQueryFilter) return dateQueryFilter
     // If no date conditions were created, fall back to a basic equality check
     operator = filter.inverted ? 'ne' : 'eq'
   } else if (isBooleanField) {

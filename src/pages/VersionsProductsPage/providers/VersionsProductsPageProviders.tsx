@@ -41,7 +41,7 @@ const VersionsProductsPageProviders: FC<VersionsProductsPageProvidersProps> = ({
               <SettingsPanelProvider>
                 <VPColumnSettingsProvider>
                   <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
-                    <EntityListsProvider entityTypes={['version']} projectName={projectName}>
+                    <EntityListsProvider projectName={projectName}>
                       <VPProjectTableProvider projectName={projectName} modules={modules}>
                         <DetailsPanelEntityProvider>
                           <SelectionCellsProvider>

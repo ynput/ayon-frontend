@@ -66,6 +66,18 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
       inputRef.current?.select()
     }, [!!form])
 
+    // If this dialog is creating a review-session list, use review-friendly labels
+    const isReview = !!form && form.entityListType === 'review-session'
+    const effectiveDialogTitle = isReview ? 'Create Review Session' : dialogTitle
+    const effectiveLabels = isReview
+      ? {
+          ...labels,
+          listLabel: 'Session label',
+          entityType: 'Version',
+          createButton: 'Create session',
+        }
+      : labels
+
     if (!form) return null
     const handleChange = <K extends keyof NewListForm>(value: NewListForm[K], field: K) => {
       onChange({
@@ -80,17 +92,17 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
         ref={ref}
         size="sm"
         enableBackdropClose={false}
-        header={dialogTitle}
+        header={effectiveDialogTitle}
         footer={
           <Styled.Footer>
             <Button
-              label={labels.cancelButton}
+              label={effectiveLabels.cancelButton}
               variant="text"
               icon="close"
               onClick={props.onClose}
             />
             <SaveButton
-              label={labels.createButton}
+              label={effectiveLabels.createButton}
               icon="add"
               onClick={() => onSubmit?.()}
               disabled={!form.label || submitLoading}
@@ -115,7 +127,7 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
         >
           {!hidden?.includes('label') && (
             <Styled.Row>
-              <label htmlFor="label">{labels.listLabel}</label>
+              <label htmlFor="label">{effectiveLabels.listLabel}</label>
               <InputText
                 ref={inputRef}
                 type="text"
@@ -130,7 +142,7 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
           )}
           {!hidden?.includes('entityType') && (
             <Styled.Row>
-              <label htmlFor="entityType">{labels.entityType || 'Entity type'} </label>
+              <label htmlFor="entityType">{effectiveLabels.entityType || 'Entity type'} </label>
               <Dropdown
                 value={[form.entityType]}
                 onChange={(e) => handleChange(e[0] as NewListForm['entityType'], 'entityType')}

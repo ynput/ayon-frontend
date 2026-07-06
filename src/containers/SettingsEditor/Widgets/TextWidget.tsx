@@ -213,10 +213,14 @@ export const TextWidget = (props: $Any) => {
     }
   }
 
+  const isMultilineWidget = props.schema.widget === 'textarea'
+
   // Disable propagation of enter key
   // to prevent form submission. Just commit the change instead.
   opts.onKeyDown = (e: $Any) => {
-    if (Input === InputTextarea) return
+    // Multiline settings fields need Enter to insert a newline. This also covers
+    // syntax-highlighted textarea widgets, which do not render InputTextarea.
+    if (isMultilineWidget) return
     if (e.keyCode === 13) {
       e.preventDefault()
       e.stopPropagation()

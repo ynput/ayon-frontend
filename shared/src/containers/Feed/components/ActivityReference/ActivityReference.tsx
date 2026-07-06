@@ -13,6 +13,8 @@ interface ActivityReferenceProps extends Omit<React.HTMLAttributes<HTMLElement>,
   onMouseEnter?: (e: React.MouseEvent<HTMLElement>, pos: { left: number; top: number }) => void
   categoryPrimary?: string
   categorySecondary?: string
+  'data-mention-value'?: string
+  'data-mention-label'?: string
 }
 
 const ActivityReference: React.FC<ActivityReferenceProps> = ({
@@ -27,7 +29,7 @@ const ActivityReference: React.FC<ActivityReferenceProps> = ({
   children,
   ...props
 }) => {
-  const icon = type === 'user' ? 'alternate_email' : getEntityTypeIcon(type, 'link')
+  const icon = type === 'user' ? 'alternate_email' : type === 'team' ? 'group' : getEntityTypeIcon(type, 'link')
   const ref = useRef<HTMLDivElement>(null)
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLElement>) => {

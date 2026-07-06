@@ -30,6 +30,9 @@ import { useDetailsPanelContext } from '@shared/context'
 import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
 import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
 import ActivityCommentMenu from './ActivityCommentMenu'
+import { checkForEmptyLine } from '../CommentInput/InputMarkdownConvert'
+import { useCategoryData } from '../../hooks/useCategoryData'
+import { getActivityUserName } from '../../helpers/getActivityUserName'
 
 type Props = {
   activity: any
@@ -69,33 +72,20 @@ const ActivityComment = ({
   isSlideOut,
   statuses = [],
 }: Props) => {
-  const { userName, createReaction, deleteReaction, editingId, setEditingId, categories, isGuest } =
-    useFeedContext()
+  const {
+    userName,
+    createReaction,
+    deleteReaction,
+    editingId,
+    setEditingId,
+    isGuest,
+    userTeamNames,
+  } = useFeedContext()
 
   const moreRef = useRef<HTMLButtonElement>(null)
   const { toggleMenuOpen, menuOpen } = useMenuContext()
 
-  const { categoryData, categoryNotFound } = useMemo(() => {
-    let categoryNotFound = false
-    if (activity.activityData?.category) {
-      const foundCategory = categories.find((cat) => cat.name === activity.activityData?.category)
-      if (!foundCategory) {
-        categoryNotFound = true
-      }
-      return {
-        categoryData: foundCategory || {
-          name: activity.activityData?.category,
-          color: '#c5c5c5',
-        },
-        categoryNotFound,
-      }
-    } else {
-      return {
-        categoryData: null,
-        categoryNotFound,
-      }
-    }
-  }, [activity?.activityData?.category, categories])
+  const { categoryData, categoryNotFound } = useCategoryData(activity?.activityData?.category)
   // Compute blended background color for category
   const blendedCategoryColor = useBlendedCategoryColor(categoryData?.color)
 
@@ -113,7 +103,7 @@ const ActivityComment = ({
     origin,
   } = activity
   if (!authorName) authorName = author?.name || ''
-  if (!authorFullName) authorFullName = author?.fullName || authorName
+  authorFullName = getActivityUserName({ name: authorName, label: authorFullName })
 
   const menuId = `activity-comment-menu-${activityId}-${isSlideOut ? 'slideout' : 'normal'}`
   const isMenuOpen = menuOpen === menuId
@@ -290,6 +280,7 @@ const ActivityComment = ({
                       aTag(props, {
                         entityId,
                         userName,
+                        userTeamNames,
                         projectName,
                         projectInfo,
                         onReferenceClick,
@@ -321,6 +312,14 @@ const ActivityComment = ({
                           {props.children}
                         </ActivityStatus>
                       )
+                    },
+                    p: (props) => {
+                      // check for empty paragraphs
+                      const text = props.children
+                      if (typeof text === 'string' && checkForEmptyLine(text)) {
+                        return <p className="empty-line"></p>
+                      }
+                      return <p>{props.children}</p>
                     },
                   }}
                 >
