@@ -367,6 +367,15 @@ export default function useBuildProjectDataTable({
 
     rootRows.push(...createRootTaskRows())
 
+    // if we are loading more tasks, add loading rows at the root level
+    // this happens when in hierarchy mode but with a slicer selection that causes paginated tasks
+    if (showHierarchy && isLoadingMore) {
+      const count = TASKS_INFINITE_QUERY_COUNT
+      if (count > 0) {
+        rootRows.push(...generateLoadingRows(count, { type: 'task' }))
+      }
+    }
+
     // Add any extra rows to the root rows
     for (const row of rows || []) {
       rootRows.push(row)

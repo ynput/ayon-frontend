@@ -34,7 +34,7 @@ import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import NewEntityForm, { InputLabel, InputsContainer } from '@components/NewEntity/NewEntityForm.tsx'
 import { toast } from 'react-toastify'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 
 const StyledDialog = styled(Dialog)`
   .body {
@@ -110,11 +110,8 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
 
   const [createMore, setCreateMore] = useState(false)
   const { selectedCells } = useSelectionCellsContext()
-  const {
-    rowSelectionData: slicerSelectionData,
-    persistentRowSelectionData,
-    sliceType,
-  } = useSlicerContext()
+  const { rowSelection, pinnedSlice, sliceType } = useSlicerContext()
+  const { getFolderById } = useProjectFoldersContext()
   const { getEntityById } = useProjectTableContext()
 
   const [allSelectedFolderIds, _allSelectedEntitiesLabels, parentTargetOptions] =
@@ -157,11 +154,15 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
           .filter(Boolean)
       } else {
         // no table selection, use slicer selection
-        const activeSlicerData =
-          sliceType === 'hierarchy' ? slicerSelectionData : persistentRowSelectionData
-        ids = Object.keys(activeSlicerData)
-        labels = Object.entries(activeSlicerData)
-          .map(([, data]) => data.label || data.name)
+        const activeRowSelection =
+          sliceType === 'hierarchy' ? rowSelection : pinnedSlice?.rowSelection || null
+        if (!activeRowSelection) return [[], [], []]
+        ids = Object.keys(activeRowSelection).filter((id) => activeRowSelection[id])
+        labels = ids
+          .map((id) => {
+            const folder = getFolderById(id)
+            return folder?.label || folder?.name || null
+          })
           .filter(Boolean) as string[]
       }
 
@@ -171,7 +172,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
       })
 
       return [ids, labels, options]
-    }, [selectedCells, slicerSelectionData, persistentRowSelectionData, sliceType, getEntityById])
+    }, [selectedCells, rowSelection, pinnedSlice, sliceType, getEntityById, getFolderById])
 
   const [manuallySelectedParents, setManuallySelectedParents] = useState<string[] | null>(null)
 

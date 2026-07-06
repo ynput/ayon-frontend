@@ -2,9 +2,25 @@ import { Dropdown } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const StyledDropdown = styled(Dropdown)`
+  --button-bg: unset;
+  --button-bg-hover: var(--md-sys-color-surface-container-highest-hover);
+  --icon-color: var(--md-sys-color-on-surface);
+
+  &.developer {
+    --button-bg: var(--color-hl-developer-container);
+    --button-bg-hover: var(--color-hl-developer-container-hover);
+    --icon-color: var(--color-hl-developer);
+  }
+
+  &.staging {
+    --button-bg: var(--color-hl-staging-container);
+    --button-bg-hover: var(--color-hl-staging-container-hover);
+    --icon-color: var(--color-hl-staging);
+  }
+
   height: unset;
   button {
-    background-color: unset;
+    background-color: var(--button-bg);
     max-height: 28px;
     max-width: 28px;
     min-height: 28px;
@@ -21,24 +37,11 @@ export const StyledDropdown = styled(Dropdown)`
 
     .icon {
       vertical-align: middle;
+      color: var(--icon-color);
     }
 
     &:hover {
-      background-color: var(--md-sys-color-surface-container-highest-hover);
-    }
-  }
-
-  /* developer mode */
-  &.dev {
-    button {
-      background-color: var(--color-hl-developer-container);
-      .icon {
-        color: var(--color-hl-developer);
-      }
-
-      &:hover {
-        background-color: var(--color-hl-developer-container-hover);
-      }
+      background-color: var(--button-bg-hover);
     }
   }
 

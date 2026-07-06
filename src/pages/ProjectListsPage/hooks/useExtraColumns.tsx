@@ -66,7 +66,8 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
             id: valueColumn.value,
             accessorKey: valueColumn.value,
             header: valueColumn.label,
-            enableSorting: true,
+            // reference value of a related entity — no valid backend sort key, would 400 the query
+            enableSorting: false,
             enableResizing: true,
             enablePinning: true,
             enableHiding: true,
@@ -98,8 +99,8 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
           column: {
             id: typeColumn.value,
             accessorKey: typeColumn.value,
-            header: typeColumn.label,
             enableSorting: true,
+            header: typeColumn.label,
             enableResizing: true,
             enablePinning: true,
             enableHiding: true,

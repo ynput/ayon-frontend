@@ -32,32 +32,28 @@ const SuccessState = styled(EmptyPlaceholder)`
   }
 `
 
-export default function SubmitStep({ data, importContext, onNext }: Props) {
+export default function SubmitStep({ data, importContext, onNext  }: Props) {
   const [importProgress, setImportProgress] = useState(0)
+  const [importDescription, setImportDescription] = useState<string | null>(null)
   const [importResult, setImportResult] = useState<ImportDataProcessSummary | null>(null)
+  type PhaseType = 'upload' | 'processing' | 'unsupported' | 'queued' | 'waiting' | 'importing' | 'validating';
+  const [importPhase, setImportPhase] = useState<PhaseType>("validating")
 
   usePubSub(
     "import.data",
     (_: any, message: ImportDataMessage) => {
-      if ((message.summary as ImportDataStartSummary).total) return
 
-      const processedCount = Object.values(message.summary as ImportDataProcessSummary)
-        .filter((value) => typeof value === "number")
-        .reduce((a, i) => a + i, 0)
+      setImportProgress(message.progress)
+      setImportDescription(message.description || null)
+      setImportPhase(((message.summary as ImportDataProcessSummary)?.phase as PhaseType) ?? 'validating')
 
-      setImportProgress(Math.round(processedCount / data.rows.length * 100))
+      if(message.status === "finished" || message.status === "failed") {
+        setImportResult(message.summary as ImportDataProcessSummary)
+      }
+
     },
     null,
     { disableDebounce: true },
-  )
-
-  usePubSub(
-    "import.data.finish",
-    (_: any, message: ImportDataMessage) => {
-      setImportResult(message.summary as ImportDataProcessSummary)
-    },
-    null,
-    { },
   )
 
   return (
@@ -68,7 +64,7 @@ export default function SubmitStep({ data, importContext, onNext }: Props) {
             <SuccessState
               icon="check"
               color="var(--md-sys-color-primary)"
-              message="Import successful"
+              message="Import finished"
             >
               <Stats
                 heading={data.fileName}
@@ -108,11 +104,14 @@ export default function SubmitStep({ data, importContext, onNext }: Props) {
         }
         {
           !importResult && (
+            <>
             <ProgressBar
-              type="importing"
+              type={importPhase}
               name={data.fileName}
               progress={importProgress}
             />
+            { importDescription && <p>{importDescription}</p>}
+            </>
           )
         }
       </StepContainer>

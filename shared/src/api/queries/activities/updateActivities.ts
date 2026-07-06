@@ -1,5 +1,4 @@
 import { getActivitiesGQLApi } from './getActivities'
-import { toast } from 'react-toastify'
 import { filterActivityTypes, filterKey } from './util/activitiesHelpers'
 import { patchTableLatestComments } from './patchTableLatestComments'
 
@@ -82,9 +81,6 @@ const patchActivities = async (
   try {
     await queryFulfilled
   } catch (error: any) {
-    const message = `Error: ${error?.error?.data?.detail || `Failed to ${method} activity`}`
-    console.error(message, error)
-    toast.error(message)
     for (const patchResult of [...patches, ...tablePatches]) {
       patchResult?.undo()
     }

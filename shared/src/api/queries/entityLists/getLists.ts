@@ -294,7 +294,10 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         initialPageParam: { cursor: '' },
         getNextPageParam: (lastPage) => {
           const { pageInfo } = lastPage
-          if (!pageInfo.hasNextPage || !pageInfo.endCursor) return undefined
+          // ascending paginates via hasNextPage, descending (last/before) via
+          // hasPreviousPage — the backend only sets one depending on direction
+          const hasMore = pageInfo.hasNextPage || pageInfo.hasPreviousPage
+          if (!hasMore || !pageInfo.endCursor) return undefined
 
           return {
             cursor: pageInfo.endCursor,

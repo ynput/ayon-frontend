@@ -1,6 +1,6 @@
 query GetFoldersLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
-    folders(ids: $entityIds, last: 100) {
+    folders(ids: $entityIds, last: 5000) {
       edges {
         node {
           id
@@ -17,7 +17,7 @@ query GetFoldersLinks($projectName: String!, $entityIds: [String!]) {
 
 query GetProductsLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
-    products(ids: $entityIds, last: 1000) {
+    products(ids: $entityIds, last: 5000) {
       edges {
         node {
           id
@@ -34,7 +34,7 @@ query GetProductsLinks($projectName: String!, $entityIds: [String!]) {
 
 query GetTasksLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
-    tasks(ids: $entityIds, last: 1000) {
+    tasks(ids: $entityIds, last: 5000) {
       edges {
         node {
           id
@@ -51,7 +51,7 @@ query GetTasksLinks($projectName: String!, $entityIds: [String!]) {
 
 query GetVersionsLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
-    versions(ids: $entityIds, last: 1000) {
+    versions(ids: $entityIds, last: 5000) {
       edges {
         node {
           id
@@ -68,7 +68,7 @@ query GetVersionsLinks($projectName: String!, $entityIds: [String!]) {
 
 query GetWorkfilesLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
-    workfiles(ids: $entityIds, last: 1000) {
+    workfiles(ids: $entityIds, last: 5000) {
       edges {
         node {
           id
@@ -85,7 +85,7 @@ query GetWorkfilesLinks($projectName: String!, $entityIds: [String!]) {
 
 query GetRepresentationsLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
-    representations(ids: $entityIds, last: 1000) {
+    representations(ids: $entityIds, last: 5000) {
       edges {
         node {
           id

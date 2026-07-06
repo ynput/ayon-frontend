@@ -4,14 +4,14 @@ import { RowSelectionState } from '@tanstack/react-table'
 interface UseSelectedFoldersProps {
   rowSelection: RowSelectionState
   sliceType: string
-  persistentRowSelectionData: Record<string, { id: string }> | null
+  pinnedRowSelection?: RowSelectionState | null
   entityListFolderIds?: string[]
 }
 
 export const useSelectedFolders = ({
   rowSelection,
   sliceType,
-  persistentRowSelectionData,
+  pinnedRowSelection,
   entityListFolderIds,
 }: UseSelectedFoldersProps): string[] => {
   return useMemo(() => {
@@ -24,19 +24,13 @@ export const useSelectedFolders = ({
 
     if (sliceType === 'hierarchy') {
       selection = rowSelection
-    } else if (persistentRowSelectionData) {
-      selection = Object.values(persistentRowSelectionData).reduce(
-        (acc: RowSelectionState, item) => {
-          acc[item.id] = !!item
-          return acc
-        },
-        {},
-      )
+    } else if (pinnedRowSelection) {
+      selection = pinnedRowSelection
     }
 
     // Process the selection inside useMemo
     return Object.entries(selection)
       .filter(([, value]) => value)
       .map(([id]) => id)
-  }, [rowSelection, persistentRowSelectionData, sliceType, entityListFolderIds])
+  }, [rowSelection, pinnedRowSelection, sliceType, entityListFolderIds])
 }

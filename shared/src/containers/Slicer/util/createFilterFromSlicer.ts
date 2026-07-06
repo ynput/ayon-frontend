@@ -1,22 +1,17 @@
-import { AttributeModel } from '@shared/api'
+import { AttributeModel, FolderListItem } from '@shared/api'
 import { ProjectTableAttribute } from '../../ProjectTreeTable/hooks/useAttributesList'
-import { SelectionData, SliceFilter, SliceType } from '../types'
+import { SliceFilter, SliceType } from '../types'
+import { RowSelectionState } from '@tanstack/react-table'
 
 export type CreateFilterFromSlicer = ({
-  selection,
-  type,
+  slice,
   attribFields,
 }: {
-  selection: SelectionData
-  type: SliceType
+  slice: { sliceType: SliceType; rowSelection: RowSelectionState } | null
   attribFields: ProjectTableAttribute[]
 }) => SliceFilter | null
 
-export const createFilterFromSlicer: CreateFilterFromSlicer = ({
-  selection,
-  type,
-  attribFields,
-}) => {
+export const createFilterFromSlicer: CreateFilterFromSlicer = ({ slice, attribFields }) => {
   const sliceFilterTypes = {
     assignees: 'list_of_strings',
     status: 'string',
@@ -33,18 +28,19 @@ export const createFilterFromSlicer: CreateFilterFromSlicer = ({
   }
 
   const filter: SliceFilter | null = (() => {
-    const sliceType = sliceFilterTypes[type as keyof typeof sliceFilterTypes]
-    if (!sliceType) return null
+    if (!slice) return null
+    const sliceType = sliceFilterTypes[slice?.sliceType as keyof typeof sliceFilterTypes]
 
-    const selectedItems = Object.values(selection)
-    const values = selectedItems.map((item) => ({
-      id: item.id,
-      label: item.label || item.name || '',
-    }))
+    const values = Object.keys(slice.rowSelection)
+      .filter((sliceId) => !!sliceId)
+      .map((sliceId) => ({
+        id: sliceId,
+        label: sliceId,
+      }))
 
     return {
-      id: type,
-      label: type,
+      id: slice?.sliceType,
+      label: slice?.sliceType,
       type: sliceType,
       inverted: false,
       operator: 'OR',

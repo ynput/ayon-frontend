@@ -7,6 +7,7 @@ import { clsx } from 'clsx'
 import { UserImage } from '@shared/components'
 import { CategoryTag } from '../ActivityCategorySelect'
 import { useCategoryData } from '../../hooks/useCategoryData'
+import { getActivityUserName } from '../../helpers/getActivityUserName'
 
 interface ActivityVersionReviewProps {
   entityType?: string
@@ -52,16 +53,13 @@ export const getIconForFeedback = (feedback: VersionReviewFeedback) => {
   }
 }
 
-const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({
-  isGuest,
-  activity = {},
-}) => {
-  const { authorName, authorFullName, createdAt, activityData } = activity
+const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ isGuest, activity }) => {
+  const { authorName, authorFullName, createdAt, activityData } = activity || {}
 
   const label = useMemo(
     () =>
       [
-        authorFullName || authorName,
+        getActivityUserName({ name: authorName, label: authorFullName }),
         getVerbForFeedback(activityData?.feedback ?? VersionReviewFeedback.APPROVE),
       ].join(' '),
     [authorFullName, authorName, activityData?.feedback, createdAt],

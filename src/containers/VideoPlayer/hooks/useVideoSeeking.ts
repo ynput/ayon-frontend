@@ -17,7 +17,7 @@ const useVideoSeeking = (
     const videoElement = videoRef.current
     if (!videoElement) return false
     if (newTime === videoElement.currentTime) return false
-    if (videoElement.readyState >= 1) {
+    if (videoElement.readyState >= 2) {
       // HAVE_METADATA
       videoElement.currentTime = newTime
     } else {

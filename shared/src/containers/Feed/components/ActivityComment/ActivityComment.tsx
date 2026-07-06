@@ -32,6 +32,7 @@ import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
 import ActivityCommentMenu from './ActivityCommentMenu'
 import { checkForEmptyLine } from '../CommentInput/InputMarkdownConvert'
 import { useCategoryData } from '../../hooks/useCategoryData'
+import { getActivityUserName } from '../../helpers/getActivityUserName'
 
 type Props = {
   activity: any
@@ -71,7 +72,15 @@ const ActivityComment = ({
   isSlideOut,
   statuses = [],
 }: Props) => {
-  const {userName, createReaction, deleteReaction, editingId, setEditingId, isGuest, userTeamNames,} = useFeedContext()
+  const {
+    userName,
+    createReaction,
+    deleteReaction,
+    editingId,
+    setEditingId,
+    isGuest,
+    userTeamNames,
+  } = useFeedContext()
 
   const moreRef = useRef<HTMLButtonElement>(null)
   const { toggleMenuOpen, menuOpen } = useMenuContext()
@@ -94,7 +103,7 @@ const ActivityComment = ({
     origin,
   } = activity
   if (!authorName) authorName = author?.name || ''
-  if (!authorFullName) authorFullName = author?.fullName || authorName
+  authorFullName = getActivityUserName({ name: authorName, label: authorFullName })
 
   const menuId = `activity-comment-menu-${activityId}-${isSlideOut ? 'slideout' : 'normal'}`
   const isMenuOpen = menuOpen === menuId

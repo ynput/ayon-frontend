@@ -340,7 +340,7 @@ const useListContextMenu = () => {
               {
                 label: 'Create subfolder',
                 icon: FOLDER_ICON_ADD,
-                command: () => onOpenFolderList({}),
+                command: () => onOpenFolderList({ parentId: selectedFolderIds[0] }),
                 shortcut: 'F',
                 hidden: !allSelectedRowsAreFolders || selectedFolderIds.length !== 1,
               },

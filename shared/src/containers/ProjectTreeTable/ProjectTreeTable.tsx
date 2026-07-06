@@ -49,7 +49,6 @@ import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
-import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
 import useCellContextMenu, {
   HeaderLabel,
   ContextMenuItemConstructors,
@@ -168,6 +167,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   fieldStats?: FieldStats[] // primary-entity stats (tasks/versions) feeding the footer
   groupFieldStats?: FieldStats[] // group-entity stats (folders/products) for the 'all' row scope
   fieldStatsLoading?: boolean // footer stats still loading -> show skeletons
+  fieldStatsError?: any // error fetching footer stats
   mainCountLabels?: MainCountLabels // labels for the main cell dual count (defaults folders/tasks)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
@@ -202,6 +202,7 @@ export const ProjectTreeTable = ({
   fieldStats,
   groupFieldStats,
   fieldStatsLoading,
+  fieldStatsError,
   mainCountLabels,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
@@ -254,6 +255,13 @@ export const ProjectTreeTable = ({
     loadingLinksEntityIds,
   } = useProjectTableContext()
   const isGrouping = !!groupBy || !!overrideGroupBy
+
+  // Parent (folder/product) summary scope only applies when those entities are
+  // actually on screen: hierarchy view, or grouping by a parent entity.
+  const groupField = overrideGroupBy?.id ?? groupBy?.id
+  const groupFieldId = Array.isArray(groupField) ? groupField[0] : groupField
+  const parentScopeApplicable =
+    showHierarchy || ['hierarchy', 'folder', 'product'].includes(groupFieldId ?? '')
 
   const { writableFields } = useProjectDataContext()
 
@@ -640,7 +648,9 @@ export const ProjectTreeTable = ({
 
       if (onScrollBottom) {
         const containerRefElement = e.currentTarget
-        if (containerRefElement && !showHierarchy && !isFlatFolderView && !groupBy) {
+        // When not grouping (or when hierarchy+slicer relies on tasksList), we trigger standard fetchNextPage
+        // The table itself handles showing tasks.
+        if (containerRefElement && !groupBy && (!showHierarchy || !isFlatFolderView)) {
           const { scrollHeight, scrollTop, clientHeight } = containerRefElement
           //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
           if (scrollHeight - scrollTop - clientHeight < 500 && !isLoading) {
@@ -774,6 +784,7 @@ export const ProjectTreeTable = ({
                 virtualPaddingLeft={virtualPaddingLeft}
                 virtualPaddingRight={virtualPaddingRight}
                 isLoading={summariesLoading}
+                error={fieldStatsError}
                 // Free-user upsell hidden for now; keep for later:
                 // onClick={showSummaryPowerFeature ? () => setPowerpackDialog('columnSummaries') : undefined}
                 renderCellContent={(columnId) => (
@@ -790,6 +801,7 @@ export const ProjectTreeTable = ({
                     onScopeChange={(scope) => updateColumnSummaryScope(columnId, scope)}
                     mainCountLabels={mainCountLabels}
                     fieldOptions={options}
+                    parentScopeApplicable={parentScopeApplicable}
                   />
                 )}
                 // Power feature cell for community users (hidden for now), shows a bolt hint in the name column:
@@ -1106,7 +1118,19 @@ const TableHeadCell = ({
   const menuId = `column-header-menu-${column.id}`
   const { menuOpen } = useMenuContext()
   const isOpen = menuOpen === menuId
-  const { columnPinning } = useColumnSettingsContext()
+  const { columnPinning, sorting: sortingState, updateSorting } = useColumnSettingsContext()
+
+  // toggle sort via the same direct updateSorting call the Customize panel uses;
+  // routing through TanStack's onSortingChange did not apply under manualSorting.
+  const handleToggleSort = () => {
+    const current = sortingState?.find((s) => s.id === column.id)
+    const next = !current
+      ? [{ id: column.id, desc: false }]
+      : !current.desc
+      ? [{ id: column.id, desc: true }]
+      : []
+    updateSorting(next)
+  }
 
   // Check if this column is pinned
   const isThisColumnPinned = columnPinning.left?.includes(column.id) || false
@@ -1197,7 +1221,7 @@ const TableHeadCell = ({
                 style={{
                   transform: sorting === 'asc' ? 'rotate(180deg) scaleX(-1)' : 'none',
                 }}
-                onClick={column.getToggleSortingHandler()}
+                onClick={handleToggleSort}
                 selected={!!column.getIsSorted()}
               />
             )}
@@ -1298,8 +1322,6 @@ const TableBody = ({
 
   const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
 
-  const { handlePreFetchTasks } = usePrefetchFolderTasks()
-
   const { rows } = table.getRowModel()
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
@@ -1355,16 +1377,13 @@ const TableBody = ({
         display: 'grid',
       }}
       onContextMenu={handleTableBodyContextMenu}
-      onMouseOver={(e) => {
-        handlePreFetchTasks(e)
-      }}
     >
       <Styled.ColumnDividers aria-hidden>
         {columnDividerLefts.map((left, i) => (
           <div key={i} style={{ left }} />
         ))}
       </Styled.ColumnDividers>
-      {virtualRows.map((virtualRow, i) => {
+      {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index] as Row<TableRow>
         // Add a check for row existence to prevent potential errors if data is out of sync
         if (!row) {
@@ -1373,7 +1392,7 @@ const TableBody = ({
         }
         return (
           <TableBodyRow
-            key={row.id + i.toString()} // dnd-kit needs this key to be stable and match the id in useSortable
+            key={row.id} // stable per-row identity; dnd-kit matches on row.id via SortableContext, not this key
             row={row}
             showHierarchy={showHierarchy}
             visibleCells={row.getVisibleCells()}
@@ -1516,7 +1535,7 @@ const TableBodyRow = ({
         //fake empty column to the left for virtualization scroll padding
         <td style={{ display: 'flex', width: paddingLeft }} />
       ) : null}
-      {virtualColumns.map((vc, i) => {
+      {virtualColumns.map((vc) => {
         const cell = visibleCells[vc.index]
         if (!cell) return null // Should not happen in normal circumstances
 
@@ -1525,7 +1544,7 @@ const TableBodyRow = ({
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
           return (
             <Styled.TD
-              key={cell.id + i.toString()}
+              key={cell.id}
               style={{
                 ...getCommonPinningStyles(cell.column),
                 width: getColumnWidth(cell.column.id),
@@ -1560,7 +1579,7 @@ const TableBodyRow = ({
             cell={cell}
             cellId={cellId}
             rowId={row.id}
-            key={cell.id + i.toString()}
+            key={cell.id}
             showHierarchy={showHierarchy}
             sortableRows={sortableRows}
             rowHeight={rowHeight}

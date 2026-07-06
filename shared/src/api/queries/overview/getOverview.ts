@@ -11,7 +11,12 @@ import {
 import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 import type { FieldStats } from '../columnStats'
-import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
+import {
+  normalizeFieldStats,
+  mergeFieldStats,
+  hasNewTargetFields,
+  transformStatsError,
+} from '../columnStats'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,
@@ -84,6 +89,8 @@ export type GetTasksListArgs = {
   taskIds?: string[]
   desc?: boolean
   sortBy?: string
+  showComments?: boolean
+  includeFolderChildren?: boolean
 }
 
 export type GetGroupedTasksListResult = {
@@ -141,6 +148,7 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     GetFolderColumnStats: {
       transformResponse: (res: GetFolderColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.folders?.fieldStats ?? []),
+      transformErrorResponse: (error: any) => transformStatsError(error, 'folder'),
       serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
@@ -149,6 +157,7 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     GetTaskColumnStats: {
       transformResponse: (res: GetTaskColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.tasks?.fieldStats ?? []),
+      transformErrorResponse: (error: any) => transformStatsError(error, 'task'),
       serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
@@ -399,6 +408,7 @@ const injectedApi = enhancedApi.injectEndpoints({
             sortBy,
             desc,
             showComments,
+            includeFolderChildren,
           } = queryArg
           const { cursor } = pageParam
 
@@ -411,6 +421,7 @@ const injectedApi = enhancedApi.injectEndpoints({
             folderIds,
             taskIds,
             showComments: !!showComments,
+            includeFolderChildren: includeFolderChildren !== false, // default to true
           }
 
           // Add cursor-based pagination

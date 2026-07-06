@@ -6,6 +6,7 @@ import { SettingHighlightedId } from '@shared/context'
 import { confirmDelete } from '@shared/util'
 import { useListsModuleContext } from '@pages/ProjectListsPage/context/ListsModulesContext'
 import { useListsContext } from '@pages/ProjectListsPage/context'
+import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 
 export interface ListsTableSettingsProps {
   onGoTo: (name: string) => void
@@ -23,6 +24,10 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
     useListsAttributesContext()
   const { ListsAttributesSettings, requiredVersion } = useListsModuleContext()
 
+  // mirror the table's excluded columns so the panel doesn't offer dead toggles
+  // (e.g. subType is excluded for version/product lists where productType is the real column)
+  const [hiddenColumns] = getColumnConfigFromType(selectedList?.entityType)
+
   const onSuccess = (message: string) => {
     toast.success(message)
   }
@@ -33,6 +38,7 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
   return (
     <ProjectTableSettings
       extraColumns={extraColumns}
+      hiddenColumns={hiddenColumns}
       highlighted={highlightedSetting}
       hiddenSettings={['group-by']}
       hideSortBy={isReview}

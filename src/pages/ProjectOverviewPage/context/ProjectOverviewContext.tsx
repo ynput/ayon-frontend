@@ -6,7 +6,7 @@ import { ExpandedState } from '@tanstack/react-table'
 import { OverviewSettings } from '@shared/api'
 
 // Shared components and hooks
-import { useLocalStorage, useGetEntityGroups } from '@shared/hooks'
+import { useSessionStorage, useGetEntityGroups } from '@shared/hooks'
 
 // Shared ProjectTreeTable
 import {
@@ -34,11 +34,7 @@ import {
 } from '@shared/containers'
 
 // Local context and hooks
-import {
-  useSlicerContext,
-  useSelectedEntityIds,
-  useSlicerViewSync,
-} from '@shared/containers/Slicer'
+import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
@@ -50,8 +46,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { projectName, ...projectInfo } = useProjectContext()
   const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
 
-  const { rowSelection, rowSelectionData, sliceType, persistentRowSelectionData } =
-    useSlicerContext()
+  const { rowSelection, sliceType, pinnedSlice } = useSlicerContext()
 
   const {
     sorting,
@@ -61,8 +56,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useColumnSettingsContext()
 
   const sliceFilter = createFilterFromSlicer({
-    type: sliceType,
-    selection: rowSelectionData,
+    slice: { rowSelection, sliceType },
     attribFields: attribFields,
   })
 
@@ -76,7 +70,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
 
   const page = 'overview'
 
-  const [expanded, setExpanded] = useLocalStorage<ExpandedState>(
+  const [expanded, setExpanded] = useSessionStorage<ExpandedState>(
     createLocalStorageKey(page, 'expanded', projectName),
     {},
   )
@@ -114,8 +108,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     onUpdateGroupBy: _updateGroupByAtomic,
     filters: queryFilters,
     onUpdateFilters: setQueryFilters,
-    sliceType: viewSliceType,
-    onUpdateSliceType,
     columns,
   } = useOverviewViewSettings({ viewSettings, updateViewSettings })
 
@@ -133,9 +125,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     () => checkColumnVisibility(columnVisibility, 'comments', defaultColumnVisibility),
     [columnVisibility, defaultColumnVisibility],
   )
-
-  // Sync slicer slice type with view settings (selection is in-memory, project-scoped)
-  useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews)
 
   // Derive effective showHierarchy from viewGroupBy.
   // null = explicit hierarchy, undefined = not loaded yet — both default to
@@ -261,7 +250,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const selectedFolders = useSelectedFolders({
     rowSelection,
     sliceType,
-    persistentRowSelectionData,
+    pinnedRowSelection: pinnedSlice?.rowSelection || null,
     entityListFolderIds: entityIds.folderIds,
   })
 

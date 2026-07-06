@@ -57,6 +57,8 @@ strong {
   --color-hl-production-active: var(--md-sys-color-tertiary-active);
 
   // staging colors
+  --color-hl-staging-container: hsl(21deg 83.13% 20.94%);
+  --color-hl-staging-container-hover: hsl(21deg 83.13% 23.94%);
   --color-hl-staging: hsl(357, 100%, 76%);
   --color-hl-staging-hover: hsl(357, 100%, 73%);
   --color-hl-staging-active: hsl(357, 100%, 70%);

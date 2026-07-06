@@ -65,6 +65,11 @@ const useGetListItemsData = ({
     } else if (sortId.endsWith('Type') && entityType && !sortId.startsWith(entityType)) {
       // if the type is not native to the entity, add the parent prefix
       sortId = 'parent' + sortId[0].toUpperCase() + sortId.slice(1)
+    } else if (sortId === 'product') {
+      // backend resolves productName to the related product's name (per entity type)
+      sortId = 'productName'
+    } else if (sortId === 'folder') {
+      sortId = 'folderPath'
     } else {
       // add entity prefix to entity fields
       sortId = `entity_${sortId}`

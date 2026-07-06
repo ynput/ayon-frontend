@@ -54,7 +54,7 @@ export const useSelectedEntityIds = (): {
   isLoading: boolean
 } => {
   const dispatch = useDispatch<ThunkDispatch<unknown, unknown, UnknownAction>>()
-  const { rowSelectionData, sliceType } = useSlicerContext()
+  const { rowSelection, sliceType } = useSlicerContext()
   const { projectName } = useProjectContext()
   const [entityIds, setEntityIds] = useState<SelectedEntityIds>(EMPTY_IDS)
   const [rawEntityIds, setRawEntityIds] = useState<SelectedEntityIds>(EMPTY_IDS)
@@ -67,28 +67,10 @@ export const useSelectedEntityIds = (): {
       return
     }
 
-    // Resolve folder selections to child list IDs
-    const selectedKeys = Object.keys(rowSelectionData).filter((id) => rowSelectionData[id])
-    const listIdSet = new Set<string>()
-
-    for (const key of selectedKeys) {
-      if (key.startsWith('folder-')) {
-        // Folder row: extract child list IDs from the row data
-        const rowData = rowSelectionData[key]
-        if (rowData && typeof rowData === 'object' && 'data' in rowData) {
-          const data = (rowData as { data?: { childListIds?: string[] } }).data
-          if (data?.childListIds) {
-            for (const id of data.childListIds) {
-              listIdSet.add(id)
-            }
-          }
-        }
-      } else {
-        listIdSet.add(key)
-      }
-    }
-
-    const selectedListIds = [...listIdSet]
+    // Get selected list IDs from rowSelection, filtering out folder-grouped rows
+    const selectedListIds = Object.keys(rowSelection).filter(
+      (id) => rowSelection[id] && !id.startsWith('folder-'),
+    )
 
     if (!selectedListIds.length) {
       setEntityIds(EMPTY_IDS)
@@ -138,7 +120,7 @@ export const useSelectedEntityIds = (): {
     return () => {
       cancelled = true
     }
-  }, [sliceType, rowSelectionData, projectName, dispatch])
+  }, [sliceType, rowSelection, projectName, dispatch])
 
   return { entityIds, rawEntityIds, isLoading }
 }

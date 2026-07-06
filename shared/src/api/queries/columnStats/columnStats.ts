@@ -1,24 +1,7 @@
+import { ColumnStats } from '@shared/api/generated'
 // Shape of the backend GraphQL `ColumnStats` (connection.fieldStats).
 // `sum` and `distribution` are typed ahead of backend support so wiring them is a no-op.
-export type FieldStats = {
-  columnName: string
-  // numeric for number columns, ISO date string for datetime columns
-  min?: number | string | null
-  max?: number | string | null
-  avg?: number | null
-  sum?: number | null
-  valueFilledCount?: number | null
-  percentageFilled?: number | null
-  valueNotFilledCount?: number | null
-  percentageNotFilled?: number | null
-  checkedCount?: number | null
-  checkedPercentage?: number | null
-  notCheckedCount?: number | null
-  notCheckedPercentage?: number | null
-  distribution?:
-    | { value: string; label?: string | null; color?: string | null; count: number }[]
-    | null
-  // main/count column: primary/secondary entity totals (folders/tasks, products/versions)
+export interface FieldStats extends ColumnStats {
   primaryCount?: number | null
   secondaryCount?: number | null
 }
@@ -194,4 +177,10 @@ export const combineFieldStats = (
     out.set(id, p ? combineTwo(p, g) : g)
   }
   return [...out.values()]
+}
+
+export const transformStatsError = (error: any, entityType: string): string => {
+  const message = error?.message ?? 'Unknown stats error'
+  console.error(`Error fetching ${entityType} stats:`, error)
+  return message
 }

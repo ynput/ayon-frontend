@@ -1,4 +1,5 @@
 export * from './useLocalStorage'
+export * from './useSessionStorage'
 export * from './useLoadModule'
 export * from './useLoadModules'
 export * from './useScopedStatuses'

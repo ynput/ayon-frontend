@@ -12,6 +12,7 @@ query GetTasksList(
   $last: Int
   $sortBy: String
   $showComments: Boolean! = false
+  $includeFolderChildren: Boolean! = true
 ) {
   project(name: $projectName) {
     name
@@ -26,6 +27,7 @@ query GetTasksList(
       last: $last
       sortBy: $sortBy
       ids: $taskIds
+      includeFolderChildren: $includeFolderChildren
     ) {
       pageInfo {
         startCursor

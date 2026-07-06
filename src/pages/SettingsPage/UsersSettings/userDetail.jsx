@@ -85,6 +85,13 @@ const fields = [
     },
   },
   {
+    name: 'isStagingAllowed',
+    label: 'Staging access',
+    data: {
+      type: 'boolean',
+    },
+  },
+  {
     name: 'defaultAccessGroups',
     label: 'Default access groups',
     data: {
@@ -133,6 +140,11 @@ const mergeMultipleUsers = (users = [], defaultForm = {}, initForm = {}) => {
     if (index !== 0 && initForm.isDeveloper !== user.isDeveloper)
       initForm.isDeveloper = defaultForm.isDeveloper
     else initForm.isDeveloper = user.isDeveloper
+
+    // isStagingAllowed
+    if (index !== 0 && initForm.isStagingAllowed !== user.isStagingAllowed)
+      initForm.isStagingAllowed = defaultForm.isStagingAllowed
+    else initForm.isStagingAllowed = user.isStagingAllowed
 
     // userLevel
     let userLevel = 'user'
@@ -326,6 +338,9 @@ const UserDetail = ({
           data.isGuest = formData.isGuest
         } else if (field === 'isDeveloper') {
           data.isDeveloper = formData.isDeveloper && formData.userLevel === 'admin'
+        } else if (field === 'isStagingAllowed') {
+          // Note: for some reason backend expected isStagingEnabled and then return isStagingAllowed
+          data.isStagingEnabled = formData.isStagingAllowed
         } else if (singleUserEdit && attributes.find((a) => a.name === field)) {
           const value = formData[field]
           attrib[field] = typeof value === 'string' ? value.trim() : value

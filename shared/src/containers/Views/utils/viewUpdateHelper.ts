@@ -11,7 +11,6 @@
  */
 
 import {
-  CreateViewApiArg,
   EntityIdResponse,
   useCreateViewMutation,
   useUpdateViewMutation,

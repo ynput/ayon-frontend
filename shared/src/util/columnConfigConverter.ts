@@ -22,7 +22,7 @@ import {
 // persisted or loaded from saved view settings.
 const INTERNAL_COLUMN_IDS = new Set([ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID])
 
-// Backend doesn't store summary/summaryScope/summaryFormat on ColumnItemModel yet
+// summary/summaryScope/summaryFormat persist in the view settings dict but aren't on the generated ColumnItemModel type
 type ColumnItem = ColumnItemModel & {
   summary?: SummaryCalc
   summaryScope?: RowScope

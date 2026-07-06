@@ -64,7 +64,7 @@ const DetailsPanelHeader = ({
   thumbnailInputRef,
   versionsInputRef,
 }: DetailsPanelHeaderProps) => {
-  const { useSearchParams, useNavigate, isDeveloperMode } = useDetailsPanelContext()
+  const { useSearchParams, useNavigate, bundleMode } = useDetailsPanelContext()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const tagsSelectRef = useRef<DropdownRef>(null)
@@ -284,7 +284,7 @@ const DetailsPanelHeader = ({
             entitySubTypes={entitySubTypes}
             isLoadingEntity={!!isFetching || !!isLoading}
             searchParams={searchParams}
-            isDeveloperMode={isDeveloperMode}
+            bundleMode={bundleMode}
             onSetSearchParams={setSearchParams}
             onNavigate={navigate}
           />

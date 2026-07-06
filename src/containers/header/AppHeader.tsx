@@ -1,9 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { MouseEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { InputSwitch } from '@ynput/ayon-react-components'
 import { UserImage } from '@shared/components'
-import { useUpdateUserMutation } from '@shared/api'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import HeaderButton from './HeaderButton'
@@ -14,14 +12,13 @@ import InstallerDownloadPrompt from '@components/InstallerDownload/InstallerDown
 import { useMenuContext } from '@shared/context/MenuContext'
 import { HelpMenu, UserMenu } from '@components/Menu'
 import { MenuContainer } from '@shared/components'
-import { toast } from 'react-toastify'
-import { toggleDevMode } from '@state/user'
 import styled from 'styled-components'
 import { useRestart } from '@context/RestartContext'
 import clsx from 'clsx'
 import InboxNotificationIcon from './InboxNotification'
 import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseInstallerPrompt/ReleaseInstallerPrompt'
 import ChatBubbleButton from './ChatBubbleButton'
+import BundleModeSelector from './BundleMode/BundleMode'
 
 const FlexWrapper = styled.div`
   display: flex;
@@ -32,55 +29,7 @@ const FlexWrapperEnd = styled.div`
   display: flex;
   gap: var(--base-gap-small);
   justify-content: end;
-`
-
-const DeveloperSwitch = styled.div`
-  display: flex;
   align-items: center;
-  gap: var(--base-gap-small);
-  border-radius: var(--border-radius-l);
-  padding: 4px 4px 4px 8px;
-  margin: 4px 0;
-  cursor: pointer;
-  z-index: 10;
-  transition: background-color 0.2s;
-  background-color: var(--md-sys-color-surface-container-highest);
-
-  & > span {
-    user-select: none;
-  }
-
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-highest-hover);
-  }
-
-  &.active {
-    background-color: var(--color-hl-developer-container);
-
-    & > span {
-      color: var(--color-hl-developer);
-    }
-
-    &:hover {
-      background-color: var(--color-hl-developer-container-hover);
-    }
-  }
-`
-
-const StyledSwitch = styled(InputSwitch)`
-  pointer-events: none;
-
-  .switch-body input:checked + .slider {
-    background-color: var(--color-hl-developer);
-    border-color: var(--color-hl-developer);
-
-    &,
-    &:hover {
-      &::before {
-        background-color: var(--color-hl-developer-container);
-      }
-    }
-  }
 `
 
 const ProjectsButton = styled(HeaderButton)`
@@ -105,10 +54,6 @@ const Header: React.FC = () => {
 
   // restart server notification
   const { isSnoozing } = useRestart()
-
-  // Get developer states
-  const isDeveloper = (user?.data as any)?.isDeveloper
-  const developerMode = user?.attrib.developerMode
 
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef<HTMLButtonElement>(null)
@@ -139,31 +84,6 @@ const Header: React.FC = () => {
   const handleNavClick = (e: MouseEvent<HTMLElement>) => {
     // if target us nav, then close menu
     if ((e.target as HTMLElement).tagName === 'NAV') handleSetMenu(false)
-  }
-
-  // UPDATE USER DATA
-  const [updateUser] = useUpdateUserMutation()
-  const handleDeveloperMode = async () => {
-    try {
-      const newDeveloperMode = !developerMode
-      // optimistic update the switch
-      dispatch(toggleDevMode(newDeveloperMode))
-
-      await updateUser({
-        name: user.name,
-        patch: {
-          attrib: { developerMode: newDeveloperMode },
-        },
-      }).unwrap()
-
-      // if the request fails, revert the switch
-    } catch (error) {
-      console.error(error)
-      const errorMessage = (error as any)?.details || 'Unknown error'
-      toast.error('Unable to update developer mode: ' + errorMessage)
-      // reset switch on error
-      dispatch(toggleDevMode(developerMode))
-    }
   }
 
   // if on certain page, hide
@@ -199,15 +119,7 @@ const Header: React.FC = () => {
       <FlexWrapperEnd id="header-menu-right">
         <InstallerDownloadPrompt />
         <ReleaseInstallerPrompt isAdmin={user.data.isAdmin} />
-        {isDeveloper && (
-          <DeveloperSwitch
-            className={clsx({ active: developerMode })}
-            onClick={handleDeveloperMode}
-          >
-            <span>Developer Mode</span>
-            <StyledSwitch checked={developerMode} readOnly />
-          </DeveloperSwitch>
-        )}
+        <BundleModeSelector />
 
         {!user.data.isGuest && (
           <>

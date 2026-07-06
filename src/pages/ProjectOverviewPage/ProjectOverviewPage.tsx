@@ -4,7 +4,12 @@ import { FC, useMemo } from 'react'
 import styled from 'styled-components'
 
 // state
-import { Slicer, useSlicerContext } from '@shared/containers/Slicer'
+import {
+  Slicer,
+  SLICER_PAGES_CONFIG,
+  useSlicerContext,
+  useSlicerSplitter,
+} from '@shared/containers/Slicer'
 
 // arc
 import { Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
@@ -33,6 +38,7 @@ import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operation
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
+import { getBundleModeFromUser } from '@shared/util'
 
 // the tasks resolver task filter does not whitelist folder_type — use the
 // folder-scope folderType chip instead (goes through folderFilter)
@@ -65,7 +71,7 @@ const GroupByDropdown = styled(SortingDropdown)<{
 
 const ProjectOverviewPage: FC = () => {
   const { user } = useGlobalContext()
-  const isDeveloperMode = user?.attrib?.developerMode ?? false
+  const bundleMode = getBundleModeFromUser(user)
 
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -141,23 +147,11 @@ const ProjectOverviewPage: FC = () => {
   const { setSelectedCells } = useSelectionCellsContext()
 
   // load slicer remote config
-  const { config, sliceType, setPersistentRowSelectionData, ...slicer } = useSlicerContext()
-  const overviewSliceFields = config?.overview?.fields
+  const { sliceType, setPinnedSlice, ...slicer } = useSlicerContext()
 
   const handleFiltersChange = (newQueryFilters: QueryFilter) => {
     // Update the stored QueryFilter directly
     setQueryFilters(newQueryFilters)
-
-    // check if we need to clear hierarchy selection
-    // This is a simplified check - you might need to implement QueryFilter inspection
-    // to determine if hierarchy filter is present
-    if (
-      !newQueryFilters.conditions?.some(
-        (condition) => 'key' in condition && condition.key === 'hierarchy',
-      )
-    ) {
-      setPersistentRowSelectionData({})
-    }
   }
 
   const expandAndSelectNewFolders = useExpandAndSelectNewFolders()
@@ -187,8 +181,8 @@ const ProjectOverviewPage: FC = () => {
 
     // Expand folders in both table and slicer
     updateExpanded(data.expandedFolders)
-    slicer.setExpanded(data.expandedFolders)
-    slicer.setRowSelection(data.selectedFolders)
+    slicer.onExpandedChange?.(data.expandedFolders)
+    slicer.onRowSelectionChange(data.selectedFolders)
 
     // Select the entity in the table
     setSelectedCells(
@@ -199,24 +193,25 @@ const ProjectOverviewPage: FC = () => {
     )
   }
 
+  const [slicerSize, handleResizeEnd] = useSlicerSplitter()
+
   return (
     <main style={{ gap: 4 }}>
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}
-        stateKey="overview-splitter-table"
-        stateStorage="local"
+        onResizeEnd={handleResizeEnd}
       >
-        <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
-          <Section wrap>
+        <SplitterPanel size={slicerSize[0]} style={{ overflow: 'hidden' }}>
+          <Section wrap style={{ height: '100%' }}>
             <Slicer
-              sliceFields={overviewSliceFields}
+              sliceFields={SLICER_PAGES_CONFIG.overview.fields}
               entityTypes={['task', 'folder']}
-              persistFieldId="hierarchy"
+              pinnedSliceType="hierarchy"
             />
           </Section>
         </SplitterPanel>
-        <SplitterPanel size={88}>
+        <SplitterPanel size={slicerSize[1]}>
           <Section wrap direction="column" style={{ height: '100%' }}>
             <Toolbar>
               <NewEntity disabled={!showHierarchy} onNewEntities={handleNewEntities} />
@@ -248,7 +243,7 @@ const ProjectOverviewPage: FC = () => {
                 onNavigate={navigate}
                 onSetSearchParams={setSearchParams}
                 searchParams={searchParams}
-                isDeveloperMode={isDeveloperMode}
+                bundleMode={bundleMode}
                 align="right"
               />
               <CustomizeButton />
