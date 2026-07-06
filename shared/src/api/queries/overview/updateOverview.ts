@@ -8,7 +8,7 @@ import type {
   OperationsApiArg,
 } from '@shared/api/generated'
 import getOverviewApi from './getOverview'
-import { patchDetailsPanelEntity } from '@shared/api/queries/entities'
+import { patchDetailsPanelEntity } from '../entities'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
@@ -292,9 +292,7 @@ const scheduleStatsRefetch = (
     setTimeout(() => {
       statsRefetchTimers.delete(key)
       dispatch(
-        getOverviewApi.util.invalidateTags(
-          tagTypes.map((type) => ({ type, id: projectName })),
-        ),
+        getOverviewApi.util.invalidateTags(tagTypes.map((type) => ({ type, id: projectName }))),
       )
     }, 500),
   )

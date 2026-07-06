@@ -1,4 +1,5 @@
-import { EnumItem, AttributeModel } from '@shared/api'
+import { EnumItem } from '@shared/api/generated/dataImport'
+import { AttributeModel } from '@shared/api/generated/system'
 
 type ScopeEntityType =
   | 'folder'

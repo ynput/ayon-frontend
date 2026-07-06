@@ -8,7 +8,8 @@ import {
   SearchFoldersApiArg,
   GetTasksListQueryVariables,
 } from '@shared/api/generated'
-import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
+import PubSub from '@shared/util/pubsub'
+import { subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 import type { FieldStats } from '../columnStats'
 import {

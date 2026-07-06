@@ -42,7 +42,8 @@ import {
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
 import { parseAllAttribs } from '../overview'
-import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
+import PubSub from '@shared/util/pubsub'
+import { subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import type { FieldStats } from '../columnStats'
 import {
   normalizeFieldStats,

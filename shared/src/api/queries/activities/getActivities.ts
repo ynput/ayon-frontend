@@ -165,6 +165,7 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
           cacheEntryRemoved,
           dispatch,
           getCacheEntry,
+          gqlApi: enhanceActivitiesApi,
         })
       },
       providesTags: (result, _e, { entityIds, activityTypes, filter }) =>

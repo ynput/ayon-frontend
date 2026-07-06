@@ -1,6 +1,7 @@
-import { PubSub } from '@shared/util'
+import PubSub from '@shared/util/pubsub'
 import { reviewablesApi, ReviewableModel, VersionReviewablesModel } from '@shared/api/generated'
-import { addonsQueries } from '@shared/api/queries/addons'
+import { addonsQueries } from '../addons'
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import {
   Summary,
   GetReviewablesResponse,
@@ -8,7 +9,6 @@ import {
   TagTypes,
   UpdatedDefinitions,
 } from './types'
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
 const getViewerReviewablesTags = (
   result: (GetReviewablesResponse | VersionReviewablesModel | undefined)[] | undefined,
@@ -320,4 +320,4 @@ export const {
   useGetReviewablesForVersionQuery,
   useHasTranscoderQuery,
 } = getReviewApi
-export default getReviewApi
+export { getReviewApi }
