@@ -68,6 +68,7 @@ import useStoryboardsCardsModules from './hooks/useStoryboardsCardsModules.tsx'
 import OpenStoryboardButton from '@pages/ReviewPage/OpenStoryboardButton.tsx'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
+import usePatchListsCaches from './hooks/usePatchListsCaches'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -201,6 +202,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
             <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
               <ProjectTableProvider
                 projectName={projectName}
+                // @ts-ignore
                 attribFields={mergedAttribFields}
                 projectInfo={projectInfo}
                 users={props.users}
@@ -306,6 +308,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
 
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
 
+  const patchListsCaches = usePatchListsCaches({ listId: selectedList?.id || '' })
+
   // if the addon is outdated, make sure we land in table view
   useEffect(() => {
     if (!reviewSessionCardsOutdated) return
@@ -374,9 +378,21 @@ const ProjectLists: FC<ProjectListsProps> = ({
                 onOpenInViewer={(state) => {
                   handleOpenPlayer(state, { quickView: true })
                 }}
-                onItemsChanged={() => {
-                  refetchListItems()
-                  refetchLists()
+                onItemsChanged={(clips, promise, type) => {
+                  if (type === 'add') {
+                    void promise?.then(() => {
+                      refetchListItems()
+                      patchListsCaches(clips, 'add')
+                    })
+                  } else if (type === 'delete') {
+                    patchListsCaches(clips, 'delete')
+                  } else if (type === 'reorder') {
+                    patchListsCaches(clips, 'reorder')
+                  } else if (type === 'replace') {
+                    refetchListItems()
+                  } else if (type === 'update') {
+                    refetchListItems()
+                  }
                 }}
               >
                 {selectedList && (
@@ -396,6 +412,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       <>
                         <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
                         <ListItemsFilter
+                          // @ts-ignore
                           entityType={selectedList.entityType}
                           projectName={projectName}
                         />
@@ -501,7 +518,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                           onGoTo={handleGoToCustomAttrib}
                         />
                       ) : (
-                        <ReviewCardsSettings pageDisplayStyle={pageDisplayStyle} />
+                        <ReviewCardsSettings />
                       )}
                     </SplitterPanel>
                   ) : (

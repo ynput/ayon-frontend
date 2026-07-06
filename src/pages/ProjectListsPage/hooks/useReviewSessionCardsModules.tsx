@@ -1,27 +1,35 @@
-import { RemoteAddonProjectProps, usePowerpack } from "@shared/context"
-import { useLoadModule } from "@shared/hooks"
-import { createContext, PropsWithChildren, useContext } from "react"
+import { RemoteAddonProjectProps, usePowerpack } from '@shared/context'
+import { useLoadModule } from '@shared/hooks'
+import { createContext, PropsWithChildren, useContext } from 'react'
 
-function FallbackReviewCardsProvider({ children }: RemoteAddonProjectProps & PropsWithChildren & {
-  onSelectionChange: (versionIds: string[]) => void
-  onOpenDetails: (versionId: string) => void
-  onItemsChanged?: () => void
-  onOpenInViewer?: (state: {
-    versionId: string
-    productId: string
-    folderId: string
-    taskId?: string
-  }) => void
-  headerContentStart?: JSX.Element
-  headerContentEnd?: JSX.Element
-  api?: any
-  gridSize?: number
-  playlistView?: boolean
-}) { return <>{children}</> }
+export type Clip = { listItemId: string }
+export type UpdateType = 'reorder' | 'add' | 'delete' | 'replace' | 'update'
 
-function FallbackReviewCardsControlsRight({ }: {
-  groupingDisabled?: boolean
-}) { return <></> }
+function FallbackReviewCardsProvider({
+  children,
+}: RemoteAddonProjectProps &
+  PropsWithChildren & {
+    onSelectionChange: (versionIds: string[]) => void
+    onOpenDetails: (versionId: string) => void
+    onItemsChanged?: (clips: Clip[], promise?: Promise<unknown>, updateType?: UpdateType) => void
+    onOpenInViewer?: (state: {
+      versionId: string
+      productId: string
+      folderId: string
+      taskId?: string
+    }) => void
+    headerContentStart?: JSX.Element
+    headerContentEnd?: JSX.Element
+    api?: any
+    gridSize?: number
+    playlistView?: boolean
+  }) {
+  return <>{children}</>
+}
+
+function FallbackReviewCardsControlsRight({}: { groupingDisabled?: boolean }) {
+  return <></>
+}
 
 type UseReviewSessionCardsReturn = {
   clearHighlighted?: () => void
@@ -52,32 +60,36 @@ export default function useReviewSessionCardsModules({ skip }: Args) {
     module: 'ReviewCards',
     fallback: () => <></>,
   })
-  const [ReviewSessionCardsProvider, { isLoaded: reviewSessionCardsProviderLoaded }] = useLoadModule({
-    ...commonOptions,
-    module: 'ReviewCardsProvider',
-    fallback: FallbackReviewCardsProvider,
-  })
-  const [ReviewSessionCardsControlsLeft, { isLoaded: reviewSessionCardsControlsLeftLoaded }] = useLoadModule({
-    ...commonOptions,
-    module: 'ReviewCardsControlsLeft',
-    fallback: () => <></>,
-  })
-  const [ReviewSessionCardsControlsRight, { isLoaded: reviewSessionCardsControlsRightLoaded }] = useLoadModule({
-    ...commonOptions,
-    module: 'ReviewCardsControlsRight',
-    fallback: FallbackReviewCardsControlsRight,
-  })
+  const [ReviewSessionCardsProvider, { isLoaded: reviewSessionCardsProviderLoaded }] =
+    useLoadModule({
+      ...commonOptions,
+      module: 'ReviewCardsProvider',
+      fallback: FallbackReviewCardsProvider,
+    })
+  const [ReviewSessionCardsControlsLeft, { isLoaded: reviewSessionCardsControlsLeftLoaded }] =
+    useLoadModule({
+      ...commonOptions,
+      module: 'ReviewCardsControlsLeft',
+      fallback: () => <></>,
+    })
+  const [ReviewSessionCardsControlsRight, { isLoaded: reviewSessionCardsControlsRightLoaded }] =
+    useLoadModule({
+      ...commonOptions,
+      module: 'ReviewCardsControlsRight',
+      fallback: FallbackReviewCardsControlsRight,
+    })
   const [useReviewSessionCards, { isLoaded: useReviewSessionCardsLoaded }] = useLoadModule({
     ...commonOptions,
     module: 'useReviewSessionCards',
     fallback: fallbackUseReviewSessionCards,
   })
 
-  const allModulesLoaded = reviewSessionCardsLoaded
-    && reviewSessionCardsProviderLoaded
-    && reviewSessionCardsControlsLeftLoaded
-    && reviewSessionCardsControlsRightLoaded
-    && useReviewSessionCardsLoaded
+  const allModulesLoaded =
+    reviewSessionCardsLoaded &&
+    reviewSessionCardsProviderLoaded &&
+    reviewSessionCardsControlsLeftLoaded &&
+    reviewSessionCardsControlsRightLoaded &&
+    useReviewSessionCardsLoaded
 
   return {
     ReviewSessionCards,
