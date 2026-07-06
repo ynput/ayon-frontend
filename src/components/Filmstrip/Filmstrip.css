@@ -1,0 +1,52 @@
+.filmstrip-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  position: relative;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 4px 0;
+  user-select: none;
+}
+
+.filmstrip-track {
+  position: relative;
+  height: 100%;
+  display: inline-flex;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.filmstrip-thumbnail {
+  border: 2px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  flex-shrink: 0;
+}
+
+.filmstrip-thumbnail:hover {
+  border-color: #4a9eff;
+}
+
+.filmstrip-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #ff3b30;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.filmstrip-loading,
+.filmstrip-error {
+  padding: 20px;
+  text-align: center;
+  color: #888;
+}
+
+.filmstrip-error {
+  color: #e74c3c;
+}
