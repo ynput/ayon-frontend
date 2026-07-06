@@ -55,6 +55,9 @@ const getGroupData = (
   if (stat) {
     base.count = stat.count
     base.percentage = stat.percentage
+  } else if (groupCounts) {
+    base.count = 0
+    base.percentage = undefined
   }
   return base
 }

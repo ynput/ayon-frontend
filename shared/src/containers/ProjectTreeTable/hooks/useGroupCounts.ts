@@ -33,7 +33,7 @@ export type UseGroupCountsParams =
   | { entity: 'version'; groupBy?: TableGroupBy; args: VersionStatsArgs; skip?: boolean }
 
 export type GroupCountsResult = {
-  counts: GroupCountsMap
+  counts: GroupCountsMap | undefined
   total: number
   isLoading: boolean
   isSupported: boolean
@@ -68,14 +68,18 @@ export const useGroupCounts = (params: UseGroupCountsParams): GroupCountsResult 
 
   const active = params.entity === 'task' ? taskRes : versionRes
   const fieldStats = active.data ?? EMPTY
+  const hasData = !!active.data
 
   const { counts, total } = useMemo(() => {
     const selection = selectGroupCounts(fieldStats, target)
     if (selection.ungrouped.count > 0) {
       selection.counts.set(UNGROUPED_VALUE, selection.ungrouped)
     }
-    return selection
-  }, [fieldStats, target])
+    return {
+      counts: hasData && selection.complete ? selection.counts : undefined,
+      total: selection.total,
+    }
+  }, [fieldStats, target, hasData])
 
   return {
     counts,

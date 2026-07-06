@@ -12,6 +12,7 @@ export type GroupCountsSelection = {
   total: number
   // the null/empty bucket (no value for the grouped field) -> Ungrouped row
   ungrouped: GroupCount
+  complete: boolean
 }
 
 // Distribution buckets the values; NotFilled gives the null/empty (Ungrouped)
@@ -72,12 +73,14 @@ export const selectGroupCounts = (
 ): GroupCountsSelection => {
   const counts: GroupCountsMap = new Map()
   const none: GroupCount = { count: 0, percentage: 0 }
-  if (!target) return { counts, total: 0, ungrouped: none }
+  if (!target) return { counts, total: 0, ungrouped: none, complete: false }
 
   const columnId = targetToColumnId(target.field)
   const stat = fieldStats.find((s) => s.columnName === columnId)
   const distribution = stat?.distribution ?? []
   const notFilled = stat?.valueNotFilledCount ?? 0
+  const filled = stat?.valueFilledCount ?? 0
+  const complete = !!stat && (distribution.length > 0 || filled === 0)
 
   const distSum = distribution.reduce((sum, d) => sum + (d.count || 0), 0)
   const total = distSum + notFilled
@@ -94,5 +97,5 @@ export const selectGroupCounts = (
     count: notFilled,
     percentage: distSum > 0 && notFilled > 0 ? Math.round((notFilled / total) * 100) : undefined,
   }
-  return { counts, total, ungrouped }
+  return { counts, total, ungrouped, complete }
 }
