@@ -148,6 +148,7 @@ const CommentInput: FC<CommentInputProps> = ({
     setEditorValue,
     setInitHeight,
     isOpen: isOpen,
+    // @ts-expect-error - QueryFilter type is the same
     filter: feedFilter,
   })
 
