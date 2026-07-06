@@ -1,0 +1,67 @@
+.filmstrip-container {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  padding: 4px 0;
+  background: #1e1e1e;
+  scroll-behavior: smooth;
+}
+
+.filmstrip-thumb {
+  flex-shrink: 0;
+  position: relative;
+  margin: 0 2px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s, transform 0.1s;
+}
+
+.filmstrip-thumb:hover {
+  border-color: #888;
+  transform: scale(1.05);
+}
+
+.filmstrip-thumb.selected {
+  border-color: #4a90d9;
+}
+
+.filmstrip-thumb img {
+  display: block;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.playhead {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #4a90d9;
+}
+
+.filmstrip-thumb.selected .playhead {
+  display: block;
+}
+
+.filmstrip-thumb .playhead {
+  display: none;
+}
+
+/* Scrollbar styling */
+.filmstrip-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.filmstrip-container::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+.filmstrip-container::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
