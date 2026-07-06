@@ -19,6 +19,7 @@ import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 // Hooks
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useGroupMessages from '../hooks/useGroupMessages'
+import { useInboxFilterOptions } from '../hooks/useInboxFilterOptions'
 import useKeydown from '../hooks/useKeydown'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useInboxRefresh from '../hooks/useInboxRefresh'
@@ -35,6 +36,9 @@ import type {
   InboxContextMenuItem,
 } from '../types'
 import type { InboxMessage as InboxMessageType } from '@/services/inbox/inboxTransform'
+import type { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import InboxSearchFilter from '../components/InboxSearchFilter'
+import { applyInboxFilters } from '../utils/filterInboxMessages'
 
 const placeholderMessages: PlaceholderMessage[] = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -104,13 +108,22 @@ const Inbox = ({ filter }: InboxProps) => {
     isImportant: isImportant ?? false,
   })
 
+  const [queryFilters, setQueryFilters] = useState<QueryFilter>({})
+  const hasFilters = !!queryFilters?.conditions?.length
+  const filterOptions = useInboxFilterOptions(messages)
+
+  const filteredMessages = useMemo(
+    () => applyInboxFilters(messages, queryFilters),
+    [messages, queryFilters],
+  )
+
   //   now sort the messages by createdAt using the compare function
   const messagesSortedByDate = useMemo(
     () =>
-      [...messages].sort((a, b) =>
+      [...filteredMessages].sort((a, b) =>
         isActive ? compareAsc(new Date(b.createdAt), new Date(a.createdAt)) : 0,
       ),
-    [messages, isActive],
+    [filteredMessages, isActive],
   )
 
   // group messages of same entity and type together
@@ -364,7 +377,11 @@ const Inbox = ({ filter }: InboxProps) => {
       {/* @ts-expect-error - Shortcuts component has complex typing */}
       <Shortcuts shortcuts={shortcuts} deps={[messagesData, selected]} />
       <Styled.Tools>
-        {/* <InputText placeholder="Search..." /> */}
+        <InboxSearchFilter
+          options={filterOptions}
+          queryFilters={queryFilters}
+          onChange={setQueryFilters}
+        />
         <Spacer />
         <EnableNotifications />
         {isActive && (
@@ -441,8 +458,12 @@ const Inbox = ({ filter }: InboxProps) => {
             </Styled.MessagesList>
             {!isLoadingAny && (errorInbox || !messagesData.length) && (
               <EmptyPlaceholder
-                icon="done_all"
-                message="All caught up! No messages to show."
+                icon={hasFilters && !!messages.length ? 'search_off' : 'done_all'}
+                message={
+                  hasFilters && !!messages.length
+                    ? 'No messages match your filters.'
+                    : 'All caught up! No messages to show.'
+                }
                 error={errorInbox}
               />
             )}
