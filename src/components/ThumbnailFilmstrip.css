@@ -1,0 +1,59 @@
+.filmstrip-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #222;
+  padding: 4px 0;
+}
+
+.filmstrip-timeline {
+  display: flex;
+  gap: 2px;
+  padding: 0 4px;
+}
+
+.filmstrip-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+  flex-shrink: 0;
+}
+
+.filmstrip-frame:hover {
+  border-color: #4caf50;
+}
+
+.filmstrip-frame.selected {
+  border-color: #ff9800;
+}
+
+.filmstrip-frame img {
+  width: 160px;
+  height: 90px;
+  object-fit: cover;
+  display: block;
+}
+
+.filmstrip-time {
+  color: #fff;
+  font-size: 12px;
+  background: rgba(0,0,0,0.7);
+  width: 100%;
+  text-align: center;
+  padding: 2px 0;
+}
+
+.filmstrip-loading,
+.filmstrip-error {
+  padding: 20px;
+  text-align: center;
+  color: #fff;
+}
+
+.filmstrip-error {
+  color: #f44336;
+}
