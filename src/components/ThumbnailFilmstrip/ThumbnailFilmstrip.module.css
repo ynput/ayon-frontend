@@ -1,0 +1,54 @@
+.container {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 8px;
+  background: #1e1e1e;
+  border-radius: 8px;
+}
+
+.thumbnailWrapper {
+  flex: 0 0 auto;
+  cursor: pointer;
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.thumbnailWrapper:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.thumbnailImage {
+  width: 120px;
+  height: 68px;
+  object-fit: cover;
+  display: block;
+}
+
+.timeLabel {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 11px;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.loading,
+.error,
+.empty {
+  padding: 16px;
+  text-align: center;
+  color: #ccc;
+  background: #2a2a2a;
+  border-radius: 8px;
+}
+
+.error {
+  color: #ff6b6b;
+}
