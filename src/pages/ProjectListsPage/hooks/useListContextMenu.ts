@@ -133,10 +133,10 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => 
       const userCanDeleteAllFolders = canDeleteAllFolders(selectedFoldersAll, userPermissions)
 
       // Single item access checks
-      const userCanEditList = selectedList ? canEditList(selectedList, userPermissions) : false
       const userCanEditFolder = selectedFolder
         ? canEditFolder(selectedFolder, userPermissions)
         : false
+      const userCanEditList = selectedList ? canEditList(selectedList, userPermissions) : false
 
       // Create recursive folder submenu
       const createFolderHierarchy = (

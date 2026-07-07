@@ -84,6 +84,11 @@ export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   rowHeight?: number // height of each row, used for virtual scrolling
   imgRatio?: number
   onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
+  onRename?: (id: string, row: Row<SimpleTableRow>) => void
+  renamingId?: string | null
+  onSubmitRename?: (id: string, value: string) => void
+  onCancelRename?: () => void
+  onRowDoubleClick?: (id: string, row: Row<SimpleTableRow>) => void
   fitContent?: boolean
   rowContextMenuBuilders?: SimpleTableRowContextMenuBuilder[]
   children?: (

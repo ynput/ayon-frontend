@@ -1,10 +1,15 @@
-import ProjectsListRow from '@containers/ProjectsList/ProjectsListRow.tsx'
 import SimpleTable, {
+  SimpleTableCellTemplate,
   SimpleTableRow,
   SimpleTableRowContextMenuBuilder,
 } from '@shared/containers/SimpleTable'
-import { FC } from 'react'
+import { TableRowAction } from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
+import { Row } from '@tanstack/react-table'
+import { SimpleTableCellTemplateProps } from '@shared/containers/SimpleTable'
+import { FC, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { parseProjectFolderRowId } from './buildProjectsTableData'
+import clsx from 'clsx'
 
 interface ProjectsSimpleTableProps extends React.HTMLAttributes<HTMLDivElement> {
   tableData: SimpleTableRow[]
@@ -20,6 +25,8 @@ interface ProjectsSimpleTableProps extends React.HTMLAttributes<HTMLDivElement> 
   renamingProject?: string | null
   onSubmitRenameProject?: (value: string) => void
   closeRenameProject?: () => void
+  onRenameFolder?: (folderId: string) => void
+  onRenameProject?: (projectName: string) => void
   onOpenProject?: (projectName: string) => void
   fitContent?: boolean
   hidePinned?: boolean
@@ -40,6 +47,8 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
   renamingProject,
   onSubmitRenameProject,
   closeRenameProject,
+  onRenameFolder,
+  onRenameProject,
   onOpenProject,
   fitContent,
   hidePinned,
@@ -47,13 +56,104 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
   ...props
 }) => {
   const navigate = useNavigate()
-  const onSettings = (id: string) => {
-    if (onSettingsClick) {
-      onSettingsClick(id)
-    } else {
-      navigate('/manageProjects/projectSettings?project=' + id)
-    }
-  }
+  const onSettings = useCallback(
+    (id: string) => {
+      if (onSettingsClick) {
+        onSettingsClick(id)
+      } else {
+        navigate('/manageProjects/projectSettings?project=' + id)
+      }
+    },
+    [onSettingsClick, navigate],
+  )
+
+  const handleRename = useCallback(
+    (id: string) => {
+      const isFolder = !!parseProjectFolderRowId(id)
+      if (isFolder) {
+        onRenameFolder?.(id)
+      } else {
+        onRenameProject?.(id)
+      }
+    },
+    [onRenameFolder, onRenameProject],
+  )
+
+  const handleSubmitRename = useCallback(
+    (id: string, value: string) => {
+      const isFolder = !!parseProjectFolderRowId(id)
+      if (isFolder) {
+        onSubmitRenameFolder?.(value)
+      } else {
+        onSubmitRenameProject?.(value)
+      }
+    },
+    [onSubmitRenameFolder, onSubmitRenameProject],
+  )
+
+  const handleCancelRename = useCallback(() => {
+    closeRenameFolder?.()
+    closeRenameProject?.()
+  }, [closeRenameFolder, closeRenameProject])
+
+  const renamingId = renamingFolder || renamingProject
+
+  const handleRowDoubleClick = useCallback(
+    (id: string) => {
+      console.log('onRowDoubleClick', id)
+      if (readonly) return
+      if (parseProjectFolderRowId(id)) return
+      onOpenProject?.(id)
+    },
+    [readonly, onOpenProject],
+  )
+
+  const renderCell = useCallback(
+    (props: SimpleTableCellTemplateProps, row: Row<SimpleTableRow>) => {
+      const isFolder = !!parseProjectFolderRowId(row.id || '')
+      const isPinned = row.getIsPinned() === 'top'
+
+      const hoverActions: TableRowAction[] = !isFolder
+        ? [
+            {
+              icon: 'settings_applications',
+              className: 'settings-icon',
+              onClick: (e) => {
+                e.stopPropagation()
+                onSettings?.(row.id)
+              },
+            },
+            {
+              icon: 'push_pin',
+              className: clsx('pin', { active: isPinned }),
+              show: isPinned ? 'always' : 'hover',
+              onClick: (e) => {
+                e.stopPropagation()
+                if (!readonly) {
+                  row.pin(isPinned ? false : 'top')
+                }
+              },
+            },
+          ]
+        : []
+      return (
+        <SimpleTableCellTemplate
+          {...props}
+          id={row.id}
+          className={clsx(props.className, { pinned: isPinned, hidePinned })}
+          hoverActions={hoverActions}
+          badge={isFolder ? row.original.data.count : row.original.data.code}
+          renamePlaceholder={!isFolder ? 'Project label' : undefined}
+          enableNonFolderIndent={false}
+          inactive={row.original.data.active === false}
+          renameInitialValue={
+            row.id === renamingProject ? row.original.data.projectLabel || '' : undefined
+          }
+        />
+      )
+    },
+    [onSettings, readonly, renamingProject, hidePinned],
+  )
 
   return (
     <SimpleTable
@@ -75,53 +175,14 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
         onSubmitRenameProject,
         closeRenameProject,
       }}
+      onRename={readonly ? undefined : handleRename}
+      onSubmitRename={handleSubmitRename}
+      onCancelRename={handleCancelRename}
+      onRowDoubleClick={handleRowDoubleClick}
+      renamingId={renamingId}
       {...props}
     >
-      {(props, row, table) => (
-        <ProjectsListRow
-          {...props}
-          id={row.id}
-          code={row.original.data.code}
-          isPinned={row.getIsPinned() === 'top'}
-          hidePinned={hidePinned}
-          onPinToggle={
-            readonly ? undefined : () => row.pin(row.getIsPinned() === 'top' ? false : 'top')
-          }
-          inactive={row.original.data.active === false}
-          onDoubleClick={
-            readonly
-              ? undefined
-              : row.original.data?.isFolder
-              ? undefined
-              : () => onOpenProject?.(row.original.name)
-          }
-          isTableExpandable={props.isTableExpandable}
-          isRowExpandable={row.getCanExpand()}
-          isRowExpanded={row.getIsExpanded()}
-          onExpandClick={row.getToggleExpandedHandler()}
-          isRenaming={
-            row.id === table.options.meta?.renamingFolder ||
-            row.id === table.options.meta?.renamingProject
-          }
-          renameInitialValue={
-            row.id === table.options.meta?.renamingProject
-              ? row.original.data.projectLabel || ''
-              : undefined
-          }
-          onSubmitRename={(v) =>
-            row.id === table.options.meta?.renamingProject
-              ? table.options.meta?.onSubmitRenameProject?.(v)
-              : table.options.meta?.onSubmitRenameFolder?.(v)
-          }
-          onCancelRename={
-            row.id === table.options.meta?.renamingProject
-              ? table.options.meta?.closeRenameProject
-              : table.options.meta?.closeRenameFolder
-          }
-          count={row.original.data.count}
-          onSettingsClick={() => onSettings(row.id)}
-        />
-      )}
+      {renderCell}
     </SimpleTable>
   )
 }

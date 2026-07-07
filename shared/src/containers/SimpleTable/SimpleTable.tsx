@@ -32,7 +32,7 @@ import {
   SimpleTableRow,
   SimpleTableRowContextMenuBuilder,
 } from './SimpleTable.types'
-import { useCreateContextMenu } from '../ContextMenu'
+import { ContextMenuItemType, useCreateContextMenu } from '../ContextMenu'
 
 const toMenuItems = (items: ReturnType<SimpleTableRowContextMenuBuilder>) => {
   if (!items) return []
@@ -134,6 +134,11 @@ const SimpleTable: FC<SimpleTableProps> = ({
   rowHeight,
   imgRatio,
   onScrollBottom,
+  onRename,
+  renamingId,
+  onSubmitRename,
+  onCancelRename,
+  onRowDoubleClick,
   rowContextMenuBuilders = [],
   children,
   pt,
@@ -152,6 +157,22 @@ const SimpleTable: FC<SimpleTableProps> = ({
   const lastSelectedIdRef = useRef<string | null>(null)
   const tableRef = useRef<Table<SimpleTableRow> | null>(null)
   const [showRowContextMenu] = useCreateContextMenu()
+
+  // Refs for values used inside the columns memo.
+  // Assigning synchronously (not via useEffect) means the cell function always reads
+  // the latest value at render time, while the columns memo itself has a minimal dep
+  // array and stays as a stable reference — critical because flexRender calls
+  // React.createElement with the cell function, so a new reference = remount = broken dblclick.
+  const onRowDoubleClickRef = useRef(onRowDoubleClick)
+  onRowDoubleClickRef.current = onRowDoubleClick
+  const renamingIdRef = useRef(renamingId)
+  renamingIdRef.current = renamingId
+  const onSubmitRenameRef = useRef(onSubmitRename)
+  onSubmitRenameRef.current = onSubmitRename
+  const onCancelRenameRef = useRef(onCancelRename)
+  onCancelRenameRef.current = onCancelRename
+  const onRenameRef = useRef(onRename)
+  onRenameRef.current = onRename
 
   // stable data reference
   const tableData = useMemo(() => {
@@ -216,7 +237,11 @@ const SimpleTable: FC<SimpleTableProps> = ({
       } else if (isMultiSelect && isCtrlOrMeta) {
         currentRow.toggleSelected()
       } else {
-        tableInstance.setRowSelection({ [currentId]: true })
+        // If it's already selected and it's the only one, don't update selection to avoid unnecessary re-renders
+        const selection = tableInstance.getState().rowSelection
+        if (!(Object.keys(selection).length === 1 && selection[currentId])) {
+          tableInstance.setRowSelection({ [currentId]: true })
+        }
       }
       lastSelectedIdRef.current = currentId
     },
@@ -296,9 +321,19 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [handleSelectionLogic],
   )
 
+  // handleRenameForKeydown reads from onRenameRef so it has empty deps and is
+  // permanently stable — keeping handleRowKeyDown and therefore columns stable.
+  const handleRenameForKeydown = useCallback(
+    (e: RowKeyboardEvent, row: Row<SimpleTableRow>) => {
+      if (!row.original.isDisabled) onRenameRef.current?.(row.id, row)
+    },
+    [], // eslint-disable-line react-hooks/exhaustive-deps
+  )
+
   const { handleRowKeyDown } = useRowKeydown<SimpleTableRow>({
     handleRowSelect: handleRowSelectForKeydown,
     handleArrowNavigation,
+    handleRename: handleRenameForKeydown,
   })
 
   const columns = useMemo<ColumnDef<SimpleTableRow>[]>(
@@ -333,6 +368,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
           const props: SimpleTableCellTemplateProps & {
             onClick?: (event: ReactMouseEvent<HTMLElement, MouseEvent>) => void
+            onDoubleClick?: (event: ReactMouseEvent<HTMLElement, MouseEvent>) => void
           } = {
             className: clsx({
               selected: row.getIsSelected(),
@@ -364,8 +400,14 @@ const SimpleTable: FC<SimpleTableProps> = ({
             endContent: row.original.endContent,
             isDisabled: row.original.isDisabled,
             disabledMessage: row.original.disabledMessage,
+            isRenaming: row.id === renamingIdRef.current,
+            onSubmitRename: onSubmitRenameRef.current
+              ? (v) => onSubmitRenameRef.current!(row.id, v)
+              : undefined,
+            onCancelRename: onCancelRenameRef.current,
             ...pt?.cell,
             onClick: handleCellClick, // Added onClick handler
+            onDoubleClick: (e) => onRowDoubleClickRef.current?.(row.id, row),
           }
 
           // Use children function if provided, otherwise default to SimpleTableCellTemplate
@@ -384,7 +426,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
       enableClickToDeselect,
       enableNonFolderIndent,
       imgRatio,
-    ], // include enableClickToDeselect for completeness
+    ],
   )
 
   const handleRowSelectionChangeCallback: OnChangeFn<RowSelectionState> = useCallback(
@@ -439,12 +481,15 @@ const SimpleTable: FC<SimpleTableProps> = ({
     filterFromLeafRows: true,
     // debugTable: true,
     // @ts-expect-error: updateData is not required
-    meta: {
-      isExpandable: !!isExpandable,
-      isLoading: isLoading,
-      children: children,
-      ...meta,
-    },
+    meta: useMemo(
+      () => ({
+        isExpandable: !!isExpandable,
+        isLoading: isLoading,
+        children: children,
+        ...meta,
+      }),
+      [isExpandable, isLoading, children, meta],
+    ),
   })
 
   // Update tableRef whenever the table instance changes.

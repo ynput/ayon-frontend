@@ -184,8 +184,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
     renamingProject,
     onSubmitRenameProject,
     closeRenameProject,
-    onRenameFolder,
-    onRenameProject,
   } = useProjectMenuController({
     projects,
     folders: folders || [],
@@ -236,14 +234,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         pt={pt}
       />
       <ProjectFolderFormDialog {...folderDialogProps} />
-      <ProjectsShortcuts
-        rowSelection={rowSelection}
-        folders={folders || []}
-        onOpenFolderDialog={handleOpenFolderDialog}
-        onRenameFolder={onRenameFolder}
-        onRenameProject={onRenameProject}
-        disabled={!powerLicense}
-      />
+      <ProjectsShortcuts onOpenFolderDialog={handleOpenFolderDialog} disabled={!powerLicense} />
     </>
   )
 }

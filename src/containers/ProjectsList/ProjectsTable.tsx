@@ -8,8 +8,16 @@ import { RowSelectionState, ExpandedState, RowPinningState } from '@tanstack/rea
 import { FC, Dispatch, SetStateAction, useMemo } from 'react'
 import ProjectsListTableHeader from './ProjectsListTableHeader'
 import { ProjectsSimpleTable } from './ProjectsSimpleTable'
-import { PinnedDivider } from './ProjectsListRow.styled'
 import { useSessionStorage } from '@shared/hooks'
+import styled from 'styled-components'
+
+export const PinnedDivider = styled.hr`
+  margin: 0;
+  width: 100%;
+  border-style: solid;
+  border-width: 1px 0 0 0;
+  border-color: var(--md-sys-color-outline-variant);
+`
 
 type ButtonType = 'delete' | 'add' | 'filter' | 'search' | 'select-all'
 
@@ -45,6 +53,8 @@ interface ProjectsTableProps {
   renamingProject?: string | null
   onSubmitRenameProject?: (value: string) => void
   closeRenameProject?: () => void
+  onRenameFolder?: (folderId: string) => void
+  onRenameProject?: (projectName: string) => void
   containerClassName?: string
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
@@ -82,6 +92,8 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   renamingProject,
   onSubmitRenameProject,
   closeRenameProject,
+  onRenameFolder,
+  onRenameProject,
   containerClassName,
   pt,
 }) => {
@@ -101,14 +113,18 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   const allProjectsSelection = activeTable === 'all' ? selectionState : {}
 
   const handlePinnedSelectionChange = (newSelection: RowSelectionState) => {
-    setActiveTable('pinned')
+    if (activeTable !== 'pinned') {
+      setActiveTable('pinned')
+    }
     const ids = Object.keys(newSelection).filter((id) => newSelection[id])
     onSelect?.(ids)
     onRowSelectionChange?.(newSelection)
   }
 
   const handleAllProjectsSelectionChange = (newSelection: RowSelectionState) => {
-    setActiveTable('all')
+    if (activeTable !== 'all') {
+      setActiveTable('all')
+    }
     const ids = Object.keys(newSelection).filter((id) => newSelection[id])
     onSelect?.(ids)
     onRowSelectionChange?.(newSelection)
@@ -202,6 +218,8 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
             renamingProject={renamingProject}
             onSubmitRenameProject={onSubmitRenameProject}
             closeRenameProject={closeRenameProject}
+            onRenameFolder={onRenameFolder}
+            onRenameProject={onRenameProject}
             onOpenProject={onOpenProject}
             onSettingsClick={onSettingsClick}
             fitContent
@@ -234,6 +252,8 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
           renamingProject={renamingProject}
           onSubmitRenameProject={onSubmitRenameProject}
           closeRenameProject={closeRenameProject}
+          onRenameFolder={onRenameFolder}
+          onRenameProject={onRenameProject}
           onOpenProject={onOpenProject}
           onSettingsClick={onSettingsClick}
           hidePinned={!search}
