@@ -88,6 +88,7 @@ const useVersionsGroupBy = ({
         filters: groupById === 'taskType' ? taskFilters : versionFilters, // taskType is not natively supported for versions, so we use taskFilters here
         groupBy,
         groupPageCounts,
+        dataType: groupByDataType,
       }) ?? []
 
     // Only fetch versions for groups that are expanded

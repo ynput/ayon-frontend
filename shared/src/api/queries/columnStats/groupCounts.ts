@@ -15,9 +15,13 @@ export type GroupCountsSelection = {
   complete: boolean
 }
 
-// Distribution buckets the values; NotFilled gives the null/empty (Ungrouped)
-// count so the denominator covers every item, not just the ones with a value.
-const DISTRIBUTION_AGGS = [StatsOperation.Distribution, StatsOperation.NotFilled]
+// Distribution = per-group counts; Filled/NotFilled = entity totals for the
+// percentage denominator (an entity with N values counts once, not N times).
+const DISTRIBUTION_AGGS = [
+  StatsOperation.Distribution,
+  StatsOperation.Filled,
+  StatsOperation.NotFilled,
+]
 
 // groupBy.id -> backend stats field, per entity. Only the field-value groupings
 // the distribution endpoint covers; folder/folderType/hierarchy return null.
@@ -55,9 +59,8 @@ export const groupByToStatsTarget = (
 }
 
 // Per-group count + percentage of the filtered total, read from the grouped
-// field's distribution. Denominator = all items (value buckets + not-filled).
-// Ungrouped count = not-filled; its percentage is the remainder so the column
-// sums to 100% (absorbs per-group rounding drift).
+// field's distribution. Denominator = filled + not-filled entities (an entity
+// with N values counts once, not N times). Ungrouped count = not-filled.
 // Map a stats target field to the canonical fieldStats columnName. Attribute
 // targets are dot-paths (inherited_attributes.x / attrib.x) that canonicalColumnId
 // (underscore-based) won't normalize, so resolve those to attrib_<name> here.
@@ -83,7 +86,9 @@ export const selectGroupCounts = (
   const complete = !!stat && (distribution.length > 0 || filled === 0)
 
   const distSum = distribution.reduce((sum, d) => sum + (d.count || 0), 0)
-  const total = distSum + notFilled
+  // entity total when valueFilledCount is available (an entity with N values
+  // counts once); else fall back to the distribution sum (may over-count lists).
+  const total = filled ? filled + notFilled : distSum + notFilled
 
   for (const d of distribution) {
     const count = d.count || 0

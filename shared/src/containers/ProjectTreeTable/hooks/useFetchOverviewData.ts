@@ -397,6 +397,7 @@ export const useFetchOverviewData = ({
         filters: taskFilters.filter,
         groupBy,
         groupPageCounts,
+        dataType: groupByDataType,
       }) ?? []
 
     // Only fetch tasks for groups that are expanded

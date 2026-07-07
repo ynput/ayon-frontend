@@ -1,61 +1,37 @@
 import { useLoadModule } from '@shared/hooks'
 import { GroupSettingsFallback } from '../containers/ProjectTreeTable/components/GroupSettingsFallback'
-import { EntityGroup, QueryFilter } from '@shared/api'
-import { TableGroupBy } from '../containers/ProjectTreeTable/context'
+import {
+  getGroupQueries,
+  type GetGroupQueriesParams,
+  type GroupQuery,
+} from '../containers/ProjectTreeTable/utils/getGroupQueries'
 import { usePowerpack } from '@shared/context'
-import { Filter } from '@ynput/ayon-react-components'
-
-type GetGroupQueriesParams = {
-  groups: EntityGroup[]
-  taskGroups?: EntityGroup[] // deprecated, but keep for backward compatibility
-  filters: QueryFilter | Filter[] | undefined
-  groupBy: TableGroupBy
-  groupPageCounts: Record<string, number>
-}
-
-type GetGroupQueriesReturn = {
-  value: any
-  count: number
-  filter: string
-}[]
 
 export type ProjectTableModulesType = {
   GroupSettings: typeof GroupSettingsFallback
-  getGroupQueries?: (params: GetGroupQueriesParams) => GetGroupQueriesReturn
+  getGroupQueries: (params: GetGroupQueriesParams) => GroupQuery[]
   requiredVersion?: string
   isLoading: boolean
 }
 
-const getGroupQueriesFallback = (params: GetGroupQueriesParams): GetGroupQueriesReturn => []
-
+// getGroupQueries is community (shared, not license-gated) — see issue #2083.
+// Only the advanced GroupSettings config UI stays a powerpack remote.
 export const useGroupByRemoteModules = (): ProjectTableModulesType => {
   const { powerLicense } = usePowerpack()
 
-  const minVersion = '1.1.1-dev'
-  const [GroupSettings, { outdated, isLoading: isLoadingSettings }] = useLoadModule({
+  const [GroupSettings, { outdated, isLoading }] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'GroupSettings',
     fallback: GroupSettingsFallback,
-    minVersion: minVersion,
+    minVersion: '1.1.1-dev',
     skip: !powerLicense, // skip loading if powerpack license is not available
   })
-
-  const [getGroupQueries, { isLoading: isLoadingQueries }] = useLoadModule({
-    addon: 'powerpack',
-    remote: 'slicer',
-    module: 'getGroupQueries',
-    fallback: getGroupQueriesFallback,
-    minVersion: minVersion,
-    skip: !powerLicense, // skip loading if powerpack license is not available
-  })
-
-  const isLoading = isLoadingSettings || isLoadingQueries
 
   return {
     GroupSettings,
     getGroupQueries,
     requiredVersion: outdated?.required,
-    isLoading: isLoading,
+    isLoading,
   }
 }
