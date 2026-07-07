@@ -31,6 +31,7 @@ import {
   DEFAULT_COLUMNS_TASK,
   DEFAULT_COLUMNS_VERSION,
 } from '@pages/ProjectsPage/constants'
+import useReplaceListItem from '../hooks/useReplaceListItem'
 
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
 
@@ -69,6 +70,8 @@ export interface ListItemsDataContextValue {
   deleteListItemAction: UseDeleteListItemsReturn['deleteListItemAction']
   // reorder list item
   reorderListItem: UseReorderListItemReturn['reorderListItem']
+  // replace list items
+  replaceListItemsState: readonly [null | string[], (ids: null | string[]) => void]
   // reset filters
   resetFilters: () => void
   refetch: () => void
@@ -293,6 +296,10 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     accessLevel: selectedList?.accessLevel,
   })
 
+  const { replaceItemContextMenu, state: replaceListItemsState } = useReplaceListItem({
+    entityType: listEntityType || '',
+  })
+
   const handleReorderFinished = () => {
     // remove any sorting
     updateSorting([])
@@ -314,9 +321,10 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     'copy-paste',
     'show-details',
     'open-viewer',
-    deleteListItemMenuItem,
     // add context menu to add to lists but filter out own list
     menuItemsAddToList((item) => item.id !== selectedListId),
+    replaceItemContextMenu,
+    deleteListItemMenuItem,
   ]
 
   return (
@@ -352,6 +360,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         deleteListItemAction,
         // reorder list item
         reorderListItem,
+        // replace list items
+        replaceListItemsState,
         resetFilters,
         refetch,
         setLinksVisible,
