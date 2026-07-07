@@ -6,7 +6,7 @@ const ProjectDropdown = ({ projectName, setProjectName, disabled, style }) => {
   const { projects, isLoading, error } = useGlobalContext()
 
   const projectOptions = useMemo(() => {
-    if (isLoading || error) return []
+    if (isLoading?.projects || error?.projects) return []
     return projects.active.map((i) => ({ value: i.name }))
   }, [projects.active, isLoading, error])
 
