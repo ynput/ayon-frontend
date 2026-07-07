@@ -58,9 +58,6 @@ export const groupByToStatsTarget = (
   return null
 }
 
-// Per-group count + percentage of the filtered total, read from the grouped
-// field's distribution. Denominator = filled + not-filled entities (an entity
-// with N values counts once, not N times). Ungrouped count = not-filled.
 // Map a stats target field to the canonical fieldStats columnName. Attribute
 // targets are dot-paths (inherited_attributes.x / attrib.x) that canonicalColumnId
 // (underscore-based) won't normalize, so resolve those to attrib_<name> here.

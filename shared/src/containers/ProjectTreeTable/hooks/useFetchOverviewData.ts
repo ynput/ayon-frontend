@@ -15,6 +15,7 @@ import { LoadingTasks } from '../types'
 import { TasksByFolderMap } from '../utils'
 import { TableGroupBy } from '../context'
 import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
+import { getGroupQueries } from '../utils/getGroupQueries'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { useGetEntityLinksQuery } from '@shared/api'
@@ -77,7 +78,7 @@ export const useFetchOverviewData = ({
   skipLinks,
   showComments = false,
 }: Params): useFetchOverviewDataData => {
-  const { getGroupQueries, isLoading: isLoadingModules } = modules
+  const { isLoading: isLoadingModules } = modules
 
   const {
     folders,
@@ -386,19 +387,16 @@ export const useFetchOverviewData = ({
       .map(([id]) => id.slice(GROUP_BY_ID.length))
   }, [expanded])
 
-  // get group queries from powerpack, filtered to only include expanded groups
   const groupQueries: GetGroupedTasksListArgs['groups'] = useMemo(() => {
     if (!groupBy) return []
 
-    const allGroupQueries =
-      getGroupQueries?.({
-        groups: taskGroups,
-        taskGroups, // deprecated, but keep for backward compatibility
-        filters: taskFilters.filter,
-        groupBy,
-        groupPageCounts,
-        dataType: groupByDataType,
-      }) ?? []
+    const allGroupQueries = getGroupQueries({
+      groups: taskGroups,
+      filters: taskFilters.filter,
+      groupBy,
+      groupPageCounts,
+      dataType: groupByDataType,
+    })
 
     // Only fetch tasks for groups that are expanded
     return allGroupQueries.filter((group) => expandedGroupValues.includes(group.value))
@@ -408,7 +406,6 @@ export const useFetchOverviewData = ({
     groupPageCounts,
     groupByDataType,
     taskFilters.filter,
-    getGroupQueries,
     expandedGroupValues,
   ])
 
@@ -510,7 +507,8 @@ export const useFetchOverviewData = ({
 
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
-      if (group && group in groupPageCounts) {
+      // Ungrouped is never seeded into pageCounts, so don't gate on key presence
+      if (group) {
         incrementPageCount(group)
       }
     } else if (hasNextPage) {

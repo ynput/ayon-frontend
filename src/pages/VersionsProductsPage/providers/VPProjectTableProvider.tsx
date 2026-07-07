@@ -32,7 +32,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
 
   // filter-aware per-group counts for the active grouping (community: not license-gated)
   const { groupBy } = useColumnSettingsContext()
-  const { counts: groupCounts } = useGroupCounts({
+  const { counts: groupCounts, complete: groupCountsComplete } = useGroupCounts({
     entity: 'version',
     groupBy,
     skip: isLoadingViews,
@@ -80,6 +80,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       tableRows={versionsTableData}
       groups={groups}
       groupCounts={groupCounts}
+      groupCountsComplete={groupCountsComplete}
       groupByConfig={{ entityType: 'version' }}
       hierarchyOptions={hierarchyOptions}
       groupRowFunc={buildVersionRow}

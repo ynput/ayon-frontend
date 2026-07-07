@@ -1,21 +1,14 @@
 import { useLoadModule } from '@shared/hooks'
 import { GroupSettingsFallback } from '../containers/ProjectTreeTable/components/GroupSettingsFallback'
-import {
-  getGroupQueries,
-  type GetGroupQueriesParams,
-  type GroupQuery,
-} from '../containers/ProjectTreeTable/utils/getGroupQueries'
 import { usePowerpack } from '@shared/context'
 
 export type ProjectTableModulesType = {
   GroupSettings: typeof GroupSettingsFallback
-  getGroupQueries: (params: GetGroupQueriesParams) => GroupQuery[]
   requiredVersion?: string
   isLoading: boolean
 }
 
-// getGroupQueries is community (shared, not license-gated) — see issue #2083.
-// Only the advanced GroupSettings config UI stays a powerpack remote.
+// getGroupQueries is community (not license-gated, #2083); only GroupSettings stays powerpack
 export const useGroupByRemoteModules = (): ProjectTableModulesType => {
   const { powerLicense } = usePowerpack()
 
@@ -30,7 +23,6 @@ export const useGroupByRemoteModules = (): ProjectTableModulesType => {
 
   return {
     GroupSettings,
-    getGroupQueries,
     requiredVersion: outdated?.required,
     isLoading,
   }

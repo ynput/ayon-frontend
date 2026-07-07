@@ -41,7 +41,7 @@ const getGroupData = (
   groupValue: string,
   groups?: EntityGroup[],
   groupCounts?: GroupCountsMap,
-  hasNamedCounts?: boolean,
+  groupCountsComplete?: boolean,
 ): GroupData => {
   const stat = groupCounts?.get(groupValue)
   const group = groups?.find((g) => g.value === groupValue)
@@ -60,7 +60,8 @@ const getGroupData = (
   if (stat) {
     base.count = stat.count
     base.percentage = stat.percentage
-  } else if (groupCounts && hasNamedCounts) {
+  } else if (groupCounts && groupCountsComplete) {
+    // stats are authoritative: a named group absent from them truly has 0 matches
     base.count = 0
     base.percentage = undefined
   }
@@ -83,6 +84,7 @@ type BuildGroupByTableProps = {
   showEmpty?: boolean
   groupRowFunc?: (node: any) => TableRow
   groupCounts?: GroupCountsMap
+  groupCountsComplete?: boolean
 }
 
 // get sorting ids based on the groupBy field
@@ -159,6 +161,7 @@ const useBuildGroupByTableData = ({
   showEmpty,
   groupRowFunc, // for versions etc
   groupCounts,
+  groupCountsComplete,
 }: BuildGroupByTableProps) => {
   const project = useProjectContext()
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
@@ -184,15 +187,16 @@ const useBuildGroupByTableData = ({
     (groupBy: TableGroupBy): TableRow[] => {
       const groupsMap = new Map<string, TableRow>()
 
-      // named (distribution) counts arrive after the ungrouped/notFilled count;
-      // only trust a stat's 0 for a named group once the distribution has loaded
-      const hasNamedCounts =
-        !!groupCounts && [...groupCounts.keys()].some((k) => k !== UNGROUPED_VALUE)
-
       for (const group of groups) {
         const groupValue = group.value?.toString() as string
         const groupId = buildGroupId(groupValue)
-        const groupData = getGroupData(groupBy.id, groupValue, groups, groupCounts, hasNamedCounts)
+        const groupData = getGroupData(
+          groupBy.id,
+          groupValue,
+          groups,
+          groupCounts,
+          groupCountsComplete,
+        )
         groupsMap.set(groupValue, {
           id: groupId,
           name: groupValue,
@@ -331,7 +335,17 @@ const useBuildGroupByTableData = ({
 
       return showEmpty ? groupsList : nonEmptyGroups
     },
-    [entities, entityType, groups, attribFields, showEmpty, groupCounts, entityToGroupRow, project],
+    [
+      entities,
+      entityType,
+      groups,
+      attribFields,
+      showEmpty,
+      groupCounts,
+      groupCountsComplete,
+      entityToGroupRow,
+      project,
+    ],
   )
 }
 

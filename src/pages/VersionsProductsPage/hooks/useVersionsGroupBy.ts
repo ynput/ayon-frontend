@@ -18,6 +18,7 @@ import {
   isGroupId,
   GROUP_BY_ID,
 } from '@shared/containers/ProjectTreeTable/hooks/useBuildGroupByTableData'
+import { getGroupQueries } from '@shared/containers/ProjectTreeTable/utils/getGroupQueries'
 import { ExpandedState } from '@tanstack/react-table'
 
 type Props = {
@@ -38,7 +39,7 @@ const useVersionsGroupBy = ({
   expanded,
 }: Props) => {
   const { attribFields } = useProjectDataContext()
-  const { getGroupQueries, isLoading: isLoadingModules } = modules
+  const { isLoading: isLoadingModules } = modules
 
   const { groupBy: groupById, columns } = useVPViewsContext()
 
@@ -77,19 +78,16 @@ const useVersionsGroupBy = ({
       .map(([id]) => id.slice(GROUP_BY_ID.length))
   }, [expanded])
 
-  // get group queries from powerpack, filtered to only include expanded groups
   const groupFilters: GetGroupedVersionsListArgs['groups'] = useMemo(() => {
     if (!groupBy || !groups.length) return []
 
-    const allGroupFilters =
-      getGroupQueries?.({
-        groups,
-        taskGroups: groups, // deprecated, but keep for backward compatibility
-        filters: groupById === 'taskType' ? taskFilters : versionFilters, // taskType is not natively supported for versions, so we use taskFilters here
-        groupBy,
-        groupPageCounts,
-        dataType: groupByDataType,
-      }) ?? []
+    const allGroupFilters = getGroupQueries({
+      groups,
+      filters: groupById === 'taskType' ? taskFilters : versionFilters, // taskType is not natively supported for versions, so we use taskFilters here
+      groupBy,
+      groupPageCounts,
+      dataType: groupByDataType,
+    })
 
     // Only fetch versions for groups that are expanded
     return allGroupFilters.filter((group) => expandedGroupValues.includes(group.value))
@@ -99,7 +97,6 @@ const useVersionsGroupBy = ({
     groupPageCounts,
     groupByDataType,
     versionFilters,
-    getGroupQueries,
     expandedGroupValues,
     groupById,
     taskFilters,

@@ -1,7 +1,7 @@
 import type { EntityGroup } from '@shared/api'
-import type { QueryCondition, QueryFilter } from '@shared/containers'
+import type { QueryCondition, QueryFilter } from '../types/operations'
 import type { TableGroupBy } from '../context'
-import { UNGROUPED_VALUE } from '@shared/containers'
+import { UNGROUPED_VALUE } from '../hooks/useBuildGroupByTableData'
 
 export type GetGroupQueriesParams = {
   groups: EntityGroup[]
@@ -9,7 +9,6 @@ export type GetGroupQueriesParams = {
   groupBy: TableGroupBy
   groupPageCounts: Record<string, number>
   dataType?: string
-  taskGroups?: EntityGroup[] // deprecated alias for `groups`, kept for back-compat
 }
 
 export type GroupQuery = { value: string; count: number; filter: string }
@@ -22,30 +21,20 @@ const MIN_PER_GROUP = 100
 export const getCountPerGroup = (groupCount = 1): number =>
   Math.max(MIN_PER_GROUP, Math.min(MAX_PER_GROUP, Math.round(TOTAL_GROUP_COUNT / groupCount)))
 
-// tags/assignees/list_of_* hold arrays -> membership uses includes/excludes.
-const isListField = (groupBy: TableGroupBy, dataType?: string): boolean =>
-  !!dataType?.startsWith('list_of_') ||
-  groupBy.id.includes('tags') ||
-  groupBy.id.includes('assignees')
-
-// One GetGroupedTasksList filter per group value, plus an "Ungrouped" bucket for
-// entities with no value. Every query carries the active `filters` so counts and
-// rows stay filter-aware. Pure + community — no powerpack dependency.
+// one filter per group value + an "Ungrouped" bucket for entities with no value
 export const getGroupQueries = ({
-  groups: groupsNew = [],
-  taskGroups = [],
+  groups = [],
   filters = { conditions: [] },
   groupBy,
   groupPageCounts,
   dataType,
 }: GetGroupQueriesParams): GroupQuery[] => {
-  const groups = groupsNew.length ? groupsNew : taskGroups
   if (!groups.length) return []
 
-  const list = isListField(groupBy, dataType)
+  // list_of_* fields hold arrays -> membership operators instead of equality
+  const list = !!dataType?.startsWith('list_of_')
   const base = filters.conditions || []
 
-  // named groups: base filter AND field matches this value
   const named: GroupQuery[] = groups.map((group) => {
     const condition: QueryCondition = {
       key: groupBy.id,
@@ -60,7 +49,6 @@ export const getGroupQueries = ({
     }
   })
 
-  // ungrouped: base filter AND field is none of the group values
   const ungroupedCondition: QueryCondition = {
     key: groupBy.id,
     value: groups.map((g) => g.value),
@@ -68,7 +56,7 @@ export const getGroupQueries = ({
   }
   const ungrouped: GroupQuery = {
     value: UNGROUPED_VALUE,
-    count: getCountPerGroup(),
+    count: getCountPerGroup() * (groupPageCounts[UNGROUPED_VALUE] || 1),
     filter: JSON.stringify({ ...filters, conditions: [...base, ungroupedCondition] }),
   }
 

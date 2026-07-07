@@ -86,6 +86,7 @@ export interface ProjectTableProviderProps {
   overrideGroupBy?: TableGroupBy
   // filter-aware per-group counts for the active grouping (overlaid onto group rows)
   groupCounts?: GroupCountsMap
+  groupCountsComplete?: boolean
 
   // links loading
   loadingLinksEntityIds?: Set<string>
@@ -178,6 +179,7 @@ export const ProjectTableProvider = ({
   groupRowFunc,
   overrideGroupBy,
   groupCounts,
+  groupCountsComplete,
   queryFilters,
   updateShowHierarchy,
   toggleExpanded,
@@ -238,6 +240,7 @@ export const ProjectTableProvider = ({
     showEmpty: showEmptyGroups,
     groupRowFunc,
     groupCounts,
+    groupCountsComplete,
   })
 
   const attribFieldsScoped = useMemo(

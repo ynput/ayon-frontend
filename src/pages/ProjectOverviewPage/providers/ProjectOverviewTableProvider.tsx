@@ -65,7 +65,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
     [statsFolderIds, props.selectedFolders],
   )
 
-  const { counts: groupCounts } = useGroupCounts({
+  const { counts: groupCounts, complete: groupCountsComplete } = useGroupCounts({
     entity: 'task',
     groupBy: groupByForCounts,
     skip: isLoadingViews,
@@ -92,6 +92,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         {...props}
         groups={isFlatFolderView ? [] : taskGroups}
         groupCounts={groupCounts}
+        groupCountsComplete={groupCountsComplete}
         overrideGroupBy={overrideGroupBy}
         isFlatFolderView={isFlatFolderView}
         powerpack={powerpack}
