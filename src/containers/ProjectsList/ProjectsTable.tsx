@@ -1,12 +1,15 @@
-import { Container, SimpleTableProvider, SimpleTableRow } from '@shared/containers/SimpleTable'
+import {
+  Container,
+  SimpleTableProvider,
+  SimpleTableRow,
+  SimpleTableRowContextMenuBuilder,
+} from '@shared/containers/SimpleTable'
 import { RowSelectionState, ExpandedState, RowPinningState } from '@tanstack/react-table'
-import { FC, useCallback, Dispatch, SetStateAction } from 'react'
+import { FC, Dispatch, SetStateAction, useMemo } from 'react'
 import ProjectsListTableHeader from './ProjectsListTableHeader'
-import { useCreateContextMenu } from '@shared/containers'
 import { ProjectsSimpleTable } from './ProjectsSimpleTable'
 import { PinnedDivider } from './ProjectsListRow.styled'
 import { useSessionStorage } from '@shared/hooks'
-import { usePowerpack } from '@shared/context'
 
 type ButtonType = 'delete' | 'add' | 'filter' | 'search' | 'select-all'
 
@@ -25,6 +28,7 @@ interface ProjectsTableProps {
   multiSelect?: boolean
   readonly?: boolean
   buildMenuItems?: (selection: string[], options?: any) => any[]
+  rowContextMenuBuilders?: SimpleTableRowContextMenuBuilder[]
   selection: string[]
   onSelect?: (ids: string[]) => void
   onOpenProject?: (projectName: string) => void
@@ -61,6 +65,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   multiSelect,
   readonly = false,
   buildMenuItems,
+  rowContextMenuBuilders = [],
   selection,
   onSelect,
   onOpenProject,
@@ -80,10 +85,6 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   containerClassName,
   pt,
 }) => {
-  // create the ref and model
-  const { powerLicense, setPowerpackDialog } = usePowerpack()
-  const [ctxMenuShow] = useCreateContextMenu([], { powerLicense, setPowerpackDialog })
-
   // Track which table has active selection: 'pinned' | 'all'
   const [activeTable, setActiveTable] = useSessionStorage<'pinned' | 'all'>(
     'project-list-selection',
@@ -113,6 +114,28 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
     onRowSelectionChange?.(newSelection)
   }
 
+  const pinnedContextMenuBuilders = useMemo(
+    () => [
+      ...rowContextMenuBuilders,
+      (() => {
+        setActiveTable('pinned')
+        return []
+      }) as SimpleTableRowContextMenuBuilder,
+    ],
+    [rowContextMenuBuilders, setActiveTable],
+  )
+
+  const allProjectsContextMenuBuilders = useMemo(
+    () => [
+      ...rowContextMenuBuilders,
+      (() => {
+        setActiveTable('all')
+        return []
+      }) as SimpleTableRowContextMenuBuilder,
+    ],
+    [rowContextMenuBuilders, setActiveTable],
+  )
+
   // Wrap onRowPinningChange to switch activeTable when selected project is unpinned
   const handleRowPinningChange = (newPinning: RowPinningState) => {
     const newPinnedList = newPinning?.top || []
@@ -125,48 +148,6 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
     }
     onRowPinningChange?.(newPinning)
   }
-  const handleRowContext = useCallback(
-    (e: React.MouseEvent<HTMLElement>) => {
-      if (readonly) return
-
-      e.preventDefault()
-      e.stopPropagation()
-
-      const rowId = e.currentTarget.id
-      let newSelection: string[] = [...selection]
-      // if we are selecting a row outside of the selection (or none), set the selection to the row
-      if (!newSelection.includes(rowId)) {
-        newSelection = [rowId]
-        onSelect?.(newSelection)
-      }
-
-      // check which table the row is in
-      const isPinnedRow = !!e.currentTarget.closest('.pinned-projects')
-      if (isPinnedRow && activeTable !== 'pinned') {
-        setActiveTable('pinned')
-      } else if (!isPinnedRow && activeTable !== 'all') {
-        setActiveTable('all')
-      }
-
-      const newSelectedRows = newSelection
-
-      // build menu items based on selection
-      if (buildMenuItems) {
-        const menuItems = buildMenuItems(newSelectedRows, {
-          command: true,
-          dividers: false,
-          hidden: {
-            'add-project': true,
-            search: true,
-            'select-all': true,
-          },
-        })
-
-        ctxMenuShow(e, menuItems)
-      }
-    },
-    [ctxMenuShow, buildMenuItems, selection, onSelect, readonly, rowPinning, setActiveTable],
-  )
 
   const pinnedSet = new Set(rowPinning)
 
@@ -214,7 +195,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
             multiSelect={multiSelect}
             error={error}
             readonly={readonly}
-            handleRowContext={handleRowContext}
+            rowContextMenuBuilders={pinnedContextMenuBuilders}
             renamingFolder={renamingFolder}
             onSubmitRenameFolder={onSubmitRenameFolder}
             closeRenameFolder={closeRenameFolder}
@@ -246,7 +227,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
           multiSelect={multiSelect}
           error={error}
           readonly={readonly}
-          handleRowContext={handleRowContext}
+          rowContextMenuBuilders={allProjectsContextMenuBuilders}
           renamingFolder={renamingFolder}
           onSubmitRenameFolder={onSubmitRenameFolder}
           closeRenameFolder={closeRenameFolder}

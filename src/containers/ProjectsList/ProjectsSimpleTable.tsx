@@ -1,5 +1,8 @@
 import ProjectsListRow from '@containers/ProjectsList/ProjectsListRow.tsx'
-import SimpleTable, { SimpleTableRow } from '@shared/containers/SimpleTable'
+import SimpleTable, {
+  SimpleTableRow,
+  SimpleTableRowContextMenuBuilder,
+} from '@shared/containers/SimpleTable'
 import { FC } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -10,7 +13,7 @@ interface ProjectsSimpleTableProps extends React.HTMLAttributes<HTMLDivElement> 
   multiSelect?: boolean
   error?: string
   readonly?: boolean
-  handleRowContext?: (e: React.MouseEvent<HTMLElement>) => void
+  rowContextMenuBuilders?: SimpleTableRowContextMenuBuilder[]
   renamingFolder?: string | null
   onSubmitRenameFolder?: (value: string) => void
   closeRenameFolder?: () => void
@@ -30,7 +33,7 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
   multiSelect,
   error,
   readonly,
-  handleRowContext,
+  rowContextMenuBuilders = [],
   renamingFolder,
   onSubmitRenameFolder,
   closeRenameFolder,
@@ -51,6 +54,7 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
       navigate('/manageProjects/projectSettings?project=' + id)
     }
   }
+
   return (
     <SimpleTable
       data={tableData}
@@ -62,8 +66,8 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
       enableClickToDeselect={false}
       enableNonFolderIndent={true}
       fitContent={fitContent}
+      rowContextMenuBuilders={readonly ? [] : rowContextMenuBuilders}
       meta={{
-        handleRowContext: readonly ? undefined : handleRowContext,
         renamingFolder,
         onSubmitRenameFolder,
         closeRenameFolder,
@@ -77,7 +81,6 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
         <ProjectsListRow
           {...props}
           id={row.id}
-          onContextMenu={readonly ? undefined : table.options.meta?.handleRowContext}
           code={row.original.data.code}
           isPinned={row.getIsPinned() === 'top'}
           hidePinned={hidePinned}

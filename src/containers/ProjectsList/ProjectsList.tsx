@@ -171,6 +171,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
   )
   const {
     buildMenuItems,
+    rowContextMenuBuilder,
     canCreateProject,
     rowPinning,
     onRowPinningChange,
@@ -216,6 +217,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         multiSelect={multiSelect}
         readonly={false}
         buildMenuItems={buildMenuItems}
+        rowContextMenuBuilders={[rowContextMenuBuilder]}
         selection={selection}
         onSelect={onSelect}
         onOpenProject={onOpenProject}
