@@ -83,6 +83,9 @@ import {
   getEntityViewierIds,
   getReadOnlyLists,
   getTableFieldOptions,
+  isFilterError,
+  getFilterErrorMessage,
+  getEntitiesLabelFromScopes,
 } from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
 
@@ -253,8 +256,12 @@ export const ProjectTreeTable = ({
     onResetView,
     overrideGroupBy,
     loadingLinksEntityIds,
+    queryFilters,
   } = useProjectTableContext()
   const isGrouping = !!groupBy || !!overrideGroupBy
+
+  const filterError = isFilterError(error, queryFilters)
+  const filterErrorMessage = getFilterErrorMessage(getEntitiesLabelFromScopes(scopes))
 
   // Parent (folder/product) summary scope only applies when those entities are
   // actually on screen: hierarchy view, or grouping by a parent entity.
@@ -770,6 +777,8 @@ export const ProjectTreeTable = ({
               rowOrderIds={rowOrderIds}
               sortableRows={sortableRows}
               error={error}
+              isFilterError={filterError}
+              filterErrorMessage={filterErrorMessage}
               isLoading={isLoading}
               isGrouping={isGrouping}
               getRowHeight={getRowHeight}
@@ -1270,6 +1279,8 @@ interface TableBodyProps {
   rowOrderIds: UniqueIdentifier[]
   sortableRows: boolean
   error?: string
+  isFilterError?: boolean
+  filterErrorMessage?: string
   isLoading: boolean
   isGrouping: boolean
   getRowHeight: (row: TableRow) => number
@@ -1290,6 +1301,8 @@ const TableBody = ({
   rowOrderIds,
   sortableRows,
   error,
+  isFilterError: filterError,
+  filterErrorMessage,
   isLoading,
   isGrouping,
   getRowHeight,
@@ -1416,16 +1429,29 @@ const TableBody = ({
       tableContainerRef.current &&
       createPortal(
         <Styled.AnimatedEmptyPlaceholder>
-          <EmptyPlaceholder message="No items found" error={error}>
-            {onResetView && (
-              <Button
-                variant="filled"
-                label="Reset working view"
-                icon="restart_alt"
-                onClick={onResetView}
-              />
-            )}
-          </EmptyPlaceholder>
+          {filterError ? (
+            <EmptyPlaceholder message={filterErrorMessage} icon="filter_alt_off">
+              {onResetView && (
+                <Button
+                  variant="filled"
+                  label="Reset working view"
+                  icon="restart_alt"
+                  onClick={onResetView}
+                />
+              )}
+            </EmptyPlaceholder>
+          ) : (
+            <EmptyPlaceholder message="No items found" error={error}>
+              {onResetView && (
+                <Button
+                  variant="filled"
+                  label="Reset working view"
+                  icon="restart_alt"
+                  onClick={onResetView}
+                />
+              )}
+            </EmptyPlaceholder>
+          )}
         </Styled.AnimatedEmptyPlaceholder>,
         tableContainerRef.current,
       )

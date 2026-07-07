@@ -23,7 +23,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
     useVersionsDataContext()
 
   const { resetWorkingView } = useViewsContext()
-  const { showProducts, onUpdateShowProducts } = useVPViewsContext()
+  const { showProducts, onUpdateShowProducts, filters } = useVPViewsContext()
 
   const { ...projectInfo } = useProjectContext()
   const { attribFields, users } = useProjectDataContext()
@@ -75,6 +75,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       hierarchyActive={showProducts}
       isLoading={isLoadingAll}
       scopes={SCOPES}
+      queryFilters={{ filter: filters as any, search: undefined }}
       playerOpen={viewerOpen}
       onOpenPlayer={handleOpenPlayer}
       error={error}

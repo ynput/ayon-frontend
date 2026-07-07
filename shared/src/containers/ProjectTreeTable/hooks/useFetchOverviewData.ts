@@ -30,6 +30,7 @@ type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
   tasksMap: TaskNodeMap
   tasksByFolderMap: TasksByFolderMap
+  error?: unknown // first task/folder load failure (e.g. corrupt filter), if any
   isLoadingAll: boolean // the whole table is a loading state
   isLoadingMore: boolean // loading more tasks
   loadingTasks: LoadingTasks // show number of loading tasks per folder or root
@@ -96,6 +97,7 @@ export const useFetchOverviewData = ({
   const {
     data: expandedFoldersTasks = [],
     isFetching: isFetchingExpandedFoldersTasks,
+    error: expandedFoldersTasksError,
     refetch: refetchExpandedFoldersTasks,
     isUninitialized: isUninitializedExpandedFoldersTasks,
   } = useGetOverviewTasksByFoldersQuery(
@@ -123,6 +125,7 @@ export const useFetchOverviewData = ({
     isUninitialized,
     isLoading: isLoadingTasksFolders,
     isUninitialized: isUninitializedTasksFolders,
+    error: searchFoldersError,
     refetch: refetchTasksFolders,
   } = useGetSearchFoldersQuery(
     {
@@ -331,6 +334,7 @@ export const useFetchOverviewData = ({
     data: tasksListInfiniteData,
     isLoading: isLoadingTasksList,
     isFetching: isFetchingTasksList,
+    error: tasksListError,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage: isFetchingNextPageTasksList,
@@ -414,6 +418,7 @@ export const useFetchOverviewData = ({
   const {
     data: { tasks: groupTasks = [] } = {},
     isUninitialized: isUninitializedGroupedTasks,
+    error: groupedTasksError,
     refetch: refetchGroupedTasks,
   } = useGetGroupedTasksListQuery(
     {
@@ -611,10 +616,14 @@ export const useFetchOverviewData = ({
     if (!isUninitializedTasksLinks) refetchTasksLinks()
   }
 
+  const error =
+    tasksListError || expandedFoldersTasksError || searchFoldersError || groupedTasksError
+
   return {
     foldersMap: filteredFoldersMap,
     tasksMap: tasksMap,
     tasksByFolderMap: tasksByFolderMap,
+    error,
     isLoadingAll:
       isLoadingFolders || isLoadingTasksList || isLoadingTasksFolders || isLoadingModules, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
