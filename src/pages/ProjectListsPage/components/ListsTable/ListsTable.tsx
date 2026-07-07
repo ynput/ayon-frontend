@@ -11,13 +11,10 @@ import ListRow from '../ListRow/ListRow'
 import ListsTableHeader from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
 import { Row, Table } from '@tanstack/react-table'
-import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
-import ListFolderFormDialog from '../ListFolderFormDialog'
-
-export type {
+import useListContextMenu, {
   ListRowContextMenuBuilder,
-  ListRowContextMenuContext,
 } from '@pages/ProjectListsPage/hooks/useListContextMenu'
+import ListFolderFormDialog from '../ListFolderFormDialog'
 
 interface ListsTableProps {
   isReview?: boolean
@@ -51,7 +48,7 @@ const ListsTable: FC<ListsTableProps> = ({
     }
   }, [])
 
-  const { openContext: handleRowContext } = useListContextMenu(rowContextMenuBuilders)
+  const rowContextMenuBuildersAll = useListContextMenu(rowContextMenuBuilders)
 
   // Memoize the render function for the row (definition remains the same)
   const renderListRow = useCallback<
@@ -87,7 +84,6 @@ const ListsTable: FC<ListsTableProps> = ({
         isRenaming={listId === meta?.renamingList}
         onSubmitRename={(v) => meta?.onRenameList(v)}
         onCancelRename={meta?.closeRenameList}
-        onContextMenu={meta?.handleRowContext}
         isTableExpandable={props.isTableExpandable}
         isRowExpandable={row.getCanExpand()}
         isRowExpanded={row.getIsExpanded()}
@@ -136,8 +132,8 @@ const ListsTable: FC<ListsTableProps> = ({
             error={isError ? 'Error loading lists' : undefined}
             onScrollBottom={fetchNextPage}
             enableClickToDeselect={false}
+            rowContextMenuBuilders={rowContextMenuBuildersAll}
             meta={{
-              handleRowContext,
               handleDoubleClick,
               closeRenameList,
               onRenameList,
