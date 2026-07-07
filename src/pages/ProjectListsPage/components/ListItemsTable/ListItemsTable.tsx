@@ -8,7 +8,7 @@ import {
   ProjectTreeTable,
   isFilterError,
   getFilterErrorMessage,
-  getErrorMessage,
+  extractQueryErrorMessage,
 } from '@shared/containers/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
@@ -71,7 +71,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         </EmptyPlaceholder>
       )
     }
-    const errorMessage = getErrorMessage(error) || 'Error loading list items.'
+    const errorMessage = extractQueryErrorMessage(error) || 'Error loading list items.'
     return (
       <EmptyPlaceholder error={errorMessage} ynputError={false}>
         <Button label="Reset" icon="replay" onClick={resetFilters} />

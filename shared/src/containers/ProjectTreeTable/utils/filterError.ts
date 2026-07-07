@@ -25,7 +25,7 @@ export type ActiveFilters = {
 // Pulls a message out of the assorted error shapes these queries produce:
 // infinite-query FETCH_ERROR wrappers ({ error }), RTK validation errors
 // ({ data: { detail } }), a plain Error, or a bare string.
-export const getErrorMessage = (error: unknown): string => {
+export const extractQueryErrorMessage = (error: unknown): string => {
   if (!error) return ''
   if (typeof error === 'string') return error
   if (error instanceof Error) return error.message
@@ -43,7 +43,7 @@ export const hasActiveFilters = (filters?: ActiveFilters): boolean => {
 // otherwise-unexplained load failure.
 export const isFilterError = (error: unknown, filters?: ActiveFilters): boolean => {
   if (!error) return false
-  const message = getErrorMessage(error).toLowerCase()
+  const message = extractQueryErrorMessage(error).toLowerCase()
   if (FILTER_ERROR_SIGNATURES.some((signature) => message.includes(signature))) return true
   return hasActiveFilters(filters)
 }
@@ -52,7 +52,8 @@ export const getFilterErrorMessage = (entities = 'Items'): string =>
   `${entities} were unable to load due to a corrupt filter.`
 
 export const getEntitiesLabelFromScopes = (scopes: string[] = []): string => {
-  if (scopes.includes('version') || scopes.includes('product')) return 'Products'
+  if (scopes.includes('product')) return 'Products'
+  if (scopes.includes('version')) return 'Versions'
   if (scopes.includes('task')) return 'Tasks'
   if (scopes.includes('folder')) return 'Folders'
   return 'Items'
