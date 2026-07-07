@@ -379,6 +379,12 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   handleOpenPlayer(state, { quickView: true })
                 }}
                 onItemsChanged={(clips, promise, type) => {
+                  // backwards compatibility for old review addon versions
+                  if (!clips) {
+                    refetchListItems()
+                    return
+                  }
+
                   if (type === 'add') {
                     void promise?.then(() => {
                       refetchListItems()
