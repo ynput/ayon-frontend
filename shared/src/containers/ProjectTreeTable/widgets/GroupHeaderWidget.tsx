@@ -87,6 +87,7 @@ type GroupHeaderProps = {
   img?: string | null
   color?: string | null
   count?: number
+  percentage?: number
   isExpanded: boolean
   isEmpty?: boolean
   toggleExpanded: () => void
@@ -99,6 +100,7 @@ export const GroupHeaderWidget = ({
   icon,
   img,
   count,
+  percentage,
   color,
   isExpanded,
   isEmpty,
@@ -122,8 +124,14 @@ export const GroupHeaderWidget = ({
             <StyledTextContent style={{ color: color || undefined }}>
               <span className="label">{label || name}</span>
             </StyledTextContent>
-            {/* {count === undefined && <Count>{count}</Count>} */}
-            {isEmpty && <Count>(Empty)</Count>}
+            {count !== undefined && count > 0 ? (
+              <Count>
+                {count}
+                {percentage !== undefined && ` (${percentage}%)`}
+              </Count>
+            ) : isEmpty ? (
+              <Count>(Empty)</Count>
+            ) : null}
           </StyledContent>
         </StyledContentAbsolute>
       </StyledContentWrapper>

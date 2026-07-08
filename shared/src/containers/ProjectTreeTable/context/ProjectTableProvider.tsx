@@ -37,6 +37,7 @@ import { ProjectTableAttribute, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
 import { EntityGroup } from '@shared/api'
+import type { GroupCountsMap } from '@shared/api'
 import useBuildGroupByTableData, {
   GroupByEntityType,
   ROW_ID_SEPARATOR,
@@ -83,6 +84,9 @@ export interface ProjectTableProviderProps {
   groups: EntityGroup[]
   groupRowFunc?: (node: any) => TableRow
   overrideGroupBy?: TableGroupBy
+  // filter-aware per-group counts for the active grouping (overlaid onto group rows)
+  groupCounts?: GroupCountsMap
+  groupCountsComplete?: boolean
 
   // links loading
   loadingLinksEntityIds?: Set<string>
@@ -174,6 +178,8 @@ export const ProjectTableProvider = ({
   groups,
   groupRowFunc,
   overrideGroupBy,
+  groupCounts,
+  groupCountsComplete,
   queryFilters,
   updateShowHierarchy,
   toggleExpanded,
@@ -233,6 +239,8 @@ export const ProjectTableProvider = ({
     attribFields,
     showEmpty: showEmptyGroups,
     groupRowFunc,
+    groupCounts,
+    groupCountsComplete,
   })
 
   const attribFieldsScoped = useMemo(
@@ -243,7 +251,7 @@ export const ProjectTableProvider = ({
   // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
   const groupedTableData = useMemo(
     () => !!effectiveGroupBy && buildGroupByTableData(effectiveGroupBy),
-    [effectiveGroupBy, entitiesMap, groups],
+    [effectiveGroupBy, buildGroupByTableData],
   )
 
   const tableData =
