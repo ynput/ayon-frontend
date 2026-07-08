@@ -4,11 +4,8 @@ import { Button, Dialog, Dropdown, SaveButton, ScrollPanel } from '@ynput/ayon-r
 import { FC, useEffect, useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
-import { useGetProjectBundleInfoQuery } from '@queries/bundles/getBundles'
-import {
-  useSetProjectBundleMutation,
-  useUnsetProjectBundleMutation,
-} from '@queries/bundles/updateBundles'
+import { useGetProjectBundleInfoQuery } from '@shared/api'
+import { useSetProjectBundleMutation, useUnsetProjectBundleMutation } from '@shared/api'
 import clsx from 'clsx'
 import InfoMessage from '@components/InfoMessage'
 
@@ -226,79 +223,89 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
       isOpen
       header={`Freeze ${variant} bundle for ${projectName}`}
       size="md"
-      style={{ height: '80vh'}}
+      style={{ height: '80vh' }}
       footer={footer}
     >
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px',  width: "100%", height: "100%" }}>
-      <ScrollPanel style={{ flexGrow: 1, background: 'transparent' }}>
-      <AddonForm className={clsx({ loading: isLoading })}>
-        <div className="addon-row">
-          <label htmlFor="installerVersion">Launcher Version</label>
-          <Dropdown
-            id="installerVersion"
-            options={formData?.installerOptions.map((opt) => ({ label: opt, value: opt })) || []}
-            value={formData?.installerVersion ? [formData.installerVersion] : []}
-            onChange={handleInstallerChange}
-            placeholder="Select launcher version"
-            style={{ minWidth: '200px' }}
-            disabled={isLoading}
-          />
-        </div>
-      </AddonForm>
-
-      <h2>Dependency Packages</h2>
-      <AddonForm className={clsx({ loading: isLoading })}>
-        {['windows', 'linux', 'darwin'].map((platform) => {
-          const options = [{ label: 'None', value: '__none__' }]
-
-          if (formData?.dependencyPackageOptions[platform]) {
-            for (const option of formData.dependencyPackageOptions[platform]) {
-              options.push({ label: option, value: option })
-            }
-          }
-
-          return (
-            <div className="addon-row" key={platform}>
-              <label>{platform.charAt(0).toUpperCase() + platform.slice(1)}</label>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          width: '100%',
+          height: '100%',
+        }}
+      >
+        <ScrollPanel style={{ flexGrow: 1, background: 'transparent' }}>
+          <AddonForm className={clsx({ loading: isLoading })}>
+            <div className="addon-row">
+              <label htmlFor="installerVersion">Launcher Version</label>
               <Dropdown
-                options={options}
-                value={
-                  formData?.dependencyPackages[platform]
-                    ? [formData.dependencyPackages[platform]]
-                    : ['__none__']
+                id="installerVersion"
+                options={
+                  formData?.installerOptions.map((opt) => ({ label: opt, value: opt })) || []
                 }
-                onChange={(value) => handleDependencyPackageChange(value, platform)}
-                style={{ minWidth: '300px' }}
-                multiSelect={false}
-                disabled={isLoading}
-              />
-            </div>
-          )
-        })}
-      </AddonForm>
-
-      <h2>Addons</h2>
-      <AddonForm className={clsx({ loading: isLoading })}>
-        {formData?.addonMetadata.map((meta: AddonMetadata) => {
-          return (
-            <div className="addon-row" key={meta.name}>
-              <label htmlFor={meta.name}>{meta.label}</label>
-              <Dropdown
-                id={meta.name}
-                options={meta.options}
-                value={[formData.addons[meta.name] || '__inherit__']}
-                onChange={(value) => handleAddonChange(value, meta.name)}
-                placeholder="Select version"
+                value={formData?.installerVersion ? [formData.installerVersion] : []}
+                onChange={handleInstallerChange}
+                placeholder="Select launcher version"
                 style={{ minWidth: '200px' }}
                 disabled={isLoading}
               />
             </div>
-          )
-        })}
-      </AddonForm>
-      </ScrollPanel>
-      {errorMessage && <InfoMessage variant="error" message={errorMessage} />}
-    </div>
+          </AddonForm>
+
+          <h2>Dependency Packages</h2>
+          <AddonForm className={clsx({ loading: isLoading })}>
+            {['windows', 'linux', 'darwin'].map((platform) => {
+              const options = [{ label: 'None', value: '__none__' }]
+
+              if (formData?.dependencyPackageOptions[platform]) {
+                for (const option of formData.dependencyPackageOptions[platform]) {
+                  options.push({ label: option, value: option })
+                }
+              }
+
+              return (
+                <div className="addon-row" key={platform}>
+                  <label>{platform.charAt(0).toUpperCase() + platform.slice(1)}</label>
+                  <Dropdown
+                    options={options}
+                    value={
+                      formData?.dependencyPackages[platform]
+                        ? [formData.dependencyPackages[platform]]
+                        : ['__none__']
+                    }
+                    onChange={(value) => handleDependencyPackageChange(value, platform)}
+                    style={{ minWidth: '300px' }}
+                    multiSelect={false}
+                    disabled={isLoading}
+                  />
+                </div>
+              )
+            })}
+          </AddonForm>
+
+          <h2>Addons</h2>
+          <AddonForm className={clsx({ loading: isLoading })}>
+            {formData?.addonMetadata.map((meta: AddonMetadata) => {
+              return (
+                <div className="addon-row" key={meta.name}>
+                  <label htmlFor={meta.name}>{meta.label}</label>
+                  <Dropdown
+                    id={meta.name}
+                    options={meta.options}
+                    value={[formData.addons[meta.name] || '__inherit__']}
+                    onChange={(value) => handleAddonChange(value, meta.name)}
+                    placeholder="Select version"
+                    style={{ minWidth: '200px' }}
+                    disabled={isLoading}
+                  />
+                </div>
+              )
+            })}
+          </AddonForm>
+        </ScrollPanel>
+        {errorMessage && <InfoMessage variant="error" message={errorMessage} />}
+      </div>
     </StyledDialog>
   )
 }

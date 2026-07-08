@@ -7,8 +7,7 @@ import BundleDeps from './BundleDeps'
 import { cloneDeep, upperFirst } from 'lodash'
 import BundleCompare from './BundleCompare'
 import useAddonSelection from './useAddonSelection'
-import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { useUpdateBundleMutation, useListBundlesQuery } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import type { Addon } from './types'
 import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/AddonSearchContext.tsx'
@@ -112,7 +111,10 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
 
   const handleAddonAutoSave = async (addon: string, version: string | null) => {
     try {
-      await updateBundle({ name: bundle.name, data: { addons: { [addon]: version } } }).unwrap()
+      await updateBundle({
+        bundleName: bundle.name,
+        bundlePatchModel: { addons: { [addon]: version as string } },
+      }).unwrap()
       toast.success(`Bundle addon updated ${addon}: ${version}`)
     } catch (error) {
       console.error(error)
@@ -153,10 +155,7 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
         />
       </Toolbar>
       {selectedBundles.length > 1 && selectedBundles.length < 5 ? (
-        <BundleCompare
-          bundles={selectedBundles as any}
-          addons={filteredAddons as any}
-        />
+        <BundleCompare bundles={selectedBundles as any} addons={filteredAddons as any} />
       ) : (
         <BundleForm
           isNew={false}

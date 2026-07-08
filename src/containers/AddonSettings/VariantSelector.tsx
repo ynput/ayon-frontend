@@ -1,7 +1,7 @@
 import { Button } from '@ynput/ayon-react-components'
 import { useAppSelector } from '@state/store'
 import styled from 'styled-components'
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@shared/api'
 import { toast } from 'react-toastify'
 
 const ButtonContainer = styled.div`
@@ -68,7 +68,12 @@ const VariantSelector = ({
           key={variantType}
           label={variantType.charAt(0).toUpperCase() + variantType.slice(1)}
           onClick={() => handleOnChange(variantType)}
-          style={(variantType === variant || (variantType === 'dev' && !['production', 'staging'].includes(variant))) ? VARIANT_STYLES[variantType] : {}}
+          style={
+            variantType === variant ||
+            (variantType === 'dev' && !['production', 'staging'].includes(variant))
+              ? VARIANT_STYLES[variantType]
+              : {}
+          }
           disabled={disabled}
         />
       ))}

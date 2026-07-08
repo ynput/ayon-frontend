@@ -1,7 +1,7 @@
 import { FormLayout, Dialog } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import BundleDepPackage from './BundleDepPackage'
-import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
+import { useUpdateBundleMutation } from '@shared/api'
 import { toast } from 'react-toastify'
 import { useListDependencyPackagesQuery } from '@queries/dependencyPackages/getDependencyPackages'
 import BundleDepsPicker from './BundleDepsPicker'
@@ -42,7 +42,7 @@ const BundleDeps = ({ bundle, onChange }) => {
 
     // update bundle on server
     try {
-      await updateBundle({ name: bundle.name, patch, data: patch })
+      await updateBundle({ bundleName: bundle.name, bundlePatchModel: patch, patch })
       handleCloseForm()
       toast.success('Bundle Dependency Package updated')
     } catch (error) {
