@@ -1,5 +1,6 @@
 import type { VisibilityState } from '@tanstack/react-table'
 import { StatsOperation } from '@shared/api/generated'
+import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils/checkColumnVisibility'
 
 export type MetricTarget = {
   field: string // column or dot-path for JSONB, e.g. 'status' / 'attrib.fps'
@@ -62,6 +63,9 @@ type BuildMetricTargetsArgs = {
   entity: StatsEntity
   attribs: AttribFieldLike[]
   columnVisibility: VisibilityState
+  // resolved the same way the table resolves it (opt-in): a column absent from
+  // both maps is hidden, so it must NOT be aggregated
+  defaultColumnVisibility?: VisibilityState
   extraFields?: string[] // visible page-specific columns, e.g. 'product_base_type'
 }
 
@@ -73,10 +77,12 @@ export const buildMetricTargets = ({
   entity,
   attribs,
   columnVisibility,
+  defaultColumnVisibility,
   extraFields = [],
 }: BuildMetricTargetsArgs): MetricTarget[] => {
   // TanStack visibility map only stores toggled columns — absent means visible.
-  const isVisible = (columnId: string) => columnVisibility[columnId] !== false
+  const isVisible = (columnId: string) =>
+    checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)
 
   const targets: MetricTarget[] = []
   if (entity === 'version') {

@@ -30,7 +30,7 @@ const ProjectOverviewTable = ({}: Props) => {
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
   const { showHierarchy, isFlatFolderView, isLoading, fetchNextPage, attribFields } =
     useProjectTableContext()
-  const { columnVisibility, groupByConfig } = useColumnSettingsContext()
+  const { columnVisibility, defaultColumnVisibility, groupByConfig } = useColumnSettingsContext()
   // hold stats queries until views load, otherwise targets cover every column
   const { isLoadingViews } = useViewsContext()
   // column summaries are a powerpack feature — don't fetch stats without a license
@@ -48,12 +48,24 @@ const ProjectOverviewTable = ({}: Props) => {
   const scope = `overview-${projectName}`
 
   const folderTargets = useMemo(
-    () => buildMetricTargets({ entity: 'folder', attribs: attribFields, columnVisibility }),
-    [attribFields, columnVisibility],
+    () =>
+      buildMetricTargets({
+        entity: 'folder',
+        attribs: attribFields,
+        columnVisibility,
+        defaultColumnVisibility,
+      }),
+    [attribFields, columnVisibility, defaultColumnVisibility],
   )
   const taskTargets = useMemo(
-    () => buildMetricTargets({ entity: 'task', attribs: attribFields, columnVisibility }),
-    [attribFields, columnVisibility],
+    () =>
+      buildMetricTargets({
+        entity: 'task',
+        attribs: attribFields,
+        columnVisibility,
+        defaultColumnVisibility,
+      }),
+    [attribFields, columnVisibility, defaultColumnVisibility],
   )
 
   const {

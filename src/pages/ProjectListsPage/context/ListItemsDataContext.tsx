@@ -234,10 +234,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
             buildMetricTargets({
               entity: statsEntity,
               attribs: scopedAttribFields,
-              columnVisibility: {
-                ...defaultColumnVisibility,
-                ...columns.columnVisibility,
-              },
+              columnVisibility: columns.columnVisibility,
+              defaultColumnVisibility,
             }),
           )
         : [],
