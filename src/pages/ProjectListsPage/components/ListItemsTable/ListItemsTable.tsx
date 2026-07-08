@@ -2,7 +2,7 @@ import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListIte
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
-import { EmptyPlaceholder } from '@shared/components'
+import { EmptyPlaceholder, FilterErrorActions } from '@shared/components'
 import {
   BuildTreeTableColumnsProps,
   ProjectTreeTable,
@@ -68,6 +68,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
       return (
         <EmptyPlaceholder message={getFilterErrorMessage('List items')} icon="filter_alt_off">
           <Button label="Reset filters" icon="replay" onClick={resetFilters} />
+          <FilterErrorActions errorMessage={extractQueryErrorMessage(error)} />
         </EmptyPlaceholder>
       )
     }

@@ -36,6 +36,7 @@ import { TableFooterRow } from './components/TableFooterRow'
 import type { FieldStats } from '@shared/api'
 import { getCommonPinningStyles, getColumnWidth } from './utils/pinningUtils'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
+import { FilterErrorActions } from '../../components/FilterErrorActions'
 import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
@@ -86,6 +87,7 @@ import {
   isFilterError,
   getFilterErrorMessage,
   getEntitiesLabelFromScopes,
+  extractQueryErrorMessage,
 } from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
 
@@ -1434,19 +1436,20 @@ const TableBody = ({
               {onResetView && (
                 <Button
                   variant="filled"
-                  label="Reset working view"
-                  icon="restart_alt"
+                  label="Reset filters"
+                  icon="replay"
                   onClick={onResetView}
                 />
               )}
+              <FilterErrorActions errorMessage={extractQueryErrorMessage(error)} />
             </EmptyPlaceholder>
           ) : (
             <EmptyPlaceholder message="No items found" error={error}>
               {onResetView && (
                 <Button
                   variant="filled"
-                  label="Reset working view"
-                  icon="restart_alt"
+                  label="Reset filters"
+                  icon="replay"
                   onClick={onResetView}
                 />
               )}
@@ -1467,8 +1470,8 @@ const TableBody = ({
             {onResetView && (
               <Button
                 variant="filled"
-                label="Reset working view"
-                icon="restart_alt"
+                label="Reset filters"
+                icon="replay"
                 onClick={onResetView}
               />
             )}

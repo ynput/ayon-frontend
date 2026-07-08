@@ -419,3 +419,6 @@ export const useFeedback = (): FeedbackContextType => {
   }
   return context
 }
+
+// Non-throwing variant for shared components that may render outside a FeedbackProvider.
+export const useFeedbackSafe = (): FeedbackContextType | undefined => useContext(FeedbackContext)
