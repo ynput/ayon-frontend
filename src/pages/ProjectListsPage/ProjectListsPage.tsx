@@ -9,7 +9,7 @@ import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { ListsDataProvider, useListsDataContext } from './context/ListsDataContext'
+import { ListsDataProvider } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
 import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
@@ -42,6 +42,7 @@ import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActio
 import useExtraColumns from './hooks/useExtraColumns'
 import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
 import useUpdateListItems from './hooks/useUpdateListItems'
+import ReplaceListItemsDialog from './components/ReplaceListItemsDialog'
 import { Actions } from '@shared/containers/Actions/Actions'
 import { ListsModuleProvider } from './context/ListsModulesContext.tsx'
 import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
@@ -239,6 +240,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                           dndActiveId={dndActiveId}
                         />
                         <ListsShortcuts />
+                        <ReplaceListItemsDialog />
                       </CellEditingProvider>
                     </SelectedRowsProvider>
                   </SelectionCellsProvider>
@@ -275,7 +277,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { projectName } = useProjectContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList } = useListsContext()
-  const { refetch: refetchLists } = useListsDataContext()
   const {
     listItemsData,
     deleteListItemAction,

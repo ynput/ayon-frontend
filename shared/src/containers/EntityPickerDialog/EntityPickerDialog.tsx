@@ -56,6 +56,7 @@ interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
   disabledMessage?: string // Default tooltip message for disabled items
   getDisabledMessage?: (id: string) => string | undefined // Custom message per disabled item
   reviewableRequired?: boolean // When entityType is 'version', disable versions without reviewables
+  isLoading?: boolean // Whether the submit action is loading
 }
 
 export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
@@ -70,6 +71,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   disabledMessage = 'Cannot select this item',
   getDisabledMessage,
   reviewableRequired,
+  isLoading,
   ...props
 }) => {
   const initSelectionState: PickerSelection = {
@@ -235,7 +237,9 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
           <Button
             label={`Select ${entityType}${isMultiSelect ? 's' : ''}`}
             variant="filled"
-            disabled={!entitySelection[entityType]?.length}
+            disabled={!entitySelection[entityType]?.length || isLoading}
+            // @ts-ignore
+            loading={isLoading}
             onClick={handleSubmit}
           />
         </>
