@@ -49,9 +49,7 @@ export const groupByToStatsTarget = (
     const name = groupBy.id.slice('attrib.'.length)
     // tasks/folders display inherited attrib values; versions/products use own
     const attribField =
-      entity === 'task' || entity === 'folder'
-        ? `inherited_attributes.${name}`
-        : `attrib.${name}`
+      entity === 'task' || entity === 'folder' ? `inherited_attributes.${name}` : `attrib.${name}`
     return { field: attribField, aggregations: DISTRIBUTION_AGGS }
   }
 
@@ -77,7 +75,7 @@ export const selectGroupCounts = (
 
   const columnId = targetToColumnId(target.field)
   const stat = fieldStats.find((s) => s.columnName === columnId)
-  const distribution = stat?.distribution ?? []
+  const distribution = (stat?.distribution || []) as { value: string; count?: number | null }[]
   const notFilled = stat?.valueNotFilledCount ?? 0
   const filled = stat?.valueFilledCount ?? 0
   const complete = !!stat && (distribution.length > 0 || filled === 0)
