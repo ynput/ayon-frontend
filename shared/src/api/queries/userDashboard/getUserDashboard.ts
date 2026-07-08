@@ -6,8 +6,9 @@ import {
   KanbanNode,
   Anatomy,
 } from '@shared/api/generated'
-import { projectQueries } from '@shared/api/queries/project'
-import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
+import { projectQueries } from '../project'
+import PubSub from '@shared/util/pubsub'
+import { subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import convertAccessGroupsData, { AccessGroups } from './convertAccessGroupsData'
 
 // GetKanban response type

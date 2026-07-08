@@ -1,9 +1,22 @@
 import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import { ActivitiesResult } from './activitiesHelpers'
 import type { GetActivitiesQueryVariables } from '@shared/api'
-import { getActivitiesGQLApi as gqlApi } from '../getActivities'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { FeedActivity } from '../types'
+
+type ActivitiesGqlApi = {
+  endpoints: {
+    GetActivitiesById: {
+      initiate: (
+        args: { projectName: string; activityIds: string[]; entityIds: string | string[] },
+        options?: { forceRefetch?: boolean },
+      ) => any
+    }
+  }
+  util: {
+    invalidateTags: (tags: { type: string; id: string }[]) => any
+  }
+}
 
 export type ActivityMessage = {
   topic: string
@@ -34,6 +47,7 @@ type CacheLifecycleApi = {
   cacheEntryRemoved: Promise<void>
   dispatch: ThunkDispatch<unknown, unknown, UnknownAction>
   getCacheEntry: () => { data?: InfiniteDataDraft }
+  gqlApi: ActivitiesGqlApi
 }
 
 /**
@@ -55,6 +69,7 @@ export const handleActivityRealtimeUpdates = async (
     cacheEntryRemoved,
     dispatch,
     getCacheEntry,
+    gqlApi,
   }: CacheLifecycleApi,
 ) => {
   let token: string | undefined

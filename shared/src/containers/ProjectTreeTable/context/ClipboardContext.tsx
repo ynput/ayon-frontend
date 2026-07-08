@@ -180,6 +180,15 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               // @ts-ignore
               let foundValue = getCellValue(entity, colId)
 
+              // folder is an object on some entities (product/task) or nested under
+              // product (version) - copy the display name the cell shows,
+              // falling back to the last parent (parent folder name on tasks/folders)
+              if (colId === 'folder' && typeof foundValue !== 'string') {
+                const folder = foundValue || (entity as any).product?.folder
+                const parents = 'parents' in entity ? entity.parents : undefined
+                foundValue = folder?.label || folder?.name || parents?.[parents.length - 1] || ''
+              }
+
               if (!foundValue) {
                 // we should look for the default value set out in attribFields
                 const field = attribFields.find((f) => f.name === colId.replace('attrib_', ''))

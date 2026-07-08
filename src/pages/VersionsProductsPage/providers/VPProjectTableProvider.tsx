@@ -1,6 +1,12 @@
 import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
-import { ProjectTableProvider, useProjectDataContext, useViewsContext } from '@shared/containers'
+import {
+  ProjectTableProvider,
+  useProjectDataContext,
+  useViewsContext,
+  useColumnSettingsContext,
+  useGroupCounts,
+} from '@shared/containers'
 import { useAppSelector } from '@state/store'
 import { FC, useMemo } from 'react'
 import { useVersionsDataContext } from '../context/VPDataContext'
@@ -19,10 +25,19 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
   modules,
   children,
 }) => {
-  const { versionsTableData, entitiesMap, groups, expanded, updateExpanded, error } =
+  const { versionsTableData, entitiesMap, groups, expanded, updateExpanded, error, columnStatsArgs } =
     useVersionsDataContext()
 
-  const { resetWorkingView } = useViewsContext()
+  const { resetWorkingView, isLoadingViews } = useViewsContext()
+
+  // filter-aware per-group counts for the active grouping (community: not license-gated)
+  const { groupBy } = useColumnSettingsContext()
+  const { counts: groupCounts, complete: groupCountsComplete } = useGroupCounts({
+    entity: 'version',
+    groupBy,
+    skip: isLoadingViews,
+    args: columnStatsArgs,
+  })
   const { showProducts, onUpdateShowProducts, filters } = useVPViewsContext()
 
   const { ...projectInfo } = useProjectContext()
@@ -64,6 +79,8 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       tasksMap={tasksMap}
       tableRows={versionsTableData}
       groups={groups}
+      groupCounts={groupCounts}
+      groupCountsComplete={groupCountsComplete}
       groupByConfig={{ entityType: 'version' }}
       hierarchyOptions={hierarchyOptions}
       groupRowFunc={buildVersionRow}

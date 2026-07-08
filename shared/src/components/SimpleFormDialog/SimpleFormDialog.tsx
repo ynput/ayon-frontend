@@ -15,12 +15,19 @@ import {
   DefaultItemTemplate,
 } from '@ynput/ayon-react-components'
 import { Badge } from '@shared/components'
-import { FormFileUpload, FormFileDownload, type FormFileData} from './FormFile'
+import { FormFileUpload, FormFileDownload, type FormFileData } from './FormFile'
 
 import type { FormSelectOption, SimpleFormField } from '@shared/api'
 
-
-export type SimpleFormValue = string | number | boolean | string[] | number[] | FormFileData | null | undefined
+export type SimpleFormValue =
+  | string
+  | number
+  | boolean
+  | string[]
+  | number[]
+  | FormFileData
+  | null
+  | undefined
 export type SimpleFormValueDict = Record<string, SimpleFormValue>
 
 const getDefaults = (fields: SimpleFormField[], values: SimpleFormValueDict) => {
@@ -96,7 +103,7 @@ const DropdownItemTemplate = (option: FormSelectOption) => {
   const endContent = (
     <>
       <div style={{ flex: 1 }} />
-      {option.badges && option.badges.map((badge, index) => <Badge key={index} label={badge}/>)}
+      {option.badges && option.badges.map((badge, index) => <Badge key={index} label={badge} />)}
     </>
   )
   return (
@@ -181,7 +188,7 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
   } // Handle select
 
   if (field.type === 'multiselect') {
-    const parsedValue = Array.isArray(value) ? value.map(value => `${value}`) : []
+    const parsedValue = Array.isArray(value) ? value.map((value) => `${value}`) : []
     return (
       <Dropdown
         widthExpand
@@ -199,9 +206,14 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
     if (value && (value as FormFileData)?.download) {
       return <FormFileDownload value={value as FormFileData} />
     }
-    return <FormFileUpload value={value as FormFileData} onChange={onChange} validExtensions={field.valid_extensions} />
+    return (
+      <FormFileUpload
+        value={value as FormFileData}
+        onChange={onChange}
+        validExtensions={field.valid_extensions}
+      />
+    )
   }
-
 }
 
 export interface SimpleFormDialogProps {
@@ -263,6 +275,7 @@ export const SimpleFormDialog = ({
       header={title}
       footer={footer}
       style={{ minHeight: 500, minWidth: 600 }}
+      enableBackdropClose={false}
     >
       <FormLayout
         style={{ width: '95%' }}

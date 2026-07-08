@@ -5,7 +5,6 @@ import type {
 } from '@shared/api/generated'
 import { ChecklistCount, FeedActivity, FeedActivityData } from '../types'
 import { BaseTypes, EntityTooltipQuery, TaskTypes, VersionTypes } from '../activityQueries'
-import { FeedFilter } from '@shared/context'
 
 // Helper function to get a nested property of an object using a string path
 const getNestedProperty = <T extends Record<string, any>, R = any>(
@@ -232,7 +231,14 @@ export const filterKey = (filter: any): string => {
 }
 
 export const filterActivityTypes: Record<string, string[]> = {
-  activity: ['comment', 'version.publish', 'status.change', 'assignee.add', 'assignee.remove', 'version.review'],
+  activity: [
+    'comment',
+    'version.publish',
+    'status.change',
+    'assignee.add',
+    'assignee.remove',
+    'version.review',
+  ],
   comments: ['comment'],
   versions: ['version.publish'],
   updates: ['status.change', 'assignee.add', 'assignee.remove'],

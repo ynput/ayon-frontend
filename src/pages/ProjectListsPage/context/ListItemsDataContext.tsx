@@ -13,6 +13,8 @@ import { useEntityListsContext } from './EntityListsContext'
 import useReorderListItem, { UseReorderListItemReturn } from '../hooks/useReorderListItem'
 import useBuildListItemsTableData from '../hooks/useBuildListItemsTableData'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
+import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
 import { ListsViewSettings, useListsViewSettings } from '@shared/containers'
 import { SortingState, VisibilityState } from '@tanstack/react-table'
 import { useProjectContext, usePowerpack } from '@shared/context'
@@ -243,7 +245,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   )
 
   const statsFilter = listItemsFilters?.conditions?.length
-    ? JSON.stringify(listItemsFilters)
+    ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(listItemsFilters)))
     : undefined
 
   const {

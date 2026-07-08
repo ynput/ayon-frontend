@@ -1,4 +1,4 @@
-import { EntityNaming } from '@shared/api'
+import { EntityNaming } from '@shared/api/generated/anatomy'
 import { snakeCase, deburr } from 'lodash'
 
 export interface CheckNameResult {

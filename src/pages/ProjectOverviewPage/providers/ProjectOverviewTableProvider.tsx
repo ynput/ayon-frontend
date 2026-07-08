@@ -6,6 +6,8 @@ import {
   SelectedRowsProvider,
   CellEditingProvider,
   DetailsPanelEntityProvider,
+  useColumnSettingsContext,
+  useGroupCounts,
 } from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
 import { usePowerpack, useSubtasksModulesContext } from '@shared/context'
@@ -38,7 +40,44 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
     projectName: props.projectName,
   })
 
-  const { resetWorkingView } = useViewsContext()
+  const { resetWorkingView, isLoadingViews } = useViewsContext()
+
+  // filter-aware per-group counts for the active grouping (community: not license-gated)
+  const { groupBy: columnSettingsGroupBy } = useColumnSettingsContext()
+  const groupByForCounts = useMemo(
+    () => (isFlatFolderView ? undefined : overrideGroupBy || columnSettingsGroupBy),
+    [isFlatFolderView, overrideGroupBy, columnSettingsGroupBy],
+  )
+
+  const statsTaskIds = props.selectedTaskIds?.length ? props.selectedTaskIds : undefined
+  const statsFolderIds = useMemo(
+    () =>
+      !statsTaskIds && props.selectedFolders?.length
+        ? Array.from(props.foldersMap.keys())
+        : undefined,
+    [statsTaskIds, props.selectedFolders, props.foldersMap],
+  )
+  const taskStatsFolderIds = useMemo(
+    () =>
+      statsFolderIds
+        ? Array.from(new Set([...statsFolderIds, ...props.selectedFolders]))
+        : undefined,
+    [statsFolderIds, props.selectedFolders],
+  )
+
+  const { counts: groupCounts, complete: groupCountsComplete } = useGroupCounts({
+    entity: 'task',
+    groupBy: groupByForCounts,
+    skip: isLoadingViews,
+    args: {
+      projectName: props.projectName,
+      filter: props.taskFilters?.filterString || undefined,
+      folderFilter: props.folderFilters?.filterString || undefined,
+      search: props.taskFilters?.search || undefined,
+      folderIds: taskStatsFolderIds,
+      taskIds: statsTaskIds,
+    },
+  })
 
   const powerpack = usePowerpack()
   const { SubtasksManager } = useSubtasksModulesContext()
@@ -52,6 +91,8 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
       <ProjectTableProvider
         {...props}
         groups={isFlatFolderView ? [] : taskGroups}
+        groupCounts={groupCounts}
+        groupCountsComplete={groupCountsComplete}
         overrideGroupBy={overrideGroupBy}
         isFlatFolderView={isFlatFolderView}
         powerpack={powerpack}

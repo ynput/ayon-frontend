@@ -283,6 +283,7 @@ const buildTreeTableColumns = ({
                 img={row.original.group.img}
                 color={row.original.group.color}
                 count={row.original.group.count}
+                percentage={row.original.group.percentage}
                 isExpanded={row.getIsExpanded()}
                 isEmpty={row.original.group.count === 0}
                 toggleExpanded={row.getToggleExpandedHandler()}

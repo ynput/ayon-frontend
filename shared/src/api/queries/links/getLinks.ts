@@ -8,7 +8,7 @@ import {
   GetSearchedWorkfilesQuery,
   gqlLinksApi,
 } from '@shared/api/generated'
-import { PubSub } from '@shared/util'
+import PubSub from '@shared/util/pubsub'
 
 export const ENTITIES_INFINITE_QUERY_COUNT = 50 // Number of items to fetch per page
 
@@ -244,10 +244,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
         }
       },
       // Subscribe to link.created and link.deleted WebSocket events
-      async onCacheEntryAdded(
-        { projectName },
-        { cacheDataLoaded, cacheEntryRemoved, dispatch },
-      ) {
+      async onCacheEntryAdded({ projectName }, { cacheDataLoaded, cacheEntryRemoved, dispatch }) {
         let token: any
 
         try {
@@ -265,9 +262,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
 
             // Invalidate the search query cache when a link is created or deleted
             // This ensures the search results are fresh and don't show stale data
-            dispatch(
-              gqlLinksApi.util.invalidateTags([{ type: 'linkSearchItem', id: 'LIST' }]),
-            )
+            dispatch(gqlLinksApi.util.invalidateTags([{ type: 'linkSearchItem', id: 'LIST' }]))
           }
 
           // Subscribe to link events
