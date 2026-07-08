@@ -113,7 +113,7 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
       const isFolder = !!parseProjectFolderRowId(row.id || '')
       const isPinned = row.getIsPinned() === 'top'
 
-      const hoverActions: TableRowAction[] = !isFolder
+      const actions: TableRowAction[] = !isFolder
         ? [
             {
               icon: 'settings_applications',
@@ -141,7 +141,7 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
           {...props}
           id={row.id}
           className={clsx(props.className, { pinned: isPinned, hidePinned })}
-          hoverActions={hoverActions}
+          actions={actions}
           badge={isFolder ? row.original.data.count : row.original.data.code}
           renamePlaceholder={!isFolder ? 'Project label' : undefined}
           enableNonFolderIndent={false}

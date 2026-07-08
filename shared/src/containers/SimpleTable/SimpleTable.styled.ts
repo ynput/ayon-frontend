@@ -119,8 +119,8 @@ export const Cell = styled.div`
       }
     }
 
-    /* update action buttons on hover */
-    .hover-actions {
+    /* update action buttons */
+    .actions {
       .icon:hover {
         background-color: var(--md-sys-color-on-primary);
         color: var(--md-sys-color-primary);
@@ -134,7 +134,7 @@ export const Cell = styled.div`
 
   /* badges and actions */
   .badges,
-  .hover-actions {
+  .actions {
     display: flex;
     align-items: center;
     gap: var(--base-gap-small);
@@ -145,7 +145,7 @@ export const Cell = styled.div`
     padding-right: 4px;
   }
 
-  .hover-actions {
+  .actions {
     display: flex;
     align-items: center;
     gap: var(--base-gap-small);
@@ -172,12 +172,12 @@ export const Cell = styled.div`
   }
 
   &:hover {
-    .hover-actions {
+    .actions {
       .icon:not(.show-hidden) {
         display: flex;
       }
     }
-    .badges {
+    &.has-actions .badges {
       display: none;
     }
   }

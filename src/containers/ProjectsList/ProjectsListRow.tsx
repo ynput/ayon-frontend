@@ -21,7 +21,7 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
     // Check if this is a folder row using the canonical folder ID parser
     const isFolder = !!parseProjectFolderRowId(id || '')
 
-    const hoverActions: TableRowAction[] = !isFolder
+    const actions: TableRowAction[] = !isFolder
       ? [
           {
             icon: 'settings_applications',
@@ -51,7 +51,7 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
         id={id}
         enableNonFolderIndent={false}
         renamePlaceholder={!isFolder ? 'Project label' : undefined}
-        hoverActions={hoverActions}
+        actions={actions}
         badge={isFolder ? count : code}
       />
     )

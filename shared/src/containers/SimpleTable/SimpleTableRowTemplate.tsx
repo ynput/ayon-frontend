@@ -55,7 +55,7 @@ export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLD
   startContent?: React.ReactNode
   endContent?: React.ReactNode
   badge?: string | React.ReactNode
-  hoverActions?: TableRowAction[]
+  actions?: TableRowAction[]
   isRenaming?: boolean
   renameInitialValue?: string
   onSubmitRename?: (value: string) => void
@@ -94,7 +94,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       startContent,
       endContent,
       badge,
-      hoverActions,
+      actions,
       isRenaming,
       renameInitialValue,
       onSubmitRename,
@@ -126,6 +126,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
         className={clsx(props.className, {
           disabled: isDisabled,
           inactive: inactive || active === false,
+          'has-actions': !!actions?.length,
         })}
         style={{
           ...style,
@@ -203,9 +204,9 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
                 {typeof badge === 'string' ? <span>{badge}</span> : badge}
               </div>
             )}
-            {hoverActions && (
-              <div className="hover-actions">
-                {hoverActions.map((action, i) => {
+            {actions && (
+              <div className="actions">
+                {actions.map((action, i) => {
                   const { show = 'hover', ...iconProps } = action
 
                   if (show === 'hidden') return null
