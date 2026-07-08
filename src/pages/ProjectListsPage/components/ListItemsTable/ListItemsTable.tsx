@@ -2,8 +2,14 @@ import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListIte
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
-import { EmptyPlaceholder } from '@shared/components'
-import { BuildTreeTableColumnsProps, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
+import { EmptyPlaceholder, FilterErrorActions } from '@shared/components'
+import {
+  BuildTreeTableColumnsProps,
+  ProjectTreeTable,
+  isFilterError,
+  getFilterErrorMessage,
+  extractQueryErrorMessage,
+} from '@shared/containers/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
 import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributesShortcutButton'
@@ -33,6 +39,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
     error,
     fetchNextPage,
     resetFilters,
+    listItemsFilters,
     setLinksVisible,
     fieldStats,
     fieldStatsLoading,
@@ -57,10 +64,15 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
     return <EmptyPlaceholder message="Please select one list to view its items." />
 
   if (isError) {
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : (error as any)?.message ?? 'Error loading list items.'
+    if (isFilterError(error, { filter: listItemsFilters })) {
+      return (
+        <EmptyPlaceholder message={getFilterErrorMessage('List items')} icon="filter_alt_off">
+          <Button label="Reset filters" icon="replay" onClick={resetFilters} />
+          <FilterErrorActions errorMessage={extractQueryErrorMessage(error)} />
+        </EmptyPlaceholder>
+      )
+    }
+    const errorMessage = extractQueryErrorMessage(error) || 'Error loading list items.'
     return (
       <EmptyPlaceholder error={errorMessage} ynputError={false}>
         <Button label="Reset" icon="replay" onClick={resetFilters} />

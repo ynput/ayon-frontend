@@ -19,6 +19,7 @@ import {
   useExpandedState,
   createLocalStorageKey,
   extractErrorMessage,
+  extractQueryErrorMessage,
   ProjectOverviewContextType,
   ProjectOverviewProviderProps,
   useColumnSettingsContext,
@@ -265,6 +266,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     isLoadingMore,
     loadingTasks,
     loadingLinksEntityIds,
+    error: dataError,
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
@@ -295,7 +297,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // combine foldersMap and tasksMap into a single map
   const entitiesMap = useEntitiesMap({ foldersMap, tasksMap })
 
-  const error = extractErrorMessage(groupingError)
+  const error =
+    extractErrorMessage(groupingError) || extractQueryErrorMessage(dataError) || undefined
 
   return (
     <ProjectOverviewContext.Provider

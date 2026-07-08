@@ -36,6 +36,7 @@ import { TableFooterRow } from './components/TableFooterRow'
 import type { FieldStats } from '@shared/api'
 import { getCommonPinningStyles, getColumnWidth } from './utils/pinningUtils'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
+import { FilterErrorActions } from '../../components/FilterErrorActions'
 import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
@@ -83,6 +84,10 @@ import {
   getEntityViewierIds,
   getReadOnlyLists,
   getTableFieldOptions,
+  isFilterError,
+  getFilterErrorMessage,
+  getEntitiesLabelFromScopes,
+  extractQueryErrorMessage,
 } from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
 
@@ -253,8 +258,12 @@ export const ProjectTreeTable = ({
     onResetView,
     overrideGroupBy,
     loadingLinksEntityIds,
+    queryFilters,
   } = useProjectTableContext()
   const isGrouping = !!groupBy || !!overrideGroupBy
+
+  const filterError = isFilterError(error, queryFilters)
+  const filterErrorMessage = getFilterErrorMessage(getEntitiesLabelFromScopes(scopes))
 
   // Parent (folder/product) summary scope only applies when those entities are
   // actually on screen: hierarchy view, or grouping by a parent entity.
@@ -770,6 +779,8 @@ export const ProjectTreeTable = ({
               rowOrderIds={rowOrderIds}
               sortableRows={sortableRows}
               error={error}
+              isFilterError={filterError}
+              filterErrorMessage={filterErrorMessage}
               isLoading={isLoading}
               isGrouping={isGrouping}
               getRowHeight={getRowHeight}
@@ -1270,6 +1281,8 @@ interface TableBodyProps {
   rowOrderIds: UniqueIdentifier[]
   sortableRows: boolean
   error?: string
+  isFilterError?: boolean
+  filterErrorMessage?: string
   isLoading: boolean
   isGrouping: boolean
   getRowHeight: (row: TableRow) => number
@@ -1290,6 +1303,8 @@ const TableBody = ({
   rowOrderIds,
   sortableRows,
   error,
+  isFilterError: filterError,
+  filterErrorMessage,
   isLoading,
   isGrouping,
   getRowHeight,
@@ -1416,16 +1431,30 @@ const TableBody = ({
       tableContainerRef.current &&
       createPortal(
         <Styled.AnimatedEmptyPlaceholder>
-          <EmptyPlaceholder message="No items found" error={error}>
-            {onResetView && (
-              <Button
-                variant="filled"
-                label="Reset working view"
-                icon="restart_alt"
-                onClick={onResetView}
-              />
-            )}
-          </EmptyPlaceholder>
+          {filterError ? (
+            <EmptyPlaceholder message={filterErrorMessage} icon="filter_alt_off">
+              {onResetView && (
+                <Button
+                  variant="filled"
+                  label="Reset filters"
+                  icon="replay"
+                  onClick={onResetView}
+                />
+              )}
+              <FilterErrorActions errorMessage={extractQueryErrorMessage(error)} />
+            </EmptyPlaceholder>
+          ) : (
+            <EmptyPlaceholder message="No items found" error={error}>
+              {onResetView && (
+                <Button
+                  variant="filled"
+                  label="Reset filters"
+                  icon="replay"
+                  onClick={onResetView}
+                />
+              )}
+            </EmptyPlaceholder>
+          )}
         </Styled.AnimatedEmptyPlaceholder>,
         tableContainerRef.current,
       )
@@ -1441,8 +1470,8 @@ const TableBody = ({
             {onResetView && (
               <Button
                 variant="filled"
-                label="Reset working view"
-                icon="restart_alt"
+                label="Reset filters"
+                icon="replay"
                 onClick={onResetView}
               />
             )}
