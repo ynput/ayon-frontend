@@ -1,6 +1,6 @@
 import { FC, useMemo, useState, useCallback } from 'react'
 import { EntityPickerDialog, PickerEntityType } from '@shared/containers'
-import { useProjectContext, useProjectFoldersContext } from '@shared/context'
+import { useProjectContext } from '@shared/context'
 import { useListsContext } from '../context'
 import { useListItemsDataContext } from '../context/ListItemsDataContext'
 import { useUpdateEntityListItemsMutation } from '@shared/api'
@@ -19,11 +19,16 @@ const ReplaceListItemsDialog: FC = () => {
 
   const replaceListItems = useCallback(
     async (newEntityIds: string[]) => {
-      if (!itemIdsToReplace || !selectedList?.id) return
+      if (!itemIdsToReplace || !selectedList?.id || !listItemsMap) return
       setIsReplacing(true)
-      //   calculate the position for the new items based on the first item to replace
-      const firstItemId = itemIdsToReplace[0]
-      const firstItem = listItemsMap?.get(firstItemId)
+
+      // capture full item data before deletion so we can restore if adding fails
+      const itemsToReplace = itemIdsToReplace
+        .map((id) => listItemsMap.get(id))
+        .filter((item): item is NonNullable<typeof item> => Boolean(item))
+
+      // calculate the position for the new items based on the first item to replace
+      const firstItem = itemsToReplace[0]
       const position = firstItem?.position || 1
 
       try {
@@ -38,19 +43,48 @@ const ReplaceListItemsDialog: FC = () => {
           },
         }).unwrap()
 
-        // 2. add new items
-        await updateEntityListItems({
-          projectName,
-          listId: selectedList.id,
-          entityListMultiPatchModel: {
-            // @ts-ignore
-            items: newEntityIds.map((entityId) => ({ entityId, position })),
-            mode: 'merge',
-          },
-        }).unwrap()
+        try {
+          // 2. add new items
+          await updateEntityListItems({
+            projectName,
+            listId: selectedList.id,
+            entityListMultiPatchModel: {
+              // @ts-ignore
+              items: newEntityIds.map((entityId) => ({ entityId, position })),
+              mode: 'merge',
+            },
+          }).unwrap()
 
-        toast.success(`Items replaced successfully`)
-        setItemIdsToReplace(null)
+          toast.success(`Items replaced successfully`)
+          setItemIdsToReplace(null)
+        } catch (addError) {
+          // adding failed - try to restore the removed items
+          console.error('Error adding replacement items, reverting:', addError)
+
+          try {
+            await updateEntityListItems({
+              projectName,
+              listId: selectedList.id,
+              entityListMultiPatchModel: {
+                // @ts-ignore
+                items: itemsToReplace.map((item) => ({
+                  entityId: item.entityId,
+                  position: item.position,
+                })),
+                mode: 'merge',
+              },
+            }).unwrap()
+
+            toast.error(`Replace failed, original items restored`)
+          } catch (restoreError) {
+            console.error('Error restoring original items:', restoreError)
+            toast.error(
+              `Replace failed and original items could not be restored. Please refresh the page.`,
+            )
+          }
+
+          setItemIdsToReplace(null)
+        }
       } catch (error) {
         console.error('Error replacing items:', error)
         toast.error(`Error replacing items: ${error}`)
