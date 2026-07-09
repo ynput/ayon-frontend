@@ -20,7 +20,7 @@ import { SortingState, VisibilityState } from '@tanstack/react-table'
 import { useProjectContext, usePowerpack } from '@shared/context'
 import {
   buildMetricTargets,
-  anySummaryActive,
+  shouldSkipColumnStats,
   mergeFieldStats,
   totalRowsFromStats,
   toListItemsStatsTargets,
@@ -276,7 +276,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         !selectedListId ||
         !statsEntity ||
         !powerLicense ||
-        !anySummaryActive(
+        shouldSkipColumnStats(
           columns.columnSummaries,
           columns.columnSummaryScopes,
           columns.columnVisibility,

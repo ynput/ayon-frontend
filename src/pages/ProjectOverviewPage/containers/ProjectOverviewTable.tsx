@@ -15,7 +15,7 @@ import { useViewsContext } from '@shared/containers'
 import {
   mergeFieldStats,
   buildMetricTargets,
-  anySummaryActive,
+  shouldSkipColumnStats,
   totalRowsFromStats,
   useGetFolderColumnStatsQuery,
   useGetTaskColumnStatsQuery,
@@ -42,8 +42,8 @@ const ProjectOverviewTable = ({}: Props) => {
   const { isLoadingViews } = useViewsContext()
   // column summaries are a powerpack feature — don't fetch stats without a license
   const { powerLicense } = usePowerpack()
-  // nothing to compute when every visible summary is switched off — skip the query
-  const noSummaries = !anySummaryActive(
+  // skip the query only when the name count and every other summary are off
+  const noSummaries = shouldSkipColumnStats(
     columnSummaries,
     columnSummaryScopes,
     columnVisibility,

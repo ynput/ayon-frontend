@@ -51,6 +51,19 @@ export const anySummaryActive = (
   return false
 }
 
+// The main count (name column) is on by default, so the footer always has at
+// least that to show. Skip the stats fetch only when the user has explicitly
+// turned the name count off too AND no other column has an active summary —
+// otherwise the name cell has no data and can't be re-enabled.
+export const shouldSkipColumnStats = (
+  columnSummaries?: Record<string, SummaryCalc>,
+  columnSummaryScopes?: Record<string, RowScope>,
+  columnVisibility?: VisibilityState,
+  defaultColumnVisibility?: VisibilityState,
+): boolean =>
+  columnSummaryScopes?.['name'] === 'none' &&
+  !anySummaryActive(columnSummaries, columnSummaryScopes, columnVisibility, defaultColumnVisibility)
+
 // refetch only when a target was added — hiding a column needs no query
 export const hasNewTargetFields = (current?: TargetsArg, previous?: TargetsArg): boolean => {
   if (!current) return false
