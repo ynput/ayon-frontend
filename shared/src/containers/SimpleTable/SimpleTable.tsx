@@ -32,7 +32,7 @@ import {
   SimpleTableRow,
   SimpleTableRowContextMenuBuilder,
 } from './SimpleTable.types'
-import { ContextMenuItemType, useCreateContextMenu } from '../ContextMenu'
+import { useCreateContextMenu } from '../ContextMenu'
 
 const toMenuItems = (items: ReturnType<SimpleTableRowContextMenuBuilder>) => {
   if (!items) return []
