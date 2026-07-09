@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react'
+import { usePowerpack } from '@shared/context'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import { EntityListFolderModel, ProjectFolderModel, ListProjectsItemModel } from '@shared/api'
 import {
@@ -117,6 +118,7 @@ const useProjectsListMenuItems = ({
   onRenameFolder,
   onRenameProject,
 }: MenuItemProps) => {
+  const { setPowerpackDialog } = usePowerpack()
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
   const handlePin = (allPinned: boolean, selection: string[]) => {
     if (onPin) {
@@ -146,6 +148,36 @@ const useProjectsListMenuItems = ({
       onDeleteFolder?.(folderIds)
     }
   }
+
+  const handleCreateFolder = useCallback(
+    ({
+      isSelectedRowFolder,
+      selectedFolder,
+      isSelectedProject,
+      newSelectedProjects,
+    }: {
+      isSelectedRowFolder: boolean
+      selectedFolder: ProjectFolderModel | null
+      isSelectedProject: boolean
+      newSelectedProjects: ListProjectsItemModel[]
+    }) => {
+      if (!powerLicense) {
+        setPowerpackDialog('projectFolders')
+        return
+      }
+
+      if (isSelectedRowFolder) {
+        onCreateFolder?.({ folderId: selectedFolder?.id })
+      } else if (isSelectedProject) {
+        onCreateFolder?.({
+          projectNames: newSelectedProjects.map((project) => project.name),
+        })
+      } else {
+        onCreateFolder?.({})
+      }
+    },
+    [powerLicense, setPowerpackDialog, onCreateFolder],
+  )
 
   const isMenuItemEnabled = (
     itemId: keyof NonNullable<MenuItemProps['hidden']>,
@@ -411,14 +443,13 @@ const useProjectsListMenuItems = ({
           icon: 'create_new_folder',
           shortcut: 'F',
           powerFeature: powerLicense ? undefined : 'projectFolders',
-          [command ? 'command' : 'onClick']: isSelectedRowFolder
-            ? () => onCreateFolder?.({ folderId: selectedFolder?.id })
-            : isSelectedProject
-            ? () =>
-                onCreateFolder?.({
-                  projectNames: newSelectedProjects.map((project) => project.name),
-                })
-            : onCreateFolder,
+          [command ? 'command' : 'onClick']: () =>
+            handleCreateFolder({
+              isSelectedRowFolder,
+              selectedFolder,
+              isSelectedProject,
+              newSelectedProjects,
+            }),
         },
 
         ...(moveMenuItem ? [moveMenuItem] : []),
@@ -486,6 +517,7 @@ const useProjectsListMenuItems = ({
       handleArchive,
       handleDelete,
       handleDeleteFolder,
+      handleCreateFolder,
       wouldCreateCircularDependency,
       hidden,
       isMenuItemEnabled,
