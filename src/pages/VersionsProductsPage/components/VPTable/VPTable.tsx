@@ -11,6 +11,7 @@ import { usePowerpack } from '@shared/context'
 import {
   mergeFieldStats,
   buildMetricTargets,
+  isSummaryActive,
   totalRowsFromStats,
   useGetProductsColumnStatsQuery,
   useGetVersionsColumnStatsQuery,
@@ -31,7 +32,8 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   const { fetchNextPage, isLoading, columnStatsArgs } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
   const { attribFields } = useProjectDataContext()
-  const { columnVisibility, defaultColumnVisibility } = useColumnSettingsContext()
+  const { columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes } =
+    useColumnSettingsContext()
   // hold stats queries until views load, otherwise targets cover every column
   const { isLoadingViews } = useViewsContext()
   // column summaries are a powerpack feature — don't fetch stats without a license
@@ -44,11 +46,15 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         attribs: attribFields,
         columnVisibility,
         defaultColumnVisibility,
-        extraFields: checkColumnVisibility(columnVisibility, 'productBaseType', defaultColumnVisibility)
-          ? ['product_base_type']
-          : [],
+        columnSummaries,
+        columnSummaryScopes,
+        extraFields:
+          checkColumnVisibility(columnVisibility, 'productBaseType', defaultColumnVisibility) &&
+          isSummaryActive('productBaseType', columnSummaries, columnSummaryScopes)
+            ? ['product_base_type']
+            : [],
       }),
-    [attribFields, columnVisibility, defaultColumnVisibility],
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
   const versionTargets = useMemo(
     () =>
@@ -57,8 +63,10 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         attribs: attribFields,
         columnVisibility,
         defaultColumnVisibility,
+        columnSummaries,
+        columnSummaryScopes,
       }),
-    [attribFields, columnVisibility, defaultColumnVisibility],
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
 
   const {
