@@ -20,6 +20,7 @@ import { SortingState, VisibilityState } from '@tanstack/react-table'
 import { useProjectContext, usePowerpack } from '@shared/context'
 import {
   buildMetricTargets,
+  anySummaryActive,
   mergeFieldStats,
   totalRowsFromStats,
   toListItemsStatsTargets,
@@ -269,7 +270,14 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       filter: statsFilter,
       targets: statsTargets,
     },
-    { skip: !projectName || !selectedListId || !statsEntity || !powerLicense },
+    {
+      skip:
+        !projectName ||
+        !selectedListId ||
+        !statsEntity ||
+        !powerLicense ||
+        !anySummaryActive(columns.columnSummaries, columns.columnSummaryScopes),
+    },
   )
 
   const fieldStats = useMemo(() => {

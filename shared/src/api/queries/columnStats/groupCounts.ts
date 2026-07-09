@@ -34,7 +34,6 @@ const TASK_FIELDS: Record<string, string> = {
 const VERSION_FIELDS: Record<string, string> = {
   status: 'status',
   tags: 'tags',
-  productType: 'product_type',
 }
 
 export const groupByToStatsTarget = (

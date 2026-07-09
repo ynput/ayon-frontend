@@ -266,11 +266,14 @@ export const ProjectTreeTable = ({
   const filterErrorMessage = getFilterErrorMessage(getEntitiesLabelFromScopes(scopes))
 
   // Parent (folder/product) summary scope only applies when those entities are
-  // actually on screen: hierarchy view, or grouping by a parent entity.
+  // actually on screen: hierarchy view, grouping by a parent entity, or the
+  // Products tab's product tree (product parent rows -> 'product' in scopes).
   const groupField = overrideGroupBy?.id ?? groupBy?.id
   const groupFieldId = Array.isArray(groupField) ? groupField[0] : groupField
   const parentScopeApplicable =
-    showHierarchy || ['hierarchy', 'folder', 'product'].includes(groupFieldId ?? '')
+    showHierarchy ||
+    ['hierarchy', 'folder', 'product'].includes(groupFieldId ?? '') ||
+    scopes.includes('product')
 
   const { writableFields } = useProjectDataContext()
 

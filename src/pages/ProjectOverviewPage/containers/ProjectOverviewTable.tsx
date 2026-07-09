@@ -15,6 +15,7 @@ import { useViewsContext } from '@shared/containers'
 import {
   mergeFieldStats,
   buildMetricTargets,
+  anySummaryActive,
   totalRowsFromStats,
   useGetFolderColumnStatsQuery,
   useGetTaskColumnStatsQuery,
@@ -41,6 +42,8 @@ const ProjectOverviewTable = ({}: Props) => {
   const { isLoadingViews } = useViewsContext()
   // column summaries are a powerpack feature — don't fetch stats without a license
   const { powerLicense } = usePowerpack()
+  // nothing to compute when every summary is switched off — skip the query
+  const noSummaries = !anySummaryActive(columnSummaries, columnSummaryScopes)
   const { folderFilters, taskFilters, selectedFolders, selectedTaskIds, foldersMap } =
     useProjectOverviewContext()
 
@@ -95,7 +98,7 @@ const ProjectOverviewTable = ({}: Props) => {
       // when grouping by folder, not having having "show empty" enabled means we do not count empty folder
       hideEmptyFolders: groupByConfig?.showEmpty === false && !showHierarchy ? true : undefined,
     },
-    { skip: !projectName || isLoadingViews || !powerLicense },
+    { skip: !projectName || isLoadingViews || !powerLicense || noSummaries },
   )
 
   const {
@@ -112,7 +115,7 @@ const ProjectOverviewTable = ({}: Props) => {
       taskIds: statsTaskIds,
       targets: taskTargets,
     },
-    { skip: !projectName || isLoadingViews || !powerLicense },
+    { skip: !projectName || isLoadingViews || !powerLicense || noSummaries },
   )
 
   const fieldStats = useMemo(() => {

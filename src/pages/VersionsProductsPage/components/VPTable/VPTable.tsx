@@ -12,6 +12,7 @@ import {
   mergeFieldStats,
   buildMetricTargets,
   isSummaryActive,
+  anySummaryActive,
   totalRowsFromStats,
   useGetProductsColumnStatsQuery,
   useGetVersionsColumnStatsQuery,
@@ -38,6 +39,8 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   const { isLoadingViews } = useViewsContext()
   // column summaries are a powerpack feature — don't fetch stats without a license
   const { powerLicense } = usePowerpack()
+  // nothing to compute when every summary is switched off — skip the query
+  const noSummaries = !anySummaryActive(columnSummaries, columnSummaryScopes)
 
   const productTargets = useMemo(
     () =>
@@ -75,7 +78,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     error: productStatsError,
   } = useGetProductsColumnStatsQuery(
     { ...columnStatsArgs, targets: productTargets },
-    { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense },
+    { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense || noSummaries },
   )
   const {
     data: versionStats,
@@ -83,7 +86,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     error: versionStatsError,
   } = useGetVersionsColumnStatsQuery(
     { ...columnStatsArgs, targets: versionTargets },
-    { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense },
+    { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense || noSummaries },
   )
 
   const fieldStats = useMemo(() => {

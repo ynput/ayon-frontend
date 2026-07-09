@@ -28,6 +28,22 @@ export const isSummaryActive = (
   return calc != null || scope != null
 }
 
+// True when at least one column has an active summary — lets callers skip the
+// whole column-stats query when the user has every summary switched off.
+export const anySummaryActive = (
+  columnSummaries?: Record<string, SummaryCalc>,
+  columnSummaryScopes?: Record<string, RowScope>,
+): boolean => {
+  const ids = new Set([
+    ...Object.keys(columnSummaries ?? {}),
+    ...Object.keys(columnSummaryScopes ?? {}),
+  ])
+  for (const id of ids) {
+    if (isSummaryActive(id, columnSummaries, columnSummaryScopes)) return true
+  }
+  return false
+}
+
 // refetch only when a target was added — hiding a column needs no query
 export const hasNewTargetFields = (current?: TargetsArg, previous?: TargetsArg): boolean => {
   if (!current) return false
