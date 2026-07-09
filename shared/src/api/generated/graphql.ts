@@ -218,6 +218,7 @@ export type EntityListNode = {
   access: Scalars['String']['output'];
   accessLevel: Scalars['Int']['output'];
   active: Scalars['Boolean']['output'];
+  activityCategories: Array<Scalars['String']['output']>;
   allAttrib: Scalars['String']['output'];
   attributes: Scalars['String']['output'];
   count: Scalars['Int']['output'];
@@ -1950,10 +1951,11 @@ export type GetTasksByParentQueryVariables = Exact<{
   folderFilter?: string | null | undefined;
   search?: string | null | undefined;
   showComments?: boolean;
+  first?: number | null | undefined;
 }>;
 
 
-export type GetTasksByParentQuery = { project: { name: string, tasks: { edges: Array<{ node: { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string } } }> } } };
+export type GetTasksByParentQuery = { project: { name: string, tasks: { edges: Array<{ node: { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string, taskCount: number } } }> } } };
 
 export type GetTasksListQueryVariables = Exact<{
   projectName: string;
@@ -1972,11 +1974,11 @@ export type GetTasksListQueryVariables = Exact<{
 }>;
 
 
-export type GetTasksListQuery = { project: { name: string, tasks: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string } } }> } } };
+export type GetTasksListQuery = { project: { name: string, tasks: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string, taskCount: number } } }> } } };
 
 export type SubTaskFragmentFragment = { id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean };
 
-export type TaskPropsFragmentFragment = { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string } };
+export type TaskPropsFragmentFragment = { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string, taskCount: number } };
 
 export type GetFolderProductsQueryVariables = Exact<{
   projectName: string;
@@ -2494,6 +2496,7 @@ export const TaskPropsFragmentFragmentDoc = new TypedDocumentString(`
   }
   folder {
     folderType
+    taskCount
   }
 }
     fragment SubTaskFragment on SubTaskNode {
@@ -3452,7 +3455,7 @@ export const GetTaskColumnStatsDocument = new TypedDocumentString(`
   distribution
 }`);
 export const GetTasksByParentDocument = new TypedDocumentString(`
-    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $folderFilter: String, $search: String, $showComments: Boolean! = false) {
+    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $folderFilter: String, $search: String, $showComments: Boolean! = false, $first: Int = 1000) {
   project(name: $projectName) {
     name
     tasks(
@@ -3460,6 +3463,7 @@ export const GetTasksByParentDocument = new TypedDocumentString(`
       filter: $filter
       folderFilter: $folderFilter
       search: $search
+      first: $first
     ) {
       edges {
         node {
@@ -3507,6 +3511,7 @@ fragment TaskPropsFragment on TaskNode {
   }
   folder {
     folderType
+    taskCount
   }
 }`);
 export const GetTasksListDocument = new TypedDocumentString(`
@@ -3579,6 +3584,7 @@ fragment TaskPropsFragment on TaskNode {
   }
   folder {
     folderType
+    taskCount
   }
 }`);
 export const GetFolderProductsDocument = new TypedDocumentString(`

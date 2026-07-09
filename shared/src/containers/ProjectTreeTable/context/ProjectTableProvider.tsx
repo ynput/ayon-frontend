@@ -93,6 +93,7 @@ export interface ProjectTableProviderProps {
 
   // data functions
   fetchNextPage: (value?: string) => void
+  loadMoreTasksForFolder?: (folderId: string, missingTasks: number) => void
   reloadTableData: () => void
 
   // Filters
@@ -185,6 +186,7 @@ export const ProjectTableProvider = ({
   toggleExpanded,
   updateExpanded,
   fetchNextPage,
+  loadMoreTasksForFolder,
   reloadTableData,
   setExpanded,
   contextMenuItems,
@@ -373,6 +375,7 @@ export const ProjectTableProvider = ({
         foldersMap,
         entitiesMap,
         fetchNextPage,
+        loadMoreTasksForFolder,
         reloadTableData,
         groups,
         overrideGroupBy,

@@ -31,6 +31,7 @@ export interface ProjectTableContextType {
   foldersMap: ProjectTableProviderProps['foldersMap']
   entitiesMap: ProjectTableProviderProps['entitiesMap']
   fetchNextPage: ProjectTableProviderProps['fetchNextPage']
+  loadMoreTasksForFolder?: (folderId: string, missingTasks: number) => void
   reloadTableData: ProjectTableProviderProps['reloadTableData']
   getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
   loadingLinksEntityIds?: Set<string>

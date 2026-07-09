@@ -3,8 +3,10 @@ import {
   useGetOverviewTasksByFoldersQuery,
   useGetSearchFoldersQuery,
   useGetTasksListInfiniteInfiniteQuery,
+  useLazyGetMoreTasksForSingleFolderQuery,
 } from '@shared/api'
-import type { FolderListItem, GetGroupedTasksListArgs, EntityGroup, QueryFilter } from '@shared/api'
+import type { FolderListItem, GetGroupedTasksListArgs, EntityGroup } from '@shared/api'
+import { QueryFilter } from '../types'
 import { useGroupedPagination, useQueryArgumentChangeLoading } from '@shared/hooks'
 import { getGroupByDataType } from '@shared/util'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
@@ -38,6 +40,7 @@ type useFetchOverviewDataData = {
   loadingLinksEntityIds: Set<string> // entity IDs whose links are currently being fetched (not yet cached)
   fetchNextPage: (value?: string) => void
   reloadTableData: () => void
+  loadMoreTasksForFolder?: (folderId: string, missingTasks: number) => void
 }
 
 type Params = {
@@ -80,6 +83,38 @@ export const useFetchOverviewData = ({
   showComments = false,
 }: Params): useFetchOverviewDataData => {
   const { isLoading: isLoadingModules } = modules
+
+  const [triggerLoadMoreTasks] = useLazyGetMoreTasksForSingleFolderQuery()
+
+  // Track parent folders of tasks that are being loaded infinitely
+  const [loadingTasksMoreParents, setLoadingTasksMoreParents] = useState<LoadingTasks>({})
+
+  const loadMoreTasksForFolder = (folderId: string, missingTasks: number = 1) => {
+    // Optimistically set the loading state so it shows up immediately
+    setLoadingTasksMoreParents((prev) => ({ ...prev, [folderId]: missingTasks }))
+
+    triggerLoadMoreTasks({
+      projectName,
+      folderId,
+      filter: taskFilters?.filterString,
+      search: taskFilters?.search,
+      showComments,
+      parentQueryArgs: {
+        projectName,
+        filter: taskFilters?.filterString,
+        folderFilter: folderFilters?.filterString,
+        search: taskFilters?.search,
+        showComments,
+      },
+    }).finally(() => {
+      // Clear up the loading state once the query is finished
+      setLoadingTasksMoreParents((prev) => {
+        const next = { ...prev }
+        delete next[folderId]
+        return next
+      })
+    })
+  }
 
   const {
     folders,
@@ -303,8 +338,14 @@ export const useFetchOverviewData = ({
         expandedParentIds,
         foldersMap,
       })
-    } else return {}
-  }, [isFetchingExpandedFoldersTasks, expandedFoldersTasks, expandedParentIds, foldersMap])
+    } else return loadingTasksMoreParents
+  }, [
+    isFetchingExpandedFoldersTasks,
+    expandedFoldersTasks,
+    expandedParentIds,
+    foldersMap,
+    loadingTasksMoreParents,
+  ])
 
   const [tasksListCursor, setTasksListCursor] = useState('')
 
@@ -396,7 +437,7 @@ export const useFetchOverviewData = ({
 
     const allGroupQueries = getGroupQueries({
       groups: taskGroups,
-      filters: taskFilters.filter,
+      filters: taskFilters.filter as any,
       groupBy,
       groupPageCounts,
       dataType: groupByDataType,
@@ -630,5 +671,6 @@ export const useFetchOverviewData = ({
     loadingLinksEntityIds,
     fetchNextPage: handleFetchNextPage,
     reloadTableData,
+    loadMoreTasksForFolder,
   }
 }

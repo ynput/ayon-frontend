@@ -176,6 +176,30 @@ const foldersApiEnhanced = foldersApi.enhanceEndpoints({
 
 export const TASKS_INFINITE_QUERY_COUNT = 100 // Number of items to fetch per page
 
+// --- TRACKING REGISTRY FOR EMPTY FOLDERS (FILTER-AWARE) ---
+const queriedFoldersRegistry: Record<string, Set<string>> = {}
+
+const getCacheKey = (
+  projectName: string,
+  filter?: string,
+  folderFilter?: string,
+  search?: string,
+  showComments?: boolean,
+) => {
+  return JSON.stringify({ projectName, filter, folderFilter, search, showComments })
+}
+
+const markFoldersAsQueried = (cacheKey: string, folderIds: string[]) => {
+  if (!queriedFoldersRegistry[cacheKey]) {
+    queriedFoldersRegistry[cacheKey] = new Set()
+  }
+  folderIds.forEach((id) => queriedFoldersRegistry[cacheKey].add(id))
+}
+
+const getQueriedFolders = (cacheKey: string): Set<string> => {
+  return queriedFoldersRegistry[cacheKey] || new Set()
+}
+
 const injectedApi = enhancedApi.injectEndpoints({
   endpoints: (build) => ({
     // Each project has one cache for all the tasks of the expanded folders
@@ -194,52 +218,60 @@ const injectedApi = enhancedApi.injectEndpoints({
         showComments?: boolean
       }
     >({
-      async queryFn(
-        { projectName, parentIds, filter, folderFilter, search, showComments },
-        { dispatch, forced },
-      ) {
+      async queryFn({ projectName, parentIds, filter, folderFilter, search, showComments }, api) {
         try {
-          // Process parent IDs in sequential batches
-          const BATCH_SIZE = 20 // Process x parentIds at a time
-          const allTasks: EditorTaskNode[] = []
+          const state = api.getState()
+          const cacheArgs = { projectName, filter, folderFilter, search, showComments }
 
-          // Process batches one after another
-          for (let i = 0; i < parentIds.length; i += BATCH_SIZE) {
-            const batchParentIds = parentIds.slice(i, i + BATCH_SIZE)
+          // Select current flat cache state
+          const currentCache = (injectedApi.endpoints as any).getOverviewTasksByFolders.select(
+            cacheArgs,
+          )(state)
+          const cacheData: EditorTaskNode[] = currentCache?.data || []
 
-            // Process this batch in parallel
-            const batchResults = await Promise.all(
-              batchParentIds.map(async (parentId) =>
-                dispatch(
-                  enhancedApi.endpoints.GetTasksByParent.initiate(
-                    {
-                      projectName,
-                      parentIds: [parentId],
-                      filter,
-                      folderFilter,
-                      search,
-                      showComments: !!showComments,
-                    },
-                    { forceRefetch: forced },
-                  ),
-                ),
-              ),
-            )
+          // 1. Generate a stable cache key matching RTK Query's serialization
+          const cacheKey = getCacheKey(projectName, filter, folderFilter, search, showComments)
 
-            // Add the results from this batch to our accumulated results
-            const batchTasks = batchResults
-              .filter((r) => !!r.data)
-              .flatMap((result) => result.data as EditorTaskNode[])
+          // 2. Fetch our registry specific to THIS combination of search/filters
+          const alreadyQueriedFolders = getQueriedFolders(cacheKey)
 
-            allTasks.push(...batchTasks)
+          // 3. Diffing: Only request folders that haven't hit the network under these specific filters
+          const newFolderIds = parentIds.filter((id) => !alreadyQueriedFolders.has(id))
+
+          // Short-circuit if all expanded folders have been evaluated for this filter setup
+          if (newFolderIds.length === 0) {
+            return { data: cacheData }
           }
 
-          return { data: allTasks }
+          // 4. Mark them as queried for this cache key immediately to prevent duplicate flight requests
+          markFoldersAsQueried(cacheKey, newFolderIds)
+
+          // 5. Fire one single network request for all new folders using GetTasksByParent
+          const result = await api.dispatch(
+            enhancedApi.endpoints.GetTasksByParent.initiate(
+              {
+                projectName,
+                parentIds: newFolderIds,
+                filter,
+                search,
+                showComments: !!showComments,
+                first: 100,
+              },
+              { forceRefetch: true },
+            ),
+          )
+
+          if (result.error) throw result.error
+
+          const newlyFetchedTasks = result.data || []
+
+          // 5. Append new tasks to the existing flat array cache
+          return {
+            data: [...cacheData, ...newlyFetchedTasks],
+          }
         } catch (e: any) {
-          // handle errors appropriately
           console.error(e)
-          const error = { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError
-          return { error }
+          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
         }
       },
       // keep one cache per project
@@ -612,7 +644,7 @@ const injectedApi = enhancedApi.injectEndpoints({
             const count = groupCount || group.count || 500
 
             // Separate folder-level conditions from task-level conditions in the group filter
-            let taskFilter = group.filter
+            let taskFilter: string | undefined = group.filter
             let mergedFolderFilter = folderFilter
             if (group.filter) {
               try {
@@ -704,6 +736,82 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.tasks, projectName),
     }),
+    getMoreTasksForSingleFolder: build.query<
+      EditorTaskNode[],
+      {
+        projectName: string
+        folderId: string
+        filter?: string
+        search?: string
+        showComments?: boolean
+        parentQueryArgs: {
+          projectName: string
+          filter?: string
+          folderFilter?: string
+          search?: string
+          showComments?: boolean
+        }
+      }
+    >({
+      queryFn: async ({ projectName, folderId, filter, search, showComments }, api) => {
+        try {
+          const result = await api.dispatch(
+            enhancedApi.endpoints.GetTasksByParent.initiate(
+              {
+                projectName,
+                parentIds: [folderId],
+                filter,
+                search,
+                showComments: !!showComments,
+                first: TASKS_INFINITE_QUERY_COUNT,
+              } as any,
+              { forceRefetch: true },
+            ),
+          )
+
+          if (result.error) throw result.error
+
+          const tasks = (result.data as EditorTaskNode[]) || []
+          return { data: tasks }
+        } catch (e: any) {
+          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+        }
+      },
+      async onQueryStarted({ parentQueryArgs }, { dispatch, queryFulfilled }) {
+        try {
+          const { data: newTasks } = await queryFulfilled
+
+          // Seamlessly patch the flat array cache slot with duplicate protection
+          dispatch(
+            injectedApi.util.updateQueryData(
+              'getOverviewTasksByFolders' as any,
+              parentQueryArgs as any,
+              // @ts-expect-error - we know the draft is EditorTaskNode[] from the query above
+              (draft: EditorTaskNode[]) => {
+                console.log('Patching tasks into main cache')
+                // Create a quick lookup Set of IDs already resident in the cache
+                const existingIds = new Set(draft.map((task) => task.id))
+
+                // Only push tasks that don't already exist in the cache
+                for (const task of newTasks) {
+                  if (!existingIds.has(task.id)) {
+                    draft.push(task)
+                  } else {
+                    // Optional: If the task exists, update it in place to keep attributes fresh
+                    const idx = draft.findIndex((t) => t.id === task.id)
+                    if (idx > -1) {
+                      draft[idx] = task
+                    }
+                  }
+                }
+              },
+            ),
+          )
+        } catch (err) {
+          console.error('Failed to patch overview tasks flat cache:', err)
+        }
+      },
+    }),
   }),
 })
 
@@ -716,5 +824,6 @@ export const {
   useGetGroupedTasksListQuery,
   useGetFolderColumnStatsQuery,
   useGetTaskColumnStatsQuery,
+  useLazyGetMoreTasksForSingleFolderQuery,
 } = injectedApi
 export default injectedApi

@@ -44,6 +44,7 @@ export interface ProjectOverviewContextType {
   tasksByFolderMap: TasksByFolderMap
   fetchNextPage: (value?: string) => void
   reloadTableData: () => void
+  loadMoreTasksForFolder?: (folderId: string, missingTasks: number) => void
 
   // Grouping data
   taskGroups: EntityGroup[]

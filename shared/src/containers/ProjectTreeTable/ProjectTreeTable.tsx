@@ -114,6 +114,7 @@ import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
 import { upperFirst } from 'lodash'
 import { ColumnsConfig } from './types/columnConfig'
+import LoadMoreTasksRow from './components/LoadMoreTasksRow'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -253,6 +254,7 @@ export const ProjectTreeTable = ({
     showHierarchy,
     isFlatFolderView,
     fetchNextPage,
+    loadMoreTasksForFolder,
     scopes, // or entityTypes
     getEntityById,
     onResetView,
@@ -528,6 +530,7 @@ export const ProjectTreeTable = ({
       selection: Array.from(selectedCells),
       columnsConfig,
       loadingLinksEntityIds,
+      loadMoreTasksForFolder,
     },
   })
 
@@ -1468,12 +1471,7 @@ const TableBody = ({
         <Styled.AnimatedEmptyPlaceholder>
           <EmptyPlaceholder message="No items found">
             {onResetView && (
-              <Button
-                variant="filled"
-                label="Reset filters"
-                icon="replay"
-                onClick={onResetView}
-              />
+              <Button variant="filled" label="Reset filters" icon="replay" onClick={onResetView} />
             )}
           </EmptyPlaceholder>
         </Styled.AnimatedEmptyPlaceholder>,
@@ -1524,8 +1522,12 @@ const TableBodyRow = ({
 }: TableBodyRowProps) => {
   const sortable = sortableRows ? useSortable({ id: row.id }) : null
 
+  // Track actual DOM element node
+  const rowHtmlElementRef = useRef<HTMLTableRowElement | null>(null)
+
   const combinedRef = useCallback(
     (node: HTMLTableRowElement | null) => {
+      rowHtmlElementRef.current = node
       if (sortable) {
         sortable.setNodeRef(node)
       }
@@ -1703,6 +1705,17 @@ const TD = ({
         // Only process left clicks (button 0), ignore right clicks
         if (e.button !== 0) return
 
+        // Manual Click Handler for load-more row items
+        if (cell.row.original.entityType === 'load-more') {
+          e.preventDefault()
+          const loadMoreFn = (cell.getContext().table.options.meta as any)?.loadMoreTasksForFolder
+          if (loadMoreFn) {
+            // @ts-expect-error: missing tasks is a property of the row data, but TypeScript doesn't know about it
+            loadMoreFn(cell.row.original.folderId, cell.row.original.missingTasks)
+          }
+          return
+        }
+
         const target = e.target as HTMLElement
 
         // check we are not clicking on expander
@@ -1841,7 +1854,23 @@ const TD = ({
         // keyboard events are handled in useKeyboardNavigation hook
       }}
     >
-      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      {cell.row.original.entityType === 'load-more' ? (
+        cell.column.id === 'name' ? (
+          <LoadMoreTasksRow
+            message={cell.row.original.name}
+            onLoadMore={() => {
+              const loadMoreFn = (cell.getContext().table.options.meta as any)
+                ?.loadMoreTasksForFolder
+              if (loadMoreFn) {
+                // @ts-expect-error: missing tasks is a property of the row data, but TypeScript doesn't know about it
+                loadMoreFn(cell.row.original.folderId, cell.row.original.missingTasks)
+              }
+            }}
+          />
+        ) : null
+      ) : (
+        flexRender(cell.column.columnDef.cell, cell.getContext())
+      )}
     </Styled.TD>
   )
 }

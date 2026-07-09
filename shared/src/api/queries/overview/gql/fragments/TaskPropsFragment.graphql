@@ -26,5 +26,6 @@ fragment TaskPropsFragment on TaskNode {
   }
   folder {
     folderType
+    taskCount
   }
 }

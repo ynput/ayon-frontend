@@ -262,6 +262,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     tasksByFolderMap,
     fetchNextPage,
     reloadTableData,
+    loadMoreTasksForFolder,
     isLoadingAll,
     isLoadingMore,
     loadingTasks,
@@ -273,12 +274,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     excludeSelectedFolders: sliceType !== 'entityList',
     taskIds: rawEntityIds.taskIds,
     taskFilters: {
-      filter: combinedTaskFilter.filter,
+      filter: combinedTaskFilter.filter as any,
       filterString: combinedTaskFilter.filterString,
       search: combinedTaskFilter.search,
     },
     folderFilters: {
-      filter: combinedFolderFilter.filter,
+      filter: combinedFolderFilter.filter as any,
       filterString: combinedFolderFilter.filterString,
       search: combinedFolderFilter.search,
     },
@@ -318,6 +319,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         tasksByFolderMap,
         fetchNextPage,
         reloadTableData,
+        loadMoreTasksForFolder,
         taskGroups,
         // Separate task and folder filters
         taskFilters: {

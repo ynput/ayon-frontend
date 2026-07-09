@@ -13,7 +13,7 @@ import { LoadingTasks } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { TableGroupBy } from '../context'
 import { linksToTableData } from '../utils'
-import { ProjectModelWithProducts, useProjectContext } from '@shared/context'
+import { useProjectContext } from '@shared/context'
 
 type Params = {
   foldersMap: FolderNodeMap
@@ -219,7 +219,11 @@ export default function useBuildProjectDataTable({
           const folderTaskIds = tasksByFolderMap.get(folder.id) || []
           const folderTasks = folderTaskIds.flatMap((taskId) => tasksMap.get(taskId) || [])
 
-          if (folderTasks.length || loadingTasks[folder.id]) {
+          // Calculate pagination metrics
+          const totalTasksCount = folder.taskNames?.length || 0
+          const missingTasks = totalTasksCount - folderTasks.length
+
+          if (folderTasks.length || loadingTasks[folder.id] || missingTasks > 0) {
             const taskRows = folderTasks.map((task) => createTaskRow(task, folder.id))
 
             if (loadingTasks[folder.id]) {
@@ -227,6 +231,18 @@ export default function useBuildProjectDataTable({
               if (count > 0) {
                 taskRows.push(...generateLoadingRows(count, { parentId: folder.id }))
               }
+            } else if (missingTasks > 0) {
+              // Append a custom dummy placeholder row
+              taskRows.push({
+                id: `load-more-${folder.id}`,
+                entityType: 'load-more',
+                parentId: folder.id,
+                folderId: folder.id,
+                name: `Load ${missingTasks} more tasks`,
+                missingTasks,
+                subRows: [],
+                parents: folder.parents || [],
+              } as any)
             }
 
             row.subRows = taskRows
@@ -327,13 +343,15 @@ export default function useBuildProjectDataTable({
         const folderTaskIds = tasksByFolderMap.get(folderId) || []
         const folderTasks = folderTaskIds.flatMap((taskId) => tasksMap.get(taskId) || [])
 
-        if (folderTasks.length || loadingTasks[folderId]) {
-          // Use array literal with known length for better performance
-          const taskRows = new Array<TableRow>(folderTasks.length)
+        // Calculate pagination metrics
+        const totalTasksCount = folder?.taskNames?.length || 0
+        const missingTasks = totalTasksCount - folderTasks.length
 
-          // Direct array assignment is faster than push operations
+        if (folderTasks.length || loadingTasks[folderId] || missingTasks > 0) {
+          const taskRows: TableRow[] = []
+
           for (let i = 0; i < folderTasks.length; i++) {
-            taskRows[i] = createTaskRow(folderTasks[i], folderId)
+            taskRows.push(createTaskRow(folderTasks[i], folderId))
           }
 
           // Add loading rows if applicable
@@ -344,6 +362,18 @@ export default function useBuildProjectDataTable({
 
               taskRows.push(...loadingTaskRows)
             }
+          } else if (missingTasks > 0) {
+            // Append a custom dummy placeholder row
+            taskRows.push({
+              id: `load-more-${folderId}`,
+              entityType: 'load-more',
+              parentId: folderId,
+              folderId: folderId,
+              name: `Load ${missingTasks} more tasks`,
+              missingTasks,
+              subRows: [],
+              parents: folder.parents || [],
+            } as any)
           }
 
           row.subRows = taskRows
