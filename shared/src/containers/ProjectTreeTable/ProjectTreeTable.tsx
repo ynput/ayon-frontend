@@ -1336,6 +1336,7 @@ const TableBody = ({
   })
 
   const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
+  const handleTableBodyAltClick = cellContextMenuHook.handleTableBodyAltClick
 
   const { rows } = table.getRowModel()
 
@@ -1392,6 +1393,7 @@ const TableBody = ({
         display: 'grid',
       }}
       onContextMenu={handleTableBodyContextMenu}
+      onClick={handleTableBodyAltClick}
     >
       <Styled.ColumnDividers aria-hidden>
         {columnDividerLefts.map((left, i) => (

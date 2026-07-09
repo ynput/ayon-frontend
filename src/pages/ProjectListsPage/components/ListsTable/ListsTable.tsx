@@ -51,7 +51,7 @@ const ListsTable: FC<ListsTableProps> = ({
     }
   }, [])
 
-  const { openContext: handleRowContext } = useListContextMenu(rowContextMenuBuilders)
+  const { openContext: handleRowContext, menuItems } = useListContextMenu(rowContextMenuBuilders)
 
   // Memoize the render function for the row (definition remains the same)
   const renderListRow = useCallback<
@@ -104,7 +104,13 @@ const ListsTable: FC<ListsTableProps> = ({
   return (
     <>
       <SimpleTableProvider
-        {...{ expanded, setExpanded, rowSelection, onRowSelectionChange: setRowSelection }}
+        {...{
+          expanded,
+          setExpanded,
+          rowSelection,
+          onRowSelectionChange: setRowSelection,
+          menuItems,
+        }}
       >
         <Container>
           <ListsTableHeader
@@ -137,7 +143,6 @@ const ListsTable: FC<ListsTableProps> = ({
             onScrollBottom={fetchNextPage}
             enableClickToDeselect={false}
             meta={{
-              handleRowContext,
               handleDoubleClick,
               closeRenameList,
               onRenameList,

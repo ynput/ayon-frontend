@@ -9,6 +9,7 @@ export type RowExpanderProps = {
   enableNonFolderIndent?: boolean
   isTableExpandable?: boolean
   onExpandClick?: () => void
+  onAltExpandClick?: () => void
 }
 
 export const RowExpander = ({
@@ -17,12 +18,17 @@ export const RowExpander = ({
   enableNonFolderIndent = true,
   isTableExpandable,
   onExpandClick,
+  onAltExpandClick,
 }: RowExpanderProps) =>
   isRowExpandable ? (
     <Styled.Expander
       onClick={(e) => {
         e.stopPropagation()
-        onExpandClick?.()
+        if (e.altKey) {
+          onAltExpandClick?.()
+        } else {
+          onExpandClick?.()
+        }
       }}
       icon={isRowExpanded ? 'expand_more' : 'chevron_right'}
       className="expander"
@@ -47,6 +53,7 @@ export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLD
   isTableExpandable?: boolean
   enableNonFolderIndent?: boolean
   onExpandClick?: () => void
+  onAltExpandClick?: () => void
   //  when used as a template
   startContent?: React.ReactNode
   endContent?: React.ReactNode
@@ -78,6 +85,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       isTableExpandable,
       enableNonFolderIndent = true,
       onExpandClick,
+      onAltExpandClick,
       startContent,
       endContent,
       depth = 0,
@@ -105,6 +113,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
           isRowExpanded={isRowExpanded}
           isTableExpandable={isTableExpandable}
           onExpandClick={onExpandClick}
+          onAltExpandClick={onAltExpandClick}
           enableNonFolderIndent={enableNonFolderIndent}
           {...pt?.expander}
         />
