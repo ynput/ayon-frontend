@@ -191,6 +191,15 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     [selectedList],
   )
 
+  // copy/getEntityById needs display-ready rows (name/version/product/task resolved); keep raw link arrays
+  const entitiesMap = useMemo(() => {
+    const map = new Map<string, any>()
+    for (const row of props.listItemsTableData) {
+      map.set(row.id, { ...row, links: props.listItemsMap.get(row.id)?.links ?? [] })
+    }
+    return map
+  }, [props.listItemsTableData, props.listItemsMap])
+
   return (
     <SettingsPanelProvider>
       <ColumnSettingsProvider
@@ -209,7 +218,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                 users={props.users}
                 modules={modules}
                 // @ts-ignore
-                entitiesMap={props.listItemsMap}
+                entitiesMap={entitiesMap}
                 foldersMap={props.foldersMap}
                 tasksMap={props.tasksMap}
                 tableRows={props.listItemsTableData}
