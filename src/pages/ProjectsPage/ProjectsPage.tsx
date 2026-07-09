@@ -1,4 +1,5 @@
 import { FC, useCallback, useMemo, useState } from 'react'
+import { ExpandedState } from '@tanstack/react-table'
 import {
   useGetProjectsData,
   isEmptyFolderPlaceholderRow,
@@ -34,6 +35,7 @@ import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useShortcuts from '@hooks/useShortcuts'
 import { SettingsPanelProvider, usePowerpack, useSettingsPanel } from '@shared/context'
 import { CustomizeButton, PowerpackButton } from '@shared/components'
+import { useSessionStorage } from '@shared/hooks'
 import { DEFAULT_COLUMNS_PROJECT, GROUP_BY_FOLDER_KEY } from './constants'
 import useProjectMenuController from '@containers/ProjectsList/hooks/useProjectMenuController'
 import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
@@ -98,6 +100,9 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   const { sorting, handleSortingChange } = useProjectSorting()
   // SETTINGS: Filters
   const { filters, handleFiltersChange } = useProjectFilters()
+
+  // STATE: expanded rows (persisted in session storage)
+  const [expanded, setExpanded] = useSessionStorage<ExpandedState>('projects-page-expanded', {})
 
   const handleGroupChange = (v: SortCardType[]) => {
     const nextGrouping = v.map((item) => item.id)
@@ -258,6 +263,8 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
                 enableColumnResizing
                 columnSizing={columnSizing}
                 onColumnSizingChange={handleColumnSizingChange}
+                expanded={expanded}
+                onExpandedChange={setExpanded}
                 editable={false}
                 getIsRowInactive={(row) => row.active === false}
               />
