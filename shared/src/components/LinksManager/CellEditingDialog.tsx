@@ -238,7 +238,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         maxWidth: maxWidth ? `${maxWidth}px` : 'none',
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
       }}
-      className="links-widget-popup"
+      className="links-widget-popup block-shortcuts"
       onKeyDown={handleKeyDown}
     >
       {children}

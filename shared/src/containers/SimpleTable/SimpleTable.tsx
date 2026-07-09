@@ -340,9 +340,14 @@ const SimpleTable: FC<SimpleTableProps> = ({
             event.ctrlKey || event.metaKey,
           )
 
-          // Focus the next row's cell
+          // Focus the next row's cell. Scope to this table's container: row ids are
+          // entity ids that can also exist in other SimpleTables on the page (slicer),
+          // so a document-wide getElementById would steal focus to a duplicate.
           requestAnimationFrame(() => {
-            const nextRowElement = document.getElementById(nextRow.id)
+            const container = tableContainerRef.current
+            const nextRowElement = container
+              ? container.querySelector(`#${CSS.escape(nextRow.id)}`)
+              : document.getElementById(nextRow.id)
             const nextCell = nextRowElement?.querySelector('[tabindex="0"]') as HTMLElement
             if (nextCell) {
               nextCell.focus()

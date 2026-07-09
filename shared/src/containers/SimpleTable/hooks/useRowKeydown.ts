@@ -20,11 +20,15 @@ function useRowKeydown<T>({ handleRowSelect, handleArrowNavigation }: UseRowKeyd
       if (['Enter', ' '].includes(event.key)) {
         // prevent default to prevent scrolling
         event.preventDefault()
+        // don't leak the key to global (e.g. overview) shortcut handlers
+        event.stopPropagation()
         // select row
         handleRowSelect(event, row)
       } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         // prevent default to prevent scrolling
         event.preventDefault()
+        // don't leak the key to global (e.g. overview) shortcut handlers
+        event.stopPropagation()
         // navigate and select
         const direction = event.key === 'ArrowDown' ? 'down' : 'up'
         handleArrowNavigation?.(direction, row, event)
