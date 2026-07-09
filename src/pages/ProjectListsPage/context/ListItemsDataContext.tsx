@@ -237,14 +237,21 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
             buildMetricTargets({
               entity: statsEntity,
               attribs: scopedAttribFields,
-              columnVisibility: {
-                ...defaultColumnVisibility,
-                ...columns.columnVisibility,
-              },
+              columnVisibility: columns.columnVisibility,
+              defaultColumnVisibility,
+              columnSummaries: columns.columnSummaries,
+              columnSummaryScopes: columns.columnSummaryScopes,
             }),
           )
         : [],
-    [statsEntity, scopedAttribFields, defaultColumnVisibility, columns.columnVisibility],
+    [
+      statsEntity,
+      scopedAttribFields,
+      defaultColumnVisibility,
+      columns.columnVisibility,
+      columns.columnSummaries,
+      columns.columnSummaryScopes,
+    ],
   )
 
   const statsFilter = listItemsFilters?.conditions?.length

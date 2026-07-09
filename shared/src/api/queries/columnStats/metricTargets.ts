@@ -1,5 +1,7 @@
 import type { VisibilityState } from '@tanstack/react-table'
 import { StatsOperation } from '@shared/api/generated'
+import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils/checkColumnVisibility'
+import type { SummaryCalc, RowScope } from '@shared/containers/ProjectTreeTable/types/summaryTypes'
 
 export type MetricTarget = {
   field: string // column or dot-path for JSONB, e.g. 'status' / 'attrib.fps'
@@ -13,6 +15,17 @@ type TargetsArg = { targets?: { field: string }[] | { field: string } | null }
 const targetFields = (arg?: TargetsArg): { field: string }[] => {
   const t = arg?.targets
   return Array.isArray(t) ? t : t ? [t] : []
+}
+
+export const isSummaryActive = (
+  columnId: string,
+  columnSummaries?: Record<string, SummaryCalc>,
+  columnSummaryScopes?: Record<string, RowScope>,
+): boolean => {
+  const calc = columnSummaries?.[columnId]
+  const scope = columnSummaryScopes?.[columnId]
+  if (calc === 'none' || scope === 'none') return false
+  return calc != null || scope != null
 }
 
 // refetch only when a target was added — hiding a column needs no query
@@ -62,7 +75,12 @@ type BuildMetricTargetsArgs = {
   entity: StatsEntity
   attribs: AttribFieldLike[]
   columnVisibility: VisibilityState
-  extraFields?: string[] // visible page-specific columns, e.g. 'product_base_type'
+  // resolved the same way the table resolves it (opt-in): a column absent from
+  // both maps is hidden, so it must NOT be aggregated
+  defaultColumnVisibility?: VisibilityState
+  columnSummaries?: Record<string, SummaryCalc>
+  columnSummaryScopes?: Record<string, RowScope>
+  extraFields?: string[] // visible, summary-active page columns, e.g. 'product_base_type'
 }
 
 // Targets for the footer over the columns the user can actually see.
@@ -73,28 +91,33 @@ export const buildMetricTargets = ({
   entity,
   attribs,
   columnVisibility,
+  defaultColumnVisibility,
+  columnSummaries,
+  columnSummaryScopes,
   extraFields = [],
 }: BuildMetricTargetsArgs): MetricTarget[] => {
-  // TanStack visibility map only stores toggled columns — absent means visible.
-  const isVisible = (columnId: string) => columnVisibility[columnId] !== false
+  const isVisible = (columnId: string) =>
+    checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)
+ const isActive = (columnId: string) =>
+    isVisible(columnId) && isSummaryActive(columnId, columnSummaries, columnSummaryScopes)
 
   const targets: MetricTarget[] = []
   if (entity === 'version') {
     // versions have no `name` column (display name derives from the version
-    // number) — status is non-null and doubles as the row-count anchor
-    targets.push({ field: 'status', aggregations: ENUM })
+    // number) — status is non-null and doubles as the row-count anchor, so it
+    targets.push({ field: 'status', aggregations: isActive('status') ? ENUM : COUNTS })
   } else {
     // name counts always — they feed the main folders/tasks count cell
     targets.push({ field: 'name', aggregations: COUNTS })
-    if (isVisible('status')) targets.push({ field: 'status', aggregations: ENUM })
+    if (isActive('status')) targets.push({ field: 'status', aggregations: ENUM })
   }
-  if (isVisible('tags')) targets.push({ field: 'tags', aggregations: ENUM })
-  if (entity === 'task' && isVisible('assignees')) {
+  if (isActive('tags')) targets.push({ field: 'tags', aggregations: ENUM })
+  if (entity === 'task' && isActive('assignees')) {
     targets.push({ field: 'assignees', aggregations: ENUM })
   }
 
   const subTypeField = SUB_TYPE_FIELD[entity]
-  if (subTypeField && isVisible('subType')) {
+  if (subTypeField && isActive('subType')) {
     targets.push({ field: subTypeField, aggregations: ENUM })
   }
 
@@ -104,7 +127,7 @@ export const buildMetricTargets = ({
 
   for (const attrib of attribs) {
     if (attrib.scope && !attrib.scope.includes(entity)) continue
-    if (!isVisible(`attrib_${attrib.name}`)) continue
+    if (!isActive(`attrib_${attrib.name}`)) continue
 
     let field = `attrib.${attrib.name}`
     if (['folder', 'task'].includes(entity)) {

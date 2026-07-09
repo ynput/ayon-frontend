@@ -5,12 +5,13 @@ import {
   NEXT_PAGE_ID,
   ProjectTreeTable,
 } from '@shared/containers'
-import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
+import { checkColumnVisibility, useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import { useProjectDataContext, useViewsContext } from '@shared/containers'
 import { usePowerpack } from '@shared/context'
 import {
   mergeFieldStats,
   buildMetricTargets,
+  isSummaryActive,
   totalRowsFromStats,
   useGetProductsColumnStatsQuery,
   useGetVersionsColumnStatsQuery,
@@ -31,7 +32,8 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   const { fetchNextPage, isLoading, columnStatsArgs } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
   const { attribFields } = useProjectDataContext()
-  const { columnVisibility } = useColumnSettingsContext()
+  const { columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes } =
+    useColumnSettingsContext()
   // hold stats queries until views load, otherwise targets cover every column
   const { isLoadingViews } = useViewsContext()
   // column summaries are a powerpack feature — don't fetch stats without a license
@@ -43,13 +45,28 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         entity: 'product',
         attribs: attribFields,
         columnVisibility,
-        extraFields: columnVisibility['productBaseType'] !== false ? ['product_base_type'] : [],
+        defaultColumnVisibility,
+        columnSummaries,
+        columnSummaryScopes,
+        extraFields:
+          checkColumnVisibility(columnVisibility, 'productBaseType', defaultColumnVisibility) &&
+          isSummaryActive('productBaseType', columnSummaries, columnSummaryScopes)
+            ? ['product_base_type']
+            : [],
       }),
-    [attribFields, columnVisibility],
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
   const versionTargets = useMemo(
-    () => buildMetricTargets({ entity: 'version', attribs: attribFields, columnVisibility }),
-    [attribFields, columnVisibility],
+    () =>
+      buildMetricTargets({
+        entity: 'version',
+        attribs: attribFields,
+        columnVisibility,
+        defaultColumnVisibility,
+        columnSummaries,
+        columnSummaryScopes,
+      }),
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
 
   const {
