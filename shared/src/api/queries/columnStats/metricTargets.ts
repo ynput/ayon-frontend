@@ -28,17 +28,24 @@ export const isSummaryActive = (
   return calc != null || scope != null
 }
 
-// True when at least one column has an active summary — lets callers skip the
-// whole column-stats query when the user has every summary switched off.
+// True when at least one *visible* column has an active summary — lets callers
+// skip the whole column-stats query when the user has every summary switched off.
+// Visibility matters: a hidden column can still carry a stale summary value, but
+// buildMetricTargets skips it, so it must not keep the query alive either.
 export const anySummaryActive = (
   columnSummaries?: Record<string, SummaryCalc>,
   columnSummaryScopes?: Record<string, RowScope>,
+  columnVisibility?: VisibilityState,
+  defaultColumnVisibility?: VisibilityState,
 ): boolean => {
   const ids = new Set([
     ...Object.keys(columnSummaries ?? {}),
     ...Object.keys(columnSummaryScopes ?? {}),
   ])
   for (const id of ids) {
+    if (columnVisibility && !checkColumnVisibility(columnVisibility, id, defaultColumnVisibility)) {
+      continue
+    }
     if (isSummaryActive(id, columnSummaries, columnSummaryScopes)) return true
   }
   return false

@@ -276,7 +276,12 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         !selectedListId ||
         !statsEntity ||
         !powerLicense ||
-        !anySummaryActive(columns.columnSummaries, columns.columnSummaryScopes),
+        !anySummaryActive(
+          columns.columnSummaries,
+          columns.columnSummaryScopes,
+          columns.columnVisibility,
+          defaultColumnVisibility,
+        ),
     },
   )
 

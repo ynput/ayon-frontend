@@ -42,8 +42,13 @@ const ProjectOverviewTable = ({}: Props) => {
   const { isLoadingViews } = useViewsContext()
   // column summaries are a powerpack feature — don't fetch stats without a license
   const { powerLicense } = usePowerpack()
-  // nothing to compute when every summary is switched off — skip the query
-  const noSummaries = !anySummaryActive(columnSummaries, columnSummaryScopes)
+  // nothing to compute when every visible summary is switched off — skip the query
+  const noSummaries = !anySummaryActive(
+    columnSummaries,
+    columnSummaryScopes,
+    columnVisibility,
+    defaultColumnVisibility,
+  )
   const { folderFilters, taskFilters, selectedFolders, selectedTaskIds, foldersMap } =
     useProjectOverviewContext()
 
