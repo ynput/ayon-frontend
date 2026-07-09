@@ -199,7 +199,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
         {!isRenaming && (
           <>
             <Spacer className="spacer" />
-            {badge && (
+            {badge?.toString() && (
               <div className="badges">
                 {typeof badge === 'string' ? <span>{badge}</span> : badge}
               </div>

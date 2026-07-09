@@ -157,7 +157,7 @@ const useProjectsListMenuItems = ({
       newSelectedProjects,
     }: {
       isSelectedRowFolder: boolean
-      selectedFolder: ProjectFolderModel | null
+      selectedFolder: ProjectFolderModel | null | undefined
       isSelectedProject: boolean
       newSelectedProjects: ListProjectsItemModel[]
     }) => {
