@@ -70,7 +70,6 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
   const handleRename = useCallback(
     (id: string) => {
       const isFolder = !!parseProjectFolderRowId(id)
-      console.log(isFolder)
       if (isFolder) {
         onRenameFolder?.(id)
       } else {

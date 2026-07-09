@@ -96,7 +96,6 @@ export const useProjectFolderActions = ({
 
   const openRenameFolder = useCallback(
     (rowId: string) => {
-      console.log('on rename folder', rowId)
       setRenamingFolder(rowId)
       setRenamingProject(null) // Ensure project renaming is closed
       onSelect([rowId])
