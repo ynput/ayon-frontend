@@ -104,7 +104,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
         />
         {!search && (
           <SimpleTableCellTemplate
-            id={''}
+            id="create-empty-review-session"
             value={`Create empty ${isStoryboards ? 'storyboard' : 'review session'}`}
             icon="add_box"
             style={{
