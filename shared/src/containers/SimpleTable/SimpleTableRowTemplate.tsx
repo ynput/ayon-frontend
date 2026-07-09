@@ -1,4 +1,4 @@
-import { forwardRef, Fragment, useEffect, useState } from 'react'
+import { forwardRef, useEffect, useState } from 'react'
 import * as Styled from './SimpleTable.styled'
 import { Icon, IconProps, InputText, Spacer } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
