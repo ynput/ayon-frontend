@@ -33,7 +33,10 @@ function useRowKeydown<T>({
         // navigate and select
         const direction = event.key === 'ArrowDown' ? 'down' : 'up'
         handleArrowNavigation?.(direction, row, event)
-      } else if (event.key.toLowerCase() === 'r') {
+      } else if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.metaKey) {
+        // prevent default and stop propagation to ensure the shortcut is handled correctly
+        event.preventDefault()
+        event.stopPropagation()
         handleRename?.(event, row)
       }
     },

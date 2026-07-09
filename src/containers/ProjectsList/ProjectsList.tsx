@@ -178,6 +178,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onOpenProject,
     handleOpenFolderDialog,
     folderDialogProps,
+    onRenameFolder,
+    onRenameProject,
     renamingFolder,
     onSubmitRenameFolder,
     closeRenameFolder,
@@ -225,6 +227,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
         toggleMenu={toggleMenu}
         onSelectAll={toggleSelectAll}
         hiddenButtons={!multiSelect ? ['select-all'] : []}
+        onRenameFolder={onRenameFolder}
+        onRenameProject={onRenameProject}
         renamingFolder={renamingFolder}
         onSubmitRenameFolder={onSubmitRenameFolder}
         closeRenameFolder={closeRenameFolder}

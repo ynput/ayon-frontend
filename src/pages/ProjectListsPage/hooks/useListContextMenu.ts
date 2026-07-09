@@ -273,7 +273,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => 
 
       const menuItems: any[] = [
         {
-          label: 'Rename',
+          label: `Rename ${allSelectedRowsAreFolders ? 'folder' : 'list'}`,
           icon: 'edit',
           command: () => openRenameList(firstSelectedRow),
           // Disable for multi-select

@@ -28,6 +28,7 @@ const ListsTable: FC<ListsTableProps> = ({
     rowSelection,
     setRowSelection,
     closeRenameList,
+    openRenameList,
     onRenameList,
     renamingList,
     setListDetailsOpen,
@@ -43,7 +44,7 @@ const ListsTable: FC<ListsTableProps> = ({
     [isStoryboards],
   )
 
-  const handleRename = useCallback((id: string) => onRenameList(id), [onRenameList])
+  const handleRename = useCallback((id: string) => openRenameList(id), [openRenameList])
   const handleSubmitRename = useCallback(
     (_id: string, val: string) => onRenameList(val),
     [onRenameList],

@@ -89,14 +89,16 @@ export const useProjectFolderActions = ({
       const folder = folders?.find((f) => f.id === folderId)
       if (folder) {
         handleOpenFolderDialog({ label: folder.label, ...folder.data }, folderId)
-    }
+      }
     },
     [folders, handleOpenFolderDialog],
   )
 
   const openRenameFolder = useCallback(
     (rowId: string) => {
+      console.log('on rename folder', rowId)
       setRenamingFolder(rowId)
+      setRenamingProject(null) // Ensure project renaming is closed
       onSelect([rowId])
     },
     [onSelect],
@@ -131,8 +133,8 @@ export const useProjectFolderActions = ({
 
   const onRenameFolder = useCallback(
     (folderId: string) => {
-      // The row ID has format "folder-{id}"
-      const rowId = `folder-${folderId}`
+      // check if we need to add folder- prefix to the rowId, if not already present
+      const rowId = folderId.startsWith('folder-') ? folderId : `folder-${folderId}`
       openRenameFolder(rowId)
     },
     [openRenameFolder],
@@ -142,6 +144,7 @@ export const useProjectFolderActions = ({
   const onRenameProject = useCallback(
     (projectName: string) => {
       setRenamingProject(projectName)
+      setRenamingFolder(null) // Ensure folder renaming is closed
       onSelect([projectName])
     },
     [onSelect],

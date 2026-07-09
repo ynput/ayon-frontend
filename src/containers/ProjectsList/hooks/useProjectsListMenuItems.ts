@@ -407,7 +407,7 @@ const useProjectsListMenuItems = ({
         },
         {
           id: 'rename-folder',
-          label: 'Rename',
+          label: 'Rename folder',
           icon: 'edit',
           shortcut: 'R',
           [command ? 'command' : 'onClick']: () => onRenameFolder?.(selectedFolderId as string),
@@ -415,7 +415,7 @@ const useProjectsListMenuItems = ({
         },
         {
           id: 'edit-label',
-          label: 'Edit label',
+          label: 'Rename project',
           icon: 'edit',
           shortcut: 'R',
           [command ? 'command' : 'onClick']: () =>
