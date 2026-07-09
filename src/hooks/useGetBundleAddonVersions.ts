@@ -1,4 +1,4 @@
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@shared/api'
 
 type Props = {
   addons: string[]

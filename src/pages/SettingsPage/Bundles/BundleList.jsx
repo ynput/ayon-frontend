@@ -4,7 +4,7 @@ import { Column } from 'primereact/column'
 import { Badge, BadgeWrapper } from '@shared/components'
 import { TablePanel } from '@ynput/ayon-react-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { useDeleteBundleMutation, useUpdateBundleMutation } from '@queries/bundles/updateBundles'
+import { useDeleteBundleMutation, useUpdateBundleMutation } from '@shared/api'
 import { useMemo } from 'react'
 import { confirmDelete } from '@shared/util'
 import { toast } from 'react-toastify'
@@ -43,8 +43,8 @@ const BundleList = ({
         bundles.map((bundle) => {
           const patch = { ...bundle, isArchived }
           return updateBundle({
-            name: bundle.name,
-            data: { isArchived },
+            bundleName: bundle.name,
+            bundlePatchModel: { isArchived },
             patch,
           }).unwrap()
         }),
@@ -103,7 +103,14 @@ const BundleList = ({
     // you can only set production, staging, dev status on one bundle at a time
     const activeBundle = e?.data
     if (!activeBundle) return
-    const { name: activeBundleName, isArchived, isProduction, isStaging, isDev, isProject } = e?.data || {}
+    const {
+      name: activeBundleName,
+      isArchived,
+      isProduction,
+      isStaging,
+      isDev,
+      isProject,
+    } = e?.data || {}
     if (!activeBundleName) {
       return
     }
@@ -194,9 +201,17 @@ const BundleList = ({
           marginLeft: 0,
         }}
       >
-        {rowData.isProduction && <Badge  data-testid={`${rowData.name}-production`} label="Production" /> }
-        {rowData.isStaging && <Badge data-testid={`${rowData.name}-staging`} label="Staging" /> }
-        {rowData.isDev && <Badge color="developer" data-testid={`${rowData.name}-dev`} label={`Dev${rowData.activeUser ? ` (${rowData.activeUser})` : ''}`} />}
+        {rowData.isProduction && (
+          <Badge data-testid={`${rowData.name}-production`} label="Production" />
+        )}
+        {rowData.isStaging && <Badge data-testid={`${rowData.name}-staging`} label="Staging" />}
+        {rowData.isDev && (
+          <Badge
+            color="developer"
+            data-testid={`${rowData.name}-dev`}
+            label={`Dev${rowData.activeUser ? ` (${rowData.activeUser})` : ''}`}
+          />
+        )}
         {rowData.isProject && <Badge data-testid={`${rowData.name}-prj`} label="Project" />}
       </BadgeWrapper>
     )

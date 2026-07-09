@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import { Button, SaveButton, Spacer, Toolbar } from '@ynput/ayon-react-components'
-import { useCreateBundleMutation, useUpdateBundleMutation } from '@queries/bundles/updateBundles'
+import {
+  useCreateBundleMutation,
+  useUpdateBundleMutation,
+  useCheckBundleCompatibilityQuery,
+} from '@shared/api'
 import type { Addon } from './types'
 
 import BundleForm from './BundleForm'
@@ -12,7 +16,6 @@ import BundleDeps from './BundleDeps'
 import useAddonSelection from './useAddonSelection'
 import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '@containers/Shortcuts'
-import { useCheckBundleCompatibilityQuery } from '@queries/bundles/getBundles'
 import BundleChecks from './BundleChecks/BundleChecks'
 import usePrevious from '@hooks/usePrevious'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
@@ -68,7 +71,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
   const { filteredAddons, addons } = useAddonSearchContext()
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
-  const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation() as any
+  const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
 
   useEffect(() => {
     if (!formData || !previousFormData) {
@@ -239,7 +242,10 @@ const NewBundle: React.FC<NewBundleProps> = ({
     }
 
     try {
-      await updateBundle({ name: initBundle.name, data: { ...changes } }).unwrap()
+      await updateBundle({
+        bundleName: initBundle.name ?? 'unknown-bundle-name',
+        bundlePatchModel: { ...changes },
+      }).unwrap()
 
       toast.success('Dev bundle updated')
       setDevChanges(false)
@@ -377,13 +383,17 @@ const NewBundle: React.FC<NewBundleProps> = ({
           <Button
             label="Select activated"
             icon="check_circle"
-            onClick={() => setSelectedAddons(filteredAddons.filter((a) => !!formData?.addons?.[a.name]))}
+            onClick={() =>
+              setSelectedAddons(filteredAddons.filter((a) => !!formData?.addons?.[a.name]))
+            }
             data-tooltip="Select addons that have a version"
           />
           <Button
             label="Select deactivated"
             icon="block"
-            onClick={() => setSelectedAddons(filteredAddons.filter((a) => !formData?.addons?.[a.name]))}
+            onClick={() =>
+              setSelectedAddons(filteredAddons.filter((a) => !formData?.addons?.[a.name]))
+            }
             data-tooltip="Select addons that have a NONE version"
           />
           <Button

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@shared/api'
 import { DataTable, DataTableSortEvent } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { compareBuild, coerce } from 'semver'
@@ -202,7 +202,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
       const tableData = (addons as Addon[])
         .map((addon) => ({
           ...addon,
-          version: formData?.addons?.[addon.name],// || 'NONE',
+          version: formData?.addons?.[addon.name], // || 'NONE',
           dev: formData?.addonDevelopment?.[addon.name] as { enabled?: boolean; path?: string },
         }))
         .sort((a, b) => {
@@ -308,11 +308,9 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
               })
               const latestVersion = sortedVersions[0]
 
-
               // Display logic for project bundles
 
               if (formData.isProject) {
-
                 // Inheriting from the studio bundle (undefined currentVersion or override is not possible)
                 //
                 // TODO: compare with staging version if we're showing a staging project bundle
@@ -327,11 +325,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
                 }
 
                 // when currentVersion is set, show it in orange to indicate project override
-                return (
-                  <span style={{ color: 'orange' }}>
-                    {currentVersion || 'NONE'}
-                  </span>
-                )
+                return <span style={{ color: 'orange' }}>{currentVersion || 'NONE'}</span>
               }
 
               // Display logic for normal bundles

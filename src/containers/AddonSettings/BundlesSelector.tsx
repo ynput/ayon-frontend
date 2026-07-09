@@ -1,7 +1,7 @@
 import { Dropdown } from '@ynput/ayon-react-components'
 import { useAppSelector } from '@state/store'
 import { useMemo } from 'react'
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@shared/api'
 import styled from 'styled-components'
 import type { BundleModel } from '@shared/api/generated/bundles'
 import clsx from 'clsx'

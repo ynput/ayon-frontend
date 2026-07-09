@@ -3,8 +3,8 @@ import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
 import { Button, InputSwitch, Section } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
-import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
+import { useListBundlesQuery } from '@shared/api'
+import { useUpdateBundleMutation, bundlesQueries } from '@shared/api'
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
 import { useListInstallersQuery } from '@queries/installers/getInstallers'
@@ -14,7 +14,6 @@ import { toast } from 'react-toastify'
 import AddonDialog from '@components/AddonDialog/AddonDialog'
 import { useGetAddonSettingsQuery } from '@queries/addonSettings'
 import getLatestSemver from './getLatestSemver'
-import { bundlesQueries } from '@queries/bundles/updateBundles'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocalStorage } from '@shared/hooks'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -296,7 +295,11 @@ const Bundles = () => {
       } else {
         // No source bundles to copy from — set tag directly
         try {
-          await updateBundle({ name, data: { [statusKey]: true }, patch }).unwrap()
+          await updateBundle({
+            bundleName: name,
+            bundlePatchModel: { [statusKey]: true },
+            patch,
+          }).unwrap()
         } catch (error) {
           console.error(error)
           toast.error(`Error setting bundle ${name} as ${status}`)
@@ -305,7 +308,11 @@ const Bundles = () => {
     } else {
       // Unsetting tag - still immediate
       try {
-        await updateBundle({ name, data: { [statusKey]: newActive }, patch }).unwrap()
+        await updateBundle({
+          bundleName: name,
+          bundlePatchModel: { [statusKey]: newActive },
+          patch,
+        }).unwrap()
       } catch (error) {
         console.error(error)
         toast.error(`Error unsetting ${status} on bundle ${name}`)
@@ -338,7 +345,11 @@ const Bundles = () => {
         }
       }
 
-      await updateBundle({ name, data: { [statusKey]: true }, patch }).unwrap()
+      await updateBundle({
+        bundleName: name,
+        bundlePatchModel: { [statusKey]: true },
+        patch,
+      }).unwrap()
     } catch (error) {
       console.error(error)
       toast.error(`Error setting bundle ${name} as ${copySettingsBundle.env}`)

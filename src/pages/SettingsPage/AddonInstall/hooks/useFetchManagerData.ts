@@ -1,5 +1,5 @@
 import type { BundleModel, DependencyPackage, Installer } from '@shared/api'
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@shared/api'
 import { useListDependencyPackagesQuery } from '@queries/dependencyPackages/getDependencyPackages'
 import { useListInstallersQuery } from '@queries/installers/getInstallers'
 

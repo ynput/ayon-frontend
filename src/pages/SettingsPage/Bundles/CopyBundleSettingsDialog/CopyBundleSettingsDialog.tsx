@@ -7,8 +7,8 @@ import { BundleBadges } from '@containers/BundleDropdown'
 import { FriendlyDialog } from './CopyBundleSettingsDialog.styled'
 
 // Query imports
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
-import { useMigrateSettingsByBundleMutation } from '@queries/bundles/updateBundles'
+import { useListBundlesQuery } from '@shared/api'
+import { useMigrateSettingsByBundleMutation } from '@shared/api'
 
 // API imports
 import { BundleModel } from '@shared/api'
@@ -177,7 +177,9 @@ const CopyBundleSettingsDialog = ({
         migrateBundleSettingsRequest: {
           sourceBundle: sourceBundle,
           targetBundle: bundle.name,
-          sourceVariant: ['production', 'staging'].includes(sourceVariant) ? sourceVariant : sourceBundle,
+          sourceVariant: ['production', 'staging'].includes(sourceVariant)
+            ? sourceVariant
+            : sourceBundle,
           targetVariant: ['production', 'staging'].includes(envTarget) ? envTarget : bundle.name,
         },
       }).unwrap()

@@ -13,7 +13,7 @@ import VariantSelector from '@containers/AddonSettings/VariantSelector'
 import CopySettingsNode from './CopySettingsNode'
 
 import { setValueByPath } from '../AddonSettings/utils'
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@shared/api'
 import { cloneDeep } from 'lodash'
 
 const StateShade = styled.div`
@@ -111,7 +111,6 @@ const CopySettingsDialog = ({
     }
   }, [sourceBundle, bundles])
 
-
   //
   // Addon data
   //
@@ -123,7 +122,6 @@ const CopySettingsDialog = ({
     const sb = bundles.find((i) => i.name === sourceBundle)
     return sb?.addons || {}
   }, [sourceBundle, bundles, bundlesLoading, bundlesError])
-
 
   const doTheMagic = () => {
     const newLocalData = cloneDeep(localData)
@@ -300,7 +298,10 @@ const CopySettingsDialog = ({
             }}
           >
             {selectedAddons
-              .filter((addon) => ((!variantIsDev(sourceVariant)) || sourceVersions[addon.name] || !allowBundleSelect) ) 
+              .filter(
+                (addon) =>
+                  !variantIsDev(sourceVariant) || sourceVersions[addon.name] || !allowBundleSelect,
+              )
               .map((addon) => (
                 <CopySettingsNode
                   key={`${addon.name}_${addon.version}`}
@@ -319,7 +320,9 @@ const CopySettingsDialog = ({
                     setNodeState((o) => ({ ...o, [addon.name]: state }))
                   }}
                   forcedSourceVariant={sourceVariant}
-                  forcedSourceVersion={allowBundleSelect && (sourceBundle ? sourceVersions[addon.name] : null)}
+                  forcedSourceVersion={
+                    allowBundleSelect && (sourceBundle ? sourceVersions[addon.name] : null)
+                  }
                   forcedSourceProjectName={sourceProjectName}
                   preferredSourceVersion={sourceVersions[addon.name]}
                   isDev={variantIsDev(sourceVariant)}

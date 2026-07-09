@@ -15,8 +15,8 @@ import {
   useGetInstallEventsQuery,
 } from '@queries/releases/getReleases'
 import { useLocalStorage } from '@shared/hooks'
-import { useLazyListBundlesQuery } from '@queries/bundles/getBundles'
-import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
+import { useLazyListBundlesQuery } from '@shared/api'
+import { useCreateBundleMutation } from '@shared/api'
 import { createBundleFromRelease, guessPlatform } from '@containers/ReleaseInstallerDialog/helpers'
 
 const userFormFields = [

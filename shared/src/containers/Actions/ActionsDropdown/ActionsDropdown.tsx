@@ -84,6 +84,7 @@ export interface ActionsDropdownProps extends Omit<DropdownProps, 'value'> {
   options: ActionsDropdownItemProps[]
   isLoading?: boolean
   bundleMode: BundleMode
+  actionsVariant: string
   onAction: (value: string) => void
   onConfig: (e: any) => void
 }
@@ -92,6 +93,7 @@ export const ActionsDropdown = ({
   options,
   isLoading,
   bundleMode,
+  actionsVariant,
   onAction,
   onConfig,
   ...props
@@ -117,7 +119,7 @@ export const ActionsDropdown = ({
       buttonProps={{
         // @ts-expect-error
         ['data-tooltip']:
-          bundleMode === 'production' ? 'Actions' : `${upperFirst(bundleMode)} Actions`,
+          bundleMode === 'production' ? 'Actions' : `${upperFirst(actionsVariant)} Actions`,
         ['data-tooltip-delay']: 0,
       }}
       {...props}
