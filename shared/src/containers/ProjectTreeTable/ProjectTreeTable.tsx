@@ -1238,14 +1238,16 @@ const TableHeadCell = ({
             )}
 
             {/* COLUMN PINNING - only show on pinned columns (exclude selection column) */}
-            {column.getIsPinned() && column.id !== ROW_SELECTION_COLUMN_ID && (
-              <HeaderActionButton
-                icon="push_pin"
-                className={clsx('pin-button', 'visible')}
-                onClick={() => column.pin(false)}
-                selected
-              />
-            )}
+            {column.getIsPinned() &&
+              column.id !== ROW_SELECTION_COLUMN_ID &&
+              column.id !== DRAG_HANDLE_COLUMN_ID && (
+                <HeaderActionButton
+                  icon="push_pin"
+                  className={clsx('pin-button', 'visible')}
+                  onClick={() => column.pin(false)}
+                  selected
+                />
+              )}
           </Styled.HeaderButtons>
           {canResize && (
             <Styled.ResizedHandler
@@ -1468,12 +1470,7 @@ const TableBody = ({
         <Styled.AnimatedEmptyPlaceholder>
           <EmptyPlaceholder message="No items found">
             {onResetView && (
-              <Button
-                variant="filled"
-                label="Reset filters"
-                icon="replay"
-                onClick={onResetView}
-              />
+              <Button variant="filled" label="Reset filters" icon="replay" onClick={onResetView} />
             )}
           </EmptyPlaceholder>
         </Styled.AnimatedEmptyPlaceholder>,
