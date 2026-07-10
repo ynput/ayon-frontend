@@ -78,7 +78,9 @@ export const RepresentationsList = ({ entities = [] }: Props) => {
   const copyRepPath = (id: string, platform: 'windows' | 'darwin' | 'linux') => {
     const rootless = representations.find((rep) => rep.id === id)?.files?.[0]
     if (!rootless) return
-    copyToClipboard(replaceRoot(rootless, rootsByPlatform[platform]) ?? rootless, true)
+    const resolved = replaceRoot(rootless, rootsByPlatform[platform])
+    if (!resolved || /\{root\[.*?\]\}/.test(resolved)) return
+    copyToClipboard(resolved, true)
   }
 
   const ctxMenuItems = (id: string) => [
