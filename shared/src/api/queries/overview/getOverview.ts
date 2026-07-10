@@ -256,7 +256,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           // --- REMOVED markFoldersAsQueried FROM HERE ---
 
           const allNewTasks: EditorTaskNode[] = []
-          const BATCH_SIZE = 50
+          const BATCH_SIZE = 100 // number of parent folders per request
           const TASK_PER_FOLDER = 20
           const MAX_PAGES_PER_BATCH = 10 // Sane fail-safe boundary to stop infinite request loops
           const MAX_FOLDERS = 5000 // Maximum number of folders to process in one go
