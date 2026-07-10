@@ -1,4 +1,3 @@
-import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const MessageCard = styled.div`
