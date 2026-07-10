@@ -9,6 +9,7 @@ query GetTasksByParent(
   $search: String
   $showComments: Boolean! = false
   $first: Int = 1000
+  $after: String
 ) {
   project(name: $projectName) {
     name
@@ -18,11 +19,16 @@ query GetTasksByParent(
       folderFilter: $folderFilter
       search: $search
       first: $first
+      after: $after
     ) {
       edges {
         node {
           ...TaskPropsFragment
         }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
   }

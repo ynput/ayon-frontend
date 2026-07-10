@@ -38,3 +38,5 @@ const getVariantIcon = (variant: InfoMessageProps['variant']): IconProps['icon']
       return 'info'
   }
 }
+
+export default InfoMessage

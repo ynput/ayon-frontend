@@ -1952,10 +1952,11 @@ export type GetTasksByParentQueryVariables = Exact<{
   search?: string | null | undefined;
   showComments?: boolean;
   first?: number | null | undefined;
+  after?: string | null | undefined;
 }>;
 
 
-export type GetTasksByParentQuery = { project: { name: string, tasks: { edges: Array<{ node: { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string, taskCount: number } } }> } } };
+export type GetTasksByParentQuery = { project: { name: string, tasks: { edges: Array<{ node: { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string, taskCount: number } } }>, pageInfo: { hasNextPage: boolean, endCursor: string | null } } } };
 
 export type GetTasksListQueryVariables = Exact<{
   projectName: string;
@@ -3455,7 +3456,7 @@ export const GetTaskColumnStatsDocument = new TypedDocumentString(`
   distribution
 }`);
 export const GetTasksByParentDocument = new TypedDocumentString(`
-    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $folderFilter: String, $search: String, $showComments: Boolean! = false, $first: Int = 1000) {
+    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $folderFilter: String, $search: String, $showComments: Boolean! = false, $first: Int = 1000, $after: String) {
   project(name: $projectName) {
     name
     tasks(
@@ -3464,11 +3465,16 @@ export const GetTasksByParentDocument = new TypedDocumentString(`
       folderFilter: $folderFilter
       search: $search
       first: $first
+      after: $after
     ) {
       edges {
         node {
           ...TaskPropsFragment
         }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
   }

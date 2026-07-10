@@ -64,6 +64,7 @@ export interface ProjectTableProviderProps {
   isLoadingMore: boolean
   loadingTasks?: LoadingTasks
   error?: string
+  softError?: string // shows a warning banner but doesn't block the table from rendering
   users: TableUser[]
   // Attributes
   attribFields: ProjectTableAttribute[]
@@ -93,7 +94,6 @@ export interface ProjectTableProviderProps {
 
   // data functions
   fetchNextPage: (value?: string) => void
-  loadMoreTasksForFolder?: (folderId: string, missingTasks: number) => void
   reloadTableData: () => void
 
   // Filters
@@ -172,6 +172,7 @@ export const ProjectTableProvider = ({
   isLoadingMore,
   isLoading,
   error,
+  softError,
   isInitialized,
   users,
   attribFields,
@@ -186,7 +187,6 @@ export const ProjectTableProvider = ({
   toggleExpanded,
   updateExpanded,
   fetchNextPage,
-  loadMoreTasksForFolder,
   reloadTableData,
   setExpanded,
   contextMenuItems,
@@ -367,6 +367,7 @@ export const ProjectTableProvider = ({
         isInitialized,
         isLoading,
         error,
+        softError,
         attribFields,
         attribFieldsScoped,
         scopes,
@@ -375,7 +376,6 @@ export const ProjectTableProvider = ({
         foldersMap,
         entitiesMap,
         fetchNextPage,
-        loadMoreTasksForFolder,
         reloadTableData,
         groups,
         overrideGroupBy,

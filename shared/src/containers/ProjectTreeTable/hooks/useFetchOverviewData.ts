@@ -3,10 +3,8 @@ import {
   useGetOverviewTasksByFoldersQuery,
   useGetSearchFoldersQuery,
   useGetTasksListInfiniteInfiniteQuery,
-  useLazyGetMoreTasksForSingleFolderQuery,
 } from '@shared/api'
-import type { FolderListItem, GetGroupedTasksListArgs, EntityGroup } from '@shared/api'
-import { QueryFilter } from '../types'
+import type { FolderListItem, GetGroupedTasksListArgs, EntityGroup, QueryFilter } from '@shared/api'
 import { useGroupedPagination, useQueryArgumentChangeLoading } from '@shared/hooks'
 import { getGroupByDataType } from '@shared/util'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
@@ -34,13 +32,13 @@ type useFetchOverviewDataData = {
   tasksMap: TaskNodeMap
   tasksByFolderMap: TasksByFolderMap
   error?: unknown // first task/folder load failure (e.g. corrupt filter), if any
+  softError?: string // error for fetching tasks for expanded folders, if any
   isLoadingAll: boolean // the whole table is a loading state
   isLoadingMore: boolean // loading more tasks
   loadingTasks: LoadingTasks // show number of loading tasks per folder or root
   loadingLinksEntityIds: Set<string> // entity IDs whose links are currently being fetched (not yet cached)
   fetchNextPage: (value?: string) => void
   reloadTableData: () => void
-  loadMoreTasksForFolder?: (folderId: string, missingTasks: number) => void
 }
 
 type Params = {
@@ -84,38 +82,6 @@ export const useFetchOverviewData = ({
 }: Params): useFetchOverviewDataData => {
   const { isLoading: isLoadingModules } = modules
 
-  const [triggerLoadMoreTasks] = useLazyGetMoreTasksForSingleFolderQuery()
-
-  // Track parent folders of tasks that are being loaded infinitely
-  const [loadingTasksMoreParents, setLoadingTasksMoreParents] = useState<LoadingTasks>({})
-
-  const loadMoreTasksForFolder = (folderId: string, missingTasks: number = 1) => {
-    // Optimistically set the loading state so it shows up immediately
-    setLoadingTasksMoreParents((prev) => ({ ...prev, [folderId]: missingTasks }))
-
-    triggerLoadMoreTasks({
-      projectName,
-      folderId,
-      filter: taskFilters?.filterString,
-      search: taskFilters?.search,
-      showComments,
-      parentQueryArgs: {
-        projectName,
-        filter: taskFilters?.filterString,
-        folderFilter: folderFilters?.filterString,
-        search: taskFilters?.search,
-        showComments,
-      },
-    }).finally(() => {
-      // Clear up the loading state once the query is finished
-      setLoadingTasksMoreParents((prev) => {
-        const next = { ...prev }
-        delete next[folderId]
-        return next
-      })
-    })
-  }
-
   const {
     folders,
     isLoading: isLoadingFolders,
@@ -134,6 +100,7 @@ export const useFetchOverviewData = ({
     data: expandedFoldersTasks = [],
     isFetching: isFetchingExpandedFoldersTasks,
     error: expandedFoldersTasksError,
+    isSuccess: isSuccessExpandedFoldersTasks,
     refetch: refetchExpandedFoldersTasks,
     isUninitialized: isUninitializedExpandedFoldersTasks,
   } = useGetOverviewTasksByFoldersQuery(
@@ -338,14 +305,8 @@ export const useFetchOverviewData = ({
         expandedParentIds,
         foldersMap,
       })
-    } else return loadingTasksMoreParents
-  }, [
-    isFetchingExpandedFoldersTasks,
-    expandedFoldersTasks,
-    expandedParentIds,
-    foldersMap,
-    loadingTasksMoreParents,
-  ])
+    } else return {}
+  }, [isFetchingExpandedFoldersTasks, expandedFoldersTasks, expandedParentIds, foldersMap])
 
   const [tasksListCursor, setTasksListCursor] = useState('')
 
@@ -375,7 +336,6 @@ export const useFetchOverviewData = ({
   const {
     data: tasksListInfiniteData,
     isLoading: isLoadingTasksList,
-    isFetching: isFetchingTasksList,
     error: tasksListError,
     fetchNextPage,
     hasNextPage,
@@ -437,7 +397,8 @@ export const useFetchOverviewData = ({
 
     const allGroupQueries = getGroupQueries({
       groups: taskGroups,
-      filters: taskFilters.filter as any,
+      // @ts-expect-error: filter is the same
+      filters: taskFilters.filter,
       groupBy,
       groupPageCounts,
       dataType: groupByDataType,
@@ -656,14 +617,15 @@ export const useFetchOverviewData = ({
     if (!isUninitializedTasksLinks) refetchTasksLinks()
   }
 
-  const error =
-    tasksListError || expandedFoldersTasksError || searchFoldersError || groupedTasksError
+  const error = tasksListError || searchFoldersError || groupedTasksError
 
   return {
     foldersMap: filteredFoldersMap,
     tasksMap: tasksMap,
     tasksByFolderMap: tasksByFolderMap,
     error,
+    // @ts-expect-error: error does exist on it
+    softError: expandedFoldersTasksError?.error, // this is separate as we should still show the folders table so the user can make changes
     isLoadingAll:
       isLoadingFolders || isLoadingTasksList || isLoadingTasksFolders || isLoadingModules, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
@@ -671,6 +633,5 @@ export const useFetchOverviewData = ({
     loadingLinksEntityIds,
     fetchNextPage: handleFetchNextPage,
     reloadTableData,
-    loadMoreTasksForFolder,
   }
 }

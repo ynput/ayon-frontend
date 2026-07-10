@@ -6,6 +6,7 @@ import { ContextMenuItemConstructors } from '../hooks'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { QueryFilter } from './operations'
 import { ReactNode } from 'react'
+import { ProjectInfo } from '@shared/containers/DetailsPanel/helpers/mergeProjectInfo'
 
 interface EntityMoveData {
   entityId: string
@@ -26,7 +27,7 @@ type QueryFilterParams = {
 export interface ProjectOverviewContextType {
   isInitialized: boolean
   // Project Info
-  projectInfo?: ProjectDataContextProps['projectInfo']
+  projectInfo?: ProjectInfo
   projectName: string
   users: ProjectDataContextProps['users']
   // Attributes
@@ -37,6 +38,7 @@ export interface ProjectOverviewContextType {
   isLoadingMore: boolean
   loadingTasks: LoadingTasks
   error?: string
+  softError?: string // non-blocking error (e.g. for fetching tasks for expanded folders)
   // Data
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
@@ -44,7 +46,6 @@ export interface ProjectOverviewContextType {
   tasksByFolderMap: TasksByFolderMap
   fetchNextPage: (value?: string) => void
   reloadTableData: () => void
-  loadMoreTasksForFolder?: (folderId: string, missingTasks: number) => void
 
   // Grouping data
   taskGroups: EntityGroup[]

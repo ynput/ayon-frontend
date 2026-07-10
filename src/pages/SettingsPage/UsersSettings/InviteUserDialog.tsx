@@ -3,7 +3,7 @@ import { toast } from 'react-toastify'
 import { formatDistance } from 'date-fns'
 import { Button } from '@ynput/ayon-react-components'
 import { useInviteUserMutation } from '@shared/api'
-import InfoMessage from '@components/InfoMessage'
+import { InfoMessage } from '@shared/components'
 import * as Styled from './DeleteUserDialog.styled'
 
 export type InviteCandidate = {

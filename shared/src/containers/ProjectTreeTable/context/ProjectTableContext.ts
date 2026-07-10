@@ -23,6 +23,8 @@ export interface ProjectTableContextType {
   attribFields: ProjectTableProviderProps['attribFields']
   attribFieldsScoped: ProjectTableProviderProps['attribFields']
   error?: string
+  softError?: string // shows a warning banner but doesn't block the table from rendering
+
   scopes: ProjectTableProviderProps['scopes']
 
   // Data
@@ -31,7 +33,6 @@ export interface ProjectTableContextType {
   foldersMap: ProjectTableProviderProps['foldersMap']
   entitiesMap: ProjectTableProviderProps['entitiesMap']
   fetchNextPage: ProjectTableProviderProps['fetchNextPage']
-  loadMoreTasksForFolder?: (folderId: string, missingTasks: number) => void
   reloadTableData: ProjectTableProviderProps['reloadTableData']
   getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
   loadingLinksEntityIds?: Set<string>

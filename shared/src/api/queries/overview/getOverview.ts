@@ -80,6 +80,10 @@ export type GetTasksListResult = {
   pageInfo: GetTasksListQuery['project']['tasks']['pageInfo']
   tasks: EditorTaskNode[]
 }
+export type GetTasksByParentResult = {
+  pageInfo: GetTasksByParentQuery['project']['tasks']['pageInfo']
+  tasks: EditorTaskNode[]
+}
 
 export type GetTasksListArgs = {
   projectName: string
@@ -119,7 +123,7 @@ type TasksListPageParam = {
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
 type UpdatedDefinitions = Omit<Definitions, 'GetFilteredEntities'> & {
-  GetTasksByParent: OverrideResultType<Definitions['GetTasksByParent'], EditorTaskNode[]>
+  GetTasksByParent: OverrideResultType<Definitions['GetTasksByParent'], GetTasksByParentResult>
   GetTasksList: OverrideResultType<Definitions['GetTasksList'], GetTasksListResult>
   GetFolderColumnStats: OverrideResultType<Definitions['GetFolderColumnStats'], FieldStats[]>
   GetTaskColumnStats: OverrideResultType<Definitions['GetTaskColumnStats'], FieldStats[]>
@@ -132,9 +136,12 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     // But in this case it will only ever receive one parent folder from the getOverviewTasksByFolders query
     // It is only used by getOverviewTasksByFolders in this file
     GetTasksByParent: {
-      transformResponse: transformFilteredEntitiesByParent,
+      transformResponse: (res: GetTasksByParentQuery) => ({
+        pageInfo: res?.project?.tasks?.pageInfo ?? { hasNextPage: false, endCursor: null },
+        tasks: transformFilteredEntitiesByParent(res),
+      }),
       providesTags: (result, _e, { parentIds, projectName }) =>
-        getOverviewTaskTags(result, projectName, parentIds),
+        getOverviewTaskTags(result?.tasks || [], projectName, parentIds),
     },
     GetTasksList: {
       transformResponse: (result: GetTasksListQuery) => ({
@@ -218,9 +225,12 @@ const injectedApi = enhancedApi.injectEndpoints({
         showComments?: boolean
       }
     >({
-      async queryFn({ projectName, parentIds, filter, folderFilter, search, showComments }, api) {
+      async queryFn(
+        { projectName, parentIds, filter, folderFilter, search, showComments },
+        { dispatch, getState },
+      ) {
         try {
-          const state = api.getState()
+          const state = getState()
           const cacheArgs = { projectName, filter, folderFilter, search, showComments }
 
           // Select current flat cache state
@@ -243,35 +253,83 @@ const injectedApi = enhancedApi.injectEndpoints({
             return { data: cacheData }
           }
 
-          // 4. Mark them as queried for this cache key immediately to prevent duplicate flight requests
+          // --- REMOVED markFoldersAsQueried FROM HERE ---
+
+          const allNewTasks: EditorTaskNode[] = []
+          const BATCH_SIZE = 50
+          const TASK_PER_FOLDER = 20
+          const MAX_PAGES_PER_BATCH = 10 // Sane fail-safe boundary to stop infinite request loops
+          const MAX_FOLDERS = 5000 // Maximum number of folders to process in one go
+          const TASKS_PER_PAGE = BATCH_SIZE * TASK_PER_FOLDER // Number of tasks to fetch per page
+
+          if (newFolderIds.length > MAX_FOLDERS) {
+            throw new Error(
+              `Exceeded maximum folders count limit ${MAX_FOLDERS} (${newFolderIds.length}). Please reduce the number of expanded folders.`,
+            )
+          }
+
+          // 5. Batch folder IDs into groups and process them sequentially
+          for (let i = 0; i < newFolderIds.length; i += BATCH_SIZE) {
+            const batchFolderIds = newFolderIds.slice(i, i + BATCH_SIZE)
+
+            let hasNextPage = true
+            let cursor: string | undefined = undefined
+            let pageCount = 0
+
+            // Automatically deep-paginate this batch completely before allowing the next batch to start
+            while (hasNextPage && pageCount < MAX_PAGES_PER_BATCH) {
+              pageCount++
+
+              if (pageCount === MAX_PAGES_PER_BATCH) {
+                throw new Error(
+                  `Exceeded maximum tasks count limit ${MAX_PAGES_PER_BATCH * TASKS_PER_PAGE}.`,
+                )
+              }
+
+              const result = await dispatch(
+                enhancedApi.endpoints.GetTasksByParent.initiate(
+                  {
+                    projectName,
+                    parentIds: batchFolderIds,
+                    filter,
+                    folderFilter,
+                    search,
+                    showComments: !!showComments,
+                    first: TASKS_PER_PAGE,
+                    after: cursor, // Pass pagination cursor back to the query
+                  },
+                  { forceRefetch: true },
+                ),
+              )
+
+              // Safely catch errors via the standard RTK Query wrapper response
+              if (result.error) throw result.error
+              const data = result.data as GetTasksByParentResult
+
+              // Extract the transformed data payload properties smoothly
+              const fetchedTasks = data?.tasks || []
+              allNewTasks.push(...fetchedTasks)
+
+              // Extract connection tracking data to evaluate deep pagination constraints
+              const pageInfo = data?.pageInfo
+              hasNextPage = pageInfo?.hasNextPage || false
+              cursor = pageInfo?.endCursor || undefined
+            }
+          }
+
+          // 4. MOVE TO THE END: Only mark them as queried if the requests successfully finish!
           markFoldersAsQueried(cacheKey, newFolderIds)
 
-          // 5. Fire one single network request for all new folders using GetTasksByParent
-          const result = await api.dispatch(
-            enhancedApi.endpoints.GetTasksByParent.initiate(
-              {
-                projectName,
-                parentIds: newFolderIds,
-                filter,
-                search,
-                showComments: !!showComments,
-                first: 100,
-              },
-              { forceRefetch: true },
-            ),
-          )
-
-          if (result.error) throw result.error
-
-          const newlyFetchedTasks = result.data || []
-
-          // 5. Append new tasks to the existing flat array cache
+          // 6. Append new tasks to the existing flat array cache
           return {
-            data: [...cacheData, ...newlyFetchedTasks],
+            data: [...cacheData, ...allNewTasks],
           }
         } catch (e: any) {
           console.error(e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          // Fallback parsing for error messages since thrown GraphQL/RTK errors can be complex nested objects
+          const errorMessage =
+            e.message || e.data?.message || JSON.stringify(e) || 'Unknown Fetch Error'
+          return { error: { status: 'FETCH_ERROR', error: errorMessage } as FetchBaseQueryError }
         }
       },
       // keep one cache per project
@@ -736,82 +794,6 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.tasks, projectName),
     }),
-    getMoreTasksForSingleFolder: build.query<
-      EditorTaskNode[],
-      {
-        projectName: string
-        folderId: string
-        filter?: string
-        search?: string
-        showComments?: boolean
-        parentQueryArgs: {
-          projectName: string
-          filter?: string
-          folderFilter?: string
-          search?: string
-          showComments?: boolean
-        }
-      }
-    >({
-      queryFn: async ({ projectName, folderId, filter, search, showComments }, api) => {
-        try {
-          const result = await api.dispatch(
-            enhancedApi.endpoints.GetTasksByParent.initiate(
-              {
-                projectName,
-                parentIds: [folderId],
-                filter,
-                search,
-                showComments: !!showComments,
-                first: TASKS_INFINITE_QUERY_COUNT,
-              } as any,
-              { forceRefetch: true },
-            ),
-          )
-
-          if (result.error) throw result.error
-
-          const tasks = (result.data as EditorTaskNode[]) || []
-          return { data: tasks }
-        } catch (e: any) {
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
-        }
-      },
-      async onQueryStarted({ parentQueryArgs }, { dispatch, queryFulfilled }) {
-        try {
-          const { data: newTasks } = await queryFulfilled
-
-          // Seamlessly patch the flat array cache slot with duplicate protection
-          dispatch(
-            injectedApi.util.updateQueryData(
-              'getOverviewTasksByFolders' as any,
-              parentQueryArgs as any,
-              // @ts-expect-error - we know the draft is EditorTaskNode[] from the query above
-              (draft: EditorTaskNode[]) => {
-                console.log('Patching tasks into main cache')
-                // Create a quick lookup Set of IDs already resident in the cache
-                const existingIds = new Set(draft.map((task) => task.id))
-
-                // Only push tasks that don't already exist in the cache
-                for (const task of newTasks) {
-                  if (!existingIds.has(task.id)) {
-                    draft.push(task)
-                  } else {
-                    // Optional: If the task exists, update it in place to keep attributes fresh
-                    const idx = draft.findIndex((t) => t.id === task.id)
-                    if (idx > -1) {
-                      draft[idx] = task
-                    }
-                  }
-                }
-              },
-            ),
-          )
-        } catch (err) {
-          console.error('Failed to patch overview tasks flat cache:', err)
-        }
-      },
-    }),
   }),
 })
 
@@ -824,6 +806,5 @@ export const {
   useGetGroupedTasksListQuery,
   useGetFolderColumnStatsQuery,
   useGetTaskColumnStatsQuery,
-  useLazyGetMoreTasksForSingleFolderQuery,
 } = injectedApi
 export default injectedApi

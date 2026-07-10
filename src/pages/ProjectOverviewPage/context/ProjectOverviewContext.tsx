@@ -262,12 +262,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     tasksByFolderMap,
     fetchNextPage,
     reloadTableData,
-    loadMoreTasksForFolder,
     isLoadingAll,
     isLoadingMore,
     loadingTasks,
     loadingLinksEntityIds,
     error: dataError,
+    softError,
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
@@ -309,6 +309,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         isLoadingMore,
         loadingTasks,
         error,
+        softError, // shows a warning banner but doesn't block the table from rendering
         projectInfo,
         attribFields: scopedAttribFields,
         users,
@@ -319,7 +320,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         tasksByFolderMap,
         fetchNextPage,
         reloadTableData,
-        loadMoreTasksForFolder,
         taskGroups,
         // Separate task and folder filters
         taskFilters: {

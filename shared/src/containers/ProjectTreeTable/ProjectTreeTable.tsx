@@ -36,7 +36,7 @@ import { TableFooterRow } from './components/TableFooterRow'
 import type { FieldStats } from '@shared/api'
 import { getCommonPinningStyles, getColumnWidth } from './utils/pinningUtils'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
-import { FilterErrorActions } from '../../components/FilterErrorActions'
+import { InfoMessage, FilterErrorActions } from '@shared/components'
 import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
@@ -114,7 +114,6 @@ import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
 import { upperFirst } from 'lodash'
 import { ColumnsConfig } from './types/columnConfig'
-import LoadMoreTasksRow from './components/LoadMoreTasksRow'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -247,6 +246,7 @@ export const ProjectTreeTable = ({
     users,
     isLoading: isLoadingData,
     error,
+    softError,
     isInitialized,
     expanded,
     updateExpanded,
@@ -254,7 +254,6 @@ export const ProjectTreeTable = ({
     showHierarchy,
     isFlatFolderView,
     fetchNextPage,
-    loadMoreTasksForFolder,
     scopes, // or entityTypes
     getEntityById,
     onResetView,
@@ -530,7 +529,6 @@ export const ProjectTreeTable = ({
       selection: Array.from(selectedCells),
       columnsConfig,
       loadingLinksEntityIds,
-      loadMoreTasksForFolder,
     },
   })
 
@@ -791,7 +789,7 @@ export const ProjectTreeTable = ({
               onResetView={onResetView}
               contextMenuItems={propsContextMenuItems}
             />
-            {summariesEnabled && (
+            {summariesEnabled && !error && (
               <TableFooterRow
                 columnVirtualizer={columnVirtualizer}
                 table={table}
@@ -831,6 +829,11 @@ export const ProjectTreeTable = ({
             )}
           </table>
         </Styled.TableContainer>
+        {softError && (
+          <Styled.SoftErrorBanner>
+            <InfoMessage variant="warning" message={softError} />
+          </Styled.SoftErrorBanner>
+        )}
       </Styled.TableWrapper>
       {/* Render EntityPickerDialog alongside table content */}
       {isEntityPickerOpen &&
@@ -1705,17 +1708,6 @@ const TD = ({
         // Only process left clicks (button 0), ignore right clicks
         if (e.button !== 0) return
 
-        // Manual Click Handler for load-more row items
-        if (cell.row.original.entityType === 'load-more') {
-          e.preventDefault()
-          const loadMoreFn = (cell.getContext().table.options.meta as any)?.loadMoreTasksForFolder
-          if (loadMoreFn) {
-            // @ts-expect-error: missing tasks is a property of the row data, but TypeScript doesn't know about it
-            loadMoreFn(cell.row.original.folderId, cell.row.original.missingTasks)
-          }
-          return
-        }
-
         const target = e.target as HTMLElement
 
         // check we are not clicking on expander
@@ -1854,23 +1846,7 @@ const TD = ({
         // keyboard events are handled in useKeyboardNavigation hook
       }}
     >
-      {cell.row.original.entityType === 'load-more' ? (
-        cell.column.id === 'name' ? (
-          <LoadMoreTasksRow
-            message={cell.row.original.name}
-            onLoadMore={() => {
-              const loadMoreFn = (cell.getContext().table.options.meta as any)
-                ?.loadMoreTasksForFolder
-              if (loadMoreFn) {
-                // @ts-expect-error: missing tasks is a property of the row data, but TypeScript doesn't know about it
-                loadMoreFn(cell.row.original.folderId, cell.row.original.missingTasks)
-              }
-            }}
-          />
-        ) : null
-      ) : (
-        flexRender(cell.column.columnDef.cell, cell.getContext())
-      )}
+      {flexRender(cell.column.columnDef.cell, cell.getContext())}
     </Styled.TD>
   )
 }
