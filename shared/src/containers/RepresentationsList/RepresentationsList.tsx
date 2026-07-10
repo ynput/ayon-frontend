@@ -4,11 +4,11 @@ import { TablePanel } from '@ynput/ayon-react-components'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import { groupResult } from '@shared/util'
+import { copyToClipboard, groupResult, replaceRoot } from '@shared/util'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { DetailsDialog } from '@shared/components'
 import versionsToRepresentations from './versionsToRepresentations'
-import { DetailsPanelEntityData } from '@shared/api'
+import { DetailsPanelEntityData, useGetProjectAnatomyQuery } from '@shared/api'
 
 const columns = [
   {
@@ -61,11 +61,40 @@ export const RepresentationsList = ({ entities = [] }: Props) => {
     onRepSelectionChange(e.node.data.id)
   }
 
+  const projectName = representations[0]?.projectName
+
+  const { data: anatomy } = useGetProjectAnatomyQuery(
+    { projectName: projectName as string },
+    { skip: !projectName },
+  )
+
+  const rootsByPlatform = useMemo(() => {
+    const roots = anatomy?.roots ?? []
+    const build = (platform: 'windows' | 'linux' | 'darwin') =>
+      Object.fromEntries(roots.filter((r) => r[platform]).map((r) => [r.name, r[platform]]))
+    return { windows: build('windows'), darwin: build('darwin'), linux: build('linux') }
+  }, [anatomy])
+
+  const copyRepPath = (id: string, platform: 'windows' | 'darwin' | 'linux') => {
+    const rootless = representations.find((rep) => rep.id === id)?.files?.[0]
+    if (!rootless) return
+    copyToClipboard(replaceRoot(rootless, rootsByPlatform[platform]) ?? rootless, true)
+  }
+
   const ctxMenuItems = (id: string) => [
     {
       label: 'Representation detail',
       command: () => setShowDetail(id),
       icon: 'database',
+    },
+    {
+      label: 'Copy path',
+      icon: 'content_copy',
+      items: [
+        { label: 'Copy Windows path', command: () => copyRepPath(id, 'windows') },
+        { label: 'Copy Mac path', command: () => copyRepPath(id, 'darwin') },
+        { label: 'Copy Linux path', command: () => copyRepPath(id, 'linux') },
+      ],
     },
   ]
 

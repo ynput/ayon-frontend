@@ -26,6 +26,7 @@ export * from './getProjectDisplayName'
 export * from './getThumbnailUrl'
 export * from './thumbnailWebsocket'
 export * from './getBundleMode'
+export * from './replaceRoot'
 
 import isHTMLElement from './isHTMLElement'
 export { isHTMLElement }

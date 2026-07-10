@@ -1812,7 +1812,7 @@ export type GetDetailsPanelVersionQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelVersionQuery = { project: { projectName: string, code: string, version: { id: string, version: number, name: string, author: string | null, status: string, tags: Array<string>, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, thumbnailId: string | null, hasReviewables: boolean, parents: Array<string>, allAttrib: string, product: { id: string, name: string, productType: string, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string }, latestVersion: { version: number } | null }, task: { id: string, name: string, label: string | null, assignees: Array<string>, taskType: string } | null, representations: { edges: Array<{ node: { id: string, name: string, fileCount: number } }> } } | null } };
+export type GetDetailsPanelVersionQuery = { project: { projectName: string, code: string, version: { id: string, version: number, name: string, author: string | null, status: string, tags: Array<string>, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, thumbnailId: string | null, hasReviewables: boolean, parents: Array<string>, allAttrib: string, product: { id: string, name: string, productType: string, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string }, latestVersion: { version: number } | null }, task: { id: string, name: string, label: string | null, assignees: Array<string>, taskType: string } | null, representations: { edges: Array<{ node: { id: string, name: string, fileCount: number, files: Array<{ path: string }> } }> } } | null } };
 
 export type GetProductVersionsQueryVariables = Exact<{
   projectName: string;
@@ -1826,7 +1826,7 @@ export type DetailsPanelFolderFragmentFragment = { id: string, name: string, lab
 
 export type DetailsPanelProductFragmentFragment = { id: string, name: string, productType: string, latestVersion: { version: number } | null };
 
-export type DetailsPanelRepresentationFragmentFragment = { id: string, name: string, fileCount: number };
+export type DetailsPanelRepresentationFragmentFragment = { id: string, name: string, fileCount: number, files: Array<{ path: string }> };
 
 export type DetailsPanelTaskFragmentFragment = { id: string, name: string, label: string | null, assignees: Array<string>, taskType: string };
 
@@ -2305,6 +2305,9 @@ export const DetailsPanelRepresentationFragmentFragmentDoc = new TypedDocumentSt
   id
   name
   fileCount
+  files {
+    path
+  }
 }
     `, {"fragmentName":"DetailsPanelRepresentationFragment"});
 export const DetailsPanelTaskFragmentFragmentDoc = new TypedDocumentString(`
@@ -3094,6 +3097,9 @@ fragment DetailsPanelRepresentationFragment on RepresentationNode {
   id
   name
   fileCount
+  files {
+    path
+  }
 }
 fragment DetailsPanelTaskFragment on TaskNode {
   id
