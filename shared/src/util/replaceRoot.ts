@@ -3,7 +3,7 @@ export const replaceRoot = (
   input?: string | null,
   roots: Record<string, string | undefined> = {},
 ): string | undefined => {
-  if (!input) return input ?? undefined
+  if (input == null) return undefined
   return input.replace(/\{root\[(.*?)\]\}/g, (match, name) => {
     const value = roots[name]
     return value ? value.replace(/[\\/]+$/, '') : match
