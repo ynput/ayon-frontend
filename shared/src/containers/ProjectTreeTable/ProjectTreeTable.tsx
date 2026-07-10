@@ -171,7 +171,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   showColumnSummaries?: boolean // render the fixed summary footer row
   fieldStats?: FieldStats[] // primary-entity stats (tasks/versions) feeding the footer
   groupFieldStats?: FieldStats[] // group-entity stats (folders/products) for the 'all' row scope
-  fieldStatsLoading?: boolean // footer stats still loading -> show skeletons
+  fieldStatsLoading?: boolean // footer stats still loading - click-through shimmer over values
   fieldStatsError?: any // error fetching footer stats
   mainCountLabels?: MainCountLabels // labels for the main cell dual count (defaults folders/tasks)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
@@ -266,11 +266,14 @@ export const ProjectTreeTable = ({
   const filterErrorMessage = getFilterErrorMessage(getEntitiesLabelFromScopes(scopes))
 
   // Parent (folder/product) summary scope only applies when those entities are
-  // actually on screen: hierarchy view, or grouping by a parent entity.
+  // actually on screen: hierarchy view, grouping by a parent entity, or the
+  // Products tab's product tree (product parent rows -> 'product' in scopes).
   const groupField = overrideGroupBy?.id ?? groupBy?.id
   const groupFieldId = Array.isArray(groupField) ? groupField[0] : groupField
   const parentScopeApplicable =
-    showHierarchy || ['hierarchy', 'folder', 'product'].includes(groupFieldId ?? '')
+    showHierarchy ||
+    ['hierarchy', 'folder', 'product'].includes(groupFieldId ?? '') ||
+    scopes.includes('product')
 
   const { writableFields } = useProjectDataContext()
 
@@ -618,8 +621,9 @@ export const ProjectTreeTable = ({
     powerLicense &&
     (isFooterLoaded || isFooterModuleLoading) &&
     !!rows.length
-  // shimmer while the remote module or the footer stats are still loading
-  const summariesLoading = isFooterModuleLoading || !isFooterLoaded || !!fieldStatsLoading
+  // Full skeleton only while the remote module itself is loading (no cell to
+  // render yet). Stats loading is handled per-cell so the footer stays clickable.
+  const footerModuleLoading = isFooterModuleLoading || !isFooterLoaded
   // only show the upsell once the license check resolves, so licensed users
   // don't see the bolt flash before the addon loads
   // const showSummaryPowerFeature = !isLicenseLoading && !powerLicense
@@ -794,7 +798,8 @@ export const ProjectTreeTable = ({
                 table={table}
                 virtualPaddingLeft={virtualPaddingLeft}
                 virtualPaddingRight={virtualPaddingRight}
-                isLoading={summariesLoading}
+                isLoading={footerModuleLoading}
+                statsLoading={!!fieldStatsLoading}
                 error={fieldStatsError}
                 // Free-user upsell hidden for now; keep for later:
                 // onClick={showSummaryPowerFeature ? () => setPowerpackDialog('columnSummaries') : undefined}
@@ -1230,7 +1235,7 @@ const TableHeadCell = ({
                 icon="sort"
                 className={clsx('sort-button', { visible: sorting })}
                 style={{
-                  transform: sorting === 'asc' ? 'rotate(180deg) scaleX(-1)' : 'none',
+                  transform: sorting === 'desc' ? 'rotate(180deg) scaleX(-1)' : 'none',
                 }}
                 onClick={handleToggleSort}
                 selected={!!column.getIsSorted()}

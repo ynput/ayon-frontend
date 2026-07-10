@@ -92,6 +92,18 @@ const CellSkeleton = styled.div`
   }
 `
 
+// Same shimmer, laid over the still-rendered (and still-clickable) cell content
+// while only the stats are loading. pointer-events: none lets clicks fall
+// through to the summary control underneath, so the footer never goes dead.
+const CellSkeletonOverlay = styled(CellSkeleton)`
+  position: absolute;
+  inset: 1px 0 2px 1px;
+  width: auto;
+  height: auto;
+  margin: 0;
+  pointer-events: none;
+`
+
 export interface TableFooterRowProps {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
   table: Table<TableRow>
@@ -101,8 +113,11 @@ export interface TableFooterRowProps {
   renderCellContent?: (columnId: string) => ReactNode
   // when set, the whole row is clickable (used for the locked/upsell state)
   onClick?: () => void
-  // show a shimmer skeleton in each cell while the footer stats load
+  // full-cell skeleton while the summaries remote module itself is still loading
   isLoading?: boolean
+  // stats still loading but the module is ready — keep cells clickable and show
+  // a click-through shimmer over the (as yet empty) values
+  statsLoading?: boolean
   // error fetching stats
   error?: any
 }
@@ -117,6 +132,7 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
   renderCellContent,
   onClick,
   isLoading,
+  statsLoading,
   error,
 }) => {
   const visibleColumns = [
@@ -176,7 +192,14 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
                   </CellContent>
                 ) : null
               ) : (
-                !isUtility && renderCellContent?.(column.id)
+                !isUtility && (
+                  <>
+                    {renderCellContent?.(column.id)}
+                    {statsLoading && (
+                      <CellSkeletonOverlay className={clsx('loading', 'shimmer-dark')} />
+                    )}
+                  </>
+                )
               )}
             </FooterCell>
           )
