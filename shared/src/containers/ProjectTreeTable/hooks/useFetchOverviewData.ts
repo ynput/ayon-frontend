@@ -100,7 +100,6 @@ export const useFetchOverviewData = ({
     data: expandedFoldersTasks = [],
     isFetching: isFetchingExpandedFoldersTasks,
     error: expandedFoldersTasksError,
-    isSuccess: isSuccessExpandedFoldersTasks,
     refetch: refetchExpandedFoldersTasks,
     isUninitialized: isUninitializedExpandedFoldersTasks,
   } = useGetOverviewTasksByFoldersQuery(
