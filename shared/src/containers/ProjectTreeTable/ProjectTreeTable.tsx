@@ -1235,7 +1235,7 @@ const TableHeadCell = ({
                 icon="sort"
                 className={clsx('sort-button', { visible: sorting })}
                 style={{
-                  transform: sorting === 'asc' ? 'rotate(180deg) scaleX(-1)' : 'none',
+                  transform: sorting === 'desc' ? 'rotate(180deg) scaleX(-1)' : 'none',
                 }}
                 onClick={handleToggleSort}
                 selected={!!column.getIsSorted()}

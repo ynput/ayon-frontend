@@ -121,7 +121,7 @@ export function SortableTHComponent<TData extends RowData>({
               icon="sort"
               className={clsx('sort-button', { visible: !!isSorted })}
               style={{
-                transform: isSorted === 'asc' ? 'rotate(180deg) scaleX(-1)' : 'none',
+                transform: isSorted === 'desc' ? 'rotate(180deg) scaleX(-1)' : 'none',
               }}
               onClick={column.getToggleSortingHandler()}
               selected={!!isSorted}
