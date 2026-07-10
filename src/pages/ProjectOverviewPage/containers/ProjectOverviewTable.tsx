@@ -49,7 +49,7 @@ const ProjectOverviewTable = ({}: Props) => {
     columnVisibility,
     defaultColumnVisibility,
   )
-  const { folderFilters, taskFilters, selectedFolders, selectedTaskIds, foldersMap } =
+  const { folderFilters, taskFilters, selectedFolders, selectedTaskIds } =
     useProjectOverviewContext()
 
   // Mirror the task list query: slicer selection narrows rows to the selected
@@ -94,6 +94,7 @@ const ProjectOverviewTable = ({}: Props) => {
     {
       projectName,
       filter: folderFilters?.filterString || undefined,
+      taskFilter: taskFilters?.filterString || undefined,
       search: folderFilters?.search || undefined,
       // show hierarchy never includes it self and only children
       [showHierarchy ? 'parentIds' : 'ids']: selectedFolders?.length ? selectedFolders : undefined,

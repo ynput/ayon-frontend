@@ -218,6 +218,7 @@ export type EntityListNode = {
   access: Scalars['String']['output'];
   accessLevel: Scalars['Int']['output'];
   active: Scalars['Boolean']['output'];
+  activityCategories: Array<Scalars['String']['output']>;
   allAttrib: Scalars['String']['output'];
   attributes: Scalars['String']['output'];
   count: Scalars['Int']['output'];

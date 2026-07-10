@@ -4,6 +4,7 @@
 query GetFolderColumnStats(
   $projectName: String!
   $filter: String
+  $taskFilter: String
   $search: String
   $parentIds: [String!]
   $ids: [String!]
@@ -16,6 +17,7 @@ query GetFolderColumnStats(
     folders(
       calculateSpecificStatistics: $targets
       filter: $filter
+      taskFilter: $taskFilter
       search: $search
       parentIds: $parentIds
       ids: $ids
