@@ -3,6 +3,7 @@ import { useGetFolderListQuery } from '@shared/api'
 
 import type { FolderListItem } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
+import { ProjectFoldersContext } from './ProjectFoldersContextInstance'
 
 export interface ProjectFoldersContextValue {
   folders: FolderListItem[]
@@ -16,8 +17,6 @@ export interface ProjectFoldersContextValue {
   error: any
   refetch: () => void
 }
-
-const ProjectFoldersContext = createContext<ProjectFoldersContextValue | undefined>(undefined)
 
 //
 // ProjectFoldersProvider
