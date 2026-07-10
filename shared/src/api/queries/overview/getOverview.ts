@@ -253,14 +253,12 @@ const injectedApi = enhancedApi.injectEndpoints({
             return { data: cacheData }
           }
 
-          // --- REMOVED markFoldersAsQueried FROM HERE ---
-
           const allNewTasks: EditorTaskNode[] = []
-          const BATCH_SIZE = 100 // number of parent folders per request
+          const BATCH_SIZE = 100
           const TASK_PER_FOLDER = 20
-          const MAX_PAGES_PER_BATCH = 10 // Sane fail-safe boundary to stop infinite request loops
-          const MAX_FOLDERS = 1000 // Maximum number of folders to process in one go
-          const TASKS_PER_PAGE = BATCH_SIZE * TASK_PER_FOLDER // Number of tasks to fetch per page
+          const MAX_PAGES_PER_BATCH = 10
+          const MAX_FOLDERS = 1000
+          const TASKS_PER_PAGE = BATCH_SIZE * TASK_PER_FOLDER
 
           if (newFolderIds.length > MAX_FOLDERS) {
             throw new Error(
@@ -276,7 +274,6 @@ const injectedApi = enhancedApi.injectEndpoints({
             let cursor: string | undefined = undefined
             let pageCount = 0
 
-            // Automatically deep-paginate this batch completely before allowing the next batch to start
             while (hasNextPage && pageCount < MAX_PAGES_PER_BATCH) {
               pageCount++
 
@@ -296,37 +293,36 @@ const injectedApi = enhancedApi.injectEndpoints({
                     search,
                     showComments: !!showComments,
                     first: TASKS_PER_PAGE,
-                    after: cursor, // Pass pagination cursor back to the query
+                    after: cursor,
                   },
                   { forceRefetch: true },
                 ),
               )
 
-              // Safely catch errors via the standard RTK Query wrapper response
               if (result.error) throw result.error
               const data = result.data as GetTasksByParentResult
 
-              // Extract the transformed data payload properties smoothly
               const fetchedTasks = data?.tasks || []
               allNewTasks.push(...fetchedTasks)
 
-              // Extract connection tracking data to evaluate deep pagination constraints
               const pageInfo = data?.pageInfo
               hasNextPage = pageInfo?.hasNextPage || false
               cursor = pageInfo?.endCursor || undefined
             }
           }
 
-          // 4. MOVE TO THE END: Only mark them as queried if the requests successfully finish!
+          // 4. Only mark folders as queried if the network loops complete successfully
           markFoldersAsQueried(cacheKey, newFolderIds)
 
-          // 6. Append new tasks to the existing flat array cache
+          // 5. Append new tasks to the existing flat array cache with task ID deduplication
+          const finalTasks = [...cacheData, ...allNewTasks]
+          const uniqueTasksMap = new Map(finalTasks.map((task) => [task.id, task]))
+
           return {
-            data: [...cacheData, ...allNewTasks],
+            data: Array.from(uniqueTasksMap.values()),
           }
         } catch (e: any) {
           console.error(e)
-          // Fallback parsing for error messages since thrown GraphQL/RTK errors can be complex nested objects
           const errorMessage =
             e.message || e.data?.message || JSON.stringify(e) || 'Unknown Fetch Error'
           return { error: { status: 'FETCH_ERROR', error: errorMessage } as FetchBaseQueryError }
@@ -343,7 +339,7 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
       async onCacheEntryAdded(
-        { projectName, parentIds, filter, search, showComments },
+        { projectName, parentIds, filter, folderFilter, search, showComments },
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
       ) {
         let token: any
@@ -437,6 +433,11 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
 
         await cacheEntryRemoved
+
+        // Evict tracking map memory entry completely when this RTK Query cache entry expires
+        const deadCacheKey = getCacheKey(projectName, filter, folderFilter, search, showComments)
+        delete queriedFoldersRegistry[deadCacheKey]
+
         if (token) PubSub.unsubscribe(token)
         if (unsubscribeThumbnails) unsubscribeThumbnails()
       },
