@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { determineLoadingTaskFolders } from '../utils/loadingUtils'
 import { LoadingTasks, SoftErrorAction } from '../types'
-import { TasksByFolderMap } from '../utils'
+import { getFolderIdsToQueryFromExpanded, TasksByFolderMap } from '../utils'
 import { TableGroupBy } from '../context'
 import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
 import { getGroupQueries } from '../utils/getGroupQueries'
@@ -90,6 +90,7 @@ export const useFetchOverviewData = ({
     isLoading: isLoadingFolders,
     isUninitialized: isUninitializedFolders,
     refetch: refetchFolders,
+    getFolderById,
   } = useProjectFoldersContext()
 
   const expandedParentIds = Object.entries(expanded)
@@ -97,7 +98,19 @@ export const useFetchOverviewData = ({
     .filter(([id]) => !isGroupId(id)) // filter out the root folder
     .map(([id]) => id)
 
-  const taskParentIds = expandedParentIds
+  const taskFolderIdsToQuery = useMemo(
+    () =>
+      getFolderIdsToQueryFromExpanded(
+        expanded,
+        expandedParentIds,
+        selectedFolders,
+        excludeSelectedFolders,
+        getFolderById,
+      ),
+    [expanded, expandedParentIds, selectedFolders, excludeSelectedFolders, getFolderById],
+  )
+
+  console.log(taskFolderIdsToQuery)
 
   const {
     data: expandedFoldersTasks = [],
@@ -108,13 +121,13 @@ export const useFetchOverviewData = ({
   } = useGetOverviewTasksByFoldersQuery(
     {
       projectName,
-      parentIds: taskParentIds,
+      parentIds: taskFolderIdsToQuery,
       filter: taskFilters.filterString,
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
       showComments,
     },
-    { skip: !taskParentIds.length || (!showHierarchy && !isFlatFolderView) },
+    { skip: !taskFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView) },
   )
 
   const skipFoldersByTaskFilter =
