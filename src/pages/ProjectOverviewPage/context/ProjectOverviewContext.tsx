@@ -268,6 +268,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     loadingLinksEntityIds,
     error: dataError,
     softError,
+    softErrorAction,
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
@@ -293,6 +294,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     modules,
     skipLinks,
     showComments,
+    onCollapseAll: () => setExpanded({}),
   })
 
   // combine foldersMap and tasksMap into a single map
@@ -310,6 +312,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         loadingTasks,
         error,
         softError, // shows a warning banner but doesn't block the table from rendering
+        softErrorAction,
         projectInfo,
         attribFields: scopedAttribFields,
         users,

@@ -1,5 +1,5 @@
 import { EntityGroup } from '@shared/api'
-import { FolderNodeMap, LoadingTasks, TaskNodeMap, TasksByFolderMap } from '.'
+import { FolderNodeMap, LoadingTasks, TaskNodeMap, TasksByFolderMap, SoftErrorAction } from '.'
 import { ProjectDataContextProps } from '../context'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { ContextMenuItemConstructors } from '../hooks'
@@ -39,6 +39,7 @@ export interface ProjectOverviewContextType {
   loadingTasks: LoadingTasks
   error?: string
   softError?: string // non-blocking error (e.g. for fetching tasks for expanded folders)
+  softErrorAction?: SoftErrorAction
   // Data
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap

@@ -247,6 +247,7 @@ export const ProjectTreeTable = ({
     isLoading: isLoadingData,
     error,
     softError,
+    softErrorAction,
     isInitialized,
     expanded,
     updateExpanded,
@@ -836,7 +837,7 @@ export const ProjectTreeTable = ({
         </Styled.TableContainer>
         {softError && (
           <Styled.SoftErrorBanner>
-            <InfoMessage variant="warning" message={softError} />
+            <InfoMessage variant="warning" message={softError} action={softErrorAction} />
           </Styled.SoftErrorBanner>
         )}
       </Styled.TableWrapper>

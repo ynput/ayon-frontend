@@ -11,7 +11,7 @@ import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../t
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { determineLoadingTaskFolders } from '../utils/loadingUtils'
-import { LoadingTasks } from '../types'
+import { LoadingTasks, SoftErrorAction } from '../types'
 import { TasksByFolderMap } from '../utils'
 import { TableGroupBy } from '../context'
 import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
@@ -33,6 +33,7 @@ type useFetchOverviewDataData = {
   tasksByFolderMap: TasksByFolderMap
   error?: unknown // first task/folder load failure (e.g. corrupt filter), if any
   softError?: string // error for fetching tasks for expanded folders, if any
+  softErrorAction?: SoftErrorAction
   isLoadingAll: boolean // the whole table is a loading state
   isLoadingMore: boolean // loading more tasks
   loadingTasks: LoadingTasks // show number of loading tasks per folder or root
@@ -59,6 +60,7 @@ type Params = {
   modules: ProjectTableModulesType
   skipLinks?: boolean
   showComments?: boolean // only fetch latestComments when the comments column is visible
+  onCollapseAll?: () => void
 }
 
 export const useFetchOverviewData = ({
@@ -79,6 +81,7 @@ export const useFetchOverviewData = ({
   modules,
   skipLinks,
   showComments = false,
+  onCollapseAll,
 }: Params): useFetchOverviewDataData => {
   const { isLoading: isLoadingModules } = modules
 
@@ -618,6 +621,17 @@ export const useFetchOverviewData = ({
 
   const error = tasksListError || searchFoldersError || groupedTasksError
 
+  const softErrorAction = useMemo<SoftErrorAction | undefined>(() => {
+    if (expandedFoldersTasksError && onCollapseAll) {
+      return {
+        label: 'Collapse all folders',
+        icon: 'restart_alt',
+        callback: onCollapseAll,
+      }
+    }
+    return undefined
+  }, [expandedFoldersTasksError, onCollapseAll])
+
   return {
     foldersMap: filteredFoldersMap,
     tasksMap: tasksMap,
@@ -625,6 +639,7 @@ export const useFetchOverviewData = ({
     error,
     // @ts-expect-error: error does exist on it
     softError: expandedFoldersTasksError?.error, // this is separate as we should still show the folders table so the user can make changes
+    softErrorAction,
     isLoadingAll:
       isLoadingFolders || isLoadingTasksList || isLoadingTasksFolders || isLoadingModules, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,

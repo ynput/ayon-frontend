@@ -259,7 +259,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           const BATCH_SIZE = 100 // number of parent folders per request
           const TASK_PER_FOLDER = 20
           const MAX_PAGES_PER_BATCH = 10 // Sane fail-safe boundary to stop infinite request loops
-          const MAX_FOLDERS = 5000 // Maximum number of folders to process in one go
+          const MAX_FOLDERS = 1000 // Maximum number of folders to process in one go
           const TASKS_PER_PAGE = BATCH_SIZE * TASK_PER_FOLDER // Number of tasks to fetch per page
 
           if (newFolderIds.length > MAX_FOLDERS) {
