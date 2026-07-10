@@ -15,6 +15,7 @@ import { useViewsContext } from '@shared/containers'
 import {
   mergeFieldStats,
   buildMetricTargets,
+  shouldSkipColumnStats,
   totalRowsFromStats,
   useGetFolderColumnStatsQuery,
   useGetTaskColumnStatsQuery,
@@ -30,12 +31,25 @@ const ProjectOverviewTable = ({}: Props) => {
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
   const { showHierarchy, isFlatFolderView, isLoading, fetchNextPage, attribFields } =
     useProjectTableContext()
-  const { columnVisibility, groupByConfig } = useColumnSettingsContext()
+  const {
+    columnVisibility,
+    defaultColumnVisibility,
+    columnSummaries,
+    columnSummaryScopes,
+    groupByConfig,
+  } = useColumnSettingsContext()
   // hold stats queries until views load, otherwise targets cover every column
   const { isLoadingViews } = useViewsContext()
   // column summaries are a powerpack feature — don't fetch stats without a license
   const { powerLicense } = usePowerpack()
-  const { folderFilters, taskFilters, selectedFolders, selectedTaskIds, foldersMap } =
+  // skip the query only when the name count and every other summary are off
+  const noSummaries = shouldSkipColumnStats(
+    columnSummaries,
+    columnSummaryScopes,
+    columnVisibility,
+    defaultColumnVisibility,
+  )
+  const { folderFilters, taskFilters, selectedFolders, selectedTaskIds } =
     useProjectOverviewContext()
 
   // Mirror the task list query: slicer selection narrows rows to the selected
@@ -48,12 +62,28 @@ const ProjectOverviewTable = ({}: Props) => {
   const scope = `overview-${projectName}`
 
   const folderTargets = useMemo(
-    () => buildMetricTargets({ entity: 'folder', attribs: attribFields, columnVisibility }),
-    [attribFields, columnVisibility],
+    () =>
+      buildMetricTargets({
+        entity: 'folder',
+        attribs: attribFields,
+        columnVisibility,
+        defaultColumnVisibility,
+        columnSummaries,
+        columnSummaryScopes,
+      }),
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
   const taskTargets = useMemo(
-    () => buildMetricTargets({ entity: 'task', attribs: attribFields, columnVisibility }),
-    [attribFields, columnVisibility],
+    () =>
+      buildMetricTargets({
+        entity: 'task',
+        attribs: attribFields,
+        columnVisibility,
+        defaultColumnVisibility,
+        columnSummaries,
+        columnSummaryScopes,
+      }),
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
 
   const {
@@ -64,6 +94,7 @@ const ProjectOverviewTable = ({}: Props) => {
     {
       projectName,
       filter: folderFilters?.filterString || undefined,
+      taskFilter: taskFilters?.filterString || undefined,
       search: folderFilters?.search || undefined,
       // show hierarchy never includes it self and only children
       [showHierarchy ? 'parentIds' : 'ids']: selectedFolders?.length ? selectedFolders : undefined,
@@ -73,7 +104,7 @@ const ProjectOverviewTable = ({}: Props) => {
       // when grouping by folder, not having having "show empty" enabled means we do not count empty folder
       hideEmptyFolders: groupByConfig?.showEmpty === false && !showHierarchy ? true : undefined,
     },
-    { skip: !projectName || isLoadingViews || !powerLicense },
+    { skip: !projectName || isLoadingViews || !powerLicense || noSummaries },
   )
 
   const {
@@ -90,7 +121,7 @@ const ProjectOverviewTable = ({}: Props) => {
       taskIds: statsTaskIds,
       targets: taskTargets,
     },
-    { skip: !projectName || isLoadingViews || !powerLicense },
+    { skip: !projectName || isLoadingViews || !powerLicense || noSummaries },
   )
 
   const fieldStats = useMemo(() => {

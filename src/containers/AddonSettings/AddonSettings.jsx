@@ -32,8 +32,8 @@ import {
   useGetAddonSettingsListQuery,
 } from '@queries/addonSettings'
 
-import { usePromoteBundleMutation } from '@queries/bundles/updateBundles'
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { usePromoteBundleMutation } from '@shared/api'
+import { useListBundlesQuery } from '@shared/api'
 import { confirmDialog } from 'primereact/confirmdialog'
 
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'

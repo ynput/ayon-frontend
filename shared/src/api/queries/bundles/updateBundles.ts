@@ -1,6 +1,6 @@
 // we continue to use the enhanced bundles api from getBundles.js
 import api from './getBundles'
-import { projectsApi } from '@shared/api'
+import { projectsApi } from '@shared/api/generated'
 
 const enhancedUpdateBundles = api.enhanceEndpoints({
   endpoints: {
@@ -11,21 +11,40 @@ const enhancedUpdateBundles = api.enhanceEndpoints({
         { type: 'addonSettingsList' },
       ],
     },
+    updateBundle: {
+      // optimisticUpdate bundleList to update bundle
+      onQueryStarted: async (
+        // @ts-expect-error: archived and patch are not part of the api args, but we need them for the optimistic update
+        { bundleName, archived = true, patch },
+        { dispatch, queryFulfilled },
+      ) => {
+        const patchResult = dispatch(
+          api.util.updateQueryData('listBundles', { archived }, (draft) => {
+            if (!patch || !draft?.bundles) return
+            const bundleIndex = draft.bundles.findIndex((bundle) => bundle.name === bundleName)
+            if (bundleIndex === -1) throw new Error('bundle not found')
+            draft.bundles[bundleIndex] = patch
+          }),
+        )
+        try {
+          await queryFulfilled
+        } catch {
+          patchResult.undo()
+        }
+      },
+      // eslint-disable-next-line no-unused-vars
+      invalidatesTags: () => [
+        { type: 'bundleList' },
+        { type: 'addonList' },
+        { type: 'addonSettingsList' },
+        { type: 'marketAddon' },
+      ],
+    },
   },
 })
 
 const enhancedProjectsApi = projectsApi.enhanceEndpoints({
   endpoints: {
-    setProjectBundle: {
-      invalidatesTags: (_result, _error, { projectName }) => [
-        { type: 'bundle', id: projectName },
-        { type: 'bundleList' },
-        { type: 'addonSettings' },
-        { type: 'addonSettingsOverrides' },
-        { type: 'addonSettingsList' },
-        { type: 'addonSettingsSchema' },
-      ],
-    },
     unsetProjectBundle: {
       invalidatesTags: (_result, _error, { projectName }) => [
         { type: 'bundle', id: projectName },
@@ -39,7 +58,7 @@ const enhancedProjectsApi = projectsApi.enhanceEndpoints({
   },
 })
 
-// Rest of non converted queries that will eventually be converted to use the enhanced api
+// NOTE: Rest of non converted queries that will eventually be converted to use the enhanced api
 const updateBundles = enhancedUpdateBundles.injectEndpoints({
   endpoints: (build) => ({
     deleteBundle: build.mutation({
@@ -97,38 +116,6 @@ const updateBundles = enhancedUpdateBundles.injectEndpoints({
         { type: 'addonSettingsList' },
       ],
     }),
-
-    updateBundle: build.mutation({
-      query: ({ name, data, force = true }) => ({
-        url: `/api/bundles/${name}?force=${force}`,
-        method: 'PATCH',
-        body: data,
-      }),
-      // optimisticUpdate bundleList to update bundle
-      // eslint-disable-next-line no-unused-vars
-      onQueryStarted: async ({ name, archived = true, patch }, { dispatch, queryFulfilled }) => {
-        const patchResult = dispatch(
-          api.util.updateQueryData('listBundles', { archived }, (draft) => {
-            if (!patch || !draft?.bundles) return
-            const bundleIndex = draft.bundles.findIndex((bundle) => bundle.name === name)
-            if (bundleIndex === -1) throw new Error('bundle not found')
-            draft.bundles[bundleIndex] = patch
-          }),
-        )
-        try {
-          await queryFulfilled
-        } catch {
-          patchResult.undo()
-        }
-      },
-      // eslint-disable-next-line no-unused-vars
-      invalidatesTags: () => [
-        { type: 'bundleList' },
-        { type: 'addonList' },
-        { type: 'addonSettingsList' },
-        { type: 'marketAddon' },
-      ],
-    }),
   }), // endpoints
   overrideExisting: true,
 })
@@ -136,11 +123,12 @@ const updateBundles = enhancedUpdateBundles.injectEndpoints({
 export const {
   useDeleteBundleMutation,
   useCreateBundleMutation,
-  useUpdateBundleMutation, // migrated to enhanced api
   usePromoteBundleMutation,
   useMigrateSettingsByBundleMutation,
+  useUpdateBundleMutation,
 } = updateBundles
 
-export const { useSetProjectBundleMutation, useUnsetProjectBundleMutation } = enhancedProjectsApi
+export const { useUnsetProjectBundleMutation } = enhancedProjectsApi
+// useSetProjectBundleMutation
 
 export { updateBundles as bundlesQueries }

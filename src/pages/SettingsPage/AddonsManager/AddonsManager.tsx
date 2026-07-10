@@ -1,9 +1,7 @@
 import { Button, Dialog, Section } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { useListAddonsQuery } from '@shared/api'
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
-import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
+import { useListAddonsQuery, useListBundlesQuery, useUpdateBundleMutation } from '@shared/api'
 import { useMemo, useState } from 'react'
 import { transformAddonsWithBundles } from './helpers'
 import AddonsManagerTable from './AddonsManagerTable'
@@ -100,7 +98,7 @@ const AddonsManager = (): JSX.Element => {
     const updatePromises = selected.map((bundleName: string) => {
       const bundleData = bundleMap.get(bundleName)
       if (!bundleData || bundleData.isProduction || bundleData.isStaging || bundleData.isDev) return
-      return updateBundle({ name: bundleName, data: { isArchived: true } })
+      return updateBundle({ bundleName: bundleName, bundlePatchModel: { isArchived: true } })
     })
 
     await Promise.all(updatePromises)

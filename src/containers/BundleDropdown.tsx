@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { DefaultValueTemplate, Dropdown, DropdownProps } from '@ynput/ayon-react-components'
 
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@shared/api'
 import styled from 'styled-components'
 import { BundleModel } from '@shared/api'
 import { $Any } from '@types'

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@shared/api'
 import { coerce, compareBuild } from 'semver'
 import { useLocalStorage } from '@shared/hooks'
 import { toast } from 'react-toastify'

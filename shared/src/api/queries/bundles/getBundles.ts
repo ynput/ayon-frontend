@@ -1,4 +1,4 @@
-import { bundlesApi, projectsApi } from '@shared/api'
+import { bundlesApi, projectsApi } from '@shared/api/generated'
 
 const getBundles = bundlesApi.enhanceEndpoints({
   endpoints: {

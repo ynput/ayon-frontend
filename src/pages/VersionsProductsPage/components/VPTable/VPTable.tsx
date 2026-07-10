@@ -5,12 +5,14 @@ import {
   NEXT_PAGE_ID,
   ProjectTreeTable,
 } from '@shared/containers'
-import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
+import { checkColumnVisibility, useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import { useProjectDataContext, useViewsContext } from '@shared/containers'
 import { usePowerpack } from '@shared/context'
 import {
   mergeFieldStats,
   buildMetricTargets,
+  isSummaryActive,
+  shouldSkipColumnStats,
   totalRowsFromStats,
   useGetProductsColumnStatsQuery,
   useGetVersionsColumnStatsQuery,
@@ -31,11 +33,19 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   const { fetchNextPage, isLoading, columnStatsArgs } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
   const { attribFields } = useProjectDataContext()
-  const { columnVisibility } = useColumnSettingsContext()
+  const { columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes } =
+    useColumnSettingsContext()
   // hold stats queries until views load, otherwise targets cover every column
   const { isLoadingViews } = useViewsContext()
   // column summaries are a powerpack feature — don't fetch stats without a license
   const { powerLicense } = usePowerpack()
+  // skip the query only when the name count and every other summary are off
+  const noSummaries = shouldSkipColumnStats(
+    columnSummaries,
+    columnSummaryScopes,
+    columnVisibility,
+    defaultColumnVisibility,
+  )
 
   const productTargets = useMemo(
     () =>
@@ -43,13 +53,28 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         entity: 'product',
         attribs: attribFields,
         columnVisibility,
-        extraFields: columnVisibility['productBaseType'] !== false ? ['product_base_type'] : [],
+        defaultColumnVisibility,
+        columnSummaries,
+        columnSummaryScopes,
+        extraFields:
+          checkColumnVisibility(columnVisibility, 'productBaseType', defaultColumnVisibility) &&
+          isSummaryActive('productBaseType', columnSummaries, columnSummaryScopes)
+            ? ['product_base_type']
+            : [],
       }),
-    [attribFields, columnVisibility],
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
   const versionTargets = useMemo(
-    () => buildMetricTargets({ entity: 'version', attribs: attribFields, columnVisibility }),
-    [attribFields, columnVisibility],
+    () =>
+      buildMetricTargets({
+        entity: 'version',
+        attribs: attribFields,
+        columnVisibility,
+        defaultColumnVisibility,
+        columnSummaries,
+        columnSummaryScopes,
+      }),
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
 
   const {
@@ -58,7 +83,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     error: productStatsError,
   } = useGetProductsColumnStatsQuery(
     { ...columnStatsArgs, targets: productTargets },
-    { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense },
+    { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense || noSummaries },
   )
   const {
     data: versionStats,
@@ -66,7 +91,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     error: versionStatsError,
   } = useGetVersionsColumnStatsQuery(
     { ...columnStatsArgs, targets: versionTargets },
-    { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense },
+    { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense || noSummaries },
   )
 
   const fieldStats = useMemo(() => {

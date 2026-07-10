@@ -9,6 +9,7 @@ import {
   SortingState,
   VisibilityState,
   ColumnSizingState,
+  ExpandedState,
   useReactTable,
 } from '@tanstack/react-table'
 import { checkColumnVisibility, ensureAtLeastOneVisibleColumn } from '../ProjectTreeTable/utils'
@@ -87,11 +88,15 @@ export function ListTable<TData extends RowData>({
   enableSorting = false,
   sorting: sortingProp,
   onSortingChange,
+  enableExpanding = true,
+  expanded: expandedProp,
+  onExpandedChange,
   getIsRowInactive,
 }: ListTableProps<TData>) {
   const [sortingLocal, setSortingLocal] = useState<SortingState>([])
   const [columnVisibilityLocal, setColumnVisibilityLocal] = useState<VisibilityState>({})
   const [columnSizingLocal, setColumnSizingLocal] = useState<ColumnSizingState>({})
+  const [expandedLocal, setExpandedLocal] = useState<ExpandedState>({})
   const tableContainerRef = useRef<HTMLDivElement>(null)
   const [showRowContextMenu] = useCreateContextMenu()
 
@@ -102,6 +107,17 @@ export function ListTable<TData extends RowData>({
     const next = typeof updater === 'function' ? updater(sorting) : updater
     setSortingLocal(next)
     onSortingChange?.(next)
+  }
+
+  // Use controlled expanded state if provided, otherwise internal state
+  const expanded = expandedProp ?? expandedLocal
+
+  const handleExpandedChange = (
+    updater: ExpandedState | ((prev: ExpandedState) => ExpandedState),
+  ) => {
+    const next = typeof updater === 'function' ? updater(expanded) : updater
+    setExpandedLocal(next)
+    onExpandedChange?.(next)
   }
 
   // Use controlled column visibility if provided, otherwise internal state
@@ -170,13 +186,16 @@ export function ListTable<TData extends RowData>({
       sorting,
       columnVisibility: resolvedColumnVisibility,
       columnSizing,
+      expanded,
     },
     filterFns: { fuzzy: () => true }, // Placeholder for fuzzy filtering
     onColumnOrderChange: setColumnOrder,
     onSortingChange: handleSortingChange,
     onColumnVisibilityChange: handleColumnVisibilityChange,
     onColumnSizingChange: handleColumnSizingChange,
+    onExpandedChange: handleExpandedChange,
     enableSorting,
+    enableExpanding,
     columnResizeMode: 'onEnd',
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),

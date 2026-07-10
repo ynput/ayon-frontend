@@ -1911,6 +1911,7 @@ export type ColumnStatsFragmentFragment = { columnName: string, min: number | nu
 export type GetFolderColumnStatsQueryVariables = Exact<{
   projectName: string;
   filter?: string | null | undefined;
+  taskFilter?: string | null | undefined;
   search?: string | null | undefined;
   parentIds?: Array<string> | string | null | undefined;
   ids?: Array<string> | string | null | undefined;
@@ -3365,12 +3366,13 @@ export const GetListsItemsForReviewSessionDocument = new TypedDocumentString(`
 }
     `);
 export const GetFolderColumnStatsDocument = new TypedDocumentString(`
-    query GetFolderColumnStats($projectName: String!, $filter: String, $search: String, $parentIds: [String!], $ids: [String!], $targets: [MetricTargetInput!], $includeFolderChildren: Boolean! = true, $hideEmptyFolders: Boolean) {
+    query GetFolderColumnStats($projectName: String!, $filter: String, $taskFilter: String, $search: String, $parentIds: [String!], $ids: [String!], $targets: [MetricTargetInput!], $includeFolderChildren: Boolean! = true, $hideEmptyFolders: Boolean) {
   project(name: $projectName) {
     name
     folders(
       calculateSpecificStatistics: $targets
       filter: $filter
+      taskFilter: $taskFilter
       search: $search
       parentIds: $parentIds
       ids: $ids

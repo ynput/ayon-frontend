@@ -4,11 +4,8 @@ import { Button, Dialog, Dropdown, SaveButton, ScrollPanel } from '@ynput/ayon-r
 import { FC, useEffect, useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
-import { useGetProjectBundleInfoQuery } from '@queries/bundles/getBundles'
-import {
-  useSetProjectBundleMutation,
-  useUnsetProjectBundleMutation,
-} from '@queries/bundles/updateBundles'
+import { useGetProjectBundleInfoQuery } from '@shared/api'
+import { useSetProjectBundleMutation, useUnsetProjectBundleMutation } from '@shared/api'
 import clsx from 'clsx'
 import { InfoMessage } from '@shared/components'
 

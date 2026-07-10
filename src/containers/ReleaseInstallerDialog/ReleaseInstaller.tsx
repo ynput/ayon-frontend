@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 
 // Queries
 import { useGetReleasesQuery } from '@queries/releases/getReleases'
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@shared/api'
 
 // Components
 import { ReleaseInstallerError } from './components'
@@ -26,7 +26,7 @@ import {
 import { useInstallRelease, useReleaseForm, useReleaseInfo } from './hooks'
 import { ReleaseFormType, switchDialog } from '@state/releaseInstaller'
 import { useRestart } from '@context/RestartContext'
-import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
+import { useCreateBundleMutation } from '@shared/api'
 import { useNavigate } from 'react-router-dom'
 import { useListAddonsQuery } from '@shared/api'
 

@@ -3,13 +3,19 @@ import { MouseEvent, useState } from 'react'
 import clsx from 'clsx'
 import { toast } from 'react-toastify'
 import { useMemo, useEffect } from 'react'
-import { ActionContext, useExecuteActionMutation, useGetActionsFromContextQuery } from '@shared/api'
+import {
+  ActionContext,
+  useExecuteActionMutation,
+  useGetActionsFromContextQuery,
+  useListBundlesQuery,
+} from '@shared/api'
 import { ActionsDropdown, ActionsDropdownProps } from './ActionsDropdown'
 import ActionIcon from './ActionIcon'
 import { ActionTriggersProps, useActionTriggers } from '@shared/hooks'
 import { ActionConfigDialog } from './ActionConfigDialog'
 import { InteractiveActionDialog, InteractiveForm } from './InteractiveActionDialog'
 import { BundleMode } from '@shared/util'
+import { useGlobalContext } from '@shared/context'
 
 const placeholder = {
   identifier: 'placeholder',
@@ -47,6 +53,7 @@ export const Actions = ({
   align,
   pt,
 }: ActionsProps) => {
+  const { user } = useGlobalContext()
   // special triggers the actions can make to perform stuff on the client
   const { handleActionPayload } = useActionTriggers({ onNavigate, onSetSearchParams, searchParams })
   const [actionBeingConfigured, setActionBeingConfigured] = useState<any>(null)
@@ -93,8 +100,34 @@ export const Actions = ({
     setInteractiveForm(null)
   }, [context])
 
+  // we must get the developers current dev bundle name
+  const { data: bundlesData, isFetching: isFetchingBundles } = useListBundlesQuery(
+    { archived: false },
+    { skip: bundleMode !== 'developer' },
+  )
+  const bundles = bundlesData?.bundles || []
+  // find isDev bundles and then match current username to activeUser, if not found then use the first isDev bundle
+  const myDevBundleName = useMemo(() => {
+    if (!bundles?.length) return null
+    if (bundleMode !== 'developer') return null
+    const devBundles = bundles.filter((bundle) => bundle.isDev)
+    if (!devBundles.length) return null
+    const myDevBundle = devBundles.find((bundle) => bundle.activeUser === user?.name)
+    return myDevBundle?.name || devBundles[0].name
+  }, [bundles, bundleMode, user?.name])
+  const actionsVariant = useMemo(() => {
+    if (bundleMode === 'developer') {
+      return myDevBundleName || 'developer'
+    }
+    return bundleMode
+  }, [bundleMode, myDevBundleName])
+
   const { data, isFetching: isFetchingActions } = useGetActionsFromContextQuery(
-    { mode: 'simple', variant: bundleMode, actionContext: context as ActionContext },
+    {
+      mode: 'simple',
+      variant: actionsVariant,
+      actionContext: context as ActionContext,
+    },
     { skip: !context },
   )
 
@@ -324,10 +357,11 @@ export const Actions = ({
       ))}
       <ActionsDropdown
         options={dropdownOptions}
-        isLoading={isLoading && featuredCount > 0}
+        isLoading={(isLoading && featuredCount > 0) || isFetchingBundles}
         onAction={handleExecuteAction}
         onConfig={handleConfigureAction}
         bundleMode={bundleMode}
+        actionsVariant={actionsVariant}
         align={align}
         {...pt?.dropdown}
       />

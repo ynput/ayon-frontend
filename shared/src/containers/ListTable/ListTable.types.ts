@@ -3,6 +3,7 @@ import {
   ColumnOrderState,
   Row,
   ColumnSizingState,
+  ExpandedState,
   RowData,
   SortingState,
   VisibilityState,
@@ -99,5 +100,9 @@ export interface ListTableProps<TData> {
   enableSorting?: boolean
   sorting?: SortingState
   onSortingChange?: (sorting: SortingState) => void
+  // Expanding
+  enableExpanding?: boolean
+  expanded?: ExpandedState
+  onExpandedChange?: (expanded: ExpandedState) => void
   getIsRowInactive?: (row: TData) => boolean
 }
