@@ -8,14 +8,27 @@ query GetTasksByParent(
   $folderFilter: String
   $search: String
   $showComments: Boolean! = false
+  $first: Int = 1000
+  $after: String
 ) {
   project(name: $projectName) {
     name
-    tasks(folderIds: $parentIds, filter: $filter, folderFilter: $folderFilter, search: $search) {
+    tasks(
+      folderIds: $parentIds
+      filter: $filter
+      folderFilter: $folderFilter
+      search: $search
+      first: $first
+      after: $after
+    ) {
       edges {
         node {
           ...TaskPropsFragment
         }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
   }

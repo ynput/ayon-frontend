@@ -1,0 +1,10 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Delete old InfoMessage component",
+			"type": "shell",
+			"command": "rm -rf src/components/InfoMessage"
+		}
+	]
+}

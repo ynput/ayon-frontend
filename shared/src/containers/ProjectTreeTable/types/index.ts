@@ -14,6 +14,12 @@ export interface ProjectTableAttribute extends Omit<AttributeModel, 'position'> 
 
 export type LoadingTasks = Record<string, number> // show number of loading tasks per folder or root
 
+export type SoftErrorAction = {
+  label: string
+  icon: string
+  callback: () => void
+}
+
 export type PatchOperation = Pick<OperationModel, 'entityId' | 'entityType' | 'data'> & {
   type?: OperationModel['type']
 }

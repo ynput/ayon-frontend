@@ -33,7 +33,7 @@ import {
 } from '../types/table'
 import useFolderRelationships from '../hooks/useFolderRelationships'
 import { ProjectModel } from '../types/project'
-import { ProjectTableAttribute, LoadingTasks } from '../types'
+import { ProjectTableAttribute, LoadingTasks, SoftErrorAction } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
 import { EntityGroup } from '@shared/api'
@@ -64,6 +64,8 @@ export interface ProjectTableProviderProps {
   isLoadingMore: boolean
   loadingTasks?: LoadingTasks
   error?: string
+  softError?: string // shows a warning banner but doesn't block the table from rendering
+  softErrorAction?: SoftErrorAction
   users: TableUser[]
   // Attributes
   attribFields: ProjectTableAttribute[]
@@ -171,6 +173,8 @@ export const ProjectTableProvider = ({
   isLoadingMore,
   isLoading,
   error,
+  softError,
+  softErrorAction,
   isInitialized,
   users,
   attribFields,
@@ -365,6 +369,8 @@ export const ProjectTableProvider = ({
         isInitialized,
         isLoading,
         error,
+        softError,
+        softErrorAction,
         attribFields,
         attribFieldsScoped,
         scopes,

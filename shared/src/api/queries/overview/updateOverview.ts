@@ -209,7 +209,7 @@ export const patchOverviewTasks = (
       // it also updates any GetTasksByParent caches
       const tasksPatch = dispatch(
         getOverviewApi.util.updateQueryData(
-          entry.endpointName as 'getOverviewTasksByFolders' | 'GetTasksByParent' | 'GetTasksList',
+          entry.endpointName as 'getOverviewTasksByFolders' | 'GetTasksList',
           entry.originalArgs,
           (draft) => {
             // Apply each change to matching tasks in the cache

@@ -1,11 +1,14 @@
 const { getIntrospectionQuery, buildClientSchema, introspectionFromSchema } = require('graphql')
+const path = require('path')
+require('dotenv').config({ path: path.join(__dirname, '../.env.local') })
 
 module.exports = async () => {
   const token = process.env.TOKEN
+  const serverUrl = process.env.SERVER_URL || 'http://localhost:5000'
 
   console.log('Loader: Fetching and sanitizing backend schema...')
 
-  const response = await fetch('http://localhost:3000/graphql', {
+  const response = await fetch(`${serverUrl}/graphql`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

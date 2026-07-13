@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@ynput/ayon-react-components'
-import InfoMessage from '@components/InfoMessage'
+import { InfoMessage } from '@shared/components'
 import * as Styled from './DeleteUserDialog.styled'
 
 type DeleteUserDialogProps = {
@@ -10,7 +10,12 @@ type DeleteUserDialogProps = {
   onDisable: () => void
 }
 
-const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: DeleteUserDialogProps) => {
+const DeleteUserDialog = ({
+  onHide,
+  selectedUsers,
+  onDelete,
+  onDisable,
+}: DeleteUserDialogProps) => {
   const [value, setValue] = useState('')
 
   if (!selectedUsers?.length) {
@@ -22,9 +27,7 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: Delete
   const isSingle = selectedUsers.length === 1
   const confirmDeleteUsersString = isSingle ? selectedUsers[0] : 'delete selected'
 
-  const header = isSingle
-    ? `Delete ${selectedUsers[0]}`
-    : `Delete ${selectedUsers.length} Users`
+  const header = isSingle ? `Delete ${selectedUsers[0]}` : `Delete ${selectedUsers.length} Users`
 
   return (
     <Styled.StyledDialog

@@ -11,6 +11,7 @@ import { RowId } from '../utils/cellUtils'
 
 import { ProjectTableProviderProps } from './ProjectTableProvider'
 import type { SubtasksManagerProps } from '@shared/components'
+import { SoftErrorAction } from '../types'
 
 export type ToggleExpandAll = (rowIds: RowId[], expand?: boolean) => void
 export type ToggleExpands = (rowIds: RowId[], expand?: boolean) => void
@@ -23,6 +24,9 @@ export interface ProjectTableContextType {
   attribFields: ProjectTableProviderProps['attribFields']
   attribFieldsScoped: ProjectTableProviderProps['attribFields']
   error?: string
+  softError?: string // shows a warning banner but doesn't block the table from rendering
+  softErrorAction?: SoftErrorAction
+
   scopes: ProjectTableProviderProps['scopes']
 
   // Data

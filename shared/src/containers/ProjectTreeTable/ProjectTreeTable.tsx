@@ -36,7 +36,7 @@ import { TableFooterRow } from './components/TableFooterRow'
 import type { FieldStats } from '@shared/api'
 import { getCommonPinningStyles, getColumnWidth } from './utils/pinningUtils'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
-import { FilterErrorActions } from '../../components/FilterErrorActions'
+import { InfoMessage, FilterErrorActions } from '@shared/components'
 import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
@@ -246,6 +246,8 @@ export const ProjectTreeTable = ({
     users,
     isLoading: isLoadingData,
     error,
+    softError,
+    softErrorAction,
     isInitialized,
     expanded,
     updateExpanded,
@@ -792,7 +794,7 @@ export const ProjectTreeTable = ({
               onResetView={onResetView}
               contextMenuItems={propsContextMenuItems}
             />
-            {summariesEnabled && (
+            {summariesEnabled && !error && (
               <TableFooterRow
                 columnVirtualizer={columnVirtualizer}
                 table={table}
@@ -833,6 +835,11 @@ export const ProjectTreeTable = ({
             )}
           </table>
         </Styled.TableContainer>
+        {softError && (
+          <Styled.SoftErrorBanner>
+            <InfoMessage variant="warning" message={softError} action={softErrorAction} />
+          </Styled.SoftErrorBanner>
+        )}
       </Styled.TableWrapper>
       {/* Render EntityPickerDialog alongside table content */}
       {isEntityPickerOpen &&
@@ -1526,8 +1533,12 @@ const TableBodyRow = ({
 }: TableBodyRowProps) => {
   const sortable = sortableRows ? useSortable({ id: row.id }) : null
 
+  // Track actual DOM element node
+  const rowHtmlElementRef = useRef<HTMLTableRowElement | null>(null)
+
   const combinedRef = useCallback(
     (node: HTMLTableRowElement | null) => {
+      rowHtmlElementRef.current = node
       if (sortable) {
         sortable.setNodeRef(node)
       }

@@ -1,8 +1,8 @@
-import { createContext, ReactNode, useContext, useMemo } from 'react'
+import { ReactNode, useContext, useMemo } from 'react'
 import { useGetUsersAssigneeQuery, useGetMyProjectPermissionsQuery } from '@shared/api'
-import type { ProjectModel } from '@shared/api'
 import useAttributeFields, { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { useProjectContext } from '@shared/context'
+import { ProjectDataContext } from './ProjectDataContextInstance'
 
 type User = {
   name: string
@@ -20,8 +20,6 @@ export interface ProjectDataContextProps {
   canWriteNamePermission: boolean
   canWriteLabelPermission: boolean
 }
-
-const ProjectDataContext = createContext<ProjectDataContextProps | undefined>(undefined)
 
 interface ProjectDataProviderProps {
   children: ReactNode

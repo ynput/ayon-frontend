@@ -403,10 +403,16 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
       if (res?.success && res.operations) {
         return res.operations
       } else {
-        throw { data: { details: `${entityForm.subType} with the name: ${entityForm.label} already exists` } }
+        throw {
+          // @ts-expect-error - res.operations may not be typed
+          error:
+            res?.operations?.[0]?.error ||
+            'An error occurred while creating the entity. Please try again.',
+        }
       }
     } catch (error: any) {
-      toast.error(`${entityForm.subType || entityType} with the name: ${entityForm.label} already exists`)
+      console.log(error)
+      toast.error(error.error || '')
       throw new Error(error?.data?.details)
     }
   }

@@ -13,7 +13,7 @@ import { LoadingTasks } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { TableGroupBy } from '../context'
 import { linksToTableData } from '../utils'
-import { ProjectModelWithProducts, useProjectContext } from '@shared/context'
+import { useProjectContext } from '@shared/context'
 
 type Params = {
   foldersMap: FolderNodeMap

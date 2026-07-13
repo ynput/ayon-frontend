@@ -267,18 +267,20 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     loadingTasks,
     loadingLinksEntityIds,
     error: dataError,
+    softError,
+    softErrorAction,
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
     excludeSelectedFolders: sliceType !== 'entityList',
     taskIds: rawEntityIds.taskIds,
     taskFilters: {
-      filter: combinedTaskFilter.filter,
+      filter: combinedTaskFilter.filter as any,
       filterString: combinedTaskFilter.filterString,
       search: combinedTaskFilter.search,
     },
     folderFilters: {
-      filter: combinedFolderFilter.filter,
+      filter: combinedFolderFilter.filter as any,
       filterString: combinedFolderFilter.filterString,
       search: combinedFolderFilter.search,
     },
@@ -292,6 +294,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     modules,
     skipLinks,
     showComments,
+    onCollapseAll: () => setExpanded({}),
   })
 
   // combine foldersMap and tasksMap into a single map
@@ -308,6 +311,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         isLoadingMore,
         loadingTasks,
         error,
+        softError, // shows a warning banner but doesn't block the table from rendering
+        softErrorAction,
         projectInfo,
         attribFields: scopedAttribFields,
         users,
