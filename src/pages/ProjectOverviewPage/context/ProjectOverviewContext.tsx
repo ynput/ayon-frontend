@@ -1,5 +1,5 @@
 // React imports
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { useCallback, useContext, useMemo, useState } from 'react'
 
 // Third-party libraries
 import { ExpandedState } from '@tanstack/react-table'
@@ -20,7 +20,6 @@ import {
   createLocalStorageKey,
   extractErrorMessage,
   extractQueryErrorMessage,
-  ProjectOverviewContextType,
   ProjectOverviewProviderProps,
   useColumnSettingsContext,
   checkColumnVisibility,
@@ -39,8 +38,7 @@ import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slice
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
-
-const ProjectOverviewContext = createContext<ProjectOverviewContextType | undefined>(undefined)
+import { ProjectOverviewContext } from './ProjectOverviewContextInstance'
 
 export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewProviderProps) => {
   // Get project data from the new context
@@ -113,6 +111,9 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useOverviewViewSettings({ viewSettings, updateViewSettings })
 
   const [linksVisible, setLinksVisible] = useState(false)
+
+  // entity ids currently rendered in the table's viewport, reported by ProjectTreeTable
+  const [visibleEntityIds, setVisibleEntityIds] = useState<string[]>([])
 
   const hasLinkColumn = useMemo(
     () => checkColumnVisibility(columns.columnVisibility, 'link_', defaultColumnVisibility),
@@ -295,6 +296,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     skipLinks,
     showComments,
     onCollapseAll: () => setExpanded({}),
+    visibleEntityIds,
   })
 
   // combine foldersMap and tasksMap into a single map
@@ -366,6 +368,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         contextMenuItems,
         setLinksVisible,
         loadingLinksEntityIds,
+        visibleEntityIds,
+        setVisibleEntityIds,
       }}
     >
       {children}

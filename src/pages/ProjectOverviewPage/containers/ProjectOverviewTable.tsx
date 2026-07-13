@@ -27,7 +27,7 @@ type Props = {}
 
 const ProjectOverviewTable = ({}: Props) => {
   const { projectName } = useProjectContext()
-  const { setLinksVisible } = useProjectOverviewContext()
+  const { setLinksVisible, setVisibleEntityIds } = useProjectOverviewContext()
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
   const { showHierarchy, isFlatFolderView, isLoading, fetchNextPage, attribFields } =
     useProjectTableContext()
@@ -172,6 +172,7 @@ const ProjectOverviewTable = ({}: Props) => {
         groupFieldStats={folderStats}
         fieldStatsLoading={folderStatsLoading || taskStatsLoading}
         fieldStatsError={folderStatsError || taskStatsError}
+        onVisibleRowsChange={setVisibleEntityIds}
       />
     </Section>
   )

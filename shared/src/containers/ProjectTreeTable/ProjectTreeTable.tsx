@@ -77,7 +77,7 @@ import {
   SummaryCellContentProps,
 } from './types'
 import { EnumItem } from '@shared/api'
-import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
+import { ToggleExpandAll, useProjectTableContext, parseRowId } from './context/ProjectTableContext'
 import {
   checkColumnVisibility,
   ensureAtLeastOneVisibleColumn,
@@ -178,6 +178,9 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
   onColumnVisibleChange?: (changes: Record<string, boolean>) => void
   onColumnVisibleChangeSubscribed?: string[]
+  // called whenever the set of rows currently rendered in the viewport changes
+  // (entity ids, not row ids - group suffixes are stripped)
+  onVisibleRowsChange?: (entityIds: string[]) => void
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -213,6 +216,7 @@ export const ProjectTreeTable = ({
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
   onColumnVisibleChange,
   onColumnVisibleChangeSubscribed,
+  onVisibleRowsChange,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -793,6 +797,7 @@ export const ProjectTreeTable = ({
               defaultRowHeight={defaultRowHeight}
               onResetView={onResetView}
               contextMenuItems={propsContextMenuItems}
+              onVisibleRowsChange={onVisibleRowsChange}
             />
             {summariesEnabled && !error && (
               <TableFooterRow
@@ -1303,6 +1308,7 @@ interface TableBodyProps {
   defaultRowHeight: number
   onResetView?: () => void
   contextMenuItems?: ContextMenuItemConstructors
+  onVisibleRowsChange?: (entityIds: string[]) => void
 }
 
 const TableBody = ({
@@ -1325,6 +1331,7 @@ const TableBody = ({
   defaultRowHeight,
   onResetView,
   contextMenuItems,
+  onVisibleRowsChange,
 }: TableBodyProps) => {
   const headerLabels = useMemo(() => {
     const allColumns = table.getAllColumns()
@@ -1370,6 +1377,26 @@ const TableBody = ({
   })
 
   const virtualRows = rowVirtualizer.getVirtualItems()
+
+  // Notify the consumer whenever the set of rendered (visible) entity ids changes,
+  // so data fetching can be scoped to what's actually on screen. Only fires when
+  // the resolved id list actually differs, to avoid spamming updates on every
+  // render (rowVirtualizer.getVirtualItems() returns a new array each call).
+  const prevVisibleRowIdsRef = useRef<string>('')
+  useEffect(() => {
+    if (!onVisibleRowsChange) return
+
+    const ids = virtualRows
+      .map((virtualRow) => rows[virtualRow.index] && parseRowId(rows[virtualRow.index].id))
+      .filter(Boolean) as string[]
+    const uniqueIds = Array.from(new Set(ids))
+    const key = uniqueIds.join(',')
+
+    if (key === prevVisibleRowIdsRef.current) return
+    prevVisibleRowIdsRef.current = key
+
+    onVisibleRowsChange(uniqueIds)
+  }, [virtualRows, rows, onVisibleRowsChange])
 
   // Memoize the measureElement callback
   const measureRowElement = useCallback(

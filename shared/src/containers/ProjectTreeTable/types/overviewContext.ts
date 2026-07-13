@@ -95,6 +95,11 @@ export interface ProjectOverviewContextType {
   loadingLinksEntityIds: Set<string>
   setLinksVisible: (visible: boolean) => void
 
+  // entity ids currently rendered in the table's viewport - used to scope task
+  // fetching (hierarchy mode) to folders actually on screen
+  visibleEntityIds: string[]
+  setVisibleEntityIds: (entityIds: string[]) => void
+
   // move dialog
   openMoveDialog?: (entityData: EntityMoveData) => void
 }

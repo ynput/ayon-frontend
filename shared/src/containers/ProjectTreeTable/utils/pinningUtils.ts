@@ -1,9 +1,7 @@
 import { CSSProperties } from 'react'
 import { Column } from '@tanstack/react-table'
-import { ROW_SELECTION_COLUMN_ID } from '../constants'
+import { DRAG_HANDLE_COLUMN_ID, ROW_SELECTION_COLUMN_ID } from '../constants'
 import type { TableRow } from '../types/table'
-
-export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 
 // Sticky column pinning styles shared by header, body and footer cells.
 export const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
