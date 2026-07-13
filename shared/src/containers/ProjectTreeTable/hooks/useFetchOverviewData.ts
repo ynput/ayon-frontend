@@ -1,4 +1,5 @@
 import {
+  clearOverviewTasksByFoldersRegistry,
   useGetGroupedTasksListQuery,
   useGetOverviewTasksByFoldersQuery,
   useGetSearchFoldersQuery,
@@ -19,7 +20,7 @@ import { getGroupQueries } from '../utils/getGroupQueries'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { useGetEntityLinksQuery } from '@shared/api'
-import { useProjectFoldersContext } from '@shared/context'
+import { EntityUpdate, useProjectFoldersContext } from '@shared/context'
 import { debounce } from 'lodash'
 
 // how long a folder must stay rendered in the viewport before its tasks are fetched.
@@ -44,7 +45,8 @@ type useFetchOverviewDataData = {
   loadingTasks: LoadingTasks // show number of loading tasks per folder or root
   loadingLinksEntityIds: Set<string> // entity IDs whose links are currently being fetched (not yet cached)
   fetchNextPage: (value?: string) => void
-  reloadTableData: () => void
+  isSyncing: boolean
+  onSyncData: (updates?: EntityUpdate[]) => void
 }
 
 type Params = {
@@ -96,6 +98,7 @@ export const useFetchOverviewData = ({
 
   const {
     folders,
+    isFetching: isFetchingFolders,
     isLoading: isLoadingFolders,
     isUninitialized: isUninitializedFolders,
     refetch: refetchFolders,
@@ -185,6 +188,7 @@ export const useFetchOverviewData = ({
   const {
     data: foldersByTaskFilter,
     isUninitialized,
+    isFetching: isFetchingFoldersByTaskFilter,
     isLoading: isLoadingTasksFolders,
     isUninitialized: isUninitializedTasksFolders,
     error: searchFoldersError,
@@ -394,6 +398,7 @@ export const useFetchOverviewData = ({
   // Use the new infinite query hook for tasks list with correct name
   const {
     data: tasksListInfiniteData,
+    isFetching: isFetchingTasksList,
     isLoading: isLoadingTasksList,
     error: tasksListError,
     fetchNextPage,
@@ -476,6 +481,7 @@ export const useFetchOverviewData = ({
 
   const {
     data: { tasks: groupTasks = [] } = {},
+    isFetching: isFetchingGroupedTasks,
     isUninitialized: isUninitializedGroupedTasks,
     error: groupedTasksError,
     refetch: refetchGroupedTasks,
@@ -664,17 +670,32 @@ export const useFetchOverviewData = ({
     return filtered
   }, [foldersMap, tasksByFolderMap, taskIds])
 
-  // reload all data for all queries
-  const reloadTableData = () => {
-    // only reload if there is data
-    if (!isUninitializedFolders) refetchFolders()
-    if (!isUninitializedExpandedFoldersTasks) refetchExpandedFoldersTasks()
-    if (!isUninitializedTasksFolders) refetchTasksFolders()
-    if (!isUninitializedTasksList) refetchTasksList()
-    if (!isUninitializedGroupedTasks) refetchGroupedTasks()
-    if (!isUninitializedFoldersLinks) refetchFoldersLinks()
-    if (!isUninitializedTasksLinks) refetchTasksLinks()
+  const onSyncData = (updates: EntityUpdate[] = []) => {
+    const isFullSync = updates.length === 0
+    const hasFolderUpdates = updates.some((update) => update.topic.startsWith('entity.folder.'))
+    const hasTaskUpdates = updates.some((update) => update.topic.startsWith('entity.task.'))
+
+    if ((isFullSync || hasFolderUpdates) && !isUninitializedFolders) refetchFolders()
+    if ((isFullSync || hasFolderUpdates || hasTaskUpdates) && !isUninitializedTasksFolders) {
+      refetchTasksFolders()
+    }
+    if ((isFullSync || hasTaskUpdates) && !isUninitializedExpandedFoldersTasks) {
+      clearOverviewTasksByFoldersRegistry(projectName)
+      refetchExpandedFoldersTasks()
+    }
+    if ((isFullSync || hasTaskUpdates) && !isUninitializedTasksList) refetchTasksList()
+    if ((isFullSync || hasTaskUpdates) && !isUninitializedGroupedTasks) refetchGroupedTasks()
+    if ((isFullSync || hasFolderUpdates) && !isUninitializedFoldersLinks) refetchFoldersLinks()
+    if ((isFullSync || hasTaskUpdates) && !isUninitializedTasksLinks) refetchTasksLinks()
   }
+  const isSyncing =
+    isFetchingFolders ||
+    isFetchingExpandedFoldersTasks ||
+    isFetchingFoldersByTaskFilter ||
+    isFetchingTasksList ||
+    isFetchingGroupedTasks ||
+    isFetchingFoldersLinks ||
+    isFetchingTasksLinks
 
   const error = tasksListError || searchFoldersError || groupedTasksError
 
@@ -703,6 +724,7 @@ export const useFetchOverviewData = ({
     loadingTasks: loadingTasksForParents,
     loadingLinksEntityIds,
     fetchNextPage: handleFetchNextPage,
-    reloadTableData,
+    onSyncData,
+    isSyncing,
   }
 }

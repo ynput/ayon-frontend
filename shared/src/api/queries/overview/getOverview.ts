@@ -207,6 +207,14 @@ const getQueriedFolders = (cacheKey: string): Set<string> => {
   return queriedFoldersRegistry[cacheKey] || new Set()
 }
 
+export const clearOverviewTasksByFoldersRegistry = (projectName: string) => {
+  Object.keys(queriedFoldersRegistry).forEach((cacheKey) => {
+    if (JSON.parse(cacheKey).projectName === projectName) {
+      delete queriedFoldersRegistry[cacheKey]
+    }
+  })
+}
+
 const injectedApi = enhancedApi.injectEndpoints({
   endpoints: (build) => ({
     // Each project has one cache for all the tasks of the expanded folders
@@ -415,6 +423,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           )
 
           const handlePubSub = async (_topic: string, message: any) => {
+            if (_topic.endsWith('.created')) return
             const taskId = message?.summary?.entityId
             const parentId = message?.summary?.parentId
             if (!taskId || !parentId) return
@@ -663,6 +672,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           )
 
           const handlePubSub = async (_topic: string, message: any) => {
+            if (_topic.endsWith('.created')) return
             const taskId = message?.summary?.entityId
             if (!taskId) return
             pendingTaskIds.add(taskId)

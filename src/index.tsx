@@ -24,7 +24,7 @@ import './styles/index.scss'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 
 import short from 'short-uuid'
-import { SocketProvider } from '@shared/context'
+import { EntityUpdatesProvider, SocketProvider } from '@shared/context'
 
 // generate unique session id
 declare global {
@@ -59,7 +59,7 @@ const SocketProviderWrapper = (props: { children: React.ReactNode }) => {
   const userName = useAppSelector((state) => state.user.name)
   return (
     <SocketProvider userName={userName} projectName={projectName} dispatch={dispatch}>
-      {props.children}
+      <EntityUpdatesProvider projectNames={[]}>{props.children}</EntityUpdatesProvider>
     </SocketProvider>
   )
 }

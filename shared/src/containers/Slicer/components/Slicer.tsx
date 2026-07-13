@@ -11,6 +11,8 @@ import { SliceTypeField } from '../types'
 import { useSlicerContext } from '../context/SlicerContext'
 import styled from 'styled-components'
 import { ExpandedState } from '@tanstack/react-table'
+import { SyncButton } from '@shared/components'
+import { useProjectFoldersContext } from '@shared/context'
 
 const DropdownSkeleton = styled.div`
   height: 28px;
@@ -32,6 +34,7 @@ export const Slicer: FC<SlicerProps> = ({
 }) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const {
+    projectName,
     SlicerDropdown,
     rowSelection,
     onRowSelectionChange,
@@ -39,6 +42,16 @@ export const Slicer: FC<SlicerProps> = ({
     onExpandedChange,
     isViewSyncPending,
   } = useSlicerContext()
+  const { refetch } = useProjectFoldersContext()
+  const [isSyncing, setIsSyncing] = useState(false)
+  const handleSync = async () => {
+    setIsSyncing(true)
+    try {
+      await refetch()
+    } finally {
+      setIsSyncing(false)
+    }
+  }
 
   const {
     sliceOptions,
@@ -71,6 +84,13 @@ export const Slicer: FC<SlicerProps> = ({
           />
         )}
         <SlicerSearch value={globalFilter} onChange={setGlobalFilter} />
+        <SyncButton
+          projectNames={[projectName]}
+          topics={['entity.folder.created']}
+          onSync={handleSync}
+          syncing={isSyncing}
+          hideWhenNoUpdates
+        />
       </Header>
       <SimpleTableProvider
         {...{

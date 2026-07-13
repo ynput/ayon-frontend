@@ -46,7 +46,7 @@ import useBuildGroupByTableData, {
   GroupByEntityType,
   ROW_ID_SEPARATOR,
 } from '../hooks/useBuildGroupByTableData'
-import { PowerpackContextType, useProjectContext } from '@shared/context'
+import { EntityUpdate, PowerpackContextType, useProjectContext } from '@shared/context'
 import { TableGroupBy, useColumnSettingsContext } from './ColumnSettingsContext'
 import { ProjectTableModulesType } from '@shared/hooks'
 import type { SubtasksManagerProps } from '@shared/components'
@@ -75,7 +75,7 @@ export interface ProjectTableContextType {
   foldersMap: ProjectTableProviderProps['foldersMap']
   entitiesMap: ProjectTableProviderProps['entitiesMap']
   fetchNextPage: ProjectTableProviderProps['fetchNextPage']
-  reloadTableData: ProjectTableProviderProps['reloadTableData']
+  onSyncData: ProjectTableProviderProps['onSyncData']
   getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
   loadingLinksEntityIds?: Set<string>
 
@@ -182,7 +182,7 @@ export interface ProjectTableProviderProps {
 
   // data functions
   fetchNextPage: (value?: string) => void
-  reloadTableData: () => void
+  onSyncData: (updates?: EntityUpdate[]) => void
 
   // Filters
   queryFilters: {
@@ -276,7 +276,7 @@ export const ProjectTableProvider = ({
   toggleExpanded,
   updateExpanded,
   fetchNextPage,
-  reloadTableData,
+  onSyncData,
   setExpanded,
   contextMenuItems,
   powerpack,
@@ -466,7 +466,7 @@ export const ProjectTableProvider = ({
         foldersMap,
         entitiesMap,
         fetchNextPage,
-        reloadTableData,
+        onSyncData,
         groups,
         overrideGroupBy,
         queryFilters,
