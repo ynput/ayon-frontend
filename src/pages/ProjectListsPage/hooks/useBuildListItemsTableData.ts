@@ -18,8 +18,12 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
 
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
 
-  const buildListItemsTableData = (listItemsData: EntityListItemWithLinks[]): TableRow[] => {
-    return listItemsData.map((item) => {
+  const buildListItemsTableData = (listItemsData: EntityListItemWithLinks[]) => {
+    const tableData: TableRow[] = []
+    // copy/getEntityById needs display-ready rows keyed by id; keep the raw link arrays
+    const entitiesMap = new Map<string, TableRow>()
+
+    for (const item of listItemsData) {
       // Check if this is a restricted access entity
       const isRestricted = isEntityRestricted(item.entityType)
 
@@ -35,7 +39,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         extractSubTypes(item, item.entityType).subType,
       )
 
-      return {
+      const row: TableRow = {
         id: item.id,
         name: isRestricted ? RESTRICTED_ENTITY_NAME : item.name,
         label: isRestricted
@@ -74,13 +78,19 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         subtasks: item.subtasks || [], // Add subtasks if they exist
         latestComments: item.latestComments || [],
       }
-    })
+
+      tableData.push(row)
+      // copy reads link columns via getLinkEntityIdsByColumnId, which expects the raw EntityLink[] array
+      entitiesMap.set(item.id, { ...row, links: (item.links ?? []) as unknown as TableRow['links'] })
+    }
+
+    return { tableData, entitiesMap }
   }
-  const tableData = useMemo(
+  const { tableData, entitiesMap } = useMemo(
     () => buildListItemsTableData(listItemsData),
     [listItemsData, getEntityTypeData],
   )
-  return tableData
+  return { tableData, entitiesMap }
 }
 
 export default useBuildListItemsTableData
