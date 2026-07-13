@@ -5,7 +5,6 @@ import type {
 } from '@shared/api/generated'
 import { ChecklistCount, FeedActivity, FeedActivityData } from '../types'
 import { BaseTypes, EntityTooltipQuery, TaskTypes, VersionTypes } from '../activityQueries'
-import { GetActivitiesInfiniteQueryArgs } from '../getActivities'
 
 // Helper function to get a nested property of an object using a string path
 const getNestedProperty = <T extends Record<string, any>, R = any>(
