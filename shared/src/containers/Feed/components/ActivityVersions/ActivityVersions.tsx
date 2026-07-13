@@ -5,6 +5,9 @@ import * as Styled from './ActivityVersions.styled'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
 import { useDetailsPanelContext } from '@shared/context'
+import ActivityStatus from '../ActivityStatus/ActivityStatus'
+import { Status } from '@shared/api'
+import { ActivityStatusSecondary } from '../ActivityStatusChange/ActivityStatusSecondary'
 
 interface Version {
   name: string
@@ -14,6 +17,7 @@ interface Version {
   updatedAt: string
   thumbnailHash?: string
   comment?: string
+  status: string
 }
 
 interface ActivityVersionsProps {
@@ -28,6 +32,7 @@ interface ActivityVersionsProps {
   entityType?: string
   onReferenceClick?: (ref: any) => void
   filter?: any
+  statuses: Status[]
 }
 
 const ActivityVersions: React.FC<ActivityVersionsProps> = ({
@@ -36,6 +41,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
   entityType,
   onReferenceClick,
   filter,
+  statuses = [],
 }) => {
   const { onOpenViewer } = useDetailsPanelContext()
   let { authorName, authorFullName, createdAt, versions = [] } = activity
@@ -67,6 +73,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
       />
       {versions.flatMap((version, index) => {
         const { name, id, productId, productName, thumbnailHash, comment } = version
+        const status = statuses.find((s) => s.name === version.status)
         return (
           (index < limit || showAll) && (
             <Styled.Card onClick={() => handleClick(id, productId)} key={id}>
@@ -76,7 +83,14 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
                     <span>{productName}</span>
                     <ActivityDate date={createdAt} isExact />
                   </Styled.Title>
-                  <Styled.VersionName className="version">{name}</Styled.VersionName>
+                  <Styled.Title>
+                    <Styled.VersionName className="version">{name}</Styled.VersionName> -
+                    <ActivityStatusSecondary
+                      icon={status?.icon}
+                      color={status?.color}
+                      name={status?.name || ''}
+                    />
+                  </Styled.Title>
                 </div>
                 <Styled.Thumbnail
                   {...{ projectName }}
