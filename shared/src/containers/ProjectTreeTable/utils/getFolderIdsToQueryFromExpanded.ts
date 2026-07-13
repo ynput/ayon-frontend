@@ -1,13 +1,22 @@
 import { ProjectFoldersContextValue } from '@shared/context'
 import { ExpandedState } from '@tanstack/react-table'
 
-export const getFolderIdsToQueryFromExpanded = (
-  expanded: ExpandedState,
-  expandedParentIds: string[],
-  selectedFolders: string[],
-  excludeSelectedFolders: boolean,
-  getFolderById: ProjectFoldersContextValue['getFolderById'],
-) => {
+export const getFolderIdsToQueryFromExpanded = (props: {
+  expanded: ExpandedState
+  expandedParentIds: string[]
+  selectedFolders: string[]
+  excludeSelectedFolders: boolean
+  getFolderById: ProjectFoldersContextValue['getFolderById']
+  showHierarchy: boolean
+}) => {
+  const {
+    expanded,
+    expandedParentIds,
+    selectedFolders,
+    excludeSelectedFolders,
+    getFolderById,
+    showHierarchy,
+  } = props
   const expandedMap = expanded as Record<string, boolean>
   const memoVisibility = new Map<string, boolean>()
 
@@ -40,12 +49,17 @@ export const getFolderIdsToQueryFromExpanded = (
       return isVisible
     }
 
-    // Chain step: Visible ONLY if the immediate parent is expanded AND that parent path is visible
-    const visible = expandedMap[parentId] === true && isFolderVisible(parentId)
+    // If the parent folder is not expanded, this folder is NOT visible (only for tree table hierarchy)
+    if (showHierarchy) {
+      // Chain step: Visible ONLY if the immediate parent is expanded AND that parent path is visible
+      const visible = expandedMap[parentId] === true && isFolderVisible(parentId)
 
-    // Cache the result to protect sibling lookups from re-walking this shared ancestral path
-    memoVisibility.set(id, visible)
-    return visible
+      // Cache the result to protect sibling lookups from re-walking this shared ancestral path
+      memoVisibility.set(id, visible)
+      return visible
+    } else {
+      return true
+    }
   }
 
   // We ONLY loop over the expanded folder IDs, never the full project folder array!

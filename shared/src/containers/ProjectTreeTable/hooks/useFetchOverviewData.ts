@@ -109,14 +109,22 @@ export const useFetchOverviewData = ({
 
   const expandedFolderIdsToQuery = useMemo(
     () =>
-      getFolderIdsToQueryFromExpanded(
+      getFolderIdsToQueryFromExpanded({
         expanded,
         expandedParentIds,
         selectedFolders,
         excludeSelectedFolders,
         getFolderById,
-      ),
-    [expanded, expandedParentIds, selectedFolders, excludeSelectedFolders, getFolderById],
+        showHierarchy,
+      }),
+    [
+      expanded,
+      expandedParentIds,
+      selectedFolders,
+      excludeSelectedFolders,
+      getFolderById,
+      showHierarchy,
+    ],
   )
 
   // Debounce the rendered viewport rows so fast scrolling doesn't fire a new
@@ -140,7 +148,7 @@ export const useFetchOverviewData = ({
   // Not applied to flat folder view: rows there are top-level folders, not
   // nested paths, so there's no "off screen ancestor" case to guard against,
   // and filtering there would delay every row's expand-to-reveal-tasks interaction.
-  const taskFolderIdsToQuery = useMemo(() => {
+  const visibleFolderIdsToQuery = useMemo(() => {
     if (!showHierarchy || isFlatFolderView) {
       return expandedFolderIdsToQuery
     }
@@ -157,13 +165,13 @@ export const useFetchOverviewData = ({
   } = useGetOverviewTasksByFoldersQuery(
     {
       projectName,
-      parentIds: taskFolderIdsToQuery,
+      parentIds: visibleFolderIdsToQuery,
       filter: taskFilters.filterString,
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
       showComments,
     },
-    { skip: !taskFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView) },
+    { skip: !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView) },
   )
 
   const skipFoldersByTaskFilter =
