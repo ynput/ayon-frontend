@@ -5,7 +5,6 @@ import * as Styled from './ActivityVersions.styled'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
 import { useDetailsPanelContext } from '@shared/context'
-import ActivityStatus from '../ActivityStatus/ActivityStatus'
 import { Status } from '@shared/api'
 import { ActivityStatusSecondary } from '../ActivityStatusChange/ActivityStatusSecondary'
 
