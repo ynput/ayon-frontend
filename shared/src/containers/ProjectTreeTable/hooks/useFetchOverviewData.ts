@@ -110,8 +110,6 @@ export const useFetchOverviewData = ({
     [expanded, expandedParentIds, selectedFolders, excludeSelectedFolders, getFolderById],
   )
 
-  console.log(taskFolderIdsToQuery)
-
   const {
     data: expandedFoldersTasks = [],
     isFetching: isFetchingExpandedFoldersTasks,
