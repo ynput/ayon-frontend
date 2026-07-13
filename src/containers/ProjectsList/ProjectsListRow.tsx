@@ -1,159 +1,59 @@
-import { forwardRef, useEffect, useState } from 'react'
-import * as Styled from './ProjectsListRow.styled'
-import { Icon, IconProps, InputText, Spacer } from '@ynput/ayon-react-components'
+import { forwardRef } from 'react'
 import clsx from 'clsx'
-import { RowExpander } from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
+import {
+  SimpleTableCellTemplate,
+  SimpleTableCellTemplateProps,
+  TableRowAction,
+} from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
 import { parseProjectFolderRowId } from './buildProjectsTableData'
 
-export interface ProjectsListRowProps extends React.HTMLAttributes<HTMLDivElement> {
-  value: string
-  icon?: string
-  iconFilled?: boolean
-  iconColor?: string
-  depth?: number
+export interface ProjectsListRowProps extends SimpleTableCellTemplateProps {
   code?: string
   count?: number | string
-  disabled?: boolean
-  inactive?: boolean
-  isRenaming?: boolean
-  isTableExpandable?: boolean
-  isRowExpandable?: boolean
-  isRowExpanded?: boolean
   isPinned?: boolean
   hidePinned?: boolean
-  renameInitialValue?: string
-  onSubmitRename?: (value: string) => void
-  onCancelRename?: () => void
-  onExpandClick?: () => void
   onPinToggle?: () => void
   onSettingsClick?: () => void
-  pt?: {
-    icon?: Partial<IconProps>| undefined;
-  }
 }
 
 const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
-  (
-    {
-      value,
-      depth = 0,
-      icon,
-      iconFilled,
-      iconColor,
-      code,
-      count,
-      disabled,
-      inactive,
-      isRenaming,
-      isTableExpandable,
-      isRowExpandable,
-      isRowExpanded,
-      isPinned,
-      hidePinned,
-      renameInitialValue,
-      onSubmitRename,
-      onCancelRename,
-      onExpandClick,
-      onPinToggle,
-      onSettingsClick,
-      pt,
-      className,
-      id,
-      ...props
-    },
-    ref,
-  ) => {
-    const [renameValue, setRenameValue] = useState(renameInitialValue ?? value)
-
-    useEffect(() => {
-      if (isRenaming) {
-        setRenameValue(renameInitialValue ?? value)
-      }
-    }, [value, isRenaming, renameInitialValue])
-
+  ({ code, count, isPinned, onPinToggle, onSettingsClick, id, className, ...props }, ref) => {
     // Check if this is a folder row using the canonical folder ID parser
     const isFolder = !!parseProjectFolderRowId(id || '')
 
+    const actions: TableRowAction[] = !isFolder
+      ? [
+          {
+            icon: 'settings_applications',
+            className: 'settings-icon',
+            onClick: (e) => {
+              e.stopPropagation()
+              onSettingsClick?.()
+            },
+          },
+          {
+            icon: 'push_pin',
+            className: clsx('pin', { active: isPinned }),
+            show: isPinned ? 'always' : 'hover',
+            onClick: (e) => {
+              e.stopPropagation()
+              onPinToggle?.()
+            },
+          },
+        ]
+      : []
+
     return (
-      <Styled.Cell
+      <SimpleTableCellTemplate
         {...props}
-        className={clsx(className, { disabled, inactive, pinned: isPinned, hidePinned })}
+        className={clsx(className, { pinned: isPinned, hidePinned: props.hidePinned })}
         ref={ref}
         id={id}
-        style={{
-          ...props.style,
-          paddingLeft: `calc(${depth * 2.5}rem + 4px)`,
-        }}
-      >
-        <RowExpander
-          isRowExpandable={isRowExpandable}
-          isRowExpanded={isRowExpanded}
-          isTableExpandable={isTableExpandable}
-          onExpandClick={onExpandClick}
-          enableNonFolderIndent={false}
-        />
-        {icon && (
-          <Icon
-            icon={icon}
-            className={clsx('icon', { filled: iconFilled })}
-            style={iconColor ? { color: iconColor } : undefined}
-          />
-        )}
-        {isRenaming ? (
-          <InputText
-            autoFocus
-            style={{ flex: 1 }}
-            onChange={(e) => setRenameValue(e.target.value)}
-            value={renameValue}
-            placeholder={!isFolder ? 'Project label' : undefined}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                onSubmitRename?.(renameValue)
-              }
-              if (e.key === 'Escape') {
-                onCancelRename?.()
-              }
-            }}
-            onBlur={() => {
-              onCancelRename?.()
-            }}
-            onFocus={(e) => {
-              e.target.select()
-            }}
-          />
-        ) : (
-          <span className={clsx('value')}>{value}</span>
-        )}
-
-        {!isRenaming && (
-          <>
-            <Spacer className="spacer" />
-            {isFolder ? (
-              <Styled.ProjectCount>{count}</Styled.ProjectCount>
-            ) : (
-              <>
-                <Styled.SettingsIcon
-                  icon="settings_applications"
-                  className="settings-icon"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onSettingsClick?.()
-                  }}
-                />
-                <Styled.PinIcon
-                  icon="push_pin"
-                  className={clsx('pin', { active: isPinned })}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onPinToggle?.()
-                  }}
-                />
-                <Styled.Code className="project-code">{code}</Styled.Code>
-              </>
-            )}
-          </>
-        )}
-      </Styled.Cell>
+        enableNonFolderIndent={false}
+        renamePlaceholder={!isFolder ? 'Project label' : undefined}
+        actions={actions}
+        badge={isFolder ? count : code}
+      />
     )
   },
 )

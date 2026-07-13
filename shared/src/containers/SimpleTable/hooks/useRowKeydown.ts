@@ -12,9 +12,14 @@ interface UseRowKeydownProps<T> {
     currentRow: Row<T>,
     event: RowKeyboardEvent,
   ) => void
+  handleRename?: (event: RowKeyboardEvent, row: Row<T>) => void
 }
 
-function useRowKeydown<T>({ handleRowSelect, handleArrowNavigation }: UseRowKeydownProps<T>) {
+function useRowKeydown<T>({
+  handleRowSelect,
+  handleArrowNavigation,
+  handleRename,
+}: UseRowKeydownProps<T>) {
   const handleRowKeyDown = useCallback(
     (event: RowKeyboardEvent, row: Row<T>) => {
       if (['Enter', ' '].includes(event.key)) {
@@ -28,9 +33,14 @@ function useRowKeydown<T>({ handleRowSelect, handleArrowNavigation }: UseRowKeyd
         // navigate and select
         const direction = event.key === 'ArrowDown' ? 'down' : 'up'
         handleArrowNavigation?.(direction, row, event)
+      } else if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.metaKey) {
+        // prevent default and stop propagation to ensure the shortcut is handled correctly
+        event.preventDefault()
+        event.stopPropagation()
+        handleRename?.(event, row)
       }
     },
-    [handleRowSelect, handleArrowNavigation],
+    [handleRowSelect, handleArrowNavigation, handleRename],
   )
 
   return { handleRowKeyDown }

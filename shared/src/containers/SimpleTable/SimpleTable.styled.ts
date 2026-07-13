@@ -103,6 +103,9 @@ export const Cell = styled.div`
 
   &.selected {
     background-color: var(--md-sys-color-primary-container);
+    &:hover {
+      background-color: var(--md-sys-color-primary-container-hover);
+    }
 
     &,
     .icon {
@@ -115,6 +118,81 @@ export const Cell = styled.div`
         background-color: var(--md-sys-color-on-primary);
       }
     }
+
+    /* update action buttons */
+    .actions {
+      .icon:hover {
+        background-color: var(--md-sys-color-on-primary);
+        color: var(--md-sys-color-primary);
+      }
+      .pin.active {
+        opacity: 0.7;
+        font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+      }
+    }
+  }
+
+  /* badges and actions */
+  .badges,
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-small);
+  }
+
+  .badges {
+    color: var(--md-sys-color-outline);
+    padding-right: 4px;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-small);
+
+    .icon {
+      border-radius: var(--border-radius-m);
+      padding: var(--padding-s);
+      cursor: pointer;
+      display: none;
+
+      &.show-always {
+        display: flex;
+      }
+
+      &:hover {
+        background-color: var(--md-sys-color-surface-container-highest-hover);
+      }
+      &.active {
+        display: flex;
+        opacity: 0.7;
+        font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+      }
+    }
+  }
+
+  &:hover {
+    .actions {
+      .icon:not(.show-hidden) {
+        display: flex;
+      }
+    }
+    &.has-actions .badges {
+      display: none;
+    }
+  }
+
+  &.pinned {
+    .pin {
+      display: flex;
+    }
+    .badges {
+      display: none;
+    }
+  }
+
+  .spacer {
+    flex: 1;
   }
 
   &.inactive {

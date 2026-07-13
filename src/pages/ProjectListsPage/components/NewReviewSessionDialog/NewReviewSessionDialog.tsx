@@ -1,11 +1,12 @@
 import { useProjectContext } from '@shared/context'
-import { Dialog, DialogProps } from '@ynput/ayon-react-components'
-import { FC, useRef, useCallback } from 'react'
-import ListRow from '../ListRow/ListRow'
+import { Dialog, DialogProps, InputText } from '@ynput/ayon-react-components'
+import { FC, useRef, useCallback, useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import useGetListsItemsForReviewSession from '@pages/ProjectListsPage/hooks/useGetListsItemsForReviewSession'
 import NewReviewSessionLoading from './NewReviewSessionLoading'
 import { getEntityTypeIcon } from '@shared/util'
+import { SimpleTableCellTemplate } from '@shared/containers/SimpleTable'
+import { matchSorter } from 'match-sorter'
 
 interface NewReviewSessionDialogProps extends Omit<DialogProps, 'onSubmit'> {
   onSubmit: ((listId: string) => Promise<any> | undefined) | undefined
@@ -24,6 +25,8 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
 }) => {
   const { projectName } = useProjectContext()
 
+  const [search, setSearch] = useState('')
+
   // get a list of all version lists in the project
   const {
     data: listsData,
@@ -34,6 +37,11 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
   } = useGetListsItemsForReviewSession({
     projectName,
   })
+
+  const filteredLists = useMemo(() => {
+    if (!search) return listsData
+    return matchSorter(listsData, search, { keys: ['label', 'name'] })
+  }, [listsData, search])
 
   const dialogContentRef = useRef<HTMLDivElement>(null)
 
@@ -58,7 +66,10 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
 
         // Note: closing the dialog and selecting the new list is handled in useNewList.ts
       } catch (error: any) {
-        toast.error(`Failed to create ${isStoryboards ? 'storyboard' : 'review session'}: ` + error || 'Unknown error')
+        toast.error(
+          `Failed to create ${isStoryboards ? 'storyboard' : 'review session'}: ` + error ||
+            'Unknown error',
+        )
       }
     },
     [onSubmit],
@@ -84,38 +95,46 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
         }}
         onScroll={handleScroll}
       >
-        <ListRow
-          id={''}
-          value={`Create empty ${isStoryboards ? 'storyboard' : 'review session'}`}
-          icon="add_box"
-          count={''}
-          style={{
-            padding: 6,
-            opacity: submitLoading ? 0 : 1,
-          }}
-          onClick={handleCreateEmptyReviewList}
-          tabIndex={0}
+        <InputText
+          autoFocus
+          placeholder="Filter lists..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ marginBottom: 4 }}
         />
+        {!search && (
+          <SimpleTableCellTemplate
+            id="create-empty-review-session"
+            value={`Create empty ${isStoryboards ? 'storyboard' : 'review session'}`}
+            icon="add_box"
+            style={{
+              padding: 6,
+              opacity: submitLoading ? 0 : 1,
+            }}
+            onClick={handleCreateEmptyReviewList}
+            tabIndex={0}
+          />
+        )}
         {isLoading
           ? Array.from({ length: 10 }).map((_, index) => (
-              <ListRow
+              <SimpleTableCellTemplate
                 key={index}
                 id={`loading-${index}`}
                 value="Loading..."
-                count={0}
+                badge={0}
                 icon="layers"
                 className="loading"
                 style={{ padding: 6 }}
               />
             ))
-          : listsData.map((list) => {
+          : filteredLists.map((list) => {
               return (
-                <ListRow
+                <SimpleTableCellTemplate
                   key={list.id}
                   id={list.id}
                   value={list.label}
                   icon={getEntityTypeIcon(list.entityType)}
-                  count={list.count}
+                  badge={list.count}
                   style={{
                     padding: 6,
                     opacity: submitLoading ? 0 : 1,
