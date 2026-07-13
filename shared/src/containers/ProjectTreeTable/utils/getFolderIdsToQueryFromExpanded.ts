@@ -23,12 +23,6 @@ export const getFolderIdsToQueryFromExpanded = (
 
     const parentId = folder.parentId as string
 
-    // Top-level root folders (no parent) are always visible
-    if (!parentId) {
-      memoVisibility.set(id, true)
-      return true
-    }
-
     // Check if this folder acts as a boundary root from the slicer selection
     const isRootFromSlicer = excludeSelectedFolders
       ? selectedFolders.includes(parentId)
@@ -37,6 +31,13 @@ export const getFolderIdsToQueryFromExpanded = (
     if (isRootFromSlicer) {
       memoVisibility.set(id, true)
       return true
+    }
+
+    // Top-level root folders (no parent) are always visible IF there is no slicer selection
+    if (!parentId) {
+      const isVisible = selectedFolders.length === 0
+      memoVisibility.set(id, isVisible)
+      return isVisible
     }
 
     // Chain step: Visible ONLY if the immediate parent is expanded AND that parent path is visible
