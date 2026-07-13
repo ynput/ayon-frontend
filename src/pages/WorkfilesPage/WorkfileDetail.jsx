@@ -7,22 +7,7 @@ import { useSelector } from 'react-redux'
 import { useGetWorkfileByIdQuery } from '@queries/getWorkfiles'
 import { useGetSiteRootsQuery } from '@queries/customRoots'
 import SiteDropdown from '@containers/SiteDropdown'
-import { getCurrentPlatform } from '@shared/util'
-
-const replaceRoot = (inputStr, replacements) => {
-  if (!inputStr) return inputStr
-  return inputStr.replace(/\{root\[(.*?)\]\}/g, function (match, p1) {
-    //TODO: fix eslint error
-    //eslint-disable-next-line
-    if (replacements.hasOwnProperty(p1)) {
-      let value = replacements[p1]
-      // strip forward and back slashes from the end of the value
-      value = value.replace(/\/$/, '')
-      return value
-    }
-    return match
-  })
-}
+import { getCurrentPlatform, replaceRoot } from '@shared/util'
 
 const WorkfileDetail = ({ style }) => {
   const projectName = useSelector((state) => state.project.name)
