@@ -8,7 +8,6 @@ export * from './ColumnSettingsProvider'
 export * from './ColumnSettingsContext'
 // project table context
 export * from './ProjectTableContext'
-export * from './ProjectTableProvider'
 export * from './ProjectTableQueriesContext'
 // selected rows context
 export * from './SelectedRowsContext'

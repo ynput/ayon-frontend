@@ -20,6 +20,11 @@ import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { useGetEntityLinksQuery } from '@shared/api'
 import { useProjectFoldersContext } from '@shared/context'
+import { debounce } from 'lodash'
+
+// how long a folder must stay rendered in the viewport before its tasks are fetched.
+// prevents firing a request per folder while the user is quickly scrolling past them.
+const VISIBLE_FOLDERS_DEBOUNCE_MS = 300
 
 type QueryFilterParams = {
   filter: QueryFilter | undefined
@@ -61,6 +66,9 @@ type Params = {
   skipLinks?: boolean
   showComments?: boolean // only fetch latestComments when the comments column is visible
   onCollapseAll?: () => void
+  // entity ids currently rendered in the table's viewport (hierarchy mode only) - used to
+  // scope task fetching to folders actually on screen, rather than every expanded folder
+  visibleEntityIds?: string[]
 }
 
 export const useFetchOverviewData = ({
@@ -82,6 +90,7 @@ export const useFetchOverviewData = ({
   skipLinks,
   showComments = false,
   onCollapseAll,
+  visibleEntityIds = [],
 }: Params): useFetchOverviewDataData => {
   const { isLoading: isLoadingModules } = modules
 
@@ -98,7 +107,7 @@ export const useFetchOverviewData = ({
     .filter(([id]) => !isGroupId(id)) // filter out the root folder
     .map(([id]) => id)
 
-  const taskFolderIdsToQuery = useMemo(
+  const expandedFolderIdsToQuery = useMemo(
     () =>
       getFolderIdsToQueryFromExpanded(
         expanded,
@@ -109,6 +118,35 @@ export const useFetchOverviewData = ({
       ),
     [expanded, expandedParentIds, selectedFolders, excludeSelectedFolders, getFolderById],
   )
+
+  // Debounce the rendered viewport rows so fast scrolling doesn't fire a new
+  // request for every folder scrolled past - only once it's settled on screen.
+  const [debouncedVisibleEntityIds, setDebouncedVisibleEntityIds] =
+    useState<string[]>(visibleEntityIds)
+
+  const debouncedSetVisible = useMemo(
+    () =>
+      debounce((ids: string[]) => setDebouncedVisibleEntityIds(ids), VISIBLE_FOLDERS_DEBOUNCE_MS),
+    [],
+  )
+
+  useEffect(() => {
+    debouncedSetVisible(visibleEntityIds)
+    return () => debouncedSetVisible.cancel()
+  }, [visibleEntityIds, debouncedSetVisible])
+
+  // In hierarchy mode, only fetch tasks for expanded folders that are currently
+  // rendered in the viewport, instead of every expanded folder in the tree.
+  // Not applied to flat folder view: rows there are top-level folders, not
+  // nested paths, so there's no "off screen ancestor" case to guard against,
+  // and filtering there would delay every row's expand-to-reveal-tasks interaction.
+  const taskFolderIdsToQuery = useMemo(() => {
+    if (!showHierarchy || isFlatFolderView) {
+      return expandedFolderIdsToQuery
+    }
+    const visibleIdsSet = new Set(debouncedVisibleEntityIds)
+    return expandedFolderIdsToQuery.filter((id) => visibleIdsSet.has(id))
+  }, [expandedFolderIdsToQuery, showHierarchy, isFlatFolderView, debouncedVisibleEntityIds])
 
   const {
     data: expandedFoldersTasks = [],

@@ -6,12 +6,8 @@ import clsx from 'clsx'
 import { Button, Icon } from '@ynput/ayon-react-components'
 
 import type { TableRow } from '../types/table'
-import { ROW_SELECTION_COLUMN_ID } from '../constants'
-import {
-  DRAG_HANDLE_COLUMN_ID,
-  getCommonPinningStyles,
-  getColumnWidth,
-} from '../utils/pinningUtils'
+import { DRAG_HANDLE_COLUMN_ID, ROW_SELECTION_COLUMN_ID } from '../constants'
+import { getCommonPinningStyles, getColumnWidth } from '../utils/pinningUtils'
 import { copyToClipboard } from '@shared/util'
 
 const Footer = styled.tfoot`
