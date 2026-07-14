@@ -36,6 +36,18 @@ const injectedRtkApi = api.injectEndpoints({
     getSystemMetrics: build.query<GetSystemMetricsApiResponse, GetSystemMetricsApiArg>({
       query: () => ({ url: `/api/metrics/system` }),
     }),
+    getTracemallocMetrics: build.query<
+      GetTracemallocMetricsApiResponse,
+      GetTracemallocMetricsApiArg
+    >({
+      query: () => ({ url: `/api/metrics/tracemalloc` }),
+    }),
+    stopTracemallocMetrics: build.mutation<
+      StopTracemallocMetricsApiResponse,
+      StopTracemallocMetricsApiArg
+    >({
+      query: () => ({ url: `/api/metrics/tracemalloc`, method: 'DELETE' }),
+    }),
     getListOfSecrets: build.query<GetListOfSecretsApiResponse, GetListOfSecretsApiArg>({
       query: () => ({ url: `/api/secrets` }),
     }),
@@ -98,6 +110,10 @@ export type GetProductionMetricsApiArg = {
 }
 export type GetSystemMetricsApiResponse = /** status 200 Successful Response */ any
 export type GetSystemMetricsApiArg = void
+export type GetTracemallocMetricsApiResponse = /** status 200 Successful Response */ any
+export type GetTracemallocMetricsApiArg = void
+export type StopTracemallocMetricsApiResponse = /** status 200 Successful Response */ any
+export type StopTracemallocMetricsApiArg = void
 export type GetListOfSecretsApiResponse = /** status 200 Successful Response */ Secret[]
 export type GetListOfSecretsApiArg = void
 export type GetSecretApiResponse = /** status 200 Successful Response */ Secret

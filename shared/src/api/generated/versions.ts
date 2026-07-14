@@ -31,10 +31,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}`,
         method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     updateVersion: build.mutation<UpdateVersionApiResponse, UpdateVersionApiArg>({
@@ -42,10 +38,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}`,
         method: 'PATCH',
         body: queryArg.versionPatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     createVersion: build.mutation<CreateVersionApiResponse, CreateVersionApiArg>({
@@ -53,10 +45,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/versions`,
         method: 'POST',
         body: queryArg.versionPostModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
   }),
@@ -71,7 +59,7 @@ export type GetVersionThumbnailApiArg = {
   original?: boolean
 }
 export type CreateVersionThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
 export type CreateVersionThumbnailApiArg = {
   projectName: string
   versionId: string
@@ -86,22 +74,16 @@ export type DeleteVersionApiResponse = unknown
 export type DeleteVersionApiArg = {
   projectName: string
   versionId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
 }
 export type UpdateVersionApiResponse = unknown
 export type UpdateVersionApiArg = {
   projectName: string
   versionId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   versionPatchModel: VersionPatchModel
 }
 export type CreateVersionApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateVersionApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   versionPostModel: VersionPostModel
 }
 export type ValidationError = {
@@ -112,8 +94,14 @@ export type ValidationError = {
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
+export type AffectedEntity = {
+  entityType: string
+  entityId: string
+  thumbnailHash: string
+}
 export type CreateThumbnailResponseModel = {
   id: string
+  affectedEntities?: AffectedEntity[]
 }
 export type VersionAttribModel = {
   /** Frame rate */

@@ -109,6 +109,27 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getProjectThumbnail: build.query<GetProjectThumbnailApiResponse, GetProjectThumbnailApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/thumbnail`,
+        params: {
+          placeholder: queryArg.placeholder,
+          original: queryArg.original,
+        },
+      }),
+    }),
+    createProjectThumbnail: build.mutation<
+      CreateProjectThumbnailApiResponse,
+      CreateProjectThumbnailApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/thumbnail`,
+        method: 'POST',
+        headers: {
+          'content-type': queryArg['content-type'],
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -126,7 +147,8 @@ export type GetThumbnailApiArg = {
   placeholder?: 'empty' | 'none'
   original?: boolean
 }
-export type UpdateThumbnailApiResponse = unknown
+export type UpdateThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
 export type UpdateThumbnailApiArg = {
   projectName: string
   thumbnailId: string
@@ -140,7 +162,7 @@ export type GetFolderThumbnailApiArg = {
   original?: boolean
 }
 export type CreateFolderThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
 export type CreateFolderThumbnailApiArg = {
   projectName: string
   folderId: string
@@ -154,7 +176,7 @@ export type GetVersionThumbnailApiArg = {
   original?: boolean
 }
 export type CreateVersionThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
 export type CreateVersionThumbnailApiArg = {
   projectName: string
   versionId: string
@@ -168,7 +190,7 @@ export type GetWorkfileThumbnailApiArg = {
   original?: boolean
 }
 export type CreateWorkfileThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
 export type CreateWorkfileThumbnailApiArg = {
   projectName: string
   workfileId: string
@@ -182,14 +204,32 @@ export type GetTaskThumbnailApiArg = {
   original?: boolean
 }
 export type CreateTaskThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
 export type CreateTaskThumbnailApiArg = {
   projectName: string
   taskId: string
   'content-type'?: string
 }
+export type GetProjectThumbnailApiResponse = /** status 200 Successful Response */ any
+export type GetProjectThumbnailApiArg = {
+  projectName: string
+  placeholder?: 'empty' | 'none'
+  original?: boolean
+}
+export type CreateProjectThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
+export type CreateProjectThumbnailApiArg = {
+  projectName: string
+  'content-type'?: string
+}
+export type AffectedEntity = {
+  entityType: string
+  entityId: string
+  thumbnailHash: string
+}
 export type CreateThumbnailResponseModel = {
   id: string
+  affectedEntities?: AffectedEntity[]
 }
 export type ValidationError = {
   loc: (string | number)[]

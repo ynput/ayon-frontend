@@ -70,7 +70,7 @@ export type ImportDataApiResponse = /** status 200 Successful Response */ Import
 export type ImportDataApiArg = {
   importType: 'user' | 'folder' | 'task' | 'hierarchy' | 'entity_list_item'
   fileId: string
-  existingStrategy?: 'skip' | 'update' | 'fail'
+  existingStrategy?: ExistingItemStrategy
   projectName?: string
   folderId?: string
   preview?: boolean
@@ -94,6 +94,7 @@ export type EnumItem = {
   /** Icon name (material symbol) or IconModel object */
   icon?: string | IconModel
   color?: string
+  shortName?: string
   /** Enum item is visible, but not selectable */
   disabled?: boolean
   /** Message to show when the option is disabled */
@@ -126,6 +127,8 @@ export type ImportableColumn = {
   enumName?: string
   /** A list of possible error handling modes for this column. Every column can have different available modes: For example: `name` column cannot use `default`, because default name cannot be generated. */
   errorHandlingModes: ('skip' | 'abort' | 'default')[]
+  /** Marker that new items can be created for frontend to decide if Create button should be offered. Entity_type cannot be created for example. */
+  createNewItems?: boolean
 }
 export type ValidationError = {
   loc: (string | number)[]
@@ -149,7 +152,9 @@ export type ImportStatus = {
   failed?: number
   failedItems?: object
   preview?: boolean
+  phase?: 'validating' | 'importing'
 }
+export type ExistingItemStrategy = 'skip' | 'update' | 'fail'
 export type ColumnValueMapping = {
   /** The source value from csv */
   source?: string
