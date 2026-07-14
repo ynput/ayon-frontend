@@ -426,7 +426,11 @@ const Inbox = ({ filter }: InboxProps) => {
 
     // keep the multi-selection when right-clicking a row that is part of it
     const isMulti = selected.length > 1 && selected.includes(id)
-    if (!isMulti) setSelected([id])
+    if (!isMulti) {
+      setSelected([id])
+      // move the shift-range anchor to the right-clicked row so a following shift-select is correct
+      lastSelectedIndexRef.current = groupedMessages.findIndex((m) => m.activityId === id)
+    }
 
     // open context menu
     ctxMenuShow(e, contextMenu(id, isMulti))
