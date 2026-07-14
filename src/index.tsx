@@ -59,7 +59,7 @@ const SocketProviderWrapper = (props: { children: React.ReactNode }) => {
   const userName = useAppSelector((state) => state.user.name)
   return (
     <SocketProvider userName={userName} projectName={projectName} dispatch={dispatch}>
-      <EntityUpdatesProvider projectNames={[]}>{props.children}</EntityUpdatesProvider>
+      {props.children}
     </SocketProvider>
   )
 }

@@ -412,9 +412,11 @@ const ProjectPageInner = () => {
       >
         <EntityListsProvider projectName={projectName}>
           <WithViews viewType={page.viewType} projectName={projectName}>
-            <SlicerProvider page={module} projectName={projectName}>
-              {page.component}
-            </SlicerProvider>
+            <EntityUpdatesProvider projectNames={[projectName]}>
+              <SlicerProvider page={module} projectName={projectName}>
+                {page.component}
+              </SlicerProvider>
+            </EntityUpdatesProvider>
           </WithViews>
           <NewListFromContext />
         </EntityListsProvider>
@@ -432,11 +434,9 @@ const ProjectPage = () => {
 
   return (
     <ProjectContextProvider projectName={projectName}>
-      <EntityUpdatesProvider projectNames={[projectName]}>
-        <ProjectFoldersContextProvider projectName={projectName}>
-          <ProjectPageInner />
-        </ProjectFoldersContextProvider>
-      </EntityUpdatesProvider>
+      <ProjectFoldersContextProvider projectName={projectName}>
+        <ProjectPageInner />
+      </ProjectFoldersContextProvider>
     </ProjectContextProvider>
   )
 }
