@@ -636,13 +636,16 @@ export const ProjectTreeTable = ({
   // "N selected" count. Mirrors the context menu's row count (group headers
   // excluded); the checkbox-only `selectedRows` would undercount cell selections.
   const selectedRowCount = useMemo(() => {
-    const rowIds = new Set<string>()
+    const entityIds = new Set<string>()
     for (const cellId of selectedCells) {
       const rowId = parseCellId(cellId)?.rowId
-      if (rowId && !isGroupId(rowId)) rowIds.add(rowId)
+      if (!rowId || isGroupId(rowId)) continue
+
+      const entity = getEntityById(rowId)
+      if (entity?.entityId) entityIds.add(entity.entityId)
     }
-    return rowIds.size
-  }, [selectedCells])
+    return entityIds.size
+  }, [selectedCells, getEntityById])
   // only show the upsell once the license check resolves, so licensed users
   // don't see the bolt flash before the addon loads
   // const showSummaryPowerFeature = !isLicenseLoading && !powerLicense
