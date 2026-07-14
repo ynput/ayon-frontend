@@ -7,6 +7,9 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/products/${queryArg.productId}/reviewables`,
+        params: {
+          latest_done: queryArg.latestDone,
+        },
       }),
     }),
     getReviewablesForVersion: build.query<
@@ -15,6 +18,9 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
+        params: {
+          latest_done: queryArg.latestDone,
+        },
       }),
     }),
     uploadReviewable: build.mutation<UploadReviewableApiResponse, UploadReviewableApiArg>({
@@ -22,10 +28,8 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
         method: 'POST',
         headers: {
-          'content-type': queryArg['content-type'],
           'x-file-name': queryArg['x-file-name'],
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
+          'content-type': queryArg['content-type'],
         },
         params: {
           label: queryArg.label,
@@ -48,6 +52,9 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/reviewables`,
+        params: {
+          latest_done: queryArg.latestDone,
+        },
       }),
     }),
     getReviewablesForFolder: build.query<
@@ -56,6 +63,22 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/reviewables`,
+        params: {
+          latest_done: queryArg.latestDone,
+        },
+      }),
+    }),
+    getReviewablesForEntities: build.mutation<
+      GetReviewablesForEntitiesApiResponse,
+      GetReviewablesForEntitiesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/${queryArg.entityType}/reviewables/list`,
+        method: 'POST',
+        body: queryArg.reviewablesRequestModel,
+        params: {
+          latest_done: queryArg.latestDone,
+        },
       }),
     }),
     updateReviewable: build.mutation<UpdateReviewableApiResponse, UpdateReviewableApiArg>({
@@ -74,12 +97,16 @@ export type GetReviewablesForProductApiResponse =
 export type GetReviewablesForProductApiArg = {
   projectName: string
   productId: string
+  /** If True, returns only the latest approved versions */
+  latestDone?: boolean
 }
 export type GetReviewablesForVersionApiResponse =
   /** status 200 Successful Response */ VersionReviewablesModel
 export type GetReviewablesForVersionApiArg = {
   projectName: string
   versionId: string
+  /** If True, returns only the latest approved versions */
+  latestDone?: boolean
 }
 export type UploadReviewableApiResponse = /** status 200 Successful Response */ ReviewableModel
 export type UploadReviewableApiArg = {
@@ -87,10 +114,8 @@ export type UploadReviewableApiArg = {
   versionId: string
   /** Label */
   label?: string
-  'content-type': string
   'x-file-name': string
-  'x-sender'?: string
-  'x-sender-type'?: string
+  'content-type': string
 }
 export type SortVersionReviewablesApiResponse = /** status 200 Successful Response */ any
 export type SortVersionReviewablesApiArg = {
@@ -103,12 +128,26 @@ export type GetReviewablesForTaskApiResponse =
 export type GetReviewablesForTaskApiArg = {
   projectName: string
   taskId: string
+  /** If True, returns only the latest approved versions */
+  latestDone?: boolean
 }
 export type GetReviewablesForFolderApiResponse =
   /** status 200 Successful Response */ VersionReviewablesModel[]
 export type GetReviewablesForFolderApiArg = {
   projectName: string
   folderId: string
+  /** If True, returns only the latest approved versions */
+  latestDone?: boolean
+}
+export type GetReviewablesForEntitiesApiResponse =
+  /** status 200 Successful Response */ VersionReviewablesModel[]
+export type GetReviewablesForEntitiesApiArg = {
+  projectName: string
+  /** Project level entity type is used in the endpoint path to specify the type of entity to operate on. It is usually one of 'folders', 'products', 'versions', 'representations', 'tasks', 'workfiles'. (trailing 's' is optional). */
+  entityType: string
+  /** If True, returns only the latest approved versions */
+  latestDone?: boolean
+  reviewablesRequestModel: ReviewablesRequestModel
 }
 export type UpdateReviewableApiResponse = /** status 200 Successful Response */ any
 export type UpdateReviewableApiArg = {
@@ -164,6 +203,10 @@ export type HttpValidationError = {
 export type SortReviewablesRequest = {
   /** List of reviewable (activity) ids in the order you want them to appear in the UI. */
   sort?: string[]
+}
+export type ReviewablesRequestModel = {
+  /** List of target Entity IDs (folders, products, versions, etc.) to fetch reviewables for. */
+  entityIds: string[]
 }
 export type UpdateReviewablesRequest = {
   label?: string
