@@ -65,6 +65,7 @@ import { useMoveEntities } from './hooks/useMoveEntities'
 import { useProjectDataContext } from '@shared/containers'
 
 // Utility function imports
+import { isGroupId } from './hooks/useBuildGroupByTableData'
 import { CellId, getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
@@ -630,6 +631,18 @@ export const ProjectTreeTable = ({
   // Full skeleton only while the remote module itself is loading (no cell to
   // render yet). Stats loading is handled per-cell so the footer stays clickable.
   const footerModuleLoading = isFooterModuleLoading || !isFooterLoaded
+
+  // Unique entity rows across all selected cells (any column), for the footer's
+  // "N selected" count. Mirrors the context menu's row count (group headers
+  // excluded); the checkbox-only `selectedRows` would undercount cell selections.
+  const selectedRowCount = useMemo(() => {
+    const rowIds = new Set<string>()
+    for (const cellId of selectedCells) {
+      const rowId = parseCellId(cellId)?.rowId
+      if (rowId && !isGroupId(rowId)) rowIds.add(rowId)
+    }
+    return rowIds.size
+  }, [selectedCells])
   // only show the upsell once the license check resolves, so licensed users
   // don't see the bolt flash before the addon loads
   // const showSummaryPowerFeature = !isLicenseLoading && !powerLicense
@@ -825,6 +838,7 @@ export const ProjectTreeTable = ({
                     mainCountLabels={mainCountLabels}
                     fieldOptions={options}
                     parentScopeApplicable={parentScopeApplicable}
+                    selectedCount={selectedRowCount}
                   />
                 )}
                 // Power feature cell for community users (hidden for now), shows a bolt hint in the name column:
