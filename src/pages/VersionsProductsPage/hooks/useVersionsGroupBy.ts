@@ -114,12 +114,14 @@ const useVersionsGroupBy = ({
     folderIds: versionArguments.folderIds,
     featuredOnly: versionArguments.featuredOnly,
     hasReviewables: versionArguments.hasReviewables,
+    rtUpdates: versionArguments.rtUpdates,
   }
 
   const {
     data: { versions = [] } = {},
     isFetching: isFetchingGroups,
     refetch: refetchGroupedVersions,
+    isUninitialized: isUninitializedGroupedVersions,
   } = useGetGroupedVersionsListQuery(queryArgs, {
     skip: !groupBy || !groupFilters.length || isLoadingModules,
   })
@@ -139,6 +141,7 @@ const useVersionsGroupBy = ({
     versions,
     isLoading,
     refetch: refetchGroupedVersions,
+    isUninitialized: isUninitializedGroupedVersions,
     incrementPageCount,
   }
 }

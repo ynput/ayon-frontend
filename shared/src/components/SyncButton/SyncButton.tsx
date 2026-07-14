@@ -28,6 +28,7 @@ interface SyncButtonProps extends Omit<ButtonProps, 'onClick'> {
   projectNames?: string[]
   topics: string[]
   onSync?: OnSyncDataCallback
+  shouldSyncOnUpdate?: (update: RTEntityUpdate) => boolean
   hideWhenNoUpdates?: boolean
 }
 
@@ -66,12 +67,16 @@ const getUpdatesTooltip = (updates: RTEntityUpdate[]) => {
 }
 
 export const SyncButton = forwardRef<HTMLButtonElement, SyncButtonProps>(
-  ({ projectNames, topics, onSync, hideWhenNoUpdates = false, ...props }, ref) => {
+  (
+    { projectNames, topics, onSync, shouldSyncOnUpdate, hideWhenNoUpdates = false, ...props },
+    ref,
+  ) => {
     const [isSyncing, setIsSyncing] = useState(false)
     const { updates, hasUpdates } = useSyncUpdates({
       projectNames,
       topics,
       isSyncing,
+      shouldSyncOnUpdate,
     })
 
     if (hideWhenNoUpdates && !hasUpdates) return null

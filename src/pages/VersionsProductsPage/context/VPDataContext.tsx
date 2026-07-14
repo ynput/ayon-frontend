@@ -1,5 +1,6 @@
 import {
   EntityGroup,
+  RTUpdateType,
   useGetVersionsByProductsQuery,
   useGetVersionsInfiniteQuery,
 } from '@shared/api'
@@ -44,6 +45,7 @@ import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slice
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
+import { OnSyncDataCallback } from '@shared/context'
 import {
   DEFAULT_FEATURED_ORDER,
   FEATURED_VERSION_TYPES,
@@ -105,6 +107,7 @@ interface VersionsDataContextValue {
   isLoading: boolean
   isFetchingNextPage: boolean
   loadingProductVersions: Record<string, number> // product IDs to their version counts that are loading
+  onSyncData: OnSyncDataCallback
   // meta
   error: string | undefined
 }
@@ -132,7 +135,10 @@ export type QueryArguments = {
   featuredOnly?: string[]
   hasReviewables?: boolean
   showComments?: boolean
+  rtUpdates?: RTUpdateType[]
 }
+
+const RT_UPDATES: RTUpdateType[] = ['field_update', 'attrib_update', 'delete']
 
 interface VersionsDataProviderProps {
   projectName: string
@@ -288,6 +294,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       sortBy: resolvedSortBy,
       desc: sortDesc,
       showComments,
+      rtUpdates: RT_UPDATES,
     }),
     [
       projectName,
@@ -381,6 +388,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: productsFetchNextPage,
     isFetchingNextPage: productsIsFetchingNextPage,
     isFetching: isFetchingProducts,
+    isUninitialized: isProductsUninitialized,
+    refetch: refetchProducts,
     error: productsError,
   } = useGetProductsInfiniteQuery(productArguments, {
     skip: !showProducts || isLoadingViews,
@@ -397,6 +406,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: versionsFetchNextPage,
     isFetchingNextPage: versionsIsFetchingNextPage,
     isFetching: isFetchingVersions,
+    isUninitialized: isVersionsUninitialized,
+    refetch: refetchVersions,
     error: versionsError,
   } = useGetVersionsInfiniteQuery(versionArguments, {
     skip: showProducts || isLoadingViews,
@@ -410,6 +421,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     groups,
     versions: groupedVersions,
     incrementPageCount: incrementGroupPage,
+    refetch: refetchGroupedVersions,
+    isUninitialized: isGroupedVersionsUninitialized,
   } = useVersionsGroupBy({
     projectName,
     versionFilters: combinedVersionFilter.combinedFilters,
@@ -441,6 +454,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     featuredOnly: versionArguments.featuredOnly,
     hasReviewables: versionArguments.hasReviewables,
     showComments,
+    rtUpdates: RT_UPDATES,
   }
 
   // QUERY: get child versions for expanded products
@@ -449,6 +463,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     error: childVersionsError,
     isFetching: isFetchingChildren,
     isLoading: isLoadingChildren,
+    isUninitialized: isChildrenUninitialized,
+    refetch: refetchChildren,
   } = useGetVersionsByProductsQuery(childVersionsArgs, { skip: !showProducts || isLoadingViews })
 
   const isLoadingChildVersions = useQueryArgumentChangeLoading(
@@ -549,6 +565,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     }
   }
 
+  const onSyncData: OnSyncDataCallback = async () => {
+    const refetches: Promise<unknown>[] = []
+
+    if (showProducts && !isProductsUninitialized) refetches.push(refetchProducts())
+    if (!showProducts && !isVersionsUninitialized) refetches.push(refetchVersions())
+    if (!isChildrenUninitialized) refetches.push(refetchChildren())
+    if (!isGroupedVersionsUninitialized) refetches.push(refetchGroupedVersions())
+
+    await Promise.all(refetches)
+  }
+
   const value: VersionsDataContextValue = {
     versionFilter,
     productFilter,
@@ -582,6 +609,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     isLoading: isLoadingTable,
     isFetchingNextPage,
     loadingProductVersions,
+    onSyncData,
     // meta
     error,
   }

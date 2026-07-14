@@ -6,12 +6,11 @@ export type RTEntityUpdate = {
   project?: string
   topic: string
   entityId?: string
+  message?: any
 }
 
 // Util type not used in context but by other logic
-export type OnSyncDataCallback = (
-  updates: RTEntityUpdate[] | undefined,
-) => void | Promise<void>
+export type OnSyncDataCallback = (updates: RTEntityUpdate[] | undefined) => void | Promise<void>
 
 type EntityUpdatesContextValue = {
   updates: RTEntityUpdate[]
@@ -48,6 +47,7 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
         project: message.project,
         topic: message.topic,
         entityId: message.summary?.entityId,
+        message,
       }
       setUpdates((current) => [...current, update])
     })
@@ -81,12 +81,14 @@ type UseSyncUpdatesParams = {
   projectNames?: string[]
   topics: string[]
   isSyncing?: boolean
+  shouldSyncOnUpdate?: (update: RTEntityUpdate) => boolean
 }
 
 export const useSyncUpdates = ({
   projectNames: projectNamesOverride,
   topics,
   isSyncing = false,
+  shouldSyncOnUpdate,
 }: UseSyncUpdatesParams) => {
   const context = useContext(EntityUpdatesContext)
   if (!context) {
@@ -99,7 +101,8 @@ export const useSyncUpdates = ({
   const subscribedUpdates = context.updates.filter(
     (update) =>
       matchesProject(update.project, projectNames) &&
-      topics.some((topic) => matchesTopic(update.topic, topic)),
+      topics.some((topic) => matchesTopic(update.topic, topic)) &&
+      (shouldSyncOnUpdate?.(update) ?? true),
   )
 
   useEffect(() => {

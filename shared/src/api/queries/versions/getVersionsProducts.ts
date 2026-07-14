@@ -179,7 +179,10 @@ export type GetVersionsResult = {
 // for infinite query args
 export type GetVersionsArgs = Omit<GetVersionsQueryVariables, 'cursor'> & {
   desc?: boolean // sort direction
+  rtUpdates?: RTUpdateType[]
 }
+
+export type RTUpdateType = 'field_update' | 'attrib_update' | 'delete' | 'create'
 
 // for paginated queries in infinite query
 type VersionsPageParam = {
@@ -189,6 +192,7 @@ type VersionsPageParam = {
 
 export type GetProductsArgs = Omit<GetProductsQueryVariables, 'cursor' | 'versionIds'> & {
   desc?: boolean // sort direction
+  rtUpdates?: RTUpdateType[]
 }
 
 type ProductsPageParam = {
@@ -199,6 +203,7 @@ type ProductsPageParam = {
 type GetVersionsByProductsArgs = GetVersionsByProductIdQueryVariables & {
   productIds: string[]
   desc?: boolean
+  rtUpdates?: RTUpdateType[]
 }
 
 export type GetGroupedVersionsListArgs = {
@@ -213,6 +218,7 @@ export type GetGroupedVersionsListArgs = {
   sortBy?: string
   featuredOnly?: string[]
   hasReviewables?: boolean
+  rtUpdates?: RTUpdateType[]
 }
 
 export type GetGroupedVersionsListResult = {
@@ -288,12 +294,24 @@ const VERSION_UPDATE_ATTRIB_JITTER = 1000 // max ms of random jitter for attribu
 const VERSION_UPDATE_NEW_DATA_DEBOUNCE = 30000 // ms to wait before fetching new version data in batch
 const VERSION_UPDATE_NEW_DATA_JITTER = 1500 // max ms of random jitter for new version data fetches
 
+const isRTUpdateEnabled = (updates: RTUpdateType[] | undefined, update: RTUpdateType) =>
+  !updates || updates.includes(update)
+
+const getRTUpdateType = (topic: string): RTUpdateType | undefined => {
+  if (topic.endsWith('.created')) return 'create'
+  if (topic.endsWith('.deleted')) return 'delete'
+  if (topic.includes('.attrib_')) return 'attrib_update'
+  if (topic.includes('_changed')) return 'field_update'
+  return undefined
+}
+
 /**
  * Reusable handler for websocket version updates to perform efficient batched cache updates
  */
 function createVersionUpdateBatcher(
   projectName: string,
   dispatch: any,
+  enabledUpdates: RTUpdateType[] | undefined,
   handlers: {
     checkVersionInCache: (entityId: string, parentId?: string) => boolean
     onBatchUpdate: (changes: {
@@ -326,7 +344,7 @@ function createVersionUpdateBatcher(
       if (!entityId) continue
 
       if (topic === 'entity.version.deleted') {
-        deleted.push({ entityId, parentId })
+        if (isRTUpdateEnabled(enabledUpdates, 'delete')) deleted.push({ entityId, parentId })
       } else if (topic.startsWith('entity.version.') && topic.endsWith('_changed')) {
         const versionFound = handlers.checkVersionInCache(entityId, parentId)
         if (!versionFound) continue
@@ -334,9 +352,12 @@ function createVersionUpdateBatcher(
         const field = topic.split('.')[2].split('_changed')[0]
 
         if (field === 'attrib') {
+          if (!isRTUpdateEnabled(enabledUpdates, 'attrib_update')) continue
           attribsToFetch.add(entityId)
           continue
         }
+
+        if (!isRTUpdateEnabled(enabledUpdates, 'field_update')) continue
 
         const supportedFields = ['status', 'tags'] as const
         const isFieldSupported = supportedFields.includes(field as any)
@@ -438,6 +459,7 @@ function createVersionUpdateBatcher(
     if (!entityId) return
 
     if (topic === 'entity.version.created') {
+      if (!isRTUpdateEnabled(enabledUpdates, 'create')) return
       pendingFullFetchIds.add(entityId)
       if (!fullFetchTimeoutId) {
         fullFetchTimeoutId = setTimeout(processFullFetches, VERSION_UPDATE_NEW_DATA_DEBOUNCE)
@@ -455,6 +477,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
     // enhance GetVersions with an infinite query
     getVersionsInfinite: build.infiniteQuery<GetVersionsResult, GetVersionsArgs, VersionsPageParam>(
       {
+        serializeQueryArgs: ({ queryArgs: { rtUpdates: _rtUpdates, ...queryArgs } }) => queryArgs,
         infiniteQueryOptions: {
           initialPageParam: { cursor: '', desc: false },
           // Calculate the next page param based on current page response and params
@@ -474,7 +497,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         },
         queryFn: async ({ queryArg, pageParam }, api) => {
           try {
-            const { sortBy, desc, folderIds, ...rest } = queryArg
+            const { sortBy, desc, folderIds, rtUpdates: _rtUpdates, ...rest } = queryArg
             const { cursor } = pageParam
 
             // Build the query parameters for GetVersions query
@@ -569,7 +592,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
           const token = PubSub.subscribe(
             'entity.version',
-            createVersionUpdateBatcher(arg.projectName, dispatch, {
+            createVersionUpdateBatcher(arg.projectName, dispatch, arg.rtUpdates, {
               getBaseFilters: () => ({
                 versionFilter: arg.versionFilter,
                 productFilter: arg.productFilter,
@@ -658,8 +681,9 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
     // custom query function that fetches versions by multiple parent ids -not infinite and gets 1000 versions max
     getVersionsByProducts: build.query<GetVersionsResult, GetVersionsByProductsArgs>({
+      serializeQueryArgs: ({ queryArgs: { rtUpdates: _rtUpdates, ...queryArgs } }) => queryArgs,
       queryFn: async (args, { dispatch, forced }) => {
-        const { productIds = [], desc, ...rest } = args
+        const { productIds = [], desc, rtUpdates: _rtUpdates, ...rest } = args
 
         // Helper function to fetch a page of versions
         const fetchVersionsPage = async (productId: string, cursor?: string) => {
@@ -795,7 +819,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
         const token = PubSub.subscribe(
           'entity.version',
-          createVersionUpdateBatcher(arg.projectName, dispatch, {
+          createVersionUpdateBatcher(arg.projectName, dispatch, arg.rtUpdates, {
             getBaseFilters: () => ({
               versionFilter: arg.versionFilter,
               taskFilter: arg.taskFilter,
@@ -875,6 +899,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
     // enhance GetProducts with an infinite query
     getProductsInfinite: build.infiniteQuery<GetProductsResult, GetProductsArgs, ProductsPageParam>(
       {
+        serializeQueryArgs: ({ queryArgs: { rtUpdates: _rtUpdates, ...queryArgs } }) => queryArgs,
         infiniteQueryOptions: {
           initialPageParam: { cursor: '', desc: false },
           // Calculate the next page param based on current page response and params
@@ -895,7 +920,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         queryFn: async ({ queryArg, pageParam }, api) => {
           let result
           try {
-            const { sortBy, desc, folderIds, ...rest } = queryArg
+            const { sortBy, desc, folderIds, rtUpdates: _rtUpdates, ...rest } = queryArg
             const { cursor } = pageParam
 
             // Build the query parameters for GetProducts query
@@ -1026,6 +1051,9 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             'entity.product',
             async (_topic: string, message: any) => {
               try {
+                const updateType = getRTUpdateType(_topic)
+                if (updateType && !isRTUpdateEnabled(arg.rtUpdates, updateType)) return
+
                 const entityId = message.summary?.entityId
                 if (!entityId) return
 
@@ -1049,7 +1077,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           // This ensures product's versions list and featuredVersion stay up-to-date
           const versionToken = PubSub.subscribe(
             'entity.version',
-            createVersionUpdateBatcher(arg.projectName, dispatch, {
+            createVersionUpdateBatcher(arg.projectName, dispatch, arg.rtUpdates, {
               getBaseFilters: () => ({
                 versionFilter: arg.versionFilter,
                 productFilter: arg.productFilter,
@@ -1140,6 +1168,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
     // Grouped versions query - fetches versions for multiple group filters
     getGroupedVersionsList: build.query<GetGroupedVersionsListResult, GetGroupedVersionsListArgs>({
+      serializeQueryArgs: ({ queryArgs: { rtUpdates: _rtUpdates, ...queryArgs } }) => queryArgs,
       queryFn: async (
         {
           projectName,
@@ -1153,6 +1182,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           sortBy,
           featuredOnly,
           hasReviewables,
+          rtUpdates: _rtUpdates,
         },
         api,
       ) => {
@@ -1261,7 +1291,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
         const token = PubSub.subscribe(
           'entity.version',
-          createVersionUpdateBatcher(arg.projectName, dispatch, {
+          createVersionUpdateBatcher(arg.projectName, dispatch, arg.rtUpdates, {
             getBaseFilters: () => ({
               versionFilter: arg.versionFilter,
               productFilter: arg.productFilter,
