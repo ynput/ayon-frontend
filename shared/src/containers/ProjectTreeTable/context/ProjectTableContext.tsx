@@ -46,7 +46,7 @@ import useBuildGroupByTableData, {
   GroupByEntityType,
   ROW_ID_SEPARATOR,
 } from '../hooks/useBuildGroupByTableData'
-import { EntityUpdate, PowerpackContextType, useProjectContext } from '@shared/context'
+import { RTEntityUpdate, PowerpackContextType, useProjectContext } from '@shared/context'
 import { TableGroupBy, useColumnSettingsContext } from './ColumnSettingsContext'
 import { ProjectTableModulesType } from '@shared/hooks'
 import type { SubtasksManagerProps } from '@shared/components'
@@ -182,7 +182,7 @@ export interface ProjectTableProviderProps {
 
   // data functions
   fetchNextPage: (value?: string) => void
-  onSyncData: (updates?: EntityUpdate[]) => void
+  onSyncData: (updates?: RTEntityUpdate[]) => void
 
   // Filters
   queryFilters: {

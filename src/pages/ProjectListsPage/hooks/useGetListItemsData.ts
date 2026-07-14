@@ -2,7 +2,7 @@ import { useGetListItemsInfiniteInfiniteQuery, useGetEntityLinksQuery } from '@s
 import type { EntityListItem, GetListItemsResult } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { EntityLink } from '@shared/api/queries/links/getEntityLinks'
 import {
   RESTRICTED_ENTITY_TYPE,
@@ -11,6 +11,7 @@ import {
 import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
+import { OnSyncDataCallback } from '@shared/context'
 
 // Extend EntityListItem to include links
 export type EntityListItemWithLinks = EntityListItem & {
@@ -32,10 +33,12 @@ export interface UseGetListItemsDataReturn {
   data: EntityListItemWithLinks[]
   isLoading: boolean
   isFetchingNextPage: boolean
+  isSyncing: boolean
   isError: boolean
   error?: unknown
-  fetchNextPage: () => void
   refetch: () => void
+  fetchNextPage: () => void
+  onSyncData: OnSyncDataCallback
 }
 
 const useGetListItemsData = ({
@@ -81,13 +84,13 @@ const useGetListItemsData = ({
   const {
     data: itemsInfiniteData,
     isLoading: isLoadingRaw,
-    isFetching: isFetchingRaw,
+    isFetching: isFetchingListItems,
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
     isError,
     error,
-    refetch,
+    refetch: refetchListItems,
   } = useGetListItemsInfiniteInfiniteQuery(
     {
       projectName,
@@ -112,7 +115,7 @@ const useGetListItemsData = ({
       desc: singleSort?.desc || false,
       filter: queryFilterString || '',
     },
-    isFetchingRaw,
+    isFetchingListItems,
   )
 
   const isLoading = isLoadingRaw || isFetching
@@ -166,7 +169,12 @@ const useGetListItemsData = ({
   }, [data])
 
   // Get all links for visible entities
-  const { data: linksData = [] } = useGetEntityLinksQuery(
+  const {
+    data: linksData = [],
+    isFetching: isFetchingLinks,
+    refetch: refetchLinks,
+    isUninitialized: isLinksUninitialized,
+  } = useGetEntityLinksQuery(
     {
       projectName,
       entityIds: Array.from(visibleEntityIds),
@@ -196,14 +204,38 @@ const useGetListItemsData = ({
     }))
   }, [data, linksMap])
 
+  const [isSyncing, setIsSyncing] = useState(false)
+  const onSyncData: OnSyncDataCallback = async (updates = []) => {
+    const isFullSync = updates.length === 0
+    const hasListItemUpdates = updates.some((update) =>
+      update.topic.startsWith('entity_list.changed'),
+    )
+    const hasLinkUpdates = updates.some((update) => update.topic.startsWith('link'))
+
+    const syncLinks = (isFullSync || hasLinkUpdates) && !isLinksUninitialized
+    const syncListItems = isFullSync || hasListItemUpdates
+
+    if (!syncLinks && !syncListItems) return
+
+    setIsSyncing(true)
+    // LINK UPDATES
+    if (syncLinks) await refetchLinks().unwrap()
+
+    // LIST ITEM UPDATES
+    if (syncListItems) await refetchListItems().unwrap()
+    setIsSyncing(false)
+  }
+
   return {
     data: dataWithLinks,
     isLoading,
     isFetchingNextPage,
+    isSyncing,
+    onSyncData,
     isError,
     error,
     fetchNextPage: handleFetchNextPage,
-    refetch,
+    refetch: refetchListItems,
   }
 }
 

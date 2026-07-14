@@ -17,7 +17,7 @@ import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/e
 import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
 import { ListsViewSettings, useListsViewSettings } from '@shared/containers'
 import { SortingState, VisibilityState } from '@tanstack/react-table'
-import { useProjectContext, usePowerpack } from '@shared/context'
+import { useProjectContext, usePowerpack, OnSyncDataCallback } from '@shared/context'
 import {
   buildMetricTargets,
   shouldSkipColumnStats,
@@ -79,6 +79,8 @@ export interface ListItemsDataContextValue {
   // reset filters
   resetFilters: () => void
   refetch: () => void
+  onSyncData: OnSyncDataCallback
+  isSyncing: boolean
   // links visibility
   setLinksVisible: (visible: boolean) => void
   // column summaries footer (powerpack)
@@ -203,6 +205,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     error,
     fetchNextPage,
     refetch,
+    onSyncData,
+    isSyncing,
   } = useGetListItemsData({
     projectName,
     entityType: selectedList?.entityType,
@@ -389,6 +393,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         replaceListItemsState,
         resetFilters,
         refetch,
+        onSyncData,
+        isSyncing,
         setLinksVisible,
         fieldStats,
         fieldStatsLoading,

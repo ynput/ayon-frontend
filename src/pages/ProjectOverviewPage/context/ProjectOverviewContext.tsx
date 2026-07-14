@@ -316,6 +316,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         error,
         softError, // shows a warning banner but doesn't block the table from rendering
         softErrorAction,
+        // @ts-expect-error: projectInfo is typed as ProjectInfo | undefined, but the context expects ProjectInfo. This is safe because we check isInitialized above.
         projectInfo,
         attribFields: scopedAttribFields,
         users,

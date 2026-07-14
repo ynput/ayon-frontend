@@ -1,7 +1,7 @@
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { forwardRef } from 'react'
 import styled from 'styled-components'
-import { EntityUpdate, useSyncUpdates } from '@shared/context'
+import { OnSyncDataCallback, RTEntityUpdate, useSyncUpdates } from '@shared/context'
 
 const StyledSync = styled(Button)`
   /* spin icon */
@@ -25,10 +25,10 @@ const StyledSync = styled(Button)`
 `
 
 interface SyncButtonProps extends Omit<ButtonProps, 'onClick'> {
-  projectNames: string[]
+  projectNames?: string[]
   topics: string[]
   syncing?: boolean
-  onSync?: (updates: EntityUpdate[]) => void
+  onSync?: OnSyncDataCallback
   hideWhenNoUpdates?: boolean
 }
 
@@ -39,7 +39,7 @@ const formatUpdateType = (updateType: string, entityType: string, count: number)
   return `${count} ${entityLabel} ${updateType.replaceAll('_', ' ')}`
 }
 
-const getUpdatesTooltip = (updates: EntityUpdate[]) => {
+const getUpdatesTooltip = (updates: RTEntityUpdate[]) => {
   const groupedUpdates = new Map<
     string,
     { entityType: string; updateType: string; ids: Set<string> }
@@ -67,10 +67,7 @@ const getUpdatesTooltip = (updates: EntityUpdate[]) => {
 }
 
 export const SyncButton = forwardRef<HTMLButtonElement, SyncButtonProps>(
-  (
-    { projectNames, topics, syncing = false, onSync, hideWhenNoUpdates = false, title, ...props },
-    ref,
-  ) => {
+  ({ projectNames, topics, syncing = false, onSync, hideWhenNoUpdates = false, ...props }, ref) => {
     const { updates, hasUpdates } = useSyncUpdates({
       projectNames,
       topics,
@@ -88,7 +85,7 @@ export const SyncButton = forwardRef<HTMLButtonElement, SyncButtonProps>(
         ref={ref}
         onClick={() => onSync?.(updates)}
         className={syncing ? 'syncing' : ''}
-        data-tooltip={hasUpdates ? updatesTooltip : title}
+        data-tooltip={hasUpdates ? updatesTooltip : 'Refresh the data'}
         variant={hasUpdates ? 'filled' : 'surface'}
       />
     )

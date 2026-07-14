@@ -6,7 +6,7 @@ import {
   useGetTasksListInfiniteInfiniteQuery,
 } from '@shared/api'
 import type { FolderListItem, GetGroupedTasksListArgs, EntityGroup, QueryFilter } from '@shared/api'
-import { useGroupedPagination, useQueryArgumentChangeLoading } from '@shared/hooks'
+import { useGroupedPagination } from '@shared/hooks'
 import { getGroupByDataType } from '@shared/util'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
 import { useEffect, useMemo, useState } from 'react'
@@ -20,7 +20,7 @@ import { getGroupQueries } from '../utils/getGroupQueries'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { useGetEntityLinksQuery } from '@shared/api'
-import { EntityUpdate, useProjectFoldersContext } from '@shared/context'
+import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
 import { debounce } from 'lodash'
 
 // how long a folder must stay rendered in the viewport before its tasks are fetched.
@@ -46,7 +46,7 @@ type useFetchOverviewDataData = {
   loadingLinksEntityIds: Set<string> // entity IDs whose links are currently being fetched (not yet cached)
   fetchNextPage: (value?: string) => void
   isSyncing: boolean
-  onSyncData: (updates?: EntityUpdate[]) => void
+  onSyncData: OnSyncDataCallback
 }
 
 type Params = {
@@ -670,7 +670,7 @@ export const useFetchOverviewData = ({
     return filtered
   }, [foldersMap, tasksByFolderMap, taskIds])
 
-  const onSyncData = (updates: EntityUpdate[] = []) => {
+  const onSyncData: OnSyncDataCallback = (updates = []) => {
     const isFullSync = updates.length === 0
     const hasFolderUpdates = updates.some((update) => update.topic.startsWith('entity.folder.'))
     const hasTaskUpdates = updates.some((update) => update.topic.startsWith('entity.task.'))

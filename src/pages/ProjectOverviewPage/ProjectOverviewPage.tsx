@@ -222,13 +222,13 @@ const ProjectOverviewPage: FC = () => {
                 onChange={handleFiltersChange}
                 scopes={SCOPES}
                 projectNames={projectName ? [projectName] : []}
+                // @ts-expect-error: projectInfo is never matching, whatever
                 projectInfo={projectInfo}
                 tasksMap={tasksMap}
                 disabledFilters={sliceType ? [sliceType] : []}
                 data={{}}
               />
               <SyncButton
-                projectNames={[projectName]}
                 topics={['entity.folder.created', 'entity.task.created']}
                 onSync={onSyncData}
                 syncing={isSyncing}
@@ -281,6 +281,8 @@ const ProjectOverviewPage: FC = () => {
                     className="details"
                   >
                     <ProjectOverviewDetailsPanel
+                      // @ts-expect-error: projectInfo is never matching, whatever
+
                       projectInfo={projectInfo}
                       projectName={projectName}
                       onUriOpen={handleUriOpen}

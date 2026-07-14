@@ -34,7 +34,6 @@ export const Slicer: FC<SlicerProps> = ({
 }) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const {
-    projectName,
     SlicerDropdown,
     rowSelection,
     onRowSelectionChange,
@@ -85,7 +84,6 @@ export const Slicer: FC<SlicerProps> = ({
         )}
         <SlicerSearch value={globalFilter} onChange={setGlobalFilter} />
         <SyncButton
-          projectNames={[projectName]}
           topics={['entity.folder.created']}
           onSync={handleSync}
           syncing={isSyncing}

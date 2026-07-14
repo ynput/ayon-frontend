@@ -19,7 +19,7 @@ import {
 } from './context/ListsAttributesContext'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
-import { CustomizeButton } from '@shared/components'
+import { CustomizeButton, SyncButton } from '@shared/components'
 import {
   MoveEntityProvider,
   SettingsPanelProvider,
@@ -281,6 +281,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
     listItemsData,
     deleteListItemAction,
     refetch: refetchListItems,
+    isSyncing,
+    onSyncData,
   } = useListItemsDataContext()
 
   const { selectedCells, setSelectedCells, setFocusedCellId, setAnchorCell, clearSelection } =
@@ -425,6 +427,16 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         />
                       </>
                     )}
+                    {
+                      // sync button for list items
+                      pageDisplayStyle === 'table' && (
+                        <SyncButton
+                          syncing={isSyncing}
+                          onSync={onSyncData}
+                          topics={['entity_list.changed', 'link']}
+                        />
+                      )
+                    }
                     {isReview && reviewModulesLoaded && (
                       <>
                         <Spacer />

@@ -1,15 +1,18 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { PubSub } from '@shared/util'
 
-export type EntityUpdate = {
+export type RTEntityUpdate = {
   id: number
   project?: string
   topic: string
   entityId?: string
 }
 
+// Util type not used in context but by other logic
+export type OnSyncDataCallback = (updates: RTEntityUpdate[] | undefined) => void
+
 type EntityUpdatesContextValue = {
-  updates: EntityUpdate[]
+  updates: RTEntityUpdate[]
   projectNames: string[]
   acknowledge: (topics: string[], projectNames: string[], throughId: number) => void
   getLatestId: () => number
@@ -32,13 +35,13 @@ const matchesProject = (project: string | undefined, projectNames: string[]) => 
 
 export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesProviderProps) => {
   const nextId = useRef(0)
-  const [updates, setUpdates] = useState<EntityUpdate[]>([])
+  const [updates, setUpdates] = useState<RTEntityUpdate[]>([])
 
   useEffect(() => {
     const token = PubSub.subscribeAll((_topic: string, message: any) => {
       if (!message?.topic || !matchesProject(message.project, projectNames)) return
 
-      const update: EntityUpdate = {
+      const update: RTEntityUpdate = {
         id: ++nextId.current,
         project: message.project,
         topic: message.topic,
@@ -73,13 +76,13 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
 }
 
 type UseSyncUpdatesParams = {
-  projectNames: string[]
+  projectNames?: string[]
   topics: string[]
   isSyncing?: boolean
 }
 
 export const useSyncUpdates = ({
-  projectNames,
+  projectNames: projectNamesOverride,
   topics,
   isSyncing = false,
 }: UseSyncUpdatesParams) => {
@@ -87,6 +90,7 @@ export const useSyncUpdates = ({
   if (!context) {
     throw new Error('useSyncUpdates must be used within an EntityUpdatesProvider')
   }
+  const projectNames = projectNamesOverride || context.projectNames
 
   const syncStartId = useRef(0)
   const previousIsSyncing = useRef(false)
