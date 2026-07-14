@@ -632,19 +632,23 @@ export const ProjectTreeTable = ({
   // render yet). Stats loading is handled per-cell so the footer stays clickable.
   const footerModuleLoading = isFooterModuleLoading || !isFooterLoaded
 
-  // Unique entity rows across all selected cells (any column), for the footer's
-  // "N selected" count. Mirrors the context menu's row count (group headers
-  // excluded); the checkbox-only `selectedRows` would undercount cell selections.
+  // Unique selected entities for the footer's "N selected" count, deduped by
+  // entityId (group headers / load-more rows excluded). Marked cells win: when
+  // any cell is selected we count only those and ignore checkbox row-selection;
+  // whole-row selection counts on its own.
   const selectedRowCount = useMemo(() => {
-    const entityIds = new Set<string>()
+    const cellEntities = new Set<string>()
+    const rowEntities = new Set<string>()
     for (const cellId of selectedCells) {
-      const rowId = parseCellId(cellId)?.rowId
+      const { rowId, colId } = parseCellId(cellId) || {}
       if (!rowId || isGroupId(rowId)) continue
 
-      const entity = getEntityById(rowId)
-      if (entity?.entityId) entityIds.add(entity.entityId)
+      const id = getEntityById(rowId)?.entityId
+      if (!id) continue
+      if (colId === ROW_SELECTION_COLUMN_ID) rowEntities.add(id)
+      else cellEntities.add(id)
     }
-    return entityIds.size
+    return cellEntities.size || rowEntities.size
   }, [selectedCells, getEntityById])
   // only show the upsell once the license check resolves, so licensed users
   // don't see the bolt flash before the addon loads
