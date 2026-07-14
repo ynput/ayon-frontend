@@ -33,6 +33,7 @@ import type {
   GroupedMessage,
   PlaceholderMessage,
   InboxContextMenuItem,
+  SelectModifiers,
 } from '../types'
 import type { InboxMessage as InboxMessageType } from '@/services/inbox/inboxTransform'
 
@@ -116,9 +117,8 @@ const Inbox = ({ filter }: InboxProps) => {
   // group messages of same entity and type together
   const groupedMessages = useGroupMessages({ messages: messagesSortedByDate, currentUser: user })
 
-  // single select only allow but multi select is possible
-  // it always seems to become multi select so i'll just support it from the start
   const [selected, setSelected] = useState<string[]>([])
+  const lastSelectedIndexRef = useRef<number>(-1)
 
   const listRef = useRef<HTMLUListElement>(null)
 
@@ -126,6 +126,8 @@ const Inbox = ({ filter }: InboxProps) => {
   // we do this so that keyboard navigation works right away
   useEffect(() => {
     setSelected([])
+    // reset the shift-range anchor so it can't point at a stale row in the new list
+    lastSelectedIndexRef.current = -1
     if (!listRef.current || isLoadingInbox) return
 
     const firstChild = listRef.current?.firstElementChild as HTMLElement | null
@@ -152,23 +154,41 @@ const Inbox = ({ filter }: InboxProps) => {
     )
   }
 
-  const handleMessageSelect = async (id: string, ids: string[] = []): Promise<void> => {
+  const handleMessageSelect = (
+    id: string,
+    ids: string[] = [],
+    modifiers?: SelectModifiers,
+    rowIndex?: number,
+  ): void => {
     if (id.includes('placeholder')) return
-    // if the message is already selected, deselect it
-    let newSelection = []
-    if (selected.includes(id)) {
-      newSelection = selected.filter((s) => s !== id)
-      setSelected(newSelection)
-      return
+
+    // mouse/keyboard pass rowIndex; programmatic calls resolve it from the list
+    const currentIndex =
+      rowIndex !== undefined ? rowIndex : groupedMessages.findIndex((m) => m.activityId === id)
+
+    let newSelection: string[]
+    if (modifiers?.shiftKey && lastSelectedIndexRef.current >= 0) {
+      const start = Math.min(lastSelectedIndexRef.current, currentIndex)
+      const end = Math.max(lastSelectedIndexRef.current, currentIndex)
+      newSelection = groupedMessages.slice(start, end + 1).map((m) => m.activityId)
+    } else if (modifiers?.metaKey || modifiers?.ctrlKey) {
+      newSelection = selected.includes(id)
+        ? selected.filter((s) => s !== id)
+        : [...selected, id]
+      lastSelectedIndexRef.current = currentIndex
     } else {
-      newSelection = [id]
+      newSelection = selected.includes(id) ? [] : [id]
+      lastSelectedIndexRef.current = currentIndex
     }
 
-    // select the message
     setSelected(newSelection)
 
-    // get messages and check if it has been read
-    const message = groupedMessages.find((m) => m.activityId === id)
+    if (newSelection.length !== 1) {
+      setHighlightedActivities([])
+      return
+    }
+
+    const message = groupedMessages.find((m) => m.activityId === newSelection[0])
     const group = message?.messages || []
     const unReadMessages = group.filter((m) => !m.read)
     const activityIds = group.map((m) => m.activityId)
@@ -229,6 +249,51 @@ const Inbox = ({ filter }: InboxProps) => {
     clearMessages(id, group.messages, group.projectName)
   }
 
+  const getSelectedGroups = (): GroupedMessage[] =>
+    selected
+      .map((sid) => groupedMessages.find((g) => g.activityId === sid))
+      .filter((g): g is GroupedMessage => Boolean(g))
+
+  // handleUpdateMessages is per-project, so bulk actions must group referenceIds by project
+  const groupReferenceIdsByProject = (
+    groups: GroupedMessage[],
+  ): Record<string, { ids: string[]; reads: boolean[] }> => {
+    const byProject: Record<string, { ids: string[]; reads: boolean[] }> = {}
+    for (const group of groups) {
+      if (!byProject[group.projectName]) byProject[group.projectName] = { ids: [], reads: [] }
+      for (const m of group.messages) {
+        byProject[group.projectName].ids.push(m.referenceId)
+        byProject[group.projectName].reads.push(m.read)
+      }
+    }
+    return byProject
+  }
+
+  const clearSelected = (): void => {
+    const groups = getSelectedGroups()
+    if (!groups.length) return
+
+    const status = isActive ? 'inactive' : 'unread'
+    const byProject = groupReferenceIdsByProject(groups)
+    Object.entries(byProject).forEach(([projectName, { ids, reads }]) => {
+      const isRead = reads.every(Boolean)
+      handleUpdateMessages(ids, status, projectName, true, isRead)
+    })
+    setSelected([])
+    lastSelectedIndexRef.current = -1
+  }
+
+  const toggleReadSelected = (): void => {
+    const groups = getSelectedGroups()
+    if (!groups.length) return
+
+    const allRead = groups.every((g) => g.read)
+    const byProject = groupReferenceIdsByProject(groups)
+    Object.entries(byProject).forEach(([projectName, { ids }]) => {
+      handleUpdateMessages(ids, allRead ? 'unread' : 'read', projectName, false, allRead)
+    })
+  }
+
   const handleClearAll = async (): Promise<void> => {
     let promises = []
     // for all projects, clear all messages
@@ -264,6 +329,11 @@ const Inbox = ({ filter }: InboxProps) => {
   }
 
   const handleReadShortcut = (e: MouseEvent | KeyboardEvent): void => {
+    if (selected.length > 1) {
+      toggleReadSelected()
+      return
+    }
+
     const id = getHoveredMessageId(e)
     if (!id) return
 
@@ -271,6 +341,11 @@ const Inbox = ({ filter }: InboxProps) => {
   }
 
   const handleClearShortcut = (e: MouseEvent | KeyboardEvent): void => {
+    if (selected.length > 1) {
+      clearSelected()
+      return
+    }
+
     const id = getHoveredMessageId(e, '.clearable')
     if (!id) return
 
@@ -284,7 +359,29 @@ const Inbox = ({ filter }: InboxProps) => {
     }
   }
 
-  const contextMenu = (id: string): InboxContextMenuItem[] => {
+  const contextMenu = (id: string, isMulti = false): InboxContextMenuItem[] => {
+    if (isMulti) {
+      const groups = getSelectedGroups()
+      const allRead = groups.every((g) => g.read)
+      return [
+        {
+          id: 'clear',
+          label: `${isActive ? 'Clear' : 'Unclear'} ${selected.length}`,
+          icon: isActive ? 'done' : 'replay',
+          shortcut: 'c',
+          command: clearSelected,
+        },
+        {
+          id: allRead ? 'unread' : 'read',
+          label: allRead ? 'Mark as unread' : 'Mark as read',
+          icon: allRead ? 'mark_email_unread' : 'drafts',
+          disabled: !isActive,
+          shortcut: 'x',
+          command: toggleReadSelected,
+        },
+      ]
+    }
+
     // find the group message with id
     const group = groupedMessages.find((g) => g.activityId === id)
 
@@ -327,11 +424,16 @@ const Inbox = ({ filter }: InboxProps) => {
 
     if (!id) return
 
-    // update selection
-    setSelected([id])
+    // keep the multi-selection when right-clicking a row that is part of it
+    const isMulti = selected.length > 1 && selected.includes(id)
+    if (!isMulti) {
+      setSelected([id])
+      // move the shift-range anchor to the right-clicked row so a following shift-select is correct
+      lastSelectedIndexRef.current = groupedMessages.findIndex((m) => m.activityId === id)
+    }
 
     // open context menu
-    ctxMenuShow(e, contextMenu(id))
+    ctxMenuShow(e, contextMenu(id, isMulti))
   }
 
   const shortcuts = useMemo(
@@ -394,9 +496,10 @@ const Inbox = ({ filter }: InboxProps) => {
               onKeyDown={handleKeyDown}
               className={clsx({ isLoading: isLoadingInbox })}
             >
-              {messagesData.map((group) => (
+              {messagesData.map((group, i: number) => (
                 <InboxMessage
                   key={group.activityId}
+                  rowIndex={i}
                   path={group.path}
                   type={group.activityType}
                   entityType={group.entityType ?? undefined}

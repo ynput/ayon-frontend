@@ -111,10 +111,11 @@ interface InboxMessageProps extends Omit<HTMLAttributes<HTMLLIElement>, 'onSelec
   isSelected?: boolean
   disableHover?: boolean
   isPlaceholder?: boolean
-  onSelect?: (id: string, ids: string[]) => void
+  onSelect?: (id: string, ids: string[], e: MouseEvent<HTMLLIElement>, rowIndex?:number) => void
   projectsInfo?: ProjectsInfo
   isMultiple?: boolean
   customBody?: string
+  rowIndex: number
 }
 
 const InboxMessage = ({
@@ -141,6 +142,7 @@ const InboxMessage = ({
   projectsInfo = {},
   isMultiple, // are there multiple messages in this group
   customBody, // custom body for special message types (e.g. reassignment)
+  rowIndex = 0,
   ...props
 }: InboxMessageProps) => {
   const typeIcon = useMemo(() => {
@@ -184,7 +186,7 @@ const InboxMessage = ({
       // check we are not clicking the clear button
       // use closest to check if the clear button is clicked
       if (!(e.target as HTMLElement).closest('.clear')) {
-        onSelect(id, ids)
+        onSelect(id, ids, e, rowIndex)
       }
     }
   }
