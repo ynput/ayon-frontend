@@ -9,7 +9,9 @@ export type RTEntityUpdate = {
 }
 
 // Util type not used in context but by other logic
-export type OnSyncDataCallback = (updates: RTEntityUpdate[] | undefined) => void
+export type OnSyncDataCallback = (
+  updates: RTEntityUpdate[] | undefined,
+) => void | Promise<void>
 
 type EntityUpdatesContextValue = {
   updates: RTEntityUpdate[]

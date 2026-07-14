@@ -281,7 +281,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
     listItemsData,
     deleteListItemAction,
     refetch: refetchListItems,
-    isSyncing,
     onSyncData,
   } = useListItemsDataContext()
 
@@ -430,11 +429,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     {
                       // sync button for list items
                       pageDisplayStyle === 'table' && (
-                        <SyncButton
-                          syncing={isSyncing}
-                          onSync={onSyncData}
-                          topics={['entity_list.changed', 'link']}
-                        />
+                        // we do automatic patching for list and link changes 'entity_list.changed'
+                        <SyncButton onSync={onSyncData} topics={[]} />
                       )
                     }
                     {isReview && reviewModulesLoaded && (

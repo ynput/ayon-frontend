@@ -263,7 +263,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     tasksByFolderMap,
     fetchNextPage,
     onSyncData,
-    isSyncing,
     isLoadingAll,
     isLoadingMore,
     loadingTasks,
@@ -326,7 +325,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         entitiesMap,
         tasksByFolderMap,
         fetchNextPage,
-        isSyncing,
         onSyncData,
         taskGroups,
         // Separate task and folder filters

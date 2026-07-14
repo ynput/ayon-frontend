@@ -42,15 +42,7 @@ export const Slicer: FC<SlicerProps> = ({
     isViewSyncPending,
   } = useSlicerContext()
   const { refetch } = useProjectFoldersContext()
-  const [isSyncing, setIsSyncing] = useState(false)
-  const handleSync = async () => {
-    setIsSyncing(true)
-    try {
-      await refetch()
-    } finally {
-      setIsSyncing(false)
-    }
-  }
+  const handleSync = async () => refetch()
 
   const {
     sliceOptions,
@@ -85,8 +77,9 @@ export const Slicer: FC<SlicerProps> = ({
         <SlicerSearch value={globalFilter} onChange={setGlobalFilter} />
         <SyncButton
           topics={['entity.folder.created']}
-          onSync={handleSync}
-          syncing={isSyncing}
+          onSync={async () => {
+            await handleSync()
+          }}
           hideWhenNoUpdates
         />
       </Header>

@@ -1,5 +1,5 @@
 import { EntityGroup } from '@shared/api'
-import { RTEntityUpdate } from '@shared/context'
+import { OnSyncDataCallback } from '@shared/context'
 import { FolderNodeMap, LoadingTasks, TaskNodeMap, TasksByFolderMap, SoftErrorAction } from '.'
 import { ProjectDataContextProps } from '../context'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
@@ -47,8 +47,7 @@ export interface ProjectOverviewContextType {
   entitiesMap: FolderNodeMap & TaskNodeMap
   tasksByFolderMap: TasksByFolderMap
   fetchNextPage: (value?: string) => void
-  isSyncing: boolean
-  onSyncData: (updates?: RTEntityUpdate[]) => void
+  onSyncData: OnSyncDataCallback
 
   // Grouping data
   taskGroups: EntityGroup[]

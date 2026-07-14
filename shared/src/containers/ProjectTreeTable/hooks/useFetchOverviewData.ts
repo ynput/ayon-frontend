@@ -45,7 +45,6 @@ type useFetchOverviewDataData = {
   loadingTasks: LoadingTasks // show number of loading tasks per folder or root
   loadingLinksEntityIds: Set<string> // entity IDs whose links are currently being fetched (not yet cached)
   fetchNextPage: (value?: string) => void
-  isSyncing: boolean
   onSyncData: OnSyncDataCallback
 }
 
@@ -98,7 +97,6 @@ export const useFetchOverviewData = ({
 
   const {
     folders,
-    isFetching: isFetchingFolders,
     isLoading: isLoadingFolders,
     isUninitialized: isUninitializedFolders,
     refetch: refetchFolders,
@@ -670,32 +668,36 @@ export const useFetchOverviewData = ({
     return filtered
   }, [foldersMap, tasksByFolderMap, taskIds])
 
-  const onSyncData: OnSyncDataCallback = (updates = []) => {
+  const onSyncData: OnSyncDataCallback = async (updates = []) => {
     const isFullSync = updates.length === 0
     const hasFolderUpdates = updates.some((update) => update.topic.startsWith('entity.folder.'))
     const hasTaskUpdates = updates.some((update) => update.topic.startsWith('entity.task.'))
 
-    if ((isFullSync || hasFolderUpdates) && !isUninitializedFolders) refetchFolders()
+    const refetches: Promise<unknown>[] = []
+    if ((isFullSync || hasFolderUpdates) && !isUninitializedFolders) {
+      refetches.push(refetchFolders())
+    }
     if ((isFullSync || hasFolderUpdates || hasTaskUpdates) && !isUninitializedTasksFolders) {
-      refetchTasksFolders()
+      refetches.push(refetchTasksFolders().unwrap())
     }
     if ((isFullSync || hasTaskUpdates) && !isUninitializedExpandedFoldersTasks) {
       clearOverviewTasksByFoldersRegistry(projectName)
-      refetchExpandedFoldersTasks()
+      refetches.push(refetchExpandedFoldersTasks().unwrap())
     }
-    if ((isFullSync || hasTaskUpdates) && !isUninitializedTasksList) refetchTasksList()
-    if ((isFullSync || hasTaskUpdates) && !isUninitializedGroupedTasks) refetchGroupedTasks()
-    if ((isFullSync || hasFolderUpdates) && !isUninitializedFoldersLinks) refetchFoldersLinks()
-    if ((isFullSync || hasTaskUpdates) && !isUninitializedTasksLinks) refetchTasksLinks()
+    if ((isFullSync || hasTaskUpdates) && !isUninitializedTasksList) {
+      refetches.push(refetchTasksList().unwrap())
+    }
+    if ((isFullSync || hasTaskUpdates) && !isUninitializedGroupedTasks) {
+      refetches.push(refetchGroupedTasks().unwrap())
+    }
+    if ((isFullSync || hasFolderUpdates) && !isUninitializedFoldersLinks) {
+      refetches.push(refetchFoldersLinks().unwrap())
+    }
+    if ((isFullSync || hasTaskUpdates) && !isUninitializedTasksLinks) {
+      refetches.push(refetchTasksLinks().unwrap())
+    }
+    await Promise.all(refetches)
   }
-  const isSyncing =
-    isFetchingFolders ||
-    isFetchingExpandedFoldersTasks ||
-    isFetchingFoldersByTaskFilter ||
-    isFetchingTasksList ||
-    isFetchingGroupedTasks ||
-    isFetchingFoldersLinks ||
-    isFetchingTasksLinks
 
   const error = tasksListError || searchFoldersError || groupedTasksError
 
@@ -725,6 +727,5 @@ export const useFetchOverviewData = ({
     loadingLinksEntityIds,
     fetchNextPage: handleFetchNextPage,
     onSyncData,
-    isSyncing,
   }
 }

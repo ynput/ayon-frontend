@@ -1,5 +1,5 @@
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
-import { forwardRef } from 'react'
+import { forwardRef, useState } from 'react'
 import styled from 'styled-components'
 import { OnSyncDataCallback, RTEntityUpdate, useSyncUpdates } from '@shared/context'
 
@@ -27,7 +27,6 @@ const StyledSync = styled(Button)`
 interface SyncButtonProps extends Omit<ButtonProps, 'onClick'> {
   projectNames?: string[]
   topics: string[]
-  syncing?: boolean
   onSync?: OnSyncDataCallback
   hideWhenNoUpdates?: boolean
 }
@@ -67,25 +66,35 @@ const getUpdatesTooltip = (updates: RTEntityUpdate[]) => {
 }
 
 export const SyncButton = forwardRef<HTMLButtonElement, SyncButtonProps>(
-  ({ projectNames, topics, syncing = false, onSync, hideWhenNoUpdates = false, ...props }, ref) => {
+  ({ projectNames, topics, onSync, hideWhenNoUpdates = false, ...props }, ref) => {
+    const [isSyncing, setIsSyncing] = useState(false)
     const { updates, hasUpdates } = useSyncUpdates({
       projectNames,
       topics,
-      isSyncing: syncing,
+      isSyncing,
     })
 
     if (hideWhenNoUpdates && !hasUpdates) return null
 
     const updatesTooltip = getUpdatesTooltip(updates)
 
+    const handleSync = async () => {
+      setIsSyncing(true)
+      try {
+        await onSync?.(updates)
+      } finally {
+        setIsSyncing(false)
+      }
+    }
+
     return (
       <StyledSync
         {...props}
         icon="sync"
         ref={ref}
-        onClick={() => onSync?.(updates)}
-        className={syncing ? 'syncing' : ''}
-        data-tooltip={hasUpdates ? updatesTooltip : 'Refresh the data'}
+        onClick={handleSync}
+        className={isSyncing ? 'syncing' : ''}
+        data-tooltip={hasUpdates ? updatesTooltip : 'Refresh data'}
         variant={hasUpdates ? 'filled' : 'surface'}
       />
     )

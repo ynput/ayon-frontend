@@ -1,7 +1,7 @@
 import { useContext, useMemo } from 'react'
 import { useGetFolderListQuery } from '@shared/api'
 
-import type { FolderListItem } from '@shared/api'
+import type { FolderListItem, FolderListModel } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { ProjectFoldersContext } from './ProjectFoldersContextInstance'
 
@@ -15,7 +15,7 @@ export interface ProjectFoldersContextValue {
   isSuccess: boolean
   isUninitialized: boolean
   error: any
-  refetch: () => void
+  refetch: () => Promise<FolderListModel>
 }
 
 //
@@ -100,6 +100,8 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
     [folders],
   )
 
+  const onRefetch = () => refetch().unwrap()
+
   const value = useMemo(
     () => ({
       folders: folders,
@@ -111,7 +113,7 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
       isSuccess,
       isUninitialized,
       error,
-      refetch,
+      refetch: onRefetch,
     }),
     [
       folders,
@@ -123,7 +125,7 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
       isSuccess,
       isUninitialized,
       error,
-      refetch,
+      onRefetch,
     ],
   )
 

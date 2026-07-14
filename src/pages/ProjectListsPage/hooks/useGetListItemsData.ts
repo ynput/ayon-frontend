@@ -2,7 +2,7 @@ import { useGetListItemsInfiniteInfiniteQuery, useGetEntityLinksQuery } from '@s
 import type { EntityListItem, GetListItemsResult } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import type { EntityLink } from '@shared/api/queries/links/getEntityLinks'
 import {
   RESTRICTED_ENTITY_TYPE,
@@ -33,7 +33,6 @@ export interface UseGetListItemsDataReturn {
   data: EntityListItemWithLinks[]
   isLoading: boolean
   isFetchingNextPage: boolean
-  isSyncing: boolean
   isError: boolean
   error?: unknown
   refetch: () => void
@@ -171,7 +170,6 @@ const useGetListItemsData = ({
   // Get all links for visible entities
   const {
     data: linksData = [],
-    isFetching: isFetchingLinks,
     refetch: refetchLinks,
     isUninitialized: isLinksUninitialized,
   } = useGetEntityLinksQuery(
@@ -204,7 +202,6 @@ const useGetListItemsData = ({
     }))
   }, [data, linksMap])
 
-  const [isSyncing, setIsSyncing] = useState(false)
   const onSyncData: OnSyncDataCallback = async (updates = []) => {
     const isFullSync = updates.length === 0
     const hasListItemUpdates = updates.some((update) =>
@@ -217,20 +214,17 @@ const useGetListItemsData = ({
 
     if (!syncLinks && !syncListItems) return
 
-    setIsSyncing(true)
     // LINK UPDATES
     if (syncLinks) await refetchLinks().unwrap()
 
     // LIST ITEM UPDATES
     if (syncListItems) await refetchListItems().unwrap()
-    setIsSyncing(false)
   }
 
   return {
     data: dataWithLinks,
     isLoading,
     isFetchingNextPage,
-    isSyncing,
     onSyncData,
     isError,
     error,

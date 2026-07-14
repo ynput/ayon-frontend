@@ -80,7 +80,6 @@ export interface ListItemsDataContextValue {
   resetFilters: () => void
   refetch: () => void
   onSyncData: OnSyncDataCallback
-  isSyncing: boolean
   // links visibility
   setLinksVisible: (visible: boolean) => void
   // column summaries footer (powerpack)
@@ -206,7 +205,6 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     fetchNextPage,
     refetch,
     onSyncData,
-    isSyncing,
   } = useGetListItemsData({
     projectName,
     entityType: selectedList?.entityType,
@@ -394,7 +392,6 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         resetFilters,
         refetch,
         onSyncData,
-        isSyncing,
         setLinksVisible,
         fieldStats,
         fieldStatsLoading,

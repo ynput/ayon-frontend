@@ -86,7 +86,6 @@ const ProjectOverviewPage: FC = () => {
     updateViewGroupBy,
     tasksMap,
     updateExpanded,
-    isSyncing: isSyncing,
     onSyncData,
   } = useProjectOverviewContext()
 
@@ -231,7 +230,6 @@ const ProjectOverviewPage: FC = () => {
               <SyncButton
                 topics={['entity.folder.created', 'entity.task.created']}
                 onSync={onSyncData}
-                syncing={isSyncing}
               />
               <GroupByDropdown
                 title="Group by"
