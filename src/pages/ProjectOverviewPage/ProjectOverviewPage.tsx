@@ -9,6 +9,7 @@ import {
   SLICER_PAGES_CONFIG,
   useSlicerContext,
   useSlicerSplitter,
+  type SlicerCountsSource,
 } from '@shared/containers/Slicer'
 
 // arc
@@ -87,7 +88,22 @@ const ProjectOverviewPage: FC = () => {
     updateViewGroupBy,
     tasksMap,
     updateExpanded,
+    taskFilters,
+    folderFilters,
   } = useProjectOverviewContext()
+
+  const slicerCountsSource = useMemo<SlicerCountsSource>(
+    () => ({
+      entity: 'task',
+      args: {
+        projectName,
+        filter: taskFilters?.filterString || undefined,
+        folderFilter: folderFilters?.filterString || undefined,
+        search: taskFilters?.search || undefined,
+      },
+    }),
+    [projectName, taskFilters?.filterString, folderFilters?.filterString, taskFilters?.search],
+  )
 
   const { sorting, updateSorting } = useColumnSettingsContext()
   const nameSortDesc = sorting?.[0]?.id === 'name' ? sorting[0].desc : false
@@ -208,6 +224,7 @@ const ProjectOverviewPage: FC = () => {
               sliceFields={SLICER_PAGES_CONFIG.overview.fields}
               entityTypes={['task', 'folder']}
               pinnedSliceType="hierarchy"
+              countsSource={slicerCountsSource}
             />
           </Section>
         </SplitterPanel>

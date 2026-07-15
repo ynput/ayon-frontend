@@ -2,6 +2,7 @@ import { FC, useState } from 'react'
 import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from '../hooks/useTableDataBySlice'
+import { useSlicerCounts, type SlicerCountsSource } from '../hooks/useSlicerCounts'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
 import { SliceType } from '@shared/containers/Slicer'
@@ -23,12 +24,14 @@ export interface SlicerProps {
   sliceFields: SliceTypeField[]
   entityTypes?: string[] // entity types
   pinnedSliceType?: SliceType // when changing slice type, pinned the current slice
+  countsSource?: SlicerCountsSource // entity + filter args for per-value count badges
 }
 
 export const Slicer: FC<SlicerProps> = ({
   sliceFields = [],
   entityTypes = ['task'],
   pinnedSliceType,
+  countsSource,
 }) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const {
@@ -40,6 +43,8 @@ export const Slicer: FC<SlicerProps> = ({
     isViewSyncPending,
   } = useSlicerContext()
 
+  const { counts, filled, complete } = useSlicerCounts(countsSource)
+
   const {
     sliceOptions,
     sliceType,
@@ -47,7 +52,13 @@ export const Slicer: FC<SlicerProps> = ({
     table: { data: sliceTableData, isExpandable },
     sliceMap,
     isLoading: isLoadingSliceTableData,
-  } = useTableDataBySlice({ sliceFields, entityTypes })
+  } = useTableDataBySlice({
+    sliceFields,
+    entityTypes,
+    counts,
+    filled,
+    countsComplete: complete,
+  })
 
   const handleSelectionChange = (s: RowSelectionState) => {
     onRowSelectionChange?.(s)
