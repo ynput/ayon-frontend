@@ -1,4 +1,4 @@
-import { useContext, useMemo, useRef, useState } from 'react'
+import { useContext, useId, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { Button } from '@ynput/ayon-react-components'
 import { Menu, MenuContainer, DetailsDialog } from '@shared/components'
@@ -76,10 +76,13 @@ export const DetailsPanelMoreMenu = ({
   const { triggerThumbnailUpload, canUploadVersion } = useContext(ThumbnailUploadContext)
   const { onOpenVersionUpload } = useContextAccess()
 
+  // useId keeps the id unique per panel instance so the main panel and the slideout
+  // never share it — a global menuOpen would otherwise open both menus at once.
+  const instanceId = useId()
   const menuId = useMemo(() => {
     const seed = entityId || entityIds?.[0] || 'noentity'
-    return `details-more-menu-${seed}-${projectName || 'noproject'}`
-  }, [entityId, entityIds, projectName])
+    return `details-more-menu-${instanceId}-${seed}-${projectName || 'noproject'}`
+  }, [instanceId, entityId, entityIds, projectName])
 
   const isOpen = menuOpen === menuId
 
