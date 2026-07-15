@@ -45,7 +45,8 @@ export const buildChildrenDetails = (
 
   for (const folder of topLevelFolders) {
     const info = folderInfoMap.get(folder.id)
-    const prefix = many ? `"${folder.label || folder.name}" contains ` : 'Contains '
+    const folderDisplayName = folder.label || folder.name || folder.id
+    const prefix = many ? `"${folderDisplayName}" contains ` : 'Contains '
     const hasDescendants =
       info &&
       (info.totalFolderCount > 0 ||
