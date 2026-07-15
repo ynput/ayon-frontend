@@ -239,6 +239,17 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     config: { searchKey: 'name' },
   })
 
+  // Same base filters WITHOUT the slice merged in — for slicer value counts, so a
+  // selected slice value keeps its siblings' true counts (no self-zeroing).
+  const baseTaskFilter = useQueryFilters({
+    queryFilters: taskFilter,
+    config: { searchKey: 'name' },
+  })
+  const baseFolderFilter = useQueryFilters({
+    queryFilters: folderFilter,
+    config: { searchKey: 'name' },
+  })
+
   // Use the shared hook to handle filter logic (for backward compatibility)
   const queryFiltersResult = useQueryFilters({
     queryFilters,
@@ -255,6 +266,28 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     pinnedRowSelection: pinnedSlice?.rowSelection || null,
     entityListFolderIds: entityIds.folderIds,
   })
+
+  // Slicer value counts: exclude the active slice's own filter (base*Filter, no
+  // sliceFilter) so a selected value keeps its siblings' true counts; keep the
+  // hierarchy/entity-list ids so counts still match the filtered table.
+  const slicerCountsArgs = useMemo(
+    () => ({
+      projectName,
+      filter: baseTaskFilter.filterString || undefined,
+      folderFilter: baseFolderFilter.filterString || undefined,
+      search: baseTaskFilter.search || undefined,
+      folderIds: selectedFolders.length ? selectedFolders : undefined,
+      taskIds: rawEntityIds.taskIds.length ? rawEntityIds.taskIds : undefined,
+    }),
+    [
+      projectName,
+      baseTaskFilter.filterString,
+      baseFolderFilter.filterString,
+      baseTaskFilter.search,
+      selectedFolders,
+      rawEntityIds.taskIds,
+    ],
+  )
 
   // DATA FETCHING
   const {
@@ -337,6 +370,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
           filterString: combinedFolderFilter.filterString,
           search: combinedFolderFilter.search,
         },
+        slicerCountsArgs,
         selectedFolders,
         selectedTaskIds: rawEntityIds.taskIds,
         // Backward compatibility for ProjectTableProvider (uses taskFilters)

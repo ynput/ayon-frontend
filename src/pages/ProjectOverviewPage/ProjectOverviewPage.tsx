@@ -88,21 +88,12 @@ const ProjectOverviewPage: FC = () => {
     updateViewGroupBy,
     tasksMap,
     updateExpanded,
-    taskFilters,
-    folderFilters,
+    slicerCountsArgs,
   } = useProjectOverviewContext()
 
   const slicerCountsSource = useMemo<SlicerCountsSource>(
-    () => ({
-      entity: 'task',
-      args: {
-        projectName,
-        filter: taskFilters?.filterString || undefined,
-        folderFilter: folderFilters?.filterString || undefined,
-        search: taskFilters?.search || undefined,
-      },
-    }),
-    [projectName, taskFilters?.filterString, folderFilters?.filterString, taskFilters?.search],
+    () => ({ entity: 'task', args: slicerCountsArgs }),
+    [slicerCountsArgs],
   )
 
   const { sorting, updateSorting } = useColumnSettingsContext()

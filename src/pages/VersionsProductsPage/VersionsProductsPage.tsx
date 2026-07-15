@@ -36,24 +36,11 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
   const { showGrid } = useVPViewsContext()
   const { showVersionsTable } = useVersionsSelectionContext()
   const { projectName } = useProjectContext()
-  const { columnStatsArgs } = useVersionsDataContext()
+  const { slicerCountsArgs } = useVersionsDataContext()
 
   const slicerCountsSource = useMemo<SlicerCountsSource>(
-    () => ({
-      entity: 'version',
-      args: {
-        projectName: columnStatsArgs.projectName,
-        versionFilter: columnStatsArgs.versionFilter,
-        productFilter: columnStatsArgs.productFilter,
-        taskFilter: columnStatsArgs.taskFilter,
-      },
-    }),
-    [
-      columnStatsArgs.projectName,
-      columnStatsArgs.versionFilter,
-      columnStatsArgs.productFilter,
-      columnStatsArgs.taskFilter,
-    ],
+    () => ({ entity: 'version', args: slicerCountsArgs }),
+    [slicerCountsArgs],
   )
 
   // modal dialog state for product and version details
