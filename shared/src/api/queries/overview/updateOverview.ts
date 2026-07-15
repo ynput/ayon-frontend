@@ -731,25 +731,26 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         }
 
         // reconcile list caches after deletes — this runs once the request has settled,
-        // so it confirms the optimistic removal (or restores rows after a failure)
+        // so it confirms the optimistic removal (or restores rows after a failure).
+        // expand server-side cascades: folder -> child folders/tasks/products/versions,
+        // product -> versions.
+        const invalidateList = new Set<string>()
         if (deletedTypes.has('folder')) {
-          deletedEntityTags.push({ type: 'folder', id: 'LIST' })
-          // folder delete cascades to everything under it
-          deletedEntityTags.push({ type: 'product', id: 'LIST' }, { type: 'version', id: 'LIST' })
+          ;['folder', 'task', 'product', 'version'].forEach((t) => invalidateList.add(t))
         }
-        if (deletedTypes.has('task')) {
+        if (deletedTypes.has('task')) invalidateList.add('task')
+        if (deletedTypes.has('product')) ['product', 'version'].forEach((t) => invalidateList.add(t))
+        if (deletedTypes.has('version')) invalidateList.add('version')
+
+        if (invalidateList.has('folder')) deletedEntityTags.push({ type: 'folder', id: 'LIST' })
+        if (invalidateList.has('task')) {
           deletedEntityTags.push(
             { type: 'overviewTask', id: 'LIST' },
             { type: 'overviewTask', id: projectName },
           )
         }
-        if (deletedTypes.has('product')) {
-          // product delete cascades to its versions
-          deletedEntityTags.push({ type: 'product', id: 'LIST' }, { type: 'version', id: 'LIST' })
-        }
-        if (deletedTypes.has('version')) {
-          deletedEntityTags.push({ type: 'version', id: 'LIST' })
-        }
+        if (invalidateList.has('product')) deletedEntityTags.push({ type: 'product', id: 'LIST' })
+        if (invalidateList.has('version')) deletedEntityTags.push({ type: 'version', id: 'LIST' })
 
         return [
           ...userDashboardTags,
