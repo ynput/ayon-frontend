@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { MenuItemType } from '@shared/components'
 import { isDeletableEntityType } from '@shared/context'
+import { pluralize } from '@shared/util'
 import type { DetailsPanelEntityListsContext, SelectedEntityRef } from '../types'
 
 interface UseMenuOptionsParams {
@@ -251,13 +252,17 @@ export const useMenuOptions = ({
     })
 
     // Delete stays at the very bottom, styled as a danger action.
-    const deletableCount = normalizedSelected.filter((e) =>
+    const deletable = normalizedSelected.filter((e) =>
       isDeletableEntityType(e.entityType || entityType),
-    ).length
-    if (canDelete && deletableCount > 0) {
+    )
+    if (canDelete && deletable.length > 0) {
+      const types = new Set(deletable.map((e) => e.entityType || entityType))
+      const noun = types.size === 1 ? [...types][0] : 'item'
+      const label =
+        deletable.length === 1 ? `Delete ${noun}` : `Delete ${pluralize(deletable.length, noun)}`
       items.push({
         id: 'delete',
-        label: deletableCount > 1 ? `Delete ${deletableCount}` : 'Delete',
+        label,
         icon: 'delete',
         danger: true,
         onClick: onDelete,

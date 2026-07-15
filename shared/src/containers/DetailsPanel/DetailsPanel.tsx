@@ -13,7 +13,6 @@ import {
   ProjectContextProvider,
   ProjectModelWithProducts,
   ThumbnailUploadProvider,
-  DeleteEntitiesProvider,
   useDetailsPanelContext,
   useScopedDetailsPanel,
   useURIContext,
@@ -383,7 +382,6 @@ DetailsPanelProps) => {
       versionsInputRef={versionsInputRef}
       canUploadVersion={canUploadVersion}
     >
-      <DeleteEntitiesProvider>
       <Styled.Panel className="details-panel">
         <Styled.Toolbar>
           {/* TODO FIX PATH */}
@@ -526,7 +524,6 @@ DetailsPanelProps) => {
           )}
         </ProjectContextProvider>
       </Styled.Panel>
-      </DeleteEntitiesProvider>
     </ThumbnailUploadProvider>
   )
 }

@@ -730,17 +730,13 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           tasksFolderTags.push({ type: 'tasksFolder', id: projectName })
         }
 
-        // reconcile list caches after deletes — this runs once the request has settled,
-        // so it confirms the optimistic removal (or restores rows after a failure).
-        // expand server-side cascades: folder -> child folders/tasks/products/versions,
-        // product -> versions.
+        // Deleted rows are removed optimistically; only server-side descendants need a refetch
+        // (folder -> folders/tasks/products/versions, product -> versions).
         const invalidateList = new Set<string>()
         if (deletedTypes.has('folder')) {
           ;['folder', 'task', 'product', 'version'].forEach((t) => invalidateList.add(t))
         }
-        if (deletedTypes.has('task')) invalidateList.add('task')
-        if (deletedTypes.has('product')) ['product', 'version'].forEach((t) => invalidateList.add(t))
-        if (deletedTypes.has('version')) invalidateList.add('version')
+        if (deletedTypes.has('product')) invalidateList.add('version')
 
         if (invalidateList.has('folder')) deletedEntityTags.push({ type: 'folder', id: 'LIST' })
         if (invalidateList.has('task')) {

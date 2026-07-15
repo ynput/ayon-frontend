@@ -194,9 +194,7 @@ export const patchVersions = (
     }
   }
 
-  // Step 3: Invalidate affected caches to trigger refetching.
-  // Skip for deletes — the request is still in flight, an immediate refetch would
-  // resurrect the optimistically removed rows; reconciliation happens on success.
+  // Invalidate updated rows only; deletes have nothing to refresh — reconciled by invalidatesTags.
   const nonDeleteOps = versions.filter((op) => op.type !== 'delete')
   if (nonDeleteOps.length > 0) {
     dispatch(injectedVersionsPageApi.util.invalidateTags(getVersionTags(nonDeleteOps)))
