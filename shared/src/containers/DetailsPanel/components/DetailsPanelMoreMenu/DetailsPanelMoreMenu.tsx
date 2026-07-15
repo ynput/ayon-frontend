@@ -2,7 +2,13 @@ import { useContext, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { Button } from '@ynput/ayon-react-components'
 import { Menu, MenuContainer, DetailsDialog } from '@shared/components'
-import { useMenuContext, ThumbnailUploadContext } from '@shared/context'
+import {
+  useMenuContext,
+  ThumbnailUploadContext,
+  useDeleteEntitiesContextOptional,
+  isDeletableEntityType,
+  type DeletableEntity,
+} from '@shared/context'
 
 import { useContextAccess } from './hooks/useContextAccess'
 import { useMenuOptions } from './hooks/useMenuOptions'
@@ -94,6 +100,39 @@ export const DetailsPanelMoreMenu = ({
       : null
   const canOpenViewer = !!onOpenViewer && !!viewerArgs
 
+  const deleteContext = useDeleteEntitiesContextOptional()
+
+  const deletableEntities = useMemo<DeletableEntity[]>(() => {
+    const source: SelectedEntityRef[] = selectedEntities.length
+      ? selectedEntities
+      : entityId
+        ? [{ entityId, entityType, projectName }]
+        : []
+    return source
+      .map((e): DeletableEntity | null => {
+        const type = e.entityType || entityType
+        const entityProjectName = e.projectName || projectName
+        if (!isDeletableEntityType(type) || !e.entityId || !entityProjectName) return null
+        return {
+          id: e.entityId,
+          entityType: type,
+          name: e.name,
+          label: e.label,
+          projectName: entityProjectName,
+          folderId: e.folderId,
+          parentId: e.parentId,
+        }
+      })
+      .filter((e): e is DeletableEntity => e !== null)
+  }, [selectedEntities, entityId, entityType, projectName])
+
+  const canDelete = !!deleteContext && deletableEntities.length > 0
+
+  const handleDelete = () => {
+    setMenuOpen(false)
+    deleteContext?.deleteEntities(deletableEntities)
+  }
+
   const { items } = useMenuOptions({
     entityType,
     entityId,
@@ -103,6 +142,7 @@ export const DetailsPanelMoreMenu = ({
     canUploadVersion: canUploadVersionItem,
     canOpenPip: !!onOpenPip,
     canOpenViewer,
+    canDelete,
     entityListsContext,
     onPip: () => onOpenPip?.(),
     onOpenViewer: () => viewerArgs && onOpenViewer?.(viewerArgs),
@@ -110,6 +150,7 @@ export const DetailsPanelMoreMenu = ({
     onUploadVersion: handleUploadVersion,
     onShare: (link) => setShareDialogLink(link),
     onViewData: () => setShowDataDialog(true),
+    onDelete: handleDelete,
   })
 
   const dialogIds = entityIds?.length ? entityIds : entityId ? [entityId] : []

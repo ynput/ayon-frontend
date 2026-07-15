@@ -9,11 +9,12 @@ import {
 } from '@shared/containers'
 import { useVersionsDataContext } from '../context/VPDataContext'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
-import { confirmDelete } from '@shared/util'
-import { useDeleteVersionMutation } from '@shared/api'
-import { useDeleteProductMutation } from '@queries/product/updateProduct'
 import { useVersionUploadContext } from '@shared/components'
-import { useProjectContext } from '@shared/context'
+import {
+  useProjectContext,
+  useDeleteEntitiesContext,
+  type DeletableEntity,
+} from '@shared/context'
 
 export interface VPContextMenuItems {
   showDetailsItem: ContextMenuItemConstructor
@@ -35,53 +36,39 @@ export const useVPContextMenu = (callbacks?: {
   const { buildReviewContextMenu } = useEntityListsContext()
   const { onOpenPlayer } = useProjectTableContext()
   const { projectName } = useProjectContext()
-  const [deleteVersion] = useDeleteVersionMutation()
-  const [deleteProduct] = useDeleteProductMutation()
+  const { deleteEntities } = useDeleteEntitiesContext()
   const { onOpenVersionUpload } = useVersionUploadContext()
 
-  // Shared delete version handler
+  // Shared delete version handler — delegates to the standardized delete flow
   const handleDeleteVersion = useCallback(
-    async (versionIds: string[], versionNames: string[]) => {
-      const isSingle = versionIds.length === 1
-      const label = isSingle ? `version ${versionNames[0]}` : `${versionIds.length} versions`
-
-      confirmDelete({
-        label,
-        accept: async () => {
-          // Delete all versions in parallel
-          await Promise.all(
-            versionIds.map((versionId) => deleteVersion({ versionId, projectName }).unwrap()),
-          )
-          // Cache invalidation will automatically update the UI
-        },
-      })
+    (versionIds: string[], versionNames: string[]) => {
+      const entities = versionIds.map(
+        (id, i): DeletableEntity => ({
+          id,
+          entityType: 'version',
+          name: versionNames[i],
+          projectName,
+        }),
+      )
+      deleteEntities(entities)
     },
-    [deleteVersion, projectName],
+    [deleteEntities, projectName],
   )
 
-  // Shared delete product handler
+  // Shared delete product handler — delegates to the standardized delete flow
   const handleDeleteProduct = useCallback(
-    async (productIds: string[], productNames: string[]) => {
-      const isSingle = productIds.length === 1
-      const label = isSingle ? `(${productNames[0]})` : `${productIds.length} products`
-      const message = isSingle
-        ? `Deleting this product will also delete all associated versions. This action cannot be undone. Are you sure you want to proceed?`
-        : `Deleting these ${productIds.length} products will also delete all their associated versions. This action cannot be undone. Are you sure you want to proceed?`
-
-      confirmDelete({
-        label,
-        message,
-        accept: async () => {
-          // Delete all products in parallel
-          await Promise.all(
-            productIds.map((productId) => deleteProduct({ productId, projectName }).unwrap()),
-          )
-          // Cache invalidation will automatically update the UI
-        },
-        deleteLabel: isSingle ? 'Delete Product and Versions' : 'Delete Products and Versions',
-      })
+    (productIds: string[], productNames: string[]) => {
+      const entities = productIds.map(
+        (id, i): DeletableEntity => ({
+          id,
+          entityType: 'product',
+          name: productNames[i],
+          projectName,
+        }),
+      )
+      deleteEntities(entities)
     },
-    [deleteProduct, projectName],
+    [deleteEntities, projectName],
   )
 
   // Show details context menu item

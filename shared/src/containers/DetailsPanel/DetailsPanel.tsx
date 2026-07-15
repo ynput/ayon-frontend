@@ -13,6 +13,7 @@ import {
   ProjectContextProvider,
   ProjectModelWithProducts,
   ThumbnailUploadProvider,
+  DeleteEntitiesProvider,
   useDetailsPanelContext,
   useScopedDetailsPanel,
   useURIContext,
@@ -382,6 +383,7 @@ DetailsPanelProps) => {
       versionsInputRef={versionsInputRef}
       canUploadVersion={canUploadVersion}
     >
+      <DeleteEntitiesProvider>
       <Styled.Panel className="details-panel">
         <Styled.Toolbar>
           {/* TODO FIX PATH */}
@@ -405,11 +407,18 @@ DetailsPanelProps) => {
               projectName={firstProject}
               selectedEntities={entityDetailsData
                 .filter((e) => !!e?.id)
-                .map((e) => ({
-                  entityId: e.id,
-                  entityType: e.entityType || activeEntityType,
-                  hasReviewables: !!e.hasReviewables,
-                }))}
+                .map((e) => {
+                  const type = e.entityType || activeEntityType
+                  return {
+                    entityId: e.id,
+                    entityType: type,
+                    hasReviewables: !!e.hasReviewables,
+                    name: e.name,
+                    label: e.label,
+                    projectName: e.projectName || firstProject,
+                    folderId: type === 'task' ? e.folder?.id : undefined,
+                  }
+                })}
               entityListsContext={entityListsContext}
               onOpenPip={handleOpenPip}
               onOpenViewer={onOpenViewer}
@@ -517,6 +526,7 @@ DetailsPanelProps) => {
           )}
         </ProjectContextProvider>
       </Styled.Panel>
+      </DeleteEntitiesProvider>
     </ThumbnailUploadProvider>
   )
 }

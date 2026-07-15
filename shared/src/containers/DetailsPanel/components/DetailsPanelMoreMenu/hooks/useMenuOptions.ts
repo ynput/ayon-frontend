@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import type { MenuItemType } from '@shared/components'
+import { isDeletableEntityType } from '@shared/context'
 import type { DetailsPanelEntityListsContext, SelectedEntityRef } from '../types'
 
 interface UseMenuOptionsParams {
@@ -11,6 +12,7 @@ interface UseMenuOptionsParams {
   canUploadVersion: boolean
   canOpenPip: boolean
   canOpenViewer: boolean
+  canDelete: boolean
   entityListsContext: DetailsPanelEntityListsContext | undefined
   onPip: () => void
   onOpenViewer: () => void
@@ -18,6 +20,7 @@ interface UseMenuOptionsParams {
   onUploadVersion: () => void
   onShare: (link: string) => void
   onViewData: () => void
+  onDelete: () => void
 }
 
 export interface MenuOptionsResult {
@@ -98,6 +101,7 @@ export const useMenuOptions = ({
   canUploadVersion,
   canOpenPip,
   canOpenViewer,
+  canDelete,
   entityListsContext,
   onPip,
   onOpenViewer,
@@ -105,6 +109,7 @@ export const useMenuOptions = ({
   onUploadVersion,
   onShare,
   onViewData,
+  onDelete,
 }: UseMenuOptionsParams): MenuOptionsResult => {
   const normalizedSelected = useMemo<SelectedEntityRef[]>(() => {
     if (selectedEntities.length) {
@@ -245,12 +250,27 @@ export const useMenuOptions = ({
       onClick: onViewData,
     })
 
+    // Delete stays at the very bottom, styled as a danger action.
+    const deletableCount = normalizedSelected.filter((e) =>
+      isDeletableEntityType(e.entityType || entityType),
+    ).length
+    if (canDelete && deletableCount > 0) {
+      items.push({
+        id: 'delete',
+        label: deletableCount > 1 ? `Delete ${deletableCount}` : 'Delete',
+        icon: 'delete',
+        danger: true,
+        onClick: onDelete,
+      })
+    }
+
     return { items, shareLink }
   }, [
     canOpenPip,
     canOpenViewer,
     canUploadThumbnail,
     canUploadVersion,
+    canDelete,
     entityListsContext,
     projectName,
     normalizedSelected,
@@ -261,5 +281,6 @@ export const useMenuOptions = ({
     onUploadVersion,
     onShare,
     onViewData,
+    onDelete,
   ])
 }
