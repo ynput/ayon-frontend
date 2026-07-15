@@ -12,24 +12,23 @@ import { PubSub } from '@shared/util'
 import { EntityUpdatesContext } from './EntityUpdatesContextInstance'
 import { useViewsState } from '@shared/containers'
 
+export type RTUpdateType = 'created' | 'changed' | 'deleted'
+
 // settings for different levels of auto syncing
-type SettingsConfig = {
-  create: boolean
-  update: boolean
-  delete: boolean
-}
+type SettingsConfig = Record<RTUpdateType, boolean>
 
 // helper function to turn everything on or off for a given level of auto syncing
 const toggleSyncAll = (on: boolean): SettingsConfig => ({
-  create: on,
-  update: on,
-  delete: on,
+  created: on,
+  changed: on,
+  deleted: on,
 })
 
 export type RTEntityUpdate = {
   id: number
   project?: string
   topic: string
+  updateType: RTUpdateType
   entityId?: string
   message?: any
 }
@@ -59,6 +58,19 @@ const matchesProject = (project: string | undefined, projectNames: string[]) => 
   return projectNames.includes(project || '')
 }
 
+const getUpdateType = (topic: string): RTUpdateType | undefined => {
+  const event = topic.split('.').pop()
+  if (!event) return undefined
+  if (event.endsWith('_created')) return 'created'
+  if (event.endsWith('_deleted')) return 'deleted'
+  if (event.endsWith('_changed')) return 'changed'
+  if (event === 'created' || event === 'changed' || event === 'deleted') {
+    return event
+  } else {
+    return undefined
+  }
+}
+
 export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesProviderProps) => {
   const nextId = useRef(0)
   const [autoSyncSettings = toggleSyncAll(false), setAutoSyncSettings] = useViewsState<
@@ -71,10 +83,16 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
     const token = PubSub.subscribeAll((_topic: string, message: any) => {
       if (!message?.topic || !matchesProject(message.project, projectNames)) return
 
+      const updateType = getUpdateType(message.topic)
+      // check the type of update and whether auto syncing is enabled for that type
+      // NOTE: when auto syncing is enabled we DO NOT push to updates because it is streamed in automatically
+      if (!updateType || autoSyncSettings[updateType]) return
+
       const update: RTEntityUpdate = {
         id: ++nextId.current,
         project: message.project,
         topic: message.topic,
+        updateType,
         entityId: message.summary?.entityId,
         message,
       }
@@ -82,7 +100,7 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
     })
 
     return () => PubSub.unsubscribe(token)
-  }, [projectNames])
+  }, [autoSyncSettings, projectNames])
 
   const value = useMemo<EntityUpdatesContextValue>(
     () => ({

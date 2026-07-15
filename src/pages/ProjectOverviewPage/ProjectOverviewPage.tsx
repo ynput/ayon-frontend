@@ -227,10 +227,7 @@ const ProjectOverviewPage: FC = () => {
                 disabledFilters={sliceType ? [sliceType] : []}
                 data={{}}
               />
-              <SyncButton
-                topics={['entity.folder.created', 'entity.task.created']}
-                onSync={onSyncData}
-              />
+              <SyncButton topics={['entity.folder', 'entity.task']} onSync={onSyncData} />
               <GroupByDropdown
                 title="Group by"
                 options={viewGroupByOptions}

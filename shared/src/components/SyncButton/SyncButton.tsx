@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import {
   OnSyncDataCallback,
   RTEntityUpdate,
+  RTUpdateType,
   useAutoSyncSettings,
   useSyncUpdates,
 } from '@shared/context'
@@ -11,7 +12,20 @@ import { Menu, MenuContainer } from '../Menu'
 import { useMenuContext } from '@shared/context'
 import clsx from 'clsx'
 
+const UPDATE_TYPES: { updateType: RTUpdateType; label: string; tooltip?: string }[] = [
+  {
+    updateType: 'created',
+    label: 'Creations',
+    tooltip: 'Automatically add newly created entities',
+  },
+  { updateType: 'changed', label: 'Updates', tooltip: 'Automatically update existing entities' },
+  { updateType: 'deleted', label: 'Deletions', tooltip: 'Automatically remove deleted entities' },
+]
+
 const StyledSync = styled(Button)`
+  /* put above the menu so it's still clickable */
+  z-index: 1001;
+
   /* spin icon */
   &.syncing {
     .icon {
@@ -31,7 +45,7 @@ const StyledSync = styled(Button)`
     }
   }
 
-  &.auto-sync:not(.syncing) {
+  &.auto-sync:not(.has-updates) {
     &,
     .icon {
       color: var(--md-sys-color-primary);
@@ -174,6 +188,7 @@ export const SyncButton = forwardRef<HTMLButtonElement, SyncButtonProps>(
           onMouseLeave={closeSettingsMenu}
           className={clsx(props.className, {
             syncing: isSyncing,
+            'has-updates': hasUpdates,
             'auto-sync': isAutoSyncEnabled,
           })}
           data-tooltip={hasUpdates ? updatesTooltip : 'Refresh data'}
@@ -213,16 +228,19 @@ export const SyncButton = forwardRef<HTMLButtonElement, SyncButtonProps>(
                         }
                       />
                     </div>
-                    {(['create', 'update', 'delete'] as const).map((setting) => (
-                      <div className="setting" key={setting}>
-                        <span>{setting[0].toUpperCase() + setting.slice(1)}</span>
+                    {UPDATE_TYPES.map((setting) => (
+                      <div className="setting" key={setting.updateType}>
+                        <span>{setting.label}</span>
                         <InputSwitch
-                          checked={autoSyncSettings[setting]}
+                          checked={autoSyncSettings[setting.updateType]}
                           onChange={() =>
                             updateAutoSyncSettings({
-                              settings: { [setting]: !autoSyncSettings[setting] },
+                              settings: {
+                                [setting.updateType]: !autoSyncSettings[setting.updateType],
+                              },
                             })
                           }
+                          data-tooltip={setting.tooltip}
                         />
                       </div>
                     ))}
