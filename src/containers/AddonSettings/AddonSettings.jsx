@@ -52,7 +52,7 @@ import PerProjectBundleConfig, {
   projectBundleFromName,
 } from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
 import { useSessionStorage } from '@shared/hooks'
-import InfoMessage from '@components/InfoMessage'
+import { InfoMessage } from '@shared/components'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}

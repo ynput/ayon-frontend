@@ -19,7 +19,7 @@
  * The context also provides utility functions for entity relationships, expansion state
  * management, filtering,  and folder inheritance operations.
  */
-import { ReactNode, useCallback, useMemo } from 'react'
+import { ReactNode, useCallback, useContext, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import useBuildProjectDataTable from '../hooks/useBuildProjectDataTable'
@@ -31,9 +31,13 @@ import {
   TaskNodeMap,
   TasksByFolderMap,
 } from '../types/table'
-import useFolderRelationships from '../hooks/useFolderRelationships'
-import { ProjectModel } from '../types/project'
-import { ProjectTableAttribute, LoadingTasks } from '../types'
+import useFolderRelationships, {
+  FindInheritedValueFromAncestors,
+  FindNonInheritedValues,
+  GetAncestorsOf,
+  GetInheritedDependents,
+} from '../hooks/useFolderRelationships'
+import { ProjectTableAttribute, LoadingTasks, SoftErrorAction } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
 import { EntityGroup } from '@shared/api'
@@ -45,8 +49,91 @@ import useBuildGroupByTableData, {
 import { PowerpackContextType, useProjectContext } from '@shared/context'
 import { TableGroupBy, useColumnSettingsContext } from './ColumnSettingsContext'
 import { ProjectTableModulesType } from '@shared/hooks'
-import { ProjectTableContext, ProjectTableContextType } from './ProjectTableContext'
 import type { SubtasksManagerProps } from '@shared/components'
+import { RowId } from '../utils'
+import { ProjectTableContext } from './ProjectTableContextInstance'
+
+export type ToggleExpandAll = (rowIds: RowId[], expand?: boolean) => void
+export type ToggleExpands = (rowIds: RowId[], expand?: boolean) => void
+
+export interface ProjectTableContextType {
+  isInitialized: ProjectTableProviderProps['isInitialized']
+  isLoading: ProjectTableProviderProps['isLoading']
+  users: ProjectTableProviderProps['users']
+  // Attributes
+  attribFields: ProjectTableProviderProps['attribFields']
+  attribFieldsScoped: ProjectTableProviderProps['attribFields']
+  error?: string
+  softError?: string // shows a warning banner but doesn't block the table from rendering
+  softErrorAction?: SoftErrorAction
+
+  scopes: ProjectTableProviderProps['scopes']
+
+  // Data
+  tableData: TableRow[]
+  tasksMap: ProjectTableProviderProps['tasksMap']
+  foldersMap: ProjectTableProviderProps['foldersMap']
+  entitiesMap: ProjectTableProviderProps['entitiesMap']
+  fetchNextPage: ProjectTableProviderProps['fetchNextPage']
+  reloadTableData: ProjectTableProviderProps['reloadTableData']
+  getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
+  loadingLinksEntityIds?: Set<string>
+
+  // grouping
+  groups: ProjectTableProviderProps['groups']
+  overrideGroupBy?: ProjectTableProviderProps['overrideGroupBy']
+
+  // Filters
+  queryFilters: ProjectTableProviderProps['queryFilters']
+
+  // Hierarchy
+  showHierarchy: ProjectTableProviderProps['showHierarchy']
+  updateShowHierarchy: ProjectTableProviderProps['updateShowHierarchy']
+  hierarchyOptions?: ProjectTableProviderProps['hierarchyOptions']
+  hierarchyActive?: ProjectTableProviderProps['hierarchyActive']
+
+  // Flat folder view
+  isFlatFolderView?: boolean
+
+  // Expanded state
+  expanded: ProjectTableProviderProps['expanded']
+  setExpanded: ProjectTableProviderProps['setExpanded']
+  toggleExpanded: ProjectTableProviderProps['toggleExpanded']
+  updateExpanded: ProjectTableProviderProps['updateExpanded']
+  toggleExpandAll: ToggleExpandAll
+  toggleExpands: ToggleExpands // expand/collapse multiple rows at once
+
+  // Folder Relationships
+  getInheritedDependents: GetInheritedDependents
+  findInheritedValueFromAncestors: FindInheritedValueFromAncestors
+  findNonInheritedValues: FindNonInheritedValues
+  getAncestorsOf: GetAncestorsOf
+
+  // Context menu
+  contextMenuItems: ProjectTableProviderProps['contextMenuItems']
+
+  // Powerpack context
+  powerpack?: ProjectTableProviderProps['powerpack']
+
+  // remote modules
+  modules: ProjectTableProviderProps['modules']
+
+  // SubtasksManager
+  SubtasksManager?: React.ComponentType<SubtasksManagerProps>
+
+  // player
+  playerOpen?: ProjectTableProviderProps['playerOpen']
+  onOpenPlayer?: ProjectTableProviderProps['onOpenPlayer']
+
+  // Views
+  onResetView?: () => void
+
+  // router hooks
+  useParams?: typeof useParams
+  useNavigate?: typeof useNavigate
+  useLocation?: typeof useLocation
+  useSearchParams?: typeof useSearchParams
+}
 
 export const parseRowId = (rowId: string) => rowId?.split(ROW_ID_SEPARATOR)[0] || rowId
 
@@ -64,6 +151,8 @@ export interface ProjectTableProviderProps {
   isLoadingMore: boolean
   loadingTasks?: LoadingTasks
   error?: string
+  softError?: string // shows a warning banner but doesn't block the table from rendering
+  softErrorAction?: SoftErrorAction
   users: TableUser[]
   // Attributes
   attribFields: ProjectTableAttribute[]
@@ -171,6 +260,8 @@ export const ProjectTableProvider = ({
   isLoadingMore,
   isLoading,
   error,
+  softError,
+  softErrorAction,
   isInitialized,
   users,
   attribFields,
@@ -365,6 +456,8 @@ export const ProjectTableProvider = ({
         isInitialized,
         isLoading,
         error,
+        softError,
+        softErrorAction,
         attribFields,
         attribFieldsScoped,
         scopes,
@@ -420,4 +513,12 @@ export const ProjectTableProvider = ({
       {children}
     </ProjectTableContext.Provider>
   )
+}
+
+export const useProjectTableContext = () => {
+  const context = useContext(ProjectTableContext)
+  if (!context) {
+    throw new Error('useProjectTableContext must be used within a ProjectTableProvider')
+  }
+  return context
 }

@@ -24,6 +24,7 @@ import {
   createVersionHelper,
 } from '@shared/util/versionUploadHelpers'
 import { parseFilename } from '@shared/components/ReviewablesList'
+import { VersionUploadContext } from './VersionUploadContextInstance'
 
 export interface FormData {
   version: number
@@ -37,7 +38,7 @@ export interface LinkedTask {
   taskType: string
 }
 
-interface VersionUploadContextType {
+export interface VersionUploadContextType {
   productId: string
   folderId: string
   taskId: string
@@ -77,8 +78,6 @@ interface VersionUploadContextType {
   // pass through
   dispatch: any
 }
-
-const VersionUploadContext = createContext<VersionUploadContextType | undefined>(undefined)
 
 interface VersionUploadProviderProps {
   children: ReactNode

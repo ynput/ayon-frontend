@@ -11,8 +11,8 @@ import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../t
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { determineLoadingTaskFolders } from '../utils/loadingUtils'
-import { LoadingTasks } from '../types'
-import { TasksByFolderMap } from '../utils'
+import { LoadingTasks, SoftErrorAction } from '../types'
+import { getFolderIdsToQueryFromExpanded, TasksByFolderMap } from '../utils'
 import { TableGroupBy } from '../context'
 import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
 import { getGroupQueries } from '../utils/getGroupQueries'
@@ -20,6 +20,11 @@ import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { useGetEntityLinksQuery } from '@shared/api'
 import { useProjectFoldersContext } from '@shared/context'
+import { debounce } from 'lodash'
+
+// how long a folder must stay rendered in the viewport before its tasks are fetched.
+// prevents firing a request per folder while the user is quickly scrolling past them.
+const VISIBLE_FOLDERS_DEBOUNCE_MS = 300
 
 type QueryFilterParams = {
   filter: QueryFilter | undefined
@@ -32,6 +37,8 @@ type useFetchOverviewDataData = {
   tasksMap: TaskNodeMap
   tasksByFolderMap: TasksByFolderMap
   error?: unknown // first task/folder load failure (e.g. corrupt filter), if any
+  softError?: string // error for fetching tasks for expanded folders, if any
+  softErrorAction?: SoftErrorAction
   isLoadingAll: boolean // the whole table is a loading state
   isLoadingMore: boolean // loading more tasks
   loadingTasks: LoadingTasks // show number of loading tasks per folder or root
@@ -58,6 +65,10 @@ type Params = {
   modules: ProjectTableModulesType
   skipLinks?: boolean
   showComments?: boolean // only fetch latestComments when the comments column is visible
+  onCollapseAll?: () => void
+  // entity ids currently rendered in the table's viewport (hierarchy mode only) - used to
+  // scope task fetching to folders actually on screen, rather than every expanded folder
+  visibleEntityIds?: string[]
 }
 
 export const useFetchOverviewData = ({
@@ -78,6 +89,8 @@ export const useFetchOverviewData = ({
   modules,
   skipLinks,
   showComments = false,
+  onCollapseAll,
+  visibleEntityIds = [],
 }: Params): useFetchOverviewDataData => {
   const { isLoading: isLoadingModules } = modules
 
@@ -86,6 +99,7 @@ export const useFetchOverviewData = ({
     isLoading: isLoadingFolders,
     isUninitialized: isUninitializedFolders,
     refetch: refetchFolders,
+    getFolderById,
   } = useProjectFoldersContext()
 
   const expandedParentIds = Object.entries(expanded)
@@ -93,7 +107,54 @@ export const useFetchOverviewData = ({
     .filter(([id]) => !isGroupId(id)) // filter out the root folder
     .map(([id]) => id)
 
-  const taskParentIds = expandedParentIds
+  const expandedFolderIdsToQuery = useMemo(
+    () =>
+      getFolderIdsToQueryFromExpanded({
+        expanded,
+        expandedParentIds,
+        selectedFolders,
+        excludeSelectedFolders,
+        getFolderById,
+        showHierarchy,
+      }),
+    [
+      expanded,
+      expandedParentIds,
+      selectedFolders,
+      excludeSelectedFolders,
+      getFolderById,
+      showHierarchy,
+    ],
+  )
+
+  // Debounce the rendered viewport rows so fast scrolling doesn't fire a new
+  // request for every folder scrolled past - only once it's settled on screen.
+  const [debouncedVisibleEntityIds, setDebouncedVisibleEntityIds] =
+    useState<string[]>(visibleEntityIds)
+
+  const debouncedSetVisible = useMemo(
+    () =>
+      debounce((ids: string[]) => setDebouncedVisibleEntityIds(ids), VISIBLE_FOLDERS_DEBOUNCE_MS),
+    [],
+  )
+
+  useEffect(() => {
+    debouncedSetVisible(visibleEntityIds)
+    return () => debouncedSetVisible.cancel()
+  }, [visibleEntityIds, debouncedSetVisible])
+
+  // In hierarchy mode, only fetch tasks for expanded folders that are currently
+  // rendered in the viewport, instead of every expanded folder in the tree.
+  // Not applied to flat folder view: rows there are top-level folders, not
+  // nested paths, so there's no "off screen ancestor" case to guard against,
+  // and filtering there would delay every row's expand-to-reveal-tasks interaction.
+  const visibleFolderIdsToQuery = useMemo(() => {
+    if (!showHierarchy || isFlatFolderView) {
+      return expandedFolderIdsToQuery
+    }
+    const visibleIdsSet = new Set(debouncedVisibleEntityIds)
+    return expandedFolderIdsToQuery.filter((id) => visibleIdsSet.has(id))
+  }, [expandedFolderIdsToQuery, showHierarchy, isFlatFolderView, debouncedVisibleEntityIds])
 
   const {
     data: expandedFoldersTasks = [],
@@ -104,13 +165,13 @@ export const useFetchOverviewData = ({
   } = useGetOverviewTasksByFoldersQuery(
     {
       projectName,
-      parentIds: taskParentIds,
+      parentIds: visibleFolderIdsToQuery,
       filter: taskFilters.filterString,
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
       showComments,
     },
-    { skip: !taskParentIds.length || (!showHierarchy && !isFlatFolderView) },
+    { skip: !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView) },
   )
 
   const skipFoldersByTaskFilter =
@@ -334,7 +395,6 @@ export const useFetchOverviewData = ({
   const {
     data: tasksListInfiniteData,
     isLoading: isLoadingTasksList,
-    isFetching: isFetchingTasksList,
     error: tasksListError,
     fetchNextPage,
     hasNextPage,
@@ -396,6 +456,7 @@ export const useFetchOverviewData = ({
 
     const allGroupQueries = getGroupQueries({
       groups: taskGroups,
+      // @ts-expect-error: filter is the same
       filters: taskFilters.filter,
       groupBy,
       groupPageCounts,
@@ -615,14 +676,27 @@ export const useFetchOverviewData = ({
     if (!isUninitializedTasksLinks) refetchTasksLinks()
   }
 
-  const error =
-    tasksListError || expandedFoldersTasksError || searchFoldersError || groupedTasksError
+  const error = tasksListError || searchFoldersError || groupedTasksError
+
+  const softErrorAction = useMemo<SoftErrorAction | undefined>(() => {
+    if (expandedFoldersTasksError && onCollapseAll) {
+      return {
+        label: 'Collapse all folders',
+        icon: 'restart_alt',
+        callback: onCollapseAll,
+      }
+    }
+    return undefined
+  }, [expandedFoldersTasksError, onCollapseAll])
 
   return {
     foldersMap: filteredFoldersMap,
     tasksMap: tasksMap,
     tasksByFolderMap: tasksByFolderMap,
     error,
+    // @ts-expect-error: error does exist on it
+    softError: expandedFoldersTasksError?.error, // this is separate as we should still show the folders table so the user can make changes
+    softErrorAction,
     isLoadingAll:
       isLoadingFolders || isLoadingTasksList || isLoadingTasksFolders || isLoadingModules, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,

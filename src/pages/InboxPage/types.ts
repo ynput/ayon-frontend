@@ -98,6 +98,13 @@ export interface InboxStatusChange {
   name?: string
 }
 
+// Modifier keys that drive multi-selection, sourced from a mouse or keyboard event
+export interface SelectModifiers {
+  shiftKey?: boolean
+  metaKey?: boolean
+  ctrlKey?: boolean
+}
+
 // Message selection handler type
 export type MessageSelectHandler = (id: string, ids?: string[]) => void
 

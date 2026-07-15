@@ -2,4 +2,7 @@ fragment DetailsPanelRepresentationFragment on RepresentationNode {
   id
   name
   fileCount
+  files {
+    path
+  }
 }

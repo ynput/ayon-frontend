@@ -171,20 +171,21 @@ const ProjectsList: FC<ProjectsListProps> = ({
   )
   const {
     buildMenuItems,
+    rowContextMenuBuilder,
     canCreateProject,
     rowPinning,
     onRowPinningChange,
     onOpenProject,
     handleOpenFolderDialog,
     folderDialogProps,
+    onRenameFolder,
+    onRenameProject,
     renamingFolder,
     onSubmitRenameFolder,
     closeRenameFolder,
     renamingProject,
     onSubmitRenameProject,
     closeRenameProject,
-    onRenameFolder,
-    onRenameProject,
   } = useProjectMenuController({
     projects,
     folders: folders || [],
@@ -216,6 +217,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         multiSelect={multiSelect}
         readonly={false}
         buildMenuItems={buildMenuItems}
+        rowContextMenuBuilders={[rowContextMenuBuilder]}
         selection={selection}
         onSelect={onSelect}
         onOpenProject={onOpenProject}
@@ -225,6 +227,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
         toggleMenu={toggleMenu}
         onSelectAll={toggleSelectAll}
         hiddenButtons={!multiSelect ? ['select-all'] : []}
+        onRenameFolder={onRenameFolder}
+        onRenameProject={onRenameProject}
         renamingFolder={renamingFolder}
         onSubmitRenameFolder={onSubmitRenameFolder}
         closeRenameFolder={closeRenameFolder}
@@ -234,14 +238,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         pt={pt}
       />
       <ProjectFolderFormDialog {...folderDialogProps} />
-      <ProjectsShortcuts
-        rowSelection={rowSelection}
-        folders={folders || []}
-        onOpenFolderDialog={handleOpenFolderDialog}
-        onRenameFolder={onRenameFolder}
-        onRenameProject={onRenameProject}
-        disabled={!powerLicense}
-      />
+      <ProjectsShortcuts onOpenFolderDialog={handleOpenFolderDialog} disabled={!powerLicense} />
     </>
   )
 }

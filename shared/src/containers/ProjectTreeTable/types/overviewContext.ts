@@ -1,11 +1,12 @@
 import { EntityGroup } from '@shared/api'
-import { FolderNodeMap, LoadingTasks, TaskNodeMap, TasksByFolderMap } from '.'
+import { FolderNodeMap, LoadingTasks, TaskNodeMap, TasksByFolderMap, SoftErrorAction } from '.'
 import { ProjectDataContextProps } from '../context'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { ContextMenuItemConstructors } from '../hooks'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { QueryFilter } from './operations'
 import { ReactNode } from 'react'
+import { ProjectInfo } from '@shared/containers/DetailsPanel/helpers/mergeProjectInfo'
 
 interface EntityMoveData {
   entityId: string
@@ -26,7 +27,7 @@ type QueryFilterParams = {
 export interface ProjectOverviewContextType {
   isInitialized: boolean
   // Project Info
-  projectInfo?: ProjectDataContextProps['projectInfo']
+  projectInfo?: ProjectInfo
   projectName: string
   users: ProjectDataContextProps['users']
   // Attributes
@@ -37,6 +38,8 @@ export interface ProjectOverviewContextType {
   isLoadingMore: boolean
   loadingTasks: LoadingTasks
   error?: string
+  softError?: string // non-blocking error (e.g. for fetching tasks for expanded folders)
+  softErrorAction?: SoftErrorAction
   // Data
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
@@ -91,6 +94,11 @@ export interface ProjectOverviewContextType {
   // links
   loadingLinksEntityIds: Set<string>
   setLinksVisible: (visible: boolean) => void
+
+  // entity ids currently rendered in the table's viewport - used to scope task
+  // fetching (hierarchy mode) to folders actually on screen
+  visibleEntityIds: string[]
+  setVisibleEntityIds: (entityIds: string[]) => void
 
   // move dialog
   openMoveDialog?: (entityData: EntityMoveData) => void

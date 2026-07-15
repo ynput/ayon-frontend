@@ -11,8 +11,8 @@ import {
   FilterFn,
   SortingFn,
   sortingFns,
-  RowData,
   Table,
+  RowData,
   OnChangeFn,
   RowSelectionState,
   functionalUpdate,
@@ -22,31 +22,21 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import clsx from 'clsx'
 import useRowKeydown, { RowKeyboardEvent } from './hooks/useRowKeydown'
 
-import { RankingInfo, rankItem, compareItems, rankings } from '@tanstack/match-sorter-utils'
+import { rankItem, compareItems, rankings } from '@tanstack/match-sorter-utils'
 import { useSimpleTableContext } from './context/SimpleTableContext'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { EmptyPlaceholder } from '@shared/components'
 import { RowPinningState } from '@tanstack/react-table'
+import {
+  SimpleTableProps,
+  SimpleTableRow,
+  SimpleTableRowContextMenuBuilder,
+} from './SimpleTable.types'
+import { useCreateContextMenu } from '../ContextMenu'
 
-declare module '@tanstack/react-table' {
-  //add fuzzy filter to the filterFns
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo
-  }
-
-  interface TableMeta<TData extends RowData> {
-    isExpandable?: boolean
-    isLoading?: boolean
-    children?: (
-      props: SimpleTableCellTemplateProps,
-      row: Row<TData>,
-      table: Table<SimpleTableRow>,
-    ) => JSX.Element
-    [key: string]: any
-  }
+const toMenuItems = (items: ReturnType<SimpleTableRowContextMenuBuilder>) => {
+  if (!items) return []
+  return Array.isArray(items) ? items.filter(Boolean) : [items]
 }
 
 // Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
@@ -94,60 +84,6 @@ const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
 
   // Provide an alphanumeric fallback for when the item ranks are equal
   return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir
-}
-
-export type RowItemData = {
-  id: string
-  name?: string | null
-  label?: string | null
-  subType?: string | null
-  [key: string]: any
-}
-
-export type SimpleTableRow = {
-  id: string
-  parentId?: string
-  name: string
-  label: string
-  parents?: string[]
-  icon?: string | null
-  iconColor?: string
-  iconFilled?: boolean
-  img?: string | null
-  imgShape?: 'square' | 'circle'
-  startContent?: JSX.Element
-  endContent?: JSX.Element
-  subRows: SimpleTableRow[]
-  data: RowItemData
-  isDisabled?: boolean
-  disabledMessage?: string
-  inactive?: boolean
-}
-
-export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
-  data: SimpleTableRow[]
-  isLoading: boolean
-  error?: string
-  isExpandable?: boolean // show expand/collapse icons
-  isMultiSelect?: boolean // enable multi-select with shift+click and ctrl/cmd+click
-  enableClickToDeselect?: boolean // allow deselecting a single selected row by clicking it again & clicking outside clears selection
-  enableNonFolderIndent?: boolean // indent non-folder rows to align with folder rows
-  forceUpdateTable?: any
-  globalFilter?: string
-  meta?: Record<string, any>
-  rowHeight?: number // height of each row, used for virtual scrolling
-  imgRatio?: number
-  onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
-  fitContent?: boolean
-  children?: (
-    props: SimpleTableCellTemplateProps,
-    row: Row<SimpleTableRow>,
-    table: Table<SimpleTableRow>,
-  ) => JSX.Element
-  pt?: {
-    cell?: Partial<SimpleTableCellTemplateProps>
-    row?: Partial<React.HTMLAttributes<HTMLTableRowElement>>
-  }
 }
 
 // Helper function to get row range for shift-selection
@@ -198,6 +134,12 @@ const SimpleTable: FC<SimpleTableProps> = ({
   rowHeight,
   imgRatio,
   onScrollBottom,
+  onRename,
+  renamingId,
+  onSubmitRename,
+  onCancelRename,
+  onRowDoubleClick,
+  rowContextMenuBuilders = [],
   children,
   pt,
   fitContent,
@@ -214,6 +156,23 @@ const SimpleTable: FC<SimpleTableProps> = ({
   } = useSimpleTableContext()
   const lastSelectedIdRef = useRef<string | null>(null)
   const tableRef = useRef<Table<SimpleTableRow> | null>(null)
+  const [showRowContextMenu] = useCreateContextMenu()
+
+  // Refs for values used inside the columns memo.
+  // Assigning synchronously (not via useEffect) means the cell function always reads
+  // the latest value at render time, while the columns memo itself has a minimal dep
+  // array and stays as a stable reference — critical because flexRender calls
+  // React.createElement with the cell function, so a new reference = remount = broken dblclick.
+  const onRowDoubleClickRef = useRef(onRowDoubleClick)
+  onRowDoubleClickRef.current = onRowDoubleClick
+  const renamingIdRef = useRef(renamingId)
+  renamingIdRef.current = renamingId
+  const onSubmitRenameRef = useRef(onSubmitRename)
+  onSubmitRenameRef.current = onSubmitRename
+  const onCancelRenameRef = useRef(onCancelRename)
+  onCancelRenameRef.current = onCancelRename
+  const onRenameRef = useRef(onRename)
+  onRenameRef.current = onRename
 
   // stable data reference
   const tableData = useMemo(() => {
@@ -278,7 +237,11 @@ const SimpleTable: FC<SimpleTableProps> = ({
       } else if (isMultiSelect && isCtrlOrMeta) {
         currentRow.toggleSelected()
       } else {
-        tableInstance.setRowSelection({ [currentId]: true })
+        // If it's already selected and it's the only one, don't update selection to avoid unnecessary re-renders
+        const selection = tableInstance.getState().rowSelection
+        if (!(Object.keys(selection).length === 1 && selection[currentId])) {
+          tableInstance.setRowSelection({ [currentId]: true })
+        }
       }
       lastSelectedIdRef.current = currentId
     },
@@ -363,9 +326,19 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [handleSelectionLogic],
   )
 
+  // handleRenameForKeydown reads from onRenameRef so it has empty deps and is
+  // permanently stable — keeping handleRowKeyDown and therefore columns stable.
+  const handleRenameForKeydown = useCallback(
+    (e: RowKeyboardEvent, row: Row<SimpleTableRow>) => {
+      if (!row.original.isDisabled) onRenameRef.current?.(row.id, row)
+    },
+    [], // eslint-disable-line react-hooks/exhaustive-deps
+  )
+
   const { handleRowKeyDown } = useRowKeydown<SimpleTableRow>({
     handleRowSelect: handleRowSelectForKeydown,
     handleArrowNavigation,
+    handleRename: handleRenameForKeydown,
   })
 
   const columns = useMemo<ColumnDef<SimpleTableRow>[]>(
@@ -400,6 +373,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
           const props: SimpleTableCellTemplateProps & {
             onClick?: (event: ReactMouseEvent<HTMLElement, MouseEvent>) => void
+            onDoubleClick?: (event: ReactMouseEvent<HTMLElement, MouseEvent>) => void
           } = {
             className: clsx({
               selected: row.getIsSelected(),
@@ -431,8 +405,14 @@ const SimpleTable: FC<SimpleTableProps> = ({
             endContent: row.original.endContent,
             isDisabled: row.original.isDisabled,
             disabledMessage: row.original.disabledMessage,
+            isRenaming: row.id === renamingIdRef.current,
+            onSubmitRename: onSubmitRenameRef.current
+              ? (v) => onSubmitRenameRef.current!(row.id, v)
+              : undefined,
+            onCancelRename: onCancelRenameRef.current,
             ...pt?.cell,
             onClick: handleCellClick, // Added onClick handler
+            onDoubleClick: (e) => onRowDoubleClickRef.current?.(row.id, row),
           }
 
           // Use children function if provided, otherwise default to SimpleTableCellTemplate
@@ -451,7 +431,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
       enableClickToDeselect,
       enableNonFolderIndent,
       imgRatio,
-    ], // include enableClickToDeselect for completeness
+    ],
   )
 
   const handleRowSelectionChangeCallback: OnChangeFn<RowSelectionState> = useCallback(
@@ -505,12 +485,16 @@ const SimpleTable: FC<SimpleTableProps> = ({
     getExpandedRowModel: getExpandedRowModel(),
     filterFromLeafRows: true,
     // debugTable: true,
-    meta: {
-      isExpandable: !!isExpandable,
-      isLoading: isLoading,
-      children: children,
-      ...meta,
-    },
+    // @ts-expect-error: updateData is not required
+    meta: useMemo(
+      () => ({
+        isExpandable: !!isExpandable,
+        isLoading: isLoading,
+        children: children,
+        ...meta,
+      }),
+      [isExpandable, isLoading, children, meta],
+    ),
   })
 
   // Update tableRef whenever the table instance changes.
@@ -520,6 +504,44 @@ const SimpleTable: FC<SimpleTableProps> = ({
   }, [table])
 
   const { rows } = table.getRowModel()
+
+  const handleRowContextMenu = useCallback(
+    (rowId: string, rowIndex: number, e: ReactMouseEvent<HTMLTableRowElement>) => {
+      if (!tableRef.current) return
+      const row = rows[rowIndex]
+      if (!row || row.original === undefined) return
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      const selectedIds = Object.keys(rowSelection)
+
+      const nextSelectedRows = selectedIds.includes(rowId) ? selectedIds : [rowId]
+
+      if (!selectedIds.includes(rowId)) {
+        // convert array to RowSelectionState object
+        const nextSelection: RowSelectionState = { [rowId]: true }
+        onRowSelectionChange?.(nextSelection)
+      }
+
+      const menuItems = rowContextMenuBuilders.flatMap((builder) =>
+        toMenuItems(
+          builder(e as any, {
+            rowId,
+            rowIndex,
+            row,
+            selectedRows: nextSelectedRows,
+            isSelected: nextSelectedRows.includes(rowId),
+          }),
+        ),
+      )
+
+      if (menuItems.length > 0) {
+        showRowContextMenu(e as any, menuItems)
+      }
+    },
+    [rowContextMenuBuilders, rows, rowSelection, onRowSelectionChange, showRowContextMenu],
+  )
 
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -596,6 +618,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
                   ref={measureElementRef} //measure dynamic row height
                   key={row.id}
                   id={row.id}
+                  onContextMenu={(e) => handleRowContextMenu(row.id, virtualRow.index, e)}
                   {...pt?.row}
                   style={{
                     transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll

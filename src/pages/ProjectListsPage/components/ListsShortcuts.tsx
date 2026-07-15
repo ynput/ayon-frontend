@@ -10,7 +10,6 @@ interface ListsShortcutsProps {}
 const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
   const {
     openNewList,
-    openRenameList,
     rowSelection,
     onOpenFolderList,
     onRemoveListsFromFolder,
@@ -50,10 +49,6 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
       const allSelectedRowsAreFolders =
         selectedRowIds.length > 0 &&
         selectedRowIds.every((selected) => parseListFolderRowId(selected))
-      const hasMultipleSelected = selectedRowIds.length > 1
-      const firstSelectedRow = selectedRowIds[0]
-      const selectedFolderId = parseListFolderRowId(firstSelectedRow)
-      const isFirstRowFolder = !!selectedFolderId
 
       // Handle different key combinations
       if (key === 'n' && !isMeta && !isShift && !isAlt) {
@@ -86,24 +81,11 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
           )
 
           if (listsWithFolders.length > 0) {
-            onRemoveListsFromFolder(selectedListIds)
+            onRemoveListsFromFolder(listsWithFolders.map((list) => list.id))
             actionExecuted = true
           }
         }
         // Mixed selection - no action
-      } else if (key === 'r' && !isMeta && !isShift && !isAlt) {
-        // 'r' - Rename selected item (only works with single selection)
-        if (selectedRowIds.length === 0 || hasMultipleSelected) return
-
-        // Don't allow renaming folders if user is not admin/manager
-        if (isFirstRowFolder && isUser) return
-
-        // Only allow renaming if it's a single list or single folder
-        if (allSelectedRowsAreLists || allSelectedRowsAreFolders) {
-          e.preventDefault()
-          openRenameList(firstSelectedRow)
-          actionExecuted = true
-        }
       }
 
       if (actionExecuted) {
@@ -119,7 +101,6 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
       onRemoveFoldersFromFolder,
       selectedLists,
       listFolders,
-      openRenameList,
       isUser,
     ],
   )

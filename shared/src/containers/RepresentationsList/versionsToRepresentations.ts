@@ -16,6 +16,7 @@ const versionsToRepresentations = (entities: DetailsPanelEntityData[] = []) => {
         productType: product?.productType,
         fileCount: representation.fileCount,
         projectName: entity.projectName,
+        files: representation.files?.map((file) => file.path) || [],
       })
     }
   }

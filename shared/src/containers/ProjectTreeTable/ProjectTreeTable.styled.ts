@@ -547,6 +547,7 @@ export const AnimatedEmptyPlaceholder = styled.div`
   animation: fadeIn 20ms ease-in forwards;
   animation-delay: 300ms;
   opacity: 0;
+  z-index: 100;
 
   @keyframes fadeIn {
     from {
@@ -569,5 +570,20 @@ export const SummaryPowerFeature = styled.span`
   .icon {
     font-size: 18px;
     color: var(--md-sys-color-tertiary);
+  }
+`
+
+export const SoftErrorBanner = styled.div`
+  position: absolute;
+  bottom: 60px; // to go above the footer stats
+  left: 8px;
+  right: 8px;
+  z-index: 100;
+  pointer-events: none;
+
+  .message {
+    pointer-events: auto;
+    box-shadow: var(--md-sys-shadow-level-2);
+    padding: var(--padding-s);
   }
 `

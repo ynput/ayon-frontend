@@ -20,6 +20,7 @@ import { SortingState, VisibilityState } from '@tanstack/react-table'
 import { useProjectContext, usePowerpack } from '@shared/context'
 import {
   buildMetricTargets,
+  shouldSkipColumnStats,
   mergeFieldStats,
   totalRowsFromStats,
   toListItemsStatsTargets,
@@ -49,6 +50,7 @@ export interface ListItemsDataContextValue {
   listItemsData: EntityListItemWithLinks[]
   listItemsTableData: TableRow[]
   listItemsMap: ListItemsMap
+  listItemsEntitiesMap: Map<string, TableRow>
   fetchNextPage: () => void
   isLoadingAll: boolean
   isLoadingMore: boolean
@@ -269,7 +271,19 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       filter: statsFilter,
       targets: statsTargets,
     },
-    { skip: !projectName || !selectedListId || !statsEntity || !powerLicense },
+    {
+      skip:
+        !projectName ||
+        !selectedListId ||
+        !statsEntity ||
+        !powerLicense ||
+        shouldSkipColumnStats(
+          columns.columnSummaries,
+          columns.columnSummaryScopes,
+          columns.columnVisibility,
+          defaultColumnVisibility,
+        ),
+    },
   )
 
   const fieldStats = useMemo(() => {
@@ -286,10 +300,11 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     [statsEntity],
   )
 
-  // convert listItemsData into tableData
-  const listItemsTableData = useBuildListItemsTableData({
-    listItemsData,
-  })
+  // convert listItemsData into tableData (+ a display-ready map for copy/getEntityById)
+  const { tableData: listItemsTableData, entitiesMap: listItemsEntitiesMap } =
+    useBuildListItemsTableData({
+      listItemsData,
+    })
 
   const foldersMap: FolderNodeMap = new Map(
     // @ts-ignore
@@ -347,6 +362,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         listItemsData,
         listItemsTableData,
         listItemsMap,
+        listItemsEntitiesMap,
         isLoadingAll: isLoading || isLoadingData,
         isLoadingMore: isFetchingNextPage,
         isError,

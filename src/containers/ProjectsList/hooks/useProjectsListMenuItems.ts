@@ -1,4 +1,5 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
+import { usePowerpack } from '@shared/context'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import { EntityListFolderModel, ProjectFolderModel, ListProjectsItemModel } from '@shared/api'
 import {
@@ -7,6 +8,7 @@ import {
 } from '@pages/ProjectListsPage/hooks/useListContextMenu.ts'
 import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData.ts'
+import { SimpleTableRowContextMenuBuilder } from '@shared/containers/SimpleTable'
 
 export type Hidden = {
   search?: boolean
@@ -83,6 +85,12 @@ export type BuildMenuItems = (
   config?: { command?: boolean; dividers?: boolean; hidden?: Hidden },
 ) => MenuItem[]
 
+const CONTEXT_MENU_HIDDEN: Hidden = {
+  search: true,
+  'add-project': true,
+  'select-all': true,
+}
+
 const useProjectsListMenuItems = ({
   hidden = {},
   projects,
@@ -109,7 +117,8 @@ const useProjectsListMenuItems = ({
   onEditFolder,
   onRenameFolder,
   onRenameProject,
-}: MenuItemProps): BuildMenuItems => {
+}: MenuItemProps) => {
+  const { setPowerpackDialog } = usePowerpack()
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
   const handlePin = (allPinned: boolean, selection: string[]) => {
     if (onPin) {
@@ -139,6 +148,36 @@ const useProjectsListMenuItems = ({
       onDeleteFolder?.(folderIds)
     }
   }
+
+  const handleCreateFolder = useCallback(
+    ({
+      isSelectedRowFolder,
+      selectedFolder,
+      isSelectedProject,
+      newSelectedProjects,
+    }: {
+      isSelectedRowFolder: boolean
+      selectedFolder: ProjectFolderModel | null | undefined
+      isSelectedProject: boolean
+      newSelectedProjects: ListProjectsItemModel[]
+    }) => {
+      if (!powerLicense) {
+        setPowerpackDialog('projectFolders')
+        return
+      }
+
+      if (isSelectedRowFolder) {
+        onCreateFolder?.({ folderId: selectedFolder?.id })
+      } else if (isSelectedProject) {
+        onCreateFolder?.({
+          projectNames: newSelectedProjects.map((project) => project.name),
+        })
+      } else {
+        onCreateFolder?.({})
+      }
+    },
+    [powerLicense, setPowerpackDialog, onCreateFolder],
+  )
 
   const isMenuItemEnabled = (
     itemId: keyof NonNullable<MenuItemProps['hidden']>,
@@ -368,7 +407,7 @@ const useProjectsListMenuItems = ({
         },
         {
           id: 'rename-folder',
-          label: 'Rename',
+          label: 'Rename folder',
           icon: 'edit',
           shortcut: 'R',
           [command ? 'command' : 'onClick']: () => onRenameFolder?.(selectedFolderId as string),
@@ -376,7 +415,7 @@ const useProjectsListMenuItems = ({
         },
         {
           id: 'edit-label',
-          label: 'Edit label',
+          label: 'Rename project',
           icon: 'edit',
           shortcut: 'R',
           [command ? 'command' : 'onClick']: () =>
@@ -404,14 +443,13 @@ const useProjectsListMenuItems = ({
           icon: 'create_new_folder',
           shortcut: 'F',
           powerFeature: powerLicense ? undefined : 'projectFolders',
-          [command ? 'command' : 'onClick']: isSelectedRowFolder
-            ? () => onCreateFolder?.({ folderId: selectedFolder?.id })
-            : isSelectedProject
-            ? () =>
-                onCreateFolder?.({
-                  projectNames: newSelectedProjects.map((project) => project.name),
-                })
-            : onCreateFolder,
+          [command ? 'command' : 'onClick']: () =>
+            handleCreateFolder({
+              isSelectedRowFolder,
+              selectedFolder,
+              isSelectedProject,
+              newSelectedProjects,
+            }),
         },
 
         ...(moveMenuItem ? [moveMenuItem] : []),
@@ -451,20 +489,18 @@ const useProjectsListMenuItems = ({
       })
     },
     [
-      hidden,
-      onNewProject,
-      onPin,
-      onManage,
-      onOpen,
-      onSelectAll,
-      onSearch,
       pinned,
       projects,
       folders,
       multiSelect,
       showArchived,
       userLevel,
-      isMenuItemEnabled,
+      onNewProject,
+      onSearch,
+      onPin,
+      onManage,
+      onOpen,
+      onSelectAll,
       onArchive,
       onDelete,
       onShowArchivedToggle,
@@ -473,19 +509,38 @@ const useProjectsListMenuItems = ({
       onPutProjectsInFolder,
       onPutFolderInFolder,
       onRemoveProjectsFromFolder,
+      onDeleteFolder,
+      onEditFolder,
+      onRenameFolder,
+      onRenameProject,
       handlePin,
       handleArchive,
       handleDelete,
       handleDeleteFolder,
-      onDeleteFolder,
+      handleCreateFolder,
       wouldCreateCircularDependency,
-      onRenameFolder,
-      onEditFolder,
-      onRenameProject,
+      hidden,
+      isMenuItemEnabled,
     ],
   )
 
-  return buildMenuItems
+  const rowContextMenuBuilder: SimpleTableRowContextMenuBuilder = useCallback(
+    (_e, context) =>
+      buildMenuItems(context.selectedRows, {
+        command: true,
+        dividers: false,
+        hidden: CONTEXT_MENU_HIDDEN,
+      }),
+    [buildMenuItems],
+  )
+
+  return useMemo(
+    () => ({
+      buildMenuItems,
+      rowContextMenuBuilder,
+    }),
+    [buildMenuItems, rowContextMenuBuilder],
+  )
 }
 
 export default useProjectsListMenuItems

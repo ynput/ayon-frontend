@@ -209,7 +209,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                 users={props.users}
                 modules={modules}
                 // @ts-ignore
-                entitiesMap={props.listItemsMap}
+                entitiesMap={props.listItemsEntitiesMap}
                 foldersMap={props.foldersMap}
                 tasksMap={props.tasksMap}
                 tableRows={props.listItemsTableData}

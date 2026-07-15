@@ -1,11 +1,13 @@
 const path = require('path')
 require('dotenv').config({ path: path.join(__dirname, '.env') })
+require('dotenv').config({ path: path.join(__dirname, '../.env.local') })
 
 const fs = require('fs')
 const http = require('http')
 
 // Define your token here or retrieve it from environment/config
 const token = process.env.TOKEN
+const serverUrl = process.env.SERVER_URL || 'http://localhost:5000'
 
 // Function to download the OpenAPI schema
 async function downloadOpenApiSchema() {
@@ -13,7 +15,7 @@ async function downloadOpenApiSchema() {
 
   try {
     const schemaPath = path.join(__dirname, 'openapi.json')
-    const apiUrl = 'http://localhost:3000/openapi.json'
+    const apiUrl = `${serverUrl}/openapi.json`
     const token = process.env.TOKEN
 
     // Create a promise-based HTTP request

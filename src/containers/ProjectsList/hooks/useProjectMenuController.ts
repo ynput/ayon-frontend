@@ -54,12 +54,6 @@ interface UseProjectMenuControllerProps {
   folderGroupColumnId?: string
 }
 
-const CONTEXT_MENU_HIDDEN: Hidden = {
-  search: true,
-  'add-project': true,
-  'select-all': true,
-}
-
 export const useProjectMenuController = ({
   projects,
   folders = [],
@@ -180,7 +174,7 @@ export const useProjectMenuController = ({
     [deleteProject, onSelect, projects, selection],
   )
 
-  const buildMenuItems = useProjectListMenuItems({
+  const { buildMenuItems, rowContextMenuBuilder } = useProjectListMenuItems({
     hidden: {
       'add-project': !canCreateProject,
       'delete-project': !canEditProjectLabel,
@@ -220,7 +214,9 @@ export const useProjectMenuController = ({
         command: true,
         dividers: false,
         hidden: {
-          ...CONTEXT_MENU_HIDDEN,
+          search: true,
+          'add-project': true,
+          'select-all': true,
           ...hiddenOverrides,
         },
       }),
@@ -277,6 +273,7 @@ export const useProjectMenuController = ({
 
   return {
     buildMenuItems,
+    rowContextMenuBuilder,
     buildContextMenuItems,
     buildListTableContextMenuItems,
     canCreateProject,

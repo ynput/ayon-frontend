@@ -36,7 +36,7 @@ import { TableFooterRow } from './components/TableFooterRow'
 import type { FieldStats } from '@shared/api'
 import { getCommonPinningStyles, getColumnWidth } from './utils/pinningUtils'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
-import { FilterErrorActions } from '../../components/FilterErrorActions'
+import { InfoMessage, FilterErrorActions } from '@shared/components'
 import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
@@ -65,6 +65,7 @@ import { useMoveEntities } from './hooks/useMoveEntities'
 import { useProjectDataContext } from '@shared/containers'
 
 // Utility function imports
+import { isGroupId } from './hooks/useBuildGroupByTableData'
 import { CellId, getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
@@ -77,7 +78,7 @@ import {
   SummaryCellContentProps,
 } from './types'
 import { EnumItem } from '@shared/api'
-import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
+import { ToggleExpandAll, useProjectTableContext, parseRowId } from './context/ProjectTableContext'
 import {
   checkColumnVisibility,
   ensureAtLeastOneVisibleColumn,
@@ -171,13 +172,16 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   showColumnSummaries?: boolean // render the fixed summary footer row
   fieldStats?: FieldStats[] // primary-entity stats (tasks/versions) feeding the footer
   groupFieldStats?: FieldStats[] // group-entity stats (folders/products) for the 'all' row scope
-  fieldStatsLoading?: boolean // footer stats still loading -> show skeletons
+  fieldStatsLoading?: boolean // footer stats still loading - click-through shimmer over values
   fieldStatsError?: any // error fetching footer stats
   mainCountLabels?: MainCountLabels // labels for the main cell dual count (defaults folders/tasks)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
   onColumnVisibleChange?: (changes: Record<string, boolean>) => void
   onColumnVisibleChangeSubscribed?: string[]
+  // called whenever the set of rows currently rendered in the viewport changes
+  // (entity ids, not row ids - group suffixes are stripped)
+  onVisibleRowsChange?: (entityIds: string[]) => void
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -213,6 +217,7 @@ export const ProjectTreeTable = ({
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
   onColumnVisibleChange,
   onColumnVisibleChangeSubscribed,
+  onVisibleRowsChange,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -246,6 +251,8 @@ export const ProjectTreeTable = ({
     users,
     isLoading: isLoadingData,
     error,
+    softError,
+    softErrorAction,
     isInitialized,
     expanded,
     updateExpanded,
@@ -266,11 +273,14 @@ export const ProjectTreeTable = ({
   const filterErrorMessage = getFilterErrorMessage(getEntitiesLabelFromScopes(scopes))
 
   // Parent (folder/product) summary scope only applies when those entities are
-  // actually on screen: hierarchy view, or grouping by a parent entity.
+  // actually on screen: hierarchy view, grouping by a parent entity, or the
+  // Products tab's product tree (product parent rows -> 'product' in scopes).
   const groupField = overrideGroupBy?.id ?? groupBy?.id
   const groupFieldId = Array.isArray(groupField) ? groupField[0] : groupField
   const parentScopeApplicable =
-    showHierarchy || ['hierarchy', 'folder', 'product'].includes(groupFieldId ?? '')
+    showHierarchy ||
+    ['hierarchy', 'folder', 'product'].includes(groupFieldId ?? '') ||
+    scopes.includes('product')
 
   const { writableFields } = useProjectDataContext()
 
@@ -618,8 +628,28 @@ export const ProjectTreeTable = ({
     powerLicense &&
     (isFooterLoaded || isFooterModuleLoading) &&
     !!rows.length
-  // shimmer while the remote module or the footer stats are still loading
-  const summariesLoading = isFooterModuleLoading || !isFooterLoaded || !!fieldStatsLoading
+  // Full skeleton only while the remote module itself is loading (no cell to
+  // render yet). Stats loading is handled per-cell so the footer stays clickable.
+  const footerModuleLoading = isFooterModuleLoading || !isFooterLoaded
+
+  // Unique selected entities for the footer's "N selected" count, deduped by
+  // entityId (group headers / load-more rows excluded). Marked cells win: when
+  // any cell is selected we count only those and ignore checkbox row-selection;
+  // whole-row selection counts on its own.
+  const selectedRowCount = useMemo(() => {
+    const cellEntities = new Set<string>()
+    const rowEntities = new Set<string>()
+    for (const cellId of selectedCells) {
+      const { rowId, colId } = parseCellId(cellId) || {}
+      if (!rowId || isGroupId(rowId)) continue
+
+      const id = getEntityById(rowId)?.entityId
+      if (!id) continue
+      if (colId === ROW_SELECTION_COLUMN_ID) rowEntities.add(id)
+      else cellEntities.add(id)
+    }
+    return cellEntities.size || rowEntities.size
+  }, [selectedCells, getEntityById])
   // only show the upsell once the license check resolves, so licensed users
   // don't see the bolt flash before the addon loads
   // const showSummaryPowerFeature = !isLicenseLoading && !powerLicense
@@ -787,14 +817,16 @@ export const ProjectTreeTable = ({
               defaultRowHeight={defaultRowHeight}
               onResetView={onResetView}
               contextMenuItems={propsContextMenuItems}
+              onVisibleRowsChange={onVisibleRowsChange}
             />
-            {summariesEnabled && (
+            {summariesEnabled && !error && (
               <TableFooterRow
                 columnVirtualizer={columnVirtualizer}
                 table={table}
                 virtualPaddingLeft={virtualPaddingLeft}
                 virtualPaddingRight={virtualPaddingRight}
-                isLoading={summariesLoading}
+                isLoading={footerModuleLoading}
+                statsLoading={!!fieldStatsLoading}
                 error={fieldStatsError}
                 // Free-user upsell hidden for now; keep for later:
                 // onClick={showSummaryPowerFeature ? () => setPowerpackDialog('columnSummaries') : undefined}
@@ -813,6 +845,7 @@ export const ProjectTreeTable = ({
                     mainCountLabels={mainCountLabels}
                     fieldOptions={options}
                     parentScopeApplicable={parentScopeApplicable}
+                    selectedCount={selectedRowCount}
                   />
                 )}
                 // Power feature cell for community users (hidden for now), shows a bolt hint in the name column:
@@ -828,6 +861,11 @@ export const ProjectTreeTable = ({
             )}
           </table>
         </Styled.TableContainer>
+        {softError && (
+          <Styled.SoftErrorBanner>
+            <InfoMessage variant="warning" message={softError} action={softErrorAction} />
+          </Styled.SoftErrorBanner>
+        )}
       </Styled.TableWrapper>
       {/* Render EntityPickerDialog alongside table content */}
       {isEntityPickerOpen &&
@@ -1230,7 +1268,7 @@ const TableHeadCell = ({
                 icon="sort"
                 className={clsx('sort-button', { visible: sorting })}
                 style={{
-                  transform: sorting === 'asc' ? 'rotate(180deg) scaleX(-1)' : 'none',
+                  transform: sorting === 'desc' ? 'rotate(180deg) scaleX(-1)' : 'none',
                 }}
                 onClick={handleToggleSort}
                 selected={!!column.getIsSorted()}
@@ -1238,14 +1276,16 @@ const TableHeadCell = ({
             )}
 
             {/* COLUMN PINNING - only show on pinned columns (exclude selection column) */}
-            {column.getIsPinned() && column.id !== ROW_SELECTION_COLUMN_ID && (
-              <HeaderActionButton
-                icon="push_pin"
-                className={clsx('pin-button', 'visible')}
-                onClick={() => column.pin(false)}
-                selected
-              />
-            )}
+            {column.getIsPinned() &&
+              column.id !== ROW_SELECTION_COLUMN_ID &&
+              column.id !== DRAG_HANDLE_COLUMN_ID && (
+                <HeaderActionButton
+                  icon="push_pin"
+                  className={clsx('pin-button', 'visible')}
+                  onClick={() => column.pin(false)}
+                  selected
+                />
+              )}
           </Styled.HeaderButtons>
           {canResize && (
             <Styled.ResizedHandler
@@ -1289,6 +1329,7 @@ interface TableBodyProps {
   defaultRowHeight: number
   onResetView?: () => void
   contextMenuItems?: ContextMenuItemConstructors
+  onVisibleRowsChange?: (entityIds: string[]) => void
 }
 
 const TableBody = ({
@@ -1311,6 +1352,7 @@ const TableBody = ({
   defaultRowHeight,
   onResetView,
   contextMenuItems,
+  onVisibleRowsChange,
 }: TableBodyProps) => {
   const headerLabels = useMemo(() => {
     const allColumns = table.getAllColumns()
@@ -1356,6 +1398,26 @@ const TableBody = ({
   })
 
   const virtualRows = rowVirtualizer.getVirtualItems()
+
+  // Notify the consumer whenever the set of rendered (visible) entity ids changes,
+  // so data fetching can be scoped to what's actually on screen. Only fires when
+  // the resolved id list actually differs, to avoid spamming updates on every
+  // render (rowVirtualizer.getVirtualItems() returns a new array each call).
+  const prevVisibleRowIdsRef = useRef<string>('')
+  useEffect(() => {
+    if (!onVisibleRowsChange) return
+
+    const ids = virtualRows
+      .map((virtualRow) => rows[virtualRow.index] && parseRowId(rows[virtualRow.index].id))
+      .filter(Boolean) as string[]
+    const uniqueIds = Array.from(new Set(ids))
+    const key = uniqueIds.join(',')
+
+    if (key === prevVisibleRowIdsRef.current) return
+    prevVisibleRowIdsRef.current = key
+
+    onVisibleRowsChange(uniqueIds)
+  }, [virtualRows, rows, onVisibleRowsChange])
 
   // Memoize the measureElement callback
   const measureRowElement = useCallback(
@@ -1468,12 +1530,7 @@ const TableBody = ({
         <Styled.AnimatedEmptyPlaceholder>
           <EmptyPlaceholder message="No items found">
             {onResetView && (
-              <Button
-                variant="filled"
-                label="Reset filters"
-                icon="replay"
-                onClick={onResetView}
-              />
+              <Button variant="filled" label="Reset filters" icon="replay" onClick={onResetView} />
             )}
           </EmptyPlaceholder>
         </Styled.AnimatedEmptyPlaceholder>,
@@ -1524,8 +1581,12 @@ const TableBodyRow = ({
 }: TableBodyRowProps) => {
   const sortable = sortableRows ? useSortable({ id: row.id }) : null
 
+  // Track actual DOM element node
+  const rowHtmlElementRef = useRef<HTMLTableRowElement | null>(null)
+
   const combinedRef = useCallback(
     (node: HTMLTableRowElement | null) => {
+      rowHtmlElementRef.current = node
       if (sortable) {
         sortable.setNodeRef(node)
       }

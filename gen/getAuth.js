@@ -1,10 +1,14 @@
 const axios = require('axios')
 const fs = require('fs')
 const { exec } = require('child_process')
+const path = require('path')
+require('dotenv').config({ path: path.join(__dirname, '../.env.local') })
+
+const serverUrl = process.env.SERVER_URL || 'http://localhost:5000'
 
 async function getToken() {
   try {
-    const response = await axios.post(`http://localhost:3000/api/auth/login`, {
+    const response = await axios.post(`${serverUrl}/api/auth/login`, {
       name: process.env.NAME,
       password: process.env.PASSWORD,
     })

@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.3.43",
+  "version": "0.3.44",
   "description": "Shared React components for AYON frontend",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
@@ -132,7 +132,7 @@
   "dependencies": {
     "@tanstack/match-sorter-utils": "8.19.4",
     "@tanstack/react-virtual": "3.13.23",
-    "@ynput/ayon-frontend-shared": "^0.3.40",
+    "@ynput/ayon-frontend-shared": "^0.3.43",
     "@ynput/ayon-react-components": "^1.18.8",
     "axios": "1.16.1",
     "clsx": "2.1.1",

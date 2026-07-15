@@ -14,6 +14,12 @@ export interface ProjectTableAttribute extends Omit<AttributeModel, 'position'> 
 
 export type LoadingTasks = Record<string, number> // show number of loading tasks per folder or root
 
+export type SoftErrorAction = {
+  label: string
+  icon: string
+  callback: () => void
+}
+
 export type PatchOperation = Pick<OperationModel, 'entityId' | 'entityType' | 'data'> & {
   type?: OperationModel['type']
 }
@@ -49,4 +55,6 @@ export interface SummaryCellContentProps {
   fieldOptions?: BuiltInFieldOptions
   // false when no parent entity (folder/product) is on screen; addon hides + disables the parent scope
   parentScopeApplicable?: boolean
+  // unique entity rows in the current selection; addon shows "N selected" in the main count cell
+  selectedCount?: number
 }

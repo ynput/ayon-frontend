@@ -7,7 +7,7 @@ import styled from 'styled-components'
 import { useGetProjectBundleInfoQuery } from '@shared/api'
 import { useSetProjectBundleMutation, useUnsetProjectBundleMutation } from '@shared/api'
 import clsx from 'clsx'
-import InfoMessage from '@components/InfoMessage'
+import { InfoMessage } from '@shared/components'
 
 //
 // Styled Components
