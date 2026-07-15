@@ -11,6 +11,7 @@ import {
 import { Menu, MenuContainer } from '../Menu'
 import { useMenuContext } from '@shared/context'
 import clsx from 'clsx'
+import { shouldBlockShortcuts } from '@shared/util'
 
 const UPDATE_TYPES: { updateType: RTUpdateType; label: string; tooltip?: string }[] = [
   {
@@ -141,12 +142,43 @@ export const SyncButton = forwardRef<HTMLButtonElement, SyncButtonProps>(
     }, [])
     useImperativeHandle(ref, () => buttonRef.current as HTMLButtonElement, [])
 
+    const handleSync = async () => {
+      setIsSyncing(true)
+      try {
+        await onSync?.(updates)
+      } finally {
+        setIsSyncing(false)
+      }
+    }
+
     const { updates, hasUpdates } = useSyncUpdates({
       projectNames,
       topics,
       isSyncing,
       shouldSyncOnUpdate,
     })
+
+    useEffect(() => {
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (
+          event.repeat ||
+          !event.shiftKey ||
+          event.ctrlKey ||
+          event.metaKey ||
+          event.key.toLowerCase() !== 'r' ||
+          shouldBlockShortcuts(event)
+        ) {
+          return
+        }
+
+        event.preventDefault()
+        event.stopPropagation()
+        handleSync()
+      }
+
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [handleSync])
 
     if (hideWhenNoUpdates && !hasUpdates) return null
 
@@ -168,15 +200,6 @@ export const SyncButton = forwardRef<HTMLButtonElement, SyncButtonProps>(
       closeTimeout.current = setTimeout(() => setMenuOpen(false), 100)
     }
 
-    const handleSync = async () => {
-      setIsSyncing(true)
-      try {
-        await onSync?.(updates)
-      } finally {
-        setIsSyncing(false)
-      }
-    }
-
     return (
       <>
         <StyledSync
@@ -191,6 +214,7 @@ export const SyncButton = forwardRef<HTMLButtonElement, SyncButtonProps>(
             'has-updates': hasUpdates,
             'auto-sync': isAutoSyncEnabled,
           })}
+          data-shortcut="Shift+R"
           data-tooltip={hasUpdates ? updatesTooltip : 'Refresh data'}
           variant={hasUpdates ? 'filled' : 'surface'}
         />

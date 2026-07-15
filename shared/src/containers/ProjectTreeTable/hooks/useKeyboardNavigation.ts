@@ -199,8 +199,7 @@ export default function useKeyboardNavigation() {
           openPlayer(rowId)
           break
         }
-        case 'r':
-        case 'R': {
+        case 'r': {
           // Don't prevent default if Ctrl/Cmd is held (allow page reload)
           if (e.ctrlKey || e.metaKey) {
             return

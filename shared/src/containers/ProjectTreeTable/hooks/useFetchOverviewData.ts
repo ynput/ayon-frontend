@@ -20,7 +20,7 @@ import { getGroupQueries } from '../utils/getGroupQueries'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { useGetEntityLinksQuery } from '@shared/api'
-import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
+import { OnSyncDataCallback, useAutoSyncSettings, useProjectFoldersContext } from '@shared/context'
 import { debounce } from 'lodash'
 
 // how long a folder must stay rendered in the viewport before its tasks are fetched.
@@ -94,6 +94,7 @@ export const useFetchOverviewData = ({
   visibleEntityIds = [],
 }: Params): useFetchOverviewDataData => {
   const { isLoading: isLoadingModules } = modules
+  const [autoSyncSettings] = useAutoSyncSettings()
 
   const {
     folders,
@@ -157,6 +158,7 @@ export const useFetchOverviewData = ({
     return expandedFolderIdsToQuery.filter((id) => visibleIdsSet.has(id))
   }, [expandedFolderIdsToQuery, showHierarchy, isFlatFolderView, debouncedVisibleEntityIds])
 
+  // QUERY
   const {
     data: expandedFoldersTasks = [],
     isFetching: isFetchingExpandedFoldersTasks,
@@ -171,6 +173,7 @@ export const useFetchOverviewData = ({
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
       showComments,
+      autoSync: autoSyncSettings,
     },
     { skip: !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView) },
   )
@@ -186,7 +189,6 @@ export const useFetchOverviewData = ({
   const {
     data: foldersByTaskFilter,
     isUninitialized,
-    isFetching: isFetchingFoldersByTaskFilter,
     isLoading: isLoadingTasksFolders,
     isUninitialized: isUninitializedTasksFolders,
     error: searchFoldersError,
@@ -396,7 +398,6 @@ export const useFetchOverviewData = ({
   // Use the new infinite query hook for tasks list with correct name
   const {
     data: tasksListInfiniteData,
-    isFetching: isFetchingTasksList,
     isLoading: isLoadingTasksList,
     error: tasksListError,
     fetchNextPage,
@@ -479,7 +480,6 @@ export const useFetchOverviewData = ({
 
   const {
     data: { tasks: groupTasks = [] } = {},
-    isFetching: isFetchingGroupedTasks,
     isUninitialized: isUninitializedGroupedTasks,
     error: groupedTasksError,
     refetch: refetchGroupedTasks,

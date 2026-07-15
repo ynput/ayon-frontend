@@ -15,10 +15,10 @@ import { useViewsState } from '@shared/containers'
 export type RTUpdateType = 'created' | 'changed' | 'deleted'
 
 // settings for different levels of auto syncing
-type SettingsConfig = Record<RTUpdateType, boolean>
+export type RTUpdateConfig = Record<RTUpdateType, boolean>
 
 // helper function to turn everything on or off for a given level of auto syncing
-const toggleSyncAll = (on: boolean): SettingsConfig => ({
+const toggleSyncAll = (on: boolean): RTUpdateConfig => ({
   created: on,
   changed: on,
   deleted: on,
@@ -41,8 +41,8 @@ export type EntityUpdatesContextValue = {
   projectNames: string[]
   acknowledge: (topics: string[], projectNames: string[], throughId: number) => void
   getLatestId: () => number
-  autoSyncSettings: SettingsConfig
-  setAutoSyncSettings: Dispatch<SetStateAction<SettingsConfig>>
+  autoSyncSettings: RTUpdateConfig
+  setAutoSyncSettings: Dispatch<SetStateAction<RTUpdateConfig>>
 }
 
 type EntityUpdatesProviderProps = {
@@ -58,7 +58,7 @@ const matchesProject = (project: string | undefined, projectNames: string[]) => 
   return projectNames.includes(project || '')
 }
 
-const getUpdateType = (topic: string): RTUpdateType | undefined => {
+export const getUpdateType = (topic: string): RTUpdateType | undefined => {
   const event = topic.split('.').pop()
   if (!event) return undefined
   if (event.endsWith('_created')) return 'created'
@@ -74,7 +74,7 @@ const getUpdateType = (topic: string): RTUpdateType | undefined => {
 export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesProviderProps) => {
   const nextId = useRef(0)
   const [autoSyncSettings = toggleSyncAll(false), setAutoSyncSettings] = useViewsState<
-    { autoSync: SettingsConfig },
+    { autoSync: RTUpdateConfig },
     'autoSync'
   >('autoSync')
   const [updates, setUpdates] = useState<RTEntityUpdate[]>([])
@@ -180,7 +180,7 @@ export const useAutoSyncSettings = () => {
   const { autoSyncSettings, setAutoSyncSettings } = context
 
   const updateAutoSyncSettings = (payload: {
-    settings?: Partial<SettingsConfig>
+    settings?: Partial<RTUpdateConfig>
     global?: boolean
   }) => {
     const { settings, global } = payload

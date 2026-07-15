@@ -24,6 +24,7 @@ import {
   OverrideResultType,
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
+import { getUpdateType, RTUpdateConfig } from '@shared/context'
 
 // parse attribs JSON string to object
 export const parseAllAttribs = (allAttrib: string) => {
@@ -215,6 +216,16 @@ export const clearOverviewTasksByFoldersRegistry = (projectName: string) => {
   })
 }
 
+type GetOverviewTasksByFoldersArgs = {
+  projectName: string
+  parentIds: string[]
+  filter?: string
+  folderFilter?: string
+  search?: string
+  showComments?: boolean
+  autoSync?: RTUpdateConfig
+}
+
 const injectedApi = enhancedApi.injectEndpoints({
   endpoints: (build) => ({
     // Each project has one cache for all the tasks of the expanded folders
@@ -222,17 +233,7 @@ const injectedApi = enhancedApi.injectEndpoints({
     // Each expanded folder has it's own query that is looped over here
     // When new folders are expanded, the new tasks are fetched and we use the cache for the rest
     // This also solves the pagination issue of getting all tasks in one query, splitting it up in multiple queries to avoid pagination limits
-    getOverviewTasksByFolders: build.query<
-      EditorTaskNode[],
-      {
-        projectName: string
-        parentIds: string[]
-        filter?: string
-        folderFilter?: string
-        search?: string
-        showComments?: boolean
-      }
-    >({
+    getOverviewTasksByFolders: build.query<EditorTaskNode[], GetOverviewTasksByFoldersArgs>({
       async queryFn(
         { projectName, parentIds, filter, folderFilter, search, showComments },
         { dispatch, getState },
@@ -251,6 +252,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           const cacheKey = getCacheKey(projectName, filter, folderFilter, search, showComments)
 
           // 2. Fetch our registry specific to THIS combination of search/filters
+          const hasQueriedFolders = queriedFoldersRegistry[cacheKey] !== undefined
           const alreadyQueriedFolders = getQueriedFolders(cacheKey)
 
           // 3. Diffing: Only request folders that haven't hit the network under these specific filters
@@ -323,7 +325,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           markFoldersAsQueried(cacheKey, newFolderIds)
 
           // 5. Append new tasks to the existing flat array cache with task ID deduplication
-          const finalTasks = [...cacheData, ...allNewTasks]
+          const finalTasks = hasQueriedFolders ? [...cacheData, ...allNewTasks] : allNewTasks
           const uniqueTasksMap = new Map(finalTasks.map((task) => [task.id, task]))
 
           return {
@@ -337,7 +339,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
       },
       // keep one cache per project
-      serializeQueryArgs: ({ queryArgs: { parentIds, ...rest } }) => ({
+      serializeQueryArgs: ({ queryArgs: { parentIds, autoSync, ...rest } }) => ({
         ...rest,
       }),
       // Refetch when the page arg changes
@@ -347,7 +349,7 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
       async onCacheEntryAdded(
-        { projectName, parentIds, filter, folderFilter, search, showComments },
+        { projectName, parentIds, filter, folderFilter, search, showComments, autoSync },
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
       ) {
         let token: any
@@ -423,7 +425,9 @@ const injectedApi = enhancedApi.injectEndpoints({
           )
 
           const handlePubSub = async (_topic: string, message: any) => {
-            if (_topic.endsWith('.created')) return
+            // Only react to updates that are enabled in the autoSync settings
+            const updateType = getUpdateType(_topic)
+            if (!updateType || !autoSync?.[updateType]) return
             const taskId = message?.summary?.entityId
             const parentId = message?.summary?.parentId
             if (!taskId || !parentId) return
