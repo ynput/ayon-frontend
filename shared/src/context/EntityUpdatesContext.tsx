@@ -12,15 +12,28 @@ import { PubSub } from '@shared/util'
 import { EntityUpdatesContext } from './EntityUpdatesContextInstance'
 import { useViewsState } from '@shared/containers'
 
-export type RTUpdateType = 'created' | 'changed' | 'deleted'
+export type TopicUpdateType =
+  | 'created'
+  | 'label_changed'
+  | 'renamed'
+  | 'type_changed'
+  | 'status_changed'
+  | 'tags_changed'
+  | 'attrib_changed'
+  | 'deleted'
 
 // settings for different levels of auto syncing
-export type RTUpdateConfig = Record<RTUpdateType, boolean>
+export type RTUpdateConfig = Record<TopicUpdateType, boolean>
 
 // helper function to turn everything on or off for a given level of auto syncing
 const toggleSyncAll = (on: boolean): RTUpdateConfig => ({
   created: on,
-  changed: on,
+  label_changed: on,
+  renamed: on,
+  type_changed: on,
+  status_changed: on,
+  tags_changed: on,
+  attrib_changed: on,
   deleted: on,
 })
 
@@ -28,7 +41,7 @@ export type RTEntityUpdate = {
   id: number
   project?: string
   topic: string
-  updateType: RTUpdateType
+  updateType: TopicUpdateType
   entityId?: string
   message?: any
 }
@@ -58,14 +71,22 @@ const matchesProject = (project: string | undefined, projectNames: string[]) => 
   return projectNames.includes(project || '')
 }
 
-export const getUpdateType = (topic: string): RTUpdateType | undefined => {
+export const getUpdateType = (topic: string): TopicUpdateType | undefined => {
   const event = topic.split('.').pop()
   if (!event) return undefined
-  if (event.endsWith('_created')) return 'created'
-  if (event.endsWith('_deleted')) return 'deleted'
-  if (event.endsWith('_changed')) return 'changed'
-  if (event === 'created' || event === 'changed' || event === 'deleted') {
-    return event
+  if (
+    [
+      'created',
+      'label_changed',
+      'renamed',
+      'type_changed',
+      'status_changed',
+      'tags_changed',
+      'attrib_changed',
+      'deleted',
+    ].includes(event)
+  ) {
+    return event as TopicUpdateType
   } else {
     return undefined
   }

@@ -1,6 +1,6 @@
 import {
   EntityGroup,
-  RTUpdateType,
+  TopicUpdateType,
   useGetVersionsByProductsQuery,
   useGetVersionsInfiniteQuery,
 } from '@shared/api'
@@ -135,10 +135,10 @@ export type QueryArguments = {
   featuredOnly?: string[]
   hasReviewables?: boolean
   showComments?: boolean
-  rtUpdates?: RTUpdateType[]
+  rtUpdates?: TopicUpdateType[]
 }
 
-const RT_UPDATES: RTUpdateType[] = ['field_update', 'attrib_update', 'delete']
+const RT_UPDATES: TopicUpdateType[] = ['field_update', 'attrib_update', 'delete']
 
 interface VersionsDataProviderProps {
   projectName: string

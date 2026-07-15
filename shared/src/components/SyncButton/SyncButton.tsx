@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import {
   OnSyncDataCallback,
   RTEntityUpdate,
-  RTUpdateType,
+  TopicUpdateType,
   useAutoSyncSettings,
   useSyncUpdates,
 } from '@shared/context'
@@ -13,14 +13,28 @@ import { useMenuContext } from '@shared/context'
 import clsx from 'clsx'
 import { shouldBlockShortcuts } from '@shared/util'
 
-const UPDATE_TYPES: { updateType: RTUpdateType; label: string; tooltip?: string }[] = [
+const UPDATE_TYPES: { updateTypes: TopicUpdateType[]; label: string; tooltip?: string }[] = [
   {
-    updateType: 'created',
+    updateTypes: ['created'],
     label: 'Creations',
     tooltip: 'Automatically add newly created entities',
   },
-  { updateType: 'changed', label: 'Updates', tooltip: 'Automatically update existing entities' },
-  { updateType: 'deleted', label: 'Deletions', tooltip: 'Automatically remove deleted entities' },
+  {
+    updateTypes: ['attrib_changed'],
+    label: 'Attribute Changes',
+    tooltip: 'Automatically update existing entities',
+  },
+  {
+    updateTypes: ['deleted'],
+    label: 'Deletions',
+    tooltip: 'Automatically remove deleted entities',
+  },
+  // all other update types are grouped together
+  {
+    updateTypes: ['label_changed', 'renamed', 'type_changed', 'status_changed', 'tags_changed'],
+    label: 'Other Changes',
+    tooltip: 'Automatically update other changes to existing entities',
+  },
 ]
 
 const StyledSync = styled(Button)`
@@ -253,15 +267,19 @@ export const SyncButton = forwardRef<HTMLButtonElement, SyncButtonProps>(
                       />
                     </div>
                     {UPDATE_TYPES.map((setting) => (
-                      <div className="setting" key={setting.updateType}>
+                      <div className="setting" key={setting.updateTypes.join(',')}>
                         <span>{setting.label}</span>
                         <InputSwitch
-                          checked={autoSyncSettings[setting.updateType]}
+                          checked={setting.updateTypes.every((type) => autoSyncSettings[type])}
                           onChange={() =>
                             updateAutoSyncSettings({
-                              settings: {
-                                [setting.updateType]: !autoSyncSettings[setting.updateType],
-                              },
+                              settings: setting.updateTypes.reduce(
+                                (acc, type) => ({
+                                  ...acc,
+                                  [type]: !autoSyncSettings[type],
+                                }),
+                                {},
+                              ),
                             })
                           }
                           data-tooltip={setting.tooltip}

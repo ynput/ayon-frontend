@@ -179,10 +179,10 @@ export type GetVersionsResult = {
 // for infinite query args
 export type GetVersionsArgs = Omit<GetVersionsQueryVariables, 'cursor'> & {
   desc?: boolean // sort direction
-  rtUpdates?: RTUpdateType[]
+  rtUpdates?: TopicUpdateType[]
 }
 
-export type RTUpdateType = 'field_update' | 'attrib_update' | 'delete' | 'create'
+export type TopicUpdateType = 'field_update' | 'attrib_update' | 'delete' | 'create'
 
 // for paginated queries in infinite query
 type VersionsPageParam = {
@@ -192,7 +192,7 @@ type VersionsPageParam = {
 
 export type GetProductsArgs = Omit<GetProductsQueryVariables, 'cursor' | 'versionIds'> & {
   desc?: boolean // sort direction
-  rtUpdates?: RTUpdateType[]
+  rtUpdates?: TopicUpdateType[]
 }
 
 type ProductsPageParam = {
@@ -203,7 +203,7 @@ type ProductsPageParam = {
 type GetVersionsByProductsArgs = GetVersionsByProductIdQueryVariables & {
   productIds: string[]
   desc?: boolean
-  rtUpdates?: RTUpdateType[]
+  rtUpdates?: TopicUpdateType[]
 }
 
 export type GetGroupedVersionsListArgs = {
@@ -218,7 +218,7 @@ export type GetGroupedVersionsListArgs = {
   sortBy?: string
   featuredOnly?: string[]
   hasReviewables?: boolean
-  rtUpdates?: RTUpdateType[]
+  rtUpdates?: TopicUpdateType[]
 }
 
 export type GetGroupedVersionsListResult = {
@@ -294,10 +294,10 @@ const VERSION_UPDATE_ATTRIB_JITTER = 1000 // max ms of random jitter for attribu
 const VERSION_UPDATE_NEW_DATA_DEBOUNCE = 30000 // ms to wait before fetching new version data in batch
 const VERSION_UPDATE_NEW_DATA_JITTER = 1500 // max ms of random jitter for new version data fetches
 
-const isRTUpdateEnabled = (updates: RTUpdateType[] | undefined, update: RTUpdateType) =>
+const isRTUpdateEnabled = (updates: TopicUpdateType[] | undefined, update: TopicUpdateType) =>
   !updates || updates.includes(update)
 
-const getRTUpdateType = (topic: string): RTUpdateType | undefined => {
+const getRTUpdateType = (topic: string): TopicUpdateType | undefined => {
   if (topic.endsWith('.created')) return 'create'
   if (topic.endsWith('.deleted')) return 'delete'
   if (topic.includes('.attrib_')) return 'attrib_update'
@@ -311,7 +311,7 @@ const getRTUpdateType = (topic: string): RTUpdateType | undefined => {
 function createVersionUpdateBatcher(
   projectName: string,
   dispatch: any,
-  enabledUpdates: RTUpdateType[] | undefined,
+  enabledUpdates: TopicUpdateType[] | undefined,
   handlers: {
     checkVersionInCache: (entityId: string, parentId?: string) => boolean
     onBatchUpdate: (changes: {
