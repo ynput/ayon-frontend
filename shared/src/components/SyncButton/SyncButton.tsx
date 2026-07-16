@@ -2,6 +2,7 @@ import { Button, ButtonProps, InputSwitch } from '@ynput/ayon-react-components'
 import { forwardRef, useEffect, useId, useImperativeHandle, useRef, useState } from 'react'
 import styled from 'styled-components'
 import {
+  FORCE_AUTO_SYNC,
   OnSyncDataCallback,
   RTEntityUpdate,
   TopicUpdateType,
@@ -226,72 +227,74 @@ export const SyncButton = forwardRef<HTMLButtonElement, SyncButtonProps>(
           className={clsx(props.className, {
             syncing: isSyncing,
             'has-updates': hasUpdates,
-            'auto-sync': isAutoSyncEnabled,
+            'auto-sync': isAutoSyncEnabled && !FORCE_AUTO_SYNC,
           })}
           data-shortcut="Shift+R"
           data-tooltip={hasUpdates ? updatesTooltip : 'Refresh data'}
           variant={hasUpdates ? 'filled' : 'surface'}
         />
-        <MenuContainer
-          id={menuId}
-          target={buttonRef.current}
-          align="right"
-          onMouseEnter={cancelMenuClose}
-          onMouseLeave={closeSettingsMenu}
-        >
-          <Menu
-            menu={[
-              {
-                id: 'sync-settings',
-                node: (
-                  <SyncSettings
-                    key="sync-settings"
-                    onClick={(e) => e.stopPropagation()}
-                    onMouseEnter={cancelMenuClose}
-                    onMouseLeave={closeSettingsMenu}
-                  >
-                    <div
-                      className="setting global"
-                      data-tooltip={
-                        isGlobalAutoSyncEnabled
-                          ? 'New entities and updates will be automatically synced'
-                          : 'Auto updates are disabled. Click the sync button to manually refresh data.'
-                      }
+        {!FORCE_AUTO_SYNC && (
+          <MenuContainer
+            id={menuId}
+            target={buttonRef.current}
+            align="right"
+            onMouseEnter={cancelMenuClose}
+            onMouseLeave={closeSettingsMenu}
+          >
+            <Menu
+              menu={[
+                {
+                  id: 'sync-settings',
+                  node: (
+                    <SyncSettings
+                      key="sync-settings"
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseEnter={cancelMenuClose}
+                      onMouseLeave={closeSettingsMenu}
                     >
-                      <span>Auto updates</span>
-                      <InputSwitch
-                        checked={isGlobalAutoSyncEnabled}
-                        onChange={() =>
-                          updateAutoSyncSettings({ global: !isGlobalAutoSyncEnabled })
+                      <div
+                        className="setting global"
+                        data-tooltip={
+                          isGlobalAutoSyncEnabled
+                            ? 'New entities and updates will be automatically synced'
+                            : 'Auto updates are disabled. Click the sync button to manually refresh data.'
                         }
-                      />
-                    </div>
-                    {UPDATE_TYPES.map((setting) => (
-                      <div className="setting" key={setting.updateTypes.join(',')}>
-                        <span>{setting.label}</span>
+                      >
+                        <span>Auto updates</span>
                         <InputSwitch
-                          checked={setting.updateTypes.every((type) => autoSyncSettings[type])}
+                          checked={isGlobalAutoSyncEnabled}
                           onChange={() =>
-                            updateAutoSyncSettings({
-                              settings: setting.updateTypes.reduce(
-                                (acc, type) => ({
-                                  ...acc,
-                                  [type]: !autoSyncSettings[type],
-                                }),
-                                {},
-                              ),
-                            })
+                            updateAutoSyncSettings({ global: !isGlobalAutoSyncEnabled })
                           }
-                          data-tooltip={setting.tooltip}
                         />
                       </div>
-                    ))}
-                  </SyncSettings>
-                ),
-              },
-            ]}
-          />
-        </MenuContainer>
+                      {UPDATE_TYPES.map((setting) => (
+                        <div className="setting" key={setting.updateTypes.join(',')}>
+                          <span>{setting.label}</span>
+                          <InputSwitch
+                            checked={setting.updateTypes.every((type) => autoSyncSettings[type])}
+                            onChange={() =>
+                              updateAutoSyncSettings({
+                                settings: setting.updateTypes.reduce(
+                                  (acc, type) => ({
+                                    ...acc,
+                                    [type]: !autoSyncSettings[type],
+                                  }),
+                                  {},
+                                ),
+                              })
+                            }
+                            data-tooltip={setting.tooltip}
+                          />
+                        </div>
+                      ))}
+                    </SyncSettings>
+                  ),
+                },
+              ]}
+            />
+          </MenuContainer>
+        )}
       </>
     )
   },

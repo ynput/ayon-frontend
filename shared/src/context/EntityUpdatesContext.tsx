@@ -12,6 +12,9 @@ import { PubSub } from '@shared/util'
 import { EntityUpdatesContext } from './EntityUpdatesContextInstance'
 import { useViewsState } from '@shared/containers'
 
+// removes the option to disable auto sync
+export const FORCE_AUTO_SYNC = true
+
 export type TopicUpdateType =
   | 'created'
   | 'label_changed'
@@ -107,7 +110,7 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
       const updateType = getUpdateType(message.topic)
       // check the type of update and whether auto syncing is enabled for that type
       // NOTE: when auto syncing is enabled we DO NOT push to updates because it is streamed in automatically
-      if (!updateType || autoSyncSettings[updateType]) return
+      if (!updateType || autoSyncSettings[updateType] || FORCE_AUTO_SYNC) return
 
       const update: RTEntityUpdate = {
         id: ++nextId.current,
@@ -138,7 +141,7 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
         )
       },
       getLatestId: () => nextId.current,
-      autoSyncSettings,
+      autoSyncSettings: FORCE_AUTO_SYNC ? toggleSyncAll(true) : autoSyncSettings, // force auto sync on always if the flag is set
       setAutoSyncSettings,
     }),
     [autoSyncSettings, projectNames, setAutoSyncSettings, updates],
@@ -213,4 +216,14 @@ export const useAutoSyncSettings = () => {
   }
 
   return [autoSyncSettings, updateAutoSyncSettings] as const
+}
+
+export const getAutoSyncForTopic = (
+  topic: string,
+  autoSyncSettings: RTUpdateConfig | undefined,
+): boolean => {
+  if (!autoSyncSettings) return false
+  const updateType = getUpdateType(topic)
+  if (!updateType) return false
+  return autoSyncSettings[updateType]
 }
