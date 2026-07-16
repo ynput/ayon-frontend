@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef, useContext } from 'react'
+import type { Options } from 'react-use-websocket'
 import { toast } from 'react-toastify'
 import { PubSub } from '@shared/util'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
@@ -8,6 +9,9 @@ import { RefreshToast } from '@shared/components'
 import { useLazyGetSiteInfoQuery } from '@shared/api'
 import { WebSocketLike } from 'react-use-websocket/dist/lib/types'
 import { SocketContext } from './WebsocketContextInstance'
+
+// @ts-ignore
+const DISABLE_WS = import.meta.env.VITE_DISABLE_WS === 'true'
 
 export type WebsocketContextType = {
   getWebSocket: () => WebSocketLike | null
@@ -43,8 +47,9 @@ export const SocketProvider = ({
   const [topics, setTopics] = useState([])
   const [getInfo] = useLazyGetSiteInfoQuery()
 
-  const wsOpts = {
+  const wsOpts: Options = {
     shouldReconnect: () => {
+      if (DISABLE_WS) return false
       if (!userName) return false
       // check if there is a token
       const accessToken = localStorage.getItem('accessToken')
@@ -58,7 +63,11 @@ export const SocketProvider = ({
     },
   }
 
-  const { sendMessage, readyState, getWebSocket } = useWebSocket(wsAddress, wsOpts)
+  const { sendMessage, readyState, getWebSocket } = useWebSocket(
+    wsAddress,
+    wsOpts,
+    !DISABLE_WS && !!userName,
+  )
 
   const subscribe = () => {
     sendMessage(
@@ -132,8 +141,7 @@ export const SocketProvider = ({
 
       if (topic === 'server.restart_requested') setServerRestartingVisible(true)
 
-      
-      if (["import.data"].includes(topic)) {
+      if (['import.data'].includes(topic)) {
         if (sender !== window.senderId) return // ignore import.data messages from other users
       } else if (sender === window.senderId) {
         return // for other events, ignore my own messages

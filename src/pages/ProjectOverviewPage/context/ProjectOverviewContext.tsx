@@ -36,6 +36,7 @@ import {
 // Local context and hooks
 import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
+import { useProjectOverviewStats } from '../hooks/useProjectOverviewStats'
 import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 import { ProjectOverviewContext } from './ProjectOverviewContextInstance'
@@ -256,6 +257,27 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     entityListFolderIds: entityIds.folderIds,
   })
 
+  const {
+    folderStats,
+    taskStats,
+    folderStatsLoading,
+    taskStatsLoading,
+    folderStatsError,
+    taskStatsError,
+    refetchFolderStats,
+    refetchTaskStats,
+    isUninitializedFolderStats,
+    isUninitializedTaskStats,
+  } = useProjectOverviewStats({
+    folderFilter: combinedFolderFilter.filterString,
+    taskFilter: combinedTaskFilter.filterString,
+    folderSearch: combinedFolderFilter.search,
+    taskSearch: combinedTaskFilter.search,
+    selectedFolders,
+    selectedTaskIds: rawEntityIds.taskIds,
+    showHierarchy,
+  })
+
   // DATA FETCHING
   const {
     foldersMap,
@@ -297,6 +319,10 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     showComments,
     onCollapseAll: () => setExpanded({}),
     visibleEntityIds,
+    folderStatsRefetch: refetchFolderStats,
+    taskStatsRefetch: refetchTaskStats,
+    folderStatsUninitialized: isUninitializedFolderStats,
+    taskStatsUninitialized: isUninitializedTaskStats,
   })
 
   // combine foldersMap and tasksMap into a single map
@@ -326,6 +352,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         tasksByFolderMap,
         fetchNextPage,
         onSyncData,
+        folderStats,
+        taskStats,
+        folderStatsLoading,
+        taskStatsLoading,
+        folderStatsError,
+        taskStatsError,
         taskGroups,
         // Separate task and folder filters
         taskFilters: {

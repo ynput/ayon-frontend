@@ -1,4 +1,5 @@
 import { EntityGroup } from '@shared/api'
+import type { FieldStats } from '@shared/api'
 import { OnSyncDataCallback } from '@shared/context'
 import { FolderNodeMap, LoadingTasks, TaskNodeMap, TasksByFolderMap, SoftErrorAction } from '.'
 import { ProjectDataContextProps } from '../context'
@@ -48,6 +49,12 @@ export interface ProjectOverviewContextType {
   tasksByFolderMap: TasksByFolderMap
   fetchNextPage: (value?: string) => void
   onSyncData: OnSyncDataCallback
+  folderStats?: FieldStats[]
+  taskStats?: FieldStats[]
+  folderStatsLoading: boolean
+  taskStatsLoading: boolean
+  folderStatsError?: unknown
+  taskStatsError?: unknown
 
   // Grouping data
   taskGroups: EntityGroup[]

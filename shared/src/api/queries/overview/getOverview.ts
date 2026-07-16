@@ -207,23 +207,6 @@ const getQueriedFolders = (cacheKey: string): Set<string> => {
   return queriedFoldersRegistry[cacheKey] || new Set()
 }
 
-export const clearOverviewTasksByFoldersRegistry = (projectName: string) => {
-  Object.keys(queriedFoldersRegistry).forEach((cacheKey) => {
-    if (JSON.parse(cacheKey).projectName === projectName) {
-      delete queriedFoldersRegistry[cacheKey]
-    }
-  })
-}
-
-type GetOverviewTasksByFoldersArgs = {
-  projectName: string
-  parentIds: string[]
-  filter?: string
-  folderFilter?: string
-  search?: string
-  showComments?: boolean
-}
-
 const injectedApi = enhancedApi.injectEndpoints({
   endpoints: (build) => ({
     // Each project has one cache for all the tasks of the expanded folders
@@ -231,10 +214,20 @@ const injectedApi = enhancedApi.injectEndpoints({
     // Each expanded folder has it's own query that is looped over here
     // When new folders are expanded, the new tasks are fetched and we use the cache for the rest
     // This also solves the pagination issue of getting all tasks in one query, splitting it up in multiple queries to avoid pagination limits
-    getOverviewTasksByFolders: build.query<EditorTaskNode[], GetOverviewTasksByFoldersArgs>({
+    getOverviewTasksByFolders: build.query<
+      EditorTaskNode[],
+      {
+        projectName: string
+        parentIds: string[]
+        filter?: string
+        folderFilter?: string
+        search?: string
+        showComments?: boolean
+      }
+    >({
       async queryFn(
         { projectName, parentIds, filter, folderFilter, search, showComments },
-        { dispatch, getState },
+        { dispatch, getState, forced },
       ) {
         try {
           const state = getState()
@@ -250,11 +243,13 @@ const injectedApi = enhancedApi.injectEndpoints({
           const cacheKey = getCacheKey(projectName, filter, folderFilter, search, showComments)
 
           // 2. Fetch our registry specific to THIS combination of search/filters
-          const hasQueriedFolders = queriedFoldersRegistry[cacheKey] !== undefined
           const alreadyQueriedFolders = getQueriedFolders(cacheKey)
 
           // 3. Diffing: Only request folders that haven't hit the network under these specific filters
-          const newFolderIds = parentIds.filter((id) => !alreadyQueriedFolders.has(id))
+          // If forced, we ignore the registry and fetch all folders again, like a refresh
+          const newFolderIds = forced
+            ? parentIds
+            : parentIds.filter((id) => !alreadyQueriedFolders.has(id))
 
           // Short-circuit if all expanded folders have been evaluated for this filter setup
           if (newFolderIds.length === 0) {
@@ -323,7 +318,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           markFoldersAsQueried(cacheKey, newFolderIds)
 
           // 5. Append new tasks to the existing flat array cache with task ID deduplication
-          const finalTasks = hasQueriedFolders ? [...cacheData, ...allNewTasks] : allNewTasks
+          const finalTasks = [...cacheData, ...allNewTasks]
           const uniqueTasksMap = new Map(finalTasks.map((task) => [task.id, task]))
 
           return {

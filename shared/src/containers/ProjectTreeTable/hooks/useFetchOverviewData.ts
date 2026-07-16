@@ -1,5 +1,4 @@
 import {
-  clearOverviewTasksByFoldersRegistry,
   useGetGroupedTasksListQuery,
   useGetOverviewTasksByFoldersQuery,
   useGetSearchFoldersQuery,
@@ -70,6 +69,10 @@ type Params = {
   // entity ids currently rendered in the table's viewport (hierarchy mode only) - used to
   // scope task fetching to folders actually on screen, rather than every expanded folder
   visibleEntityIds?: string[]
+  folderStatsRefetch?: () => { unwrap: () => Promise<unknown> }
+  taskStatsRefetch?: () => { unwrap: () => Promise<unknown> }
+  folderStatsUninitialized?: boolean
+  taskStatsUninitialized?: boolean
 }
 
 export const useFetchOverviewData = ({
@@ -92,6 +95,10 @@ export const useFetchOverviewData = ({
   showComments = false,
   onCollapseAll,
   visibleEntityIds = [],
+  folderStatsRefetch,
+  taskStatsRefetch,
+  folderStatsUninitialized,
+  taskStatsUninitialized,
 }: Params): useFetchOverviewDataData => {
   const { isLoading: isLoadingModules } = modules
   const [autoSyncSettings] = useAutoSyncSettings()
@@ -173,7 +180,6 @@ export const useFetchOverviewData = ({
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
       showComments,
-      autoSync: autoSyncSettings,
     },
     { skip: !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView) },
   )
@@ -681,7 +687,6 @@ export const useFetchOverviewData = ({
       refetches.push(refetchTasksFolders().unwrap())
     }
     if ((isFullSync || hasTaskUpdates) && !isUninitializedExpandedFoldersTasks) {
-      clearOverviewTasksByFoldersRegistry(projectName)
       refetches.push(refetchExpandedFoldersTasks().unwrap())
     }
     if ((isFullSync || hasTaskUpdates) && !isUninitializedTasksList) {
@@ -689,6 +694,12 @@ export const useFetchOverviewData = ({
     }
     if ((isFullSync || hasTaskUpdates) && !isUninitializedGroupedTasks) {
       refetches.push(refetchGroupedTasks().unwrap())
+    }
+    if ((isFullSync || hasFolderUpdates) && !folderStatsUninitialized && folderStatsRefetch) {
+      refetches.push(folderStatsRefetch().unwrap())
+    }
+    if ((isFullSync || hasTaskUpdates) && !taskStatsUninitialized && taskStatsRefetch) {
+      refetches.push(taskStatsRefetch().unwrap())
     }
     if ((isFullSync || hasFolderUpdates) && !isUninitializedFoldersLinks) {
       refetches.push(refetchFoldersLinks().unwrap())
