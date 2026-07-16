@@ -191,11 +191,9 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     const folderIds = new Set<string>()
     for (const operation of operations) {
       if (operation.entityType === 'folder') {
-        if (!operation.data?.parentId) {
-          console.warn('Folder operation without parentId:', operation)
-          continue // Skip folders without parentId
+        if (operation.data?.parentId) {
+          folderIds.add(operation.data.parentId)
         }
-        folderIds.add(operation.data.parentId)
       } else if (operation.entityType === 'task') {
         if (!operation.data?.folderId) {
           console.warn('Task operation without folderId:', operation)
