@@ -497,7 +497,8 @@ export const useBuildListMenuItems = ({
             const label = `Add to list (${cell.data.featuredVersion.name})`
             return buildReviewContextMenu('version', [versionEntity], label, filter)
           }
-          return [buildAddToListItem('product', selected, undefined, filter)]
+          // a product with no featured version can't be added: products aren't a valid list type
+          return [{ id: 'add-to-list', label: 'Add to list', icon: 'list_alt_add', disabled: true }]
         } else if (cell.entityType === 'version') {
           // Cells expose hasReviewables on .data — propagate so addToList + UI gating can consume it
           const selectedWithReviewable: ListEntityInput[] = selected.map((s) => ({
