@@ -23,6 +23,7 @@ import {
   ListSubMenuItem,
   ListEntityInput,
 } from '../hooks/useBuildListMenuItems'
+import AddToListDialog from '../components/AddToListDialog'
 
 const MIN_REVIEW_VERSION = '0.0.3'
 const MIN_REVIEW_ACTIONS_VERSION = '0.5.0'
@@ -48,6 +49,11 @@ export interface EntityListsContextType {
   versions: EntityList[]
   reviews: EntityList[]
   addToList: (listId: string, entityType: string, entities: ListEntityInput[]) => Promise<void>
+  openAddToListDialog: (
+    entityType: string,
+    entities: ListEntityInput[],
+    opts?: { isReview?: boolean; listFilter?: (list: EntityList) => boolean },
+  ) => void
   menuItems: (filter?: (item: ListSubMenuItem) => boolean) => ContextMenuItemConstructor
   buildListMenuItem: (
     list: EntityList,
@@ -289,6 +295,24 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
     ],
   )
 
+  const [addToListDialog, setAddToListDialog] = useState<{
+    entityType: string
+    entities: ListEntityInput[]
+    isReview?: boolean
+    listFilter?: (list: EntityList) => boolean
+  } | null>(null)
+
+  const openAddToListDialog: EntityListsContextType['openAddToListDialog'] = useCallback(
+    (entityType, entities, opts) =>
+      setAddToListDialog({
+        entityType,
+        entities,
+        isReview: opts?.isReview,
+        listFilter: opts?.listFilter,
+      }),
+    [],
+  )
+
   // Update the state type and initialize as null
   const [newListData, setNewListData] = useState<NewListData | null>(null)
 
@@ -443,6 +467,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
     reviews,
     addToList,
     openCreateNewList,
+    openAddToListDialog,
     executeAction,
   })
 
@@ -455,6 +480,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       versions,
       reviews,
       addToList,
+      openAddToListDialog,
       menuItems,
       buildListMenuItem,
       buildAddToListMenu,
@@ -475,6 +501,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       versions,
       reviews,
       addToList,
+      openAddToListDialog,
       menuItems,
       buildListMenuItem,
       buildAddToListMenu,
@@ -489,7 +516,22 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
     ],
   )
 
-  return <EntityListsContext.Provider value={value}>{children}</EntityListsContext.Provider>
+  return (
+    <EntityListsContext.Provider value={value}>
+      {children}
+      {addToListDialog && (
+        <AddToListDialog
+          entityType={addToListDialog.entityType}
+          entities={addToListDialog.entities}
+          isReview={addToListDialog.isReview}
+          listFilter={addToListDialog.listFilter}
+          addToList={addToList}
+          openCreateNewList={openCreateNewList}
+          onClose={() => setAddToListDialog(null)}
+        />
+      )}
+    </EntityListsContext.Provider>
+  )
 }
 
 export const useEntityListsContext = () => {

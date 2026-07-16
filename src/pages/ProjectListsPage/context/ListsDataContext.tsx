@@ -34,6 +34,9 @@ interface ListsDataProviderProps {
   entityListTypes?: string[]
   isReview?: boolean
   isStoryboards?: boolean
+  // picker mode: ignore the page's saved list filters (selection dialog, not the Lists page)
+  picker?: boolean
+  listsFilter?: (list: EntityList) => boolean
 }
 
 // fetch all lists and provide methods to update the lists
@@ -42,6 +45,8 @@ export const ListsDataProvider = ({
   entityListTypes,
   isReview,
   isStoryboards,
+  picker,
+  listsFilter,
 }: ListsDataProviderProps) => {
   const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
   const { projectName, isLoading: isFetchingProject } = useProjectContext()
@@ -79,7 +84,7 @@ export const ListsDataProvider = ({
     },
   })
 
-  const listsFilters = isReview ? [] : pageConfig?.listsFilters || ([] as Filter[])
+  const listsFilters = isReview || picker ? [] : pageConfig?.listsFilters || ([] as Filter[])
   const setListsFilters = async (filters: Filter[]) => {
     await updatePageConfig({ listsFilters: filters })
   }
@@ -87,7 +92,7 @@ export const ListsDataProvider = ({
   const [showArchived, setShowArchived] = useLocalStorage<boolean>('lists-show-archived', false)
 
   const {
-    data: listsData,
+    data: listsDataRaw,
     isLoading: isLoadingLists,
     isFetchingNextPage,
     isError,
@@ -98,6 +103,11 @@ export const ListsDataProvider = ({
     filters: listsFilters,
     entityListTypes,
   })
+
+  const listsData = useMemo(
+    () => (listsFilter ? listsDataRaw.filter(listsFilter) : listsDataRaw),
+    [listsDataRaw, listsFilter],
+  )
 
   // convert to a Map for easier access
   const listsMap: ListsMap = useMemo(() => {

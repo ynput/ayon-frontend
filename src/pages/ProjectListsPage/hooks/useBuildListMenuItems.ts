@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { getEntityTypeIcon } from '@shared/util'
-import { ListEntityType, listEntityTypes } from '../components/NewListDialog/NewListDialog'
+import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { EntityList, EntityListFolderModel } from '@shared/api'
 import { toast } from 'react-toastify'
@@ -41,6 +41,11 @@ interface UseBuildListMenuItemsProps {
     selectedEntities: ListEntityInput[],
     entityListType?: string,
   ) => void
+  openAddToListDialog: (
+    entityType: string,
+    entities: ListEntityInput[],
+    opts?: { isReview?: boolean; listFilter?: (list: EntityList) => boolean },
+  ) => void
   executeAction: any
 }
 
@@ -51,13 +56,9 @@ export const useBuildListMenuItems = ({
   hasReviewActionsVersion,
   reviewAddonVersion,
   listFolders,
-  folders,
-  tasks,
-  products,
-  versions,
-  reviews,
   addToList,
   openCreateNewList,
+  openAddToListDialog,
   executeAction,
 }: UseBuildListMenuItemsProps) => {
   const newListMenuItem = useCallback(
@@ -114,6 +115,25 @@ export const useBuildListMenuItems = ({
       items: items,
     }
   }, [])
+
+  // Direct "Add to list" action that opens the add-to-list dialog instead of a nested submenu
+  const buildAddToListItem = useCallback(
+    (
+      entityType: string,
+      entities: ListEntityInput[],
+      label?: string,
+      filter?: (item: ListSubMenuItem) => boolean,
+    ): ListSubMenuItem => ({
+      id: 'add-to-list',
+      label: label || 'Add to list',
+      icon: 'list_alt_add',
+      command: () =>
+        openAddToListDialog(entityType, entities, {
+          listFilter: filter ? (list) => filter({ id: list.id, label: list.label }) : undefined,
+        }),
+    }),
+    [openAddToListDialog],
+  )
 
   // Build a hierarchical structure of folders -> lists (lists only actionable)
   const buildHierarchicalMenuItems = useCallback(
@@ -341,28 +361,6 @@ export const useBuildListMenuItems = ({
       const hasAnyNonReviewable =
         entityType === 'version' ? entities.some((v) => v.hasReviewables === false) : false
 
-      let targetLists = versions
-      if (entityType === 'folder') targetLists = folders
-      else if (entityType === 'task') targetLists = tasks
-
-      let subMenuItems = buildHierarchicalMenuItems(
-        targetLists,
-        entities,
-        () => false,
-        () => false,
-      )
-      const reviewSubMenuItems = buildHierarchicalMenuItems(
-        reviews,
-        entities,
-        () => true,
-        undefined,
-        entityType,
-      )
-
-      if (filter && typeof filter === 'function') {
-        subMenuItems = subMenuItems.filter(filter)
-      }
-
       const OPEN_REVIEW_SESSION_ACTION_ID_BASE = 'review-create-session-from'
       const openReviewSession = async () => {
         if (!reviewAddonVersion) return toast.error('Review addon not available')
@@ -414,9 +412,7 @@ export const useBuildListMenuItems = ({
         }
       }
 
-      subMenuItems.push(newListMenuItem(entityType, entities))
-
-      const menu: any[] = [buildAddToListMenu(subMenuItems, { label })]
+      const menu: any[] = [buildAddToListItem(entityType, entities, label, filter)]
 
       if (hasReviewAddon) {
         // Build review menu items and add a disabled note if any selected version lacks reviewables
@@ -443,10 +439,9 @@ export const useBuildListMenuItems = ({
           },
           {
             id: 'add-to-session',
-            label: 'Add to session',
+            label: 'Add to review list',
             icon: 'list_alt_add',
-            items: reviewSubMenuItems,
-            disabled: reviewSubMenuItems.length === 0,
+            command: () => openAddToListDialog(entityType, entities, { isReview: true }),
           },
         ]
 
@@ -466,13 +461,8 @@ export const useBuildListMenuItems = ({
       return menu
     },
     [
-      folders,
-      tasks,
-      buildHierarchicalMenuItems,
-      buildAddToListMenu,
-      newListMenuItem,
-      versions,
-      reviews,
+      buildAddToListItem,
+      openAddToListDialog,
       hasReviewAddon,
       hasReviewActionsVersion,
       executeAction,
@@ -485,37 +475,29 @@ export const useBuildListMenuItems = ({
   const menuItems = useCallback(
     (filter?: (item: ListSubMenuItem) => boolean): ContextMenuItemConstructor =>
       (_e, cell, selected, _meta) => {
+        if (cell.isGroup) return []
+
         const isMultipleEntityTypes = selected.some(
           (item) => item.entityType !== selected[0].entityType,
         )
 
-        if (cell.isGroup) return []
-
-        // helpers to decide icon visibility
-        const getShowIconMultiple = () => isMultipleEntityTypes
-
-        let subMenuItems: ListSubMenuItem[] = []
-
         if (isMultipleEntityTypes) {
-          const combined = [...folders, ...tasks]
-          subMenuItems = buildHierarchicalMenuItems(combined, selected, () => getShowIconMultiple())
+          return [buildAddToListItem(selected[0].entityType as string, selected, undefined, filter)]
         } else if (cell.entityType === 'folder') {
           return buildReviewContextMenu('folder', selected, undefined, filter)
         } else if (cell.entityType === 'task') {
           return buildReviewContextMenu('task', selected, undefined, filter)
         } else if (cell.entityType === 'product') {
           // if the product has a featured version, only allow adding that version to lists
-          // @ts-expect-error- just don't worry about it
+          // @ts-expect-error - featuredVersion is not supported in typings
           if (cell.data?.featuredVersion?.id) {
             // @ts-expect-error - featuredVersion is not supported in typings
             const versionEntity = { entityId: cell.data.featuredVersion.id, entityType: 'version' }
-            // Pass down the filter here too
-            return buildReviewContextMenu('version', [versionEntity], undefined, filter)
-          } else {
-            subMenuItems = buildHierarchicalMenuItems(products, selected, () =>
-              getShowIconMultiple(),
-            )
+            // @ts-expect-error - featuredVersion is not supported in typings
+            const label = `Add to list (${cell.data.featuredVersion.name})`
+            return buildReviewContextMenu('version', [versionEntity], label, filter)
           }
+          return [buildAddToListItem('product', selected, undefined, filter)]
         } else if (cell.entityType === 'version') {
           // Cells expose hasReviewables on .data — propagate so addToList + UI gating can consume it
           const selectedWithReviewable: ListEntityInput[] = selected.map((s) => ({
@@ -526,35 +508,9 @@ export const useBuildListMenuItems = ({
           return buildReviewContextMenu('version', selectedWithReviewable, undefined, filter)
         }
 
-        // Apply filter if provided
-        if (filter && typeof filter === 'function') {
-          subMenuItems = subMenuItems.filter(filter)
-        }
-
-        // Add new list item at end
-        // @ts-expect-error - product is not supported in typings
-        if (cell.entityType && listEntityTypes.includes(cell.entityType)) {
-          subMenuItems.push(newListMenuItem(cell.entityType as ListEntityType, selected))
-        }
-
-        // @ts-expect-error - featuredVersion is not supported in typings
-        const listLabel = cell.data?.featuredVersion?.id
-          ? // @ts-expect-error - featuredVersion is not supported in typings
-            `Add to list (${cell.data.featuredVersion.name})`
-          : undefined
-
-        return [buildAddToListMenu(subMenuItems, { label: listLabel })]
+        return []
       },
-    [
-      folders,
-      tasks,
-      products,
-      versions,
-      buildHierarchicalMenuItems,
-      newListMenuItem,
-      buildAddToListMenu,
-      buildReviewContextMenu,
-    ],
+    [buildAddToListItem, buildReviewContextMenu],
   )
 
   return {
