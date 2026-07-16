@@ -24,7 +24,6 @@ import {
   OverrideResultType,
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
-import { getUpdateType, RTUpdateConfig } from '@shared/context'
 
 // parse attribs JSON string to object
 export const parseAllAttribs = (allAttrib: string) => {
@@ -223,7 +222,6 @@ type GetOverviewTasksByFoldersArgs = {
   folderFilter?: string
   search?: string
   showComments?: boolean
-  autoSync?: RTUpdateConfig
 }
 
 const injectedApi = enhancedApi.injectEndpoints({
@@ -339,7 +337,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
       },
       // keep one cache per project
-      serializeQueryArgs: ({ queryArgs: { parentIds, autoSync, ...rest } }) => ({
+      serializeQueryArgs: ({ queryArgs: { parentIds, ...rest } }) => ({
         ...rest,
       }),
       // Refetch when the page arg changes
@@ -349,7 +347,7 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
       async onCacheEntryAdded(
-        { projectName, parentIds, filter, folderFilter, search, showComments, autoSync },
+        { projectName, parentIds, filter, folderFilter, search, showComments },
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
       ) {
         let token: any
@@ -425,9 +423,6 @@ const injectedApi = enhancedApi.injectEndpoints({
           )
 
           const handlePubSub = async (_topic: string, message: any) => {
-            // Only react to updates that are enabled in the autoSync settings
-            const updateType = getUpdateType(_topic)
-            if (!updateType || !autoSync?.[updateType]) return
             const taskId = message?.summary?.entityId
             const parentId = message?.summary?.parentId
             if (!taskId || !parentId) return
@@ -676,7 +671,6 @@ const injectedApi = enhancedApi.injectEndpoints({
           )
 
           const handlePubSub = async (_topic: string, message: any) => {
-            if (_topic.endsWith('.created')) return
             const taskId = message?.summary?.entityId
             if (!taskId) return
             pendingTaskIds.add(taskId)

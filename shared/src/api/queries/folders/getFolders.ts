@@ -213,7 +213,6 @@ const enhancedApi = foldersApi.enhanceEndpoints({
           )
 
           const handlePubSub = (_topic: string, _message: any) => {
-            if (_topic.endsWith('.created')) return
             const isMembership = _topic.endsWith('.created') || _topic.endsWith('.deleted')
 
             if (isMembership) {

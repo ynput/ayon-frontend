@@ -24,7 +24,7 @@ import './styles/index.scss'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 
 import short from 'short-uuid'
-import { EntityUpdatesProvider, SocketProvider } from '@shared/context'
+import { SocketProvider } from '@shared/context'
 
 // generate unique session id
 declare global {
