@@ -18,6 +18,7 @@ import { getProjectDisplayName } from '@shared/util'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@shared/containers/Slicer'
+import { useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 import { Navigate } from 'react-router-dom'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
@@ -79,6 +80,31 @@ const ProjectContextInfo = () => {
         <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify({ project }, null, 2)}</pre>
       </TabPanel>
     </TabView>
+  )
+}
+
+const SlicerWithViews = ({
+  children,
+  page,
+  projectName,
+}: {
+  children: React.ReactNode
+  page: string
+  projectName: string
+}) => {
+  const { viewSettings, isLoadingViews } = useViewsContext()
+  const { updateViewSettings } = useViewUpdateHelper()
+
+  return (
+    <SlicerProvider
+      page={page}
+      projectName={projectName}
+      viewSettings={viewSettings}
+      isLoadingViews={isLoadingViews}
+      updateViewSettings={updateViewSettings}
+    >
+      {children}
+    </SlicerProvider>
   )
 }
 
@@ -411,9 +437,9 @@ const ProjectPageInner = () => {
       >
         <EntityListsProvider projectName={projectName}>
           <WithViews viewType={page.viewType} projectName={projectName}>
-            <SlicerProvider page={module} projectName={projectName}>
+            <SlicerWithViews page={module} projectName={projectName}>
               {page.component}
-            </SlicerProvider>
+            </SlicerWithViews>
           </WithViews>
           <NewListFromContext />
         </EntityListsProvider>
