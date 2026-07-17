@@ -142,6 +142,7 @@ const useVersionsGroupBy = ({
     isLoading,
     refetch: refetchGroupedVersions,
     isUninitialized: isUninitializedGroupedVersions,
+    queryArgs,
     incrementPageCount,
   }
 }

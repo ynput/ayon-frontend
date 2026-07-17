@@ -46,17 +46,21 @@ export const refreshActiveAndPurgeOthers =
     const queryApi = api as any
     const state = getState()[api.reducerPath] as ApiState | undefined
 
-    const primaryPromise = dispatch(
-      queryApi.endpoints[endpointName].initiate(currentArgs, { forceRefetch: true }),
-    )
-
-    if (refreshOtherActiveQueries) {
-      for (const args of getOtherActiveQueryArgs(state, endpointName, currentArgs)) {
-        dispatch(queryApi.endpoints[endpointName].initiate(args, { forceRefetch: true }))
+    try {
+      const primaryPromise = dispatch(
+        queryApi.endpoints[endpointName].initiate(currentArgs, { forceRefetch: true }),
+      )
+      if (refreshOtherActiveQueries) {
+        for (const args of getOtherActiveQueryArgs(state, endpointName, currentArgs)) {
+          dispatch(queryApi.endpoints[endpointName].initiate(args, { forceRefetch: true }))
+        }
       }
-    }
 
-    return primaryPromise
+      return primaryPromise
+    } catch (error) {
+      console.error('Error refreshing active queries:', endpointName, error)
+      return Promise.reject(error)
+    }
   }
 
 export const refreshOtherActiveQueries =

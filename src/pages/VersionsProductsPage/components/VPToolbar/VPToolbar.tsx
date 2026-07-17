@@ -124,6 +124,10 @@ const VPToolbar: FC = () => {
   return (
     <Toolbar>
       <VPSearchFilter />
+      <SyncButton
+        topics={['entity.version.created', 'entity.product.created']}
+        onSync={onSyncData}
+      />
       <GroupByDropdown
         $disableSortOrder={!viewGroupBy || viewGroupBy === 'hierarchy'}
         title="Group by"
@@ -133,10 +137,6 @@ const VPToolbar: FC = () => {
         multiSelect={false}
       />
       <TableGridSwitch showGrid={showGrid} onChange={(value) => onUpdateShowGrid(value)} />
-      <SyncButton
-        topics={['entity.version.created', 'entity.product.created']}
-        onSync={onSyncData}
-      />
       <CustomizeButton />
     </Toolbar>
   )
