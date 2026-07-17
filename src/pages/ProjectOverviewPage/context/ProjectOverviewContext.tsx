@@ -320,6 +320,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     modules,
     skipLinks,
     showComments,
+    isLoadingViews,
     onCollapseAll: () => setExpanded({}),
     visibleEntityIds,
     folderStatsArgs,

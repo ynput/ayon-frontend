@@ -11,34 +11,63 @@ type ApiState = {
   subscriptions?: Record<string, Record<string, unknown> | undefined>
 }
 
+type RefreshOptions = {
+  refreshOtherActiveQueries?: boolean
+}
+
+const getOtherActiveQueryArgs = (
+  state: ApiState | undefined,
+  endpointName: string,
+  currentArgs: unknown,
+) => {
+  const serialize = (args: unknown) => JSON.stringify(args ?? {})
+  const currentArgsSerialized = serialize(currentArgs)
+
+  return Object.values(state?.queries || {})
+    .filter(
+      (querySubstate) =>
+        querySubstate?.endpointName === endpointName &&
+        serialize(querySubstate.originalArgs) !== currentArgsSerialized,
+    )
+    .map((querySubstate) => querySubstate?.originalArgs)
+}
+
 /**
  * Refreshes the current query without dropping its cached data, then refreshes
  * active permutations and removes inactive ones so they cannot become stale.
  */
 export const refreshActiveAndPurgeOthers =
-  (endpointName: string, currentArgs: unknown) =>
+  (
+    endpointName: string,
+    currentArgs: unknown,
+    { refreshOtherActiveQueries = true }: RefreshOptions = {},
+  ) =>
   (dispatch: ThunkDispatch<any, any, UnknownAction>, getState: () => any) => {
     const queryApi = api as any
     const state = getState()[api.reducerPath] as ApiState | undefined
-    const queries = state?.queries || {}
 
     const primaryPromise = dispatch(
       queryApi.endpoints[endpointName].initiate(currentArgs, { forceRefetch: true }),
     )
 
-    const serialize = (args: unknown) => JSON.stringify(args ?? {})
-    const currentArgsSerialized = serialize(currentArgs)
-
-    Object.entries(queries).forEach(([, querySubstate]) => {
-      if (!querySubstate || querySubstate.endpointName !== endpointName) return
-      if (serialize(querySubstate.originalArgs) === currentArgsSerialized) return
-
-      dispatch(
-        queryApi.endpoints[endpointName].initiate(querySubstate.originalArgs, {
-          forceRefetch: true,
-        }),
-      )
-    })
+    if (refreshOtherActiveQueries) {
+      for (const args of getOtherActiveQueryArgs(state, endpointName, currentArgs)) {
+        dispatch(queryApi.endpoints[endpointName].initiate(args, { forceRefetch: true }))
+      }
+    }
 
     return primaryPromise
+  }
+
+export const refreshOtherActiveQueries =
+  (endpointName: string, currentArgs: unknown) =>
+  (dispatch: ThunkDispatch<any, any, UnknownAction>, getState: () => any) => {
+    const queryApi = api as any
+    const state = getState()[api.reducerPath] as ApiState | undefined
+
+    return Promise.all(
+      getOtherActiveQueryArgs(state, endpointName, currentArgs).map((args) =>
+        dispatch(queryApi.endpoints[endpointName].initiate(args, { forceRefetch: true })).unwrap(),
+      ),
+    )
   }

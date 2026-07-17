@@ -25,6 +25,8 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 
+const CACHE_TIME = 10 // seconds
+
 // parse attribs JSON string to object
 export const parseAllAttribs = (allAttrib: string) => {
   try {
@@ -142,6 +144,7 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       }),
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result?.tasks || [], projectName, parentIds),
+      keepUnusedDataFor: CACHE_TIME,
     },
     GetTasksList: {
       transformResponse: (result: GetTasksListQuery) => ({
@@ -150,6 +153,7 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       }),
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.tasks || [], projectName),
+      keepUnusedDataFor: CACHE_TIME,
     },
     // footer stats: `targets` excluded from cache key + responses merged,
     // so column toggles reuse cache and only added targets refetch
@@ -161,6 +165,7 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
       providesTags: (_r, _e, { projectName }) => [{ type: 'folderColumnStats', id: projectName }],
+      keepUnusedDataFor: CACHE_TIME,
     },
     GetTaskColumnStats: {
       transformResponse: (res: GetTaskColumnStatsQuery) =>
@@ -170,6 +175,7 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
       providesTags: (_r, _e, { projectName }) => [{ type: 'taskColumnStats', id: projectName }],
+      keepUnusedDataFor: CACHE_TIME,
     },
   },
 })
@@ -258,7 +264,7 @@ const injectedApi = enhancedApi.injectEndpoints({
 
           const allNewTasks: EditorTaskNode[] = []
           const BATCH_SIZE = 100
-          const TASK_PER_FOLDER = 20
+          const TASK_PER_FOLDER = CACHE_TIME
           const MAX_PAGES_PER_BATCH = 10
           const MAX_FOLDERS = 1000
           const TASKS_PER_PAGE = BATCH_SIZE * TASK_PER_FOLDER
@@ -444,7 +450,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         if (token) PubSub.unsubscribe(token)
         if (unsubscribeThumbnails) unsubscribeThumbnails()
       },
-      keepUnusedDataFor: 20,
+      keepUnusedDataFor: CACHE_TIME,
     }),
     // searchFolders is a post so it's a bit annoying to consume
     // we wrap it in a queryFn to make it easier to consume as a query hook
@@ -468,7 +474,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
       },
       providesTags: (_r, _e, { projectName }) => [{ type: 'tasksFolder', id: projectName }],
-      keepUnusedDataFor: 20,
+      keepUnusedDataFor: CACHE_TIME,
     }),
     // Add new infinite query endpoint for tasks list
     getTasksListInfinite: build.infiniteQuery<
@@ -682,7 +688,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         if (token) PubSub.unsubscribe(token)
         if (unsubscribeThumbnails) unsubscribeThumbnails()
       },
-      keepUnusedDataFor: 20,
+      keepUnusedDataFor: CACHE_TIME,
     }),
     getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
       queryFn: async (
@@ -800,7 +806,7 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.tasks, projectName),
-      keepUnusedDataFor: 20,
+      keepUnusedDataFor: CACHE_TIME,
     }),
   }),
 })

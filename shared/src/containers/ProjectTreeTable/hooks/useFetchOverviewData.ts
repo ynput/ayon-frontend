@@ -27,7 +27,7 @@ import { ProjectTableModulesType } from '@shared/hooks'
 import { useGetEntityLinksQuery } from '@shared/api'
 import { OnSyncDataCallback, useAutoSyncSettings, useProjectFoldersContext } from '@shared/context'
 import { debounce } from 'lodash'
-import { refreshActiveAndPurgeOthers } from '@shared/api'
+import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 
 // how long a folder must stay rendered in the viewport before its tasks are fetched.
@@ -73,6 +73,7 @@ type Params = {
   modules: ProjectTableModulesType
   skipLinks?: boolean
   showComments?: boolean // only fetch latestComments when the comments column is visible
+  isLoadingViews?: boolean
   onCollapseAll?: () => void
   // entity ids currently rendered in the table's viewport (hierarchy mode only) - used to
   // scope task fetching to folders actually on screen, rather than every expanded folder
@@ -102,6 +103,7 @@ export const useFetchOverviewData = ({
   modules,
   skipLinks,
   showComments = false,
+  isLoadingViews = false,
   onCollapseAll,
   visibleEntityIds = [],
   folderStatsArgs,
@@ -190,7 +192,8 @@ export const useFetchOverviewData = ({
     error: expandedFoldersTasksError,
     isUninitialized: isUninitializedExpandedFoldersTasks,
   } = useGetOverviewTasksByFoldersQuery(expandedFoldersTasksArgs, {
-    skip: !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView),
+    skip:
+      isLoadingViews || !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView),
   })
 
   const skipFoldersByTaskFilter =
@@ -217,7 +220,9 @@ export const useFetchOverviewData = ({
     isLoading: isLoadingTasksFolders,
     isUninitialized: isUninitializedTasksFolders,
     error: searchFoldersError,
-  } = useGetSearchFoldersQuery(searchFoldersArgs, { skip: skipFoldersByTaskFilter })
+  } = useGetSearchFoldersQuery(searchFoldersArgs, {
+    skip: isLoadingViews || skipFoldersByTaskFilter,
+  })
 
   // create a list of folders that are current visible in the table
   // root folders are always visible
@@ -265,7 +270,7 @@ export const useFetchOverviewData = ({
     data: foldersLinks = [],
     isUninitialized: isUninitializedFoldersLinks,
     isFetching: isFetchingFoldersLinks,
-  } = useGetEntityLinksQuery(foldersLinksArgs, { skip: skipLinks })
+  } = useGetEntityLinksQuery(foldersLinksArgs, { skip: isLoadingViews || skipLinks })
 
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {
@@ -433,7 +438,9 @@ export const useFetchOverviewData = ({
     // Skip flat task list for flat folder view (tasks loaded on folder expand).
     // In hierarchy+slicer mode, run it to fetch tasks under selected-but-hidden folders.
     // Always run it when entity list provides specific task IDs.
-    skip: ((showHierarchy && !hierarchySlicerFolderIds) || isFlatFolderView) && !taskIds?.length,
+    skip:
+      isLoadingViews ||
+      (((showHierarchy && !hierarchySlicerFolderIds) || isFlatFolderView) && !taskIds?.length),
     initialPageParam: {
       cursor: '',
       desc: !!singleSort?.desc,
@@ -503,7 +510,7 @@ export const useFetchOverviewData = ({
     isUninitialized: isUninitializedGroupedTasks,
     error: groupedTasksError,
   } = useGetGroupedTasksListQuery(groupTasksArgs, {
-    skip: !groupBy || !groupQueries.length || isLoadingModules,
+    skip: isLoadingViews || !groupBy || !groupQueries.length || isLoadingModules,
   })
 
   // Resolve which task source to use based on current mode
@@ -547,7 +554,7 @@ export const useFetchOverviewData = ({
     isUninitialized: isUninitializedTasksLinks,
     isFetching: isFetchingTasksLinks,
   } = useGetEntityLinksQuery(tasksLinksArgs, {
-    skip: visibleTasks.size === 0 || skipLinks,
+    skip: isLoadingViews || visibleTasks.size === 0 || skipLinks,
   })
 
   // Compute entity IDs whose links are currently loading (in query but not yet in the cache result)
@@ -677,57 +684,56 @@ export const useFetchOverviewData = ({
     const hasFolderUpdates = updates.some((update) => update.topic.startsWith('entity.folder.'))
     const hasTaskUpdates = updates.some((update) => update.topic.startsWith('entity.task.'))
 
-    const refetches: Promise<unknown>[] = []
+    const queriesToRefresh: { endpointName: string; args: unknown }[] = []
     if ((isFullSync || hasFolderUpdates) && !isUninitializedFolders) {
-      refetches.push(
-        dispatch(
-          refreshActiveAndPurgeOthers('getFolderList', { projectName, attrib: true }),
-        ).unwrap(),
-      )
+      queriesToRefresh.push({
+        endpointName: 'getFolderList',
+        args: { projectName, attrib: true },
+      })
     }
     if ((isFullSync || hasFolderUpdates || hasTaskUpdates) && !isUninitializedTasksFolders) {
-      refetches.push(
-        dispatch(refreshActiveAndPurgeOthers('getSearchFolders', searchFoldersArgs)).unwrap(),
-      )
+      queriesToRefresh.push({ endpointName: 'getSearchFolders', args: searchFoldersArgs })
     }
     if ((isFullSync || hasTaskUpdates) && !isUninitializedExpandedFoldersTasks) {
-      refetches.push(
-        dispatch(
-          refreshActiveAndPurgeOthers('getOverviewTasksByFolders', expandedFoldersTasksArgs),
-        ).unwrap(),
-      )
+      queriesToRefresh.push({
+        endpointName: 'getOverviewTasksByFolders',
+        args: expandedFoldersTasksArgs,
+      })
     }
     if ((isFullSync || hasTaskUpdates) && !isUninitializedTasksList) {
-      refetches.push(
-        dispatch(refreshActiveAndPurgeOthers('getTasksListInfinite', tasksListArgs)).unwrap(),
-      )
+      queriesToRefresh.push({ endpointName: 'getTasksListInfinite', args: tasksListArgs })
     }
     if ((isFullSync || hasTaskUpdates) && !isUninitializedGroupedTasks) {
-      refetches.push(
-        dispatch(refreshActiveAndPurgeOthers('getGroupedTasksList', groupTasksArgs)).unwrap(),
-      )
+      queriesToRefresh.push({ endpointName: 'getGroupedTasksList', args: groupTasksArgs })
     }
     if ((isFullSync || hasFolderUpdates) && !folderStatsUninitialized && folderStatsArgs) {
-      refetches.push(
-        dispatch(refreshActiveAndPurgeOthers('GetFolderColumnStats', folderStatsArgs)).unwrap(),
-      )
+      queriesToRefresh.push({ endpointName: 'GetFolderColumnStats', args: folderStatsArgs })
     }
     if ((isFullSync || hasTaskUpdates) && !taskStatsUninitialized && taskStatsArgs) {
-      refetches.push(
-        dispatch(refreshActiveAndPurgeOthers('GetTaskColumnStats', taskStatsArgs)).unwrap(),
-      )
+      queriesToRefresh.push({ endpointName: 'GetTaskColumnStats', args: taskStatsArgs })
     }
     if ((isFullSync || hasFolderUpdates) && !isUninitializedFoldersLinks) {
-      refetches.push(
-        dispatch(refreshActiveAndPurgeOthers('getEntityLinks', foldersLinksArgs)).unwrap(),
-      )
+      queriesToRefresh.push({ endpointName: 'getEntityLinks', args: foldersLinksArgs })
     }
     if ((isFullSync || hasTaskUpdates) && !isUninitializedTasksLinks) {
-      refetches.push(
-        dispatch(refreshActiveAndPurgeOthers('getEntityLinks', tasksLinksArgs)).unwrap(),
-      )
+      queriesToRefresh.push({ endpointName: 'getEntityLinks', args: tasksLinksArgs })
     }
-    await Promise.all(refetches)
+
+    // refresh the active queries
+    await Promise.all(
+      queriesToRefresh.map(({ endpointName, args }) =>
+        dispatch(
+          refreshActiveAndPurgeOthers(endpointName, args, {
+            refreshOtherActiveQueries: false,
+          }),
+        ).unwrap(),
+      ),
+    )
+
+    // then later on refresh any other caches
+    queriesToRefresh.map(({ endpointName, args }) =>
+      dispatch(refreshOtherActiveQueries(endpointName, args)),
+    )
   }
 
   const error = tasksListError || searchFoldersError || groupedTasksError
@@ -748,10 +754,15 @@ export const useFetchOverviewData = ({
     tasksMap: tasksMap,
     tasksByFolderMap: tasksByFolderMap,
     error,
+    // @ts-expect-error: softError is a string
     softError: expandedFoldersTasksError?.error, // this is separate as we should still show the folders table so the user can make changes
     softErrorAction,
     isLoadingAll:
-      isLoadingFolders || isLoadingTasksList || isLoadingTasksFolders || isLoadingModules, // these all show a full loading state
+      isLoadingViews ||
+      isLoadingFolders ||
+      isLoadingTasksList ||
+      isLoadingTasksFolders ||
+      isLoadingModules, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
     loadingTasks: loadingTasksForParents,
     loadingLinksEntityIds,
