@@ -126,7 +126,7 @@ export const useMenuOptions = ({
       // versions/representations can also go to review-session lists; gated on reviewables (YN-0683)
       const isVersionLike =
         targetEntityType === 'version' || targetEntityType === 'representation'
-      if (isVersionLike && (entityListsContext.reviews?.length ?? 0) > 0) {
+      if (isVersionLike && entityListsContext.hasReviewAddon) {
         const anyHasReviewables = normalizedSelected.some((e) => e.hasReviewables === true)
         items.push({
           id: 'add-to-review-list',

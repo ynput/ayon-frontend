@@ -40,11 +40,8 @@ export interface EntityList {
  * is forbidden). When the source type changes, update this interface to match.
  */
 export interface DetailsPanelEntityListsContext {
-  folders: EntityList[]
-  tasks: EntityList[]
-  products: EntityList[]
-  versions: EntityList[]
-  reviews: EntityList[]
+  // gates the "Add to review list" item without preloading review lists
+  hasReviewAddon?: boolean
   // opens the searchable add-to-list dialog (replaces the old nested submenu builders)
   openAddToListDialog?: (
     entityType: string,

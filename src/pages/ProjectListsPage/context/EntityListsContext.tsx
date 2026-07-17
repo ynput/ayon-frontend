@@ -1,5 +1,4 @@
 import { createContext, useContext, ReactNode, useCallback, useMemo, useState } from 'react'
-import useGetListsData, { UseGetListsDataReturn } from '../hooks/useGetListsData'
 import { ListEntityType, listEntityTypes } from '../components/NewListDialog/NewListDialog'
 import { toast } from 'react-toastify'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
@@ -39,13 +38,13 @@ interface NewListData {
 export type { ListEntityInput, ListSubMenuItem }
 
 export interface EntityListsContextType {
-  allLists: UseGetListsDataReturn
-  folders: EntityList[]
-  tasks: EntityList[]
-  products: EntityList[]
-  versions: EntityList[]
-  reviews: EntityList[]
-  addToList: (listId: string, entityType: string, entities: ListEntityInput[]) => Promise<void>
+  hasReviewAddon: boolean
+  addToList: (
+    listId: string,
+    entityType: string,
+    entities: ListEntityInput[],
+    listEntityListType?: string,
+  ) => Promise<void>
   openAddToListDialog: (
     entityType: string,
     entities: ListEntityInput[],
@@ -83,45 +82,6 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
   const dispatch = useAppDispatch()
   const [, setSearchParams] = useSearchParams()
 
-  // Fetch all lists without filters and split on client
-  const allLists = useGetListsData({
-    projectName,
-    filters: [],
-    skip: !projectName,
-  })
-
-  // Derive individual lists by filtering on client
-  const folders = useMemo(
-    () => allLists.data.filter((list) => list.entityType === 'folder'),
-    [allLists.data],
-  )
-
-  const tasks = useMemo(
-    () => allLists.data.filter((list) => list.entityType === 'task'),
-    [allLists.data],
-  )
-
-  const products = useMemo(
-    () => allLists.data.filter((list) => list.entityType === 'product'),
-    [allLists.data],
-  )
-
-  const versions = useMemo(
-    () =>
-      allLists.data.filter(
-        (list) => list.entityType === 'version' && list.entityListType === 'generic',
-      ),
-    [allLists.data],
-  )
-
-  const reviews = useMemo(
-    () =>
-      allLists.data.filter(
-        (list) => list.entityType === 'version' && list.entityListType === 'review-session',
-      ),
-    [allLists.data],
-  )
-
   const { getProductionAddon } = useGetProductionAddon()
 
   const hasReviewAddon = !!getProductionAddon('review', { minVersion: MIN_REVIEW_VERSION })
@@ -135,7 +95,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
 
   // add an item to a list
   const addToList: EntityListsContextType['addToList'] = useCallback(
-    async (listId, entityType, entities) => {
+    async (listId, entityType, entities, listEntityListType) => {
       // check the entity type is valid
       if (!listEntityTypes.includes(entityType as ListEntityType)) {
         toast.error('Invalid entity type')
@@ -145,9 +105,8 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       // filter out entities that do not match entityType
       let filteredEntities = entities.filter((entity) => entity.entityType === entityType)
 
-      // Review sessions logic
-      const targetList = allLists.data.find((l) => l.id === listId)
-      const isReviewSession = targetList?.entityListType === 'review-session'
+      // Review sessions logic (caller passes the target list's type; no preloaded list data)
+      const isReviewSession = listEntityListType === 'review-session'
 
       if (isReviewSession && (entityType === 'folder' || entityType === 'task')) {
         if (!reviewAddonVersion) {
@@ -249,7 +208,6 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
     },
     [
       projectName,
-      allLists.data,
       reviewAddonVersion,
       hasReviewActionsVersion,
       executeAction,
@@ -420,12 +378,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
 
   const value = useMemo(
     () => ({
-      allLists,
-      folders,
-      tasks,
-      products,
-      versions,
-      reviews,
+      hasReviewAddon,
       addToList,
       openAddToListDialog,
       menuItems,
@@ -437,12 +390,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       buildReviewContextMenu,
     }),
     [
-      allLists,
-      folders,
-      tasks,
-      products,
-      versions,
-      reviews,
+      hasReviewAddon,
       addToList,
       openAddToListDialog,
       menuItems,

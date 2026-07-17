@@ -30,7 +30,12 @@ export interface AddToListDialogProps {
   projectName?: string
   isReview?: boolean
   listFilter?: (list: EntityList) => boolean
-  addToList: (listId: string, entityType: string, entities: ListEntityInput[]) => Promise<void>
+  addToList: (
+    listId: string,
+    entityType: string,
+    entities: ListEntityInput[],
+    listEntityListType?: string,
+  ) => Promise<void>
   openCreateNewList: (
     entityType: ListEntityType,
     selectedEntities: ListEntityInput[],
@@ -57,7 +62,7 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
     const results = await Promise.allSettled(
       lists.map((list) =>
         // review sessions add via the picked entity type; generic lists use their own type
-        addToList(list.id, isReview ? entityType : list.entityType, entities),
+        addToList(list.id, isReview ? entityType : list.entityType, entities, list.entityListType),
       ),
     )
     setIsLoading(false)
