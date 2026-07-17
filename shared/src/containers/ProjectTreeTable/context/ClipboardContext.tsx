@@ -15,6 +15,7 @@ import {
 } from '../utils/cellUtils'
 
 // Types
+import { TableRow } from '../types/table'
 import { EntityUpdate } from '../hooks/useUpdateTableData'
 import usePasteLinks, { LinkUpdate } from '../hooks/usePasteLinks'
 import { useUpdateSubtasksMutation } from '@shared/api'
@@ -38,6 +39,17 @@ import { validateEntityId, getEntityId } from '@shared/util'
 
 const ClipboardContext = createContext<ClipboardContextType | undefined>(undefined)
 
+// Columns the flat list computes purely for display. The raw entity node either lacks them or
+// holds a differently-typed value (product/task are objects, version is a number), so the built
+// display row — what the cell actually shows — is authoritative when copying these.
+const DISPLAY_PREFERRED_COLS = new Set([
+  'version',
+  'product',
+  'productBaseType',
+  'task',
+  'taskLabel',
+])
+
 export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   children,
   entitiesMap,
@@ -49,7 +61,22 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities, history } = useCellEditing()
   const { pasteTableLinks } = usePasteLinks()
-  const { getEntityById, attribFields } = useProjectTableContext()
+  const { getEntityById, attribFields, tableData } = useProjectTableContext()
+
+  // Flat tables (lists) key entitiesMap by row id and hold raw entity nodes, so display-computed
+  // columns (name path, version, product, task, base type, subType) aren't on the entity. Fall
+  // back to the built display row — exactly what the cell shows — keyed by the same row id.
+  const displayRowsById = useMemo(() => {
+    const map = new Map<string, TableRow>()
+    const walk = (rows: TableRow[]) => {
+      for (const row of rows) {
+        map.set(row.id, row)
+        if (row.subRows?.length) walk(row.subRows as TableRow[])
+      }
+    }
+    walk(tableData || [])
+    return map
+  }, [tableData])
   const { projectName } = useProjectContext()
   const [updateSubtasks] = useUpdateSubtasksMutation()
 
@@ -146,6 +173,8 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             continue
           }
 
+          const displayRow = displayRowsById.get((entity as any).id)
+
           // Get all column IDs for this row, sorted by their index in the grid
           const colIds = Array.from(cellsByRow.get(rowId) || []).sort((a, b) => {
             const indexA = gridMap.colIdToIndex.get(a) ?? Infinity
@@ -189,6 +218,23 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
                 foundValue = folder?.label || folder?.name || parents?.[parents.length - 1] || ''
               }
 
+              // Raw entity nodes (flat lists) either lack display-computed columns or hold a
+              // non-string value (product/task object, numeric version) — prefer the built
+              // display row, which is exactly what the cell shows.
+              if (
+                displayRow &&
+                (DISPLAY_PREFERRED_COLS.has(colId) ||
+                  foundValue === undefined ||
+                  foundValue === null ||
+                  foundValue === '' ||
+                  typeof foundValue === 'object')
+              ) {
+                const displayValue = getCellValue(displayRow, colId)
+                if (displayValue !== undefined && displayValue !== null && displayValue !== '') {
+                  foundValue = displayValue
+                }
+              }
+
               if (!foundValue) {
                 // we should look for the default value set out in attribFields
                 const field = attribFields.find((f) => f.name === colId.replace('attrib_', ''))
@@ -202,18 +248,30 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               // convert to string if foundValue is not undefined or null use empty string otherwise
               cellValue = foundValue !== undefined && foundValue !== null ? String(foundValue) : ''
 
-              // Special handling for name field - include full path
+              // Hierarchical tables resolve a full path; flat lists (raw nodes keyed by row id)
+              // can't, so fall back to the built display row label/name the cell shows
               if (colId === 'name') {
-                cellValue = getEntityPath(entity.entityId || entity.id, entitiesMap)
+                cellValue =
+                  getEntityPath(entity.entityId || entity.id, entitiesMap) ||
+                  (displayRow as any)?.label ||
+                  displayRow?.name ||
+                  (entity as any).label ||
+                  entity.name ||
+                  ''
               }
 
               if (colId === 'subType') {
-                // get folderType or taskType
-                if ('folderType' in entity) {
-                  cellValue = entity.folderType || ''
-                }
-                if ('taskType' in entity) {
-                  cellValue = entity.taskType || ''
+                // built display rows resolve subType (folder/task/product); raw nodes fall back to type fields
+                const resolvedSubType = (displayRow as any)?.subType ?? (entity as any).subType
+                if (typeof resolvedSubType === 'string' && resolvedSubType) {
+                  cellValue = resolvedSubType
+                } else {
+                  if ('folderType' in entity) {
+                    cellValue = entity.folderType || ''
+                  }
+                  if ('taskType' in entity) {
+                    cellValue = entity.taskType || ''
+                  }
                 }
               }
             }
@@ -237,7 +295,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         console.error('Failed to copy to clipboard:', error)
       }
     },
-    [selectedCells, focusedCellId, gridMap, entitiesMap, getEntityById, visibleColumns],
+    [selectedCells, focusedCellId, gridMap, entitiesMap, getEntityById, visibleColumns, displayRowsById],
   )
 
   const doesClipboardContainId = async () => {
