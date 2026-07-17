@@ -166,7 +166,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             continue
           }
 
-          const displayRow = displayRowsById.get((entity as any).id)
+          const displayRow = displayRowsById.get(rowId)
 
           // Get all column IDs for this row, sorted by their index in the grid
           const colIds = Array.from(cellsByRow.get(rowId) || []).sort((a, b) => {
