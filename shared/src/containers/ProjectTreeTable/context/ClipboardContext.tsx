@@ -39,14 +39,10 @@ import { validateEntityId, getEntityId } from '@shared/util'
 
 const ClipboardContext = createContext<ClipboardContextType | undefined>(undefined)
 
-// Columns the flat list computes purely for display. The raw entity node either lacks them or
-// holds a differently-typed value (product/task are objects, version is a number), so the built
-// display row — what the cell actually shows — is authoritative when copying these.
 const DISPLAY_PREFERRED_COLS = new Set([
   'version',
   'product',
   'productBaseType',
-  'task',
   'taskLabel',
 ])
 
@@ -63,9 +59,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   const { pasteTableLinks } = usePasteLinks()
   const { getEntityById, attribFields, tableData } = useProjectTableContext()
 
-  // Flat tables (lists) key entitiesMap by row id and hold raw entity nodes, so display-computed
-  // columns (name path, version, product, task, base type, subType) aren't on the entity. Fall
-  // back to the built display row — exactly what the cell shows — keyed by the same row id.
   const displayRowsById = useMemo(() => {
     const map = new Map<string, TableRow>()
     const walk = (rows: TableRow[]) => {
