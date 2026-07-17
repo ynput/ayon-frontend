@@ -1,20 +1,24 @@
 import { FC, useCallback, useState } from 'react'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { ListsDataProvider } from '@pages/ProjectListsPage/context/ListsDataContext'
+import {
+  ListsDataProvider,
+  useListsDataContext,
+} from '@pages/ProjectListsPage/context/ListsDataContext'
 import { ListsProvider } from '@pages/ProjectListsPage/context/ListsProvider'
 import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
+import { ProjectContextProvider, useOptionalProjectContext } from '@shared/context'
 import ListsTable from '../ListsTable/ListsTable'
 import type { ListEntityInput } from '../../hooks/useBuildListMenuItems'
 import { listEntityTypes, type ListEntityType } from '../NewListDialog/NewListDialog'
+import { ACCESS_LEVEL } from '../../util/listAccessControl'
 import type { EntityList } from '@shared/api'
-
-const EDITOR_ACCESS_LEVEL = 20
 
 const TableContainer = styled.div`
   display: flex;
   flex-direction: column;
-  height: 60vh;
+  flex: 1;
+  height: 100%;
   min-height: 0;
   width: 100%;
 `
@@ -22,6 +26,8 @@ const TableContainer = styled.div`
 export interface AddToListDialogProps {
   entityType: string
   entities: ListEntityInput[]
+  // owning provider's project — used to supply a ProjectContext where none exists (UserDashboard)
+  projectName?: string
   isReview?: boolean
   listFilter?: (list: EntityList) => boolean
   addToList: (listId: string, entityType: string, entities: ListEntityInput[]) => Promise<void>
@@ -42,6 +48,7 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
   onClose,
 }) => {
   const { selectedLists } = useListsContext()
+  const { listsMap } = useListsDataContext()
   const [isLoading, setIsLoading] = useState(false)
 
   const addTo = async (lists: EntityList[]) => {
@@ -59,7 +66,8 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
   }
 
   const handleRowSubmit = (listId: string) => {
-    const list = selectedLists.find((l) => l.id === listId) || { id: listId, entityType }
+    // use the real list (with its own entityType) from the fetched map; fabricate only as a last resort
+    const list = listsMap.get(listId) ?? { id: listId, entityType }
     addTo([list as EntityList])
   }
 
@@ -76,16 +84,16 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
     <Dialog
       isOpen
       onClose={onClose}
-      size="md"
+      size="full"
       className="add-to-list-dialog block-shortcuts"
       header={isReview ? 'Add to review list' : 'Add to list'}
-      style={{ width: 480, maxWidth: '90vw' }}
+      style={{ width: '100%', maxWidth: 560, height: '80vh' }}
       footer={
         <Button
           label={count > 1 ? `Add to ${count} lists` : 'Add to list'}
           variant="filled"
           disabled={count === 0 || isLoading}
-          // @ts-ignore - loading prop exists on Button
+          // @ts-expect-error - loading prop exists on Button but is missing from its typings
           loading={isLoading}
           onClick={() => addTo(selectedLists)}
         />
@@ -104,11 +112,12 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
 }
 
 export const AddToListDialog: FC<AddToListDialogProps> = (props) => {
-  const { entities, isReview, listFilter } = props
+  const { entities, isReview, listFilter, projectName } = props
+  const existingProject = useOptionalProjectContext()
 
   const listsFilter = useCallback(
     (list: EntityList) => {
-      if ((list.accessLevel ?? 0) < EDITOR_ACCESS_LEVEL) return false
+      if ((list.accessLevel ?? 0) < ACCESS_LEVEL.EDITOR) return false
       // generic lists must match the selected entities' type (review sessions accept any via actions)
       if (!isReview && !entities.some((e) => e.entityType === list.entityType)) return false
       if (listFilter && !listFilter(list)) return false
@@ -117,7 +126,7 @@ export const AddToListDialog: FC<AddToListDialogProps> = (props) => {
     [entities, isReview, listFilter],
   )
 
-  return (
+  const tree = (
     <ListsDataProvider
       picker
       isReview={isReview}
@@ -129,6 +138,11 @@ export const AddToListDialog: FC<AddToListDialogProps> = (props) => {
       </ListsProvider>
     </ListsDataProvider>
   )
+
+  // ListsDataProvider/ListsProvider read useProjectContext; supply one where the page
+  // doesn't (e.g. UserDashboard details panel) using the owning provider's projectName
+  if (existingProject) return tree
+  return <ProjectContextProvider projectName={projectName ?? ''}>{tree}</ProjectContextProvider>
 }
 
 export default AddToListDialog

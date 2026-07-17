@@ -195,12 +195,7 @@ export const TasksProgressTable = ({
     setOpen(open)
   }
 
-  const {
-    buildAddToListMenu,
-    newListMenuItem,
-    tasks: tasksLists,
-    buildHierarchicalMenuItems,
-  } = useEntityListsContext()
+  const { openAddToListDialog } = useEntityListsContext()
 
   const buildContextMenu = (selection: string[], taskId: string) => {
     const selectedEntities = selection.map((id) => ({ entityId: id, entityType: 'task' }))
@@ -217,14 +212,11 @@ export const TasksProgressTable = ({
         shortcut: 'Spacebar',
         command: () => onOpenViewer({ taskId, quickView: true }),
       },
-      buildAddToListMenu([
-        ...buildHierarchicalMenuItems(
-          tasksLists,
-          selectedEntities,
-          () => false, // no icon needed
-        ),
-        newListMenuItem('task', selectedEntities),
-      ]),
+      {
+        label: 'Add to list',
+        icon: 'list_alt_add',
+        command: () => openAddToListDialog('task', selectedEntities),
+      },
     ]
   }
 

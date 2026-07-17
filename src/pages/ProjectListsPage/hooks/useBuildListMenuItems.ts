@@ -1,8 +1,7 @@
 import { useCallback } from 'react'
-import { getEntityTypeIcon } from '@shared/util'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
-import { EntityList, EntityListFolderModel } from '@shared/api'
+import { EntityList } from '@shared/api'
 import { toast } from 'react-toastify'
 
 const MIN_REVIEW_ACTIONS_VERSION = '0.5.0'
@@ -25,17 +24,9 @@ export type ListEntityInput = {
 
 interface UseBuildListMenuItemsProps {
   projectName: string
-  powerLicense: boolean
   hasReviewAddon: boolean
   hasReviewActionsVersion: boolean
   reviewAddonVersion?: string
-  listFolders: EntityListFolderModel[]
-  folders: EntityList[]
-  tasks: EntityList[]
-  products: EntityList[]
-  versions: EntityList[]
-  reviews: EntityList[]
-  addToList: (listId: string, entityType: string, entities: ListEntityInput[]) => Promise<void>
   openCreateNewList: (
     entityType: ListEntityType,
     selectedEntities: ListEntityInput[],
@@ -51,71 +42,13 @@ interface UseBuildListMenuItemsProps {
 
 export const useBuildListMenuItems = ({
   projectName,
-  powerLicense,
   hasReviewAddon,
   hasReviewActionsVersion,
   reviewAddonVersion,
-  listFolders,
-  addToList,
   openCreateNewList,
   openAddToListDialog,
   executeAction,
 }: UseBuildListMenuItemsProps) => {
-  const newListMenuItem = useCallback(
-    (entityType: ListEntityType, selected: ListEntityInput[]): ListSubMenuItem => ({
-      id: '__new-list__',
-      label: 'New list',
-      icon: 'add',
-      command: () => openCreateNewList(entityType, selected),
-    }),
-    [openCreateNewList],
-  )
-
-  const getListIcon = (entityType: string, entityListType: string) => {
-    if (entityListType === 'review-session') {
-      return 'subscriptions'
-    } else {
-      return getEntityTypeIcon(entityType)
-    }
-  }
-
-  const buildListMenuItem = useCallback(
-    (
-      list: EntityList,
-      selected: ListEntityInput[],
-      showIcon?: boolean,
-      disabled?: boolean,
-      overrideEntityType?: string,
-    ): ListSubMenuItem => ({
-      id: list.id,
-      label: list.label,
-      icon: showIcon ? getListIcon(list.entityType, list.entityListType) : undefined,
-      disabled,
-      command: disabled
-        ? undefined
-        : () =>
-            addToList(
-              list.id,
-              overrideEntityType || list.entityType,
-              selected.map((i) => ({
-                entityId: i.entityId,
-                entityType: i.entityType,
-                hasReviewables: i.hasReviewables,
-              })),
-            ),
-    }),
-    [addToList],
-  )
-
-  const buildAddToListMenu = useCallback((items: ListSubMenuItem[], menu?: { label?: string }) => {
-    return {
-      id: 'add-to-list',
-      label: menu?.label || 'Add to list',
-      icon: 'list_alt_add',
-      items: items,
-    }
-  }, [])
-
   // Direct "Add to list" action that opens the add-to-list dialog instead of a nested submenu
   const buildAddToListItem = useCallback(
     (
@@ -133,222 +66,6 @@ export const useBuildListMenuItems = ({
         }),
     }),
     [openAddToListDialog],
-  )
-
-  // Build a hierarchical structure of folders -> lists (lists only actionable)
-  const buildHierarchicalMenuItems = useCallback(
-    (
-      lists: EntityList[],
-      selected: ListEntityInput[],
-      getShowIcon?: (list: EntityList) => boolean,
-      getDisabled?: (list: EntityList) => boolean,
-      overrideEntityType?: string,
-    ): ListSubMenuItem[] => {
-      // Simple cache keyed by folder+list ids + selection length + powerLicense flag
-      // This prevents rebuilding identical structures across repeated context menu openings.
-      // (Selection identities beyond length don't affect structure of destination list tree).
-      type CacheValue = {
-        items: ListSubMenuItem[]
-        selectedRef: ListEntityInput[]
-      }
-      const staticCache = (buildHierarchicalMenuItems as any)._cache as
-        | Map<string, CacheValue>
-        | undefined
-      const cache: Map<string, CacheValue> = staticCache || new Map()
-      if (!(buildHierarchicalMenuItems as any)._cache) {
-        ;(buildHierarchicalMenuItems as any)._cache = cache
-      }
-
-      // When getDisabled is supplied, results depend on per-call selection state — skip cache
-      const useCache = !getDisabled && !overrideEntityType
-      const folderSig = powerLicense
-        ? listFolders.map((f) => `${f.id}:${f.parentId || ''}:${f.label}`).join('|')
-        : 'nofolders'
-      const listSig = lists.map((l) => `${l.id}:${l.entityListFolderId || ''}`).join('|')
-      const key = `${folderSig}::${listSig}::${selected.length}::${powerLicense}`
-
-      const cached = useCache ? cache.get(key) : undefined
-      if (cached) {
-        // Recreate command closures with current selection (list items carry command depending on selected)
-        const rebindCommands = (items: ListSubMenuItem[]): ListSubMenuItem[] => {
-          return items.map((item) => {
-            // Skip special items like '__new-list__' which should not be in the cache
-            if (item.id.startsWith('__')) {
-              return item
-            }
-            // If this is a list item (has command), rebind it with current selection
-            if (item.command) {
-              const list = lists.find((l) => l.id === item.id)
-              if (list) {
-                return buildListMenuItem(
-                  list,
-                  selected,
-                  item.icon !== undefined,
-                  false,
-                  overrideEntityType,
-                )
-              }
-            }
-            // If this is a folder (has nested items), recursively rebind children
-            if (item.items) {
-              return {
-                ...item,
-                items: rebindCommands(item.items),
-              }
-            }
-            return item
-          })
-        }
-        // Filter out any special items that shouldn't be in cache (like __new-list__)
-        const filteredItems = cached.items.filter((item) => !item.id.startsWith('__'))
-        return rebindCommands(filteredItems)
-      }
-
-      const resolveShowIcon = getShowIcon || (() => false)
-      const resolveDisabled = getDisabled || (() => false)
-
-      const PAGINATION_LIMIT = 18
-
-      const paginateItems = (
-        items: ListSubMenuItem[],
-        moreLabel: string,
-        icon: string,
-      ): ListSubMenuItem[] => {
-        if (items.length <= PAGINATION_LIMIT) return items
-
-        const firstChunk = items.slice(0, PAGINATION_LIMIT - 1)
-        const remaining = items.slice(PAGINATION_LIMIT - 1)
-
-        return [
-          ...firstChunk,
-          {
-            id: `__more_${moreLabel.replace(/\s+/g, '_')}_${remaining[0].id}__`,
-            label: moreLabel,
-            icon: icon,
-            items: paginateItems(remaining, moreLabel, icon),
-          },
-        ]
-      }
-
-      // Filter lists to only include those with editor access (accessLevel >= 20)
-      const editableLists = lists.filter((list) => (list.accessLevel ?? 0) >= 20)
-
-      if (!powerLicense || !listFolders.length) {
-        const flatItems = editableLists.map((l) =>
-          buildListMenuItem(
-            l,
-            selected,
-            resolveShowIcon(l),
-            resolveDisabled(l),
-            overrideEntityType,
-          ),
-        )
-        const isSession = editableLists.some((l) => l.entityListType === 'review-session')
-        return paginateItems(
-          flatItems,
-          isSession ? 'More sessions' : 'More lists',
-          isSession ? 'subscriptions' : 'list',
-        )
-      }
-
-      // folder node structure
-      interface FolderNode {
-        folder: EntityListFolderModel
-        children: FolderNode[]
-        lists: EntityList[]
-      }
-      const nodeMap = new Map<string, FolderNode>()
-
-      // init nodes
-      listFolders.forEach((f) => {
-        nodeMap.set(f.id, { folder: f, children: [], lists: [] })
-      })
-
-      // link children
-      listFolders.forEach((f) => {
-        if (f.parentId && nodeMap.has(f.parentId)) {
-          nodeMap.get(f.parentId)!.children.push(nodeMap.get(f.id)!)
-        }
-      })
-
-      // assign lists (only editable ones)
-      editableLists.forEach((list) => {
-        if (list.entityListFolderId && nodeMap.has(list.entityListFolderId)) {
-          nodeMap.get(list.entityListFolderId)!.lists.push(list)
-        }
-      })
-
-      // determine which folders (and ancestors) actually contain lists
-      const folderHasListCache = new Map<string, boolean>()
-      const hasAnyLists = (folderId: string): boolean => {
-        if (folderHasListCache.has(folderId)) return folderHasListCache.get(folderId)!
-        const node = nodeMap.get(folderId)
-        if (!node) return false
-        const value =
-          node.lists.length > 0 || node.children.some((child) => hasAnyLists(child.folder.id))
-        folderHasListCache.set(folderId, value)
-        return value
-      }
-
-      const buildFolderItems = (nodes: FolderNode[]): ListSubMenuItem[] => {
-        return nodes
-          .filter((n) => hasAnyLists(n.folder.id))
-          .map((n) => {
-            const childFolders = buildFolderItems(n.children)
-            const listItems = n.lists.map((l) =>
-              buildListMenuItem(
-                l,
-                selected,
-                resolveShowIcon(l),
-                resolveDisabled(l),
-                overrideEntityType,
-              ),
-            )
-            const isSession = n.lists.some((l) => l.entityListType === 'review-session')
-            const paginatedFolders = paginateItems(childFolders, 'More folders', 'snippet_folder')
-            const paginatedLists = paginateItems(
-              listItems,
-              isSession ? 'More sessions' : 'More lists',
-              isSession ? 'subscriptions' : 'list',
-            )
-
-            return {
-              id: `folder-${n.folder.id}`,
-              label: n.folder.label,
-              icon: n.folder.data?.icon || 'snippet_folder',
-              // Folders themselves are not actionable, only their items
-              items: [...paginatedFolders, ...paginatedLists],
-            }
-          })
-      }
-
-      // root folders (no parentId)
-      const rootNodes = listFolders
-        .filter((f) => !f.parentId)
-        .map((f) => nodeMap.get(f.id)!)
-        .filter(Boolean)
-
-      const folderItems = buildFolderItems(rootNodes)
-
-      // lists without a folder (root lists)
-      const rootLists = editableLists.filter((l) => !l.entityListFolderId)
-      const rootListItems = rootLists.map((l) =>
-        buildListMenuItem(l, selected, resolveShowIcon(l), resolveDisabled(l), overrideEntityType),
-      )
-
-      const isRootSession = rootLists.some((l) => l.entityListType === 'review-session')
-      const paginatedRootFolders = paginateItems(folderItems, 'More folders', 'snippet_folder')
-      const paginatedRootLists = paginateItems(
-        rootListItems,
-        isRootSession ? 'More sessions' : 'More lists',
-        isRootSession ? 'subscriptions' : 'list',
-      )
-
-      const result = [...paginatedRootFolders, ...paginatedRootLists]
-      if (useCache) cache.set(key, { items: result, selectedRef: selected })
-      return result
-    },
-    [buildListMenuItem, listFolders, powerLicense],
   )
 
   const buildReviewContextMenu = useCallback(
@@ -515,10 +232,6 @@ export const useBuildListMenuItems = ({
   )
 
   return {
-    newListMenuItem,
-    buildListMenuItem,
-    buildAddToListMenu,
-    buildHierarchicalMenuItems,
     buildReviewContextMenu,
     menuItems,
   }

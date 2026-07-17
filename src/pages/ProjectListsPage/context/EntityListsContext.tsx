@@ -7,14 +7,11 @@ import {
   useUpdateEntityListItemsMutation,
   EntityList,
   useCreateEntityListMutation,
-  EntityListFolderModel,
-  useGetEntityListFoldersQuery,
   useExecuteActionMutation,
   entityListsQueriesGql,
 } from '@shared/api'
 import { upperFirst } from 'lodash'
 import { useSearchParams } from 'react-router-dom'
-import { usePowerpack } from '@shared/context'
 import { useGetProductionAddon } from '@shared/hooks'
 import { useAppDispatch } from '@state/store'
 
@@ -55,23 +52,6 @@ export interface EntityListsContextType {
     opts?: { isReview?: boolean; listFilter?: (list: EntityList) => boolean },
   ) => void
   menuItems: (filter?: (item: ListSubMenuItem) => boolean) => ContextMenuItemConstructor
-  buildListMenuItem: (
-    list: EntityList,
-    selected: ListEntityInput[],
-    showIcon?: boolean,
-    disabled?: boolean,
-    overrideEntityType?: string,
-  ) => ListSubMenuItem
-  buildAddToListMenu: (
-    items: ListSubMenuItem[],
-    menu?: { label?: string },
-  ) => {
-    id: string
-    label: string
-    icon: string
-    items: ListSubMenuItem[]
-  }
-  newListMenuItem: (entityType: ListEntityType, selected: ListEntityInput[]) => ListSubMenuItem
   // Update the type of newListData
   newListData: NewListData | null
   // Update the signature of openCreateNewList
@@ -84,14 +64,6 @@ export interface EntityListsContextType {
   // Remove entities parameter as it will be stored in newListData
   createNewList: (label: string) => Promise<void>
   newListErrorMessage?: string
-  // Build hierarchical menu items for arbitrary list collections (folders grouping)
-  buildHierarchicalMenuItems: (
-    lists: EntityList[],
-    selected: ListEntityInput[],
-    getShowIcon?: (list: EntityList) => boolean,
-    getDisabled?: (list: EntityList) => boolean,
-    overrideEntityType?: string,
-  ) => ListSubMenuItem[]
   // Build the full ["Add to list", "Review"] top-level menu items
   buildReviewContextMenu: (
     entityType: ListEntityType,
@@ -109,7 +81,6 @@ interface EntityListsProviderProps extends EntityListsContextProps {
 
 export const EntityListsProvider = ({ children, projectName }: EntityListsProviderProps) => {
   const dispatch = useAppDispatch()
-  const { powerLicense } = usePowerpack()
   const [, setSearchParams] = useSearchParams()
 
   // Fetch all lists without filters and split on client
@@ -150,15 +121,6 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       ),
     [allLists.data],
   )
-
-  // fetch list folders to build hierarchy (only needed when power license)
-  const { data: listFoldersAll = [] } = useGetEntityListFoldersQuery(
-    { projectName },
-    { skip: !projectName || !powerLicense },
-  )
-
-  // no filtering by scope here (UI using this context is overview page)
-  const listFolders = listFoldersAll as EntityListFolderModel[]
 
   const { getProductionAddon } = useGetProductionAddon()
 
@@ -446,26 +408,11 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
     ],
   )
 
-  const {
-    newListMenuItem,
-    buildListMenuItem,
-    buildAddToListMenu,
-    buildHierarchicalMenuItems,
-    buildReviewContextMenu,
-    menuItems,
-  } = useBuildListMenuItems({
+  const { buildReviewContextMenu, menuItems } = useBuildListMenuItems({
     projectName,
-    powerLicense,
     hasReviewAddon,
     hasReviewActionsVersion,
     reviewAddonVersion,
-    listFolders,
-    folders,
-    tasks,
-    products,
-    versions,
-    reviews,
-    addToList,
     openCreateNewList,
     openAddToListDialog,
     executeAction,
@@ -482,15 +429,11 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       addToList,
       openAddToListDialog,
       menuItems,
-      buildListMenuItem,
-      buildAddToListMenu,
-      newListMenuItem,
       newListData,
       openCreateNewList,
       closeCreateNewList,
       createNewList,
       newListErrorMessage,
-      buildHierarchicalMenuItems,
       buildReviewContextMenu,
     }),
     [
@@ -503,15 +446,11 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       addToList,
       openAddToListDialog,
       menuItems,
-      buildListMenuItem,
-      buildAddToListMenu,
-      newListMenuItem,
       newListData,
       openCreateNewList,
       closeCreateNewList,
       createNewList,
       newListErrorMessage,
-      buildHierarchicalMenuItems,
       buildReviewContextMenu,
     ],
   )
@@ -523,6 +462,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
         <AddToListDialog
           entityType={addToListDialog.entityType}
           entities={addToListDialog.entities}
+          projectName={projectName}
           isReview={addToListDialog.isReview}
           listFilter={addToListDialog.listFilter}
           addToList={addToList}

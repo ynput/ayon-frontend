@@ -1,5 +1,3 @@
-import type { MenuItemType } from '@shared/components'
-
 /**
  * Selected entity reference passed to the more-menu's "Add to list" sub-menu.
  */
@@ -8,6 +6,17 @@ export interface SelectedEntityRef {
   entityType?: string
   // YN-0683 / issue #1947: review-session lists are skipped when no selected
   // version has reviewables. Optional because non-version selections never set it.
+  hasReviewables?: boolean
+}
+
+/**
+ * Normalized entity ref handed to `openAddToListDialog`. Mirrors the source
+ * `ListEntityInput` (entityType present, may be undefined) so the app's context is
+ * structurally assignable to this shared interface.
+ */
+export interface ListEntityRef {
+  entityId: string
+  entityType: string | undefined
   hasReviewables?: boolean
 }
 
@@ -36,22 +45,10 @@ export interface DetailsPanelEntityListsContext {
   products: EntityList[]
   versions: EntityList[]
   reviews: EntityList[]
-  buildHierarchicalMenuItems?: (
-    lists: EntityList[],
-    selected: SelectedEntityRef[],
-    showIcon?: (list: EntityList) => boolean,
-  ) => MenuItemType[]
-  buildAddToListMenu?: (
-    items: MenuItemType[],
-    menu?: { label?: string },
-  ) => {
-    id: string
-    label: string
-    icon: string
-    items: MenuItemType[]
-  }
-  newListMenuItem?: (
-    entityType: 'folder' | 'task' | 'version',
-    selected: SelectedEntityRef[],
-  ) => MenuItemType | undefined
+  // opens the searchable add-to-list dialog (replaces the old nested submenu builders)
+  openAddToListDialog?: (
+    entityType: string,
+    entities: ListEntityRef[],
+    opts?: { isReview?: boolean },
+  ) => void
 }
