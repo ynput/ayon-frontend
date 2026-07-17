@@ -15,7 +15,7 @@ import useBuildListItemsTableData from '../hooks/useBuildListItemsTableData'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
 import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
-import { ListsViewSettings, useListsViewSettings } from '@shared/containers'
+import { ListsViewSettings, useListsViewSettings, useViewsContext } from '@shared/containers'
 import { SortingState, VisibilityState } from '@tanstack/react-table'
 import { useProjectContext, usePowerpack, OnSyncDataCallback } from '@shared/context'
 import {
@@ -139,7 +139,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   const [linksVisible, setLinksVisible] = useState(false)
 
-  // TODO: finish setting up settings for lists
+  const { isLoadingViews } = useViewsContext()
   const {
     filters: listItemsFilters,
     onUpdateFilters: setListItemsFilters,
@@ -213,6 +213,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     filters: listItemsFilters,
     skipLinks: skipLinks,
     showComments,
+    isLoadingViews,
   })
 
   // convert to a Map for easier access

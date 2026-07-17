@@ -27,6 +27,7 @@ interface UseGetListItemsDataProps {
   entityType?: string
   skipLinks?: boolean
   showComments?: boolean
+  isLoadingViews: boolean
 }
 
 export interface UseGetListItemsDataReturn {
@@ -35,6 +36,7 @@ export interface UseGetListItemsDataReturn {
   isFetchingNextPage: boolean
   isError: boolean
   error?: unknown
+
   refetch: () => void
   fetchNextPage: () => void
   onSyncData: OnSyncDataCallback
@@ -49,6 +51,7 @@ const useGetListItemsData = ({
   skip,
   skipLinks = true,
   showComments = false,
+  isLoadingViews,
 }: UseGetListItemsDataProps): UseGetListItemsDataReturn => {
   const queryFilterString = filters.conditions?.length
     ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(filters)))
@@ -101,7 +104,7 @@ const useGetListItemsData = ({
     },
     {
       initialPageParam: { cursor: '' },
-      skip: !projectName || !listId || skip,
+      skip: !projectName || !listId || isLoadingViews || skip,
     },
   )
 
