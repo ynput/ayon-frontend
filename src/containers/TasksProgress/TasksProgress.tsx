@@ -12,9 +12,13 @@ import {
 } from './helpers'
 import { useRootFolders } from './hooks'
 // shared
-import { useGetAllProjectUsersAsAssigneeQuery, useUpdateEntitiesMutation } from '@shared/api'
+import {
+  refreshActiveAndPurgeOthers,
+  useGetAllProjectUsersAsAssigneeQuery,
+  useUpdateEntitiesMutation,
+} from '@shared/api'
 import type { FolderType, Status, TaskType, EnumItem } from '@shared/api'
-import { EmptyPlaceholder, FilterFieldType } from '@shared/components'
+import { EmptyPlaceholder, FilterFieldType, SyncButton } from '@shared/components'
 import {
   createFilterFromSlicer,
   useTaskProgressViewSettings,
@@ -152,6 +156,18 @@ const TasksProgress: FC<TasksProgressProps> = ({
     sliceType,
   )
 
+  const tasksProgressArgs = {
+    projectName,
+    folderIds: folderIdsToFetch,
+    assignees: queryFiltersForGraphQL.assignees,
+    assigneesAny: queryFiltersForGraphQL.assigneesAny,
+    tags: queryFiltersForGraphQL.tags,
+    tagsAny: queryFiltersForGraphQL.tagsAny,
+    taskTypes: queryFiltersForGraphQL.taskTypes,
+    statuses: queryFiltersForGraphQL.statuses,
+    attributes: queryFiltersForGraphQL.attributes,
+  }
+
   // VVV MAIN QUERY VVV
   //
   //
@@ -160,20 +176,14 @@ const TasksProgress: FC<TasksProgressProps> = ({
     data: foldersTasksData = [],
     isFetching: isFetchingTasks,
     error,
-  } = useGetTasksProgressQuery(
-    {
-      projectName,
-      folderIds: folderIdsToFetch,
-      assignees: queryFiltersForGraphQL.assignees,
-      assigneesAny: queryFiltersForGraphQL.assigneesAny,
-      tags: queryFiltersForGraphQL.tags,
-      tagsAny: queryFiltersForGraphQL.tagsAny,
-      taskTypes: queryFiltersForGraphQL.taskTypes,
-      statuses: queryFiltersForGraphQL.statuses,
-      attributes: queryFiltersForGraphQL.attributes,
-    },
-    { skip: !folderIdsToFetch.length || !projectName },
-  )
+  } = useGetTasksProgressQuery(tasksProgressArgs, {
+    skip: !folderIdsToFetch.length || !projectName,
+  })
+
+  const handleSync = async () => {
+    if (!folderIdsToFetch.length || !projectName) return
+    await dispatch(refreshActiveAndPurgeOthers('GetTasksProgress', tasksProgressArgs)).unwrap()
+  }
   //
   //
   // ^^^ MAIN QUERY ^^^
@@ -398,6 +408,11 @@ const TasksProgress: FC<TasksProgressProps> = ({
             disabledFilters={sliceType ? [sliceType] : []}
           />
           <Spacer />
+          <SyncButton
+            topics={['entity.task', 'entity.folder']}
+            onSync={handleSync}
+            disabled={!folderIdsToFetch.length || !projectName}
+          />
           <Button
             onClick={handleExpandAllToggle}
             icon={expandAll ? 'collapse_all' : 'expand_all'}
