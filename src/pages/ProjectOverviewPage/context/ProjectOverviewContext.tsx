@@ -40,8 +40,11 @@ import { useProjectOverviewStats } from '../hooks/useProjectOverviewStats'
 import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 import { ProjectOverviewContext } from './ProjectOverviewContextInstance'
+import { useAppDispatch } from '@state/store'
 
 export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewProviderProps) => {
+  const dispatch = useAppDispatch()
+
   // Get project data from the new context
   const { projectName, ...projectInfo } = useProjectContext()
   const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
@@ -264,8 +267,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     taskStatsLoading,
     folderStatsError,
     taskStatsError,
-    refetchFolderStats,
-    refetchTaskStats,
+    folderStatsArgs,
+    taskStatsArgs,
     isUninitializedFolderStats,
     isUninitializedTaskStats,
   } = useProjectOverviewStats({
@@ -319,10 +322,11 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     showComments,
     onCollapseAll: () => setExpanded({}),
     visibleEntityIds,
-    folderStatsRefetch: refetchFolderStats,
-    taskStatsRefetch: refetchTaskStats,
+    folderStatsArgs,
+    taskStatsArgs,
     folderStatsUninitialized: isUninitializedFolderStats,
     taskStatsUninitialized: isUninitializedTaskStats,
+    dispatch,
   })
 
   // combine foldersMap and tasksMap into a single map

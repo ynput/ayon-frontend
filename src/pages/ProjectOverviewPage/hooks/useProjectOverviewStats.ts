@@ -95,32 +95,30 @@ export const useProjectOverviewStats = ({
 
   const skip = !projectName || isLoadingViews || !powerLicense || noSummaries
 
-  const folderQuery = useGetFolderColumnStatsQuery(
-    {
-      projectName,
-      filter: folderFilter || undefined,
-      taskFilter: taskFilter || undefined,
-      search: folderSearch || undefined,
-      [showHierarchy ? 'parentIds' : 'ids']: selectedFolders.length ? selectedFolders : undefined,
-      targets: folderTargets,
-      includeFolderChildren: true,
-      hideEmptyFolders: groupByConfig?.showEmpty === false && !showHierarchy ? true : undefined,
-    },
-    { skip },
-  )
+  const folderStatsArgs = {
+    projectName,
+    filter: folderFilter || undefined,
+    taskFilter: taskFilter || undefined,
+    search: folderSearch || undefined,
+    [showHierarchy ? 'parentIds' : 'ids']: selectedFolders.length ? selectedFolders : undefined,
+    targets: folderTargets,
+    includeFolderChildren: true,
+    hideEmptyFolders: groupByConfig?.showEmpty === false && !showHierarchy ? true : undefined,
+  }
 
-  const taskQuery = useGetTaskColumnStatsQuery(
-    {
-      projectName,
-      filter: taskFilter || undefined,
-      folderFilter: folderFilter || undefined,
-      search: taskSearch || undefined,
-      folderIds: selectedFolders.length ? selectedFolders : undefined,
-      taskIds: selectedTaskIds.length ? selectedTaskIds : undefined,
-      targets: taskTargets,
-    },
-    { skip },
-  )
+  const folderQuery = useGetFolderColumnStatsQuery(folderStatsArgs, { skip })
+
+  const taskStatsArgs = {
+    projectName,
+    filter: taskFilter || undefined,
+    folderFilter: folderFilter || undefined,
+    search: taskSearch || undefined,
+    folderIds: selectedFolders.length ? selectedFolders : undefined,
+    taskIds: selectedTaskIds.length ? selectedTaskIds : undefined,
+    targets: taskTargets,
+  }
+
+  const taskQuery = useGetTaskColumnStatsQuery(taskStatsArgs, { skip })
 
   return {
     folderStats: folderQuery.data,
@@ -129,8 +127,8 @@ export const useProjectOverviewStats = ({
     taskStatsLoading: taskQuery.isLoading,
     folderStatsError: folderQuery.error,
     taskStatsError: taskQuery.error,
-    refetchFolderStats: folderQuery.refetch,
-    refetchTaskStats: taskQuery.refetch,
+    folderStatsArgs,
+    taskStatsArgs,
     isUninitializedFolderStats: folderQuery.isUninitialized,
     isUninitializedTaskStats: taskQuery.isUninitialized,
   }

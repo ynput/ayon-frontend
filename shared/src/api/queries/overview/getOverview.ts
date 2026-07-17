@@ -444,6 +444,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         if (token) PubSub.unsubscribe(token)
         if (unsubscribeThumbnails) unsubscribeThumbnails()
       },
+      keepUnusedDataFor: 20,
     }),
     // searchFolders is a post so it's a bit annoying to consume
     // we wrap it in a queryFn to make it easier to consume as a query hook
@@ -467,6 +468,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
       },
       providesTags: (_r, _e, { projectName }) => [{ type: 'tasksFolder', id: projectName }],
+      keepUnusedDataFor: 20,
     }),
     // Add new infinite query endpoint for tasks list
     getTasksListInfinite: build.infiniteQuery<
@@ -680,6 +682,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         if (token) PubSub.unsubscribe(token)
         if (unsubscribeThumbnails) unsubscribeThumbnails()
       },
+      keepUnusedDataFor: 20,
     }),
     getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
       queryFn: async (
@@ -797,6 +800,7 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.tasks, projectName),
+      keepUnusedDataFor: 20,
     }),
   }),
 })
