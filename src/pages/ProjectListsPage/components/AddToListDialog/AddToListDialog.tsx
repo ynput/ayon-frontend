@@ -92,7 +92,7 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
       size="full"
       className="add-to-list-dialog block-shortcuts"
       header={isReview ? 'Add to review list' : 'Add to list'}
-      style={{ width: '100%', maxWidth: 560, height: '80vh' }}
+      style={{ width: '100%', maxWidth: 800, height: '80vh' }}
       footer={
         <Button
           label={count > 1 ? `Add to ${count} lists` : 'Add to list'}
