@@ -8,6 +8,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/products/${queryArg.productId}/reviewables`,
         params: {
+          latest: queryArg.latest,
           latest_done: queryArg.latestDone,
         },
       }),
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
         params: {
+          latest: queryArg.latest,
           latest_done: queryArg.latestDone,
         },
       }),
@@ -53,6 +55,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/reviewables`,
         params: {
+          latest: queryArg.latest,
           latest_done: queryArg.latestDone,
         },
       }),
@@ -64,6 +67,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/reviewables`,
         params: {
+          latest: queryArg.latest,
           latest_done: queryArg.latestDone,
         },
       }),
@@ -77,6 +81,7 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'POST',
         body: queryArg.reviewablesRequestModel,
         params: {
+          latest: queryArg.latest,
           latest_done: queryArg.latestDone,
         },
       }),
@@ -97,6 +102,8 @@ export type GetReviewablesForProductApiResponse =
 export type GetReviewablesForProductApiArg = {
   projectName: string
   productId: string
+  /** If True, returns only the latest version */
+  latest?: boolean
   /** If True, returns only the latest approved versions */
   latestDone?: boolean
 }
@@ -105,6 +112,8 @@ export type GetReviewablesForVersionApiResponse =
 export type GetReviewablesForVersionApiArg = {
   projectName: string
   versionId: string
+  /** If True, returns only the latest version */
+  latest?: boolean
   /** If True, returns only the latest approved versions */
   latestDone?: boolean
 }
@@ -128,6 +137,8 @@ export type GetReviewablesForTaskApiResponse =
 export type GetReviewablesForTaskApiArg = {
   projectName: string
   taskId: string
+  /** If True, returns only the latest version */
+  latest?: boolean
   /** If True, returns only the latest approved versions */
   latestDone?: boolean
 }
@@ -136,6 +147,8 @@ export type GetReviewablesForFolderApiResponse =
 export type GetReviewablesForFolderApiArg = {
   projectName: string
   folderId: string
+  /** If True, returns only the latest version */
+  latest?: boolean
   /** If True, returns only the latest approved versions */
   latestDone?: boolean
 }
@@ -145,6 +158,8 @@ export type GetReviewablesForEntitiesApiArg = {
   projectName: string
   /** Project level entity type is used in the endpoint path to specify the type of entity to operate on. It is usually one of 'folders', 'products', 'versions', 'representations', 'tasks', 'workfiles'. (trailing 's' is optional). */
   entityType: string
+  /** If True, returns only the latest version */
+  latest?: boolean
   /** If True, returns only the latest approved versions */
   latestDone?: boolean
   reviewablesRequestModel: ReviewablesRequestModel
