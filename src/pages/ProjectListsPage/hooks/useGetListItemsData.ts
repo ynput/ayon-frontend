@@ -1,5 +1,16 @@
-import { useGetListItemsInfiniteInfiniteQuery, useGetEntityLinksQuery } from '@shared/api'
-import type { EntityListItem, GetListItemsResult } from '@shared/api'
+import {
+  buildMetricTargets,
+  mergeFieldStats,
+  refreshActiveAndPurgeOthers,
+  refreshOtherActiveQueries,
+  shouldSkipColumnStats,
+  toListItemsStatsTargets,
+  totalRowsFromStats,
+  useGetEntityLinksQuery,
+  useGetListItemsColumnStatsQuery,
+  useGetListItemsInfiniteInfiniteQuery,
+} from '@shared/api'
+import type { EntityListItem, FieldStats, GetListItemsResult, StatsEntity } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
 import { useMemo } from 'react'
@@ -11,7 +22,9 @@ import {
 import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
-import { OnSyncDataCallback } from '@shared/context'
+import { OnSyncDataCallback, usePowerpack, useProjectContext } from '@shared/context'
+import { useListsViewSettings, useProjectDataContext, useViewsContext } from '@shared/containers'
+import { useAppDispatch } from '@state/store'
 
 // Extend EntityListItem to include links
 export type EntityListItemWithLinks = EntityListItem & {
@@ -28,6 +41,7 @@ interface UseGetListItemsDataProps {
   skipLinks?: boolean
   showComments?: boolean
   isLoadingViews: boolean
+  defaultColumnVisibility: Record<string, boolean>
 }
 
 export interface UseGetListItemsDataReturn {
@@ -40,6 +54,10 @@ export interface UseGetListItemsDataReturn {
   refetch: () => void
   fetchNextPage: () => void
   onSyncData: OnSyncDataCallback
+  fieldStats: FieldStats[]
+  fieldStatsLoading: boolean
+  fieldStatsError: boolean
+  mainCountLabels: { primary: string }
 }
 
 const useGetListItemsData = ({
@@ -52,7 +70,23 @@ const useGetListItemsData = ({
   skipLinks = true,
   showComments = false,
   isLoadingViews,
+  defaultColumnVisibility,
 }: UseGetListItemsDataProps): UseGetListItemsDataReturn => {
+  const dispatch = useAppDispatch()
+  const { projectName: contextProjectName } = useProjectContext()
+  const { attribFields } = useProjectDataContext()
+  const { columns } = useListsViewSettings()
+  const { powerLicense } = usePowerpack()
+  const { isLoadingViews: areViewsLoading } = useViewsContext()
+  const statsEntity = (
+    entityType === 'folder' ||
+    entityType === 'task' ||
+    entityType === 'product' ||
+    entityType === 'version'
+      ? entityType
+      : undefined
+  ) as StatsEntity | undefined
+  const statsProjectName = contextProjectName || projectName
   const queryFilterString = filters.conditions?.length
     ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(filters)))
     : ''
@@ -83,6 +117,15 @@ const useGetListItemsData = ({
     return sortId
   }
 
+  const listItemsArgs = {
+    projectName,
+    listId: listId || '',
+    sortBy: parseSorting(singleSort?.id),
+    desc: singleSort?.desc,
+    filter: queryFilterString || undefined,
+    showComments,
+  }
+
   const {
     data: itemsInfiniteData,
     isLoading: isLoadingRaw,
@@ -93,20 +136,10 @@ const useGetListItemsData = ({
     isError,
     error,
     refetch: refetchListItems,
-  } = useGetListItemsInfiniteInfiniteQuery(
-    {
-      projectName,
-      listId: listId || '',
-      sortBy: parseSorting(singleSort?.id),
-      desc: singleSort?.desc,
-      filter: queryFilterString || undefined,
-      showComments,
-    },
-    {
-      initialPageParam: { cursor: '' },
-      skip: !projectName || !listId || isLoadingViews || skip,
-    },
-  )
+  } = useGetListItemsInfiniteInfiniteQuery(listItemsArgs, {
+    initialPageParam: { cursor: '' },
+    skip: !projectName || !listId || isLoadingViews || skip,
+  })
 
   // Only show loading when query arguments change, not on background refetches
   const isFetching = useQueryArgumentChangeLoading(
@@ -121,6 +154,68 @@ const useGetListItemsData = ({
   )
 
   const isLoading = isLoadingRaw || isFetching
+
+  const statsTargets = useMemo(
+    () =>
+      statsEntity
+        ? toListItemsStatsTargets(
+            buildMetricTargets({
+              entity: statsEntity,
+              attribs: attribFields.filter((field) => field.scope?.includes(statsEntity)),
+              columnVisibility: columns.columnVisibility,
+              defaultColumnVisibility,
+              columnSummaries: columns.columnSummaries,
+              columnSummaryScopes: columns.columnSummaryScopes,
+            }),
+          )
+        : [],
+    [
+      statsEntity,
+      attribFields,
+      columns.columnVisibility,
+      columns.columnSummaries,
+      columns.columnSummaryScopes,
+      defaultColumnVisibility,
+    ],
+  )
+
+  const statsFilter = filters.conditions?.length
+    ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(filters)))
+    : undefined
+  const statsArgs = {
+    projectName: statsProjectName,
+    listId: listId || '',
+    filter: statsFilter,
+    targets: statsTargets,
+  }
+  const skipStats =
+    !statsProjectName ||
+    !listId ||
+    !statsEntity ||
+    !powerLicense ||
+    isLoadingViews ||
+    areViewsLoading ||
+    shouldSkipColumnStats(
+      columns.columnSummaries,
+      columns.columnSummaryScopes,
+      columns.columnVisibility,
+      defaultColumnVisibility,
+    )
+  const {
+    data: itemStats,
+    isLoading: fieldStatsLoading,
+    isError: fieldStatsError,
+    isUninitialized: isStatsUninitialized,
+  } = useGetListItemsColumnStatsQuery(statsArgs, { skip: skipStats })
+
+  const fieldStats = useMemo(() => {
+    const items = itemStats ?? []
+    const mainCount: FieldStats = {
+      columnName: 'name',
+      primaryCount: itemStats ? totalRowsFromStats(items) : undefined,
+    }
+    return mergeFieldStats([...items, mainCount])
+  }, [itemStats])
 
   const handleFetchNextPage = () => {
     if (hasNextPage) {
@@ -171,22 +266,19 @@ const useGetListItemsData = ({
   }, [data])
 
   // Get all links for visible entities
-  const {
-    data: linksData = [],
-    refetch: refetchLinks,
-    isUninitialized: isLinksUninitialized,
-  } = useGetEntityLinksQuery(
-    {
-      projectName,
-      entityIds: Array.from(visibleEntityIds),
-      entityType: entityType as
-        | 'folder'
-        | 'task'
-        | 'product'
-        | 'version'
-        | 'representation'
-        | 'workfile',
-    },
+  const linksArgs = {
+    projectName,
+    entityIds: Array.from(visibleEntityIds),
+    entityType: entityType as
+      | 'folder'
+      | 'task'
+      | 'product'
+      | 'version'
+      | 'representation'
+      | 'workfile',
+  }
+  const { data: linksData = [], isUninitialized: isLinksUninitialized } = useGetEntityLinksQuery(
+    linksArgs,
     {
       skip: visibleEntityIds.size === 0 || !entityType || skip || skipLinks, // Skip if no visible entities, no entity type, or if skipLinks is true
     },
@@ -214,14 +306,33 @@ const useGetListItemsData = ({
 
     const syncLinks = (isFullSync || hasLinkUpdates) && !isLinksUninitialized
     const syncListItems = isFullSync || hasListItemUpdates
+    const syncStats = (isFullSync || hasListItemUpdates) && !isStatsUninitialized
 
-    if (!syncLinks && !syncListItems) return
+    if (!syncLinks && !syncListItems && !syncStats) return
 
-    // LINK UPDATES
-    if (syncLinks) await refetchLinks().unwrap()
+    const queriesToRefresh: { endpointName: string; args: unknown }[] = []
+    if (syncLinks) queriesToRefresh.push({ endpointName: 'getEntityLinks', args: linksArgs })
+    if (syncListItems) {
+      queriesToRefresh.push({ endpointName: 'getListItemsInfinite', args: listItemsArgs })
+    }
+    if (syncStats) {
+      queriesToRefresh.push({ endpointName: 'GetListItemsColumnStats', args: statsArgs })
+    }
 
-    // LIST ITEM UPDATES
-    if (syncListItems) await refetchListItems().unwrap()
+    await Promise.all(
+      queriesToRefresh.map(({ endpointName, args }) =>
+        dispatch(
+          refreshActiveAndPurgeOthers(endpointName, args, {
+            refreshOtherActiveQueries: false,
+          }),
+        ).unwrap(),
+      ),
+    )
+    await Promise.all(
+      queriesToRefresh.map(({ endpointName, args }) =>
+        dispatch(refreshOtherActiveQueries(endpointName, args)),
+      ),
+    )
   }
 
   return {
@@ -233,6 +344,10 @@ const useGetListItemsData = ({
     error,
     fetchNextPage: handleFetchNextPage,
     refetch: refetchListItems,
+    fieldStats,
+    fieldStatsLoading,
+    fieldStatsError,
+    mainCountLabels: { primary: statsEntity ? `${statsEntity}s` : 'items' },
   }
 }
 
