@@ -166,15 +166,10 @@ export const useHierarchyContextMenuItems = (onAddToList?: OnAddToList, entityMa
         command: () => toggleChildren(row, false),
         hidden: !row.getCanExpand() || !row.getIsExpanded(),
       }),
-      (_e, { row, selectedRows }) => ({
-        label: 'Add to list',
-        icon: 'playlist_add',
-        items: (() => {
-          const items = actions.onAddToList?.(row.original, selectedRows)
-          return items ? (Array.isArray(items) ? items : [items]) : undefined
-        })(),
-        hidden: !actions.onAddToList,
-      }),
+      (_e, { row, selectedRows }) => {
+        const items = actions.onAddToList?.(row.original, selectedRows)
+        return items ? (Array.isArray(items) ? items : [items]) : undefined
+      },
       (_e, { row }) => ({
         label: 'Upload version',
         icon: 'upload',

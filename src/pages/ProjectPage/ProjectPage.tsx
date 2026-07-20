@@ -134,22 +134,15 @@ const ProjectSlicerWithViews = ({
   page: string
   projectName: string
 }) => {
-  const { buildHierarchicalMenuItems, buildAddToListMenu, newListMenuItem, folders } =
-    useEntityListsContext()
+  const { buildReviewContextMenu } = useEntityListsContext()
 
   const onAddToList = useMemo<OnAddToList>(
     () => (row: SimpleTableRow, selectedRows: string[]) => {
       const entityType = row.data?.entityType === 'task' ? 'task' : 'folder'
       const selectedEntities = selectedRows.map((entityId) => ({ entityId, entityType }))
-      const listItems = buildHierarchicalMenuItems(
-        entityType === 'task' ? [] : folders,
-        selectedEntities,
-        () => false,
-      )
-      const newListItem = newListMenuItem(entityType, selectedEntities)
-      return buildAddToListMenu([...listItems, newListItem]).items
+      return buildReviewContextMenu(entityType, selectedEntities)
     },
-    [buildAddToListMenu, buildHierarchicalMenuItems, folders, newListMenuItem],
+    [buildReviewContextMenu],
   )
 
   return (

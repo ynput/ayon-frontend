@@ -38,6 +38,9 @@ import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 import { getBundleModeFromUser } from '@shared/util'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+import type { OnAddToList } from '@shared/containers/Slicer'
+import type { SimpleTableRow } from '@shared/containers/SimpleTable'
 
 // the tasks resolver task filter does not whitelist folder_type — use the
 // folder-scope folderType chip instead (goes through folderFilter)
@@ -87,6 +90,16 @@ const ProjectOverviewPage: FC = () => {
     tasksMap,
     updateExpanded,
   } = useProjectOverviewContext()
+  const { buildReviewContextMenu } = useEntityListsContext()
+
+  const onAddToList = useMemo<OnAddToList>(
+    () => (row: SimpleTableRow, selectedRows: string[]) => {
+      const entityType = row.data?.entityType === 'task' ? 'task' : 'folder'
+      const selectedEntities = selectedRows.map((entityId) => ({ entityId, entityType }))
+      return buildReviewContextMenu(entityType, selectedEntities)
+    },
+    [buildReviewContextMenu],
+  )
 
   const { sorting, updateSorting } = useColumnSettingsContext()
   const nameSortDesc = sorting?.[0]?.id === 'name' ? sorting[0].desc : false
@@ -199,6 +212,7 @@ const ProjectOverviewPage: FC = () => {
               sliceFields={SLICER_PAGES_CONFIG.overview.fields}
               entityTypes={['task', 'folder']}
               pinnedSliceType="hierarchy"
+              onAddToList={onAddToList}
             />
           </Section>
         </SplitterPanel>
