@@ -5,7 +5,7 @@ import {
   OperationResponseModel,
   useUpdateOverviewEntitiesMutation,
 } from '@shared/api'
-import { useProjectTableContext } from '@shared/containers'
+import { useOptionalProjectTableContext } from '@shared/containers'
 import {
   useMoveEntityContext,
   EntityMoveData,
@@ -31,10 +31,16 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
   const [updateOverviewEntities] = useUpdateOverviewEntitiesMutation()
 
   // Get project context for entity data
-  const { tableData, getEntityById } = useProjectTableContext()
+  const projectTableContext = useOptionalProjectTableContext()
 
   // Get folder data to check hasVersions property
   const { folders } = useProjectFoldersContext()
+  const tableData = projectTableContext?.tableData || []
+  const getEntityById = useCallback(
+    (id: string) =>
+      projectTableContext?.getEntityById(id) || folders.find((folder) => folder.id === id),
+    [folders, projectTableContext],
+  )
 
   // Action dispatchers
   const openMoveDialogHandler = useCallback(

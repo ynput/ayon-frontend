@@ -39,6 +39,11 @@ const toMenuItems = (items: ReturnType<SimpleTableRowContextMenuBuilder>) => {
   return Array.isArray(items) ? items.filter(Boolean) : [items]
 }
 
+const toggleRowAndDescendants = <TData,>(row: Row<TData>, expanded: boolean) => {
+  row.toggleExpanded(expanded)
+  row.subRows.forEach((subRow) => toggleRowAndDescendants(subRow, expanded))
+}
+
 // Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
 const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
   const cellValue = row.getValue(columnId)
@@ -136,6 +141,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   onScrollBottom,
   onRename,
   renamingId,
+  renameInitialValue,
   onSubmitRename,
   onCancelRename,
   onRowDoubleClick,
@@ -167,6 +173,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
   onRowDoubleClickRef.current = onRowDoubleClick
   const renamingIdRef = useRef(renamingId)
   renamingIdRef.current = renamingId
+  const renameInitialValueRef = useRef(renameInitialValue)
+  renameInitialValueRef.current = renameInitialValue
   const onSubmitRenameRef = useRef(onSubmitRename)
   onSubmitRenameRef.current = onSubmitRename
   const onCancelRenameRef = useRef(onCancelRename)
@@ -400,12 +408,21 @@ const SimpleTable: FC<SimpleTableProps> = ({
             enableNonFolderIndent,
             isRowExpanded: row.getIsExpanded(),
             isTableExpandable: cellMeta?.isExpandable,
-            onExpandClick: row.getToggleExpandedHandler(),
+            // @ts-ignore
+            onExpandClick: (event) => {
+              if (event.altKey) {
+                toggleRowAndDescendants(row, !row.getIsExpanded())
+              } else {
+                row.toggleExpanded()
+              }
+            },
             startContent: row.original.startContent,
             endContent: row.original.endContent,
             isDisabled: row.original.isDisabled,
             disabledMessage: row.original.disabledMessage,
             isRenaming: row.id === renamingIdRef.current,
+            renameInitialValue:
+              row.id === renamingIdRef.current ? renameInitialValueRef.current : undefined,
             onSubmitRename: onSubmitRenameRef.current
               ? (v) => onSubmitRenameRef.current!(row.id, v)
               : undefined,

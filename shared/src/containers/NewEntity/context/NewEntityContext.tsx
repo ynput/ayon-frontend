@@ -10,12 +10,12 @@ import {
   OperationResponseModel,
   EntityNaming,
 } from '@shared/api'
-import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
+import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { parseAndFormatName } from '@shared/util'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import { isEmpty } from 'lodash'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 import { NewEntityContext } from './NewEntityContextInstance'
 import { NewEntityType } from '../util/entityDefinitions'
 
@@ -53,7 +53,8 @@ interface NewEntityProviderProps {
 
 export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }) => {
   const { projectName, ...projectInfo } = useProjectContext()
-  const { findNonInheritedValues, attribFields, getEntityById } = useProjectTableContext()
+  const { attribFields } = useProjectDataContext()
+  const { findNonInheritedValues, getFolderById } = useProjectFoldersContext()
   const { attrib: projectAttrib = {}, statuses } = projectInfo || {}
 
   const { anatomy } = useProjectContext()
@@ -359,12 +360,12 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     if (sequenceForm.active) {
       const selectedFolders = []
       for (const folderId of selectedFolderIds) {
-        const entity = getEntityById(folderId)
-        if (entity?.entityType === 'folder') {
+        const folder = getFolderById(folderId)
+        if (folder) {
           selectedFolders.push({
-            id: entity.id,
-            name: entity.name,
-            label: entity.label || entity.name, // Use label if available
+            id: folder.id,
+            name: folder.name,
+            label: folder.label || folder.name,
           })
         }
       }
@@ -390,9 +391,9 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     // get all the paths for the selected folders
     const paths: Record<string, string> = {}
     for (const folderId of selectedFolderIds) {
-      const entity = getEntityById(folderId)
-      if (entity?.entityType === 'folder') {
-        paths[entity.id] = entity.path
+      const folder = getFolderById(folderId)
+      if (folder) {
+        paths[folder.id] = folder.path
       }
     }
 

@@ -1,13 +1,11 @@
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {
   CellEditingProvider,
-  DetailsPanelEntityProvider,
-  ProjectDataProvider,
   ProjectTableQueriesProvider,
   SelectedRowsProvider,
   SelectionCellsProvider,
 } from '@shared/containers'
-import { MoveEntityProvider, SettingsPanelProvider } from '@shared/context'
+import { SettingsPanelProvider } from '@shared/context'
 import { FC } from 'react'
 import { VPProjectTableProvider } from './VPProjectTableProvider'
 import { VPColumnSettingsProvider } from './VPColumnSettingsProvider'
@@ -35,31 +33,25 @@ const VersionsProductsPageProviders: FC<VersionsProductsPageProvidersProps> = ({
   return (
     <VPViewsProvider>
       <VPFocusProvider>
-        <ProjectDataProvider projectName={projectName}>
-          <VersionsDataProvider projectName={projectName} modules={modules}>
-            <MoveEntityProvider>
-              <SettingsPanelProvider>
-                <VPColumnSettingsProvider>
-                  <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
-                    <EntityListsProvider projectName={projectName}>
-                      <VPProjectTableProvider projectName={projectName} modules={modules}>
-                        <DetailsPanelEntityProvider>
-                          <SelectionCellsProvider>
-                            <SelectedRowsProvider>
-                              <VersionsSelectionProvider>
-                                <CellEditingProvider>{children}</CellEditingProvider>
-                              </VersionsSelectionProvider>
-                            </SelectedRowsProvider>
-                          </SelectionCellsProvider>
-                        </DetailsPanelEntityProvider>
-                      </VPProjectTableProvider>
-                    </EntityListsProvider>
-                  </ProjectTableQueriesProvider>
-                </VPColumnSettingsProvider>
-              </SettingsPanelProvider>
-            </MoveEntityProvider>
-          </VersionsDataProvider>
-        </ProjectDataProvider>
+        <VersionsDataProvider projectName={projectName} modules={modules}>
+          <SettingsPanelProvider>
+            <VPColumnSettingsProvider>
+              <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
+                <EntityListsProvider projectName={projectName}>
+                  <VPProjectTableProvider projectName={projectName} modules={modules}>
+                    <SelectionCellsProvider>
+                      <SelectedRowsProvider>
+                        <VersionsSelectionProvider>
+                          <CellEditingProvider>{children}</CellEditingProvider>
+                        </VersionsSelectionProvider>
+                      </SelectedRowsProvider>
+                    </SelectionCellsProvider>
+                  </VPProjectTableProvider>
+                </EntityListsProvider>
+              </ProjectTableQueriesProvider>
+            </VPColumnSettingsProvider>
+          </SettingsPanelProvider>
+        </VersionsDataProvider>
       </VPFocusProvider>
     </VPViewsProvider>
   )

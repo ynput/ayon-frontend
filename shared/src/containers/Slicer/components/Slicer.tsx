@@ -1,21 +1,16 @@
 import { FC, useState } from 'react'
-import SimpleTable, {
-  Container,
-  Header,
-  SimpleTableRowContextMenuBuilder,
-} from '@shared/containers/SimpleTable'
+import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from '../hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
-import { SliceType, useHierarchyContextMenuItems } from '@shared/containers/Slicer'
+import { OnAddToList, SliceType, useHierarchyContextMenuItems } from '@shared/containers/Slicer'
 import { SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { RowSelectionState } from '@tanstack/react-table'
 import { SliceTypeField } from '../types'
 import { useSlicerContext } from '../context/SlicerContext'
 import styled from 'styled-components'
 import { ExpandedState } from '@tanstack/react-table'
-import { newEntityDefinitions, useNewEntityContext } from '@shared/containers/NewEntity'
 
 const DropdownSkeleton = styled.div`
   height: 28px;
@@ -28,12 +23,14 @@ export interface SlicerProps {
   sliceFields: SliceTypeField[]
   entityTypes?: string[] // entity types
   pinnedSliceType?: SliceType // when changing slice type, pinned the current slice
+  onAddToList?: OnAddToList
 }
 
 export const Slicer: FC<SlicerProps> = ({
   sliceFields = [],
   entityTypes = ['task'],
   pinnedSliceType,
+  onAddToList,
 }) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const {
@@ -54,8 +51,9 @@ export const Slicer: FC<SlicerProps> = ({
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({ sliceFields, entityTypes })
 
-  const hierarchyContextMenuBuilders = useHierarchyContextMenuItems()
-  const rowContextMenuBuilders = sliceType === 'hierarchy' ? hierarchyContextMenuBuilders : []
+  const hierarchyContextMenu = useHierarchyContextMenuItems(onAddToList)
+  const rowContextMenuBuilders =
+    sliceType === 'hierarchy' ? hierarchyContextMenu.rowContextMenuBuilders : []
 
   const handleSelectionChange = (s: RowSelectionState) => {
     onRowSelectionChange?.(s)
@@ -95,6 +93,10 @@ export const Slicer: FC<SlicerProps> = ({
           isLoading={isLoadingSliceTableData || isViewSyncPending}
           forceUpdateTable={sliceType}
           globalFilter={globalFilter}
+          renamingId={hierarchyContextMenu.renamingRow?.id}
+          renameInitialValue={hierarchyContextMenu.renameInitialValue}
+          onSubmitRename={(_id, value) => hierarchyContextMenu.onSubmitRename(value)}
+          onCancelRename={hierarchyContextMenu.onCancelRename}
           rowContextMenuBuilders={rowContextMenuBuilders}
         />
       </SimpleTableProvider>

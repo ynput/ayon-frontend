@@ -23,8 +23,8 @@ import {
 import {
   EditorTaskNode,
   MatchingFolder,
-  useProjectTableContext,
-  useSelectionCellsContext,
+  useOptionalProjectTableContext,
+  useOptionalSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { type OperationResponseModel, type ProjectModel } from '@shared/api'
@@ -93,9 +93,18 @@ const StyledCreateItem = styled.span`
 export interface NewEntityProps {
   disabled?: boolean
   onNewEntities?: (ops: OperationResponseModel[], stayOpen: boolean) => void
+  showButton?: boolean
+  showDialog?: boolean
+  enableShortcuts?: boolean
 }
 
-export const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
+export const NewEntity: React.FC<NewEntityProps> = ({
+  disabled,
+  onNewEntities,
+  showButton = true,
+  showDialog = true,
+  enableShortcuts = true,
+}) => {
   const { ...projectInfo } = useProjectContext()
   const {
     entityType,
@@ -110,10 +119,11 @@ export const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities })
   } = useNewEntityContext()
 
   const [createMore, setCreateMore] = useState(false)
-  const { selectedCells } = useSelectionCellsContext()
+  const { selectedCells = new Set() } = useOptionalSelectionCellsContext() || {}
   const { rowSelection, pinnedSlice, sliceType } = useSlicerContext()
   const { getFolderById } = useProjectFoldersContext()
-  const { getEntityById } = useProjectTableContext()
+  const projectTableContext = useOptionalProjectTableContext()
+  const getEntityById = projectTableContext?.getEntityById
 
   const [allSelectedFolderIds, _allSelectedEntitiesLabels, parentTargetOptions] =
     React.useMemo(() => {
@@ -130,7 +140,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities })
       let labels: string[] = []
 
       if (selectedRowIds.length > 0) {
-        const selectedEntities = selectedRowIds.map((id) => getEntityById(id))
+        const selectedEntities = selectedRowIds.map((id) => getEntityById?.(id))
 
         const selectedFolders = selectedEntities
           .filter((entity) => entity?.entityType === 'folder')
@@ -149,7 +159,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities })
 
         labels = ids
           .map((id) => {
-            const entity = getEntityById(id)
+            const entity = getEntityById?.(id)
             return (entity?.label || entity?.name) as string
           })
           .filter(Boolean)
@@ -398,7 +408,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities })
   ]
 
   // Use the keyboard shortcuts hook
-  useCreateEntityShortcuts({ options, onOpenNew })
+  useCreateEntityShortcuts({ options, onOpenNew, enabled: enableShortcuts })
 
   const handleOpenFromMenu = (value: string) => {
     // get the full option object
@@ -412,30 +422,32 @@ export const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities })
 
   return (
     <>
-      <StyledCreateButton
-        options={options}
-        value={[]}
-        onChange={(v: string[]) => handleOpenFromMenu(v[0])}
-        valueTemplate={() => (
-          <>
-            <Icon icon="add" />
-            <span>Create</span>
-          </>
-        )}
-        itemTemplate={(option) => (
-          <StyledCreateItem>
-            <Icon icon={option.icon} />
-            <span className="label">{option.label}</span>
-            <ShortcutTag>{option.shortcut}</ShortcutTag>
-          </StyledCreateItem>
-        )}
-        itemStyle={{
-          paddingRight: 16,
-        }}
-        disabled={disabled}
-        data-tooltip={disabled ? 'Enable hierarchy to create new entity' : 'Create new entity'}
-      />
-      {entityType && (
+      {showButton && (
+        <StyledCreateButton
+          options={options}
+          value={[]}
+          onChange={(v: string[]) => handleOpenFromMenu(v[0])}
+          valueTemplate={() => (
+            <>
+              <Icon icon="add" />
+              <span>Create</span>
+            </>
+          )}
+          itemTemplate={(option) => (
+            <StyledCreateItem>
+              <Icon icon={option.icon} />
+              <span className="label">{option.label}</span>
+              <ShortcutTag>{option.shortcut}</ShortcutTag>
+            </StyledCreateItem>
+          )}
+          itemStyle={{
+            paddingRight: 16,
+          }}
+          disabled={disabled}
+          data-tooltip={disabled ? 'Enable hierarchy to create new entity' : 'Create new entity'}
+        />
+      )}
+      {showDialog && entityType && (
         <StyledDialog
           header={getDialogTitle()}
           isOpen

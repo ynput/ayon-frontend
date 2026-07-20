@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
+import { useContext, useEffect } from 'react'
 import type { NewEntityType } from '../context/NewEntityContext'
-import { useMenuContext } from '@shared/context'
-import { useCellEditing } from '@shared/containers/ProjectTreeTable'
+import { MenuContext } from '@shared/context/MenuContext'
+import { CellEditingContext } from '@shared/containers/ProjectTreeTable/context/CellEditingContext'
 
 interface EntityOption {
   label: string
@@ -15,6 +15,7 @@ interface EntityOption {
 interface UseCreateEntityShortcutsProps {
   options: EntityOption[]
   onOpenNew: (type: NewEntityType, config?: { isSequence?: boolean }) => void
+  enabled?: boolean
 }
 
 /**
@@ -22,10 +23,16 @@ interface UseCreateEntityShortcutsProps {
  * @param options Array of entity options with shortcut keys
  * @param onOpenNew Callback function to open entity creation dialog
  */
-const useCreateEntityShortcuts = ({ options, onOpenNew }: UseCreateEntityShortcutsProps) => {
-  const { menuOpen } = useMenuContext()
-  const { editingCellId } = useCellEditing()
+const useCreateEntityShortcuts = ({
+  options,
+  onOpenNew,
+  enabled = true,
+}: UseCreateEntityShortcutsProps) => {
+  const { menuOpen } = useContext(MenuContext) || { menuOpen: false }
+  const { editingCellId } = useContext(CellEditingContext) || { editingCellId: null }
   useEffect(() => {
+    if (!enabled) return
+
     const handleKeyDown = (e: KeyboardEvent) => {
       // skip if the menu is open
       if (menuOpen) return
@@ -66,7 +73,7 @@ const useCreateEntityShortcuts = ({ options, onOpenNew }: UseCreateEntityShortcu
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [options, onOpenNew, editingCellId])
+  }, [enabled, options, onOpenNew, editingCellId, menuOpen])
 }
 
 export default useCreateEntityShortcuts

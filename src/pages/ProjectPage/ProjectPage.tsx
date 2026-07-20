@@ -13,7 +13,7 @@ import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 
 import { selectProject } from '@state/project'
-import { useGetProjectAddonsQuery } from '@shared/api'
+import { OperationResponseModel, useGetProjectAddonsQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
@@ -43,6 +43,21 @@ import { ProjectContextProvider } from '@shared/context'
 import { WithViews } from '@/hoc/WithViews'
 import { ProjectPageRemote } from '@shared/components'
 import ProjectStoryboardsPage from '@pages/ProjectListsPage/ProductStoryboardsPage'
+import {
+  DetailsPanelEntityProvider,
+  ProjectDataProvider,
+  getCellId,
+  useOptionalProjectTableContext,
+  useOptionalSelectedRowsContext,
+  useOptionalSelectionCellsContext,
+} from '@shared/containers/ProjectTreeTable'
+import { MoveEntityDialog } from '@shared/containers'
+import { NewEntity, NewEntityProvider } from '@shared/containers/NewEntity'
+import { MoveEntityProvider } from '@shared/context'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+import { SimpleTableRow } from '@shared/containers/SimpleTable'
+import { OnAddToList } from '@shared/containers/Slicer'
+import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
 
@@ -87,10 +102,12 @@ const SlicerWithViews = ({
   children,
   page,
   projectName,
+  onAddToList,
 }: {
   children: React.ReactNode
   page: string
   projectName: string
+  onAddToList?: OnAddToList
 }) => {
   const { viewSettings, isLoadingViews } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
@@ -106,6 +123,80 @@ const SlicerWithViews = ({
       {children}
     </SlicerProvider>
   )
+}
+
+const ProjectSlicerWithViews = ({
+  children,
+  page,
+  projectName,
+}: {
+  children: React.ReactNode
+  page: string
+  projectName: string
+}) => {
+  const { buildHierarchicalMenuItems, buildAddToListMenu, newListMenuItem, folders } =
+    useEntityListsContext()
+
+  const onAddToList = useMemo<OnAddToList>(
+    () => (row: SimpleTableRow, selectedRows: string[]) => {
+      const entityType = row.data?.entityType === 'task' ? 'task' : 'folder'
+      const selectedEntities = selectedRows.map((entityId) => ({ entityId, entityType }))
+      const listItems = buildHierarchicalMenuItems(
+        entityType === 'task' ? [] : folders,
+        selectedEntities,
+        () => false,
+      )
+      const newListItem = newListMenuItem(entityType, selectedEntities)
+      return buildAddToListMenu([...listItems, newListItem]).items
+    },
+    [buildAddToListMenu, buildHierarchicalMenuItems, folders, newListMenuItem],
+  )
+
+  return (
+    <SlicerWithViews page={page} projectName={projectName} onAddToList={onAddToList}>
+      {children}
+    </SlicerWithViews>
+  )
+}
+
+const ProjectNewEntityHost = () => {
+  const projectTableContext = useOptionalProjectTableContext()
+  const selectedRowsContext = useOptionalSelectedRowsContext()
+  const selectionContext = useOptionalSelectionCellsContext()
+
+  const handleNewEntities = useMemo(
+    () => (ops: OperationResponseModel[], stayOpen: boolean) => {
+      if (!projectTableContext || !selectionContext) return
+
+      if (projectTableContext.expanded && typeof projectTableContext.expanded !== 'boolean') {
+        const expanded = { ...projectTableContext.expanded }
+        if (projectTableContext.expanded) {
+          for (const rowId of selectedRowsContext?.selectedRows || []) expanded[rowId] = true
+          for (const cellId of selectionContext.selectedCells) {
+            const rowId = parseCellId(cellId)?.rowId
+            if (rowId) expanded[rowId] = true
+          }
+          projectTableContext.setExpanded(expanded)
+        }
+      }
+
+      if (!stayOpen) {
+        const newSelection = new Set<string>()
+        for (const op of ops) {
+          if (op.entityId && op.entityType === 'folder') {
+            newSelection.add(getCellId(op.entityId, 'name'))
+          }
+        }
+        if (newSelection.size) {
+          selectionContext.setSelectedCells(newSelection)
+          selectionContext.setFocusedCellId(newSelection.values().next().value || null)
+        }
+      }
+    },
+    [projectTableContext, selectedRowsContext, selectionContext],
+  )
+
+  return <NewEntity showButton={false} onNewEntities={handleNewEntities} />
 }
 
 const ProjectPageInner = () => {
@@ -436,11 +527,19 @@ const ProjectPageInner = () => {
         onVersionCreated={handleNewVersionUploaded}
       >
         <EntityListsProvider projectName={projectName}>
-          <WithViews viewType={page.viewType} projectName={projectName}>
-            <SlicerWithViews page={module} projectName={projectName}>
-              {page.component}
-            </SlicerWithViews>
-          </WithViews>
+          <MoveEntityProvider>
+            <DetailsPanelEntityProvider>
+              <MoveEntityDialog projectName={projectName} />
+              <WithViews viewType={page.viewType} projectName={projectName}>
+                <ProjectSlicerWithViews page={module} projectName={projectName}>
+                  <NewEntityProvider>
+                    <ProjectNewEntityHost />
+                    {page.component}
+                  </NewEntityProvider>
+                </ProjectSlicerWithViews>
+              </WithViews>
+            </DetailsPanelEntityProvider>
+          </MoveEntityProvider>
           <NewListFromContext />
         </EntityListsProvider>
         <UploadVersionDialog />
@@ -458,7 +557,9 @@ const ProjectPage = () => {
   return (
     <ProjectContextProvider projectName={projectName}>
       <ProjectFoldersContextProvider projectName={projectName}>
-        <ProjectPageInner />
+        <ProjectDataProvider projectName={projectName}>
+          <ProjectPageInner />
+        </ProjectDataProvider>
       </ProjectFoldersContextProvider>
     </ProjectContextProvider>
   )

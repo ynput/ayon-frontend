@@ -1,6 +1,5 @@
 import {
   parseCellId,
-  ProjectDataProvider,
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
@@ -21,7 +20,6 @@ import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton } from '@shared/components'
 import {
-  MoveEntityProvider,
   SettingsPanelProvider,
   useProjectContext,
   useSettingsPanel,
@@ -31,7 +29,6 @@ import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQuer
 import {
   CellEditingProvider,
   ColumnSettingsProvider,
-  DetailsPanelEntityProvider,
   ProjectTableProvider,
   ProjectTableQueriesProvider,
   SelectedRowsProvider,
@@ -98,7 +95,6 @@ const ProviderFill = styled.div`
 `
 
 const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
-  projectName,
   entityListTypes,
   isReview,
   isStoryboards,
@@ -109,27 +105,23 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
   return (
     <ReviewCardsSettingsProvider>
       <ListsModuleProvider>
-        <ProjectDataProvider projectName={projectName}>
-          <ListsDataProvider
-            entityListTypes={entityListTypes}
-            isReview={isReview}
-            isStoryboards={isStoryboards}
-          >
-            <ListsProvider isReview={isReview} isStoryboards={isStoryboards}>
-              <ListItemsDataProvider>
-                <ListsAttributesProvider>
-                  <MoveEntityProvider>
-                    <ProjectListsWithInnerProviders
-                      isReview={isReview}
-                      isStoryboards={isStoryboards}
-                      modules={modules}
-                    />
-                  </MoveEntityProvider>
-                </ListsAttributesProvider>
-              </ListItemsDataProvider>
-            </ListsProvider>
-          </ListsDataProvider>
-        </ProjectDataProvider>
+        <ListsDataProvider
+          entityListTypes={entityListTypes}
+          isReview={isReview}
+          isStoryboards={isStoryboards}
+        >
+          <ListsProvider isReview={isReview} isStoryboards={isStoryboards}>
+            <ListItemsDataProvider>
+              <ListsAttributesProvider>
+                <ProjectListsWithInnerProviders
+                  isReview={isReview}
+                  isStoryboards={isStoryboards}
+                  modules={modules}
+                />
+              </ListsAttributesProvider>
+            </ListItemsDataProvider>
+          </ListsProvider>
+        </ListsDataProvider>
       </ListsModuleProvider>
     </ReviewCardsSettingsProvider>
   )
@@ -228,23 +220,21 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                 useLocation={useLocation}
                 useSearchParams={useSearchParams}
               >
-                <DetailsPanelEntityProvider>
-                  <SelectionCellsProvider>
-                    <SelectedRowsProvider>
-                      <CellEditingProvider>
-                        <ProjectLists
-                          extraColumns={extraColumns}
-                          extraColumnsSettings={extraColumnsSettings}
-                          isReview={isReview}
-                          isStoryboards={isStoryboards}
-                          dndActiveId={dndActiveId}
-                        />
-                        <ListsShortcuts />
-                        <ReplaceListItemsDialog />
-                      </CellEditingProvider>
-                    </SelectedRowsProvider>
-                  </SelectionCellsProvider>
-                </DetailsPanelEntityProvider>
+                <SelectionCellsProvider>
+                  <SelectedRowsProvider>
+                    <CellEditingProvider>
+                      <ProjectLists
+                        extraColumns={extraColumns}
+                        extraColumnsSettings={extraColumnsSettings}
+                        isReview={isReview}
+                        isStoryboards={isStoryboards}
+                        dndActiveId={dndActiveId}
+                      />
+                      <ListsShortcuts />
+                      <ReplaceListItemsDialog />
+                    </CellEditingProvider>
+                  </SelectedRowsProvider>
+                </SelectionCellsProvider>
               </ProjectTableProvider>
             </ProjectTableQueriesProvider>
           )}

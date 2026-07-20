@@ -32,8 +32,7 @@ import { useGlobalContext, useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { DetailsPanelEntityData, OperationResponseModel } from '@shared/api'
-import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
+import { DetailsPanelEntityData } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
@@ -154,14 +153,6 @@ const ProjectOverviewPage: FC = () => {
     setQueryFilters(newQueryFilters)
   }
 
-  const expandAndSelectNewFolders = useExpandAndSelectNewFolders()
-
-  // select new entities and expand their parents
-  const handleNewEntities = (ops: OperationResponseModel[], stayOpen: boolean) => {
-    // expands to newly created folders and selects them
-    expandAndSelectNewFolders(ops, { enableSelect: !stayOpen, enableExpand: true })
-  }
-
   const { getGoToEntityData } = useGoToEntity()
 
   // select the entity in the table and expand its parent folders
@@ -214,7 +205,7 @@ const ProjectOverviewPage: FC = () => {
         <SplitterPanel size={slicerSize[1]}>
           <Section wrap direction="column" style={{ height: '100%' }}>
             <Toolbar>
-              <NewEntity disabled={!showHierarchy} onNewEntities={handleNewEntities} />
+              <NewEntity disabled={!showHierarchy} showDialog={false} enableShortcuts={false} />
               <OverviewActions />
               <SearchFilterWrapper
                 queryFilters={displayFilters}

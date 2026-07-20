@@ -8,7 +8,7 @@ interface MenuContextType {
   navigate: NavigateFunction
 }
 
-const MenuContext = createContext<MenuContextType | undefined>(undefined)
+export const MenuContext = createContext<MenuContextType | undefined>(undefined)
 
 interface MenuProviderProps {
   children: ReactNode

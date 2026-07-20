@@ -8,6 +8,11 @@ import { ProjectFoldersContext } from './ProjectFoldersContextInstance'
 export interface ProjectFoldersContextValue {
   folders: FolderListItem[]
   getFolderById: (id: string) => FolderListItem | undefined
+  findNonInheritedValues: (
+    folderId: string | undefined,
+    attribNames: string[],
+    projectAttrib?: Record<string, any>,
+  ) => Record<string, any>
   getParentFolderIds: (folderId: string) => string[]
   getChildFolderIds: (folderIds: string[], includeSelf?: boolean) => string[]
   isLoading: boolean
@@ -57,6 +62,55 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
   // Function to get folder by ID
   const getFolderById = useMemo(() => (id: string) => folderMap.get(id), [folderMap])
 
+  const findNonInheritedValues = useMemo(
+    () =>
+      (
+        folderId: string | undefined,
+        attribNames: string[],
+        projectAttrib: Record<string, any> = {},
+      ): Record<string, any> => {
+        if (!attribNames.length) return {}
+
+        const result: Record<string, any> = {}
+        const pendingAttribs = new Set(attribNames)
+        const visited = new Set<string>()
+        let currentId = folderId
+
+        while (pendingAttribs.size > 0 && currentId && !visited.has(currentId)) {
+          visited.add(currentId)
+          const folder = folderMap.get(currentId)
+
+          if (!folder) break
+          const folderAttribs = (folder.attrib || {}) as Record<string, any>
+
+          for (const attribName of Array.from(pendingAttribs)) {
+            if (folder.ownAttrib?.includes(attribName) && attribName in folderAttribs) {
+              result[attribName] = Object.entries(folderAttribs).find(
+                ([name]) => name === attribName,
+              )?.[1]
+              pendingAttribs.delete(attribName)
+            }
+          }
+
+          currentId = folder.parentId
+        }
+
+        for (const attribName of Array.from(pendingAttribs)) {
+          if (attribName in projectAttrib) {
+            result[attribName] = projectAttrib[attribName]
+            pendingAttribs.delete(attribName)
+          }
+        }
+
+        for (const attribName of pendingAttribs) {
+          result[attribName] = null
+        }
+
+        return result
+      },
+    [folderMap],
+  )
+
   // Function to get all parent folder IDs by crawling up the hierarchy
   const getParentFolderIds = useMemo(
     () =>
@@ -104,6 +158,7 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
     () => ({
       folders: folders,
       getFolderById,
+      findNonInheritedValues,
       getParentFolderIds,
       getChildFolderIds,
       isLoading: isLoadingFolders, // first time and when args change
@@ -116,6 +171,7 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
     [
       folders,
       getFolderById,
+      findNonInheritedValues,
       getParentFolderIds,
       getChildFolderIds,
       isLoadingFolders,

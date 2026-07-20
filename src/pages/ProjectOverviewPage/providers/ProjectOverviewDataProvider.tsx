@@ -5,7 +5,7 @@ import {
   ColumnDndProvider,
 } from '@shared/containers/ProjectTreeTable'
 import { useGroupByRemoteModules } from '@shared/hooks'
-import { SettingsPanelProvider, MoveEntityProvider } from '@shared/context'
+import { SettingsPanelProvider } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import { ProjectOverviewProvider } from '../context/ProjectOverviewContext'
 import ProjectOverviewTableProvider from './ProjectOverviewTableProvider'
@@ -40,13 +40,11 @@ const ProjectOverviewDataProvider: FC = () => {
         defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
       >
         <ColumnDndProvider>
-          <MoveEntityProvider>
-            <ProjectOverviewProvider modules={modules}>
-              <SettingsPanelProvider>
-                <ProjectOverviewTableProvider modules={modules} />
-              </SettingsPanelProvider>
-            </ProjectOverviewProvider>
-          </MoveEntityProvider>
+          <ProjectOverviewProvider modules={modules}>
+            <SettingsPanelProvider>
+              <ProjectOverviewTableProvider modules={modules} />
+            </SettingsPanelProvider>
+          </ProjectOverviewProvider>
         </ColumnDndProvider>
       </ColumnSettingsProvider>
     </ProjectDataProvider>
