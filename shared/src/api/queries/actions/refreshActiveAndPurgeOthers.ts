@@ -1,5 +1,6 @@
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { api } from '@shared/api/base'
+import { subscribe } from 'graphql'
 
 type QuerySubstate = {
   endpointName?: string
@@ -48,11 +49,19 @@ export const refreshActiveAndPurgeOthers =
 
     try {
       const primaryPromise = dispatch(
-        queryApi.endpoints[endpointName].initiate(currentArgs, { forceRefetch: true }),
+        queryApi.endpoints[endpointName].initiate(currentArgs, {
+          forceRefetch: true,
+          subscribe: false,
+        }),
       )
       if (refreshOtherActiveQueries) {
         for (const args of getOtherActiveQueryArgs(state, endpointName, currentArgs)) {
-          dispatch(queryApi.endpoints[endpointName].initiate(args, { forceRefetch: true }))
+          dispatch(
+            queryApi.endpoints[endpointName].initiate(args, {
+              forceRefetch: true,
+              subscribe: false,
+            }),
+          )
         }
       }
 
@@ -71,7 +80,9 @@ export const refreshOtherActiveQueries =
 
     return Promise.all(
       getOtherActiveQueryArgs(state, endpointName, currentArgs).map((args) =>
-        dispatch(queryApi.endpoints[endpointName].initiate(args, { forceRefetch: true })).unwrap(),
+        dispatch(
+          queryApi.endpoints[endpointName].initiate(args, { forceRefetch: true, subscribe: false }),
+        ).unwrap(),
       ),
     )
   }

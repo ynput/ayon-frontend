@@ -264,7 +264,7 @@ const injectedApi = enhancedApi.injectEndpoints({
 
           const allNewTasks: EditorTaskNode[] = []
           const BATCH_SIZE = 100
-          const TASK_PER_FOLDER = CACHE_TIME
+          const TASK_PER_FOLDER = 20
           const MAX_PAGES_PER_BATCH = 10
           const MAX_FOLDERS = 1000
           const TASKS_PER_PAGE = BATCH_SIZE * TASK_PER_FOLDER
