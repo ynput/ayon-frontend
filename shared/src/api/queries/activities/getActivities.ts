@@ -6,7 +6,7 @@ import {
   GetActivityUsersQuery,
   GetEntitiesChecklistsQuery,
 } from '@shared/api/generated'
-import { taskProvideTags } from './util/activitiesHelpers'
+import { provideSharedActivityTags, taskProvideTags } from './util/activitiesHelpers'
 import {
   ActivitiesResult,
   countChecklists,
@@ -43,28 +43,7 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
     GetActivities: {
       transformResponse: (res: GetActivitiesQuery) =>
         transformActivityData(res.project.activities.edges, res.project.activities.pageInfo),
-      // @ts-expect-error - filter is not an query arg
-      providesTags: (result, _e, { entityIds, activityTypes = [], filter }) =>
-        result
-          ? [
-              ...result.activities.map((a) => ({ type: 'activity', id: a.activityId })),
-              { type: 'activity', id: 'LIST' },
-              ...(Array.isArray(entityIds) ? entityIds : [entityIds]).map((id) => ({
-                type: 'entityActivities',
-                id: id,
-              })),
-              { type: 'entityActivities', id: 'LIST' },
-              ...(Array.isArray(activityTypes) ? activityTypes : [activityTypes])?.map((type) => ({
-                type: 'entityActivities',
-                id: type as string,
-              })),
-              // filter is used when a comment is made, to refetch the activities of other filters
-              ...(Array.isArray(entityIds) ? entityIds : [entityIds]).map((id) => ({
-                type: 'entityActivities',
-                id: id + '-' + filterKey(filter),
-              })),
-            ]
-          : [{ type: 'activity', id: 'LIST' }],
+     providesTags: provideSharedActivityTags, 
     },
     GetActivitiesById: {
       transformResponse: (res: GetActivitiesByIdQuery) =>
@@ -94,13 +73,18 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
   },
 })
 
+export type GetActivitiesInfiniteQueryArgs = Omit<
+  GetActivitiesQueryVariables,
+  'last' | 'first' | 'cursor'
+> & { filter?: any }
+
 const ACTIVITIES_INFINITE_QUERY_COUNT = 30
 
 const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
   endpoints: (build) => ({
     getActivitiesInfinite: build.infiniteQuery<
       ActivitiesResult,
-      Omit<GetActivitiesQueryVariables, 'last' | 'first' | 'cursor'> & { filter?: any },
+      GetActivitiesInfiniteQueryArgs,
       { cursor: string; first?: number; last?: number }
     >({
       infiniteQueryOptions: {
@@ -168,31 +152,7 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
           gqlApi: enhanceActivitiesApi,
         })
       },
-      providesTags: (result, _e, { entityIds, activityTypes, filter }) =>
-        result
-          ? [
-              ...result.pages
-                .flatMap((page) => page.activities)
-                .map((a) => ({ type: 'activity', id: a.activityId })),
-              { type: 'activity', id: 'LIST' },
-              ...(Array.isArray(entityIds) ? entityIds : [entityIds]).filter(Boolean).map((id) => ({
-                type: 'entityActivities',
-                id: id as string,
-              })),
-              { type: 'entityActivities', id: 'LIST' },
-              ...(Array.isArray(activityTypes) ? activityTypes : [activityTypes])
-                ?.filter(Boolean)
-                .map((type) => ({
-                  type: 'entityActivities',
-                  id: type as string,
-                })),
-              // filter is used when a comment is made, to refetch the activities of other filters
-              ...(Array.isArray(entityIds) ? entityIds : [entityIds]).filter(Boolean).map((id) => ({
-                type: 'entityActivities',
-                id: `${id}-${filterKey(filter)}`,
-              })),
-            ]
-          : [{ type: 'activity', id: 'LIST' }],
+providesTags: provideSharedActivityTags,
     }),
     // get data for a reference tooltip based on type,id and projectName
     getEntityTooltip: build.query({

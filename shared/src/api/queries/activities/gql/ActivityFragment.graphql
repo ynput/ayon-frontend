@@ -36,6 +36,7 @@ fragment ActivityFragment on ActivityNode {
   }
   version {
     thumbnailHash
+    status
     attrib {
       comment
     }

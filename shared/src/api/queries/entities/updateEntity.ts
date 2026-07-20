@@ -369,12 +369,6 @@ const updateEntity = api.injectEndpoints({
             throw 'Failed to update some tasks'
           }
 
-          const activityTags = []
-
-          if (activityTags.length) {
-            dispatch(api.util.invalidateTags(activityTags))
-          }
-
           return { data: operations }
         } catch (error) {
           console.error(error)
@@ -391,6 +385,13 @@ const updateEntity = api.injectEndpoints({
         if (entityType === 'version') {
           tags.push({ type: 'version', id: 'LIST' }, { type: 'product', id: 'LIST' })
           operations.forEach((o) => tags.push({ type: 'version', id: o.id }))
+          if (operations.some((o) => !!o.data.status)) {
+            console.log('invalidate version.publish activities')
+            // invalidate feeds with that version in it (published versions activity)
+            operations.forEach((o) =>
+              tags.push({ type: 'entityActivities', id: `version.publish-${o.id}` }),
+            )
+          }
         }
 
         return tags

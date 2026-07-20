@@ -3,6 +3,7 @@ import * as Styled from './ActivityStatusChange.styled'
 import ActivityDate from '../ActivityDate'
 import { Icon } from '@ynput/ayon-react-components'
 import useGetContextParents from './hooks/getContextParents'
+import { ActivityStatusSecondary } from './ActivityStatusSecondary'
 
 interface StatusInfo {
   icon?: string
@@ -34,11 +35,17 @@ const ActivityStatusChange: React.FC<ActivityStatusChangeProps> = ({
       <Styled.Body>
         <Styled.Text>{authorFullName || authorName}</Styled.Text>
         <Styled.Text>- {tagList.join(' / ')} -</Styled.Text>
-        {oldStatus.icon && <Icon icon={oldStatus.icon} style={{ color: oldStatus.color }} />}
-        <Styled.Text>{oldStatus.name}</Styled.Text>
+        <ActivityStatusSecondary
+          icon={oldStatus.icon}
+          color={oldStatus.color}
+          name={oldStatus.name || ''}
+        />
         <Icon icon="trending_flat" />
-        {newStatus.icon && <Icon icon={newStatus.icon} style={{ color: newStatus.color }} />}
-        <Styled.Text>{newStatus.name}</Styled.Text>
+        <ActivityStatusSecondary
+          icon={newStatus.icon}
+          color={newStatus.color}
+          name={newStatus.name || ''}
+        />
       </Styled.Body>
       <ActivityDate date={createdAt} />
     </Styled.StatusChange>
