@@ -257,7 +257,19 @@ const useCellContextMenu = ({
     label: 'Delete',
     icon: 'delete',
     danger: true,
-    command: () => deleteEntities(meta.selectedRows),
+    // prefer the cell selection; fall back to checkbox/row selection only when no body
+    // cells are selected, so row-selected rows still delete on their own but don't get
+    // swept in alongside an unrelated cell selection
+    command: () => {
+      const cellRows = [
+        ...new Set(
+          meta.selectedCells
+            .map((cellId) => parseCellId(cellId)?.rowId)
+            .filter((rowId): rowId is string => !!rowId),
+        ),
+      ]
+      deleteEntities(cellRows.length ? cellRows : meta.selectedRows)
+    },
     hidden: cell.columnId !== 'name' || cell.isGroup,
   })
 

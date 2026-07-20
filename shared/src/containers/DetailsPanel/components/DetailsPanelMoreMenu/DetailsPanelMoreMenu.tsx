@@ -1,8 +1,14 @@
-import { useContext, useMemo, useRef, useState } from 'react'
+import { useContext, useId, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { Button } from '@ynput/ayon-react-components'
 import { Menu, MenuContainer, DetailsDialog } from '@shared/components'
-import { useMenuContext, ThumbnailUploadContext } from '@shared/context'
+import {
+  useMenuContext,
+  ThumbnailUploadContext,
+  useDeleteEntitiesContextOptional,
+  isDeletableEntityType,
+  type DeletableEntity,
+} from '@shared/context'
 
 import { useContextAccess } from './hooks/useContextAccess'
 import { useMenuOptions } from './hooks/useMenuOptions'
@@ -70,10 +76,13 @@ export const DetailsPanelMoreMenu = ({
   const { triggerThumbnailUpload, canUploadVersion } = useContext(ThumbnailUploadContext)
   const { onOpenVersionUpload } = useContextAccess()
 
+  // useId keeps the id unique per panel instance so the main panel and the slideout
+  // never share it — a global menuOpen would otherwise open both menus at once.
+  const instanceId = useId()
   const menuId = useMemo(() => {
     const seed = entityId || entityIds?.[0] || 'noentity'
-    return `details-more-menu-${seed}-${projectName || 'noproject'}`
-  }, [entityId, entityIds, projectName])
+    return `details-more-menu-${instanceId}-${seed}-${projectName || 'noproject'}`
+  }, [instanceId, entityId, entityIds, projectName])
 
   const isOpen = menuOpen === menuId
 
@@ -94,15 +103,52 @@ export const DetailsPanelMoreMenu = ({
       : null
   const canOpenViewer = !!onOpenViewer && !!viewerArgs
 
+  const deleteContext = useDeleteEntitiesContextOptional()
+
+  // Delete acts only on what this panel currently displays — never an outside selection,
+  // which can diverge from the panel's entity and delete the wrong thing.
+  const deletableEntities = useMemo<DeletableEntity[]>(() => {
+    const source: SelectedEntityRef[] = selectedEntities.length
+      ? selectedEntities
+      : entityId
+        ? [{ entityId, entityType, projectName }]
+        : []
+    return source
+      .map((e): DeletableEntity | null => {
+        const type = e.entityType || entityType
+        const entityProjectName = e.projectName || projectName
+        if (!isDeletableEntityType(type) || !e.entityId || !entityProjectName) return null
+        return {
+          id: e.entityId,
+          entityType: type,
+          name: e.name,
+          label: e.label,
+          projectName: entityProjectName,
+          folderId: e.folderId,
+          parentId: e.parentId,
+        }
+      })
+      .filter((e): e is DeletableEntity => e !== null)
+  }, [selectedEntities, entityId, entityType, projectName])
+
+  const canDelete = !!deleteContext && deletableEntities.length > 0
+
+  const handleDelete = () => {
+    setMenuOpen(false)
+    deleteContext?.deleteEntities(deletableEntities)
+  }
+
   const { items } = useMenuOptions({
     entityType,
     entityId,
     projectName,
     selectedEntities,
+    deleteEntities: deletableEntities,
     canUploadThumbnail,
     canUploadVersion: canUploadVersionItem,
     canOpenPip: !!onOpenPip,
     canOpenViewer,
+    canDelete,
     entityListsContext,
     onPip: () => onOpenPip?.(),
     onOpenViewer: () => viewerArgs && onOpenViewer?.(viewerArgs),
@@ -110,6 +156,7 @@ export const DetailsPanelMoreMenu = ({
     onUploadVersion: handleUploadVersion,
     onShare: (link) => setShareDialogLink(link),
     onViewData: () => setShowDataDialog(true),
+    onDelete: handleDelete,
   })
 
   const dialogIds = entityIds?.length ? entityIds : entityId ? [entityId] : []

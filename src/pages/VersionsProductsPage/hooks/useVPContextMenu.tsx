@@ -2,6 +2,8 @@ import { useCallback } from 'react'
 import {
   ContextMenuItemConstructor,
   getCellId,
+  parseCellId,
+  parseRowId,
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
   useProjectTableContext,
@@ -9,11 +11,31 @@ import {
 } from '@shared/containers'
 import { useVersionsDataContext } from '../context/VPDataContext'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
-import { confirmDelete } from '@shared/util'
-import { useDeleteVersionMutation } from '@shared/api'
-import { useDeleteProductMutation } from '@queries/product/updateProduct'
 import { useVersionUploadContext } from '@shared/components'
-import { useProjectContext } from '@shared/context'
+import {
+  useProjectContext,
+  useDeleteEntitiesContext,
+  type DeletableEntity,
+} from '@shared/context'
+
+// prefer the cell selection; fall back to checkbox/row selection only when no body cells
+// are selected, then the clicked cell — so a stray row-selection isn't swept in alongside
+// an unrelated cell selection
+const resolveSelectedEntityIds = (meta: any, cell: any): string[] => {
+  const cellEntityIds = [
+    ...new Set(
+      ((meta.selectedCells as string[]) || [])
+        .map((cellId) => {
+          const rowId = parseCellId(cellId)?.rowId
+          return rowId ? parseRowId(rowId) : undefined
+        })
+        .filter((id): id is string => !!id),
+    ),
+  ]
+  if (cellEntityIds.length) return cellEntityIds
+  if (meta.selectedRows?.length) return meta.selectedRows
+  return [cell.entityId]
+}
 
 export interface VPContextMenuItems {
   showDetailsItem: ContextMenuItemConstructor
@@ -35,53 +57,39 @@ export const useVPContextMenu = (callbacks?: {
   const { buildReviewContextMenu } = useEntityListsContext()
   const { onOpenPlayer } = useProjectTableContext()
   const { projectName } = useProjectContext()
-  const [deleteVersion] = useDeleteVersionMutation()
-  const [deleteProduct] = useDeleteProductMutation()
+  const { deleteEntities } = useDeleteEntitiesContext()
   const { onOpenVersionUpload } = useVersionUploadContext()
 
-  // Shared delete version handler
+  // Shared delete version handler — delegates to the standardized delete flow
   const handleDeleteVersion = useCallback(
-    async (versionIds: string[], versionNames: string[]) => {
-      const isSingle = versionIds.length === 1
-      const label = isSingle ? `version ${versionNames[0]}` : `${versionIds.length} versions`
-
-      confirmDelete({
-        label,
-        accept: async () => {
-          // Delete all versions in parallel
-          await Promise.all(
-            versionIds.map((versionId) => deleteVersion({ versionId, projectName }).unwrap()),
-          )
-          // Cache invalidation will automatically update the UI
-        },
-      })
+    (versionIds: string[], versionNames: string[]) => {
+      const entities = versionIds.map(
+        (id, i): DeletableEntity => ({
+          id,
+          entityType: 'version',
+          name: versionNames[i],
+          projectName,
+        }),
+      )
+      deleteEntities(entities)
     },
-    [deleteVersion, projectName],
+    [deleteEntities, projectName],
   )
 
-  // Shared delete product handler
+  // Shared delete product handler — delegates to the standardized delete flow
   const handleDeleteProduct = useCallback(
-    async (productIds: string[], productNames: string[]) => {
-      const isSingle = productIds.length === 1
-      const label = isSingle ? `(${productNames[0]})` : `${productIds.length} products`
-      const message = isSingle
-        ? `Deleting this product will also delete all associated versions. This action cannot be undone. Are you sure you want to proceed?`
-        : `Deleting these ${productIds.length} products will also delete all their associated versions. This action cannot be undone. Are you sure you want to proceed?`
-
-      confirmDelete({
-        label,
-        message,
-        accept: async () => {
-          // Delete all products in parallel
-          await Promise.all(
-            productIds.map((productId) => deleteProduct({ productId, projectName }).unwrap()),
-          )
-          // Cache invalidation will automatically update the UI
-        },
-        deleteLabel: isSingle ? 'Delete Product and Versions' : 'Delete Products and Versions',
-      })
+    (productIds: string[], productNames: string[]) => {
+      const entities = productIds.map(
+        (id, i): DeletableEntity => ({
+          id,
+          entityType: 'product',
+          name: productNames[i],
+          projectName,
+        }),
+      )
+      deleteEntities(entities)
     },
-    [deleteProduct, projectName],
+    [deleteEntities, projectName],
   )
 
   // Show details context menu item
@@ -329,8 +337,8 @@ export const useVPContextMenu = (callbacks?: {
   // Delete version context menu item
   const deleteVersionItem: ContextMenuItemConstructor = useCallback(
     (_e: any, cell: any, _selected: any, meta: any) => {
-      // Get selected entity IDs from meta, or use the cell entity
-      const selectedEntityIds = meta.selectedRows.length > 0 ? meta.selectedRows : [cell.entityId]
+      // prefer cell selection, fall back to row/checkbox selection, then the clicked cell
+      const selectedEntityIds = resolveSelectedEntityIds(meta, cell)
 
       // Filter to only version entities
       const versionIds: string[] = []
@@ -368,8 +376,8 @@ export const useVPContextMenu = (callbacks?: {
   // Delete product context menu item
   const deleteProductItem: ContextMenuItemConstructor = useCallback(
     (_e: any, cell: any, _selected: any, meta: any) => {
-      // Get selected entity IDs from meta, or use the cell entity
-      const selectedEntityIds = meta.selectedRows.length > 0 ? meta.selectedRows : [cell.entityId]
+      // prefer cell selection, fall back to row/checkbox selection, then the clicked cell
+      const selectedEntityIds = resolveSelectedEntityIds(meta, cell)
 
       // Filter to only product entities
       const productIds: string[] = []
