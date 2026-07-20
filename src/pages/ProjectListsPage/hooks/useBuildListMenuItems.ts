@@ -338,9 +338,6 @@ export const useBuildListMenuItems = ({
       label?: string,
       filter?: (item: ListSubMenuItem) => boolean,
     ) => {
-      const hasAnyNonReviewable =
-        entityType === 'version' ? entities.some((v) => v.hasReviewables === false) : false
-
       let targetLists = versions
       if (entityType === 'folder') targetLists = folders
       else if (entityType === 'task') targetLists = tasks
@@ -419,7 +416,6 @@ export const useBuildListMenuItems = ({
       const menu: any[] = [buildAddToListMenu(subMenuItems, { label })]
 
       if (hasReviewAddon) {
-        // Build review menu items and add a disabled note if any selected version lacks reviewables
         const reviewItems: ListSubMenuItem[] = [
           {
             id: 'open-session',
@@ -432,12 +428,6 @@ export const useBuildListMenuItems = ({
             label: 'Create new session',
             icon: 'add',
             command: () => {
-              if ((entityType === 'folder' || entityType === 'task') && !hasReviewActionsVersion) {
-                toast.error(
-                  `Please upgrade Review addon to at least ${MIN_REVIEW_ACTIONS_VERSION} to use this feature with folders and tasks`,
-                )
-                return
-              }
               openCreateNewList(entityType, entities, 'review-session')
             },
           },
@@ -450,16 +440,11 @@ export const useBuildListMenuItems = ({
           },
         ]
 
-        const disabledLabel =
-          entityType === 'version' ? ' (all versions need reviewable)' : ' (need reviewable)'
-        const getLabel = (base: string) => (hasAnyNonReviewable ? base + disabledLabel : base)
-
         menu.push({
           id: 'review',
-          label: getLabel('Review'),
+          label: 'Review',
           icon: 'subscriptions',
-          items: hasAnyNonReviewable ? [] : reviewItems,
-          disabled: hasAnyNonReviewable,
+          items: reviewItems,
         })
       }
 
