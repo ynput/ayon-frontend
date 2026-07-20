@@ -2,6 +2,8 @@ import { useCallback } from 'react'
 import {
   ContextMenuItemConstructor,
   getCellId,
+  parseCellId,
+  parseRowId,
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
   useProjectTableContext,
@@ -15,6 +17,25 @@ import {
   useDeleteEntitiesContext,
   type DeletableEntity,
 } from '@shared/context'
+
+// prefer the cell selection; fall back to checkbox/row selection only when no body cells
+// are selected, then the clicked cell — so a stray row-selection isn't swept in alongside
+// an unrelated cell selection
+const resolveSelectedEntityIds = (meta: any, cell: any): string[] => {
+  const cellEntityIds = [
+    ...new Set(
+      ((meta.selectedCells as string[]) || [])
+        .map((cellId) => {
+          const rowId = parseCellId(cellId)?.rowId
+          return rowId ? parseRowId(rowId) : undefined
+        })
+        .filter((id): id is string => !!id),
+    ),
+  ]
+  if (cellEntityIds.length) return cellEntityIds
+  if (meta.selectedRows?.length) return meta.selectedRows
+  return [cell.entityId]
+}
 
 export interface VPContextMenuItems {
   showDetailsItem: ContextMenuItemConstructor
@@ -316,8 +337,8 @@ export const useVPContextMenu = (callbacks?: {
   // Delete version context menu item
   const deleteVersionItem: ContextMenuItemConstructor = useCallback(
     (_e: any, cell: any, _selected: any, meta: any) => {
-      // Get selected entity IDs from meta, or use the cell entity
-      const selectedEntityIds = meta.selectedRows.length > 0 ? meta.selectedRows : [cell.entityId]
+      // prefer cell selection, fall back to row/checkbox selection, then the clicked cell
+      const selectedEntityIds = resolveSelectedEntityIds(meta, cell)
 
       // Filter to only version entities
       const versionIds: string[] = []
@@ -355,8 +376,8 @@ export const useVPContextMenu = (callbacks?: {
   // Delete product context menu item
   const deleteProductItem: ContextMenuItemConstructor = useCallback(
     (_e: any, cell: any, _selected: any, meta: any) => {
-      // Get selected entity IDs from meta, or use the cell entity
-      const selectedEntityIds = meta.selectedRows.length > 0 ? meta.selectedRows : [cell.entityId]
+      // prefer cell selection, fall back to row/checkbox selection, then the clicked cell
+      const selectedEntityIds = resolveSelectedEntityIds(meta, cell)
 
       // Filter to only product entities
       const productIds: string[] = []

@@ -17,6 +17,7 @@ import {
   useScopedDetailsPanel,
   useURIContext,
   FeedFilter,
+  type DeletableEntity,
 } from '@shared/context'
 
 import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
@@ -72,6 +73,10 @@ export type DetailsPanelProps = {
    *  structural type in shared/ so the layering rule (shared cannot import src/pages)
    *  is preserved. */
   entityListsContext?: DetailsPanelEntityListsContext
+  /** Overrides the more-menu delete target (non-empty wins). Hosts with their own
+   *  selection model (e.g. the overview tree table's cell selection) pass the entities
+   *  that delete should act on, so it isn't tied to the row-selection-driven panel. */
+  deleteEntitiesOverride?: DeletableEntity[]
   // optional tab state for independent tab management
 }
 
@@ -106,6 +111,7 @@ const DetailsPanelInner = ({
   entityListId,
   guestCategories = {},
   entityListsContext,
+  deleteEntitiesOverride,
 }: // optional tab state for independent tab management
 DetailsPanelProps) => {
   const {
@@ -417,6 +423,7 @@ DetailsPanelProps) => {
                     folderId: type === 'task' ? e.folder?.id : undefined,
                   }
                 })}
+              deleteEntitiesOverride={deleteEntitiesOverride}
               entityListsContext={entityListsContext}
               onOpenPip={handleOpenPip}
               onOpenViewer={onOpenViewer}

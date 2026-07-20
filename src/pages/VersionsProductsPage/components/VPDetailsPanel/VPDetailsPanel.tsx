@@ -6,6 +6,7 @@ import { useGetUsersAssigneeQuery } from '@shared/api'
 import type { DetailsPanelEntityData, ProjectModel } from '@shared/api'
 import {
   parseCellId,
+  parseRowId,
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
   getCellId,
@@ -13,8 +14,8 @@ import {
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
 import { useVersionsSelectionContext } from '@pages/VersionsProductsPage/context/VPSelectionContext'
-import { useCallback } from 'react'
-import { useProjectContext } from '@shared/context'
+import { useCallback, useMemo } from 'react'
+import { useProjectContext, isDeletableEntityType, type DeletableEntity } from '@shared/context'
 import useGoToEntity from '@hooks/useGoToEntity'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
 import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContext'
@@ -30,9 +31,9 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
   const { projectName, ...projectInfo } = useProjectContext()
   const { selectedVersions, setSelectedVersions, showVersionDetails } =
     useVersionsSelectionContext()
-  const { setSelectedCells, selectedRows } = useSelectionCellsContext()
+  const { setSelectedCells, selectedRows, selectedCells } = useSelectionCellsContext()
   const { onUpdateViewGroupBy, onUpdateFilters } = useVPViewsContext()
-  const { setExpanded: setProductsExpanded } = useVersionsDataContext()
+  const { setExpanded: setProductsExpanded, entitiesMap } = useVersionsDataContext()
   const slicer = useSlicerContext()
 
   const { data: users = [] } = useGetUsersAssigneeQuery(
@@ -46,6 +47,31 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
   }))
 
   const projectsInfo = { [projectName]: projectInfo as ProjectModel }
+
+  // Delete acts on the cell selection (matching the context-menu delete), not the
+  // row-selection-driven panel entities. Resolves both versions and products.
+  const deleteEntities = useMemo<DeletableEntity[]>(() => {
+    const entityIds = new Set<string>()
+    for (const cellId of selectedCells) {
+      const { rowId, colId } = parseCellId(cellId) || {}
+      if (!rowId || colId === ROW_SELECTION_COLUMN_ID) continue
+      entityIds.add(parseRowId(rowId))
+    }
+    const result: DeletableEntity[] = []
+    entityIds.forEach((entityId) => {
+      const entity = entitiesMap.get(entityId)
+      if (!entity || !isDeletableEntityType(entity.entityType)) return
+      result.push({
+        id: entity.id,
+        entityType: entity.entityType,
+        name: entity.name,
+        label: entity.label,
+        projectName,
+        folderId: entity.folderId || undefined,
+      })
+    })
+    return result
+  }, [selectedCells, entitiesMap, projectName])
 
   const handleClose = () => {
     // reset selected versions and products
@@ -126,6 +152,7 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
             isOpen={showVersionDetails}
             entityType={'version'}
             entities={entities}
+            deleteEntitiesOverride={deleteEntities}
             projectsInfo={projectsInfo}
             projectNames={[projectName]}
             tagsOptions={projectInfo?.tags || []}

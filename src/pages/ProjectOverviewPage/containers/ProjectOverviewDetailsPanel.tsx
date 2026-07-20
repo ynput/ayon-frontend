@@ -1,6 +1,7 @@
 // this is a wrapper around the DetailsPanel
 // we do this so that focused changes do not re-render the entire page
 
+import { useMemo, type ReactNode } from 'react'
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import type { DetailsPanelEntityData, ProjectModel } from '@shared/api'
@@ -8,8 +9,16 @@ import {
   useProjectTableContext,
   useSelectedRowsContext,
   useDetailsPanelEntityContext,
+  useSelectionCellsContext,
+  parseCellId,
+  ROW_SELECTION_COLUMN_ID,
 } from '@shared/containers/ProjectTreeTable'
 import { EntityMap } from '@shared/containers/ProjectTreeTable'
+import {
+  isDeletableEntityType,
+  DetailsPanelDeleteSelectionContext,
+  type DeletableEntity,
+} from '@shared/context'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
 import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
@@ -79,30 +88,90 @@ const ProjectOverviewDetailsPanel = ({
     <EntityListsContextBoundary projectName={projectName}>
       {(entityListsContext) => (
         <>
-          <DetailsPanel
-            isOpen={isPanelOpen}
-            entityType={entityType}
-            entityListId={entityListId}
-            entities={entities}
-            projectsInfo={projectsInfo}
-            projectNames={[projectName]}
-            tagsOptions={projectInfo.tags || []}
-            projectUsers={users}
-            activeProjectUsers={users}
-            style={{ boxShadow: 'none' }}
-            scope="overview"
-            entityListsContext={entityListsContext}
-            onClose={() => {
-              handleClose?.()
-              onClose?.()
-            }}
-            onOpenViewer={handleOpenViewer}
-            onUriOpen={onUriOpen}
-          />
+          <OverviewDeleteSelection projectName={projectName}>
+            <DetailsPanel
+              isOpen={isPanelOpen}
+              entityType={entityType}
+              entityListId={entityListId}
+              entities={entities}
+              projectsInfo={projectsInfo}
+              projectNames={[projectName]}
+              tagsOptions={projectInfo.tags || []}
+              projectUsers={users}
+              activeProjectUsers={users}
+              style={{ boxShadow: 'none' }}
+              scope="overview"
+              entityListsContext={entityListsContext}
+              onClose={() => {
+                handleClose?.()
+                onClose?.()
+              }}
+              onOpenViewer={handleOpenViewer}
+              onUriOpen={onUriOpen}
+            />
+          </OverviewDeleteSelection>
           <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
         </>
       )}
     </EntityListsContextBoundary>
+  )
+}
+
+/**
+ * Subscribes to the tree table's cell selection and publishes the resulting delete target via
+ * context. Kept as its own component so cell-selection changes re-render only this provider
+ * (and the more-menu that consumes it) instead of the whole details panel. Its `children` stay
+ * referentially stable across cell-nav because the parent doesn't subscribe to cell selection.
+ */
+function OverviewDeleteSelection({
+  projectName,
+  children,
+}: {
+  projectName: string
+  children: ReactNode
+}) {
+  const { getEntityById } = useProjectTableContext()
+  const { selectedCells } = useSelectionCellsContext()
+
+  // Delete acts on the cell selection (matching the toolbar / context-menu delete), not the
+  // row-selection-driven panel entities. Empty here → more-menu falls back to panel entities.
+  const deleteEntities = useMemo<DeletableEntity[]>(() => {
+    const rowIds: string[] = []
+    for (const cellId of selectedCells) {
+      const { rowId, colId } = parseCellId(cellId) || {}
+      if (!rowId || colId === ROW_SELECTION_COLUMN_ID || rowIds.includes(rowId)) continue
+      rowIds.push(rowId)
+    }
+    return rowIds.reduce<DeletableEntity[]>((acc, rowId) => {
+      const entity = getEntityById(rowId)
+      if (!entity || !isDeletableEntityType(entity.entityType)) return acc
+      const { entityId, id, name, label, folderId, parentId } = entity as {
+        entityId?: string
+        id?: string
+        name?: string
+        label?: string | null
+        folderId?: string | null
+        parentId?: string
+      }
+      const resolvedId = entityId || id
+      if (!resolvedId) return acc
+      acc.push({
+        id: resolvedId,
+        entityType: entity.entityType,
+        name,
+        label,
+        projectName,
+        folderId: folderId ?? undefined,
+        parentId,
+      })
+      return acc
+    }, [])
+  }, [selectedCells, getEntityById, projectName])
+
+  return (
+    <DetailsPanelDeleteSelectionContext.Provider value={deleteEntities}>
+      {children}
+    </DetailsPanelDeleteSelectionContext.Provider>
   )
 }
 
