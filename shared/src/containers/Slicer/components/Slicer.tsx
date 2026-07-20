@@ -51,7 +51,7 @@ export const Slicer: FC<SlicerProps> = ({
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({ sliceFields, entityTypes })
 
-  const hierarchyContextMenu = useHierarchyContextMenuItems(onAddToList)
+  const hierarchyContextMenu = useHierarchyContextMenuItems(onAddToList, sliceMap)
   const rowContextMenuBuilders =
     sliceType === 'hierarchy' ? hierarchyContextMenu.rowContextMenuBuilders : []
 

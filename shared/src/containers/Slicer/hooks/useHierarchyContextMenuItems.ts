@@ -6,9 +6,15 @@ import { useCallback, useMemo, useState } from 'react'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
 import { useUpdateOverviewEntitiesMutation } from '@shared/api'
-import { useProjectContext, useMoveEntityContext } from '@shared/context'
+import {
+  useProjectContext,
+  useMoveEntityContext,
+  useDeleteEntitiesContext,
+  type DeletableEntity,
+} from '@shared/context'
 import { useDetailsPanelEntityContext } from '@shared/containers/ProjectTreeTable'
 import { useOptionalVersionUploadContext } from '@shared/components'
+import { SliceMap } from '../types'
 
 const toggleChildren = (row: any, expanded: boolean) => {
   row.toggleExpanded(expanded)
@@ -20,7 +26,7 @@ export type OnAddToList = (
   selectedRows: string[],
 ) => ContextMenuItemType | ContextMenuItemType[] | undefined
 
-export const useHierarchyContextMenuItems = (onAddToList?: OnAddToList) => {
+export const useHierarchyContextMenuItems = (onAddToList?: OnAddToList, entityMap?: SliceMap) => {
   const { onOpenNew } = useNewEntityContext()
   const { projectName } = useProjectContext()
   const { setSelectedEntity } = useDetailsPanelEntityContext()
@@ -28,6 +34,7 @@ export const useHierarchyContextMenuItems = (onAddToList?: OnAddToList) => {
   const versionUpload = useOptionalVersionUploadContext()
   const dispatch = useAppDispatch()
   const [updateEntities] = useUpdateOverviewEntitiesMutation()
+  const { deleteEntities } = useDeleteEntitiesContext()
   const [renamingRow, setRenamingRow] = useState<SimpleTableRow | null>(null)
 
   const actions = useMemo(
@@ -71,17 +78,26 @@ export const useHierarchyContextMenuItems = (onAddToList?: OnAddToList) => {
         }
       },
       onDelete: (row: SimpleTableRow, selectedRows: string[]) => {
-        const entityType = row.data?.entityType === 'task' ? 'task' : 'folder'
-        updateEntities({
-          projectName,
-          operationsRequestModel: {
-            operations: selectedRows.map((entityId) => ({
+        const entities: DeletableEntity[] = selectedRows.flatMap((entityId) => {
+          const selectedRow = entityMap?.get(entityId) || (entityId === row.id ? row : undefined)
+          if (!selectedRow) return []
+
+          const entityType = selectedRow.data?.entityType === 'task' ? 'task' : 'folder'
+          const parentId = selectedRow.parentId || selectedRow.data?.parentId
+          return [
+            {
+              id: selectedRow.id,
               entityType,
-              type: 'delete',
-              entityId,
-            })),
-          },
+              name: selectedRow.name,
+              label: selectedRow.label,
+              projectName,
+              folderId: entityType === 'task' ? parentId : undefined,
+              parentId: entityType === 'folder' ? parentId : undefined,
+            },
+          ]
         })
+
+        void deleteEntities(entities)
       },
     }),
     [
@@ -90,6 +106,8 @@ export const useHierarchyContextMenuItems = (onAddToList?: OnAddToList) => {
       openMoveDialog,
       projectName,
       setSelectedEntity,
+      deleteEntities,
+      entityMap,
       updateEntities,
       versionUpload,
     ],
