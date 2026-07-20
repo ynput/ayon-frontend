@@ -57,7 +57,7 @@ export const ListsProvider = ({
 }: ListsProviderProps) => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
   const { projectName } = useProjectContext()
-  const { listsMap, listsData, listFolders } = useListsDataContext()
+  const { listsMap, listsData, listFolders, disabledListIds } = useListsDataContext()
 
   // Memoize the configurations for the query parameters
   const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
@@ -365,13 +365,14 @@ export const ListsProvider = ({
         }
 
         listsToSelect = listsData.filter((l) => {
+          if (disabledListIds.has(l.id)) return false
           if (!l.entityListFolderId) return false
           if (!allFolderIds.includes(l.entityListFolderId)) return false
           return isFolderChainExpanded(l.entityListFolderId)
         })
       } else {
         // No folders selected: select all root lists (lists without folder)
-        listsToSelect = listsData.filter((l) => !l.entityListFolderId)
+        listsToSelect = listsData.filter((l) => !l.entityListFolderId && !disabledListIds.has(l.id))
       }
 
       const selection = listsToSelect.reduce(
@@ -380,7 +381,7 @@ export const ListsProvider = ({
       )
       setRowSelection(selection)
     },
-    [selectedRows, listsData, listFolders, expanded, setRowSelection],
+    [selectedRows, listsData, listFolders, expanded, setRowSelection, disabledListIds],
   )
 
   return (

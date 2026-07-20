@@ -13,6 +13,7 @@ interface ListsDataContextValue {
   listsData: EntityList[]
   listsTableData: SimpleTableRow[]
   listsMap: ListsMap
+  disabledListIds: Set<string>
   listFolders: EntityListFolderModel[]
   fetchNextPage: () => void
   isLoadingAll: boolean
@@ -37,6 +38,7 @@ interface ListsDataProviderProps {
   // picker mode: ignore the page's saved list filters (selection dialog, not the Lists page)
   picker?: boolean
   listsFilter?: (list: EntityList) => boolean
+  listDisabled?: (list: EntityList) => string | undefined
 }
 
 // fetch all lists and provide methods to update the lists
@@ -47,6 +49,7 @@ export const ListsDataProvider = ({
   isStoryboards,
   picker,
   listsFilter,
+  listDisabled,
 }: ListsDataProviderProps) => {
   const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
   const { projectName, isLoading: isFetchingProject } = useProjectContext()
@@ -114,10 +117,18 @@ export const ListsDataProvider = ({
     return new Map(listsData.map((list) => [list.id, list]))
   }, [listsData])
 
+  const disabledListIds = useMemo(() => {
+    const ids = new Set<string>()
+    if (listDisabled) {
+      for (const list of listsData) if (listDisabled(list)) ids.add(list.id)
+    }
+    return ids
+  }, [listsData, listDisabled])
+
   // convert listsData into tableData
   const listsTableData = useMemo(
-    () => buildListsTableData(listsData, listFolders, true, powerLicense, showArchived),
-    [listsData, listFolders, powerLicense, showArchived],
+    () => buildListsTableData(listsData, listFolders, true, powerLicense, showArchived, listDisabled),
+    [listsData, listFolders, powerLicense, showArchived, listDisabled],
   )
 
   return (
@@ -126,6 +137,7 @@ export const ListsDataProvider = ({
         listsData,
         listsTableData,
         listsMap,
+        disabledListIds,
         listFolders,
         isLoadingAll:
           isLoadingLists ||

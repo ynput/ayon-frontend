@@ -14,6 +14,19 @@ import { listEntityTypes, type ListEntityType } from '../NewListDialog/NewListDi
 import { ACCESS_LEVEL } from '../../util/listAccessControl'
 import type { EntityList } from '@shared/api'
 
+// why a list can't be added to (shown but disabled); undefined = addable
+// access-restricted lists are hidden (see listsFilter), not disabled — this only covers type mismatch
+const getDisabledReason = (
+  list: EntityList,
+  entities: ListEntityInput[],
+  isReview?: boolean,
+): string | undefined => {
+  // generic lists must match the selected entities' type (review sessions accept any via actions)
+  if (!isReview && !entities.some((e) => e.entityType === list.entityType))
+    return `This list only accepts ${list.entityType} items`
+  return undefined
+}
+
 const TableContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -71,9 +84,10 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
   }
 
   const handleRowSubmit = (listId: string) => {
-    // use the real list (with its own entityType) from the fetched map; fabricate only as a last resort
-    const list = listsMap.get(listId) ?? { id: listId, entityType }
-    addTo([list as EntityList])
+    // double-click can hit a disabled row (SimpleTable only blocks click/keyboard selection)
+    const list = listsMap.get(listId)
+    if (!list || getDisabledReason(list, entities, isReview)) return
+    addTo([list])
   }
 
   // creating a list is only supported for the types NewListDialog knows (no 'product')
@@ -123,12 +137,14 @@ export const AddToListDialog: FC<AddToListDialogProps> = (props) => {
   const listsFilter = useCallback(
     (list: EntityList) => {
       if ((list.accessLevel ?? 0) < ACCESS_LEVEL.EDITOR) return false
-      // generic lists must match the selected entities' type (review sessions accept any via actions)
-      if (!isReview && !entities.some((e) => e.entityType === list.entityType)) return false
       if (listFilter && !listFilter(list)) return false
       return true
     },
-    [entities, isReview, listFilter],
+    [listFilter],
+  )
+  const listDisabled = useCallback(
+    (list: EntityList) => getDisabledReason(list, entities, isReview),
+    [entities, isReview],
   )
 
   const tree = (
@@ -137,6 +153,7 @@ export const AddToListDialog: FC<AddToListDialogProps> = (props) => {
       isReview={isReview}
       entityListTypes={isReview ? ['review-session'] : ['generic']}
       listsFilter={listsFilter}
+      listDisabled={listDisabled}
     >
       <ListsProvider picker isReview={isReview}>
         <AddToListDialogInner {...props} />
