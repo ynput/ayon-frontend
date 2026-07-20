@@ -202,27 +202,18 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               // convert to string if foundValue is not undefined or null use empty string otherwise
               cellValue = foundValue !== undefined && foundValue !== null ? String(foundValue) : ''
 
-              // Flat tables (lists) key entitiesMap by row id not entityId, so the path can't resolve — fall back to label/name
+              // Special handling for name field - include full path
               if (colId === 'name') {
-                cellValue =
-                  getEntityPath(entity.entityId || entity.id, entitiesMap) ||
-                  (entity as any).label ||
-                  entity.name ||
-                  ''
+                cellValue = getEntityPath(entity.entityId || entity.id, entitiesMap)
               }
 
               if (colId === 'subType') {
-                // built rows resolve subType (folder/task/product); raw nodes fall back to type-specific fields
-                const resolvedSubType = (entity as any).subType
-                if (typeof resolvedSubType === 'string' && resolvedSubType) {
-                  cellValue = resolvedSubType
-                } else {
-                  if ('folderType' in entity) {
-                    cellValue = entity.folderType || ''
-                  }
-                  if ('taskType' in entity) {
-                    cellValue = entity.taskType || ''
-                  }
+                // get folderType or taskType
+                if ('folderType' in entity) {
+                  cellValue = entity.folderType || ''
+                }
+                if ('taskType' in entity) {
+                  cellValue = entity.taskType || ''
                 }
               }
             }
