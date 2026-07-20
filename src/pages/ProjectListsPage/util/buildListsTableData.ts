@@ -19,6 +19,7 @@ export const buildListsTableData = (
   showEmptyFolders: boolean = true,
   powerLicense: boolean = false,
   showArchived: boolean = false,
+  getDisabledMessage?: (list: EntityList) => string | undefined,
 ): SimpleTableRow[] => {
   // Create lookup maps
   const foldersMap = new Map<string, EntityListFolderModel>()
@@ -111,23 +112,28 @@ export const buildListsTableData = (
     list: EntityList,
     parentType?: string,
     parents: string[] = [],
-  ): SimpleTableRow => ({
-    id: list.id,
-    name: list.label,
-    label: list.label,
-    ...(parents.length > 0 && { parents }),
-    icon: getListIcon(list),
-    inactive: !list.active,
-    subRows: [],
-    data: {
+  ): SimpleTableRow => {
+    const disabledMessage = getDisabledMessage?.(list)
+    return {
       id: list.id,
-      count: list.count,
-      owner: list.owner,
-      entityListType: list.entityListType,
-      createdAt: list.createdAt,
-      ...(parentType && { parentType }),
-    },
-  })
+      name: list.label,
+      label: list.label,
+      ...(parents.length > 0 && { parents }),
+      icon: getListIcon(list),
+      inactive: !list.active,
+      isDisabled: !!disabledMessage,
+      disabledMessage,
+      subRows: [],
+      data: {
+        id: list.id,
+        count: list.count,
+        owner: list.owner,
+        entityListType: list.entityListType,
+        createdAt: list.createdAt,
+        ...(parentType && { parentType }),
+      },
+    }
+  }
 
   // Helper function to sort folder nodes by original folders array order
   const sortFolderNodes = (nodes: FolderNode[]): FolderNode[] => {

@@ -218,3 +218,7 @@ export const useProjectContext = () => {
   }
   return context
 }
+
+// non-throwing variant: returns undefined when no ProjectContextProvider is mounted
+// (e.g. the cross-project UserDashboard) so callers can supply their own provider
+export const useOptionalProjectContext = () => useContext(ProjectContext)

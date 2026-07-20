@@ -14,7 +14,6 @@ import HierarchyExpandFolders from './HierarchyExpandFolders'
 import { openViewer } from '@/features/viewer'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 
 // Cell component that uses EntityIcon for proper icon/color from anatomy
 const HierarchyCell = ({ label, name, folderType }) => (
@@ -316,18 +315,10 @@ const Hierarchy = (props) => {
     handleTableKeyDown(event)
   }
 
-  const {
-    buildAddToListMenu,
-    newListMenuItem,
-    folders: foldersList,
-    buildHierarchicalMenuItems,
-  } = useEntityListsContext()
-
   // Context Menu
   // const {openContext, useCreateContextMenu} = useContextMenu()
   // context items
   const ctxMenuItems = (selected = []) => {
-    const selectedEntities = selected.map((id) => ({ entityId: id, entityType: 'folder' }))
     return [
       {
         label: 'Open in viewer',
@@ -342,14 +333,11 @@ const Hierarchy = (props) => {
         disabled: selected.length !== 1,
         hidden: !props.onOpenVersionUpload,
       },
-      buildAddToListMenu([
-        ...buildHierarchicalMenuItems(
-          foldersList,
-          selectedEntities,
-          () => false, // no icon needed in hierarchy tree
-        ),
-        newListMenuItem('folder', selectedEntities),
-      ]),
+      {
+        label: 'Add to list (deprecated)',
+        icon: 'list_alt_add',
+        disabled: true,
+      },
       {
         label: 'Detail',
         command: () => setShowDetail(true),
