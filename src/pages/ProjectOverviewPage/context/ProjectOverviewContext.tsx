@@ -36,11 +36,15 @@ import {
 // Local context and hooks
 import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
+import { useProjectOverviewStats } from '../hooks/useProjectOverviewStats'
 import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 import { ProjectOverviewContext } from './ProjectOverviewContextInstance'
+import { useAppDispatch } from '@state/store'
 
 export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewProviderProps) => {
+  const dispatch = useAppDispatch()
+
   // Get project data from the new context
   const { projectName, ...projectInfo } = useProjectContext()
   const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
@@ -256,13 +260,34 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     entityListFolderIds: entityIds.folderIds,
   })
 
+  const {
+    folderStats,
+    taskStats,
+    folderStatsLoading,
+    taskStatsLoading,
+    folderStatsError,
+    taskStatsError,
+    folderStatsArgs,
+    taskStatsArgs,
+    isUninitializedFolderStats,
+    isUninitializedTaskStats,
+  } = useProjectOverviewStats({
+    folderFilter: combinedFolderFilter.filterString,
+    taskFilter: combinedTaskFilter.filterString,
+    folderSearch: combinedFolderFilter.search,
+    taskSearch: combinedTaskFilter.search,
+    selectedFolders,
+    selectedTaskIds: rawEntityIds.taskIds,
+    showHierarchy,
+  })
+
   // DATA FETCHING
   const {
     foldersMap,
     tasksMap,
     tasksByFolderMap,
     fetchNextPage,
-    reloadTableData,
+    onSyncData,
     isLoadingAll,
     isLoadingMore,
     loadingTasks,
@@ -295,8 +320,14 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     modules,
     skipLinks,
     showComments,
+    isLoadingViews,
     onCollapseAll: () => setExpanded({}),
     visibleEntityIds,
+    folderStatsArgs,
+    taskStatsArgs,
+    folderStatsUninitialized: isUninitializedFolderStats,
+    taskStatsUninitialized: isUninitializedTaskStats,
+    dispatch,
   })
 
   // combine foldersMap and tasksMap into a single map
@@ -315,6 +346,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         error,
         softError, // shows a warning banner but doesn't block the table from rendering
         softErrorAction,
+        // @ts-expect-error: projectInfo is typed as ProjectInfo | undefined, but the context expects ProjectInfo. This is safe because we check isInitialized above.
         projectInfo,
         attribFields: scopedAttribFields,
         users,
@@ -324,7 +356,13 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         entitiesMap,
         tasksByFolderMap,
         fetchNextPage,
-        reloadTableData,
+        onSyncData,
+        folderStats,
+        taskStats,
+        folderStatsLoading,
+        taskStatsLoading,
+        folderStatsError,
+        taskStatsError,
         taskGroups,
         // Separate task and folder filters
         taskFilters: {

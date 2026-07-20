@@ -15,7 +15,7 @@ import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTa
 import { parseAndFormatName } from '@shared/util'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import { isEmpty } from 'lodash'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 
 export type NewEntityType = 'folder' | 'task'
 
@@ -53,6 +53,7 @@ interface NewEntityProviderProps {
 
 export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }) => {
   const { projectName, ...projectInfo } = useProjectContext()
+  const { getFolderById } = useProjectFoldersContext()
   const { findNonInheritedValues, attribFields, getEntityById } = useProjectTableContext()
   const { attrib: projectAttrib = {}, statuses } = projectInfo || {}
 
@@ -191,11 +192,9 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     const folderIds = new Set<string>()
     for (const operation of operations) {
       if (operation.entityType === 'folder') {
-        if (!operation.data?.parentId) {
-          console.warn('Folder operation without parentId:', operation)
-          continue // Skip folders without parentId
+        if (operation.data?.parentId) {
+          folderIds.add(operation.data.parentId)
         }
-        folderIds.add(operation.data.parentId)
       } else if (operation.entityType === 'task') {
         if (!operation.data?.folderId) {
           console.warn('Task operation without folderId:', operation)
@@ -386,8 +385,9 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     const paths: Record<string, string> = {}
     for (const folderId of selectedFolderIds) {
       const entity = getEntityById(folderId)
-      if (entity?.entityType === 'folder') {
-        paths[entity.id] = entity.path
+      const folder = entity?.entityType === 'folder' ? entity : getFolderById(folderId)
+      if (folder) {
+        paths[folder.id] = folder.path
       }
     }
 

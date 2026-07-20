@@ -4,7 +4,6 @@ import { Icon } from '@ynput/ayon-react-components'
 import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import SearchingLoadingItems from './SearchingLoadingItems'
-import { useProjectContext } from '@shared/context'
 import { EntityIcon } from '@shared/components/EntityIcon/EntityIcon'
 
 export type LinkSearchType = 'search' | 'picker' | null
@@ -26,13 +25,6 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
 }) => {
   const [search, setSearch] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const project = useProjectContext()
-
-  const anatomyForIcons = {
-    folderTypes: project?.folderTypes || [],
-    taskTypes: project?.taskTypes || [],
-    productTypes: project?.productTypes || [],
-  }
 
   const {
     data: searchData,
@@ -127,9 +119,7 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
                   tabIndex={0}
                   {...getItemProps(flatIndex)}
                 >
-                  <EntityIcon
-                   entity={entity}
-                  />
+                  <EntityIcon entity={entity} />
                   <span className="label">
                     {entity.parents?.map((part, index) => (
                       <Fragment key={index}>

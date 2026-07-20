@@ -1,7 +1,8 @@
 import { SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import { FC, useCallback, useMemo } from 'react'
 import VPSearchFilter from './VPSearchFilter'
-import { CustomizeButton, TableGridSwitch } from '@shared/components'
+import { CustomizeButton, SyncButton, TableGridSwitch } from '@shared/components'
+import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContext'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
 import { useGetGroupedFields, useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import styled from 'styled-components'
@@ -32,6 +33,7 @@ const GroupByDropdown = styled(SortingDropdown)<{
 `
 
 const VPToolbar: FC = () => {
+  const { onSyncData } = useVersionsDataContext()
   const { showGrid, onUpdateShowGrid, viewGroupBy, onUpdateViewGroupBy, columns, onUpdateColumns } =
     useVPViewsContext()
   const { sorting } = useColumnSettingsContext()
@@ -122,6 +124,10 @@ const VPToolbar: FC = () => {
   return (
     <Toolbar>
       <VPSearchFilter />
+      <SyncButton
+        topics={['entity.version.created', 'entity.product.created']}
+        onSync={onSyncData}
+      />
       <GroupByDropdown
         $disableSortOrder={!viewGroupBy || viewGroupBy === 'hierarchy'}
         title="Group by"
