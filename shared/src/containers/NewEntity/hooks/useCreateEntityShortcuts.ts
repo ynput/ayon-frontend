@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
-import { NewEntityType } from '@context/NewEntityContext'
-import { useMenuContext } from '@shared/context/MenuContext'
-import { useCellEditing } from '@shared/containers'
+import type { NewEntityType } from '../context/NewEntityContext'
+import { useMenuContext } from '@shared/context'
+import { useCellEditing } from '@shared/containers/ProjectTreeTable'
 
 interface EntityOption {
   label: string

@@ -17,7 +17,7 @@ import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
 import { CustomizeButton, buildScopes } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
-import NewEntity from '@components/NewEntity/NewEntity'
+import { NewEntity } from '@shared/containers/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
 import {
   getCellId,

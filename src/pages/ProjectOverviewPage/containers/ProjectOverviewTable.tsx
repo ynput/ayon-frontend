@@ -9,7 +9,7 @@ import {
   useColumnSettingsContext,
   ProjectTreeTable,
 } from '@shared/containers/ProjectTreeTable'
-import { useNewEntityContext } from '@context/NewEntityContext'
+import { useNewEntityContext } from '@shared/containers/NewEntity'
 import { useProjectContext, usePowerpack } from '@shared/context'
 import { useViewsContext } from '@shared/containers'
 import {

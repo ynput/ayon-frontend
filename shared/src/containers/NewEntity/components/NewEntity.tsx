@@ -7,6 +7,7 @@ import {
   Icon,
   InputSwitch,
   SaveButton,
+  ShortcutTag,
   Spacer,
   Toolbar,
 } from '@ynput/ayon-react-components'
@@ -19,7 +20,6 @@ import {
   getPlatformShortcutKey,
   KeyMode,
 } from '@shared/util'
-import ShortcutWidget from '@components/ShortcutWidget'
 import {
   EditorTaskNode,
   MatchingFolder,
@@ -28,11 +28,11 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { type OperationResponseModel, type ProjectModel } from '@shared/api'
-import FolderSequence from '@components/FolderSequence/FolderSequence'
-import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
-import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
+import FolderSequence from './FolderSequence'
+import { EntityForm, NewEntityType, useNewEntityContext } from '../context/NewEntityContext'
+import useCreateEntityShortcuts from '../hooks/useCreateEntityShortcuts'
 import { useSlicerContext } from '@shared/containers/Slicer'
-import NewEntityForm, { InputLabel, InputsContainer } from '@components/NewEntity/NewEntityForm.tsx'
+import { NewEntityForm, InputLabel, InputsContainer } from './NewEntityForm'
 import { toast } from 'react-toastify'
 import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 
@@ -94,7 +94,7 @@ export interface NewEntityProps {
   onNewEntities?: (ops: OperationResponseModel[], stayOpen: boolean) => void
 }
 
-const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
+export const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
   const { ...projectInfo } = useProjectContext()
   const {
     entityType,
@@ -415,7 +415,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
           <StyledCreateItem>
             <Icon icon={option.icon} />
             <span className="label">{option.label}</span>
-            <ShortcutWidget>{option.shortcut}</ShortcutWidget>
+            <ShortcutTag>{option.shortcut}</ShortcutTag>
           </StyledCreateItem>
         )}
         itemStyle={{
@@ -505,6 +505,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
                 nesting={false}
                 onChange={handleSeqChange}
                 isRoot={isRoot}
+                // @ts-ignore
                 typeSelectRef={typeSelectRef}
                 // @ts-ignore
                 onLastInputKeydown={(e) => handleKeyDown(e, true)}
@@ -540,8 +541,6 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     </>
   )
 }
-
-export default NewEntity
 
 // Helper function to generate label based on entity type and selected subtype
 export const generateLabel = (

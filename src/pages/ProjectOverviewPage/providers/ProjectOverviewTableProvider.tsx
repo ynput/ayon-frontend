@@ -9,7 +9,7 @@ import {
   useColumnSettingsContext,
   useGroupCounts,
 } from '@shared/containers/ProjectTreeTable'
-import { NewEntityProvider } from '@context/NewEntityContext'
+import { NewEntityProvider } from '@shared/containers/NewEntity'
 import { usePowerpack, useSubtasksModulesContext } from '@shared/context'
 import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
 import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'

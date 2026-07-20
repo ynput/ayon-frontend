@@ -1,4 +1,4 @@
-const getSequence = (start: string, next: string, length: number): string[] => {
+export const getSequence = (start: string, next: string, length: number): string[] => {
   // Extract the numeric parts from the 'start' and 'next' strings
   const startMatch = start.match(/\d+$/)
   const nextMatch = next.match(/\d+$/)
@@ -26,5 +26,3 @@ const getSequence = (start: string, next: string, length: number): string[] => {
 
   return sequence
 }
-
-export default getSequence

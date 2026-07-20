@@ -6,12 +6,58 @@ import {
   InputText,
   Spacer,
 } from '@ynput/ayon-react-components'
+import clsx from 'clsx'
 import * as Styled from './FolderSequence.styled'
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import getSequence from '@helpers/getSequence'
-import TypeEditor from '@components/NewEntity/TypeEditor'
+import React, { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { getSequence } from '../util/getSequence'
+import TypeEditor from './TypeEditor'
 
-function formatSeq(arr, maxLength, prefix = '') {
+interface SequenceTypeOption {
+  name: string
+  shortName?: string
+  [key: string]: unknown
+}
+
+type SequenceEntityType = 'folder' | 'task'
+
+interface SequenceValues {
+  id?: string
+  entityType?: SequenceEntityType
+  base?: string
+  increment?: string
+  length?: number
+  type?: string
+  prefix?: boolean
+  prefixDepth?: number
+  parentBases?: string[]
+  [key: string]: unknown
+}
+
+interface SequenceChangeEvent {
+  preventDefault?: () => void
+  target: {
+    value: string | number | boolean
+    id: string
+  }
+}
+
+interface FolderSequenceProps extends SequenceValues {
+  onChange: (value: SequenceValues, id?: string | null, entityType?: SequenceEntityType) => void
+  parentId?: string | null
+  children?: ReactNode
+  depth?: number
+  onNew?: (parentId: string | null, entityType?: SequenceEntityType) => void
+  index?: number
+  nesting?: boolean
+  isRoot?: boolean
+  parentLabel?: string
+  prefixDisabled?: boolean
+  typeSelectRef?: React.RefObject<HTMLElement>
+  onLastInputKeydown?: (event: React.KeyboardEvent<HTMLInputElement>) => void
+  folders: SequenceTypeOption[]
+}
+
+function formatSeq(arr: string[], maxLength: number, prefix = ''): string {
   if (arr.length <= maxLength) {
     return arr.map((item) => prefix + item).join(', ')
   } else {
@@ -21,7 +67,12 @@ function formatSeq(arr, maxLength, prefix = '') {
   }
 }
 
-function getDefaultIncrements(type) {
+function getDefaultIncrements(type?: string): {
+  base: string
+  increment: string
+  length: number
+  difference: number
+} {
   switch (type) {
     case 'Shot':
       return {
@@ -40,7 +91,7 @@ function getDefaultIncrements(type) {
   }
 }
 
-const FolderSequence = ({
+const FolderSequence: React.FC<FolderSequenceProps> = ({
   onChange,
   parentId = null,
   children,
@@ -56,32 +107,33 @@ const FolderSequence = ({
   folders,
   ...props
 }) => {
-  const { base, increment, length, type, id, entityType, prefix, prefixDepth, parentBases } = props
+  const { base, increment, length, type, id, prefix, prefixDepth, parentBases } = props
+  const entityType = props.entityType as SequenceEntityType | undefined
 
   const disablePrefix = (!nesting && isRoot) || prefixDisabled
 
-  let initSeq = []
+  let initSeq: string[] = []
   if (base && increment && length) {
     initSeq = getSequence(base, increment, length)
   }
 
-  const [sequence, setSequence] = useState(initSeq)
+  const [sequence, setSequence] = useState<string[]>(initSeq)
 
-  const baseRef = useRef(null)
-  const prefixRef = useRef(null)
-  const handleChange = (e) => {
+  const baseRef = useRef<HTMLInputElement>(null)
+  const prefixRef = useRef<HTMLInputElement>(null)
+  const handleChange = (e: SequenceChangeEvent): void => {
     e?.preventDefault && e?.preventDefault()
 
     let { value, id: fieldId } = e.target
 
     if (fieldId === 'prefixDepth') {
       // convert to number
-      value = parseInt(value, 10)
+      value = parseInt(String(value), 10)
     }
 
     const newValue = { [fieldId]: value }
 
-    const newState = { ...props, ...newValue }
+    const newState: SequenceValues = { ...props, ...newValue }
 
     // if changing type, look to change base and increment
     if (fieldId === 'type') {
@@ -101,7 +153,7 @@ const FolderSequence = ({
         for (const key in option) {
           if (
             typeof option[key] === 'string' &&
-            newState.base.toLowerCase().includes(option[key].toLowerCase())
+            newState.base?.toLowerCase().includes((option[key] as string).toLowerCase())
           ) {
             matches = true
             break
@@ -116,7 +168,7 @@ const FolderSequence = ({
       // add new state to new value
 
       // get default increments
-      const suffixes = getDefaultIncrements(value)
+      const suffixes = getDefaultIncrements(String(value))
 
       newState.base = newName + suffixes.base
       newState.increment = newName + suffixes.increment
@@ -127,8 +179,9 @@ const FolderSequence = ({
       // get default increments
       const suffixes = getDefaultIncrements(newState.type)
       // split value into prefix (letter) and suffix (number)
-      const prefix = value.replace(/[^a-zA-Z]/g, '')
-      const suffix = value.replace(/[^0-9]/g, '')
+      const stringValue = String(value)
+      const prefix = stringValue.replace(/[^a-zA-Z]/g, '')
+      const suffix = stringValue.replace(/[^0-9]/g, '')
       // get integer value of suffix and padding
       const suffixInt = parseInt(suffix, 10)
       const suffixPad = suffix.length
@@ -139,7 +192,11 @@ const FolderSequence = ({
       newState.increment = newIncrement.replace('NaN', '')
     }
 
-    onChange(newState, id, entityType)
+    onChange(
+      newState,
+      typeof id === 'string' ? id : undefined,
+      entityType as SequenceEntityType | undefined,
+    )
 
     if (newState.base && newState.increment && newState.length) {
       // calculate the sequence
@@ -151,12 +208,12 @@ const FolderSequence = ({
     if (fieldId === 'type') {
       if (disablePrefix) {
         setTimeout(() => {
-          baseRef.current.focus()
-          baseRef.current.select()
+          baseRef.current?.focus()
+          baseRef.current?.select()
         }, 50)
       } else {
         setTimeout(() => {
-          prefixRef.current.focus()
+          prefixRef.current?.focus()
         }, 50)
       }
     }
@@ -178,7 +235,7 @@ const FolderSequence = ({
 
   const sequenceString = formatSeq(sequence, 5, prefix ? parentLabel : undefined)
 
-  const seqRef = useRef(null)
+  const seqRef = useRef<HTMLDivElement>(null)
   const [seqWidth, setSeqWidth] = useState(0)
   useLayoutEffect(() => {
     if (seqRef.current) {
@@ -189,11 +246,8 @@ const FolderSequence = ({
   if (entityType === 'task') {
     return (
       <Styled.TaskContainer
-        $isNew={isNew}
-        $index={index}
-        $depth={depth}
-        className="task"
-        $nesting={nesting}
+        className={clsx('task', { 'is-new': isNew, nesting, 'no-nesting': !nesting })}
+        style={{ zIndex: 100 - (depth ?? 0) - (index ?? 0) }}
       >
         <Styled.SequenceForm className="form">
           <Icon icon="task_alt" />
@@ -202,7 +256,7 @@ const FolderSequence = ({
           <label>Type</label>
           <TypeEditor
             value={[type]}
-            onChange={(v) => handleChange({ target: { value: v, id: 'type' } })}
+            onChange={(v: string) => handleChange({ target: { value: v, id: 'type' } })}
             options={folders}
             style={{ width: 160 }}
             align="right"
@@ -229,8 +283,8 @@ const FolderSequence = ({
   }
 
   return (
-    <Styled.FolderSequenceWrapper $depth={depth} $index={index} className="folder">
-      <Styled.RowWrapper $depth={depth} className="seq">
+    <Styled.FolderSequenceWrapper className="folder">
+      <Styled.RowWrapper className="seq" style={{ zIndex: 100 - (depth ?? 0) - (index ?? 0) }}>
         {nesting && (
           <Styled.AddButtons className="buttons">
             <Styled.SequenceForm>
@@ -238,7 +292,7 @@ const FolderSequence = ({
               {depth === 0 && (
                 <Button
                   icon={'south'}
-                  onClick={() => onNew(null)}
+                  onClick={() => onNew?.(null)}
                   label="Root"
                   title="add root folder"
                 />
@@ -246,28 +300,31 @@ const FolderSequence = ({
               {/* provide it's parents id for new sibling */}
               <Button
                 icon={'create_new_folder'}
-                onClick={() => onNew(id, 'folder')}
-                label={depth === 0 && 'Folder'}
+                onClick={() => id && onNew?.(id, 'folder')}
+                label={depth === 0 ? 'Folder' : undefined}
                 title="add nested folder"
               />
             </Styled.SequenceForm>
             {/* provide it's own id for new child */}
             <Button
               icon={'add_task'}
-              onClick={() => onNew(id, 'task')}
-              label={depth === 0 && 'Task'}
+              onClick={() => id && onNew?.(id, 'task')}
+              label={depth === 0 ? 'Task' : undefined}
               title="add nested task"
               style={{ width: 'max-content', marginLeft: 'auto' }}
             />
           </Styled.AddButtons>
         )}
-        <Styled.SequenceContainer $isNew={isNew} $nesting={nesting} ref={seqRef}>
+        <Styled.SequenceContainer
+          className={clsx({ 'is-new': isNew, 'no-nesting': !nesting })}
+          ref={seqRef}
+        >
           <Styled.SequenceForm className="form folder">
             <Styled.InputColumn>
               <label>Type</label>
               <TypeEditor
                 value={[type]}
-                onChange={(v) => handleChange({ target: { value: v, id: 'type' } })}
+                onChange={(v: string) => handleChange({ target: { value: v, id: 'type' } })}
                 options={folders}
                 style={{ width: 160 }}
                 align="right"
@@ -365,7 +422,10 @@ const FolderSequence = ({
         </Styled.SequenceContainer>
       </Styled.RowWrapper>
       {nesting && (
-        <Styled.Children className="children" style={{ width: seqWidth }}>
+        <Styled.Children
+          className="children"
+          style={{ width: seqWidth, zIndex: 99 - (depth ?? 0) - (index ?? 0) }}
+        >
           {children}
         </Styled.Children>
       )}

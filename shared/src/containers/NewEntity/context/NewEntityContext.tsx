@@ -1,8 +1,8 @@
 import React, { createContext, useState, ReactNode, useContext } from 'react'
 import { getEntityId } from '@shared/util'
 import { toast } from 'react-toastify'
-import getSequence from '@helpers/getSequence'
-import { generateLabel } from '@components/NewEntity/NewEntity'
+import { getSequence } from '../util/getSequence'
+import { generateLabel } from '../components/NewEntity'
 import {
   PatchOperation,
   useUpdateOverviewEntitiesMutation,
@@ -16,6 +16,7 @@ import { parseAndFormatName } from '@shared/util'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import { isEmpty } from 'lodash'
 import { useProjectContext } from '@shared/context'
+import { NewEntityContext } from './NewEntityContextInstance'
 
 export type NewEntityType = 'folder' | 'task'
 
@@ -33,7 +34,7 @@ interface SequenceForm {
   prefixDepth: number
 }
 
-interface NewEntityContextProps {
+export interface NewEntityContextType {
   config: EntityNaming
   entityType: NewEntityType | null
   setEntityType: React.Dispatch<React.SetStateAction<NewEntityType | null>>
@@ -44,8 +45,6 @@ interface NewEntityContextProps {
   onCreateNew: (selectedFolderIds: string[]) => Promise<OperationResponseModel[]>
   onOpenNew: (type: NewEntityType, config?: { isSequence?: boolean }) => void
 }
-
-export const NewEntityContext = createContext<NewEntityContextProps | undefined>(undefined)
 
 interface NewEntityProviderProps {
   children: ReactNode
@@ -176,6 +175,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     data: {
       id: string
       name: string
+      label?: string
       folderId?: string
       parentId?: string
       folderType?: string
@@ -294,20 +294,24 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
               ...operation.data,
               entityId: operation.data.id,
               entityType: 'task',
-              taskType: operation.data.taskType,
-              folderId: operation.data.folderId,
+              label: operation.data.label || operation.data.name,
+              taskType: operation.data.taskType || '',
+              folderId: operation.data.folderId || '',
               active: true,
               assignees: operation.data.assignees || [],
               projectName,
               status: operation.data.status || firstStatusForTask,
               folder: {
                 path: operation.data.folderId ? paths[operation.data.folderId] : '',
+                folderType: '',
               },
               tags: [],
               ownAttrib: [],
               path: '',
               updatedAt: new Date().toISOString(),
               createdAt: new Date().toISOString(),
+              thumbnailHash: '',
+              subtasks: [],
               attrib: filteredAttribs,
               hasReviewables: false, // Add required field
               links: [], // Add empty links object
@@ -336,7 +340,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
 
   const [createEntities] = useUpdateOverviewEntitiesMutation()
 
-  const onCreateNew: NewEntityContextProps['onCreateNew'] = async (selectedFolderIds) => {
+  const onCreateNew: NewEntityContextType['onCreateNew'] = async (selectedFolderIds) => {
     // first check name and entityType valid
     if (!entityType || !entityForm.label || !entityForm.name) {
       toast.error('Please provide a valid name and select an entity type')
@@ -404,8 +408,8 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
         return res.operations
       } else {
         throw {
-          // @ts-expect-error - res.operations may not be typed
           error:
+            // @ts-expect-error - res.operations may not be typed
             res?.operations?.[0]?.error ||
             'An error occurred while creating the entity. Please try again.',
         }
@@ -417,7 +421,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     }
   }
 
-  const onOpenNew: NewEntityContextProps['onOpenNew'] = (type, c) => {
+  const onOpenNew: NewEntityContextType['onOpenNew'] = (type, c) => {
     // set entityType
     setEntityType(type)
     // set any default values
@@ -445,7 +449,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     setEntityForm(initData)
   }
 
-  const value: NewEntityContextProps = {
+  const value: NewEntityContextType = {
     config,
     entityType,
     setEntityType,
