@@ -25,7 +25,7 @@ import { getGroupQueries } from '../utils/getGroupQueries'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { useGetEntityLinksQuery } from '@shared/api'
-import { OnSyncDataCallback, useAutoSyncSettings, useProjectFoldersContext } from '@shared/context'
+import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
 import { debounce } from 'lodash'
 import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
@@ -113,7 +113,6 @@ export const useFetchOverviewData = ({
   dispatch,
 }: Params): useFetchOverviewDataData => {
   const { isLoading: isLoadingModules } = modules
-  const [autoSyncSettings] = useAutoSyncSettings()
 
   const {
     folders,
