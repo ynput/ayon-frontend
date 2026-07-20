@@ -40,6 +40,8 @@ export const Slicer: FC<SlicerProps> = ({
     expanded,
     onExpandedChange,
     isViewSyncPending,
+    onOpenViewer,
+    onAddToList: contextOnAddToList,
   } = useSlicerContext()
 
   const {
@@ -51,7 +53,11 @@ export const Slicer: FC<SlicerProps> = ({
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({ sliceFields, entityTypes })
 
-  const hierarchyContextMenu = useHierarchyContextMenuItems(onAddToList, sliceMap)
+  const hierarchyContextMenu = useHierarchyContextMenuItems(
+    onAddToList || contextOnAddToList,
+    sliceMap,
+    onOpenViewer,
+  )
   const rowContextMenuBuilders =
     sliceType === 'hierarchy' ? hierarchyContextMenu.rowContextMenuBuilders : []
 

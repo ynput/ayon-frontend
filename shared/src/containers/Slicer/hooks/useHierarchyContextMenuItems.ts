@@ -3,8 +3,6 @@ import { SimpleTableRow, SimpleTableRowContextMenuBuilder } from '@shared/contai
 import { ContextMenuItemType } from '@shared/containers/ContextMenu'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import { useCallback, useMemo, useState } from 'react'
-import { useAppDispatch } from '@state/store'
-import { openViewer } from '@state/viewer'
 import { useUpdateOverviewEntitiesMutation } from '@shared/api'
 import {
   useProjectContext,
@@ -26,13 +24,18 @@ export type OnAddToList = (
   selectedRows: string[],
 ) => ContextMenuItemType | ContextMenuItemType[] | undefined
 
-export const useHierarchyContextMenuItems = (onAddToList?: OnAddToList, entityMap?: SliceMap) => {
+export type OnOpenViewer = (row: SimpleTableRow, projectName: string) => void
+
+export const useHierarchyContextMenuItems = (
+  onAddToList?: OnAddToList,
+  entityMap?: SliceMap,
+  onOpenViewer?: OnOpenViewer,
+) => {
   const { onOpenNew } = useNewEntityContext()
   const { projectName } = useProjectContext()
   const { setSelectedEntity } = useDetailsPanelEntityContext()
   const { openMoveDialog } = useMoveEntityContext()
   const versionUpload = useOptionalVersionUploadContext()
-  const dispatch = useAppDispatch()
   const [updateEntities] = useUpdateOverviewEntitiesMutation()
   const { deleteEntities } = useDeleteEntitiesContext()
   const [renamingRow, setRenamingRow] = useState<SimpleTableRow | null>(null)
@@ -57,16 +60,7 @@ export const useHierarchyContextMenuItems = (onAddToList?: OnAddToList, entityMa
         })
       },
       onRename: (row: SimpleTableRow) => setRenamingRow(row),
-      onOpenViewer: (row: SimpleTableRow) => {
-        const isTask = row.data?.entityType === 'task'
-        dispatch(
-          openViewer({
-            projectName,
-            quickView: true,
-            ...(isTask ? { taskId: row.id } : { folderId: row.id }),
-          }),
-        )
-      },
+      onOpenViewer: (row: SimpleTableRow) => onOpenViewer?.(row, projectName),
       onUploadVersion: (row: SimpleTableRow) => {
         const isTask = row.data?.entityType === 'task'
         const folderId = isTask ? row.parentId || row.data?.parentId : row.id
@@ -101,8 +95,8 @@ export const useHierarchyContextMenuItems = (onAddToList?: OnAddToList, entityMa
       },
     }),
     [
-      dispatch,
       onAddToList,
+      onOpenViewer,
       openMoveDialog,
       projectName,
       setSelectedEntity,
@@ -151,6 +145,7 @@ export const useHierarchyContextMenuItems = (onAddToList?: OnAddToList, entityMa
         label: 'Open in viewer',
         icon: 'play_circle',
         command: () => actions.onOpenViewer(row.original),
+        hidden: !onOpenViewer,
       }),
       (_e, { row }) => ({
         label: 'Expand all children',

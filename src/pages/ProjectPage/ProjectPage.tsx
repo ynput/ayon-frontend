@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
+import { openViewer } from '@state/viewer'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
@@ -56,7 +57,7 @@ import { NewEntity, NewEntityProvider } from '@shared/containers/NewEntity'
 import { MoveEntityProvider } from '@shared/context'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
-import { OnAddToList } from '@shared/containers/Slicer'
+import { OnAddToList, OnOpenViewer } from '@shared/containers/Slicer'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
@@ -103,11 +104,13 @@ const SlicerWithViews = ({
   page,
   projectName,
   onAddToList,
+  onOpenViewer,
 }: {
   children: React.ReactNode
   page: string
   projectName: string
   onAddToList?: OnAddToList
+  onOpenViewer?: OnOpenViewer
 }) => {
   const { viewSettings, isLoadingViews } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
@@ -119,6 +122,8 @@ const SlicerWithViews = ({
       viewSettings={viewSettings}
       isLoadingViews={isLoadingViews}
       updateViewSettings={updateViewSettings}
+      onOpenViewer={onOpenViewer}
+      onAddToList={onAddToList}
     >
       {children}
     </SlicerProvider>
@@ -135,6 +140,21 @@ const ProjectSlicerWithViews = ({
   projectName: string
 }) => {
   const { buildReviewContextMenu } = useEntityListsContext()
+  const dispatch = useAppDispatch()
+
+  const onOpenViewer = useCallback<OnOpenViewer>(
+    (row, currentProjectName) => {
+      const isTask = row.data?.entityType === 'task'
+      dispatch(
+        openViewer({
+          projectName: currentProjectName,
+          quickView: true,
+          ...(isTask ? { taskId: row.id } : { folderId: row.id }),
+        }),
+      )
+    },
+    [dispatch],
+  )
 
   const onAddToList = useMemo<OnAddToList>(
     () => (row: SimpleTableRow, selectedRows: string[]) => {
@@ -146,7 +166,12 @@ const ProjectSlicerWithViews = ({
   )
 
   return (
-    <SlicerWithViews page={page} projectName={projectName} onAddToList={onAddToList}>
+    <SlicerWithViews
+      page={page}
+      projectName={projectName}
+      onAddToList={onAddToList}
+      onOpenViewer={onOpenViewer}
+    >
       {children}
     </SlicerWithViews>
   )
