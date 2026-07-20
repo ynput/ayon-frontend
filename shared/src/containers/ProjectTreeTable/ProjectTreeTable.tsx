@@ -65,6 +65,7 @@ import { useMoveEntities } from './hooks/useMoveEntities'
 import { useProjectDataContext } from '@shared/containers'
 
 // Utility function imports
+import { isGroupId } from './hooks/useBuildGroupByTableData'
 import { CellId, getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
@@ -630,6 +631,25 @@ export const ProjectTreeTable = ({
   // Full skeleton only while the remote module itself is loading (no cell to
   // render yet). Stats loading is handled per-cell so the footer stays clickable.
   const footerModuleLoading = isFooterModuleLoading || !isFooterLoaded
+
+  // Unique selected entities for the footer's "N selected" count, deduped by
+  // entityId (group headers / load-more rows excluded). Marked cells win: when
+  // any cell is selected we count only those and ignore checkbox row-selection;
+  // whole-row selection counts on its own.
+  const selectedRowCount = useMemo(() => {
+    const cellEntities = new Set<string>()
+    const rowEntities = new Set<string>()
+    for (const cellId of selectedCells) {
+      const { rowId, colId } = parseCellId(cellId) || {}
+      if (!rowId || isGroupId(rowId)) continue
+
+      const id = getEntityById(rowId)?.entityId
+      if (!id) continue
+      if (colId === ROW_SELECTION_COLUMN_ID) rowEntities.add(id)
+      else cellEntities.add(id)
+    }
+    return cellEntities.size || rowEntities.size
+  }, [selectedCells, getEntityById])
   // only show the upsell once the license check resolves, so licensed users
   // don't see the bolt flash before the addon loads
   // const showSummaryPowerFeature = !isLicenseLoading && !powerLicense
@@ -825,6 +845,7 @@ export const ProjectTreeTable = ({
                     mainCountLabels={mainCountLabels}
                     fieldOptions={options}
                     parentScopeApplicable={parentScopeApplicable}
+                    selectedCount={selectedRowCount}
                   />
                 )}
                 // Power feature cell for community users (hidden for now), shows a bolt hint in the name column:

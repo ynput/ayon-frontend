@@ -191,7 +191,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
           />
         ) : (
           <div className="text" {...pt?.text}>
-            {parents && <span className="path">{parents.join(' / ')} / </span>}
+            {parents && depth === 0 && <span className="path">{parents.join(' / ')} / </span>}
             <span className="value">{value}</span>
           </div>
         )}

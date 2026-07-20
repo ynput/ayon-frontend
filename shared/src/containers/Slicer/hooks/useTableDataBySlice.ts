@@ -153,7 +153,7 @@ const useTableDataBySlice = ({
     isLoadingHierarchy ||
     isLoadingProject ||
     isUsersLoading ||
-    isLoadingExtraSlices ||
+    (isLoadingExtraSlices && sliceType !== 'hierarchy') ||
     isLoadingAttribs
 
   const builtInSlices: Record<SliceType, SliceData> = {

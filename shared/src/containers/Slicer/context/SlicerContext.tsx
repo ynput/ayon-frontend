@@ -14,7 +14,8 @@ import type { ProjectModel, Assignees, AttributeModel, ProductType } from '@shar
 import { SlicerDropdownFallbackProps } from '../components/SlicerDropdownFallback'
 import { DropdownRef } from '@ynput/ayon-react-components'
 import { PinnedSlice, SliceTypeField } from '../types'
-import { useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
+import type { ViewSettings } from '@shared/containers/Views'
+import type { UpdateViewSettingsFn } from '@shared/containers/Views/utils/viewUpdateHelper'
 import { SlicerContext } from './SlicerContextInstance'
 import { useSlicerRemotes } from '../hooks/useSlicerRemotes'
 import { useSlicerRowSelection } from '../hooks/useSlicerRowSelection'
@@ -102,13 +103,20 @@ interface SlicerProviderProps {
   onSliceTypeChange?: OnSliceTypeChange
   page: string
   projectName: string
+  viewSettings: ViewSettings | undefined
+  isLoadingViews: boolean
+  updateViewSettings: UpdateViewSettingsFn
 }
 
-export const SlicerProvider = ({ children, page, projectName, ...props }: SlicerProviderProps) => {
-  const { viewSettings, isLoadingViews } = useViewsContext()
-  // Get view update helper
-  const { updateViewSettings } = useViewUpdateHelper()
-
+export const SlicerProvider = ({
+  children,
+  page,
+  projectName,
+  viewSettings,
+  isLoadingViews,
+  updateViewSettings,
+  ...props
+}: SlicerProviderProps) => {
   // @ts-expect-error - sliceType can be on a view
   const sliceType = props.sliceType ?? viewSettings?.sliceType ?? 'hierarchy'
 

@@ -20,6 +20,30 @@ export const parseFilename = (filename: string) => {
   }
 }
 
+const getUploadErrorMessage = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const responseData = error.response?.data
+    if (typeof responseData === 'string' && responseData) {
+      return responseData
+    }
+
+    if (responseData && typeof responseData === 'object' && 'detail' in responseData) {
+      const detail = responseData.detail
+      if (typeof detail === 'string' && detail) {
+        return detail
+      }
+    }
+
+    return error.message || error.response?.statusText || 'Unknown upload error'
+  }
+
+  if (error instanceof Error) {
+    return error.message
+  }
+
+  return typeof error === 'string' ? error : 'Unknown upload error'
+}
+
 export interface UseReviewablesUploadProps {
   projectName: string | null
   versionId?: string | null
@@ -111,20 +135,18 @@ export const useReviewablesUpload = ({
         handleRemoveUpload(parseFilename(file.name))
       }
 
-      const errorHandler = (file: File) => (error: any) => {
+      const errorHandler = (file: File) => (error: unknown) => {
         if (!reviewableVersionId) return
         console.error(`Upload failed for ${file.name}: ${error}`)
-        toast.error(`Failed to upload file: ${file.name}`)
         // add error to the file
         setUploads((uploads) => {
           // current uploads for reviewableVersionId
           const currentUploads = uploads[reviewableVersionId] || []
           const updatedUploads = currentUploads.map((upload) => {
             if (upload.name !== parseFilename(file.name)) return upload
-            console.log(error)
             return {
               ...upload,
-              error: error.response || error.message,
+              error: getUploadErrorMessage(error),
             }
           })
 
@@ -181,7 +203,10 @@ export const useReviewablesUpload = ({
           return axios
             .post(url, file, { headers, onUploadProgress: progressHandler(file) })
             .then(successHandler(file))
-            .catch(errorHandler(file))
+            .catch((error) => {
+              errorHandler(file)(error)
+              throw error
+            })
         })
 
         // Wait for all uploads to complete
@@ -192,7 +217,8 @@ export const useReviewablesUpload = ({
       } catch (error) {
         // something went wrong with everything, EEEEK!
         console.error(error)
-        toast.error('Failed to upload file/s')
+        toast.error(`Failed to upload file/s: ${getUploadErrorMessage(error)}`)
+        throw error
       }
     },
     [

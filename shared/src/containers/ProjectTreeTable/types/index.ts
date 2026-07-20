@@ -55,4 +55,6 @@ export interface SummaryCellContentProps {
   fieldOptions?: BuiltInFieldOptions
   // false when no parent entity (folder/product) is on screen; addon hides + disables the parent scope
   parentScopeApplicable?: boolean
+  // unique entity rows in the current selection; addon shows "N selected" in the main count cell
+  selectedCount?: number
 }
