@@ -6,7 +6,6 @@ import {
   useMenuContext,
   ThumbnailUploadContext,
   useDeleteEntitiesContextOptional,
-  useDetailsPanelDeleteSelection,
   isDeletableEntityType,
   type DeletableEntity,
 } from '@shared/context'
@@ -23,9 +22,6 @@ export interface DetailsPanelMoreMenuProps {
   entityLabel?: string
   projectName?: string
   selectedEntities?: SelectedEntityRef[]
-  // when set (non-empty), delete targets these instead of the panel's own entities —
-  // lets a host scope deletion to its cell selection rather than the row-selection-driven panel
-  deleteEntitiesOverride?: DeletableEntity[]
   entityListsContext?: DetailsPanelEntityListsContext
   onOpenPip?: () => void
   onOpenViewer?: (args: any) => void
@@ -65,7 +61,6 @@ export const DetailsPanelMoreMenu = ({
   entityLabel,
   projectName,
   selectedEntities = [],
-  deleteEntitiesOverride,
   entityListsContext,
   onOpenPip,
   onOpenViewer,
@@ -109,12 +104,10 @@ export const DetailsPanelMoreMenu = ({
   const canOpenViewer = !!onOpenViewer && !!viewerArgs
 
   const deleteContext = useDeleteEntitiesContextOptional()
-  // context-provided override (isolates re-renders to this menu); prop still supported
-  const deleteSelectionFromContext = useDetailsPanelDeleteSelection()
 
+  // Delete acts only on what this panel currently displays — never an outside selection,
+  // which can diverge from the panel's entity and delete the wrong thing.
   const deletableEntities = useMemo<DeletableEntity[]>(() => {
-    const override = deleteEntitiesOverride?.length ? deleteEntitiesOverride : deleteSelectionFromContext
-    if (override?.length) return override
     const source: SelectedEntityRef[] = selectedEntities.length
       ? selectedEntities
       : entityId
@@ -136,14 +129,7 @@ export const DetailsPanelMoreMenu = ({
         }
       })
       .filter((e): e is DeletableEntity => e !== null)
-  }, [
-    deleteEntitiesOverride,
-    deleteSelectionFromContext,
-    selectedEntities,
-    entityId,
-    entityType,
-    projectName,
-  ])
+  }, [selectedEntities, entityId, entityType, projectName])
 
   const canDelete = !!deleteContext && deletableEntities.length > 0
 
