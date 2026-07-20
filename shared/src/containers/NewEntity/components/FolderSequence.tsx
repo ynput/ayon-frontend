@@ -11,6 +11,7 @@ import * as Styled from './FolderSequence.styled'
 import React, { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { getSequence } from '../util/getSequence'
 import TypeEditor from './TypeEditor'
+import { newEntityDefinitions } from '../util/entityDefinitions'
 
 interface SequenceTypeOption {
   name: string
@@ -299,17 +300,17 @@ const FolderSequence: React.FC<FolderSequenceProps> = ({
               )}
               {/* provide it's parents id for new sibling */}
               <Button
-                icon={'create_new_folder'}
+                icon={newEntityDefinitions.folder.icon}
                 onClick={() => id && onNew?.(id, 'folder')}
-                label={depth === 0 ? 'Folder' : undefined}
+                label={depth === 0 ? newEntityDefinitions.folder.label : undefined}
                 title="add nested folder"
               />
             </Styled.SequenceForm>
             {/* provide it's own id for new child */}
             <Button
-              icon={'add_task'}
+              icon={newEntityDefinitions.task.icon}
               onClick={() => id && onNew?.(id, 'task')}
-              label={depth === 0 ? 'Task' : undefined}
+              label={depth === 0 ? newEntityDefinitions.task.label : undefined}
               title="add nested task"
               style={{ width: 'max-content', marginLeft: 'auto' }}
             />

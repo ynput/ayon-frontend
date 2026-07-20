@@ -1,5 +1,5 @@
 import React, { KeyboardEvent, useRef, useState } from 'react'
-import { capitalize, isEmpty } from 'lodash'
+import { isEmpty } from 'lodash'
 import {
   Dialog,
   Dropdown,
@@ -35,6 +35,7 @@ import { useSlicerContext } from '@shared/containers/Slicer'
 import { NewEntityForm, InputLabel, InputsContainer } from './NewEntityForm'
 import { toast } from 'react-toastify'
 import { useProjectContext, useProjectFoldersContext } from '@shared/context'
+import { newEntityDefinitions } from '../util/entityDefinitions'
 
 const StyledDialog = styled(Dialog)`
   .body {
@@ -204,7 +205,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities })
   const getDialogTitle = () => {
     let title = 'Add New '
     if (isRoot) title += 'Root '
-    title += capitalize(entityType || '')
+    title += entityType ? newEntityDefinitions[entityType].label : ''
     if (!isRoot) {
       if (selectedEntitiesLabels.length > 2) {
         title +=
@@ -374,7 +375,12 @@ export const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities })
     shortcut?: string
     isSequence?: boolean
   }[] = [
-    { label: 'Folder', value: 'folder', type: 'folder', icon: 'create_new_folder', shortcut: 'N' },
+    {
+      ...newEntityDefinitions.folder,
+      value: 'folder',
+      type: 'folder',
+      shortcut: 'N',
+    },
     {
       label: 'Folder sequence',
       value: 'sequence',
@@ -383,7 +389,12 @@ export const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities })
       shortcut: 'M',
       isSequence: true,
     },
-    { label: 'Task', value: 'task', type: 'task', icon: 'add_task', shortcut: 'T' },
+    {
+      ...newEntityDefinitions.task,
+      value: 'task',
+      type: 'task',
+      shortcut: 'T',
+    },
   ]
 
   // Use the keyboard shortcuts hook
@@ -456,7 +467,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities })
                 onChange={(e) => setCreateMore((e.target as HTMLInputElement).checked)}
               />
               <SaveButton
-                label={`Create ${capitalize(entityType)}`}
+                label={newEntityDefinitions[entityType].createLabel}
                 onClick={() => handleSubmit(createMore)}
                 active={!addDisabled || isSubmitting}
                 disabled={!entityForm.name || !entityForm.label}

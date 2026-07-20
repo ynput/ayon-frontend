@@ -17,8 +17,9 @@ import { useSlicerContext } from '@shared/containers/Slicer'
 import { isEmpty } from 'lodash'
 import { useProjectContext } from '@shared/context'
 import { NewEntityContext } from './NewEntityContextInstance'
+import { NewEntityType } from '../util/entityDefinitions'
 
-export type NewEntityType = 'folder' | 'task'
+export type { NewEntityType } from '../util/entityDefinitions'
 
 export interface EntityForm {
   label: string

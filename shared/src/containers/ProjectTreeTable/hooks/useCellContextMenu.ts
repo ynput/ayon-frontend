@@ -17,6 +17,7 @@ import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useMemo } from 'react'
 import { useProjectContext } from '@shared/context'
+import { newEntityDefinitions } from '@shared/containers/NewEntity'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -284,14 +285,14 @@ const useCellContextMenu = ({
 
   const createFolderItems: ContextMenuItemConstructor = (e, cell) => [
     {
-      label: 'Create folder',
-      icon: 'create_new_folder',
+      label: newEntityDefinitions.folder.createLabel,
+      icon: newEntityDefinitions.folder.icon,
       command: () => onOpenNew?.('folder'),
       hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
     },
     {
-      label: 'Create root folder',
-      icon: 'create_new_folder',
+      label: `Create root ${newEntityDefinitions.folder.label.toLowerCase()}`,
+      icon: newEntityDefinitions.folder.icon,
       command: () => {
         clearSelection()
         onOpenNew?.('folder')
@@ -301,8 +302,8 @@ const useCellContextMenu = ({
   ]
 
   const createTaskItem: ContextMenuItemConstructor = (e, cell) => ({
-    label: 'Create task',
-    icon: 'add_task',
+    label: newEntityDefinitions.task.createLabel,
+    icon: newEntityDefinitions.task.icon,
     command: () => onOpenNew?.('task'),
     hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
   })

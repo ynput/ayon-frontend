@@ -1,16 +1,21 @@
 import { FC, useState } from 'react'
-import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
+import SimpleTable, {
+  Container,
+  Header,
+  SimpleTableRowContextMenuBuilder,
+} from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from '../hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
-import { SliceType } from '@shared/containers/Slicer'
+import { SliceType, useHierarchyContextMenuItems } from '@shared/containers/Slicer'
 import { SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { RowSelectionState } from '@tanstack/react-table'
 import { SliceTypeField } from '../types'
 import { useSlicerContext } from '../context/SlicerContext'
 import styled from 'styled-components'
 import { ExpandedState } from '@tanstack/react-table'
+import { newEntityDefinitions, useNewEntityContext } from '@shared/containers/NewEntity'
 
 const DropdownSkeleton = styled.div`
   height: 28px;
@@ -48,6 +53,9 @@ export const Slicer: FC<SlicerProps> = ({
     sliceMap,
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({ sliceFields, entityTypes })
+
+  const hierarchyContextMenuBuilders = useHierarchyContextMenuItems()
+  const rowContextMenuBuilders = sliceType === 'hierarchy' ? hierarchyContextMenuBuilders : []
 
   const handleSelectionChange = (s: RowSelectionState) => {
     onRowSelectionChange?.(s)
@@ -87,6 +95,7 @@ export const Slicer: FC<SlicerProps> = ({
           isLoading={isLoadingSliceTableData || isViewSyncPending}
           forceUpdateTable={sliceType}
           globalFilter={globalFilter}
+          rowContextMenuBuilders={rowContextMenuBuilders}
         />
       </SimpleTableProvider>
     </Container>
