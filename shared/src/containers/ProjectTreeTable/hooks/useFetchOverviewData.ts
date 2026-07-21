@@ -284,7 +284,6 @@ export const useFetchOverviewData = ({
         (selectedPath) => folderPath === selectedPath || folderPath.startsWith(selectedPath + '/'),
       )
     }
-    console.log({ selectedPaths })
 
     const addExtraDataToFolder = (folder: FolderListItem) => {
       // add any extra data to folder
