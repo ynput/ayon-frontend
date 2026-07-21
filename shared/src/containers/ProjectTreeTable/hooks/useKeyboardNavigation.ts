@@ -19,12 +19,18 @@ export default function useKeyboardNavigation() {
   const { setEditingCellId, editingCellId } = useCellEditing()
   const { setSelectedEntity } = useDetailsPanelEntityContext()
 
+  const focusCellElement = useCallback(
+    (cellId: string) => {
+      focusCell(cellId)
+      requestAnimationFrame(() => document.getElementById(cellId)?.focus())
+    },
+    [focusCell],
+  )
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
-      // is target inside table or not body?
-      // NOTE: we must check for body because there is a bug that means the active element goes to body not the table td
-      if (!target?.closest('table') && !target.closest('body')) {
+      if (!target?.closest('tbody td')) {
         return
       }
 
@@ -81,7 +87,7 @@ export default function useKeyboardNavigation() {
             if (newRowId) {
               const newCellId = getCellId(newRowId, colId)
               selectCell(newCellId, e.shiftKey, e.shiftKey)
-              focusCell(newCellId)
+              focusCellElement(newCellId)
 
               // if the player is open, update with new selected cell
               if (playerOpen) {
@@ -97,7 +103,7 @@ export default function useKeyboardNavigation() {
           if (newRowId) {
             const newCellId = getCellId(newRowId, colId)
             selectCell(newCellId, e.shiftKey, e.shiftKey)
-            focusCell(newCellId)
+            focusCellElement(newCellId)
 
             // if the player is open, update with new selected cell
             if (playerOpen) {
@@ -113,7 +119,7 @@ export default function useKeyboardNavigation() {
             if (newColId) {
               const newCellId = getCellId(rowId, newColId)
               selectCell(newCellId, e.shiftKey, e.shiftKey)
-              focusCell(newCellId)
+              focusCellElement(newCellId)
             }
           }
           break
@@ -124,7 +130,7 @@ export default function useKeyboardNavigation() {
           if (newColId) {
             const newCellId = getCellId(rowId, newColId)
             selectCell(newCellId, e.shiftKey, e.shiftKey)
-            focusCell(newCellId)
+            focusCellElement(newCellId)
           }
           break
         }
@@ -171,7 +177,7 @@ export default function useKeyboardNavigation() {
             // Move to next/prev column in same row
             const newCellId = getCellId(rowId, nextColId)
             selectCell(newCellId, false, false)
-            focusCell(newCellId)
+            focusCellElement(newCellId)
           } else if (!e.shiftKey && rowIndex < gridMap.rowIdToIndex.size - 1) {
             // Move to first column of next row
             const newRowId = gridMap.indexToRowId.get(rowIndex + 1)
@@ -179,7 +185,7 @@ export default function useKeyboardNavigation() {
             if (newRowId && firstColId) {
               const newCellId = getCellId(newRowId, firstColId)
               selectCell(newCellId, false, false)
-              focusCell(newCellId)
+              focusCellElement(newCellId)
             }
           } else if (e.shiftKey && rowIndex > 0) {
             // Move to last column of previous row
@@ -188,7 +194,7 @@ export default function useKeyboardNavigation() {
             if (newRowId && lastColId) {
               const newCellId = getCellId(newRowId, lastColId)
               selectCell(newCellId, false, false)
-              focusCell(newCellId)
+              focusCellElement(newCellId)
             }
           }
           break
@@ -221,7 +227,7 @@ export default function useKeyboardNavigation() {
       focusedCellId,
       gridMap,
       selectCell,
-      focusCell,
+      focusCellElement,
       clearSelection,
       setEditingCellId,
       editingCellId,
@@ -245,7 +251,7 @@ export default function useKeyboardNavigation() {
     focusedCellId,
     gridMap,
     selectCell,
-    focusCell,
+    focusCellElement,
     clearSelection,
     setEditingCellId,
     editingCellId,
