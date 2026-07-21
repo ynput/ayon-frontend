@@ -1,6 +1,5 @@
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { api } from '@shared/api/base'
-import { subscribe } from 'graphql'
 
 type QuerySubstate = {
   endpointName?: string
