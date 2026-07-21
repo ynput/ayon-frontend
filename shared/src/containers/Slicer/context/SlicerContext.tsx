@@ -77,6 +77,7 @@ export type UseExtraSlices = () => ExtraSlices
 type OnRowSelectionChange = (selection: RowSelectionState) => void
 
 export interface SlicerContextValue {
+  projectName: string
   rowSelection: RowSelectionState
   onRowSelectionChange: OnRowSelectionChange
   expanded: ExpandedState
@@ -205,6 +206,7 @@ export const SlicerProvider = ({
 
   const value = useMemo(
     () => ({
+      projectName,
       useExtraSlices,
       isLoadingExtraSlices,
       SlicerDropdown,

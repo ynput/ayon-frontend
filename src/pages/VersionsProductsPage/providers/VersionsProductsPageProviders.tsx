@@ -33,9 +33,9 @@ const VersionsProductsPageProviders: FC<VersionsProductsPageProvidersProps> = ({
   return (
     <VPViewsProvider>
       <VPFocusProvider>
-        <VersionsDataProvider projectName={projectName} modules={modules}>
-          <SettingsPanelProvider>
-            <VPColumnSettingsProvider>
+        <VPColumnSettingsProvider>
+          <VersionsDataProvider projectName={projectName} modules={modules}>
+            <SettingsPanelProvider>
               <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
                 <EntityListsProvider projectName={projectName}>
                   <VPProjectTableProvider projectName={projectName} modules={modules}>
@@ -49,9 +49,9 @@ const VersionsProductsPageProviders: FC<VersionsProductsPageProvidersProps> = ({
                   </VPProjectTableProvider>
                 </EntityListsProvider>
               </ProjectTableQueriesProvider>
-            </VPColumnSettingsProvider>
-          </SettingsPanelProvider>
-        </VersionsDataProvider>
+            </SettingsPanelProvider>
+          </VersionsDataProvider>
+        </VPColumnSettingsProvider>
       </VPFocusProvider>
     </VPViewsProvider>
   )

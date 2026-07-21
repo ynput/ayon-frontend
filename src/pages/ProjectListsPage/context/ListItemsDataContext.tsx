@@ -13,20 +13,10 @@ import { useEntityListsContext } from './EntityListsContext'
 import useReorderListItem, { UseReorderListItemReturn } from '../hooks/useReorderListItem'
 import useBuildListItemsTableData from '../hooks/useBuildListItemsTableData'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
-import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
-import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
-import { ListsViewSettings, useListsViewSettings } from '@shared/containers'
+import { ListsViewSettings, useListsViewSettings, useViewsContext } from '@shared/containers'
 import { SortingState, VisibilityState } from '@tanstack/react-table'
-import { useProjectContext, usePowerpack } from '@shared/context'
-import {
-  buildMetricTargets,
-  shouldSkipColumnStats,
-  mergeFieldStats,
-  totalRowsFromStats,
-  toListItemsStatsTargets,
-  useGetListItemsColumnStatsQuery,
-} from '@shared/api'
-import type { FieldStats, StatsEntity } from '@shared/api'
+import { useProjectContext, OnSyncDataCallback } from '@shared/context'
+import type { FieldStats } from '@shared/api'
 import { useReviewCardsSettingsContext } from './ReviewCardsSettingsContext'
 import {
   DEFAULT_COLUMNS_FOLDER,
@@ -78,6 +68,7 @@ export interface ListItemsDataContextValue {
   // reset filters
   resetFilters: () => void
   refetch: () => void
+  onSyncData: OnSyncDataCallback
   // links visibility
   setLinksVisible: (visible: boolean) => void
   // column summaries footer (powerpack)
@@ -112,13 +103,6 @@ export const DEFAULT_COLUMNS_BY_TYPE: Record<string, VisibilityState> = {
   product: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_PRODUCT },
 }
 
-const STATS_ENTITIES: Record<string, StatsEntity> = {
-  folder: 'folder',
-  task: 'task',
-  product: 'product',
-  version: 'version',
-}
-
 // fetch all items and provide methods to update the items
 export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) => {
   // Get project data from the new context
@@ -137,7 +121,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   const [linksVisible, setLinksVisible] = useState(false)
 
-  // TODO: finish setting up settings for lists
+  const { isLoadingViews } = useViewsContext()
   const {
     filters: listItemsFilters,
     onUpdateFilters: setListItemsFilters,
@@ -202,6 +186,11 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     error,
     fetchNextPage,
     refetch,
+    onSyncData,
+    fieldStats,
+    fieldStatsLoading,
+    fieldStatsError,
+    mainCountLabels,
   } = useGetListItemsData({
     projectName,
     entityType: selectedList?.entityType,
@@ -210,14 +199,11 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     filters: listItemsFilters,
     skipLinks: skipLinks,
     showComments,
+    isLoadingViews,
+    defaultColumnVisibility,
   })
 
-  // convert to a Map for easier access
-  const listItemsMap: ListItemsMap = useMemo(() => {
-    return new Map(listItemsData.map((item) => [item.id, item]))
-  }, [listItemsData])
-
-  // filter out attribFields by scope
+  // filter out attribFields by scope for the table columns
   const scopedAttribFields = useMemo(
     () =>
       attribFields.filter((field) =>
@@ -226,78 +212,10 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     [attribFields, selectedList?.entityType],
   )
 
-  // column summaries footer (powerpack) — queried here, above the review
-  // addon's remote provider, so it works on the Review page too
-  const { powerLicense } = usePowerpack()
-  const statsEntity = listEntityType ? STATS_ENTITIES[listEntityType] : undefined
-
-  const statsTargets = useMemo(
-    () =>
-      statsEntity
-        ? toListItemsStatsTargets(
-            buildMetricTargets({
-              entity: statsEntity,
-              attribs: scopedAttribFields,
-              columnVisibility: columns.columnVisibility,
-              defaultColumnVisibility,
-              columnSummaries: columns.columnSummaries,
-              columnSummaryScopes: columns.columnSummaryScopes,
-            }),
-          )
-        : [],
-    [
-      statsEntity,
-      scopedAttribFields,
-      defaultColumnVisibility,
-      columns.columnVisibility,
-      columns.columnSummaries,
-      columns.columnSummaryScopes,
-    ],
-  )
-
-  const statsFilter = listItemsFilters?.conditions?.length
-    ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(listItemsFilters)))
-    : undefined
-
-  const {
-    data: itemStats,
-    isLoading: fieldStatsLoading,
-    isError: fieldStatsError,
-  } = useGetListItemsColumnStatsQuery(
-    {
-      projectName,
-      listId: selectedListId || '',
-      filter: statsFilter,
-      targets: statsTargets,
-    },
-    {
-      skip:
-        !projectName ||
-        !selectedListId ||
-        !statsEntity ||
-        !powerLicense ||
-        shouldSkipColumnStats(
-          columns.columnSummaries,
-          columns.columnSummaryScopes,
-          columns.columnVisibility,
-          defaultColumnVisibility,
-        ),
-    },
-  )
-
-  const fieldStats = useMemo(() => {
-    const items = itemStats ?? []
-    const mainCount: FieldStats = {
-      columnName: 'name',
-      primaryCount: itemStats ? totalRowsFromStats(items) : undefined,
-    }
-    return mergeFieldStats([...items, mainCount])
-  }, [itemStats])
-
-  const mainCountLabels = useMemo(
-    () => ({ primary: statsEntity ? `${statsEntity}s` : 'items' }),
-    [statsEntity],
-  )
+  // convert to a Map for easier access
+  const listItemsMap: ListItemsMap = useMemo(() => {
+    return new Map(listItemsData.map((item) => [item.id, item]))
+  }, [listItemsData])
 
   // convert listItemsData into tableData
   const listItemsTableData = useBuildListItemsTableData({
@@ -386,6 +304,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         replaceListItemsState,
         resetFilters,
         refetch,
+        onSyncData,
         setLinksVisible,
         fieldStats,
         fieldStatsLoading,

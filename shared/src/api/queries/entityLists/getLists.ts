@@ -24,6 +24,8 @@ import {
   ListsPageParam,
 } from './types'
 
+const CACHE_TIME = 10 // seconds
+
 // Helper function to batch pub/sub messages to avoid constant cache updates
 export function createBatchedCacheUpdater<TMessage, TDraft>(
   updateCachedData: (updater: (draft: TDraft) => void) => void,
@@ -104,6 +106,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
           pageInfo: response.project.entityLists.pageInfo,
         }
       },
+      keepUnusedDataFor: CACHE_TIME,
     },
     GetListItems: {
       transformResponse: (response: GetListItemsQuery): GetListItemsResult => {
@@ -124,6 +127,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
           pageInfo: firstEdge.node.items.pageInfo,
         }
       },
+      keepUnusedDataFor: CACHE_TIME,
     },
     GetListsItemsForReviewSession: {
       transformResponse: (
@@ -134,6 +138,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
           pageInfo: response.project.entityLists.pageInfo,
         }
       },
+      keepUnusedDataFor: CACHE_TIME,
     },
   },
 })
@@ -284,6 +289,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         topics.forEach((t) => PubSub.unsubscribe(t))
         if (handlePubSub && typeof handlePubSub.clear === 'function') handlePubSub.clear()
       },
+      keepUnusedDataFor: CACHE_TIME,
     }),
     getListItemsInfinite: build.infiniteQuery<
       GetListItemsResult,
@@ -450,6 +456,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           unsubscribeThumbnails()
         }
       },
+      keepUnusedDataFor: CACHE_TIME,
     }),
     getListsItemsForReviewSession: build.infiniteQuery<
       GetListsItemsForReviewSessionResult,
@@ -512,6 +519,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           id: list.id,
         })),
       ],
+      keepUnusedDataFor: CACHE_TIME,
     }),
   }),
 })
@@ -532,6 +540,7 @@ export const getListsApiEnhanced = entityListsApi.enhanceEndpoints({
             ]
           : []),
       ],
+      keepUnusedDataFor: CACHE_TIME,
     },
   },
 })

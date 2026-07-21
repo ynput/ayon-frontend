@@ -15,7 +15,7 @@ import {
 import { Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
-import { CustomizeButton, buildScopes } from '@shared/components'
+import { CustomizeButton, SyncButton, buildScopes } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import { NewEntity } from '@shared/containers/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
@@ -29,7 +29,6 @@ import {
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
 import { useGlobalContext, useSettingsPanel } from '@shared/context'
-import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DetailsPanelEntityData } from '@shared/api'
@@ -89,6 +88,7 @@ const ProjectOverviewPage: FC = () => {
     updateViewGroupBy,
     tasksMap,
     updateExpanded,
+    onSyncData,
   } = useProjectOverviewContext()
   const { buildReviewContextMenu } = useEntityListsContext()
 
@@ -226,12 +226,13 @@ const ProjectOverviewPage: FC = () => {
                 onChange={handleFiltersChange}
                 scopes={SCOPES}
                 projectNames={projectName ? [projectName] : []}
+                // @ts-expect-error: projectInfo is never matching, whatever
                 projectInfo={projectInfo}
                 tasksMap={tasksMap}
                 disabledFilters={sliceType ? [sliceType] : []}
                 data={{}}
               />
-              <ReloadButton />
+              <SyncButton topics={['entity.folder', 'entity.task']} onSync={onSyncData} />
               <GroupByDropdown
                 title="Group by"
                 options={viewGroupByOptions}
@@ -280,6 +281,8 @@ const ProjectOverviewPage: FC = () => {
                     className="details"
                   >
                     <ProjectOverviewDetailsPanel
+                      // @ts-expect-error: projectInfo is never matching, whatever
+
                       projectInfo={projectInfo}
                       projectName={projectName}
                       onUriOpen={handleUriOpen}

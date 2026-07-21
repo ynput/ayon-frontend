@@ -44,11 +44,16 @@ import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slice
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
+import { OnSyncDataCallback } from '@shared/context'
+import type { FieldStats } from '@shared/api'
+import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import {
   DEFAULT_FEATURED_ORDER,
   FEATURED_VERSION_TYPES,
 } from '../../../../shared/src/components/FeaturedVersionOrder/FeaturedVersionOrder'
 import useVersionsGroupBy from '../hooks/useVersionsGroupBy'
+import { useVPColumnStats } from '../hooks/useVPColumnStats'
+import { useAppDispatch } from '@state/store'
 
 // Stable default filter to prevent unnecessary re-renders
 const EMPTY_FILTER: QueryFilter = { conditions: [] }
@@ -89,6 +94,10 @@ interface VersionsDataContextValue {
     versionIds?: string[]
     productIds?: string[]
   }
+  fieldStats: FieldStats[]
+  groupFieldStats: FieldStats[]
+  fieldStatsLoading: boolean
+  fieldStatsError: unknown
   // data
   versionsTableData: TableRow[]
   versionsMap: VersionMap // root versions only
@@ -105,6 +114,7 @@ interface VersionsDataContextValue {
   isLoading: boolean
   isFetchingNextPage: boolean
   loadingProductVersions: Record<string, number> // product IDs to their version counts that are loading
+  onSyncData: OnSyncDataCallback
   // meta
   error: string | undefined
 }
@@ -145,6 +155,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   children,
   modules,
 }) => {
+  const dispatch = useAppDispatch()
   const { attribFields } = useProjectDataContext()
   const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy, columns } =
     useVPViewsContext()
@@ -303,6 +314,24 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     ],
   )
 
+  const {
+    fieldStats,
+    groupFieldStats,
+    fieldStatsLoading,
+    fieldStatsError,
+    productStatsArgs,
+    versionStatsArgs,
+    isProductStatsUninitialized,
+    isVersionStatsUninitialized,
+  } = useVPColumnStats({
+    productFilter: combinedProductFilter.filterString,
+    versionFilter: combinedVersionFilter.filterString,
+    taskFilter: entityListTaskFilterString,
+    folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
+    versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
+    productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
+  })
+
   const resolveEntityArguments = useCallback(
     (entityType: 'version' | 'product'): QueryArguments => {
       // remove sortBy based on excluded
@@ -381,6 +410,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: productsFetchNextPage,
     isFetchingNextPage: productsIsFetchingNextPage,
     isFetching: isFetchingProducts,
+    isUninitialized: isProductsUninitialized,
     error: productsError,
   } = useGetProductsInfiniteQuery(productArguments, {
     skip: !showProducts || isLoadingViews,
@@ -397,6 +427,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: versionsFetchNextPage,
     isFetchingNextPage: versionsIsFetchingNextPage,
     isFetching: isFetchingVersions,
+    isUninitialized: isVersionsUninitialized,
     error: versionsError,
   } = useGetVersionsInfiniteQuery(versionArguments, {
     skip: showProducts || isLoadingViews,
@@ -410,6 +441,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     groups,
     versions: groupedVersions,
     incrementPageCount: incrementGroupPage,
+    isUninitialized: isGroupedVersionsUninitialized,
+    queryArgs: groupedVersionsArgs,
   } = useVersionsGroupBy({
     projectName,
     versionFilters: combinedVersionFilter.combinedFilters,
@@ -449,6 +482,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     error: childVersionsError,
     isFetching: isFetchingChildren,
     isLoading: isLoadingChildren,
+    isUninitialized: isChildrenUninitialized,
   } = useGetVersionsByProductsQuery(childVersionsArgs, { skip: !showProducts || isLoadingViews })
 
   const isLoadingChildVersions = useQueryArgumentChangeLoading(
@@ -549,6 +583,48 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     }
   }
 
+  const onSyncData: OnSyncDataCallback = async () => {
+    const queriesToRefresh: { endpointName: string; args: unknown }[] = []
+
+    if (showProducts && !isProductsUninitialized) {
+      queriesToRefresh.push({ endpointName: 'getProductsInfinite', args: productArguments })
+    }
+    if (!showProducts && !isVersionsUninitialized) {
+      queriesToRefresh.push({ endpointName: 'getVersionsInfinite', args: versionArguments })
+    }
+    if (!isChildrenUninitialized) {
+      queriesToRefresh.push({ endpointName: 'getVersionsByProducts', args: childVersionsArgs })
+    }
+    if (!isGroupedVersionsUninitialized) {
+      queriesToRefresh.push({
+        endpointName: 'getGroupedVersionsList',
+        args: groupedVersionsArgs,
+      })
+    }
+    if (!isProductStatsUninitialized) {
+      queriesToRefresh.push({ endpointName: 'GetProductsColumnStats', args: productStatsArgs })
+    }
+    if (!isVersionStatsUninitialized) {
+      queriesToRefresh.push({ endpointName: 'GetVersionsColumnStats', args: versionStatsArgs })
+    }
+
+    await Promise.all(
+      queriesToRefresh.map(({ endpointName, args }) =>
+        dispatch(
+          refreshActiveAndPurgeOthers(endpointName, args, {
+            refreshOtherActiveQueries: false,
+          }),
+        ).unwrap(),
+      ),
+    )
+
+    await Promise.all(
+      queriesToRefresh.map(({ endpointName, args }) =>
+        dispatch(refreshOtherActiveQueries(endpointName, args)),
+      ),
+    )
+  }
+
   const value: VersionsDataContextValue = {
     versionFilter,
     productFilter,
@@ -562,6 +638,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
       productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
     },
+    fieldStats,
+    groupFieldStats,
+    fieldStatsLoading,
+    fieldStatsError,
     // expanded
     expanded,
     setExpanded,
@@ -582,6 +662,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     isLoading: isLoadingTable,
     isFetchingNextPage,
     loadingProductVersions,
+    onSyncData,
     // meta
     error,
   }

@@ -100,9 +100,9 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
       scope="version"
       order={[
         'columns',
+        'sort-by',
         'group-by',
         'featured-version-order',
-        'sort-by',
         'row-height',
         'grid-size',
       ]}
