@@ -1,5 +1,6 @@
 /**
- * Selected entity reference passed to the more-menu's "Add to list" sub-menu.
+ * Selected entity reference passed to the more-menu's "Add to list" sub-menu
+ * and (when the deletion fields are populated) its "Delete" item.
  */
 export interface SelectedEntityRef {
   entityId: string
@@ -7,6 +8,12 @@ export interface SelectedEntityRef {
   // YN-0683 / issue #1947: review-session lists are skipped when no selected
   // version has reviewables. Optional because non-version selections never set it.
   hasReviewables?: boolean
+  // Deletion metadata — needed to build the standardized delete confirmation.
+  name?: string
+  label?: string | null
+  projectName?: string
+  folderId?: string // task parent folder
+  parentId?: string // folder parent folder
 }
 
 /**

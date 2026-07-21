@@ -275,8 +275,30 @@ export const handleActivityRealtimeUpdates = async (
             } else {
               console.warn('[Activity RT] Cannot add activity: no pages or activities array')
             }
-          } else if (!existingActivityFound) {
-          } else {
+          }
+
+          // If this is a status change, update any version.publish activities in the cache
+          if (
+            newActivity.activityType === 'status.change' &&
+            newActivity.origin?.type === 'version'
+          ) {
+            const versionId = newActivity.origin.id
+            const newStatus = newActivity.activityData?.newValue
+            if (newStatus) {
+              draft.pages.forEach((page) => {
+                page.activities?.forEach((activity) => {
+                  if (
+                    activity.activityType === 'version.publish' &&
+                    activity.origin?.id === versionId
+                  ) {
+                    if (!activity.version) {
+                      activity.version = {} as any
+                    }
+                    activity.version!.status = newStatus
+                  }
+                })
+              })
+            }
           }
         })
       } catch (error) {

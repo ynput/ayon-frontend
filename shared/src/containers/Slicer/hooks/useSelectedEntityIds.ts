@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+import type { RowSelectionState } from '@tanstack/react-table'
 import { entityListsApi, type EntityListEnities } from '@shared/api/generated'
-import { useSlicerContext } from '@shared/containers'
-import { useProjectContext } from '@shared/context'
 import {
   resolveEntityParents,
   type SelectedEntityIds,
 } from '@shared/api/queries/entityLists/resolveEntityParents'
+import type { SliceType } from '../types'
 
 export type { SelectedEntityIds }
 
@@ -48,14 +48,20 @@ const collectEntityIds = (results: EntityListEnities[]): SelectedEntityIds => {
  * When sliceType is 'entityList', fetches entity IDs from each selected list,
  * then resolves cross-entity parent references (e.g. task → folder, version → folder/task).
  */
-export const useSelectedEntityIds = (): {
+export const useSelectedEntityIds = ({
+  rowSelection,
+  sliceType,
+  projectName,
+}: {
+  rowSelection: RowSelectionState
+  sliceType: SliceType
+  projectName: string
+}): {
   entityIds: SelectedEntityIds
   rawEntityIds: SelectedEntityIds
   isLoading: boolean
 } => {
   const dispatch = useDispatch<ThunkDispatch<unknown, unknown, UnknownAction>>()
-  const { rowSelection, sliceType } = useSlicerContext()
-  const { projectName } = useProjectContext()
   const [entityIds, setEntityIds] = useState<SelectedEntityIds>(EMPTY_IDS)
   const [rawEntityIds, setRawEntityIds] = useState<SelectedEntityIds>(EMPTY_IDS)
   const [isLoading, setIsLoading] = useState(false)

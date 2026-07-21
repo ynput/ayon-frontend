@@ -61,13 +61,21 @@ const OverviewActions: FC<OverviewActionsProps> = ({ items }) => {
   const { canUndo, canRedo } = history
   const deleteEntities = useDeleteEntities({})
 
-  // find which entities are selected (removing duplicates and row_selection)
-  const selectedEntities: string[] = []
+  // prefer body-cell selection; fall back to checkbox/row selection only when no body
+  // cells are selected, so row-selected rows still delete on their own but don't get
+  // swept in alongside an unrelated cell selection
+  const cellEntities: string[] = []
+  const rowEntities: string[] = []
   Array.from(selectedCells).forEach((cellId) => {
     const { rowId, colId } = parseCellId(cellId) || {}
-    if (!rowId || selectedEntities.includes(rowId) || colId === ROW_SELECTION_COLUMN_ID) return
-    selectedEntities.push(rowId)
+    if (!rowId) return
+    if (colId === ROW_SELECTION_COLUMN_ID) {
+      if (!rowEntities.includes(rowId)) rowEntities.push(rowId)
+      return
+    }
+    if (!cellEntities.includes(rowId)) cellEntities.push(rowId)
   })
+  const selectedEntities = cellEntities.length ? cellEntities : rowEntities
 
   const builtInActions: Record<ActionType, ActionItem> = {
     undo: {

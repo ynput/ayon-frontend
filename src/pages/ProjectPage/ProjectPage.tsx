@@ -23,6 +23,7 @@ import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 import { Navigate } from 'react-router-dom'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
 import {
+  EntityUpdatesProvider,
   ProjectFoldersContextProvider,
   RemoteAddonProject,
   useGlobalContext,
@@ -437,9 +438,11 @@ const ProjectPageInner = () => {
       >
         <EntityListsProvider projectName={projectName}>
           <WithViews viewType={page.viewType} projectName={projectName}>
-            <SlicerWithViews page={module} projectName={projectName}>
-              {page.component}
-            </SlicerWithViews>
+            <EntityUpdatesProvider projectNames={[projectName]}>
+              <SlicerWithViews page={module} projectName={projectName}>
+                {page.component}
+              </SlicerWithViews>
+            </EntityUpdatesProvider>
           </WithViews>
           <NewListFromContext />
         </EntityListsProvider>

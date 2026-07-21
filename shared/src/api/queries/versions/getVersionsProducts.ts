@@ -52,6 +52,8 @@ import {
   transformStatsError,
 } from '../columnStats'
 
+const CACHE_TIME = 10 // seconds
+
 // SHARED CACHE UPDATE HELPERS
 // These helpers are used by PubSub handlers to update cached data in real-time
 
@@ -245,16 +247,19 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
     GetVersions: {
       transformResponse: transformVersionsResponse,
       providesTags: provideTagsForVersionsResult,
+      keepUnusedDataFor: CACHE_TIME,
     },
     // used by getVersionsByProducts only
     GetVersionsByProductId: {
       transformResponse: transformVersionsResponse,
       providesTags: provideTagsForVersionsResult,
+      keepUnusedDataFor: CACHE_TIME,
     },
     // used by getProductsInfinite only
     GetProducts: {
       transformResponse: transformProductsResponse,
       providesTags: provideTagsForProductsResult,
+      keepUnusedDataFor: CACHE_TIME,
     },
     // footer stats: `targets` excluded from cache key + responses merged,
     // so column toggles reuse cache and only added targets refetch
@@ -266,6 +271,7 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
       providesTags: (_r, _e, { projectName }) => [{ type: 'productColumnStats', id: projectName }],
+      keepUnusedDataFor: CACHE_TIME,
     },
     GetVersionsColumnStats: {
       transformResponse: (res: GetVersionsColumnStatsQuery) =>
@@ -275,6 +281,7 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
       providesTags: (_r, _e, { projectName }) => [{ type: 'versionColumnStats', id: projectName }],
+      keepUnusedDataFor: CACHE_TIME,
     },
   },
 })
@@ -535,7 +542,6 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           }
         },
         providesTags: provideTagsForVersionsInfinite,
-        keepUnusedDataFor: 30,
         // Subscribes to version entity changes and updates cache accordingly
         // Handles: create, update, delete operations
         onCacheEntryAdded: async (
@@ -653,6 +659,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             unsubscribeThumbnails()
           }
         },
+        keepUnusedDataFor: CACHE_TIME,
       },
     ),
 
@@ -768,7 +775,6 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           },
         }
       },
-      keepUnusedDataFor: 30,
       // Subscribes to version entity changes for expanded products
       // Only updates versions that belong to currently expanded products
       onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
@@ -870,6 +876,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         }
       },
       providesTags: provideTagsForVersionsResult,
+      keepUnusedDataFor: CACHE_TIME,
     }),
 
     // enhance GetProducts with an infinite query
@@ -956,8 +963,6 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           }
         },
         providesTags: provideTagsForProductsInfinite,
-        keepUnusedDataFor: 30,
-
         // Subscribes to product entity changes and updates cache accordingly
         // Handles: create, update, delete operations
         // Often triggered together with version changes (new product + version)
@@ -1135,6 +1140,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             unsubscribeThumbnails()
           }
         },
+        keepUnusedDataFor: CACHE_TIME,
       },
     ),
 
@@ -1234,7 +1240,6 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         }
       },
       providesTags: provideTagsForVersionsResult,
-      keepUnusedDataFor: 30,
       // Subscribes to version entity changes and updates cache accordingly
       // Handles: create, update, delete operations for grouped versions view
       onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
@@ -1330,6 +1335,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           unsubscribeThumbnails()
         }
       },
+      keepUnusedDataFor: CACHE_TIME,
     }),
   }),
 })
