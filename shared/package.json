@@ -121,8 +121,8 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "7.27.0",
-    "@module-federation/enhanced": "2.3.2",
-    "@module-federation/vite": "1.14.2",
+    "@module-federation/enhanced": "2.8.0",
+    "@module-federation/vite": "1.19.0",
     "@vitejs/plugin-react": "4.7.0",
     "typescript": "5.9.3",
     "vite": "7.3.5",
