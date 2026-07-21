@@ -88,7 +88,7 @@ interface ButtonsCustomization {
   }
 }
 
-type ButtonType = 'delete' | 'add' | 'filter' | 'search'
+export type ButtonType = 'delete' | 'add' | 'filter' | 'search'
 
 interface MenuItemDefinition {
   id: string
@@ -117,6 +117,12 @@ interface ListsTableHeaderProps {
   onSearch: (search: string | null) => void
   buttonLabels?: ButtonsCustomization
   hiddenButtons?: ButtonType[]
+  // menu item ids to omit entirely (dropdown + pinned button), e.g. 'new-folder', 'delete'
+  hiddenMenuItemIds?: string[]
+  // unique DOM/menu id so a second instance (e.g. picker dialog) doesn't collide with the sidepanel
+  menuId?: string
+  // overrides the default create-list flow (picker pre-populates the selected entities)
+  onCreateList?: () => void
   isReview?: boolean
   isStoryboards?: boolean
 }
@@ -127,6 +133,9 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   onSearch,
   buttonLabels = {},
   hiddenButtons = [],
+  hiddenMenuItemIds = [],
+  menuId = MENU_ID,
+  onCreateList,
   isReview = false,
   isStoryboards = false,
 }) => {
@@ -161,9 +170,9 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   )
 
   const toggleMenu = (open: boolean = true) => {
-    toggleMenuOpen(open ? MENU_ID : false)
+    toggleMenuOpen(open ? menuId : false)
   }
-  const isOpen = menuOpen === MENU_ID
+  const isOpen = menuOpen === menuId
 
   const selectedListsIds = selectedRows.filter((id) => !parseListFolderRowId(id))
   const selectedFolders = selectedRows
@@ -246,6 +255,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       icon: 'add',
       shortcut: 'N',
       onClick: async () => {
+        if (onCreateList) return onCreateList()
         if (isStoryboards) {
           const label =
             prompt('What would you like to call the storyboard?') ||
@@ -331,8 +341,12 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     },
   ]
 
+  const visibleMenuItems = hiddenMenuItemIds.length
+    ? menuItems.filter((item) => !item.id || !hiddenMenuItemIds.includes(item.id))
+    : menuItems
+
   // Get pinned items (for buttons)
-  const pinnedItems = menuItems.filter((item) => item.isPinned)
+  const pinnedItems = visibleMenuItems.filter((item) => item.isPinned)
 
   return (
     <HeaderStyled>
@@ -343,11 +357,11 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
           <HeaderButton
             icon="more_horiz"
             onClick={() => toggleMenu?.(true)}
-            id={MENU_ID}
+            id={menuId}
             className={clsx('list-menu', { active: isOpen })}
           />
-          <MenuContainer targetId={MENU_ID} id={MENU_ID} align="left">
-            <Menu menu={menuItems} onClose={() => toggleMenu?.(false)} />
+          <MenuContainer targetId={menuId} id={menuId} align="left">
+            <Menu menu={visibleMenuItems} onClose={() => toggleMenu?.(false)} />
           </MenuContainer>
 
           {/* Render pinned items as buttons (in reverse order for right-to-left layout) */}

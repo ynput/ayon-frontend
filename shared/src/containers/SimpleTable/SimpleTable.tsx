@@ -235,7 +235,15 @@ const SimpleTable: FC<SimpleTableProps> = ({
           tableInstance.setRowSelection(newSelection)
         }
       } else if (isMultiSelect && isCtrlOrMeta) {
-        currentRow.toggleSelected()
+        // write a concrete object from live state; toggleSelected()'s functional updater runs
+        // against a stale rowSelection closure and drops the other selected rows
+        const selection = { ...tableInstance.getState().rowSelection }
+        if (selection[currentId]) {
+          delete selection[currentId]
+        } else {
+          selection[currentId] = true
+        }
+        tableInstance.setRowSelection(selection)
       } else {
         // If it's already selected and it's the only one, don't update selection to avoid unnecessary re-renders
         const selection = tableInstance.getState().rowSelection
