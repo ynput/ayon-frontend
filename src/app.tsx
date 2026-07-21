@@ -45,7 +45,7 @@ import {
   useSubtasksModulesContext,
 } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
-import { MenuProvider, URIProvider } from '@shared/context'
+import { MenuProvider, URIProvider, DeleteEntitiesProvider } from '@shared/context'
 
 // containers
 import Header from '@containers/header'
@@ -232,19 +232,21 @@ const App = () => {
                                       <ShortcutsProvider>
                                         <PiPProvider>
                                           <ImportDialogProvider>
-                                            <Header />
-                                            <ShareDialog />
-                                            <ViewerDialog />
-                                            <ConfirmDialog />
-                                            <ImportDialog />
-                                            <FileUploadPreviewContainer />
-                                            <ReleaseInstallerDialog />
-                                            <CompleteProfilePrompt />
-                                            <AppRoutes />
-                                            <DetailsPanelFloating />
-                                            <PowerpackDialog />
-                                            <AppRemoteLoader />
-                                            <TrialBanner />
+                                            <DeleteEntitiesProvider>
+                                              <Header />
+                                              <ShareDialog />
+                                              <ViewerDialog />
+                                              <ConfirmDialog />
+                                              <ImportDialog />
+                                              <FileUploadPreviewContainer />
+                                              <ReleaseInstallerDialog />
+                                              <CompleteProfilePrompt />
+                                              <AppRoutes />
+                                              <DetailsPanelFloating />
+                                              <PowerpackDialog />
+                                              <AppRemoteLoader />
+                                              <TrialBanner />
+                                            </DeleteEntitiesProvider>
                                           </ImportDialogProvider>
                                         </PiPProvider>
                                       </ShortcutsProvider>

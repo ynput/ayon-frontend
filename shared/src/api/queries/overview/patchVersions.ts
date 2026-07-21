@@ -194,7 +194,9 @@ export const patchVersions = (
     }
   }
 
-  // Step 3: Invalidate all affected caches to trigger refetching
-  // This will automatically refetch with filters and update calculated attributes
-  dispatch(injectedVersionsPageApi.util.invalidateTags(tags))
+  // Invalidate updated rows only; deletes have nothing to refresh — reconciled by invalidatesTags.
+  const nonDeleteOps = versions.filter((op) => op.type !== 'delete')
+  if (nonDeleteOps.length > 0) {
+    dispatch(injectedVersionsPageApi.util.invalidateTags(getVersionTags(nonDeleteOps)))
+  }
 }

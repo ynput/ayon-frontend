@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import type { MenuItemType } from '@shared/components'
+import type { DeletableEntity } from '@shared/context'
+import { pluralize } from '@shared/util'
 import type { DetailsPanelEntityListsContext, SelectedEntityRef } from '../types'
 
 interface UseMenuOptionsParams {
@@ -7,10 +9,14 @@ interface UseMenuOptionsParams {
   entityId?: string
   projectName?: string
   selectedEntities: SelectedEntityRef[]
+  // resolved delete target — drives both the delete gate and its label so they
+  // stay in sync with whatever is actually deleted (cell selection in the tree table)
+  deleteEntities: DeletableEntity[]
   canUploadThumbnail: boolean
   canUploadVersion: boolean
   canOpenPip: boolean
   canOpenViewer: boolean
+  canDelete: boolean
   entityListsContext: DetailsPanelEntityListsContext | undefined
   onPip: () => void
   onOpenViewer: () => void
@@ -18,6 +24,7 @@ interface UseMenuOptionsParams {
   onUploadVersion: () => void
   onShare: (link: string) => void
   onViewData: () => void
+  onDelete: () => void
 }
 
 export interface MenuOptionsResult {
@@ -94,10 +101,12 @@ export const useMenuOptions = ({
   entityId,
   projectName,
   selectedEntities,
+  deleteEntities,
   canUploadThumbnail,
   canUploadVersion,
   canOpenPip,
   canOpenViewer,
+  canDelete,
   entityListsContext,
   onPip,
   onOpenViewer,
@@ -105,6 +114,7 @@ export const useMenuOptions = ({
   onUploadVersion,
   onShare,
   onViewData,
+  onDelete,
 }: UseMenuOptionsParams): MenuOptionsResult => {
   const normalizedSelected = useMemo<SelectedEntityRef[]>(() => {
     if (selectedEntities.length) {
@@ -245,12 +255,31 @@ export const useMenuOptions = ({
       onClick: onViewData,
     })
 
+    // Delete stays at the very bottom, styled as a danger action.
+    if (canDelete && deleteEntities.length > 0) {
+      const types = new Set(deleteEntities.map((e) => e.entityType))
+      const noun = types.size === 1 ? [...types][0] : 'item'
+      const label =
+        deleteEntities.length === 1
+          ? `Delete ${noun}`
+          : `Delete ${pluralize(deleteEntities.length, noun)}`
+      items.push({
+        id: 'delete',
+        label,
+        icon: 'delete',
+        danger: true,
+        onClick: onDelete,
+      })
+    }
+
     return { items, shareLink }
   }, [
     canOpenPip,
     canOpenViewer,
     canUploadThumbnail,
     canUploadVersion,
+    canDelete,
+    deleteEntities,
     entityListsContext,
     projectName,
     normalizedSelected,
@@ -261,5 +290,6 @@ export const useMenuOptions = ({
     onUploadVersion,
     onShare,
     onViewData,
+    onDelete,
   ])
 }

@@ -177,6 +177,15 @@ export const patchOverviewTasks = (
   const tags = getOverviewTaskTags(tasks)
   const taskEntries = getOverviewApi.util.selectInvalidatedBy(state, tags)
 
+  const deleteIds = new Set(
+    tasks.filter((op) => op.type === 'delete' && op.entityId).map((op) => op.entityId),
+  )
+  const removeDeletedTasks = (tasksArrayDraft: EditorTaskNode[]) => {
+    for (let i = tasksArrayDraft.length - 1; i >= 0; i--) {
+      if (deleteIds.has(tasksArrayDraft[i].id)) tasksArrayDraft.splice(i, 1)
+    }
+  }
+
   for (const entry of taskEntries) {
     if (entry.endpointName === 'getTasksListInfinite') {
       // patch getTasksListInfinite
@@ -188,7 +197,7 @@ export const patchOverviewTasks = (
               // push operation data to first page
               // @ts-expect-error
               draft.pages[0].tasks.push(taskOperation.data)
-            } else {
+            } else if (taskOperation.type !== 'delete') {
               // Iterate through all pages in the infinite query
               for (const page of draft.pages) {
                 // TODO: task is not found here, why?
@@ -197,6 +206,12 @@ export const patchOverviewTasks = (
                   updateEntityWithOperation(task, taskOperation.data)
                 }
               }
+            }
+          }
+          // optimistically remove deleted tasks
+          if (deleteIds.size > 0) {
+            for (const page of draft.pages) {
+              removeDeletedTasks(page.tasks)
             }
           }
         }),
@@ -212,6 +227,16 @@ export const patchOverviewTasks = (
           entry.endpointName as 'getOverviewTasksByFolders' | 'GetTasksList',
           entry.originalArgs,
           (draft) => {
+            const applyToDraft = (patchTask: (tasksArrayDraft: EditorTaskNode[]) => void) => {
+              // Check if draft is an array or an object with a tasks property
+              if (Array.isArray(draft)) {
+                patchTask(draft)
+              } else if (draft.tasks && Array.isArray(draft.tasks)) {
+                // Handle object with tasks array case (like in GetTasksList)
+                patchTask(draft.tasks)
+              }
+            }
+
             // Apply each change to matching tasks in the cache
             for (const taskOperation of tasks) {
               if (
@@ -219,36 +244,22 @@ export const patchOverviewTasks = (
                 taskOperation.data &&
                 entry.originalArgs.parentIds?.includes(taskOperation.data.folderId)
               ) {
-                const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
+                applyToDraft((tasksArrayDraft) => {
                   // @ts-expect-error
                   tasksArrayDraft.push(taskOperation.data)
-                }
-
-                // Check if draft is an array or an object with a tasks property
-                if (Array.isArray(draft)) {
-                  patchTask(draft)
-                } else if (draft.tasks && Array.isArray(draft.tasks)) {
-                  // Handle object with tasks array case (like in GetTasksList)
-                  const draftArray = draft.tasks
-                  patchTask(draftArray)
-                }
-              } else {
-                const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
+                })
+              } else if (taskOperation.type !== 'delete') {
+                applyToDraft((tasksArrayDraft) => {
                   const task = tasksArrayDraft.find((task) => task.id === taskOperation.entityId)
                   if (task) {
                     updateEntityWithOperation(task, taskOperation.data)
                   }
-                }
-
-                // Check if draft is an array or an object with a tasks property
-                if (Array.isArray(draft)) {
-                  patchTask(draft)
-                } else if (draft.tasks && Array.isArray(draft.tasks)) {
-                  // Handle object with tasks array case (like in GetTasksList)
-                  const draftArray = draft.tasks
-                  patchTask(draftArray)
-                }
+                })
               }
+            }
+            // optimistically remove deleted tasks
+            if (deleteIds.size > 0) {
+              applyToDraft(removeDeletedTasks)
             }
           },
         ),
@@ -257,18 +268,6 @@ export const patchOverviewTasks = (
       patches?.push(tasksPatch)
     }
   }
-}
-
-const invalidateOverviewTasks = (
-  tasks: PatchOperation[],
-  {
-    dispatch,
-  }: {
-    dispatch: ThunkDispatch<any, any, UnknownAction>
-  },
-) => {
-  if (!tasks.length) return
-  dispatch(getOverviewApi.util.invalidateTags(getOverviewTaskTags(tasks)))
 }
 
 // Debounced, per-project invalidation of the footer stats caches after entity ops.
@@ -312,6 +311,11 @@ export const patchOverviewFolders = (
   const folderEntries = foldersQueries.util
     .selectInvalidatedBy(state, getOverviewFolderTags(folders))
     .filter((entry) => entry.endpointName === 'getFolderList')
+
+  const deleteIds = new Set(
+    folders.filter((op) => op.type === 'delete' && op.entityId).map((op) => op.entityId),
+  )
+
   for (const entry of folderEntries) {
     const folderPatch = dispatch(
       foldersQueries.util.updateQueryData(
@@ -329,12 +333,19 @@ export const patchOverviewFolders = (
               // push operation data to first page
               // @ts-expect-error
               draft.folders.push(folderOperation.data)
-            } else {
+            } else if (folderOperation.type !== 'delete') {
               const folder = folderMap.get(folderOperation.entityId)
 
               if (folder) {
                 updateEntityWithOperation(folder, folderOperation.data)
               }
+            }
+          }
+
+          // optimistically remove deleted folders
+          if (deleteIds.size > 0) {
+            for (let i = draft.folders.length - 1; i >= 0; i--) {
+              if (deleteIds.has(draft.folders[i].id)) draft.folders.splice(i, 1)
             }
           }
         },
@@ -359,6 +370,10 @@ const patchListItems = (
   const tags = entities.map((op) => ({ type: 'entityListItem', id: op.entityId }))
   const entries = entityListsQueriesGql.util.selectInvalidatedBy(state, tags)
 
+  const deleteIds = new Set(
+    entities.filter((op) => op.type === 'delete' && op.entityId).map((op) => op.entityId),
+  )
+
   for (const entry of entries) {
     if (entry.endpointName === 'getListItemsInfinite') {
       const listItemsPatch = dispatch(
@@ -375,6 +390,14 @@ const patchListItems = (
                   if (item) {
                     updateEntityWithOperation(item, listOperation.data)
                   }
+                }
+              }
+            }
+            // optimistically remove items whose entity is being deleted
+            if (deleteIds.size > 0) {
+              for (const page of draft.pages) {
+                for (let i = page.items.length - 1; i >= 0; i--) {
+                  if (deleteIds.has(page.items[i].entityId)) page.items.splice(i, 1)
                 }
               }
             }
@@ -493,12 +516,9 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           const updatesToPatch = update.filter(
             (op) => !patchOperations.some((dep) => dep.entityId === op.entityId),
           )
-          // update existing tasks
-          patchOverviewTasks(updatesToPatch, { state, dispatch }, patches)
-          // invalidate the caches for tasks being created and deleted
-          invalidateOverviewTasks([...deleteOps], {
-            dispatch,
-          })
+          // update existing tasks and optimistically remove deleted ones
+          // (deletes are reconciled via invalidatesTags once the request settles)
+          patchOverviewTasks([...updatesToPatch, ...deleteOps], { state, dispatch }, patches)
         }
 
         // patch the overview folders (any other folders from foldersList)
@@ -509,12 +529,8 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           const updatesToPatch = update.filter(
             (op) => !patchOperations.some((dep) => dep.entityId === op.entityId),
           )
-          // update existing folders
-          patchOverviewFolders(updatesToPatch, { state, dispatch }, patches)
-          // invalidate the caches for folders being created and deleted
-          if (deleteOps.length) {
-            dispatch(foldersQueries.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
-          }
+          // update existing folders and optimistically remove deleted ones
+          patchOverviewFolders([...updatesToPatch, ...deleteOps], { state, dispatch }, patches)
         }
 
         const patchExtraTasks = patchOperations.filter((op) => op.entityType === 'task')
@@ -664,11 +680,8 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
 
           // Always refetch folders if they were updated (for calculated attributes)
           // Not conditional on affectsFilter - requirement says "always refetch entities"
-          // Only invalidate if we haven't already done so for delete operations
-          const hasDeleteOps = (operationsByType.folder || []).some(
-            (op: OperationModel) => op.type === 'delete',
-          )
-          if (updatedFolderIds.length > 0 && projectName && !hasDeleteOps) {
+          // (deletes are reconciled via invalidatesTags)
+          if (updatedFolderIds.length > 0 && projectName) {
             dispatch(foldersQueries.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
           }
         } catch (error) {
@@ -689,9 +702,11 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         const userDashboardTags: Tags = [{ type: 'kanban', id: 'project-' + projectName }],
           taskProgressTags: Tags = [],
           entityListItemTags: Tags = [],
-          tasksFolderTags: Tags = []
+          tasksFolderTags: Tags = [],
+          deletedEntityTags: Tags = []
 
         let hasAttribOp = false
+        const deletedTypes = new Set<string>()
         operationsRequestModel.operations?.forEach((op) => {
           const { entityId } = op
           if (entityId) {
@@ -703,17 +718,42 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
             taskProgressTags.push({ type: 'progress', id: 'LIST' })
           }
           if ((op.data as any)?.attrib) hasAttribOp = true
+          if (op.type === 'delete' && entityId) {
+            deletedTypes.add(op.entityType)
+            deletedEntityTags.push({ type: op.entityType, id: entityId })
+            // details panels showing the deleted entity
+            deletedEntityTags.push({ type: 'entities', id: entityId })
+          }
         })
 
         if (hasAttribOp) {
           tasksFolderTags.push({ type: 'tasksFolder', id: projectName })
         }
 
+        // Deleted rows are removed optimistically; only server-side descendants need a refetch
+        // (folder -> folders/tasks/products/versions, product -> versions).
+        const invalidateList = new Set<string>()
+        if (deletedTypes.has('folder')) {
+          ;['folder', 'task', 'product', 'version'].forEach((t) => invalidateList.add(t))
+        }
+        if (deletedTypes.has('product')) invalidateList.add('version')
+
+        if (invalidateList.has('folder')) deletedEntityTags.push({ type: 'folder', id: 'LIST' })
+        if (invalidateList.has('task')) {
+          deletedEntityTags.push(
+            { type: 'overviewTask', id: 'LIST' },
+            { type: 'overviewTask', id: projectName },
+          )
+        }
+        if (invalidateList.has('product')) deletedEntityTags.push({ type: 'product', id: 'LIST' })
+        if (invalidateList.has('version')) deletedEntityTags.push({ type: 'version', id: 'LIST' })
+
         return [
           ...userDashboardTags,
           ...taskProgressTags,
           ...entityListItemTags,
           ...tasksFolderTags,
+          ...deletedEntityTags,
         ]
       },
     }),
