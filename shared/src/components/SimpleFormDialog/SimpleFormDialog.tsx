@@ -210,7 +210,7 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
       <FormFileUpload
         value={value as FormFileData}
         onChange={onChange}
-        validExtensions={field.valid_extensions}
+        validExtensions={field.validExtensions}
       />
     )
   }

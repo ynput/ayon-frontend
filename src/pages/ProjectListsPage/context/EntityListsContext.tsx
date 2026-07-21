@@ -11,6 +11,7 @@ import {
   useGetEntityListFoldersQuery,
   useExecuteActionMutation,
   entityListsQueriesGql,
+  useGetReviewablesForEntitiesMutation,
 } from '@shared/api'
 import { upperFirst } from 'lodash'
 import { useSearchParams } from 'react-router-dom'
@@ -62,7 +63,6 @@ export interface EntityListsContextType {
   ) => {
     id: string
     label: string
-    icon: string
     items: ListSubMenuItem[]
   }
   newListMenuItem: (entityType: ListEntityType, selected: ListEntityInput[]) => ListSubMenuItem
@@ -164,6 +164,44 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
 
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
   const [executeAction] = useExecuteActionMutation()
+  const [getReviewablesForEntities] = useGetReviewablesForEntitiesMutation()
+
+  const getReviewableVersions = useCallback(
+    async (entityType: 'folder' | 'task', entities: ListEntityInput[]) => {
+      const result = await getReviewablesForEntities({
+        projectName,
+        entityType: `${entityType}s`,
+        reviewablesRequestModel: {
+          entityIds: entities.map((entity) => entity.entityId),
+        },
+        latest: true,
+      }).unwrap()
+
+      return result.map((version) => ({
+        entityId: version.id,
+        entityType: 'version',
+      }))
+    },
+    [getReviewablesForEntities, projectName],
+  )
+
+  const invalidateListCaches = useCallback(
+    (listId?: string) => {
+      dispatch(
+        entityListsQueriesGql.util.invalidateTags([
+          { type: 'entityList', id: 'LIST' },
+          ...(listId
+            ? [
+                { type: 'entityList', id: listId },
+                { type: 'entityListItem', id: listId },
+                { type: 'entityListItemsColumnStats', id: listId },
+              ]
+            : []),
+        ]),
+      )
+    },
+    [dispatch],
+  )
 
   // add an item to a list
   const addToList: EntityListsContextType['addToList'] = useCallback(
@@ -182,66 +220,36 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       const isReviewSession = targetList?.entityListType === 'review-session'
 
       if (isReviewSession && (entityType === 'folder' || entityType === 'task')) {
-        if (!reviewAddonVersion) {
-          toast.error('Review addon not available')
-          return Promise.reject(new Error('Review addon not available'))
-        }
-
-        if (!hasReviewActionsVersion) {
-          toast.error(
-            `Please upgrade Review addon to at least ${MIN_REVIEW_ACTIONS_VERSION} to use this feature with folders and tasks`,
-          )
-          return Promise.reject(new Error('Review addon version too low'))
-        }
+        const selectedEntityCount = filteredEntities.length
 
         try {
-          const actionIdentifier = `review-add-to-session-from-${entityType}s`
-          const result = await executeAction({
-            identifier: actionIdentifier,
-            actionContext: {
-              projectName,
-              entityType,
-              entityIds: filteredEntities.map((e) => e.entityId),
-              // Pass the target list ID as list_id in formData
-              formData: { list_id: listId },
-            },
-            addonName: 'review',
-            addonVersion: reviewAddonVersion,
-          }).unwrap()
-
-          if (result.success) {
-            if (result.payload) {
-              // invalidate the list caches
-              const tags = [
-                { type: 'entityList', id: listId },
-                { type: 'entityListItem', id: listId },
-                { type: 'entityListItemsColumnStats', id: listId },
-              ]
-              dispatch(entityListsQueriesGql.util.invalidateTags(tags))
-            }
-            toast.success(`Item${filteredEntities.length > 1 ? 's' : ''} added to session`)
-            return Promise.resolve()
-          } else {
-            throw new Error(result.message || 'Error adding to session')
-          }
+          filteredEntities = await getReviewableVersions(entityType, filteredEntities)
         } catch (error: any) {
-          console.error('Error adding to session via action', error)
-          toast.error(error?.data?.detail || error?.message || 'Error adding to session')
+          console.error('Error getting reviewables for session', error)
+          toast.error(error?.data?.detail || error?.message || 'Error getting reviewables')
           return Promise.reject(error)
+        }
+
+        const skippedCount = selectedEntityCount - filteredEntities.length
+        if (filteredEntities.length === 0) {
+          toast.error('No reviewable versions found for selected entities')
+          return Promise.reject(new Error('No reviewable versions found'))
+        }
+        if (skippedCount > 0) {
+          toast.warn(
+            skippedCount === 1
+              ? '1 selected entity skipped (no reviewables)'
+              : `${skippedCount} selected entities skipped (no reviewables)`,
+          )
         }
       }
 
-      // Default review session logic for versions: only accept versions with reviewables
       if (isReviewSession && entityType === 'version') {
-        const eligible = filteredEntities.filter((e) => e.hasReviewables !== false)
+        const eligible = filteredEntities.filter((entity) => entity.hasReviewables !== false)
         const skippedCount = filteredEntities.length - eligible.length
-        if (skippedCount > 0 && eligible.length === 0) {
-          toast.error(
-            skippedCount === 1
-              ? 'Cannot add version without reviewables to review session'
-              : `Cannot add ${skippedCount} versions without reviewables to review session`,
-          )
-          return Promise.reject(new Error('No reviewable versions to add'))
+        if (eligible.length === 0) {
+          toast.error('No reviewable versions found for selected entities')
+          return Promise.reject(new Error('No reviewable versions found'))
         }
         if (skippedCount > 0) {
           toast.warn(
@@ -270,6 +278,8 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           },
         }).unwrap()
 
+        if (isReviewSession) invalidateListCaches(listId)
+
         toast.success(`Item${entitiesToAdd.length > 1 ? 's' : ''} added to list`)
 
         return Promise.resolve()
@@ -282,9 +292,8 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
     [
       projectName,
       allLists.data,
-      reviewAddonVersion,
-      hasReviewActionsVersion,
-      executeAction,
+      getReviewableVersions,
+      invalidateListCaches,
       updateEntityListItems,
     ],
   )
@@ -313,85 +322,70 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           return Promise.reject(new Error('No entities selected'))
         }
 
-        const { selectedEntities, entityType, entityListType } = newListData
+        const { selectedEntities, entityListType } = newListData
+        let { entityType } = newListData
 
         // filter out entities that do not match entityType
-        const filteredEntities = selectedEntities.filter(
-          (entity) => entity.entityType === entityType,
-        )
+        let filteredEntities = selectedEntities.filter((entity) => entity.entityType === entityType)
+
+        if (
+          entityListType === 'review-session' &&
+          (entityType === 'folder' || entityType === 'task')
+        ) {
+          const selectedEntityCount = filteredEntities.length
+          filteredEntities = await getReviewableVersions(entityType, filteredEntities)
+          const skippedCount = selectedEntityCount - filteredEntities.length
+          if (filteredEntities.length === 0) {
+            throw new Error('No reviewable versions found for selected entities')
+          }
+          if (skippedCount > 0) {
+            toast.warn(
+              skippedCount === 1
+                ? '1 selected entity skipped (no reviewables)'
+                : `${skippedCount} selected entities skipped (no reviewables)`,
+            )
+          }
+          entityType = 'version'
+        }
+
+        if (entityListType === 'review-session' && entityType === 'version') {
+          const eligible = filteredEntities.filter((entity) => entity.hasReviewables !== false)
+          const skippedCount = filteredEntities.length - eligible.length
+          if (skippedCount > 0) {
+            toast.warn(
+              skippedCount === 1
+                ? '1 version skipped (no reviewables)'
+                : `${skippedCount} versions skipped (no reviewables)`,
+            )
+          }
+          filteredEntities = eligible
+        }
+
+        if (entityListType === 'review-session' && filteredEntities.length === 0) {
+          throw new Error('No reviewable versions found for selected entities')
+        }
 
         const entitiesToAdd = filteredEntities.map((entity) => ({ entityId: entity.entityId }))
 
         let listId: string | undefined
 
-        // For review sessions from folders or tasks, use the specialized action
-        if (
-          entityListType === 'review-session' &&
-          (entityType === 'folder' || entityType === 'task')
-        ) {
-          if (!reviewAddonVersion) {
-            toast.error('Review addon not available')
-            return Promise.reject(new Error('Review addon not available'))
-          }
+        const newListResult = await createNewListMutation({
+          projectName,
+          entityListPostModel: {
+            label,
+            entityType,
+            entityListType,
+            items: entitiesToAdd,
+          },
+        }).unwrap()
 
-          if (!hasReviewActionsVersion) {
-            toast.error(
-              `Please upgrade Review addon to at least ${MIN_REVIEW_ACTIONS_VERSION} to use this feature with folders and tasks`,
-            )
-            return Promise.reject(new Error('Review addon version too low'))
-          }
+        listId = newListResult.id
+        invalidateListCaches(listId)
 
-          const actionIdentifier = `review-save-session-from-${entityType}`
-          const result = await executeAction({
-            identifier: actionIdentifier,
-            actionContext: {
-              projectName,
-              entityType,
-              entityIds: entitiesToAdd.map((e) => e.entityId),
-              // Passing label to the action as it might be required for naming the session
-              formData: { label },
-            },
-            addonName: 'review',
-            addonVersion: reviewAddonVersion,
-          }).unwrap()
-
-          if (!result.success) {
-            throw new Error(result.message || 'Error creating review session from action')
-          }
-
-          const payloadData = (result.payload as any)?.data
-          // Try to extract created ID if provided, though standard behavior might vary
-          listId = payloadData?.id
-
-          if (payloadData) {
-            // invalidate the list caches
-            const tags = [
-              { type: 'entityList', id: listId },
-              { type: 'entityListItemsColumnStats', id: listId },
-            ]
-            dispatch(entityListsQueriesGql.util.invalidateTags(tags))
-          }
-
-          toast.success(`Review session ${label} created`)
-        } else {
-          // Default: create via entity list mutation (used for versions and generic lists)
-          const newListResult = await createNewListMutation({
-            projectName,
-            entityListPostModel: {
-              label,
-              entityType,
-              entityListType,
-              items: entitiesToAdd,
-            },
-          }).unwrap()
-
-          listId = newListResult.id
-
-          toast.success(`List ${label} created`)
-          toast.success(
-            `${upperFirst(entityType)}${entitiesToAdd.length > 1 ? 's' : ''} added to list`,
-          )
-        }
+        toast.success(`List ${label} created`)
+        toast.success(
+          `${upperFirst(entityType)}${entitiesToAdd.length > 1 ? 's' : ''} added to list`,
+        )
 
         // close the dialog
         closeCreateNewList()
@@ -416,9 +410,8 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       newListData,
       setSearchParams,
       createNewListMutation,
-      executeAction,
-      reviewAddonVersion,
-      hasReviewActionsVersion,
+      getReviewableVersions,
+      invalidateListCaches,
     ],
   )
 

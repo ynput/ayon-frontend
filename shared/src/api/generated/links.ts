@@ -17,25 +17,27 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'DELETE',
       }),
     }),
+    createEntityLinksBulk: build.mutation<
+      CreateEntityLinksBulkApiResponse,
+      CreateEntityLinksBulkApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/links/bulk`,
+        method: 'POST',
+        body: queryArg.createLinksRequestModel,
+      }),
+    }),
     createEntityLink: build.mutation<CreateEntityLinkApiResponse, CreateEntityLinkApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/links`,
         method: 'POST',
         body: queryArg.createLinkRequestModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     deleteEntityLink: build.mutation<DeleteEntityLinkApiResponse, DeleteEntityLinkApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/links/${queryArg.linkId}`,
         method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
   }),
@@ -57,19 +59,21 @@ export type DeleteLinkTypeApiArg = {
   projectName: string
   linkType: string
 }
+export type CreateEntityLinksBulkApiResponse =
+  /** status 200 Successful Response */ CreateLinksResponseModel
+export type CreateEntityLinksBulkApiArg = {
+  projectName: string
+  createLinksRequestModel: CreateLinksRequestModel
+}
 export type CreateEntityLinkApiResponse = /** status 200 Successful Response */ EntityIdResponse
 export type CreateEntityLinkApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   createLinkRequestModel: CreateLinkRequestModel
 }
 export type DeleteEntityLinkApiResponse = unknown
 export type DeleteEntityLinkApiArg = {
   projectName: string
   linkId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
 }
 export type LinkTypeModel = {
   /** Name of the link type */
@@ -81,7 +85,7 @@ export type LinkTypeModel = {
   /** Output entity type */
   outputType: string
   /** Additional link type data */
-  data?: Record<string, any>
+  data?: object
 }
 export type LinkTypeListResponse = {
   /** List of link types defined in the project. */
@@ -97,11 +101,17 @@ export type HttpValidationError = {
 }
 export type CreateLinkTypeRequestModel = {
   /** Additional link type data (appearance, description, etc.). */
-  data?: Record<string, any>
+  data?: object
 }
-export type EntityIdResponse = {
-  /** Entity ID */
+export type LinkCreatedItem = {
   id: string
+  input: string
+  output: string
+  linkType: string
+}
+export type CreateLinksResponseModel = {
+  /** List of successfully created links. */
+  created: LinkCreatedItem[]
 }
 export type CreateLinkRequestModel = {
   /** ID of the link to create. If not provided, will be generated. */
@@ -115,7 +125,15 @@ export type CreateLinkRequestModel = {
   /** Link type to create. */
   linkType?: string
   /** Additional data for the link. */
-  data?: Record<string, any>
+  data?: object
   /** Link type to create. This is deprecated. Use linkType instead. */
   link?: string
+}
+export type CreateLinksRequestModel = {
+  /** List of links to create. */
+  links: CreateLinkRequestModel[]
+}
+export type EntityIdResponse = {
+  /** Entity ID */
+  id: string
 }

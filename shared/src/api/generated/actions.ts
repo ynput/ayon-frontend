@@ -26,8 +26,8 @@ const injectedRtkApi = api.injectEndpoints({
         params: {
           addonName: queryArg.addonName,
           addonVersion: queryArg.addonVersion,
-          variant: queryArg.variant,
           identifier: queryArg.identifier,
+          variant: queryArg.variant,
         },
       }),
     }),
@@ -43,8 +43,8 @@ const injectedRtkApi = api.injectEndpoints({
         params: {
           addonName: queryArg.addonName,
           addonVersion: queryArg.addonVersion,
-          variant: queryArg.variant,
           identifier: queryArg.identifier,
+          variant: queryArg.variant,
         },
       }),
     }),
@@ -75,16 +75,16 @@ export type ConfigureActionApiResponse = /** status 200 Successful Response */ o
 export type ConfigureActionApiArg = {
   addonName: string
   addonVersion: string
-  variant?: string
   identifier: string
+  variant?: string
   actionConfig: ActionConfig
 }
 export type ExecuteActionApiResponse = /** status 200 Successful Response */ ExecuteResponseModel
 export type ExecuteActionApiArg = {
   addonName: string
   addonVersion: string
-  variant?: string
   identifier: string
+  variant?: string
   'x-sender'?: string
   'x-sender-type'?: string
   actionContext: ActionContext
@@ -107,6 +107,11 @@ export type IconModel = {
   /** The URL of the icon (for type url) */
   url?: string
 }
+export type FormFileData = {
+  filename: string
+  payload: string
+  download?: boolean
+}
 export type FormSelectOption = {
   value: string
   label: string
@@ -115,11 +120,20 @@ export type FormSelectOption = {
   badges?: string[]
 }
 export type SimpleFormField = {
-  type: 'text' | 'boolean' | 'select' | 'multiselect' | 'hidden' | 'integer' | 'float' | 'label' | 'file'
+  type:
+    | 'text'
+    | 'boolean'
+    | 'select'
+    | 'multiselect'
+    | 'hidden'
+    | 'integer'
+    | 'float'
+    | 'label'
+    | 'file'
   name: string
   label?: string
   placeholder?: any
-  value?: string | number | number | boolean | string[] | number[] | number[]
+  value?: string | number | number | boolean | string[] | number[] | number[] | FormFileData
   regex?: string
   multiline?: boolean
   syntax?: string
@@ -127,7 +141,7 @@ export type SimpleFormField = {
   highlight?: 'info' | 'warning' | 'error'
   min?: number | number
   max?: number | number
-  valid_extensions?: string[]
+  validExtensions?: string[]
 }
 export type BaseActionManifest = {
   /** The identifier of the action */

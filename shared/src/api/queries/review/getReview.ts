@@ -103,6 +103,10 @@ const getViewerReviewablesTags = (
 
 const enhancedApi = reviewablesApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
+    getReviewablesForEntities: {
+      transformResponse: (result: VersionReviewablesModel[]) =>
+        result.filter((version) => version.reviewables?.length),
+    },
     getReviewablesForVersion: {
       keepUnusedDataFor: 1,
       providesTags: (result, _error, { versionId }) =>
@@ -317,6 +321,7 @@ const getReviewApi = enhancedApi.injectEndpoints({
 
 export const {
   useGetViewerReviewablesQuery,
+  useGetReviewablesForEntitiesMutation,
   useGetReviewablesForVersionQuery,
   useHasTranscoderQuery,
 } = getReviewApi
