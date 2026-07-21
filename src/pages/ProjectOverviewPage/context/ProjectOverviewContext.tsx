@@ -251,7 +251,11 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   })
 
   // Resolve entity list selections to IDs
-  const { entityIds, rawEntityIds } = useSelectedEntityIds()
+  const { entityIds, rawEntityIds } = useSelectedEntityIds({
+    rowSelection,
+    sliceType,
+    projectName,
+  })
 
   const selectedFolders = useSelectedFolders({
     rowSelection,

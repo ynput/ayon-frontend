@@ -242,7 +242,11 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     })
   }, [sliceFilter, attribScopeMap])
   // Resolve entity list selections to IDs
-  const { entityIds, rawEntityIds } = useSelectedEntityIds()
+  const { entityIds, rawEntityIds } = useSelectedEntityIds({
+    rowSelection,
+    sliceType,
+    projectName,
+  })
 
   // get selected folders from slicer
   const slicerFolderIds = useSelectedFolders({
