@@ -155,5 +155,8 @@
     "short-uuid": "4.2.2",
     "turndown": "7.2.4",
     "uuid": "14.0.0"
+  },
+  "resolutions": {
+    "lodash": "4.18.1"
   }
 }
