@@ -8,10 +8,11 @@ import {
   useProjectTableContext,
   useColumnSettingsContext,
   ProjectTreeTable,
+  applySliceSummaryDefault,
 } from '@shared/containers/ProjectTreeTable'
 import { useNewEntityContext } from '@context/NewEntityContext'
 import { useProjectContext, usePowerpack } from '@shared/context'
-import { useViewsContext } from '@shared/containers'
+import { useViewsContext, useSlicerContext } from '@shared/containers'
 import {
   mergeFieldStats,
   buildMetricTargets,
@@ -38,13 +39,19 @@ const ProjectOverviewTable = ({}: Props) => {
     columnSummaryScopes,
     groupByConfig,
   } = useColumnSettingsContext()
+  // active slicer auto-enables its matching column's default summary
+  const { sliceType } = useSlicerContext()
+  const effectiveColumnSummaries = useMemo(
+    () => applySliceSummaryDefault(columnSummaries, columnSummaryScopes, sliceType),
+    [columnSummaries, columnSummaryScopes, sliceType],
+  )
   // hold stats queries until views load, otherwise targets cover every column
   const { isLoadingViews } = useViewsContext()
   // column summaries are a powerpack feature — don't fetch stats without a license
   const { powerLicense } = usePowerpack()
   // skip the query only when the name count and every other summary are off
   const noSummaries = shouldSkipColumnStats(
-    columnSummaries,
+    effectiveColumnSummaries,
     columnSummaryScopes,
     columnVisibility,
     defaultColumnVisibility,
@@ -68,10 +75,16 @@ const ProjectOverviewTable = ({}: Props) => {
         attribs: attribFields,
         columnVisibility,
         defaultColumnVisibility,
-        columnSummaries,
+        columnSummaries: effectiveColumnSummaries,
         columnSummaryScopes,
       }),
-    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
+    [
+      attribFields,
+      columnVisibility,
+      defaultColumnVisibility,
+      effectiveColumnSummaries,
+      columnSummaryScopes,
+    ],
   )
   const taskTargets = useMemo(
     () =>
@@ -80,10 +93,16 @@ const ProjectOverviewTable = ({}: Props) => {
         attribs: attribFields,
         columnVisibility,
         defaultColumnVisibility,
-        columnSummaries,
+        columnSummaries: effectiveColumnSummaries,
         columnSummaryScopes,
       }),
-    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
+    [
+      attribFields,
+      columnVisibility,
+      defaultColumnVisibility,
+      effectiveColumnSummaries,
+      columnSummaryScopes,
+    ],
   )
 
   const {
@@ -168,6 +187,7 @@ const ProjectOverviewTable = ({}: Props) => {
           }
         }}
         showColumnSummaries
+        sliceType={sliceType}
         fieldStats={fieldStats}
         groupFieldStats={folderStats}
         fieldStatsLoading={folderStatsLoading || taskStatsLoading}

@@ -5,8 +5,12 @@ import {
   NEXT_PAGE_ID,
   ProjectTreeTable,
 } from '@shared/containers'
-import { checkColumnVisibility, useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
-import { useProjectDataContext, useViewsContext } from '@shared/containers'
+import {
+  checkColumnVisibility,
+  useColumnSettingsContext,
+  applySliceSummaryDefault,
+} from '@shared/containers/ProjectTreeTable'
+import { useProjectDataContext, useViewsContext, useSlicerContext } from '@shared/containers'
 import { usePowerpack } from '@shared/context'
 import {
   mergeFieldStats,
@@ -35,13 +39,19 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   const { attribFields } = useProjectDataContext()
   const { columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes } =
     useColumnSettingsContext()
+  // active slicer auto-enables its matching column's default summary
+  const { sliceType } = useSlicerContext()
+  const effectiveColumnSummaries = useMemo(
+    () => applySliceSummaryDefault(columnSummaries, columnSummaryScopes, sliceType),
+    [columnSummaries, columnSummaryScopes, sliceType],
+  )
   // hold stats queries until views load, otherwise targets cover every column
   const { isLoadingViews } = useViewsContext()
   // column summaries are a powerpack feature — don't fetch stats without a license
   const { powerLicense } = usePowerpack()
   // skip the query only when the name count and every other summary are off
   const noSummaries = shouldSkipColumnStats(
-    columnSummaries,
+    effectiveColumnSummaries,
     columnSummaryScopes,
     columnVisibility,
     defaultColumnVisibility,
@@ -54,15 +64,21 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         attribs: attribFields,
         columnVisibility,
         defaultColumnVisibility,
-        columnSummaries,
+        columnSummaries: effectiveColumnSummaries,
         columnSummaryScopes,
         extraFields:
           checkColumnVisibility(columnVisibility, 'productBaseType', defaultColumnVisibility) &&
-          isSummaryActive('productBaseType', columnSummaries, columnSummaryScopes)
+          isSummaryActive('productBaseType', effectiveColumnSummaries, columnSummaryScopes)
             ? ['product_base_type']
             : [],
       }),
-    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
+    [
+      attribFields,
+      columnVisibility,
+      defaultColumnVisibility,
+      effectiveColumnSummaries,
+      columnSummaryScopes,
+    ],
   )
   const versionTargets = useMemo(
     () =>
@@ -71,10 +87,16 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         attribs: attribFields,
         columnVisibility,
         defaultColumnVisibility,
-        columnSummaries,
+        columnSummaries: effectiveColumnSummaries,
         columnSummaryScopes,
       }),
-    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
+    [
+      attribFields,
+      columnVisibility,
+      defaultColumnVisibility,
+      effectiveColumnSummaries,
+      columnSummaryScopes,
+    ],
   )
 
   const {
@@ -126,6 +148,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
       isLoading={isLoading}
       includeLinks={false}
       showColumnSummaries
+      sliceType={sliceType}
       fieldStats={fieldStats}
       groupFieldStats={productStats}
       fieldStatsLoading={productStatsLoading || versionStatsLoading}
