@@ -103,6 +103,7 @@ export const Slicer: FC<SlicerProps> = ({
           renameInitialValue={hierarchyContextMenu.renameInitialValue}
           onSubmitRename={(_id, value) => hierarchyContextMenu.onSubmitRename(value)}
           onCancelRename={hierarchyContextMenu.onCancelRename}
+          onRowOptionClick={hierarchyContextMenu.onOptionClick}
           rowContextMenuBuilders={rowContextMenuBuilders}
         />
       </SimpleTableProvider>

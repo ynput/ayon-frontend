@@ -145,6 +145,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   onSubmitRename,
   onCancelRename,
   onRowDoubleClick,
+  onRowOptionClick,
   rowContextMenuBuilders = [],
   children,
   pt,
@@ -385,6 +386,9 @@ const SimpleTable: FC<SimpleTableProps> = ({
               event.shiftKey,
               event.ctrlKey || event.metaKey,
             )
+            if (event.altKey) {
+              onRowOptionClick?.(row.original)
+            }
           }
 
           const props: SimpleTableCellTemplateProps & {
@@ -456,6 +460,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
       enableClickToDeselect,
       enableNonFolderIndent,
       imgRatio,
+      onRowOptionClick,
     ],
   )
 

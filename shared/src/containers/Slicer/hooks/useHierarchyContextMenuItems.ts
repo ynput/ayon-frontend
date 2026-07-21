@@ -133,6 +133,7 @@ export const useHierarchyContextMenuItems = (
       (_e, { row, selectedRows }) => ({
         label: 'Show details',
         icon: 'dock_to_left',
+        shortcut: getPlatformShortcutKey('click', [KeyMode.Alt]),
         command: () => actions.onShowDetails(row.original),
       }),
       (_e, { row }) => ({
@@ -150,14 +151,12 @@ export const useHierarchyContextMenuItems = (
       (_e, { row }) => ({
         label: 'Expand all children',
         icon: 'expand_all',
-        shortcut: getPlatformShortcutKey('click', [KeyMode.Alt]),
         command: () => toggleChildren(row, true),
         hidden: !row.getCanExpand() || row.getIsExpanded(),
       }),
       (_e, { row }) => ({
         label: 'Collapse all children',
         icon: 'collapse_all',
-        shortcut: getPlatformShortcutKey('click', [KeyMode.Alt]),
         command: () => toggleChildren(row, false),
         hidden: !row.getCanExpand() || !row.getIsExpanded(),
       }),
@@ -197,6 +196,7 @@ export const useHierarchyContextMenuItems = (
 
   return {
     rowContextMenuBuilders,
+    onOptionClick: actions.onShowDetails,
     renamingRow,
     renameInitialValue: renamingRow?.label || renamingRow?.name || '',
     onSubmitRename: handleRenameLabel,
