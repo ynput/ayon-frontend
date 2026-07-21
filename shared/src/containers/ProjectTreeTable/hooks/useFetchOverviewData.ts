@@ -12,6 +12,14 @@ import type {
   QueryFilter,
 } from '@shared/api'
 import { useGroupedPagination } from '@shared/hooks'
+import type {
+  FolderListItem,
+  GetGroupedTasksListArgs,
+  GetTasksListArgs,
+  EntityGroup,
+  QueryFilter,
+} from '@shared/api'
+import { useGroupedPagination } from '@shared/hooks'
 import { getGroupByDataType } from '@shared/util'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
 import { useEffect, useMemo, useState } from 'react'
@@ -353,6 +361,7 @@ export const useFetchOverviewData = ({
       // For each folder, check if it should be included
       map.forEach((folder, folderId) => {
         const folderPath = folder.path as string
+        console.log(folderPath)
 
         const isSelected = selectedPaths.includes(folderPath)
 
