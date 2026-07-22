@@ -212,7 +212,7 @@ DetailsPanelProps) => {
     if (!contextEntities) uriOpenFiredForId.current = null
   }, [contextEntities])
 
-  // if the details panel is opened vair the uri, run callback
+  // if the details panel is opened via the uri, run callback
   useEffect(() => {
     if (isFetchingEntitiesDetails) return
 
@@ -230,7 +230,7 @@ DetailsPanelProps) => {
       uriOpenFiredForId.current = targetId
       onUriOpen(uriEntity, contextEntities.source)
     }
-  }, [entityDetailsData, isFetchingEntitiesDetails])
+  }, [entityDetailsData, isFetchingEntitiesDetails, contextEntities, onUriOpen])
 
   // TODO:  merge current entities data with fresh details data
 
