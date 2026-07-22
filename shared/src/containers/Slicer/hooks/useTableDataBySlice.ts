@@ -168,7 +168,11 @@ const useTableDataBySlice = ({
   } = useProjectAnatomySlices({ scopes: entityTypes, useExtraSlices })
 
   //   Hierarchy
-  const { getData: getHierarchyData, isFetching: isLoadingHierarchy } = useHierarchyTable({
+  const {
+    data: hierarchyData,
+    getData: getHierarchyData,
+    isFetching: isLoadingHierarchy,
+  } = useHierarchyTable({
     projectName: projectName || '',
     folderTypes: project?.folderTypes || [],
     includeColors: true,
@@ -183,12 +187,13 @@ const useTableDataBySlice = ({
     getData: getEntityListsData,
     isLoading: isLoadingLists,
     isExpandable: isEntityListExpandable,
-  } = useEntityListsSlice(entityTypes)
+  } = useEntityListsSlice(entityTypes, sliceType === 'entityList')
   const isLoadingData =
     isLoadingHierarchy ||
     isLoadingProject ||
     isUsersLoading ||
-    isLoadingExtraSlices ||
+    (isLoadingExtraSlices && sliceType !== 'hierarchy') ||
+    (isLoadingLists && sliceType === 'entityList') ||
     isLoadingAttribs
 
   const builtInSlices: Record<SliceType, SliceData> = {
@@ -303,7 +308,7 @@ const useTableDataBySlice = ({
     }
 
     fetchData()
-  }, [sliceType, projectName, isLoadingData])
+  }, [sliceType, projectName, isLoadingData, sliceType === 'hierarchy' ? hierarchyData : null])
 
   const dataWithBadges = useMemo(
     () => decorateBadges(slice.data, counts, filled, countsComplete),

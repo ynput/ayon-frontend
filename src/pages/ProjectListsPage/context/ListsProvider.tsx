@@ -45,12 +45,19 @@ interface ListsProviderProps {
   children: ReactNode
   isReview?: boolean
   isStoryboards?: boolean
+  // picker mode keeps selection in local state instead of URL query params
+  picker?: boolean
 }
 
-export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProviderProps) => {
+export const ListsProvider = ({
+  children,
+  isReview,
+  isStoryboards,
+  picker,
+}: ListsProviderProps) => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
   const { projectName } = useProjectContext()
-  const { listsMap, listsData, listFolders } = useListsDataContext()
+  const { listsMap, listsData, listFolders, disabledListIds } = useListsDataContext()
 
   // Memoize the configurations for the query parameters
   const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
@@ -74,15 +81,22 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
   const { getProductionAddon } = useGetProductionAddon()
   const reviewVersion = getProductionAddon('review')?.productionVersion
 
+  // picker mode: selection lives in local state, never touches the URL
+  const [pickerSelection, setPickerSelection] = useState<RowSelectionState>({})
+
   const rowSelection = useMemo(
     () =>
-      isReview
+      picker
+        ? pickerSelection
+        : isReview
         ? isStoryboards
           ? unstableStoryboardSelection
           : unstableReviewSelection
         : unstableListSelection,
     // Simpler dependencies: unstableListSelection and unstableReviewSelection are stable state references
     [
+      picker,
+      pickerSelection,
       unstableListSelection,
       unstableReviewSelection,
       unstableStoryboardSelection,
@@ -93,7 +107,9 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
 
   const setRowSelection = useCallback(
     (ids: RowSelectionState) => {
-      if (isStoryboards) {
+      if (picker) {
+        setPickerSelection(ids)
+      } else if (isStoryboards) {
         setStoryboardSelection(ids)
       } else if (isReview) {
         setReviewSelection(ids)
@@ -101,7 +117,7 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
         setListSelection(ids)
       }
     },
-    [isReview, setReviewSelection, setStoryboardSelection, setListSelection], // setReviewSelection and setListSelection are stable
+    [picker, isReview, isStoryboards, setReviewSelection, setStoryboardSelection, setListSelection], // setReviewSelection and setListSelection are stable
   )
 
   // only rows that are selected
@@ -349,13 +365,14 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
         }
 
         listsToSelect = listsData.filter((l) => {
+          if (disabledListIds.has(l.id)) return false
           if (!l.entityListFolderId) return false
           if (!allFolderIds.includes(l.entityListFolderId)) return false
           return isFolderChainExpanded(l.entityListFolderId)
         })
       } else {
         // No folders selected: select all root lists (lists without folder)
-        listsToSelect = listsData.filter((l) => !l.entityListFolderId)
+        listsToSelect = listsData.filter((l) => !l.entityListFolderId && !disabledListIds.has(l.id))
       }
 
       const selection = listsToSelect.reduce(
@@ -364,7 +381,7 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
       )
       setRowSelection(selection)
     },
-    [selectedRows, listsData, listFolders, expanded, setRowSelection],
+    [selectedRows, listsData, listFolders, expanded, setRowSelection, disabledListIds],
   )
 
   return (

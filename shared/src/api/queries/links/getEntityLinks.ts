@@ -53,11 +53,15 @@ export type EntityLinkQuery =
   | RepresentationLink
   | WorkfileLink
 export type EntityLink = Pick<EntityLinkQuery, 'direction' | 'entityType' | 'id' | 'linkType'> & {
-  node: Pick<EntityLinkQuery['node'], 'name' | 'id'> & {
-    label?: string | null
-    parents: string[]
-    subType: string | undefined
-  } | null
+  node:
+    | (EntityLinkQuery['node'] & {
+        name: string
+        id: string
+        label?: string | null
+        parents: string[]
+        subType: string | undefined
+      })
+    | null
   isRestricted?: boolean // flag to indicate if this link is restricted
 }
 
@@ -130,45 +134,46 @@ const injectedQueries = foldersApi.injectEndpoints({
           const newEntities =
             result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => {
               // Log restricted links
-              const restrictedLinks = node.links.edges?.filter((e: EntityLinkQuery | null) => !e?.node) || []
+              const restrictedLinks =
+                node.links.edges?.filter((e: EntityLinkQuery | null) => !e?.node) || []
               if (restrictedLinks.length > 0) {
-                console.log(`[RESTRICTED LINKS] Entity ${node.id} (${node.name}) has ${restrictedLinks.length} restricted link(s):`,
+                console.log(
+                  `[RESTRICTED LINKS] Entity ${node.id} (${node.name}) has ${restrictedLinks.length} restricted link(s):`,
                   restrictedLinks.map((link: any) => ({
                     linkId: link?.id,
                     linkType: link?.linkType,
                     direction: link?.direction,
                     entityType: link?.entityType,
-                    nodeIsNull: !link?.node
-                  }))
+                    nodeIsNull: !link?.node,
+                  })),
                 )
               }
 
               return {
                 id: node.id,
                 links:
-                  node.links.edges
-                    ?.map((linkEdge: EntityLinkQuery | null) => {
-                      if (!linkEdge?.node) {
-                        // Restricted link - node is null
-                        return {
-                          ...linkEdge,
-                          node: null,
-                          isRestricted: true,
-                        } as EntityLink
-                      }
-                      // Normal link
+                  node.links.edges?.map((linkEdge: EntityLinkQuery | null) => {
+                    if (!linkEdge?.node) {
+                      // Restricted link - node is null
                       return {
                         ...linkEdge,
-                        node: {
-                          id: linkEdge.node.id,
-                          name: linkEdge.node.name,
-                          label: formatEntityLabel(linkEdge.node),
-                          parents: linkEdge.node.parents || [],
-                          subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
-                        },
-                        isRestricted: false,
+                        node: null,
+                        isRestricted: true,
                       } as EntityLink
-                    }) || [], // Flatten the edges structure
+                    }
+                    // Normal link
+                    return {
+                      ...linkEdge,
+                      node: {
+                        id: linkEdge.node.id,
+                        name: linkEdge.node.name,
+                        label: formatEntityLabel(linkEdge.node),
+                        parents: linkEdge.node.parents || [],
+                        subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
+                      },
+                      isRestricted: false,
+                    } as EntityLink
+                  }) || [], // Flatten the edges structure
               }
             }) || []
 
@@ -222,14 +227,14 @@ const injectedQueries = foldersApi.injectEndpoints({
               ...result.flatMap((entity) =>
                 entity.links
                   .filter((link) => link.node !== null)
-                  .map((link) => ({ type: 'link', id: link.node!.id })),
+                  .map((link) => ({ type: 'link', id: link.node!.id as string })),
               ),
               { type: 'link', id: `${arg.projectName}-${arg.entityType}` },
             ]
           : [{ type: 'link', id: `${arg.projectName}-${arg.entityType}` }],
       // Subscribe to link.created and link.deleted WebSocket events
       async onCacheEntryAdded(
-        { projectName, entityIds, entityType },
+        { projectName, entityType },
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
       ) {
         let token: any
@@ -265,33 +270,31 @@ const injectedQueries = foldersApi.injectEndpoints({
 
             const updatedEntities =
               result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => {
-
                 return {
                   id: node.id,
                   links:
-                    node.links.edges
-                      ?.map((linkEdge: EntityLinkQuery | null) => {
-                        if (!linkEdge?.node) {
-                          // Restricted link - node is null
-                          return {
-                            ...linkEdge,
-                            node: null,
-                            isRestricted: true,
-                          } as EntityLink
-                        }
-                        // Normal link
+                    node.links.edges?.map((linkEdge: EntityLinkQuery | null) => {
+                      if (!linkEdge?.node) {
+                        // Restricted link - node is null
                         return {
                           ...linkEdge,
-                          node: {
-                            id: linkEdge.node.id,
-                            name: linkEdge.node.name,
-                            label: formatEntityLabel(linkEdge.node),
-                            parents: linkEdge.node.parents || [],
-                            subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
-                          },
-                          isRestricted: false,
+                          node: null,
+                          isRestricted: true,
                         } as EntityLink
-                      }) || [],
+                      }
+                      // Normal link
+                      return {
+                        ...linkEdge,
+                        node: {
+                          id: linkEdge.node.id,
+                          name: linkEdge.node.name,
+                          label: formatEntityLabel(linkEdge.node),
+                          parents: linkEdge.node.parents || [],
+                          subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
+                        },
+                        isRestricted: false,
+                      } as EntityLink
+                    }) || [],
                 }
               }) || []
 

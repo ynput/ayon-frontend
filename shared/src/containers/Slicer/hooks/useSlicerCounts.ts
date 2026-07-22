@@ -20,6 +20,8 @@ export type SlicerCounts = {
   complete: boolean
 }
 
+const EMPTY_COUNTS: GroupCountsMap = new Map()
+
 export const useSlicerCounts = (
   source: SlicerCountsSource | undefined,
   skip?: boolean,
@@ -45,7 +47,16 @@ export const useSlicerCounts = (
   const ungrouped = counts?.get(UNGROUPED_VALUE)?.count ?? 0
   const filled = Math.max(total - ungrouped, 0)
 
-  return { counts: disabled ? undefined : counts, total, filled, complete: !disabled && complete }
+  // Stats settled with an empty distribution (filters match nothing) still must
+  // zero-fill badges — hand decorateBadges an empty map instead of undefined.
+  const resolvedCounts = counts ?? (complete ? EMPTY_COUNTS : undefined)
+
+  return {
+    counts: disabled ? undefined : resolvedCounts,
+    total,
+    filled,
+    complete: !disabled && complete,
+  }
 }
 
 export default useSlicerCounts

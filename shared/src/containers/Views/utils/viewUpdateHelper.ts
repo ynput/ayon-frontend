@@ -18,7 +18,7 @@ import {
 } from '@shared/api'
 import { generateWorkingView } from './generateWorkingView'
 import { toast } from 'react-toastify'
-import { useCallback } from 'react'
+import { SetStateAction, useCallback, useRef, useState } from 'react'
 import { useStore } from 'react-redux'
 import { useViewsContext, ViewsContextValue } from '../context/ViewsContext'
 
@@ -274,4 +274,104 @@ export const useViewUpdateHelper = () => {
     getLatestSettings: getLatest,
     markCacheDirty,
   }
+}
+
+type SettingsObject = Record<string, any>
+
+export type PathKeys<T> = T extends SettingsObject
+  ? {
+      [K in keyof T & string]: NonNullable<T[K]> extends readonly any[]
+        ? K
+        : NonNullable<T[K]> extends SettingsObject
+        ? K | `${K}.${PathKeys<NonNullable<T[K]>>}`
+        : K
+    }[keyof T & string]
+  : never
+
+export type PathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
+  ? K extends keyof T
+    ? PathValue<NonNullable<T[K]>, Rest>
+    : never
+  : P extends keyof T
+  ? T[P]
+  : never
+
+const getNestedValue = <T extends SettingsObject, P extends PathKeys<T>>(
+  settings: T | undefined,
+  path: P,
+): PathValue<T, P> | undefined => {
+  return path.split('.').reduce<any>((value, key) => value?.[key], settings)
+}
+
+const setNestedValue = <T extends SettingsObject>(settings: T, path: string, value: any): T => {
+  const [key, ...rest] = path.split('.')
+
+  if (!key) return settings
+
+  return {
+    ...settings,
+    [key]: rest.length
+      ? setNestedValue((settings[key] as SettingsObject) || {}, rest.join('.'), value)
+      : value,
+  }
+}
+
+export const useViewsState = <
+  Settings extends SettingsObject = SettingsObject,
+  P extends PathKeys<Settings> = PathKeys<Settings>,
+>(
+  path: P,
+  defaultValue?: PathValue<Settings, P>,
+): [
+  PathValue<Settings, P> | undefined,
+  (value: SetStateAction<PathValue<Settings, P>>) => void,
+] => {
+  const { viewSettings, isLoadingViews } = useViewsContext()
+  const { updateViewSettings, getLatestSettings } = useViewUpdateHelper()
+  const [localValue, setLocalValueState] = useState<PathValue<Settings, P> | null>(null)
+  const localValueRef = useRef<PathValue<Settings, P> | null>(null)
+
+  const settings = viewSettings as Settings | undefined
+  const value = localValue !== null ? localValue : getNestedValue(settings, path) ?? defaultValue
+
+  const setLocalValue = useCallback((newValue: PathValue<Settings, P> | null) => {
+    localValueRef.current = newValue
+    setLocalValueState(newValue)
+  }, [])
+
+  const setValue = useCallback(
+    (nextValue: SetStateAction<PathValue<Settings, P>>) => {
+      if (isLoadingViews || !settings) return
+
+      const latestSettings = (getLatestSettings().settings as Settings | undefined) ?? settings
+      const currentValue =
+        localValueRef.current !== null
+          ? localValueRef.current
+          : getNestedValue(latestSettings, path) ?? defaultValue
+      const resolvedValue =
+        typeof nextValue === 'function'
+          ? (nextValue as (value: PathValue<Settings, P>) => PathValue<Settings, P>)(
+              currentValue as PathValue<Settings, P>,
+            )
+          : nextValue
+
+      void updateViewSettings(
+        setNestedValue(latestSettings, path, resolvedValue),
+        setLocalValue,
+        resolvedValue,
+        {},
+      )
+    },
+    [
+      defaultValue,
+      getLatestSettings,
+      isLoadingViews,
+      path,
+      settings,
+      setLocalValue,
+      updateViewSettings,
+    ],
+  )
+
+  return [value, setValue]
 }

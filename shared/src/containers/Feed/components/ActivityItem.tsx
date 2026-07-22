@@ -63,7 +63,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
     case 'assignee.remove':
       return <ActivityAssigneeChange activity={activity} {...props} />
     case 'version.publish':
-      return <ActivityVersions {...{ activity, projectInfo, filter }} {...props} />
+      return <ActivityVersions {...{ activity, projectInfo, filter, statuses }} {...props} />
     case 'version.review':
       return <ActivityVersionReview activity={activity} isGuest={isGuest} {...props} />
     case 'group':

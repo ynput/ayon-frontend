@@ -35,11 +35,11 @@ const enhancedApi = foldersApi.enhanceEndpoints({
 
         // Simplified trailing debounce approach:
         // - Collect updated folder IDs for 2000ms window
-        // - If a creation topic appears, perform one full list refetch (within debounce window)
+        // - If a deletion topic appears, perform one full list refetch (within debounce window)
         // - Otherwise, fetch each pending event and patch existing cache entries only
         const MIN_INTERVAL = 2000
         const pendingMessages = new Map<string, any>()
-        let resyncFlag = false // full list refetch needed (created or deleted)
+        let resyncFlag = false // full list refetch needed for deleted folders
         let timer: ReturnType<typeof setTimeout> | null = null
         let processing = false
 
@@ -64,7 +64,7 @@ const enhancedApi = foldersApi.enhanceEndpoints({
             if (resyncFlag) {
               resyncFlag = false
               try {
-                // get full folder list and update cache - done for created events
+                // get full folder list and update cache after folder deletion
                 const result = await dispatch(
                   foldersApi.endpoints.getFolderList.initiate(
                     // @ts-expect-error realtime flag to avoid toggling global isFetching for watchers

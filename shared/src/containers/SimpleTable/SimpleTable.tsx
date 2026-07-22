@@ -235,7 +235,15 @@ const SimpleTable: FC<SimpleTableProps> = ({
           tableInstance.setRowSelection(newSelection)
         }
       } else if (isMultiSelect && isCtrlOrMeta) {
-        currentRow.toggleSelected()
+        // write a concrete object from live state; toggleSelected()'s functional updater runs
+        // against a stale rowSelection closure and drops the other selected rows
+        const selection = { ...tableInstance.getState().rowSelection }
+        if (selection[currentId]) {
+          delete selection[currentId]
+        } else {
+          selection[currentId] = true
+        }
+        tableInstance.setRowSelection(selection)
       } else {
         // If it's already selected and it's the only one, don't update selection to avoid unnecessary re-renders
         const selection = tableInstance.getState().rowSelection
@@ -303,9 +311,14 @@ const SimpleTable: FC<SimpleTableProps> = ({
             event.ctrlKey || event.metaKey,
           )
 
-          // Focus the next row's cell
+          // Focus the next row's cell. Scope to this table's container: row ids are
+          // entity ids that can also exist in other SimpleTables on the page (slicer),
+          // so a document-wide getElementById would steal focus to a duplicate.
           requestAnimationFrame(() => {
-            const nextRowElement = document.getElementById(nextRow.id)
+            const container = tableContainerRef.current
+            const nextRowElement = container
+              ? container.querySelector(`#${CSS.escape(nextRow.id)}`)
+              : document.getElementById(nextRow.id)
             const nextCell = nextRowElement?.querySelector('[tabindex="0"]') as HTMLElement
             if (nextCell) {
               nextCell.focus()

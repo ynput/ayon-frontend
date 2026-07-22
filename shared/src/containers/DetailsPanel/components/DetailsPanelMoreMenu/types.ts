@@ -1,13 +1,29 @@
-import type { MenuItemType } from '@shared/components'
-
 /**
- * Selected entity reference passed to the more-menu's "Add to list" sub-menu.
+ * Selected entity reference passed to the more-menu's "Add to list" sub-menu
+ * and (when the deletion fields are populated) its "Delete" item.
  */
 export interface SelectedEntityRef {
   entityId: string
   entityType?: string
   // YN-0683 / issue #1947: review-session lists are skipped when no selected
   // version has reviewables. Optional because non-version selections never set it.
+  hasReviewables?: boolean
+  // Deletion metadata — needed to build the standardized delete confirmation.
+  name?: string
+  label?: string | null
+  projectName?: string
+  folderId?: string // task parent folder
+  parentId?: string // folder parent folder
+}
+
+/**
+ * Normalized entity ref handed to `openAddToListDialog`. Mirrors the source
+ * `ListEntityInput` (entityType present, may be undefined) so the app's context is
+ * structurally assignable to this shared interface.
+ */
+export interface ListEntityRef {
+  entityId: string
+  entityType: string | undefined
   hasReviewables?: boolean
 }
 
@@ -31,27 +47,12 @@ export interface EntityList {
  * is forbidden). When the source type changes, update this interface to match.
  */
 export interface DetailsPanelEntityListsContext {
-  folders: EntityList[]
-  tasks: EntityList[]
-  products: EntityList[]
-  versions: EntityList[]
-  reviews: EntityList[]
-  buildHierarchicalMenuItems?: (
-    lists: EntityList[],
-    selected: SelectedEntityRef[],
-    showIcon?: (list: EntityList) => boolean,
-  ) => MenuItemType[]
-  buildAddToListMenu?: (
-    items: MenuItemType[],
-    menu?: { label?: string },
-  ) => {
-    id: string
-    label: string
-    icon: string
-    items: MenuItemType[]
-  }
-  newListMenuItem?: (
-    entityType: 'folder' | 'task' | 'version',
-    selected: SelectedEntityRef[],
-  ) => MenuItemType | undefined
+  // gates the "Add to review list" item without preloading review lists
+  hasReviewAddon?: boolean
+  // opens the searchable add-to-list dialog (replaces the old nested submenu builders)
+  openAddToListDialog?: (
+    entityType: string,
+    entities: ListEntityRef[],
+    opts?: { isReview?: boolean },
+  ) => void
 }

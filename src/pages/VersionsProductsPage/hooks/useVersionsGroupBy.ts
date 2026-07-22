@@ -120,6 +120,7 @@ const useVersionsGroupBy = ({
     data: { versions = [] } = {},
     isFetching: isFetchingGroups,
     refetch: refetchGroupedVersions,
+    isUninitialized: isUninitializedGroupedVersions,
   } = useGetGroupedVersionsListQuery(queryArgs, {
     skip: !groupBy || !groupFilters.length || isLoadingModules,
   })
@@ -139,6 +140,8 @@ const useVersionsGroupBy = ({
     versions,
     isLoading,
     refetch: refetchGroupedVersions,
+    isUninitialized: isUninitializedGroupedVersions,
+    queryArgs,
     incrementPageCount,
   }
 }

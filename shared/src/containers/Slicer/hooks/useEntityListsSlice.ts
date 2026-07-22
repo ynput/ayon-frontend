@@ -19,7 +19,7 @@ export const buildListFolderRowId = (folderId: string) =>
 const getListIcon = (list: Pick<EntityList, 'entityListType' | 'entityType'>) =>
   list.entityListType === 'review-session' ? 'subscriptions' : getEntityTypeIcon(list.entityType)
 
-export const useEntityListsSlice = (entityTypes?: string[]) => {
+export const useEntityListsSlice = (entityTypes?: string[], enabled: boolean = true) => {
   const { projectName } = useProjectContext()
   const { powerLicense } = usePowerpack()
 
@@ -31,13 +31,13 @@ export const useEntityListsSlice = (entityTypes?: string[]) => {
     { projectName: projectName || '' },
     {
       initialPageParam: { cursor: '' },
-      skip: !projectName,
+      skip: !projectName || !enabled,
     },
   )
 
   const { data: listFolders = [], isLoading: isLoadingFolders } = useGetEntityListFoldersQuery(
     { projectName: projectName || '' },
-    { skip: !projectName || !powerLicense },
+    { skip: !projectName || !powerLicense || !enabled },
   )
 
   const tableData: SimpleTableRow[] = useMemo(() => {
