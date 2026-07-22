@@ -33,6 +33,9 @@ interface VPTableProps {
   contextMenuItems: VPContextMenuItems
 }
 
+// products/versions subType column is product type - scopes the slice-summary default accordingly
+const VP_SCOPES = ['version', 'product']
+
 const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   const { fetchNextPage, isLoading, columnStatsArgs } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
@@ -42,7 +45,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   // active slicer auto-enables its matching column's default summary
   const { sliceType } = useSlicerContext()
   const effectiveColumnSummaries = useMemo(
-    () => applySliceSummaryDefault(columnSummaries, columnSummaryScopes, sliceType),
+    () => applySliceSummaryDefault(columnSummaries, columnSummaryScopes, sliceType, VP_SCOPES),
     [columnSummaries, columnSummaryScopes, sliceType],
   )
   // hold stats queries until views load, otherwise targets cover every column

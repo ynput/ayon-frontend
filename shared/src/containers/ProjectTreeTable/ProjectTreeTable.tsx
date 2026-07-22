@@ -245,11 +245,6 @@ export const ProjectTreeTable = ({
     columnSummaryFormats,
     updateColumnSummaryFormat,
   } = useColumnSettingsContext()
-  // Auto-enable the sliced column's summary when the user hasn't set one.
-  const effectiveColumnSummaries = useMemo(
-    () => applySliceSummaryDefault(columnSummaries, columnSummaryScopes, sliceType),
-    [columnSummaries, columnSummaryScopes, sliceType],
-  )
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
 
   const {
@@ -275,6 +270,11 @@ export const ProjectTreeTable = ({
     loadingLinksEntityIds,
     queryFilters,
   } = useProjectTableContext()
+  // Auto-enable the sliced column's summary when the user hasn't set one.
+  const effectiveColumnSummaries = useMemo(
+    () => applySliceSummaryDefault(columnSummaries, columnSummaryScopes, sliceType, scopes),
+    [columnSummaries, columnSummaryScopes, sliceType, scopes],
+  )
   const isGrouping = !!groupBy || !!overrideGroupBy
 
   const filterError = isFilterError(error, queryFilters)
