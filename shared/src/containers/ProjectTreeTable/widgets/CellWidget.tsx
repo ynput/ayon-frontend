@@ -319,10 +319,12 @@ export const CellWidget: FC<EditorCellProps> = ({
         )
 
       case type === 'datetime':
+        console.log(columnId)
         return (
           <DateWidget
             value={value ? (value as string) : undefined}
             isInherited={isInherited}
+            isAllDayEndDate={columnId === 'attrib_endDate'}
             {...sharedProps}
             {...pt?.date}
           />

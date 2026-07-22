@@ -1,6 +1,6 @@
 import { forwardRef, useState, useEffect, useRef } from 'react'
 import styled from 'styled-components'
-import { isValid, parseISO } from 'date-fns'
+import { isValid, parseISO, subMilliseconds } from 'date-fns'
 import { WidgetBaseProps } from './CellWidget'
 import { formatUTCDate } from '@shared/util/formatUTCDate'
 
@@ -10,6 +10,7 @@ interface DateWidgetInputProps
   value: string
   onCancel?: () => void
   autoFocus?: boolean
+  isAllDayEndDate?: boolean
 }
 
 const StyledInput = styled.input`
@@ -29,12 +30,25 @@ const StyledInput = styled.input`
 `
 
 export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps>(
-  ({ value: initialValue, onChange, onCancel, autoFocus = true, ...props }, _) => {
+  (
+    {
+      value: initialValue,
+      onChange,
+      onCancel,
+      autoFocus = true,
+      isAllDayEndDate = false,
+      ...props
+    },
+    _,
+  ) => {
     const [value, setValue] = useState(() => {
       if (initialValue) {
         const parsedDate = parseISO(initialValue)
         if (isValid(parsedDate)) {
-          return formatUTCDate(parsedDate, 'yyyy-MM-dd')
+          return formatUTCDate(
+            isAllDayEndDate ? subMilliseconds(parsedDate, 1) : parsedDate,
+            'yyyy-MM-dd',
+          )
         }
       }
       return ''
@@ -44,12 +58,17 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
       if (initialValue) {
         const parsedDate = parseISO(initialValue)
         if (isValid(parsedDate)) {
-          setValue(formatUTCDate(parsedDate, 'yyyy-MM-dd'))
+          setValue(
+            formatUTCDate(
+              isAllDayEndDate ? subMilliseconds(parsedDate, 1) : parsedDate,
+              'yyyy-MM-dd',
+            ),
+          )
         } else {
           setValue('')
         }
       }
-    }, [initialValue])
+    }, [initialValue, isAllDayEndDate])
 
     const inputRef = useRef<HTMLInputElement>(null)
 
@@ -81,7 +100,7 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
       if (value) {
         const [y, m, d] = value.split('-').map(Number)
         if (y && m && d) {
-          const utcDate = new Date(Date.UTC(y, m - 1, d))
+          const utcDate = new Date(Date.UTC(y, m - 1, d + Number(isAllDayEndDate)))
           const newISOValue = utcDate.toISOString()
 
           // For Click/Blur: only save if value changed
