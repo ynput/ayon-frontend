@@ -237,6 +237,9 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 
   // on first load or URL param change, check if there is a uri or URL params and open details panel if present
   useEffect(() => {
+    // closing the panel deletes these params; bail so the stale uri state below can't reopen it
+    if (!project && !type && !id) return
+
     // Priority 1: Check for 'uri' parameter (ayon+entity://...)
     if (uriType === 'entity' && entity && entity.entityType !== 'product') {
       getUriEntities()
