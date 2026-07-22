@@ -22,7 +22,8 @@ export default function useKeyboardNavigation() {
   const focusCellElement = useCallback(
     (cellId: string) => {
       focusCell(cellId)
-      requestAnimationFrame(() => document.getElementById(cellId)?.focus())
+      console.log(cellId)
+      requestAnimationFrame(() => document.getElementById(cellId)?.closest('td')?.focus())
     },
     [focusCell],
   )
