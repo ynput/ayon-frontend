@@ -353,7 +353,6 @@ export const useFetchOverviewData = ({
       // For each folder, check if it should be included
       map.forEach((folder, folderId) => {
         const folderPath = folder.path as string
-        console.log(folderPath)
 
         const isSelected = selectedPaths.includes(folderPath)
 
