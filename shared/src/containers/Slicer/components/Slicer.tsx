@@ -110,11 +110,13 @@ export const Slicer: FC<SlicerProps> = ({
           isLoading={isLoadingSliceTableData || isViewSyncPending}
           forceUpdateTable={sliceType}
           globalFilter={globalFilter}
-          renamingId={hierarchyContextMenu.renamingRow?.id}
-          renameInitialValue={hierarchyContextMenu.renameInitialValue}
-          onSubmitRename={(_id, value) => hierarchyContextMenu.onSubmitRename(value)}
-          onCancelRename={hierarchyContextMenu.onCancelRename}
-          onRowOptionClick={hierarchyContextMenu.onOptionClick}
+          renamingId={sliceType === 'hierarchy' ? hierarchyContextMenu.renamingRow?.id : null}
+          renameInitialValue={sliceType === 'hierarchy' ? hierarchyContextMenu.renameInitialValue : undefined}
+          onSubmitRename={
+            sliceType === 'hierarchy' ? (_id, value) => hierarchyContextMenu.onSubmitRename(value) : undefined
+          }
+          onCancelRename={sliceType === 'hierarchy' ? hierarchyContextMenu.onCancelRename : undefined}
+          onRowOptionClick={sliceType === 'hierarchy' ? hierarchyContextMenu.onOptionClick : undefined}
           rowContextMenuBuilders={rowContextMenuBuilders}
         />
       </SimpleTableProvider>
