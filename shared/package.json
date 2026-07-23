@@ -121,8 +121,8 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "7.27.0",
-    "@module-federation/enhanced": "2.3.2",
-    "@module-federation/vite": "1.14.2",
+    "@module-federation/enhanced": "2.8.0",
+    "@module-federation/vite": "1.19.0",
     "@vitejs/plugin-react": "4.7.0",
     "typescript": "5.9.3",
     "vite": "7.3.5",
@@ -134,7 +134,7 @@
     "@tanstack/react-virtual": "3.13.23",
     "@ynput/ayon-frontend-shared": "^0.3.43",
     "@ynput/ayon-react-components": "^1.18.8",
-    "axios": "1.16.1",
+    "axios": "1.18.1",
     "clsx": "2.1.1",
     "custom-protocol-check": "1.4.0",
     "date-fns": "3.6.0",
@@ -155,5 +155,8 @@
     "short-uuid": "4.2.2",
     "turndown": "7.2.4",
     "uuid": "14.0.0"
+  },
+  "resolutions": {
+    "lodash": "4.18.1"
   }
 }
