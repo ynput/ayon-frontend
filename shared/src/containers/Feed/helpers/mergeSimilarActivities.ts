@@ -19,6 +19,8 @@ const mergeSimilarActivities = (activities: any[], type: string, oldKey: string 
 
       const isSameAuthor = currentActivity.authorName === activity.authorName
       const isSameEntity = currentActivity.origin.id === activity.entityId
+      // attrib changes only merge per attribute (key is undefined for other types)
+      const isSameKey = currentActivity.activityData?.key === activity.activityData?.key
       const currentCreatedAt = new Date(currentActivity.createdAt)
       const activityCreatedAt = new Date(activity.createdAt)
       const activityDuration =
@@ -32,7 +34,7 @@ const mergeSimilarActivities = (activities: any[], type: string, oldKey: string 
         // @ts-expect-error
         !('minutes' in activityDuration) && activityDuration.seconds <= seconds
 
-      if (isSameAuthor && isWithinSeconds && isSameEntity) {
+      if (isSameAuthor && isWithinSeconds && isSameEntity && isSameKey) {
         // Continue the sequence, update the newValue from the current activity
         currentActivity[oldKey] = activity[oldKey]
         // Create a new activityData object instead of modifying the existing one

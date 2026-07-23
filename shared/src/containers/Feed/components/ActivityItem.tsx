@@ -2,6 +2,7 @@ import React from 'react'
 import ActivityComment from './ActivityComment/ActivityComment'
 import ActivityStatusChange from './ActivityStatusChange/ActivityStatusChange'
 import ActivityAssigneeChange from './ActivityAssigneeChange/ActivityAssigneeChange'
+import ActivityAttribChange from './ActivityAttribChange/ActivityAttribChange'
 import ActivityVersions from './ActivityVersions/ActivityVersions'
 import ActivityGroup from './ActivityGroup/ActivityGroup'
 import { Status } from '../../ProjectTreeTable/types/project'
@@ -58,6 +59,8 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
       )
     case 'status.change':
       return <ActivityStatusChange activity={activity} {...props} />
+    case 'attrib.change':
+      return <ActivityAttribChange activity={activity} {...props} />
     case 'assignee.add':
       return <ActivityAssigneeChange activity={activity} {...props} isAdding />
     case 'assignee.remove':

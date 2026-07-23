@@ -296,10 +296,11 @@ export const filterActivityTypes: Record<string, string[]> = {
     'assignee.add',
     'assignee.remove',
     'version.review',
+    'attrib.change',
   ],
   comments: ['comment'],
   versions: ['version.publish'],
-  updates: ['status.change', 'assignee.add', 'assignee.remove'],
+  updates: ['status.change', 'assignee.add', 'assignee.remove', 'attrib.change'],
   checklists: ['checklist'],
 }
 

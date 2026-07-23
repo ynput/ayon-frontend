@@ -7,7 +7,7 @@ import groupMinorActivities, { ActivityUser } from '../helpers/groupMinorActivit
 import mergeSimilarActivities from '../helpers/mergeSimilarActivities'
 
 // Define the types of activities that are considered minor
-const minorActivityTypes = ['status.change', 'assignee.add', 'assignee.remove']
+const minorActivityTypes = ['status.change', 'assignee.add', 'assignee.remove', 'attrib.change']
 
 const getStatusActivityIcon = (activities = [], projectInfo = {}) => {
   return activities.map((activity) => {
@@ -88,9 +88,15 @@ const useTransformActivities = (
   }, [activitiesWithoutRelations])
 
   // 4. for status change activities that are together, merge them into one activity
-  const mergedActivitiesData = useMemo(
+  const mergedStatusActivitiesData = useMemo(
     () => mergeSimilarActivities(reversedActivitiesData, 'status.change', 'oldStatus'),
     [reversedActivitiesData],
+  )
+
+  // 4.5. merge rapid changes of the same attribute into one activity
+  const mergedActivitiesData = useMemo(
+    () => mergeSimilarActivities(mergedStatusActivitiesData, 'attrib.change'),
+    [mergedStatusActivitiesData],
   )
 
   // 5. group minor activities together
