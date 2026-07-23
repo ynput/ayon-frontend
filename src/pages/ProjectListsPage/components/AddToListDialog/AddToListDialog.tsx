@@ -34,6 +34,22 @@ const TableContainer = styled.div`
   height: 100%;
   min-height: 0;
   width: 100%;
+
+  /* type-mismatch rows: muted, not struck through; the reason gets the space it needs (name truncates first) so it never paints over other text (&& outranks SimpleTable's disabled rule) */
+  && .disabled {
+    .value {
+      text-decoration: none;
+    }
+    .text {
+      min-width: 0;
+    }
+    .badges {
+      flex-shrink: 0;
+    }
+    .badges span {
+      white-space: nowrap;
+    }
+  }
 `
 
 export interface AddToListDialogProps {

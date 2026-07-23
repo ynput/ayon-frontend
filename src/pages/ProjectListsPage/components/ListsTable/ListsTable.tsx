@@ -50,7 +50,7 @@ const ListsTable: FC<ListsTableProps> = ({
   // unique menu id in picker mode so the dialog's header menu doesn't collide with the sidepanel's
   const pickerMenuId = useId()
 
-  const rowContextMenuBuildersAll = useListContextMenu(rowContextMenuBuilders, { picker })
+  const rowContextMenuBuildersAll = useListContextMenu(rowContextMenuBuilders)
   const sessionsLabel = useMemo(
     () => (isStoryboards ? 'Storyboards' : 'Review sessions'),
     [isStoryboards],
@@ -77,14 +77,15 @@ const ListsTable: FC<ListsTableProps> = ({
 
   const renderCell = useCallback((props: any, row: any) => {
     const listId = row.original.id
+    const { isDisabled, disabledMessage, inactive, data } = row.original
 
     return (
       <SimpleTableCellTemplate
         {...props}
         key={listId}
-        iconColor={row.original.data.color}
+        iconColor={data.color}
         enableNonFolderIndent={false}
-        badge={row.original.inactive ? '(archived)' : row.original.data.count}
+        badge={isDisabled ? disabledMessage : inactive ? '(archived)' : data.count}
       />
     )
   }, [])
@@ -129,7 +130,7 @@ const ListsTable: FC<ListsTableProps> = ({
             error={isError ? 'Error loading lists' : undefined}
             onScrollBottom={fetchNextPage}
             enableClickToDeselect={false}
-            rowContextMenuBuilders={rowContextMenuBuildersAll}
+            rowContextMenuBuilders={picker ? [] : rowContextMenuBuildersAll}
             renamingId={picker ? undefined : renamingList}
             onRename={picker ? undefined : handleRename}
             onSubmitRename={picker ? undefined : handleSubmitRename}

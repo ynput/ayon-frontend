@@ -51,14 +51,7 @@ const wouldCreateCircularDependency = (
   return isDescendant(targetParentId, folderId)
 }
 
-interface UseListContextMenuOptions {
-  picker?: boolean
-}
-
-const useListContextMenu = (
-  extraBuilders: ListRowContextMenuBuilder[] = [],
-  { picker = false }: UseListContextMenuOptions = {},
-) => {
+const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => {
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
   const { projectName } = useProjectContext()
@@ -127,18 +120,6 @@ const useListContextMenu = (
       const allSelectedRowsAreFolders = selectedRows.every((selected) =>
         parseListFolderRowId(selected),
       )
-
-      // picker (add-to-list dialog): allowlist — selection helpers only, no mutations
-      if (picker) {
-        return [
-          {
-            label: 'Select all lists',
-            icon: 'checklist',
-            hidden: !selectedFolderIds.length,
-            command: () => selectAllLists({ rowIds: selectedRows }),
-          },
-        ]
-      }
 
       // Get selected folders as full objects
       const selectedFoldersAll: EntityListFolderModel[] = selectedFolderIds
@@ -425,7 +406,6 @@ const useListContextMenu = (
       clearListItems,
       isReview,
       powerLicense,
-      picker,
     ],
   )
 

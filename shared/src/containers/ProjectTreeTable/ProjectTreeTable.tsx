@@ -1714,6 +1714,8 @@ const TD = ({
         // check we are not clicking in a dropdown
         if (target.closest('.options')) return
 
+        e.currentTarget.focus()
+
         // Handle double-click via e.detail (browser's native click count).
         // We handle it here in mousedown instead of relying on the dblclick event,
         // because the 1st mousedown triggers React state updates that can replace

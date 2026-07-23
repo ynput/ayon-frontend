@@ -139,7 +139,7 @@ export const useMenuOptions = ({
         const anyHasReviewables = normalizedSelected.some((e) => e.hasReviewables === true)
         items.push({
           id: 'add-to-review-list',
-          label: 'Add to review list',
+          label: 'Add to session',
           icon: 'list_alt_add',
           disabled: !anyHasReviewables,
           ...(anyHasReviewables
