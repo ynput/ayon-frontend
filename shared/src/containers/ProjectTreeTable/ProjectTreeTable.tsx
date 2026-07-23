@@ -393,6 +393,18 @@ export const ProjectTreeTable = ({
     return scopes.map((s) => upperFirst(s)).join(' / ')
   }
 
+  // TanStack renders function-valued cell definitions as component types. Keep
+  // those types stable when Overview recreates equivalent metadata arrays.
+  const columnInputKey = JSON.stringify({
+    scopes,
+    columnAttribs,
+    options,
+    linkTypes,
+    excludedColumns,
+    excludedSorting,
+    groupBy,
+  })
+
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
       scopes,
@@ -428,20 +440,14 @@ export const ProjectTreeTable = ({
     }
     return baseColumns
   }, [
-    scopes,
-    columnAttribs,
+    columnInputKey,
     showHierarchy,
     isFlatFolderView,
     isExpandable,
-    options,
-    linkTypes,
     includeLinks,
     extraColumns,
-    excludedColumns,
-    excludedSorting,
     sortableRows,
     enableSorting,
-    groupBy,
   ])
 
   // Keep ColumnSettingsProvider's allColumns ref up to date
