@@ -420,9 +420,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
             enableNonFolderIndent,
             isRowExpanded: row.getIsExpanded(),
             isTableExpandable: cellMeta?.isExpandable,
-            // @ts-ignore
-            onExpandClick: (event) => {
-              if (event.altKey) {
+            onExpandClick: (event?: ReactMouseEvent<HTMLElement, MouseEvent>) => {
+              if (event?.altKey) {
                 toggleRowAndDescendants(row, !row.getIsExpanded())
               } else {
                 row.toggleExpanded()
