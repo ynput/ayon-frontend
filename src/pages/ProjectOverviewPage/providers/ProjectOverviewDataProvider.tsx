@@ -20,8 +20,6 @@ const DEFAULT_COLUMN_VISIBILITY = {
 }
 
 const ProjectOverviewDataProvider: FC = () => {
-  const projectName = useAppSelector((state) => state.project.name) || ''
-
   // view context and update helper
   const { viewSettings } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
@@ -33,21 +31,19 @@ const ProjectOverviewDataProvider: FC = () => {
   const modules = useGroupByRemoteModules()
 
   return (
-    <ProjectDataProvider projectName={projectName}>
-      <ColumnSettingsProvider
-        config={columns}
-        onChange={onUpdateColumns}
-        defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
-      >
-        <ColumnDndProvider>
-          <ProjectOverviewProvider modules={modules}>
-            <SettingsPanelProvider>
-              <ProjectOverviewTableProvider modules={modules} />
-            </SettingsPanelProvider>
-          </ProjectOverviewProvider>
-        </ColumnDndProvider>
-      </ColumnSettingsProvider>
-    </ProjectDataProvider>
+    <ColumnSettingsProvider
+      config={columns}
+      onChange={onUpdateColumns}
+      defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
+    >
+      <ColumnDndProvider>
+        <ProjectOverviewProvider modules={modules}>
+          <SettingsPanelProvider>
+            <ProjectOverviewTableProvider modules={modules} />
+          </SettingsPanelProvider>
+        </ProjectOverviewProvider>
+      </ColumnDndProvider>
+    </ColumnSettingsProvider>
   )
 }
 

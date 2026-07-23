@@ -3,7 +3,7 @@
 
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
 import { useGetUsersAssigneeQuery } from '@shared/api'
-import type { DetailsPanelEntityData, ProjectModel } from '@shared/api'
+import type { DetailsPanelEntityData } from '@shared/api'
 import {
   parseCellId,
   ROW_SELECTION_COLUMN_ID,
@@ -49,7 +49,7 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
         projectName,
       }))
 
-  const projectsInfo = { [projectName]: projectInfo as ProjectModel }
+  const projectsInfo = { [projectName]: projectInfo }
 
   const handleClose = () => {
     clearSelectedEntity()
@@ -131,7 +131,6 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
             isOpen={!!selectedEntity || showVersionDetails}
             entityType={selectedEntity?.entityType || 'version'}
             entities={entities}
-            // @ts-ignore
             projectsInfo={projectsInfo}
             projectNames={[projectName]}
             tagsOptions={projectInfo?.tags || []}

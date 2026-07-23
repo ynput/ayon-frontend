@@ -12,14 +12,6 @@ import type {
   QueryFilter,
 } from '@shared/api'
 import { useGroupedPagination } from '@shared/hooks'
-import type {
-  FolderListItem,
-  GetGroupedTasksListArgs,
-  GetTasksListArgs,
-  EntityGroup,
-  QueryFilter,
-} from '@shared/api'
-import { useGroupedPagination } from '@shared/hooks'
 import { getGroupByDataType } from '@shared/util'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
 import { useEffect, useMemo, useState } from 'react'
