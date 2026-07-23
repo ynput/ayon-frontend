@@ -5,7 +5,6 @@ import {
   NEXT_PAGE_ID,
   ProjectTreeTable,
 } from '@shared/containers'
-import { useSlicerContext } from '@shared/containers'
 import { FC, useMemo } from 'react'
 import { useVersionsDataContext } from '../../context/VPDataContext'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
@@ -30,8 +29,6 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     fieldStatsError,
   } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
-  // active slicer auto-enables its matching column's default summary
-  const { sliceType } = useSlicerContext()
   const {
     uploadVersionItem,
     deleteVersionItem,
@@ -171,7 +168,6 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
       isLoading={isLoading}
       includeLinks={false}
       showColumnSummaries
-      sliceType={sliceType}
       fieldStats={fieldStats}
       groupFieldStats={groupFieldStats}
       fieldStatsLoading={fieldStatsLoading}

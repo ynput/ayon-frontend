@@ -89,7 +89,6 @@ import {
   getFilterErrorMessage,
   getEntitiesLabelFromScopes,
   extractQueryErrorMessage,
-  applySliceSummaryDefault,
 } from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
 
@@ -171,7 +170,6 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   dndActiveId?: UniqueIdentifier | null // Added prop
   columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
   showColumnSummaries?: boolean // render the fixed summary footer row
-  sliceType?: string // active slicer type; auto-enables the matching column's default summary
   fieldStats?: FieldStats[] // primary-entity stats (tasks/versions) feeding the footer
   groupFieldStats?: FieldStats[] // group-entity stats (folders/products) for the 'all' row scope
   fieldStatsLoading?: boolean // footer stats still loading - click-through shimmer over values
@@ -210,7 +208,6 @@ export const ProjectTreeTable = ({
   dndActiveId, // Destructure new prop
   columnsConfig,
   showColumnSummaries = false,
-  sliceType,
   fieldStats,
   groupFieldStats,
   fieldStatsLoading,
@@ -270,11 +267,6 @@ export const ProjectTreeTable = ({
     loadingLinksEntityIds,
     queryFilters,
   } = useProjectTableContext()
-  // Auto-enable the sliced column's summary when the user hasn't set one.
-  const effectiveColumnSummaries = useMemo(
-    () => applySliceSummaryDefault(columnSummaries, columnSummaryScopes, sliceType, scopes),
-    [columnSummaries, columnSummaryScopes, sliceType, scopes],
-  )
   const isGrouping = !!groupBy || !!overrideGroupBy
 
   const filterError = isFilterError(error, queryFilters)
@@ -844,7 +836,7 @@ export const ProjectTreeTable = ({
                     attribs={attribFields}
                     fieldStats={fieldStats}
                     groupFieldStats={groupFieldStats}
-                    calc={effectiveColumnSummaries[columnId]}
+                    calc={columnSummaries[columnId]}
                     onCalcChange={(calc) => updateColumnSummary(columnId, calc)}
                     format={columnSummaryFormats[columnId]}
                     onFormatChange={(format) => updateColumnSummaryFormat(columnId, format)}

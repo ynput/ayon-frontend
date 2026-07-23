@@ -13,9 +13,7 @@ import {
   useColumnSettingsContext,
   useProjectDataContext,
   useViewsContext,
-  useSlicerContext,
 } from '@shared/containers'
-import { applySliceSummaryDefault } from '@shared/containers/ProjectTreeTable'
 import { usePowerpack, useProjectContext } from '@shared/context'
 import { useMemo } from 'react'
 
@@ -27,9 +25,6 @@ type Params = {
   versionIds?: string[]
   productIds?: string[]
 }
-
-// products/versions subType column is product type - scopes the slice-summary default accordingly
-const VP_SCOPES = ['version', 'product']
 
 export const useVPColumnStats = ({
   productFilter,
@@ -46,15 +41,8 @@ export const useVPColumnStats = ({
   const { columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes } =
     useColumnSettingsContext()
 
-  // active slicer auto-enables its matching column's default summary
-  const { sliceType } = useSlicerContext()
-  const effectiveColumnSummaries = useMemo(
-    () => applySliceSummaryDefault(columnSummaries, columnSummaryScopes, sliceType, VP_SCOPES),
-    [columnSummaries, columnSummaryScopes, sliceType],
-  )
-
   const noSummaries = shouldSkipColumnStats(
-    effectiveColumnSummaries,
+    columnSummaries,
     columnSummaryScopes,
     columnVisibility,
     defaultColumnVisibility,
@@ -67,11 +55,11 @@ export const useVPColumnStats = ({
         attribs: attribFields,
         columnVisibility,
         defaultColumnVisibility,
-        columnSummaries: effectiveColumnSummaries,
+        columnSummaries,
         columnSummaryScopes,
         extraFields:
           checkColumnVisibility(columnVisibility, 'productBaseType', defaultColumnVisibility) &&
-          isSummaryActive('productBaseType', effectiveColumnSummaries, columnSummaryScopes)
+          isSummaryActive('productBaseType', columnSummaries, columnSummaryScopes)
             ? ['product_base_type']
             : [],
       }),
@@ -79,7 +67,7 @@ export const useVPColumnStats = ({
       attribFields,
       columnVisibility,
       defaultColumnVisibility,
-      effectiveColumnSummaries,
+      columnSummaries,
       columnSummaryScopes,
     ],
   )
@@ -90,14 +78,14 @@ export const useVPColumnStats = ({
         attribs: attribFields,
         columnVisibility,
         defaultColumnVisibility,
-        columnSummaries: effectiveColumnSummaries,
+        columnSummaries,
         columnSummaryScopes,
       }),
     [
       attribFields,
       columnVisibility,
       defaultColumnVisibility,
-      effectiveColumnSummaries,
+      columnSummaries,
       columnSummaryScopes,
     ],
   )

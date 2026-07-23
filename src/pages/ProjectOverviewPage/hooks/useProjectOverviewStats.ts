@@ -10,9 +10,8 @@ import {
   useColumnSettingsContext,
   useProjectDataContext,
   useScopedAttributeFields,
-  applySliceSummaryDefault,
 } from '@shared/containers/ProjectTreeTable'
-import { useViewsContext, useSlicerContext } from '@shared/containers'
+import { useViewsContext } from '@shared/containers'
 import { usePowerpack, useProjectContext } from '@shared/context'
 
 interface UseProjectOverviewStatsParams {
@@ -50,15 +49,8 @@ export const useProjectOverviewStats = ({
     allowedScopes: ['task', 'folder'],
   })
 
-  // active slicer auto-enables its matching column's default summary
-  const { sliceType } = useSlicerContext()
-  const effectiveColumnSummaries = useMemo(
-    () => applySliceSummaryDefault(columnSummaries, columnSummaryScopes, sliceType),
-    [columnSummaries, columnSummaryScopes, sliceType],
-  )
-
   const noSummaries = shouldSkipColumnStats(
-    effectiveColumnSummaries,
+    columnSummaries,
     columnSummaryScopes,
     columnVisibility,
     defaultColumnVisibility,
@@ -71,14 +63,14 @@ export const useProjectOverviewStats = ({
         attribs: scopedAttribFields,
         columnVisibility,
         defaultColumnVisibility,
-        columnSummaries: effectiveColumnSummaries,
+        columnSummaries,
         columnSummaryScopes,
       }),
     [
       scopedAttribFields,
       columnVisibility,
       defaultColumnVisibility,
-      effectiveColumnSummaries,
+      columnSummaries,
       columnSummaryScopes,
     ],
   )
@@ -89,14 +81,14 @@ export const useProjectOverviewStats = ({
         attribs: scopedAttribFields,
         columnVisibility,
         defaultColumnVisibility,
-        columnSummaries: effectiveColumnSummaries,
+        columnSummaries,
         columnSummaryScopes,
       }),
     [
       scopedAttribFields,
       columnVisibility,
       defaultColumnVisibility,
-      effectiveColumnSummaries,
+      columnSummaries,
       columnSummaryScopes,
     ],
   )

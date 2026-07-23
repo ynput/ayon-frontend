@@ -7,7 +7,6 @@ import { Section } from '@ynput/ayon-react-components'
 import { useProjectTableContext, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
 import { useNewEntityContext } from '@context/NewEntityContext'
 import { useProjectContext } from '@shared/context'
-import { useSlicerContext } from '@shared/containers'
 import { mergeFieldStats, totalRowsFromStats } from '@shared/api'
 import type { FieldStats } from '@shared/api'
 import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
@@ -28,8 +27,6 @@ const ProjectOverviewTable = ({}: Props) => {
   } = useProjectOverviewContext()
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
   const { showHierarchy, isFlatFolderView, isLoading, fetchNextPage } = useProjectTableContext()
-  // active slicer auto-enables its matching column's default summary
-  const { sliceType } = useSlicerContext()
   const { onOpenNew } = useNewEntityContext()
 
   const scope = `overview-${projectName}`
@@ -78,7 +75,6 @@ const ProjectOverviewTable = ({}: Props) => {
           }
         }}
         showColumnSummaries
-        sliceType={sliceType}
         fieldStats={fieldStats}
         groupFieldStats={folderStats}
         fieldStatsLoading={folderStatsLoading || taskStatsLoading}
