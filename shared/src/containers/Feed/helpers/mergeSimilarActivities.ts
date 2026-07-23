@@ -35,8 +35,8 @@ const mergeSimilarActivities = (activities: any[], type: string, oldKey: string 
         !('minutes' in activityDuration) && activityDuration.seconds <= seconds
 
       if (isSameAuthor && isWithinSeconds && isSameEntity && isSameKey) {
-        // Continue the sequence, update the newValue from the current activity
-        currentActivity[oldKey] = activity[oldKey]
+        // Continue the sequence, keep the old value from the earliest activity
+        if (activity[oldKey] !== undefined) currentActivity[oldKey] = activity[oldKey]
         // Create a new activityData object instead of modifying the existing one
         currentActivity.activityData = {
           ...currentActivity.activityData,

@@ -1,17 +1,26 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import * as Styled from '../ActivityStatusChange/ActivityStatusChange.styled'
 import ActivityDate from '../ActivityDate'
 import { Icon } from '@ynput/ayon-react-components'
 import useGetContextParents from '../ActivityStatusChange/hooks/getContextParents'
 import { useGetAttributeListQuery } from '@shared/api'
 import type { AttributeModel } from '@shared/api'
+import { formatUTCDate } from '@shared/util/formatUTCDate'
+
+const formatSingleValue = (value: unknown, attribute?: AttributeModel): string => {
+  const enumLabel = attribute?.data.enum?.find((e) => e.value === value)?.label
+  if (enumLabel) return enumLabel
+  if (attribute?.data.type === 'datetime') {
+    const date = new Date(String(value))
+    if (!isNaN(date.getTime())) return formatUTCDate(date, 'dd-MM-yyyy')
+  }
+  return String(value)
+}
 
 const formatValue = (value: unknown, attribute?: AttributeModel): string => {
   if (value === null || value === undefined || value === '') return 'none'
   const values = Array.isArray(value) ? value : [value]
-  return values
-    .map((v) => attribute?.data.enum?.find((e) => e.value === v)?.label ?? String(v))
-    .join(', ')
+  return values.map((v) => formatSingleValue(v, attribute)).join(', ')
 }
 
 interface ActivityAttribChangeProps {
@@ -38,7 +47,7 @@ const ActivityAttribChange: React.FC<ActivityAttribChangeProps> = ({
   const tagList = useGetContextParents(activity, entityType)
 
   const { data: attributes = [] } = useGetAttributeListQuery()
-  const attribute = attributes.find((a) => a.name === key)
+  const attribute = useMemo(() => attributes.find((a) => a.name === key), [attributes, key])
 
   return (
     <Styled.StatusChange>
