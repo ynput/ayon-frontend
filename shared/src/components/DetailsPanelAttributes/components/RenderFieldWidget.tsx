@@ -95,6 +95,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           onCancelEdit={onCancelEdit}
           style={{ width: 'fit-content' }}
           autoFocus={false}
+          isAllDayEndDate={field.name === 'endDate' || field.name === 'attrib_endDate'}
         />
       )
 

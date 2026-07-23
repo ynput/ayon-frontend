@@ -68,7 +68,6 @@ const renderEnumWidget = <TData extends RowData>({
   return (
     <EnumWidget
       value={enumValue}
-      //   @ts-expect-error -- just between icon prop
       options={attributeData.enum || []}
       type={attributeData.type}
       isEditing={isEditing}
@@ -128,6 +127,7 @@ const dateWidgetRenderer = <TData extends RowData>(
       isReadOnly={context.isReadOnly}
       onCancelEdit={context.stopEditing}
       onChange={(nextValue) => context.updateValue(nextValue)}
+      isAllDayEndDate={context.columnId === 'attrib_endDate'}
     />
   )
 }
