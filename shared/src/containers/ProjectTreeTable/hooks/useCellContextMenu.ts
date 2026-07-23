@@ -17,7 +17,7 @@ import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useMemo } from 'react'
 import { useProjectContext } from '@shared/context'
-import { newEntityDefinitions } from '@shared/containers/NewEntity'
+import { newEntityDefinitions, type NewEntityOpenConfig } from '@shared/containers/NewEntity'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -69,7 +69,7 @@ type CellContextMenuProps = {
   attribs: ProjectTableAttribute[]
   columns?: ColumnDef<TableRow>[]
   headerLabels: HeaderLabel[]
-  onOpenNew?: (type: 'folder' | 'task') => void
+  onOpenNew?: (type: 'folder' | 'task', config?: NewEntityOpenConfig) => void
   contextMenuItems?: ContextMenuItemConstructors
 }
 
@@ -295,11 +295,20 @@ const useCellContextMenu = ({
     hidden: cell.isGroup,
   })
 
+  const getExplicitParentConfig = (cell: TableCellContextData): NewEntityOpenConfig => ({
+    parentFolderIds:
+      cell.entityType === 'folder'
+        ? [cell.entityId]
+        : cell.entityType === 'task' && cell.parentId
+        ? [cell.parentId]
+        : [],
+  })
+
   const createFolderItems: ContextMenuItemConstructor = (e, cell) => [
     {
       label: newEntityDefinitions.folder.createLabel,
       icon: newEntityDefinitions.folder.icon,
-      command: () => onOpenNew?.('folder'),
+      command: () => onOpenNew?.('folder', getExplicitParentConfig(cell)),
       hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
     },
     {
@@ -307,7 +316,7 @@ const useCellContextMenu = ({
       icon: newEntityDefinitions.folder.icon,
       command: () => {
         clearSelection()
-        onOpenNew?.('folder')
+        onOpenNew?.('folder', { parentFolderIds: [] })
       },
       hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
     },
@@ -316,7 +325,7 @@ const useCellContextMenu = ({
   const createTaskItem: ContextMenuItemConstructor = (e, cell) => ({
     label: newEntityDefinitions.task.createLabel,
     icon: newEntityDefinitions.task.icon,
-    command: () => onOpenNew?.('task'),
+    command: () => onOpenNew?.('task', getExplicitParentConfig(cell)),
     hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
   })
 

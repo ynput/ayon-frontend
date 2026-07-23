@@ -27,6 +27,11 @@ export interface EntityForm {
   name: string
 }
 
+export interface NewEntityOpenConfig {
+  isSequence?: boolean
+  parentFolderIds?: string[]
+}
+
 interface SequenceForm {
   active: boolean
   increment: string
@@ -44,7 +49,8 @@ export interface NewEntityContextType {
   sequenceForm: SequenceForm
   setSequenceForm: React.Dispatch<React.SetStateAction<SequenceForm>>
   onCreateNew: (selectedFolderIds: string[]) => Promise<OperationResponseModel[]>
-  onOpenNew: (type: NewEntityType, config?: { isSequence?: boolean }) => void
+  onOpenNew: (type: NewEntityType, config?: NewEntityOpenConfig) => void
+  parentFolderIds: string[] | null
 }
 
 interface NewEntityProviderProps {
@@ -74,6 +80,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     'none'
 
   const [entityType, setEntityType] = useState<NewEntityType | null>(null)
+  const [parentFolderIds, setParentFolderIds] = useState<string[] | null>(null)
 
   const initData: EntityForm = { label: '', subType: '', name: '' }
   const [entityForm, setEntityForm] = useState<EntityForm>(initData)
@@ -424,6 +431,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
   const onOpenNew: NewEntityContextType['onOpenNew'] = (type, c) => {
     // set entityType
     setEntityType(type)
+    setParentFolderIds(c?.parentFolderIds ?? null)
     // set any default values
     const typeOptions =
       (type === 'folder' ? projectInfo?.folderTypes : projectInfo?.taskTypes) || []
@@ -449,19 +457,24 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     setEntityForm(initData)
   }
 
-  const value: NewEntityContextType = {
-    config,
-    entityType,
-    setEntityType,
-    entityForm,
-    setEntityForm,
-    sequenceForm,
-    setSequenceForm,
-    onCreateNew,
-    onOpenNew,
-  }
-
-  return <NewEntityContext.Provider value={value}>{children}</NewEntityContext.Provider>
+  return (
+    <NewEntityContext.Provider
+      value={{
+        config,
+        entityType,
+        setEntityType,
+        entityForm,
+        setEntityForm,
+        sequenceForm,
+        setSequenceForm,
+        onCreateNew,
+        onOpenNew,
+        parentFolderIds,
+      }}
+    >
+      {children}
+    </NewEntityContext.Provider>
+  )
 }
 
 export const useNewEntityContext = () => {

@@ -14,7 +14,7 @@ import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 
 import { selectProject } from '@state/project'
-import { OperationResponseModel, useGetProjectAddonsQuery } from '@shared/api'
+import { useGetProjectAddonsQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
@@ -48,18 +48,14 @@ import ProjectStoryboardsPage from '@pages/ProjectListsPage/ProductStoryboardsPa
 import {
   DetailsPanelEntityProvider,
   ProjectDataProvider,
-  getCellId,
-  useOptionalProjectTableContext,
-  useOptionalSelectedRowsContext,
-  useOptionalSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { MoveEntityDialog } from '@shared/containers'
-import { NewEntity, NewEntityProvider } from '@shared/containers/NewEntity'
+import { NewEntityProvider } from '@shared/containers/NewEntity'
 import { MoveEntityProvider } from '@shared/context'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { OnAddToList, OnOpenViewer } from '@shared/containers/Slicer'
-import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
+import { ProjectNewEntityHost } from './ProjectNewEntityHost'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
 
@@ -176,46 +172,6 @@ const ProjectSlicerWithViews = ({
       {children}
     </SlicerWithViews>
   )
-}
-
-const ProjectNewEntityHost = () => {
-  const projectTableContext = useOptionalProjectTableContext()
-  const selectedRowsContext = useOptionalSelectedRowsContext()
-  const selectionContext = useOptionalSelectionCellsContext()
-
-  const handleNewEntities = useMemo(
-    () => (ops: OperationResponseModel[], stayOpen: boolean) => {
-      if (!projectTableContext || !selectionContext) return
-
-      if (projectTableContext.expanded && typeof projectTableContext.expanded !== 'boolean') {
-        const expanded = { ...projectTableContext.expanded }
-        if (projectTableContext.expanded) {
-          for (const rowId of selectedRowsContext?.selectedRows || []) expanded[rowId] = true
-          for (const cellId of selectionContext.selectedCells) {
-            const rowId = parseCellId(cellId)?.rowId
-            if (rowId) expanded[rowId] = true
-          }
-          projectTableContext.setExpanded(expanded)
-        }
-      }
-
-      if (!stayOpen) {
-        const newSelection = new Set<string>()
-        for (const op of ops) {
-          if (op.entityId && op.entityType === 'folder') {
-            newSelection.add(getCellId(op.entityId, 'name'))
-          }
-        }
-        if (newSelection.size) {
-          selectionContext.setSelectedCells(newSelection)
-          selectionContext.setFocusedCellId(newSelection.values().next().value || null)
-        }
-      }
-    },
-    [projectTableContext, selectedRowsContext, selectionContext],
-  )
-
-  return <NewEntity showButton={false} onNewEntities={handleNewEntities} />
 }
 
 const ProjectPageInner = () => {
@@ -553,7 +509,7 @@ const ProjectPageInner = () => {
                 <EntityUpdatesProvider projectNames={[projectName]}>
                   <ProjectSlicerWithViews page={module} projectName={projectName}>
                     <NewEntityProvider>
-                      <ProjectNewEntityHost />
+                      {module !== 'overview' && <ProjectNewEntityHost showButton={false} />}
                       {page.component}
                     </NewEntityProvider>
                   </ProjectSlicerWithViews>

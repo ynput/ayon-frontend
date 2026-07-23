@@ -95,6 +95,7 @@ import {
   type UniqueIdentifier,
   // Removed: DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, DragEndEvent, DragStartEvent, Active, Over, useSensor, useSensors
 } from '@dnd-kit/core'
+import type { NewEntityOpenConfig } from '@shared/containers/NewEntity'
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import {
   SortableContext,
@@ -150,7 +151,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   scope: string
   sliceId: string
   onScrollBottom?: React.HTMLAttributes<HTMLDivElement>['onScroll']
-  onOpenNew?: (type: 'folder' | 'task') => void
+  onOpenNew?: (type: 'folder' | 'task', config?: NewEntityOpenConfig) => void
   readOnly?: (DefaultColumns | string)[]
   excludedColumns?: (DefaultColumns | string)[]
   excludedSorting?: (DefaultColumns | string)[]
@@ -1258,7 +1259,7 @@ interface TableBodyProps {
   virtualPaddingLeft: number | undefined
   virtualPaddingRight: number | undefined
   attribs: ProjectTableAttribute[]
-  onOpenNew?: (type: 'folder' | 'task') => void
+  onOpenNew?: (type: 'folder' | 'task', config?: NewEntityOpenConfig) => void
   rowOrderIds: UniqueIdentifier[]
   sortableRows: boolean
   error?: string

@@ -19,6 +19,10 @@ const toggleChildren = (row: any, expanded: boolean) => {
   row.subRows?.forEach((subRow: any) => toggleChildren(subRow, expanded))
 }
 
+const getExplicitParentFolderIds = (row: SimpleTableRow): string[] => {
+  return row.id ? [row.id] : []
+}
+
 export type OnAddToList = (
   row: SimpleTableRow,
   selectedRows: string[],
@@ -174,15 +178,17 @@ export const useHierarchyContextMenuItems = (
         icon: 'drive_file_move',
         command: () => actions.onMove(row.original, selectedRows),
       }),
-      () => ({
+      (_e, { row }) => ({
         label: newEntityDefinitions.folder.createLabel,
         icon: newEntityDefinitions.folder.icon,
-        command: () => onOpenNew?.('folder'),
+        command: () =>
+          onOpenNew?.('folder', { parentFolderIds: getExplicitParentFolderIds(row.original) }),
       }),
-      () => ({
+      (_e, { row }) => ({
         label: newEntityDefinitions.task.createLabel,
         icon: newEntityDefinitions.task.icon,
-        command: () => onOpenNew?.('task'),
+        command: () =>
+          onOpenNew?.('task', { parentFolderIds: getExplicitParentFolderIds(row.original) }),
       }),
       (_e, { row, selectedRows }) => ({
         label: 'Delete',

@@ -17,7 +17,7 @@ import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
 import { CustomizeButton, SyncButton, buildScopes } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
-import { NewEntity } from '@shared/containers/NewEntity'
+import { ProjectNewEntityHost } from '../ProjectPage/ProjectNewEntityHost'
 import { Actions } from '@shared/containers/Actions/Actions'
 import {
   getCellId,
@@ -219,7 +219,7 @@ const ProjectOverviewPage: FC = () => {
         <SplitterPanel size={slicerSize[1]}>
           <Section wrap direction="column" style={{ height: '100%' }}>
             <Toolbar>
-              <NewEntity disabled={!showHierarchy} showDialog={false} enableShortcuts={false} />
+              <ProjectNewEntityHost disabled={!showHierarchy} showButton />
               <OverviewActions />
               <SearchFilterWrapper
                 queryFilters={displayFilters}

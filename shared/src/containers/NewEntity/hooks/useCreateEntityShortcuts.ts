@@ -1,5 +1,5 @@
 import { useContext, useEffect } from 'react'
-import type { NewEntityType } from '../context/NewEntityContext'
+import type { NewEntityOpenConfig, NewEntityType } from '../context/NewEntityContext'
 import { MenuContext } from '@shared/context/MenuContext'
 import { CellEditingContext } from '@shared/containers/ProjectTreeTable/context/CellEditingContext'
 
@@ -14,7 +14,7 @@ interface EntityOption {
 
 interface UseCreateEntityShortcutsProps {
   options: EntityOption[]
-  onOpenNew: (type: NewEntityType, config?: { isSequence?: boolean }) => void
+  onOpenNew: (type: NewEntityType, config?: NewEntityOpenConfig) => void
   enabled?: boolean
 }
 
