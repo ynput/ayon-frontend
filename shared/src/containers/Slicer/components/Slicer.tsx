@@ -1,5 +1,7 @@
 import { FC, useCallback, useState } from 'react'
 import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
+import { Row } from '@tanstack/react-table'
+import { SimpleTableRow } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from '../hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
@@ -141,6 +143,12 @@ export const Slicer: FC<SlicerProps> = ({
           isLoading={isLoadingSliceTableData || isViewSyncPending}
           forceUpdateTable={sliceType}
           globalFilter={globalFilter}
+          onRename={
+            sliceType === 'hierarchy'
+              ? (_id: string, row: Row<SimpleTableRow>) =>
+                  hierarchyContextMenu.onRename(row.original)
+              : undefined
+          }
           renamingId={sliceType === 'hierarchy' ? hierarchyContextMenu.renamingRow?.id : null}
           renameInitialValue={
             sliceType === 'hierarchy' ? hierarchyContextMenu.renameInitialValue : undefined

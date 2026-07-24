@@ -204,6 +204,7 @@ export const useHierarchyContextMenuItems = (
   return {
     rowContextMenuBuilders,
     onOptionClick: actions.onShowDetails,
+    onRename: actions.onRename,
     renamingRow,
     renameInitialValue: renamingRow?.label || renamingRow?.name || '',
     onSubmitRename: handleRenameLabel,
