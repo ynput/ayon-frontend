@@ -12,6 +12,7 @@ type FieldDisplayValue = {
   name: string
   icon?: string
   color?: string
+  items?: { label: string; color?: string }[]
 }
 
 const getEnumDisplay = (item: EnumItem): FieldDisplayValue => {
@@ -48,6 +49,10 @@ const formatValue = (value: unknown, attribute?: AttributeModel): FieldDisplayVa
 
 interface ActivityFieldChangeProps {
   entityType?: string
+  projectInfo?: {
+    tags?: { name: string; color?: string }[]
+    [key: string]: any
+  }
   activity: {
     activityType?: string
     authorName?: string
@@ -66,6 +71,7 @@ interface ActivityFieldChangeProps {
 
 const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
   entityType,
+  projectInfo,
   activity = {},
 }) => {
   const {
@@ -81,9 +87,13 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
   const tagList = useGetContextParents(activity, entityType)
 
   const isAttrib = activityType === 'attrib.change'
+  const isTags = activityType === 'tags.change'
+  const isTypeChange = activityType === 'type.change'
 
   const { data: attributes = [] } = useGetAttributeListQuery(undefined, { skip: !isAttrib })
   const attribute = useMemo(() => attributes.find((a) => a.name === key), [attributes, key])
+
+  const fieldTitle = isAttrib ? attribute?.data.title || key : isTags ? 'Tags' : isTypeChange ? 'Type' : undefined
 
   const statusDisplay = (status?: FieldDisplayValue): FieldDisplayValue => ({
     name: status?.name || '',
@@ -91,17 +101,34 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
     color: status?.color,
   })
 
-  const oldDisplay = isAttrib ? formatValue(oldValue, attribute) : statusDisplay(oldStatus)
-  const newDisplay = isAttrib ? formatValue(newValue, attribute) : statusDisplay(newStatus)
+  const tagsDisplay = (value: unknown): FieldDisplayValue => {
+    const tags = Array.isArray(value) ? value.map(String) : []
+    if (!tags.length) return { name: 'none' }
+    const items = tags.map((tag) => ({
+      label: tag,
+      color: projectInfo?.tags?.find((t) => t.name === tag)?.color,
+    }))
+    return { name: tags.join(', '), items }
+  }
+
+  const isStatus = activityType === 'status.change'
+  const getDisplay = (value: unknown, status?: FieldDisplayValue): FieldDisplayValue => {
+    if (isStatus) return statusDisplay(status)
+    if (isTags) return tagsDisplay(value)
+    return formatValue(value, attribute)
+  }
+
+  const oldDisplay = getDisplay(oldValue, oldStatus)
+  const newDisplay = getDisplay(newValue, newStatus)
 
   return (
     <Styled.FieldChange>
       <Styled.Body>
         <Styled.Text>{authorFullName || authorName}</Styled.Text>
         <Styled.Text>- {tagList.join(' / ')} -</Styled.Text>
-        {isAttrib && (
+        {fieldTitle && (
           <Styled.Text>
-            <strong>{attribute?.data.title || key}</strong>
+            <strong>{fieldTitle}</strong>
           </Styled.Text>
         )}
         <FieldValue {...oldDisplay} />

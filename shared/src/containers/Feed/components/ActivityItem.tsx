@@ -58,7 +58,9 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
       )
     case 'status.change':
     case 'attrib.change':
-      return <ActivityFieldChange activity={activity} {...props} />
+    case 'tags.change':
+    case 'type.change':
+      return <ActivityFieldChange activity={activity} projectInfo={projectInfo} {...props} />
     case 'assignee.add':
       return <ActivityAssigneeChange activity={activity} {...props} isAdding />
     case 'assignee.remove':
@@ -71,7 +73,12 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
       // fromGroup prevents infinite recursion
       return (
         !fromGroup && (
-          <ActivityGroup editProps={editProps} activities={activity.items || []} {...props} />
+          <ActivityGroup
+            editProps={editProps}
+            activities={activity.items || []}
+            projectInfo={projectInfo}
+            {...props}
+          />
         )
       )
     default:

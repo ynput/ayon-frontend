@@ -7,7 +7,14 @@ import groupMinorActivities, { ActivityUser } from '../helpers/groupMinorActivit
 import mergeSimilarActivities from '../helpers/mergeSimilarActivities'
 
 // Define the types of activities that are considered minor
-const minorActivityTypes = ['status.change', 'assignee.add', 'assignee.remove', 'attrib.change']
+const minorActivityTypes = [
+  'status.change',
+  'assignee.add',
+  'assignee.remove',
+  'attrib.change',
+  'tags.change',
+  'type.change',
+]
 
 const getStatusActivityIcon = (activities = [], projectInfo = {}) => {
   return activities.map((activity) => {
