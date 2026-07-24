@@ -1,7 +1,7 @@
 import { differenceInSeconds, isValid } from 'date-fns'
 
 // Takes activities of the same type and author and merges them into one activity
-// activities must be within one min of each other
+// activities must be within 20 seconds min of each other
 // for example, if there are multiple status change activities by the same author
 // they will be merged into one activity, resulting in a single status change activity
 
