@@ -94,6 +94,11 @@
       "types": "./dist/types/containers/ListTable/index.d.ts",
       "import": "./dist/ListTable.es.js",
       "require": "./dist/ListTable.cjs.js"
+    },
+    "./NewEntity": {
+      "types": "./dist/types/containers/NewEntity/index.d.ts",
+      "import": "./dist/NewEntity.es.js",
+      "require": "./dist/NewEntity.cjs.js"
     }
   },
   "files": [

@@ -522,3 +522,5 @@ export const useProjectTableContext = () => {
   }
   return context
 }
+
+export const useOptionalProjectTableContext = () => useContext(ProjectTableContext)

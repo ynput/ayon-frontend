@@ -11,6 +11,7 @@ import useGoToEntity from '@hooks/useGoToEntity'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import { selectProgress } from '@state/progress'
 import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
+import { useDetailsPanelEntityContext } from '@shared/containers/ProjectTreeTable'
 
 type TaskProgressDetailsPanelProps = {
   projectInfo: $Any
@@ -22,11 +23,14 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
   const dispatch = useAppDispatch()
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))
   const { setOpen, isOpen } = useScopedDetailsPanel('progress')
+  const { selectedEntity, clearSelectedEntity } = useDetailsPanelEntityContext()
   const { onUpdateFilters: setQueryFilters } = useTaskProgressViewSettings()
 
   const projectsInfo = { [projectName]: projectInfo }
 
-  const entities = selected.ids.map((id) => ({ id, projectName }))
+  const entities = selectedEntity
+    ? [{ id: selectedEntity.entityId, projectName }]
+    : selected.ids.map((id) => ({ id, projectName }))
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
@@ -62,8 +66,8 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
           {/* @ts-ignore */}
           <DetailsPanel
             // entitySubTypes={subTypes}
-            isOpen={isOpen && !!entities.length}
-            entityType={selected.type}
+            isOpen={(isOpen || !!selectedEntity) && !!entities.length}
+            entityType={selectedEntity?.entityType || selected.type}
             entities={entities as any}
             projectsInfo={projectsInfo}
             projectNames={[projectName] as any}
@@ -73,7 +77,10 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
             style={{ boxShadow: 'none' }}
             scope="progress"
             entityListsContext={entityListsContext}
-            onClose={() => setOpen(false)}
+            onClose={() => {
+              clearSelectedEntity()
+              setOpen(false)
+            }}
             onOpenViewer={handleOpenViewer}
             onUriOpen={handleUriOpen}
           />

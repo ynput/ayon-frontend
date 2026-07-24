@@ -24,6 +24,7 @@ import {
   useColumnSettingsContext,
   checkColumnVisibility,
 } from '@shared/containers/ProjectTreeTable'
+import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable'
 
 // Views hooks
 import {
@@ -35,12 +36,13 @@ import {
 
 // Local context and hooks
 import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
-import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 import { useProjectOverviewStats } from '../hooks/useProjectOverviewStats'
 import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 import { ProjectOverviewContext } from './ProjectOverviewContextInstance'
 import { useAppDispatch } from '@state/store'
+import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
+import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
 
 export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewProviderProps) => {
   const dispatch = useAppDispatch()
@@ -69,8 +71,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     allowedScopes: ['task', 'folder'],
   })
 
-  const contextMenuItems = useOverviewContextMenu({})
-
   const page = 'overview'
 
   const [expanded, setExpanded] = useSessionStorage<ExpandedState>(
@@ -81,6 +81,17 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { updateExpanded, toggleExpanded, expandedIds } = useExpandedState({
     expanded,
     setExpanded,
+  })
+
+  const [movingEntities, setMovingEntities] = useState<MultiEntityMoveData | null>(null)
+  const openMoveDialog = useCallback<OpenMoveDialog>((data) => {
+    setMovingEntities('entities' in data ? data : { entities: [data] })
+  }, [])
+  const closeMoveDialog = useCallback(() => {
+    setMovingEntities(null)
+  }, [])
+  const contextMenuItems: ContextMenuItemConstructors = useOverviewContextMenu({
+    openMoveDialog,
   })
 
   // view context and update helper
@@ -406,12 +417,13 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         toggleExpanded,
         updateExpanded,
         setExpanded,
-        // context menu item
-        contextMenuItems,
         setLinksVisible,
         loadingLinksEntityIds,
         visibleEntityIds,
         setVisibleEntityIds,
+        contextMenuItems,
+        movingEntities,
+        closeMoveDialog,
       }}
     >
       {children}

@@ -19,6 +19,7 @@ import type { UpdateViewSettingsFn } from '@shared/containers/Views/utils/viewUp
 import { SlicerContext } from './SlicerContextInstance'
 import { useSlicerRemotes } from '../hooks/useSlicerRemotes'
 import { useSlicerRowSelection } from '../hooks/useSlicerRowSelection'
+import type { OnAddToList, OnOpenViewer } from '../hooks/useHierarchyContextMenuItems'
 
 export const SLICER_PAGES_CONFIG: SlicerConfig = {
   progress: {
@@ -91,6 +92,8 @@ export interface SlicerContextValue {
   SlicerDropdown: ForwardRefExoticComponent<
     SlicerDropdownFallbackProps & RefAttributes<DropdownRef>
   >
+  onOpenViewer?: OnOpenViewer
+  onAddToList?: OnAddToList
 }
 
 interface SlicerProviderProps {
@@ -106,6 +109,8 @@ interface SlicerProviderProps {
   viewSettings: ViewSettings | undefined
   isLoadingViews: boolean
   updateViewSettings: UpdateViewSettingsFn
+  onOpenViewer?: OnOpenViewer
+  onAddToList?: OnAddToList
 }
 
 export const SlicerProvider = ({
@@ -115,6 +120,8 @@ export const SlicerProvider = ({
   viewSettings,
   isLoadingViews,
   updateViewSettings,
+  onOpenViewer,
+  onAddToList,
   ...props
 }: SlicerProviderProps) => {
   // @ts-expect-error - sliceType can be on a view
@@ -216,6 +223,8 @@ export const SlicerProvider = ({
       onExpandedChange,
       // loading state
       isViewSyncPending: isLoadingViews,
+      onOpenViewer,
+      onAddToList,
     }),
     [
       useExtraSlices,
@@ -230,6 +239,8 @@ export const SlicerProvider = ({
       expanded,
       onExpandedChange,
       isLoadingViews,
+      onOpenViewer,
+      onAddToList,
     ],
   )
 

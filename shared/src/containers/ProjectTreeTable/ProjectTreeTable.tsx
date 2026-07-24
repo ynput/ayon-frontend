@@ -58,10 +58,6 @@ import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import useDynamicRowHeight from './hooks/useDynamicRowHeight'
 
-// EntityPickerDialog import
-import { EntityPickerDialog } from '../EntityPickerDialog/EntityPickerDialog'
-// Move entity hook
-import { useMoveEntities } from './hooks/useMoveEntities'
 import { useProjectDataContext } from '@shared/containers'
 
 // Utility function imports
@@ -99,6 +95,7 @@ import {
   type UniqueIdentifier,
   // Removed: DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, DragEndEvent, DragStartEvent, Active, Over, useSensor, useSensors
 } from '@dnd-kit/core'
+import type { NewEntityOpenConfig } from '@shared/containers/NewEntity'
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import {
   SortableContext,
@@ -112,7 +109,6 @@ import { useProjectContext, usePowerpack, setDetailsPanelTabForScope } from '@sh
 import { useLoadModule } from '@shared/hooks'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
-import { EntityMoveData } from '@shared/context/MoveEntityContext'
 import { upperFirst } from 'lodash'
 import { ColumnsConfig } from './types/columnConfig'
 
@@ -155,7 +151,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   scope: string
   sliceId: string
   onScrollBottom?: React.HTMLAttributes<HTMLDivElement>['onScroll']
-  onOpenNew?: (type: 'folder' | 'task') => void
+  onOpenNew?: (type: 'folder' | 'task', config?: NewEntityOpenConfig) => void
   readOnly?: (DefaultColumns | string)[]
   excludedColumns?: (DefaultColumns | string)[]
   excludedSorting?: (DefaultColumns | string)[]
@@ -714,42 +710,6 @@ export const ProjectTreeTable = ({
     [onScroll, onScrollBottom, onScrollBottomGroupBy, showHierarchy, groupBy, isLoading],
   )
 
-  // Get move entity functions for the dialog
-  const {
-    isEntityPickerOpen,
-    handleMoveSubmit,
-    closeMoveDialog,
-    movingEntities,
-    handleMoveToRoot,
-    getDisabledFolderIds,
-    getDisabledMessage,
-  } = useMoveEntities({
-    projectName,
-  })
-
-  const handleMoveSubmitWithExpand = (selection: string[]) => {
-    handleMoveSubmit(selection)
-    const folderIdToExpand = selection[0]
-
-    updateExpanded((prevExpanded: ExpandedState) => {
-      if (typeof prevExpanded === 'boolean') {
-        if (prevExpanded) {
-          return prevExpanded
-        }
-        return { [folderIdToExpand]: true }
-      }
-
-      if (prevExpanded[folderIdToExpand]) {
-        return prevExpanded
-      }
-
-      return {
-        ...prevExpanded,
-        [folderIdToExpand]: true,
-      }
-    })
-  }
-
   const tableUiContent = (
     <ClipboardProvider
       entitiesMap={entitiesMap}
@@ -867,24 +827,6 @@ export const ProjectTreeTable = ({
           </Styled.SoftErrorBanner>
         )}
       </Styled.TableWrapper>
-      {/* Render EntityPickerDialog alongside table content */}
-      {isEntityPickerOpen &&
-        projectName &&
-        movingEntities?.entities &&
-        movingEntities.entities.length > 0 && (
-          <EntityPickerDialog
-            projectName={projectName}
-            entityType="folder"
-            onSubmit={handleMoveSubmitWithExpand}
-            onClose={closeMoveDialog}
-            showMoveToRoot={movingEntities.entities.every(
-              (entity: EntityMoveData) => entity.entityType === 'folder',
-            )}
-            onMoveToRoot={handleMoveToRoot}
-            disabledIds={getDisabledFolderIds()}
-            getDisabledMessage={getDisabledMessage}
-          />
-        )}
     </ClipboardProvider>
   )
 
@@ -1317,7 +1259,7 @@ interface TableBodyProps {
   virtualPaddingLeft: number | undefined
   virtualPaddingRight: number | undefined
   attribs: ProjectTableAttribute[]
-  onOpenNew?: (type: 'folder' | 'task') => void
+  onOpenNew?: (type: 'folder' | 'task', config?: NewEntityOpenConfig) => void
   rowOrderIds: UniqueIdentifier[]
   sortableRows: boolean
   error?: string

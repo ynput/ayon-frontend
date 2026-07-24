@@ -12,7 +12,7 @@ export type RowExpanderProps = {
   isRowExpanded?: boolean
   enableNonFolderIndent?: boolean
   isTableExpandable?: boolean
-  onExpandClick?: () => void
+  onExpandClick?: (event: React.MouseEvent) => void
 }
 
 export const RowExpander = ({
@@ -26,7 +26,7 @@ export const RowExpander = ({
     <Styled.Expander
       onClick={(e) => {
         e.stopPropagation()
-        onExpandClick?.()
+        onExpandClick?.(e)
       }}
       icon={isRowExpanded ? 'expand_more' : 'chevron_right'}
       className="expander"

@@ -1,12 +1,7 @@
 import { FC } from 'react'
-import {
-  ColumnSettingsProvider,
-  ProjectDataProvider,
-  ColumnDndProvider,
-} from '@shared/containers/ProjectTreeTable'
+import { ColumnSettingsProvider, ColumnDndProvider } from '@shared/containers/ProjectTreeTable'
 import { useGroupByRemoteModules } from '@shared/hooks'
-import { SettingsPanelProvider, MoveEntityProvider } from '@shared/context'
-import { useAppSelector } from '@state/store'
+import { SettingsPanelProvider } from '@shared/context'
 import { ProjectOverviewProvider } from '../context/ProjectOverviewContext'
 import ProjectOverviewTableProvider from './ProjectOverviewTableProvider'
 import { useOverviewViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers'
@@ -20,8 +15,6 @@ const DEFAULT_COLUMN_VISIBILITY = {
 }
 
 const ProjectOverviewDataProvider: FC = () => {
-  const projectName = useAppSelector((state) => state.project.name) || ''
-
   // view context and update helper
   const { viewSettings } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
@@ -33,23 +26,19 @@ const ProjectOverviewDataProvider: FC = () => {
   const modules = useGroupByRemoteModules()
 
   return (
-    <ProjectDataProvider projectName={projectName}>
-      <ColumnSettingsProvider
-        config={columns}
-        onChange={onUpdateColumns}
-        defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
-      >
-        <ColumnDndProvider>
-          <MoveEntityProvider>
-            <ProjectOverviewProvider modules={modules}>
-              <SettingsPanelProvider>
-                <ProjectOverviewTableProvider modules={modules} />
-              </SettingsPanelProvider>
-            </ProjectOverviewProvider>
-          </MoveEntityProvider>
-        </ColumnDndProvider>
-      </ColumnSettingsProvider>
-    </ProjectDataProvider>
+    <ColumnSettingsProvider
+      config={columns}
+      onChange={onUpdateColumns}
+      defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
+    >
+      <ColumnDndProvider>
+        <ProjectOverviewProvider modules={modules}>
+          <SettingsPanelProvider>
+            <ProjectOverviewTableProvider modules={modules} />
+          </SettingsPanelProvider>
+        </ProjectOverviewProvider>
+      </ColumnDndProvider>
+    </ColumnSettingsProvider>
   )
 }
 

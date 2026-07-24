@@ -62,6 +62,7 @@ export type SimpleTableRowContextMenuContext = {
   rowIndex: number
   row: Row<SimpleTableRow>
   selectedRows: string[]
+  selectedTableRows: Row<SimpleTableRow>[]
   isSelected: boolean
 }
 
@@ -86,9 +87,11 @@ export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
   onRename?: (id: string, row: Row<SimpleTableRow>) => void
   renamingId?: string | null
+  renameInitialValue?: string
   onSubmitRename?: (id: string, value: string) => void
   onCancelRename?: () => void
   onRowDoubleClick?: (id: string, row: Row<SimpleTableRow>) => void
+  onRowOptionClick?: (row: SimpleTableRow, selectedRows: string[]) => void
   fitContent?: boolean
   rowContextMenuBuilders?: SimpleTableRowContextMenuBuilder[]
   children?: (

@@ -3,12 +3,13 @@
 
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
 import { useGetUsersAssigneeQuery } from '@shared/api'
-import type { DetailsPanelEntityData, ProjectModel } from '@shared/api'
+import type { DetailsPanelEntityData } from '@shared/api'
 import {
   parseCellId,
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
   getCellId,
+  useDetailsPanelEntityContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
@@ -30,6 +31,7 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
   const { projectName, ...projectInfo } = useProjectContext()
   const { selectedVersions, setSelectedVersions, showVersionDetails } =
     useVersionsSelectionContext()
+  const { selectedEntity, clearSelectedEntity } = useDetailsPanelEntityContext()
   const { setSelectedCells, selectedRows } = useSelectionCellsContext()
   const { onUpdateViewGroupBy, onUpdateFilters } = useVPViewsContext()
   const { setExpanded: setProductsExpanded } = useVersionsDataContext()
@@ -40,14 +42,17 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
     { skip: !projectName },
   )
 
-  const entities = selectedVersions.map((versionId) => ({
-    id: versionId,
-    projectName,
-  }))
+  const entities = selectedEntity
+    ? [{ id: selectedEntity.entityId, projectName }]
+    : selectedVersions.map((versionId) => ({
+        id: versionId,
+        projectName,
+      }))
 
-  const projectsInfo = { [projectName]: projectInfo as ProjectModel }
+  const projectsInfo = { [projectName]: projectInfo }
 
   const handleClose = () => {
+    clearSelectedEntity()
     // reset selected versions and products
     setSelectedVersions([])
     // unselect only the row (filter out ROW_SELECTION_COLUMN_ID ids)
@@ -123,8 +128,8 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
       {(entityListsContext) => (
         <>
           <DetailsPanel
-            isOpen={showVersionDetails}
-            entityType={'version'}
+            isOpen={!!selectedEntity || showVersionDetails}
+            entityType={selectedEntity?.entityType || 'version'}
             entities={entities}
             projectsInfo={projectsInfo}
             projectNames={[projectName]}

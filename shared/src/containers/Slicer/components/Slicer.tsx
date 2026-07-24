@@ -1,10 +1,12 @@
-import { FC, useState } from 'react'
+import { FC, useCallback, useState } from 'react'
 import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
+import { Row } from '@tanstack/react-table'
+import { SimpleTableRow } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from '../hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
-import { SliceType } from '@shared/containers/Slicer'
+import { OnAddToList, SliceType, useHierarchyContextMenuItems } from '@shared/containers/Slicer'
 import { SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { RowSelectionState } from '@tanstack/react-table'
 import { SliceTypeField } from '../types'
@@ -13,6 +15,8 @@ import styled from 'styled-components'
 import { ExpandedState } from '@tanstack/react-table'
 import { SyncButton } from '@shared/components'
 import { useProjectFoldersContext } from '@shared/context'
+import { MoveEntityDialog } from '@shared/containers/MoveEntityDialog'
+import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
 
 const DropdownSkeleton = styled.div`
   height: 28px;
@@ -25,12 +29,14 @@ export interface SlicerProps {
   sliceFields: SliceTypeField[]
   entityTypes?: string[] // entity types
   pinnedSliceType?: SliceType // when changing slice type, pinned the current slice
+  onAddToList?: OnAddToList
 }
 
 export const Slicer: FC<SlicerProps> = ({
   sliceFields = [],
   entityTypes = ['task'],
   pinnedSliceType,
+  onAddToList,
 }) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const {
@@ -40,8 +46,38 @@ export const Slicer: FC<SlicerProps> = ({
     expanded,
     onExpandedChange,
     isViewSyncPending,
+    onOpenViewer,
+    onAddToList: contextOnAddToList,
+    projectName,
   } = useSlicerContext()
-  const { refetch } = useProjectFoldersContext()
+
+  const [movingEntities, setMovingEntities] = useState<MultiEntityMoveData | null>(null)
+  const openMoveDialog = useCallback<OpenMoveDialog>((data) => {
+    setMovingEntities('entities' in data ? data : { entities: [data] })
+  }, [])
+  const closeMoveDialog = useCallback(() => {
+    setMovingEntities(null)
+  }, [])
+
+  const { refetch, getParentFolderIds } = useProjectFoldersContext()
+
+  const handleMoveComplete = useCallback(
+    (folderId: string) => {
+      const folderIdsToExpand = [folderId, ...getParentFolderIds(folderId)]
+      onExpandedChange(
+        typeof expanded === 'boolean'
+          ? expanded
+            ? expanded
+            : Object.fromEntries(folderIdsToExpand.map((id) => [id, true]))
+          : {
+              ...expanded,
+              ...Object.fromEntries(folderIdsToExpand.map((id) => [id, true])),
+            },
+      )
+    },
+    [expanded, getParentFolderIds, onExpandedChange],
+  )
+
   const handleSync = async () => refetch()
 
   const {
@@ -52,6 +88,15 @@ export const Slicer: FC<SlicerProps> = ({
     sliceMap,
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({ sliceFields, entityTypes })
+
+  const hierarchyContextMenu = useHierarchyContextMenuItems(
+    onAddToList || contextOnAddToList,
+    sliceMap,
+    onOpenViewer,
+    openMoveDialog,
+  )
+  const rowContextMenuBuilders =
+    sliceType === 'hierarchy' ? hierarchyContextMenu.rowContextMenuBuilders : []
 
   const handleSelectionChange = (s: RowSelectionState) => {
     onRowSelectionChange?.(s)
@@ -98,8 +143,36 @@ export const Slicer: FC<SlicerProps> = ({
           isLoading={isLoadingSliceTableData || isViewSyncPending}
           forceUpdateTable={sliceType}
           globalFilter={globalFilter}
+          onRename={
+            sliceType === 'hierarchy'
+              ? (_id: string, row: Row<SimpleTableRow>) =>
+                  hierarchyContextMenu.onRename(row.original)
+              : undefined
+          }
+          renamingId={sliceType === 'hierarchy' ? hierarchyContextMenu.renamingRow?.id : null}
+          renameInitialValue={
+            sliceType === 'hierarchy' ? hierarchyContextMenu.renameInitialValue : undefined
+          }
+          onSubmitRename={
+            sliceType === 'hierarchy'
+              ? (_id, value) => hierarchyContextMenu.onSubmitRename(value)
+              : undefined
+          }
+          onCancelRename={
+            sliceType === 'hierarchy' ? hierarchyContextMenu.onCancelRename : undefined
+          }
+          onRowOptionClick={
+            sliceType === 'hierarchy' ? hierarchyContextMenu.onOptionClick : undefined
+          }
+          rowContextMenuBuilders={rowContextMenuBuilders}
         />
       </SimpleTableProvider>
+      <MoveEntityDialog
+        projectName={projectName}
+        movingEntities={movingEntities}
+        onClose={closeMoveDialog}
+        onMoveComplete={handleMoveComplete}
+      />
     </Container>
   )
 }

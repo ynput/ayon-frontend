@@ -1,5 +1,5 @@
-import React, { KeyboardEvent, useRef, useState } from 'react'
-import { capitalize, isEmpty } from 'lodash'
+import React, { KeyboardEvent, useMemo, useRef, useState } from 'react'
+import { isEmpty } from 'lodash'
 import {
   Dialog,
   Dropdown,
@@ -7,6 +7,7 @@ import {
   Icon,
   InputSwitch,
   SaveButton,
+  ShortcutTag,
   Spacer,
   Toolbar,
 } from '@ynput/ayon-react-components'
@@ -19,22 +20,23 @@ import {
   getPlatformShortcutKey,
   KeyMode,
 } from '@shared/util'
-import ShortcutWidget from '@components/ShortcutWidget'
 import {
   EditorTaskNode,
   MatchingFolder,
-  useProjectTableContext,
-  useSelectionCellsContext,
+  ROW_SELECTION_COLUMN_ID,
+  useOptionalProjectTableContext,
+  useOptionalSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { type OperationResponseModel, type ProjectModel } from '@shared/api'
-import FolderSequence from '@components/FolderSequence/FolderSequence'
-import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
-import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
+import FolderSequence from './FolderSequence'
+import { EntityForm, NewEntityType, useNewEntityContext } from '../context/NewEntityContext'
+import useCreateEntityShortcuts from '../hooks/useCreateEntityShortcuts'
 import { useSlicerContext } from '@shared/containers/Slicer'
-import NewEntityForm, { InputLabel, InputsContainer } from '@components/NewEntity/NewEntityForm.tsx'
+import { NewEntityForm, InputLabel, InputsContainer } from './NewEntityForm'
 import { toast } from 'react-toastify'
 import { useProjectContext, useProjectFoldersContext } from '@shared/context'
+import { newEntityDefinitions } from '../util/entityDefinitions'
 
 const StyledDialog = styled(Dialog)`
   .body {
@@ -92,9 +94,18 @@ const StyledCreateItem = styled.span`
 export interface NewEntityProps {
   disabled?: boolean
   onNewEntities?: (ops: OperationResponseModel[], stayOpen: boolean) => void
+  showButton?: boolean
+  showDialog?: boolean
+  enableShortcuts?: boolean
 }
 
-const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
+export const NewEntity: React.FC<NewEntityProps> = ({
+  disabled,
+  onNewEntities,
+  showButton = true,
+  showDialog = true,
+  enableShortcuts = true,
+}) => {
   const { ...projectInfo } = useProjectContext()
   const {
     entityType,
@@ -106,73 +117,82 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     onCreateNew,
     onOpenNew,
     config,
+    parentFolderIds,
   } = useNewEntityContext()
 
   const [createMore, setCreateMore] = useState(false)
-  const { selectedCells } = useSelectionCellsContext()
+  const { selectedCells } = useOptionalSelectionCellsContext() || {}
   const { rowSelection, pinnedSlice, sliceType } = useSlicerContext()
   const { getFolderById } = useProjectFoldersContext()
-  const { getEntityById } = useProjectTableContext()
+  const projectTableContext = useOptionalProjectTableContext()
+  const getEntityById = projectTableContext?.getEntityById
 
-  const [allSelectedFolderIds, _allSelectedEntitiesLabels, parentTargetOptions] =
-    React.useMemo(() => {
-      const selectedRowIds = Array.from(
+  const [allSelectedFolderIds, parentTargetOptions] = useMemo(() => {
+    let folderIds: string[]
+
+    if (parentFolderIds !== null) {
+      folderIds = parentFolderIds
+    } else {
+      const selectedCellPositions = selectedCells
+        ? Array.from(selectedCells).map((cellId) => parseCellId(cellId))
+        : []
+      const selectedCellIds = Array.from(
         new Set(
-          Array.from(selectedCells)
-            .map((cellId) => parseCellId(cellId))
-            .filter((cell) => cell && cell?.colId === 'name')
-            .map((cell) => cell?.rowId) as string[],
+          selectedCellPositions
+            .filter((cell) => cell && cell.colId !== ROW_SELECTION_COLUMN_ID)
+            .map((cell) => cell?.rowId)
+            .filter(Boolean) as string[],
         ),
       )
+      const selectedRowIds = Array.from(
+        new Set(
+          selectedCellPositions
+            .filter((cell) => cell?.colId === ROW_SELECTION_COLUMN_ID)
+            .map((cell) => cell?.rowId)
+            .filter(Boolean) as string[],
+        ),
+      )
+      const tableSelectedRowIds = selectedCellIds.length > 0 ? selectedCellIds : selectedRowIds
 
-      let ids: string[] = []
-      let labels: string[] = []
+      if (tableSelectedRowIds.length > 0) {
+        const selectedEntities = tableSelectedRowIds.map((id) => getEntityById?.(id))
+        const selectedFolders = selectedEntities.filter(
+          (entity): entity is MatchingFolder => entity?.entityType === 'folder',
+        )
+        const selectedTasks = selectedEntities.filter(
+          (entity): entity is EditorTaskNode => entity?.entityType === 'task',
+        )
 
-      if (selectedRowIds.length > 0) {
-        const selectedEntities = selectedRowIds.map((id) => getEntityById(id))
-
-        const selectedFolders = selectedEntities
-          .filter((entity) => entity?.entityType === 'folder')
-          .filter(Boolean) as MatchingFolder[]
-        const selectedTasks = selectedEntities
-          .filter((entity) => entity?.entityType === 'task')
-          .filter(Boolean) as EditorTaskNode[]
-
-        // Extract folder IDs from selected folders and tasks
-        const folderIdsFromFolders = selectedFolders.map((folder) => folder.id)
-        // get parent folder ids from tasks
-        const folderIdsFromTasks = selectedTasks.map((task) => task.folderId)
-
-        // Combine and remove duplicate folder IDs
-        ids = Array.from(new Set([...folderIdsFromFolders, ...folderIdsFromTasks]))
-
-        labels = ids
-          .map((id) => {
-            const entity = getEntityById(id)
-            return (entity?.label || entity?.name) as string
-          })
-          .filter(Boolean)
+        folderIds = Array.from(
+          new Set([
+            ...selectedFolders.map((folder) => folder.id),
+            ...selectedTasks.map((task) => task.folderId),
+          ]),
+        )
       } else {
-        // no table selection, use slicer selection
         const activeRowSelection =
           sliceType === 'hierarchy' ? rowSelection : pinnedSlice?.rowSelection || null
-        if (!activeRowSelection) return [[], [], []]
-        ids = Object.keys(activeRowSelection).filter((id) => activeRowSelection[id])
-        labels = ids
-          .map((id) => {
-            const folder = getFolderById(id)
-            return folder?.label || folder?.name || null
-          })
-          .filter(Boolean) as string[]
+        folderIds = activeRowSelection
+          ? Object.keys(activeRowSelection).filter((id) => activeRowSelection[id])
+          : []
       }
+    }
 
-      const options: { value: string; label: string }[] = []
-      ids.forEach((id, index) => {
-        options.push({ value: id, label: labels[index] || id })
-      })
+    const options = folderIds.map((id) => {
+      const folder = getEntityById?.(id) || getFolderById(id)
+      return { value: id, label: folder?.label || folder?.name || id }
+    })
 
-      return [ids, labels, options]
-    }, [selectedCells, rowSelection, pinnedSlice, sliceType, getEntityById, getFolderById])
+    return [folderIds, options]
+  }, [
+    parentFolderIds,
+    selectedCells,
+    rowSelection,
+    pinnedSlice,
+    sliceType,
+    getEntityById,
+    getFolderById,
+  ])
 
   const [manuallySelectedParents, setManuallySelectedParents] = useState<string[] | null>(null)
 
@@ -204,7 +224,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
   const getDialogTitle = () => {
     let title = 'Add New '
     if (isRoot) title += 'Root '
-    title += capitalize(entityType || '')
+    title += entityType ? newEntityDefinitions[entityType].label : ''
     if (!isRoot) {
       if (selectedEntitiesLabels.length > 2) {
         title +=
@@ -374,7 +394,12 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     shortcut?: string
     isSequence?: boolean
   }[] = [
-    { label: 'Folder', value: 'folder', type: 'folder', icon: 'create_new_folder', shortcut: 'N' },
+    {
+      ...newEntityDefinitions.folder,
+      value: 'folder',
+      type: 'folder',
+      shortcut: 'N',
+    },
     {
       label: 'Folder sequence',
       value: 'sequence',
@@ -383,11 +408,16 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
       shortcut: 'M',
       isSequence: true,
     },
-    { label: 'Task', value: 'task', type: 'task', icon: 'add_task', shortcut: 'T' },
+    {
+      ...newEntityDefinitions.task,
+      value: 'task',
+      type: 'task',
+      shortcut: 'T',
+    },
   ]
 
   // Use the keyboard shortcuts hook
-  useCreateEntityShortcuts({ options, onOpenNew })
+  useCreateEntityShortcuts({ options, onOpenNew, enabled: enableShortcuts })
 
   const handleOpenFromMenu = (value: string) => {
     // get the full option object
@@ -401,30 +431,32 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
 
   return (
     <>
-      <StyledCreateButton
-        options={options}
-        value={[]}
-        onChange={(v: string[]) => handleOpenFromMenu(v[0])}
-        valueTemplate={() => (
-          <>
-            <Icon icon="add" />
-            <span>Create</span>
-          </>
-        )}
-        itemTemplate={(option) => (
-          <StyledCreateItem>
-            <Icon icon={option.icon} />
-            <span className="label">{option.label}</span>
-            <ShortcutWidget>{option.shortcut}</ShortcutWidget>
-          </StyledCreateItem>
-        )}
-        itemStyle={{
-          paddingRight: 16,
-        }}
-        disabled={disabled}
-        data-tooltip={disabled ? 'Enable hierarchy to create new entity' : 'Create new entity'}
-      />
-      {entityType && (
+      {showButton && (
+        <StyledCreateButton
+          options={options}
+          value={[]}
+          onChange={(v: string[]) => handleOpenFromMenu(v[0])}
+          valueTemplate={() => (
+            <>
+              <Icon icon="add" />
+              <span>Create</span>
+            </>
+          )}
+          itemTemplate={(option) => (
+            <StyledCreateItem>
+              <Icon icon={option.icon} />
+              <span className="label">{option.label}</span>
+              <ShortcutTag>{option.shortcut}</ShortcutTag>
+            </StyledCreateItem>
+          )}
+          itemStyle={{
+            paddingRight: 16,
+          }}
+          disabled={disabled}
+          data-tooltip={disabled ? 'Enable hierarchy to create new entity' : 'Create new entity'}
+        />
+      )}
+      {showDialog && entityType && (
         <StyledDialog
           header={getDialogTitle()}
           isOpen
@@ -456,7 +488,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
                 onChange={(e) => setCreateMore((e.target as HTMLInputElement).checked)}
               />
               <SaveButton
-                label={`Create ${capitalize(entityType)}`}
+                label={newEntityDefinitions[entityType].createLabel}
                 onClick={() => handleSubmit(createMore)}
                 active={!addDisabled || isSubmitting}
                 disabled={!entityForm.name || !entityForm.label}
@@ -505,6 +537,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
                 nesting={false}
                 onChange={handleSeqChange}
                 isRoot={isRoot}
+                // @ts-ignore
                 typeSelectRef={typeSelectRef}
                 // @ts-ignore
                 onLastInputKeydown={(e) => handleKeyDown(e, true)}
@@ -540,8 +573,6 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     </>
   )
 }
-
-export default NewEntity
 
 // Helper function to generate label based on entity type and selected subtype
 export const generateLabel = (

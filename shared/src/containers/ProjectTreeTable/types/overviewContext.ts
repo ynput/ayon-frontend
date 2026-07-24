@@ -10,11 +10,6 @@ import { QueryFilter } from './operations'
 import { ReactNode } from 'react'
 import { ProjectInfo } from '@shared/containers/DetailsPanel/helpers/mergeProjectInfo'
 
-interface EntityMoveData {
-  entityId: string
-  entityType: 'folder'
-}
-
 export interface ProjectOverviewProviderProps {
   children: ReactNode
   modules: ProjectTableModulesType
@@ -96,12 +91,16 @@ export interface ProjectOverviewContextType {
   updateExpanded: OnChangeFn<ExpandedState>
   setExpanded: (expanded: ExpandedState) => void
 
-  // context menu items
-  contextMenuItems: ContextMenuItemConstructors
-
   // links
   loadingLinksEntityIds: Set<string>
   setLinksVisible: (visible: boolean) => void
+
+  // context menu items
+  contextMenuItems: ContextMenuItemConstructors
+
+  // move dialog
+  movingEntities: import('@shared/containers/MoveEntityDialog').MultiEntityMoveData | null
+  closeMoveDialog: () => void
 
   // entity ids currently rendered in the table's viewport - used to scope task
   // fetching (hierarchy mode) to folders actually on screen
@@ -109,5 +108,4 @@ export interface ProjectOverviewContextType {
   setVisibleEntityIds: (entityIds: string[]) => void
 
   // move dialog
-  openMoveDialog?: (entityData: EntityMoveData) => void
 }

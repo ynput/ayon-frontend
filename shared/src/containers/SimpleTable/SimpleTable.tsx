@@ -39,6 +39,11 @@ const toMenuItems = (items: ReturnType<SimpleTableRowContextMenuBuilder>) => {
   return Array.isArray(items) ? items.filter(Boolean) : [items]
 }
 
+const toggleRowAndDescendants = <TData,>(row: Row<TData>, expanded: boolean) => {
+  row.toggleExpanded(expanded)
+  row.subRows.forEach((subRow) => toggleRowAndDescendants(subRow, expanded))
+}
+
 // Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
 const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
   const cellValue = row.getValue(columnId)
@@ -136,9 +141,11 @@ const SimpleTable: FC<SimpleTableProps> = ({
   onScrollBottom,
   onRename,
   renamingId,
+  renameInitialValue,
   onSubmitRename,
   onCancelRename,
   onRowDoubleClick,
+  onRowOptionClick,
   rowContextMenuBuilders = [],
   children,
   pt,
@@ -167,6 +174,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
   onRowDoubleClickRef.current = onRowDoubleClick
   const renamingIdRef = useRef(renamingId)
   renamingIdRef.current = renamingId
+  const renameInitialValueRef = useRef(renameInitialValue)
+  renameInitialValueRef.current = renameInitialValue
   const onSubmitRenameRef = useRef(onSubmitRename)
   onSubmitRenameRef.current = onSubmitRename
   const onCancelRenameRef = useRef(onCancelRename)
@@ -199,59 +208,62 @@ const SimpleTable: FC<SimpleTableProps> = ({
       rowId: string,
       isShift: boolean,
       isCtrlOrMeta: boolean,
-    ) => {
+    ): RowSelectionState => {
       const currentId = rowId
       const allProcessableRows = tableInstance.getFilteredRowModel().flatRows
       const currentRow = allProcessableRows.find((r) => r.id === currentId)
 
-      if (!currentRow) return
+      if (!currentRow) return { ...(tableInstance.getState().rowSelection || {}) }
 
       // Prevent selection of disabled rows
-      if (currentRow.original.isDisabled) return
+      if (currentRow.original.isDisabled) {
+        return { ...(tableInstance.getState().rowSelection || {}) }
+      }
 
       // If click-to-deselect is enabled and only one row is selected and it's the current row
       if (
         enableClickToDeselect &&
         !isShift &&
         !isCtrlOrMeta &&
-        Object.keys(tableInstance.getState().rowSelection).length === 1 &&
-        tableInstance.getState().rowSelection[currentId]
+        Object.keys(tableInstance.getState().rowSelection || {}).length === 1 &&
+        (tableInstance.getState().rowSelection || {})[currentId]
       ) {
         tableInstance.setRowSelection({})
         lastSelectedIdRef.current = null
-        return
+        return {}
       }
 
+      let nextSelection: RowSelectionState
       if (isMultiSelect && isShift && lastSelectedIdRef.current) {
         const lastId = lastSelectedIdRef.current
         const anchorRow = allProcessableRows.find((r) => r.id === lastId)
 
         if (!anchorRow) {
-          tableInstance.setRowSelection({ [currentId]: true })
+          nextSelection = { [currentId]: true }
         } else {
           const rowsToToggle = getRowRange(allProcessableRows, currentId, lastId)
-          const newSelection: RowSelectionState = {}
-          rowsToToggle.forEach((r) => (newSelection[r.id] = true))
-          tableInstance.setRowSelection(newSelection)
+          nextSelection = {}
+          rowsToToggle.forEach((r) => (nextSelection[r.id] = true))
         }
       } else if (isMultiSelect && isCtrlOrMeta) {
         // write a concrete object from live state; toggleSelected()'s functional updater runs
         // against a stale rowSelection closure and drops the other selected rows
-        const selection = { ...tableInstance.getState().rowSelection }
-        if (selection[currentId]) {
-          delete selection[currentId]
+        nextSelection = { ...(tableInstance.getState().rowSelection || {}) }
+        if (nextSelection[currentId]) {
+          delete nextSelection[currentId]
         } else {
-          selection[currentId] = true
+          nextSelection[currentId] = true
         }
-        tableInstance.setRowSelection(selection)
       } else {
         // If it's already selected and it's the only one, don't update selection to avoid unnecessary re-renders
-        const selection = tableInstance.getState().rowSelection
-        if (!(Object.keys(selection).length === 1 && selection[currentId])) {
-          tableInstance.setRowSelection({ [currentId]: true })
+        nextSelection = { ...(tableInstance.getState().rowSelection || {}) }
+        if (!(Object.keys(nextSelection).length === 1 && nextSelection[currentId])) {
+          nextSelection = { [currentId]: true }
         }
       }
+      tableInstance.setRowSelection(nextSelection)
       lastSelectedIdRef.current = currentId
+      return nextSelection
     },
     [isMultiSelect, enableClickToDeselect],
   )
@@ -371,12 +383,25 @@ const SimpleTable: FC<SimpleTableProps> = ({
             ) {
               return
             }
-            handleSelectionLogic(
-              cellTableInstance, // Pass the cell's table instance
-              row.id,
-              event.shiftKey,
-              event.ctrlKey || event.metaKey,
-            )
+            // Keep an already-selected row selected for a plain option click.
+            // Modifier clicks still go through the normal range/toggle selection path.
+            const preserveSelection =
+              event.altKey &&
+              row.getIsSelected() &&
+              !event.shiftKey &&
+              !event.ctrlKey &&
+              !event.metaKey
+            const nextSelection: RowSelectionState = !preserveSelection
+              ? handleSelectionLogic(
+                  cellTableInstance, // Pass the cell's table instance
+                  row.id,
+                  event.shiftKey,
+                  event.ctrlKey || event.metaKey,
+                )
+              : cellTableInstance.getState().rowSelection || {}
+            if (event.altKey) {
+              onRowOptionClick?.(row.original, Object.keys(nextSelection))
+            }
           }
 
           const props: SimpleTableCellTemplateProps & {
@@ -408,12 +433,20 @@ const SimpleTable: FC<SimpleTableProps> = ({
             enableNonFolderIndent,
             isRowExpanded: row.getIsExpanded(),
             isTableExpandable: cellMeta?.isExpandable,
-            onExpandClick: row.getToggleExpandedHandler(),
+            onExpandClick: (event?: ReactMouseEvent<HTMLElement, MouseEvent>) => {
+              if (event?.altKey) {
+                toggleRowAndDescendants(row, !row.getIsExpanded())
+              } else {
+                row.toggleExpanded()
+              }
+            },
             startContent: row.original.startContent,
             endContent: row.original.endContent,
             isDisabled: row.original.isDisabled,
             disabledMessage: row.original.disabledMessage,
             isRenaming: row.id === renamingIdRef.current,
+            renameInitialValue:
+              row.id === renamingIdRef.current ? renameInitialValueRef.current : undefined,
             onSubmitRename: onSubmitRenameRef.current
               ? (v) => onSubmitRenameRef.current!(row.id, v)
               : undefined,
@@ -439,6 +472,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
       enableClickToDeselect,
       enableNonFolderIndent,
       imgRatio,
+      onRowOptionClick,
     ],
   )
 
@@ -539,6 +573,9 @@ const SimpleTable: FC<SimpleTableProps> = ({
             rowIndex,
             row,
             selectedRows: nextSelectedRows,
+            selectedTableRows: nextSelectedRows
+              .map((selectedRowId) => table.getRowModel().rowsById[selectedRowId])
+              .filter((selectedRow): selectedRow is Row<SimpleTableRow> => !!selectedRow),
             isSelected: nextSelectedRows.includes(rowId),
           }),
         ),
