@@ -6,7 +6,7 @@ import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
 import { useDetailsPanelContext } from '@shared/context'
 import { Status } from '@shared/api'
-import { ActivityStatusSecondary } from '../ActivityStatusChange/ActivityStatusSecondary'
+import { FieldValue } from '../ActivityFieldChange/FieldValue'
 
 interface Version {
   name: string
@@ -84,11 +84,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
                   </Styled.Title>
                   <Styled.Title>
                     <Styled.VersionName className="version">{name}</Styled.VersionName> -
-                    <ActivityStatusSecondary
-                      icon={status?.icon}
-                      color={status?.color}
-                      name={status?.name || ''}
-                    />
+                    <FieldValue icon={status?.icon} color={status?.color} name={status?.name || ''} />
                   </Styled.Title>
                 </div>
                 <Styled.Thumbnail
