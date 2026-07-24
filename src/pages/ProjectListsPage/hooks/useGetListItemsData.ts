@@ -22,6 +22,7 @@ import {
 import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
+import { convertSearchToQueryFilter } from '../util/searchToQueryFilter'
 import { OnSyncDataCallback, usePowerpack, useProjectContext } from '@shared/context'
 import { useListsViewSettings, useProjectDataContext, useViewsContext } from '@shared/containers'
 import { useAppDispatch } from '@state/store'
@@ -87,8 +88,9 @@ const useGetListItemsData = ({
       : undefined
   ) as StatsEntity | undefined
   const statsProjectName = contextProjectName || projectName
-  const queryFilterString = filters.conditions?.length
-    ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(filters)))
+  const searchedFilters = convertSearchToQueryFilter(filters, entityType)
+  const queryFilterString = searchedFilters.conditions?.length
+    ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(searchedFilters)))
     : ''
 
   // Create sort params for infinite query
@@ -179,9 +181,7 @@ const useGetListItemsData = ({
     ],
   )
 
-  const statsFilter = filters.conditions?.length
-    ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(filters)))
-    : undefined
+  const statsFilter = queryFilterString || undefined
   const statsArgs = {
     projectName: statsProjectName,
     listId: listId || '',
