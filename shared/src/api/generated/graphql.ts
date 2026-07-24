@@ -2885,7 +2885,7 @@ export const GetEntitiesChecklistsDocument = new TypedDocumentString(`
       entityIds: $entityIds
       last: 1000
       activityTypes: ["checklist"]
-      referenceTypes: ["origin"]
+      referenceTypes: ["origin", "relation"]
     ) {
       edges {
         cursor

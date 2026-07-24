@@ -5,7 +5,7 @@ query GetEntitiesChecklists($projectName: String!, $entityIds: [String!]!) {
       entityIds: $entityIds
       last: 1000
       activityTypes: ["checklist"]
-      referenceTypes: ["origin"]
+      referenceTypes: ["origin", "relation"]
     ) {
       edges {
         cursor
