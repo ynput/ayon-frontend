@@ -208,59 +208,62 @@ const SimpleTable: FC<SimpleTableProps> = ({
       rowId: string,
       isShift: boolean,
       isCtrlOrMeta: boolean,
-    ) => {
+    ): RowSelectionState => {
       const currentId = rowId
       const allProcessableRows = tableInstance.getFilteredRowModel().flatRows
       const currentRow = allProcessableRows.find((r) => r.id === currentId)
 
-      if (!currentRow) return
+      if (!currentRow) return { ...(tableInstance.getState().rowSelection || {}) }
 
       // Prevent selection of disabled rows
-      if (currentRow.original.isDisabled) return
+      if (currentRow.original.isDisabled) {
+        return { ...(tableInstance.getState().rowSelection || {}) }
+      }
 
       // If click-to-deselect is enabled and only one row is selected and it's the current row
       if (
         enableClickToDeselect &&
         !isShift &&
         !isCtrlOrMeta &&
-        Object.keys(tableInstance.getState().rowSelection).length === 1 &&
-        tableInstance.getState().rowSelection[currentId]
+        Object.keys(tableInstance.getState().rowSelection || {}).length === 1 &&
+        (tableInstance.getState().rowSelection || {})[currentId]
       ) {
         tableInstance.setRowSelection({})
         lastSelectedIdRef.current = null
-        return
+        return {}
       }
 
+      let nextSelection: RowSelectionState
       if (isMultiSelect && isShift && lastSelectedIdRef.current) {
         const lastId = lastSelectedIdRef.current
         const anchorRow = allProcessableRows.find((r) => r.id === lastId)
 
         if (!anchorRow) {
-          tableInstance.setRowSelection({ [currentId]: true })
+          nextSelection = { [currentId]: true }
         } else {
           const rowsToToggle = getRowRange(allProcessableRows, currentId, lastId)
-          const newSelection: RowSelectionState = {}
-          rowsToToggle.forEach((r) => (newSelection[r.id] = true))
-          tableInstance.setRowSelection(newSelection)
+          nextSelection = {}
+          rowsToToggle.forEach((r) => (nextSelection[r.id] = true))
         }
       } else if (isMultiSelect && isCtrlOrMeta) {
         // write a concrete object from live state; toggleSelected()'s functional updater runs
         // against a stale rowSelection closure and drops the other selected rows
-        const selection = { ...tableInstance.getState().rowSelection }
-        if (selection[currentId]) {
-          delete selection[currentId]
+        nextSelection = { ...(tableInstance.getState().rowSelection || {}) }
+        if (nextSelection[currentId]) {
+          delete nextSelection[currentId]
         } else {
-          selection[currentId] = true
+          nextSelection[currentId] = true
         }
-        tableInstance.setRowSelection(selection)
       } else {
         // If it's already selected and it's the only one, don't update selection to avoid unnecessary re-renders
-        const selection = tableInstance.getState().rowSelection
-        if (!(Object.keys(selection).length === 1 && selection[currentId])) {
-          tableInstance.setRowSelection({ [currentId]: true })
+        nextSelection = { ...(tableInstance.getState().rowSelection || {}) }
+        if (!(Object.keys(nextSelection).length === 1 && nextSelection[currentId])) {
+          nextSelection = { [currentId]: true }
         }
       }
+      tableInstance.setRowSelection(nextSelection)
       lastSelectedIdRef.current = currentId
+      return nextSelection
     },
     [isMultiSelect, enableClickToDeselect],
   )
@@ -380,14 +383,24 @@ const SimpleTable: FC<SimpleTableProps> = ({
             ) {
               return
             }
-            handleSelectionLogic(
-              cellTableInstance, // Pass the cell's table instance
-              row.id,
-              event.shiftKey,
-              event.ctrlKey || event.metaKey,
-            )
+            // Keep an already-selected row selected for a plain option click.
+            // Modifier clicks still go through the normal range/toggle selection path.
+            const preserveSelection =
+              event.altKey &&
+              row.getIsSelected() &&
+              !event.shiftKey &&
+              !event.ctrlKey &&
+              !event.metaKey
+            const nextSelection: RowSelectionState = !preserveSelection
+              ? handleSelectionLogic(
+                  cellTableInstance, // Pass the cell's table instance
+                  row.id,
+                  event.shiftKey,
+                  event.ctrlKey || event.metaKey,
+                )
+              : cellTableInstance.getState().rowSelection || {}
             if (event.altKey) {
-              onRowOptionClick?.(row.original)
+              onRowOptionClick?.(row.original, Object.keys(nextSelection))
             }
           }
 

@@ -30,14 +30,14 @@ export const DetailsPanelEntityProvider = ({ children }: DetailsPanelEntityProvi
     setSelectedEntityState(null)
   }, [])
 
-  const value = {
-    selectedEntity,
-    setSelectedEntity,
-    clearSelectedEntity,
-  }
-
   return (
-    <DetailsPanelEntityContext.Provider value={value}>
+    <DetailsPanelEntityContext.Provider
+      value={{
+        selectedEntity,
+        setSelectedEntity,
+        clearSelectedEntity,
+      }}
+    >
       {children}
     </DetailsPanelEntityContext.Provider>
   )

@@ -90,7 +90,7 @@ export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   onSubmitRename?: (id: string, value: string) => void
   onCancelRename?: () => void
   onRowDoubleClick?: (id: string, row: Row<SimpleTableRow>) => void
-  onRowOptionClick?: (row: SimpleTableRow) => void
+  onRowOptionClick?: (row: SimpleTableRow, selectedRows: string[]) => void
   fitContent?: boolean
   rowContextMenuBuilders?: SimpleTableRowContextMenuBuilder[]
   children?: (

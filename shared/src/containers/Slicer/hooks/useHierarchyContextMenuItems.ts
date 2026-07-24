@@ -4,9 +4,13 @@ import { ContextMenuItemType } from '@shared/containers/ContextMenu'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import { useCallback, useMemo, useState } from 'react'
 import { useUpdateOverviewEntitiesMutation } from '@shared/api'
-import { useProjectContext, useDeleteEntitiesContext, type DeletableEntity } from '@shared/context'
+import {
+  useDetailsPanelContext,
+  useProjectContext,
+  useDeleteEntitiesContext,
+  type DeletableEntity,
+} from '@shared/context'
 import { OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
-import { useDetailsPanelEntityContext } from '@shared/containers/ProjectTreeTable'
 import { useOptionalVersionUploadContext } from '@shared/components'
 import { SliceMap } from '../types'
 
@@ -34,7 +38,7 @@ export const useHierarchyContextMenuItems = (
 ) => {
   const { onOpenNew } = useNewEntityContext()
   const { projectName } = useProjectContext()
-  const { setSelectedEntity } = useDetailsPanelEntityContext()
+  const { setEntities } = useDetailsPanelContext()
   const versionUpload = useOptionalVersionUploadContext()
   const [updateEntities] = useUpdateOverviewEntitiesMutation()
   const { deleteEntities } = useDeleteEntitiesContext()
@@ -42,10 +46,10 @@ export const useHierarchyContextMenuItems = (
 
   const actions = useMemo(
     () => ({
-      onShowDetails: (row: SimpleTableRow) => {
-        setSelectedEntity({
-          entityId: row.id,
-          entityType: row.data?.entityType === 'task' ? 'task' : 'folder',
+      onShowDetails: (row: SimpleTableRow, selectedRows: string[] = [row.id]) => {
+        setEntities({
+          entityType: 'folder',
+          entities: selectedRows.map((id) => ({ id, projectName })),
         })
       },
       onAddToList,
@@ -99,7 +103,7 @@ export const useHierarchyContextMenuItems = (
       onOpenViewer,
       openMoveDialog,
       projectName,
-      setSelectedEntity,
+      setEntities,
       deleteEntities,
       entityMap,
       updateEntities,
@@ -134,7 +138,7 @@ export const useHierarchyContextMenuItems = (
         label: 'Show details',
         icon: 'dock_to_left',
         shortcut: getPlatformShortcutKey('click', [KeyMode.Alt]),
-        command: () => actions.onShowDetails(row.original),
+        command: () => actions.onShowDetails(row.original, selectedRows),
       }),
       (_e, { row }) => ({
         label: 'Rename label',
