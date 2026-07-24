@@ -62,6 +62,7 @@ export type SimpleTableRowContextMenuContext = {
   rowIndex: number
   row: Row<SimpleTableRow>
   selectedRows: string[]
+  selectedTableRows: Row<SimpleTableRow>[]
   isSelected: boolean
 }
 

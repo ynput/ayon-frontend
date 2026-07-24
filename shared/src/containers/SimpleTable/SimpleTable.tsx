@@ -573,6 +573,9 @@ const SimpleTable: FC<SimpleTableProps> = ({
             rowIndex,
             row,
             selectedRows: nextSelectedRows,
+            selectedTableRows: nextSelectedRows
+              .map((selectedRowId) => table.getRowModel().rowsById[selectedRowId])
+              .filter((selectedRow): selectedRow is Row<SimpleTableRow> => !!selectedRow),
             isSelected: nextSelectedRows.includes(rowId),
           }),
         ),

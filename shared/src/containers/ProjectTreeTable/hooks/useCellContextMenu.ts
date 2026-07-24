@@ -295,20 +295,28 @@ const useCellContextMenu = ({
     hidden: cell.isGroup,
   })
 
-  const getExplicitParentConfig = (cell: TableCellContextData): NewEntityOpenConfig => ({
-    parentFolderIds:
-      cell.entityType === 'folder'
-        ? [cell.entityId]
-        : cell.entityType === 'task' && cell.parentId
-        ? [cell.parentId]
-        : [],
-  })
+  const getSelectedParentFolderIds = (
+    cell: TableCellContextData,
+    selectedRows: string[],
+  ): string[] => {
+    const rows = selectedRows.length ? selectedRows : [cell.entityId]
+    return rows.flatMap((rowId) => {
+      const entity = getEntityById(rowId) as (EntityMap & Record<string, any>) | undefined
+      if (!entity) return []
 
-  const createFolderItems: ContextMenuItemConstructor = (e, cell) => [
+      if (entity.entityType === 'folder' || !('folderId' in entity)) return [entity.id]
+      return entity.folderId ? [entity.folderId] : []
+    })
+  }
+
+  const createFolderItems: ContextMenuItemConstructor = (e, cell, selected, meta) => [
     {
       label: newEntityDefinitions.folder.createLabel,
       icon: newEntityDefinitions.folder.icon,
-      command: () => onOpenNew?.('folder', getExplicitParentConfig(cell)),
+      command: () =>
+        onOpenNew?.('folder', {
+          parentFolderIds: getSelectedParentFolderIds(cell, meta.selectedRows),
+        }),
       hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
     },
     {
@@ -322,10 +330,13 @@ const useCellContextMenu = ({
     },
   ]
 
-  const createTaskItem: ContextMenuItemConstructor = (e, cell) => ({
+  const createTaskItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({
     label: newEntityDefinitions.task.createLabel,
     icon: newEntityDefinitions.task.icon,
-    command: () => onOpenNew?.('task', getExplicitParentConfig(cell)),
+    command: () =>
+      onOpenNew?.('task', {
+        parentFolderIds: getSelectedParentFolderIds(cell, meta.selectedRows),
+      }),
     hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
   })
 
@@ -399,8 +410,17 @@ const useCellContextMenu = ({
     if (!cellData) return
 
     let currentSelectedCells = Array.from(selectedCells)
+    const selectedRowCellIds = currentSelectedCells.filter(
+      (selectedCellId) => parseCellId(selectedCellId)?.colId === ROW_SELECTION_COLUMN_ID,
+    )
+    const clickedRowIsSelected = selectedRowCellIds.some(
+      (selectedCellId) => parseCellId(selectedCellId)?.rowId === cellData.entityId,
+    )
     // if selecting a cell outside of the current selection
-    if (!currentSelectedCells.includes(cellId) || !currentSelectedCells.length) {
+    if (
+      (!currentSelectedCells.includes(cellId) && !clickedRowIsSelected) ||
+      !currentSelectedCells.length
+    ) {
       currentSelectedCells = [cellId]
       // update selection
       selectCell(cellId, false, false)

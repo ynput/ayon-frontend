@@ -19,8 +19,8 @@ const toggleChildren = (row: any, expanded: boolean) => {
   row.subRows?.forEach((subRow: any) => toggleChildren(subRow, expanded))
 }
 
-const getExplicitParentFolderIds = (row: SimpleTableRow): string[] => {
-  return row.id ? [row.id] : []
+const getExplicitParentFolderIds = (rows: SimpleTableRow[]): string[] => {
+  return rows.map((row) => row.id).filter(Boolean)
 }
 
 export type OnAddToList = (
@@ -44,6 +44,14 @@ export const useHierarchyContextMenuItems = (
   const { deleteEntities } = useDeleteEntitiesContext()
   const [renamingRow, setRenamingRow] = useState<SimpleTableRow | null>(null)
 
+  const getSelectedRows = useCallback(
+    (row: SimpleTableRow, selectedRows: string[]) =>
+      selectedRows
+        .map((entityId) => entityMap?.get(entityId) || (entityId === row.id ? row : undefined))
+        .filter((selectedRow): selectedRow is SimpleTableRow => !!selectedRow),
+    [entityMap],
+  )
+
   const actions = useMemo(
     () => ({
       onShowDetails: (row: SimpleTableRow, selectedRows: string[] = [row.id]) => {
@@ -53,13 +61,12 @@ export const useHierarchyContextMenuItems = (
         })
       },
       onAddToList,
-      onMove: (row: SimpleTableRow, selectedRows: string[]) => {
-        const entityType = row.data?.entityType === 'task' ? 'task' : 'folder'
+      onMove: (selectedRows: SimpleTableRow[]) => {
         openMoveDialog?.({
-          entities: selectedRows.map((entityId) => ({
-            entityId,
-            entityType,
-            currentParentId: row.parentId || row.data?.parentId,
+          entities: selectedRows.map((selectedRow) => ({
+            entityId: selectedRow.id,
+            entityType: selectedRow.data?.entityType === 'task' ? 'task' : 'folder',
+            currentParentId: selectedRow.parentId || selectedRow.data?.parentId,
           })),
         })
       },
@@ -75,24 +82,19 @@ export const useHierarchyContextMenuItems = (
           })
         }
       },
-      onDelete: (row: SimpleTableRow, selectedRows: string[]) => {
-        const entities: DeletableEntity[] = selectedRows.flatMap((entityId) => {
-          const selectedRow = entityMap?.get(entityId) || (entityId === row.id ? row : undefined)
-          if (!selectedRow) return []
-
+      onDelete: (selectedRows: SimpleTableRow[]) => {
+        const entities: DeletableEntity[] = selectedRows.map((selectedRow) => {
           const entityType = selectedRow.data?.entityType === 'task' ? 'task' : 'folder'
           const parentId = selectedRow.parentId || selectedRow.data?.parentId
-          return [
-            {
-              id: selectedRow.id,
-              entityType,
-              name: selectedRow.name,
-              label: selectedRow.label,
-              projectName,
-              folderId: entityType === 'task' ? parentId : undefined,
-              parentId: entityType === 'folder' ? parentId : undefined,
-            },
-          ]
+          return {
+            id: selectedRow.id,
+            entityType,
+            name: selectedRow.name,
+            label: selectedRow.label,
+            projectName,
+            folderId: entityType === 'task' ? parentId : undefined,
+            parentId: entityType === 'folder' ? parentId : undefined,
+          }
         })
 
         void deleteEntities(entities)
@@ -105,8 +107,6 @@ export const useHierarchyContextMenuItems = (
       projectName,
       setEntities,
       deleteEntities,
-      entityMap,
-      updateEntities,
       versionUpload,
     ],
   )
@@ -152,17 +152,27 @@ export const useHierarchyContextMenuItems = (
         command: () => actions.onOpenViewer(row.original),
         hidden: !onOpenViewer,
       }),
-      (_e, { row }) => ({
+      (_e, { selectedTableRows }) => ({
         label: 'Expand all children',
         icon: 'expand_all',
-        command: () => toggleChildren(row, true),
-        hidden: !row.getCanExpand() || row.getIsExpanded(),
+        command: () =>
+          selectedTableRows
+            .filter((selectedRow) => selectedRow.getCanExpand() && !selectedRow.getIsExpanded())
+            .forEach((selectedRow) => toggleChildren(selectedRow, true)),
+        hidden: !selectedTableRows.some(
+          (selectedRow) => selectedRow.getCanExpand() && !selectedRow.getIsExpanded(),
+        ),
       }),
-      (_e, { row }) => ({
+      (_e, { selectedTableRows }) => ({
         label: 'Collapse all children',
         icon: 'collapse_all',
-        command: () => toggleChildren(row, false),
-        hidden: !row.getCanExpand() || !row.getIsExpanded(),
+        command: () =>
+          selectedTableRows
+            .filter((selectedRow) => selectedRow.getCanExpand() && selectedRow.getIsExpanded())
+            .forEach((selectedRow) => toggleChildren(selectedRow, false)),
+        hidden: !selectedTableRows.some(
+          (selectedRow) => selectedRow.getCanExpand() && selectedRow.getIsExpanded(),
+        ),
       }),
       (_e, { row, selectedRows }) => {
         const items = actions.onAddToList?.(row.original, selectedRows)
@@ -176,29 +186,37 @@ export const useHierarchyContextMenuItems = (
       (_e, { row, selectedRows }) => ({
         label: 'Move',
         icon: 'drive_file_move',
-        command: () => actions.onMove(row.original, selectedRows),
+        command: () => actions.onMove(getSelectedRows(row.original, selectedRows)),
         hidden: !openMoveDialog,
       }),
-      (_e, { row }) => ({
+      (_e, { row, selectedRows }) => ({
         label: newEntityDefinitions.folder.createLabel,
         icon: newEntityDefinitions.folder.icon,
         command: () =>
-          onOpenNew?.('folder', { parentFolderIds: getExplicitParentFolderIds(row.original) }),
+          onOpenNew?.('folder', {
+            parentFolderIds: getExplicitParentFolderIds(
+              getSelectedRows(row.original, selectedRows),
+            ),
+          }),
       }),
-      (_e, { row }) => ({
+      (_e, { row, selectedRows }) => ({
         label: newEntityDefinitions.task.createLabel,
         icon: newEntityDefinitions.task.icon,
         command: () =>
-          onOpenNew?.('task', { parentFolderIds: getExplicitParentFolderIds(row.original) }),
+          onOpenNew?.('task', {
+            parentFolderIds: getExplicitParentFolderIds(
+              getSelectedRows(row.original, selectedRows),
+            ),
+          }),
       }),
       (_e, { row, selectedRows }) => ({
         label: 'Delete',
         icon: 'delete',
         danger: true,
-        command: () => actions.onDelete(row.original, selectedRows),
+        command: () => actions.onDelete(getSelectedRows(row.original, selectedRows)),
       }),
     ],
-    [actions, onOpenNew],
+    [actions, getSelectedRows, onOpenNew],
   )
 
   return {
