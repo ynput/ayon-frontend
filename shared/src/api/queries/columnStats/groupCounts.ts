@@ -31,9 +31,18 @@ const TASK_FIELDS: Record<string, string> = {
   tags: 'tags',
   taskType: 'task_type',
 }
+// Versions distribute over columns projected into their stats raw_data CTE: native
+// versions.* columns (status, tags, author, own attrib.*) plus the joined subtype
+// columns the backend now projects (product_type/task_type/folder_type).
+// Only ONE subtype field can back version counts at a time: product_type and task_type
+// both canonicalize to the `subType` columnName (COLUMN_ALIASES) and would clobber each
+// other in the merged stats cache. productType is the version slicer's primary
+// dimension, so it wins; taskType stays unmapped.
 const VERSION_FIELDS: Record<string, string> = {
   status: 'status',
   tags: 'tags',
+  author: 'author',
+  productType: 'product_type',
 }
 
 export const groupByToStatsTarget = (

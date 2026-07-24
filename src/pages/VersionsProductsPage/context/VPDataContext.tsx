@@ -94,6 +94,17 @@ interface VersionsDataContextValue {
     versionIds?: string[]
     productIds?: string[]
   }
+  // like columnStatsArgs but with the active slice's own filter excluded — so
+  // slicer value counts show each value's true population (no self-zeroing)
+  slicerCountsArgs: {
+    projectName: string
+    productFilter?: string
+    versionFilter?: string
+    taskFilter?: string
+    folderIds?: string[]
+    versionIds?: string[]
+    productIds?: string[]
+  }
   fieldStats: FieldStats[]
   groupFieldStats: FieldStats[]
   fieldStatsLoading: boolean
@@ -269,6 +280,11 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     sliceFilter: slicerTaskFilter,
   })
 
+  // same base filters WITHOUT the slice merged in — used for slicer value counts
+  const baseVersionFilter = useQueryFilters({ queryFilters: versionFilter })
+  const baseProductFilter = useQueryFilters({ queryFilters: productFilter })
+  const baseTaskFilter = useQueryFilters({ queryFilters: taskFilter })
+
   // When entity list has task IDs, merge them into the task filter
   const entityListTaskFilterString = useMemo(() => {
     if (!rawEntityIds.taskIds.length) return combinedTaskFilter.filterString
@@ -288,6 +304,30 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       operator: 'and',
     })
   }, [rawEntityIds.taskIds, combinedTaskFilter.filterString])
+
+  // Slicer value counts: exclude the active slice's own filter (base*Filter, no
+  // sliceFilter) so a selected value keeps its siblings' true counts; keep the
+  // hierarchy/entity-list ids so counts still match the filtered table.
+  const slicerCountsArgs = useMemo(
+    () => ({
+      projectName,
+      versionFilter: baseVersionFilter.filterString,
+      productFilter: baseProductFilter.filterString,
+      taskFilter: baseTaskFilter.filterString,
+      folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
+      versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
+      productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
+    }),
+    [
+      projectName,
+      baseVersionFilter.filterString,
+      baseProductFilter.filterString,
+      baseTaskFilter.filterString,
+      slicerFolderIds,
+      entityIds.versionIds,
+      entityIds.productIds,
+    ],
+  )
 
   const resolvedSortBy = useMemo(() => (sortBy && SORT_BY_FIELD_MAP[sortBy]) || sortBy, [sortBy])
 
@@ -642,6 +682,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
       productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
     },
+    slicerCountsArgs,
     fieldStats,
     groupFieldStats,
     fieldStatsLoading,

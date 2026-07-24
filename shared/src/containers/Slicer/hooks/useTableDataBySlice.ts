@@ -10,10 +10,46 @@ import useSlicerAttributesData from './useSlicerAttributesData'
 import { useEntityListsSlice } from './useEntityListsSlice'
 import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
 import { useProjectContext } from '@shared/context'
+import type { GroupCountsMap } from '@shared/api'
+import { UNGROUPED_VALUE } from '../../ProjectTreeTable/hooks/useBuildGroupByTableData'
 
 interface TableDataBySliceProps {
   sliceFields: SliceTypeField[]
   entityTypes?: string[] // entity types
+  counts?: GroupCountsMap
+  filled?: number
+  countsComplete?: boolean
+}
+
+const getRowCount = (
+  row: SimpleTableRow,
+  counts: GroupCountsMap,
+  filled: number,
+  complete: boolean,
+): number | undefined => {
+  if (row.id === 'noValue') return counts.get(UNGROUPED_VALUE)?.count ?? (complete ? 0 : undefined)
+  if (row.id === 'hasValue') return complete ? filled : undefined
+  const hit = counts.get(row.id)?.count ?? (row.name ? counts.get(row.name)?.count : undefined)
+  return hit ?? (complete ? 0 : undefined)
+}
+
+const decorateBadges = (
+  rows: SimpleTableRow[],
+  counts: GroupCountsMap | undefined,
+  filled: number,
+  complete: boolean,
+): SimpleTableRow[] => {
+  if (!counts) return rows
+  return rows.map((row) => {
+    const count = getRowCount(row, counts, filled, complete)
+    return {
+      ...row,
+      badge: count != null ? String(count) : row.badge,
+      subRows: row.subRows?.length
+        ? decorateBadges(row.subRows, counts, filled, complete)
+        : row.subRows,
+    }
+  })
 }
 
 const getNoValue = (field: string): SimpleTableRow => ({
@@ -84,6 +120,9 @@ export const defaultSliceOptions: SliceTypeField[] = [
 const useTableDataBySlice = ({
   sliceFields,
   entityTypes = [],
+  counts,
+  filled = 0,
+  countsComplete = false,
 }: TableDataBySliceProps): TableData => {
   const { sliceType, onSliceTypeChange, useExtraSlices, isLoadingExtraSlices } = useSlicerContext()
   const { projectName } = useProjectContext()
@@ -271,10 +310,15 @@ const useTableDataBySlice = ({
     fetchData()
   }, [sliceType, projectName, isLoadingData, sliceType === 'hierarchy' ? hierarchyData : null])
 
+  const dataWithBadges = useMemo(
+    () => decorateBadges(slice.data, counts, filled, countsComplete),
+    [slice.data, counts, filled, countsComplete],
+  )
+
   // from slice data, flatten into a map of ids to rows
   const sliceMap = useMemo(() => {
     const map = new Map<string, SimpleTableRow>()
-    const queue: SimpleTableRow[] = [...slice.data]
+    const queue: SimpleTableRow[] = [...dataWithBadges]
 
     while (queue.length > 0) {
       const row = queue.shift()
@@ -288,11 +332,11 @@ const useTableDataBySlice = ({
       }
     }
     return map
-  }, [slice.data])
+  }, [dataWithBadges])
 
   return {
     sliceOptions,
-    table: slice,
+    table: { ...slice, data: dataWithBadges },
     sliceMap,
     isLoading:
       (builtInSlices[sliceType] && builtInSlices[sliceType].isLoading) ||

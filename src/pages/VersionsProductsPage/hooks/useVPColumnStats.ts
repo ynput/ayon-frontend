@@ -63,7 +63,13 @@ export const useVPColumnStats = ({
             ? ['product_base_type']
             : [],
       }),
-    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
+    [
+      attribFields,
+      columnVisibility,
+      defaultColumnVisibility,
+      columnSummaries,
+      columnSummaryScopes,
+    ],
   )
   const versionTargets = useMemo(
     () =>
@@ -75,7 +81,13 @@ export const useVPColumnStats = ({
         columnSummaries,
         columnSummaryScopes,
       }),
-    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
+    [
+      attribFields,
+      columnVisibility,
+      defaultColumnVisibility,
+      columnSummaries,
+      columnSummaryScopes,
+    ],
   )
 
   const columnStatsBaseArgs = {

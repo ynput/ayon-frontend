@@ -55,6 +55,7 @@ export type SimpleTableRow = {
   isDisabled?: boolean
   disabledMessage?: string
   inactive?: boolean
+  badge?: string | React.ReactNode
 }
 
 export type SimpleTableRowContextMenuContext = {

@@ -1,9 +1,15 @@
-import { FC, useState } from 'react'
+import { FC, useMemo, useState } from 'react'
 import VersionsProductsPageProviders from './providers'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { Slicer, SLICER_PAGES_CONFIG, useSlicerSplitter } from '@shared/containers/Slicer'
+import {
+  Slicer,
+  SLICER_PAGES_CONFIG,
+  useSlicerSplitter,
+  type SlicerCountsSource,
+} from '@shared/containers/Slicer'
 import { useProjectContext, useSettingsPanel } from '@shared/context'
+import { useVersionsDataContext } from './context/VPDataContext'
 import VPToolbar from './components/VPToolbar/VPToolbar'
 // TABLES
 import VPTable from './components/VPTable/VPTable'
@@ -30,6 +36,12 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
   const { showGrid } = useVPViewsContext()
   const { showVersionsTable } = useVersionsSelectionContext()
   const { projectName } = useProjectContext()
+  const { slicerCountsArgs } = useVersionsDataContext()
+
+  const slicerCountsSource = useMemo<SlicerCountsSource>(
+    () => ({ entity: 'version', args: slicerCountsArgs }),
+    [slicerCountsArgs],
+  )
 
   // modal dialog state for product and version details
   const [showDetail, setShowDetail] = useState<false | 'product' | 'version'>(false)
@@ -62,6 +74,7 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
               sliceFields={SLICER_PAGES_CONFIG.versions.fields}
               pinnedSliceType="hierarchy"
               entityTypes={['version', 'task', 'folder']}
+              countsSource={slicerCountsSource}
             />
           </Section>
         </SplitterPanel>

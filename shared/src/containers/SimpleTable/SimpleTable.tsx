@@ -411,6 +411,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
             onExpandClick: row.getToggleExpandedHandler(),
             startContent: row.original.startContent,
             endContent: row.original.endContent,
+            badge: row.original.badge,
             isDisabled: row.original.isDisabled,
             disabledMessage: row.original.disabledMessage,
             isRenaming: row.id === renamingIdRef.current,
