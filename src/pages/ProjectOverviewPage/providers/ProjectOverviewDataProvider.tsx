@@ -1,12 +1,7 @@
 import { FC } from 'react'
-import {
-  ColumnSettingsProvider,
-  ProjectDataProvider,
-  ColumnDndProvider,
-} from '@shared/containers/ProjectTreeTable'
+import { ColumnSettingsProvider, ColumnDndProvider } from '@shared/containers/ProjectTreeTable'
 import { useGroupByRemoteModules } from '@shared/hooks'
 import { SettingsPanelProvider } from '@shared/context'
-import { useAppSelector } from '@state/store'
 import { ProjectOverviewProvider } from '../context/ProjectOverviewContext'
 import ProjectOverviewTableProvider from './ProjectOverviewTableProvider'
 import { useOverviewViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers'

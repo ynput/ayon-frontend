@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useCallback, useState } from 'react'
 import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from '../hooks/useTableDataBySlice'
@@ -13,6 +13,8 @@ import styled from 'styled-components'
 import { ExpandedState } from '@tanstack/react-table'
 import { SyncButton } from '@shared/components'
 import { useProjectFoldersContext } from '@shared/context'
+import { MoveEntityDialog } from '@shared/containers/MoveEntityDialog'
+import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
 
 const DropdownSkeleton = styled.div`
   height: 28px;
@@ -44,8 +46,36 @@ export const Slicer: FC<SlicerProps> = ({
     isViewSyncPending,
     onOpenViewer,
     onAddToList: contextOnAddToList,
+    projectName,
   } = useSlicerContext()
-  const { refetch } = useProjectFoldersContext()
+
+  const [movingEntities, setMovingEntities] = useState<MultiEntityMoveData | null>(null)
+  const openMoveDialog = useCallback<OpenMoveDialog>((data) => {
+    setMovingEntities('entities' in data ? data : { entities: [data] })
+  }, [])
+  const closeMoveDialog = useCallback(() => {
+    setMovingEntities(null)
+  }, [])
+
+  const { refetch, getParentFolderIds } = useProjectFoldersContext()
+
+  const handleMoveComplete = useCallback(
+    (folderId: string) => {
+      const folderIdsToExpand = [folderId, ...getParentFolderIds(folderId)]
+      onExpandedChange(
+        typeof expanded === 'boolean'
+          ? expanded
+            ? expanded
+            : Object.fromEntries(folderIdsToExpand.map((id) => [id, true]))
+          : {
+              ...expanded,
+              ...Object.fromEntries(folderIdsToExpand.map((id) => [id, true])),
+            },
+      )
+    },
+    [expanded, getParentFolderIds, onExpandedChange],
+  )
+
   const handleSync = async () => refetch()
 
   const {
@@ -61,6 +91,7 @@ export const Slicer: FC<SlicerProps> = ({
     onAddToList || contextOnAddToList,
     sliceMap,
     onOpenViewer,
+    openMoveDialog,
   )
   const rowContextMenuBuilders =
     sliceType === 'hierarchy' ? hierarchyContextMenu.rowContextMenuBuilders : []
@@ -111,15 +142,29 @@ export const Slicer: FC<SlicerProps> = ({
           forceUpdateTable={sliceType}
           globalFilter={globalFilter}
           renamingId={sliceType === 'hierarchy' ? hierarchyContextMenu.renamingRow?.id : null}
-          renameInitialValue={sliceType === 'hierarchy' ? hierarchyContextMenu.renameInitialValue : undefined}
-          onSubmitRename={
-            sliceType === 'hierarchy' ? (_id, value) => hierarchyContextMenu.onSubmitRename(value) : undefined
+          renameInitialValue={
+            sliceType === 'hierarchy' ? hierarchyContextMenu.renameInitialValue : undefined
           }
-          onCancelRename={sliceType === 'hierarchy' ? hierarchyContextMenu.onCancelRename : undefined}
-          onRowOptionClick={sliceType === 'hierarchy' ? hierarchyContextMenu.onOptionClick : undefined}
+          onSubmitRename={
+            sliceType === 'hierarchy'
+              ? (_id, value) => hierarchyContextMenu.onSubmitRename(value)
+              : undefined
+          }
+          onCancelRename={
+            sliceType === 'hierarchy' ? hierarchyContextMenu.onCancelRename : undefined
+          }
+          onRowOptionClick={
+            sliceType === 'hierarchy' ? hierarchyContextMenu.onOptionClick : undefined
+          }
           rowContextMenuBuilders={rowContextMenuBuilders}
         />
       </SimpleTableProvider>
+      <MoveEntityDialog
+        projectName={projectName}
+        movingEntities={movingEntities}
+        onClose={closeMoveDialog}
+        onMoveComplete={handleMoveComplete}
+      />
     </Container>
   )
 }

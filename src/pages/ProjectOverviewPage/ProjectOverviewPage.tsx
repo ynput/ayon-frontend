@@ -1,6 +1,6 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC, useMemo } from 'react'
+import { FC, useCallback, useMemo } from 'react'
 import styled from 'styled-components'
 
 // state
@@ -28,7 +28,7 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
-import { useGlobalContext, useSettingsPanel } from '@shared/context'
+import { useGlobalContext, useProjectFoldersContext, useSettingsPanel } from '@shared/context'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DetailsPanelEntityData } from '@shared/api'
@@ -40,6 +40,8 @@ import { getBundleModeFromUser } from '@shared/util'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import type { OnAddToList } from '@shared/containers/Slicer'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable'
+import { MoveEntityDialog } from '@shared/containers/MoveEntityDialog'
+import type { OnMoveComplete } from '@shared/containers/MoveEntityDialog'
 
 // the tasks resolver task filter does not whitelist folder_type — use the
 // folder-scope folderType chip instead (goes through folderFilter)
@@ -89,8 +91,26 @@ const ProjectOverviewPage: FC = () => {
     tasksMap,
     updateExpanded,
     onSyncData,
+    movingEntities,
+    closeMoveDialog,
   } = useProjectOverviewContext()
   const { buildReviewContextMenu } = useEntityListsContext()
+  const { getParentFolderIds } = useProjectFoldersContext()
+  const handleMoveComplete = useCallback<OnMoveComplete>(
+    (folderId) => {
+      const folderIdsToExpand = [folderId, ...getParentFolderIds(folderId)]
+      updateExpanded((previous) => {
+        if (typeof previous === 'boolean') {
+          return previous ? previous : Object.fromEntries(folderIdsToExpand.map((id) => [id, true]))
+        }
+        return {
+          ...previous,
+          ...Object.fromEntries(folderIdsToExpand.map((id) => [id, true])),
+        }
+      })
+    },
+    [getParentFolderIds, updateExpanded],
+  )
 
   const onAddToList = useMemo<OnAddToList>(
     () => (row: SimpleTableRow, selectedRows: string[]) => {
@@ -306,6 +326,12 @@ const ProjectOverviewPage: FC = () => {
           </Section>
         </SplitterPanel>
       </Splitter>
+      <MoveEntityDialog
+        projectName={projectName}
+        movingEntities={movingEntities}
+        onClose={closeMoveDialog}
+        onMoveComplete={handleMoveComplete}
+      />
     </main>
   )
 }

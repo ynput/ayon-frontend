@@ -49,9 +49,7 @@ import {
   DetailsPanelEntityProvider,
   ProjectDataProvider,
 } from '@shared/containers/ProjectTreeTable'
-import { MoveEntityDialog } from '@shared/containers'
 import { NewEntityProvider } from '@shared/containers/NewEntity'
-import { MoveEntityProvider } from '@shared/context'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { OnAddToList, OnOpenViewer } from '@shared/containers/Slicer'
@@ -502,21 +500,18 @@ const ProjectPageInner = () => {
         onVersionCreated={handleNewVersionUploaded}
       >
         <EntityListsProvider projectName={projectName}>
-          <MoveEntityProvider>
-            <DetailsPanelEntityProvider>
-              <MoveEntityDialog projectName={projectName} />
-              <WithViews viewType={page.viewType} projectName={projectName}>
-                <EntityUpdatesProvider projectNames={[projectName]}>
-                  <ProjectSlicerWithViews page={module} projectName={projectName}>
-                    <NewEntityProvider>
-                      {module !== 'overview' && <ProjectNewEntityHost showButton={false} />}
-                      {page.component}
-                    </NewEntityProvider>
-                  </ProjectSlicerWithViews>
-                </EntityUpdatesProvider>
-              </WithViews>
-            </DetailsPanelEntityProvider>
-          </MoveEntityProvider>
+          <DetailsPanelEntityProvider>
+            <WithViews viewType={page.viewType} projectName={projectName}>
+              <EntityUpdatesProvider projectNames={[projectName]}>
+                <ProjectSlicerWithViews page={module} projectName={projectName}>
+                  <NewEntityProvider>
+                    {module !== 'overview' && <ProjectNewEntityHost showButton={false} />}
+                    {page.component}
+                  </NewEntityProvider>
+                </ProjectSlicerWithViews>
+              </EntityUpdatesProvider>
+            </WithViews>
+          </DetailsPanelEntityProvider>
           <NewListFromContext />
         </EntityListsProvider>
         <UploadVersionDialog />

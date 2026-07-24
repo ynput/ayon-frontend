@@ -1,43 +1,30 @@
-import { FC, useCallback } from 'react'
+import { FC } from 'react'
 import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog'
-import { useOptionalProjectTableContext } from '@shared/containers/ProjectTreeTable'
-import { EntityMoveData } from '@shared/context/MoveEntityContext'
 import { useMoveEntities } from '@shared/containers/ProjectTreeTable/hooks/useMoveEntities'
+import { EntityMoveData, MultiEntityMoveData, OnMoveComplete } from './types'
 
 interface MoveEntityDialogProps {
   projectName: string
+  movingEntities: MultiEntityMoveData | null
+  onClose: () => void
+  onMoveComplete?: OnMoveComplete
 }
 
-export const MoveEntityDialog: FC<MoveEntityDialogProps> = ({ projectName }) => {
-  const projectTableContext = useOptionalProjectTableContext()
-  const {
-    isEntityPickerOpen,
-    handleMoveSubmit,
-    closeMoveDialog,
-    movingEntities,
-    handleMoveToRoot,
-    getDisabledFolderIds,
-    getDisabledMessage,
-  } = useMoveEntities({ projectName })
+export const MoveEntityDialog: FC<MoveEntityDialogProps> = ({
+  projectName,
+  movingEntities,
+  onClose,
+  onMoveComplete,
+}) => {
+  const { handleMoveSubmit, handleMoveToRoot, getDisabledFolderIds, getDisabledMessage } =
+    useMoveEntities({
+      projectName,
+      movingEntities: movingEntities ?? null,
+      onClose,
+      onMoveComplete,
+    })
 
-  const handleMoveSubmitWithExpand = useCallback(
-    (selection: string[]) => {
-      handleMoveSubmit(selection)
-      const folderIdToExpand = selection[0]
-      if (!folderIdToExpand || !projectTableContext) return
-
-      projectTableContext.updateExpanded((prevExpanded) => {
-        if (typeof prevExpanded === 'boolean') {
-          return prevExpanded ? prevExpanded : { [folderIdToExpand]: true }
-        }
-        if (prevExpanded[folderIdToExpand]) return prevExpanded
-        return { ...prevExpanded, [folderIdToExpand]: true }
-      })
-    },
-    [handleMoveSubmit, projectTableContext],
-  )
-
-  if (!isEntityPickerOpen || !movingEntities?.entities?.length) {
+  if (!movingEntities?.entities.length) {
     return null
   }
 
@@ -45,8 +32,8 @@ export const MoveEntityDialog: FC<MoveEntityDialogProps> = ({ projectName }) => 
     <EntityPickerDialog
       projectName={projectName}
       entityType="folder"
-      onSubmit={handleMoveSubmitWithExpand}
-      onClose={closeMoveDialog}
+      onSubmit={handleMoveSubmit}
+      onClose={onClose}
       showMoveToRoot={movingEntities.entities.every(
         (entity: EntityMoveData) => entity.entityType === 'folder',
       )}

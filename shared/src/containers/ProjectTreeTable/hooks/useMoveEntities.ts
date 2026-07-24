@@ -7,27 +7,27 @@ import {
 } from '@shared/api'
 import { useOptionalProjectTableContext } from '@shared/containers'
 import {
-  useMoveEntityContext,
   EntityMoveData,
   MultiEntityMoveData,
-} from '@shared/context/MoveEntityContext'
+  OnMoveComplete,
+} from '@shared/containers/MoveEntityDialog'
 import { useProjectFoldersContext } from '@shared/context'
 
 export type EntityType = 'folder' | 'task'
 
 interface UseMoveEntitiesProps {
   projectName: string
+  movingEntities: MultiEntityMoveData | null
+  onClose: () => void
+  onMoveComplete?: OnMoveComplete
 }
 
-export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
-  const {
-    movingEntities,
-    isEntityPickerOpen,
-    openMoveDialog,
-    closeMoveDialog,
-    setEntityPickerOpen,
-    clearMovingEntities,
-  } = useMoveEntityContext()
+export const useMoveEntities = ({
+  projectName,
+  movingEntities,
+  onClose,
+  onMoveComplete,
+}: UseMoveEntitiesProps) => {
   const [updateOverviewEntities] = useUpdateOverviewEntitiesMutation()
 
   // Get project context for entity data
@@ -42,26 +42,12 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
     [folders, projectTableContext],
   )
 
-  // Action dispatchers
-  const openMoveDialogHandler = useCallback(
-    (entityData: EntityMoveData | MultiEntityMoveData) => {
-      openMoveDialog(entityData)
-    },
-    [openMoveDialog],
-  )
-
-  const closeMoveDialogHandler = useCallback(() => {
-    closeMoveDialog()
-  }, [closeMoveDialog])
-
   // Move submit handler
   const handleMoveSubmit = useCallback(
     async (selectedFolderIds: string[]) => {
       if (!movingEntities || selectedFolderIds.length === 0) return
 
       const targetFolderId = selectedFolderIds[0]
-      setEntityPickerOpen(false)
-
       try {
         // Prepare move operations for all entities
         const moveOperations: OperationModel[] = movingEntities.entities.map(
@@ -93,6 +79,7 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
           const errorDetails = failedOperations.map((op) => op.detail).join(', ')
           throw new Error(errorDetails || 'Some move operations failed')
         }
+        onMoveComplete?.(targetFolderId)
       } catch (error: any) {
         console.error('Failed to move entity:', error)
 
@@ -123,26 +110,15 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
 
         toast.error(errorMessage)
       } finally {
-        clearMovingEntities()
-        setEntityPickerOpen(false)
+        onClose()
       }
     },
-    [
-      movingEntities,
-      projectName,
-      updateOverviewEntities,
-      openMoveDialog,
-      closeMoveDialog,
-      setEntityPickerOpen,
-      clearMovingEntities,
-    ],
+    [movingEntities, projectName, updateOverviewEntities, onClose, onMoveComplete],
   )
 
   // Move to root handler
   const handleMoveToRoot = useCallback(async () => {
     if (!movingEntities) return
-
-    setEntityPickerOpen(false)
 
     try {
       // Prepare move operations for all entities to move to root (null parentId/folderId)
@@ -181,18 +157,9 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
 
       toast.error(errorMessage)
     } finally {
-      clearMovingEntities()
-      setEntityPickerOpen(false)
+      onClose()
     }
-  }, [
-    movingEntities,
-    projectName,
-    updateOverviewEntities,
-    openMoveDialog,
-    closeMoveDialog,
-    setEntityPickerOpen,
-    clearMovingEntities,
-  ])
+  }, [movingEntities, projectName, updateOverviewEntities, onClose])
 
   // Get disabled folder IDs
   const getDisabledFolderIds = useCallback((): string[] => {
@@ -322,14 +289,6 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
   }, [movingEntities])
 
   return {
-    // State
-    movingEntities,
-    isEntityPickerOpen,
-
-    // Actions (keeping legacy names for compatibility)
-    isDialogOpen: isEntityPickerOpen,
-    openMoveDialog: openMoveDialogHandler,
-    closeMoveDialog: closeMoveDialogHandler,
     handleMoveSubmit,
     handleMoveToRoot,
     getDisabledFolderIds,

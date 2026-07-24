@@ -4,12 +4,8 @@ import { ContextMenuItemType } from '@shared/containers/ContextMenu'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import { useCallback, useMemo, useState } from 'react'
 import { useUpdateOverviewEntitiesMutation } from '@shared/api'
-import {
-  useProjectContext,
-  useMoveEntityContext,
-  useDeleteEntitiesContext,
-  type DeletableEntity,
-} from '@shared/context'
+import { useProjectContext, useDeleteEntitiesContext, type DeletableEntity } from '@shared/context'
+import { OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
 import { useDetailsPanelEntityContext } from '@shared/containers/ProjectTreeTable'
 import { useOptionalVersionUploadContext } from '@shared/components'
 import { SliceMap } from '../types'
@@ -34,11 +30,11 @@ export const useHierarchyContextMenuItems = (
   onAddToList?: OnAddToList,
   entityMap?: SliceMap,
   onOpenViewer?: OnOpenViewer,
+  openMoveDialog?: OpenMoveDialog,
 ) => {
   const { onOpenNew } = useNewEntityContext()
   const { projectName } = useProjectContext()
   const { setSelectedEntity } = useDetailsPanelEntityContext()
-  const { openMoveDialog } = useMoveEntityContext()
   const versionUpload = useOptionalVersionUploadContext()
   const [updateEntities] = useUpdateOverviewEntitiesMutation()
   const { deleteEntities } = useDeleteEntitiesContext()
@@ -55,7 +51,7 @@ export const useHierarchyContextMenuItems = (
       onAddToList,
       onMove: (row: SimpleTableRow, selectedRows: string[]) => {
         const entityType = row.data?.entityType === 'task' ? 'task' : 'folder'
-        openMoveDialog({
+        openMoveDialog?.({
           entities: selectedRows.map((entityId) => ({
             entityId,
             entityType,
@@ -177,6 +173,7 @@ export const useHierarchyContextMenuItems = (
         label: 'Move',
         icon: 'drive_file_move',
         command: () => actions.onMove(row.original, selectedRows),
+        hidden: !openMoveDialog,
       }),
       (_e, { row }) => ({
         label: newEntityDefinitions.folder.createLabel,
