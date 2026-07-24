@@ -1,6 +1,6 @@
 import React from 'react'
 import ActivityComment from './ActivityComment/ActivityComment'
-import ActivityStatusChange from './ActivityStatusChange/ActivityStatusChange'
+import ActivityFieldChange from './ActivityFieldChange/ActivityFieldChange'
 import ActivityAssigneeChange from './ActivityAssigneeChange/ActivityAssigneeChange'
 import ActivityVersions from './ActivityVersions/ActivityVersions'
 import ActivityGroup from './ActivityGroup/ActivityGroup'
@@ -57,7 +57,10 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
         />
       )
     case 'status.change':
-      return <ActivityStatusChange activity={activity} {...props} />
+    case 'attrib.change':
+    case 'tags.change':
+    case 'type.change':
+      return <ActivityFieldChange activity={activity} projectInfo={projectInfo} {...props} />
     case 'assignee.add':
       return <ActivityAssigneeChange activity={activity} {...props} isAdding />
     case 'assignee.remove':
@@ -70,7 +73,12 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
       // fromGroup prevents infinite recursion
       return (
         !fromGroup && (
-          <ActivityGroup editProps={editProps} activities={activity.items || []} {...props} />
+          <ActivityGroup
+            editProps={editProps}
+            activities={activity.items || []}
+            projectInfo={projectInfo}
+            {...props}
+          />
         )
       )
     default:
