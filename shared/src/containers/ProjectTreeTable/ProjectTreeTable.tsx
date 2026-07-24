@@ -433,7 +433,7 @@ export const ProjectTreeTable = ({
     return baseColumns
   }, [
     scopes,
-    columnAttribs,
+    JSON.stringify(columnAttribs), // columnAttribs is unstable between renders
     showHierarchy,
     isFlatFolderView,
     isExpandable,
