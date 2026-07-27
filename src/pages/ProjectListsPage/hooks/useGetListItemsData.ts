@@ -22,7 +22,7 @@ import {
 import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
-import { convertSearchToQueryFilter } from '../util/searchToQueryFilter'
+import { extractSearchFromFilters } from '../util/searchToQueryFilter'
 import { OnSyncDataCallback, usePowerpack, useProjectContext } from '@shared/context'
 import { useListsViewSettings, useProjectDataContext, useViewsContext } from '@shared/containers'
 import { useAppDispatch } from '@state/store'
@@ -88,9 +88,9 @@ const useGetListItemsData = ({
       : undefined
   ) as StatsEntity | undefined
   const statsProjectName = contextProjectName || projectName
-  const searchedFilters = convertSearchToQueryFilter(filters, entityType)
-  const queryFilterString = searchedFilters.conditions?.length
-    ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(searchedFilters)))
+  const { search, filters: filtersWithoutSearch } = extractSearchFromFilters(filters)
+  const queryFilterString = filtersWithoutSearch.conditions?.length
+    ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(filtersWithoutSearch)))
     : ''
 
   // Create sort params for infinite query
@@ -125,6 +125,7 @@ const useGetListItemsData = ({
     sortBy: parseSorting(singleSort?.id),
     desc: singleSort?.desc,
     filter: queryFilterString || undefined,
+    search,
     showComments,
   }
 
@@ -151,6 +152,7 @@ const useGetListItemsData = ({
       sortBy: parseSorting(singleSort?.id) || '',
       desc: singleSort?.desc || false,
       filter: queryFilterString || '',
+      search: search || '',
     },
     isFetchingListItems,
   )
@@ -186,6 +188,7 @@ const useGetListItemsData = ({
     projectName: statsProjectName,
     listId: listId || '',
     filter: statsFilter,
+    search,
     targets: statsTargets,
   }
   const skipStats =
