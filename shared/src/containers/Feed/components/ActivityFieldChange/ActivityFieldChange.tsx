@@ -88,7 +88,7 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
 
   const isAttrib = activityType === 'attrib.change'
   const isTags = activityType === 'tags.change'
-  const isTypeChange = activityType === 'type.change'
+  const isTypeChange = activityType === 'subtype.change'
 
   const { data: attributes = [] } = useGetAttributeListQuery(undefined, { skip: !isAttrib })
   const attribute = useMemo(() => attributes.find((a) => a.name === key), [attributes, key])

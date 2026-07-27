@@ -298,7 +298,7 @@ export const filterActivityTypes: Record<string, string[]> = {
     'version.review',
     'attrib.change',
     'tags.change',
-    'type.change',
+    'subtype.change',
   ],
   comments: ['comment'],
   versions: ['version.publish'],
@@ -308,7 +308,7 @@ export const filterActivityTypes: Record<string, string[]> = {
     'assignee.remove',
     'attrib.change',
     'tags.change',
-    'type.change',
+    'subtype.change',
   ],
   checklists: ['checklist'],
 }

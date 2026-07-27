@@ -59,7 +59,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
     case 'status.change':
     case 'attrib.change':
     case 'tags.change':
-    case 'type.change':
+    case 'subtype.change':
       return <ActivityFieldChange activity={activity} projectInfo={projectInfo} {...props} />
     case 'assignee.add':
       return <ActivityAssigneeChange activity={activity} {...props} isAdding />

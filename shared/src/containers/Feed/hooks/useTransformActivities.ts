@@ -13,7 +13,7 @@ const minorActivityTypes = [
   'assignee.remove',
   'attrib.change',
   'tags.change',
-  'type.change',
+  'subtype.change',
 ]
 
 const getStatusActivityIcon = (activities = [], projectInfo = {}) => {
