@@ -703,7 +703,8 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           taskProgressTags: Tags = [],
           entityListItemTags: Tags = [],
           tasksFolderTags: Tags = [],
-          deletedEntityTags: Tags = []
+          deletedEntityTags: Tags = [],
+          entityActivityTags: Tags = []
 
         let hasAttribOp = false
         const deletedTypes = new Set<string>()
@@ -718,6 +719,16 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
             taskProgressTags.push({ type: 'progress', id: 'LIST' })
           }
           if ((op.data as any)?.attrib) hasAttribOp = true
+          // own-edit activity events are sender-filtered on the websocket, so refetch open feeds
+          if (
+            op.type === 'update' &&
+            entityId &&
+            ['status', 'attrib', 'tags', 'assignees', `${op.entityType}Type`].some(
+              (key) => (op.data as any)?.[key] !== undefined,
+            )
+          ) {
+            entityActivityTags.push({ type: 'entityActivities', id: entityId })
+          }
           if (op.type === 'delete' && entityId) {
             deletedTypes.add(op.entityType)
             deletedEntityTags.push({ type: op.entityType, id: entityId })
@@ -754,6 +765,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           ...entityListItemTags,
           ...tasksFolderTags,
           ...deletedEntityTags,
+          ...entityActivityTags,
         ]
       },
     }),

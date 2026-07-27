@@ -378,6 +378,14 @@ const updateEntity = api.injectEndpoints({
       invalidatesTags: (result, error, { operations, entityType }) => {
         const tags = operations.map((o) => ({ id: o.id, type: 'review' }))
 
+        // own-edit activity events are sender-filtered on the websocket, so refetch open feeds
+        const activityFields = ['status', 'attrib', 'tags', 'assignees', `${entityType}Type`]
+        operations.forEach((o) => {
+          if (o.data && activityFields.some((key) => o.data[key] !== undefined)) {
+            tags.push({ type: 'entityActivities', id: o.id })
+          }
+        })
+
         if (entityType === 'product') {
           tags.push({ type: 'product', id: 'LIST' }, { type: 'version', id: 'LIST' })
           operations.forEach((o) => tags.push({ type: 'product', id: o.id }))

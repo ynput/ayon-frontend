@@ -144,8 +144,7 @@ export const SocketProvider = ({
       if (['import.data'].includes(topic)) {
         if (sender !== window.senderId) return // ignore import.data messages from other users
       } else if (sender === window.senderId) {
-        // let own activity events through so own edits (attrib/status changes) patch open feeds
-        if (!topic?.startsWith('activity')) return
+        return // for other events, ignore my own messages
       }
 
       const now = Date.now()

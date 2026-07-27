@@ -1,7 +1,7 @@
 import { differenceInSeconds, isValid } from 'date-fns'
 
 // Takes activities of the same type and author and merges them into one activity
-// activities must be within 20 seconds min of each other
+// activities must be within 20 seconds of each other
 // for example, if there are multiple status change activities by the same author
 // they will be merged into one activity, resulting in a single status change activity
 
@@ -41,7 +41,7 @@ const mergeSimilarActivities = (activities: any[], type: string, oldKey: string 
         currentActivity.hasPreviousPage = activity.hasPreviousPage
         currentActivity.cursor = activity.cursor
       } else {
-        // If the author is different, or not within 1 min, end the current sequence and start a new one
+        // If the author is different, or not within 20 seconds, end the current sequence and start a new one
         if (currentActivity.activityData.oldValue !== currentActivity.activityData.newValue) {
           mergedActivities.push(currentActivity)
         }
