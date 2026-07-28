@@ -134,7 +134,10 @@ export const DeleteEntitiesConfirmDialog = ({
         childrenDetails={childrenDetails}
         totalLine={
           expectedTotal > DELETE_CONFIRM_THRESHOLD
-            ? `This deletes ${expectedTotal} entities in total.`
+            ? // versions cascaded from products are not countable, so the total is a floor
+              `This deletes ${
+                (expectedCounts.product || 0) > 0 ? 'at least ' : ''
+              }${expectedTotal} entities in total.`
             : undefined
         }
       />

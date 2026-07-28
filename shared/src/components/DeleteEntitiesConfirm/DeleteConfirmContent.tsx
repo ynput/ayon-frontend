@@ -19,7 +19,7 @@ export type ExpectedDeleteCounts = Partial<Record<DeletableEntityType, number>>
 
 // multi-selection deletes at or below this many entities go through without typed
 // confirmation — a single entity always types its name
-export const DELETE_CONFIRM_THRESHOLD = 2
+export const DELETE_CONFIRM_THRESHOLD = 1
 
 // "5 folders" | "5 folders and 25 tasks" | "5 folders, 1 product and 25 versions"
 const joinNatural = (parts: string[]): string => {

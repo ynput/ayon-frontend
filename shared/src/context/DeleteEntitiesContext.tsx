@@ -238,7 +238,7 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
     setPendingDelete(null)
 
     const label = payload.entityLabel
-    const toastId = toast.loading(`Deleting ${label.toLowerCase()}...`, { autoClose: false })
+    const toastId = toast.loading(`Deleting ${label}...`, { autoClose: false })
     try {
       await accept()
       toast.update(toastId, {
