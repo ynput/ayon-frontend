@@ -8,12 +8,16 @@ import { differenceInSeconds, isValid } from 'date-fns'
 const mergeSimilarActivities = (activities: any[], type: string, oldKey: string = 'oldValue') => {
   const mergedActivities: any[] = []
   let currentActivity: any = null
+  // createdAt of the last activity merged into the sequence, so long bursts
+  // of consecutive changes (each within the window) keep merging
+  let sequenceBoundaryCreatedAt: Date | null = null
 
   for (const activity of activities) {
     if (activity.activityType === type) {
       if (!currentActivity) {
         // Start a new sequence of the same type
         currentActivity = { ...activity }
+        sequenceBoundaryCreatedAt = new Date(activity.createdAt)
         continue
       }
 
@@ -21,14 +25,14 @@ const mergeSimilarActivities = (activities: any[], type: string, oldKey: string 
       const isSameEntity = currentActivity.origin.id === activity.entityId
       // attrib changes only merge per attribute (key is undefined for other types)
       const isSameKey = currentActivity.activityData?.key === activity.activityData?.key
-      const currentCreatedAt = new Date(currentActivity.createdAt)
       const activityCreatedAt = new Date(activity.createdAt)
 
       const seconds = 20
       const isWithinSeconds =
-        isValid(currentCreatedAt) &&
+        sequenceBoundaryCreatedAt !== null &&
+        isValid(sequenceBoundaryCreatedAt) &&
         isValid(activityCreatedAt) &&
-        Math.abs(differenceInSeconds(currentCreatedAt, activityCreatedAt)) <= seconds
+        Math.abs(differenceInSeconds(sequenceBoundaryCreatedAt, activityCreatedAt)) <= seconds
 
       if (isSameAuthor && isWithinSeconds && isSameEntity && isSameKey) {
         // Continue the sequence, keep the old value from the earliest activity
@@ -40,12 +44,14 @@ const mergeSimilarActivities = (activities: any[], type: string, oldKey: string 
         }
         currentActivity.hasPreviousPage = activity.hasPreviousPage
         currentActivity.cursor = activity.cursor
+        sequenceBoundaryCreatedAt = activityCreatedAt
       } else {
         // If the author is different, or not within 20 seconds, end the current sequence and start a new one
         if (currentActivity.activityData.oldValue !== currentActivity.activityData.newValue) {
           mergedActivities.push(currentActivity)
         }
         currentActivity = { ...activity }
+        sequenceBoundaryCreatedAt = activityCreatedAt
       }
     } else {
       if (currentActivity) {
@@ -56,6 +62,7 @@ const mergeSimilarActivities = (activities: any[], type: string, oldKey: string 
           mergedActivities.push(currentActivity)
         }
         currentActivity = null
+        sequenceBoundaryCreatedAt = null
       }
       // Push the activity of a different type
       mergedActivities.push(activity)
