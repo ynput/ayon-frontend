@@ -12051,7 +12051,7 @@
               },
               {
                 "name": "isSupport",
-                "description": "Filter users by isSupport flag in data",
+                "description": "Deprecated: Filter users by isSupport flag in data",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Boolean",

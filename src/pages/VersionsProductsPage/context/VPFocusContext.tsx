@@ -36,18 +36,20 @@ export const VPFocusProvider: FC<VPFocusProviderProps> = ({ children }) => {
 
       // 1. Try to find a selected row first
       let targetElement = versionsTableRef.current.querySelector(
-        'tr .selected[tabindex]',
+        'tbody td.selected[tabindex="0"]',
       ) as HTMLElement
 
-      // 2. If no selected row, find any row with tabindex
-      if (!targetElement) {
-        targetElement = versionsTableRef.current.querySelector('tr [tabindex="0"]') as HTMLElement
-      }
-
-      // 3. If still nothing, try to find any focusable element in the table
+      // 2. If no selected cell, find any body cell with tabindex
       if (!targetElement) {
         targetElement = versionsTableRef.current.querySelector(
-          '[tabindex]:not([tabindex="-1"])',
+          'tbody td[tabindex="0"]',
+        ) as HTMLElement
+      }
+
+      // 3. If still nothing, try to find a focusable body element
+      if (!targetElement) {
+        targetElement = versionsTableRef.current.querySelector(
+          'tbody [tabindex]:not([tabindex="-1"])',
         ) as HTMLElement
       }
 

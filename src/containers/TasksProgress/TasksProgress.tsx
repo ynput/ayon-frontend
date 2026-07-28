@@ -9,6 +9,7 @@ import {
   resolveShiftSelect,
   getPriorityChangeOperations,
   getPlaceholderMessage,
+  resolveSelectedFolders,
 } from './helpers'
 import { useRootFolders } from './hooks'
 // shared
@@ -19,11 +20,7 @@ import {
 } from '@shared/api'
 import type { FolderType, Status, TaskType, EnumItem } from '@shared/api'
 import { EmptyPlaceholder, FilterFieldType, SyncButton } from '@shared/components'
-import {
-  createFilterFromSlicer,
-  useTaskProgressViewSettings,
-  type SliceType,
-} from '@shared/containers'
+import { createFilterFromSlicer, useTaskProgressViewSettings } from '@shared/containers'
 import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
@@ -40,7 +37,6 @@ import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
-import { RowSelectionState } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
 
@@ -133,21 +129,6 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   // when the slice type is not hierarchy we need to get the root folders
   const rootFolderIds = useRootFolders()
-
-  const resolveSelectedFolders = (
-    rowSelection: RowSelectionState,
-    pinnedRowSelection: RowSelectionState | null | undefined,
-    rootFolderIds: string[],
-    sliceType: SliceType,
-  ): string[] => {
-    if (sliceType === 'hierarchy') {
-      return Object.keys(rowSelection)
-    } else if (pinnedRowSelection) {
-      return Object.keys(pinnedRowSelection).filter((id) => pinnedRowSelection[id])
-    } else {
-      return rootFolderIds
-    }
-  }
 
   const folderIdsToFetch = resolveSelectedFolders(
     rowSelection,

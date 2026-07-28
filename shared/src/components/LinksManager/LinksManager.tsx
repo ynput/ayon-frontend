@@ -116,7 +116,10 @@ export const LinksManager: FC<LinksManagerProps> = ({
       <Styled.Container
         onMouseDown={(e) => {
           // Blur active input when clicking anywhere in the dialog (so count input commits)
-          if (e.target !== document.activeElement && document.activeElement instanceof HTMLInputElement) {
+          if (
+            e.target !== document.activeElement &&
+            document.activeElement instanceof HTMLInputElement
+          ) {
             document.activeElement.blur()
           }
         }}

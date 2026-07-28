@@ -10,11 +10,6 @@ import { QueryFilter } from './operations'
 import { ReactNode } from 'react'
 import { ProjectInfo } from '@shared/containers/DetailsPanel/helpers/mergeProjectInfo'
 
-interface EntityMoveData {
-  entityId: string
-  entityType: 'folder'
-}
-
 export interface ProjectOverviewProviderProps {
   children: ReactNode
   modules: ProjectTableModulesType
@@ -62,6 +57,16 @@ export interface ProjectOverviewContextType {
   // Query Filters - separate filters for tasks and folders
   taskFilters: QueryFilterParams
   folderFilters: QueryFilterParams
+  // task stats args for slicer value counts — like the filters above but with the
+  // active slice's own filter excluded, so counts don't self-zero on selection
+  slicerCountsArgs: {
+    projectName: string
+    filter?: string
+    folderFilter?: string
+    search?: string
+    folderIds?: string[]
+    taskIds?: string[]
+  }
   // folder ids selected in the slicer (selection roots, not expanded to subtree)
   selectedFolders: string[]
   // task ids selected via an entity-list slice
@@ -96,12 +101,16 @@ export interface ProjectOverviewContextType {
   updateExpanded: OnChangeFn<ExpandedState>
   setExpanded: (expanded: ExpandedState) => void
 
-  // context menu items
-  contextMenuItems: ContextMenuItemConstructors
-
   // links
   loadingLinksEntityIds: Set<string>
   setLinksVisible: (visible: boolean) => void
+
+  // context menu items
+  contextMenuItems: ContextMenuItemConstructors
+
+  // move dialog
+  movingEntities: import('@shared/containers/MoveEntityDialog').MultiEntityMoveData | null
+  closeMoveDialog: () => void
 
   // entity ids currently rendered in the table's viewport - used to scope task
   // fetching (hierarchy mode) to folders actually on screen
@@ -109,5 +118,4 @@ export interface ProjectOverviewContextType {
   setVisibleEntityIds: (entityIds: string[]) => void
 
   // move dialog
-  openMoveDialog?: (entityData: EntityMoveData) => void
 }

@@ -9,7 +9,7 @@ import type { FieldStats, GroupCountsMap } from '@shared/api'
 import type { TableGroupBy } from '../context'
 import { UNGROUPED_VALUE } from './useBuildGroupByTableData'
 
-type TaskStatsArgs = {
+export type TaskStatsArgs = {
   projectName: string
   filter?: string
   folderFilter?: string
@@ -18,7 +18,7 @@ type TaskStatsArgs = {
   taskIds?: string[]
 }
 
-type VersionStatsArgs = {
+export type VersionStatsArgs = {
   projectName: string
   versionFilter?: string
   productFilter?: string

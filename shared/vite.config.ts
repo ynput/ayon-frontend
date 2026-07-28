@@ -46,6 +46,7 @@ export default defineConfig({
         SimpleTable: resolve(__dirname, 'src/containers/SimpleTable/index.ts'),
         EntityPickerDialog: resolve(__dirname, 'src/containers/EntityPickerDialog/index.ts'),
         ListTable: resolve(__dirname, 'src/containers/ListTable/index.ts'),
+        NewEntity: resolve(__dirname, 'src/containers/NewEntity/index.ts'),
       },
       name: 'AyonFrontendShared',
       formats: ['es', 'cjs'],

@@ -6,3 +6,4 @@ export {
 } from './operations'
 export { resolveShiftSelect } from './resolveShiftSelect'
 export { getPlaceholderMessage } from './getPlaceholderMessage'
+export { resolveSelectedFolders } from './resolveSelectedFolders'

@@ -40,7 +40,8 @@ const UPDATE_TYPES: { updateTypes: TopicUpdateType[]; label: string; tooltip?: s
 
 const StyledSync = styled(Button)`
   /* put above the menu so it's still clickable */
-  z-index: 1001;
+  /* NOTE: this will need fixing as this also puts it above dialogs */
+  /* z-index: 1001;  */
 
   /* spin icon */
   &.syncing {

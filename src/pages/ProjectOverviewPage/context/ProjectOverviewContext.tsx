@@ -24,6 +24,7 @@ import {
   useColumnSettingsContext,
   checkColumnVisibility,
 } from '@shared/containers/ProjectTreeTable'
+import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable'
 
 // Views hooks
 import {
@@ -35,12 +36,13 @@ import {
 
 // Local context and hooks
 import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
-import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 import { useProjectOverviewStats } from '../hooks/useProjectOverviewStats'
 import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 import { ProjectOverviewContext } from './ProjectOverviewContextInstance'
 import { useAppDispatch } from '@state/store'
+import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
+import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
 
 export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewProviderProps) => {
   const dispatch = useAppDispatch()
@@ -69,8 +71,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     allowedScopes: ['task', 'folder'],
   })
 
-  const contextMenuItems = useOverviewContextMenu({})
-
   const page = 'overview'
 
   const [expanded, setExpanded] = useSessionStorage<ExpandedState>(
@@ -81,6 +81,17 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { updateExpanded, toggleExpanded, expandedIds } = useExpandedState({
     expanded,
     setExpanded,
+  })
+
+  const [movingEntities, setMovingEntities] = useState<MultiEntityMoveData | null>(null)
+  const openMoveDialog = useCallback<OpenMoveDialog>((data) => {
+    setMovingEntities('entities' in data ? data : { entities: [data] })
+  }, [])
+  const closeMoveDialog = useCallback(() => {
+    setMovingEntities(null)
+  }, [])
+  const contextMenuItems: ContextMenuItemConstructors = useOverviewContextMenu({
+    openMoveDialog,
   })
 
   // view context and update helper
@@ -243,6 +254,17 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     config: { searchKey: 'name' },
   })
 
+  // Same base filters WITHOUT the slice merged in — for slicer value counts, so a
+  // selected slice value keeps its siblings' true counts (no self-zeroing).
+  const baseTaskFilter = useQueryFilters({
+    queryFilters: taskFilter,
+    config: { searchKey: 'name' },
+  })
+  const baseFolderFilter = useQueryFilters({
+    queryFilters: folderFilter,
+    config: { searchKey: 'name' },
+  })
+
   // Use the shared hook to handle filter logic (for backward compatibility)
   const queryFiltersResult = useQueryFilters({
     queryFilters,
@@ -263,6 +285,28 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     pinnedRowSelection: pinnedSlice?.rowSelection || null,
     entityListFolderIds: entityIds.folderIds,
   })
+
+  // Slicer value counts: exclude the active slice's own filter (base*Filter, no
+  // sliceFilter) so a selected value keeps its siblings' true counts; keep the
+  // hierarchy/entity-list ids so counts still match the filtered table.
+  const slicerCountsArgs = useMemo(
+    () => ({
+      projectName,
+      filter: baseTaskFilter.filterString || undefined,
+      folderFilter: baseFolderFilter.filterString || undefined,
+      search: baseTaskFilter.search || undefined,
+      folderIds: selectedFolders.length ? selectedFolders : undefined,
+      taskIds: rawEntityIds.taskIds.length ? rawEntityIds.taskIds : undefined,
+    }),
+    [
+      projectName,
+      baseTaskFilter.filterString,
+      baseFolderFilter.filterString,
+      baseTaskFilter.search,
+      selectedFolders,
+      rawEntityIds.taskIds,
+    ],
+  )
 
   const {
     folderStats,
@@ -379,6 +423,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
           filterString: combinedFolderFilter.filterString,
           search: combinedFolderFilter.search,
         },
+        slicerCountsArgs,
         selectedFolders,
         selectedTaskIds: rawEntityIds.taskIds,
         // Backward compatibility for ProjectTableProvider (uses taskFilters)
@@ -406,12 +451,13 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         toggleExpanded,
         updateExpanded,
         setExpanded,
-        // context menu item
-        contextMenuItems,
         setLinksVisible,
         loadingLinksEntityIds,
         visibleEntityIds,
         setVisibleEntityIds,
+        contextMenuItems,
+        movingEntities,
+        closeMoveDialog,
       }}
     >
       {children}
