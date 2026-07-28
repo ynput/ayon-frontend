@@ -1,15 +1,17 @@
-import { createContext, useCallback, useContext, ReactNode } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState, ReactNode } from 'react'
 import { toast } from 'react-toastify'
-import { confirmDelete } from '@shared/util'
 import {
   useUpdateOverviewEntitiesMutation,
   useLazyGetFolderDeleteInfoQuery,
+  type FolderDeleteInfo,
   type OperationModel,
 } from '@shared/api'
 import {
-  DeleteConfirmContent,
+  DeleteEntitiesConfirmDialog,
   buildChildrenDetails,
   buildEntityLabel,
+  buildExpectedCounts,
+  type DeleteConfirmPayload,
 } from '@shared/components/DeleteEntitiesConfirm'
 
 export type DeletableEntityType =
@@ -68,9 +70,16 @@ const DELETE_OP_ORDER: DeletableEntityType[] = [
 ]
 const FOLDER_WITH_CHILDREN_CODE = 'delete-folder-with-children'
 
+type PendingDelete = {
+  payload: DeleteConfirmPayload
+  accept: () => Promise<void>
+  onError: (error: any) => void
+}
+
 export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) => {
   const [operations] = useUpdateOverviewEntitiesMutation()
   const [fetchFolderDeleteInfo] = useLazyGetFolderDeleteInfoQuery()
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
 
   const deleteEntities = useCallback<DeleteEntitiesContextValue['deleteEntities']>(
     async (entities, options) => {
@@ -158,7 +167,7 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
 
       // fetch child counts for top-level folders (grouped per project) to show what else gets deleted
       const topLevelFolders = topLevel.filter((e) => e.entityType === 'folder')
-      let childrenDetails: string[] = []
+      let folderInfo: FolderDeleteInfo[] = []
       if (topLevelFolders.length > 0) {
         const foldersByProject = new Map<string, DeletableEntity[]>()
         for (const f of topLevelFolders) {
@@ -175,12 +184,12 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
               }).unwrap(),
             ),
           )
-          childrenDetails = buildChildrenDetails(topLevelFolders, infoLists.flat())
+          folderInfo = infoLists.flat()
         } catch (error) {
           console.warn('Failed to fetch folder delete info, falling back to local data', error)
-          childrenDetails = buildChildrenDetails(topLevelFolders, [])
         }
       }
+      const childrenDetails = buildChildrenDetails(topLevelFolders, folderInfo)
 
       // products cascade to their versions on the backend — warn about it
       const productCount = topLevel.filter((e) => e.entityType === 'product').length
@@ -193,10 +202,15 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
       }
 
       const entityLabel = buildEntityLabel(topLevel)
+      const single = topLevel.length === 1 ? topLevel[0] : undefined
 
-      confirmDelete({
-        label: entityLabel,
-        message: <DeleteConfirmContent entityLabel={entityLabel} childrenDetails={childrenDetails} />,
+      setPendingDelete({
+        payload: {
+          entityLabel,
+          childrenDetails,
+          expectedCounts: buildExpectedCounts(topLevel, folderInfo),
+          expectedName: single && (single.label || single.name || single.id),
+        },
         accept: runDelete,
         onError: (error: any) => {
           if (error?.errorCodes?.includes(FOLDER_WITH_CHILDREN_CODE)) {
@@ -213,15 +227,51 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
             }
           }
         },
-        deleteLabel: 'Delete forever',
       })
     },
     [operations, fetchFolderDeleteInfo],
   )
 
+  const handleConfirm = useCallback(async () => {
+    if (!pendingDelete) return
+    const { payload, accept, onError } = pendingDelete
+    setPendingDelete(null)
+
+    const label = payload.entityLabel
+    const toastId = toast.loading(`Deleting ${label.toLowerCase()}...`, { autoClose: false })
+    try {
+      await accept()
+      toast.update(toastId, {
+        render: `${label} deleted`,
+        type: 'success',
+        autoClose: 5000,
+        isLoading: false,
+      })
+    } catch (error: any) {
+      const message =
+        typeof error === 'string' ? error : error?.message || `Error deleting ${label}`
+      toast.update(toastId, {
+        render: message,
+        type: 'error',
+        autoClose: 5000,
+        isLoading: false,
+      })
+      onError(error)
+    }
+  }, [pendingDelete])
+
+  const value = useMemo(() => ({ deleteEntities }), [deleteEntities])
+
   return (
-    <DeleteEntitiesContext.Provider value={{ deleteEntities }}>
+    <DeleteEntitiesContext.Provider value={value}>
       {children}
+      {pendingDelete && (
+        <DeleteEntitiesConfirmDialog
+          payload={pendingDelete.payload}
+          onConfirm={handleConfirm}
+          onCancel={() => setPendingDelete(null)}
+        />
+      )}
     </DeleteEntitiesContext.Provider>
   )
 }
