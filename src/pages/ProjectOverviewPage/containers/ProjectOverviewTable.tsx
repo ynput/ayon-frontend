@@ -5,7 +5,7 @@ import { Section } from '@ynput/ayon-react-components'
 
 // Components
 import { useProjectTableContext, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
-import { useNewEntityContext } from '@context/NewEntityContext'
+import { useNewEntityContext } from '@shared/containers/NewEntity'
 import { useProjectContext } from '@shared/context'
 import { mergeFieldStats, totalRowsFromStats } from '@shared/api'
 import type { FieldStats } from '@shared/api'

@@ -18,3 +18,5 @@ export const useSelectedRowsContext = () => {
   }
   return context
 }
+
+export const useOptionalSelectedRowsContext = () => useContext(SelectedRowsContext)

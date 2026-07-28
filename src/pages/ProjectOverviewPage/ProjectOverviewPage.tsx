@@ -1,6 +1,6 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC, useMemo } from 'react'
+import { FC, useCallback, useMemo } from 'react'
 import styled from 'styled-components'
 
 // state
@@ -18,7 +18,7 @@ import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
 import { CustomizeButton, SyncButton, buildScopes } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
-import NewEntity from '@components/NewEntity/NewEntity'
+import { ProjectNewEntityHost } from '../ProjectPage/ProjectNewEntityHost'
 import { Actions } from '@shared/containers/Actions/Actions'
 import {
   getCellId,
@@ -29,16 +29,20 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
-import { useGlobalContext, useSettingsPanel } from '@shared/context'
+import { useGlobalContext, useProjectFoldersContext, useSettingsPanel } from '@shared/context'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { DetailsPanelEntityData, OperationResponseModel } from '@shared/api'
-import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
+import { DetailsPanelEntityData } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 import { getBundleModeFromUser } from '@shared/util'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+import type { OnAddToList } from '@shared/containers/Slicer'
+import type { SimpleTableRow } from '@shared/containers/SimpleTable'
+import { MoveEntityDialog } from '@shared/containers/MoveEntityDialog'
+import type { OnMoveComplete } from '@shared/containers/MoveEntityDialog'
 
 // the tasks resolver task filter does not whitelist folder_type — use the
 // folder-scope folderType chip instead (goes through folderFilter)
@@ -89,11 +93,39 @@ const ProjectOverviewPage: FC = () => {
     updateExpanded,
     slicerCountsArgs,
     onSyncData,
+    movingEntities,
+    closeMoveDialog,
   } = useProjectOverviewContext()
 
   const slicerCountsSource = useMemo<SlicerCountsSource>(
     () => ({ entity: 'task', args: slicerCountsArgs }),
     [slicerCountsArgs],
+  )
+  const { buildReviewContextMenu } = useEntityListsContext()
+  const { getParentFolderIds } = useProjectFoldersContext()
+  const handleMoveComplete = useCallback<OnMoveComplete>(
+    (folderId) => {
+      const folderIdsToExpand = [folderId, ...getParentFolderIds(folderId)]
+      updateExpanded((previous) => {
+        if (typeof previous === 'boolean') {
+          return previous ? previous : Object.fromEntries(folderIdsToExpand.map((id) => [id, true]))
+        }
+        return {
+          ...previous,
+          ...Object.fromEntries(folderIdsToExpand.map((id) => [id, true])),
+        }
+      })
+    },
+    [getParentFolderIds, updateExpanded],
+  )
+
+  const onAddToList = useMemo<OnAddToList>(
+    () => (row: SimpleTableRow, selectedRows: string[]) => {
+      const entityType = row.data?.entityType === 'task' ? 'task' : 'folder'
+      const selectedEntities = selectedRows.map((entityId) => ({ entityId, entityType }))
+      return buildReviewContextMenu(entityType, selectedEntities)
+    },
+    [buildReviewContextMenu],
   )
 
   const { sorting, updateSorting } = useColumnSettingsContext()
@@ -161,14 +193,6 @@ const ProjectOverviewPage: FC = () => {
     setQueryFilters(newQueryFilters)
   }
 
-  const expandAndSelectNewFolders = useExpandAndSelectNewFolders()
-
-  // select new entities and expand their parents
-  const handleNewEntities = (ops: OperationResponseModel[], stayOpen: boolean) => {
-    // expands to newly created folders and selects them
-    expandAndSelectNewFolders(ops, { enableSelect: !stayOpen, enableExpand: true })
-  }
-
   const { getGoToEntityData } = useGoToEntity()
 
   // select the entity in the table and expand its parent folders
@@ -216,13 +240,14 @@ const ProjectOverviewPage: FC = () => {
               entityTypes={['task', 'folder']}
               pinnedSliceType="hierarchy"
               countsSource={slicerCountsSource}
+              onAddToList={onAddToList}
             />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={slicerSize[1]}>
           <Section wrap direction="column" style={{ height: '100%' }}>
             <Toolbar>
-              <NewEntity disabled={!showHierarchy} onNewEntities={handleNewEntities} />
+              <ProjectNewEntityHost disabled={!showHierarchy} showButton />
               <OverviewActions />
               <SearchFilterWrapper
                 queryFilters={displayFilters}
@@ -309,6 +334,12 @@ const ProjectOverviewPage: FC = () => {
           </Section>
         </SplitterPanel>
       </Splitter>
+      <MoveEntityDialog
+        projectName={projectName}
+        movingEntities={movingEntities}
+        onClose={closeMoveDialog}
+        onMoveComplete={handleMoveComplete}
+      />
     </main>
   )
 }

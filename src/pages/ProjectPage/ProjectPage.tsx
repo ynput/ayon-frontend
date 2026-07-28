@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
+import { openViewer } from '@state/viewer'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
@@ -44,6 +45,15 @@ import { ProjectContextProvider } from '@shared/context'
 import { WithViews } from '@/hoc/WithViews'
 import { ProjectPageRemote } from '@shared/components'
 import ProjectStoryboardsPage from '@pages/ProjectListsPage/ProductStoryboardsPage'
+import {
+  DetailsPanelEntityProvider,
+  ProjectDataProvider,
+} from '@shared/containers/ProjectTreeTable'
+import { NewEntityProvider } from '@shared/containers/NewEntity'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+import { SimpleTableRow } from '@shared/containers/SimpleTable'
+import { OnAddToList, OnOpenViewer } from '@shared/containers/Slicer'
+import { ProjectNewEntityHost } from './ProjectNewEntityHost'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
 
@@ -88,10 +98,14 @@ const SlicerWithViews = ({
   children,
   page,
   projectName,
+  onAddToList,
+  onOpenViewer,
 }: {
   children: React.ReactNode
   page: string
   projectName: string
+  onAddToList?: OnAddToList
+  onOpenViewer?: OnOpenViewer
 }) => {
   const { viewSettings, isLoadingViews } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
@@ -103,9 +117,58 @@ const SlicerWithViews = ({
       viewSettings={viewSettings}
       isLoadingViews={isLoadingViews}
       updateViewSettings={updateViewSettings}
+      onOpenViewer={onOpenViewer}
+      onAddToList={onAddToList}
     >
       {children}
     </SlicerProvider>
+  )
+}
+
+const ProjectSlicerWithViews = ({
+  children,
+  page,
+  projectName,
+}: {
+  children: React.ReactNode
+  page: string
+  projectName: string
+}) => {
+  const { buildReviewContextMenu } = useEntityListsContext()
+  const dispatch = useAppDispatch()
+
+  const onOpenViewer = useCallback<OnOpenViewer>(
+    (row, currentProjectName) => {
+      const isTask = row.data?.entityType === 'task'
+      dispatch(
+        openViewer({
+          projectName: currentProjectName,
+          quickView: true,
+          ...(isTask ? { taskId: row.id } : { folderId: row.id }),
+        }),
+      )
+    },
+    [dispatch],
+  )
+
+  const onAddToList = useMemo<OnAddToList>(
+    () => (row: SimpleTableRow, selectedRows: string[]) => {
+      const entityType = row.data?.entityType === 'task' ? 'task' : 'folder'
+      const selectedEntities = selectedRows.map((entityId) => ({ entityId, entityType }))
+      return buildReviewContextMenu(entityType, selectedEntities)
+    },
+    [buildReviewContextMenu],
+  )
+
+  return (
+    <SlicerWithViews
+      page={page}
+      projectName={projectName}
+      onAddToList={onAddToList}
+      onOpenViewer={onOpenViewer}
+    >
+      {children}
+    </SlicerWithViews>
   )
 }
 
@@ -437,13 +500,18 @@ const ProjectPageInner = () => {
         onVersionCreated={handleNewVersionUploaded}
       >
         <EntityListsProvider projectName={projectName}>
-          <WithViews viewType={page.viewType} projectName={projectName}>
-            <EntityUpdatesProvider projectNames={[projectName]}>
-              <SlicerWithViews page={module} projectName={projectName}>
-                {page.component}
-              </SlicerWithViews>
-            </EntityUpdatesProvider>
-          </WithViews>
+          <DetailsPanelEntityProvider>
+            <WithViews viewType={page.viewType} projectName={projectName}>
+              <EntityUpdatesProvider projectNames={[projectName]}>
+                <ProjectSlicerWithViews page={module} projectName={projectName}>
+                  <NewEntityProvider>
+                    {module !== 'overview' && <ProjectNewEntityHost showButton={false} />}
+                    {page.component}
+                  </NewEntityProvider>
+                </ProjectSlicerWithViews>
+              </EntityUpdatesProvider>
+            </WithViews>
+          </DetailsPanelEntityProvider>
           <NewListFromContext />
         </EntityListsProvider>
         <UploadVersionDialog />
@@ -461,7 +529,9 @@ const ProjectPage = () => {
   return (
     <ProjectContextProvider projectName={projectName}>
       <ProjectFoldersContextProvider projectName={projectName}>
-        <ProjectPageInner />
+        <ProjectDataProvider projectName={projectName}>
+          <ProjectPageInner />
+        </ProjectDataProvider>
       </ProjectFoldersContextProvider>
     </ProjectContextProvider>
   )

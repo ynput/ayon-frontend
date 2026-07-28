@@ -5,11 +5,9 @@ import {
   SelectionCellsProvider,
   SelectedRowsProvider,
   CellEditingProvider,
-  DetailsPanelEntityProvider,
   useColumnSettingsContext,
   useGroupCounts,
 } from '@shared/containers/ProjectTreeTable'
-import { NewEntityProvider } from '@context/NewEntityContext'
 import { usePowerpack, useSubtasksModulesContext } from '@shared/context'
 import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
 import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
@@ -108,17 +106,13 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         useLocation={useLocation}
         useSearchParams={useSearchParams}
       >
-        <NewEntityProvider>
-          <DetailsPanelEntityProvider>
-            <SelectionCellsProvider>
-              <SelectedRowsProvider>
-                <CellEditingProvider>
-                  <ProjectOverviewPage />
-                </CellEditingProvider>
-              </SelectedRowsProvider>
-            </SelectionCellsProvider>
-          </DetailsPanelEntityProvider>
-        </NewEntityProvider>
+        <SelectionCellsProvider>
+          <SelectedRowsProvider>
+            <CellEditingProvider>
+              <ProjectOverviewPage />
+            </CellEditingProvider>
+          </SelectedRowsProvider>
+        </SelectionCellsProvider>
       </ProjectTableProvider>
     </ProjectTableQueriesProvider>
   )
