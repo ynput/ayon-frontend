@@ -38,26 +38,25 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   // Convert QueryFilter to Filter[] for the SearchFilter component
   const filters = useMemo(() => {
     const filters = queryFilterToClientFilter(queryFilters, options)
-    const pinned: Filter | null = pinnedSlice
-      ? {
-          id: pinnedSlice.sliceType + '__pinned',
-          label: pinnedSlice.sliceType,
-          type: 'string',
-          inverted: false,
-          operator: 'OR',
-          values: Object.keys(pinnedSlice.rowSelection)
-            .filter((id) => pinnedSlice.rowSelection[id])
-            .map((id) => {
-              const folder = getFolderById(id)
-              return { id, label: folder?.label || folder?.name || id }
-            }),
-        }
-      : null
+    const pinned: Filter | null =
+      pinnedSlice && Object.keys(pinnedSlice.rowSelection).length > 0
+        ? {
+            id: pinnedSlice.sliceType + '__pinned',
+            label: pinnedSlice.sliceType,
+            type: 'string',
+            inverted: false,
+            operator: 'OR',
+            values: Object.keys(pinnedSlice.rowSelection)
+              .filter((id) => pinnedSlice.rowSelection[id])
+              .map((id) => {
+                const folder = getFolderById(id)
+                return { id, label: folder?.label || folder?.name || id }
+              }),
+          }
+        : null
 
     return pinned ? [pinned, ...filters] : filters
   }, [queryFilters, options, pinnedSlice])
-
-  console.log(filters)
 
   // Use filters directly as initial state and manage changes through onChange
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)

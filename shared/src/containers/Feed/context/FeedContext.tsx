@@ -18,7 +18,7 @@ import {
 } from '@shared/api'
 import type { ActivityCategory, ChecklistCount, SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
-import { FeedFilter, PowerpackFeature, useDetailsPanelContext } from '@shared/context'
+import { FeedFilter, useDetailsPanelContext } from '@shared/context'
 import { getFilterActivityTypes } from '@shared/api'
 
 export const FEED_NEW_COMMENT = '__new__' as const

@@ -4,6 +4,7 @@ import { Row } from '@tanstack/react-table'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from '../hooks/useTableDataBySlice'
+import { useSlicerCounts, type SlicerCountsSource } from '../hooks/useSlicerCounts'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
 import { OnAddToList, SliceType, useHierarchyContextMenuItems } from '@shared/containers/Slicer'
@@ -29,6 +30,7 @@ export interface SlicerProps {
   sliceFields: SliceTypeField[]
   entityTypes?: string[] // entity types
   pinnedSliceType?: SliceType // when changing slice type, pinned the current slice
+  countsSource?: SlicerCountsSource // entity + filter args for per-value count badges
   onAddToList?: OnAddToList
 }
 
@@ -36,6 +38,7 @@ export const Slicer: FC<SlicerProps> = ({
   sliceFields = [],
   entityTypes = ['task'],
   pinnedSliceType,
+  countsSource,
   onAddToList,
 }) => {
   const [globalFilter, setGlobalFilter] = useState('')
@@ -80,6 +83,8 @@ export const Slicer: FC<SlicerProps> = ({
 
   const handleSync = async () => refetch()
 
+  const { counts, filled, complete } = useSlicerCounts(countsSource)
+
   const {
     sliceOptions,
     sliceType,
@@ -87,7 +92,13 @@ export const Slicer: FC<SlicerProps> = ({
     table: { data: sliceTableData, isExpandable },
     sliceMap,
     isLoading: isLoadingSliceTableData,
-  } = useTableDataBySlice({ sliceFields, entityTypes })
+  } = useTableDataBySlice({
+    sliceFields,
+    entityTypes,
+    counts,
+    filled,
+    countsComplete: complete,
+  })
 
   const hierarchyContextMenu = useHierarchyContextMenuItems(
     onAddToList || contextOnAddToList,

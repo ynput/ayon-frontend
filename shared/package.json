@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.3.49",
+  "version": "0.3.51",
   "description": "Shared React components for AYON frontend",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
@@ -139,7 +139,7 @@
     "@tanstack/react-virtual": "3.13.23",
     "@ynput/ayon-frontend-shared": "^0.3.43",
     "@ynput/ayon-react-components": "^1.18.8",
-    "axios": "1.16.1",
+    "axios": "1.18.0",
     "clsx": "2.1.1",
     "custom-protocol-check": "1.4.0",
     "date-fns": "3.6.0",
@@ -159,6 +159,6 @@
     "remark-gfm": "4.0.1",
     "short-uuid": "4.2.2",
     "turndown": "7.2.4",
-    "uuid": "14.0.0"
+    "uuid": "14.0.1"
   }
 }

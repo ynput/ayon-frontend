@@ -50,3 +50,6 @@ export * from './Menu'
 export * from './EntityIcon'
 export * from './ReviewablesSelector'
 export * from './ColumnHeaderMenuUI'
+
+// re-export prime-react ConfirmDialog
+export * from 'primereact/confirmdialog'

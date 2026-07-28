@@ -274,16 +274,6 @@ export const useFetchOverviewData = ({
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {
     const map = new Map()
-    const selectedPaths = selectedFolders
-      .map((id) => folders.find((folder) => folder.id === id)?.path)
-      .filter(Boolean) as string[]
-
-    const isUnderSelectedFolder = (folder: FolderListItem) => {
-      const folderPath = folder.path as string
-      return selectedPaths.some(
-        (selectedPath) => folderPath === selectedPath || folderPath.startsWith(selectedPath + '/'),
-      )
-    }
 
     const addExtraDataToFolder = (folder: FolderListItem) => {
       // add any extra data to folder
@@ -334,7 +324,7 @@ export const useFetchOverviewData = ({
 
       // Third pass: Build the final map using only relevant folders
       for (const folder of folders) {
-        if (relevantFolderIds.has(folder.id as string) || isUnderSelectedFolder(folder)) {
+        if (relevantFolderIds.has(folder.id as string)) {
           map.set(folder.id as string, addExtraDataToFolder(folder))
         }
       }
@@ -345,8 +335,11 @@ export const useFetchOverviewData = ({
       }
     }
 
-    // Filter by selected folders if needed
+    // Filter by selected folders (SLICER) if needed
     if (selectedFolders.length) {
+      const selectedPaths = selectedFolders
+        .map((id) => folders.find((folder) => folder.id === id)?.path)
+        .filter(Boolean) as string[]
       // Create a new map that only contains selected folders and their children
       const filteredMap = new Map()
 

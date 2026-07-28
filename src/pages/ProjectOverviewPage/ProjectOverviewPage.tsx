@@ -9,6 +9,7 @@ import {
   SLICER_PAGES_CONFIG,
   useSlicerContext,
   useSlicerSplitter,
+  type SlicerCountsSource,
 } from '@shared/containers/Slicer'
 
 // arc
@@ -90,10 +91,16 @@ const ProjectOverviewPage: FC = () => {
     updateViewGroupBy,
     tasksMap,
     updateExpanded,
+    slicerCountsArgs,
     onSyncData,
     movingEntities,
     closeMoveDialog,
   } = useProjectOverviewContext()
+
+  const slicerCountsSource = useMemo<SlicerCountsSource>(
+    () => ({ entity: 'task', args: slicerCountsArgs }),
+    [slicerCountsArgs],
+  )
   const { buildReviewContextMenu } = useEntityListsContext()
   const { getParentFolderIds } = useProjectFoldersContext()
   const handleMoveComplete = useCallback<OnMoveComplete>(
@@ -232,6 +239,7 @@ const ProjectOverviewPage: FC = () => {
               sliceFields={SLICER_PAGES_CONFIG.overview.fields}
               entityTypes={['task', 'folder']}
               pinnedSliceType="hierarchy"
+              countsSource={slicerCountsSource}
               onAddToList={onAddToList}
             />
           </Section>
