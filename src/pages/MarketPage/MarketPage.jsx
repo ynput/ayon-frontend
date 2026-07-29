@@ -25,6 +25,7 @@ import ReleaseDetails from './MarketDetails/ReleaseDetails'
 import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
 import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
+import { usePowerpack } from '@shared/context'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   type: 'placeholder',
@@ -60,8 +61,9 @@ const MarketPage = () => {
   const [isUpdatingAll, setIsUpdatingAll] = useState(false)
   const [isUpdatingAllFinished, setIsUpdatingAllFinished] = useState(false)
 
+  const { powerLicense } = usePowerpack()
+
   const [isCloudConnected, setIsCloudConnected] = useState(false)
-  const [hasCloudSub, setHasCloudSub] = useState(false)
   // if the user hasn't connected to ynput cloud yet
   const [showConnectDialog, setShowConnectDialog] = useState(false)
 
@@ -231,8 +233,8 @@ const MarketPage = () => {
 
   // transform releases into a table list
   const releaseItems = useMemo(
-    () => transformReleasesToTable(releasesData, hasCloudSub, filter),
-    [releasesData, hasCloudSub, filter],
+    () => transformReleasesToTable(releasesData, powerLicense, filter),
+    [releasesData, powerLicense, filter],
   )
 
   // merge selected release with found release in releasesData
@@ -242,9 +244,9 @@ const MarketPage = () => {
 
     return {
       ...found,
-      isActive: found.isLatest || hasCloudSub,
+      isActive: found.isLatest || powerLicense,
     }
-  }, [releasesData, selectedItemId, hasCloudSub])
+  }, [releasesData, selectedItemId, powerLicense])
 
   // convert addons to grouping format
   const addonsGrouped = useMemo(() => {
@@ -386,7 +388,6 @@ const MarketPage = () => {
   const handleYnputConnect = (isConnected, hasSubs) => {
     if (isConnected) {
       setIsCloudConnected(true)
-      setHasCloudSub(hasSubs)
     }
   }
 
