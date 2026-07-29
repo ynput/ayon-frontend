@@ -1,40 +1,42 @@
-import { intervalToDuration, isValid } from 'date-fns'
+import { differenceInSeconds, isValid } from 'date-fns'
 
 // Takes activities of the same type and author and merges them into one activity
-// activities must be within one min of each other
+// activities must be within 20 seconds of each other
 // for example, if there are multiple status change activities by the same author
 // they will be merged into one activity, resulting in a single status change activity
 
 const mergeSimilarActivities = (activities: any[], type: string, oldKey: string = 'oldValue') => {
   const mergedActivities: any[] = []
   let currentActivity: any = null
+  // createdAt of the last activity merged into the sequence, so long bursts
+  // of consecutive changes (each within the window) keep merging
+  let sequenceBoundaryCreatedAt: Date | null = null
 
   for (const activity of activities) {
     if (activity.activityType === type) {
       if (!currentActivity) {
         // Start a new sequence of the same type
         currentActivity = { ...activity }
+        sequenceBoundaryCreatedAt = new Date(activity.createdAt)
         continue
       }
 
       const isSameAuthor = currentActivity.authorName === activity.authorName
       const isSameEntity = currentActivity.origin.id === activity.entityId
-      const currentCreatedAt = new Date(currentActivity.createdAt)
+      // attrib changes only merge per attribute (key is undefined for other types)
+      const isSameKey = currentActivity.activityData?.key === activity.activityData?.key
       const activityCreatedAt = new Date(activity.createdAt)
-      const activityDuration =
-        isValid(currentCreatedAt) &&
-        isValid(activityCreatedAt) &&
-        intervalToDuration({ start: activityCreatedAt, end: currentCreatedAt })
 
-      // If the activity is within 1 min of the current activity
       const seconds = 20
       const isWithinSeconds =
-        // @ts-expect-error
-        !('minutes' in activityDuration) && activityDuration.seconds <= seconds
+        sequenceBoundaryCreatedAt !== null &&
+        isValid(sequenceBoundaryCreatedAt) &&
+        isValid(activityCreatedAt) &&
+        Math.abs(differenceInSeconds(sequenceBoundaryCreatedAt, activityCreatedAt)) <= seconds
 
-      if (isSameAuthor && isWithinSeconds && isSameEntity) {
-        // Continue the sequence, update the newValue from the current activity
-        currentActivity[oldKey] = activity[oldKey]
+      if (isSameAuthor && isWithinSeconds && isSameEntity && isSameKey) {
+        // Continue the sequence, keep the old value from the earliest activity
+        if (activity[oldKey] !== undefined) currentActivity[oldKey] = activity[oldKey]
         // Create a new activityData object instead of modifying the existing one
         currentActivity.activityData = {
           ...currentActivity.activityData,
@@ -42,12 +44,14 @@ const mergeSimilarActivities = (activities: any[], type: string, oldKey: string 
         }
         currentActivity.hasPreviousPage = activity.hasPreviousPage
         currentActivity.cursor = activity.cursor
+        sequenceBoundaryCreatedAt = activityCreatedAt
       } else {
-        // If the author is different, or not within 1 min, end the current sequence and start a new one
+        // If the author is different, or not within 20 seconds, end the current sequence and start a new one
         if (currentActivity.activityData.oldValue !== currentActivity.activityData.newValue) {
           mergedActivities.push(currentActivity)
         }
         currentActivity = { ...activity }
+        sequenceBoundaryCreatedAt = activityCreatedAt
       }
     } else {
       if (currentActivity) {
@@ -58,6 +62,7 @@ const mergeSimilarActivities = (activities: any[], type: string, oldKey: string 
           mergedActivities.push(currentActivity)
         }
         currentActivity = null
+        sequenceBoundaryCreatedAt = null
       }
       // Push the activity of a different type
       mergedActivities.push(activity)
