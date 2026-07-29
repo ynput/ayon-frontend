@@ -153,29 +153,21 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
   const createCode = (name, regexPattern) => {
     if (!regexPattern) return ''
 
-    // Always create a new RegExp from the string pattern
     try {
-      // Add 'g' flag to match all occurrences
-      const regex = new RegExp(regexPattern, 'g')
+      const matchCode = (value) => {
+        const matches = [...value.matchAll(new RegExp(regexPattern, 'g'))]
+        if (!matches.length) return ''
 
-      // Use matchAll instead of match for global patterns
-      const matches = [...name.replaceAll('_', ' ').matchAll(regex)]
-      if (!matches.length) return ''
-
-      // Check if the regex has capture groups
-      if (matches[0].length > 1) {
-        // Extract the first capture group from each match
+        const hasCaptureGroups = matches[0].length > 1
         return matches
-          .map((match) => match[1])
-          .join('')
-          .replaceAll(' ', '')
-      } else {
-        // If no capture groups, use the full match
-        return matches
-          .map((match) => match[0])
+          .map((match) => (hasCaptureGroups ? match[1] : match[0]))
           .join('')
           .replaceAll(' ', '')
       }
+
+      // patterns expecting a literal _ get the raw name; others keep the spaced name so \b and .{n} patterns behave as before
+      if (regexPattern.includes('_')) return matchCode(name)
+      return matchCode(name.replaceAll('_', ' '))
     } catch (error) {
       console.warn('Invalid regex pattern for project code', error)
       return ''
