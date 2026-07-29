@@ -41,7 +41,7 @@ export const CountRow = styled.label`
 `
 
 export const CountInput = styled(InputText)`
-  width: 120px;
+  width: 180px;
 `
 
 export const ConfirmInput = styled(InputText)`

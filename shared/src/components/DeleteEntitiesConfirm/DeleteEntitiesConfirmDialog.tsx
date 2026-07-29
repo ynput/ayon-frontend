@@ -16,7 +16,8 @@ export type DeleteConfirmPayload = {
   childrenDetails: string[]
   // everything the delete removes, cascaded folder children included
   expectedCounts: ExpectedDeleteCounts
-  // set when a single entity is selected — its name is typed instead of counts
+  // set when a single entity is selected — its name is typed instead of counts,
+  // unless its children push the total above the threshold
   expectedName?: string
   deleteLabel?: string
 }
@@ -54,12 +55,15 @@ export const DeleteEntitiesConfirmDialog = ({
   )
   const expectedTotal = useMemo(() => sumExpectedCounts(expectedCounts), [expectedCounts])
 
-  // a single entity always types its name; counts only once the delete is big enough
-  const requiresCounts = !expectedName && expectedTotal > DELETE_CONFIRM_THRESHOLD
-  const isConfirmed = expectedName
-    ? nameValue.trim() === expectedName
-    : !requiresCounts ||
-      countTypes.every((type) => matchesCount(countValues[type], expectedCounts[type] as number))
+  // counts win whenever the delete removes more than one entity, cascaded children
+  // included — name typing only guards a delete of exactly one entity
+  const requiresCounts = expectedTotal > DELETE_CONFIRM_THRESHOLD
+  const requiresName = !!expectedName && !requiresCounts
+  const isConfirmed = requiresCounts
+    ? countTypes.every((type) => matchesCount(countValues[type], expectedCounts[type] as number))
+    : requiresName
+      ? nameValue.trim() === expectedName
+      : true
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' && isConfirmed) {
@@ -78,7 +82,7 @@ export const DeleteEntitiesConfirmDialog = ({
         // keydown lives here, not on the dialog — dialog spreads rest props over its own
         // handler and would lose escape-to-close
         <Styled.FooterContainer onKeyDown={handleKeyDown}>
-          {expectedName && (
+          {requiresName && (
             <>
               <Styled.FooterLabel>
                 To confirm delete action, type '{expectedName}' in the box below
@@ -106,7 +110,7 @@ export const DeleteEntitiesConfirmDialog = ({
                       autoFocus={index === 0}
                       inputMode="numeric"
                       value={countValues[type] ?? ''}
-                      placeholder={String(expectedCounts[type])}
+                      placeholder={`Number of ${type}s`}
                       onChange={(e) =>
                         setCountValues((prev) => ({ ...prev, [type]: e.target.value }))
                       }

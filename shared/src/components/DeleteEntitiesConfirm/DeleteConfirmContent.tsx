@@ -17,8 +17,8 @@ export const DELETE_TYPE_ORDER: DeletableEntityType[] = [
 
 export type ExpectedDeleteCounts = Partial<Record<DeletableEntityType, number>>
 
-// multi-selection deletes at or below this many entities go through without typed
-// confirmation — a single entity always types its name
+// deletes above this total require typed count confirmation; a delete of exactly
+// one entity types its name instead
 export const DELETE_CONFIRM_THRESHOLD = 1
 
 // "5 folders" | "5 folders and 25 tasks" | "5 folders, 1 product and 25 versions"
