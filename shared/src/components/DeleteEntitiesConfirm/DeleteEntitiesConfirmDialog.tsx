@@ -1,6 +1,5 @@
 import { KeyboardEvent, useMemo, useState } from 'react'
 import { Button } from '@ynput/ayon-react-components'
-import { pluralize } from '@shared/util'
 import {
   DELETE_CONFIRM_THRESHOLD,
   DELETE_TYPE_ORDER,
@@ -84,10 +83,11 @@ export const DeleteEntitiesConfirmDialog = ({
         <Styled.FooterContainer onKeyDown={handleKeyDown}>
           {requiresName && (
             <>
-              <Styled.FooterLabel>
+              <Styled.FooterLabel htmlFor="delete-confirm-name-input">
                 To confirm delete action, type '{expectedName}' in the box below
               </Styled.FooterLabel>
               <Styled.ConfirmInput
+                id="delete-confirm-name-input"
                 data-testid="delete-confirm-name-input"
                 autoFocus
                 value={nameValue}
@@ -104,7 +104,7 @@ export const DeleteEntitiesConfirmDialog = ({
               <Styled.CountRows>
                 {countTypes.map((type, index) => (
                   <Styled.CountRow key={type}>
-                    <span>{pluralize(expectedCounts[type] as number, type)}</span>
+                    <span>{`${type[0].toUpperCase()}${type.slice(1)}s`}</span>
                     <Styled.CountInput
                       data-testid={`delete-confirm-count-${type}`}
                       autoFocus={index === 0}
