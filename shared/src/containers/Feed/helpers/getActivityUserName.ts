@@ -6,7 +6,7 @@ export const getActivityUserName = (user: { name?: string; label?: string | null
   if (!user || !user.name) {
     return UNKNOWN_USER_FULL_NAME
   }
-  if (user.name === ANONYMOUS_GUEST_NAME) {
+  if (user.name === ANONYMOUS_GUEST_NAME && !user.label) {
     return ANONYMOUS_GUEST_FULL_NAME
   }
   if (user.label) {
