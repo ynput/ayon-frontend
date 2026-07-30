@@ -6,7 +6,7 @@ import {
   DeleteConfirmContent,
   sumExpectedCounts,
   type ExpectedDeleteCounts,
-} from '@shared/components'
+} from './DeleteConfirmContent'
 import type { DeletableEntityType } from '@shared/context/DeleteEntitiesContext'
 import * as Styled from './DeleteEntitiesConfirmDialog.styled'
 
@@ -98,13 +98,15 @@ export const DeleteEntitiesConfirmDialog = ({
           )}
           {requiresCounts && (
             <>
-              <Styled.FooterLabel>
+              <Styled.FooterLabel as="p">
                 To confirm, type how many of each will be deleted, children included
               </Styled.FooterLabel>
               <Styled.CountRows>
                 {countTypes.map((type, index) => (
                   <Styled.CountRow key={type}>
-                    <span>{`${type[0].toUpperCase()}${type.slice(1)}s`}</span>
+                    <span>{`${type[0].toUpperCase()}${type.slice(1)}s - ${
+                      expectedCounts[type]
+                    }`}</span>
                     <Styled.CountInput
                       data-testid={`delete-confirm-count-${type}`}
                       autoFocus={index === 0}
