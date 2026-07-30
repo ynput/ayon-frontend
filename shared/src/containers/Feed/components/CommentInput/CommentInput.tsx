@@ -644,7 +644,7 @@ const CommentInput: FC<CommentInputProps> = ({
     }
   }
 
-  const versionReviewButtons = versionReview && onReview && (
+  const versionReviewButtons = versionReview && onReview && !disabled && (
     <Styled.VersionReviewButtons className={clsx('version-review-buttons', { guest: isGuest })}>
       <Styled.VersionReviewButton
         icon="check"
