@@ -76,17 +76,21 @@ const DetailsPanelHeader = ({
     [entityType],
   )
 
-  // for selected entities, get flat list of assignees
-  const entityUsers: string[] = useMemo(
-    () =>
-      union(
-        ...entities.flatMap((entity) => [
-          entity.task?.assignees || [],
-          entity.version?.author || [],
-        ]),
-      ),
-    [entities],
-  )
+  // for selected entities, get flat list of assignees (tasks) or authors (versions)
+  const entityUsers: string[] = useMemo(() => {
+    if (entityType === 'task') {
+      return union(...entities.map((e) => e.task?.assignees || []))
+    }
+    if (entityType === 'version') {
+      return union(
+        ...entities.map((e) => {
+          const a = e.version?.author
+          return Array.isArray(a) ? a : a ? [a] : []
+        }),
+      )
+    }
+    return []
+  }, [entities, entityType])
 
   let firstEntity = entities[0]
   // If there's no data return null
@@ -177,7 +181,7 @@ const DetailsPanelHeader = ({
   }
 
   const hasUser =
-    ['task', 'version', 'representation'].includes(entityType) &&
+    (entityType === 'task' || entityType === 'version') &&
     (entityUsers.length > 0 || entityType === 'task')
 
   const usersOptions = users.map((u) => u)
