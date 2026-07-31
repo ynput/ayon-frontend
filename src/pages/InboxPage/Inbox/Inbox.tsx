@@ -90,6 +90,8 @@ const Inbox = ({ filter }: InboxProps) => {
   // guests get no project mode: the activities resolver rejects projects they cannot access
   const [selectedProject, setSelectedProject] = useInboxProject(!isGuest)
   const [inboxFilter, setInboxFilter] = useState<QueryFilter>({ operator: 'and', conditions: [] })
+  // the only filter that works without a project, so it is a toolbar toggle, not a chip
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false)
   const isProjectMode = !!selectedProject
 
   const projectArgs = useMemo(
@@ -102,13 +104,14 @@ const Inbox = ({ filter }: InboxProps) => {
         userName: user,
         isActive,
         isImportant,
+        isUnread: isActive && showUnreadOnly,
         uiFilter: inboxFilter,
       }),
       last,
       active: isActive,
       important: isImportant,
     }),
-    [selectedProject, user, inboxFilter, isActive, isImportant],
+    [selectedProject, user, inboxFilter, isActive, isImportant, showUnreadOnly],
   )
 
   // a stale url/storage value (renamed project, or a folder row id) would 404 the query
@@ -117,8 +120,11 @@ const Inbox = ({ filter }: InboxProps) => {
     if (!projects.some((p) => p.name === selectedProject)) setSelectedProject(null)
   }, [selectedProject, projects, globalIsLoading.projects, setSelectedProject])
 
+  // null, not false: false would ask the resolver for read messages only
+  const unreadArg = isActive && showUnreadOnly ? true : null
+
   const globalQuery = useGetInboxMessagesQuery(
-    { last: last, active: isActive, important: isImportant },
+    { last: last, active: isActive, important: isImportant, unread: unreadArg },
     { skip: isProjectMode },
   )
   const projectQuery = useGetProjectInboxQuery(projectArgs, { skip: !isProjectMode })
@@ -142,7 +148,14 @@ const Inbox = ({ filter }: InboxProps) => {
     console.log('loading more messages...')
 
     if (isProjectMode) getProjectInbox({ ...projectArgs, cursor: lastCursor })
-    else getInboxMessages({ last, active: isActive, important: isImportant, cursor: lastCursor })
+    else
+      getInboxMessages({
+        last,
+        active: isActive,
+        important: isImportant,
+        unread: unreadArg,
+        cursor: lastCursor,
+      })
   }
 
   // in project mode the info is needed even when the filtered list comes back empty
@@ -528,6 +541,16 @@ const Inbox = ({ filter }: InboxProps) => {
           isImportant={isImportant}
           isLoading={isLoadingInbox}
         />
+        {/* clearing a message also marks it read, so unread is meaningless on the cleared tab */}
+        {isActive && (
+          <Button
+            icon={showUnreadOnly ? 'mark_email_unread' : 'drafts'}
+            selected={showUnreadOnly}
+            onClick={() => setShowUnreadOnly((prev) => !prev)}
+          >
+            Unread only
+          </Button>
+        )}
         <EnableNotifications />
         {isActive && (
           <Button

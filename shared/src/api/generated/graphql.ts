@@ -2170,6 +2170,7 @@ export type GetInboxMessagesQueryVariables = Exact<{
   last?: number | null | undefined;
   active?: boolean | null | undefined;
   important?: boolean | null | undefined;
+  unread?: boolean | null | undefined;
   cursor?: string | null | undefined;
 }>;
 
@@ -4172,11 +4173,12 @@ export const GetInboxHasUnreadDocument = new TypedDocumentString(`
 }
     `);
 export const GetInboxMessagesDocument = new TypedDocumentString(`
-    query GetInboxMessages($last: Int, $active: Boolean, $important: Boolean, $cursor: String) {
+    query GetInboxMessages($last: Int, $active: Boolean, $important: Boolean, $unread: Boolean, $cursor: String) {
   inbox(
     last: $last
     showActiveMessages: $active
     showImportantMessages: $important
+    showUnreadMessages: $unread
     before: $cursor
   ) {
     pageInfo {
@@ -4226,7 +4228,7 @@ export const GetInboxMessagesDocument = new TypedDocumentString(`
 export const GetInboxUnreadCountDocument = new TypedDocumentString(`
     query GetInboxUnreadCount($important: Boolean) {
   inbox(
-    last: 500
+    last: 100
     showActiveMessages: true
     showImportantMessages: $important
     showUnreadMessages: true

@@ -99,6 +99,7 @@ type BuildInboxFilterArgs = {
   userName: string
   isActive: boolean
   isImportant: boolean | null
+  isUnread?: boolean
   uiFilter?: QueryFilter
 }
 
@@ -108,6 +109,7 @@ export const buildInboxFilter = ({
   userName,
   isActive,
   isImportant,
+  isUnread,
   uiFilter,
 }: BuildInboxFilterArgs): string => {
   const conditions: (QueryCondition | QueryFilter)[] = [
@@ -116,6 +118,9 @@ export const buildInboxFilter = ({
     { key: 'active', operator: 'eq', value: isActive ? 'true' : 'false' },
     { key: 'activity_data.author', operator: 'ne', value: userName },
   ]
+
+  // read is a JSON path, so the boolean-eq coalesce is valid here
+  if (isUnread) conditions.push({ key: 'reference_data.read', operator: 'eq', value: false })
 
   if (isImportant === true) {
     conditions.push({ key: 'reference_type', operator: 'in', value: IMPORTANT_REFERENCE_TYPES })

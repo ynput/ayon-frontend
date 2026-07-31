@@ -30,10 +30,12 @@ export const enhancedInboxGraphql = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
     GetInboxMessages: {
       transformResponse: (res: GetInboxMessagesQuery, _meta, args) =>
         transformInboxMessages(res.inbox, args),
-      // only use active and isActive as cache keys
-      serializeQueryArgs: ({ queryArgs: { active, important } = {} }) => ({
+      // cursor and page size must not key the cache, everything else must:
+      // unread and unfiltered results would otherwise share one entry
+      serializeQueryArgs: ({ queryArgs: { active, important, unread } = {} }) => ({
         active,
         important,
+        unread,
       }),
       // when we get new data, merge it with the existing cache
       // (pagination)
