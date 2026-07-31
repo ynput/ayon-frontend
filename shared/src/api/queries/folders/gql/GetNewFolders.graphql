@@ -1,0 +1,42 @@
+query GetNewFolders($projectName: String!, $folderIds: [String!]!, $first: Int) {
+  project(name: $projectName) {
+    folders(ids: $folderIds, first: $first) {
+      edges {
+        node {
+          id
+          path
+          parentId
+          parents
+          name
+          label
+          folderType
+          hasTasks
+          hasChildren
+          hasReviewables
+          thumbnailHash
+          tags
+          status
+          attrib {
+            priority
+            fps
+            resolutionWidth
+            resolutionHeight
+            pixelAspect
+            clipIn
+            clipOut
+            frameStart
+            frameEnd
+            handleStart
+            handleEnd
+            startDate
+            endDate
+            description
+          }
+          ownAttrib
+          createdAt
+          updatedAt
+        }
+      }
+    }
+  }
+}
