@@ -52,7 +52,7 @@ export interface Message {
   summary: MessageSummary
 }
 
-const supportedKanbanTaskFields = ['status', 'assignees'] as const
+const supportedKanbanTaskFields = ['status', 'tags', 'assignees', 'taskType'] as const
 type SupportedKanbanTaskField = (typeof supportedKanbanTaskFields)[number]
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
