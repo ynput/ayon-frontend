@@ -161,16 +161,16 @@ const InboxSearchFilter = ({
   const handleFilterChange = (newFilters: Filter[]) =>
     dateRange.wrapFilterChange(newFilters, localFilters, setLocalFilters)
 
-  // native title rather than data-tooltip: the bar spans the whole toolbar, so an
-  // anchored tooltip lands in its middle, while the browser draws title at the cursor
   return (
     <Wrapper
       className={isDisabled || isLoading ? 'disabled' : undefined}
-      title={
+      data-tooltip={
         isDisabled
           ? 'Searching and filtering works on one project at a time. Select a project on the left to enable it.'
           : undefined
       }
+      data-tooltip-position="bottom"
+      data-tooltip-delay={0}
     >
       <SearchFilter
         ref={searchFilterRef}
