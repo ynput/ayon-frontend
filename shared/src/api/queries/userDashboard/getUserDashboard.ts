@@ -8,7 +8,14 @@ import {
 } from '@shared/api/generated'
 import { projectQueries } from '../project'
 import PubSub from '@shared/util/pubsub'
-import { subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
+import {
+  createRealtimeBatcher,
+  getSupportedEntityPatch,
+  REALTIME_REST_CALL_LIMIT,
+  subscribeToThumbnailUpdates,
+  ThumbnailUpdateMessage,
+  waitForRealtimeJitter,
+} from '@shared/util'
 import convertAccessGroupsData, { AccessGroups } from './convertAccessGroupsData'
 
 // GetKanban response type
@@ -45,6 +52,9 @@ export interface Message {
   summary: MessageSummary
 }
 
+const supportedKanbanTaskFields = ['status', 'assignees'] as const
+type SupportedKanbanTaskField = (typeof supportedKanbanTaskFields)[number]
+
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import getUserProjectsAccess from './getUserProjectsAccess'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
@@ -78,7 +88,7 @@ const provideKanbanTags = (result: GetKanbanResponse | undefined, _error: any, a
   result?.length
     ? [
         { type: 'kanBanTask', id: 'LIST' },
-        ...result.flatMap(({ id, projectName, assignees }) => [
+        ...result.flatMap(({ id, projectName, assignees = [] }) => [
           { type: 'task', id },
           { type: 'kanban', id: 'project-' + projectName },
           ...assignees.map((assignee) => ({ type: 'kanban', id: 'user-' + assignee })),
@@ -102,6 +112,8 @@ export const getKanbanTasks = async (
   dispatch: ThunkDispatch<any, any, UnknownAction>,
 ) => {
   try {
+    projects = projects ?? []
+    taskIds = taskIds ?? []
     // get the task
     const response = await dispatch(
       enhancedDashboardGraphqlApi.endpoints.GetKanbanTasks.initiate(
@@ -130,13 +142,130 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
       transformResponse: transformKanban,
       providesTags: provideKanbanTags,
       async onCacheEntryAdded(
-        { assignees = [], projects = [] } = {},
+        args = {},
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
       ) {
         let token
         let unsubscribeThumbnails: (() => void) | undefined
-        let fetchQueue: { taskIds: string[]; projects: string[] }[] = []
-        let fetchTimeout: any = null
+        const batchProcessMessages = async (updates: { topic: string; message: Message }[]) => {
+          const selectedProjects: string[] = Array.isArray(args?.projects) ? args.projects : []
+          const selectedAssignees: string[] = Array.isArray(args?.assignees) ? args.assignees : []
+          // Current tasks on the board. Re-read the cache when the batch runs because it may
+          // have changed while the realtime updates were waiting in the debounce window.
+          const cacheTasks = getCacheEntry().data ?? []
+          const cachedTaskKeys = new Set(cacheTasks.map((task) => `${task.projectName}:${task.id}`))
+          const taskUpdatesToFetch = new Map<string, { taskId: string; project: string }>()
+          const patches: {
+            taskId: string
+            project: string
+            field: SupportedKanbanTaskField
+            value: string | string[]
+          }[] = []
+
+          updates.forEach(({ topic, message }) => {
+            // First check the project name as selected.
+            const project = message.project
+            if (!project || !selectedProjects.includes(project)) return
+
+            const taskId = message.summary?.entityId
+            if (!taskId) return
+
+            // Only patch the task for the fields supported by the Kanban view.
+            const field = topic.split('.')[2]?.replace('_changed', '')
+            const patch = getSupportedEntityPatch(field, message.summary, supportedKanbanTaskFields)
+            if (!patch) return
+
+            const taskKey = `${project}:${taskId}`
+            const isTaskOnMyBoard = cachedTaskKeys.has(taskKey)
+            const patchValue = patch.value
+            const isValueMe =
+              patch.field === 'assignees' &&
+              (patchValue as string[]).some((assignee) => selectedAssignees.includes(assignee))
+
+            // A task not currently on the board only matters when an assignee update
+            // makes it relevant to the selected users.
+            if (!isTaskOnMyBoard && !isValueMe) return
+
+            if (!isTaskOnMyBoard) {
+              taskUpdatesToFetch.set(taskKey, { taskId, project })
+              return
+            }
+
+            patches.push({
+              taskId,
+              project,
+              field: patch.field as SupportedKanbanTaskField,
+              value: patch.value,
+            })
+          })
+
+          if (patches.length) {
+            updateCachedData((draft) => {
+              patches.forEach(({ taskId, project, field, value }) => {
+                const task = draft.find(
+                  (item) => item.id === taskId && item.projectName === project,
+                )
+                if (!task) return
+
+                // Patch the Kanban cache directly for supported fields.
+                Object.assign(task, { [field]: value })
+                if (
+                  field === 'assignees' &&
+                  selectedAssignees.length > 0 &&
+                  !(value as string[]).some((assignee) => selectedAssignees.includes(assignee))
+                ) {
+                  const index = draft.indexOf(task)
+                  if (index !== -1) draft.splice(index, 1)
+                }
+              })
+            })
+          }
+
+          const fetchUpdates = Array.from(taskUpdatesToFetch.values())
+          if (!fetchUpdates.length || fetchUpdates.length > REALTIME_REST_CALL_LIMIT) return
+
+          // Fetch tasks that have just become relevant to the selected assignees.
+          await waitForRealtimeJitter()
+          const tasks = await getKanbanTasks(
+            {
+              projects: [...new Set(fetchUpdates.map(({ project }) => project))],
+              taskIds: [...new Set(fetchUpdates.map(({ taskId }) => taskId))],
+            },
+            dispatch,
+          )
+
+          // Get all tasks that have been ADDED to the assignees.
+          const tasksWithArgAssignees = tasks.filter(
+            (task) =>
+              !selectedAssignees.length ||
+              (task.assignees ?? []).some((assignee) => selectedAssignees.includes(assignee)),
+          )
+          // Get all tasks that have been REMOVED from the assignees.
+          const tasksWithoutArgAssignees = tasks.filter(
+            (task) =>
+              selectedAssignees.length > 0 &&
+              !(task.assignees ?? []).some((assignee) => selectedAssignees.includes(assignee)),
+          )
+
+          // Patch the Kanban query by adding new tasks and removing old tasks.
+          updateCachedData((draft) => {
+            // Add new tasks or update existing tasks.
+            tasksWithArgAssignees.forEach((task) => {
+              const index = draft.findIndex((cachedTask) => cachedTask.id === task.id)
+              if (index === -1) draft.push(task)
+              else draft[index] = task
+            })
+            // Remove old tasks.
+            tasksWithoutArgAssignees.forEach((task) => {
+              const index = draft.findIndex((cachedTask) => cachedTask.id === task.id)
+              if (index !== -1) draft.splice(index, 1)
+            })
+          })
+        }
+        const batcher = createRealtimeBatcher(
+          batchProcessMessages,
+          ({ message }) => `${message.project ?? ''}:${message.summary?.entityId}`,
+        )
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
@@ -163,138 +292,9 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
             ['task'],
           )
 
-          const processFetchQueue = async () => {
-            const batch = [...fetchQueue]
-            fetchQueue = []
-            fetchTimeout = null
-
-            const taskIds = Array.from(new Set(batch.flatMap((b) => b.taskIds)))
-            const projects = Array.from(new Set(batch.flatMap((b) => b.projects)))
-
-            if (taskIds.length === 0) return
-
-            const tasks = await getKanbanTasks({ projects, taskIds }, dispatch)
-
-            // get all tasks that have been ADDED to the assignees
-            const tasksWithArgAssignees = tasks.filter((task) =>
-              task.assignees.some((assignee) => assignees?.includes(assignee)),
-            )
-            // get all tasks that have been REMOVED from the assignees
-            const tasksWithoutArgAssignees = tasks.filter(
-              (task) => !task.assignees.some((assignee) => assignees?.includes(assignee)),
-            )
-
-            // patch the kanban query by adding new tasks and remove old tasks
-            updateCachedData((draft) => {
-              // add new tasks
-              tasksWithArgAssignees.forEach((task) => {
-                const index = draft.findIndex((t) => t.id === task.id)
-                if (index === -1) {
-                  draft.push(task)
-                } else {
-                  // update the task
-                  draft[index] = task
-                }
-              })
-              // remove old tasks
-              tasksWithoutArgAssignees.forEach((task) => {
-                const index = draft.findIndex((t) => t.id === task.id)
-                if (index !== -1) {
-                  draft.splice(index, 1)
-                }
-              })
-            })
-          }
-
-          const patchKanbanTask = ({
-            projects = [],
-            taskIds = [],
-            payload,
-          }: {
-            projects: string[]
-            taskIds: string[]
-            payload?: Partial<KanbanNode>
-          }) => {
-            let needsFetch = false
-
-            if (payload) {
-              updateCachedData((draft) => {
-                taskIds.forEach((id) => {
-                  const index = draft.findIndex((t) => t.id === id)
-                  if (index !== -1) {
-                    // update the task
-                    Object.assign(draft[index], payload)
-
-                    // if assignees changed, check if it should be removed
-                    if (payload.assignees) {
-                      const isStillAssigned =
-                        !assignees?.length || payload.assignees.some((a) => assignees?.includes(a))
-                      if (!isStillAssigned) {
-                        draft.splice(index, 1)
-                      }
-                    }
-                  } else {
-                    // task not in cache, if it's now assigned to us, we need to fetch
-                    if (payload.assignees?.some((a) => assignees?.includes(a))) {
-                      needsFetch = true
-                    }
-                  }
-                })
-              })
-            } else {
-              needsFetch = true
-            }
-
-            if (!needsFetch) return
-
-            // add to queue
-            fetchQueue.push({ projects, taskIds })
-
-            // debounce the fetch with a random offset
-            if (!fetchTimeout) {
-              const delay = Math.random() * 5000
-              fetchTimeout = setTimeout(processFetchQueue, delay)
-            }
-          }
-
-          const handlePubSub = async (_topic: string, message: Message) => {
-            const project = message.project
-            // first check the project name as selected
-            if (!projects?.includes(project)) return console.log('project not selected')
-            // then get entity id
-            const entityId = message.summary.entityId
-            if (!entityId) return console.log('no entity id found')
-
-            // current tasks on the board
-            const cacheTasks = getCacheEntry().data ?? []
-            // entity.task.status_changed
-            const field = message.topic.split('.')[2].split('_changed')[0]
-
-            // Only patch the task for the fields status and assignees.
-            if (!['status', 'assignees'].includes(field)) return
-
-            const value = message.summary.value
-            // cast the correct type onto value based on the field
-            let castValue: any = value
-            if (field === 'status') {
-              castValue = String(value)
-            } else if (field === 'assignees') {
-              castValue = Array.isArray(value) ? (value as string[]) : []
-            }
-
-            // check this task is actually on the board
-            const isTaskOnMyBoard = cacheTasks.some((t) => t.id === entityId)
-            // if the field is assignees AND the value includes current assignees then we patch
-            const isValueMe =
-              field === 'assignees' && (castValue as string[]).some((a) => assignees?.includes(a))
-
-            if (!isTaskOnMyBoard && !isValueMe) return
-            // patch task updates into kanban cache
-            patchKanbanTask({
-              taskIds: [entityId],
-              projects: [project],
-              payload: { [field]: castValue } as Partial<KanbanNode>,
-            })
+          const handlePubSub = (_topic: string, message: Message) => {
+            if (!message?.summary?.entityId) return
+            batcher.add({ topic: _topic, message })
           }
 
           // sub to websocket topic
@@ -311,7 +311,7 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
         if (unsubscribeThumbnails) {
           unsubscribeThumbnails()
         }
-        if (fetchTimeout) clearTimeout(fetchTimeout)
+        batcher.clear()
       },
       // // there is only one cache for kanban
       // serializeQueryArgs: () => '',
