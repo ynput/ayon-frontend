@@ -6,7 +6,11 @@ import type {
   GetInboxUnreadCountQuery,
 } from '@shared/api'
 import { TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { TransformedInboxMessages, transformInboxMessages } from './inboxTransform'
+import {
+  TransformedInboxMessages,
+  mergeInboxMessages,
+  transformInboxMessages,
+} from './inboxTransform'
 import { DefinitionsFromApi, OverrideResultType } from '@reduxjs/toolkit/query'
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
@@ -33,29 +37,7 @@ export const enhancedInboxGraphql = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
       }),
       // when we get new data, merge it with the existing cache
       // (pagination)
-      merge: (currentCache: TransformedInboxMessages, newCache: TransformedInboxMessages) => {
-        const { messages = [], projectNames = [], pageInfo } = newCache
-        const { messages: lastMessages = [], projectNames: lastProjectNames = [] } = currentCache
-
-        type Message = TransformedInboxMessages['messages'][0]
-
-        const newMessages = [
-          ...lastMessages,
-          ...messages.filter(
-            (m: Message) => !lastMessages.some((lm: Message) => lm.referenceId === m.referenceId),
-          ),
-        ]
-        const newProjectNames = [
-          ...lastProjectNames,
-          ...projectNames.filter((p: string) => !lastProjectNames.includes(p)),
-        ]
-
-        return {
-          messages: newMessages,
-          projectNames: newProjectNames,
-          pageInfo,
-        }
-      },
+      merge: mergeInboxMessages,
       keepUnusedDataFor: 30,
       providesTags: (_res, _error, { active, important } = {}) => [
         { type: 'inbox', id: 'LIST' },

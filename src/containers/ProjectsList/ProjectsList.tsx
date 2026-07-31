@@ -19,6 +19,7 @@ interface ProjectsListProps {
   selection: string[]
   onSelect: (ids: string[]) => void
   multiSelect?: boolean
+  allowEmptySelection?: boolean
   onNewProject?: () => void
   onNoProjectSelected?: (projectName: string) => void
   pt?: {
@@ -30,6 +31,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
   selection,
   onSelect,
   multiSelect,
+  allowEmptySelection,
   onNewProject,
   onNoProjectSelected,
   pt,
@@ -78,10 +80,10 @@ const ProjectsList: FC<ProjectsListProps> = ({
       onSelect([selectedProjects[0].name])
     }
     // if there is no project selected, select the first one
-    if (projects.length && !selection.length) {
+    if (!allowEmptySelection && projects.length && !selection.length) {
       onSelect([projects[0].name])
     }
-  }, [multiSelect, selection, selectedProjects, onSelect, projects])
+  }, [multiSelect, selection, selectedProjects, onSelect, projects, allowEmptySelection])
 
   // state
   // search state
@@ -221,6 +223,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         selection={selection}
         onSelect={onSelect}
         onOpenProject={onOpenProject}
+        enableClickToDeselect={allowEmptySelection}
         title="Projects"
         showAddProject={canCreateProject}
         onNewProject={onNewProject}

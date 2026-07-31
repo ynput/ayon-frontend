@@ -2,6 +2,7 @@ import { toast } from 'react-toastify'
 import { inboxApi, ManageInboxItemApiArg } from '@shared/api'
 import { current } from '@reduxjs/toolkit'
 import { enhancedInboxGraphql } from './getInbox'
+import { projectInboxApi, type GetProjectInboxArgs } from './getProjectInbox'
 
 // add some extra types for the patching
 export interface Arg extends ManageInboxItemApiArg {
@@ -22,6 +23,20 @@ const patchUnreadCount = (dispatch: any, count: number | 'all', important: boole
   )
 }
 
+// The project inbox is cached per filter combination, so the entries to patch can
+// only be found by walking the cache and matching on the project.
+const getProjectInboxArgs = (state: any, projectName?: string): GetProjectInboxArgs[] => {
+  if (!projectName) return []
+
+  return Object.values(state?.restApi?.queries || {})
+    .filter(
+      (entry: any) =>
+        entry?.endpointName === 'getProjectInbox' &&
+        entry?.originalArgs?.projectName === projectName,
+    )
+    .map((entry: any) => entry.originalArgs as GetProjectInboxArgs)
+}
+
 const enhancedRest = inboxApi.enhanceEndpoints({
   endpoints: {
     manageInboxItem: {
@@ -32,9 +47,9 @@ const enhancedRest = inboxApi.enhanceEndpoints({
           last,
           isActiveChange,
           isRead,
-          manageInboxItemRequest: { ids = [], status, all },
+          manageInboxItemRequest: { ids = [], status, all, projectName },
         }: Arg,
-        { dispatch, queryFulfilled },
+        { dispatch, getState, queryFulfilled },
       ) {
         let newRead, newActive
 
@@ -58,6 +73,17 @@ const enhancedRest = inboxApi.enhanceEndpoints({
         let messages: any[] = []
 
         let tagsToInvalidate = [{ type: 'inbox', id: 'hasUnread' }]
+
+        const projectPatches: { undo: () => void }[] = []
+        const projectArgs = getProjectInboxArgs(getState(), projectName)
+        const patchProjectInbox = (
+          args: GetProjectInboxArgs,
+          recipe: (draft: { messages: any[] }) => void,
+        ) => {
+          projectPatches.push(
+            dispatch(projectInboxApi.util.updateQueryData('getProjectInbox', args, recipe as any)),
+          )
+        }
 
         if (isActiveChange) {
           // this means we are changing the active (cleared) status of the message
@@ -127,6 +153,21 @@ const enhancedRest = inboxApi.enhanceEndpoints({
               ],
             )
           }
+
+          // project mode: drop the rows from the tab they are leaving. The tab they land
+          // in is cached per filter, so invalidate it instead of guessing which entry fits.
+          projectArgs
+            .filter((args) => args.active === active)
+            .forEach((args) =>
+              patchProjectInbox(args, (draft) => {
+                draft.messages = all
+                  ? []
+                  : draft.messages.filter((m: any) => !ids.includes(m.referenceId))
+              }),
+            )
+          if (projectName) {
+            tagsToInvalidate.push({ type: 'inbox', id: `project=${projectName}/active=${!active}` })
+          }
         } else {
           // only updating the read status of the message
           // patch new data into the cache
@@ -147,6 +188,21 @@ const enhancedRest = inboxApi.enhanceEndpoints({
                 }
               },
             ),
+          )
+
+          projectArgs.forEach((args) =>
+            patchProjectInbox(args, (draft) => {
+              for (const id of ids) {
+                const messageIndex = draft.messages.findIndex((m: any) => m.referenceId === id)
+                if (messageIndex !== -1) {
+                  draft.messages[messageIndex] = {
+                    ...draft.messages[messageIndex],
+                    read: newRead,
+                    active: newActive,
+                  }
+                }
+              }
+            }),
           )
         }
 
@@ -178,6 +234,7 @@ const enhancedRest = inboxApi.enhanceEndpoints({
           console.error(message, error)
           toast.error(message)
           patchResult?.undo()
+          projectPatches.forEach((patch) => patch.undo())
         }
       },
     },

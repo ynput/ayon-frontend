@@ -81,11 +81,18 @@ const translate = (node: QueryCondition | QueryFilter): QueryCondition | QueryFi
   return { operator: node.operator || 'and', conditions: translated }
 }
 
-export const buildBackendFilter = (filter: QueryFilter | undefined): string | undefined => {
-  if (!filter || !filter.conditions?.length) return undefined
+export const buildBackendFilterObject = (filter: QueryFilter | undefined): QueryFilter | null => {
+  if (!filter || !filter.conditions?.length) return null
 
   const expanded = expandRelativeDates(filter as any) as QueryFilter
   const translated = translate(expanded)
+  if (!translated) return null
+
+  return translated as QueryFilter
+}
+
+export const buildBackendFilter = (filter: QueryFilter | undefined): string | undefined => {
+  const translated = buildBackendFilterObject(filter)
   if (!translated) return undefined
 
   return JSON.stringify(translated)

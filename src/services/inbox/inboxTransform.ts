@@ -17,9 +17,16 @@ export interface TransformedInboxMessages {
 }
 ;[]
 
+// the inbox resolver truncates in SQL, the activities resolver does not
+const BODY_LIMIT = 200
+
+const truncateBody = (body: string): string =>
+  body.length > BODY_LIMIT ? `${body.slice(0, BODY_LIMIT).replace(/\n/g, ' ')}...` : body
+
 export const transformInboxMessages = (
   inbox: GetInboxMessagesQuery['inbox'],
   { important = false }: GetInboxMessagesQueryVariables | void = {},
+  { truncate = false }: { truncate?: boolean } = {},
 ): TransformedInboxMessages => {
   const messages: InboxMessage[] = []
   const projectNames: string[] = []
@@ -38,6 +45,7 @@ export const transformInboxMessages = (
 
     const transformedMessage = {
       ...message,
+      body: truncate ? truncateBody(message.body) : message.body,
       folderName: '',
       thumbnail: { icon: 'folder' },
       entityId: message.origin?.id,
@@ -70,4 +78,30 @@ export const transformInboxMessages = (
   }
 
   return { projectNames, messages, pageInfo: inbox.pageInfo }
+}
+
+// pagination: append the new page to what is already cached, keyed by referenceId
+export const mergeInboxMessages = (
+  currentCache: TransformedInboxMessages,
+  newCache: TransformedInboxMessages,
+): TransformedInboxMessages => {
+  const { messages = [], projectNames = [], pageInfo } = newCache
+  const { messages: lastMessages = [], projectNames: lastProjectNames = [] } = currentCache
+
+  const newMessages = [
+    ...lastMessages,
+    ...messages.filter(
+      (m) => !lastMessages.some((lm: InboxMessage) => lm.referenceId === m.referenceId),
+    ),
+  ]
+  const newProjectNames = [
+    ...lastProjectNames,
+    ...projectNames.filter((p: string) => !lastProjectNames.includes(p)),
+  ]
+
+  return {
+    messages: newMessages,
+    projectNames: newProjectNames,
+    pageInfo,
+  }
 }

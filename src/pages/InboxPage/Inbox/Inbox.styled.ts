@@ -1,8 +1,35 @@
 import { Section, Toolbar } from '@ynput/ayon-react-components'
+import { Splitter } from 'primereact/splitter'
 import styled from 'styled-components'
 
 export const Tools = styled(Toolbar)`
   padding: var(--padding-s) var(--padding-m);
+`
+
+export const ProjectsSplitter = styled(Splitter)`
+  /* doubled to beat InboxSection's "& > * { width: unset }" */
+  && {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+  }
+
+  overflow: hidden;
+
+  .p-splitter-gutter {
+    z-index: 50;
+  }
+
+  &.no-projects {
+    & > .p-splitter-panel:first-child,
+    & > .p-splitter-gutter {
+      display: none;
+    }
+
+    & > .p-splitter-panel:last-child {
+      flex-basis: 100% !important;
+    }
+  }
 `
 
 export const InboxSection = styled(Section)`

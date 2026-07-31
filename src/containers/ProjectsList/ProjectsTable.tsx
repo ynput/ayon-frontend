@@ -56,6 +56,7 @@ interface ProjectsTableProps {
   onRenameFolder?: (folderId: string) => void
   onRenameProject?: (projectName: string) => void
   containerClassName?: string
+  enableClickToDeselect?: boolean
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
   }
@@ -95,6 +96,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   onRenameFolder,
   onRenameProject,
   containerClassName,
+  enableClickToDeselect,
   pt,
 }) => {
   // Track which table has active selection: 'pinned' | 'all'
@@ -222,6 +224,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
             onRenameProject={onRenameProject}
             onOpenProject={onOpenProject}
             onSettingsClick={onSettingsClick}
+            enableClickToDeselect={enableClickToDeselect}
             fitContent
             className="pinned-projects"
           />
@@ -256,6 +259,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
           onRenameProject={onRenameProject}
           onOpenProject={onOpenProject}
           onSettingsClick={onSettingsClick}
+          enableClickToDeselect={enableClickToDeselect}
           hidePinned={!search}
           className="all-projects"
         />
