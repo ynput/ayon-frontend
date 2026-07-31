@@ -8,6 +8,8 @@ const UI_ONLY_KEYS = new Set(Object.keys(filterActivityTypes).filter((k) => k !=
 
 const UI_KEY_TO_BACKEND_KEY: Record<string, string> = {
   has_attachments: 'activity_data.files',
+  // not `entity_type`: on inbox rows that column is always 'user'
+  origin_type: 'activity_data.origin.type',
 }
 
 const isCondition = (c: QueryCondition | QueryFilter): c is QueryCondition => {

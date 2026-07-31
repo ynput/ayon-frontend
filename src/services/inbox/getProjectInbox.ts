@@ -103,8 +103,8 @@ export const projectInboxApi = gqlApi.injectEndpoints({
         ),
       // cursor and page size must not key the cache, otherwise pagination never merges
       serializeQueryArgs: ({
-        queryArgs: { projectName, active, important, filter, activityTypes },
-      }) => ({ projectName, active, important, filter, activityTypes }),
+        queryArgs: { projectName, active, important, filter, activityTypes, referenceTypes },
+      }) => ({ projectName, active, important, filter, activityTypes, referenceTypes }),
       merge: mergeInboxMessages,
       keepUnusedDataFor: 30,
       providesTags: (_res, _error, { projectName, active }) => [

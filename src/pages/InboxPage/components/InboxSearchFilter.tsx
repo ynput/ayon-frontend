@@ -31,10 +31,24 @@ const Wrapper = styled.div`
   }
 `
 
+const REASON_VALUES = [
+  { id: 'mention', label: 'Mentioned', icon: 'alternate_email' },
+  { id: 'watching', label: 'Watching', icon: 'visibility' },
+  { id: 'relation', label: 'Related', icon: 'link' },
+]
+
+const ORIGIN_TYPE_VALUES = [
+  { id: 'task', label: 'Task', icon: 'check_circle' },
+  { id: 'version', label: 'Version', icon: 'layers' },
+  { id: 'folder', label: 'Folder', icon: 'folder' },
+  { id: 'product', label: 'Product', icon: 'inventory_2' },
+]
+
 interface InboxSearchFilterProps {
   filter: QueryFilter
   onChange: (filter: QueryFilter) => void
   projectName?: string | null
+  isImportant?: boolean | null
   isLoading?: boolean
 }
 
@@ -42,6 +56,7 @@ const InboxSearchFilter = ({
   filter,
   onChange,
   projectName,
+  isImportant,
   isLoading,
 }: InboxSearchFilterProps) => {
   const isDisabled = !projectName
@@ -92,6 +107,23 @@ const InboxSearchFilter = ({
           ]
         : []),
       {
+        id: 'reason',
+        label: 'Reason',
+        icon: 'notifications',
+        type: 'list_of_strings' as const,
+        operator: 'OR' as const,
+        // the Important tab already pins mention + watching, so relation would return nothing
+        values: isImportant === true ? REASON_VALUES.slice(0, 2) : REASON_VALUES,
+      },
+      {
+        id: 'origin_type',
+        label: 'Entity type',
+        icon: 'category',
+        type: 'list_of_strings' as const,
+        operator: 'OR' as const,
+        values: ORIGIN_TYPE_VALUES,
+      },
+      {
         id: 'author',
         label: 'User',
         icon: 'person',
@@ -111,7 +143,7 @@ const InboxSearchFilter = ({
         values: generateDateOptions(),
       },
     ]
-  }, [users, categories])
+  }, [users, categories, isImportant])
 
   const filters = useMemo(() => feedFilterToClientFilters(filter, options), [filter, options])
 

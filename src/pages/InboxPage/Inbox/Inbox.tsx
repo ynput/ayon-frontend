@@ -31,7 +31,11 @@ import useKeydown from '../hooks/useKeydown'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useInboxRefresh from '../hooks/useInboxRefresh'
 import useInboxProject from '../hooks/useInboxProject'
-import { buildInboxFilter, getInboxActivityTypes, INBOX_REFERENCE_TYPES } from '../util/inboxFilter'
+import {
+  buildInboxFilter,
+  getInboxActivityTypes,
+  getInboxReferenceTypes,
+} from '../util/inboxFilter'
 import { useDetailsPanelContext, useGlobalContext } from '@shared/context'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
@@ -92,7 +96,7 @@ const Inbox = ({ filter }: InboxProps) => {
     () => ({
       projectName: selectedProject as string,
       userName: user,
-      referenceTypes: INBOX_REFERENCE_TYPES,
+      referenceTypes: getInboxReferenceTypes(inboxFilter, isImportant),
       activityTypes: getInboxActivityTypes(inboxFilter),
       filter: buildInboxFilter({
         userName: user,
@@ -222,9 +226,7 @@ const Inbox = ({ filter }: InboxProps) => {
       const end = Math.max(lastSelectedIndexRef.current, currentIndex)
       newSelection = groupedMessages.slice(start, end + 1).map((m) => m.activityId)
     } else if (modifiers?.metaKey || modifiers?.ctrlKey) {
-      newSelection = selected.includes(id)
-        ? selected.filter((s) => s !== id)
-        : [...selected, id]
+      newSelection = selected.includes(id) ? selected.filter((s) => s !== id) : [...selected, id]
       lastSelectedIndexRef.current = currentIndex
     } else {
       newSelection = selected.includes(id) ? [] : [id]
@@ -523,6 +525,7 @@ const Inbox = ({ filter }: InboxProps) => {
           filter={inboxFilter}
           onChange={setInboxFilter}
           projectName={selectedProject}
+          isImportant={isImportant}
           isLoading={isLoadingInbox}
         />
         <EnableNotifications />
