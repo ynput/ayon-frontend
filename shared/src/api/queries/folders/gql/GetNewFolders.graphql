@@ -16,22 +16,7 @@ query GetNewFolders($projectName: String!, $folderIds: [String!]!, $first: Int) 
           thumbnailHash
           tags
           status
-          attrib {
-            priority
-            fps
-            resolutionWidth
-            resolutionHeight
-            pixelAspect
-            clipIn
-            clipOut
-            frameStart
-            frameEnd
-            handleStart
-            handleEnd
-            startDate
-            endDate
-            description
-          }
+          allAttrib
           ownAttrib
           createdAt
           updatedAt

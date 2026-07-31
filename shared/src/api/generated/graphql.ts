@@ -1913,7 +1913,7 @@ export type GetNewFoldersQueryVariables = Exact<{
 }>;
 
 
-export type GetNewFoldersQuery = { project: { folders: { edges: Array<{ node: { id: string, path: string | null, parentId: string | null, parents: Array<string>, name: string, label: string | null, folderType: string, hasTasks: boolean, hasChildren: boolean, hasReviewables: boolean, thumbnailHash: string, tags: Array<string>, status: string, ownAttrib: Array<string>, createdAt: unknown, updatedAt: unknown, attrib: { priority: string | null, fps: number | null, resolutionWidth: number | null, resolutionHeight: number | null, pixelAspect: number | null, clipIn: number | null, clipOut: number | null, frameStart: number | null, frameEnd: number | null, handleStart: number | null, handleEnd: number | null, startDate: unknown, endDate: unknown, description: string | null } } }> } } };
+export type GetNewFoldersQuery = { project: { folders: { edges: Array<{ node: { id: string, path: string | null, parentId: string | null, parents: Array<string>, name: string, label: string | null, folderType: string, hasTasks: boolean, hasChildren: boolean, hasReviewables: boolean, thumbnailHash: string, tags: Array<string>, status: string, allAttrib: string, ownAttrib: Array<string>, createdAt: unknown, updatedAt: unknown } }> } } };
 
 export type ColumnStatsFragmentFragment = { columnName: string, min: number | null, max: number | null, avg: number | null, sum: number | null, count: number | null, valueFilledCount: number | null, percentageFilled: number | null, valueNotFilledCount: number | null, percentageNotFilled: number | null, checkedCount: number | null, checkedPercentage: number | null, notCheckedCount: number | null, notCheckedPercentage: number | null, distribution: unknown };
 
@@ -3401,22 +3401,7 @@ export const GetNewFoldersDocument = new TypedDocumentString(`
           thumbnailHash
           tags
           status
-          attrib {
-            priority
-            fps
-            resolutionWidth
-            resolutionHeight
-            pixelAspect
-            clipIn
-            clipOut
-            frameStart
-            frameEnd
-            handleStart
-            handleEnd
-            startDate
-            endDate
-            description
-          }
+          allAttrib
           ownAttrib
           createdAt
           updatedAt

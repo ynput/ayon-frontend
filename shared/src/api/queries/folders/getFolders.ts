@@ -11,6 +11,7 @@ import {
 } from '@shared/util'
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import { parseAllAttribs } from '../overview'
 
 type GetNewFoldersResult = FolderListItem[]
 
@@ -28,6 +29,7 @@ const graphqlFolders = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       transformResponse: (response: GetNewFoldersQuery): GetNewFoldersResult =>
         response.project.folders.edges.map(({ node }) => ({
           ...node,
+          attrib: parseAllAttribs(node.allAttrib),
           path: node.path ?? '',
           parentId: node.parentId ?? undefined,
           label: node.label ?? undefined,
