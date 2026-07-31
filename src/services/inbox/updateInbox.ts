@@ -74,7 +74,7 @@ const enhancedRest = inboxApi.enhanceEndpoints({
             break
         }
 
-        let messages: any[] = []
+        const movedMessages = new Map<string, any>()
 
         let tagsToInvalidate = [{ type: 'inbox', id: 'hasUnread' }]
 
@@ -107,28 +107,26 @@ const enhancedRest = inboxApi.enhanceEndpoints({
           // this means we are changing the active (cleared) status of the message
           // if will be moving from one cache to another
 
-          //   the cache to remove from (current tab)
+          //   the cache to remove from (current tab). The recipe runs once per cached
+          //   variant of the tab, and each holds a different subset, so collect the union
           patchInbox({ active, important }, (draft) => {
-            if (all) {
-              // add all messages to the messages array (for later)
-              messages = draft.messages.map((m) => current(m))
-              // remove all messages
-              draft.messages = []
-            } else {
-              // find the messages to clear and add them to the messages array (for later)
-              messages = draft.messages
-                .filter((m) => ids.includes(m.referenceId))
-                .map((m) => current(m))
-              // filter out the messages to clear
-              draft.messages = draft.messages.filter((m) => !ids.includes(m.referenceId))
-            }
+            const removed = all
+              ? draft.messages
+              : draft.messages.filter((m) => ids.includes(m.referenceId))
+            removed.forEach((m) => movedMessages.set(m.referenceId, current(m)))
+
+            draft.messages = all ? [] : draft.messages.filter((m) => !ids.includes(m.referenceId))
           })
 
           //  now where do we add the cleared message
           if (active) {
             // when clearing a message
             // it will always go to the cleared tab (active=false) (important=null)
-            const messagesPatch = messages.map((m) => ({ ...m, active: false, read: true }))
+            const messagesPatch = [...movedMessages.values()].map((m) => ({
+              ...m,
+              active: false,
+              read: true,
+            }))
 
             //   the cache to add to (cleared/important/other tab)
             patchInbox({ active: !active, important: null }, (draft) => {
