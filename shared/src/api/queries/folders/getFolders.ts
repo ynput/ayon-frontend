@@ -1,4 +1,9 @@
-import { FolderListItem, foldersApi, GetNewFoldersQuery, gqlApi } from '@shared/api/generated'
+import {
+  FolderListItem,
+  foldersApi,
+  GetUpdatedAndNewFoldersQuery,
+  gqlApi,
+} from '@shared/api/generated'
 import {
   getSupportedEntityPatch,
   createRealtimeBatcher,
@@ -13,20 +18,23 @@ import {
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import { parseAllAttribs } from '../overview'
 
-type GetNewFoldersResult = FolderListItem[]
+type GetUpdatedAndNewFoldersResult = FolderListItem[]
 
 // HELPER QUERIES FOR REALTIME UPDATES
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
 // update the definitions to include the new types
-type UpdatedDefinitions = Omit<Definitions, 'GetNewFolders'> & {
-  GetNewFolders: OverrideResultType<Definitions['GetNewFolders'], GetNewFoldersResult>
+type UpdatedDefinitions = Omit<Definitions, 'GetUpdatedAndNewFolders'> & {
+  GetUpdatedAndNewFolders: OverrideResultType<
+    Definitions['GetUpdatedAndNewFolders'],
+    GetUpdatedAndNewFoldersResult
+  >
 }
 
 const graphqlFolders = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
-    GetNewFolders: {
-      transformResponse: (response: GetNewFoldersQuery): GetNewFoldersResult =>
+    GetUpdatedAndNewFolders: {
+      transformResponse: (response: GetUpdatedAndNewFoldersQuery): GetUpdatedAndNewFoldersResult =>
         response.project.folders.edges.map(({ node }) => ({
           ...node,
           attrib: parseAllAttribs(node.allAttrib),
@@ -87,7 +95,7 @@ const enhancedApi = foldersApi.enhanceEndpoints({
 
           const deletedIds: string[] = []
           const createdIds: string[] = []
-          const unsupportedIds: string[] = []
+          const unsupportedFields = new Map<string, Set<string>>()
           const summaryPatches: {
             folderId: string
             field: SupportedEntityPatchField
@@ -123,7 +131,14 @@ const enhancedApi = foldersApi.enhanceEndpoints({
               supportedFolderFields,
             )
             if (patch) summaryPatches.push({ folderId, ...patch })
-            else unsupportedIds.push(folderId)
+            else {
+              const field = topicFieldMap[message.topic]
+              if (!field) return
+
+              const fields = unsupportedFields.get(folderId) || new Set<string>()
+              fields.add(field)
+              unsupportedFields.set(folderId, fields)
+            }
           })
 
           // DELETED: remove deleted folders from cache
@@ -145,56 +160,49 @@ const enhancedApi = foldersApi.enhanceEndpoints({
             })
           }
 
-          // For created and unsupported folders, we will fetch the full folder data from the API
-          // But first, check if the total number of folders to fetch exceeds the max limit, and if so, skip fetching
+          // Fetch created and unsupported folders in one request.
           // This is to avoid overwhelming the API with too many requests at once, and to prevent potential performance issues in the frontend.
-          if (createdIds.length + unsupportedIds.length > MAX_FOLDER_UPDATE_REST_CALLS) return
+          const foldersToFetch = [
+            ...new Set([...createdIds, ...unsupportedFields.keys()]),
+          ]
+          if (foldersToFetch.length > MAX_FOLDER_UPDATE_REST_CALLS) return
 
-          // CREATED: fetch created folders from the API and add them to the cache
-          // (Created folders are fetched separately from unsupported updates.)
-          if (createdIds.length) {
+          if (foldersToFetch.length) {
             await waitForRealtimeJitter()
-            const createdFolders = await dispatch(
-              graphqlFolders.endpoints.GetNewFolders.initiate({
+            const fetchedFolders = await dispatch(
+              graphqlFolders.endpoints.GetUpdatedAndNewFolders.initiate({
                 projectName,
-                folderIds: createdIds,
-                first: createdIds.length,
+                folderIds: foldersToFetch,
+                first: foldersToFetch.length,
               }),
             )
               .unwrap()
               .catch(() => [])
 
-            // Add newly created folders to the cache, or update existing ones if they already exist (e.g., if a folder was created and then updated before the cache was refreshed).
+            const createdFolderIds = new Set(createdIds)
             updateCachedData((draft: any) => {
               if (!draft || !Array.isArray(draft.folders)) return
-              createdFolders.filter(Boolean).forEach((folder: any) => {
-                const index = draft.folders.findIndex((item: any) => item.id === folder.id)
-                if (index === -1) draft.folders.push(folder)
-                else draft.folders[index] = { ...draft.folders[index], ...folder }
-              })
-            })
-          }
+              const fetchedById = new Map(
+                fetchedFolders.filter(Boolean).map((folder: any) => [folder.id, folder] as const),
+              )
 
-          // UPDATED (unsupported): fetch unsupported folders from the API and update them in the cache
-          if (unsupportedIds.length) {
-            const updatedFolders = await Promise.all(
-              unsupportedIds.map(async (folderId) => {
-                await waitForRealtimeJitter()
-                return dispatch(
-                  foldersApi.endpoints.getFolder.initiate(
-                    { projectName, folderId },
-                    { forceRefetch: true },
-                  ),
-                )
-                  .unwrap()
-                  .catch(() => null)
-              }),
-            )
-            updateCachedData((draft: any) => {
-              if (!draft || !Array.isArray(draft.folders)) return
-              updatedFolders.filter(Boolean).forEach((folder: any) => {
-                const index = draft.folders.findIndex((item: any) => item.id === folder.id)
-                if (index !== -1) draft.folders[index] = { ...draft.folders[index], ...folder }
+              draft.folders.forEach((folder: any, index: number) => {
+                const fetchedFolder = fetchedById.get(folder.id)
+                if (!fetchedFolder) return
+
+                if (createdFolderIds.has(folder.id)) {
+                  draft.folders[index] = { ...folder, ...fetchedFolder }
+                } else {
+                  const fields = unsupportedFields.get(folder.id) || new Set<string>()
+                  fields.forEach((field) => {
+                    folder[field] = fetchedFolder[field]
+                  })
+                }
+                fetchedById.delete(folder.id)
+              })
+
+              fetchedById.forEach((folder, folderId) => {
+                if (createdFolderIds.has(folderId)) draft.folders.push(folder)
               })
             })
           }

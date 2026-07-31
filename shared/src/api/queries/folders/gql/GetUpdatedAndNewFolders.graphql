@@ -1,4 +1,4 @@
-query GetNewFolders($projectName: String!, $folderIds: [String!]!, $first: Int) {
+query GetUpdatedAndNewFolders($projectName: String!, $folderIds: [String!]!, $first: Int) {
   project(name: $projectName) {
     folders(ids: $folderIds, first: $first) {
       edges {
