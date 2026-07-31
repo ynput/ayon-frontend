@@ -7,6 +7,45 @@ export const INBOX_REFERENCE_TYPES = ['mention', 'watching', 'relation']
 
 const IMPORTANT_REFERENCE_TYPES = ['mention', 'watching']
 
+// entity_path and entity_name are useless on inbox rows: user references have no entity_id,
+// so the path join yields NULL, and entity_name holds the recipient's user name.
+// activity_data.parents has no text column either - `like` casts the whole array to text
+// with ->>, so the folder names are matched inside the raw JSON.
+const TEXT_SEARCH_KEYS = [
+  'body',
+  'activity_data.origin.name',
+  'activity_data.origin.label',
+  'activity_data.parents',
+]
+
+const matchesAnyField = (term: string): QueryFilter => ({
+  operator: 'or',
+  conditions: TEXT_SEARCH_KEYS.map((key) => ({
+    key,
+    operator: 'like' as const,
+    value: `%${term}%`,
+  })),
+})
+
+// "050_0070 anim" must match folder AND task, so each word is required separately
+const expandTextSearch = (node: QueryCondition | QueryFilter): QueryCondition | QueryFilter => {
+  if ('key' in node) {
+    if (node.key !== 'body' || node.operator !== 'like') return node
+
+    const terms = String(node.value ?? '')
+      .replace(/^%|%$/g, '')
+      .split(/\s+/)
+      .filter(Boolean)
+
+    if (!terms.length) return node
+    if (terms.length === 1) return matchesAnyField(terms[0])
+
+    return { operator: 'and', conditions: terms.map(matchesAnyField) }
+  }
+
+  return { ...node, conditions: (node.conditions || []).map(expandTextSearch) }
+}
+
 type BuildInboxFilterArgs = {
   userName: string
   isActive: boolean
@@ -43,7 +82,7 @@ export const buildInboxFilter = ({
   }
 
   const translatedUiFilter = buildBackendFilterObject(uiFilter)
-  if (translatedUiFilter) conditions.push(translatedUiFilter)
+  if (translatedUiFilter) conditions.push(expandTextSearch(translatedUiFilter))
 
   return JSON.stringify({ operator: 'and', conditions })
 }

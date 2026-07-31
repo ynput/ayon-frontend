@@ -20,9 +20,14 @@ const Wrapper = styled.div`
     max-width: unset;
   }
 
+  /* the wrapper stays hoverable so the tooltip explains why the bar is dead */
   &.disabled {
     opacity: 0.5;
-    pointer-events: none;
+    cursor: not-allowed;
+
+    & > div {
+      pointer-events: none;
+    }
   }
 `
 
@@ -124,10 +129,16 @@ const InboxSearchFilter = ({
   const handleFilterChange = (newFilters: Filter[]) =>
     dateRange.wrapFilterChange(newFilters, localFilters, setLocalFilters)
 
+  // native title rather than data-tooltip: the bar spans the whole toolbar, so an
+  // anchored tooltip lands in its middle, while the browser draws title at the cursor
   return (
     <Wrapper
       className={isDisabled || isLoading ? 'disabled' : undefined}
-      title={isDisabled ? 'Select a project to search and filter' : undefined}
+      title={
+        isDisabled
+          ? 'Searching and filtering works on one project at a time. Select a project on the left to enable it.'
+          : undefined
+      }
     >
       <SearchFilter
         ref={searchFilterRef}
