@@ -70,16 +70,31 @@ const DELETE_OP_ORDER: DeletableEntityType[] = [
 ]
 const FOLDER_WITH_CHILDREN_CODE = 'delete-folder-with-children'
 
+type RecoverResult = 'recovered' | 'cancelled' | 'unhandled'
+
 type PendingDelete = {
   payload: DeleteConfirmPayload
   accept: () => Promise<void>
-  onError: (error: any) => void
+  // 'recovered' — force delete ran, 'cancelled' — user declined it, 'unhandled' — force does not apply
+  recover: (error: any) => Promise<RecoverResult>
+}
+
+type PendingForce = {
+  payload: DeleteConfirmPayload
+  resolve: (confirmed: boolean) => void
 }
 
 export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) => {
   const [operations] = useUpdateOverviewEntitiesMutation()
   const [fetchFolderDeleteInfo] = useLazyGetFolderDeleteInfoQuery()
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
+  const [pendingForce, setPendingForce] = useState<PendingForce | null>(null)
+
+  const confirmForce = useCallback(
+    (payload: DeleteConfirmPayload) =>
+      new Promise<boolean>((resolve) => setPendingForce({ payload, resolve })),
+    [],
+  )
 
   const deleteEntities = useCallback<DeleteEntitiesContextValue['deleteEntities']>(
     async (entities, options) => {
@@ -212,51 +227,73 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
           expectedName: single && (single.label || single.name || single.id),
         },
         accept: runDelete,
-        onError: (error: any) => {
-          if (error?.errorCodes?.includes(FOLDER_WITH_CHILDREN_CODE)) {
-            const confirmForce = window.confirm(
-              `Are you really sure you want to delete ${entityLabel} and all of its dependencies? This cannot be undone. (NOT RECOMMENDED)`,
-            )
-            if (confirmForce) {
-              runForceDelete()
-                .then(() => options?.onSuccess?.())
-                .catch((forceError: any) => {
-                  console.error('Failed to force delete entities:', forceError)
-                  toast.error(forceError?.error || 'Failed to delete entities')
-                })
-            }
-          }
+        recover: async (error: any): Promise<RecoverResult> => {
+          if (!error?.errorCodes?.includes(FOLDER_WITH_CHILDREN_CODE)) return 'unhandled'
+          const confirmed = await confirmForce({
+            entityLabel,
+            message: `Are you really sure you want to delete ${entityLabel} and all of its dependencies? This cannot be undone. (NOT RECOMMENDED)`,
+            childrenDetails: [],
+            expectedCounts: {},
+            deleteLabel: 'Force delete',
+          })
+          if (!confirmed) return 'cancelled'
+          await runForceDelete()
+          options?.onSuccess?.()
+          return 'recovered'
         },
       })
     },
-    [operations, fetchFolderDeleteInfo],
+    [operations, fetchFolderDeleteInfo, confirmForce],
   )
 
   const handleConfirm = useCallback(async () => {
     if (!pendingDelete) return
-    const { payload, accept, onError } = pendingDelete
+    const { payload, accept, recover } = pendingDelete
     setPendingDelete(null)
 
     const label = payload.entityLabel
     const toastId = toast.loading(`Deleting ${label}...`, { autoClose: false })
-    try {
-      await accept()
+    const succeed = () =>
       toast.update(toastId, {
         render: `${label} deleted`,
         type: 'success',
         autoClose: 5000,
         isLoading: false,
       })
+
+    try {
+      await accept()
+      succeed()
     } catch (error: any) {
+      // the first attempt failing is expected when a folder needs force — only toast
+      // the error once we know force was declined or failed
+      let failure = error
+      try {
+        const result = await recover(error)
+        if (result === 'recovered') return succeed()
+        if (result === 'cancelled') {
+          return toast.update(toastId, {
+            render: `${label} was not deleted`,
+            type: 'info',
+            autoClose: 5000,
+            isLoading: false,
+          })
+        }
+      } catch (forceError: any) {
+        console.error('Failed to force delete entities:', forceError)
+        failure = forceError
+      }
+
       const message =
-        typeof error === 'string' ? error : error?.message || `Error deleting ${label}`
+        typeof failure === 'string'
+          ? failure
+          : failure?.message || failure?.error || `Error deleting ${label}`
       toast.update(toastId, {
         render: message,
         type: 'error',
         autoClose: 5000,
         isLoading: false,
       })
-      onError(error)
     }
   }, [pendingDelete])
 
@@ -270,6 +307,19 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
           payload={pendingDelete.payload}
           onConfirm={handleConfirm}
           onCancel={() => setPendingDelete(null)}
+        />
+      )}
+      {pendingForce && (
+        <DeleteEntitiesConfirmDialog
+          payload={pendingForce.payload}
+          onConfirm={() => {
+            setPendingForce(null)
+            pendingForce.resolve(true)
+          }}
+          onCancel={() => {
+            setPendingForce(null)
+            pendingForce.resolve(false)
+          }}
         />
       )}
     </DeleteEntitiesContext.Provider>

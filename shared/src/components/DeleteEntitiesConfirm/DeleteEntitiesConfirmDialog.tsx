@@ -19,6 +19,8 @@ export type DeleteConfirmPayload = {
   // unless its children push the total above the threshold
   expectedName?: string
   deleteLabel?: string
+  // replaces the default "Are you sure…" line
+  message?: string
 }
 
 export type DeleteEntitiesConfirmDialogProps = {
@@ -43,6 +45,7 @@ export const DeleteEntitiesConfirmDialog = ({
     expectedCounts,
     expectedName,
     deleteLabel = 'Delete forever',
+    message,
   } = payload
 
   const [nameValue, setNameValue] = useState('')
@@ -138,6 +141,7 @@ export const DeleteEntitiesConfirmDialog = ({
       <DeleteConfirmContent
         entityLabel={entityLabel}
         childrenDetails={childrenDetails}
+        message={message}
         totalLine={
           expectedTotal > DELETE_CONFIRM_THRESHOLD
             ? // versions cascaded from products are not countable, so the total is a floor

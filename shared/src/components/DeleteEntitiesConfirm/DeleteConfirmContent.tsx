@@ -135,15 +135,17 @@ export type DeleteConfirmContentProps = {
   entityLabel: string
   childrenDetails: string[]
   totalLine?: string
+  message?: string
 }
 
 export const DeleteConfirmContent = ({
   entityLabel,
   childrenDetails,
   totalLine,
+  message,
 }: DeleteConfirmContentProps) => (
   <Wrapper>
-    <p>{`Are you sure you want to delete ${entityLabel}? This action cannot be undone.`}</p>
+    <p>{message || `Are you sure you want to delete ${entityLabel}? This action cannot be undone.`}</p>
     {childrenDetails.length > 0 && (
       <DetailsContainer>
         <BoldLabel>The following will also be affected:</BoldLabel>
