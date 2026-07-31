@@ -15,7 +15,6 @@ export interface TransformedInboxMessages {
   projectNames: string[]
   pageInfo: GetInboxMessagesQuery['inbox']['pageInfo']
 }
-;[]
 
 // the inbox resolver truncates in SQL, the activities resolver does not
 const BODY_LIMIT = 200

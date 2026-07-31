@@ -24,7 +24,7 @@ const patchUnreadCount = (dispatch: any, count: number | 'all', important: boole
 }
 
 const cacheArgsFor = (state: any, endpointName: string, matches: (args: any) => boolean): any[] =>
-  Object.values(state?.restApi?.queries || {})
+  Object.values(state?.[inboxApi.reducerPath]?.queries || {})
     .filter((entry: any) => entry?.endpointName === endpointName && matches(entry?.originalArgs))
     .map((entry: any) => entry.originalArgs)
 
@@ -133,7 +133,6 @@ const enhancedRest = inboxApi.enhanceEndpoints({
             //   the cache to add to (cleared/important/other tab)
             patchInbox({ active: !active, important: null }, (draft) => {
               // adding message to the new cache
-              console.log('adding message to new cache location')
               draft.messages.unshift(...messagesPatch)
             })
           } else {

@@ -4228,7 +4228,7 @@ export const GetInboxMessagesDocument = new TypedDocumentString(`
 export const GetInboxUnreadCountDocument = new TypedDocumentString(`
     query GetInboxUnreadCount($important: Boolean) {
   inbox(
-    last: 100
+    last: 500
     showActiveMessages: true
     showImportantMessages: $important
     showUnreadMessages: true

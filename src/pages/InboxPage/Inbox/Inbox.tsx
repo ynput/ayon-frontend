@@ -114,11 +114,14 @@ const Inbox = ({ filter }: InboxProps) => {
     [selectedProject, user, inboxFilter, isActive, isImportant, showUnreadOnly],
   )
 
-  // a stale url/storage value (renamed project, or a folder row id) would 404 the query
+  // a stale url/storage value (renamed project, or a folder row id) would 404 the query,
+  // so the project query waits until the name is known to exist
+  const isKnownProject = !!selectedProject && projects.some((p) => p.name === selectedProject)
+
   useEffect(() => {
     if (!selectedProject || globalIsLoading.projects) return
-    if (!projects.some((p) => p.name === selectedProject)) setSelectedProject(null)
-  }, [selectedProject, projects, globalIsLoading.projects, setSelectedProject])
+    if (!isKnownProject) setSelectedProject(null)
+  }, [selectedProject, isKnownProject, globalIsLoading.projects, setSelectedProject])
 
   // null, not false: false would ask the resolver for read messages only
   const unreadArg = isActive && showUnreadOnly ? true : null
@@ -127,7 +130,7 @@ const Inbox = ({ filter }: InboxProps) => {
     { last: last, active: isActive, important: isImportant, unread: unreadArg },
     { skip: isProjectMode },
   )
-  const projectQuery = useGetProjectInboxQuery(projectArgs, { skip: !isProjectMode })
+  const projectQuery = useGetProjectInboxQuery(projectArgs, { skip: !isKnownProject })
 
   const activeQuery = isProjectMode ? projectQuery : globalQuery
 
@@ -155,7 +158,6 @@ const Inbox = ({ filter }: InboxProps) => {
   const handleLoadMore = () => {
     if (!hasPreviousPage || isFetchingInbox || !messages.length) return
 
-    console.log('loading more messages...')
     setIsPaginating(true)
 
     if (isProjectMode) getProjectInbox({ ...projectArgs, cursor: lastCursor })
