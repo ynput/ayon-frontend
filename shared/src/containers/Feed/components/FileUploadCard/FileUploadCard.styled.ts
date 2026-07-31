@@ -89,7 +89,8 @@ export const Footer = styled.footer`
     text-overflow: ellipsis;
     white-space: nowrap;
     z-index: 20;
-    display: inherit;
+    display: flex;
+    align-items: center;
 
     .icon {
       font-size: inherit;
