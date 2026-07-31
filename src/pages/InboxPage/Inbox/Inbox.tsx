@@ -129,23 +129,34 @@ const Inbox = ({ filter }: InboxProps) => {
   )
   const projectQuery = useGetProjectInboxQuery(projectArgs, { skip: !isProjectMode })
 
+  const activeQuery = isProjectMode ? projectQuery : globalQuery
+
   const {
     data: { messages = [], projectNames = [], pageInfo } = {},
     isLoading: isLoadingInbox,
     isFetching: isFetchingInbox,
     error: errorInbox,
     refetch,
-  } = isProjectMode ? projectQuery : globalQuery
+  } = activeQuery
 
   const { hasPreviousPage, endCursor: lastCursor } = pageInfo || {}
 
   const [getInboxMessages] = useLazyGetInboxMessagesQuery()
   const [getProjectInbox] = useLazyGetProjectInboxQuery()
+
+  // pagination merges into the same cache entry, so it must not blank the list the way
+  // a project/tab/filter change does
+  const [isPaginating, setIsPaginating] = useState(false)
+  useEffect(() => {
+    if (!isFetchingInbox && isPaginating) setIsPaginating(false)
+  }, [isFetchingInbox, isPaginating])
+
   // load more messages
   const handleLoadMore = () => {
     if (!hasPreviousPage || isFetchingInbox || !messages.length) return
 
     console.log('loading more messages...')
+    setIsPaginating(true)
 
     if (isProjectMode) getProjectInbox({ ...projectArgs, cursor: lastCursor })
     else
@@ -161,7 +172,7 @@ const Inbox = ({ filter }: InboxProps) => {
   // in project mode the info is needed even when the filtered list comes back empty
   const infoProjectNames = isProjectMode ? [selectedProject as string] : projectNames
 
-  const { data: projectsInfo = {}, isLoading: isLoadingInfo } = useGetProjectsInfoQuery(
+  const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
     { projects: infoProjectNames },
     { skip: isLoadingInbox || !infoProjectNames?.length },
   )
@@ -378,7 +389,11 @@ const Inbox = ({ filter }: InboxProps) => {
     }
   }
 
-  const isLoadingAny = isLoadingInbox || isLoadingInfo || isRefreshing
+  // project info only feeds status colours, and it reloads on every project switch -
+  // gating the list on it flashes the placeholders a second time.
+  // Keyed on isFetching: RTK Query keeps the previous project's data while the new query
+  // runs, so isLoading, isSuccess and data all still describe the old project for ~500ms.
+  const isLoadingAny = (isFetchingInbox && !isPaginating) || isRefreshing
 
   // Cast placeholder messages to satisfy GroupedMessage shape for rendering
   const messagesData = isLoadingAny
