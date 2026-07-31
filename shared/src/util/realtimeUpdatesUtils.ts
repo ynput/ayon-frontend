@@ -1,4 +1,7 @@
-export const REALTIME_UPDATE_DEBOUNCE = 10000
+// @ts-ignore
+const isDev = import.meta.env.VITE_DEV === 'true'
+
+export const REALTIME_UPDATE_DEBOUNCE = isDev ? 500 : 10000
 export const REALTIME_REST_CALL_LIMIT = 25
 export const REALTIME_REST_JITTER = 1000
 
@@ -17,6 +20,13 @@ export function getSupportedEntityPatch(
   if (field === 'tags') {
     return {
       field: 'tags',
+      value: Array.isArray(value) ? value.map(String) : [],
+    }
+  }
+
+  if (field === 'assignees') {
+    return {
+      field: 'assignees',
       value: Array.isArray(value) ? value.map(String) : [],
     }
   }
