@@ -12,6 +12,8 @@ import useListContextMenu, {
   ListRowContextMenuBuilder,
 } from '@pages/ProjectListsPage/hooks/useListContextMenu'
 import ListFolderFormDialog from '../ListFolderFormDialog'
+import MoveToListDialog from '../MoveToListDialog'
+import type { MoveDialogPayload } from '@pages/ProjectListsPage/hooks/useListContextMenu'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 
 interface ListsTableProps {
@@ -50,7 +52,11 @@ const ListsTable: FC<ListsTableProps> = ({
   // unique menu id in picker mode so the dialog's header menu doesn't collide with the sidepanel's
   const pickerMenuId = useId()
 
-  const rowContextMenuBuildersAll = useListContextMenu(rowContextMenuBuilders)
+  // ✨ YN-0974: "Move list/folder" opens the MoveToListDialog (single-select folder picker)
+  const [moveDialog, setMoveDialog] = useState<MoveDialogPayload | null>(null)
+  const rowContextMenuBuildersAll = useListContextMenu(rowContextMenuBuilders, (payload) =>
+    setMoveDialog(payload),
+  )
   const sessionsLabel = useMemo(
     () => (isStoryboards ? 'Storyboards' : 'Review sessions'),
     [isStoryboards],
@@ -113,7 +119,9 @@ const ListsTable: FC<ListsTableProps> = ({
             }}
             hiddenButtons={hiddenButtons ?? (isReview ? ['filter'] : [])}
             hiddenMenuItemIds={
-              picker ? ['new-folder', 'delete', 'filter', ...(onCreateList ? [] : ['new-list'])] : []
+              picker
+                ? ['new-folder', 'delete', 'filter', ...(onCreateList ? [] : ['new-list'])]
+                : []
             }
             menuId={picker ? pickerMenuId : undefined}
             onCreateList={onCreateList}
@@ -143,6 +151,7 @@ const ListsTable: FC<ListsTableProps> = ({
       </SimpleTableProvider>
       <NewListDialogContainer />
       <ListFolderFormDialog />
+      {moveDialog && <MoveToListDialog {...moveDialog} onClose={() => setMoveDialog(null)} />}
     </>
   )
 }
