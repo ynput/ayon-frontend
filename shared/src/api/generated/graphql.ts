@@ -657,6 +657,7 @@ export type ProductNodeVersionsArgs = {
   calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
   calculateStatistics?: Scalars['Boolean']['input'];
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
+  featuredOnlyEntityType?: Scalars['String']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderFilter?: InputMaybe<Scalars['String']['input']>;
@@ -1027,6 +1028,7 @@ export type ProjectNodeVersionsArgs = {
   calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
   calculateStatistics?: Scalars['Boolean']['input'];
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
+  featuredOnlyEntityType?: Scalars['String']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderFilter?: InputMaybe<Scalars['String']['input']>;
@@ -1407,6 +1409,7 @@ export type TaskNodeVersionsArgs = {
   calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
   calculateStatistics?: Scalars['Boolean']['input'];
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
+  featuredOnlyEntityType?: Scalars['String']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderFilter?: InputMaybe<Scalars['String']['input']>;
@@ -2071,6 +2074,7 @@ export type GetProductsQueryVariables = Exact<{
   productFilter?: string | null | undefined;
   versionFilter?: string | null | undefined;
   taskFilter?: string | null | undefined;
+  folderFilter?: string | null | undefined;
   featuredVersionOrder?: Array<string> | string | null | undefined;
   search?: string | null | undefined;
   folderIds?: Array<string> | string | null | undefined;
@@ -2090,6 +2094,7 @@ export type GetProductsColumnStatsQueryVariables = Exact<{
   productFilter?: string | null | undefined;
   versionFilter?: string | null | undefined;
   taskFilter?: string | null | undefined;
+  folderFilter?: string | null | undefined;
   folderIds?: Array<string> | string | null | undefined;
   productIds?: Array<string> | string | null | undefined;
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
@@ -2105,6 +2110,7 @@ export type GetVersionsQueryVariables = Exact<{
   versionFilter?: string | null | undefined;
   productFilter?: string | null | undefined;
   taskFilter?: string | null | undefined;
+  folderFilter?: string | null | undefined;
   featuredOnly?: Array<string> | string | null | undefined;
   hasReviewables?: boolean | null | undefined;
   folderIds?: Array<string> | string | null | undefined;
@@ -2133,6 +2139,7 @@ export type GetVersionsByProductIdQueryVariables = Exact<{
   productIds: Array<string> | string;
   versionFilter?: string | null | undefined;
   taskFilter?: string | null | undefined;
+  folderFilter?: string | null | undefined;
   featuredOnly?: Array<string> | string | null | undefined;
   hasReviewables?: boolean | null | undefined;
   sortBy?: string | null | undefined;
@@ -2151,6 +2158,7 @@ export type GetVersionsColumnStatsQueryVariables = Exact<{
   versionFilter?: string | null | undefined;
   productFilter?: string | null | undefined;
   taskFilter?: string | null | undefined;
+  folderFilter?: string | null | undefined;
   folderIds?: Array<string> | string | null | undefined;
   versionIds?: Array<string> | string | null | undefined;
   productIds?: Array<string> | string | null | undefined;
@@ -3813,13 +3821,14 @@ export const GetLatestProductVersionDocument = new TypedDocumentString(`
 }
     `);
 export const GetProductsDocument = new TypedDocumentString(`
-    query GetProducts($projectName: String!, $productIds: [String!], $productFilter: String, $versionFilter: String, $taskFilter: String, $featuredVersionOrder: [String!], $search: String, $folderIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
+    query GetProducts($projectName: String!, $productIds: [String!], $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $featuredVersionOrder: [String!], $search: String, $folderIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     products(
       ids: $productIds
       filter: $productFilter
       versionFilter: $versionFilter
       taskFilter: $taskFilter
+      folderFilter: $folderFilter
       search: $search
       folderIds: $folderIds
       includeFolderChildren: true
@@ -3902,7 +3911,7 @@ fragment VersionBase on VersionNode {
   }
 }`);
 export const GetProductsColumnStatsDocument = new TypedDocumentString(`
-    query GetProductsColumnStats($projectName: String!, $productFilter: String, $versionFilter: String, $taskFilter: String, $folderIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
+    query GetProductsColumnStats($projectName: String!, $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $folderIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
   project(name: $projectName) {
     products(
       calculateSpecificStatistics: $targets
@@ -3910,6 +3919,7 @@ export const GetProductsColumnStatsDocument = new TypedDocumentString(`
       filter: $productFilter
       versionFilter: $versionFilter
       taskFilter: $taskFilter
+      folderFilter: $folderFilter
       folderIds: $folderIds
       includeFolderChildren: true
     ) {
@@ -3937,7 +3947,7 @@ export const GetProductsColumnStatsDocument = new TypedDocumentString(`
   distribution
 }`);
 export const GetVersionsDocument = new TypedDocumentString(`
-    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
+    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     versions(
       ids: $versionIds
@@ -3945,6 +3955,7 @@ export const GetVersionsDocument = new TypedDocumentString(`
       filter: $versionFilter
       productFilter: $productFilter
       taskFilter: $taskFilter
+      folderFilter: $folderFilter
       featuredOnly: $featuredOnly
       hasReviewables: $hasReviewables
       folderIds: $folderIds
@@ -4040,12 +4051,13 @@ export const GetVersionsAttribsDocument = new TypedDocumentString(`
 }
     `);
 export const GetVersionsByProductIdDocument = new TypedDocumentString(`
-    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String, $showComments: Boolean! = false) {
+    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $folderFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     versions(
       productIds: $productIds
       filter: $versionFilter
       taskFilter: $taskFilter
+      folderFilter: $folderFilter
       featuredOnly: $featuredOnly
       hasReviewables: $hasReviewables
       sortBy: $sortBy
@@ -4124,7 +4136,7 @@ fragment VersionExtended on VersionNode {
   }
 }`);
 export const GetVersionsColumnStatsDocument = new TypedDocumentString(`
-    query GetVersionsColumnStats($projectName: String!, $versionFilter: String, $productFilter: String, $taskFilter: String, $folderIds: [String!], $versionIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
+    query GetVersionsColumnStats($projectName: String!, $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $folderIds: [String!], $versionIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
   project(name: $projectName) {
     versions(
       calculateSpecificStatistics: $targets
@@ -4133,6 +4145,7 @@ export const GetVersionsColumnStatsDocument = new TypedDocumentString(`
       filter: $versionFilter
       productFilter: $productFilter
       taskFilter: $taskFilter
+      folderFilter: $folderFilter
       folderIds: $folderIds
       includeFolderChildren: true
     ) {

@@ -657,6 +657,7 @@ export type ProductNodeVersionsArgs = {
   calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
   calculateStatistics?: Scalars['Boolean']['input'];
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
+  featuredOnlyEntityType?: Scalars['String']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderFilter?: InputMaybe<Scalars['String']['input']>;
@@ -1027,6 +1028,7 @@ export type ProjectNodeVersionsArgs = {
   calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
   calculateStatistics?: Scalars['Boolean']['input'];
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
+  featuredOnlyEntityType?: Scalars['String']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderFilter?: InputMaybe<Scalars['String']['input']>;
@@ -1407,6 +1409,7 @@ export type TaskNodeVersionsArgs = {
   calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
   calculateStatistics?: Scalars['Boolean']['input'];
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
+  featuredOnlyEntityType?: Scalars['String']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderFilter?: InputMaybe<Scalars['String']['input']>;

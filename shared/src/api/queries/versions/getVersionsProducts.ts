@@ -210,6 +210,7 @@ export type GetGroupedVersionsListArgs = {
   versionFilter?: string
   productFilter?: string
   taskFilter?: string
+  folderFilter?: string
   folderIds?: string[]
   desc?: boolean
   sortBy?: string
@@ -580,6 +581,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                 versionFilter: arg.versionFilter,
                 productFilter: arg.productFilter,
                 taskFilter: arg.taskFilter,
+                folderFilter: arg.folderFilter,
                 folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
                 featuredOnly: arg.featuredOnly,
                 hasReviewables: arg.hasReviewables,
@@ -805,6 +807,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             getBaseFilters: () => ({
               versionFilter: arg.versionFilter,
               taskFilter: arg.taskFilter,
+              folderFilter: arg.folderFilter,
               productIds: arg.productIds,
             }),
             checkVersionInCache: (entityId, parentId) => {
@@ -1059,6 +1062,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                 versionFilter: arg.versionFilter,
                 productFilter: arg.productFilter,
                 taskFilter: arg.taskFilter,
+                folderFilter: arg.folderFilter,
                 folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
               }),
               checkVersionInCache: (entityId, parentId) => {
@@ -1154,6 +1158,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           versionFilter, // most of the time overridden by group filters
           productFilter,
           taskFilter,
+          folderFilter,
           folderIds,
           desc,
           sortBy,
@@ -1167,11 +1172,12 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           for (const group of groups) {
             const count = group.count || 500
 
-            const queryParams: GetVersionsQueryVariables = {
+            const queryParams = {
               projectName,
               // base filters
               productFilter,
               taskFilter,
+              folderFilter,
               versionFilter,
               // specific group filter
               [groupFilterKey]: group.filter,
@@ -1179,9 +1185,8 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               sortBy: sortBy,
               featuredOnly,
               hasReviewables,
-              // @ts-expect-error - group param used later on
               group: group.value,
-            }
+            } as GetVersionsQueryVariables & { group: string }
 
             if (desc) {
               queryParams.last = count
@@ -1190,9 +1195,12 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             }
 
             const promise = api.dispatch(
-              enhancedVersionsPageApi.endpoints.GetVersions.initiate(queryParams, {
-                forceRefetch: true,
-              }),
+              enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+                queryParams as GetVersionsQueryVariables,
+                {
+                  forceRefetch: true,
+                },
+              ),
             )
             promises.push(promise)
           }
@@ -1271,6 +1279,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               versionFilter: arg.versionFilter,
               productFilter: arg.productFilter,
               taskFilter: arg.taskFilter,
+              folderFilter: arg.folderFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
               sortBy: arg.sortBy,
               featuredOnly: arg.featuredOnly,

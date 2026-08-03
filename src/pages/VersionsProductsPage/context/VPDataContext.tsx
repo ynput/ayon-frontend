@@ -90,6 +90,7 @@ interface VersionsDataContextValue {
     productFilter?: string
     versionFilter?: string
     taskFilter?: string
+    folderFilter?: string
     folderIds?: string[]
     versionIds?: string[]
     productIds?: string[]
@@ -148,6 +149,7 @@ export type QueryArguments = {
   versionFilter?: string
   productFilter?: string
   taskFilter?: string
+  folderFilter?: string
   sortBy?: string
   desc: boolean
   featuredOnly?: string[]
@@ -210,8 +212,11 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     version: versionFilter = EMPTY_FILTER,
     product: productFilter = EMPTY_FILTER,
     task: taskFilter = EMPTY_FILTER,
+    folder: folderFilter = EMPTY_FILTER,
   } = useMemo(() => {
-    return splitFiltersByScope(filtersWithoutExtracted, ['version', 'product', 'task'])
+    return splitFiltersByScope(filtersWithoutExtracted, ['version', 'product', 'task', 'folder'], {
+      fallbackScope: 'version',
+    })
   }, [filtersWithoutExtracted])
 
   const { updateExpanded, expandedIds } = useExpandedState({
@@ -227,7 +232,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   })
 
   // Separate slicer filters into different types
-  const vpValidScopes: ('version' | 'product' | 'task')[] = ['version', 'product', 'task']
+  const vpValidScopes: ('version' | 'product' | 'task' | 'folder')[] = [
+    'version',
+    'product',
+    'task',
+    'folder',
+  ]
   const attribScopeMap = useMemo(
     () =>
       attribFields.reduce<Record<string, string>>((acc, field) => {
@@ -242,6 +252,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     version: [slicerVersionFilter],
     product: [slicerProductFilter],
     task: [slicerTaskFilter],
+    folder: [slicerFolderFilter],
   } = useMemo(() => {
     return splitClientFiltersByScope(sliceFilter ? [sliceFilter] : null, vpValidScopes, {
       status: 'version',
@@ -249,6 +260,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       productType: 'product',
       assignees: 'task',
       author: 'version',
+      folderType: 'folder',
       ...attribScopeMap,
     })
   }, [sliceFilter, attribScopeMap])
@@ -279,11 +291,20 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     queryFilters: taskFilter,
     sliceFilter: slicerTaskFilter,
   })
+  const combinedFolderFilter = useQueryFilters({
+    queryFilters: folderFilter,
+    sliceFilter: slicerFolderFilter,
+    config: { searchKey: 'name' },
+  })
 
   // same base filters WITHOUT the slice merged in — used for slicer value counts
   const baseVersionFilter = useQueryFilters({ queryFilters: versionFilter })
   const baseProductFilter = useQueryFilters({ queryFilters: productFilter })
   const baseTaskFilter = useQueryFilters({ queryFilters: taskFilter })
+  const baseFolderFilter = useQueryFilters({
+    queryFilters: folderFilter,
+    config: { searchKey: 'name' },
+  })
 
   // When entity list has task IDs, merge them into the task filter
   const entityListTaskFilterString = useMemo(() => {
@@ -314,6 +335,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       versionFilter: baseVersionFilter.filterString,
       productFilter: baseProductFilter.filterString,
       taskFilter: baseTaskFilter.filterString,
+      folderFilter: baseFolderFilter.filterString,
       folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
       versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
       productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
@@ -323,6 +345,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       baseVersionFilter.filterString,
       baseProductFilter.filterString,
       baseTaskFilter.filterString,
+      baseFolderFilter.filterString,
       slicerFolderIds,
       entityIds.versionIds,
       entityIds.productIds,
@@ -337,6 +360,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       versionFilter: combinedVersionFilter.filterString,
       productFilter: combinedProductFilter.filterString,
       taskFilter: entityListTaskFilterString,
+      folderFilter: combinedFolderFilter.filterString,
       folderIds: slicerFolderIds,
       versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
       productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
@@ -349,6 +373,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       combinedVersionFilter.filterString,
       combinedProductFilter.filterString,
       entityListTaskFilterString,
+      combinedFolderFilter.filterString,
       slicerFolderIds,
       entityIds.versionIds,
       entityIds.productIds,
@@ -371,6 +396,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     productFilter: combinedProductFilter.filterString,
     versionFilter: combinedVersionFilter.filterString,
     taskFilter: entityListTaskFilterString,
+    folderFilter: combinedFolderFilter.filterString,
     folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
     versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
     productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
@@ -491,6 +517,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     projectName,
     versionFilters: combinedVersionFilter.combinedFilters,
     taskFilters: combinedTaskFilter.combinedFilters,
+    folderFilter: combinedFolderFilter.filterString,
     modules,
     versionArguments,
     expanded,
@@ -513,6 +540,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     projectName: versionArguments.projectName,
     productIds: expandedIds,
     versionFilter: combinedVersionFilter.filterString,
+    folderFilter: combinedFolderFilter.filterString,
     sortBy: versionArguments.sortBy,
     desc: versionArguments.desc,
     featuredOnly: versionArguments.featuredOnly,
@@ -677,6 +705,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       productFilter: combinedProductFilter.filterString,
       versionFilter: combinedVersionFilter.filterString,
       taskFilter: entityListTaskFilterString,
+      folderFilter: combinedFolderFilter.filterString,
       // empty array means "match nothing" backend-side — omit when no slice
       folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
       versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,

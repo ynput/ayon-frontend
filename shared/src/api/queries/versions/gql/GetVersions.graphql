@@ -5,6 +5,7 @@ query GetVersions(
   $versionFilter: String
   $productFilter: String
   $taskFilter: String
+  $folderFilter: String
   $featuredOnly: [String!]
   $hasReviewables: Boolean
   $folderIds: [String!]
@@ -23,6 +24,7 @@ query GetVersions(
       filter: $versionFilter
       productFilter: $productFilter
       taskFilter: $taskFilter
+      folderFilter: $folderFilter
       featuredOnly: $featuredOnly
       hasReviewables: $hasReviewables
       folderIds: $folderIds

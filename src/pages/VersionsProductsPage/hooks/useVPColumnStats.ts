@@ -21,6 +21,7 @@ type Params = {
   productFilter?: string
   versionFilter?: string
   taskFilter?: string
+  folderFilter?: string
   folderIds?: string[]
   versionIds?: string[]
   productIds?: string[]
@@ -30,6 +31,7 @@ export const useVPColumnStats = ({
   productFilter,
   versionFilter,
   taskFilter,
+  folderFilter,
   folderIds,
   versionIds,
   productIds,
@@ -63,13 +65,7 @@ export const useVPColumnStats = ({
             ? ['product_base_type']
             : [],
       }),
-    [
-      attribFields,
-      columnVisibility,
-      defaultColumnVisibility,
-      columnSummaries,
-      columnSummaryScopes,
-    ],
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
   const versionTargets = useMemo(
     () =>
@@ -81,13 +77,7 @@ export const useVPColumnStats = ({
         columnSummaries,
         columnSummaryScopes,
       }),
-    [
-      attribFields,
-      columnVisibility,
-      defaultColumnVisibility,
-      columnSummaries,
-      columnSummaryScopes,
-    ],
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
 
   const columnStatsBaseArgs = {
@@ -95,6 +85,7 @@ export const useVPColumnStats = ({
     productFilter,
     versionFilter,
     taskFilter,
+    folderFilter,
     folderIds,
     versionIds,
     productIds,

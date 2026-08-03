@@ -6910,6 +6910,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "featuredOnlyEntityType",
+                "description": "\nSpecify entity type to group featured versions\n(either product or folder).\n",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"product\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filter",
                 "description": "Filter tasks using QueryFilter",
                 "type": {
@@ -10701,6 +10717,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "featuredOnlyEntityType",
+                "description": "\nSpecify entity type to group featured versions\n(either product or folder).\n",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"product\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filter",
                 "description": "Filter tasks using QueryFilter",
                 "type": {
@@ -14464,6 +14496,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "featuredOnlyEntityType",
+                "description": "\nSpecify entity type to group featured versions\n(either product or folder).\n",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"product\"",
                 "isDeprecated": false,
                 "deprecationReason": null
               },
