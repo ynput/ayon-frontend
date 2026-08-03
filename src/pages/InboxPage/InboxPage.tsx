@@ -1,6 +1,7 @@
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import Inbox from './Inbox/Inbox'
+import { INBOX_PROJECT_PARAM } from './hooks/useInboxProject'
 import { useGetInboxUnreadCountQuery } from '@queries/inbox/getInbox'
 import { UnreadCount } from './Inbox/Inbox.styled'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
@@ -25,10 +26,16 @@ const InboxPage = () => {
   const { data: importantUnreadCount } = useGetInboxUnreadCountQuery({ important: true })
   const { data: otherUnreadCount } = useGetInboxUnreadCountQuery({ important: false })
 
+  // tab links replace the whole URL, so the selected project must be carried over
+  const inboxProject = new URLSearchParams(useLocation().search).get(INBOX_PROJECT_PARAM)
+  const tabSearch = inboxProject
+    ? `?${INBOX_PROJECT_PARAM}=${encodeURIComponent(inboxProject)}`
+    : ''
+
   const links: InboxLink[] = [
     {
       name: 'Important',
-      path: '/inbox/important',
+      path: '/inbox/important' + tabSearch,
       module: 'important',
       endContent: !!importantUnreadCount && (
         <UnreadCount className={'important'}>
@@ -40,7 +47,7 @@ const InboxPage = () => {
     },
     {
       name: 'Other',
-      path: '/inbox/other',
+      path: '/inbox/other' + tabSearch,
       module: 'other',
       endContent: !!otherUnreadCount && (
         <UnreadCount>{otherUnreadCount > 99 ? '99+' : otherUnreadCount}</UnreadCount>
@@ -49,7 +56,7 @@ const InboxPage = () => {
     },
     {
       name: 'Cleared',
-      path: '/inbox/cleared',
+      path: '/inbox/cleared' + tabSearch,
       module: 'cleared',
     },
   ]

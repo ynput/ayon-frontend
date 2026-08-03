@@ -6,14 +6,14 @@ const STORAGE_KEY = 'inbox-selected-project'
 
 // not `project`: DetailsPanelContext reads that one together with type + id to open an
 // entity, so writing the inbox selection into it breaks the details panel deep link
-const PARAM_KEY = 'inboxProject'
+export const INBOX_PROJECT_PARAM = 'inboxProject'
 
 // Selected project lives in the URL so it can be shared, and in local storage
 // so a fresh visit lands back on the project the user last looked at.
 const useInboxProject = (
   enabled = true,
 ): [string | null, (projectName: string | null) => void] => {
-  const [urlProject, setUrlProject] = useQueryParam<string | undefined>(PARAM_KEY)
+  const [urlProject, setUrlProject] = useQueryParam<string | undefined>(INBOX_PROJECT_PARAM)
   const [entityProject] = useQueryParam<string | undefined>('project')
   const [storedProject, setStoredProject] = useLocalStorage<string | null>(STORAGE_KEY, null)
 
@@ -28,7 +28,7 @@ const useInboxProject = (
 
     const fallback = entityProject ?? storedProject
     if (fallback) setUrlProject(fallback, 'replaceIn')
-  }, [enabled])
+  }, [enabled, urlProject, entityProject, storedProject, setUrlProject])
 
   const setProject = useCallback(
     (projectName: string | null) => {

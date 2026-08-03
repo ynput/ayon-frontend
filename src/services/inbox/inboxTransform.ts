@@ -87,15 +87,13 @@ export const mergeInboxMessages = (
   const { messages = [], projectNames = [], pageInfo } = newCache
   const { messages: lastMessages = [], projectNames: lastProjectNames = [] } = currentCache
 
-  const newMessages = [
-    ...lastMessages,
-    ...messages.filter(
-      (m) => !lastMessages.some((lm: InboxMessage) => lm.referenceId === m.referenceId),
-    ),
-  ]
+  const cachedIds = new Set(lastMessages.map((m: InboxMessage) => m.referenceId))
+  const newMessages = [...lastMessages, ...messages.filter((m) => !cachedIds.has(m.referenceId))]
+
+  const cachedProjects = new Set(lastProjectNames)
   const newProjectNames = [
     ...lastProjectNames,
-    ...projectNames.filter((p: string) => !lastProjectNames.includes(p)),
+    ...projectNames.filter((p: string) => !cachedProjects.has(p)),
   ]
 
   return {

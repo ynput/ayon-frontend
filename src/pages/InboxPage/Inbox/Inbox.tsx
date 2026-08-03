@@ -1,6 +1,6 @@
 import InboxMessage from '../InboxMessage/InboxMessage'
 import * as Styled from './Inbox.styled'
-import { useEffect, useMemo, useRef, useState, MouseEvent, KeyboardEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, MouseEvent, KeyboardEvent } from 'react'
 import clsx from 'clsx'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { useDispatch } from 'react-redux'
@@ -10,10 +10,7 @@ import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
 // Queries
 import { useGetInboxMessagesQuery, useLazyGetInboxMessagesQuery } from '@queries/inbox/getInbox'
-import {
-  useGetProjectInboxQuery,
-  useLazyGetProjectInboxQuery,
-} from '@queries/inbox/getProjectInbox'
+import { useGetProjectInboxInfiniteInfiniteQuery } from '@queries/inbox/getProjectInbox'
 import { useGetProjectsInfoQuery } from '@shared/api'
 import type { QueryFilter } from '@shared/api'
 // Components
@@ -22,6 +19,7 @@ import { SplitterPanel } from 'primereact/splitter'
 import EnableNotifications from '@components/EnableNotifications'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import ProjectsList from '@containers/ProjectsList/ProjectsList'
+import type { Hidden } from '@containers/ProjectsList/hooks/useProjectsListMenuItems'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 import InboxSearchFilter from '../components/InboxSearchFilter'
 // Hooks
@@ -63,6 +61,19 @@ const filters: Record<InboxFilter, InboxFilterArgs> = {
   important: { active: true, important: true },
   other: { active: true, important: false },
   cleared: { active: false, important: null },
+}
+
+// the panel is a picker here, so every project/folder management action is hidden
+const HIDDEN_PROJECT_ACTIONS: Hidden = {
+  'add-project': true,
+  'archive-project': true,
+  'delete-project': true,
+  'move-project': true,
+  'create-folder': true,
+  'rename-folder': true,
+  'edit-folder': true,
+  'delete-folder': true,
+  'edit-label': true,
 }
 
 interface InboxProps {
@@ -107,7 +118,6 @@ const Inbox = ({ filter }: InboxProps) => {
         isUnread: isActive && showUnreadOnly,
         uiFilter: inboxFilter,
       }),
-      last,
       active: isActive,
       important: isImportant,
     }),
@@ -130,45 +140,61 @@ const Inbox = ({ filter }: InboxProps) => {
     { last: last, active: isActive, important: isImportant, unread: unreadArg },
     { skip: isProjectMode },
   )
-  const projectQuery = useGetProjectInboxQuery(projectArgs, { skip: !isKnownProject })
+  const projectQuery = useGetProjectInboxInfiniteInfiniteQuery(projectArgs, {
+    skip: !isKnownProject,
+  })
 
   const activeQuery = isProjectMode ? projectQuery : globalQuery
 
   const {
-    data: { messages = [], projectNames = [], pageInfo } = {},
     isLoading: isLoadingInbox,
     isFetching: isFetchingInbox,
     error: errorInbox,
     refetch,
   } = activeQuery
 
-  const { hasPreviousPage, endCursor: lastCursor } = pageInfo || {}
+  const { hasNextPage, fetchNextPage, isFetchingNextPage } = projectQuery
+
+  const projectMessages = useMemo(
+    () => (projectQuery.data?.pages || []).flatMap((page) => page.messages),
+    [projectQuery.data],
+  )
+
+  const { messages: globalMessages = [], projectNames = [], pageInfo } = globalQuery.data || {}
+  const messages = isProjectMode ? projectMessages : globalMessages
+  const hasMore = isProjectMode ? !!hasNextPage : !!pageInfo?.hasPreviousPage
 
   const [getInboxMessages] = useLazyGetInboxMessagesQuery()
-  const [getProjectInbox] = useLazyGetProjectInboxQuery()
 
   // pagination merges into the same cache entry, so it must not blank the list the way
   // a project/tab/filter change does
-  const [isPaginating, setIsPaginating] = useState(false)
+  const [isPaginatingGlobal, setIsPaginatingGlobal] = useState(false)
   useEffect(() => {
-    if (!isFetchingInbox && isPaginating) setIsPaginating(false)
-  }, [isFetchingInbox, isPaginating])
+    if (!isFetchingInbox && isPaginatingGlobal) setIsPaginatingGlobal(false)
+  }, [isFetchingInbox, isPaginatingGlobal])
+
+  const isPaginating = isProjectMode ? isFetchingNextPage : isPaginatingGlobal
 
   // load more messages
   const handleLoadMore = () => {
-    if (!hasPreviousPage || isFetchingInbox || !messages.length) return
+    if (!hasMore || !messages.length) return
 
-    setIsPaginating(true)
+    if (isProjectMode) {
+      if (isFetchingNextPage) return
+      fetchNextPage()
+      return
+    }
 
-    if (isProjectMode) getProjectInbox({ ...projectArgs, cursor: lastCursor })
-    else
-      getInboxMessages({
-        last,
-        active: isActive,
-        important: isImportant,
-        unread: unreadArg,
-        cursor: lastCursor,
-      })
+    if (isFetchingInbox) return
+
+    setIsPaginatingGlobal(true)
+    getInboxMessages({
+      last,
+      active: isActive,
+      important: isImportant,
+      unread: unreadArg,
+      cursor: pageInfo?.endCursor,
+    })
   }
 
   // in project mode the info is needed even when the filtered list comes back empty
@@ -189,7 +215,7 @@ const Inbox = ({ filter }: InboxProps) => {
   const messagesSortedByDate = useMemo(
     () =>
       [...messages].sort((a, b) =>
-        isActive ? compareAsc(new Date(b.createdAt), new Date(a.createdAt)) : 0,
+        isActive ? compareAsc(new Date(b.createdAt as string), new Date(a.createdAt as string)) : 0,
       ),
     [messages, isActive],
   )
@@ -213,6 +239,17 @@ const Inbox = ({ filter }: InboxProps) => {
     const firstChild = listRef.current?.firstElementChild as HTMLElement | null
     firstChild?.focus()
   }, [listRef, isLoadingInbox, filter, selectedProject])
+
+  const handleProjectSelect = useCallback(
+    (ids: string[]): void => {
+      // clicking the selected row clears it, which returns to the cross-project inbox
+      if (!ids.length) return setSelectedProject(null)
+      // folder rows are group headers, their ids are not project names
+      const projectName = ids.find((id) => !parseProjectFolderRowId(id))
+      if (projectName) setSelectedProject(projectName)
+    },
+    [setSelectedProject],
+  )
 
   const handleToggleReadMessage = (id: string): void => {
     // get all the messages in the group
@@ -593,14 +630,9 @@ const Inbox = ({ filter }: InboxProps) => {
           <SplitterPanel size={18} style={{ minWidth: 180 }}>
             <ProjectsList
               selection={selectedProject ? [selectedProject] : []}
-              onSelect={(ids: string[]) => {
-                // clicking the selected row clears it, which returns to the cross-project inbox
-                if (!ids.length) return setSelectedProject(null)
-                // folder rows are group headers, their ids are not project names
-                const projectName = ids.find((id) => !parseProjectFolderRowId(id))
-                if (projectName) setSelectedProject(projectName)
-              }}
+              onSelect={handleProjectSelect}
               allowEmptySelection
+              hidden={HIDDEN_PROJECT_ACTIONS}
             />
           </SplitterPanel>
           <SplitterPanel size={82} style={{ overflow: 'hidden' }}>
@@ -650,7 +682,7 @@ const Inbox = ({ filter }: InboxProps) => {
                       customBody={group.body}
                     />
                   ))}
-                  {hasPreviousPage && !isLoadingInbox && !!messages.length && (
+                  {hasMore && !isLoadingInbox && !!messages.length && (
                     <InView
                       onChange={(inView) => inView && handleLoadMore()}
                       rootMargin={'0px 0px 500px 0px'}

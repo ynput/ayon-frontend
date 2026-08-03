@@ -481,12 +481,22 @@ const useProjectsListMenuItems = ({
         },
       ]
 
-      return allItems.filter((item) => {
+      // dividers around a section whose items are all hidden would render as dangling <hr>s
+      const visible = allItems.reduce<MenuItem[]>((acc, item) => {
         if (item.id === 'divider') {
-          return dividers
+          if (dividers && acc.length && acc[acc.length - 1].id !== 'divider') acc.push(item)
+          return acc
         }
-        return isMenuItemEnabled(item.id as keyof NonNullable<MenuItemProps['hidden']>, hidden)
-      })
+        if (item.hidden) return acc
+        if (isMenuItemEnabled(item.id as keyof NonNullable<MenuItemProps['hidden']>, hidden)) {
+          acc.push(item)
+        }
+        return acc
+      }, [])
+
+      if (visible[visible.length - 1]?.id === 'divider') visible.pop()
+
+      return visible
     },
     [
       pinned,

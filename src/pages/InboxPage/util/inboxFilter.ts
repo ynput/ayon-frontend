@@ -16,19 +16,20 @@ const stripUiKey = (filter: QueryFilter | undefined, key: string): QueryFilter |
     conditions: (filter.conditions || []).filter((c) => !('key' in c) || c.key !== key),
   }
 
+const getSelectedReasons = (uiFilter: QueryFilter | undefined): string[] =>
+  (uiFilter?.conditions || []).flatMap((c) =>
+    'key' in c && c.key === REASON_FILTER_KEY && Array.isArray(c.value)
+      ? (c.value as string[])
+      : [],
+  )
+
 export const getInboxReferenceTypes = (
   uiFilter: QueryFilter | undefined,
   isImportant: boolean | null,
 ): string[] => {
   const allowed = isImportant === true ? IMPORTANT_REFERENCE_TYPES : INBOX_REFERENCE_TYPES
 
-  const selected = (uiFilter?.conditions || []).flatMap((c) =>
-    'key' in c && c.key === REASON_FILTER_KEY && Array.isArray(c.value)
-      ? (c.value as string[])
-      : [],
-  )
-
-  const valid = selected.filter((type) => allowed.includes(type))
+  const valid = getSelectedReasons(uiFilter).filter((type) => allowed.includes(type))
   return valid.length ? valid : allowed
 }
 
@@ -135,6 +136,17 @@ export const buildInboxFilter = ({
     })
   }
 
+  // assignments are mention references too, so the Mentioned reason must stay comments-only
+  if (getSelectedReasons(uiFilter).includes('mention')) {
+    conditions.push({
+      operator: 'or',
+      conditions: [
+        { key: 'reference_type', operator: 'ne', value: 'mention' },
+        { key: 'activity_type', operator: 'eq', value: 'comment' },
+      ],
+    })
+  }
+
   const translatedUiFilter = buildBackendFilterObject(stripUiKey(uiFilter, REASON_FILTER_KEY))
   if (translatedUiFilter) conditions.push(expandTextSearch(translatedUiFilter))
 
@@ -147,6 +159,7 @@ export const buildInboxFilter = ({
 const INBOX_ACTIVITY_TYPES: Record<string, string[]> = {
   comments: ['comment'],
   versions: ['version.publish', 'reviewable'],
+  reviews: ['version.review'],
   updates: [
     'status.change',
     'assignee.add',

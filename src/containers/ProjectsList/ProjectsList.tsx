@@ -5,6 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import buildProjectsTableData, { buildProjectFolderRowId } from './buildProjectsTableData'
 import { MENU_ID } from './ProjectsListTableHeader'
 import useProjectMenuController from './hooks/useProjectMenuController'
+import type { Hidden } from './hooks/useProjectsListMenuItems'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { useQueryParam } from 'use-query-params'
 import { useLocalStorage } from '@shared/hooks'
@@ -22,6 +23,7 @@ interface ProjectsListProps {
   allowEmptySelection?: boolean
   onNewProject?: () => void
   onNoProjectSelected?: (projectName: string) => void
+  hidden?: Hidden
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
   }
@@ -34,6 +36,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
   allowEmptySelection,
   onNewProject,
   onNoProjectSelected,
+  hidden,
   pt,
 }) => {
   // GET USER PREFERENCES (moved to hook)
@@ -198,6 +201,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     showArchived,
     onSelectAll: toggleSelectAll,
     onShowArchivedToggle,
+    hidden,
     onFolderCreated: handleFolderCreated,
     onFoldersCreated: handleFoldersCreated,
   })
@@ -225,7 +229,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         onOpenProject={onOpenProject}
         enableClickToDeselect={allowEmptySelection}
         title="Projects"
-        showAddProject={canCreateProject}
+        showAddProject={canCreateProject && !hidden?.['add-project']}
         onNewProject={onNewProject}
         toggleMenu={toggleMenu}
         onSelectAll={toggleSelectAll}
@@ -241,7 +245,10 @@ const ProjectsList: FC<ProjectsListProps> = ({
         pt={pt}
       />
       <ProjectFolderFormDialog {...folderDialogProps} />
-      <ProjectsShortcuts onOpenFolderDialog={handleOpenFolderDialog} disabled={!powerLicense} />
+      <ProjectsShortcuts
+        onOpenFolderDialog={handleOpenFolderDialog}
+        disabled={!powerLicense || !!hidden?.['create-folder']}
+      />
     </>
   )
 }

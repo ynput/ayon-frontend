@@ -2,7 +2,7 @@ import { toast } from 'react-toastify'
 import { inboxApi, ManageInboxItemApiArg } from '@shared/api'
 import { current } from '@reduxjs/toolkit'
 import { enhancedInboxGraphql } from './getInbox'
-import { projectInboxApi, type GetProjectInboxArgs } from './getProjectInbox'
+import { projectInboxApi, type ProjectInboxInfiniteArgs } from './getProjectInbox'
 
 // add some extra types for the patching
 export interface Arg extends ManageInboxItemApiArg {
@@ -30,9 +30,9 @@ const cacheArgsFor = (state: any, endpointName: string, matches: (args: any) => 
 
 // The project inbox is cached per filter combination, so the entries to patch can
 // only be found by walking the cache and matching on the project.
-const getProjectInboxArgs = (state: any, projectName?: string): GetProjectInboxArgs[] =>
+const getProjectInboxArgs = (state: any, projectName?: string): ProjectInboxInfiniteArgs[] =>
   projectName
-    ? cacheArgsFor(state, 'getProjectInbox', (args) => args?.projectName === projectName)
+    ? cacheArgsFor(state, 'getProjectInboxInfinite', (args) => args?.projectName === projectName)
     : []
 
 // The cross-project inbox is keyed by unread as well, so a hardcoded arg triple
@@ -82,11 +82,13 @@ const enhancedRest = inboxApi.enhanceEndpoints({
 
         const projectArgs = getProjectInboxArgs(getState(), projectName)
         const patchProjectInbox = (
-          args: GetProjectInboxArgs,
-          recipe: (draft: { messages: any[] }) => void,
+          args: ProjectInboxInfiniteArgs,
+          recipe: (draft: { pages: { messages: any[] }[] }) => void,
         ) => {
           patches.push(
-            dispatch(projectInboxApi.util.updateQueryData('getProjectInbox', args, recipe as any)),
+            dispatch(
+              projectInboxApi.util.updateQueryData('getProjectInboxInfinite', args, recipe as any),
+            ),
           )
         }
 
@@ -157,9 +159,11 @@ const enhancedRest = inboxApi.enhanceEndpoints({
             .filter((args) => args.active === active)
             .forEach((args) =>
               patchProjectInbox(args, (draft) => {
-                draft.messages = all
-                  ? []
-                  : draft.messages.filter((m: any) => !ids.includes(m.referenceId))
+                draft.pages.forEach((page) => {
+                  page.messages = all
+                    ? []
+                    : page.messages.filter((m: any) => !ids.includes(m.referenceId))
+                })
               }),
             )
           if (projectName) {
@@ -184,13 +188,15 @@ const enhancedRest = inboxApi.enhanceEndpoints({
 
           projectArgs.forEach((args) =>
             patchProjectInbox(args, (draft) => {
-              for (const id of ids) {
-                const messageIndex = draft.messages.findIndex((m: any) => m.referenceId === id)
-                if (messageIndex !== -1) {
-                  draft.messages[messageIndex] = {
-                    ...draft.messages[messageIndex],
-                    read: newRead,
-                    active: newActive,
+              for (const page of draft.pages) {
+                for (const id of ids) {
+                  const messageIndex = page.messages.findIndex((m: any) => m.referenceId === id)
+                  if (messageIndex !== -1) {
+                    page.messages[messageIndex] = {
+                      ...page.messages[messageIndex],
+                      read: newRead,
+                      active: newActive,
+                    }
                   }
                 }
               }

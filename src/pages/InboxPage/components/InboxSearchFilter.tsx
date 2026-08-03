@@ -41,7 +41,6 @@ const ORIGIN_TYPE_VALUES = [
   { id: 'task', label: 'Task', icon: 'check_circle' },
   { id: 'version', label: 'Version', icon: 'layers' },
   { id: 'folder', label: 'Folder', icon: 'folder' },
-  { id: 'product', label: 'Product', icon: 'inventory_2' },
 ]
 
 interface InboxSearchFilterProps {
@@ -83,6 +82,7 @@ const InboxSearchFilter = ({
     return [
       boolean('comments', 'Comments', 'chat'),
       boolean('versions', 'Versions', 'layers'),
+      boolean('reviews', 'Reviews', 'task_alt'),
       boolean('updates', 'Updates', 'arrow_circle_right'),
       boolean('checklists', 'Checklists', 'check_circle'),
       boolean('has_attachments', 'Attachments', 'attach_file'),
@@ -164,11 +164,7 @@ const InboxSearchFilter = ({
   return (
     <Wrapper
       className={isDisabled || isLoading ? 'disabled' : undefined}
-      data-tooltip={
-        isDisabled
-          ? 'Searching and filtering works on one project at a time. Select a project on the left to enable it.'
-          : undefined
-      }
+      data-tooltip={isDisabled ? 'Select a project to enable filtering' : undefined}
       data-tooltip-position="bottom"
       data-tooltip-delay={0}
     >
