@@ -1842,6 +1842,7 @@ export type GetListItemsQueryVariables = Exact<{
   last?: number | null | undefined;
   sortBy?: string | null | undefined;
   filter?: string | null | undefined;
+  search?: string | null | undefined;
   showComments?: boolean;
 }>;
 
@@ -1859,6 +1860,7 @@ export type GetListItemsColumnStatsQueryVariables = Exact<{
   projectName: string;
   listId: string;
   filter?: string | null | undefined;
+  search?: string | null | undefined;
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
 }>;
 
@@ -3138,7 +3140,7 @@ export const GetProductVersionsDocument = new TypedDocumentString(`
 }
     `);
 export const GetListItemsDocument = new TypedDocumentString(`
-    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String, $showComments: Boolean! = false) {
+    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String, $search: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     entityLists(ids: [$listId]) {
       pageInfo {
@@ -3156,6 +3158,7 @@ export const GetListItemsDocument = new TypedDocumentString(`
             last: $last
             sortBy: $sortBy
             filter: $filter
+            search: $search
           ) {
             pageInfo {
               hasNextPage
@@ -3285,14 +3288,14 @@ fragment SubTaskFragment on SubTaskNode {
   isDone
 }`);
 export const GetListItemsColumnStatsDocument = new TypedDocumentString(`
-    query GetListItemsColumnStats($projectName: String!, $listId: String!, $filter: String, $targets: [MetricTargetInput!]) {
+    query GetListItemsColumnStats($projectName: String!, $listId: String!, $filter: String, $search: String, $targets: [MetricTargetInput!]) {
   project(name: $projectName) {
     name
     entityLists(ids: [$listId]) {
       edges {
         node {
           id
-          items(filter: $filter, calculateSpecificStatistics: $targets) {
+          items(filter: $filter, search: $search, calculateSpecificStatistics: $targets) {
             fieldStats {
               ...ColumnStatsFragment
             }
