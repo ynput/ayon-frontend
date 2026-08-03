@@ -81,7 +81,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     return false
   }
 
-  const options = useBuildFilterOptions({
+  const { options, groupOptions } = useBuildFilterOptions({
     filterTypes,
     projectNames,
     scope,
@@ -450,6 +450,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       <SearchFilter
         ref={searchFilterRef}
         options={options}
+        groupOptions={groupOptions}
         filters={localFilters}
         onChange={handleFilterChange}
         onFinish={handleFinish} // when changes are applied
