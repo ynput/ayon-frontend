@@ -94,7 +94,7 @@ export const Actions = ({
       entityIds: entities.map((entity) => entity.id),
       entitySubtypes: entitySubTypesToUse,
     }
-  }, [entities, entityType])
+  }, [entities, entityType, entitySubTypes, projectActionsProjectName])
 
 
   useEffect(() => {
