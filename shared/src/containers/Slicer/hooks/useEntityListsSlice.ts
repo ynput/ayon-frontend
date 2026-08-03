@@ -19,9 +19,12 @@ const sortLists = (lists: EntityList[]): EntityList[] =>
     if (a.active && !b.active) return -1
     if (!a.active && b.active) return 1
 
+    // @ts-ignore
     const aDate = new Date(a.createdAt || 0)
+    // @ts-ignore
     const bDate = new Date(b.createdAt || 0)
     return bDate.getTime() - aDate.getTime()
+  })
 
 export const useEntityListsSlice = (entityTypes?: string[], enabled: boolean = true) => {
   const { projectName } = useProjectContext()
