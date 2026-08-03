@@ -47,6 +47,9 @@ const ViewerDialog = () => {
   // when pressing escape key, close the dialog
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
+      // check viewer is actually open, if not, do nothing
+      if (!productId && !taskId && !folderId) return
+
       // Check if e.target is an HTMLElement before accessing tagName or isContentEditable
       if (isHTMLElement(e.target)) {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
@@ -55,6 +58,8 @@ const ViewerDialog = () => {
       }
 
       if (e.key === 'Escape' && !fullscreen) {
+        // prevent the event from propagating to the parent, which would close the details panel
+        e.stopPropagation()
         // first check if slideOut is open
         if (slideOut?.entityId) {
           closeSlideOut()
@@ -67,7 +72,7 @@ const ViewerDialog = () => {
 
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [productId, fullscreen, slideOut?.entityId])
+  }, [productId, taskId, folderId, fullscreen, slideOut?.entityId])
 
   if ((!productId && !taskId && !folderId) || !projectName) {
     return null
