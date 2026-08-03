@@ -1,4 +1,5 @@
 export * from './useFiltersWithHierarchy'
+export * from './useHierarchyContextMenuItems'
 export * from './useProjectAnatomySlices'
 export * from './useSlicerAttributesData'
 export * from './useSlicerRemotes'

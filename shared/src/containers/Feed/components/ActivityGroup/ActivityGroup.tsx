@@ -9,6 +9,7 @@ interface ActivityGroupProps {
     disabled?: boolean
     isLoading?: boolean
   }
+  projectInfo?: Record<string, any>
 }
 
 const ActivityGroup = ({ activities, editProps, ...props }: ActivityGroupProps) => {

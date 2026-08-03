@@ -1,7 +1,7 @@
 import { InputText } from '@ynput/ayon-react-components'
 import React, { KeyboardEvent, useState, useRef } from 'react'
 import styled from 'styled-components'
-import { EntityForm } from '@context/NewEntityContext.tsx'
+import type { EntityForm } from '../context/NewEntityContext'
 import { theme } from '@ynput/ayon-react-components'
 import { Icon } from '@ynput/ayon-react-components'
 
@@ -87,7 +87,7 @@ type NewEntityFormProps = {
   nameInfo?: string
 }
 
-const NewEntityForm: React.FC<NewEntityFormProps> = ({
+export const NewEntityForm: React.FC<NewEntityFormProps> = ({
   handleChange,
   entityForm,
   setNameFocused,
@@ -200,4 +200,3 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
     </InputsContainer>
   )
 }
-export default NewEntityForm

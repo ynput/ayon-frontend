@@ -82,6 +82,24 @@ export const clientFilterToQueryFilter = (filters: FilterForQuery[]): QueryFilte
   }
 }
 
+// Cleared text attribs are stored as "" (not null), so nullness checks on text
+// fields must cover both states. queryFilterToClientFilter reverses these shapes.
+const textEmptyGroup = (key: string): QueryFilter => ({
+  conditions: [
+    { key, operator: 'isnull' },
+    { key, operator: 'eq', value: '' },
+  ],
+  operator: 'or',
+})
+
+const textNotEmptyGroup = (key: string): QueryFilter => ({
+  conditions: [
+    { key, operator: 'notnull' },
+    { key, operator: 'ne', value: '' },
+  ],
+  operator: 'and',
+})
+
 // Helper function to convert a single Filter to a QueryCondition
 const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | QueryFilter => {
   // Extract key from filter ID (split by underscore if needed)
@@ -127,8 +145,13 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
     return { key, operator }
   }
 
+  const isTextField = filter.type === 'string' && !isListField
+
   // Handle different filter types
   if (hasSomeValue) {
+    if (isTextField) {
+      return filter.inverted ? textEmptyGroup(key) : textNotEmptyGroup(key)
+    }
     // we set the value to the empty state and then say it should not be that
     value = isListField ? [] : undefined
     operator = isListField
@@ -139,6 +162,9 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
       ? 'isnull'
       : 'notnull'
   } else if (hasNoValue) {
+    if (isTextField) {
+      return filter.inverted ? textNotEmptyGroup(key) : textEmptyGroup(key)
+    }
     // we set the value to the empty state and then say it should be that
     value = isListField ? [] : undefined
     operator = isListField

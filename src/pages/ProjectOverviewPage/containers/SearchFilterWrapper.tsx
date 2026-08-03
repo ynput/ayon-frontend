@@ -409,6 +409,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
     // Check if it's a relative date (Today, This week, etc.) — let dropdown open normally
     const rangeValue = datetimeFilter.values?.[0]
+    // Nullness chips (No Value / Has Value) have no date range to edit
+    if (rangeValue?.id === 'noValue' || rangeValue?.id === 'hasValue') return
     if (rangeValue?.id) {
       const customIdContent = (rangeValue.id as string).replace('custom-', '')
       const firstZIndex = customIdContent.indexOf('Z')

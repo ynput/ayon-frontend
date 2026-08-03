@@ -1,6 +1,57 @@
-import { foldersApi } from '@shared/api/generated'
-import { api as eventsApi } from '@shared/api/generated/events'
-import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
+import {
+  FolderListItem,
+  foldersApi,
+  GetUpdatedAndNewFoldersQuery,
+  gqlApi,
+} from '@shared/api/generated'
+import {
+  getSupportedEntityPatch,
+  createRealtimeBatcher,
+  REALTIME_REST_CALL_LIMIT,
+  waitForRealtimeJitter,
+  PubSub,
+  subscribeToThumbnailUpdates,
+  ThumbnailUpdateMessage,
+  SupportedEntityPatchField,
+} from '@shared/util'
+
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import { parseAllAttribs } from '../overview'
+
+type GetUpdatedAndNewFoldersResult = FolderListItem[]
+
+// HELPER QUERIES FOR REALTIME UPDATES
+type Definitions = DefinitionsFromApi<typeof gqlApi>
+type TagTypes = TagTypesFromApi<typeof gqlApi>
+// update the definitions to include the new types
+type UpdatedDefinitions = Omit<Definitions, 'GetUpdatedAndNewFolders'> & {
+  GetUpdatedAndNewFolders: OverrideResultType<
+    Definitions['GetUpdatedAndNewFolders'],
+    GetUpdatedAndNewFoldersResult
+  >
+}
+
+const graphqlFolders = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+  endpoints: {
+    GetUpdatedAndNewFolders: {
+      transformResponse: (response: GetUpdatedAndNewFoldersQuery): GetUpdatedAndNewFoldersResult =>
+        response.project.folders.edges.map(({ node }) => ({
+          ...node,
+          attrib: parseAllAttribs(node.allAttrib),
+          path: node.path ?? '',
+          parentId: node.parentId ?? undefined,
+          label: node.label ?? undefined,
+          taskNames: [],
+          createdAt: String(node.createdAt),
+          updatedAt: String(node.updatedAt),
+        })),
+    },
+  },
+})
+
+// the max number of folder to process in a single batch
+// TODO: Use this limit to trigger the reload button
+export const MAX_FOLDER_UPDATE_REST_CALLS = REALTIME_REST_CALL_LIMIT
 
 const enhancedApi = foldersApi.enhanceEndpoints({
   endpoints: {
@@ -16,11 +67,10 @@ const enhancedApi = foldersApi.enhanceEndpoints({
       ],
       async onCacheEntryAdded(
         args,
-        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, getCacheEntry, dispatch },
       ) {
         const { projectName } = args || {}
-        const patchFields = (args as any)?.patch as string[] | undefined
-
+        const supportedFolderFields = ['status', 'tags', 'folderType']
         const topicFieldMap: Record<string, string> = {
           'entity.folder.label_changed': 'label',
           'entity.folder.renamed': 'name',
@@ -30,163 +80,139 @@ const enhancedApi = foldersApi.enhanceEndpoints({
           'entity.folder.attrib_changed': 'attrib',
         }
 
-        const topics = ['entity.folder', 'entity.folder.created', 'entity.folder.deleted']
+        const topics = ['entity.folder']
         const tokens: (string | undefined)[] = []
 
-        // Simplified trailing debounce approach:
-        // - Collect updated folder IDs for 2000ms window
-        // - If a deletion topic appears, perform one full list refetch (within debounce window)
-        // - Otherwise, fetch each pending event and patch existing cache entries only
-        const MIN_INTERVAL = 2000
-        const pendingMessages = new Map<string, any>()
-        let resyncFlag = false // full list refetch needed for deleted folders
-        let timer: ReturnType<typeof setTimeout> | null = null
-        let processing = false
+        // handle a batch of messages, updating the cache and fetching missing data as needed
+        const batchProcessMessages = async (messages: any[]) => {
+          if (!projectName) return
 
-        const clearTimer = () => {
-          if (timer) {
-            clearTimeout(timer)
-            timer = null
+          const cachedFolderIds = new Set<string>()
+          const cachedFolders = getCacheEntry().data
+          if (cachedFolders && Array.isArray(cachedFolders.folders)) {
+            cachedFolders.folders.forEach((folder: any) => cachedFolderIds.add(folder.id))
           }
-        }
 
-        const schedule = () => {
-          clearTimer()
-          timer = setTimeout(run, MIN_INTERVAL)
-        }
+          const deletedIds: string[] = []
+          const createdIds: string[] = []
+          const unsupportedFields = new Map<string, Set<string>>()
+          const summaryPatches: {
+            folderId: string
+            field: SupportedEntityPatchField
+            value: string | string[]
+          }[] = []
 
-        // All non-created/deleted events are treated as incremental updates.
-        const run = async () => {
-          clearTimer()
-          if (processing || !projectName) return
-          processing = true
-          try {
-            if (resyncFlag) {
-              resyncFlag = false
-              try {
-                // get full folder list and update cache after folder deletion
-                const result = await dispatch(
-                  foldersApi.endpoints.getFolderList.initiate(
-                    // @ts-expect-error realtime flag to avoid toggling global isFetching for watchers
-                    { ...args, realtime: true },
-                    { forceRefetch: true },
-                  ),
-                ).unwrap()
-                updateCachedData(() => result)
-              } catch {
-                /* ignore */
-                console.warn('Failed to refetch folder list on resync')
-              } finally {
-                pendingMessages.clear()
-              }
+          // for each message, check it's type and then add it to the appropriate list for processing
+          messages.forEach((message) => {
+            const folderId = message.summary?.entityId
+            if (!folderId) return
+
+            // delete: remove from cache - no additional API calls
+            if (message.topic === 'entity.folder.deleted') {
+              deletedIds.push(folderId)
               return
             }
 
-            if (pendingMessages.size === 0) return
-            const messages = Array.from(pendingMessages.values())
-            pendingMessages.clear()
-            type Patch = {
-              folderId: string
-              partial?: Record<string, any>
-              attribMerge?: Record<string, any>
-              updatedAt?: string
+            // create: add to cache - will fetch the full folder data later
+            if (message.topic === 'entity.folder.created') {
+              createdIds.push(folderId)
+              return
             }
-            const patches: Patch[] = []
-            await Promise.all(
-              messages.map(async (message) => {
-                try {
-                  const topic = message.topic
-                  const summary = message.summary || {}
-                  const folderId = summary.entityId
-                  if (!folderId) return
-                  const fieldName = topicFieldMap[topic]
-                  if (!fieldName) return
 
-                  // OPTIMIZATION: use value from summary if available (for root level fields)
-                  if (summary.value !== undefined && fieldName !== 'attrib') {
-                    let value = summary.value
+            // for updates, check if the folder is in the cache
+            // no point updating a folder that does not exist for the user
+            if (!cachedFolderIds.has(folderId)) return
 
-                    // Cast value to proper type
-                    if (fieldName === 'tags') {
-                      if (!Array.isArray(value)) {
-                        value = typeof value === 'string' ? value.split(',').filter(Boolean) : []
-                      }
-                    } else if (value !== null && typeof value !== 'string') {
-                      value = String(value)
-                    }
-
-                    const partial: Record<string, any> = {
-                      [fieldName]: value,
-                      updatedAt: message.updatedAt,
-                    }
-                    if (summary.parentId !== undefined) partial.parentId = summary.parentId
-                    patches.push({ folderId, partial })
-                    return
-                  }
-
-                  // Fallback: Fetch each event and apply incremental updates
-                  const eventId = message.id
-                  const event = await dispatch(
-                    eventsApi.endpoints.getEvent.initiate({ eventId }, { forceRefetch: true }),
-                  ).unwrap()
-                  const payload: any = event?.payload || {}
-                  const eventSummary: any = event?.summary || {}
-                  if (
-                    fieldName === 'attrib' &&
-                    payload?.newValue &&
-                    typeof payload.newValue === 'object'
-                  ) {
-                    patches.push({
-                      folderId,
-                      attribMerge: payload.newValue,
-                      updatedAt: event.updatedAt,
-                    })
-                  } else {
-                    const value = payload?.newValue
-                    if (value === undefined) return
-                    const partial: Record<string, any> = { updatedAt: event.updatedAt }
-                    partial[fieldName] = value
-                    // parentId might accompany some changes in summary
-                    if (eventSummary.parentId !== undefined)
-                      partial.parentId = eventSummary.parentId
-                    patches.push({ folderId, partial })
-                  }
-                } catch {
-                  /* ignore single event errors */
-                }
-              }),
+            // check if the updated field data is in the summary  (status, tags etc)
+            // if it is, we can update the cache directly, otherwise we will need to fetch the full folder data later
+            const patch = getSupportedEntityPatch(
+              topicFieldMap[message.topic],
+              message.summary,
+              supportedFolderFields,
             )
-            if (!patches.length) return
+            if (patch) summaryPatches.push({ folderId, ...patch })
+            else {
+              const field = topicFieldMap[message.topic]
+              if (!field) return
+
+              const fields = unsupportedFields.get(folderId) || new Set<string>()
+              fields.add(field)
+              unsupportedFields.set(folderId, fields)
+            }
+          })
+
+          // DELETED: remove deleted folders from cache
+          if (deletedIds.length) {
             updateCachedData((draft: any) => {
               if (!draft || !Array.isArray(draft.folders)) return
-              patches.forEach((patch) => {
-                const idx = draft.folders.findIndex((f: any) => f.id === patch.folderId)
-                // if folder not found, skip
-                if (idx === -1) return
-                // apply patch to existing folder
-                if (patch.attribMerge) {
-                  // merge attribs if attribMerge is provided
-                  draft.folders[idx].attrib = {
-                    ...(draft.folders[idx].attrib || {}),
-                    ...patch.attribMerge,
-                  }
-                  // update updatedAt if provided
-                  if (patch.updatedAt) draft.folders[idx].updatedAt = patch.updatedAt
-                }
-                if (patch.partial) {
-                  // apply partial update
-                  draft.folders[idx] = { ...draft.folders[idx], ...patch.partial }
-                }
+              draft.folders = draft.folders.filter((folder: any) => !deletedIds.includes(folder.id))
+            })
+          }
+
+          // UPDATED: update cached folders with summary data from the message, if available
+          if (summaryPatches.length) {
+            updateCachedData((draft: any) => {
+              if (!draft || !Array.isArray(draft.folders)) return
+              summaryPatches.forEach(({ folderId, field, value }) => {
+                const folder = draft.folders.find((item: any) => item.id === folderId)
+                if (folder) folder[field] = value
               })
             })
-          } finally {
-            processing = false
-            // If new events came in while we were processing, schedule another run
-            if (pendingMessages.size > 0 || resyncFlag) {
-              schedule()
-            }
+          }
+
+          // Fetch created and unsupported folders in one request.
+          // This is to avoid overwhelming the API with too many requests at once, and to prevent potential performance issues in the frontend.
+          const foldersToFetch = [
+            ...new Set([...createdIds, ...unsupportedFields.keys()]),
+          ]
+          if (foldersToFetch.length > MAX_FOLDER_UPDATE_REST_CALLS) return
+
+          if (foldersToFetch.length) {
+            await waitForRealtimeJitter()
+            const fetchedFolders = await dispatch(
+              graphqlFolders.endpoints.GetUpdatedAndNewFolders.initiate({
+                projectName,
+                folderIds: foldersToFetch,
+                first: foldersToFetch.length,
+              }),
+            )
+              .unwrap()
+              .catch(() => [])
+
+            const createdFolderIds = new Set(createdIds)
+            updateCachedData((draft: any) => {
+              if (!draft || !Array.isArray(draft.folders)) return
+              const fetchedById = new Map(
+                fetchedFolders.filter(Boolean).map((folder: any) => [folder.id, folder] as const),
+              )
+
+              draft.folders.forEach((folder: any, index: number) => {
+                const fetchedFolder = fetchedById.get(folder.id)
+                if (!fetchedFolder) return
+
+                if (createdFolderIds.has(folder.id)) {
+                  draft.folders[index] = { ...folder, ...fetchedFolder }
+                } else {
+                  const fields = unsupportedFields.get(folder.id) || new Set<string>()
+                  fields.forEach((field) => {
+                    folder[field] = fetchedFolder[field]
+                  })
+                }
+                fetchedById.delete(folder.id)
+              })
+
+              fetchedById.forEach((folder, folderId) => {
+                if (createdFolderIds.has(folderId)) draft.folders.push(folder)
+              })
+            })
           }
         }
+
+        // create a batcher to process messages in batches
+        const batcher = createRealtimeBatcher(
+          batchProcessMessages,
+          (message: any) => message.summary.entityId,
+        )
 
         let unsubscribeThumbnails: (() => void) | undefined
 
@@ -212,31 +238,12 @@ const enhancedApi = foldersApi.enhanceEndpoints({
             ['folder'],
           )
 
-          const handlePubSub = (_topic: string, _message: any) => {
-            const isMembership = _topic.endsWith('.created') || _topic.endsWith('.deleted')
+          const handlePubSub = (topic: string, message: any) => {
+            const entityId = message?.summary?.entityId
+            if (!entityId) return
 
-            if (isMembership) {
-              const eventType = _topic.endsWith('.created') ? 'created' : 'deleted'
-              // Backward compatibility: If no patch filters are provided, always sync membership.
-              // If patch filters ARE provided, only sync if 'created'/'deleted' tokens are present.
-              if (patchFields && !patchFields.includes(eventType)) return
-
-              resyncFlag = true
-            } else {
-              const fieldName = topicFieldMap[_topic]
-              // Backward compatibility: If no patch filters are provided, allow all updates (that we have mapping for).
-              // If patch filters ARE provided, only allow fields explicitly listed in the patch array.
-              if (patchFields && (!fieldName || !patchFields.includes(fieldName))) {
-                return
-              }
-
-              const eventId = _message?.id
-              if (eventId) {
-                pendingMessages.set(eventId, _message)
-              }
-            }
-
-            schedule()
+            // add update to the batcher
+            batcher.add({ ...message, topic })
           }
 
           topics.forEach((t) => tokens.push(PubSub.subscribe(t, handlePubSub)))
@@ -245,9 +252,10 @@ const enhancedApi = foldersApi.enhanceEndpoints({
         }
 
         await cacheEntryRemoved
+        batcher.clear()
         tokens.forEach((t) => PubSub.unsubscribe(t))
         if (unsubscribeThumbnails) unsubscribeThumbnails()
-        clearTimer()
+        batcher.clear()
       },
     },
   },

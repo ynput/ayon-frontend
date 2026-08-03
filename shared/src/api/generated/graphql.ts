@@ -1906,6 +1906,15 @@ export type ListItemFragmentFragment =
   | ListItemFragment_WorkfileNode_Fragment
 ;
 
+export type GetUpdatedAndNewFoldersQueryVariables = Exact<{
+  projectName: string;
+  folderIds: Array<string> | string;
+  first?: number | null | undefined;
+}>;
+
+
+export type GetUpdatedAndNewFoldersQuery = { project: { folders: { edges: Array<{ node: { id: string, path: string | null, parentId: string | null, parents: Array<string>, name: string, label: string | null, folderType: string, hasTasks: boolean, hasChildren: boolean, hasReviewables: boolean, thumbnailHash: string, tags: Array<string>, status: string, allAttrib: string, ownAttrib: Array<string>, createdAt: unknown, updatedAt: unknown } }> } } };
+
 export type ColumnStatsFragmentFragment = { columnName: string, min: number | null, max: number | null, avg: number | null, sum: number | null, count: number | null, valueFilledCount: number | null, percentageFilled: number | null, valueNotFilledCount: number | null, percentageNotFilled: number | null, checkedCount: number | null, checkedPercentage: number | null, notCheckedCount: number | null, notCheckedPercentage: number | null, distribution: unknown };
 
 export type GetFolderColumnStatsQueryVariables = Exact<{
@@ -3373,6 +3382,35 @@ export const GetListsItemsForReviewSessionDocument = new TypedDocumentString(`
   }
 }
     `);
+export const GetUpdatedAndNewFoldersDocument = new TypedDocumentString(`
+    query GetUpdatedAndNewFolders($projectName: String!, $folderIds: [String!]!, $first: Int) {
+  project(name: $projectName) {
+    folders(ids: $folderIds, first: $first) {
+      edges {
+        node {
+          id
+          path
+          parentId
+          parents
+          name
+          label
+          folderType
+          hasTasks
+          hasChildren
+          hasReviewables
+          thumbnailHash
+          tags
+          status
+          allAttrib
+          ownAttrib
+          createdAt
+          updatedAt
+        }
+      }
+    }
+  }
+}
+    `);
 export const GetFolderColumnStatsDocument = new TypedDocumentString(`
     query GetFolderColumnStats($projectName: String!, $filter: String, $taskFilter: String, $search: String, $parentIds: [String!], $ids: [String!], $targets: [MetricTargetInput!], $includeFolderChildren: Boolean! = true, $hideEmptyFolders: Boolean) {
   project(name: $projectName) {
@@ -4415,6 +4453,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetListsItemsForReviewSession: build.query<GetListsItemsForReviewSessionQuery, GetListsItemsForReviewSessionQueryVariables>({
       query: (variables) => ({ document: GetListsItemsForReviewSessionDocument as unknown as string, variables })
+    }),
+    GetUpdatedAndNewFolders: build.query<GetUpdatedAndNewFoldersQuery, GetUpdatedAndNewFoldersQueryVariables>({
+      query: (variables) => ({ document: GetUpdatedAndNewFoldersDocument as unknown as string, variables })
     }),
     GetFolderColumnStats: build.query<GetFolderColumnStatsQuery, GetFolderColumnStatsQueryVariables>({
       query: (variables) => ({ document: GetFolderColumnStatsDocument as unknown as string, variables })

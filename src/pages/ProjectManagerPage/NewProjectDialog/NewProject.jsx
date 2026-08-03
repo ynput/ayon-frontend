@@ -28,6 +28,26 @@ const PROJECT_STATES = [
   { value: 'production', label: 'Production' },
 ]
 
+// prefer unicode mode for \p{...} patterns, but some patterns legal without it (e.g. `\-` outside a class) only compile as non-unicode
+const buildCodeRegex = (pattern) => {
+  try {
+    return new RegExp(pattern, 'gu')
+  } catch (error) {
+    return new RegExp(pattern, 'g')
+  }
+}
+
+const matchProjectCode = (value, pattern) => {
+  const matches = [...value.matchAll(buildCodeRegex(pattern))]
+  if (!matches.length) return ''
+
+  return matches
+    .map((match) => (match.length > 1 ? match.slice(1).filter(Boolean).join('') : match[0]))
+    .join('')
+    .replaceAll(' ', '')
+    .replace(/^_+|_+$/g, '')
+}
+
 const DialogContent = styled.div`
   width: 100%;
   height: 100%;
@@ -151,31 +171,15 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
   }
 
   const createCode = (name, regexPattern) => {
-    if (!regexPattern) return ''
+    if (!regexPattern || !name) return ''
 
-    // Always create a new RegExp from the string pattern
     try {
-      // Add 'g' flag to match all occurrences
-      const regex = new RegExp(regexPattern, 'g')
+      const rawCode = matchProjectCode(name, regexPattern)
+      if (PROJECT_CODE_REGEX.test(rawCode)) return rawCode
 
-      // Use matchAll instead of match for global patterns
-      const matches = [...name.replaceAll('_', ' ').matchAll(regex)]
-      if (!matches.length) return ''
-
-      // Check if the regex has capture groups
-      if (matches[0].length > 1) {
-        // Extract the first capture group from each match
-        return matches
-          .map((match) => match[1])
-          .join('')
-          .replaceAll(' ', '')
-      } else {
-        // If no capture groups, use the full match
-        return matches
-          .map((match) => match[0])
-          .join('')
-          .replaceAll(' ', '')
-      }
+      // \b and \s never fire on snake_case names, so retry on a spaced name to keep pre-existing configs working
+      const spacedCode = matchProjectCode(name.replaceAll('_', ' '), regexPattern)
+      return PROJECT_CODE_REGEX.test(spacedCode) ? spacedCode : rawCode
     } catch (error) {
       console.warn('Invalid regex pattern for project code', error)
       return ''

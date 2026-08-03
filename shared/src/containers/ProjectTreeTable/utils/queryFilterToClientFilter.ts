@@ -48,8 +48,13 @@ export const queryFilterToClientFilter = (
     } else {
       // This is a nested QueryFilter - check if it's a datetime range (gte+lte same key)
       const datetimeFilter = tryMergeDatetimeRange(condition, filterOptions)
+      const textNullnessFilter = datetimeFilter
+        ? null
+        : tryMergeTextNullness(condition, filterOptions)
       if (datetimeFilter) {
         filters.push(datetimeFilter)
+      } else if (textNullnessFilter) {
+        filters.push(textNullnessFilter)
       } else {
         // Recursively process other nested QueryFilters
         const nestedFilters = queryFilterToClientFilter(condition, filterOptions)
@@ -176,6 +181,49 @@ export const tryMergeDatetimeRange = (
     icon: filterOption.icon,
     inverted: nestedFilter.operator === 'or',
     values: [rangeValue],
+    singleSelect: filterOption.singleSelect,
+  }
+}
+
+/**
+ * Detects the composite nullness groups produced by clientFilterToQueryFilter for
+ * text fields (isnull OR eq '' / notnull AND ne '') and restores the
+ * noValue/hasValue chip instead of recursing into the group's conditions.
+ */
+export const tryMergeTextNullness = (
+  nestedFilter: QueryFilter,
+  filterOptions: Option[],
+): Filter | null => {
+  const conditions = nestedFilter.conditions?.filter((c): c is QueryCondition => 'key' in c) ?? []
+  if (conditions.length !== 2 || conditions.length !== nestedFilter.conditions?.length) return null
+
+  const key = conditions[0].key
+  if (!conditions.every((c) => c.key === key)) return null
+
+  const isNoValue =
+    nestedFilter.operator === 'or' &&
+    conditions.some((c) => c.operator === 'isnull') &&
+    conditions.some((c) => c.operator === 'eq' && c.value === '')
+  const isHasValue =
+    nestedFilter.operator === 'and' &&
+    conditions.some((c) => c.operator === 'notnull') &&
+    conditions.some((c) => c.operator === 'ne' && c.value === '')
+  if (!isNoValue && !isHasValue) return null
+
+  const filterOption = findFilterOption(key, filterOptions)
+  if (!filterOption) return null
+
+  return {
+    id: filterOption.id,
+    type: filterOption.type as Filter['type'],
+    label: filterOption.label,
+    inverted: false,
+    operator: 'OR',
+    icon: filterOption.icon,
+    values: isNoValue
+      ? [{ id: 'noValue', label: 'No Value' }]
+      : [{ id: 'hasValue', label: 'Has Value' }],
+    isCustom: filterOption.allowsCustomValues,
     singleSelect: filterOption.singleSelect,
   }
 }

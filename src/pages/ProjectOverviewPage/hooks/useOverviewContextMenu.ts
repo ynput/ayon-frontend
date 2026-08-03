@@ -8,14 +8,16 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { useCallback } from 'react'
 import { toast } from 'react-toastify'
-import { useMoveEntityContext, useProjectFoldersContext } from '@shared/context'
+import { useProjectFoldersContext } from '@shared/context'
+import { OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
 
-type OverviewContextMenuProps = {}
+type OverviewContextMenuProps = {
+  openMoveDialog: OpenMoveDialog
+}
 
-const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
+const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) => {
   //   groupBy
   const { updateGroupBy } = useColumnSettingsContext()
-  const { openMoveDialog } = useMoveEntityContext()
   // lists data
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
