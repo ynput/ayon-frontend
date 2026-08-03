@@ -4,7 +4,9 @@ import {
   getSupportedEntityPatch,
   PubSub,
   REALTIME_REST_CALL_LIMIT,
+  REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
   subscribeToThumbnailUpdates,
+  SupportedTaskField,
   ThumbnailUpdateMessage,
   waitForRealtimeJitter,
 } from '@shared/util'
@@ -21,9 +23,6 @@ export interface FolderGroup extends ProgressTaskFolder {
 
 export type GetTasksProgressResult = FolderGroup[]
 export type GetProgressTaskResult = ProgressTask | null | undefined
-
-const supportedTaskFields = ['status', 'tags', 'assignees', 'taskType'] as const
-type SupportedTaskField = (typeof supportedTaskFields)[number]
 
 type GroupedTasksType = {
   [key: string]: FolderGroup
@@ -115,7 +114,11 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
             }
 
             const field = topic.split('.')[2]?.replace('_changed', '')
-            const patch = getSupportedEntityPatch(field, message.summary, supportedTaskFields)
+            const patch = getSupportedEntityPatch(
+              field,
+              message.summary,
+              REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+            )
             if (patch) {
               patches.push({
                 taskId,
@@ -140,7 +143,7 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
               patches.forEach(({ taskId, field, value }) => {
                 draft.forEach((folder) => {
                   const task = folder.tasks.find((item) => item.id === taskId)
-                  if (task) Object.assign(task, { [field]: value })
+                  if (task) Object.assign(task, { [field === 'type' ? 'taskType' : field]: value })
                 })
               })
             })

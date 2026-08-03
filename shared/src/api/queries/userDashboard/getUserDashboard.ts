@@ -12,7 +12,9 @@ import {
   createRealtimeBatcher,
   getSupportedEntityPatch,
   REALTIME_REST_CALL_LIMIT,
+  REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
   subscribeToThumbnailUpdates,
+  SupportedTaskField,
   ThumbnailUpdateMessage,
   waitForRealtimeJitter,
 } from '@shared/util'
@@ -51,9 +53,6 @@ export interface Message {
   dependsOn: string | null
   summary: MessageSummary
 }
-
-const supportedKanbanTaskFields = ['status', 'tags', 'assignees', 'taskType'] as const
-type SupportedKanbanTaskField = (typeof supportedKanbanTaskFields)[number]
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import getUserProjectsAccess from './getUserProjectsAccess'
@@ -158,7 +157,7 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
           const patches: {
             taskId: string
             project: string
-            field: SupportedKanbanTaskField
+            field: SupportedTaskField
             value: string | string[]
           }[] = []
 
@@ -172,7 +171,11 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
 
             // Only patch the task for the fields supported by the Kanban view.
             const field = topic.split('.')[2]?.replace('_changed', '')
-            const patch = getSupportedEntityPatch(field, message.summary, supportedKanbanTaskFields)
+            const patch = getSupportedEntityPatch(
+              field,
+              message.summary,
+              REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+            )
             if (!patch) return
 
             const taskKey = `${project}:${taskId}`
@@ -194,7 +197,7 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
             patches.push({
               taskId,
               project,
-              field: patch.field as SupportedKanbanTaskField,
+              field: patch.field as SupportedTaskField,
               value: patch.value,
             })
           })
@@ -208,7 +211,7 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
                 if (!task) return
 
                 // Patch the Kanban cache directly for supported fields.
-                Object.assign(task, { [field]: value })
+                Object.assign(task, { [field === 'type' ? 'taskType' : field]: value })
                 if (
                   field === 'assignees' &&
                   selectedAssignees.length > 0 &&

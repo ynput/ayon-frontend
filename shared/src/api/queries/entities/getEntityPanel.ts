@@ -10,7 +10,9 @@ import {
   getSupportedEntityPatch,
   PubSub,
   REALTIME_REST_CALL_LIMIT,
+  REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
   subscribeToThumbnailUpdates,
+  SupportedTaskField,
   ThumbnailUpdateMessage,
   waitForRealtimeJitter,
 } from '@shared/util'
@@ -114,9 +116,6 @@ type QueryNameType =
   | 'GetDetailsPanelFolder'
   | 'GetDetailsPanelRepresentation'
 
-const supportedTaskFields = ['status', 'tags', 'assignees', 'taskType'] as const
-type SupportedTaskField = (typeof supportedTaskFields)[number]
-
 const getEntityTypeQueryName = (entityType: DetailsPanelEntityType): QueryNameType => {
   switch (entityType) {
     case 'task':
@@ -200,7 +199,11 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
             if (!cachedEntityKeys.has(entityKey)) return
 
             const field = topic.split('.')[2]?.replace('_changed', '')
-            const patch = getSupportedEntityPatch(field, message.summary, supportedTaskFields)
+            const patch = getSupportedEntityPatch(
+              field,
+              message.summary,
+              REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+            )
             if (patch) {
               patches.push({
                 id: entityId,
@@ -223,13 +226,13 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
 
                 Object.assign(entity, {
                   ...(field === 'status' || field === 'tags' ? { [field]: value } : {}),
-                  ...(field === 'taskType' ? { entitySubType: value } : {}),
+                  ...(field === 'type' ? { entitySubType: value } : {}),
                 })
 
                 if (field === 'assignees' && entity.task) {
                   entity.task.assignees = value as string[]
                 }
-                if (field === 'taskType' && entity.task) {
+                if (field === 'type' && entity.task) {
                   entity.task.taskType = value as string
                 }
               })

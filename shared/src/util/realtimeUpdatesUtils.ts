@@ -5,6 +5,10 @@ export const REALTIME_UPDATE_DEBOUNCE = isDev ? 500 : 10000
 export const REALTIME_REST_CALL_LIMIT = 25
 export const REALTIME_REST_JITTER = 1000
 
+// the update topics that include the new data in the summary value, which can be used to update the local cache
+export const REALTIME_TASK_SUPPORTED_VALUE_FIELDS = ['status', 'tags', 'assignees', 'type'] as const
+export type SupportedTaskField = (typeof REALTIME_TASK_SUPPORTED_VALUE_FIELDS)[number]
+
 export type SupportedEntityPatchField = string
 
 export function getSupportedEntityPatch(

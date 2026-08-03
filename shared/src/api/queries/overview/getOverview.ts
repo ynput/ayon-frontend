@@ -13,7 +13,9 @@ import {
   createRealtimeBatcher,
   getSupportedEntityPatch,
   REALTIME_REST_CALL_LIMIT,
+  REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
   subscribeToThumbnailUpdates,
+  SupportedTaskField,
   ThumbnailUpdateMessage,
   waitForRealtimeJitter,
 } from '@shared/util'
@@ -33,8 +35,6 @@ import {
 } from '@reduxjs/toolkit/query'
 
 const CACHE_TIME = 10 // seconds
-const supportedTaskFields = ['status', 'tags', 'assignees', 'taskType'] as const
-type SupportedTaskField = (typeof supportedTaskFields)[number]
 
 // parse attribs JSON string to object
 export const parseAllAttribs = (allAttrib: string) => {
@@ -383,7 +383,11 @@ const injectedApi = enhancedApi.injectEndpoints({
               if (!taskId || !cachedTaskIds.has(taskId)) return
 
               const field = message.topic?.split('.')[2]?.replace('_changed', '')
-              const patch = getSupportedEntityPatch(field, message.summary, supportedTaskFields)
+              const patch = getSupportedEntityPatch(
+                field,
+                message.summary,
+                REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+              )
               if (patch)
                 patches.push({
                   taskId,
@@ -398,7 +402,7 @@ const injectedApi = enhancedApi.injectEndpoints({
               patches.forEach(({ taskId, field, value }) => {
                 const task = draft.find((item) => item.id === taskId)
                 if (!task) return
-                Object.assign(task, { [field]: value })
+                Object.assign(task, { [field === 'type' ? 'taskType' : field]: value })
               })
             })
           }
@@ -633,7 +637,11 @@ const injectedApi = enhancedApi.injectEndpoints({
               if (!taskId || !cachedTaskIds.has(taskId)) return
 
               const field = message.topic?.split('.')[2]?.replace('_changed', '')
-              const patch = getSupportedEntityPatch(field, message.summary, supportedTaskFields)
+              const patch = getSupportedEntityPatch(
+                field,
+                message.summary,
+                REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+              )
               if (patch)
                 patches.push({
                   taskId,
@@ -649,7 +657,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                 for (const page of draft.pages) {
                   const task = page.tasks.find((item) => item.id === taskId)
                   if (!task) continue
-                  Object.assign(task, { [field]: value })
+                  Object.assign(task, { [field === 'type' ? 'taskType' : field]: value })
                   break
                 }
               })
