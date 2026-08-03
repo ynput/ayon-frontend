@@ -116,6 +116,7 @@ const useVersionsGroupBy = ({
     desc: versionArguments.desc,
     folderIds: versionArguments.folderIds,
     featuredOnly: versionArguments.featuredOnly,
+    featuredOnlyEntityType: versionArguments.featuredOnlyEntityType,
     hasReviewables: versionArguments.hasReviewables,
   }
 

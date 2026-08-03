@@ -1,8 +1,24 @@
 import { QueryFilter, QueryCondition } from '@shared/api'
-import { FEATURED_VERSION_TYPES } from '@shared/components'
+import { FEATURED_VERSION_FILTER_TYPES } from '@shared/components'
 
 // Get featured version values for quick lookup
-const FEATURED_VERSION_VALUES = FEATURED_VERSION_TYPES.map((type) => type.value)
+const FEATURED_VERSION_VALUES = FEATURED_VERSION_FILTER_TYPES.map((type) => type.value)
+
+export const getFeaturedVersionQueryArgs = (values: string[] | undefined) => {
+  if (!values?.length) return undefined
+
+  const folderFeaturedValues: Record<string, string> = {
+    folderLatest: 'latest',
+    folderLatestDone: 'latestDone',
+    folderHero: 'hero',
+  }
+  const hasFolderFeaturedValue = values.some((value) => value in folderFeaturedValues)
+
+  return {
+    featuredOnly: values.map((value) => folderFeaturedValues[value] || value),
+    featuredOnlyEntityType: hasFolderFeaturedValue ? 'folder' : 'product',
+  }
+}
 
 type ExtractConfig = {
   /** The filter key to extract (e.g., 'version', 'hasReviewables') */

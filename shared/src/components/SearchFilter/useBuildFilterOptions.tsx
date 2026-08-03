@@ -408,8 +408,19 @@ export const useBuildFilterOptions = ({
       const versionOption = getOptionRoot('version', config, scopePrefix, scopeLabel)
 
       if (versionOption) {
-        // add featured version types as options
-        FEATURED_VERSION_TYPES.forEach((versionType) => {
+        const versionTypes =
+          currentScope === 'folder'
+            ? [
+                { value: 'folderLatest', label: 'Latest', icon: 'fiber_new' },
+                { value: 'folderLatestDone', label: 'Latest Done', icon: 'check_circle' },
+                { value: 'folderHero', label: 'Hero', icon: 'star' },
+              ]
+            : FEATURED_VERSION_TYPES.map((versionType) => ({
+                ...versionType,
+                label: versionType.value === 'latest' ? 'Latest' : versionType.label,
+              }))
+
+        versionTypes.forEach((versionType) => {
           versionOption.values?.push({
             id: versionType.value,
             label: versionType.label,
@@ -523,7 +534,8 @@ export const useBuildFilterOptions = ({
           attribute.data.default !== null &&
           attribute.data.inherit !== false
         // booleans excluded: unset already matches "No", so has/no value would just duplicate it
-        const supportsNullness = (isListOf || isDate || isText || isNumber) && !alwaysResolvesToValue
+        const supportsNullness =
+          (isListOf || isDate || isText || isNumber) && !alwaysResolvesToValue
         const enableRelativeValues = supportsNullness ? config?.enableRelativeValues : false
         // for the attribute, get the option root
         const option = getAttributeFieldOptionRoot(
@@ -863,7 +875,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('version'),
         type: 'string',
-        label: formatLabelWithScope('Version'),
+        label: formatLabelWithScope('Latest version'),
         icon: getAttributeIcon('version'),
         inverted: false,
         operator: 'OR',
@@ -873,6 +885,7 @@ const getOptionRoot = (
         allowNoValue: false,
         allowExcludes: false,
         operatorChangeable: false,
+        singleSelect: true,
       }
       break
     case 'name':

@@ -10,6 +10,8 @@ query GetVersionsColumnStats(
   $versionIds: [String!]
   $productIds: [String!]
   $targets: [MetricTargetInput!]
+  $featuredOnly: [String!]
+  $featuredOnlyEntityType: String
 ) {
   project(name: $projectName) {
     versions(
@@ -22,6 +24,8 @@ query GetVersionsColumnStats(
       folderFilter: $folderFilter
       folderIds: $folderIds
       includeFolderChildren: true
+      featuredOnly: $featuredOnly
+      featuredOnlyEntityType: $featuredOnlyEntityType
     ) {
       fieldStats {
         ...ColumnStatsFragment

@@ -215,6 +215,7 @@ export type GetGroupedVersionsListArgs = {
   desc?: boolean
   sortBy?: string
   featuredOnly?: string[]
+  featuredOnlyEntityType?: string
   hasReviewables?: boolean
 }
 
@@ -1163,6 +1164,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           desc,
           sortBy,
           featuredOnly,
+          featuredOnlyEntityType,
           hasReviewables,
         },
         api,
@@ -1184,6 +1186,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               folderIds: folderIds?.length ? folderIds : undefined,
               sortBy: sortBy,
               featuredOnly,
+              featuredOnlyEntityType,
               hasReviewables,
               group: group.value,
             } as GetVersionsQueryVariables & { group: string }

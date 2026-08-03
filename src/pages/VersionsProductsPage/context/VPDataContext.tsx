@@ -22,6 +22,7 @@ import {
   ProductNodeExtended,
   determineLoadingVP,
   extractFilters,
+  getFeaturedVersionQueryArgs,
 } from '../util'
 import { useBuildVersionsTableData } from '../hooks/useBuildVersionsTableData'
 import {
@@ -49,7 +50,7 @@ import type { FieldStats } from '@shared/api'
 import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import {
   DEFAULT_FEATURED_ORDER,
-  FEATURED_VERSION_TYPES,
+  FEATURED_VERSION_FILTER_TYPES,
 } from '../../../../shared/src/components/FeaturedVersionOrder/FeaturedVersionOrder'
 import useVersionsGroupBy from '../hooks/useVersionsGroupBy'
 import { useVPColumnStats } from '../hooks/useVPColumnStats'
@@ -94,6 +95,8 @@ interface VersionsDataContextValue {
     folderIds?: string[]
     versionIds?: string[]
     productIds?: string[]
+    featuredOnly?: string[]
+    featuredOnlyEntityType?: string
   }
   // like columnStatsArgs but with the active slice's own filter excluded — so
   // slicer value counts show each value's true population (no self-zeroing)
@@ -153,6 +156,7 @@ export type QueryArguments = {
   sortBy?: string
   desc: boolean
   featuredOnly?: string[]
+  featuredOnlyEntityType?: string
   hasReviewables?: boolean
   showComments?: boolean
 }
@@ -187,7 +191,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     featuredVersionFilter,
     hasReviewablesFilter,
   } = useMemo(() => {
-    const FEATURED_VERSION_VALUES = FEATURED_VERSION_TYPES.map((type) => type.value)
+    const FEATURED_VERSION_VALUES = FEATURED_VERSION_FILTER_TYPES.map((type) => type.value)
     const result = extractFilters(filters, [
       {
         filterKey: 'version',
@@ -400,6 +404,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
     versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
     productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
+    featuredOnly: getFeaturedVersionQueryArgs(featuredVersionFilter)?.featuredOnly,
+    featuredOnlyEntityType:
+      getFeaturedVersionQueryArgs(featuredVersionFilter)?.featuredOnlyEntityType,
   })
 
   const resolveEntityArguments = useCallback(
@@ -451,7 +458,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
       if (entityType === 'version') {
         if (featuredVersionFilter?.length) {
-          args.featuredOnly = featuredVersionFilter
+          Object.assign(args, getFeaturedVersionQueryArgs(featuredVersionFilter))
         }
         if (hasReviewablesFilter !== undefined) {
           args.hasReviewables = hasReviewablesFilter
@@ -544,6 +551,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     sortBy: versionArguments.sortBy,
     desc: versionArguments.desc,
     featuredOnly: versionArguments.featuredOnly,
+    featuredOnlyEntityType: versionArguments.featuredOnlyEntityType,
     hasReviewables: versionArguments.hasReviewables,
     showComments,
   }
@@ -710,6 +718,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
       versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
       productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
+      featuredOnly: versionStatsArgs.featuredOnly,
+      featuredOnlyEntityType: versionStatsArgs.featuredOnlyEntityType,
     },
     slicerCountsArgs,
     fieldStats,

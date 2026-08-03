@@ -7,6 +7,7 @@ query GetVersions(
   $taskFilter: String
   $folderFilter: String
   $featuredOnly: [String!]
+  $featuredOnlyEntityType: String
   $hasReviewables: Boolean
   $folderIds: [String!]
   $search: String
@@ -26,6 +27,7 @@ query GetVersions(
       taskFilter: $taskFilter
       folderFilter: $folderFilter
       featuredOnly: $featuredOnly
+      featuredOnlyEntityType: $featuredOnlyEntityType
       hasReviewables: $hasReviewables
       folderIds: $folderIds
       includeFolderChildren: true

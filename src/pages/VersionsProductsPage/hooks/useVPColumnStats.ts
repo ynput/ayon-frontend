@@ -25,6 +25,8 @@ type Params = {
   folderIds?: string[]
   versionIds?: string[]
   productIds?: string[]
+  featuredOnly?: string[]
+  featuredOnlyEntityType?: string
 }
 
 export const useVPColumnStats = ({
@@ -35,6 +37,8 @@ export const useVPColumnStats = ({
   folderIds,
   versionIds,
   productIds,
+  featuredOnly,
+  featuredOnlyEntityType,
 }: Params) => {
   const { projectName } = useProjectContext()
   const { attribFields } = useProjectDataContext()
@@ -91,7 +95,12 @@ export const useVPColumnStats = ({
     productIds,
   }
   const productStatsArgs = { ...columnStatsBaseArgs, targets: productTargets }
-  const versionStatsArgs = { ...columnStatsBaseArgs, targets: versionTargets }
+  const versionStatsArgs = {
+    ...columnStatsBaseArgs,
+    featuredOnly,
+    featuredOnlyEntityType,
+    targets: versionTargets,
+  }
   const skip = !projectName || isLoadingViews || !powerLicense || noSummaries
 
   const productQuery = useGetProductsColumnStatsQuery(productStatsArgs, { skip })

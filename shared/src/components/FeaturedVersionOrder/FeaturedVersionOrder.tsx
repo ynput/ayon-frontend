@@ -22,9 +22,16 @@ import { CSS } from '@dnd-kit/utilities'
 export const FEATURED_VERSION_TYPES = [
   { value: 'hero', label: 'Hero', short: 'Hero', icon: 'star' },
   { value: 'latestDone', label: 'Latest Done', short: 'Done', icon: 'check_circle' },
-  { value: 'latest', label: 'Latest', short: 'Latest', icon: 'fiber_new' },
+  { value: 'latest', label: 'Product latest version', short: 'Latest', icon: 'fiber_new' },
 ]
 export const DEFAULT_FEATURED_ORDER = FEATURED_VERSION_TYPES.map((option) => option.value)
+
+export const FEATURED_VERSION_FILTER_TYPES = [
+  ...FEATURED_VERSION_TYPES,
+  { value: 'folderLatest', label: 'Folder latest version', icon: 'fiber_new' },
+  { value: 'folderLatestDone', label: 'Folder latest done version', icon: 'check_circle' },
+  { value: 'folderHero', label: 'Folder hero version', icon: 'star' },
+]
 
 interface FeaturedVersionOrderProps {
   value: string[]
