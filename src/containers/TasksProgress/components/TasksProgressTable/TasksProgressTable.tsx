@@ -71,6 +71,9 @@ interface TasksProgressTableProps
   onExpandRow: (folderId: string) => void
   collapsedParents: string[]
   onCollapseRow: (folderId: string) => void
+  hasMore?: boolean
+  isLoadingMore?: boolean
+  onLoadMore?: () => void
   onChange: TaskFieldChange
   onSelection: (taskId: string, meta: boolean, shift: boolean) => void
   onOpenViewer: ({
@@ -89,6 +92,9 @@ export const TasksProgressTable = ({
   tableData = [],
   projectName,
   isLoading,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
   activeTask,
   selectedAssignees = [],
   taskStatuses = [], // project task statuses schema
@@ -304,6 +310,24 @@ export const TasksProgressTable = ({
     '.p-datatable-wrapper',
   )
 
+  // lazily load more tasks when the user scrolls near the bottom of the table
+  useEffect(() => {
+    const el = tableWrapperEl
+    if (!el || !hasMore || isLoadingMore) return
+
+    const maybeLoadMore = () => {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200) {
+        onLoadMore?.()
+      }
+    }
+
+    el.addEventListener('scroll', maybeLoadMore, { passive: true })
+    // también chequea si el contenido no llena el viewport (sin scroll aún)
+    maybeLoadMore()
+
+    return () => el.removeEventListener('scroll', maybeLoadMore)
+  }, [tableWrapperEl, hasMore, isLoadingMore, onLoadMore])
+
   const buildColumnHeaderMenuItems = (taskType: string) => [
     {
       label: 'Reset column width',
@@ -359,6 +383,23 @@ export const TasksProgressTable = ({
       }}
       className="tasks-progress-table"
       rowClassName={(rowData: FolderRow) => (rowData.__isParent ? 'parent-row' : 'folder-row')}
+      footer={
+        hasMore || isLoadingMore ? (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 8,
+              padding: 6,
+              fontSize: 12,
+              color: 'var(--text-color-secondary, #888)',
+            }}
+          >
+            {isLoadingMore ? 'Loading more tasks…' : 'Scroll down to load more'}
+          </div>
+        ) : undefined
+      }
       {...props}
     >
       <Column

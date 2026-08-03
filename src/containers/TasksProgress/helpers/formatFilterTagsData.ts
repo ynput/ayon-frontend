@@ -1,7 +1,7 @@
 import { BuildFilterOptions } from '@shared/components'
-import { GetTasksProgressResult } from '@queries/tasksProgress/getTasksProgress'
+import { FolderGroup } from '@queries/tasksProgress/getTasksProgress'
 
-const formatFilterTagsData = (data: GetTasksProgressResult): BuildFilterOptions['data']['tags'] => {
+const formatFilterTagsData = (data: FolderGroup[]): BuildFilterOptions['data']['tags'] => {
   const tags: BuildFilterOptions['data']['tags'] = []
 
   //   add tags from tasks

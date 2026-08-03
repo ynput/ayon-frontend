@@ -10,12 +10,15 @@ query GetTasksProgress(
   $statuses: [String!]
   $taskTypes: [String!]
   $attributes: [AttributeFilterInput!]
+  $first: Int = 100
+  $after: String
 ) {
   project(name: $projectName) {
     name
     tasks(
       folderIds: $folderIds
-      last: 1000
+      first: $first
+      after: $after
       includeFolderChildren: true
       assignees: $assignees
       assigneesAny: $assigneesAny
@@ -29,6 +32,10 @@ query GetTasksProgress(
         node {
           ...ProgressTaskFragment
         }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
   }

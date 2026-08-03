@@ -11,7 +11,12 @@ export interface FolderGroup extends ProgressTaskFolder {
   tasks: ProgressTask[]
 }
 
-export type GetTasksProgressResult = FolderGroup[]
+export type TasksProgressPageInfo = GetTasksProgressQuery['project']['tasks']['pageInfo']
+
+export type GetTasksProgressResult = {
+  folders: FolderGroup[]
+  pageInfo: TasksProgressPageInfo
+}
 export type GetProgressTaskResult = ProgressTask | null | undefined
 
 type GroupedTasksType = {
@@ -37,13 +42,16 @@ const transformTasksProgress = (data: GetTasksProgressQuery): GetTasksProgressRe
 
   const foldersWithTasks = Object.values(groupedTasks)
 
-  return foldersWithTasks
+  return {
+    folders: foldersWithTasks,
+    pageInfo: data.project.tasks.pageInfo,
+  }
 }
 
 const provideTagsTasksProgress = (result: GetTasksProgressResult | undefined) => {
   if (!result) return []
-  const folderTags = result.map((folder) => ({ id: folder.id, type: 'folder' }))
-  const taskTags = result.flatMap((folder) =>
+  const folderTags = result.folders.map((folder) => ({ id: folder.id, type: 'folder' }))
+  const taskTags = result.folders.flatMap((folder) =>
     folder.tasks.map((task) => ({ id: task.id, type: 'task' })),
   )
   // progress tags
@@ -66,6 +74,32 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
     GetTasksProgress: {
       transformResponse: transformTasksProgress,
       providesTags: provideTagsTasksProgress,
+      // solo cachear por los args de filtro (no por el cursor), para que las
+      // páginas compartan una única entrada de cache y merge acumule
+      serializeQueryArgs: ({ queryArgs }) => {
+        const { first, after, ...rest } = queryArgs || {}
+        return rest
+      },
+      // acumular páginas nuevas sobre la cache existente (paginación)
+      merge: (currentCache, newCache) => {
+        const { folders: newFolders = [], pageInfo } = newCache
+        const { folders: currentFolders = [] } = currentCache || { folders: [] }
+
+        // merge por folder id, agregando tasks deduplicadas por id
+        const folderMap = new Map<string, FolderGroup>()
+        for (const folder of [...currentFolders, ...newFolders]) {
+          const existing = folderMap.get(folder.id)
+          if (!existing) {
+            folderMap.set(folder.id, { ...folder, tasks: [...folder.tasks] })
+          } else {
+            const existingIds = new Set(existing.tasks.map((t) => t.id))
+            existing.tasks.push(...folder.tasks.filter((t) => !existingIds.has(t.id)))
+          }
+        }
+
+        return { folders: [...folderMap.values()], pageInfo }
+      },
+      keepUnusedDataFor: 30,
       async onCacheEntryAdded(
         { projectName },
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
@@ -79,7 +113,7 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
           unsubscribeThumbnails = subscribeToThumbnailUpdates(
             (messages: ThumbnailUpdateMessage[]) => {
               const draftData = getCacheEntry().data
-              if (!draftData?.length) return
+              if (!draftData?.folders?.length) return
 
               const relevantMessages = messages.filter((m) => m.project === projectName)
               if (!relevantMessages.length) return
@@ -87,7 +121,7 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
               updateCachedData((draft) => {
                 relevantMessages.forEach((message) => {
                   if (message.summary.entityType === 'task') {
-                    draft.forEach((folder) => {
+                    draft.folders.forEach((folder) => {
                       const taskIndex = folder.tasks.findIndex(
                         (t) => t.id === message.summary.entityId,
                       )
@@ -96,9 +130,11 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
                       }
                     })
                   } else if (message.summary.entityType === 'folder') {
-                    const folderIndex = draft.findIndex((f) => f.id === message.summary.entityId)
+                    const folderIndex = draft.folders.findIndex(
+                      (f) => f.id === message.summary.entityId,
+                    )
                     if (folderIndex !== -1) {
-                      draft[folderIndex].thumbnailHash = message.summary.thumbnailHash || ''
+                      draft.folders[folderIndex].thumbnailHash = message.summary.thumbnailHash || ''
                     }
                   }
                 })
@@ -118,7 +154,7 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
 
             // create a lookup set of all tasks
             const allTasks = new Set<string>()
-            tasksProgressCache?.forEach((folder) => {
+            tasksProgressCache?.folders?.forEach((folder) => {
               folder.tasks.forEach((task) => {
                 allTasks.add(task.id)
               })
@@ -138,7 +174,7 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
                 updateCachedData((draft) => {
                   if (!draft) return
                   // find the folder to remove the task from
-                  for (const folder of draft) {
+                  for (const folder of draft.folders) {
                     const taskIndex = folder.tasks.findIndex((task) => task.id === messageTaskId)
                     if (taskIndex !== -1) {
                       folder.tasks.splice(taskIndex, 1)
@@ -176,9 +212,11 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
               updateCachedData((draft) => {
                 if (!draft) return
                 // find the folder to add the task to
-                const folderIndex = draft.findIndex((folder) => folder.id === updatedTask.folder.id)
+                const folderIndex = draft.folders.findIndex(
+                  (folder) => folder.id === updatedTask.folder.id,
+                )
                 if (folderIndex === -1) return
-                const foundFolder = draft[folderIndex]
+                const foundFolder = draft.folders[folderIndex]
                 // find the task to update
                 const newTasks = [...foundFolder.tasks]
                 const taskIndex = newTasks.findIndex((task) => task.id === updatedTask.id)
@@ -193,7 +231,7 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
                 }
 
                 // update the folder
-                draft[folderIndex] = {
+                draft.folders[folderIndex] = {
                   ...foundFolder,
                   tasks: newTasks,
                 }
@@ -228,4 +266,4 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
   },
 })
 
-export const { useGetTasksProgressQuery } = enhancedEndpoints
+export const { useGetTasksProgressQuery, useLazyGetTasksProgressQuery } = enhancedEndpoints

@@ -2226,10 +2226,12 @@ export type GetTasksProgressQueryVariables = Exact<{
   statuses?: Array<string> | string | null | undefined;
   taskTypes?: Array<string> | string | null | undefined;
   attributes?: Array<AttributeFilterInput> | AttributeFilterInput | null | undefined;
+  first?: number | null | undefined;
+  after?: string | null | undefined;
 }>;
 
 
-export type GetTasksProgressQuery = { project: { name: string, tasks: { edges: Array<{ node: { projectName: string, id: string, name: string, label: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: unknown, thumbnailHash: string, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { priority: string | null, endDate: unknown, resolutionHeight: number | null, resolutionWidth: number | null, fps: number | null }, folder: { id: string, name: string, label: string | null, folderType: string, parents: Array<string>, status: string, updatedAt: unknown, thumbnailHash: string, parent: { id: string, name: string, label: string | null, parents: Array<string> } | null } } }> } } };
+export type GetTasksProgressQuery = { project: { name: string, tasks: { edges: Array<{ node: { projectName: string, id: string, name: string, label: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: unknown, thumbnailHash: string, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { priority: string | null, endDate: unknown, resolutionHeight: number | null, resolutionWidth: number | null, fps: number | null }, folder: { id: string, name: string, label: string | null, folderType: string, parents: Array<string>, status: string, updatedAt: unknown, thumbnailHash: string, parent: { id: string, name: string, label: string | null, parents: Array<string> } | null } } }>, pageInfo: { hasNextPage: boolean, endCursor: string | null } } } };
 
 export type ProgressTaskFragmentFragment = { projectName: string, id: string, name: string, label: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: unknown, thumbnailHash: string, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { priority: string | null, endDate: unknown, resolutionHeight: number | null, resolutionWidth: number | null, fps: number | null }, folder: { id: string, name: string, label: string | null, folderType: string, parents: Array<string>, status: string, updatedAt: unknown, thumbnailHash: string, parent: { id: string, name: string, label: string | null, parents: Array<string> } | null } };
 
@@ -4355,12 +4357,13 @@ export const GetProgressTaskDocument = new TypedDocumentString(`
   }
 }`);
 export const GetTasksProgressDocument = new TypedDocumentString(`
-    query GetTasksProgress($projectName: String!, $folderIds: [String!], $assignees: [String!], $assigneesAny: [String!], $tags: [String!], $tagsAny: [String!], $statuses: [String!], $taskTypes: [String!], $attributes: [AttributeFilterInput!]) {
+    query GetTasksProgress($projectName: String!, $folderIds: [String!], $assignees: [String!], $assigneesAny: [String!], $tags: [String!], $tagsAny: [String!], $statuses: [String!], $taskTypes: [String!], $attributes: [AttributeFilterInput!], $first: Int = 100, $after: String) {
   project(name: $projectName) {
     name
     tasks(
       folderIds: $folderIds
-      last: 1000
+      first: $first
+      after: $after
       includeFolderChildren: true
       assignees: $assignees
       assigneesAny: $assigneesAny
@@ -4374,6 +4377,10 @@ export const GetTasksProgressDocument = new TypedDocumentString(`
         node {
           ...ProgressTaskFragment
         }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
   }

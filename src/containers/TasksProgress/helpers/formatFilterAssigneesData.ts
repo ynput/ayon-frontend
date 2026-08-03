@@ -1,8 +1,8 @@
 import { BuildFilterOptions } from '@shared/components'
-import { GetTasksProgressResult } from '@queries/tasksProgress/getTasksProgress'
+import { FolderGroup } from '@queries/tasksProgress/getTasksProgress'
 
 const formatFilterAssigneesData = (
-  data: GetTasksProgressResult,
+  data: FolderGroup[],
 ): BuildFilterOptions['data']['assignees'] => {
   const assignees: BuildFilterOptions['data']['assignees'] = []
 

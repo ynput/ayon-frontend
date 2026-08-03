@@ -1,5 +1,9 @@
 import { FC, useMemo, useState, useRef } from 'react'
-import { ProgressTask, useGetTasksProgressQuery } from '@queries/tasksProgress/getTasksProgress'
+import {
+  ProgressTask,
+  useGetTasksProgressQuery,
+  useLazyGetTasksProgressQuery,
+} from '@queries/tasksProgress/getTasksProgress'
 import { $Any } from '@types'
 import { useSelector } from 'react-redux'
 import {
@@ -154,12 +158,22 @@ const TasksProgress: FC<TasksProgressProps> = ({
   //
   // GET TASKS PROGRESS FOR FOLDERS
   const {
-    data: foldersTasksData = [],
+    data: { folders: foldersTasksData = [], pageInfo } = {},
     isFetching: isFetchingTasks,
     error,
   } = useGetTasksProgressQuery(tasksProgressArgs, {
     skip: !folderIdsToFetch.length || !projectName,
   })
+
+  // paginación: cargar más tareas al llegar al final de la tabla
+  const { hasNextPage, endCursor } = pageInfo || {}
+
+  const [getTasksProgress, { isFetching: isFetchingMoreTasks }] = useLazyGetTasksProgressQuery()
+
+  const handleLoadMore = () => {
+    if (!hasNextPage || isFetchingTasks || isFetchingMoreTasks || !endCursor) return
+    getTasksProgress({ ...tasksProgressArgs, after: endCursor })
+  }
 
   const handleSync = async () => {
     if (!folderIdsToFetch.length || !projectName) return
@@ -411,6 +425,9 @@ const TasksProgress: FC<TasksProgressProps> = ({
               tableData={tableData}
               projectName={projectName}
               isLoading={isFetchingTasks}
+              hasMore={hasNextPage}
+              onLoadMore={handleLoadMore}
+              isLoadingMore={isFetchingMoreTasks}
               activeTask={activeTask}
               selectedAssignees={selectedAssignees}
               taskStatuses={taskStatuses} // task status icons etc.
