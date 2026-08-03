@@ -28,6 +28,7 @@ export * from './getThumbnailUrl'
 export * from './thumbnailWebsocket'
 export * from './getBundleMode'
 export * from './replaceRoot'
+export * from './realtimeUpdatesUtils'
 
 import isHTMLElement from './isHTMLElement'
 export { isHTMLElement }
