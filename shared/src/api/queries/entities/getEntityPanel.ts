@@ -332,7 +332,7 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
           )
 
           const handlePubSub = (_topic: string, message: any) => {
-            if (!message?.summary?.entityId) return
+            if (!message?.project || !message?.summary?.entityId) return
             batcher.add({ topic: _topic, message })
           }
 

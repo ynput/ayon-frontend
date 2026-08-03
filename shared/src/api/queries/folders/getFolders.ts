@@ -162,9 +162,7 @@ const enhancedApi = foldersApi.enhanceEndpoints({
 
           // Fetch created and unsupported folders in one request.
           // This is to avoid overwhelming the API with too many requests at once, and to prevent potential performance issues in the frontend.
-          const foldersToFetch = [
-            ...new Set([...createdIds, ...unsupportedFields.keys()]),
-          ]
+          const foldersToFetch = [...new Set([...createdIds, ...unsupportedFields.keys()])]
           if (foldersToFetch.length > MAX_FOLDER_UPDATE_REST_CALLS) return
 
           if (foldersToFetch.length) {
@@ -252,7 +250,6 @@ const enhancedApi = foldersApi.enhanceEndpoints({
         }
 
         await cacheEntryRemoved
-        batcher.clear()
         tokens.forEach((t) => PubSub.unsubscribe(t))
         if (unsubscribeThumbnails) unsubscribeThumbnails()
         batcher.clear()
