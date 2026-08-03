@@ -96,9 +96,10 @@ export const Actions = ({
     }
   }, [entities, entityType])
 
+
   useEffect(() => {
     setInteractiveForm(null)
-  }, [context])
+  }, [JSON.stringify(context)])
 
   // we must get the developers current dev bundle name
   const { data: bundlesData, isFetching: isFetchingBundles } = useListBundlesQuery(
