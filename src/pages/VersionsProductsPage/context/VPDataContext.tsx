@@ -50,7 +50,7 @@ import type { FieldStats } from '@shared/api'
 import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import {
   DEFAULT_FEATURED_ORDER,
-  FEATURED_VERSION_FILTER_TYPES,
+  FEATURED_VERSION_TYPES,
 } from '../../../../shared/src/components/FeaturedVersionOrder/FeaturedVersionOrder'
 import useVersionsGroupBy from '../hooks/useVersionsGroupBy'
 import { useVPColumnStats } from '../hooks/useVPColumnStats'
@@ -191,7 +191,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     featuredVersionFilter,
     hasReviewablesFilter,
   } = useMemo(() => {
-    const FEATURED_VERSION_VALUES = FEATURED_VERSION_FILTER_TYPES.map((type) => type.value)
+    const FEATURED_VERSION_VALUES = FEATURED_VERSION_TYPES.map((type) => type.value)
     const result = extractFilters(filters, [
       {
         filterKey: 'version',

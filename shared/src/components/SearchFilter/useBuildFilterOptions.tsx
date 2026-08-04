@@ -172,7 +172,7 @@ export const useBuildFilterOptions = ({
 
   // Loop through each scope to build options
   scopesWithTypes.forEach(({ scope: currentScope, filterTypes: scopeFilterTypes }) => {
-    const scopeId = isMultiScope ? currentScope : undefined
+    const entityType = isMultiScope ? currentScope : undefined
 
     // TASK TYPE
     // add taskType option
@@ -183,7 +183,7 @@ export const useBuildFilterOptions = ({
           ...config,
           enableOperatorChange: false,
         },
-        scopeId,
+        entityType,
         groupedFilterTypes.has('taskType'),
       )
       if (entitySubTypeOption) {
@@ -205,7 +205,7 @@ export const useBuildFilterOptions = ({
           ...config,
           enableOperatorChange: false,
         },
-        scopeId,
+        entityType,
         groupedFilterTypes.has('folderType'),
       )
       if (entitySubTypeOption) {
@@ -227,7 +227,7 @@ export const useBuildFilterOptions = ({
           ...config,
           enableOperatorChange: false,
         },
-        scopeId,
+        entityType,
         groupedFilterTypes.has('productType'),
       )
       if (entitySubTypeOption) {
@@ -247,7 +247,7 @@ export const useBuildFilterOptions = ({
           ...config,
           enableOperatorChange: false,
         },
-        scopeId,
+        entityType,
         groupedFilterTypes.has('productBaseType'),
       )
       if (productBaseTypeOption) {
@@ -278,7 +278,7 @@ export const useBuildFilterOptions = ({
       const productNameOption = getOptionRoot(
         'productName',
         config,
-        scopeId,
+        entityType,
         groupedFilterTypes.has('productName'),
       )
 
@@ -303,7 +303,7 @@ export const useBuildFilterOptions = ({
       const statusOption = getOptionRoot(
         'status',
         { ...config, enableOperatorChange: false },
-        scopeId,
+        entityType,
         groupedFilterTypes.has('status'),
       )
 
@@ -334,7 +334,7 @@ export const useBuildFilterOptions = ({
       const assigneesOption = getOptionRoot(
         'assignees',
         config,
-        scopeId,
+        entityType,
         groupedFilterTypes.has('assignees'),
       )
 
@@ -366,7 +366,7 @@ export const useBuildFilterOptions = ({
       const authorOption = getOptionRoot(
         'author',
         config,
-        scopeId,
+        entityType,
         groupedFilterTypes.has('author'),
       )
       if (authorOption) {
@@ -388,7 +388,7 @@ export const useBuildFilterOptions = ({
     // TAGS
     // add tags options
     if (scopeFilterTypes.includes('tags')) {
-      const tagsOption = getOptionRoot('tags', config, scopeId, groupedFilterTypes.has('tags'))
+      const tagsOption = getOptionRoot('tags', config, entityType, groupedFilterTypes.has('tags'))
 
       if (tagsOption) {
         // reduce projectsInfo to get all tags
@@ -444,22 +444,12 @@ export const useBuildFilterOptions = ({
       const versionOption = getOptionRoot(
         'version',
         config,
-        scopeId,
+        entityType,
         groupedFilterTypes.has('version'),
       )
 
       if (versionOption) {
-        const versionTypes =
-          currentScope === 'folder'
-            ? [
-                { value: 'folderLatest', label: 'Latest', icon: 'fiber_new' },
-                { value: 'folderLatestDone', label: 'Latest Done', icon: 'check_circle' },
-                { value: 'folderHero', label: 'Hero', icon: 'star' },
-              ]
-            : FEATURED_VERSION_TYPES.map((versionType) => ({
-                ...versionType,
-                label: versionType.value === 'latest' ? 'Latest' : versionType.label,
-              }))
+        const versionTypes = FEATURED_VERSION_TYPES
 
         versionTypes.forEach((versionType) => {
           versionOption.values?.push({
@@ -476,7 +466,7 @@ export const useBuildFilterOptions = ({
     // NAME
     // add name filter for custom string input
     if (scopeFilterTypes.includes('name')) {
-      const nameOption = getOptionRoot('name', config, scopeId, groupedFilterTypes.has('name'))
+      const nameOption = getOptionRoot('name', config, entityType, groupedFilterTypes.has('name'))
 
       if (nameOption) {
         options.push(nameOption)
@@ -489,7 +479,7 @@ export const useBuildFilterOptions = ({
       const hasReviewablesOption = getOptionRoot(
         'hasReviewables',
         config,
-        scopeId,
+        entityType,
         groupedFilterTypes.has('hasReviewables'),
       )
 
@@ -516,7 +506,7 @@ export const useBuildFilterOptions = ({
       const createdAtOption = getOptionRoot(
         'createdAt',
         config,
-        scopeId,
+        entityType,
         groupedFilterTypes.has('createdAt'),
       )
       if (createdAtOption) {
@@ -537,7 +527,7 @@ export const useBuildFilterOptions = ({
       const updatedAtOption = getOptionRoot(
         'updatedAt',
         config,
-        scopeId,
+        entityType,
         groupedFilterTypes.has('updatedAt'),
       )
       if (updatedAtOption) {
@@ -602,7 +592,7 @@ export const useBuildFilterOptions = ({
             enableOperatorChange: enableOperatorChange,
             enableRelativeValues: enableRelativeValues,
           },
-          scopeId,
+          entityType,
           (attributeScopeCounts.get(attribute.name) || 0) > 1,
         )
 
@@ -665,15 +655,15 @@ export const useBuildFilterOptions = ({
   // Build groups from the options so every filter field is represented without
   // maintaining a separate list as fields are added.
   const groupOptions = options.reduce<SearchFilterGroupOption[]>((groups, option) => {
-    if (!option.group || groups.some((group) => group.name === option.group)) return groups
+    if (!option.group) return groups
     const groupName = typeof option.group === 'string' ? option.group : option.group.name
+    if (groups.some((group) => group.name === groupName)) return groups
 
     groups.push({
       name: groupName,
       label: option.label,
       icon: option.icon,
       color: option.color,
-      tooltip: option.label,
     })
     return groups
   }, [])
@@ -764,58 +754,41 @@ const getSubTypes = (
 
 const getFormattedId = (
   base: string,
-  fieldType: FilterFieldType,
+  fieldName: FilterFieldType,
   config?: FilterConfig,
-  scopeId?: string,
+  entityType?: string,
 ) => {
   const { prefixes, keys } = config || {}
   let result = base
 
-  if (keys && fieldType in keys) {
-    result = `${keys[fieldType]}`
-  } else if (prefixes && fieldType in prefixes) {
-    result = `${prefixes[fieldType]}${base}`
+  if (keys && fieldName in keys) {
+    result = `${keys[fieldName]}`
+  } else if (prefixes && fieldName in prefixes) {
+    result = `${prefixes[fieldName]}${base}`
   }
 
   // Add scope prefix if provided
-  if (scopeId) {
-    result = `${scopeId}_${result}`
+  if (entityType) {
+    result = `${entityType}_${result}`
   }
 
   return result
 }
 
 const getOptionRoot = (
-  fieldType: FilterFieldType,
+  fieldName: FilterFieldType,
   config?: FilterConfig,
-  scopeId?: string,
+  entityType?: string,
   shouldGroup = false,
 ) => {
-  const getRootIdWithPrefix = (base: string) => getFormattedId(base, fieldType, config, scopeId)
-  const entityLabel = upperFirst(scopeId || '')
-  const group = shouldGroup
-    ? {
-        name: fieldType,
-        label: `${entityLabel} ${fieldType}`,
-        icon: getEntityTypeIcon(scopeId || ''),
-        tooltip: `${entityLabel} ${fieldType}`,
-      }
-    : undefined
-
-  const search = shouldGroup
-    ? {
-        label: entityLabel,
-      }
-    : undefined
+  const getRootIdWithPrefix = (base: string) => getFormattedId(base, fieldName, config, entityType)
 
   let rootOption: Option | null = null
-  switch (fieldType) {
+  switch (fieldName) {
     case 'taskType':
       rootOption = {
         id: getRootIdWithPrefix(`taskType`),
         type: 'string',
-        group,
-        search,
         label: 'Task Type',
         icon: getAttributeIcon('task'),
         inverted: false,
@@ -832,8 +805,6 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix(`folderType`),
         type: 'string',
-        group,
-        search,
         label: 'Folder Type',
         icon: getAttributeIcon('folder'),
         inverted: false,
@@ -850,8 +821,6 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix(`productType`),
         type: 'string',
-        group,
-        search,
         label: 'Product Type',
         icon: getAttributeIcon('product'),
         inverted: false,
@@ -868,8 +837,6 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix(`productBaseType`),
         type: 'string',
-        group,
-        search,
         label: 'Product Base Type',
         icon: getAttributeIcon('product'),
         inverted: false,
@@ -886,8 +853,6 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix(`productNames`),
         type: 'string',
-        group,
-        search,
         label: 'Product Name',
         icon: getAttributeIcon('productName', 'string'),
         inverted: false,
@@ -904,8 +869,6 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('status'),
         type: 'string',
-        group,
-        search,
         label: 'Status',
         icon: getAttributeIcon('status'),
         inverted: false,
@@ -922,8 +885,6 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('assignees'),
         type: 'list_of_strings',
-        group,
-        search,
         label: 'Assignee',
         icon: getAttributeIcon('assignees'),
         inverted: false,
@@ -940,8 +901,6 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('author'),
         type: 'string',
-        group,
-        search,
         label: 'Author',
         icon: getAttributeIcon('author'),
         inverted: false,
@@ -958,8 +917,6 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('tags'),
         type: 'list_of_strings',
-        group,
-        search,
         label: 'Tags',
         icon: getAttributeIcon('tags'),
         inverted: false,
@@ -976,8 +933,6 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('version'),
         type: 'string',
-        group,
-        search,
         label: 'Latest Version',
         icon: getAttributeIcon('latest'),
         inverted: false,
@@ -996,8 +951,6 @@ const getOptionRoot = (
         id: getRootIdWithPrefix('name'),
         type: 'string',
         label: 'Name',
-        group,
-        search,
         icon: 'text_fields',
         inverted: false,
         operator: 'OR',
@@ -1013,8 +966,6 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('hasReviewables'),
         type: 'boolean',
-        group,
-        search,
         label: 'Has Reviewables',
         icon: 'play_circle',
         inverted: false,
@@ -1032,8 +983,6 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('createdAt'),
         type: 'datetime',
-        group,
-        search,
         label: 'Created',
         icon: 'calendar_add_on',
         inverted: false,
@@ -1051,8 +1000,6 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('updatedAt'),
         type: 'datetime',
-        group,
-        search,
         label: 'Updated',
         icon: 'edit_calendar',
         inverted: false,
@@ -1072,22 +1019,43 @@ const getOptionRoot = (
     // Note: attributes are handled separately
   }
 
+  const entityLabel = upperFirst(entityType || '')
+  const fieldNameWithEntityType = (label: string) =>
+    entityType ? `${entityLabel} ${label}` : label
+
+  if (shouldGroup && rootOption) {
+    rootOption.group = {
+      name: fieldName,
+      label: fieldNameWithEntityType(rootOption.label),
+      icon: getEntityTypeIcon(entityType || ''),
+    }
+
+    rootOption.search = {
+      label: entityLabel,
+    }
+  }
+
+  if (rootOption && entityType) {
+    rootOption.tooltip = fieldNameWithEntityType(rootOption.label)
+    rootOption.value = { icon: getEntityTypeIcon(entityType) }
+  }
+
   return rootOption
 }
 
 const getAttributeFieldOptionRoot = (
   attribute: AttributeModel,
   config: FilterConfig & { allowsCustomValues: boolean },
-  scopeId?: string,
+  entityType?: string,
   shouldGroup = false,
 ): Option => {
   const label = attribute.data.title || attribute.name
-  const scopeLabel = scopeId ? `${upperFirst(scopeId)} ` : ''
+  const scopeLabel = entityType ? `${upperFirst(entityType)} ` : ''
   const group = shouldGroup
     ? {
         name: attribute.name,
         label: `${scopeLabel}${label}`,
-        icon: getEntityTypeIcon(scopeId || ''),
+        icon: getEntityTypeIcon(entityType || ''),
       }
     : undefined
 
@@ -1098,11 +1066,10 @@ const getAttributeFieldOptionRoot = (
     : undefined
 
   return {
-    id: getFormattedId(attribute.name, 'attributes', config, scopeId),
+    id: getFormattedId(attribute.name, 'attributes', config, entityType),
     type: attribute.data.type,
     label,
-    group,
-    search,
+
     operator: 'OR',
     inverted: false,
     values: [],
@@ -1112,6 +1079,10 @@ const getAttributeFieldOptionRoot = (
     allowExcludes: config?.enableExcludes,
     operatorChangeable: config?.enableOperatorChange,
     icon: getAttributeIcon(attribute.name, attribute.data.type, !!attribute.data.enum?.length),
+    group,
+    search,
+    tooltip: entityType ? `${upperFirst(entityType)} ${label}` : undefined,
+    value: entityType ? { icon: getEntityTypeIcon(entityType) } : undefined,
     singleSelect: ['boolean', 'datetime'].includes(attribute.data.type || ''),
   }
 }

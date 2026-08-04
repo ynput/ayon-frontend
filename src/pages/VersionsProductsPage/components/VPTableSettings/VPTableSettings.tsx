@@ -81,7 +81,7 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
       title: 'Featured version',
       icon: 'layers',
       preview:
-        FEATURED_VERSION_TYPES.find((option) => option.value === featuredVersionOrder[0])?.short ||
+        FEATURED_VERSION_TYPES.find((option) => option.value === featuredVersionOrder[0])?.label ||
         '',
       component: (
         <FeaturedVersionOrder
