@@ -656,14 +656,15 @@ export const useBuildFilterOptions = ({
   // maintaining a separate list as fields are added.
   const groupOptions = options.reduce<SearchFilterGroupOption[]>((groups, option) => {
     if (!option.group) return groups
-    const groupName = typeof option.group === 'string' ? option.group : option.group.name
+    const group = typeof option.group === 'string' ? undefined : option.group
+    const groupName = group?.name || option.group
     if (groups.some((group) => group.name === groupName)) return groups
 
     groups.push({
       name: groupName,
-      label: option.label,
-      icon: option.icon,
-      color: option.color,
+      label: group?.label || option.label,
+      icon: group?.icon || option.icon,
+      color: group?.color || option.color,
     })
     return groups
   }, [])
