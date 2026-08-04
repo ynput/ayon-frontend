@@ -657,7 +657,7 @@ export const useBuildFilterOptions = ({
   const groupOptions = options.reduce<SearchFilterGroupOption[]>((groups, option) => {
     if (!option.group) return groups
     const group = typeof option.group === 'string' ? undefined : option.group
-    const groupName = group?.name || option.group
+    const groupName = group?.name || (option.group as string)
     if (groups.some((group) => group.name === groupName)) return groups
 
     groups.push({
