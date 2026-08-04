@@ -357,6 +357,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   )
 
   const resolvedSortBy = useMemo(() => (sortBy && SORT_BY_FIELD_MAP[sortBy]) || sortBy, [sortBy])
+  const featuredVersionQueryArgs = getFeaturedVersionQueryArgs(featuredVersionFilter)
 
   const queryArgs = useMemo(
     () => ({
@@ -404,9 +405,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
     versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
     productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
-    featuredOnly: getFeaturedVersionQueryArgs(featuredVersionFilter)?.featuredOnly,
-    featuredOnlyEntityType:
-      getFeaturedVersionQueryArgs(featuredVersionFilter)?.featuredOnlyEntityType,
+    featuredOnly: featuredVersionQueryArgs?.featuredOnly,
+    featuredOnlyEntityType: featuredVersionQueryArgs?.featuredOnlyEntityType,
   })
 
   const resolveEntityArguments = useCallback(
