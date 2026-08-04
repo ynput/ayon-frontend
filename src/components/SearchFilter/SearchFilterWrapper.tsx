@@ -28,7 +28,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const { pinnedSlice, setPinnedSlice } = useSlicerContext()
   const { getFolderById } = useProjectFoldersContext()
 
-  const options = useBuildFilterOptions({
+  const { options, groupOptions } = useBuildFilterOptions({
     filterTypes,
     projectNames,
     scope,
@@ -91,6 +91,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   return (
     <SearchFilter
       options={options}
+      groupOptions={groupOptions}
       filters={localFilters}
       onChange={setLocalFilters}
       onFinish={handleFinish}
