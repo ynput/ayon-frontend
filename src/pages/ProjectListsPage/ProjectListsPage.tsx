@@ -3,7 +3,7 @@ import {
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
-import { FC, useEffect, useMemo } from 'react'
+import { FC, useCallback, useEffect, useMemo } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
@@ -48,7 +48,7 @@ import { useAppDispatch, useAppSelector } from '@state/store.ts'
 import { UniqueIdentifier } from '@dnd-kit/core'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
-import { useViewsContext } from '@shared/containers/index.ts'
+import { useSlicerContext, useViewsContext } from '@shared/containers/index.ts'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
 import DndContextWrapper from './components/DndContextWrapper'
 import { toast } from 'react-toastify'
@@ -151,6 +151,11 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
   const { resetWorkingView } = useViewsContext()
+  const { setPinnedSlice } = useSlicerContext()
+  const handleResetView = useCallback(async () => {
+    setPinnedSlice(null)
+    await resetWorkingView()
+  }, [resetWorkingView, setPinnedSlice])
   const { SubtasksManager } = useSubtasksModulesContext()
 
   // merge attribFields with listAttributes
@@ -213,7 +218,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                 scopes={SCOPES}
                 playerOpen={viewerOpen}
                 onOpenPlayer={handleOpenPlayer}
-                onResetView={(selectedList?.count || 0) > 0 ? resetWorkingView : undefined}
+                onResetView={(selectedList?.count || 0) > 0 ? handleResetView : undefined}
                 SubtasksManager={SubtasksManager}
                 useParams={useParams}
                 useNavigate={useNavigate}

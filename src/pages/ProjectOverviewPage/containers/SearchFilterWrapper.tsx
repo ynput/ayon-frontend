@@ -118,7 +118,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     const filtersWithPinnedSlice = pinned ? [pinned, ...filters] : filters
 
     return filtersWithPinnedSlice
-  }, [queryFilters, options])
+  }, [queryFilters, options, pinnedSlice, getFolderById])
 
   // keeps track of the filters whilst adding/removing filters
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
@@ -236,25 +236,26 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     // Dropdown closed (or filters committed) — search-chip edit session ends
     editingSearchChipRef.current = null
 
-    // Check if pinned slice was removed
+    // The pinned slice is display-only and must never be sent as a query filter.
     const pinnedId = pinnedSlice ? pinnedSlice.sliceType + '__pinned' : null
-    const isPinnedRemoved = !!pinnedId && !filters.some((f) => f.id === pinnedId)
+    const filtersWithoutPinnedSlice = pinnedId ? filters.filter((f) => f.id !== pinnedId) : filters
+    const hadPinnedFilter = !!pinnedId && localFilters.some((f) => f.id === pinnedId)
+    const isPinnedRemoved = hadPinnedFilter && !filters.some((f) => f.id === pinnedId)
 
     if (isPinnedRemoved) {
       setPinnedSlice(null)
 
       // Check if it's the only change
-      const otherFilters = filters.filter((f) => f.id !== pinnedId)
       const originalOtherFilters = localFilters.filter((f) => f.id !== pinnedId)
 
-      if (JSON.stringify(otherFilters) === JSON.stringify(originalOtherFilters)) {
+      if (JSON.stringify(filtersWithoutPinnedSlice) === JSON.stringify(originalOtherFilters)) {
         return
       }
     }
 
     validateFilters(filters, (validFilters) => {
       // Convert Filter[] back to QueryFilter and call onChange
-      const queryFilter = clientFilterToQueryFilter(validFilters)
+      const queryFilter = clientFilterToQueryFilter(validFilters.filter((f) => f.id !== pinnedId))
       onChange?.(queryFilter)
     })
   }

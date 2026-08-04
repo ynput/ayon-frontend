@@ -257,7 +257,6 @@ const ProjectOverviewPage: FC = () => {
                 // @ts-expect-error: projectInfo is never matching, whatever
                 projectInfo={projectInfo}
                 tasksMap={tasksMap}
-                disabledFilters={sliceType ? [sliceType] : []}
                 data={{}}
               />
               <SyncButton topics={['entity.folder', 'entity.task']} onSync={onSyncData} />
