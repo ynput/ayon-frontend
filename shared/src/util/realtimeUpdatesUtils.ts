@@ -46,7 +46,7 @@ export function createRealtimeBatcher<T>(
   getKey: (item: T) => string,
   delay = REALTIME_UPDATE_DEBOUNCE,
 ) {
-  const pending = new Map<string, T>()
+  const pending = new Map<string, T[]>()
   let timer: ReturnType<typeof setTimeout> | null = null
   let processing = false
 
@@ -63,7 +63,7 @@ export function createRealtimeBatcher<T>(
     if (pending.size === 0) return
 
     processing = true
-    const items = Array.from(pending.values())
+    const items = Array.from(pending.values()).flat()
     pending.clear()
     try {
       await onBatch(items)
