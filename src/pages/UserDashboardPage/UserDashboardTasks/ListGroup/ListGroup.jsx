@@ -43,7 +43,7 @@ const ListGroup = ({
   }
 
   // CONTEXT MENU
-  const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch, {
+  const { handleContextMenu, closeContext, dialogs } = useGetTaskContextMenu(tasks, dispatch, {
     onOpenInOverview: openInOverview,
   })
 
@@ -122,6 +122,7 @@ const ListGroup = ({
           {!isLoading && column?.tasks?.length === 0 && <ListItem none />}
         </>
       )}
+      {dialogs}
     </>
   )
 }

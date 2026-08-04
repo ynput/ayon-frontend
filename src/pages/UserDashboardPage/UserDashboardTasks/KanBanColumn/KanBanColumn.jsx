@@ -84,7 +84,7 @@ const KanBanColumn = forwardRef(
     }
 
     // CONTEXT MENU
-    const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch, {
+    const { handleContextMenu, closeContext, dialogs } = useGetTaskContextMenu(tasks, dispatch, {
       onOpenInOverview: openInOverview,
     })
 
@@ -199,6 +199,7 @@ const KanBanColumn = forwardRef(
     }, [inView])
 
     return (
+      <>
       <Styled.Column ref={ref} id={id}>
         <Styled.DropColumnWrapper
           className={clsx('dropzone', { 'drop-active': active })}
@@ -256,6 +257,8 @@ const KanBanColumn = forwardRef(
             loadingTasks.map((task) => <KanBanCard task={task} key={task.id} isLoading />)}
         </Styled.Items>
       </Styled.Column>
+      {dialogs}
+      </>
     )
   },
 )

@@ -908,6 +908,7 @@ export const ProjectTreeTable = ({
     return (
       <>
         {tableUiContent}
+        {cellContextMenuHook.dialogs}
         {dragOverlayPortal}
         <ColumnDragOverlay table={table} />
       </>
@@ -916,6 +917,7 @@ export const ProjectTreeTable = ({
     return (
       <>
         {tableUiContent}
+        {cellContextMenuHook.dialogs}
         <ColumnDragOverlay table={table} />
       </>
     )

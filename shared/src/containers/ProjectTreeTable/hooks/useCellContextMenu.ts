@@ -16,7 +16,9 @@ import { ColumnDef } from '@tanstack/react-table'
 import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useMemo } from 'react'
-import { useProjectContext } from '@shared/context'
+import { useGlobalContext, useProjectContext } from '@shared/context'
+import { useActionsContextMenu } from '@shared/containers/Actions'
+import { getBundleModeFromUser } from '@shared/util'
 import { newEntityDefinitions, type NewEntityOpenConfig } from '@shared/containers/NewEntity'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
@@ -80,6 +82,8 @@ const useCellContextMenu = ({
   contextMenuItems: propsContextMenuItems,
 }: CellContextMenuProps) => {
   const { projectName } = useProjectContext()
+  const { user } = useGlobalContext()
+  const { getActionsMenuItem, dialogs } = useActionsContextMenu(getBundleModeFromUser(user))
   // context hooks
   const {
     showHierarchy,
@@ -397,7 +401,7 @@ const useCellContextMenu = ({
     }
   }
 
-  const handleTableBodyContextMenu = (e: ContextEvent) => {
+  const handleTableBodyContextMenu = async (e: ContextEvent) => {
     const target = e.target as HTMLElement
     const tdEl = target.closest('td')
     // get id of first child of td
@@ -482,10 +486,21 @@ const useCellContextMenu = ({
           ),
     )
 
-    cellContextMenuShow(e, constructedMenuItems)
+    const actionEntities = filteredSelectedCellsData
+      .filter((item) => item.entityType && item.entityType !== 'unknown')
+      .map((item) => ({
+        id: item.entityId,
+        projectName,
+        entitySubType: (item.data as any)?.entitySubType || (item.data as any)?.taskType,
+      }))
+    const actionItem = await getActionsMenuItem(
+      actionEntities,
+      cellData.entityType === 'unknown' || !cellData.entityType ? 'folder' : cellData.entityType,
+    )
+    cellContextMenuShow(e, actionItem ? [...constructedMenuItems, actionItem] : constructedMenuItems)
   }
 
-  return { handleTableBodyContextMenu }
+  return { handleTableBodyContextMenu, dialogs }
 }
 
 export default useCellContextMenu

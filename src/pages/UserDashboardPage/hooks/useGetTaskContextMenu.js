@@ -5,15 +5,20 @@ import { useSelector } from 'react-redux'
 import useOpenTaskInViewer from './useOpenTaskInViewer'
 import { useScopedDetailsPanel } from '@shared/context'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
+import { useActionsContextMenu } from '@shared/containers/Actions'
+import { getBundleModeFromUser } from '@shared/util'
+import { useGlobalContext } from '@shared/context'
 
 export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInOverview } = {}) => {
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const { setOpen, isOpen } = useScopedDetailsPanel('dashboard')
 
   const openTaskInViewer = useOpenTaskInViewer()
+  const { user } = useGlobalContext()
+  const { getActionsMenuItem, dialogs } = useActionsContextMenu(getBundleModeFromUser(user))
 
-  const getContextMenuItems = (task) => {
-    return [
+  const getContextMenuItems = async (task) => {
+    const items = [
       {
         label: isOpen ? 'Hide details' : 'Show details',
         icon: 'dock_to_left',
@@ -45,6 +50,18 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInOverview } = {}
         disabled: !task.latestVersionId || selectedTasks.length > 1,
       },
     ]
+    const selected = selectedTasks.includes(task.id)
+      ? tasks.filter((item) => selectedTasks.includes(item.id))
+      : [task]
+    const actionsItem = await getActionsMenuItem(
+      selected.map((item) => ({
+        id: item.id,
+        projectName: item.projectName,
+        entitySubType: item.taskType,
+      })),
+      'task',
+    )
+    return actionsItem ? [...items, actionsItem] : items
   }
 
   const [showContextMenu, closeContext] = useCreateContextMenu([])
@@ -78,12 +95,12 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInOverview } = {}
     }
 
     // get context model
-    const contextMenuItems = getContextMenuItems(selectedTask)
+    const contextMenuItems = await getContextMenuItems(selectedTask)
     // show context menu
     showContextMenu(e, contextMenuItems)
   }
 
-  return { handleContextMenu, closeContext }
+  return { handleContextMenu, closeContext, dialogs }
 }
 
 export default useGetTaskContextMenu

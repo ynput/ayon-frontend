@@ -34,7 +34,7 @@ import {
 } from './SimpleTable.types'
 import { useCreateContextMenu } from '../ContextMenu'
 
-const toMenuItems = (items: ReturnType<SimpleTableRowContextMenuBuilder>) => {
+const toMenuItems = (items: Awaited<ReturnType<SimpleTableRowContextMenuBuilder>>) => {
   if (!items) return []
   return Array.isArray(items) ? items.filter(Boolean) : [items]
 }
@@ -549,7 +549,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   const { rows } = table.getRowModel()
 
   const handleRowContextMenu = useCallback(
-    (rowId: string, rowIndex: number, e: ReactMouseEvent<HTMLTableRowElement>) => {
+    async (rowId: string, rowIndex: number, e: ReactMouseEvent<HTMLTableRowElement>) => {
       if (!tableRef.current) return
       const row = rows[rowIndex]
       if (!row || row.original === undefined) return
@@ -567,9 +567,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
         onRowSelectionChange?.(nextSelection)
       }
 
-      const menuItems = rowContextMenuBuilders.flatMap((builder) =>
-        toMenuItems(
-          builder(e as any, {
+      const menuItems = (
+        await Promise.all(
+          rowContextMenuBuilders.map((builder) =>
+            builder(e as any, {
             rowId,
             rowIndex,
             row,
@@ -578,9 +579,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
               .map((selectedRowId) => table.getRowModel().rowsById[selectedRowId])
               .filter((selectedRow): selectedRow is Row<SimpleTableRow> => !!selectedRow),
             isSelected: nextSelectedRows.includes(rowId),
-          }),
-        ),
-      )
+            }),
+          ),
+        )
+      ).flatMap(toMenuItems)
 
       if (menuItems.length > 0) {
         showRowContextMenu(e as any, menuItems)

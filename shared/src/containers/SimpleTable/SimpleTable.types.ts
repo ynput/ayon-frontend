@@ -70,7 +70,7 @@ export type SimpleTableRowContextMenuContext = {
 export type SimpleTableRowContextMenuBuilder = (
   e: React.MouseEvent<HTMLTableRowElement>,
   context: SimpleTableRowContextMenuContext,
-) => ContextMenuItemType | ContextMenuItemType[] | undefined
+) => ContextMenuItemType | ContextMenuItemType[] | undefined | Promise<ContextMenuItemType | ContextMenuItemType[] | undefined>
 
 export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
   data: SimpleTableRow[]

@@ -184,6 +184,7 @@ export const Slicer: FC<SlicerProps> = ({
         onClose={closeMoveDialog}
         onMoveComplete={handleMoveComplete}
       />
+      {hierarchyContextMenu.dialogs}
     </Container>
   )
 }

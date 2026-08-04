@@ -6,6 +6,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { useUpdateOverviewEntitiesMutation } from '@shared/api'
 import {
   useDetailsPanelContext,
+  useGlobalContext,
   useProjectContext,
   useDeleteEntitiesContext,
   type DeletableEntity,
@@ -13,6 +14,8 @@ import {
 import { OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
 import { useOptionalVersionUploadContext } from '@shared/components'
 import { SliceMap } from '../types'
+import { useActionsContextMenu } from '@shared/containers/Actions'
+import { getBundleModeFromUser } from '@shared/util'
 
 const toggleChildren = (row: any, expanded: boolean) => {
   row.toggleExpanded(expanded)
@@ -38,6 +41,8 @@ export const useHierarchyContextMenuItems = (
 ) => {
   const { onOpenNew } = useNewEntityContext()
   const { projectName } = useProjectContext()
+  const { user } = useGlobalContext()
+  const { getActionsMenuItem, dialogs } = useActionsContextMenu(getBundleModeFromUser(user))
   const { setEntities } = useDetailsPanelContext()
   const versionUpload = useOptionalVersionUploadContext()
   const [updateEntities] = useUpdateOverviewEntitiesMutation()
@@ -215,8 +220,19 @@ export const useHierarchyContextMenuItems = (
         danger: true,
         command: () => actions.onDelete(getSelectedRows(row.original, selectedRows)),
       }),
+      async (_e, { row, selectedRows }) => {
+        const selected = getSelectedRows(row.original, selectedRows)
+        return getActionsMenuItem(
+          selected.map((selectedRow) => ({
+            id: selectedRow.id,
+            projectName,
+            entitySubType: selectedRow.data?.entitySubType || selectedRow.data?.taskType,
+          })),
+          row.original.data?.entityType === 'task' ? 'task' : 'folder',
+        )
+      },
     ],
-    [actions, getSelectedRows, onOpenNew],
+    [actions, getActionsMenuItem, getSelectedRows, onOpenNew, projectName],
   )
 
   return {
@@ -227,5 +243,6 @@ export const useHierarchyContextMenuItems = (
     renameInitialValue: renamingRow?.label || renamingRow?.name || '',
     onSubmitRename: handleRenameLabel,
     onCancelRename: () => setRenamingRow(null),
+    dialogs,
   }
 }
