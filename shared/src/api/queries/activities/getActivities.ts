@@ -23,7 +23,6 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import { ChecklistCount } from './types'
-import { handleActivityRealtimeUpdates } from './util/activityRealtimeHandler'
 
 type ActivityUserNode = GetActivityUsersQuery['users']['edges'][0]['node']
 
@@ -185,6 +184,7 @@ export { getActivitiesGQLApi }
 
 import { filterActivityTypes } from './util/activitiesHelpers'
 import { patchTableLatestComments } from './patchTableLatestComments'
+import { handleActivityRealtimeUpdates } from './util/activityRealtimeHandler'
 
 const updateCache = (activitiesDraft: any, patch: any, isDelete: boolean) => {
   // Handle paginated structure

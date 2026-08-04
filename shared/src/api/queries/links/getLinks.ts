@@ -72,6 +72,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
         },
       },
       providesTags: [{ type: 'linkSearchItem', id: 'LIST' }],
+      keepUnusedDataFor: 5,
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
           const { projectName, entityType, search, parentIds } = queryArg
@@ -242,45 +243,6 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
           console.error('Error in getSearchedEntitiesLinks queryFn:', error)
           return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
         }
-      },
-      // Subscribe to link.created and link.deleted WebSocket events
-      async onCacheEntryAdded({ projectName }, { cacheDataLoaded, cacheEntryRemoved, dispatch }) {
-        let token: any
-        const batcher = createRealtimeBatcher(
-          (messages: { inputId?: string; outputId?: string }[]) => {
-            if (!messages.length) return
-            dispatch(gqlLinksApi.util.invalidateTags([{ type: 'linkSearchItem', id: 'LIST' }]))
-          },
-          ({ inputId, outputId }) => `${inputId ?? ''}:${outputId ?? ''}`,
-        )
-
-        try {
-          await cacheDataLoaded
-
-          const handlePubSub = (_topic: string, message: any) => {
-            // Only react to link.created and link.deleted events for this project
-            if (!_topic.startsWith('link.created') && !_topic.startsWith('link.deleted')) return
-            if (message?.project !== projectName) return
-
-            // Link events have inputId and outputId in the summary
-            const inputId = message?.summary?.inputId
-            const outputId = message?.summary?.outputId
-            if (!inputId && !outputId) return
-
-            batcher.add({ inputId, outputId })
-          }
-
-          // Subscribe to link events
-          // NOTE: backend emits topics like 'link.created' and 'link.deleted'.
-          // PubSub supports prefix matching when subscribing.
-          token = PubSub.subscribe('link', handlePubSub)
-        } catch (e) {
-          // cache entry removed before loaded - ignore
-        }
-
-        await cacheEntryRemoved
-        if (token) PubSub.unsubscribe(token)
-        batcher.clear()
       },
     }),
   }),
