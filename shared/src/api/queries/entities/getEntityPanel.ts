@@ -11,6 +11,7 @@ import {
   PubSub,
   REALTIME_REST_CALL_LIMIT,
   REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+  RealtimeBatchProcessor,
   subscribeToThumbnailUpdates,
   SupportedTaskField,
   ThumbnailUpdateMessage,
@@ -176,7 +177,10 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
       ) {
         let token
         let unsubscribeThumbnails: (() => void) | undefined
-        const batchProcessMessages = async (updates: { topic: string; message: any }[]) => {
+        const batchProcessMessages: RealtimeBatchProcessor<{
+          topic: string
+          message: any
+        }> = async (updates, isActive) => {
           const cachedEntities = getCacheEntry().data ?? []
           const cachedEntityKeys = new Set(
             cachedEntities.map((entity) => `${entity.projectName}:${entity.id}`),
@@ -279,6 +283,7 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
               }
             }),
           )
+          if (!isActive()) return
 
           updateCachedData((draft) => {
             updatedEntities.forEach((updatedEntity) => {
@@ -303,7 +308,7 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
         }
         const batcher = createRealtimeBatcher(
           batchProcessMessages,
-          ({ message }) => `${message.project}:${message.summary?.entityId}`,
+          ({ topic, message }) => `${message.project}:${message.summary?.entityId}:${topic}`,
         )
 
         try {

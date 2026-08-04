@@ -41,14 +41,20 @@ export function getSupportedEntityPatch(
 export const waitForRealtimeJitter = () =>
   new Promise<void>((resolve) => setTimeout(resolve, Math.random() * REALTIME_REST_JITTER))
 
+export type RealtimeBatchProcessor<T> = (
+  items: T[],
+  isActive: () => boolean,
+) => void | Promise<void>
+
 export function createRealtimeBatcher<T>(
-  onBatch: (items: T[]) => void | Promise<void>,
+  onBatch: RealtimeBatchProcessor<T>,
   getKey: (item: T) => string,
   delay = REALTIME_UPDATE_DEBOUNCE,
 ) {
-  const pending = new Map<string, T[]>()
+  const pending = new Map<string, T>()
   let timer: ReturnType<typeof setTimeout> | null = null
   let processing = false
+  let disposed = false
 
   const clearTimer = () => {
     if (timer) {
@@ -59,32 +65,37 @@ export function createRealtimeBatcher<T>(
 
   const run = async () => {
     clearTimer()
-    if (processing) return
+    if (disposed || processing) return
     if (pending.size === 0) return
 
     processing = true
-    const items = Array.from(pending.values()).flat()
-    pending.clear()
+    const entries = Array.from(pending.entries()).slice(0, REALTIME_REST_CALL_LIMIT)
+    const items = entries.map(([, item]) => item)
+    entries.forEach(([key]) => pending.delete(key))
     try {
-      await onBatch(items)
+      await onBatch(items, () => !disposed)
+    } catch (error) {
+      console.error('Realtime batch processing failed', error)
     } finally {
       processing = false
-      if (pending.size > 0) schedule()
+      if (!disposed && pending.size > 0) schedule(0)
     }
   }
 
-  const schedule = () => {
-    clearTimer()
-    timer = setTimeout(run, delay)
+  const schedule = (scheduleDelay = delay) => {
+    if (disposed || timer || processing) return
+    timer = setTimeout(run, scheduleDelay)
   }
 
   return {
     add(item: T) {
+      if (disposed) return
       pending.set(getKey(item), item)
       schedule()
     },
     schedule,
     clear() {
+      disposed = true
       pending.clear()
       clearTimer()
     },

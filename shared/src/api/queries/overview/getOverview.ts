@@ -14,6 +14,7 @@ import {
   getSupportedEntityPatch,
   REALTIME_REST_CALL_LIMIT,
   REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+  RealtimeBatchProcessor,
   subscribeToThumbnailUpdates,
   SupportedTaskField,
   ThumbnailUpdateMessage,
@@ -361,7 +362,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch, getCacheEntry },
       ) {
         let token: any
-        const batchProcessMessages = async (messages: any[]) => {
+        const batchProcessMessages: RealtimeBatchProcessor<any> = async (messages, isActive) => {
           const queriedFolders = getQueriedFolders(
             getCacheKey(projectName, filter, folderFilter, search, showComments),
           )
@@ -423,6 +424,7 @@ const injectedApi = enhancedApi.injectEndpoints({
               ),
             ).unwrap()
             const returned = res.tasks || []
+            if (!isActive()) return
             const returnedMap = new Map(returned.map((t: EditorTaskNode) => [t.id, t]))
 
             updateCachedData((draft: EditorTaskNode[]) => {
@@ -446,7 +448,8 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
         const batcher = createRealtimeBatcher(
           batchProcessMessages,
-          (message: any) => message.summary?.entityId,
+          (message: any) =>
+            `${message.project ?? projectName}:${message.summary?.entityId}:${message.topic}`,
         )
         let unsubscribeThumbnails: (() => void) | undefined
         try {
@@ -617,7 +620,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch, getCacheEntry },
       ) {
         let token: any
-        const batchProcessMessages = async (messages: any[]) => {
+        const batchProcessMessages: RealtimeBatchProcessor<any> = async (messages, isActive) => {
           const cachedTaskIds = new Set(
             (getCacheEntry().data?.pages || []).flatMap((page) =>
               page.tasks.map((task: EditorTaskNode) => task.id),
@@ -682,6 +685,7 @@ const injectedApi = enhancedApi.injectEndpoints({
             ).unwrap()
 
             const returned = res.tasks || []
+            if (!isActive()) return
             const returnedMap = new Map(returned.map((t: EditorTaskNode) => [t.id, t]))
 
             updateCachedData((draft: { pages: GetTasksListResult[]; pageParams: any[] }) => {
@@ -728,7 +732,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
         const batcher = createRealtimeBatcher(
           batchProcessMessages,
-          (message: any) => message.summary?.entityId,
+          (message: any) => `${message.project}:${message.summary?.entityId}:${message.topic}`,
         )
         let unsubscribeThumbnails: (() => void) | undefined
         try {

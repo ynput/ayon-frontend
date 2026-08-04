@@ -46,6 +46,7 @@ import {
   getSupportedEntityPatch,
   createRealtimeBatcher,
   REALTIME_REST_CALL_LIMIT,
+  RealtimeBatchProcessor,
   waitForRealtimeJitter,
 } from '@shared/util'
 import PubSub from '@shared/util/pubsub'
@@ -315,7 +316,10 @@ function createVersionUpdateBatcher(
     getBaseFilters?: () => any
   },
 ) {
-  const batchProcessMessages = async (updates: { topic: string; message: any }[]) => {
+  const batchProcessMessages: RealtimeBatchProcessor<{
+    topic: string
+    message: any
+  }> = async (updates, isActive) => {
     const deleted: { entityId: string; parentId?: string }[] = []
     const patched: { entityId: string; field: string; value: any; parentId?: string }[] = []
     const attribsToFetch = new Set<string>()
@@ -363,6 +367,7 @@ function createVersionUpdateBatcher(
           }),
         )
 
+        if (!isActive()) return
         if (result.data?.versions) {
           handlers.onBatchUpdate({ fullUpdated: result.data.versions })
         }
@@ -384,6 +389,7 @@ function createVersionUpdateBatcher(
           ),
         )
 
+        if (!isActive()) return
         if (result.data?.project?.versions?.edges) {
           for (const edge of result.data.project.versions.edges) {
             const node = edge.node
@@ -408,7 +414,8 @@ function createVersionUpdateBatcher(
 
   const batcher = createRealtimeBatcher(
     batchProcessMessages,
-    ({ message }) => message.summary?.entityId,
+    ({ topic, message }) =>
+      `${message.summary?.entityId}:${message.summary?.parentId ?? ''}:${topic}`,
   )
 
   const handleRealtimeUpdate = (topic: string, message: any) => {

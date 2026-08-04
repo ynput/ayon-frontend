@@ -5,6 +5,7 @@ import {
   PubSub,
   REALTIME_REST_CALL_LIMIT,
   REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+  RealtimeBatchProcessor,
   subscribeToThumbnailUpdates,
   SupportedTaskField,
   ThumbnailUpdateMessage,
@@ -82,7 +83,10 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
       ) {
         let token
         let unsubscribeThumbnails: (() => void) | undefined
-        const batchProcessMessages = async (messages: { topic: string; message: any }[]) => {
+        const batchProcessMessages: RealtimeBatchProcessor<{
+          topic: string
+          message: any
+        }> = async (messages, isActive) => {
           const cachedTaskIds = new Set(
             getCacheEntry().data?.flatMap((folder) => folder.tasks.map((task) => task.id)) || [],
           )
@@ -168,6 +172,7 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
             .map((result) => result.data as unknown as GetProgressTaskResult)
             .filter((task): task is ProgressTask => Boolean(task))
 
+          if (!isActive()) return
           if (!updatedTasks.length) return
 
           updateCachedData((draft) => {
@@ -183,7 +188,7 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
         }
         const batcher = createRealtimeBatcher(
           batchProcessMessages,
-          ({ message }) => message.summary?.entityId,
+          ({ topic, message }) => `${message.summary?.entityId}:${topic}`,
         )
         try {
           // wait for the initial query to resolve before proceeding

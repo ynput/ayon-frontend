@@ -13,6 +13,7 @@ import {
   getSupportedEntityPatch,
   REALTIME_REST_CALL_LIMIT,
   REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+  RealtimeBatchProcessor,
   subscribeToThumbnailUpdates,
   SupportedTaskField,
   ThumbnailUpdateMessage,
@@ -146,7 +147,10 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
       ) {
         let token
         let unsubscribeThumbnails: (() => void) | undefined
-        const batchProcessMessages = async (updates: { topic: string; message: Message }[]) => {
+        const batchProcessMessages: RealtimeBatchProcessor<{
+          topic: string
+          message: Message
+        }> = async (updates, isActive) => {
           const selectedProjects: string[] = Array.isArray(args?.projects) ? args.projects : []
           const selectedAssignees: string[] = Array.isArray(args?.assignees) ? args.assignees : []
           // Current tasks on the board. Re-read the cache when the batch runs because it may
@@ -236,6 +240,7 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
             },
             dispatch,
           )
+          if (!isActive()) return
 
           // Get all tasks that have been ADDED to the assignees.
           const tasksWithArgAssignees = tasks.filter(
@@ -267,7 +272,7 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
         }
         const batcher = createRealtimeBatcher(
           batchProcessMessages,
-          ({ message }) => `${message.project ?? ''}:${message.summary?.entityId}`,
+          ({ topic, message }) => `${message.project ?? ''}:${message.summary?.entityId}:${topic}`,
         )
         try {
           // wait for the initial query to resolve before proceeding
