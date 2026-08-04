@@ -8,7 +8,7 @@ import {
   GetSearchedWorkfilesQuery,
   gqlLinksApi,
 } from '@shared/api/generated'
-import PubSub from '@shared/util/pubsub'
+import { createRealtimeBatcher, PubSub } from '@shared/util'
 
 export const ENTITIES_INFINITE_QUERY_COUNT = 50 // Number of items to fetch per page
 
@@ -246,11 +246,18 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
       // Subscribe to link.created and link.deleted WebSocket events
       async onCacheEntryAdded({ projectName }, { cacheDataLoaded, cacheEntryRemoved, dispatch }) {
         let token: any
+        const batcher = createRealtimeBatcher(
+          (messages: { inputId?: string; outputId?: string }[]) => {
+            if (!messages.length) return
+            dispatch(gqlLinksApi.util.invalidateTags([{ type: 'linkSearchItem', id: 'LIST' }]))
+          },
+          ({ inputId, outputId }) => `${inputId ?? ''}:${outputId ?? ''}`,
+        )
 
         try {
           await cacheDataLoaded
 
-          const handlePubSub = async (_topic: string, message: any) => {
+          const handlePubSub = (_topic: string, message: any) => {
             // Only react to link.created and link.deleted events for this project
             if (!_topic.startsWith('link.created') && !_topic.startsWith('link.deleted')) return
             if (message?.project !== projectName) return
@@ -260,9 +267,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
             const outputId = message?.summary?.outputId
             if (!inputId && !outputId) return
 
-            // Invalidate the search query cache when a link is created or deleted
-            // This ensures the search results are fresh and don't show stale data
-            dispatch(gqlLinksApi.util.invalidateTags([{ type: 'linkSearchItem', id: 'LIST' }]))
+            batcher.add({ inputId, outputId })
           }
 
           // Subscribe to link events
@@ -275,6 +280,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
 
         await cacheEntryRemoved
         if (token) PubSub.unsubscribe(token)
+        batcher.clear()
       },
     }),
   }),
