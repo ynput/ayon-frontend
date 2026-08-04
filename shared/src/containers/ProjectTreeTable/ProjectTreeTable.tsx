@@ -908,7 +908,6 @@ export const ProjectTreeTable = ({
     return (
       <>
         {tableUiContent}
-        {cellContextMenuHook.dialogs}
         {dragOverlayPortal}
         <ColumnDragOverlay table={table} />
       </>
@@ -917,7 +916,6 @@ export const ProjectTreeTable = ({
     return (
       <>
         {tableUiContent}
-        {cellContextMenuHook.dialogs}
         <ColumnDragOverlay table={table} />
       </>
     )
@@ -1391,7 +1389,8 @@ const TableBody = ({
   }, [visibleLeafColumns])
 
   const tbodyContent = (
-    <tbody
+    <>
+      <tbody
       style={{
         minHeight: `${rowVirtualizer.getTotalSize()}px`,
         position: 'relative',
@@ -1430,6 +1429,8 @@ const TableBody = ({
         )
       })}
     </tbody>
+      {cellContextMenuHook.dialogs}
+    </>
   )
 
   if (error) {

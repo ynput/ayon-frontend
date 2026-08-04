@@ -66,7 +66,7 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInOverview } = {}
 
   const [showContextMenu, closeContext] = useCreateContextMenu([])
 
-  const handleContextMenu = (e) => {
+  const handleContextMenu = async (e) => {
     // find the parent with className card
     let el = e.target
     const taskId = el.closest('.card')

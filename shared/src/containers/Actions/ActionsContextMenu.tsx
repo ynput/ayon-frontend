@@ -47,7 +47,7 @@ export const useActionsContextMenu = (bundleMode: BundleMode) => {
   }, [bundleMode, bundlesData, user?.name])
 
   const execute = useCallback(
-    async (action: any, context: ActionContext, formData?: InteractiveForm) => {
+    async (action: any, context: ActionContext, formData?: Record<string, any>) => {
       try {
         const response = await executeAction({
           actionContext: formData ? { ...context, formData } : context,
@@ -66,18 +66,18 @@ export const useActionsContextMenu = (bundleMode: BundleMode) => {
             setInteractiveAction({
               form: {
                 identifier: action.identifier,
-                title: response.payload.title,
-                fields: response.payload.fields,
-                submitLabel: response.payload.submit_label,
-                cancelLabel: response.payload.cancel_label,
-                submitIcon: response.payload.submit_icon,
-                cancelIcon: response.payload.cancel_icon,
+                title: (response.payload as any).title,
+                fields: (response.payload as any).fields,
+                submitLabel: (response.payload as any).submit_label,
+                cancelLabel: (response.payload as any).cancel_label,
+                submitIcon: (response.payload as any).submit_icon,
+                cancelIcon: (response.payload as any).cancel_icon,
               },
               action,
               context,
             })
           } else {
-            handleActionPayload(response.type, response.payload)
+            handleActionPayload(response.type as string, response.payload)
           }
         }
       } catch (error: any) {
@@ -106,11 +106,17 @@ export const useActionsContextMenu = (bundleMode: BundleMode) => {
         entityIds: entities.map((entity) => entity.id),
         entitySubtypes: subTypes,
       }
-      const result = await loadActions({
-        mode: 'simple',
-        variant: actionsVariant,
-        actionContext: context,
-      }).unwrap()
+      let result
+      try {
+        result = await loadActions({
+          mode: 'simple',
+          variant: actionsVariant,
+          actionContext: context,
+        }).unwrap()
+      } catch (error) {
+        console.warn('Error loading actions', error)
+        return
+      }
       const actions = result.actions || []
       const categories = [...new Set(actions.map((action) => action.category || 'uncategorized'))].sort()
       const items = categories.flatMap((category) => [
@@ -147,7 +153,7 @@ export const useActionsContextMenu = (bundleMode: BundleMode) => {
       <InteractiveActionDialog
         interactiveForm={interactiveAction?.form || null}
         onClose={() => setInteractiveAction(null)}
-        onSubmit={(identifier, formData) => {
+        onSubmit={(_identifier, formData) => {
           if (interactiveAction) void execute(interactiveAction.action, interactiveAction.context, formData)
           setInteractiveAction(null)
         }}
