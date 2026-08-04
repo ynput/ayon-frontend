@@ -18,6 +18,7 @@ import { api } from '@shared/api'
 // Middleware
 import localStorageMiddleware from './middleware/localStorageMiddleware'
 import searchParamsMiddleware from './middleware/searchParamsMiddleware'
+import crossTabSyncMiddleware from './middleware/crossTabSyncMiddleware'
 
 const store = configureStore({
   reducer: {
@@ -41,7 +42,8 @@ const store = configureStore({
           ...releaseInstallerLocalItems,
         }),
       )
-      .concat(searchParamsMiddleware({ ...viewerSearchParams })),
+      .concat(searchParamsMiddleware({ ...viewerSearchParams }))
+      .concat(crossTabSyncMiddleware()),
 })
 setupListeners(store.dispatch)
 
