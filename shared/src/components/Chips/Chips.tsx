@@ -94,7 +94,12 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
 
   useLayoutEffect(() => {
     const calculateVisibleChips = () => {
-      if (!containerRef.current || offscreenChips.length === 0) return
+      if (
+        !containerRef.current ||
+        offscreenChips.length === 0 ||
+        offscreenChips.length !== values.length
+      )
+        return
 
       const containerWidth = containerRef.current.offsetWidth
       const chipElements = Array.from(containerRef.current.querySelectorAll('.offscreen-chip'))
