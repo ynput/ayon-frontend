@@ -42,6 +42,13 @@ import {
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
 import { parseAllAttribs } from '../overview'
+import {
+  getSupportedEntityPatch,
+  createRealtimeBatcher,
+  REALTIME_REST_CALL_LIMIT,
+  REALTIME_UPDATE_DEBOUNCE,
+  waitForRealtimeJitter,
+} from '@shared/util'
 import PubSub from '@shared/util/pubsub'
 import { subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import type { FieldStats } from '../columnStats'
@@ -292,10 +299,7 @@ export const VP_INFINITE_QUERY_COUNT = 250 // Number of items to fetch per page
 const VERSIONS_BY_PRODUCT_ID_QUERY_COUNT = 1000 // max number of versions to fetch per product id
 const MAX_PAGES_PER_PRODUCT = 10 // Hard cutoff to prevent infinite loops
 
-const VERSION_UPDATE_BATCH_DEBOUNCE = 5000 // ms to wait before processing batched updates
-const VERSION_UPDATE_ATTRIB_JITTER = 1000 // max ms of random jitter for attribute fetches
-const VERSION_UPDATE_NEW_DATA_DEBOUNCE = 30000 // ms to wait before fetching new version data in batch
-const VERSION_UPDATE_NEW_DATA_JITTER = 1500 // max ms of random jitter for new version data fetches
+const supportedVersionFields = ['status', 'tags']
 
 /**
  * Reusable handler for websocket version updates to perform efficient batched cache updates
@@ -314,20 +318,11 @@ function createVersionUpdateBatcher(
     getBaseFilters?: () => any
   },
 ) {
-  let pendingPatchUpdates: { topic: string; message: any }[] = []
-  let patchTimeoutId: ReturnType<typeof setTimeout> | null = null
-
-  let pendingFullFetchIds = new Set<string>()
-  let fullFetchTimeoutId: ReturnType<typeof setTimeout> | null = null
-
-  const processPatches = async () => {
-    const updates = [...pendingPatchUpdates]
-    pendingPatchUpdates = []
-    patchTimeoutId = null
-
+  const batchProcessMessages = async (updates: { topic: string; message: any }[]) => {
     const deleted: { entityId: string; parentId?: string }[] = []
     const patched: { entityId: string; field: string; value: any; parentId?: string }[] = []
     const attribsToFetch = new Set<string>()
+    const fullFetchIds = new Set<string>()
 
     for (const { topic, message: msg } of updates) {
       const entityId = msg.summary?.entityId
@@ -336,6 +331,8 @@ function createVersionUpdateBatcher(
 
       if (topic === 'entity.version.deleted') {
         deleted.push({ entityId, parentId })
+      } else if (topic === 'entity.version.created') {
+        fullFetchIds.add(entityId)
       } else if (topic.startsWith('entity.version.') && topic.endsWith('_changed')) {
         const versionFound = handlers.checkVersionInCache(entityId, parentId)
         if (!versionFound) continue
@@ -347,37 +344,40 @@ function createVersionUpdateBatcher(
           continue
         }
 
-        const supportedFields = ['status', 'tags'] as const
-        const isFieldSupported = supportedFields.includes(field as any)
-        const value = msg.summary?.value
-
-        if (!value || !isFieldSupported) {
-          pendingFullFetchIds.add(entityId)
+        const patch = getSupportedEntityPatch(field, msg.summary, supportedVersionFields)
+        if (!patch) {
+          fullFetchIds.add(entityId)
           continue
         }
 
-        let castValue: any = value
-        if (field === 'status') {
-          castValue = String(value)
-        } else if (field === 'tags') {
-          castValue = Array.isArray(value) ? (value as string[]) : []
-        }
-
-        patched.push({ entityId, field, value: castValue, parentId })
+        patched.push({ entityId, field: patch.field, value: patch.value, parentId })
       }
     }
 
-    // Trigger full fetch if any unsupported changes were moved there
-    if (pendingFullFetchIds.size > 0 && !fullFetchTimeoutId) {
-      fullFetchTimeoutId = setTimeout(processFullFetches, VERSION_UPDATE_NEW_DATA_DEBOUNCE)
+    if (fullFetchIds.size > 0 && fullFetchIds.size <= REALTIME_REST_CALL_LIMIT && dispatch) {
+      try {
+        await waitForRealtimeJitter()
+
+        const result = await dispatch(
+          enhancedVersionsPageApi.endpoints.GetVersions.initiate({
+            ...(handlers.getBaseFilters?.() || {}),
+            projectName,
+            versionIds: Array.from(fullFetchIds),
+          }),
+        )
+
+        if (result.data?.versions) {
+          handlers.onBatchUpdate({ fullUpdated: result.data.versions })
+        }
+      } catch (e) {
+        console.error('Failed to fetch full version data batch', e)
+      }
     }
 
     const attribPatched: { entityId: string; allAttrib: string; parsedAttrib: any }[] = []
-    if (attribsToFetch.size > 0 && dispatch) {
+    if (attribsToFetch.size > 0 && attribsToFetch.size <= REALTIME_REST_CALL_LIMIT && dispatch) {
       try {
-        await new Promise((resolve) =>
-          setTimeout(resolve, Math.random() * VERSION_UPDATE_ATTRIB_JITTER),
-        )
+        await waitForRealtimeJitter()
 
         const versionIds = Array.from(attribsToFetch)
         const result = await dispatch(
@@ -409,53 +409,26 @@ function createVersionUpdateBatcher(
     }
   }
 
-  const processFullFetches = async () => {
-    const versionIds = Array.from(pendingFullFetchIds)
-    pendingFullFetchIds.clear()
-    fullFetchTimeoutId = null
+  const batcher = createRealtimeBatcher(
+    batchProcessMessages,
+    ({ message }) => message.summary?.entityId,
+  )
 
-    if (versionIds.length === 0 || !dispatch) return
-
-    try {
-      // Jitter fetch to prevent thundering herd
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.random() * VERSION_UPDATE_NEW_DATA_JITTER),
-      )
-
-      const baseFilters = handlers.getBaseFilters?.() || {}
-      const result = await dispatch(
-        enhancedVersionsPageApi.endpoints.GetVersions.initiate({
-          ...baseFilters,
-          projectName,
-          versionIds,
-        }),
-      )
-
-      if (result.data?.versions) {
-        handlers.onBatchUpdate({ fullUpdated: result.data.versions })
-      }
-    } catch (e) {
-      console.error('Failed to fetch full version data batch', e)
-    }
-  }
-
-  return (topic: string, message: any) => {
+  const handleRealtimeUpdate = (topic: string, message: any) => {
     const project = message.project
     if (project !== projectName) return
 
     const entityId = message.summary?.entityId
     if (!entityId) return
 
-    if (topic === 'entity.version.created') {
-      pendingFullFetchIds.add(entityId)
-      if (!fullFetchTimeoutId) {
-        fullFetchTimeoutId = setTimeout(processFullFetches, VERSION_UPDATE_NEW_DATA_DEBOUNCE)
-      }
-    } else {
-      pendingPatchUpdates.push({ topic, message })
-      if (patchTimeoutId) clearTimeout(patchTimeoutId)
-      patchTimeoutId = setTimeout(processPatches, VERSION_UPDATE_BATCH_DEBOUNCE)
-    }
+    batcher.add({ topic, message })
+  }
+
+  return {
+    handle: handleRealtimeUpdate,
+    clear() {
+      batcher.clear()
+    },
   }
 }
 
@@ -575,88 +548,87 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             ['version'],
           )
 
-          const token = PubSub.subscribe(
-            'entity.version',
-            createVersionUpdateBatcher(arg.projectName, dispatch, {
-              getBaseFilters: () => ({
-                versionFilter: arg.versionFilter,
-                productFilter: arg.productFilter,
-                taskFilter: arg.taskFilter,
-                folderFilter: arg.folderFilter,
-                folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
-                featuredOnly: arg.featuredOnly,
-                hasReviewables: arg.hasReviewables,
-                sortBy: arg.sortBy,
-              }),
-              checkVersionInCache: (entityId) => {
-                const cacheVersions = getCacheEntry().data
-                if (!cacheVersions) return false
-                for (const page of cacheVersions.pages || []) {
-                  if (page.versions.some((v) => v.id === entityId)) return true
-                }
-                return false
-              },
-              onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
-                updateCachedData((draft) => {
-                  for (const page of draft?.pages || []) {
-                    // Handle deletes
-                    if (deleted) {
-                      for (const { entityId } of deleted) {
-                        const vIndex = page.versions.findIndex((v) => v.id === entityId)
-                        if (vIndex !== -1) page.versions.splice(vIndex, 1)
+          const realtimeBatcher = createVersionUpdateBatcher(arg.projectName, dispatch, {
+            getBaseFilters: () => ({
+              versionFilter: arg.versionFilter,
+              productFilter: arg.productFilter,
+              taskFilter: arg.taskFilter,
+              folderFilter: arg.folderFilter,
+              folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+              featuredOnly: arg.featuredOnly,
+              hasReviewables: arg.hasReviewables,
+              sortBy: arg.sortBy,
+            }),
+            checkVersionInCache: (entityId) => {
+              const cacheVersions = getCacheEntry().data
+              if (!cacheVersions) return false
+              for (const page of cacheVersions.pages || []) {
+                if (page.versions.some((v) => v.id === entityId)) return true
+              }
+              return false
+            },
+            onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
+              updateCachedData((draft) => {
+                for (const page of draft?.pages || []) {
+                  // Handle deletes
+                  if (deleted) {
+                    for (const { entityId } of deleted) {
+                      const vIndex = page.versions.findIndex((v) => v.id === entityId)
+                      if (vIndex !== -1) page.versions.splice(vIndex, 1)
+                    }
+                  }
+                  // Handle simple patches
+                  if (patched) {
+                    for (const { entityId, field, value } of patched) {
+                      const version = page.versions.find((v) => v.id === entityId)
+                      if (version) {
+                        // @ts-expect-error valid field
+                        version[field] = value
                       }
                     }
-                    // Handle simple patches
-                    if (patched) {
-                      for (const { entityId, field, value } of patched) {
-                        const version = page.versions.find((v) => v.id === entityId)
-                        if (version) {
-                          // @ts-expect-error valid field
-                          version[field] = value
-                        }
+                  }
+                  // Handle attrib patched
+                  if (attribPatched) {
+                    for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
+                      const version = page.versions.find((v) => v.id === entityId)
+                      if (version) {
+                        version.allAttrib = allAttrib
+                        version.attrib = parsedAttrib
                       }
                     }
-                    // Handle attrib patched
-                    if (attribPatched) {
-                      for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
-                        const version = page.versions.find((v) => v.id === entityId)
-                        if (version) {
-                          version.allAttrib = allAttrib
-                          version.attrib = parsedAttrib
-                        }
-                      }
-                    }
-                    // Handle full updates
-                    if (fullUpdated) {
-                      for (const updatedNode of fullUpdated) {
-                        const vIndex = page.versions.findIndex((v) => v.id === updatedNode.id)
-                        if (vIndex !== -1) {
-                          page.versions[vIndex] = updatedNode
-                        } else {
-                          // New version not in cache, try to insert in first page if it fits sort
-                          // (This is a simplification, full refetch is usually better for new items in pagination)
-                          const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
-                          const insertIndex = findSortedInsertIndex(
-                            page.versions,
-                            updatedNode,
-                            sortKey,
-                            arg.desc || false,
-                          )
-                          // Only insert if it's within current page bounds or we are on first page
-                          if (page === draft.pages[0]) {
-                            page.versions.splice(insertIndex, 0, updatedNode)
-                          }
+                  }
+                  // Handle full updates
+                  if (fullUpdated) {
+                    for (const updatedNode of fullUpdated) {
+                      const vIndex = page.versions.findIndex((v) => v.id === updatedNode.id)
+                      if (vIndex !== -1) {
+                        page.versions[vIndex] = updatedNode
+                      } else {
+                        // New version not in cache, try to insert in first page if it fits sort
+                        // (This is a simplification, full refetch is usually better for new items in pagination)
+                        const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
+                        const insertIndex = findSortedInsertIndex(
+                          page.versions,
+                          updatedNode,
+                          sortKey,
+                          arg.desc || false,
+                        )
+                        // Only insert if it's within current page bounds or we are on first page
+                        if (page === draft.pages[0]) {
+                          page.versions.splice(insertIndex, 0, updatedNode)
                         }
                       }
                     }
                   }
-                })
-              },
-            }),
-          )
+                }
+              })
+            },
+          })
+          const token = PubSub.subscribe('entity.version', realtimeBatcher.handle)
 
           // Cleanup: unsubscribe when cache entry is removed
           await cacheEntryRemoved
+          realtimeBatcher.clear()
           PubSub.unsubscribe(token)
           if (unsubscribeThumbnails) {
             unsubscribeThumbnails()
@@ -802,78 +774,77 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           ['version'],
         )
 
-        const token = PubSub.subscribe(
-          'entity.version',
-          createVersionUpdateBatcher(arg.projectName, dispatch, {
-            getBaseFilters: () => ({
-              versionFilter: arg.versionFilter,
-              taskFilter: arg.taskFilter,
-              folderFilter: arg.folderFilter,
-              productIds: arg.productIds,
-            }),
-            checkVersionInCache: (entityId, parentId) => {
-              if (!parentId || !arg.productIds.includes(parentId)) return false
-              let found = false
-              updateCachedData((draft) => {
-                found = draft.versions.some((v) => v.id === entityId)
-              })
-              return found
-            },
-            onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
-              updateCachedData((draft) => {
-                // Handle deletes
-                if (deleted) {
-                  for (const { entityId } of deleted) {
-                    const vIndex = draft.versions.findIndex((v) => v.id === entityId)
-                    if (vIndex !== -1) draft.versions.splice(vIndex, 1)
-                  }
-                }
-                // Handle simple patches
-                if (patched) {
-                  for (const { entityId, field, value } of patched) {
-                    const version = draft.versions.find((v) => v.id === entityId)
-                    if (version) {
-                      // @ts-expect-error valid field
-                      version[field] = value
-                    }
-                  }
-                }
-                // Handle attrib patches
-                if (attribPatched) {
-                  for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
-                    const version = draft.versions.find((v) => v.id === entityId)
-                    if (version) {
-                      version.allAttrib = allAttrib
-                      version.attrib = parsedAttrib
-                    }
-                  }
-                }
-                // Handle full updates
-                if (fullUpdated) {
-                  for (const updatedNode of fullUpdated) {
-                    const index = draft.versions.findIndex((v) => v.id === updatedNode.id)
-                    if (index !== -1) {
-                      draft.versions[index] = updatedNode
-                    } else {
-                      // Add at correct sorted position
-                      const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
-                      const insertIndex = findSortedInsertIndex(
-                        draft.versions,
-                        updatedNode,
-                        sortKey,
-                        arg.desc || false,
-                      )
-                      draft.versions.splice(insertIndex, 0, updatedNode)
-                    }
-                  }
-                }
-              })
-            },
+        const realtimeBatcher = createVersionUpdateBatcher(arg.projectName, dispatch, {
+          getBaseFilters: () => ({
+            versionFilter: arg.versionFilter,
+            taskFilter: arg.taskFilter,
+            folderFilter: arg.folderFilter,
+            productIds: arg.productIds,
           }),
-        )
+          checkVersionInCache: (entityId, parentId) => {
+            if (!parentId || !arg.productIds.includes(parentId)) return false
+            let found = false
+            updateCachedData((draft) => {
+              found = draft.versions.some((v) => v.id === entityId)
+            })
+            return found
+          },
+          onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
+            updateCachedData((draft) => {
+              // Handle deletes
+              if (deleted) {
+                for (const { entityId } of deleted) {
+                  const vIndex = draft.versions.findIndex((v) => v.id === entityId)
+                  if (vIndex !== -1) draft.versions.splice(vIndex, 1)
+                }
+              }
+              // Handle simple patches
+              if (patched) {
+                for (const { entityId, field, value } of patched) {
+                  const version = draft.versions.find((v) => v.id === entityId)
+                  if (version) {
+                    // @ts-expect-error valid field
+                    version[field] = value
+                  }
+                }
+              }
+              // Handle attrib patches
+              if (attribPatched) {
+                for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
+                  const version = draft.versions.find((v) => v.id === entityId)
+                  if (version) {
+                    version.allAttrib = allAttrib
+                    version.attrib = parsedAttrib
+                  }
+                }
+              }
+              // Handle full updates
+              if (fullUpdated) {
+                for (const updatedNode of fullUpdated) {
+                  const index = draft.versions.findIndex((v) => v.id === updatedNode.id)
+                  if (index !== -1) {
+                    draft.versions[index] = updatedNode
+                  } else {
+                    // Add at correct sorted position
+                    const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
+                    const insertIndex = findSortedInsertIndex(
+                      draft.versions,
+                      updatedNode,
+                      sortKey,
+                      arg.desc || false,
+                    )
+                    draft.versions.splice(insertIndex, 0, updatedNode)
+                  }
+                }
+              }
+            })
+          },
+        })
+        const token = PubSub.subscribe('entity.version', realtimeBatcher.handle)
 
         // Cleanup: unsubscribe when cache entry is removed
         await cacheEntryRemoved
+        realtimeBatcher.clear()
         PubSub.unsubscribe(token)
         if (unsubscribeThumbnails) {
           unsubscribeThumbnails()
@@ -1056,89 +1027,88 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
           // Subscribe to version entity changes - refetch parent product when version changes
           // This ensures product's versions list and featuredVersion stay up-to-date
-          const versionToken = PubSub.subscribe(
-            'entity.version',
-            createVersionUpdateBatcher(arg.projectName, dispatch, {
-              getBaseFilters: () => ({
-                versionFilter: arg.versionFilter,
-                productFilter: arg.productFilter,
-                taskFilter: arg.taskFilter,
-                folderFilter: arg.folderFilter,
-                folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
-              }),
-              checkVersionInCache: (entityId, parentId) => {
-                let found = false
-                updateCachedData((draft) => {
-                  found = draft.pages.some((page) =>
-                    page.products.some(
-                      (p) => p.id === parentId && p.featuredVersion?.id === entityId,
-                    ),
-                  )
-                })
-                return found
-              },
-              onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
-                updateCachedData((draft) => {
-                  for (const page of draft?.pages || []) {
-                    for (const p of page.products) {
-                      const featuredId = p.featuredVersion?.id
-                      if (!featuredId) continue
+          const realtimeBatcher = createVersionUpdateBatcher(arg.projectName, dispatch, {
+            getBaseFilters: () => ({
+              versionFilter: arg.versionFilter,
+              productFilter: arg.productFilter,
+              taskFilter: arg.taskFilter,
+              folderFilter: arg.folderFilter,
+              folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+            }),
+            checkVersionInCache: (entityId, parentId) => {
+              let found = false
+              updateCachedData((draft) => {
+                found = draft.pages.some((page) =>
+                  page.products.some(
+                    (p) => p.id === parentId && p.featuredVersion?.id === entityId,
+                  ),
+                )
+              })
+              return found
+            },
+            onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
+              updateCachedData((draft) => {
+                for (const page of draft?.pages || []) {
+                  for (const p of page.products) {
+                    const featuredId = p.featuredVersion?.id
+                    if (!featuredId) continue
 
-                      // Handle deletes
-                      if (deleted) {
-                        if (deleted.some((d) => d.entityId === featuredId && d.parentId === p.id)) {
-                          // Version deleted, need to refetch product to update featuredVersion
-                          // Using a set to track which products need refetch to avoid multiple calls
-                          productsToRefetch.add(p.id)
+                    // Handle deletes
+                    if (deleted) {
+                      if (deleted.some((d) => d.entityId === featuredId && d.parentId === p.id)) {
+                        // Version deleted, need to refetch product to update featuredVersion
+                        // Using a set to track which products need refetch to avoid multiple calls
+                        productsToRefetch.add(p.id)
+                      }
+                    }
+
+                    // Handle simple patches
+                    if (patched) {
+                      for (const { entityId, field, value, parentId } of patched) {
+                        if (p.id === parentId && featuredId === entityId && p.featuredVersion) {
+                          // @ts-expect-error valid field
+                          p.featuredVersion[field] = value
                         }
                       }
+                    }
 
-                      // Handle simple patches
-                      if (patched) {
-                        for (const { entityId, field, value, parentId } of patched) {
-                          if (p.id === parentId && featuredId === entityId && p.featuredVersion) {
-                            // @ts-expect-error valid field
-                            p.featuredVersion[field] = value
-                          }
+                    // Handle attrib patches
+                    if (attribPatched) {
+                      for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
+                        if (featuredId === entityId && p.featuredVersion) {
+                          p.featuredVersion.allAttrib = allAttrib
+                          p.featuredVersion.attrib = parsedAttrib
                         }
                       }
+                    }
 
-                      // Handle attrib patches
-                      if (attribPatched) {
-                        for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
-                          if (featuredId === entityId && p.featuredVersion) {
-                            p.featuredVersion.allAttrib = allAttrib
-                            p.featuredVersion.attrib = parsedAttrib
-                          }
-                        }
-                      }
-
-                      // Handle full updates
-                      if (fullUpdated) {
-                        for (const updatedNode of fullUpdated) {
-                          if (featuredId === updatedNode.id && p.featuredVersion) {
-                            p.featuredVersion = updatedNode
-                          }
+                    // Handle full updates
+                    if (fullUpdated) {
+                      for (const updatedNode of fullUpdated) {
+                        if (featuredId === updatedNode.id && p.featuredVersion) {
+                          p.featuredVersion = updatedNode
                         }
                       }
                     }
                   }
-                })
-
-                // If any products need full refetch (due to deletes or new version becoming featured)
-                // we trigger that now
-                for (const productId of productsToRefetch) {
-                  refetchProduct(productId)
                 }
-                productsToRefetch.clear()
-              },
-            }),
-          )
+              })
+
+              // If any products need full refetch (due to deletes or new version becoming featured)
+              // we trigger that now
+              for (const productId of productsToRefetch) {
+                refetchProduct(productId)
+              }
+              productsToRefetch.clear()
+            },
+          })
+          const versionToken = PubSub.subscribe('entity.version', realtimeBatcher.handle)
 
           const productsToRefetch = new Set<string>()
 
           // Cleanup: unsubscribe when cache entry is removed
           await cacheEntryRemoved
+          realtimeBatcher.clear()
           PubSub.unsubscribe(productToken)
           PubSub.unsubscribe(versionToken)
           if (unsubscribeThumbnails) {
@@ -1275,73 +1245,72 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           ['version'],
         )
 
-        const token = PubSub.subscribe(
-          'entity.version',
-          createVersionUpdateBatcher(arg.projectName, dispatch, {
-            getBaseFilters: () => ({
-              versionFilter: arg.versionFilter,
-              productFilter: arg.productFilter,
-              taskFilter: arg.taskFilter,
-              folderFilter: arg.folderFilter,
-              folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
-              sortBy: arg.sortBy,
-              featuredOnly: arg.featuredOnly,
-              hasReviewables: arg.hasReviewables,
-            }),
-            checkVersionInCache: (entityId) => {
-              let found = false
-              updateCachedData((draft) => {
-                found = draft.versions.some((v) => v.id === entityId)
-              })
-              return found
-            },
-            onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
-              updateCachedData((draft) => {
-                // Handle deletes
-                if (deleted) {
-                  for (const { entityId } of deleted) {
-                    const vIndex = draft.versions.findIndex((v) => v.id === entityId)
-                    if (vIndex !== -1) draft.versions.splice(vIndex, 1)
-                  }
-                }
-                // Handle patches
-                if (patched) {
-                  for (const { entityId, field, value } of patched) {
-                    const version = draft.versions.find((v) => v.id === entityId)
-                    if (version) {
-                      // @ts-expect-error valid field
-                      version[field] = value
-                    }
-                  }
-                }
-                // Handle attrib patches
-                if (attribPatched) {
-                  for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
-                    const version = draft.versions.find((v) => v.id === entityId)
-                    if (version) {
-                      version.allAttrib = allAttrib
-                      version.attrib = parsedAttrib
-                    }
-                  }
-                }
-                // Handle full updates
-                if (fullUpdated) {
-                  for (const updatedNode of fullUpdated) {
-                    const index = draft.versions.findIndex((v) => v.id === updatedNode.id)
-                    if (index !== -1) {
-                      // Preserve groups when updating
-                      const originalGroups = draft.versions[index].groups
-                      draft.versions[index] = { ...updatedNode, groups: originalGroups }
-                    }
-                  }
-                }
-              })
-            },
+        const realtimeBatcher = createVersionUpdateBatcher(arg.projectName, dispatch, {
+          getBaseFilters: () => ({
+            versionFilter: arg.versionFilter,
+            productFilter: arg.productFilter,
+            taskFilter: arg.taskFilter,
+            folderFilter: arg.folderFilter,
+            folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+            sortBy: arg.sortBy,
+            featuredOnly: arg.featuredOnly,
+            hasReviewables: arg.hasReviewables,
           }),
-        )
+          checkVersionInCache: (entityId) => {
+            let found = false
+            updateCachedData((draft) => {
+              found = draft.versions.some((v) => v.id === entityId)
+            })
+            return found
+          },
+          onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
+            updateCachedData((draft) => {
+              // Handle deletes
+              if (deleted) {
+                for (const { entityId } of deleted) {
+                  const vIndex = draft.versions.findIndex((v) => v.id === entityId)
+                  if (vIndex !== -1) draft.versions.splice(vIndex, 1)
+                }
+              }
+              // Handle patches
+              if (patched) {
+                for (const { entityId, field, value } of patched) {
+                  const version = draft.versions.find((v) => v.id === entityId)
+                  if (version) {
+                    // @ts-expect-error valid field
+                    version[field] = value
+                  }
+                }
+              }
+              // Handle attrib patches
+              if (attribPatched) {
+                for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
+                  const version = draft.versions.find((v) => v.id === entityId)
+                  if (version) {
+                    version.allAttrib = allAttrib
+                    version.attrib = parsedAttrib
+                  }
+                }
+              }
+              // Handle full updates
+              if (fullUpdated) {
+                for (const updatedNode of fullUpdated) {
+                  const index = draft.versions.findIndex((v) => v.id === updatedNode.id)
+                  if (index !== -1) {
+                    // Preserve groups when updating
+                    const originalGroups = draft.versions[index].groups
+                    draft.versions[index] = { ...updatedNode, groups: originalGroups }
+                  }
+                }
+              }
+            })
+          },
+        })
+        const token = PubSub.subscribe('entity.version', realtimeBatcher.handle)
 
         // Cleanup: unsubscribe when cache entry is removed
         await cacheEntryRemoved
+        realtimeBatcher.clear()
         PubSub.unsubscribe(token)
         if (unsubscribeThumbnails) {
           unsubscribeThumbnails()

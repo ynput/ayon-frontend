@@ -6,7 +6,7 @@ import type {
   DeletableEntityType,
 } from '@shared/context/DeleteEntitiesContext'
 
-const TYPE_ORDER: DeletableEntityType[] = [
+export const DELETE_TYPE_ORDER: DeletableEntityType[] = [
   'folder',
   'task',
   'product',
@@ -14,6 +14,12 @@ const TYPE_ORDER: DeletableEntityType[] = [
   'representation',
   'workfile',
 ]
+
+export type ExpectedDeleteCounts = Partial<Record<DeletableEntityType, number>>
+
+// deletes above this total require typed count confirmation; a delete of exactly
+// one entity types its name instead
+export const DELETE_CONFIRM_THRESHOLD = 1
 
 // "5 folders" | "5 folders and 25 tasks" | "5 folders, 1 product and 25 versions"
 const joinNatural = (parts: string[]): string => {
@@ -28,11 +34,39 @@ export const buildEntityLabel = (topLevel: DeletableEntity[]): string => {
   }
   const counts: Record<string, number> = {}
   for (const e of topLevel) counts[e.entityType] = (counts[e.entityType] || 0) + 1
-  const parts = TYPE_ORDER.filter((type) => counts[type] > 0).map((type) =>
+  const parts = DELETE_TYPE_ORDER.filter((type) => counts[type] > 0).map((type) =>
     pluralize(counts[type], type),
   )
   return joinNatural(parts)
 }
+
+// selected entities plus the descendants a folder delete cascades to — versions cascaded
+// from deleted products are not counted, the backend gives no number for them
+export const buildExpectedCounts = (
+  topLevel: DeletableEntity[],
+  folderInfo: FolderDeleteInfo[],
+): ExpectedDeleteCounts => {
+  const counts: ExpectedDeleteCounts = {}
+  const add = (type: DeletableEntityType, amount: number) => {
+    if (amount > 0) counts[type] = (counts[type] || 0) + amount
+  }
+
+  for (const e of topLevel) add(e.entityType, 1)
+
+  for (const info of folderInfo) {
+    add('folder', info.totalFolderCount)
+    add('task', info.totalTaskCount)
+    add('product', info.totalProductCount)
+    add('version', info.totalVersionCount)
+  }
+
+  return counts
+}
+
+export const sumExpectedCounts = (counts: ExpectedDeleteCounts): number =>
+  DELETE_TYPE_ORDER.reduce((total, type) => total + (counts[type] || 0), 0)
+
+const MAX_DETAIL_LINES = 8
 
 export const buildChildrenDetails = (
   topLevelFolders: DeletableEntity[],
@@ -69,6 +103,13 @@ export const buildChildrenDetails = (
     }
   }
 
+  if (details.length > MAX_DETAIL_LINES) {
+    return [
+      ...details.slice(0, MAX_DETAIL_LINES),
+      `…and ${details.length - MAX_DETAIL_LINES} more`,
+    ]
+  }
+
   return details
 }
 
@@ -82,19 +123,29 @@ const DetailsContainer = styled.div`
 `
 const BoldLabel = styled.p`
   font-weight: 600;
+  margin-bottom: 4px;
+`
+const TotalLine = styled.p`
+  margin-top: 12px;
+  font-weight: 600;
+  color: var(--md-sys-color-error);
 `
 
 export type DeleteConfirmContentProps = {
   entityLabel: string
   childrenDetails: string[]
+  totalLine?: string
+  message?: string
 }
 
 export const DeleteConfirmContent = ({
   entityLabel,
   childrenDetails,
+  totalLine,
+  message,
 }: DeleteConfirmContentProps) => (
   <Wrapper>
-    <p>{`Are you sure you want to delete ${entityLabel}? This action cannot be undone.`}</p>
+    <p>{message || `Are you sure you want to delete ${entityLabel}? This action cannot be undone.`}</p>
     {childrenDetails.length > 0 && (
       <DetailsContainer>
         <BoldLabel>The following will also be affected:</BoldLabel>
@@ -103,5 +154,6 @@ export const DeleteConfirmContent = ({
         ))}
       </DetailsContainer>
     )}
+    {totalLine && <TotalLine>{totalLine}</TotalLine>}
   </Wrapper>
 )
