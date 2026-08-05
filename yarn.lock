@@ -2449,10 +2449,10 @@
   dependencies:
     tslib "^2.6.3"
 
-"@ynput/ayon-react-components@^1.19.6":
-  version "1.19.6"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.19.6.tgz#b913a1449861497bc26b2d7f4ae94e7271fc2019"
-  integrity sha512-SgPC/+a0p1jNnsXvCHG3lfgsk9z+XcXkUJBw6jm00NPrvg2JZwf6xng12OFUvKRm7MK/Fp5iutCIGd7518jCdg==
+"@ynput/ayon-react-components@^1.19.7":
+  version "1.19.7"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.19.7.tgz#e8c76e6442de4eeebb47676fcd02c9b57942453e"
+  integrity sha512-yWDie8wqliO0Gco11+saaDpOeO2WBgqyPUm4nvE0sl9aInSUgOfnheh3fhXfs7HgVQcSSBqj9BhAE0rpxb0yDw==
   dependencies:
     short-uuid "^5.2.0"
 

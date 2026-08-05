@@ -12,7 +12,6 @@ import {
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
 import { ProjectModelWithProducts, usePowerpack } from '@shared/context'
-import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
   queryFilterToClientFilter,
@@ -52,7 +51,6 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   pt,
   ...props
 }) => {
-  const { columnOrder } = useColumnSettingsContext()
   const { pinnedSlice, setPinnedSlice } = useSlicerContext()
   const { getFolderById } = useProjectFoldersContext()
 
@@ -87,7 +85,6 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     scope,
     scopes,
     data,
-    columnOrder,
     config: {
       enableExcludes: powerLicense,
       enableOperatorChange: powerLicense,

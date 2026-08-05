@@ -86,6 +86,23 @@ export type BuildFilterOptions = {
   power?: boolean
 }
 
+const FILTER_OPTIONS_ORDER = new Set<FilterFieldType>([
+  'name',
+  'status',
+  'tags',
+  'assignees',
+  'author',
+  'folderType',
+  'taskType',
+  'productType',
+  'productBaseType',
+  'productName',
+  'version',
+  'hasReviewables',
+  'createdAt',
+  'updatedAt',
+])
+
 export const useBuildFilterOptions = ({
   filterTypes: globalFilterTypes = [],
   projectNames,
@@ -93,12 +110,12 @@ export const useBuildFilterOptions = ({
   scopes: customScopes,
   data,
   config,
-  columnOrder = [],
   power,
 }: BuildFilterOptions): { options: Option[]; groupOptions: SearchFilterGroupOption[] } => {
   const productTypes = data.productTypes || []
   const productBaseTypes = data.productBaseTypes || []
   let options: Option[] = []
+  const attributeOptionNames = new Map<string, string>()
 
   // Determine which scopes to use
   // If customScopes is provided, use it; otherwise, fall back to the old method
@@ -647,6 +664,7 @@ export const useBuildFilterOptions = ({
         option.values?.push(...optionValues)
 
         // add option to the list of options
+        attributeOptionNames.set(option.id, attribute.name)
         options.push(option)
       })
     }
@@ -662,17 +680,22 @@ export const useBuildFilterOptions = ({
 
     groups.push({
       name: groupName,
-      label: group?.label || option.label,
-      icon: group?.icon || option.icon,
-      color: group?.color || option.color,
+      label: option.label,
+      icon: option.icon,
+      color: option.color,
     })
     return groups
   }, [])
 
-  // order options by columnOrder
-  if (columnOrder) {
-    return { options: sortOptionsBasedOnColumns(options, columnOrder), groupOptions }
-  } else return { options, groupOptions }
+  const sortedOptions = sortOptions(options, attributeOptionNames, attributes)
+  const sortedGroupOptions = sortGroupOptions(
+    groupOptions,
+    sortedOptions,
+    attributeOptionNames,
+    attributes,
+  )
+
+  return { options: sortedOptions, groupOptions: sortedGroupOptions }
 }
 
 // HELPER FUNCTIONS
@@ -1172,33 +1195,80 @@ const getAttributeOptions = (
   return [...enumOptions, ...options]
 }
 
-const sortOptionsBasedOnColumns = (options: Option[], columnOrder: ColumnOrderState) => {
-  const columnOrderWithSubTypes = columnOrder.flatMap((col) => {
-    if (col === 'subType') {
-      return ['taskType', 'folderType']
-    }
-    return col
-  })
+const sortOptions = (
+  options: Option[],
+  attributeOptionNames: Map<string, string>,
+  attributes: AttributeModel[],
+) => {
   return [...options].sort((a, b) => {
-    const aIndex = columnOrderWithSubTypes.indexOf(a.id.replace('.', '_'))
-    const bIndex = columnOrderWithSubTypes.indexOf(b.id.replace('.', '_'))
-
-    // If both options are in columnOrder, sort them based on their index in columnOrder
-    if (aIndex !== -1 && bIndex !== -1) {
-      return aIndex - bIndex
-    }
-
-    // If only one of the options is in columnOrder, sort the one in columnOrder first
-    if (aIndex !== -1) {
-      return -1
-    }
-    if (bIndex !== -1) {
-      return 1
-    }
-
-    // If neither option is in columnOrder, keep their original order
-    return 0
+    return compareOptionOrder(
+      getOptionFieldName(a),
+      attributeOptionNames.get(a.id),
+      getOptionFieldName(b),
+      attributeOptionNames.get(b.id),
+      attributes,
+    )
   })
+}
+
+const getOptionFieldName = (option: Option) => {
+  if (option.group) {
+    return typeof option.group === 'string' ? option.group : option.group.name
+  }
+  return option.id
+}
+
+const sortGroupOptions = (
+  groupOptions: SearchFilterGroupOption[],
+  options: Option[],
+  attributeOptionNames: Map<string, string>,
+  attributes: AttributeModel[],
+) => {
+  return [...groupOptions].sort((a, b) => {
+    const aOption = options.find((option) => {
+      const group = typeof option.group === 'string' ? option.group : option.group?.name
+      return group === a.name
+    })
+    const bOption = options.find((option) => {
+      const group = typeof option.group === 'string' ? option.group : option.group?.name
+      return group === b.name
+    })
+
+    return compareOptionOrder(
+      aOption ? getOptionFieldName(aOption) : a.name,
+      aOption ? attributeOptionNames.get(aOption.id) : a.name,
+      bOption ? getOptionFieldName(bOption) : b.name,
+      bOption ? attributeOptionNames.get(bOption.id) : b.name,
+      attributes,
+    )
+  })
+}
+
+const compareOptionOrder = (
+  aId: string,
+  aAttributeName: string | undefined,
+  bId: string,
+  bAttributeName: string | undefined,
+  attributes: AttributeModel[],
+) => {
+  const attributeOrder = new Map(attributes.map((attribute, index) => [attribute.name, index]))
+  const getFilterOrder = (id: string) => {
+    let order = 0
+    for (const filterType of FILTER_OPTIONS_ORDER) {
+      if (id === filterType || id.endsWith(`_${filterType}`)) return order
+      order++
+    }
+    return Number.MAX_SAFE_INTEGER
+  }
+
+  const aOrder = aAttributeName
+    ? [1, attributeOrder.get(aAttributeName) ?? Number.MAX_SAFE_INTEGER]
+    : [0, getFilterOrder(aId)]
+  const bOrder = bAttributeName
+    ? [1, attributeOrder.get(bAttributeName) ?? Number.MAX_SAFE_INTEGER]
+    : [0, getFilterOrder(bId)]
+
+  return aOrder[0] - bOrder[0] || aOrder[1] - bOrder[1]
 }
 
 /**
