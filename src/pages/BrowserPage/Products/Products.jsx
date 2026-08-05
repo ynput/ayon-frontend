@@ -18,6 +18,8 @@ import {
   setSelectedVersions,
   productSelected,
   onFocusChanged,
+  setFocusedTasks,
+  setFocusedFolders,
   updateBrowserFilters,
 } from '@state/context'
 import VersionList from './VersionList'
@@ -342,11 +344,50 @@ const Products = () => {
         field: 'taskName',
         header: 'Task',
         width: 120,
+        body: (node) => {
+          if (!node.data.taskId || node.data.isGroup) return node.data.taskName || ''
+          return (
+            <Styled.EntityLinkCell
+              title={`Open task: ${node.data.taskName}`}
+              onDoubleClick={(e) => {
+                e.stopPropagation()
+                dispatch(
+                  setFocusedTasks({
+                    ids: [node.data.taskId],
+                    subTypes: [node.data.taskType],
+                    names: [node.data.taskName],
+                  }),
+                )
+              }}
+            >
+              {node.data.taskName}
+            </Styled.EntityLinkCell>
+          )
+        },
       },
       {
         field: 'folder',
         header: 'Folder',
         width: 120,
+        body: (node) => {
+          if (!node.data.folderId) return node.data.folder || ''
+          return (
+            <Styled.EntityLinkCell
+              title={`Open folder: ${node.data.folder}`}
+              onDoubleClick={(e) => {
+                e.stopPropagation()
+                dispatch(
+                  setFocusedFolders({
+                    ids: [node.data.folderId],
+                    subTypes: [],
+                  }),
+                )
+              }}
+            >
+              {node.data.folder}
+            </Styled.EntityLinkCell>
+          )
+        },
       },
       {
         field: 'versionList',
