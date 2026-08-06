@@ -2,6 +2,7 @@ import {
   CellWidget,
   COLUMN_MIN_SIZE,
   getValueIdType,
+  getColumnLabel,
   NEXT_PAGE_ID,
   ProjectTreeTable,
 } from '@shared/containers'
@@ -45,7 +46,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         column: {
           id: 'productBaseType',
           accessorKey: 'productBaseType',
-          header: 'Base type',
+          header: getColumnLabel('productBaseType'),
           minSize: COLUMN_MIN_SIZE,
           enableResizing: true,
           enablePinning: true,
@@ -73,7 +74,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         column: {
           id: 'taskType',
           accessorKey: 'taskType',
-          header: 'Task type',
+          header: getColumnLabel('taskType'),
           minSize: COLUMN_MIN_SIZE,
           enableResizing: true,
           enablePinning: true,
@@ -102,7 +103,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         column: {
           id: 'folderType',
           accessorKey: 'folderType',
-          header: 'Folder type',
+          header: getColumnLabel('folderType'),
           minSize: COLUMN_MIN_SIZE,
           enableResizing: true,
           enablePinning: true,
@@ -118,32 +119,6 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
                 columnId={column.id}
                 value={value}
                 options={meta?.options?.folderType}
-                attributeData={{ type: 'string' }}
-                isReadOnly={true}
-              />
-            )
-          },
-        },
-      },
-      {
-        position: 12,
-        column: {
-          id: 'taskLabel',
-          accessorKey: 'taskLabel',
-          header: 'Task',
-          minSize: COLUMN_MIN_SIZE,
-          enableResizing: true,
-          enablePinning: true,
-          enableHiding: true,
-          cell: ({ row, column }) => {
-            const { value, id, type } = getValueIdType(row, column.id)
-            if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
-            return (
-              <CellWidget
-                rowId={id}
-                className={clsx('taskLabel', { loading: row.original.isLoading })}
-                columnId={column.id}
-                value={value}
                 attributeData={{ type: 'string' }}
                 isReadOnly={true}
               />

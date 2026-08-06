@@ -1,16 +1,6 @@
 import { useColumnSettingsContext, useProjectTableContext } from '../context'
+import { getSortableColumnOptions } from '../buildTreeTableColumns'
 import { SortCardType, SettingsSortingDropdown } from '@ynput/ayon-react-components'
-
-const BUILT_IN_SORT_OPTIONS: { id: string; label: string; scopes?: string[] }[] = [
-  { id: 'name', label: 'Name' },
-  { id: 'status', label: 'Status' },
-  { id: 'subType', label: 'Type' },
-  { id: 'tags', label: 'Tags' },
-  { id: 'assignees', label: 'Assignees', scopes: ['task'] },
-  { id: 'folder', label: 'Folder' },
-  { id: 'createdAt', label: 'Created at' },
-  { id: 'updatedAt', label: 'Updated at' },
-]
 
 type SortColumn = { value: string; label: string }
 
@@ -19,9 +9,7 @@ export const useSortBySettings = (columns: SortColumn[] = []) => {
   const { attribFields, scopes } = useProjectTableContext()
 
   const options = [
-    ...BUILT_IN_SORT_OPTIONS.filter(
-      (opt) => !opt.scopes || opt.scopes.some((s) => scopes.includes(s)),
-    ).map(({ id, label }) => ({ id, label })),
+    ...getSortableColumnOptions(scopes, columns),
     ...attribFields
       .filter((field) => field.scope?.some((s) => scopes.includes(s)))
       .map((field) => ({

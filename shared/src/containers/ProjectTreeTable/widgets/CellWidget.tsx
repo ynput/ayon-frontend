@@ -1,4 +1,4 @@
-import { FC, useMemo, useRef } from 'react'
+import { FC, ReactNode, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 
 // Widgets
@@ -52,6 +52,10 @@ const Cell = styled.div`
     border-radius: 4px;
     opacity: 1;
   }
+
+  &.entity-widget {
+    cursor: pointer;
+  }
 `
 
 // use this class to trigger the editing mode on a single click
@@ -81,6 +85,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isLinksLoading?: boolean
   folderId?: string | null
   tooltip?: string
+  startAdornment?: ReactNode
   onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
   // options passthrough props
   pt?: {
@@ -114,6 +119,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   isLinksLoading,
   folderId,
   tooltip,
+  startAdornment,
   onChange,
   entityType,
   pt,
@@ -363,6 +369,7 @@ export const CellWidget: FC<EditorCellProps> = ({
       }
       data-tooltip-delay={200}
     >
+      {startAdornment}
       {widget}
     </Cell>
   )

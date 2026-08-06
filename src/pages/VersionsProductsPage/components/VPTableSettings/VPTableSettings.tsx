@@ -4,7 +4,7 @@ import { SizeSlider } from '@shared/components'
 import { useVPViewsContext } from '../../context/VPViewsContext'
 import VPTableSortingSetting from './VPTableSortingSetting'
 import { FeaturedVersionOrder, FEATURED_VERSION_TYPES } from '@shared/components'
-import { useProjectTableContext } from '@shared/containers'
+import { ENTITY_COLUMN_IDS, getColumnLabel, useProjectTableContext } from '@shared/containers'
 
 export interface VPTableSettingsProps {}
 
@@ -25,27 +25,27 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
   const extraColumns = [
     {
       value: 'author',
-      label: 'Author',
+      label: getColumnLabel('author'),
     },
     {
       value: 'version',
-      label: 'Version',
+      label: getColumnLabel('version'),
+    },
+    {
+      value: ENTITY_COLUMN_IDS.version,
+      label: getColumnLabel(ENTITY_COLUMN_IDS.version),
     },
     {
       value: 'productBaseType',
-      label: 'Product base type',
+      label: getColumnLabel('productBaseType'),
     },
     {
       value: 'taskType',
-      label: 'Task type',
+      label: getColumnLabel('taskType'),
     },
     {
       value: 'folderType',
-      label: 'Folder type',
-    },
-    {
-      value: 'taskLabel',
-      label: 'Task label',
+      label: getColumnLabel('folderType'),
     },
   ]
 

@@ -1,5 +1,5 @@
 import { getValueIdType, TreeTableExtraColumn, TreeTableSubType } from '@shared/containers'
-import { CellWidget } from '@shared/containers/ProjectTreeTable'
+import { CellWidget, EntityWidget } from '@shared/containers/ProjectTreeTable'
 import clsx from 'clsx'
 import { useMemo } from 'react'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
@@ -41,7 +41,14 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
   // plain readonly value columns only available on version lists
 
   const versionValueColumns = useMemo<
-    { value: string; label: string; position: number; optionsKey?: TreeTableSubType }[]
+    {
+      value: string
+      label: string
+      position: number
+      optionsKey?: TreeTableSubType
+      accessorKey?: string
+      entityType?: 'folder' | 'task' | 'version'
+    }[]
   >(
     () =>
       entityType === 'version'
@@ -52,7 +59,6 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
               position: 9,
               optionsKey: 'productType',
             },
-            { value: 'taskLabel', label: 'Task', position: 10 },
           ]
         : [],
     [entityType],
@@ -64,7 +70,7 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
         (valueColumn): TreeTableExtraColumn => ({
           column: {
             id: valueColumn.value,
-            accessorKey: valueColumn.value,
+            accessorKey: valueColumn.accessorKey || valueColumn.value,
             header: valueColumn.label,
             // reference value of a related entity — no valid backend sort key, would 400 the query
             enableSorting: false,
@@ -73,13 +79,30 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
             enableHiding: true,
             cell: ({ row, column, table }) => {
               const meta = table.options.meta
-              const { value, id, type } = getValueIdType(row, column.id)
+              const { value, id, type } = getValueIdType(row, valueColumn.accessorKey || column.id)
+              const displayValue = isEntityRestricted(type) ? '' : value
+
+              if (valueColumn.entityType) {
+                return (
+                  <EntityWidget
+                    rowId={id}
+                    className={valueColumn.value}
+                    columnId={column.id}
+                    value={displayValue}
+                    entityId={row.original.taskId}
+                    entityType={valueColumn.entityType}
+                    subType={row.original.taskType}
+                    isLoading={row.original.isLoading}
+                  />
+                )
+              }
+
               return (
                 <CellWidget
                   rowId={id}
                   className={clsx(valueColumn.value, { loading: row.original.isLoading })}
                   columnId={column.id}
-                  value={isEntityRestricted(type) ? '' : value}
+                  value={displayValue}
                   options={
                     valueColumn.optionsKey && !isEntityRestricted(type)
                       ? meta?.options?.[valueColumn.optionsKey]

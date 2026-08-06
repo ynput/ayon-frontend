@@ -1,6 +1,8 @@
 import {
   getLinkColumnId,
   getLinkLabel,
+  getColumnLabel,
+  ENTITY_COLUMN_IDS,
   useColumnSettingsContext,
   useProjectTableContext,
   checkColumnVisibility,
@@ -80,7 +82,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   }[] = [
     {
       value: 'thumbnail',
-      label: 'Thumbnail',
+      label: getColumnLabel('thumbnail'),
     },
     {
       value: 'name',
@@ -88,51 +90,56 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
         scopes.map((scope) => scope.charAt(0).toUpperCase() + scope.slice(1)).join('/') + ' Name',
     },
     {
-      value: 'folder',
-      label: 'Folder',
+      value: ENTITY_COLUMN_IDS.folder,
+      label: getColumnLabel(ENTITY_COLUMN_IDS.folder),
+    },
+    {
+      value: ENTITY_COLUMN_IDS.task,
+      label: getColumnLabel(ENTITY_COLUMN_IDS.task),
+      hidden: !['product', 'version'].some((scope) => scopes.includes(scope)),
     },
     {
       value: 'assignees',
-      label: 'Assignees',
+      label: getColumnLabel('assignees'),
       hidden: !scopes.includes('task'),
     },
     {
       value: 'product',
-      label: 'Product name',
+      label: getColumnLabel('product'),
       hidden: ['product', 'version'].some((scope) => !scopes.includes(scope)),
     },
     {
       value: 'entityType',
-      label: 'Entity type',
+      label: getColumnLabel('entityType'),
     },
     {
       value: 'status',
-      label: 'Status',
+      label: getColumnLabel('status'),
     },
     {
       value: 'subType',
-      label: 'Type',
+      label: getColumnLabel('subType', scopes),
     },
     {
       value: 'tags',
-      label: 'Tags',
+      label: getColumnLabel('tags'),
     },
     {
       value: 'createdAt',
-      label: 'Created At',
+      label: getColumnLabel('createdAt'),
     },
     {
       value: 'updatedAt',
-      label: 'Updated At',
+      label: getColumnLabel('updatedAt'),
     },
     {
       value: 'subtasks',
-      label: 'Subtasks',
+      label: getColumnLabel('subtasks'),
       hidden: !scopes.includes('task'),
     },
     {
       value: 'comments',
-      label: 'Latest comments',
+      label: getColumnLabel('comments'),
       hidden: !scopes.some((scope) => ['task', 'version', 'product', 'folder'].includes(scope)),
     },
     ...attribFields

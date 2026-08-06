@@ -62,7 +62,7 @@ const EMPTY_FILTER: QueryFilter = { conditions: [] }
 const SORT_BY_FIELD_MAP: Record<string, string> = {
   name: 'path',
   subType: 'productType',
-  folder: 'folderName',
+  folder_entity: 'folderName',
   product: 'productName',
 }
 
