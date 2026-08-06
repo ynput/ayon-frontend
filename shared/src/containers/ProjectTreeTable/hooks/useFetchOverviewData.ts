@@ -29,6 +29,7 @@ import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
 import { debounce } from 'lodash'
 import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+import { getColumnSortKey } from '../buildTreeTableColumns'
 
 // how long a folder must stay rendered in the viewport before its tasks are fetched.
 // prevents firing a request per folder while the user is quickly scrolling past them.
@@ -392,9 +393,7 @@ export const useFetchOverviewData = ({
 
   // Create sort params for infinite query
   const singleSort = { ...sorting[0] }
-  // if task list and sorting by name, sort by path instead
-  const sortByPath = singleSort?.id === 'name' && !showHierarchy
-  const sortId = sortByPath ? 'path' : singleSort?.id === 'subType' ? 'taskType' : singleSort?.id
+  const sortId = getColumnSortKey(singleSort?.id, showHierarchy)
   const tasksFolderIdsParams = selectedFolders.length
     ? Array.from(
         new Set([...foldersMap.keys(), ...(excludeSelectedFolders ? selectedFolders : [])]),
