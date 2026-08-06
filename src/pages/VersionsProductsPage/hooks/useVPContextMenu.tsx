@@ -439,6 +439,7 @@ export const useVPContextMenu = (callbacks?: {
           label: 'Open folder',
           icon: 'folder_open',
           command: () => setSelectedEntity({ entityId: folderId, entityType: 'folder' }),
+          hidden: cell.isGroup,
         })
       }
 
@@ -449,6 +450,7 @@ export const useVPContextMenu = (callbacks?: {
           label: 'Open task',
           icon: 'task',
           command: () => setSelectedEntity({ entityId: taskId, entityType: 'task' }),
+          hidden: cell.isGroup,
         })
       }
 
