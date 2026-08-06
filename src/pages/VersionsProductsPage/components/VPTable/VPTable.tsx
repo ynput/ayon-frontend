@@ -38,6 +38,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     addToListItem,
     productDetailItem,
     versionDetailItem,
+    openFolderTaskItem,
   } = contextMenuItems
 
   const extraColumns = useMemo<TreeTableExtraColumn[]>(
@@ -229,6 +230,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         'copy-paste',
         'show-details',
         'open-viewer',
+        openFolderTaskItem,
         uploadVersionItem,
         addToListItem,
         productDetailItem,

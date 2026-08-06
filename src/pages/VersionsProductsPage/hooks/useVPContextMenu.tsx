@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import {
   ContextMenuItemConstructor,
+  ContextMenuItemType,
   getCellId,
   parseCellId,
   parseRowId,
@@ -12,6 +13,7 @@ import {
 import { useVersionsDataContext } from '../context/VPDataContext'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useVersionUploadContext } from '@shared/components'
+import { useDetailsPanelEntityContext } from '@shared/containers/ProjectTreeTable'
 import {
   useProjectContext,
   useDeleteEntitiesContext,
@@ -40,6 +42,7 @@ const resolveSelectedEntityIds = (meta: any, cell: any): string[] => {
 export interface VPContextMenuItems {
   showDetailsItem: ContextMenuItemConstructor
   openViewerItem: ContextMenuItemConstructor
+  openFolderTaskItem: ContextMenuItemConstructor
   uploadVersionItem: ContextMenuItemConstructor
   addToListItem: ContextMenuItemConstructor
   productDetailItem: ContextMenuItemConstructor
@@ -59,6 +62,7 @@ export const useVPContextMenu = (callbacks?: {
   const { projectName } = useProjectContext()
   const { deleteEntities } = useDeleteEntitiesContext()
   const { onOpenVersionUpload } = useVersionUploadContext()
+  const { setSelectedEntity } = useDetailsPanelEntityContext()
 
   // Shared delete version handler — delegates to the standardized delete flow
   const handleDeleteVersion = useCallback(
@@ -412,9 +416,51 @@ export const useVPContextMenu = (callbacks?: {
     [entitiesMap, handleDeleteProduct],
   )
 
+  // Open folder / task context menu item (YN-0989)
+  const openFolderTaskItem: ContextMenuItemConstructor = useCallback(
+    (_e: any, cell: any, _selected: any, meta: any) => {
+      // Single selection only
+      const selectedEntityIds = resolveSelectedEntityIds(meta, cell)
+      if (selectedEntityIds.length !== 1) return undefined
+
+      const entity = entitiesMap.get(selectedEntityIds[0])
+      if (!entity) return undefined
+
+      const items: ContextMenuItemType[] = []
+
+      // Folder: product rows carry folderId directly; version rows expose it
+      // through product.folder
+      const folderId =
+        entity.entityType === 'product'
+          ? (entity as any).folderId
+          : (entity as any).product?.folder?.id
+      if (folderId) {
+        items.push({
+          label: 'Open folder',
+          icon: 'folder_open',
+          command: () => setSelectedEntity({ entityId: folderId, entityType: 'folder' }),
+        })
+      }
+
+      // Task: only version rows have a linked task
+      const taskId = (entity as any).task?.id
+      if (taskId) {
+        items.push({
+          label: 'Open task',
+          icon: 'task',
+          command: () => setSelectedEntity({ entityId: taskId, entityType: 'task' }),
+        })
+      }
+
+      return items.length ? items : undefined
+    },
+    [entitiesMap, setSelectedEntity],
+  )
+
   return {
     showDetailsItem,
     openViewerItem,
+    openFolderTaskItem,
     uploadVersionItem,
     addToListItem,
     productDetailItem,
