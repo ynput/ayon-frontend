@@ -41,7 +41,7 @@ export type FilterFieldType =
   | 'attributes'
   | 'status'
   | 'tags'
-  | 'version' // version: latest
+  | 'version' // version: product latest/hero/latest done/number
   | 'hasReviewables'
   | 'productName'
   | 'name'
@@ -455,15 +455,10 @@ export const useBuildFilterOptions = ({
       }
     }
 
-    // VERSION (LATEST)
+    // VERSION
     // add version options
     if (scopeFilterTypes.includes('version')) {
-      const versionOption = getOptionRoot(
-        'version',
-        config,
-        entityType,
-        groupedFilterTypes.has('version'),
-      )
+      const versionOption = getOptionRoot('version', config, entityType)
 
       if (versionOption) {
         const versionTypes = FEATURED_VERSION_TYPES
@@ -953,21 +948,21 @@ const getOptionRoot = (
         operatorChangeable: config?.enableOperatorChange,
       }
       break
-    case 'version': // version: latest
+    case 'version': // version: product latest/hero/latest done/number
       rootOption = {
         id: getRootIdWithPrefix('version'),
         type: 'string',
-        label: 'Latest Version',
-        icon: getAttributeIcon('latest'),
+        label: 'Version',
+        icon: getEntityTypeIcon('version'),
         inverted: false,
         operator: 'OR',
         values: [],
         allowsCustomValues: true,
         allowHasValue: false,
         allowNoValue: false,
-        allowExcludes: false,
+        allowExcludes: true,
         operatorChangeable: false,
-        singleSelect: true,
+        singleSelect: false,
       }
       break
     case 'name':
@@ -1061,7 +1056,13 @@ const getOptionRoot = (
 
   if (rootOption && entityType) {
     rootOption.tooltip = fieldNameWithEntityType(rootOption.label)
-    rootOption.value = { icon: getEntityTypeIcon(entityType) }
+    rootOption.value = { label: fieldNameWithEntityType(rootOption.label) }
+  }
+
+  // except for version.version as it should show Product Version label
+  if (rootOption && fieldName === 'version' && entityType === 'version') {
+    rootOption.value = { label: 'Product Version' }
+    rootOption.tooltip = 'Product Version'
   }
 
   return rootOption

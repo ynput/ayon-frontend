@@ -7,10 +7,11 @@ const BASE: FilterFieldType[] = ['status', 'tags', 'attributes', 'createdAt', 'u
 // Single source of truth for which filter options each entity scope offers.
 // Pages differ only by which scopes they include, never by the field list per scope.
 export const FILTER_TYPES_BY_SCOPE: Record<ScopeType, FilterFieldType[]> = {
-  folder: [...BASE, 'name', 'folderType', 'version'],
+  folder: [...BASE, 'name', 'folderType'],
   task: [...BASE, 'name', 'taskType', 'folderType', 'assignees'],
   version: [
     ...BASE,
+    'version',
     'productName',
     'productType',
     'productBaseType',
@@ -19,7 +20,7 @@ export const FILTER_TYPES_BY_SCOPE: Record<ScopeType, FilterFieldType[]> = {
     'taskType',
     'folderType',
   ],
-  product: [...BASE, 'productName', 'productBaseType', 'version'],
+  product: [...BASE, 'productName', 'productBaseType'],
   user: [...BASE],
 }
 
