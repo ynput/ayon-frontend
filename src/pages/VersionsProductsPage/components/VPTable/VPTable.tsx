@@ -150,6 +150,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
                 isReadOnly={true}
                 onMouseDown={(e) => {
                   if (e.detail === 2) {
+                    e.preventDefault()
                     e.stopPropagation()
                     if (row.original.folderId) {
                       setSelectedEntity({ entityId: row.original.folderId, entityType: 'folder' })
@@ -184,6 +185,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
                 isReadOnly={true}
                 onMouseDown={(e) => {
                   if (e.detail === 2) {
+                    e.preventDefault()
                     e.stopPropagation()
                     if (row.original.taskId) {
                       setSelectedEntity({ entityId: row.original.taskId, entityType: 'task' })
