@@ -4,7 +4,7 @@ import ActivityDate from '../ActivityDate'
 import { Icon } from '@ynput/ayon-react-components'
 import { VersionReviewFeedback } from '../CommentInput/types'
 import { clsx } from 'clsx'
-import { UserImage } from '@shared/components'
+import { UserImage } from '@ynput/ayon-react-components'
 import { CategoryTag } from '../ActivityCategorySelect'
 import { useCategoryData } from '../../hooks/useCategoryData'
 import { getActivityUserName } from '../../helpers/getActivityUserName'
@@ -23,6 +23,8 @@ interface ActivityVersionReviewProps {
     [key: string]: any
   }
 }
+
+export const ANONYMOUS_GUEST_NAME_PREFIX = "anonymous.guest"
 
 export const getVerbForFeedback = (feedback: VersionReviewFeedback) => {
   switch (feedback) {
@@ -67,12 +69,25 @@ const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ isGuest, 
 
   const { categoryData, categoryNotFound } = useCategoryData(activityData?.category)
 
+  const userImageSrc = useMemo(() => {
+    if (authorName?.startsWith(ANONYMOUS_GUEST_NAME_PREFIX)) {
+      return
+    }
+
+    return `/api/users/${authorName}/avatar`
+  }, [authorName])
+
   if (!activityData?.feedback) return
 
   return (
     <Styled.VersionReview className={clsx(activityData.feedback)}>
       <Styled.Body>
-        {authorName && <UserImage name={authorName} size={22} />}
+        {authorName && <UserImage
+          name={authorName}
+          fullName={authorFullName}
+          src={userImageSrc}
+          size={22}
+        />}
         <Icon icon={getIconForFeedback(activityData.feedback)} />
         {categoryData && !isGuest && (
           <CategoryTag
