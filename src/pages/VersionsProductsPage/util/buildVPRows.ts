@@ -66,6 +66,7 @@ export const buildVersionRow = (version: VersionNode): TableRow => ({
   subType: version.product.productType,
   productBaseType: version.product.productBaseType || '',
   taskType: version.task?.taskType,
+  taskId: version.task?.id,
   taskLabel: version.task?.label || version.task?.name,
   hasReviewables: version.hasReviewables,
   author: version.author || '',

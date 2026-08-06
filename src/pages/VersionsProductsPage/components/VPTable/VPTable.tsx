@@ -5,6 +5,7 @@ import {
   NEXT_PAGE_ID,
   ProjectTreeTable,
 } from '@shared/containers'
+import { useDetailsPanelEntityContext } from '@shared/containers/ProjectTreeTable'
 import { FC, useMemo } from 'react'
 import { useVersionsDataContext } from '../../context/VPDataContext'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
@@ -12,7 +13,7 @@ import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
 import clsx from 'clsx'
 import type { TreeTableExtraColumn } from '@shared/containers/ProjectTreeTable/buildTreeTableColumns'
 
-const VP_EXCLUDED_COLUMNS = ['assignees']
+const VP_EXCLUDED_COLUMNS = ['assignees', 'folder']
 
 interface VPTableProps {
   readOnly?: string[]
@@ -29,6 +30,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     fieldStatsError,
   } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
+  const { setSelectedEntity } = useDetailsPanelEntityContext()
   const {
     uploadVersionItem,
     deleteVersionItem,
@@ -126,6 +128,40 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         },
       },
       {
+        position: 6,
+        column: {
+          id: 'folder',
+          accessorKey: 'folder',
+          header: 'Folder',
+          minSize: COLUMN_MIN_SIZE,
+          enableResizing: true,
+          enablePinning: true,
+          enableHiding: true,
+          cell: ({ row, column }) => {
+            const { value, id, type } = getValueIdType(row, column.id)
+            if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+            return (
+              <CellWidget
+                rowId={id}
+                className={clsx('folder', { loading: row.original.isLoading })}
+                columnId={column.id}
+                value={value}
+                attributeData={{ type: 'string' }}
+                isReadOnly={true}
+                onMouseDown={(e) => {
+                  if (e.detail === 2) {
+                    e.stopPropagation()
+                    if (row.original.folderId) {
+                      setSelectedEntity({ entityId: row.original.folderId, entityType: 'folder' })
+                    }
+                  }
+                }}
+              />
+            )
+          },
+        },
+      },
+      {
         position: 12,
         column: {
           id: 'taskLabel',
@@ -146,6 +182,14 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
                 value={value}
                 attributeData={{ type: 'string' }}
                 isReadOnly={true}
+                onMouseDown={(e) => {
+                  if (e.detail === 2) {
+                    e.stopPropagation()
+                    if (row.original.taskId) {
+                      setSelectedEntity({ entityId: row.original.taskId, entityType: 'task' })
+                    }
+                  }
+                }}
               />
             )
           },
