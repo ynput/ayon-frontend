@@ -9,7 +9,7 @@ import {
   GetDetailsPanelTaskQuery,
   GetDetailsPanelVersionQuery,
 } from '@shared/api/generated'
-import { parseAllAttribs } from '../overview'
+import { parseJSONField } from '../overview'
 
 type DetailsPanelTask = NonNullable<GetDetailsPanelTaskQuery['project']['task']>
 type DetailsPanelRepresentation = NonNullable<
@@ -79,7 +79,7 @@ export const transformDetailsPanelQueriesData = ({
         updatedAt: task.updatedAt as string,
         createdAt: task.createdAt as string,
         thumbnailHash: task.thumbnailHash,
-        attrib: parseAllAttribs(task.allAttrib),
+        attrib: parseJSONField(task.allAttrib),
         hasReviewables: task.hasReviewables,
         thumbnailId: task.thumbnailId,
         path: (task.folder?.path || '') + '/' + task.name,
@@ -95,7 +95,7 @@ export const transformDetailsPanelQueriesData = ({
         },
         product: undefined,
         version: task.versions?.edges?.[0]?.node,
-        data: parseAllAttribs(task.data),
+        data: parseJSONField(task.data),
       }
     case 'version':
       const version = entity as DetailsPanelVersion
@@ -111,7 +111,7 @@ export const transformDetailsPanelQueriesData = ({
         updatedAt: version.updatedAt as string,
         createdAt: version.createdAt as string,
         thumbnailHash: version.thumbnailHash,
-        attrib: parseAllAttribs(version.allAttrib),
+        attrib: parseJSONField(version.allAttrib),
         hasReviewables: version.hasReviewables,
         thumbnailId: version.thumbnailId,
         path:
@@ -151,7 +151,7 @@ export const transformDetailsPanelQueriesData = ({
         updatedAt: folder.updatedAt as string,
         createdAt: folder.createdAt as string,
         thumbnailHash: folder.thumbnailHash,
-        attrib: parseAllAttribs(folder.allAttrib),
+        attrib: parseJSONField(folder.allAttrib),
         hasReviewables: folder.hasReviewables,
         thumbnailId: folder.thumbnailId,
         path: folder.path || '',
@@ -181,7 +181,7 @@ export const transformDetailsPanelQueriesData = ({
         updatedAt: representation.updatedAt as string,
         createdAt: representation.createdAt as string,
         thumbnailHash: 'not_supported',
-        attrib: parseAllAttribs(representation.allAttrib),
+        attrib: parseJSONField(representation.allAttrib),
         hasReviewables: undefined,
         thumbnailId: undefined,
         path:

@@ -16,7 +16,7 @@ import {
 } from '@shared/util'
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { parseAllAttribs } from '../overview'
+import { parseJSONField } from '../overview'
 
 type GetUpdatedAndNewFoldersResult = FolderListItem[]
 
@@ -37,7 +37,7 @@ const graphqlFolders = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       transformResponse: (response: GetUpdatedAndNewFoldersQuery): GetUpdatedAndNewFoldersResult =>
         response.project.folders.edges.map(({ node }) => ({
           ...node,
-          attrib: parseAllAttribs(node.allAttrib),
+          attrib: parseJSONField(node.allAttrib),
           path: node.path ?? '',
           parentId: node.parentId ?? undefined,
           label: node.label ?? undefined,
@@ -162,9 +162,7 @@ const enhancedApi = foldersApi.enhanceEndpoints({
 
           // Fetch created and unsupported folders in one request.
           // This is to avoid overwhelming the API with too many requests at once, and to prevent potential performance issues in the frontend.
-          const foldersToFetch = [
-            ...new Set([...createdIds, ...unsupportedFields.keys()]),
-          ]
+          const foldersToFetch = [...new Set([...createdIds, ...unsupportedFields.keys()])]
           if (foldersToFetch.length > MAX_FOLDER_UPDATE_REST_CALLS) return
 
           if (foldersToFetch.length) {
