@@ -12,11 +12,6 @@ const useGetContextParents = (activity: any, entityType?: string) => {
     tag.push(activity.activityData.origin.name)
   }
 
-  if (activity.activityData.origin.type == 'folder' && !tagTypes.folder) {
-    tagTypes.folder = true
-    tag.push(activity.activityData.origin.name)
-  }
-
   if (entityType == 'version' || activity.activityData.origin.type == 'version') {
     if (!tagTypes.product) {
       tagTypes.product = true

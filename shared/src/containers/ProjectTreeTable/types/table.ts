@@ -75,7 +75,6 @@ export type TableRow = {
     // if you want to use a thumbnail from a different entity, e.g. latest version of a product
     entityId: string
     entityType: string
-    updatedAt: string | undefined
     thumbnailHash?: string
   }
 }

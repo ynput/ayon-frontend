@@ -206,7 +206,13 @@ DetailsPanelProps) => {
     }
   }, [originalArgs, isSlideOut])
 
-  // if the details panel is opened vair the uri, run callback
+  // fire onUriOpen once per context entity — a details refetch must not re-run the jump/filter reset
+  const uriOpenFiredForId = useRef<string | null>(null)
+  useEffect(() => {
+    if (!contextEntities) uriOpenFiredForId.current = null
+  }, [contextEntities])
+
+  // if the details panel is opened via the uri, run callback
   useEffect(() => {
     if (isFetchingEntitiesDetails) return
 
@@ -215,14 +221,16 @@ DetailsPanelProps) => {
       contextEntities?.entities?.length &&
       !!onUriOpen
     ) {
-      const uriEntity = entityDetailsData.find(
-        (entity) => entity.id === contextEntities.entities[0].id,
-      )
+      const targetId = contextEntities.entities[0].id
+      if (uriOpenFiredForId.current === targetId) return
+
+      const uriEntity = entityDetailsData.find((entity) => entity.id === targetId)
       if (!uriEntity) return
 
+      uriOpenFiredForId.current = targetId
       onUriOpen(uriEntity, contextEntities.source)
     }
-  }, [entityDetailsData, isFetchingEntitiesDetails])
+  }, [entityDetailsData, isFetchingEntitiesDetails, contextEntities, onUriOpen])
 
   // TODO:  merge current entities data with fresh details data
 
@@ -295,6 +303,8 @@ DetailsPanelProps) => {
     onClose?.()
     // also remove any entities in context
     setEntities(null)
+    // drop the uri so an in-flight resolve can't reopen the panel after close
+    setUri('')
     clearSearchUrl()
     closeSlideOut()
   }

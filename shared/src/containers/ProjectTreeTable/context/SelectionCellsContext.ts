@@ -51,3 +51,5 @@ export const useSelectionCellsContext = (): SelectionCellsContextType => {
   }
   return context
 }
+
+export const useOptionalSelectionCellsContext = () => useContext(SelectionCellsContext)

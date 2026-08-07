@@ -10,6 +10,7 @@ import { useScopedStatuses } from '@shared/hooks'
 import { Slicer, SLICER_PAGES_CONFIG, useSlicerSplitter } from '@shared/containers/Slicer'
 import { useProjectContext } from '@shared/context'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
+import { useTaskProgressSlicerCountsSource } from '@containers/TasksProgress/hooks'
 
 const TasksProgressPage: FC = () => {
   const projectName = useAppSelector((state: any) => state.project.name) as string
@@ -24,6 +25,8 @@ const TasksProgressPage: FC = () => {
 
   const [slicerSize, handleResizeEnd] = useSlicerSplitter()
 
+  const slicerCountsSource = useTaskProgressSlicerCountsSource(projectName)
+
   return (
     <main>
       <Splitter
@@ -33,7 +36,11 @@ const TasksProgressPage: FC = () => {
       >
         <SplitterPanel size={slicerSize[0]}>
           <Section wrap>
-            <Slicer sliceFields={SLICER_PAGES_CONFIG.progress.fields} pinnedSliceType="hierarchy" />
+            <Slicer
+              sliceFields={SLICER_PAGES_CONFIG.progress.fields}
+              pinnedSliceType="hierarchy"
+              countsSource={slicerCountsSource}
+            />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={slicerSize[1]} style={{ overflow: 'hidden' }}>

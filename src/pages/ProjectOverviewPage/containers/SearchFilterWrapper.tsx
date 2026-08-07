@@ -99,25 +99,26 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   // Convert QueryFilter to Filter[] for internal use
   const filters = useMemo(() => {
     const filters = queryFilterToClientFilter(queryFilters, options)
-    const pinned: Filter | null = pinnedSlice
-      ? {
-          id: pinnedSlice.sliceType + '__pinned',
-          label: pinnedSlice.sliceType,
-          type: 'string',
-          inverted: false,
-          operator: 'OR',
-          values: Object.keys(pinnedSlice.rowSelection)
-            .filter((id) => pinnedSlice.rowSelection[id])
-            .map((id) => {
-              const folder = getFolderById(id)
-              return { id, label: folder?.label || folder?.name || id }
-            }),
-        }
-      : null
+    const pinned: Filter | null =
+      pinnedSlice && Object.keys(pinnedSlice.rowSelection).length > 0
+        ? {
+            id: pinnedSlice.sliceType + '__pinned',
+            label: pinnedSlice.sliceType,
+            type: 'string',
+            inverted: false,
+            operator: 'OR',
+            values: Object.keys(pinnedSlice.rowSelection)
+              .filter((id) => pinnedSlice.rowSelection[id])
+              .map((id) => {
+                const folder = getFolderById(id)
+                return { id, label: folder?.label || folder?.name || id }
+              }),
+          }
+        : null
     const filtersWithPinnedSlice = pinned ? [pinned, ...filters] : filters
 
     return filtersWithPinnedSlice
-  }, [queryFilters, options])
+  }, [queryFilters, options, pinnedSlice, getFolderById])
 
   // keeps track of the filters whilst adding/removing filters
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
@@ -235,25 +236,26 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     // Dropdown closed (or filters committed) — search-chip edit session ends
     editingSearchChipRef.current = null
 
-    // Check if pinned slice was removed
+    // The pinned slice is display-only and must never be sent as a query filter.
     const pinnedId = pinnedSlice ? pinnedSlice.sliceType + '__pinned' : null
-    const isPinnedRemoved = !!pinnedId && !filters.some((f) => f.id === pinnedId)
+    const filtersWithoutPinnedSlice = pinnedId ? filters.filter((f) => f.id !== pinnedId) : filters
+    const hadPinnedFilter = !!pinnedId && localFilters.some((f) => f.id === pinnedId)
+    const isPinnedRemoved = hadPinnedFilter && !filters.some((f) => f.id === pinnedId)
 
     if (isPinnedRemoved) {
       setPinnedSlice(null)
 
       // Check if it's the only change
-      const otherFilters = filters.filter((f) => f.id !== pinnedId)
       const originalOtherFilters = localFilters.filter((f) => f.id !== pinnedId)
 
-      if (JSON.stringify(otherFilters) === JSON.stringify(originalOtherFilters)) {
+      if (JSON.stringify(filtersWithoutPinnedSlice) === JSON.stringify(originalOtherFilters)) {
         return
       }
     }
 
     validateFilters(filters, (validFilters) => {
       // Convert Filter[] back to QueryFilter and call onChange
-      const queryFilter = clientFilterToQueryFilter(validFilters)
+      const queryFilter = clientFilterToQueryFilter(validFilters.filter((f) => f.id !== pinnedId))
       onChange?.(queryFilter)
     })
   }
@@ -408,6 +410,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
     // Check if it's a relative date (Today, This week, etc.) — let dropdown open normally
     const rangeValue = datetimeFilter.values?.[0]
+    // Nullness chips (No Value / Has Value) have no date range to edit
+    if (rangeValue?.id === 'noValue' || rangeValue?.id === 'hasValue') return
     if (rangeValue?.id) {
       const customIdContent = (rangeValue.id as string).replace('custom-', '')
       const firstZIndex = customIdContent.indexOf('Z')

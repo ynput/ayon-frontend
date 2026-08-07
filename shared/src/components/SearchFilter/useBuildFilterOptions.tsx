@@ -514,8 +514,17 @@ export const useBuildFilterOptions = ({
           'list_of_submodels',
         ].includes(type || '')
         const isDate = type === 'datetime'
+        const isText = type === 'string'
+        const isNumber = type === 'integer' || type === 'float'
         const enableOperatorChange = isListOf ? config?.enableOperatorChange : false
-        const enableRelativeValues = isListOf || isDate ? config?.enableRelativeValues : false
+        // a project default inherits down to every entity, so nullness filters would never match
+        const alwaysResolvesToValue =
+          attribute.data.default !== undefined &&
+          attribute.data.default !== null &&
+          attribute.data.inherit !== false
+        // booleans excluded: unset already matches "No", so has/no value would just duplicate it
+        const supportsNullness = (isListOf || isDate || isText || isNumber) && !alwaysResolvesToValue
+        const enableRelativeValues = supportsNullness ? config?.enableRelativeValues : false
         // for the attribute, get the option root
         const option = getAttributeFieldOptionRoot(
           attribute,

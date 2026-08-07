@@ -17,6 +17,7 @@ import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useMemo } from 'react'
 import { useProjectContext } from '@shared/context'
+import { newEntityDefinitions, type NewEntityOpenConfig } from '@shared/containers/NewEntity'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -68,7 +69,7 @@ type CellContextMenuProps = {
   attribs: ProjectTableAttribute[]
   columns?: ColumnDef<TableRow>[]
   headerLabels: HeaderLabel[]
-  onOpenNew?: (type: 'folder' | 'task') => void
+  onOpenNew?: (type: 'folder' | 'task', config?: NewEntityOpenConfig) => void
   contextMenuItems?: ContextMenuItemConstructors
 }
 
@@ -294,28 +295,48 @@ const useCellContextMenu = ({
     hidden: cell.isGroup,
   })
 
-  const createFolderItems: ContextMenuItemConstructor = (e, cell) => [
+  const getSelectedParentFolderIds = (
+    cell: TableCellContextData,
+    selectedRows: string[],
+  ): string[] => {
+    const rows = selectedRows.length ? selectedRows : [cell.entityId]
+    return rows.flatMap((rowId) => {
+      const entity = getEntityById(rowId) as (EntityMap & Record<string, any>) | undefined
+      if (!entity) return []
+
+      if (entity.entityType === 'folder' || !('folderId' in entity)) return [entity.id]
+      return entity.folderId ? [entity.folderId] : []
+    })
+  }
+
+  const createFolderItems: ContextMenuItemConstructor = (e, cell, selected, meta) => [
     {
-      label: 'Create folder',
-      icon: 'create_new_folder',
-      command: () => onOpenNew?.('folder'),
+      label: newEntityDefinitions.folder.createLabel,
+      icon: newEntityDefinitions.folder.icon,
+      command: () =>
+        onOpenNew?.('folder', {
+          parentFolderIds: getSelectedParentFolderIds(cell, meta.selectedRows),
+        }),
       hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
     },
     {
-      label: 'Create root folder',
-      icon: 'create_new_folder',
+      label: `Create root ${newEntityDefinitions.folder.label.toLowerCase()}`,
+      icon: newEntityDefinitions.folder.icon,
       command: () => {
         clearSelection()
-        onOpenNew?.('folder')
+        onOpenNew?.('folder', { parentFolderIds: [] })
       },
       hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
     },
   ]
 
-  const createTaskItem: ContextMenuItemConstructor = (e, cell) => ({
-    label: 'Create task',
-    icon: 'add_task',
-    command: () => onOpenNew?.('task'),
+  const createTaskItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({
+    label: newEntityDefinitions.task.createLabel,
+    icon: newEntityDefinitions.task.icon,
+    command: () =>
+      onOpenNew?.('task', {
+        parentFolderIds: getSelectedParentFolderIds(cell, meta.selectedRows),
+      }),
     hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
   })
 
@@ -389,8 +410,17 @@ const useCellContextMenu = ({
     if (!cellData) return
 
     let currentSelectedCells = Array.from(selectedCells)
+    const selectedRowCellIds = currentSelectedCells.filter(
+      (selectedCellId) => parseCellId(selectedCellId)?.colId === ROW_SELECTION_COLUMN_ID,
+    )
+    const clickedRowIsSelected = selectedRowCellIds.some(
+      (selectedCellId) => parseCellId(selectedCellId)?.rowId === cellData.entityId,
+    )
     // if selecting a cell outside of the current selection
-    if (!currentSelectedCells.includes(cellId) || !currentSelectedCells.length) {
+    if (
+      (!currentSelectedCells.includes(cellId) && !clickedRowIsSelected) ||
+      !currentSelectedCells.length
+    ) {
       currentSelectedCells = [cellId]
       // update selection
       selectCell(cellId, false, false)

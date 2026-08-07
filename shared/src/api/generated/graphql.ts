@@ -1843,6 +1843,7 @@ export type GetListItemsQueryVariables = Exact<{
   last?: number | null | undefined;
   sortBy?: string | null | undefined;
   filter?: string | null | undefined;
+  search?: string | null | undefined;
   showComments?: boolean;
 }>;
 
@@ -1860,6 +1861,7 @@ export type GetListItemsColumnStatsQueryVariables = Exact<{
   projectName: string;
   listId: string;
   filter?: string | null | undefined;
+  search?: string | null | undefined;
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
 }>;
 
@@ -1906,6 +1908,15 @@ export type ListItemFragmentFragment =
   | ListItemFragment_VersionNode_Fragment
   | ListItemFragment_WorkfileNode_Fragment
 ;
+
+export type GetUpdatedAndNewFoldersQueryVariables = Exact<{
+  projectName: string;
+  folderIds: Array<string> | string;
+  first?: number | null | undefined;
+}>;
+
+
+export type GetUpdatedAndNewFoldersQuery = { project: { folders: { edges: Array<{ node: { id: string, path: string | null, parentId: string | null, parents: Array<string>, name: string, label: string | null, folderType: string, hasTasks: boolean, hasChildren: boolean, hasReviewables: boolean, thumbnailHash: string, tags: Array<string>, status: string, allAttrib: string, ownAttrib: Array<string>, createdAt: unknown, updatedAt: unknown } }> } } };
 
 export type ColumnStatsFragmentFragment = { columnName: string, min: number | null, max: number | null, avg: number | null, sum: number | null, count: number | null, valueFilledCount: number | null, percentageFilled: number | null, valueNotFilledCount: number | null, percentageNotFilled: number | null, checkedCount: number | null, checkedPercentage: number | null, notCheckedCount: number | null, notCheckedPercentage: number | null, distribution: unknown };
 
@@ -2887,7 +2898,7 @@ export const GetEntitiesChecklistsDocument = new TypedDocumentString(`
       entityIds: $entityIds
       last: 1000
       activityTypes: ["checklist"]
-      referenceTypes: ["origin"]
+      referenceTypes: ["origin", "relation"]
     ) {
       edges {
         cursor
@@ -3132,7 +3143,7 @@ export const GetProductVersionsDocument = new TypedDocumentString(`
 }
     `);
 export const GetListItemsDocument = new TypedDocumentString(`
-    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String, $showComments: Boolean! = false) {
+    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String, $search: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     entityLists(ids: [$listId]) {
       pageInfo {
@@ -3150,6 +3161,7 @@ export const GetListItemsDocument = new TypedDocumentString(`
             last: $last
             sortBy: $sortBy
             filter: $filter
+            search: $search
           ) {
             pageInfo {
               hasNextPage
@@ -3279,14 +3291,14 @@ fragment SubTaskFragment on SubTaskNode {
   isDone
 }`);
 export const GetListItemsColumnStatsDocument = new TypedDocumentString(`
-    query GetListItemsColumnStats($projectName: String!, $listId: String!, $filter: String, $targets: [MetricTargetInput!]) {
+    query GetListItemsColumnStats($projectName: String!, $listId: String!, $filter: String, $search: String, $targets: [MetricTargetInput!]) {
   project(name: $projectName) {
     name
     entityLists(ids: [$listId]) {
       edges {
         node {
           id
-          items(filter: $filter, calculateSpecificStatistics: $targets) {
+          items(filter: $filter, search: $search, calculateSpecificStatistics: $targets) {
             fieldStats {
               ...ColumnStatsFragment
             }
@@ -3370,6 +3382,35 @@ export const GetListsItemsForReviewSessionDocument = new TypedDocumentString(`
           updatedAt
           count
           accessLevel
+        }
+      }
+    }
+  }
+}
+    `);
+export const GetUpdatedAndNewFoldersDocument = new TypedDocumentString(`
+    query GetUpdatedAndNewFolders($projectName: String!, $folderIds: [String!]!, $first: Int) {
+  project(name: $projectName) {
+    folders(ids: $folderIds, first: $first) {
+      edges {
+        node {
+          id
+          path
+          parentId
+          parents
+          name
+          label
+          folderType
+          hasTasks
+          hasChildren
+          hasReviewables
+          thumbnailHash
+          tags
+          status
+          allAttrib
+          ownAttrib
+          createdAt
+          updatedAt
         }
       }
     }
@@ -4420,6 +4461,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetListsItemsForReviewSession: build.query<GetListsItemsForReviewSessionQuery, GetListsItemsForReviewSessionQueryVariables>({
       query: (variables) => ({ document: GetListsItemsForReviewSessionDocument as unknown as string, variables })
+    }),
+    GetUpdatedAndNewFolders: build.query<GetUpdatedAndNewFoldersQuery, GetUpdatedAndNewFoldersQueryVariables>({
+      query: (variables) => ({ document: GetUpdatedAndNewFoldersDocument as unknown as string, variables })
     }),
     GetFolderColumnStats: build.query<GetFolderColumnStatsQuery, GetFolderColumnStatsQueryVariables>({
       query: (variables) => ({ document: GetFolderColumnStatsDocument as unknown as string, variables })

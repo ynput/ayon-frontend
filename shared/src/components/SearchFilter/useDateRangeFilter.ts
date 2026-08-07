@@ -144,6 +144,8 @@ export const useDateRangeFilter = (): UseDateRangeFilterReturn => {
 
     // Relative dates (Today, This week, etc.) — let the dropdown open normally
     const rangeValue = datetimeFilter.values?.[0]
+    // Nullness chips (No Value / Has Value) have no date range to edit
+    if (rangeValue?.id === 'noValue' || rangeValue?.id === 'hasValue') return
     if (rangeValue?.id) {
       const content = (rangeValue.id as string).replace('custom-', '')
       const firstZ = content.indexOf('Z')
