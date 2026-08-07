@@ -120,6 +120,9 @@ const booleanWidgetRenderer = <TData extends RowData>(
 const dateWidgetRenderer = <TData extends RowData>(
   context: ListTableWidgetRenderContext<TData>,
 ) => {
+  const midnightExclusiveFields = (context.row.original as { midnightExclusiveFields?: string[] })
+    .midnightExclusiveFields
+
   return (
     <DateWidget
       value={typeof context.value === 'string' ? context.value : undefined}
@@ -127,7 +130,7 @@ const dateWidgetRenderer = <TData extends RowData>(
       isReadOnly={context.isReadOnly}
       onCancelEdit={context.stopEditing}
       onChange={(nextValue) => context.updateValue(nextValue)}
-      isAllDayEndDate={context.columnId === 'attrib_endDate'}
+      isMidnightExclusive={midnightExclusiveFields?.includes(context.columnId) ?? false}
     />
   )
 }

@@ -55,6 +55,7 @@ export type DetailsPanelEntityData = {
   product?: DetailsPanelProductFragmentFragment
   version?: DetailsPanelVersionFragmentFragment
   representations?: DetailsPanelRepresentationFragmentFragment[]
+  data?: Record<string, any>
 }
 
 // takes the data from different entity types and returns a single data model
@@ -94,6 +95,7 @@ export const transformDetailsPanelQueriesData = ({
         },
         product: undefined,
         version: task.versions?.edges?.[0]?.node,
+        data: parseAllAttribs(task.data),
       }
     case 'version':
       const version = entity as DetailsPanelVersion

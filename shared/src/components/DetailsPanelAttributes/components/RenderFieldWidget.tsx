@@ -74,6 +74,10 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   const projectNames = entities.map((entity) => entity.projectName)
   const scopedStatuses = useScopedStatuses(projectNames, [entityType])
   const scopedTypes = useScopedTypes(projectNames, entityType)
+  const isMidnightExclusive =
+    field.name === 'attrib.endDate' &&
+    entities.length > 0 &&
+    entities.every((entity) => entity.data?.schedulerSyncData?.allDay === true)
 
   // Format the value for display
   let displayValue = value === null || value === undefined ? '' : value
@@ -95,7 +99,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           onCancelEdit={onCancelEdit}
           style={{ width: 'fit-content' }}
           autoFocus={false}
-          isAllDayEndDate={field.name === 'endDate' || field.name === 'attrib_endDate'}
+          isMidnightExclusive={isMidnightExclusive}
         />
       )
 

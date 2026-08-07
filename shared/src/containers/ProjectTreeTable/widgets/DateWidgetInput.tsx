@@ -10,7 +10,7 @@ interface DateWidgetInputProps
   value: string
   onCancel?: () => void
   autoFocus?: boolean
-  isAllDayEndDate?: boolean
+  isMidnightExclusive?: boolean
 }
 
 const StyledInput = styled.input`
@@ -36,7 +36,7 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
       onChange,
       onCancel,
       autoFocus = true,
-      isAllDayEndDate = false,
+      isMidnightExclusive = false,
       ...props
     },
     _,
@@ -46,7 +46,7 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
         const parsedDate = parseISO(initialValue)
         if (isValid(parsedDate)) {
           return formatUTCDate(
-            isAllDayEndDate ? subMilliseconds(parsedDate, 1) : parsedDate,
+            isMidnightExclusive ? subMilliseconds(parsedDate, 1) : parsedDate,
             'yyyy-MM-dd',
           )
         }
@@ -60,7 +60,7 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
         if (isValid(parsedDate)) {
           setValue(
             formatUTCDate(
-              isAllDayEndDate ? subMilliseconds(parsedDate, 1) : parsedDate,
+              isMidnightExclusive ? subMilliseconds(parsedDate, 1) : parsedDate,
               'yyyy-MM-dd',
             ),
           )
@@ -68,7 +68,7 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
           setValue('')
         }
       }
-    }, [initialValue, isAllDayEndDate])
+    }, [initialValue, isMidnightExclusive])
 
     const inputRef = useRef<HTMLInputElement>(null)
 
@@ -100,7 +100,7 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
       if (value) {
         const [y, m, d] = value.split('-').map(Number)
         if (y && m && d) {
-          const utcDate = new Date(Date.UTC(y, m - 1, d + Number(isAllDayEndDate)))
+          const utcDate = new Date(Date.UTC(y, m - 1, d + Number(isMidnightExclusive)))
           const newISOValue = utcDate.toISOString()
 
           // For Click/Blur: only save if value changed

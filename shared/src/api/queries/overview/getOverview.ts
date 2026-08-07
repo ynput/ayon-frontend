@@ -28,7 +28,8 @@ import {
 const CACHE_TIME = 10 // seconds
 
 // parse attribs JSON string to object
-export const parseAllAttribs = (allAttrib: string) => {
+export const parseAllAttribs = (allAttrib: string | null | undefined): Record<string, unknown> => {
+  if (!allAttrib) return {}
   try {
     return JSON.parse(allAttrib)
   } catch (e) {
@@ -47,6 +48,7 @@ const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): Edi
       ...taskNode,
       folderId: taskNode.folderId || 'root',
       attrib: parseAllAttribs(taskNode.allAttrib),
+      data: parseAllAttribs(taskNode.data),
       entityId: taskNode.id,
       entityType: 'task',
       links: [],
