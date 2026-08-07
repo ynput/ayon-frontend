@@ -101,7 +101,8 @@ export type CreateViewApiArg = {
     | VersionsViewPostModel
     | GenericViewPostModel
 }
-export type GetWorkingViewApiResponse = /** status 200 Successful Response */
+export type GetWorkingViewApiResponse =
+  /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
@@ -112,7 +113,8 @@ export type GetWorkingViewApiArg = {
   viewType: string
   projectName?: string
 }
-export type GetBaseViewApiResponse = /** status 200 Successful Response */
+export type GetBaseViewApiResponse =
+  /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
@@ -123,7 +125,8 @@ export type GetBaseViewApiArg = {
   viewType: string
   projectName?: string
 }
-export type GetDefaultViewApiResponse = /** status 200 Successful Response */
+export type GetDefaultViewApiResponse =
+  /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
@@ -140,7 +143,8 @@ export type SetDefaultViewApiArg = {
   projectName?: string
   setDefaultViewRequestModel: SetDefaultViewRequestModel
 }
-export type GetViewApiResponse = /** status 200 Successful Response */
+export type GetViewApiResponse =
+  /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
@@ -323,6 +327,7 @@ export type VersionsSettings = {
   groupBy?: string
   groupSortByDesc?: boolean
   showEmptyGroups?: boolean
+  folderLatestVersion?: string
   sortBy?: string
   sortDesc?: boolean
   filter?: QueryFilter

@@ -174,8 +174,16 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 }) => {
   const dispatch = useAppDispatch()
   const { attribFields } = useProjectDataContext()
-  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy, columns } =
-    useVPViewsContext()
+  const {
+    filters,
+    showProducts,
+    sortBy,
+    sortDesc,
+    featuredVersionOrder,
+    folderLatestVersion,
+    groupBy,
+    columns,
+  } = useVPViewsContext()
   const { isLoadingViews } = useViewsContext()
 
   // comments are the heaviest field to resolve, so only fetch them when the column is shown
@@ -357,7 +365,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   )
 
   const resolvedSortBy = useMemo(() => (sortBy && SORT_BY_FIELD_MAP[sortBy]) || sortBy, [sortBy])
-  const featuredVersionQueryArgs = getFeaturedVersionQueryArgs(featuredVersionFilter)
+  const featuredVersionQueryArgs = getFeaturedVersionQueryArgs(
+    featuredVersionFilter,
+    folderLatestVersion,
+  )
 
   const queryArgs = useMemo(
     () => ({
@@ -457,9 +468,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       }
 
       if (entityType === 'version') {
-        if (featuredVersionFilter?.length) {
-          Object.assign(args, getFeaturedVersionQueryArgs(featuredVersionFilter))
-        }
+        Object.assign(args, getFeaturedVersionQueryArgs(featuredVersionFilter, folderLatestVersion))
+
         if (hasReviewablesFilter !== undefined) {
           args.hasReviewables = hasReviewablesFilter
         }
@@ -467,7 +477,14 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
       return args
     },
-    [queryArgs, resolvedSortBy, featuredVersionOrder, featuredVersionFilter, hasReviewablesFilter],
+    [
+      queryArgs,
+      resolvedSortBy,
+      featuredVersionOrder,
+      featuredVersionFilter,
+      folderLatestVersion,
+      hasReviewablesFilter,
+    ],
   )
 
   const productArguments = useMemo(
@@ -479,6 +496,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     () => resolveEntityArguments('version'),
     [resolveEntityArguments],
   )
+
+  console.log(versionArguments)
 
   // QUERY: Get all products when showing products
   const {

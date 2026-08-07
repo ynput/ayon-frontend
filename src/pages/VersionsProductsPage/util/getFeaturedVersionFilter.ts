@@ -4,7 +4,17 @@ import { FEATURED_VERSION_TYPES } from '@shared/components'
 // Get featured version values for quick lookup
 const FEATURED_VERSION_VALUES = FEATURED_VERSION_TYPES.map((type) => type.value)
 
-export const getFeaturedVersionQueryArgs = (values: string[] | undefined) => {
+export const getFeaturedVersionQueryArgs = (
+  values: string[] | undefined,
+  folderLatestVersion?: string,
+) => {
+  if (folderLatestVersion) {
+    return {
+      featuredOnly: [folderLatestVersion],
+      featuredOnlyEntityType: 'folder',
+    }
+  }
+
   if (!values?.length) return undefined
 
   const folderFeaturedValues: Record<string, string> = {

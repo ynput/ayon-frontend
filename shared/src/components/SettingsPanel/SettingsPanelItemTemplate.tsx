@@ -36,6 +36,10 @@ const Item = styled.li`
     background-color: var(--md-sys-color-surface-container-high);
   }
 
+  &.no-hover:hover {
+    background-color: unset;
+  }
+
   &.disabled {
     opacity: 0.5;
     user-select: none;
@@ -83,6 +87,7 @@ export interface SettingsPanelItemTemplateProps extends React.HTMLAttributes<HTM
   item: SettingsPanelItem
   isHighlighted?: boolean
   isDisabled?: boolean
+  disableHover?: boolean
   startContent?: React.ReactNode
   endContent?: React.ReactNode
   actions?: Action[]
@@ -90,7 +95,17 @@ export interface SettingsPanelItemTemplateProps extends React.HTMLAttributes<HTM
 
 export const SettingsPanelItemTemplate = forwardRef<HTMLLIElement, SettingsPanelItemTemplateProps>(
   (
-    { item, actions, startContent, endContent, isHighlighted, isDisabled, className, ...props },
+    {
+      item,
+      actions,
+      startContent,
+      endContent,
+      isHighlighted,
+      isDisabled,
+      disableHover,
+      className,
+      ...props
+    },
     ref,
   ) => {
     return (
@@ -98,6 +113,7 @@ export const SettingsPanelItemTemplate = forwardRef<HTMLLIElement, SettingsPanel
         className={clsx('setting-item', className, {
           highlighted: isHighlighted,
           disabled: isDisabled,
+          'no-hover': disableHover,
         })}
         {...props}
         ref={ref}
