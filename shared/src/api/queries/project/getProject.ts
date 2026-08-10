@@ -14,7 +14,7 @@ import {
   OverrideResultType,
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
-import { parseAllAttribs } from '../overview'
+import { parseJSONField } from '../overview'
 type Definitions = DefinitionsFromApi<typeof projectsApi>
 type TagTypes = TagTypesFromApi<typeof projectsApi>
 // update the definitions to include the new types
@@ -69,7 +69,7 @@ const enhancedGraphql = gqlApi.enhanceEndpoints<TagTypes, GQLUpdatedDefinitions>
       transformResponse: (res: GetProjectsQuery): GetProjectsResult => ({
         projects: res.projects.edges.map((edge) => ({
           ...edge.node,
-          attrib: parseAllAttribs(edge.node.allAttrib),
+          attrib: parseJSONField(edge.node.allAttrib),
         })),
         pageInfo: res.projects.pageInfo,
       }),

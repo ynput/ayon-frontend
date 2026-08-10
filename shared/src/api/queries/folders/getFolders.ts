@@ -10,13 +10,14 @@ import {
   REALTIME_REST_CALL_LIMIT,
   waitForRealtimeJitter,
   PubSub,
+  RealtimeBatchProcessor,
   subscribeToThumbnailUpdates,
   ThumbnailUpdateMessage,
   SupportedEntityPatchField,
 } from '@shared/util'
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { parseAllAttribs } from '../overview'
+import { parseJSONField } from '../overview'
 
 type GetUpdatedAndNewFoldersResult = FolderListItem[]
 
@@ -37,7 +38,7 @@ const graphqlFolders = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       transformResponse: (response: GetUpdatedAndNewFoldersQuery): GetUpdatedAndNewFoldersResult =>
         response.project.folders.edges.map(({ node }) => ({
           ...node,
-          attrib: parseAllAttribs(node.allAttrib),
+          attrib: parseJSONField(node.allAttrib),
           path: node.path ?? '',
           parentId: node.parentId ?? undefined,
           label: node.label ?? undefined,
@@ -84,7 +85,7 @@ const enhancedApi = foldersApi.enhanceEndpoints({
         const tokens: (string | undefined)[] = []
 
         // handle a batch of messages, updating the cache and fetching missing data as needed
-        const batchProcessMessages = async (messages: any[]) => {
+        const batchProcessMessages: RealtimeBatchProcessor<any> = async (messages, isActive) => {
           if (!projectName) return
 
           const cachedFolderIds = new Set<string>()
@@ -162,9 +163,7 @@ const enhancedApi = foldersApi.enhanceEndpoints({
 
           // Fetch created and unsupported folders in one request.
           // This is to avoid overwhelming the API with too many requests at once, and to prevent potential performance issues in the frontend.
-          const foldersToFetch = [
-            ...new Set([...createdIds, ...unsupportedFields.keys()]),
-          ]
+          const foldersToFetch = [...new Set([...createdIds, ...unsupportedFields.keys()])]
           if (foldersToFetch.length > MAX_FOLDER_UPDATE_REST_CALLS) return
 
           if (foldersToFetch.length) {
@@ -179,6 +178,7 @@ const enhancedApi = foldersApi.enhanceEndpoints({
               .unwrap()
               .catch(() => [])
 
+            if (!isActive()) return
             const createdFolderIds = new Set(createdIds)
             updateCachedData((draft: any) => {
               if (!draft || !Array.isArray(draft.folders)) return
@@ -211,7 +211,8 @@ const enhancedApi = foldersApi.enhanceEndpoints({
         // create a batcher to process messages in batches
         const batcher = createRealtimeBatcher(
           batchProcessMessages,
-          (message: any) => message.summary.entityId,
+          (message: any) =>
+            `${message.project ?? projectName}:${message.summary?.entityId}:${message.topic}`,
         )
 
         let unsubscribeThumbnails: (() => void) | undefined
@@ -252,7 +253,6 @@ const enhancedApi = foldersApi.enhanceEndpoints({
         }
 
         await cacheEntryRemoved
-        batcher.clear()
         tokens.forEach((t) => PubSub.unsubscribe(t))
         if (unsubscribeThumbnails) unsubscribeThumbnails()
         batcher.clear()

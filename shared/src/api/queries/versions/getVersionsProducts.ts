@@ -41,12 +41,12 @@ import {
   transformProductsResponse,
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
-import { parseAllAttribs } from '../overview'
+import { parseJSONField } from '../overview'
 import {
   getSupportedEntityPatch,
   createRealtimeBatcher,
   REALTIME_REST_CALL_LIMIT,
-  REALTIME_UPDATE_DEBOUNCE,
+  RealtimeBatchProcessor,
   waitForRealtimeJitter,
 } from '@shared/util'
 import PubSub from '@shared/util/pubsub'
@@ -316,7 +316,10 @@ function createVersionUpdateBatcher(
     getBaseFilters?: () => any
   },
 ) {
-  const batchProcessMessages = async (updates: { topic: string; message: any }[]) => {
+  const batchProcessMessages: RealtimeBatchProcessor<{
+    topic: string
+    message: any
+  }> = async (updates, isActive) => {
     const deleted: { entityId: string; parentId?: string }[] = []
     const patched: { entityId: string; field: string; value: any; parentId?: string }[] = []
     const attribsToFetch = new Set<string>()
@@ -364,6 +367,7 @@ function createVersionUpdateBatcher(
           }),
         )
 
+        if (!isActive()) return
         if (result.data?.versions) {
           handlers.onBatchUpdate({ fullUpdated: result.data.versions })
         }
@@ -385,6 +389,7 @@ function createVersionUpdateBatcher(
           ),
         )
 
+        if (!isActive()) return
         if (result.data?.project?.versions?.edges) {
           for (const edge of result.data.project.versions.edges) {
             const node = edge.node
@@ -392,7 +397,7 @@ function createVersionUpdateBatcher(
               attribPatched.push({
                 entityId: node.id,
                 allAttrib: node.allAttrib,
-                parsedAttrib: parseAllAttribs(node.allAttrib),
+                parsedAttrib: parseJSONField(node.allAttrib),
               })
             }
           }
@@ -409,7 +414,8 @@ function createVersionUpdateBatcher(
 
   const batcher = createRealtimeBatcher(
     batchProcessMessages,
-    ({ message }) => message.summary?.entityId,
+    ({ topic, message }) =>
+      `${message.summary?.entityId}:${message.summary?.parentId ?? ''}:${topic}`,
   )
 
   const handleRealtimeUpdate = (topic: string, message: any) => {
@@ -938,7 +944,10 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         // Handles: create, update, delete operations
         // Often triggered together with version changes (new product + version)
 
-        onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+        onCacheEntryAdded: async (
+          arg,
+          { updateCachedData, cacheEntryRemoved, dispatch, getCacheEntry },
+        ) => {
           let unsubscribeThumbnails: (() => void) | undefined
 
           unsubscribeThumbnails = subscribeToThumbnailUpdates(
@@ -963,16 +972,16 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             ['version'],
           )
 
-          // Helper to refetch and update a product in cache
-          const refetchProduct = async (productId: string) => {
+          // Refetch and update products in one request per realtime batch.
+          const refetchProducts = async (productIds: string[], isActive: () => boolean) => {
             const queryParams: any = {
               projectName: arg.projectName,
-              productIds: [productId],
+              productIds,
               productFilter: arg.productFilter,
               versionFilter: arg.versionFilter,
               taskFilter: arg.taskFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
-              first: 1,
+              first: productIds.length,
             }
 
             const result = await dispatch(
@@ -981,44 +990,48 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               }),
             )
 
-            if (result.error) return
+            if (result.error || !isActive()) return
 
-            // Update the cache: update existing, delete if not found, or add new
             updateCachedData((draft) => {
-              const updatedProduct = result.data?.products?.[0]
-              updatePagedCache(
-                draft.pages,
-                productId,
-                updatedProduct,
-                'products',
-                (arg.sortBy || 'createdAt') as keyof ProductNode,
-                arg.desc || false,
+              const productsById = new Map(
+                (result.data?.products || []).map((product: ProductNode) => [product.id, product]),
               )
+              productIds.forEach((productId) => {
+                updatePagedCache(
+                  draft.pages,
+                  productId,
+                  productsById.get(productId),
+                  'products',
+                  (arg.sortBy || 'createdAt') as keyof ProductNode,
+                  arg.desc || false,
+                )
+              })
             })
           }
 
-          // Subscribe to product entity changes from websocket
-          const productToken = PubSub.subscribe(
-            'entity.product',
-            async (_topic: string, message: any) => {
-              try {
-                const entityId = message.summary?.entityId
-                if (!entityId) return
+          const productBatcher = createRealtimeBatcher(
+            async (messages: { topic: string; message: any }[], isActive) => {
+              const cachedProductIds = new Set(
+                getCacheEntry().data?.pages.flatMap((page) =>
+                  page.products.map((product) => product.id),
+                ) || [],
+              )
+              const productIds = messages
+                .map(({ topic, message }) => ({
+                  topic,
+                  id: message.summary?.entityId,
+                }))
+                .filter(
+                  ({ topic, id }) =>
+                    id && (cachedProductIds.has(id) || topic === 'entity.product.created'),
+                )
+                .map(({ id }) => id as string)
 
-                let productExistsInCache = false
-                updateCachedData((draft) => {
-                  productExistsInCache = draft.pages.some((page) =>
-                    page.products.some((product: ProductNode) => product.id === entityId),
-                  )
-                })
-
-                if (!productExistsInCache && _topic !== 'entity.product.created') return
-
-                await refetchProduct(entityId)
-              } catch (error) {
-                // Silently handle errors to prevent UI disruption
+              if (productIds.length) {
+                await refetchProducts([...new Set(productIds)], isActive)
               }
             },
+            ({ message }) => message.summary?.entityId || message.id,
           )
 
           // Subscribe to version entity changes - refetch parent product when version changes
@@ -1092,17 +1105,21 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               // If any products need full refetch (due to deletes or new version becoming featured)
               // we trigger that now
               for (const productId of productsToRefetch) {
-                refetchProduct(productId)
+                refetchProducts([productId], () => true)
               }
               productsToRefetch.clear()
             },
           })
           const versionToken = PubSub.subscribe('entity.version', realtimeBatcher.handle)
+          const productToken = PubSub.subscribe('entity.product', (topic: string, message: any) => {
+            if (message?.summary?.entityId) productBatcher.add({ topic, message })
+          })
 
           const productsToRefetch = new Set<string>()
 
           // Cleanup: unsubscribe when cache entry is removed
           await cacheEntryRemoved
+          productBatcher.clear()
           realtimeBatcher.clear()
           PubSub.unsubscribe(productToken)
           PubSub.unsubscribe(versionToken)

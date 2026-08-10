@@ -11,7 +11,7 @@ import {
 } from '@shared/api/generated'
 import { formatEntityLabel } from './utils/formatEntityLinks'
 import { toast } from 'react-toastify'
-import { PubSub } from '@shared/util'
+import { createRealtimeBatcher, PubSub, waitForRealtimeJitter } from '@shared/util'
 
 /**
  * Custom queryFn for fetching entity links with optimized caching behavior.
@@ -238,89 +238,68 @@ const injectedQueries = foldersApi.injectEndpoints({
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
       ) {
         let token: any
-        const pendingEntityIds = new Set<string>()
-        const MAX_BATCH = 100
-        const INTERVAL = 500
-        let scheduled = false
-
-        const schedule = () => {
-          if (scheduled) return
-          scheduled = true
-          setTimeout(flush, INTERVAL)
-        }
-
-        const flush = async () => {
-          scheduled = false
-          if (!pendingEntityIds.size) return
-          const batchIds = Array.from(pendingEntityIds).slice(0, MAX_BATCH)
-          batchIds.forEach((id) => pendingEntityIds.delete(id))
-
-          try {
-            // Get the appropriate endpoint and parameter names
+        const batcher = createRealtimeBatcher(
+          async (items: { entityId: string }[], isActive) => {
             const endpoint = entityEndpoints[entityType]
             const resultPath = entityResultPaths[entityType]
 
-            // Fetch fresh data for the affected entities
-            const result = await dispatch(
-              (gqlLinksApi.endpoints as any)[endpoint].initiate(
-                { projectName, entityIds: batchIds },
-                { forceRefetch: true },
-              ),
-            ).unwrap()
+            try {
+              await waitForRealtimeJitter()
+              const result = await dispatch(
+                (gqlLinksApi.endpoints as any)[endpoint].initiate(
+                  { projectName, entityIds: items.map(({ entityId }) => entityId) },
+                  { forceRefetch: true },
+                ),
+              ).unwrap()
 
-            const updatedEntities =
-              result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => {
-                return {
-                  id: node.id,
-                  links:
-                    node.links.edges?.map((linkEdge: EntityLinkQuery | null) => {
-                      if (!linkEdge?.node) {
-                        // Restricted link - node is null
+              if (!isActive()) return
+
+              const updatedEntities =
+                result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => {
+                  return {
+                    id: node.id,
+                    links:
+                      node.links.edges?.map((linkEdge: EntityLinkQuery | null) => {
+                        if (!linkEdge?.node) {
+                          return {
+                            ...linkEdge,
+                            node: null,
+                            isRestricted: true,
+                          } as EntityLink
+                        }
                         return {
                           ...linkEdge,
-                          node: null,
-                          isRestricted: true,
+                          node: {
+                            id: linkEdge.node.id,
+                            name: linkEdge.node.name,
+                            label: formatEntityLabel(linkEdge.node),
+                            parents: linkEdge.node.parents || [],
+                            subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
+                          },
+                          isRestricted: false,
                         } as EntityLink
-                      }
-                      // Normal link
-                      return {
-                        ...linkEdge,
-                        node: {
-                          id: linkEdge.node.id,
-                          name: linkEdge.node.name,
-                          label: formatEntityLabel(linkEdge.node),
-                          parents: linkEdge.node.parents || [],
-                          subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
-                        },
-                        isRestricted: false,
-                      } as EntityLink
-                    }) || [],
-                }
-              }) || []
+                      }) || [],
+                  }
+                }) || []
 
-            updateCachedData((draft: EntityWithLinks[]) => {
-              for (const updatedEntity of updatedEntities) {
-                const idx = draft.findIndex((entity) => entity.id === updatedEntity.id)
-                if (idx > -1) {
-                  // Update existing entity's links
-                  draft[idx] = updatedEntity
-                } else {
-                  // Add new entity if not in cache
-                  draft.push(updatedEntity)
+              updateCachedData((draft: EntityWithLinks[]) => {
+                for (const updatedEntity of updatedEntities) {
+                  const idx = draft.findIndex((entity) => entity.id === updatedEntity.id)
+                  if (idx > -1) draft[idx] = updatedEntity
+                  else draft.push(updatedEntity)
                 }
-              }
-            })
-          } catch (err) {
-            console.error('Realtime link batch update failed', err)
-          } finally {
-            if (pendingEntityIds.size) schedule()
-          }
-        }
+              })
+            } catch (err) {
+              console.error('Realtime link batch update failed', err)
+            }
+          },
+          ({ entityId }) => entityId,
+        )
 
         try {
           await cacheDataLoaded
 
-          const handlePubSub = async (_topic: string, message: any) => {
+          const handlePubSub = (_topic: string, message: any) => {
             // Only react to link.created and link.deleted events for this project
             if (!_topic.startsWith('link.created') && !_topic.startsWith('link.deleted')) return
             if (message?.project !== projectName) return
@@ -330,10 +309,8 @@ const injectedQueries = foldersApi.injectEndpoints({
             const outputId = message?.summary?.outputId
             if (!inputId && !outputId) return
 
-            // Add both entities to pending list since both are affected by the link change
-            if (inputId) pendingEntityIds.add(inputId)
-            if (outputId) pendingEntityIds.add(outputId)
-            schedule()
+            if (inputId) batcher.add({ entityId: inputId })
+            if (outputId) batcher.add({ entityId: outputId })
           }
 
           // Subscribe to link events
@@ -346,6 +323,7 @@ const injectedQueries = foldersApi.injectEndpoints({
 
         await cacheEntryRemoved
         if (token) PubSub.unsubscribe(token)
+        batcher.clear()
       },
     }),
   }),

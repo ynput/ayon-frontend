@@ -84,6 +84,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   enableCustomValues?: boolean
   isLinksLoading?: boolean
   folderId?: string | null
+  midnightExclusiveFields?: string[]
   tooltip?: string
   startAdornment?: ReactNode
   onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
@@ -118,6 +119,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   enableCustomValues,
   isLinksLoading,
   folderId,
+  midnightExclusiveFields,
   tooltip,
   startAdornment,
   onChange,
@@ -132,6 +134,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   const { isEditing, setEditingCellId, getEditingDraft, setEditingDraft } = useCellEditing()
   const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionCellsContext()
   const cellId = getCellId(rowId, columnId)
+  const isMidnightExclusive = midnightExclusiveFields?.includes(columnId) ?? false
 
   const isCurrentCellEditing = isEditing(cellId)
   const isCurrentCellFocused = isCellFocused(cellId)
@@ -329,6 +332,7 @@ export const CellWidget: FC<EditorCellProps> = ({
           <DateWidget
             value={value ? (value as string) : undefined}
             isInherited={isInherited}
+            isMidnightExclusive={isMidnightExclusive}
             {...sharedProps}
             {...pt?.date}
           />
@@ -351,7 +355,7 @@ export const CellWidget: FC<EditorCellProps> = ({
         //console.log(`Unrecognized type "${type}" for cell ${cellId}.`)
         return null
     }
-  }, [cellId, value, type, isCurrentCellEditing, options, isCollapsed])
+  }, [cellId, value, type, isCurrentCellEditing, options, isCollapsed, isMidnightExclusive])
 
   return (
     <Cell
