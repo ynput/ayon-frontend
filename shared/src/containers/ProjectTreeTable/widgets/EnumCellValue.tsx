@@ -55,14 +55,21 @@ const StyledWidget = styled.div`
 
       .values {
         --wrap-row-height: 24px;
+        --wrap-row-gap: var(--base-gap-small);
         flex-wrap: wrap;
         align-items: flex-start;
         align-content: flex-start;
-        row-gap: 0;
+        row-gap: var(--wrap-row-gap);
         max-height: 100%;
         /* var() inside an unsupported round() computes to none, not to the fallback — gate it */
         @supports (max-height: round(down, 100px, 24px)) {
-          max-height: round(down, 100cqh, var(--wrap-row-height));
+          max-height: calc(
+            round(
+                down,
+                100cqh + var(--wrap-row-gap),
+                calc(var(--wrap-row-height) + var(--wrap-row-gap))
+              ) - var(--wrap-row-gap)
+          );
         }
       }
 
