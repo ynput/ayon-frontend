@@ -899,6 +899,7 @@ const buildTreeTableColumns = ({
               value={value}
               attributeData={{ type: attrib.data.type || 'string', widget: attrib.data.widget }}
               options={attrib.data.enum || []}
+              midnightExclusiveFields={row.original.midnightExclusiveFields}
               isCollapsed={!!row.original.childOnlyMatch}
               isInherited={isInherited}
               isReadOnly={

@@ -9,7 +9,7 @@ import {
   VersionNode,
   VersionNodeRAW,
 } from './getVersionsProducts'
-import { parseAllAttribs } from '../overview'
+import { parseJSONField } from '../overview'
 
 // TAGS
 const VERSION_TYPE = 'version' as const
@@ -104,16 +104,16 @@ export const flattenInfiniteProductsData = (data: ProductInfiniteResult): Produc
 }
 
 export const transformVersionNode = (node: VersionNodeRAW): VersionNode => {
-  const attrib = parseAllAttribs(node.allAttrib)
+  const attrib = parseJSONField(node.allAttrib)
 
   // Parse product attributes if product exists
   const product = node.product
     ? {
         ...node.product,
-        attrib: parseAllAttribs(node.product.allAttrib),
+        attrib: parseJSONField(node.product.allAttrib),
         folder: {
           ...node.product.folder,
-          attrib: parseAllAttribs(node.product.folder.allAttrib),
+          attrib: parseJSONField(node.product.folder.allAttrib),
         },
       }
     : node.product
@@ -154,10 +154,10 @@ export const transformProductsResponse = (response: GetProductsQuery): GetProduc
   const pageInfo = response.project.products.pageInfo
   const products = response.project.products.edges.map((edge) => {
     const product = edge.node
-    const attrib = parseAllAttribs(product.allAttrib)
+    const attrib = parseJSONField(product.allAttrib)
     const folder = {
       ...product.folder,
-      attrib: parseAllAttribs(product.folder.allAttrib),
+      attrib: parseJSONField(product.folder.allAttrib),
     }
     // detect hero version (negative version indicates hero) and mark it when transforming
     const heroRaw = product.versions.find((v) => Math.sign(v.version) === -1)

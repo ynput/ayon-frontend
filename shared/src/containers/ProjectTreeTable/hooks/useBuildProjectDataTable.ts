@@ -145,6 +145,9 @@ export default function useBuildProjectDataTable({
         subRows: [],
         subType: task.taskType || null,
         attrib: task.attrib,
+        midnightExclusiveFields: task.data?.schedulerSyncData?.allDay
+          ? ['attrib_endDate']
+          : undefined,
         ownAttrib: task.ownAttrib,
         parents: task.parents || [],
         path: task.parents.join('/') || null, // todo: probably remove this and just use parents
