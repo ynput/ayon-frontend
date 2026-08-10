@@ -5,6 +5,7 @@ import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
 import { useListsDataContext } from '../context/ListsDataContext'
 import { parseListFolderRowId } from '../util/buildListsTableData'
+import { wouldCreateCircularDependency } from '../util/listFolders'
 import { EntityListFolderModel } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
 import { usePowerpack, useProjectContext } from '@shared/context'
@@ -29,27 +30,6 @@ export const FOLDER_ICON = 'snippet_folder'
 export const FOLDER_ICON_ADD = 'create_new_folder'
 export const FOLDER_ICON_EDIT = 'folder_managed'
 export const FOLDER_ICON_REMOVE = 'folder_off'
-
-// Helper function to prevent circular dependencies
-const wouldCreateCircularDependency = (
-  folderId: string,
-  targetParentId: string,
-  folders: EntityListFolderModel[],
-): boolean => {
-  if (folderId === targetParentId) return true
-
-  const folderMap = new Map(folders.map((f) => [f.id, f]))
-
-  // Check if targetParentId is a descendant of folderId
-  const isDescendant = (currentId: string, ancestorId: string): boolean => {
-    const current = folderMap.get(currentId)
-    if (!current || !current.parentId) return false
-    if (current.parentId === ancestorId) return true
-    return isDescendant(current.parentId, ancestorId)
-  }
-
-  return isDescendant(targetParentId, folderId)
-}
 
 const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => {
   const user = useAppSelector((state) => state.user)
