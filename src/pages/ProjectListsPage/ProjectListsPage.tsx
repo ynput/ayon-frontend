@@ -48,6 +48,7 @@ import { useAppDispatch, useAppSelector } from '@state/store.ts'
 import { UniqueIdentifier } from '@dnd-kit/core'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
+import { MoveToFolderDialogContainer } from './components/MoveToFolderDialog'
 import { useSlicerContext, useViewsContext } from '@shared/containers/index.ts'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
 import DndContextWrapper from './components/DndContextWrapper'
@@ -237,6 +238,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                       />
                       <ListsShortcuts />
                       <ReplaceListItemsDialog />
+                      <MoveToFolderDialogContainer />
                     </CellEditingProvider>
                   </SelectedRowsProvider>
                 </SelectionCellsProvider>
