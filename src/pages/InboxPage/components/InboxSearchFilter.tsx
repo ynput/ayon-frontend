@@ -43,6 +43,12 @@ const ORIGIN_TYPE_VALUES = [
   { id: 'folder', label: 'Folder', icon: 'folder' },
 ]
 
+const REVIEW_VALUES = [
+  { id: 'all', label: 'All reviews', icon: 'rate_review' },
+  { id: 'approve', label: 'Approved', icon: 'task_alt' },
+  { id: 'request_changes', label: 'Requested changes', icon: 'refresh' },
+]
+
 interface InboxSearchFilterProps {
   filter: QueryFilter
   onChange: (filter: QueryFilter) => void
@@ -82,7 +88,15 @@ const InboxSearchFilter = ({
     return [
       boolean('comments', 'Comments', 'chat'),
       boolean('versions', 'Versions', 'layers'),
-      boolean('reviews', 'Reviews', 'task_alt'),
+      {
+        id: 'reviews',
+        label: 'Reviews',
+        icon: 'rate_review',
+        type: 'list_of_strings' as const,
+        singleSelect: true,
+        operator: 'OR' as const,
+        values: REVIEW_VALUES,
+      },
       boolean('updates', 'Updates', 'arrow_circle_right'),
       boolean('checklists', 'Checklists', 'check_circle'),
       boolean('has_attachments', 'Attachments', 'attach_file'),

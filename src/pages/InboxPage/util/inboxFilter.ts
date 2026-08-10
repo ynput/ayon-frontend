@@ -6,22 +6,27 @@ export const INBOX_REFERENCE_TYPES = ['mention', 'watching', 'relation']
 
 const IMPORTANT_REFERENCE_TYPES = ['mention', 'watching']
 
-// the reason chip drives the referenceTypes argument, so it must never reach the
-// QueryFilter - `reason` is not a whitelisted column and the backend would reject it
+// the reason chip drives the referenceTypes argument, and the reviews chip maps to
+// activityTypes + activity_data.feedback - neither is a whitelisted column, so both
+// must never reach the QueryFilter or the backend would reject them
 export const REASON_FILTER_KEY = 'reason'
+export const REVIEWS_FILTER_KEY = 'reviews'
 
-const stripUiKey = (filter: QueryFilter | undefined, key: string): QueryFilter | undefined =>
+const REVIEW_FEEDBACK_VALUES = ['approve', 'request_changes']
+
+const stripUiKeys = (filter: QueryFilter | undefined, keys: string[]): QueryFilter | undefined =>
   filter && {
     ...filter,
-    conditions: (filter.conditions || []).filter((c) => !('key' in c) || c.key !== key),
+    conditions: (filter.conditions || []).filter((c) => !('key' in c) || !keys.includes(c.key)),
   }
 
-const getSelectedReasons = (uiFilter: QueryFilter | undefined): string[] =>
+const getSelectedValues = (uiFilter: QueryFilter | undefined, key: string): string[] =>
   (uiFilter?.conditions || []).flatMap((c) =>
-    'key' in c && c.key === REASON_FILTER_KEY && Array.isArray(c.value)
-      ? (c.value as string[])
-      : [],
+    'key' in c && c.key === key && Array.isArray(c.value) ? (c.value as string[]) : [],
   )
+
+const getSelectedReasons = (uiFilter: QueryFilter | undefined): string[] =>
+  getSelectedValues(uiFilter, REASON_FILTER_KEY)
 
 export const getInboxReferenceTypes = (
   uiFilter: QueryFilter | undefined,
@@ -147,7 +152,23 @@ export const buildInboxFilter = ({
     })
   }
 
-  const translatedUiFilter = buildBackendFilterObject(stripUiKey(uiFilter, REASON_FILTER_KEY))
+  // feedback narrows only review rows, so combining e.g. Comments + Approved keeps the comments
+  const feedback = getSelectedValues(uiFilter, REVIEWS_FILTER_KEY).filter((v) =>
+    REVIEW_FEEDBACK_VALUES.includes(v),
+  )
+  if (feedback.length) {
+    conditions.push({
+      operator: 'or',
+      conditions: [
+        { key: 'activity_type', operator: 'ne', value: 'version.review' },
+        { key: 'activity_data.feedback', operator: 'in', value: feedback },
+      ],
+    })
+  }
+
+  const translatedUiFilter = buildBackendFilterObject(
+    stripUiKeys(uiFilter, [REASON_FILTER_KEY, REVIEWS_FILTER_KEY]),
+  )
   if (translatedUiFilter) conditions.push(expandTextSearch(translatedUiFilter))
 
   return JSON.stringify({ operator: 'and', conditions })
@@ -176,7 +197,11 @@ export const getInboxActivityTypes = (uiFilter?: QueryFilter): string[] | null =
   const types = new Set<string>()
 
   for (const condition of uiFilter?.conditions || []) {
-    if (!('key' in condition) || condition.value !== true) continue
+    if (!('key' in condition)) continue
+    // boolean chips carry `true`, the reviews chip carries a value list
+    const isActive =
+      condition.value === true || (Array.isArray(condition.value) && condition.value.length > 0)
+    if (!isActive) continue
     const mapped = INBOX_ACTIVITY_TYPES[condition.key]
     if (mapped) mapped.forEach((type) => types.add(type))
   }
