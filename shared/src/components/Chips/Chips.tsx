@@ -122,7 +122,9 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, wrapMinHeight, pt }) =
     const gap = parseFloat(getComputedStyle(container).rowGap) || 0
     const chipWidths = chipElements.map((el) => el.getBoundingClientRect().width)
     const chipHeight = chipElements[0].getBoundingClientRect().height
-    const moreChipWidth = container.querySelector('.more-chip')?.getBoundingClientRect().width || 60
+    // measured offscreen at its widest label, so it does not depend on the +N chip being rendered
+    const moreChipWidth =
+      container.querySelector('.offscreen-more-chip')?.getBoundingClientRect().width || 60
 
     const rowsNeeded = (count: number, extraWidth: number, containerWidth: number) => {
       let used = 1
@@ -216,6 +218,9 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, wrapMinHeight, pt }) =
           {chip.suffix}
         </OffscreenChip>
       ))}
+      {offscreenChips.length > 1 && (
+        <OffscreenChip className="offscreen-more-chip">+{offscreenChips.length - 1}</OffscreenChip>
+      )}
     </ChipsContainer>
   )
 }

@@ -24,11 +24,12 @@ import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidg
 import { NameWidgetData } from '@shared/components/RenameForm'
 import { READ_ONLY } from '../utils'
 import { AttributeData, EnumItem, type EntityComment } from '@shared/api'
+import { CELL_PADDING_Y } from '../constants'
 
 const Cell = styled.div`
   position: absolute;
   inset: 0;
-  padding: 4px 8px;
+  padding: ${CELL_PADDING_Y}px 8px;
   display: flex;
   align-items: center;
   overflow: hidden;
