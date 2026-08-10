@@ -2413,6 +2413,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "search",
+                "description": "Fuzzy text search filter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "sortBy",
                 "description": null,
                 "type": {
@@ -4597,7 +4609,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy",
+                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy, folderName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -10376,7 +10388,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy",
+                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy, folderName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",

@@ -248,6 +248,7 @@ export type EntityListNodeItemsArgs = {
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1805,7 +1806,7 @@ export type GetDetailsPanelTaskQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelTaskQuery = { project: { projectName: string, code: string, task: { id: string, name: string, label: string | null, status: string, tags: Array<string>, allAttrib: string, taskType: string, assignees: Array<string>, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, folderId: string, thumbnailId: string | null, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string }, versions: { edges: Array<{ node: { id: string, thumbnailId: string | null, name: string, updatedAt: unknown, createdAt: unknown, productId: string, version: number, author: string | null } }> } } | null } };
+export type GetDetailsPanelTaskQuery = { project: { projectName: string, code: string, task: { id: string, name: string, label: string | null, status: string, tags: Array<string>, allAttrib: string, taskType: string, assignees: Array<string>, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, folderId: string, thumbnailId: string | null, hasReviewables: boolean, parents: Array<string>, data: string | null, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string }, versions: { edges: Array<{ node: { id: string, thumbnailId: string | null, name: string, updatedAt: unknown, createdAt: unknown, productId: string, version: number, author: string | null } }> } } | null } };
 
 export type GetDetailsPanelVersionQueryVariables = Exact<{
   projectName: string;
@@ -1842,6 +1843,7 @@ export type GetListItemsQueryVariables = Exact<{
   last?: number | null | undefined;
   sortBy?: string | null | undefined;
   filter?: string | null | undefined;
+  search?: string | null | undefined;
   showComments?: boolean;
 }>;
 
@@ -1859,6 +1861,7 @@ export type GetListItemsColumnStatsQueryVariables = Exact<{
   projectName: string;
   listId: string;
   filter?: string | null | undefined;
+  search?: string | null | undefined;
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
 }>;
 
@@ -1966,7 +1969,7 @@ export type GetTasksByParentQueryVariables = Exact<{
 }>;
 
 
-export type GetTasksByParentQuery = { project: { name: string, tasks: { edges: Array<{ node: { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string } } }>, pageInfo: { hasNextPage: boolean, endCursor: string | null } } } };
+export type GetTasksByParentQuery = { project: { name: string, tasks: { edges: Array<{ node: { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, data: string | null, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string } } }>, pageInfo: { hasNextPage: boolean, endCursor: string | null } } } };
 
 export type GetTasksListQueryVariables = Exact<{
   projectName: string;
@@ -1985,11 +1988,11 @@ export type GetTasksListQueryVariables = Exact<{
 }>;
 
 
-export type GetTasksListQuery = { project: { name: string, tasks: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string } } }> } } };
+export type GetTasksListQuery = { project: { name: string, tasks: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, data: string | null, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string } } }> } } };
 
 export type SubTaskFragmentFragment = { id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean };
 
-export type TaskPropsFragmentFragment = { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string } };
+export type TaskPropsFragmentFragment = { id: string, folderId: string, label: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, data: string | null, subtasks: Array<{ id: string, name: string, label: string, assignees: Array<string>, description: string | null, startDate: unknown, endDate: unknown, isDone: boolean }>, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null, folder: { folderType: string } };
 
 export type GetFolderProductsQueryVariables = Exact<{
   projectName: string;
@@ -2500,6 +2503,7 @@ export const TaskPropsFragmentFragmentDoc = new TypedDocumentString(`
   allAttrib
   hasReviewables
   parents
+  data
   subtasks {
     ...SubTaskFragment
   }
@@ -3013,6 +3017,7 @@ export const GetDetailsPanelTaskDocument = new TypedDocumentString(`
       thumbnailId
       hasReviewables
       parents
+      data
       subtasks {
         ...SubTaskFragment
       }
@@ -3138,7 +3143,7 @@ export const GetProductVersionsDocument = new TypedDocumentString(`
 }
     `);
 export const GetListItemsDocument = new TypedDocumentString(`
-    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String, $showComments: Boolean! = false) {
+    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String, $search: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     entityLists(ids: [$listId]) {
       pageInfo {
@@ -3156,6 +3161,7 @@ export const GetListItemsDocument = new TypedDocumentString(`
             last: $last
             sortBy: $sortBy
             filter: $filter
+            search: $search
           ) {
             pageInfo {
               hasNextPage
@@ -3285,14 +3291,14 @@ fragment SubTaskFragment on SubTaskNode {
   isDone
 }`);
 export const GetListItemsColumnStatsDocument = new TypedDocumentString(`
-    query GetListItemsColumnStats($projectName: String!, $listId: String!, $filter: String, $targets: [MetricTargetInput!]) {
+    query GetListItemsColumnStats($projectName: String!, $listId: String!, $filter: String, $search: String, $targets: [MetricTargetInput!]) {
   project(name: $projectName) {
     name
     entityLists(ids: [$listId]) {
       edges {
         node {
           id
-          items(filter: $filter, calculateSpecificStatistics: $targets) {
+          items(filter: $filter, search: $search, calculateSpecificStatistics: $targets) {
             fieldStats {
               ...ColumnStatsFragment
             }
@@ -3554,6 +3560,7 @@ fragment TaskPropsFragment on TaskNode {
   allAttrib
   hasReviewables
   parents
+  data
   subtasks {
     ...SubTaskFragment
   }
@@ -3626,6 +3633,7 @@ fragment TaskPropsFragment on TaskNode {
   allAttrib
   hasReviewables
   parents
+  data
   subtasks {
     ...SubTaskFragment
   }

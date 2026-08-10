@@ -14,7 +14,7 @@ import type {
   GetListsQuery,
   GetListsQueryVariables,
 } from '@shared/api'
-import { parseAllAttribs } from '../overview'
+import { parseJSONField } from '../overview'
 import {
   createRealtimeBatcher,
   PubSub,
@@ -91,7 +91,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
               return {
                 ...node,
                 ...edge,
-                attrib: parseAllAttribs(edge.allAttrib),
+                attrib: parseJSONField(edge.allAttrib),
               } as GetListItemsResult['items'][number]
             }),
           ),

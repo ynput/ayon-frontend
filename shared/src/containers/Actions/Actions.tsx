@@ -94,11 +94,12 @@ export const Actions = ({
       entityIds: entities.map((entity) => entity.id),
       entitySubtypes: entitySubTypesToUse,
     }
-  }, [entities, entityType])
+  }, [entities, entityType, entitySubTypes, projectActionsProjectName])
+
 
   useEffect(() => {
     setInteractiveForm(null)
-  }, [context])
+  }, [JSON.stringify(context)])
 
   // we must get the developers current dev bundle name
   const { data: bundlesData, isFetching: isFetchingBundles } = useListBundlesQuery(

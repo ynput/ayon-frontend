@@ -5,7 +5,7 @@ import type {
   GetAllProjectUsersAsAssigneeQuery,
 } from '@shared/api/generated'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { parseAllAttribs } from '../overview'
+import { parseJSONField } from '../overview'
 
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {
@@ -138,7 +138,7 @@ const injectedApi = gqlApi.injectEndpoints({
             self: e.node.name === selfName,
             avatarUrl: `/api/users/${e.node.name}/avatar`,
             accessGroups: e.node.accessGroups ? JSON.parse(e.node.accessGroups) : {},
-            attrib: parseAllAttribs(e.node.allAttrib),
+            attrib: parseJSONField(e.node.allAttrib),
           }))
       },
       providesTags: (users) =>
@@ -159,7 +159,7 @@ const injectedApi = gqlApi.injectEndpoints({
         res?.data?.users.edges.map((e: any) => ({
           ...e.node,
           avatarUrl: `/api/users/${e.node?.name}/avatar`,
-          attrib: parseAllAttribs(e.node.allAttrib),
+          attrib: parseJSONField(e.node.allAttrib),
         })),
       providesTags: (res) =>
         res

@@ -137,6 +137,7 @@ const defaultEntityToGroupRow = (
     subRows: [],
     subType: task.taskType || null,
     attrib: task.attrib,
+    midnightExclusiveFields: task.data?.schedulerSyncData?.allDay ? ['attrib_endDate'] : undefined,
     ownAttrib: task.ownAttrib,
     parents: task.parents || [],
     folder: task.parents?.[task.parents.length - 1] || undefined,

@@ -113,7 +113,6 @@ export const useFetchOverviewData = ({
   dispatch,
 }: Params): useFetchOverviewDataData => {
   const { isLoading: isLoadingModules } = modules
-
   const {
     folders,
     isLoading: isLoadingFolders,

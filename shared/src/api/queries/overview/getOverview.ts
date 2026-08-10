@@ -38,13 +38,19 @@ import {
 const CACHE_TIME = 10 // seconds
 
 // parse attribs JSON string to object
-export const parseAllAttribs = (allAttrib: string) => {
+export const parseJSONField = (allAttrib: string | null | undefined): Record<string, any> => {
+  if (!allAttrib) return {}
   try {
-    return JSON.parse(allAttrib)
+    const parsed: unknown = JSON.parse(allAttrib)
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, any>)
+      : {}
   } catch (e) {
     return {}
   }
 }
+// backwards compatibility for old API
+export const parseAllAttribs = parseJSONField
 
 const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): EditorTaskNode[] => {
   if (!response.project) {
@@ -56,7 +62,8 @@ const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): Edi
     tasks.push({
       ...taskNode,
       folderId: taskNode.folderId || 'root',
-      attrib: parseAllAttribs(taskNode.allAttrib),
+      attrib: parseJSONField(taskNode.allAttrib),
+      data: parseJSONField(taskNode.data),
       entityId: taskNode.id,
       entityType: 'task',
       links: [],

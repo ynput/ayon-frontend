@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   ProjectTableProvider,
@@ -9,6 +9,7 @@ import {
   useGroupCounts,
 } from '@shared/containers/ProjectTreeTable'
 import { usePowerpack, useSubtasksModulesContext } from '@shared/context'
+import { useSlicerContext } from '@shared/containers'
 import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
 import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
 import useTableQueriesHelper from '../hooks/useTableQueriesHelper'
@@ -39,6 +40,12 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
   })
 
   const { resetWorkingView, isLoadingViews } = useViewsContext()
+  const { setPinnedSlice } = useSlicerContext()
+
+  const handleResetView = useCallback(async () => {
+    setPinnedSlice(null)
+    await resetWorkingView()
+  }, [resetWorkingView, setPinnedSlice])
 
   // filter-aware per-group counts for the active grouping (community: not license-gated)
   const { groupBy: columnSettingsGroupBy } = useColumnSettingsContext()
@@ -99,7 +106,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         scopes={SCOPES}
         playerOpen={viewerOpen}
         onOpenPlayer={handleOpenPlayer}
-        onResetView={resetWorkingView}
+        onResetView={handleResetView}
         SubtasksManager={SubtasksManager}
         useParams={useParams}
         useNavigate={useNavigate}

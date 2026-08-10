@@ -41,7 +41,7 @@ import {
   transformProductsResponse,
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
-import { parseAllAttribs } from '../overview'
+import { parseJSONField } from '../overview'
 import {
   getSupportedEntityPatch,
   createRealtimeBatcher,
@@ -397,7 +397,7 @@ function createVersionUpdateBatcher(
               attribPatched.push({
                 entityId: node.id,
                 allAttrib: node.allAttrib,
-                parsedAttrib: parseAllAttribs(node.allAttrib),
+                parsedAttrib: parseJSONField(node.allAttrib),
               })
             }
           }
