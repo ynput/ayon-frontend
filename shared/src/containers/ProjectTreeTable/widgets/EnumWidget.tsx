@@ -5,10 +5,19 @@ import styled from 'styled-components'
 import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 import { AttributeData, EnumItem } from '@shared/api'
+import { wrapMode } from './wrapMode'
 
 const StyledDropdown = styled(Dropdown)`
   height: 100%;
   width: 100%;
+
+  /* the value template clips against the button, so it has to grow with the cell */
+  ${wrapMode`
+    .button {
+      height: 100%;
+      align-items: flex-start;
+    }
+  `}
 `
 
 export interface EnumWidgetProps

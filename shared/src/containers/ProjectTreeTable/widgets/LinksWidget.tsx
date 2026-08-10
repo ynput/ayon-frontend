@@ -9,6 +9,7 @@ import { Container, CountBadge } from '@shared/components/LinksManager/LinksMana
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useGlobalContext } from '@shared/context'
 import { groupLinksByEntity } from '@shared/components/LinksManager/utils/groupLinks'
+import { WRAP_MIN_CELL_HEIGHT } from '../constants'
 
 const SHIMMER_WIDTHS = ['40px', '56px', '68px', '52px']
 
@@ -179,6 +180,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
         }
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
         disabled={disabled}
+        wrapMinHeight={WRAP_MIN_CELL_HEIGHT}
       />
       {isEditing && value && (
         <CellEditingDialog isEditing={isEditing} anchorId={cellId} onClose={onCancelEdit}>

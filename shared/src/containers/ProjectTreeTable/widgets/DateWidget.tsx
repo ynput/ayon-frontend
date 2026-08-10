@@ -1,8 +1,24 @@
 import { format } from 'date-fns'
-import { forwardRef } from 'react'
+import { forwardRef, Fragment } from 'react'
+import styled from 'styled-components'
 import { DateWidgetInput } from './DateWidgetInput'
 import { WidgetBaseProps } from './CellWidget'
 import { formatUTCDate } from '../../../util/formatUTCDate'
+import { wrapMode } from './wrapMode'
+
+const StyledDateValue = styled.span`
+  white-space: nowrap;
+
+  ${wrapMode`
+    white-space: normal;
+    align-self: flex-start;
+  `}
+`
+
+// nowrap per part so the line can only break between date and time, never inside either
+const StyledDatePart = styled.span`
+  white-space: nowrap;
+`
 
 export interface DateWidgetProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'>,
@@ -28,6 +44,7 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
     ref,
   ) => {
     let dateString = ''
+    let isInvalid = false
     if (value) {
       try {
         const formatString = showTime ? 'dd-MM-yyyy HH:mm:ss' : 'dd-MM-yyyy'
@@ -36,6 +53,7 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
       } catch (error) {
         console.error('Invalid date value:', value)
         dateString = 'Invalid Date'
+        isInvalid = true
       }
     }
 
@@ -52,10 +70,19 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
       )
     }
 
+    const parts = dateString && !isInvalid ? dateString.split(' ') : []
+
     return (
-      <span {...props} ref={ref} style={{ whiteSpace: 'nowrap' }}>
-        {dateString}
-      </span>
+      <StyledDateValue {...props} ref={ref}>
+        {isInvalid
+          ? dateString
+          : parts.map((part, index) => (
+              <Fragment key={index}>
+                {index > 0 && ' '}
+                <StyledDatePart>{part}</StyledDatePart>
+              </Fragment>
+            ))}
+      </StyledDateValue>
     )
   },
 )

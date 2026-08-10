@@ -5,6 +5,7 @@ import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 import { Container } from '@shared/components/LinksManager/LinksManager.styled'
 import { type SubTaskNode } from '@shared/api'
 import { useProjectTableContext } from '../context/ProjectTableContext'
+import { WRAP_MIN_CELL_HEIGHT } from '../constants'
 
 export type SubtasksWidgetData = {
   taskId: string
@@ -45,6 +46,7 @@ export const SubtasksWidget: FC<SubtasksWidgetProps> = ({
         values={chipValues}
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
         disabled={disabled}
+        wrapMinHeight={WRAP_MIN_CELL_HEIGHT}
       />
       {isEditing && value && SubtasksManager && (
         <CellEditingDialog isEditing={isEditing} anchorId={cellId} onClose={onCancelEdit}>

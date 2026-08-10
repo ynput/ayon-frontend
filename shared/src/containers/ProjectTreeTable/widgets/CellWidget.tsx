@@ -32,6 +32,8 @@ const Cell = styled.div`
   display: flex;
   align-items: center;
   overflow: hidden;
+  container-type: size;
+  container-name: cell;
 
   &:has(.markdown),
   &:has(.comments-list) {
