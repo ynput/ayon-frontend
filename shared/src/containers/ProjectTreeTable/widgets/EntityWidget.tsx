@@ -7,6 +7,7 @@ import { DetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
 import { useOptionalSelectedRowsContext } from '../context/SelectedRowsContext'
 import { StyledBaseTextWidget } from './TextWidget'
 import { READ_ONLY } from '../utils'
+import { Icon } from '@ynput/ayon-react-components'
 
 const EntityCell = styled(StyledBaseTextWidget)`
   position: absolute;
@@ -17,6 +18,27 @@ const EntityCell = styled(StyledBaseTextWidget)`
   &.loading {
     inset: 4px;
     border-radius: 4px;
+    opacity: 1;
+  }
+`
+
+const EntityButton = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px 4px;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high-hover);
+  }
+`
+
+const OpenIcon = styled(Icon)`
+  opacity: 0;
+
+  ${EntityButton}:hover & {
     opacity: 1;
   }
 `
@@ -47,15 +69,18 @@ export const EntityWidget: FC<EntityWidgetProps> = ({
   const entityContext = useContext(DetailsPanelEntityContext)
   const selectedRowsContext = useOptionalSelectedRowsContext()
 
-  const handleMouseDown: MouseEventHandler<HTMLDivElement> = (event) => {
-    if (event.button !== 0 || event.detail !== 2 || !entityId || !entityContext) {
+  const openEntity = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || !entityId || !entityContext) {
       return
     }
 
     selectedRowsContext?.clearRowsSelection()
     entityContext.setSelectedEntity({ entityId, entityType })
     event.preventDefault()
-    event.stopPropagation()
+  }
+
+  const handleMouseDown: MouseEventHandler<HTMLDivElement> = (event) => {
+    if (event.detail === 2) openEntity(event)
   }
 
   return (
@@ -65,8 +90,11 @@ export const EntityWidget: FC<EntityWidgetProps> = ({
       onMouseDown={handleMouseDown}
       data-tooltip-delay={200}
     >
-      {subType && <EntityIcon entity={{ entityType, subType }} />}
-      {String(value ?? '')}
+      <EntityButton onMouseDown={openEntity}>
+        {subType && <EntityIcon entity={{ entityType, subType }} />}
+        {String(value ?? '')}
+        <OpenIcon icon="dock_to_left" />
+      </EntityButton>
     </EntityCell>
   )
 }
