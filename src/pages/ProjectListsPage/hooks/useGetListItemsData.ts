@@ -96,7 +96,6 @@ const useGetListItemsData = ({
 
   // Create sort params for infinite query
   const singleSort = { ...sorting[0] }
-  console.log(singleSort)
   const parseSorting = (sorting?: string): string | undefined => {
     if (!sorting) return undefined
     let sortId = COLUMN_SORT_CONFIG[sorting]?.sortKey || sorting

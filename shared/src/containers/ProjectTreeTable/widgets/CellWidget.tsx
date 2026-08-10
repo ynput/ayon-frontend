@@ -1,4 +1,4 @@
-import { FC, ReactNode, useMemo, useRef } from 'react'
+import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 
 // Widgets
@@ -86,7 +86,6 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   folderId?: string | null
   midnightExclusiveFields?: string[]
   tooltip?: string
-  startAdornment?: ReactNode
   onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
   // options passthrough props
   pt?: {
@@ -121,7 +120,6 @@ export const CellWidget: FC<EditorCellProps> = ({
   folderId,
   midnightExclusiveFields,
   tooltip,
-  startAdornment,
   onChange,
   entityType,
   pt,
@@ -373,7 +371,6 @@ export const CellWidget: FC<EditorCellProps> = ({
       }
       data-tooltip-delay={200}
     >
-      {startAdornment}
       {widget}
     </Cell>
   )

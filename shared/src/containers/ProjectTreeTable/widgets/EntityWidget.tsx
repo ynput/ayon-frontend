@@ -1,9 +1,27 @@
 import { FC, MouseEventHandler, useContext } from 'react'
 import clsx from 'clsx'
-import { CellWidget, CellValue } from './CellWidget'
+import styled from 'styled-components'
+import { CellValue } from './CellWidget'
 import { EntityIcon } from '@shared/components/EntityIcon'
 import { DetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
 import { useOptionalSelectedRowsContext } from '../context/SelectedRowsContext'
+import { StyledBaseTextWidget } from './TextWidget'
+import { READ_ONLY } from '../utils'
+
+const EntityCell = styled(StyledBaseTextWidget)`
+  position: absolute;
+  inset: 0;
+  padding: 4px 8px;
+  align-items: center;
+
+  &.loading {
+    inset: 4px;
+    border-radius: 4px;
+    opacity: 1;
+  }
+`
+
+export const ENTITY_WIDGET_CLASS = 'entity-widget'
 
 type EntityWidgetProps = {
   rowId: string
@@ -41,18 +59,14 @@ export const EntityWidget: FC<EntityWidgetProps> = ({
   }
 
   return (
-    <CellWidget
-      rowId={rowId}
-      columnId={columnId}
-      value={value}
-      attributeData={{ type: 'string' }}
-      startAdornment={
-        subType ? (
-          <EntityIcon entity={{ entityType, subType }} style={{ marginRight: 4 }} />
-        ) : undefined
-      }
-      className={clsx('entity-widget', className, { loading: isLoading })}
+    <EntityCell
+      id={`${rowId}-${columnId}`}
+      className={clsx(ENTITY_WIDGET_CLASS, READ_ONLY, className, { loading: isLoading })}
       onMouseDown={handleMouseDown}
-    />
+      data-tooltip-delay={200}
+    >
+      {subType && <EntityIcon entity={{ entityType, subType }} />}
+      {String(value ?? '')}
+    </EntityCell>
   )
 }
