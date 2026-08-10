@@ -31,6 +31,41 @@ export const isEntityExpandable = (entityType: string) => ['folder', 'product'].
 
 export const COLUMN_MIN_SIZE = 50
 
+type ColumnSortConfig = {
+  sortKey?: string
+  enabled: boolean
+}
+
+// TanStack column IDs are also used by the UI state. Keep API sort keys here
+// so a column can use a different identifier without leaking that detail into
+// the table state.
+export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
+  thumbnail: { enabled: false },
+  name: { sortKey: 'name', enabled: true },
+  entityType: { enabled: false },
+  status: { sortKey: 'status', enabled: true },
+  subType: { sortKey: 'taskType', enabled: true },
+  assignees: { sortKey: 'assignees', enabled: true },
+  folder: { sortKey: 'folderName', enabled: true },
+  author: { sortKey: 'author', enabled: true },
+  version: { sortKey: 'version', enabled: true },
+  product: { sortKey: 'product', enabled: true },
+  tags: { sortKey: 'tags', enabled: true },
+  createdAt: { sortKey: 'createdAt', enabled: true },
+  updatedAt: { sortKey: 'updatedAt', enabled: true },
+  subtasks: { enabled: false },
+  comments: { enabled: false },
+}
+
+export const isColumnSortable = (columnId: string) =>
+  COLUMN_SORT_CONFIG[columnId]?.enabled ?? !columnId.startsWith('link_')
+
+export const getColumnSortKey = (columnId?: string, showHierarchy = true) => {
+  if (!columnId) return undefined
+  if (columnId === 'name' && !showHierarchy) return 'path'
+  return COLUMN_SORT_CONFIG[columnId]?.sortKey ?? columnId
+}
+
 // Wrapper function for sorting that pushes isLoading rows to the bottom
 const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
   return (rowA, rowB, ...args) => {
@@ -152,7 +187,8 @@ const buildTreeTableColumns = ({
 
   // Helper to check if a column should be included
   const isIncluded = (id: DefaultColumns | string) => !excluded?.includes(id)
-  const canSort = (id: DefaultColumns | string) => !excludedSorting?.includes(id)
+  const canSort = (id: DefaultColumns | string) =>
+    isColumnSortable(id) && !excludedSorting?.includes(id)
 
   // Conditionally add static columns
   if (isIncluded(ROW_SELECTION_COLUMN_ID)) {
@@ -192,6 +228,7 @@ const buildTreeTableColumns = ({
         }
         // check for thumbnail override
         if (row.original.thumbnail) {
+          // @ts-expect-error
           thumbnail = row.original.thumbnail
         }
         return (
@@ -557,7 +594,7 @@ const buildTreeTableColumns = ({
       header: 'Folder name',
       minSize: COLUMN_MIN_SIZE,
       sortingFn: withLoadingStateSort(pathSort),
-      enableSorting: canSort('folderName'),
+      enableSorting: canSort('folder'),
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
