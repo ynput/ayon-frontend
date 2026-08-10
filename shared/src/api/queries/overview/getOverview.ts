@@ -28,10 +28,13 @@ import {
 const CACHE_TIME = 10 // seconds
 
 // parse attribs JSON string to object
-export const parseJSONField = (allAttrib: string | null | undefined): Record<string, unknown> => {
+export const parseJSONField = (allAttrib: string | null | undefined): Record<string, any> => {
   if (!allAttrib) return {}
   try {
-    return JSON.parse(allAttrib)
+    const parsed: unknown = JSON.parse(allAttrib)
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, any>)
+      : {}
   } catch (e) {
     return {}
   }
