@@ -10,7 +10,7 @@ import {
   useViewUpdateHelper,
   ViewsContextValue,
 } from '@shared/containers'
-import { DetailsPanelContextType, useDetailsPanelContext } from '@shared/context'
+import { DetailsPanelContextType } from '@shared/context'
 import { FC } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
