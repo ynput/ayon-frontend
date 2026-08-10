@@ -10,6 +10,7 @@ import {
   REALTIME_REST_CALL_LIMIT,
   waitForRealtimeJitter,
   PubSub,
+  RealtimeBatchProcessor,
   subscribeToThumbnailUpdates,
   ThumbnailUpdateMessage,
   SupportedEntityPatchField,
@@ -84,7 +85,7 @@ const enhancedApi = foldersApi.enhanceEndpoints({
         const tokens: (string | undefined)[] = []
 
         // handle a batch of messages, updating the cache and fetching missing data as needed
-        const batchProcessMessages = async (messages: any[]) => {
+        const batchProcessMessages: RealtimeBatchProcessor<any> = async (messages, isActive) => {
           if (!projectName) return
 
           const cachedFolderIds = new Set<string>()
@@ -177,6 +178,7 @@ const enhancedApi = foldersApi.enhanceEndpoints({
               .unwrap()
               .catch(() => [])
 
+            if (!isActive()) return
             const createdFolderIds = new Set(createdIds)
             updateCachedData((draft: any) => {
               if (!draft || !Array.isArray(draft.folders)) return
@@ -209,7 +211,8 @@ const enhancedApi = foldersApi.enhanceEndpoints({
         // create a batcher to process messages in batches
         const batcher = createRealtimeBatcher(
           batchProcessMessages,
-          (message: any) => message.summary.entityId,
+          (message: any) =>
+            `${message.project ?? projectName}:${message.summary?.entityId}:${message.topic}`,
         )
 
         let unsubscribeThumbnails: (() => void) | undefined
@@ -250,7 +253,6 @@ const enhancedApi = foldersApi.enhanceEndpoints({
         }
 
         await cacheEntryRemoved
-        batcher.clear()
         tokens.forEach((t) => PubSub.unsubscribe(t))
         if (unsubscribeThumbnails) unsubscribeThumbnails()
         batcher.clear()

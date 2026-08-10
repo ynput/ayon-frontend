@@ -6,8 +6,6 @@ import { PickerEntityType } from '../EntityPickerDialog'
 import SimpleTable, { Container, SimpleTableRow } from '@shared/containers/SimpleTable'
 import EntityTypeTableHeader from './EntityTypeTableHeader'
 import { upperFirst } from 'lodash'
-import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
-import { buildEntityPickerTableData } from '../util'
 import { EmptyPlaceholder } from '@shared/components'
 
 interface EntityTypeTableProps {

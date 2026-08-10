@@ -5,7 +5,18 @@ import {
   GetDetailsPanelTaskQuery,
   GetDetailsPanelVersionQuery,
 } from '@shared/api/generated'
-import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
+import {
+  createRealtimeBatcher,
+  getSupportedEntityPatch,
+  PubSub,
+  REALTIME_REST_CALL_LIMIT,
+  REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+  RealtimeBatchProcessor,
+  subscribeToThumbnailUpdates,
+  SupportedTaskField,
+  ThumbnailUpdateMessage,
+  waitForRealtimeJitter,
+} from '@shared/util'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import {
   detailsPanelEntityTypes,
@@ -161,25 +172,164 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
         }
       },
       async onCacheEntryAdded(
-        { entities, entityType },
-        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch },
+        { entityType },
+        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
       ) {
         let token
         let unsubscribeThumbnails: (() => void) | undefined
+        const batchProcessMessages: RealtimeBatchProcessor<{
+          topic: string
+          message: any
+        }> = async (updates, isActive) => {
+          const cachedEntities = getCacheEntry().data ?? []
+          const cachedEntityKeys = new Set(
+            cachedEntities.map((entity) => `${entity.projectName}:${entity.id}`),
+          )
+          const entitiesToFetch = new Map<string, { id: string; projectName: string }>()
+          const patches: {
+            id: string
+            projectName: string
+            field: SupportedTaskField
+            value: string | string[]
+          }[] = []
+
+          updates.forEach(({ topic, message }) => {
+            const entityId = message.summary?.entityId
+            const projectName = message.project
+            if (!entityId || !projectName) return
+
+            const entityKey = `${projectName}:${entityId}`
+            // Only refresh entities that are currently displayed in this panel.
+            if (!cachedEntityKeys.has(entityKey)) return
+
+            const field = topic.split('.')[2]?.replace('_changed', '')
+            const patch = getSupportedEntityPatch(
+              field,
+              message.summary,
+              REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+            )
+            if (patch) {
+              patches.push({
+                id: entityId,
+                projectName,
+                field: patch.field as SupportedTaskField,
+                value: patch.value,
+              })
+            } else {
+              entitiesToFetch.set(entityKey, { id: entityId, projectName })
+            }
+          })
+
+          if (patches.length) {
+            updateCachedData((draft) => {
+              patches.forEach(({ id, projectName, field, value }) => {
+                const entity = draft.find(
+                  (item) => item.id === id && item.projectName === projectName,
+                )
+                if (!entity) return
+
+                Object.assign(entity, {
+                  ...(field === 'status' || field === 'tags' ? { [field]: value } : {}),
+                  ...(field === 'type' ? { entitySubType: value } : {}),
+                })
+
+                if (field === 'assignees' && entity.task) {
+                  entity.task.assignees = value as string[]
+                }
+                if (field === 'type' && entity.task) {
+                  entity.task.taskType = value as string
+                }
+              })
+            })
+          }
+
+          const entitiesToRefresh = Array.from(entitiesToFetch.values())
+          if (!entitiesToRefresh.length || entitiesToRefresh.length > REALTIME_REST_CALL_LIMIT) {
+            return
+          }
+
+          // Avoid sending a burst of requests immediately after a realtime event.
+          await waitForRealtimeJitter()
+          const updatedEntities = await Promise.all(
+            entitiesToRefresh.map(async (entity) => {
+              try {
+                // Get the new data for the entity.
+                const res = await dispatch(
+                  enhancedDetailsApi.endpoints[getEntityTypeQueryName(entityType)].initiate(
+                    {
+                      projectName: entity.projectName,
+                      entityId: entity.id,
+                    },
+                    { forceRefetch: true },
+                  ),
+                )
+
+                // Check the response.
+                if (res.status !== 'fulfilled') {
+                  console.error(res?.error || 'No entity found')
+                  return null
+                }
+
+                const updatedEntity = res.data
+                if (!updatedEntity) {
+                  console.error('No entity found')
+                  return null
+                }
+
+                return updatedEntity
+              } catch (error) {
+                console.error('Entity task realtime update failed', error)
+                return null
+              }
+            }),
+          )
+          if (!isActive()) return
+
+          updateCachedData((draft) => {
+            updatedEntities.forEach((updatedEntity) => {
+              if (!updatedEntity) return
+
+              // Find the entity in the cache.
+              const entityIndex = draft.findIndex(
+                (entity) =>
+                  entity.id === updatedEntity.id &&
+                  entity.projectName === updatedEntity.projectName,
+              )
+
+              if (entityIndex === -1) {
+                console.error('Entity not found in cache')
+                return
+              }
+
+              // Update the entity in the cache.
+              draft[entityIndex] = updatedEntity
+            })
+          })
+        }
+        const batcher = createRealtimeBatcher(
+          batchProcessMessages,
+          ({ topic, message }) => `${message.project}:${message.summary?.entityId}:${topic}`,
+        )
+
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
           unsubscribeThumbnails = subscribeToThumbnailUpdates(
             (messages: ThumbnailUpdateMessage[]) => {
+              const cachedEntities = getCacheEntry().data ?? []
               const matchedMessages = messages.filter((m) =>
-                entities.some((e) => e.id === m.summary.entityId && e.projectName === m.project),
+                cachedEntities.some(
+                  (entity) => entity.id === m.summary.entityId && entity.projectName === m.project,
+                ),
               )
               if (matchedMessages.length === 0) return
 
               updateCachedData((draft) => {
                 matchedMessages.forEach((message) => {
-                  const entityIndex = draft.findIndex((e: any) => e.id === message.summary.entityId)
+                  const entityIndex = draft.findIndex(
+                    (entity) => entity.id === message.summary.entityId,
+                  )
                   if (entityIndex !== -1 && draft[entityIndex] && message.summary.thumbnailHash) {
                     draft[entityIndex].thumbnailHash = message.summary.thumbnailHash
                   }
@@ -189,53 +339,9 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
             [entityType],
           )
 
-          const handlePubSub = async (_topic: string, message: any) => {
-            const messageEntityId = message.summary?.entityId
-            const matchedEntity = entities.find((entity) => entity.id === messageEntityId)
-            // check if the message is relevant to the current query
-            if (!matchedEntity) return
-
-            try {
-              // get the new data for the entity
-              const res = await dispatch(
-                enhancedDetailsApi.endpoints[getEntityTypeQueryName(entityType)].initiate(
-                  {
-                    projectName: matchedEntity.projectName,
-                    entityId: matchedEntity.id,
-                  },
-                  { forceRefetch: true },
-                ),
-              )
-
-              // check the res
-              if (res.status !== 'fulfilled') {
-                console.error(res?.error || 'No entity found')
-                return
-              }
-
-              const updatedEntity = res.data
-
-              if (!updatedEntity) {
-                console.error('No entity found')
-                return
-              }
-
-              updateCachedData((draft) => {
-                // find the entity in the cache
-                const entityIndex = draft.findIndex((entity: any) => entity.id === updatedEntity.id)
-
-                if (entityIndex === -1) {
-                  console.error('Entity not found in cache')
-                  return
-                }
-
-                // update the entity in the cache
-                draft[entityIndex] = updatedEntity
-              })
-            } catch (error) {
-              console.error('Entity task realtime update failed', error)
-              return
-            }
+          const handlePubSub = (_topic: string, message: any) => {
+            if (!message?.project || !message?.summary?.entityId) return
+            batcher.add({ topic: _topic, message })
           }
 
           const topic = `entity.${entityType}`
@@ -252,6 +358,7 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
         if (unsubscribeThumbnails) {
           unsubscribeThumbnails()
         }
+        batcher.clear()
       },
       providesTags: (_res, _error, { entities, entityType }) => [
         ...entities.map(({ id }: { id: string }) => ({ id, type: 'entities' })),

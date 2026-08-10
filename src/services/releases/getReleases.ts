@@ -1,6 +1,6 @@
 import { marketApi, gqlApi } from '@shared/api'
 import type { GetInstallEventsQuery } from '@shared/api'
-import { PubSub } from '@shared/util'
+import { createRealtimeBatcher, PubSub } from '@shared/util'
 
 const enhancedApi = marketApi.enhanceEndpoints({
   endpoints: {
@@ -51,6 +51,19 @@ const releasesGqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
         response.events.edges.map(({ node }) => node),
       async onCacheEntryAdded({ ids = [] }, { updateCachedData, cacheEntryRemoved }) {
         let subscriptions: any[] = []
+        const batcher = createRealtimeBatcher(
+          (messages: InstallMessage[]) => {
+            updateCachedData((draft) => {
+              messages.forEach((message) => {
+                const index = draft.findIndex((event) => event.id === message.id)
+                if (index !== -1) draft[index] = message
+                else draft.push(message)
+              })
+            })
+          },
+          (message) => message.id,
+          500,
+        )
 
         const topics = [
           'addon.install_from_url',
@@ -67,18 +80,7 @@ const releasesGqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
             // if message is not in ids, ignore
             if (!ids.includes(message.id)) return
 
-            // update cache
-            updateCachedData((draft) => {
-              // find index of event
-              const index = draft.findIndex((e) => e.id === message.id)
-              // replace event
-              if (index !== -1) {
-                draft[index] = message
-              } else {
-                // add event
-                draft.push(message)
-              }
-            })
+            batcher.add(message)
           }
 
           // sub to websocket topics
@@ -94,6 +96,7 @@ const releasesGqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
         await cacheEntryRemoved
         // unsubscribe from all topics
         subscriptions.forEach((sub: any) => PubSub.unsubscribe(sub))
+        batcher.clear()
       },
     },
   },
