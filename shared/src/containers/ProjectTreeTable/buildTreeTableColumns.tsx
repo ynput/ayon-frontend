@@ -64,6 +64,7 @@ export const getColumnLabel = (columnId: string, scopes: string[] = []) => {
 
 type ColumnSortConfig = {
   sortKey?: string
+  sortDescFirst?: boolean
   enabled: boolean
   label: string
   scopes?: string[]
@@ -76,18 +77,28 @@ export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
   thumbnail: { enabled: false, label: COLUMN_LABELS.thumbnail },
   name: { sortKey: 'name', enabled: true, label: 'Name' },
   entityType: { enabled: false, label: COLUMN_LABELS.entityType },
-  status: { sortKey: 'status', enabled: true, label: COLUMN_LABELS.status },
-  subType: { sortKey: 'taskType', enabled: true, label: COLUMN_LABELS.subType },
+  status: { sortKey: 'status', sortDescFirst: false, enabled: true, label: COLUMN_LABELS.status },
+  subType: {
+    sortKey: 'taskType',
+    sortDescFirst: true,
+    enabled: true,
+    label: COLUMN_LABELS.subType,
+  },
   assignees: {
     sortKey: 'assignees',
     enabled: true,
     label: COLUMN_LABELS.assignees,
     scopes: ['task'],
   },
-  folder_entity: { sortKey: 'folderName', enabled: true, label: COLUMN_LABELS.folder_entity },
+  folder_entity: {
+    sortKey: 'folderName',
+    sortDescFirst: false,
+    enabled: true,
+    label: COLUMN_LABELS.folder_entity,
+  },
   task_entity: {
     sortKey: 'taskName',
-    enabled: true,
+    enabled: false,
     label: COLUMN_LABELS.task_entity,
     scopes: ['version', 'product'],
   },
@@ -99,7 +110,8 @@ export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
   },
   version: {
     sortKey: 'version',
-    enabled: false,
+    sortDescFirst: true,
+    enabled: true,
     label: COLUMN_LABELS.version,
     scopes: ['version', 'product'],
   },
@@ -123,6 +135,7 @@ export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
   },
   taskType: {
     sortKey: 'taskType',
+    sortDescFirst: true,
     enabled: true,
     label: COLUMN_LABELS.taskType,
     scopes: ['version', 'product'],
@@ -486,7 +499,7 @@ const buildTreeTableColumns = ({
           attribSort(a, b, c, { enum: options.status, type: 'string' }),
         ),
       ),
-      sortDescFirst: true,
+      sortDescFirst: COLUMN_SORT_CONFIG.status.sortDescFirst,
       enableSorting: canSort('status'),
       enableResizing: true,
       enablePinning: true,
@@ -572,6 +585,7 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
+      sortDescFirst: COLUMN_SORT_CONFIG.taskType.sortDescFirst,
       sortingFn: withLoadingStateSort(
         withNameTieBreaker((a, b, c) =>
           attribSort(a, b, c, {
@@ -695,6 +709,7 @@ const buildTreeTableColumns = ({
       accessorKey: 'folder',
       header: getColumnLabel(ENTITY_COLUMN_IDS.folder),
       minSize: COLUMN_MIN_SIZE,
+      sortDescFirst: COLUMN_SORT_CONFIG.folder_entity.sortDescFirst,
       sortingFn: withLoadingStateSort(pathSort),
       enableSorting: canSort(ENTITY_COLUMN_IDS.folder),
       enableResizing: true,
@@ -837,6 +852,7 @@ const buildTreeTableColumns = ({
       accessorKey: 'version',
       header: getColumnLabel('version'),
       minSize: COLUMN_MIN_SIZE,
+      sortDescFirst: COLUMN_SORT_CONFIG.version.sortDescFirst,
       enableSorting: canSort('version'),
       enableResizing: true,
       enablePinning: true,

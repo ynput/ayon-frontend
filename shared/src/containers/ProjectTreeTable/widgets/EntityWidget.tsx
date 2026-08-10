@@ -4,7 +4,6 @@ import { CellWidget, CellValue } from './CellWidget'
 import { EntityIcon } from '@shared/components/EntityIcon'
 import { DetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
 import { useOptionalSelectedRowsContext } from '../context/SelectedRowsContext'
-import { isEntityRestricted } from '../utils/restrictedEntity'
 
 type EntityWidgetProps = {
   rowId: string
@@ -31,13 +30,7 @@ export const EntityWidget: FC<EntityWidgetProps> = ({
   const selectedRowsContext = useOptionalSelectedRowsContext()
 
   const handleMouseDown: MouseEventHandler<HTMLDivElement> = (event) => {
-    if (
-      event.button !== 0 ||
-      event.detail !== 2 ||
-      !entityId ||
-      isEntityRestricted(entityType) ||
-      !entityContext
-    ) {
+    if (event.button !== 0 || event.detail !== 2 || !entityId || !entityContext) {
       return
     }
 

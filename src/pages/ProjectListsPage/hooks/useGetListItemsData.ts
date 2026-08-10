@@ -25,6 +25,7 @@ import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { extractSearchFromFilters } from '../util/searchToQueryFilter'
 import { OnSyncDataCallback, usePowerpack, useProjectContext } from '@shared/context'
 import { useListsViewSettings, useProjectDataContext, useViewsContext } from '@shared/containers'
+import { COLUMN_SORT_CONFIG } from '@shared/containers/ProjectTreeTable/buildTreeTableColumns'
 import { useAppDispatch } from '@state/store'
 
 // Extend EntityListItem to include links
@@ -95,9 +96,10 @@ const useGetListItemsData = ({
 
   // Create sort params for infinite query
   const singleSort = { ...sorting[0] }
+  console.log(singleSort)
   const parseSorting = (sorting?: string): string | undefined => {
     if (!sorting) return undefined
-    let sortId = sorting
+    let sortId = COLUMN_SORT_CONFIG[sorting]?.sortKey || sorting
     if (singleSort?.id === 'name' && entityType === 'version') {
       sortId = 'path'
     } else if (sortId.startsWith('attrib') && sortId.includes('_')) {
@@ -109,9 +111,9 @@ const useGetListItemsData = ({
     } else if (sortId === 'product') {
       // backend resolves productName to the related product's name (per entity type)
       sortId = 'productName'
-    } else if (sortId === 'folder') {
+    } else if (sorting === 'folder_entity') {
       sortId = 'folderPath'
-    } else {
+    } else if (!COLUMN_SORT_CONFIG[sorting]?.sortKey) {
       // add entity prefix to entity fields
       sortId = `entity_${sortId}`
     }
