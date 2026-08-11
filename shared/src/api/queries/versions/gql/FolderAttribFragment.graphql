@@ -3,5 +3,12 @@ fragment VPFolder on FolderNode {
   name
   label
   folderType
+  status
+  tags
+  updatedAt
+  createdAt
+  thumbnailHash
+  active
+  hasReviewables
   allAttrib
 }
