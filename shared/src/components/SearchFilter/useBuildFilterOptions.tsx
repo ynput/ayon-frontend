@@ -671,13 +671,14 @@ export const useBuildFilterOptions = ({
     if (!option.group) return groups
     const group = typeof option.group === 'string' ? undefined : option.group
     const groupName = group?.name || (option.group as string)
+    const isEntityGroup = scopesWithTypes.some(({ scope }) => scope === groupName)
     if (groups.some((group) => group.name === groupName)) return groups
 
     groups.push({
       name: groupName,
-      label: option.label,
-      icon: option.icon,
-      color: option.color,
+      label: isEntityGroup ? upperFirst(groupName) : group?.label || option.label,
+      icon: isEntityGroup ? getEntityTypeIcon(groupName) : group?.icon || option.icon,
+      color: group?.color || option.color,
     })
     return groups
   }, [])
@@ -1042,11 +1043,13 @@ const getOptionRoot = (
   const fieldNameWithEntityType = (label: string) =>
     entityType ? `${entityLabel} ${label}` : label
 
-  if (shouldGroup && rootOption) {
+  if ((shouldGroup || entityType) && rootOption) {
+    const groupName = entityType || fieldName
+
     rootOption.group = {
-      name: fieldName,
-      label: fieldNameWithEntityType(rootOption.label),
-      icon: getEntityTypeIcon(entityType || ''),
+      name: groupName,
+      label: rootOption.label,
+      icon: rootOption.icon,
     }
 
     rootOption.search = {
@@ -1076,13 +1079,18 @@ const getAttributeFieldOptionRoot = (
 ): Option => {
   const label = attribute.data.title || attribute.name
   const scopeLabel = entityType ? `${upperFirst(entityType)} ` : ''
-  const group = shouldGroup
-    ? {
-        name: attribute.name,
-        label: `${scopeLabel}${label}`,
-        icon: getEntityTypeIcon(entityType || ''),
-      }
-    : undefined
+  const group =
+    shouldGroup || entityType
+      ? {
+          name: entityType || attribute.name,
+          label,
+          icon: getAttributeIcon(
+            attribute.name,
+            attribute.data.type,
+            !!attribute.data.enum?.length,
+          ),
+        }
+      : undefined
 
   const search = shouldGroup
     ? {
