@@ -61,8 +61,8 @@ export type ProjectTableSettingsProps = {
 
 export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   settings = [],
-  extraColumns = [],
-  hiddenColumns = [],
+  extraColumns,
+  hiddenColumns,
   hiddenSettings = [],
   highlighted,
   includeLinks = true,
@@ -133,6 +133,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
         <ColumnsSettingsWithContext
           columns={visibleColumns}
           highlighted={highlighted}
+          scopes={scopes}
           search={search}
           onSearchChange={setSearch}
           addColumnMenuItems={addColumnMenuItems}

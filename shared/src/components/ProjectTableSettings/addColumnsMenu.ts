@@ -16,7 +16,7 @@ export type AddColumnSection = {
 }
 
 // entity sections claim their attributes before the generic custom-attributes section
-export const ADD_COLUMN_SECTIONS: AddColumnSection[] = [
+const ADD_COLUMN_SECTIONS: AddColumnSection[] = [
   {
     id: 'version-attributes',
     label: 'Version attributes',
@@ -33,17 +33,26 @@ export const ADD_COLUMN_SECTIONS: AddColumnSection[] = [
   { id: 'links', label: 'Links', icon: 'link', match: (item) => !!item.isLink },
 ]
 
+const getActiveAddColumnSections = (scopes: string[] = []): AddColumnSection[] =>
+  ADD_COLUMN_SECTIONS.filter(
+    (section) => !section.requiresScope || scopes.includes(section.requiresScope),
+  )
+
+export const getAddColumnSection = (
+  item: AddColumnItem,
+  scopes: string[] = [],
+): AddColumnSection | undefined =>
+  getActiveAddColumnSections(scopes).find((section) => section.match(item))
+
 export const buildAddColumnsMenu = ({
   columns,
   onAdd,
   scopes = [],
-  sections = ADD_COLUMN_SECTIONS,
   extraItems = [],
 }: {
   columns: AddColumnItem[]
   onAdd: (columnId: string) => void
   scopes?: string[]
-  sections?: AddColumnSection[]
   // page actions appended at the end, e.g. Lists' "List attributes"
   extraItems?: MenuItemType[]
 }): MenuItemType[] => {
@@ -55,9 +64,7 @@ export const buildAddColumnsMenu = ({
     onClick: () => onAdd(column.value),
   })
 
-  const activeSections = sections.filter(
-    (section) => !section.requiresScope || scopes.includes(section.requiresScope),
-  )
+  const activeSections = getActiveAddColumnSections(scopes)
 
   const sectioned = new Map(activeSections.map((section) => [section.id, [] as AddColumnItem[]]))
   const topLevel: AddColumnItem[] = []

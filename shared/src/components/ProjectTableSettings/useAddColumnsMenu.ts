@@ -37,5 +37,5 @@ export const useAddColumnsMenu = ({ columns, scopes, extraItems }: UseAddColumns
     [columns, columnVisibility, defaultColumnVisibility, addColumn, scopes, extraItems],
   )
 
-  return { menuItems, hasColumnsToAdd: !!menuItems.length }
+  return { menuItems, hasMenuItems: !!menuItems.length }
 }

@@ -37,17 +37,17 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-ki
 // Notification imports
 import { toast } from 'react-toastify'
 import { checkColumnVisibility } from '../../containers/ProjectTreeTable/utils'
-import { SettingsPanelItem } from '../SettingsPanel/SettingsPanelItemTemplate'
 import { SettingHighlightedId, useMenuContext } from '@shared/context'
 import type { MenuItemType } from '../Menu'
-import { buildAddColumnsMenu } from './addColumnsMenu'
+import { AddColumnItem, buildAddColumnsMenu, getAddColumnSection } from './addColumnsMenu'
 import { AddColumnMenu } from './AddColumnMenu'
 import { TableSearch } from '../TableSearch'
 
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'
+const NO_SCOPES: string[] = []
 
 interface ColumnsSettingsProps {
-  columns: SettingsPanelItem[]
+  columns: AddColumnItem[]
   highlighted?: SettingHighlightedId
   columnVisibility: VisibilityState
   updateColumnVisibility: (visibility: VisibilityState) => void
@@ -65,6 +65,7 @@ interface ColumnsSettingsProps {
   columnSummaryFormats?: ColumnsConfig['columnSummaryFormats']
   groupByConfig?: ColumnsConfig['groupByConfig']
   addColumnMenuItems?: MenuItemType[]
+  scopes?: string[]
   // when a string (including ''), the panel switches to a flat searchable list of all columns
   search?: string | null
   onSearchChange?: (search: string | null) => void
@@ -89,6 +90,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   columnSummaryFormats,
   groupByConfig,
   addColumnMenuItems,
+  scopes = NO_SCOPES,
   search,
   onSearchChange,
 }) => {
@@ -210,11 +212,17 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     [sortedPinnedColumns],
   )
 
-  const filteredColumns = useMemo(() => {
+  // search results show the add-column menu path so nested columns are identifiable
+  const searchResults = useMemo(() => {
     if (typeof search !== 'string') return []
-    const query = search.toLowerCase()
-    return columns.filter((col) => col.label.toLowerCase().includes(query))
-  }, [columns, search])
+    const terms = search.toLowerCase().split(/\s+/).filter(Boolean)
+    return columns
+      .map((col) => ({ ...col, path: getAddColumnSection(col, scopes)?.label }))
+      .filter((col) => {
+        const searchable = [col.path, col.label].filter(Boolean).join(' / ').toLowerCase()
+        return terms.every((term) => searchable.includes(term))
+      })
+  }, [columns, search, scopes])
 
   // fallback for consumers rendering outside ColumnSettingsContext (e.g. ProjectsPage)
   const fallbackAddColumnMenuItems = useMemo(
@@ -225,8 +233,9 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
           const { columnVisibility, updateColumnVisibility } = latestRef.current
           updateColumnVisibility({ ...columnVisibility, [columnId]: true })
         },
+        scopes,
       }),
-    [hiddenColumns],
+    [hiddenColumns, scopes],
   )
 
   const addColumnItems = addColumnMenuItems ?? fallbackAddColumnMenuItems
@@ -424,9 +433,10 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
         <Section>
           <SectionTitle>All Columns</SectionTitle>
           <Styled.Menu>
-            {filteredColumns.map((column) => (
+            {searchResults.map((column) => (
               <ColumnItem
                 key={column.value}
+                id={`column-settings-${column.value}`}
                 column={column}
                 isPinned={columnPinning.left?.includes(column.value) || false}
                 isHidden={
@@ -570,7 +580,7 @@ export default ColumnsSettings
 // Backward-compat wrapper that reads all data from ColumnSettingsContext
 type ColumnsSettingsWithContextProps = Pick<
   ColumnsSettingsProps,
-  'columns' | 'highlighted' | 'addColumnMenuItems' | 'search' | 'onSearchChange'
+  'columns' | 'highlighted' | 'addColumnMenuItems' | 'scopes' | 'search' | 'onSearchChange'
 >
 
 export const ColumnsSettingsWithContext: FC<ColumnsSettingsWithContextProps> = (props) => {

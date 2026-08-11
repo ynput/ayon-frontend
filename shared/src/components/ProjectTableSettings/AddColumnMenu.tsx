@@ -5,10 +5,9 @@ import { useMenuContext } from '@shared/context'
 interface AddColumnMenuProps {
   menuId: string
   menuItems: MenuItemType[]
-  align?: 'left' | 'right'
 }
 
-export const AddColumnMenu: FC<AddColumnMenuProps> = ({ menuId, menuItems, align }) => {
+export const AddColumnMenu: FC<AddColumnMenuProps> = ({ menuId, menuItems }) => {
   const { menuOpen, setMenuOpen } = useMenuContext()
 
   // adding the last column would otherwise leave an empty popup on screen
@@ -17,7 +16,7 @@ export const AddColumnMenu: FC<AddColumnMenuProps> = ({ menuId, menuItems, align
   }, [menuItems.length, menuOpen, menuId, setMenuOpen])
 
   return (
-    <MenuContainer targetId={menuId} id={menuId} align={align}>
+    <MenuContainer targetId={menuId} id={menuId}>
       <Menu menu={menuItems} onClose={() => setMenuOpen(false)} />
     </MenuContainer>
   )

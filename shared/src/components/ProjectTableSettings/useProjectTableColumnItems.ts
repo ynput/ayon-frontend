@@ -13,10 +13,13 @@ interface UseProjectTableColumnItemsProps {
   includeLinks?: boolean
 }
 
+const NO_EXTRA_COLUMNS: { value: string; label: string }[] = []
+const NO_HIDDEN_COLUMNS: string[] = []
+
 // the settings panel and the table's add button must offer exactly the same columns
 export const useProjectTableColumnItems = ({
-  extraColumns = [],
-  hiddenColumns = [],
+  extraColumns = NO_EXTRA_COLUMNS,
+  hiddenColumns = NO_HIDDEN_COLUMNS,
   includeLinks = true,
 }: UseProjectTableColumnItemsProps) => {
   const { linkTypes } = useProjectContext()

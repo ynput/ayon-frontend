@@ -44,6 +44,7 @@ const SettingsPanelItemTemplateStyled = styled(SettingsPanelItemTemplate)`
 `
 
 interface ColumnItemProps {
+  id?: string
   column: SettingsPanelItem
   isPinned: boolean
   isHidden: boolean
@@ -57,6 +58,7 @@ interface ColumnItemProps {
 }
 
 const ColumnItem: FC<ColumnItemProps> = ({
+  id,
   column,
   isPinned,
   isHidden,
@@ -89,6 +91,7 @@ const ColumnItem: FC<ColumnItemProps> = ({
 
   return (
     <SettingsPanelItemTemplateStyled
+      id={id}
       item={column}
       actions={itemActions}
       isHighlighted={isHighlighted}

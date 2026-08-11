@@ -24,6 +24,10 @@ const Item = styled.li`
     min-width: 0;
   }
 
+  .label-path {
+    color: var(--md-sys-color-outline);
+  }
+
   &.highlighted {
     background-color: var(--md-sys-color-secondary-container);
     color: var(--md-sys-color-on-secondary-container);
@@ -78,6 +82,7 @@ export type SettingsPanelItem = {
   value: string
   label: string
   icon?: string
+  path?: string
 }
 
 export interface SettingsPanelItemTemplateProps extends React.HTMLAttributes<HTMLLIElement> {
@@ -105,7 +110,10 @@ export const SettingsPanelItemTemplate = forwardRef<HTMLLIElement, SettingsPanel
       >
         {startContent}
         {item.icon && <Icon icon={item.icon} />}
-        <span className="label">{item.label}</span>
+        <span className="label">
+          {item.path && <span className="label-path">{item.path} / </span>}
+          {item.label}
+        </span>
         <Actions className="actions">
           {actions?.map(({ icon, className, active, onClick, ...action }, index) => (
             <ActionButton
