@@ -498,8 +498,6 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     [resolveEntityArguments],
   )
 
-  console.log(versionArguments)
-
   // QUERY: Get all products when showing products
   const {
     data: productsData,
