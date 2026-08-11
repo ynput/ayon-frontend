@@ -670,6 +670,7 @@ export type ProductNodeVersionsArgs = {
   includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
+  latestPerFolder?: Scalars['Boolean']['input'];
   productFilter?: InputMaybe<Scalars['String']['input']>;
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
@@ -1041,6 +1042,7 @@ export type ProjectNodeVersionsArgs = {
   includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
+  latestPerFolder?: Scalars['Boolean']['input'];
   productFilter?: InputMaybe<Scalars['String']['input']>;
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
@@ -1422,6 +1424,7 @@ export type TaskNodeVersionsArgs = {
   includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
+  latestPerFolder?: Scalars['Boolean']['input'];
   productFilter?: InputMaybe<Scalars['String']['input']>;
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;

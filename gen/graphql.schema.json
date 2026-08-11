@@ -4609,7 +4609,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy",
+                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy, folderName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7088,6 +7088,22 @@
               {
                 "name": "latestOnly",
                 "description": "DEPRECATED List only latest versions",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "latestPerFolder",
+                "description": "\nReturn only a single version - the latest one (by creation order)\nfor each folder that matches all the other given filters.\nThe result set is still ordered according to sortBy.\n",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -10428,7 +10444,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy",
+                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy, folderName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -10895,6 +10911,22 @@
               {
                 "name": "latestOnly",
                 "description": "DEPRECATED List only latest versions",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "latestPerFolder",
+                "description": "\nReturn only a single version - the latest one (by creation order)\nfor each folder that matches all the other given filters.\nThe result set is still ordered according to sortBy.\n",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
