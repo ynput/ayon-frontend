@@ -12,6 +12,7 @@ query GetVersionsColumnStats(
   $targets: [MetricTargetInput!]
   $featuredOnly: [String!]
   $featuredOnlyEntityType: String
+  $latestPerFolder: Boolean
 ) {
   project(name: $projectName) {
     versions(
@@ -26,6 +27,7 @@ query GetVersionsColumnStats(
       includeFolderChildren: true
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType
+      latestPerFolder: $latestPerFolder
     ) {
       fieldStats {
         ...ColumnStatsFragment

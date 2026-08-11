@@ -8,6 +8,7 @@ query GetVersions(
   $folderFilter: String
   $featuredOnly: [String!]
   $featuredOnlyEntityType: String
+  $latestPerFolder: Boolean
   $hasReviewables: Boolean
   $folderIds: [String!]
   $search: String
@@ -28,6 +29,7 @@ query GetVersions(
       folderFilter: $folderFilter
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType
+      latestPerFolder: $latestPerFolder
       hasReviewables: $hasReviewables
       folderIds: $folderIds
       includeFolderChildren: true

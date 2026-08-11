@@ -2127,6 +2127,7 @@ export type GetVersionsQueryVariables = Exact<{
   folderFilter?: string | null | undefined;
   featuredOnly?: Array<string> | string | null | undefined;
   featuredOnlyEntityType?: string | null | undefined;
+  latestPerFolder?: boolean | null | undefined;
   hasReviewables?: boolean | null | undefined;
   folderIds?: Array<string> | string | null | undefined;
   search?: string | null | undefined;
@@ -2157,6 +2158,7 @@ export type GetVersionsByProductIdQueryVariables = Exact<{
   folderFilter?: string | null | undefined;
   featuredOnly?: Array<string> | string | null | undefined;
   featuredOnlyEntityType?: string | null | undefined;
+  latestPerFolder?: boolean | null | undefined;
   hasReviewables?: boolean | null | undefined;
   sortBy?: string | null | undefined;
   first?: number | null | undefined;
@@ -2181,6 +2183,7 @@ export type GetVersionsColumnStatsQueryVariables = Exact<{
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
   featuredOnly?: Array<string> | string | null | undefined;
   featuredOnlyEntityType?: string | null | undefined;
+  latestPerFolder?: boolean | null | undefined;
 }>;
 
 
@@ -3995,7 +3998,7 @@ export const GetProductsColumnStatsDocument = new TypedDocumentString(`
   distribution
 }`);
 export const GetVersionsDocument = new TypedDocumentString(`
-    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $featuredOnly: [String!], $featuredOnlyEntityType: String, $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
+    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean, $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     versions(
       ids: $versionIds
@@ -4006,6 +4009,7 @@ export const GetVersionsDocument = new TypedDocumentString(`
       folderFilter: $folderFilter
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType
+      latestPerFolder: $latestPerFolder
       hasReviewables: $hasReviewables
       folderIds: $folderIds
       includeFolderChildren: true
@@ -4100,7 +4104,7 @@ export const GetVersionsAttribsDocument = new TypedDocumentString(`
 }
     `);
 export const GetVersionsByProductIdDocument = new TypedDocumentString(`
-    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $folderFilter: String, $featuredOnly: [String!], $featuredOnlyEntityType: String, $hasReviewables: Boolean, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String, $showComments: Boolean! = false) {
+    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $folderFilter: String, $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean, $hasReviewables: Boolean, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     versions(
       productIds: $productIds
@@ -4109,6 +4113,7 @@ export const GetVersionsByProductIdDocument = new TypedDocumentString(`
       folderFilter: $folderFilter
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType
+      latestPerFolder: $latestPerFolder
       hasReviewables: $hasReviewables
       sortBy: $sortBy
       last: $last
@@ -4186,7 +4191,7 @@ fragment VersionExtended on VersionNode {
   }
 }`);
 export const GetVersionsColumnStatsDocument = new TypedDocumentString(`
-    query GetVersionsColumnStats($projectName: String!, $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $folderIds: [String!], $versionIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!], $featuredOnly: [String!], $featuredOnlyEntityType: String) {
+    query GetVersionsColumnStats($projectName: String!, $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $folderIds: [String!], $versionIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!], $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean) {
   project(name: $projectName) {
     versions(
       calculateSpecificStatistics: $targets
@@ -4200,6 +4205,7 @@ export const GetVersionsColumnStatsDocument = new TypedDocumentString(`
       includeFolderChildren: true
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType
+      latestPerFolder: $latestPerFolder
     ) {
       fieldStats {
         ...ColumnStatsFragment

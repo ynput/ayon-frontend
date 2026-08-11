@@ -6,6 +6,7 @@ query GetVersionsByProductId(
   $folderFilter: String
   $featuredOnly: [String!]
   $featuredOnlyEntityType: String
+  $latestPerFolder: Boolean
   $hasReviewables: Boolean
   $sortBy: String
   $first: Int
@@ -22,6 +23,7 @@ query GetVersionsByProductId(
       folderFilter: $folderFilter
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType
+      latestPerFolder: $latestPerFolder
       hasReviewables: $hasReviewables
       sortBy: $sortBy
       last: $last
