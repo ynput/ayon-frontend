@@ -24,11 +24,12 @@ export interface TableSearchProps {
   value: string
   onChange: (value: string) => void
   onClose: () => void
+  className?: string
 }
 
-export const TableSearch: FC<TableSearchProps> = ({ value, onChange, onClose }) => {
+export const TableSearch: FC<TableSearchProps> = ({ value, onChange, onClose, className }) => {
   return (
-    <Container>
+    <Container className={className}>
       <InputText
         value={value}
         onChange={(e) => onChange(e.target.value)}

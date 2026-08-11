@@ -76,8 +76,6 @@ export interface SettingConfig {
   icon?: string
   preview?: string | number
   headerActions?: ReactNode
-  // replaces the title and the header actions, keeping the row height
-  headerContent?: ReactNode
 }
 
 export interface SettingsPanelProps {
@@ -146,12 +144,8 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings, order }) => {
         {selectedSetting && (
           <ToolButton variant="text" icon="arrow_back" onClick={backToMainMenu} />
         )}
-        {selectedConfig?.headerContent ?? (
-          <>
-            <PanelTitle>{getPanelTitle()}</PanelTitle>
-            {selectedConfig?.headerActions}
-          </>
-        )}
+        <PanelTitle>{getPanelTitle()}</PanelTitle>
+        {selectedConfig?.headerActions}
         <ToolButton variant="text" icon="close" onClick={closePanel} />
       </PanelHeader>
       <PanelContent>{renderSettingContent()}</PanelContent>

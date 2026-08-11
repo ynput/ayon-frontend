@@ -42,6 +42,7 @@ import { SettingHighlightedId, useMenuContext } from '@shared/context'
 import type { MenuItemType } from '../Menu'
 import { buildAddColumnsMenu } from './addColumnsMenu'
 import { AddColumnMenu } from './AddColumnMenu'
+import { TableSearch } from '../TableSearch'
 
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'
 
@@ -64,10 +65,9 @@ interface ColumnsSettingsProps {
   columnSummaryFormats?: ColumnsConfig['columnSummaryFormats']
   groupByConfig?: ColumnsConfig['groupByConfig']
   addColumnMenuItems?: MenuItemType[]
-  // when set, the bottom button opens the menu already anchored to the panel header button
-  addColumnMenuId?: string
   // when a string (including ''), the panel switches to a flat searchable list of all columns
   search?: string | null
+  onSearchChange?: (search: string | null) => void
 }
 
 export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
@@ -89,8 +89,8 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   columnSummaryFormats,
   groupByConfig,
   addColumnMenuItems,
-  addColumnMenuId,
   search,
+  onSearchChange,
 }) => {
   // State for the currently dragged column
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -230,7 +230,26 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   )
 
   const addColumnItems = addColumnMenuItems ?? fallbackAddColumnMenuItems
-  const menuId = addColumnMenuId ?? ADD_COLUMN_MENU_LIST_ID
+
+  // the search bar takes the button's place so the list below it never shifts
+  const addColumnRow =
+    typeof search === 'string' ? (
+      <SearchRow
+        value={search}
+        onChange={(value) => onSearchChange?.(value)}
+        onClose={() => onSearchChange?.(null)}
+      />
+    ) : (
+      <AddColumnListButton
+        variant="text"
+        icon="add"
+        id={ADD_COLUMN_MENU_LIST_ID}
+        disabled={!addColumnItems.length}
+        onClick={() => toggleMenuOpen(ADD_COLUMN_MENU_LIST_ID)}
+      >
+        Add column
+      </AddColumnListButton>
+    )
 
   // Toggle column visibility
   const toggleVisibility = (columnId: string) => {
@@ -400,6 +419,8 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   if (typeof search === 'string') {
     return (
       <ColumnsContainer ref={containerRef}>
+        {addColumnRow}
+        <AddColumnMenu menuId={ADD_COLUMN_MENU_LIST_ID} menuItems={addColumnItems} />
         <Section>
           <SectionTitle>All Columns</SectionTitle>
           <Styled.Menu>
@@ -433,6 +454,9 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
       onDragEnd={handleDragEnd}
     >
       <ColumnsContainer ref={containerRef}>
+        {addColumnRow}
+        <AddColumnMenu menuId={ADD_COLUMN_MENU_LIST_ID} menuItems={addColumnItems} />
+
         {/* Pinned Columns Section */}
         {pinnedColumns.length > 0 && (
           <Section className={isDraggingOverPinned && !isDraggingFromPinned ? 'drop-target' : ''}>
@@ -483,16 +507,6 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
               ))}
             </Styled.Menu>
           </SortableContext>
-          <AddColumnListButton
-            variant="text"
-            icon="add"
-            id={addColumnMenuId ? undefined : menuId}
-            disabled={!addColumnItems.length}
-            onClick={() => toggleMenuOpen(menuId)}
-          >
-            Add column
-          </AddColumnListButton>
-          {!addColumnMenuId && <AddColumnMenu menuId={menuId} menuItems={addColumnItems} />}
         </Section>
 
         {/* Drag Overlay */}
@@ -541,7 +555,14 @@ const SectionTitle = styled.div`
 
 const AddColumnListButton = styled(Button)`
   justify-content: flex-start;
-  margin-top: var(--base-gap-small);
+`
+
+const SearchRow = styled(TableSearch)`
+  padding: 0;
+
+  input {
+    height: 32px;
+  }
 `
 
 export default ColumnsSettings
@@ -549,7 +570,7 @@ export default ColumnsSettings
 // Backward-compat wrapper that reads all data from ColumnSettingsContext
 type ColumnsSettingsWithContextProps = Pick<
   ColumnsSettingsProps,
-  'columns' | 'highlighted' | 'addColumnMenuItems' | 'addColumnMenuId' | 'search'
+  'columns' | 'highlighted' | 'addColumnMenuItems' | 'search' | 'onSearchChange'
 >
 
 export const ColumnsSettingsWithContext: FC<ColumnsSettingsWithContextProps> = (props) => {

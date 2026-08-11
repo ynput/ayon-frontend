@@ -3,10 +3,10 @@ import {
   useProjectTableContext,
   checkColumnVisibility,
 } from '@shared/containers/ProjectTreeTable'
-import { Button, ButtonProps, Icon, InputText } from '@ynput/ayon-react-components'
+import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC, useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { SettingHighlightedId, useMenuContext, useSettingsPanel } from '@shared/context'
+import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import { ColumnsSettingsWithContext } from './ColumnsSettings'
 import { SizeSlider } from '@shared/components'
@@ -14,10 +14,7 @@ import { useGroupBySettings } from '@shared/containers/ProjectTreeTable/hooks/us
 import { useSortBySettings } from '@shared/containers/ProjectTreeTable/hooks/useSortBySettings'
 import { useAddColumnsMenu } from './useAddColumnsMenu'
 import { useProjectTableColumnItems } from './useProjectTableColumnItems'
-import { AddColumnMenu } from './AddColumnMenu'
 import type { MenuItemType } from '../Menu'
-
-const ADD_COLUMN_MENU_HEADER_ID = 'add-column-menu-header'
 
 const StyledCustomizeButton = styled(Button)`
   min-width: 120px;
@@ -25,44 +22,6 @@ const StyledCustomizeButton = styled(Button)`
 
 const HeaderActionButton = styled(Button)`
   padding: 4px !important;
-`
-
-const HeaderSearch = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--base-gap-small);
-  flex: 1;
-  min-width: 0;
-  padding-left: 4px;
-
-  .search-icon {
-    color: var(--md-sys-color-outline);
-  }
-
-  .clear-search {
-    margin-right: 4px;
-
-    .icon {
-      font-size: 18px;
-      color: var(--md-sys-color-outline);
-    }
-  }
-
-  input {
-    flex: 1;
-    min-width: 0;
-    height: 26px;
-    min-height: unset;
-    padding: 0;
-    border: none;
-    background: none;
-
-    &:focus,
-    &:focus-visible {
-      border: none;
-      outline: none;
-    }
-  }
 `
 
 interface Props extends ButtonProps {
@@ -121,7 +80,6 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     updateRowHeightWithPersistence,
   } = useColumnSettingsContext()
 
-  const { toggleMenuOpen, setMenuOpen } = useMenuContext()
   const { isPanelOpen, selectedSetting } = useSettingsPanel()
 
   const [search, setSearch] = useState<string | null>(null)
@@ -147,7 +105,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     checkColumnVisibility(columnVisibility, column.value, defaultColumnVisibility),
   ).length
 
-  const { menuItems: addColumnMenuItems, hasColumnsToAdd } = useAddColumnsMenu({
+  const { menuItems: addColumnMenuItems } = useAddColumnsMenu({
     columns: visibleColumns,
     scopes,
     extraItems: extraMenuItems,
@@ -162,56 +120,22 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       title: 'Columns',
       icon: 'view_column',
       preview: `${visibleCount}/${visibleColumns.length}`,
-      headerContent:
-        typeof search === 'string' ? (
-          <HeaderSearch>
-            <Icon icon="search" className="search-icon" />
-            <InputText
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search"
-              autoFocus
-              onKeyDown={(e) => e.key === 'Escape' && setSearch(null)}
-            />
-            <HeaderActionButton
-              variant="text"
-              icon="close"
-              className="clear-search"
-              data-tooltip="Close search"
-              onClick={() => setSearch(null)}
-            />
-          </HeaderSearch>
-        ) : undefined,
       headerActions: (
-        <>
-          <HeaderActionButton
-            variant="text"
-            icon="search"
-            data-tooltip="Search columns"
-            onClick={() => {
-              // the add-column menu unmounts with the header actions, its open state would linger
-              setMenuOpen(false)
-              setSearch('')
-            }}
-          />
-          <HeaderActionButton
-            variant="text"
-            icon="add"
-            id={ADD_COLUMN_MENU_HEADER_ID}
-            data-tooltip="Add column"
-            disabled={!hasColumnsToAdd}
-            onClick={() => toggleMenuOpen(ADD_COLUMN_MENU_HEADER_ID)}
-          />
-          <AddColumnMenu menuId={ADD_COLUMN_MENU_HEADER_ID} menuItems={addColumnMenuItems} />
-        </>
+        <HeaderActionButton
+          variant="text"
+          icon="search"
+          data-tooltip="Search columns"
+          selected={typeof search === 'string'}
+          onClick={() => setSearch(typeof search === 'string' ? null : '')}
+        />
       ),
       component: (
         <ColumnsSettingsWithContext
           columns={visibleColumns}
           highlighted={highlighted}
           search={search}
+          onSearchChange={setSearch}
           addColumnMenuItems={addColumnMenuItems}
-          addColumnMenuId={ADD_COLUMN_MENU_HEADER_ID}
         />
       ),
     },
