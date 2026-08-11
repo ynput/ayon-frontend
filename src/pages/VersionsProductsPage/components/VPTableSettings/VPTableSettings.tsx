@@ -14,8 +14,8 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
     gridHeight,
     onUpdateGridHeight,
     onUpdateGridHeightWithPersistence,
-    folderLatestVersion,
-    onUpdateFolderLatestVersion,
+    latestPerFolder,
+    onUpdateLatestPerFolder,
     sortBy,
     sortDesc,
     onUpdateSorting,
@@ -94,14 +94,14 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
       ),
     },
     {
-      id: 'folder-latest-version',
+      id: 'latest-per-folder',
       component: (
         <SettingSwitch
           icon="folder"
-          label="Folder latest version"
-          data-tooltip="Show only the latest version published per folder"
-          checked={folderLatestVersion === 'latest'}
-          onChange={onUpdateFolderLatestVersion}
+          label="Latest per folder"
+          data-tooltip="Show only the latest published version per folder (1 version per folder)."
+          checked={latestPerFolder === true}
+          onChange={onUpdateLatestPerFolder}
         />
       ),
     },

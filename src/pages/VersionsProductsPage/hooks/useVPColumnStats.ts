@@ -27,6 +27,7 @@ type Params = {
   productIds?: string[]
   featuredOnly?: string[]
   featuredOnlyEntityType?: string
+  latestPerFolder?: boolean
 }
 
 export const useVPColumnStats = ({
@@ -39,6 +40,7 @@ export const useVPColumnStats = ({
   productIds,
   featuredOnly,
   featuredOnlyEntityType,
+  latestPerFolder,
 }: Params) => {
   const { projectName } = useProjectContext()
   const { attribFields } = useProjectDataContext()
@@ -99,6 +101,7 @@ export const useVPColumnStats = ({
     ...columnStatsBaseArgs,
     featuredOnly,
     featuredOnlyEntityType,
+    latestPerFolder,
     targets: versionTargets,
   }
   const skip = !projectName || isLoadingViews || !powerLicense || noSummaries

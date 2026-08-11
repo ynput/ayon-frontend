@@ -223,6 +223,7 @@ export type GetGroupedVersionsListArgs = {
   sortBy?: string
   featuredOnly?: string[]
   featuredOnlyEntityType?: string
+  latestPerFolder?: boolean
   hasReviewables?: boolean
 }
 
@@ -556,6 +557,8 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               folderFilter: arg.folderFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
               featuredOnly: arg.featuredOnly,
+              featuredOnlyEntityType: arg.featuredOnlyEntityType,
+              latestPerFolder: arg.latestPerFolder,
               hasReviewables: arg.hasReviewables,
               sortBy: arg.sortBy,
             }),
@@ -780,6 +783,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             taskFilter: arg.taskFilter,
             folderFilter: arg.folderFilter,
             productIds: arg.productIds,
+            latestPerFolder: arg.latestPerFolder,
           }),
           checkVersionInCache: (entityId, parentId) => {
             if (!parentId || !arg.productIds.includes(parentId)) return false
@@ -1135,6 +1139,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           sortBy,
           featuredOnly,
           featuredOnlyEntityType,
+          latestPerFolder,
           hasReviewables,
         },
         api,
@@ -1157,6 +1162,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               sortBy: sortBy,
               featuredOnly,
               featuredOnlyEntityType,
+              latestPerFolder,
               hasReviewables,
               group: group.value,
             } as GetVersionsQueryVariables & { group: string }
@@ -1254,6 +1260,8 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
             sortBy: arg.sortBy,
             featuredOnly: arg.featuredOnly,
+            featuredOnlyEntityType: arg.featuredOnlyEntityType,
+            latestPerFolder: arg.latestPerFolder,
             hasReviewables: arg.hasReviewables,
           }),
           checkVersionInCache: (entityId) => {

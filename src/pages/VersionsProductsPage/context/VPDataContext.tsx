@@ -22,7 +22,6 @@ import {
   ProductNodeExtended,
   determineLoadingVP,
   extractFilters,
-  getFeaturedVersionQueryArgs,
 } from '../util'
 import { useBuildVersionsTableData } from '../hooks/useBuildVersionsTableData'
 import {
@@ -95,6 +94,7 @@ interface VersionsDataContextValue {
     folderIds?: string[]
     versionIds?: string[]
     productIds?: string[]
+    latestPerFolder?: boolean
     featuredOnly?: string[]
     featuredOnlyEntityType?: string
   }
@@ -157,6 +157,7 @@ export type QueryArguments = {
   desc: boolean
   featuredOnly?: string[]
   featuredOnlyEntityType?: string
+  latestPerFolder?: boolean
   hasReviewables?: boolean
   showComments?: boolean
 }
@@ -180,7 +181,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     sortBy,
     sortDesc,
     featuredVersionOrder,
-    folderLatestVersion,
+    latestPerFolder,
     groupBy,
     columns,
   } = useVPViewsContext()
@@ -351,6 +352,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
       versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
       productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
+      latestPerFolder,
     }),
     [
       projectName,
@@ -361,15 +363,11 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       slicerFolderIds,
       entityIds.versionIds,
       entityIds.productIds,
+      latestPerFolder,
     ],
   )
 
   const resolvedSortBy = useMemo(() => (sortBy && SORT_BY_FIELD_MAP[sortBy]) || sortBy, [sortBy])
-  const featuredVersionQueryArgs = getFeaturedVersionQueryArgs(
-    featuredVersionFilter,
-    folderLatestVersion,
-  )
-
   const queryArgs = useMemo(
     () => ({
       projectName,
@@ -416,8 +414,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
     versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
     productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
-    featuredOnly: featuredVersionQueryArgs?.featuredOnly,
-    featuredOnlyEntityType: featuredVersionQueryArgs?.featuredOnlyEntityType,
+    featuredOnly: featuredVersionFilter,
+    featuredOnlyEntityType: featuredVersionFilter?.length ? 'product' : undefined,
+    latestPerFolder,
   })
 
   const resolveEntityArguments = useCallback(
@@ -468,7 +467,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       }
 
       if (entityType === 'version') {
-        Object.assign(args, getFeaturedVersionQueryArgs(featuredVersionFilter, folderLatestVersion))
+        args.featuredOnly = featuredVersionFilter
+        args.featuredOnlyEntityType = featuredVersionFilter?.length ? 'product' : undefined
+        args.latestPerFolder = latestPerFolder
 
         if (hasReviewablesFilter !== undefined) {
           args.hasReviewables = hasReviewablesFilter
@@ -482,7 +483,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       resolvedSortBy,
       featuredVersionOrder,
       featuredVersionFilter,
-      folderLatestVersion,
+      latestPerFolder,
       hasReviewablesFilter,
     ],
   )
@@ -571,6 +572,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     desc: versionArguments.desc,
     featuredOnly: versionArguments.featuredOnly,
     featuredOnlyEntityType: versionArguments.featuredOnlyEntityType,
+    latestPerFolder: versionArguments.latestPerFolder,
     hasReviewables: versionArguments.hasReviewables,
     showComments,
   }
@@ -739,6 +741,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
       featuredOnly: versionStatsArgs.featuredOnly,
       featuredOnlyEntityType: versionStatsArgs.featuredOnlyEntityType,
+      latestPerFolder: versionStatsArgs.latestPerFolder,
     },
     slicerCountsArgs,
     fieldStats,

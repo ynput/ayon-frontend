@@ -327,7 +327,7 @@ export type VersionsSettings = {
   groupBy?: string
   groupSortByDesc?: boolean
   showEmptyGroups?: boolean
-  folderLatestVersion?: string
+  latestPerFolder?: boolean
   sortBy?: string
   sortDesc?: boolean
   filter?: QueryFilter

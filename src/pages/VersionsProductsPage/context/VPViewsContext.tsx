@@ -17,10 +17,6 @@ import {
   useState,
 } from 'react'
 
-type VPVersionsSettings = VersionsSettings & {
-  folderLatestVersion?: string
-}
-
 export type VPViewsContextValue = {
   // Filter management
   filters: QueryFilter
@@ -62,8 +58,8 @@ export type VPViewsContextValue = {
   showEmptyGroups: boolean
   onUpdateShowEmptyGroups: (showEmptyGroups: boolean) => void
 
-  folderLatestVersion: string | undefined
-  onUpdateFolderLatestVersion: (enabled: boolean) => void
+  latestPerFolder: boolean | undefined
+  onUpdateLatestPerFolder: (enabled: boolean) => void
 
   // Sort management
   sortBy: string | undefined
@@ -94,7 +90,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
 
   // Memoize versionsSettings to prevent unnecessary re-renders when viewSettings
   // reference changes but values are the same
-  const versionsSettings = useMemo(() => viewSettings as VPVersionsSettings, [viewSettings])
+  const versionsSettings = useMemo(() => viewSettings as VersionsSettings, [viewSettings])
 
   // Local state for immediate updates
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
@@ -106,7 +102,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   const [localRowHeight, setLocalRowHeight] = useState<number | null>(null)
   const [localFeaturedVersionOrder, setLocalFeaturedVersionOrder] = useState<string[] | null>(null)
   const [localShowEmptyGroups, setLocalShowEmptyGroups] = useState<boolean | null>(null)
-  const [localFolderLatestVersion, setLocalFolderLatestVersion] = useState<string | null>(null)
+  const [localLatestPerFolder, setLocalLatestPerFolder] = useState<boolean | null>(null)
   const [localSortBy, setLocalSortBy] = useState<string | undefined | null>(null)
   const [localSortDesc, setLocalSortDesc] = useState<boolean | null>(null)
 
@@ -151,9 +147,9 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     () => versionsSettings?.showEmptyGroups ?? false,
     [versionsSettings?.showEmptyGroups],
   )
-  const serverFolderLatestVersion = useMemo(
-    () => versionsSettings?.folderLatestVersion,
-    [versionsSettings?.folderLatestVersion],
+  const serverLatestPerFolder = useMemo(
+    () => versionsSettings?.latestPerFolder,
+    [versionsSettings?.latestPerFolder],
   )
   const serverSortBy = useMemo(() => versionsSettings?.sortBy ?? 'name', [versionsSettings?.sortBy])
   const serverSortDesc = useMemo(
@@ -175,7 +171,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     setLocalGridHeightImmediate(null)
     setLocalFeaturedVersionOrder(null)
     setLocalShowEmptyGroups(null)
-    setLocalFolderLatestVersion(null)
+    setLocalLatestPerFolder(null)
   }, [
     versionsSettings?.filter,
     versionsSettings?.slicerType,
@@ -183,7 +179,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     versionsSettings?.rowHeight,
     versionsSettings?.featuredVersionOrder,
     versionsSettings?.showEmptyGroups,
-    versionsSettings?.folderLatestVersion,
+    versionsSettings?.latestPerFolder,
   ])
 
   // Use local state if available, otherwise use server state
@@ -226,10 +222,9 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     () => (localShowEmptyGroups !== null ? localShowEmptyGroups : serverShowEmptyGroups),
     [localShowEmptyGroups, serverShowEmptyGroups],
   )
-  const folderLatestVersion = useMemo(
-    () =>
-      localFolderLatestVersion !== null ? localFolderLatestVersion : serverFolderLatestVersion,
-    [localFolderLatestVersion, serverFolderLatestVersion],
+  const latestPerFolder = useMemo(
+    () => (localLatestPerFolder !== null ? localLatestPerFolder : serverLatestPerFolder),
+    [localLatestPerFolder, serverLatestPerFolder],
   )
   const sortBy = useMemo(
     () => (localSortBy !== null ? localSortBy : serverSortBy),
@@ -443,11 +438,10 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [updateViewSettings],
   )
 
-  const onUpdateFolderLatestVersion = useCallback(
+  const onUpdateLatestPerFolder = useCallback(
     async (enabled: boolean) => {
-      const value = enabled ? 'latest' : null
-      await updateViewSettings({ folderLatestVersion: value }, setLocalFolderLatestVersion, value, {
-        errorMessage: 'Failed to update folder latest version setting',
+      await updateViewSettings({ latestPerFolder: enabled }, setLocalLatestPerFolder, enabled, {
+        errorMessage: 'Failed to update latest per folder setting',
       })
     },
     [updateViewSettings],
@@ -517,8 +511,8 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
         onUpdateGroupBy,
         showEmptyGroups,
         onUpdateShowEmptyGroups,
-        folderLatestVersion,
-        onUpdateFolderLatestVersion,
+        latestPerFolder,
+        onUpdateLatestPerFolder,
         sortBy,
         onUpdateSortBy,
         sortDesc,
