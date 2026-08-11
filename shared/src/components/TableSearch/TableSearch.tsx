@@ -20,13 +20,13 @@ const CloseButton = styled(HeaderButton)`
   transform: translateY(-50%);
 `
 
-interface ListsSearchProps {
+export interface TableSearchProps {
   value: string
   onChange: (value: string) => void
   onClose: () => void
 }
 
-const ListsSearch: FC<ListsSearchProps> = ({ value, onChange, onClose }) => {
+export const TableSearch: FC<TableSearchProps> = ({ value, onChange, onClose }) => {
   return (
     <Container>
       <InputText
@@ -44,5 +44,3 @@ const ListsSearch: FC<ListsSearchProps> = ({ value, onChange, onClose }) => {
     </Container>
   )
 }
-
-export default ListsSearch

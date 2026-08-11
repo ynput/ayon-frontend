@@ -39,7 +39,7 @@ import { toast } from 'react-toastify'
 import { checkColumnVisibility } from '../../containers/ProjectTreeTable/utils'
 import { SettingsPanelItem } from '../SettingsPanel/SettingsPanelItemTemplate'
 import { SettingHighlightedId, useMenuContext } from '@shared/context'
-import { MenuItemType } from '../Menu'
+import type { MenuItemType } from '../Menu'
 import { buildAddColumnsMenu } from './addColumnsMenu'
 import { AddColumnMenu } from './AddColumnMenu'
 
@@ -66,6 +66,8 @@ interface ColumnsSettingsProps {
   addColumnMenuItems?: MenuItemType[]
   // when set, the bottom button opens the menu already anchored to the panel header button
   addColumnMenuId?: string
+  // when a string (including ''), the panel switches to a flat searchable list of all columns
+  search?: string | null
 }
 
 export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
@@ -88,6 +90,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   groupByConfig,
   addColumnMenuItems,
   addColumnMenuId,
+  search,
 }) => {
   // State for the currently dragged column
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -104,8 +107,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   const latestRef = useRef({ columnVisibility, updateColumnVisibility })
   latestRef.current = { columnVisibility, updateColumnVisibility }
 
-  // deep-links (Lists "go to attribute") point at a column that is usually hidden — show it first.
-  // Only once per highlighted column, otherwise hiding it again would immediately bring it back.
+  // show a deep-linked hidden column once; re-running would undo the user hiding it again
   const shownHighlightRef = useRef<SettingHighlightedId>(null)
   useEffect(() => {
     if (!highlighted || shownHighlightRef.current === highlighted) return
@@ -208,6 +210,12 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     [sortedPinnedColumns],
   )
 
+  const filteredColumns = useMemo(() => {
+    if (typeof search !== 'string') return []
+    const query = search.toLowerCase()
+    return columns.filter((col) => col.label.toLowerCase().includes(query))
+  }, [columns, search])
+
   // fallback for consumers rendering outside ColumnSettingsContext (e.g. ProjectsPage)
   const fallbackAddColumnMenuItems = useMemo(
     () =>
@@ -231,24 +239,46 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     updateColumnVisibility(newState)
   }
 
+  const buildColumnsConfig = (overrides: Partial<ColumnsConfig>): ColumnsConfig => ({
+    columnVisibility: { ...columnVisibility },
+    columnOrder: [...columnOrder],
+    columnPinning: { ...columnPinning },
+    columnSizing: { ...columnSizing },
+    columnSummaries,
+    columnSummaryScopes,
+    columnSummaryFormats,
+    groupBy,
+    groupByConfig,
+    sorting,
+    rowHeight,
+    ...overrides,
+  })
+
   // Toggle column pinning
   const togglePinning = (columnId: string) => {
     const newState = { ...columnPinning }
-    const newVisibility = { ...columnVisibility }
 
     // If column is currently pinned, unpin it
     if (newState.left?.includes(columnId)) {
       newState.left = newState.left.filter((id) => id !== columnId)
-    } else {
-      // If column is currently unpinned, pin it
-      newState.left = [...(newState.left || []), columnId]
-      // If column is hidden, show it
-      if (!checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)) {
-        newVisibility[columnId] = true
-        updateColumnVisibility(newVisibility)
-      }
+      updateColumnPinning(newState)
+      return
     }
-    updateColumnPinning(newState)
+
+    newState.left = [...(newState.left || []), columnId]
+
+    if (checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)) {
+      updateColumnPinning(newState)
+      return
+    }
+
+    // showing and pinning as two updates would clobber each other, they both persist the raw config
+    setColumnsConfig(
+      buildColumnsConfig({
+        columnPinning: newState,
+        columnVisibility: { ...columnVisibility, [columnId]: true },
+      }),
+    )
   }
 
   // When drag starts
@@ -313,19 +343,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
         const isOverPinned = columnPinning.left?.includes(overId) || false
 
         // Create a new config object that we'll update and apply at the end
-        const newConfig: ColumnsConfig = {
-          columnVisibility: { ...columnVisibility },
-          columnOrder: [...columnOrder],
-          columnPinning: { ...columnPinning },
-          columnSizing: { ...columnSizing },
-          columnSummaries,
-          columnSummaryScopes,
-          columnSummaryFormats,
-          groupBy,
-          groupByConfig,
-          sorting,
-          rowHeight,
-        }
+        const newConfig = buildColumnsConfig({})
 
         // If we're moving a column between visible columns (including pinned)
         if (isActiveVisible && isOverVisible) {
@@ -378,6 +396,33 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   const activeColumn = activeId
     ? [...visibleColumns, ...pinnedColumns].find((col) => col.value === activeId)
     : null
+
+  if (typeof search === 'string') {
+    return (
+      <ColumnsContainer ref={containerRef}>
+        <Section>
+          <SectionTitle>All Columns</SectionTitle>
+          <Styled.Menu>
+            {filteredColumns.map((column) => (
+              <ColumnItem
+                key={column.value}
+                column={column}
+                isPinned={columnPinning.left?.includes(column.value) || false}
+                isHidden={
+                  !checkColumnVisibility(columnVisibility, column.value, defaultColumnVisibility)
+                }
+                isHighlighted={highlighted === column.value}
+                isDisabled={!!groupBy && column.value === 'name'}
+                hideDragHandle
+                onTogglePinning={togglePinning}
+                onToggleVisibility={toggleVisibility}
+              />
+            ))}
+          </Styled.Menu>
+        </Section>
+      </ColumnsContainer>
+    )
+  }
 
   return (
     <DndContext
@@ -438,7 +483,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
               ))}
             </Styled.Menu>
           </SortableContext>
-          <AddColumnButton
+          <AddColumnListButton
             variant="text"
             icon="add"
             id={addColumnMenuId ? undefined : menuId}
@@ -446,7 +491,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
             onClick={() => toggleMenuOpen(menuId)}
           >
             Add column
-          </AddColumnButton>
+          </AddColumnListButton>
           {!addColumnMenuId && <AddColumnMenu menuId={menuId} menuItems={addColumnItems} />}
         </Section>
 
@@ -494,7 +539,7 @@ const SectionTitle = styled.div`
   padding: 4px 0;
 `
 
-const AddColumnButton = styled(Button)`
+const AddColumnListButton = styled(Button)`
   justify-content: flex-start;
   margin-top: var(--base-gap-small);
 `
@@ -504,7 +549,7 @@ export default ColumnsSettings
 // Backward-compat wrapper that reads all data from ColumnSettingsContext
 type ColumnsSettingsWithContextProps = Pick<
   ColumnsSettingsProps,
-  'columns' | 'highlighted' | 'addColumnMenuItems' | 'addColumnMenuId'
+  'columns' | 'highlighted' | 'addColumnMenuItems' | 'addColumnMenuId' | 'search'
 >
 
 export const ColumnsSettingsWithContext: FC<ColumnsSettingsWithContextProps> = (props) => {

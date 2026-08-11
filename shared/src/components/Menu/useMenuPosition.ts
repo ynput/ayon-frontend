@@ -116,7 +116,7 @@ export function useMenuPosition(
     const newPosition = calculateMenuPosition(targetElement, menuRef.current, align)
     if (!newPosition) return
 
-  setPosition((prev) =>
+    setPosition((prev) =>
       prev &&
       Math.abs(prev.top - newPosition.top) < 1 &&
       Math.abs((prev.left ?? 0) - (newPosition.left ?? 0)) < 1 &&

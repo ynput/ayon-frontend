@@ -3,8 +3,8 @@ import {
   useProjectTableContext,
   checkColumnVisibility,
 } from '@shared/containers/ProjectTreeTable'
-import { Button, ButtonProps } from '@ynput/ayon-react-components'
-import { FC } from 'react'
+import { Button, ButtonProps, Icon, InputText } from '@ynput/ayon-react-components'
+import { FC, useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { SettingHighlightedId, useMenuContext, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
@@ -25,6 +25,44 @@ const StyledCustomizeButton = styled(Button)`
 
 const HeaderActionButton = styled(Button)`
   padding: 4px !important;
+`
+
+const HeaderSearch = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  flex: 1;
+  min-width: 0;
+  padding-left: 4px;
+
+  .search-icon {
+    color: var(--md-sys-color-outline);
+  }
+
+  .clear-search {
+    margin-right: 4px;
+
+    .icon {
+      font-size: 18px;
+      color: var(--md-sys-color-outline);
+    }
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 26px;
+    min-height: unset;
+    padding: 0;
+    border: none;
+    background: none;
+
+    &:focus,
+    &:focus-visible {
+      border: none;
+      outline: none;
+    }
+  }
 `
 
 interface Props extends ButtonProps {
@@ -83,7 +121,21 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     updateRowHeightWithPersistence,
   } = useColumnSettingsContext()
 
-  const { toggleMenuOpen } = useMenuContext()
+  const { toggleMenuOpen, setMenuOpen } = useMenuContext()
+  const { isPanelOpen, selectedSetting } = useSettingsPanel()
+
+  const [search, setSearch] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (search === null) return
+    if (!isPanelOpen || selectedSetting !== 'columns') setSearch(null)
+  }, [isPanelOpen, selectedSetting, search])
+
+  // a different entity scope (switching lists) means a different column set
+  const scopeKey = `${scope ?? ''}:${scopes.join()}`
+  useEffect(() => {
+    setSearch(null)
+  }, [scopeKey])
 
   const { columns, visibleColumns } = useProjectTableColumnItems({
     extraColumns,
@@ -110,8 +162,38 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       title: 'Columns',
       icon: 'view_column',
       preview: `${visibleCount}/${visibleColumns.length}`,
+      headerContent:
+        typeof search === 'string' ? (
+          <HeaderSearch>
+            <Icon icon="search" className="search-icon" />
+            <InputText
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Escape' && setSearch(null)}
+            />
+            <HeaderActionButton
+              variant="text"
+              icon="close"
+              className="clear-search"
+              data-tooltip="Close search"
+              onClick={() => setSearch(null)}
+            />
+          </HeaderSearch>
+        ) : undefined,
       headerActions: (
         <>
+          <HeaderActionButton
+            variant="text"
+            icon="search"
+            data-tooltip="Search columns"
+            onClick={() => {
+              // the add-column menu unmounts with the header actions, its open state would linger
+              setMenuOpen(false)
+              setSearch('')
+            }}
+          />
           <HeaderActionButton
             variant="text"
             icon="add"
@@ -127,6 +209,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
         <ColumnsSettingsWithContext
           columns={visibleColumns}
           highlighted={highlighted}
+          search={search}
           addColumnMenuItems={addColumnMenuItems}
           addColumnMenuId={ADD_COLUMN_MENU_HEADER_ID}
         />

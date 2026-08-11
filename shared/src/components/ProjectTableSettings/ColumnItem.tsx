@@ -17,6 +17,11 @@ const SettingsPanelItemTemplateStyled = styled(SettingsPanelItemTemplate)`
   .drag-handle {
     cursor: grab;
     height: 20px;
+
+    /* kept in the layout so the panel keeps its width when dragging is off */
+    &.no-drag {
+      visibility: hidden;
+    }
   }
 
   &.overlay {
@@ -46,6 +51,7 @@ interface ColumnItemProps {
   isDisabled?: boolean
   dragHandleProps?: any
   dragOverlay?: boolean
+  hideDragHandle?: boolean
   onTogglePinning?: (columnId: string) => void
   onToggleVisibility?: (columnId: string) => void
 }
@@ -59,6 +65,7 @@ const ColumnItem: FC<ColumnItemProps> = ({
   // Dragging props
   dragHandleProps,
   dragOverlay = false,
+  hideDragHandle = false,
   // Callbacks
   onTogglePinning,
   onToggleVisibility,
@@ -88,7 +95,10 @@ const ColumnItem: FC<ColumnItemProps> = ({
       isDisabled={isDisabled}
       className={clsx({ hidden: isHidden, overlay: dragOverlay })}
       startContent={
-        <div {...dragHandleProps} className={'drag-handle'}>
+        <div
+          {...(hideDragHandle ? {} : dragHandleProps)}
+          className={clsx('drag-handle', { 'no-drag': hideDragHandle })}
+        >
           <Icon icon="drag_indicator" />
         </div>
       }
