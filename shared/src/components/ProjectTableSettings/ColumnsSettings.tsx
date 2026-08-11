@@ -104,9 +104,13 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   const latestRef = useRef({ columnVisibility, updateColumnVisibility })
   latestRef.current = { columnVisibility, updateColumnVisibility }
 
-  // deep-links (Lists "go to attribute") point at a column that is usually hidden — show it first
+  // deep-links (Lists "go to attribute") point at a column that is usually hidden — show it first.
+  // Only once per highlighted column, otherwise hiding it again would immediately bring it back.
+  const shownHighlightRef = useRef<SettingHighlightedId>(null)
   useEffect(() => {
-    if (!highlighted || !columns.some((col) => col.value === highlighted)) return
+    if (!highlighted || shownHighlightRef.current === highlighted) return
+    if (!columns.some((col) => col.value === highlighted)) return
+    shownHighlightRef.current = highlighted
     const { columnVisibility, updateColumnVisibility } = latestRef.current
     if (checkColumnVisibility(columnVisibility, highlighted, defaultColumnVisibility)) return
     updateColumnVisibility({ ...columnVisibility, [highlighted]: true })

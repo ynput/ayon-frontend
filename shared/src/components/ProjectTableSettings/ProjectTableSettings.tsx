@@ -58,7 +58,8 @@ export type ProjectTableSettingsProps = {
   hideSortBy?: boolean
   order?: string[]
   scope?: string
-  addColumnMenuItems?: MenuItemType[]
+  // page actions appended to the end of the add-column menu
+  extraMenuItems?: MenuItemType[]
 }
 
 export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
@@ -71,7 +72,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   hideSortBy = false,
   order,
   scope,
-  addColumnMenuItems: extraMenuItems,
+  extraMenuItems,
 }) => {
   const { scopes } = useProjectTableContext()
   const {

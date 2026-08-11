@@ -40,7 +40,7 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
     <ProjectTableSettings
       extraColumns={extraColumns}
       hiddenColumns={hiddenColumns}
-      addColumnMenuItems={[
+      extraMenuItems={[
         {
           id: 'list-attributes',
           label: 'List attributes',
