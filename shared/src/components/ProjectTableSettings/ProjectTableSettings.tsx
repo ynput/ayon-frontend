@@ -1,6 +1,4 @@
 import {
-  getLinkColumnId,
-  getLinkLabel,
   useColumnSettingsContext,
   useProjectTableContext,
   checkColumnVisibility,
@@ -8,15 +6,25 @@ import {
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
-import { SettingHighlightedId, useProjectContext, useSettingsPanel } from '@shared/context'
+import { SettingHighlightedId, useMenuContext, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import { ColumnsSettingsWithContext } from './ColumnsSettings'
 import { SizeSlider } from '@shared/components'
 import { useGroupBySettings } from '@shared/containers/ProjectTreeTable/hooks/useGroupBySettings'
 import { useSortBySettings } from '@shared/containers/ProjectTreeTable/hooks/useSortBySettings'
+import { useAddColumnsMenu } from './useAddColumnsMenu'
+import { useProjectTableColumnItems } from './useProjectTableColumnItems'
+import { AddColumnMenu } from './AddColumnMenu'
+import type { MenuItemType } from '../Menu'
+
+const ADD_COLUMN_MENU_HEADER_ID = 'add-column-menu-header'
 
 const StyledCustomizeButton = styled(Button)`
   min-width: 120px;
+`
+
+const HeaderActionButton = styled(Button)`
+  padding: 4px !important;
 `
 
 interface Props extends ButtonProps {
@@ -50,6 +58,7 @@ export type ProjectTableSettingsProps = {
   hideSortBy?: boolean
   order?: string[]
   scope?: string
+  addColumnMenuItems?: MenuItemType[]
 }
 
 export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
@@ -62,9 +71,9 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   hideSortBy = false,
   order,
   scope,
+  addColumnMenuItems: extraMenuItems,
 }) => {
-  const { ...projectInfo } = useProjectContext()
-  const { attribFields, scopes } = useProjectTableContext()
+  const { scopes } = useProjectTableContext()
   const {
     columnVisibility,
     defaultColumnVisibility,
@@ -73,98 +82,23 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     updateRowHeightWithPersistence,
   } = useColumnSettingsContext()
 
-  const columns: {
-    value: string
-    label: string
-    hidden?: boolean
-  }[] = [
-    {
-      value: 'thumbnail',
-      label: 'Thumbnail',
-    },
-    {
-      value: 'name',
-      label:
-        scopes.map((scope) => scope.charAt(0).toUpperCase() + scope.slice(1)).join('/') + ' Name',
-    },
-    {
-      value: 'folder',
-      label: 'Folder',
-    },
-    {
-      value: 'assignees',
-      label: 'Assignees',
-      hidden: !scopes.includes('task'),
-    },
-    {
-      value: 'product',
-      label: 'Product name',
-      hidden: ['product', 'version'].some((scope) => !scopes.includes(scope)),
-    },
-    {
-      value: 'entityType',
-      label: 'Entity type',
-    },
-    {
-      value: 'status',
-      label: 'Status',
-    },
-    {
-      value: 'subType',
-      label: 'Type',
-    },
-    {
-      value: 'tags',
-      label: 'Tags',
-    },
-    {
-      value: 'createdAt',
-      label: 'Created At',
-    },
-    {
-      value: 'updatedAt',
-      label: 'Updated At',
-    },
-    {
-      value: 'subtasks',
-      label: 'Subtasks',
-      hidden: !scopes.includes('task'),
-    },
-    {
-      value: 'comments',
-      label: 'Latest comments',
-      hidden: !scopes.some((scope) => ['task', 'version', 'product', 'folder'].includes(scope)),
-    },
-    ...attribFields
-      .filter((field) => field.scope?.some((scope) => scopes.includes(scope)))
-      .map((field) => ({
-        value: `attrib_${field.name}`,
-        label: field.data.title || field.name,
-      })),
-    ...(projectInfo?.linkTypes && includeLinks
-      ? projectInfo.linkTypes
-          .filter((link) => [link.inputType, link.outputType].some((type) => scopes.includes(type)))
-          .flatMap((link) => [
-            {
-              value: getLinkColumnId(link, 'in'),
-              label: getLinkLabel(link, 'in'),
-            },
-            {
-              value: getLinkColumnId(link, 'out'),
-              label: getLinkLabel(link, 'out'),
-            },
-          ])
-      : []),
-    ...extraColumns,
-  ]
+  const { toggleMenuOpen } = useMenuContext()
 
-  const visibleColumns = columns.filter(
-    (column) => !column.hidden && !hiddenColumns.includes(column.value),
-  )
+  const { columns, visibleColumns } = useProjectTableColumnItems({
+    extraColumns,
+    hiddenColumns,
+    includeLinks,
+  })
 
   const visibleCount = visibleColumns.filter((column) =>
     checkColumnVisibility(columnVisibility, column.value, defaultColumnVisibility),
   ).length
+
+  const { menuItems: addColumnMenuItems, hasColumnsToAdd } = useAddColumnsMenu({
+    columns: visibleColumns,
+    scopes,
+    extraItems: extraMenuItems,
+  })
 
   const groupBySettings = useGroupBySettings({ scope })
   const sortBySettings = useSortBySettings(columns)
@@ -175,7 +109,27 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       title: 'Columns',
       icon: 'view_column',
       preview: `${visibleCount}/${visibleColumns.length}`,
-      component: <ColumnsSettingsWithContext columns={visibleColumns} highlighted={highlighted} />,
+      headerActions: (
+        <>
+          <HeaderActionButton
+            variant="text"
+            icon="add"
+            id={ADD_COLUMN_MENU_HEADER_ID}
+            data-tooltip="Add column"
+            disabled={!hasColumnsToAdd}
+            onClick={() => toggleMenuOpen(ADD_COLUMN_MENU_HEADER_ID)}
+          />
+          <AddColumnMenu menuId={ADD_COLUMN_MENU_HEADER_ID} menuItems={addColumnMenuItems} />
+        </>
+      ),
+      component: (
+        <ColumnsSettingsWithContext
+          columns={visibleColumns}
+          highlighted={highlighted}
+          addColumnMenuItems={addColumnMenuItems}
+          addColumnMenuId={ADD_COLUMN_MENU_HEADER_ID}
+        />
+      ),
     },
     hideSortBy ? null : sortBySettings,
     groupBySettings,

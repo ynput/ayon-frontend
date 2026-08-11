@@ -5,7 +5,10 @@ interface MenuPosition {
   left?: number
   right?: number
   bottom?: number
+  maxHeight?: number
 }
+
+const DIALOG_TOP_OFFSET = 42
 
 function calculateMenuPosition(
   targetElement: HTMLElement | null,
@@ -23,24 +26,20 @@ function calculateMenuPosition(
   const viewportHeight = window.innerHeight
 
   // Default position (below the target)
-  let top = targetRect.bottom + 8 - 42
+  let top = targetRect.bottom + 8 - DIALOG_TOP_OFFSET
   let left: number | undefined
   let right: number | undefined
   let bottom: number | undefined
 
   // Check if menu fits below, otherwise flip to above
-  if (top + menuHeight > viewportHeight - padding) {
+  if (top + DIALOG_TOP_OFFSET + menuHeight > viewportHeight - padding) {
     // If it doesn't fit below, check if it fits above
-    const topAbove = targetRect.top - 8 - menuHeight
+    const topAbove = targetRect.top - 8 - menuHeight - DIALOG_TOP_OFFSET
     if (topAbove >= padding) {
       top = topAbove
     } else {
-      // If it fits neither, prefer the side with more space or clamp
-      // For now, let's clamp to bottom of viewport
-      top = Math.min(top, viewportHeight - menuHeight - padding)
-      // Or if we want to stick to bottom edge:
-      // bottom = padding
-      // top = undefined
+      // Fits neither way: keep it below the target and let it scroll to the window bottom
+      top = Math.max(padding - DIALOG_TOP_OFFSET, top)
     }
   }
 
@@ -82,7 +81,7 @@ function calculateMenuPosition(
     // But 'left' is easier to clamp. Let's stick to 'left' and 'top' for simplicity unless 'right' is explicitly needed.
   }
 
-  return { top, left }
+  return { top, left, maxHeight: viewportHeight - (top + DIALOG_TOP_OFFSET) - padding }
 }
 
 interface UseMenuPositionReturn {
@@ -115,9 +114,16 @@ export function useMenuPosition(
     if (!menuRef.current) return
 
     const newPosition = calculateMenuPosition(targetElement, menuRef.current, align)
-    if (newPosition) {
-      setPosition(newPosition)
-    }
+    if (!newPosition) return
+
+  setPosition((prev) =>
+      prev &&
+      Math.abs(prev.top - newPosition.top) < 1 &&
+      Math.abs((prev.left ?? 0) - (newPosition.left ?? 0)) < 1 &&
+      Math.abs((prev.maxHeight ?? 0) - (newPosition.maxHeight ?? 0)) < 1
+        ? prev
+        : newPosition,
+    )
   }, [target, targetId, align])
 
   // Initial position update

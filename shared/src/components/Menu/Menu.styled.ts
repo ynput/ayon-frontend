@@ -40,6 +40,7 @@ export const DialogContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-large);
+  min-height: 0;
 
   /* position */
   position: absolute;
@@ -80,6 +81,7 @@ export const Section = styled.section`
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 
   padding: 0px;
   border-radius: 8px;
@@ -92,6 +94,13 @@ export const Section = styled.section`
 export const MenuWrapper = styled.div`
   position: relative;
   border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  & > * {
+    min-height: 0;
+  }
 
   /* sub menu */
   &.sub-menu {
@@ -103,7 +112,7 @@ export const MenuWrapper = styled.div`
 
     & > * {
       border-radius: 8px;
-      overflow: hidden;
+      overflow-x: hidden;
     }
   }
 `
@@ -122,6 +131,9 @@ export const Menu = styled.menu`
   flex-direction: column;
   gap: var(--base-gap-large);
   padding: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 
   /* shrink the padding when compact */
   &.compact {

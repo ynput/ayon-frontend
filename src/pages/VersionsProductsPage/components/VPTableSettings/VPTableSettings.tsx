@@ -6,6 +6,33 @@ import VPTableSortingSetting from './VPTableSortingSetting'
 import { FeaturedVersionOrder, FEATURED_VERSION_TYPES } from '@shared/components'
 import { useProjectTableContext } from '@shared/containers'
 
+export const VP_EXTRA_COLUMNS = [
+  {
+    value: 'author',
+    label: 'Author',
+  },
+  {
+    value: 'version',
+    label: 'Version',
+  },
+  {
+    value: 'productBaseType',
+    label: 'Product base type',
+  },
+  {
+    value: 'taskType',
+    label: 'Task type',
+  },
+  {
+    value: 'folderType',
+    label: 'Folder type',
+  },
+  {
+    value: 'taskLabel',
+    label: 'Task label',
+  },
+]
+
 export interface VPTableSettingsProps {}
 
 export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
@@ -22,32 +49,7 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
 
   const { attribFieldsScoped } = useProjectTableContext()
 
-  const extraColumns = [
-    {
-      value: 'author',
-      label: 'Author',
-    },
-    {
-      value: 'version',
-      label: 'Version',
-    },
-    {
-      value: 'productBaseType',
-      label: 'Product base type',
-    },
-    {
-      value: 'taskType',
-      label: 'Task type',
-    },
-    {
-      value: 'folderType',
-      label: 'Folder type',
-    },
-    {
-      value: 'taskLabel',
-      label: 'Task label',
-    },
-  ]
+  const extraColumns = VP_EXTRA_COLUMNS
 
   const extraSettings: SettingConfig[] = [
     {

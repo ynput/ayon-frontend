@@ -70,6 +70,7 @@ export interface SettingConfig {
   component: ReactNode
   icon?: string
   preview?: string | number
+  headerActions?: ReactNode
 }
 
 export interface SettingsPanelProps {
@@ -137,6 +138,7 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings, order }) => {
           <ToolButton variant="text" icon="arrow_back" onClick={backToMainMenu} />
         )}
         <PanelTitle>{getPanelTitle()}</PanelTitle>
+        {settings.find((s) => s.id === selectedSetting)?.headerActions}
         <ToolButton variant="text" icon="close" onClick={closePanel} />
       </PanelHeader>
       <PanelContent>{renderSettingContent()}</PanelContent>
