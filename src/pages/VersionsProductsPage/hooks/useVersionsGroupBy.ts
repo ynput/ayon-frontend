@@ -25,6 +25,7 @@ type Props = {
   projectName: string
   versionFilters: QueryFilter
   taskFilters: QueryFilter
+  folderFilter?: string
   modules: ProjectTableModulesType
   versionArguments: QueryArguments
   expanded: ExpandedState
@@ -34,6 +35,7 @@ const useVersionsGroupBy = ({
   projectName,
   versionFilters,
   taskFilters,
+  folderFilter,
   modules,
   versionArguments,
   expanded,
@@ -108,11 +110,14 @@ const useVersionsGroupBy = ({
     projectName: versionArguments.projectName,
     productFilter: versionArguments.productFilter,
     taskFilter: versionArguments.taskFilter,
+    folderFilter,
     versionFilter: versionArguments.versionFilter,
     sortBy: versionArguments.sortBy,
     desc: versionArguments.desc,
     folderIds: versionArguments.folderIds,
     featuredOnly: versionArguments.featuredOnly,
+    featuredOnlyEntityType: versionArguments.featuredOnlyEntityType,
+    latestPerFolder: versionArguments.latestPerFolder,
     hasReviewables: versionArguments.hasReviewables,
   }
 

@@ -142,7 +142,7 @@ const SubtasksSearchFilter: FC<SubtasksSearchFilterProps> = ({
         onFinish={handleFinish}
         enableGlobalSearch
         enableMultipleSameFilters={false}
-        enableAutosuggestion={true}
+        enableAutosuggestion={false}
         onSearchChange={handleLiveSearch}
         quickActions={quickActions}
         placeholder="Search and filter subtasks..."

@@ -217,10 +217,13 @@ export type GetGroupedVersionsListArgs = {
   versionFilter?: string
   productFilter?: string
   taskFilter?: string
+  folderFilter?: string
   folderIds?: string[]
   desc?: boolean
   sortBy?: string
   featuredOnly?: string[]
+  featuredOnlyEntityType?: string
+  latestPerFolder?: boolean
   hasReviewables?: boolean
 }
 
@@ -557,8 +560,11 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               versionFilter: arg.versionFilter,
               productFilter: arg.productFilter,
               taskFilter: arg.taskFilter,
+              folderFilter: arg.folderFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
               featuredOnly: arg.featuredOnly,
+              featuredOnlyEntityType: arg.featuredOnlyEntityType,
+              latestPerFolder: arg.latestPerFolder,
               hasReviewables: arg.hasReviewables,
               sortBy: arg.sortBy,
             }),
@@ -781,7 +787,9 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           getBaseFilters: () => ({
             versionFilter: arg.versionFilter,
             taskFilter: arg.taskFilter,
+            folderFilter: arg.folderFilter,
             productIds: arg.productIds,
+            latestPerFolder: arg.latestPerFolder,
           }),
           checkVersionInCache: (entityId, parentId) => {
             if (!parentId || !arg.productIds.includes(parentId)) return false
@@ -1041,6 +1049,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               versionFilter: arg.versionFilter,
               productFilter: arg.productFilter,
               taskFilter: arg.taskFilter,
+              folderFilter: arg.folderFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
             }),
             checkVersionInCache: (entityId, parentId) => {
@@ -1141,10 +1150,13 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           versionFilter, // most of the time overridden by group filters
           productFilter,
           taskFilter,
+          folderFilter,
           folderIds,
           desc,
           sortBy,
           featuredOnly,
+          featuredOnlyEntityType,
+          latestPerFolder,
           hasReviewables,
         },
         api,
@@ -1154,21 +1166,23 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           for (const group of groups) {
             const count = group.count || 500
 
-            const queryParams: GetVersionsQueryVariables = {
+            const queryParams = {
               projectName,
               // base filters
               productFilter,
               taskFilter,
+              folderFilter,
               versionFilter,
               // specific group filter
               [groupFilterKey]: group.filter,
               folderIds: folderIds?.length ? folderIds : undefined,
               sortBy: sortBy,
               featuredOnly,
+              featuredOnlyEntityType,
+              latestPerFolder,
               hasReviewables,
-              // @ts-expect-error - group param used later on
               group: group.value,
-            }
+            } as GetVersionsQueryVariables & { group: string }
 
             if (desc) {
               queryParams.last = count
@@ -1177,9 +1191,12 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             }
 
             const promise = api.dispatch(
-              enhancedVersionsPageApi.endpoints.GetVersions.initiate(queryParams, {
-                forceRefetch: true,
-              }),
+              enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+                queryParams as GetVersionsQueryVariables,
+                {
+                  forceRefetch: true,
+                },
+              ),
             )
             promises.push(promise)
           }
@@ -1256,9 +1273,12 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             versionFilter: arg.versionFilter,
             productFilter: arg.productFilter,
             taskFilter: arg.taskFilter,
+            folderFilter: arg.folderFilter,
             folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
             sortBy: arg.sortBy,
             featuredOnly: arg.featuredOnly,
+            featuredOnlyEntityType: arg.featuredOnlyEntityType,
+            latestPerFolder: arg.latestPerFolder,
             hasReviewables: arg.hasReviewables,
           }),
           checkVersionInCache: (entityId) => {

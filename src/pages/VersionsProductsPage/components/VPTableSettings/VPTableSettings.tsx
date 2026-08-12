@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { ProjectTableSettings, SettingConfig } from '@shared/components'
+import { SettingSwitch } from '@shared/components/ProjectTableSettings/ColumnsSettings'
 import { SizeSlider } from '@shared/components'
 import { useVPViewsContext } from '../../context/VPViewsContext'
 import VPTableSortingSetting from './VPTableSortingSetting'
@@ -13,6 +14,8 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
     gridHeight,
     onUpdateGridHeight,
     onUpdateGridHeightWithPersistence,
+    latestPerFolder,
+    onUpdateLatestPerFolder,
     sortBy,
     sortDesc,
     onUpdateSorting,
@@ -85,12 +88,24 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
       title: 'Featured version',
       icon: 'layers',
       preview:
-        FEATURED_VERSION_TYPES.find((option) => option.value === featuredVersionOrder[0])?.short ||
+        FEATURED_VERSION_TYPES.find((option) => option.value === featuredVersionOrder[0])?.label ||
         '',
       component: (
         <FeaturedVersionOrder
           value={featuredVersionOrder}
           onChange={onUpdateFeaturedVersionOrder}
+        />
+      ),
+    },
+    {
+      id: 'latest-per-folder',
+      component: (
+        <SettingSwitch
+          icon="folder"
+          label="Latest per folder"
+          data-tooltip="Show only the latest published version per folder (1 version per folder)."
+          checked={latestPerFolder === true}
+          onChange={onUpdateLatestPerFolder}
         />
       ),
     },

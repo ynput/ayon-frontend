@@ -12,7 +12,6 @@ import {
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
 import { ProjectModelWithProducts, usePowerpack } from '@shared/context'
-import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
   queryFilterToClientFilter,
@@ -28,6 +27,7 @@ interface SearchFilterWrapperProps
     Omit<SearchFilterProps, 'options' | 'onFinish' | 'filters' | 'onChange'> {
   projectInfo?: ProjectModelWithProducts
   tasksMap?: TaskNodeMap
+  keepAppliedOptionsVisible?: boolean
   scope?: BuildFilterOptions['scope']
   scopes?: ScopeWithFilterTypes[]
   queryFilters?: QueryFilter
@@ -44,13 +44,13 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   disabledFilters,
   projectInfo,
   tasksMap,
+  keepAppliedOptionsVisible = false,
   scope,
   scopes,
   config,
   pt,
   ...props
 }) => {
-  const { columnOrder } = useColumnSettingsContext()
   const { pinnedSlice, setPinnedSlice } = useSlicerContext()
   const { getFolderById } = useProjectFoldersContext()
 
@@ -79,13 +79,12 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     return false
   }
 
-  const options = useBuildFilterOptions({
+  const { options, groupOptions } = useBuildFilterOptions({
     filterTypes,
     projectNames,
     scope,
     scopes,
     data,
-    columnOrder,
     config: {
       enableExcludes: powerLicense,
       enableOperatorChange: powerLicense,
@@ -186,6 +185,20 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     dateRange.handleCustomRangeApply(localFilters, options, handleFinish, searchFilterRef)
 
   const handleCustomRangeClose = () => dateRange.handleCustomRangeClose()
+
+  const handleAppliedOptionClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!keepAppliedOptionsVisible) return
+
+    const option = (event.target as HTMLElement).closest('li')
+    if (!option || option.dataset.parent) return
+
+    const activeFilter = localFilters.find((filter) => filter.id.split('__')[0] === option.id)
+    if (!activeFilter) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    searchFilterRef.current?.openFilter(activeFilter.id)
+  }
 
   const handleOpenCustomRangeForFilter = (filterId: string) =>
     dateRange.openCustomRangeForFilter(filterId, localFilters)
@@ -435,14 +448,16 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       <SearchFilter
         ref={searchFilterRef}
         options={options}
+        groupOptions={groupOptions}
         filters={localFilters}
         onChange={handleFilterChange}
         onFinish={handleFinish} // when changes are applied
-        enableMultipleSameFilters={false}
+        enableMultipleSameFilters={keepAppliedOptionsVisible}
         enableGlobalSearch={true}
         disabledFilters={disabledFilters}
+        onClickCapture={handleAppliedOptionClickCapture}
         onPasteCapture={handleDropdownPaste}
-        enableAutosuggestion={true}
+        enableAutosuggestion={false}
         pt={{
           searchBar: {
             style: {
