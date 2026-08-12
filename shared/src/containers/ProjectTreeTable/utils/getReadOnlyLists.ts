@@ -83,7 +83,6 @@ export const getReadOnlyLists = (
     readOnlyColumnsSet.add('subType')
     if (!readOnlyAttribs.includes('subType')) readOnlyAttribs.push('subType')
   }
-
   // Also add read-only built-in fields to readOnlyAttribs to expose a combined list
   // (Clipboard paste logic will still only enforce for attrib_ columns.)
   if (readOnlyFields.length) {

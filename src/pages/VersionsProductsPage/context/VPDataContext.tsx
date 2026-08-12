@@ -26,6 +26,7 @@ import {
 import { useBuildVersionsTableData } from '../hooks/useBuildVersionsTableData'
 import {
   checkColumnVisibility,
+  COLUMN_SORT_CONFIG,
   createFilterFromSlicer,
   TableRow,
   useExpandedState,
@@ -58,18 +59,17 @@ import { useAppDispatch } from '@state/store'
 // Stable default filter to prevent unnecessary re-renders
 const EMPTY_FILTER: QueryFilter = { conditions: [] }
 
-// Map UI sort values to API field names
 const SORT_BY_FIELD_MAP: Record<string, string> = {
   name: 'path',
   subType: 'productType',
-  folder: 'folderName',
+  folder_entity: 'folderName',
   product: 'productName',
 }
 
 // Define which sort fields are excluded for each entity type
 const EXCLUDED_SORT_FIELDS: Record<'version' | 'product', string[]> = {
   version: [],
-  product: ['author', 'productName', 'path'],
+  product: ['author', 'product', 'name'],
 }
 
 export type VersionMap = Map<string, VersionNodeExtended>
@@ -367,7 +367,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     ],
   )
 
-  const resolvedSortBy = useMemo(() => (sortBy && SORT_BY_FIELD_MAP[sortBy]) || sortBy, [sortBy])
+  const resolvedSortBy = useMemo(
+    () => sortBy && (SORT_BY_FIELD_MAP[sortBy] || COLUMN_SORT_CONFIG[sortBy]?.sortKey || sortBy),
+    [sortBy],
+  )
   const queryArgs = useMemo(
     () => ({
       projectName,

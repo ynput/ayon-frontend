@@ -1,14 +1,13 @@
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, IconProps } from '@ynput/ayon-react-components'
 import { useProjectContext } from '@shared/context'
 import { getEntityColor, getEntityIcon } from '@shared/util/iconUtils'
 
-type Props = {
+interface Props extends Partial<IconProps> {
   entity: { entityType: string; subType?: string }
   color?: string
-  icon?: string
 }
 
-export const EntityIcon = ({ entity, icon, color }: Props) => {
+export const EntityIcon = ({ entity, icon, color, ...props }: Props) => {
   const { anatomy } = useProjectContext()
 
   return (
@@ -17,6 +16,7 @@ export const EntityIcon = ({ entity, icon, color }: Props) => {
       style={{ color: color ?? getEntityColor(entity.entityType, entity.subType, anatomy) }}
       className="icon"
       data-tooltip={entity.subType?.replace(/_/g, ' ')}
+      {...props}
     />
   )
 }

@@ -2252,7 +2252,12 @@ export type GetListItemsQuery = {
                         folderType: string
                       }
                     }
-                    task: { name: string; label: string | null; taskType: string } | null
+                    task: {
+                      id: string
+                      name: string
+                      label: string | null
+                      taskType: string
+                    } | null
                     latestComments?: Array<{
                       activityId: string
                       body: string
@@ -2482,7 +2487,7 @@ type ListItemFragment_VersionNode_Fragment = {
       folderType: string
     }
   }
-  task: { name: string; label: string | null; taskType: string } | null
+  task: { id: string; name: string; label: string | null; taskType: string } | null
   latestComments?: Array<{
     activityId: string
     body: string
@@ -3927,6 +3932,7 @@ export const ListItemFragmentFragmentDoc = new TypedDocumentString(
       }
     }
     task {
+      id
       name
       label
       taskType
@@ -4785,6 +4791,7 @@ export const GetListItemsDocument = new TypedDocumentString(`
       }
     }
     task {
+      id
       name
       label
       taskType

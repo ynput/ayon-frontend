@@ -41,6 +41,8 @@ export type TableRow = {
   createdAt?: string
   parentId?: string
   folderId?: string | null // all entities have a folder except root folders which will be null
+  taskId?: string | null
+  versionEntityId?: string | null
   parents?: string[]
   folder?: string // parent folder name
   product?: string // product name of product and version parent
