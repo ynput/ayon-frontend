@@ -51,6 +51,7 @@ export type TableRow = {
   taskType?: string // linked task type
   taskLabel?: string // linked task label/name
   folderType?: string // parent folder type
+  folderStatus?: string // parent folder status
   subRows?: TableRow[]
   icon?: string | null
   color?: string | null

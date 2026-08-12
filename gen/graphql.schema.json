@@ -3979,6 +3979,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderFilter",
+                "description": "Filter products by their parent folders using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "folderIds",
                 "description": "List of parent folder IDs to filter by",
                 "type": {
@@ -6910,6 +6922,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "featuredOnlyEntityType",
+                "description": "\nSpecify entity type to group featured versions\n(either product or folder).\n",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"product\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filter",
                 "description": "Filter tasks using QueryFilter",
                 "type": {
@@ -6927,6 +6955,18 @@
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "folderFilter",
+                "description": "Filter tasks by their folders using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
                   "ofType": null
                 },
                 "defaultValue": "null",
@@ -7060,6 +7100,22 @@
               {
                 "name": "latestOnly",
                 "description": "DEPRECATED List only latest versions",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "latestPerFolder",
+                "description": "\nReturn only a single version - the latest one (by creation order)\nfor each folder that matches all the other given filters.\nThe result set is still ordered according to sortBy.\n",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -9438,6 +9494,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderFilter",
+                "description": "Filter products by their parent folders using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "folderIds",
                 "description": "List of parent folder IDs to filter by",
                 "type": {
@@ -10677,6 +10745,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "featuredOnlyEntityType",
+                "description": "\nSpecify entity type to group featured versions\n(either product or folder).\n",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"product\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filter",
                 "description": "Filter tasks using QueryFilter",
                 "type": {
@@ -10694,6 +10778,18 @@
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "folderFilter",
+                "description": "Filter tasks by their folders using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
                   "ofType": null
                 },
                 "defaultValue": "null",
@@ -10827,6 +10923,22 @@
               {
                 "name": "latestOnly",
                 "description": "DEPRECATED List only latest versions",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "latestPerFolder",
+                "description": "\nReturn only a single version - the latest one (by creation order)\nfor each folder that matches all the other given filters.\nThe result set is still ordered according to sortBy.\n",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -14432,6 +14544,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "featuredOnlyEntityType",
+                "description": "\nSpecify entity type to group featured versions\n(either product or folder).\n",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"product\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filter",
                 "description": "Filter tasks using QueryFilter",
                 "type": {
@@ -14449,6 +14577,18 @@
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "folderFilter",
+                "description": "Filter tasks by their folders using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
                   "ofType": null
                 },
                 "defaultValue": "null",
@@ -14582,6 +14722,22 @@
               {
                 "name": "latestOnly",
                 "description": "DEPRECATED List only latest versions",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "latestPerFolder",
+                "description": "\nReturn only a single version - the latest one (by creation order)\nfor each folder that matches all the other given filters.\nThe result set is still ordered according to sortBy.\n",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,

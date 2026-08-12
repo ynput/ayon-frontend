@@ -6,7 +6,7 @@ import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsCo
 
 // folderType/taskType are only whitelisted on the flat versions resolver — the
 // products resolver (hierarchy mode) and task filters reject them server-side
-const SCOPES = buildScopes(['version', 'product', 'task'], {
+const SCOPES = buildScopes(['version', 'product', 'task', 'folder'], {
   version: ['folderType', 'taskType'],
   task: ['folderType'],
 })
@@ -22,6 +22,7 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
       // @ts-ignore
       queryFilters={filters}
       onChange={onUpdateFilters}
+      keepAppliedOptionsVisible
       scopes={SCOPES}
       projectNames={[projectName]}
       projectInfo={projectInfo}

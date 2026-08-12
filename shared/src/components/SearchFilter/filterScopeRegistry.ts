@@ -11,10 +11,11 @@ export const FILTER_TYPES_BY_SCOPE: Record<ScopeType, FilterFieldType[]> = {
   task: [...BASE, 'name', 'taskType', 'folderType', 'assignees'],
   version: [
     ...BASE,
+    'version',
+    'productName',
     'productType',
     'productBaseType',
     'author',
-    'version',
     'hasReviewables',
     'taskType',
     'folderType',
