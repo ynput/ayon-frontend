@@ -587,39 +587,6 @@ const Inbox = ({ filter }: InboxProps) => {
     <>
       {/* @ts-expect-error - Shortcuts component has complex typing */}
       <Shortcuts shortcuts={shortcuts} deps={[messagesData, selected]} />
-      <Styled.Tools>
-        <InboxSearchFilter
-          filter={inboxFilter}
-          onChange={setInboxFilter}
-          projectName={selectedProject}
-          isImportant={isImportant}
-          isLoading={isLoadingInbox}
-        />
-        {/* clearing a message also marks it read, so unread is meaningless on the cleared tab */}
-        {isActive && (
-          <Button
-            icon={showUnreadOnly ? 'mark_email_unread' : 'drafts'}
-            selected={showUnreadOnly}
-            onClick={() => setShowUnreadOnly((prev) => !prev)}
-          >
-            Unread only
-          </Button>
-        )}
-        <EnableNotifications />
-        {isActive && (
-          <Button
-            icon="done_all"
-            onClick={handleClearAll}
-            disabled={!messages.length}
-            shortcut={{ children: getPlatformShortcutKey('c', [KeyMode.Shift]) }}
-          >
-            Clear all
-          </Button>
-        )}
-        <Button icon="refresh" onClick={refreshInbox} shortcut={{ children: 'R' }}>
-          Refresh
-        </Button>
-      </Styled.Tools>
       <Styled.InboxSection direction="row">
         <Styled.ProjectsSplitter
           stateKey="inbox-projects-splitter"
@@ -636,85 +603,120 @@ const Inbox = ({ filter }: InboxProps) => {
             />
           </SplitterPanel>
           <SplitterPanel size={82} style={{ overflow: 'hidden' }}>
-            <DetailsPanelSplitter
-              layout="horizontal"
-              style={{ width: '100%', height: '100%' }}
-              stateKey="inbox-splitter"
-            >
-              <SplitterPanel size={60} style={{ minWidth: 300, overflow: 'hidden' }}>
-                <Styled.MessagesList
-                  ref={listRef}
-                  onMouseMove={() => setUsingKeyboard(false)}
-                  onKeyDown={handleKeyDown}
-                  className={clsx({ isLoading: isLoadingInbox })}
-                >
-                  {messagesData.map((group, i: number) => (
-                    <InboxMessage
-                      key={group.activityId}
-                      rowIndex={i}
-                      path={group.path}
-                      type={group.activityType}
-                      entityType={group.entityType ?? undefined}
-                      entityId={group.entityId ?? undefined}
-                      projectName={group.projectName}
-                      date={group.date}
-                      userName={group.userName}
-                      isRead={group.read || group.active}
-                      unReadCount={group.unRead}
-                      onSelect={handleMessageSelect}
-                      isSelected={selected.includes(group.activityId)}
-                      disableHover={usingKeyboard}
-                      onClear={
-                        !selected.length || selected.includes(group.activityId)
-                          ? () => handleClearMessage(group.activityId)
-                          : undefined
-                      }
-                      clearLabel={isActive ? 'Clear' : 'Unclear'}
-                      clearIcon={isActive ? 'done' : 'replay'}
-                      id={group.activityId}
-                      ids={group.groupIds}
-                      messages={group.messages}
-                      changes={group.changes}
-                      isPlaceholder={group.isPlaceholder}
-                      projectsInfo={projectsInfo}
-                      isMultiple={group.isMultiple}
-                      onContextMenu={handleContextMenu}
-                      customBody={group.body}
-                    />
-                  ))}
-                  {hasMore && !isLoadingInbox && !!messages.length && (
-                    <InView
-                      onChange={(inView) => inView && handleLoadMore()}
-                      rootMargin={'0px 0px 500px 0px'}
-                      root={listRef.current}
-                    >
-                      <Styled.LoadMore onClick={handleLoadMore}>
-                        {isFetchingInbox ? 'Loading more...' : 'Load more'}
-                      </Styled.LoadMore>
-                    </InView>
-                  )}
-                </Styled.MessagesList>
-                {!isLoadingAny && (errorInbox || !messagesData.length) && (
-                  <EmptyPlaceholder
-                    icon="done_all"
-                    message="All caught up! No messages to show."
-                    error={errorInbox}
-                  />
-                )}
-              </SplitterPanel>
-              <SplitterPanel
-                size={40}
-                style={{ minWidth: 300, overflow: 'visible' }}
-                className="details"
-              >
-                <InboxDetailsPanel
-                  messages={messagesData}
-                  selected={selected}
-                  projectsInfo={projectsInfo}
-                  onClose={() => setSelected([])}
+            <Styled.MessagesColumn>
+              <Styled.Tools>
+                <InboxSearchFilter
+                  filter={inboxFilter}
+                  onChange={setInboxFilter}
+                  projectName={selectedProject}
+                  isImportant={isImportant}
+                  isLoading={isLoadingInbox}
                 />
-              </SplitterPanel>
-            </DetailsPanelSplitter>
+                {/* clearing a message also marks it read, so unread is meaningless on the cleared tab */}
+                {isActive && (
+                  <Button
+                    icon={showUnreadOnly ? 'mark_email_unread' : 'drafts'}
+                    selected={showUnreadOnly}
+                    onClick={() => setShowUnreadOnly((prev) => !prev)}
+                  >
+                    Unread only
+                  </Button>
+                )}
+                <EnableNotifications />
+                {isActive && (
+                  <Button
+                    icon="done_all"
+                    onClick={handleClearAll}
+                    disabled={!messages.length}
+                    shortcut={{ children: getPlatformShortcutKey('c', [KeyMode.Shift]) }}
+                  >
+                    Clear all
+                  </Button>
+                )}
+                <Button icon="refresh" onClick={refreshInbox} shortcut={{ children: 'R' }}>
+                  Refresh
+                </Button>
+              </Styled.Tools>
+              <DetailsPanelSplitter
+                layout="horizontal"
+                style={{ width: '100%' }}
+                stateKey="inbox-splitter"
+              >
+                <SplitterPanel size={60} style={{ minWidth: 300, overflow: 'hidden' }}>
+                  <Styled.MessagesList
+                    ref={listRef}
+                    onMouseMove={() => setUsingKeyboard(false)}
+                    onKeyDown={handleKeyDown}
+                    className={clsx({ isLoading: isLoadingInbox })}
+                  >
+                    {messagesData.map((group, i: number) => (
+                      <InboxMessage
+                        key={group.activityId}
+                        rowIndex={i}
+                        path={group.path}
+                        type={group.activityType}
+                        entityType={group.entityType ?? undefined}
+                        entityId={group.entityId ?? undefined}
+                        projectName={group.projectName}
+                        date={group.date}
+                        userName={group.userName}
+                        isRead={group.read || group.active}
+                        unReadCount={group.unRead}
+                        onSelect={handleMessageSelect}
+                        isSelected={selected.includes(group.activityId)}
+                        disableHover={usingKeyboard}
+                        onClear={
+                          !selected.length || selected.includes(group.activityId)
+                            ? () => handleClearMessage(group.activityId)
+                            : undefined
+                        }
+                        clearLabel={isActive ? 'Clear' : 'Unclear'}
+                        clearIcon={isActive ? 'done' : 'replay'}
+                        id={group.activityId}
+                        ids={group.groupIds}
+                        messages={group.messages}
+                        changes={group.changes}
+                        isPlaceholder={group.isPlaceholder}
+                        projectsInfo={projectsInfo}
+                        isMultiple={group.isMultiple}
+                        onContextMenu={handleContextMenu}
+                        customBody={group.body}
+                      />
+                    ))}
+                    {hasMore && !isLoadingInbox && !!messages.length && (
+                      <InView
+                        onChange={(inView) => inView && handleLoadMore()}
+                        rootMargin={'0px 0px 500px 0px'}
+                        root={listRef.current}
+                      >
+                        <Styled.LoadMore onClick={handleLoadMore}>
+                          {isFetchingInbox ? 'Loading more...' : 'Load more'}
+                        </Styled.LoadMore>
+                      </InView>
+                    )}
+                  </Styled.MessagesList>
+                  {!isLoadingAny && (errorInbox || !messagesData.length) && (
+                    <EmptyPlaceholder
+                      icon="done_all"
+                      message="All caught up! No messages to show."
+                      error={errorInbox}
+                    />
+                  )}
+                </SplitterPanel>
+                <SplitterPanel
+                  size={40}
+                  style={{ minWidth: 300, overflow: 'visible' }}
+                  className="details"
+                >
+                  <InboxDetailsPanel
+                    messages={messagesData}
+                    selected={selected}
+                    projectsInfo={projectsInfo}
+                    onClose={() => setSelected([])}
+                  />
+                </SplitterPanel>
+              </DetailsPanelSplitter>
+            </Styled.MessagesColumn>
           </SplitterPanel>
         </Styled.ProjectsSplitter>
       </Styled.InboxSection>

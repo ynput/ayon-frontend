@@ -3,7 +3,22 @@ import { Splitter } from 'primereact/splitter'
 import styled from 'styled-components'
 
 export const Tools = styled(Toolbar)`
-  padding: var(--padding-s) var(--padding-m);
+  padding: var(--padding-s) 0;
+`
+
+export const MessagesColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  /* doubled to beat InboxSection's ".p-splitter { height: 100% }" */
+  && > .p-splitter {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+  }
 `
 
 export const ProjectsSplitter = styled(Splitter)`
