@@ -51,9 +51,10 @@ export const ProjectPageRemote: FC<ProjectPageRemoteProps> = ({
   slicer,
   state = {},
   addonProps,
+  ...props
 }) => {
   // default use RemotePageWrapper
-  let component = <RemotePageWrapper {...{ Component, projectName }} />
+  let component = <RemotePageWrapper {...{ Component, projectName }} {...props} />
 
   // use with slicer panel next to the remote page
   if (slicer && projectName) {
@@ -68,6 +69,7 @@ export const ProjectPageRemote: FC<ProjectPageRemoteProps> = ({
       <WithSlicer fields={slicer.fields}>
         <RemotePageWrapper
           {...{ Component, projectName }}
+          {...props}
           state={{ slicer: slicerContext, ...state }}
           {...addonProps}
         />

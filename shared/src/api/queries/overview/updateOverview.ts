@@ -17,7 +17,7 @@ import {
   refetchTasksForCacheEntry,
   refetchOverviewTasksForCacheEntry,
 } from './refetchFilteredEntities'
-import { patchVersions } from './patchVersions'
+import { patchFolderStatusInVersions, patchVersions } from './patchVersions'
 import { patchProducts } from './patchProducts'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
@@ -545,6 +545,12 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           // often used for updating inherited dependents
           patchOverviewFolders(patchExtraFolders, { state, dispatch }, patches)
         }
+
+        patchFolderStatusInVersions(
+          [...operationsByType.folder, ...patchExtraFolders],
+          { state, dispatch },
+          patches,
+        )
 
         // patch the list items
         patchListItems([...operations, ...patchOperations], { state, dispatch }, patches)

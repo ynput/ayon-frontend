@@ -267,8 +267,9 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         }
       } catch (error: any) {
         console.error('Error updating entities:', error)
-        if (operations.length === 1) {
-          error.errorCodes.forEach((errorCode: string) => {
+        const errorCodes = Array.isArray(error?.errorCodes) ? error.errorCodes : []
+        if (operations.length === 1 && errorCodes.length > 0) {
+          errorCodes.forEach((errorCode: string) => {
             const op = operations[0]
             const entity = getEntityById(op.entityId as string)
             const entityName = entity?.label || entity?.name || op.entityId || ''
@@ -276,7 +277,14 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
             toast.error(message)
           })
         } else {
-          toast.error('Failed to update entities')
+          const op = operations[0]
+          const entity = op && getEntityById(op.entityId as string)
+          const entityName = entity?.label || entity?.name || op?.entityId || ''
+          toast.error(
+            operations.length === 1
+              ? getErrorMessage(undefined, op.entityType, entityName)
+              : 'Failed to update entities',
+          )
         }
         // Remove the failed update from history stack
         if (pushHistory && pushToHistory && removeHistoryEntries) {
@@ -511,8 +519,9 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         })
       } catch (error: any) {
         // Extract error code from operation result - check multiple paths
-        if (operations.length === 1) {
-          error.errorCodes.forEach((errorCode: string) => {
+        const errorCodes = Array.isArray(error?.errorCodes) ? error.errorCodes : []
+        if (operations.length === 1 && errorCodes.length > 0) {
+          errorCodes.forEach((errorCode: string) => {
             const op = operations[0]
             const entity = getEntityById(op.entityId as string)
             const entityName = entity?.label || entity?.name || op.entityId || ''
@@ -520,7 +529,14 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
             toast.error(message)
           })
         } else {
-          toast.error('Failed to update entities')
+          const op = operations[0]
+          const entity = op && getEntityById(op.entityId as string)
+          const entityName = entity?.label || entity?.name || op?.entityId || ''
+          toast.error(
+            operations.length === 1
+              ? getErrorMessage(undefined, op.entityType, entityName)
+              : 'Failed to update entities',
+          )
         }
 
         // Remove the failed update from history stack

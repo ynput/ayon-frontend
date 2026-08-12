@@ -4,4 +4,5 @@ fragment VPFolder on FolderNode {
   label
   folderType
   allAttrib
+  status
 }

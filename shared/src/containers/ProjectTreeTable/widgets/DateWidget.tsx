@@ -1,4 +1,4 @@
-import { format } from 'date-fns'
+import { format, subMilliseconds } from 'date-fns'
 import { forwardRef } from 'react'
 import { DateWidgetInput } from './DateWidgetInput'
 import { WidgetBaseProps } from './CellWidget'
@@ -11,6 +11,7 @@ export interface DateWidgetProps
   isReadOnly?: boolean
   isInherited?: boolean
   showTime?: boolean
+  isMidnightExclusive?: boolean
 }
 
 export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
@@ -23,6 +24,7 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
       onChange,
       onCancelEdit,
       showTime = false,
+      isMidnightExclusive = false,
       ...props
     },
     ref,
@@ -31,7 +33,7 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
     if (value) {
       try {
         const formatString = showTime ? 'dd-MM-yyyy HH:mm:ss' : 'dd-MM-yyyy'
-        const date = new Date(value)
+        const date = isMidnightExclusive ? subMilliseconds(new Date(value), 1) : new Date(value)
         dateString = showTime ? format(date, formatString) : formatUTCDate(date, formatString)
       } catch (error) {
         console.error('Invalid date value:', value)
@@ -47,6 +49,7 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
           onCancel={onCancelEdit}
           readOnly={isReadOnly}
           disabled={isReadOnly}
+          isMidnightExclusive={isMidnightExclusive}
           {...(props as any)}
         />
       )

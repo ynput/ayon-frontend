@@ -1,4 +1,4 @@
-import PubSub from '@shared/util/pubsub'
+import { createRealtimeBatcher, PubSub } from '@shared/util'
 import { reviewablesApi, ReviewableModel, VersionReviewablesModel } from '@shared/api/generated'
 import { addonsQueries } from '../addons'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
@@ -113,74 +113,96 @@ const enhancedApi = reviewablesApi.enhanceEndpoints<TagTypes, UpdatedDefinitions
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
       ) {
         let token
+
+        // handle
+        const mediaProcessingBatcher = createRealtimeBatcher(
+          (messages: { message: any }[]) => {
+            const cache = getCacheEntry()
+            const progressUpdates: { index: number; progress: number; eventId: string }[] = []
+            const reviewVersionIds = new Set<string>()
+            const viewerProductIds = new Set<string>()
+
+            messages.forEach(({ message }) => {
+              const summary = (message?.summary as Summary) || {}
+
+              // check if the message is for the current versionId
+              if (summary.versionId !== versionId) return
+
+              // find the index of the reviewable in the cache data
+              const index = cache.data?.reviewables?.findIndex(
+                (reviewable: ReviewableModel) => reviewable?.fileId === summary.sourceFileId,
+              )
+
+              // if the message is a progress update, update the progress in the cache
+              if (message.status !== 'finished' && index !== undefined && index !== -1) {
+                progressUpdates.push({
+                  index,
+                  progress: message?.progress || 0,
+                  eventId: message.id,
+                })
+                return
+              } else {
+                // if the message is finished, invalidate the cache for the versionId and productId
+                reviewVersionIds.add(summary.versionId)
+                if (message.status === 'finished' && cache.data?.productId) {
+                  viewerProductIds.add(cache.data.productId)
+                }
+              }
+            })
+
+            // for each progress update, update the cache data with the new progress
+            if (progressUpdates.length) {
+              updateCachedData((data) => {
+                const reviewables = data.reviewables
+                if (!reviewables) return
+                progressUpdates.forEach(({ index, progress, eventId }) => {
+                  const reviewable = reviewables[index]
+                  if (!reviewable) return
+                  reviewables[index] = {
+                    ...reviewable,
+                    processing: {
+                      ...reviewable.processing,
+                      progress,
+                      eventId,
+                    },
+                  }
+                })
+              })
+            }
+
+            // invalidate the cache for the versionId and productId if there are any finished messages
+            if (reviewVersionIds.size) {
+              dispatch(
+                reviewablesApi.util.invalidateTags(
+                  [...reviewVersionIds].map((id) => ({ type: 'review', id })),
+                ),
+              )
+            }
+
+            // invalidate the cache for the productId if there are any finished messages
+            if (viewerProductIds.size) {
+              dispatch(
+                reviewablesApi.util.invalidateTags(
+                  [...viewerProductIds].map((id) => ({ type: 'viewer', id })),
+                ),
+              )
+            }
+          },
+          ({ message }) => message?.summary?.sourceFileId || message?.id || '',
+          500,
+        )
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
-          const handlePubSub = (topic: string, message: any) => {
-            if (topic !== 'reviewable.process') return
-
-            const summary = (message?.summary as Summary) || {}
-
-            // check it's for the right version
-            if (summary.versionId !== versionId) return
-
-            const cache = getCacheEntry()
-
-            // check if the reviewable is in the cache
-            const index = cache.data?.reviewables?.findIndex(
-              (r: ReviewableModel) => r?.fileId === summary.sourceFileId,
-            )
-
-            if (index && index !== -1 && message.status !== 'finished') {
-              // update the progress of the reviewable
-              const progress = message?.progress || 0
-              // update the cache reviewable
-
-              updateCachedData((data) => {
-                const reviewables = data.reviewables
-
-                // check if there are reviewables
-                if (!reviewables) return
-                const processing = reviewables[index].processing
-
-                // update the reviewable with the new progress
-                reviewables[index] = {
-                  ...reviewables[index],
-                  processing: {
-                    ...processing,
-                    progress,
-                    eventId: message.id,
-                  },
-                }
-              })
-            } else {
-              console.log(
-                'Reviewable not found in cache, refreshing to get data:',
-                summary.sourceFileId,
-                summary.versionId,
-              )
-              // get data for this new reviewable
-              dispatch(
-                reviewablesApi.util.invalidateTags([{ type: 'review', id: summary.versionId }]),
-              )
-
-              // if it's finished, also invalidate viewer
-              if (message.status === 'finished') {
-                // also invalidate the viewer cache
-                if (cache.data?.productId) {
-                  dispatch(
-                    reviewablesApi.util.invalidateTags([
-                      { type: 'viewer', id: cache.data?.productId },
-                    ]),
-                  )
-                }
-              }
-            }
+          // handle pubsub messages for media processing events like conversion progress
+          const handleMediaProcessingEvent = (_topic: string, message: any) => {
+            if (message?.summary?.versionId !== versionId) return
+            mediaProcessingBatcher.add({ message })
           }
 
           // sub to websocket topic
-          token = PubSub.subscribe('reviewable.process', handlePubSub)
+          token = PubSub.subscribe('reviewable.process', handleMediaProcessingEvent)
         } catch {
           // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
           // in which case `cacheDataLoaded` will throw
@@ -189,6 +211,7 @@ const enhancedApi = reviewablesApi.enhanceEndpoints<TagTypes, UpdatedDefinitions
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
+        mediaProcessingBatcher.clear()
       },
     },
   },
@@ -199,6 +222,7 @@ const getReviewApi = enhancedApi.injectEndpoints({
     // custom endpoint to get reviewables from product/task/folder
     // utilizes getReviewablesForProduct, getReviewablesForTask, getReviewablesForFolder
     getViewerReviewables: build.query<GetReviewablesResponse[], GetViewerReviewablesParams>({
+      keepUnusedDataFor: 5,
       queryFn: async ({ productId, taskId, folderId, projectName }, { dispatch }) => {
         let query: any
 
@@ -256,37 +280,34 @@ const getReviewApi = enhancedApi.injectEndpoints({
         { cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
       ) {
         let token
+        const mediaProcessingBatcher = createRealtimeBatcher(
+          (messages: { message: any }[]) => {
+            const versionIds = new Set(getCacheEntry().data?.map((version) => version.id) || [])
+            const entityId = productId || taskId || folderId
+            if (!entityId) return
+
+            const shouldInvalidate = messages.some(
+              ({ message }) =>
+                message.status === 'finished' &&
+                versionIds.has((message?.summary as Summary)?.versionId || ''),
+            )
+            if (shouldInvalidate) {
+              dispatch(reviewablesApi.util.invalidateTags([{ type: 'review', id: entityId }]))
+            }
+          },
+          ({ message }) => message?.summary?.versionId || message?.id || '',
+        )
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
-          const handlePubSub = (topic: string, message: any) => {
-            if (topic !== 'reviewable.process') return
-
-            const summary = (message?.summary as Summary) || {}
-
-            const versionIds = new Set(getCacheEntry().data?.map((version) => version.id) || [])
-
-            // check that one of the versions is the right one
-            if (!versionIds?.has(summary.versionId || '')) return
-
-            if (message.status === 'finished') {
-              let id: string | undefined
-              if (productId) id = productId
-              else if (taskId) id = taskId
-              else if (folderId) id = folderId
-
-              console.log('Reviewable finished, refreshing to get data:', { id })
-              // "838977a81dab11ef95ad0242ac180005"
-              if (id) {
-                // get data for this new reviewable (invalidate self)
-                dispatch(reviewablesApi.util.invalidateTags([{ type: 'review', id: id }]))
-              }
-            }
+          const handleMediaProcessingEvent = (_topic: string, message: any) => {
+            if (message?.status !== 'finished') return
+            mediaProcessingBatcher.add({ message })
           }
 
           // sub to websocket topic
-          token = PubSub.subscribe('reviewable.process', handlePubSub)
+          token = PubSub.subscribe('reviewable.process', handleMediaProcessingEvent)
         } catch {
           // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
           // in which case `cacheDataLoaded` will throw
@@ -295,6 +316,7 @@ const getReviewApi = enhancedApi.injectEndpoints({
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
+        mediaProcessingBatcher.clear()
       },
     }),
     hasTranscoder: build.query<boolean, undefined>({

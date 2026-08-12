@@ -1,4 +1,4 @@
-import { PubSub } from '@shared/util'
+import { createRealtimeBatcher, PubSub } from '@shared/util'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 
 // VVV REST endpoints VVV
@@ -110,27 +110,30 @@ export const enhancedMarketGQL = gqlApi.enhanceEndpoints<TagTypesGQL, UpdatedDef
     GetMarketInstallEvents: {
       transformResponse: (response: GetMarketInstallEventsQuery) =>
         response.events.edges.map(({ node }) => node).filter((e) => e.status !== 'finished'),
-      async onCacheEntryAdded(_args, { updateCachedData, cacheEntryRemoved }) {
-        let subscriptions = []
+      async onCacheEntryAdded(_args, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
+        let subscriptions: any[] = []
+        const batcher = createRealtimeBatcher(
+          (messages: any[]) => {
+            updateCachedData((draft) => {
+              messages.forEach((message) => {
+                if (!draft) return
+                const index = draft.findIndex((event) => event.id === message.id)
+                if (index !== -1) draft[index] = message
+                else draft.push(message)
+              })
+            })
+          },
+          (message) => message.id,
+          500,
+        )
         try {
+          await cacheDataLoaded
           const handlePubSub = (topic: string, message: any) => {
             if (topic === 'client.connected') {
               return
             }
-
-            // update cache
-            updateCachedData((draft) => {
-              if (!draft) return (draft = [message])
-              // find index of event
-              const index = draft?.findIndex((e) => e.id === message.id)
-              // replace event
-              if (index !== -1) {
-                draft[index] = message
-              } else {
-                // add event
-                draft.push(message)
-              }
-            })
+            if (!message?.id) return
+            batcher.add(message)
           }
 
           const sub = PubSub.subscribe('addon.install_from_url', handlePubSub)
@@ -143,6 +146,7 @@ export const enhancedMarketGQL = gqlApi.enhanceEndpoints<TagTypesGQL, UpdatedDef
         await cacheEntryRemoved
         // unsubscribe from all topics
         subscriptions.forEach((sub) => PubSub.unsubscribe(sub))
+        batcher.clear()
       },
     },
   },

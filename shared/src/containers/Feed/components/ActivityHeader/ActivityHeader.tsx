@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import * as Styled from './ActivityHeader.styled'
 import ActivityReference from '../ActivityReference/ActivityReference'
 import ActivityDate from '../ActivityDate'
-import { Icon } from '@ynput/ayon-react-components'
-import UserImage from '../../../../components/UserImage'
+import { Icon, UserImage } from '@ynput/ayon-react-components'
 import { RefTooltip } from '../../context/FeedContext'
+import { ANONYMOUS_GUEST_NAME_PREFIX } from '../ActivityVersionReview/ActivityVersionReview'
 
 interface Origin {
   id: string
@@ -66,12 +66,26 @@ const ActivityHeader: React.FC<ActivityHeaderProps> = ({
   const boldString = isMention ? `mentioned` : 'commented'
   const entityTypeString = isMention ? ` ${entityType} on` : 'on'
 
-  const isGuest = name?.startsWith('guest.')
+  const isGuest = name?.startsWith('guest.') || name?.startsWith(ANONYMOUS_GUEST_NAME_PREFIX)
   const noUser = (activity.author?.deleted || !activity.author?.active) && !isGuest
+
+  const userImageSrc = useMemo(() => {
+    if (name?.startsWith(ANONYMOUS_GUEST_NAME_PREFIX)) {
+      return
+    }
+
+    return `/api/users/${name}/avatar`
+  }, [name])
+
   return (
     <Styled.Header>
       <Styled.Body>
-        {name && !noUser && <UserImage name={name} size={22} />}
+        {name && !noUser && <UserImage
+          name={name}
+          fullName={fullName}
+          src={userImageSrc}
+          size={22}
+        />}
         {noUser && <Icon icon="account_circle" />}
         <h5>{fullName || activity.activityData?.author || 'Unknown'}</h5>
         {isRef && (

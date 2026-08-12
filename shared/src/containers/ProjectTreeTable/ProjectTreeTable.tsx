@@ -113,7 +113,7 @@ import { upperFirst } from 'lodash'
 import { ColumnsConfig } from './types/columnConfig'
 
 type CellUpdate = (
-  entity: Omit<EntityUpdate, 'id'>,
+  entity: Omit<EntityUpdate, 'id'> & { id?: string },
   config?: { selection?: string[] },
 ) => Promise<void>
 
@@ -343,7 +343,7 @@ export const ProjectTreeTable = ({
       const { selection = [] } = config || {}
       const entitiesToUpdate: EntityUpdate[] = []
       if (!selection?.length) {
-        entitiesToUpdate.push({ ...entity, id: entity.rowId })
+        entitiesToUpdate.push({ ...entity, id: entity.id || entity.rowId })
       } else {
         // if includeSelection is true, update all the selected cells with the same columnId
         const { field, value, isAttrib } = entity
