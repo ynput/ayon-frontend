@@ -1,12 +1,12 @@
-import { useLocation, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import Inbox from './Inbox/Inbox'
-import { INBOX_PROJECT_PARAM } from './hooks/useInboxProject'
 import { useGetInboxUnreadCountQuery } from '@queries/inbox/getInbox'
 import { UnreadCount } from './Inbox/Inbox.styled'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
+import { WithViews } from '@/hoc/WithViews'
 import type { InboxFilter } from './types'
 import type { ReactNode } from 'react'
 
@@ -18,25 +18,31 @@ interface InboxLink {
   tooltip?: string
   shortcut?: string
   node?: ReactNode
+  viewType?: string
 }
+
+// each tab keeps its own saved views: the filters that make sense on Important are not the
+// ones you want on Cleared
+const getInboxViewType = (module: InboxFilter) => `inbox-${module}`
 
 const InboxPage = () => {
   const { module } = useParams<{ module: InboxFilter }>()
+  const activeModule = module || 'important'
 
   const { data: importantUnreadCount } = useGetInboxUnreadCountQuery({ important: true })
   const { data: otherUnreadCount } = useGetInboxUnreadCountQuery({ important: false })
 
-  // tab links replace the whole URL, so the selected project must be carried over
-  const inboxProject = new URLSearchParams(useLocation().search).get(INBOX_PROJECT_PARAM)
-  const tabSearch = inboxProject
-    ? `?${INBOX_PROJECT_PARAM}=${encodeURIComponent(inboxProject)}`
-    : ''
+  // only the active tab renders the views portal, otherwise the empty portal span would
+  // nudge the unread counts on the other tabs
+  const viewTypeFor = (linkModule: InboxFilter) =>
+    linkModule === activeModule ? getInboxViewType(linkModule) : undefined
 
   const links: InboxLink[] = [
     {
       name: 'Important',
-      path: '/inbox/important' + tabSearch,
+      path: '/inbox/important',
       module: 'important',
+      viewType: viewTypeFor('important'),
       endContent: !!importantUnreadCount && (
         <UnreadCount className={'important'}>
           {importantUnreadCount > 99 ? '99+' : importantUnreadCount}
@@ -47,8 +53,9 @@ const InboxPage = () => {
     },
     {
       name: 'Other',
-      path: '/inbox/other' + tabSearch,
+      path: '/inbox/other',
       module: 'other',
+      viewType: viewTypeFor('other'),
       endContent: !!otherUnreadCount && (
         <UnreadCount>{otherUnreadCount > 99 ? '99+' : otherUnreadCount}</UnreadCount>
       ),
@@ -56,8 +63,9 @@ const InboxPage = () => {
     },
     {
       name: 'Cleared',
-      path: '/inbox/cleared' + tabSearch,
+      path: '/inbox/cleared',
       module: 'cleared',
+      viewType: viewTypeFor('cleared'),
     },
   ]
 
@@ -65,14 +73,16 @@ const InboxPage = () => {
   links.push({
     node: <HelpButton module={`inbox`} />,
   })
-  const title = useTitle(module || 'important', links, 'AYON', 'Inbox')
+  const title = useTitle(activeModule, links, 'AYON', 'Inbox')
 
   return (
     <>
       <DocumentTitle title={title} />
       {/* @ts-expect-error - InboxLink is compatible but TypeScript doesn't infer it */}
       <AppNavLinks links={links} />
-      <Inbox filter={module || 'important'} />
+      <WithViews viewType={getInboxViewType(activeModule)}>
+        <Inbox filter={activeModule} />
+      </WithViews>
     </>
   )
 }

@@ -12,7 +12,6 @@ import { compareAsc } from 'date-fns'
 import { useGetInboxMessagesQuery, useLazyGetInboxMessagesQuery } from '@queries/inbox/getInbox'
 import { useGetProjectInboxInfiniteInfiniteQuery } from '@queries/inbox/getProjectInbox'
 import { useGetProjectsInfoQuery } from '@shared/api'
-import type { QueryFilter } from '@shared/api'
 // Components
 import { Button } from '@ynput/ayon-react-components'
 import { SplitterPanel } from 'primereact/splitter'
@@ -29,6 +28,7 @@ import useKeydown from '../hooks/useKeydown'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useInboxRefresh from '../hooks/useInboxRefresh'
 import useInboxProject from '../hooks/useInboxProject'
+import useInboxViewSettings from '../hooks/useInboxViewSettings'
 import {
   buildInboxFilter,
   getInboxActivityTypes,
@@ -97,12 +97,26 @@ const Inbox = ({ filter }: InboxProps) => {
   const isActive = filterArgs.active
   const isImportant = filterArgs.important
 
+  // the whole filter setup lives in the view, so it can be saved and switched
+  const {
+    projectName: viewProject,
+    onUpdateProjectName,
+    filter: inboxFilter,
+    onUpdateFilter,
+    // the only filter that works without a project, so it is a toolbar toggle, not a chip
+    unreadOnly: showUnreadOnly,
+    onUpdateUnreadOnly,
+    isLoadingViews,
+  } = useInboxViewSettings()
+
   // filtering is only possible per project - the inbox resolver takes no filter args
   // guests get no project mode: the activities resolver rejects projects they cannot access
-  const [selectedProject, setSelectedProject] = useInboxProject(!isGuest)
-  const [inboxFilter, setInboxFilter] = useState<QueryFilter>({ operator: 'and', conditions: [] })
-  // the only filter that works without a project, so it is a toolbar toggle, not a chip
-  const [showUnreadOnly, setShowUnreadOnly] = useState(false)
+  const [selectedProject, setSelectedProject] = useInboxProject({
+    enabled: !isGuest,
+    viewProject,
+    onViewProjectChange: onUpdateProjectName,
+    isReady: !isLoadingViews,
+  })
   const isProjectMode = !!selectedProject
 
   const projectArgs = useMemo(
@@ -136,12 +150,14 @@ const Inbox = ({ filter }: InboxProps) => {
   // null, not false: false would ask the resolver for read messages only
   const unreadArg = isActive && showUnreadOnly ? true : null
 
+  // the view holds the project and the filters, so querying before it loads would fetch the
+  // cross-project inbox first and throw it away as soon as the stored setup arrives
   const globalQuery = useGetInboxMessagesQuery(
     { last: last, active: isActive, important: isImportant, unread: unreadArg },
-    { skip: isProjectMode },
+    { skip: isProjectMode || isLoadingViews },
   )
   const projectQuery = useGetProjectInboxInfiniteInfiniteQuery(projectArgs, {
-    skip: !isKnownProject,
+    skip: !isKnownProject || isLoadingViews,
   })
 
   const activeQuery = isProjectMode ? projectQuery : globalQuery
@@ -432,7 +448,7 @@ const Inbox = ({ filter }: InboxProps) => {
   // gating the list on it flashes the placeholders a second time.
   // Keyed on isFetching: RTK Query keeps the previous project's data while the new query
   // runs, so isLoading, isSuccess and data all still describe the old project for ~500ms.
-  const isLoadingAny = (isFetchingInbox && !isPaginating) || isRefreshing
+  const isLoadingAny = isLoadingViews || (isFetchingInbox && !isPaginating) || isRefreshing
 
   // Cast placeholder messages to satisfy GroupedMessage shape for rendering
   const messagesData = isLoadingAny
@@ -607,17 +623,17 @@ const Inbox = ({ filter }: InboxProps) => {
               <Styled.Tools>
                 <InboxSearchFilter
                   filter={inboxFilter}
-                  onChange={setInboxFilter}
+                  onChange={onUpdateFilter}
                   projectName={selectedProject}
                   isImportant={isImportant}
-                  isLoading={isLoadingInbox}
+                  isLoading={isLoadingInbox || isLoadingViews}
                 />
                 {/* clearing a message also marks it read, so unread is meaningless on the cleared tab */}
                 {isActive && (
                   <Button
-                    icon={showUnreadOnly ? 'mark_email_unread' : 'drafts'}
+                    icon="mark_email_unread"
                     selected={showUnreadOnly}
-                    onClick={() => setShowUnreadOnly((prev) => !prev)}
+                    onClick={() => onUpdateUnreadOnly(!showUnreadOnly)}
                   >
                     Unread only
                   </Button>

@@ -111,8 +111,17 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
     return acc
   }, {} as RowSelectionState)
 
-  const pinnedSelection = activeTable === 'pinned' ? selectionState : {}
-  const allProjectsSelection = activeTable === 'all' ? selectionState : {}
+  // the selection can also change from outside the table (switching views, a deep link).
+  // the pinned table can only show it when the project is pinned, so fall back to the full
+  // table instead of highlighting nothing.
+  const canPinnedTableShowSelection = selection.some((id) => rowPinning.includes(id))
+  const effectiveTable =
+    activeTable === 'pinned' && selection.length && !canPinnedTableShowSelection
+      ? 'all'
+      : activeTable
+
+  const pinnedSelection = effectiveTable === 'pinned' ? selectionState : {}
+  const allProjectsSelection = effectiveTable === 'all' ? selectionState : {}
 
   const handlePinnedSelectionChange = (newSelection: RowSelectionState) => {
     if (activeTable !== 'pinned') {
