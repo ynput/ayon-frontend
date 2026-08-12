@@ -128,6 +128,49 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
       {
         position: 12,
         column: {
+          id: 'folderStatus',
+          accessorKey: 'folderStatus',
+          header: 'Folder status',
+          minSize: COLUMN_MIN_SIZE,
+          enableResizing: true,
+          enablePinning: true,
+          enableHiding: true,
+          cell: ({ row, column, table }) => {
+            const { value, id, type } = getValueIdType(row, column.id)
+            if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+            const meta = table.options.meta as any
+            const folderId = row.original.folderId
+            return (
+              <CellWidget
+                rowId={id}
+                className={clsx('folderStatus', { loading: row.original.isLoading })}
+                columnId={column.id}
+                value={value}
+                options={meta?.options?.folderStatus}
+                attributeData={{ type: 'string' }}
+                isReadOnly={
+                  !folderId ||
+                  meta?.readOnly?.includes(column.id) ||
+                  meta?.readOnly?.includes('status')
+                }
+                onChange={(value) =>
+                  folderId &&
+                  meta?.updateEntities?.({
+                    rowId: id,
+                    id: folderId,
+                    type: 'folder',
+                    field: 'status',
+                    value,
+                  })
+                }
+              />
+            )
+          },
+        },
+      },
+      {
+        position: 13,
+        column: {
           id: 'taskLabel',
           accessorKey: 'taskLabel',
           header: 'Task',
