@@ -1074,7 +1074,6 @@ const getAttributeFieldOptionRoot = (
   shouldGroup = false,
 ): Option => {
   const label = attribute.data.title || attribute.name
-  const scopeLabel = entityType ? `${upperFirst(entityType)} ` : ''
   const group =
     shouldGroup || entityType
       ? {
