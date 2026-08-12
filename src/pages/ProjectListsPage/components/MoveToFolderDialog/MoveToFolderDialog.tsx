@@ -1,7 +1,6 @@
 import { FC, useCallback } from 'react'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { toast } from 'react-toastify'
 import {
   ListsDataProvider,
   useListsDataContext,
@@ -9,7 +8,7 @@ import {
 import { ListsProvider } from '@pages/ProjectListsPage/context/ListsProvider'
 import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
 import ListsTable from '../ListsTable/ListsTable'
-import { parseListFolderRowId, wouldCreateCircularDependency } from '../../util'
+import { buildFolderMap, parseListFolderRowId, wouldCreateCircularDependency } from '../../util'
 import type { EntityListFolderModel } from '@shared/api'
 
 const TableContainer = styled.div`
@@ -47,21 +46,26 @@ export interface MoveToFolderDialogProps {
   onClose: () => void
 }
 
-const MoveToFolderDialogInner: FC<MoveToFolderDialogProps> = ({ moving, ids, onMove, onClose }) => {
+const MoveToFolderDialogInner: FC<MoveToFolderDialogProps> = ({
+  moving,
+  ids,
+  isReview,
+  isStoryboards,
+  onMove,
+  onClose,
+}) => {
   const { selectedRows } = useListsContext()
-  const { disabledFolderIds } = useListsDataContext()
+  const { disabledFolderMessages } = useListsDataContext()
 
   // right-click selects a row even when disabled, so disabled ids must be dropped here too
   const [targetFolderId] = selectedRows
     .map((rowId) => parseListFolderRowId(rowId))
-    .filter((id): id is string => !!id && !disabledFolderIds.has(id))
+    .filter((id): id is string => !!id && !disabledFolderMessages.has(id))
 
   // close immediately — the move is optimistic in the cache and rolls back on failure
   const moveTo = (folderId: string) => {
-    if (disabledFolderIds.has(folderId)) return
-    onMove(folderId).catch((error: any) => {
-      toast.error(error?.message || error || 'Failed to move')
-    })
+    if (disabledFolderMessages.has(folderId)) return
+    onMove(folderId).catch(() => {})
     onClose()
   }
 
@@ -93,7 +97,14 @@ const MoveToFolderDialogInner: FC<MoveToFolderDialogProps> = ({ moving, ids, onM
       }
     >
       <TableContainer>
-        <ListsTable picker foldersOnly singleSelect onRowSubmit={moveTo} />
+        <ListsTable
+          picker
+          foldersOnly
+          singleSelect
+          isReview={isReview}
+          isStoryboards={isStoryboards}
+          onRowSubmit={moveTo}
+        />
       </TableContainer>
     </Dialog>
   )
@@ -102,13 +113,18 @@ const MoveToFolderDialogInner: FC<MoveToFolderDialogProps> = ({ moving, ids, onM
 export const MoveToFolderDialog: FC<MoveToFolderDialogProps> = (props) => {
   const { moving, ids, isReview, isStoryboards } = props
 
-  const folderDisabled = useCallback(
-    (folder: EntityListFolderModel, folders: EntityListFolderModel[]) => {
-      if (moving !== 'folders') return undefined
-      if (ids.includes(folder.id)) return 'Cannot move into itself'
-      if (ids.some((id) => wouldCreateCircularDependency(id, folder.id, folders)))
-        return 'Cannot move into own subfolder'
-      return undefined
+  const getDisabledFolders = useCallback(
+    (folders: EntityListFolderModel[]) => {
+      const messages = new Map<string, string>()
+      if (moving !== 'folders') return messages
+
+      const folderMap = buildFolderMap(folders)
+      for (const folder of folders) {
+        if (ids.includes(folder.id)) messages.set(folder.id, 'Cannot move into itself')
+        else if (ids.some((id) => wouldCreateCircularDependency(id, folder.id, folderMap)))
+          messages.set(folder.id, 'Cannot move into own subfolder')
+      }
+      return messages
     },
     [moving, ids],
   )
@@ -119,7 +135,7 @@ export const MoveToFolderDialog: FC<MoveToFolderDialogProps> = (props) => {
       foldersOnly
       isReview={isReview}
       isStoryboards={isStoryboards}
-      folderDisabled={folderDisabled}
+      getDisabledFolders={getDisabledFolders}
     >
       <ListsProvider picker isReview={isReview} isStoryboards={isStoryboards}>
         <MoveToFolderDialogInner {...props} />

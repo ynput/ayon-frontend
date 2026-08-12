@@ -5,7 +5,7 @@ import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
 import { useListsDataContext } from '../context/ListsDataContext'
 import { parseListFolderRowId } from '../util/buildListsTableData'
-import { wouldCreateCircularDependency } from '../util/listFolders'
+import { buildFolderMap, wouldCreateCircularDependency } from '../util/listFolders'
 import { EntityListFolderModel } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { usePowerpack, useProjectContext } from '@shared/context'
@@ -31,7 +31,8 @@ export const FOLDER_ICON_ADD = 'create_new_folder'
 export const FOLDER_ICON_EDIT = 'folder_managed'
 export const FOLDER_ICON_REMOVE = 'folder_off'
 
-const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => {
+// enabled=false in picker mode: the table renders no row menu there
+const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], enabled = true) => {
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
   const { projectName } = useProjectContext()
@@ -120,16 +121,17 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => 
       const selectedListIds = newSelectedLists.map((list) => list.id)
       const moveIds = allSelectedRowsAreFolders ? selectedFolderIds : selectedListIds
 
-      // destinations the selection can actually go into (a folder can't move into itself or its own subtree)
-      const availableTargetFolders = allSelectedRowsAreFolders
-        ? listFolders.filter(
+      // is there anywhere the selection can actually go? (a folder can't move into itself or its own subtree)
+      const folderMap = buildFolderMap(listFolders)
+      const hasTargetFolders = allSelectedRowsAreFolders
+        ? listFolders.some(
             (folder) =>
               !selectedFolderIds.includes(folder.id) &&
               !selectedFolderIds.some((id) =>
-                wouldCreateCircularDependency(id, folder.id, listFolders),
+                wouldCreateCircularDependency(id, folder.id, folderMap),
               ),
           )
-        : listFolders
+        : listFolders.length > 0
 
       // "Unset folder" only makes sense when at least one selected list is in a folder
       const hasAnyFolder = newSelectedLists.some((list) => list.entityListFolderId)
@@ -149,7 +151,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => 
             hidden:
               (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
               moveIds.length === 0 ||
-              availableTargetFolders.length === 0 ||
+              !hasTargetFolders ||
               // Hide if user doesn't have edit permission on all selected items
               (allSelectedRowsAreLists && !userCanEditAllLists) ||
               (allSelectedRowsAreFolders && !userCanEditAllFolders),
@@ -157,14 +159,15 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => 
           {
             label: 'Unset folder',
             icon: FOLDER_ICON_REMOVE,
-            command: () => onRemoveListsFromFolder(selectedListIds),
+            // failures already toast inside the mutation hook
+            command: () => onRemoveListsFromFolder(selectedListIds).catch(() => {}),
             shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
             hidden: !allSelectedRowsAreLists || !hasAnyFolder || !userCanEditAllLists,
           },
           {
             label: 'Make root folder',
             icon: FOLDER_ICON_REMOVE,
-            command: () => onRemoveFoldersFromFolder(selectedFolderIds),
+            command: () => onRemoveFoldersFromFolder(selectedFolderIds).catch(() => {}),
             shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
             hidden:
               !allSelectedRowsAreFolders ||
@@ -311,7 +314,10 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => 
     ],
   )
 
-  return useMemo(() => [buildContextMenu, ...extraBuilders], [buildContextMenu, extraBuilders])
+  return useMemo(
+    () => (enabled ? [buildContextMenu, ...extraBuilders] : []),
+    [enabled, buildContextMenu, extraBuilders],
+  )
 }
 
 export default useListContextMenu

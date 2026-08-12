@@ -14,7 +14,7 @@ interface ListsDataContextValue {
   listsTableData: SimpleTableRow[]
   listsMap: ListsMap
   disabledListIds: Set<string>
-  disabledFolderIds: Set<string>
+  disabledFolderMessages: Map<string, string>
   listFolders: EntityListFolderModel[]
   fetchNextPage: () => void
   isLoadingAll: boolean
@@ -42,11 +42,8 @@ interface ListsDataProviderProps {
   foldersOnly?: boolean
   listsFilter?: (list: EntityList) => boolean
   listDisabled?: (list: EntityList) => string | undefined
-  // why a folder can't be picked; gets the full folder list for ancestry checks
-  folderDisabled?: (
-    folder: EntityListFolderModel,
-    folders: EntityListFolderModel[],
-  ) => string | undefined
+  // why folders can't be picked, keyed by folder id; batched so ancestry checks run once per render
+  getDisabledFolders?: (folders: EntityListFolderModel[]) => Map<string, string>
 }
 
 // fetch all lists and provide methods to update the lists
@@ -59,7 +56,7 @@ export const ListsDataProvider = ({
   foldersOnly,
   listsFilter,
   listDisabled,
-  folderDisabled,
+  getDisabledFolders,
 }: ListsDataProviderProps) => {
   const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
   const { projectName, isLoading: isFetchingProject } = useProjectContext()
@@ -136,13 +133,10 @@ export const ListsDataProvider = ({
     return ids
   }, [listsData, listDisabled])
 
-  const disabledFolderIds = useMemo(() => {
-    const ids = new Set<string>()
-    if (folderDisabled) {
-      for (const folder of listFolders) if (folderDisabled(folder, listFolders)) ids.add(folder.id)
-    }
-    return ids
-  }, [listFolders, folderDisabled])
+  const disabledFolderMessages = useMemo(
+    () => getDisabledFolders?.(listFolders) ?? new Map<string, string>(),
+    [listFolders, getDisabledFolders],
+  )
 
   // convert listsData into tableData
   const listsTableData = useMemo(
@@ -154,9 +148,17 @@ export const ListsDataProvider = ({
         powerLicense,
         showArchived,
         listDisabled,
-        folderDisabled ? (folder) => folderDisabled(folder, listFolders) : undefined,
+        getDisabledFolders ? (folder) => disabledFolderMessages.get(folder.id) : undefined,
       ),
-    [listsData, listFolders, powerLicense, showArchived, listDisabled, folderDisabled],
+    [
+      listsData,
+      listFolders,
+      powerLicense,
+      showArchived,
+      listDisabled,
+      getDisabledFolders,
+      disabledFolderMessages,
+    ],
   )
 
   return (
@@ -166,7 +168,7 @@ export const ListsDataProvider = ({
         listsTableData,
         listsMap,
         disabledListIds,
-        disabledFolderIds,
+        disabledFolderMessages,
         listFolders,
         isLoadingAll:
           isLoadingLists ||

@@ -51,11 +51,14 @@ const ListsTable: FC<ListsTableProps> = ({
     setExpanded,
   } = useListsContext()
   const { listsTableData, isLoadingAll, isError, fetchNextPage } = useListsDataContext()
-  const [clientSearch, setClientSearch] = useState<null | string>(null)
+  // folder picker opens with search ready — the destination list is often long
+  const [clientSearch, setClientSearch] = useState<null | string>(
+    picker && foldersOnly ? '' : null,
+  )
   // unique menu id in picker mode so the dialog's header menu doesn't collide with the sidepanel's
   const pickerMenuId = useId()
 
-  const rowContextMenuBuildersAll = useListContextMenu(rowContextMenuBuilders)
+  const rowContextMenuBuildersAll = useListContextMenu(rowContextMenuBuilders, !picker)
   const sessionsLabel = useMemo(
     () => (isStoryboards ? 'Storyboards' : 'Review sessions'),
     [isStoryboards],
@@ -166,7 +169,7 @@ const ListsTable: FC<ListsTableProps> = ({
             onScrollBottom={fetchNextPage}
             isMultiSelect={!singleSelect}
             enableClickToDeselect={false}
-            rowContextMenuBuilders={picker ? [] : rowContextMenuBuildersAll}
+            rowContextMenuBuilders={rowContextMenuBuildersAll}
             renamingId={picker ? undefined : renamingList}
             onRename={picker ? undefined : handleRename}
             onSubmitRename={picker ? undefined : handleSubmitRename}
