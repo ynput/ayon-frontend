@@ -112,7 +112,7 @@ const useGetListItemsData = ({
       sortId = 'productName'
     } else if (sorting === 'folder_entity') {
       sortId = 'folderPath'
-    } else if (!COLUMN_SORT_CONFIG[sorting]?.sortKey) {
+    } else {
       // add entity prefix to entity fields
       sortId = `entity_${sortId}`
     }
