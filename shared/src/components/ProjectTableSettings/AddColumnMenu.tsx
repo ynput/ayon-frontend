@@ -16,7 +16,7 @@ export const AddColumnMenu: FC<AddColumnMenuProps> = ({ menuId, menuItems }) => 
   }, [menuItems.length, menuOpen, menuId, setMenuOpen])
 
   return (
-    <MenuContainer targetId={menuId} id={menuId}>
+    <MenuContainer targetId={menuId} id={menuId} align="left">
       <Menu menu={menuItems} onClose={() => setMenuOpen(false)} />
     </MenuContainer>
   )

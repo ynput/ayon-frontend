@@ -46,23 +46,30 @@ export const getAddColumnSection = (
 
 export const buildAddColumnsMenu = ({
   columns,
-  onAdd,
+  onToggle,
+  isColumnVisible,
   scopes = [],
   extraItems = [],
 }: {
   columns: AddColumnItem[]
-  onAdd: (columnId: string) => void
+  onToggle: (columnId: string) => void
+  isColumnVisible: (columnId: string) => boolean
   scopes?: string[]
   // page actions appended at the end, e.g. Lists' "List attributes"
   extraItems?: MenuItemType[]
 }): MenuItemType[] => {
-  const toMenuItem = (column: AddColumnItem): MenuItemType => ({
-    id: column.value,
-    label: column.label,
-    icon: column.icon,
-    disableClose: true,
-    onClick: () => onAdd(column.value),
-  })
+  const toMenuItem = (column: AddColumnItem): MenuItemType => {
+    const visible = isColumnVisible(column.value)
+    return {
+      id: column.value,
+      label: column.label,
+      icon: column.icon,
+      disableClose: true,
+      selected: visible,
+      active: visible,
+      onClick: () => onToggle(column.value),
+    }
+  }
 
   const activeSections = getActiveAddColumnSections(scopes)
 

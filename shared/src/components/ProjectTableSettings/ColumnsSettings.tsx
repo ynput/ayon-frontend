@@ -137,14 +137,11 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     }),
   )
 
-  // Separate columns into visible, hidden, and pinned
-  const { visibleColumns, hiddenColumns, pinnedColumns } = useMemo(() => {
+  // Separate columns into visible and pinned
+  const { visibleColumns, pinnedColumns } = useMemo(() => {
     // First filter columns by visibility
     const visible = columns.filter((col) =>
       checkColumnVisibility(columnVisibility, col.value, defaultColumnVisibility),
-    )
-    const hidden = columns.filter(
-      (col) => !checkColumnVisibility(columnVisibility, col.value, defaultColumnVisibility),
     )
 
     // Then separate out pinned columns from visible
@@ -153,7 +150,6 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
 
     return {
       visibleColumns: unpinnedVisible,
-      hiddenColumns: hidden,
       pinnedColumns: pinned,
     }
   }, [columns, columnVisibility, columnPinning, defaultColumnVisibility])
@@ -222,20 +218,29 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
         const searchable = [col.path, col.label].filter(Boolean).join(' / ').toLowerCase()
         return terms.every((term) => searchable.includes(term))
       })
+      // default column order, but grouped (sectioned) columns sink to the bottom
+      .toSorted((a, b) => Number(!!a.path) - Number(!!b.path))
   }, [columns, search, scopes])
 
   // fallback for consumers rendering outside ColumnSettingsContext (e.g. ProjectsPage)
   const fallbackAddColumnMenuItems = useMemo(
     () =>
       buildAddColumnsMenu({
-        columns: hiddenColumns,
-        onAdd: (columnId) => {
+        columns,
+        onToggle: (columnId) => {
           const { columnVisibility, updateColumnVisibility } = latestRef.current
-          updateColumnVisibility({ ...columnVisibility, [columnId]: true })
+          const isVisible = checkColumnVisibility(
+            columnVisibility,
+            columnId,
+            defaultColumnVisibility,
+          )
+          updateColumnVisibility({ ...columnVisibility, [columnId]: !isVisible })
         },
+        isColumnVisible: (columnId) =>
+          checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility),
         scopes,
       }),
-    [hiddenColumns, scopes],
+    [columns, columnVisibility, defaultColumnVisibility, scopes],
   )
 
   const addColumnItems = addColumnMenuItems ?? fallbackAddColumnMenuItems

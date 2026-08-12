@@ -14,27 +14,27 @@ export const useAddColumnsMenu = ({ columns, scopes, extraItems }: UseAddColumns
   const { columnVisibility, defaultColumnVisibility, updateColumnVisibility } =
     useColumnSettingsContext()
 
-  // an open sub-menu keeps the items it was opened with, so adding must read the latest state
-  const latestRef = useRef({ columnVisibility, updateColumnVisibility })
-  latestRef.current = { columnVisibility, updateColumnVisibility }
+  // an open sub-menu keeps the items it was opened with, so toggling must read the latest state
+  const latestRef = useRef({ columnVisibility, defaultColumnVisibility, updateColumnVisibility })
+  latestRef.current = { columnVisibility, defaultColumnVisibility, updateColumnVisibility }
 
-  const addColumn = useCallback((columnId: string) => {
-    const { columnVisibility, updateColumnVisibility } = latestRef.current
-    updateColumnVisibility({ ...columnVisibility, [columnId]: true })
+  const toggleColumn = useCallback((columnId: string) => {
+    const { columnVisibility, defaultColumnVisibility, updateColumnVisibility } = latestRef.current
+    const isVisible = checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)
+    updateColumnVisibility({ ...columnVisibility, [columnId]: !isVisible })
   }, [])
 
   const menuItems = useMemo(
     () =>
       buildAddColumnsMenu({
-        columns: columns.filter(
-          (column) =>
-            !checkColumnVisibility(columnVisibility, column.value, defaultColumnVisibility),
-        ),
-        onAdd: addColumn,
+        columns,
+        onToggle: toggleColumn,
+        isColumnVisible: (columnId) =>
+          checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility),
         scopes,
         extraItems,
       }),
-    [columns, columnVisibility, defaultColumnVisibility, addColumn, scopes, extraItems],
+    [columns, columnVisibility, defaultColumnVisibility, toggleColumn, scopes, extraItems],
   )
 
   return { menuItems, hasMenuItems: !!menuItems.length }
