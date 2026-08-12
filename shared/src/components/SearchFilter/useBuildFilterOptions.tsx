@@ -1051,10 +1051,6 @@ const getOptionRoot = (
       label: rootOption.label,
       icon: rootOption.icon,
     }
-
-    rootOption.search = {
-      label: entityLabel,
-    }
   }
 
   if (rootOption && entityType) {
@@ -1092,12 +1088,6 @@ const getAttributeFieldOptionRoot = (
         }
       : undefined
 
-  const search = shouldGroup
-    ? {
-        label: scopeLabel,
-      }
-    : undefined
-
   return {
     id: getFormattedId(attribute.name, 'attributes', config, entityType),
     type: attribute.data.type,
@@ -1113,7 +1103,6 @@ const getAttributeFieldOptionRoot = (
     operatorChangeable: config?.enableOperatorChange,
     icon: getAttributeIcon(attribute.name, attribute.data.type, !!attribute.data.enum?.length),
     group,
-    search,
     tooltip: entityType ? `${upperFirst(entityType)} ${label}` : undefined,
     value: entityType ? { icon: getEntityTypeIcon(entityType) } : undefined,
     singleSelect: ['boolean', 'datetime'].includes(attribute.data.type || ''),
