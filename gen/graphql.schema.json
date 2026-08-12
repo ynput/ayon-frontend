@@ -14736,6 +14736,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "latestPerFolder",
+                "description": "\nReturn only a single version - the latest one (by creation order)\nfor each folder that matches all the other given filters.\nThe result set is still ordered according to sortBy.\n",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "productFilter",
                 "description": "Filter versions by their product using QueryFilter",
                 "type": {
