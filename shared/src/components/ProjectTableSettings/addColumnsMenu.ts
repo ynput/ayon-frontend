@@ -65,7 +65,6 @@ export const buildAddColumnsMenu = ({
       label: column.label,
       icon: column.icon,
       disableClose: true,
-      selected: visible,
       active: visible,
       onClick: () => onToggle(column.value),
     }
