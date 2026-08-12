@@ -1,5 +1,5 @@
 import api from '@shared/api'
-import { PubSub } from '@shared/util'
+import { createRealtimeBatcher, PubSub } from '@shared/util'
 
 const EVENT_FRAGMENT = `
 fragment EventFragment on EventNode {
@@ -129,6 +129,21 @@ const getEvents = api.injectEndpoints({
       }),
       async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
         let token
+        const batcher = createRealtimeBatcher(
+          (updates) => {
+            updateCachedData((draft) => {
+              updates.forEach(({ topic, message }) => {
+                if (!topic.startsWith('log.')) {
+                  patchNewEvents('events', [message], draft)
+                }
+
+                patchNewEvents('logs', [message], draft)
+              })
+            })
+          },
+          ({ topic, message }) => `${topic}:${message.id || message.updatedAt || ''}`,
+          500,
+        )
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
@@ -137,17 +152,7 @@ const getEvents = api.injectEndpoints({
             if (topic === 'client.connected' || topic === 'inbox.message') {
               return
             }
-
-            updateCachedData((draft) => {
-              console.log('new ws event')
-              if (!topic.startsWith('log.')) {
-                // patch only non log messages
-                patchNewEvents('events', [message], draft)
-              }
-
-              // patch all into logs
-              patchNewEvents('logs', [message], draft)
-            })
+            batcher.add({ topic, message })
           }
 
           // sub to websocket topic
@@ -160,6 +165,7 @@ const getEvents = api.injectEndpoints({
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
+        batcher.clear()
       },
     }),
     getEventById: build.query({

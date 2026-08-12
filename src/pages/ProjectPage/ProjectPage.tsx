@@ -27,6 +27,7 @@ import {
   EntityUpdatesProvider,
   ProjectFoldersContextProvider,
   RemoteAddonProject,
+  useDetailsPanelContext,
   useGlobalContext,
   useProjectContext,
 } from '@shared/context'
@@ -199,6 +200,7 @@ const ProjectPageInner = () => {
   }
 
   const dispatch = useAppDispatch()
+  const { onOpenImage, onGoToFrame, onOpenViewer, onUpdateEntity } = useDetailsPanelContext()
   const { trackCurrentTab } = useProjectDefaultTab()
   const [showContextDialog, setShowContextDialog] = useState(false)
 
@@ -425,6 +427,12 @@ const ProjectPageInner = () => {
             slicer={foundRemotePage.slicer}
             projectName={projectName}
             key={foundRemotePage.id}
+            dispatch={dispatch}
+            useSelector={useAppSelector}
+            onOpenImage={onOpenImage}
+            onGoToFrame={onGoToFrame}
+            onOpenViewer={onOpenViewer}
+            onUpdateEntity={onUpdateEntity}
           />
         </main>
       )

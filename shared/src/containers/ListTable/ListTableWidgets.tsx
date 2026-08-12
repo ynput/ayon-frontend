@@ -68,7 +68,6 @@ const renderEnumWidget = <TData extends RowData>({
   return (
     <EnumWidget
       value={enumValue}
-      //   @ts-expect-error -- just between icon prop
       options={attributeData.enum || []}
       type={attributeData.type}
       isEditing={isEditing}
@@ -121,6 +120,9 @@ const booleanWidgetRenderer = <TData extends RowData>(
 const dateWidgetRenderer = <TData extends RowData>(
   context: ListTableWidgetRenderContext<TData>,
 ) => {
+  const midnightExclusiveFields = (context.row.original as { midnightExclusiveFields?: string[] })
+    .midnightExclusiveFields
+
   return (
     <DateWidget
       value={typeof context.value === 'string' ? context.value : undefined}
@@ -128,6 +130,7 @@ const dateWidgetRenderer = <TData extends RowData>(
       isReadOnly={context.isReadOnly}
       onCancelEdit={context.stopEditing}
       onChange={(nextValue) => context.updateValue(nextValue)}
+      isMidnightExclusive={midnightExclusiveFields?.includes(context.columnId) ?? false}
     />
   )
 }

@@ -1,4 +1,10 @@
-import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
+import {
+  createRealtimeBatcher,
+  PubSub,
+  subscribeToThumbnailUpdates,
+  ThumbnailUpdateMessage,
+  waitForRealtimeJitter,
+} from '@shared/util'
 import { ActivitiesResult } from './activitiesHelpers'
 import type { GetActivitiesQueryVariables } from '@shared/api'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
@@ -50,17 +56,11 @@ type CacheLifecycleApi = {
   gqlApi: ActivitiesGqlApi
 }
 
-/**
- * Checks if a comment body contains a checklist
- */
 const bodyHasChecklist = (body: string): boolean => {
   if (!body) return false
   return body.includes('* [ ]') || body.includes('* [x]')
 }
 
-/**
- * Handles real-time activity updates for the infinite query cache
- */
 export const handleActivityRealtimeUpdates = async (
   queryArg: Omit<GetActivitiesQueryVariables, 'last' | 'first' | 'cursor'> & { filter?: any },
   {
@@ -74,9 +74,152 @@ export const handleActivityRealtimeUpdates = async (
 ) => {
   let token: string | undefined
   let unsubscribeThumbnails: (() => void) | undefined
+  const batcher = createRealtimeBatcher(
+    async (updates: { topic: string; message: ActivityMessage }[], isActive) => {
+      const queryEntityIds = Array.isArray(queryArg.entityIds)
+        ? queryArg.entityIds
+        : [queryArg.entityIds]
+      const relevantReferenceTypes = ['origin', 'mention', 'relation']
+      const queryActivityTypes = queryArg.activityTypes
+      const queryActivityTypesArray = Array.isArray(queryActivityTypes)
+        ? queryActivityTypes
+        : queryActivityTypes
+        ? [queryActivityTypes]
+        : []
+      const deletedIds: string[] = []
+      const activityTopics = new Map<string, string>()
+      const activityIds = new Set<string>()
+      const activityEntityIds = new Set<string>()
+
+      updates.forEach(({ topic, message }) => {
+        const activityId = message.summary?.activity_id
+        if (!activityId) return
+
+        const entityIds = (message.summary?.references || [])
+          .filter((reference) => relevantReferenceTypes.includes(reference.reference_type))
+          .map((reference) => reference.entity_id)
+        const isRelevant = queryEntityIds.some((entityId) => entityIds.includes(entityId))
+        if (!isRelevant && queryEntityIds.length > 0) return
+
+        if (topic === 'activity.deleted') {
+          deletedIds.push(activityId)
+          return
+        }
+
+        if (!message.summary?.activity_type) return
+        activityIds.add(activityId)
+        activityTopics.set(activityId, topic)
+        entityIds.forEach((entityId) => activityEntityIds.add(entityId))
+      })
+
+      if (deletedIds.length) {
+        updateCachedData((draft) => {
+          draft.pages?.forEach((page) => {
+            page.activities = page.activities?.filter(
+              (activity) => !deletedIds.includes(activity.activityId),
+            )
+          })
+        })
+      }
+
+      const activityIdList = [...activityIds]
+      if (!activityIdList.length) return
+
+      try {
+        await waitForRealtimeJitter()
+        const firstUpdate = updates.find(({ message }) => message.summary?.activity_id)
+        const result = await dispatch(
+          gqlApi.endpoints.GetActivitiesById.initiate(
+            {
+              projectName: firstUpdate?.message.project || '',
+              activityIds: activityIdList,
+              entityIds: [...activityEntityIds],
+            },
+            { forceRefetch: true },
+          ),
+        )
+
+        if ('error' in result && result.error) throw new Error('Failed to fetch activities')
+        if (!isActive()) return
+
+        const newActivities = ((result.data as unknown as ActivitiesResult)?.activities ||
+          []) as FeedActivity[]
+        const activityById = new Map(
+          newActivities.map((activity) => [activity.activityId, activity]),
+        )
+
+        updateCachedData((draft) => {
+          activityById.forEach((newActivity, activityId) => {
+            const activityTypes = [newActivity.activityType]
+            if (
+              newActivity.activityType === 'comment' &&
+              bodyHasChecklist(newActivity.body || '')
+            ) {
+              activityTypes.push('checklist')
+            }
+            if (
+              queryActivityTypesArray.length > 0 &&
+              !queryActivityTypesArray.some((type: string) => activityTypes.includes(type))
+            ) {
+              return
+            }
+
+            let existingActivityFound = false
+            draft.pages?.forEach((page) => {
+              const index = page.activities?.findIndex(
+                (activity) => activity.activityId === activityId,
+              )
+              if (index !== undefined && index !== -1 && page.activities) {
+                page.activities[index] = newActivity
+                existingActivityFound = true
+              }
+            })
+
+            if (!existingActivityFound && activityTopics.get(activityId) === 'activity.created') {
+              draft.pages?.[0]?.activities?.unshift(newActivity)
+            }
+
+            if (
+              newActivity.activityType !== 'status.change' ||
+              newActivity.origin?.type !== 'version'
+            ) {
+              return
+            }
+
+            const versionId = newActivity.origin.id
+            const newStatus = newActivity.activityData?.newValue
+            if (!newStatus) return
+
+            draft.pages?.forEach((page) => {
+              page.activities?.forEach((activity) => {
+                if (
+                  activity.activityType === 'version.publish' &&
+                  activity.origin?.id === versionId
+                ) {
+                  if (!activity.version) activity.version = {} as any
+                  activity.version!.status = newStatus
+                }
+              })
+            })
+          })
+        })
+      } catch (error) {
+        console.error('[Activity RT] Error fetching activity data for real-time update:', error)
+        dispatch(
+          gqlApi.util.invalidateTags(
+            [...new Set([...queryEntityIds, ...activityEntityIds])].map((entityId) => ({
+              type: 'entityActivities',
+              id: entityId,
+            })),
+          ),
+        )
+      }
+    },
+    ({ topic, message }) => `${topic}:${message.summary?.activity_id ?? ''}`,
+    500,
+  )
 
   try {
-    // Wait for the initial query to resolve before proceeding
     await cacheDataLoaded
 
     unsubscribeThumbnails = subscribeToThumbnailUpdates(
@@ -84,10 +227,9 @@ export const handleActivityRealtimeUpdates = async (
         const draftData = getCacheEntry().data
         if (!draftData?.pages?.length) return
 
-        // Map version ids/entity ids to their new thumbnail hashes
         const versionHashesData = messages.reduce((acc, message) => {
           if (message.summary.entityType === 'version') {
-            acc[message.summary.entityId] = message.summary.thumbnailHash || '' // Use empty string if undefined
+            acc[message.summary.entityId] = message.summary.thumbnailHash || ''
           }
           return acc
         }, {} as Record<string, string>)
@@ -98,27 +240,20 @@ export const handleActivityRealtimeUpdates = async (
           if (!draft || !draft.pages) return
           draft.pages.forEach((page) => {
             page.activities?.forEach((activity) => {
-              // Version hashes in activities exist when Activity is on a version.
-              // Or the referenceId points to the version entity.
               if (
                 activity.referenceType === 'version' &&
                 activity.referenceId &&
                 versionHashesData[activity.referenceId] !== undefined
               ) {
-                if (!activity.version) {
-                  activity.version = {} as any
-                }
+                if (!activity.version) activity.version = {} as any
                 activity.version!.thumbnailHash = versionHashesData[activity.referenceId]
               }
-              // Add check for entityId as well
               if (
                 activity.origin.type === 'version' &&
                 activity.origin.id &&
                 versionHashesData[activity.origin.id] !== undefined
               ) {
-                if (!activity.version) {
-                  activity.version = {} as any
-                }
+                if (!activity.version) activity.version = {} as any
                 activity.version!.thumbnailHash = versionHashesData[activity.origin.id]
               }
             })
@@ -128,206 +263,22 @@ export const handleActivityRealtimeUpdates = async (
       ['version'],
     )
 
-    const handlePubSub = async (topic: string, message: ActivityMessage) => {
-      const activityId = message.summary?.activity_id
-      if (!activityId) {
+    const handlePubSub = (topic: string, message: ActivityMessage) => {
+      if (!message.summary?.activity_id) {
         console.warn('[Activity RT] Activity message missing activity_id', message)
         return
       }
-
-      const projectName = message.project
-      const references = message.summary?.references || []
-      const relevantReferenceTypes = ['origin', 'mention', 'relation']
-      const entityIds = references
-        .filter((reference) => relevantReferenceTypes.includes(reference.reference_type))
-        .map((reference) => reference.entity_id)
-
-      // Check if this activity is relevant to the current cache
-      const queryEntityIds = Array.isArray(queryArg.entityIds)
-        ? queryArg.entityIds
-        : [queryArg.entityIds]
-
-      const isRelevant = queryEntityIds.some((qId) => entityIds.includes(qId))
-
-      if (!isRelevant && queryEntityIds.length > 0) {
-        return
-      }
-
-      const activityType = message.summary?.activity_type
-      if (!activityType) {
-        return
-      }
-
-      // Handle deletion
-      if (topic === 'activity.deleted') {
-        updateCachedData((draft) => {
-          if (!draft || !draft.pages) {
-            console.warn('[Activity RT] No draft or pages found for deletion')
-            return
-          }
-
-          let deleted = false
-          for (const page of draft.pages) {
-            const index = page.activities?.findIndex(
-              (activity) => activity.activityId === activityId,
-            )
-            if (index !== -1) {
-              page.activities.splice(index, 1)
-              deleted = true
-            }
-          }
-
-          if (deleted) {
-          } else {
-          }
-        })
-        return
-      }
-
-      // Handle creation and updates
-      try {
-        // Fetch the updated activity data using the enhanced endpoint
-        // The GetActivitiesById endpoint is enhanced to return ActivitiesResult via transformResponse
-        const result = await dispatch(
-          gqlApi.endpoints.GetActivitiesById.initiate(
-            {
-              projectName,
-              activityIds: [activityId],
-              entityIds,
-            },
-            {
-              forceRefetch: true, // Always fetch fresh data
-            },
-          ),
-        )
-
-        // Check if we have an error
-        if ('error' in result && result.error) {
-          console.error('[Activity RT] Error fetching activity:', result.error)
-          throw new Error('Failed to fetch activity')
-        }
-
-        // The transformResponse in enhanceActivitiesApi converts GetActivitiesByIdQuery to ActivitiesResult
-        // TypeScript doesn't see this transformation, so we cast through unknown
-        const unknownData: unknown = result.data
-        const res = unknownData as ActivitiesResult
-        const newActivities = res?.activities || []
-
-        if (newActivities.length === 0) {
-          console.warn('[Activity RT] No activities found for activity_id', activityId)
-          return
-        }
-
-        const newActivity: FeedActivity = newActivities[0]
-
-        // Determine activity types to check against
-        const activityTypes = [activityType]
-        if (activityType === 'comment') {
-          const body = newActivity?.body
-          const hasChecklist = bodyHasChecklist(body || '')
-          if (hasChecklist) {
-            activityTypes.push('checklist')
-          }
-        }
-
-        // Check if this activity type is relevant to the query
-        const queryActivityTypes = queryArg.activityTypes
-        const queryActivityTypesArray = Array.isArray(queryActivityTypes)
-          ? queryActivityTypes
-          : queryActivityTypes
-          ? [queryActivityTypes]
-          : []
-        const isActivityTypeRelevant =
-          queryActivityTypesArray.length === 0 ||
-          queryActivityTypesArray.some((type: string) => activityTypes.includes(type))
-
-        if (!isActivityTypeRelevant) {
-          return
-        }
-
-        // Update the cache
-        updateCachedData((draft) => {
-          if (!draft || !draft.pages) {
-            console.warn('[Activity RT] No draft or pages found for update')
-            return
-          }
-
-          // Check if activity already exists in any page
-          let existingActivityFound = false
-          for (const page of draft.pages) {
-            const index = page.activities?.findIndex(
-              (activity) => activity.activityId === activityId,
-            )
-            if (index !== -1) {
-              // Update existing activity
-              page.activities[index] = newActivity
-              existingActivityFound = true
-              break
-            }
-          }
-
-          // If it's a new activity (topic is 'activity.created'), add it to the first page
-          if (!existingActivityFound && topic === 'activity.created') {
-            if (draft.pages.length > 0 && draft.pages[0].activities) {
-              // Add to the beginning of the first page (most recent activities first)
-              // Since we're using reverse chronological order (last: N), prepend to the beginning
-              draft.pages[0].activities.unshift(newActivity)
-            } else {
-              console.warn('[Activity RT] Cannot add activity: no pages or activities array')
-            }
-          }
-
-          // If this is a status change, update any version.publish activities in the cache
-          if (
-            newActivity.activityType === 'status.change' &&
-            newActivity.origin?.type === 'version'
-          ) {
-            const versionId = newActivity.origin.id
-            const newStatus = newActivity.activityData?.newValue
-            if (newStatus) {
-              draft.pages.forEach((page) => {
-                page.activities?.forEach((activity) => {
-                  if (
-                    activity.activityType === 'version.publish' &&
-                    activity.origin?.id === versionId
-                  ) {
-                    if (!activity.version) {
-                      activity.version = {} as any
-                    }
-                    activity.version!.status = newStatus
-                  }
-                })
-              })
-            }
-          }
-        })
-      } catch (error) {
-        console.error('[Activity RT] Error fetching activity data for real-time update:', error)
-
-        // Invalidate the cache for these entities to trigger a refetch
-        dispatch(
-          gqlApi.util.invalidateTags(
-            entityIds.map((entityId) => ({ type: 'entityActivities', id: entityId })),
-          ),
-        )
-      }
+      batcher.add({ topic, message })
     }
 
-    // Subscribe to activity topic
     token = PubSub.subscribe(['activity'], handlePubSub)
   } catch (error) {
     console.error('[Activity RT] Error in activity real-time handler setup:', error)
-    // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`
   }
 
-  // Wait for cache entry to be removed
   await cacheEntryRemoved
 
-  // Cleanup: unsubscribe from PubSub
-  if (token) {
-    PubSub.unsubscribe(token)
-  }
-  if (unsubscribeThumbnails) {
-    unsubscribeThumbnails()
-  }
+  if (token) PubSub.unsubscribe(token)
+  if (unsubscribeThumbnails) unsubscribeThumbnails()
+  batcher.clear()
 }

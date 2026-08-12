@@ -114,7 +114,7 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, wrapMinHeight, pt }) =
 
   useLayoutEffect(() => {
     const container = containerRef.current
-    if (!container || offscreenChips.length === 0) return
+    if (!container || offscreenChips.length === 0 || offscreenChips.length !== values.length) return
 
     const chipElements = Array.from(container.querySelectorAll('.offscreen-chip'))
     if (chipElements.length !== values.length) return
