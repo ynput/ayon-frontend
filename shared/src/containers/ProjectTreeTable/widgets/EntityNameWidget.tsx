@@ -25,10 +25,6 @@ const StyledEntityNameWidget = styled.div`
   height: 100%;
   width: 100%;
   padding-right: 8px;
-
-  &.stacked {
-    align-items: flex-start;
-  }
 `
 
 const StyledContentWrapper = styled.div`
@@ -45,6 +41,8 @@ const StyledContentWrapper = styled.div`
 const StyledContentAbsolute = styled.div`
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: center;
 `
 
 const StyledContent = styled.div`
@@ -62,7 +60,6 @@ const StyledContent = styled.div`
   &.stacked {
     height: auto;
     max-height: 100%;
-    align-items: flex-start;
   }
 
   /* &:hover {

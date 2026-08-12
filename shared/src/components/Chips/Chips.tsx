@@ -13,11 +13,7 @@ const ChipsContainer = styled.div`
 
   &.multi-row {
     flex-wrap: wrap;
-    align-content: flex-start;
-  }
-
-  &.stacked {
-    align-items: flex-start;
+    align-content: center;
   }
 `
 
@@ -87,7 +83,6 @@ export type ChipValue = {
 interface ChipsProps {
   values: ChipValue[]
   disabled?: boolean
-  wrapMinHeight?: number
   pt?: {
     chip?: Partial<HTMLAttributes<HTMLDivElement>>
   }
@@ -96,15 +91,13 @@ interface ChipsProps {
 type ChipsLayout = {
   visibleCount: number
   rows: number
-  isTall: boolean
 }
 
-export const Chips: FC<ChipsProps> = ({ values, disabled, wrapMinHeight, pt }) => {
+export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [{ visibleCount, rows, isTall }, setLayout] = useState<ChipsLayout>({
+  const [{ visibleCount, rows }, setLayout] = useState<ChipsLayout>({
     visibleCount: 0,
     rows: 1,
-    isTall: false,
   })
   const [offscreenChips, setOffscreenChips] = useState<ChipValue[]>([])
 
@@ -160,12 +153,8 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, wrapMinHeight, pt }) =
         visibleCount--
       }
 
-      const isTall = wrapMinHeight !== undefined && containerHeight >= wrapMinHeight
-
       setLayout((prev) =>
-        prev.visibleCount === visibleCount && prev.rows === rows && prev.isTall === isTall
-          ? prev
-          : { visibleCount, rows, isTall },
+        prev.visibleCount === visibleCount && prev.rows === rows ? prev : { visibleCount, rows },
       )
     }
 
@@ -176,7 +165,7 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, wrapMinHeight, pt }) =
     calculateLayout()
 
     return () => resizeObserver.disconnect()
-  }, [values, offscreenChips, wrapMinHeight])
+  }, [values, offscreenChips])
 
   if (disabled) return null
 
@@ -189,7 +178,7 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, wrapMinHeight, pt }) =
   const hiddenCount = visibleCount ? values.length - visibleValues.length : 0
 
   return (
-    <ChipsContainer ref={containerRef} className={clsx({ 'multi-row': rows > 1, stacked: isTall })}>
+    <ChipsContainer ref={containerRef} className={clsx({ 'multi-row': rows > 1 })}>
       {visibleValues.map((chip, index) => (
         <Chip
           {...pt?.chip}

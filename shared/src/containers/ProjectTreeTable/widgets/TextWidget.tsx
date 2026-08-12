@@ -46,7 +46,6 @@ export const StyledBaseTextWidget = styled.span`
       overflow: hidden;
       width: 100%;
       max-height: 100%;
-      align-self: flex-start;
 
       > .icon {
         margin-right: 4px;

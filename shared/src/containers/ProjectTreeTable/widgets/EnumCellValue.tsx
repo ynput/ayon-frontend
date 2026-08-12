@@ -50,9 +50,7 @@ const StyledWidget = styled.div`
 
   /* wrapped rows sit on a fixed row lattice, so the height clip can only land between rows */
   ${wrapMode`
-    &:not(.item) {
-      align-items: flex-start;
-
+    &.multi-select:not(.item) {
       .values {
         --wrap-row-height: 24px;
         --wrap-row-gap: var(--base-gap-small);
@@ -206,7 +204,14 @@ export const EnumCellValue = ({
   }
 
   return (
-    <StyledWidget className={clsx(className, { selected: isSelected, item: isItem })} {...props}>
+    <StyledWidget
+      className={clsx(className, {
+        selected: isSelected,
+        item: isItem,
+        'multi-select': isMultiSelect,
+      })}
+      {...props}
+    >
       <StyledValuesContainer className="values">
         {selectedOptions.map((option, i) => (
           <StyledValueWrapper key={option.value.toString() + i}>

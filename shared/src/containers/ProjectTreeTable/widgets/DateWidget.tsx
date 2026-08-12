@@ -11,7 +11,6 @@ const StyledDateValue = styled.span`
 
   ${wrapMode`
     white-space: normal;
-    align-self: flex-start;
   `}
 `
 
