@@ -905,6 +905,7 @@ export type ProjectNodeFoldersArgs = {
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
+  taskSearch?: InputMaybe<Scalars['String']['input']>;
 };
 
 
