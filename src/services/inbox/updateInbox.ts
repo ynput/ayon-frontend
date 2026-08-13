@@ -14,12 +14,11 @@ export interface Arg extends ManageInboxItemApiArg {
 }
 
 // When reading a message, we need to update the unread count
-const patchUnreadCount = (dispatch: any, count: number | 'all', important: boolean) => {
+const patchUnreadCount = (dispatch: any, count: number, important: boolean) => {
   dispatch(
-    enhancedInboxGraphql.util.updateQueryData('GetInboxUnreadCount', { important }, (draft) => {
-      // console.log('updating unread count: ', draft - count, count)
-      return count === 'all' ? 0 : Math.max(0, draft - count)
-    }),
+    enhancedInboxGraphql.util.updateQueryData('GetInboxUnreadCount', { important }, (draft) =>
+      Math.max(0, draft - count),
+    ),
   )
 }
 
@@ -75,10 +74,18 @@ const enhancedRest = inboxApi.enhanceEndpoints({
         }
 
         const movedMessages = new Map<string, any>()
+        // referenceIds of the unread rows removed from any cache - drives the badge
+        const clearedUnread = new Set<string>()
 
         let tagsToInvalidate = [{ type: 'inbox', id: 'hasUnread' }]
 
         const patches: { undo: () => void }[] = []
+
+        // `all` is scoped to one project on the backend, so the cross-project cache must only
+        // lose that project's rows - wiping it hides every other project until the entry expires
+        const isLeaving = all
+          ? (m: any) => m.projectName === projectName
+          : (m: any) => ids.includes(m.referenceId)
 
         const projectArgs = getProjectInboxArgs(getState(), projectName)
         const patchProjectInbox = (
@@ -112,12 +119,12 @@ const enhancedRest = inboxApi.enhanceEndpoints({
           //   the cache to remove from (current tab). The recipe runs once per cached
           //   variant of the tab, and each holds a different subset, so collect the union
           patchInbox({ active, important }, (draft) => {
-            const removed = all
-              ? draft.messages
-              : draft.messages.filter((m) => ids.includes(m.referenceId))
-            removed.forEach((m) => movedMessages.set(m.referenceId, current(m)))
+            draft.messages.filter(isLeaving).forEach((m) => {
+              movedMessages.set(m.referenceId, current(m))
+              if (!m.read) clearedUnread.add(m.referenceId)
+            })
 
-            draft.messages = all ? [] : draft.messages.filter((m) => !ids.includes(m.referenceId))
+            draft.messages = draft.messages.filter((m) => !isLeaving(m))
           })
 
           //  now where do we add the cleared message
@@ -140,7 +147,7 @@ const enhancedRest = inboxApi.enhanceEndpoints({
             // remove the message from the cleared tab cache
             patchInbox({ active: false, important: null }, (draft) => {
               // remove the messages from cleared cache
-              draft.messages = draft.messages.filter((m) => !ids.includes(m.referenceId))
+              draft.messages = draft.messages.filter((m) => !isLeaving(m))
             })
             // we don't know if the message will go to important or other tab
             // so just invalidate all the tabs and unread counts
@@ -160,9 +167,10 @@ const enhancedRest = inboxApi.enhanceEndpoints({
             .forEach((args) =>
               patchProjectInbox(args, (draft) => {
                 draft.pages.forEach((page) => {
-                  page.messages = all
-                    ? []
-                    : page.messages.filter((m: any) => !ids.includes(m.referenceId))
+                  page.messages.filter(isLeaving).forEach((m: any) => {
+                    if (!m.read) clearedUnread.add(m.referenceId)
+                  })
+                  page.messages = page.messages.filter((m: any) => !isLeaving(m))
                 })
               }),
             )
@@ -205,18 +213,18 @@ const enhancedRest = inboxApi.enhanceEndpoints({
         }
 
         // we need to update the unread count
-        if (status === 'unread' && !isActiveChange) {
+        if (isActiveChange && status === 'inactive') {
+          // clearing marks the rows read, so only the unread ones move the badge
+          if (clearedUnread.size) patchUnreadCount(dispatch, clearedUnread.size, important)
+          // `all` clears beyond what the cache held, so the exact figure must come from the server
+          if (all) tagsToInvalidate.push({ type: 'inbox', id: 'unreadCount' })
+        } else if (status === 'unread' && !isActiveChange) {
           // a message being marked as unread (in other or important)
           // so increase the unread count
           patchUnreadCount(dispatch, -ids.length, important)
-        } else if ((status === 'read' || status === 'inactive') && !isRead) {
+        } else if (status === 'read' && !isRead) {
           // invalidating the unread count
           patchUnreadCount(dispatch, ids.length, important)
-        }
-
-        // we are clearing all messages so remove read count from important
-        if (all) {
-          patchUnreadCount(dispatch, 'all', true)
         }
 
         try {

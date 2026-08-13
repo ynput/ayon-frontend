@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef } from 'react'
 import { useQueryParam } from 'use-query-params'
 
 // not `project`: DetailsPanelContext reads that one together with type + id to open an
-// entity, so writing the inbox selection into it breaks the details panel deep link
+// entity, and the details panel rewrites it on every message opened, so reusing it would
+// both break the deep link and pin the inbox to whatever was last clicked
 export const INBOX_PROJECT_PARAM = 'inboxProject'
 
 interface Options {
@@ -22,11 +23,8 @@ const useInboxProject = ({
   isReady,
 }: Options): [string | null, (projectName: string | null) => void] => {
   const [urlProject, setUrlProject] = useQueryParam<string | undefined>(INBOX_PROJECT_PARAM)
-  const [entityProject] = useQueryParam<string | undefined>('project')
 
-  // A link wins once on arrival, after that the view drives the URL. Only once - the details
-  // panel rewrites `project` on every entity it opens, so reacting to it would switch the
-  // list out from under the user whenever they click a message.
+  // a link wins once on arrival, after that the view drives the URL
   const adopted = useRef(false)
 
   useEffect(() => {
@@ -34,9 +32,8 @@ const useInboxProject = ({
 
     if (!adopted.current) {
       adopted.current = true
-      const deepLink = urlProject ?? entityProject
-      if (deepLink && deepLink !== viewProject) {
-        onViewProjectChange(deepLink)
+      if (urlProject && urlProject !== viewProject) {
+        onViewProjectChange(urlProject)
         return
       }
     }
@@ -44,7 +41,7 @@ const useInboxProject = ({
     if ((viewProject ?? undefined) !== urlProject) {
       setUrlProject(viewProject ?? undefined, 'replaceIn')
     }
-  }, [enabled, isReady, urlProject, entityProject, viewProject, onViewProjectChange, setUrlProject])
+  }, [enabled, isReady, urlProject, viewProject, onViewProjectChange, setUrlProject])
 
   const setProject = useCallback(
     (projectName: string | null) => {

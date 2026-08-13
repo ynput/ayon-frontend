@@ -86,6 +86,7 @@ const Inbox = ({ filter }: InboxProps) => {
   const {
     projects: { all: projects },
     isLoading: globalIsLoading,
+    error: globalError,
   } = useGlobalContext()
 
   // get all project names
@@ -119,6 +120,10 @@ const Inbox = ({ filter }: InboxProps) => {
   })
   const isProjectMode = !!selectedProject
 
+  // chips only reach the query in project mode, the unread toggle narrows both
+  const isFiltered =
+    (isProjectMode && !!inboxFilter?.conditions?.length) || (isActive && showUnreadOnly)
+
   const projectArgs = useMemo(
     () => ({
       projectName: selectedProject as string,
@@ -142,10 +147,23 @@ const Inbox = ({ filter }: InboxProps) => {
   // so the project query waits until the name is known to exist
   const isKnownProject = !!selectedProject && projects.some((p) => p.name === selectedProject)
 
+  // both queries are skipped in this window, so it has to read as loading or the list
+  // would claim the inbox is empty before anything was fetched. On error it resolves to
+  // the error placeholder instead, otherwise the placeholders would never stop.
+  const isResolvingProject = isProjectMode && !isKnownProject && !globalError.projects
+
+  // a failed project list is empty too, and dropping the selection on a network blip would
+  // wipe it from the saved view
   useEffect(() => {
-    if (!selectedProject || globalIsLoading.projects) return
+    if (!selectedProject || globalIsLoading.projects || globalError.projects) return
     if (!isKnownProject) setSelectedProject(null)
-  }, [selectedProject, isKnownProject, globalIsLoading.projects, setSelectedProject])
+  }, [
+    selectedProject,
+    isKnownProject,
+    globalIsLoading.projects,
+    globalError.projects,
+    setSelectedProject,
+  ])
 
   // null, not false: false would ask the resolver for read messages only
   const unreadArg = isActive && showUnreadOnly ? true : null
@@ -165,6 +183,7 @@ const Inbox = ({ filter }: InboxProps) => {
   const {
     isLoading: isLoadingInbox,
     isFetching: isFetchingInbox,
+    isUninitialized,
     error: errorInbox,
     refetch,
   } = activeQuery
@@ -340,6 +359,7 @@ const Inbox = ({ filter }: InboxProps) => {
   // REFRESH INBOX
   const [refreshInbox, { isRefreshing }] = useInboxRefresh({
     isFetching: isFetchingInbox,
+    isUninitialized,
     refetch,
     dispatch,
   })
@@ -400,16 +420,19 @@ const Inbox = ({ filter }: InboxProps) => {
     return byProject
   }
 
+  const clearGroups = (groups: GroupedMessage[]): Promise<void>[] => {
+    const status = isActive ? 'inactive' : 'unread'
+    const byProject = groupReferenceIdsByProject(groups)
+    return Object.entries(byProject).map(([projectName, { ids, reads }]) =>
+      handleUpdateMessages(ids, status, projectName, true, reads.every(Boolean)),
+    )
+  }
+
   const clearSelected = (): void => {
     const groups = getSelectedGroups()
     if (!groups.length) return
 
-    const status = isActive ? 'inactive' : 'unread'
-    const byProject = groupReferenceIdsByProject(groups)
-    Object.entries(byProject).forEach(([projectName, { ids, reads }]) => {
-      const isRead = reads.every(Boolean)
-      handleUpdateMessages(ids, status, projectName, true, isRead)
-    })
+    clearGroups(groups)
     setSelected([])
     lastSelectedIndexRef.current = -1
   }
@@ -426,19 +449,28 @@ const Inbox = ({ filter }: InboxProps) => {
   }
 
   const handleClearAll = async (): Promise<void> => {
-    let promises = []
-    // clear every project, or only the selected one when filtering by project
-    const projectsToClear = isProjectMode
-      ? [selectedProject as string]
-      : projects.map((p) => p.name)
-    for (const project of projectsToClear) {
-      const promise = clearMessages(null, [], project, true)
-      promises.push(promise)
+    let promises: Promise<void>[] = []
+    let clearedCount = 0
+
+    if (isFiltered) {
+      // the backend `all` flag ignores the filters, so a filtered list has to name the
+      // messages it is clearing - anything the filters hide must survive
+      if (!groupedMessages.length) return
+      clearedCount = groupedMessages.reduce((sum, g) => sum + g.messages.length, 0)
+      promises = clearGroups(groupedMessages)
+      setSelected([])
+      lastSelectedIndexRef.current = -1
+    } else {
+      // nothing is hidden, so the cheap backend flag can clear whole projects at once
+      const projectsToClear = isProjectMode
+        ? [selectedProject as string]
+        : projects.map((p) => p.name)
+      promises = projectsToClear.map((project) => clearMessages(null, [], project, true))
     }
 
     try {
       await Promise.all(promises)
-      toast.success('All messages cleared')
+      toast.success(isFiltered ? `Cleared ${clearedCount} messages` : 'All messages cleared')
     } catch (error) {
       console.error(error)
     }
@@ -448,7 +480,8 @@ const Inbox = ({ filter }: InboxProps) => {
   // gating the list on it flashes the placeholders a second time.
   // Keyed on isFetching: RTK Query keeps the previous project's data while the new query
   // runs, so isLoading, isSuccess and data all still describe the old project for ~500ms.
-  const isLoadingAny = isLoadingViews || (isFetchingInbox && !isPaginating) || isRefreshing
+  const isLoadingAny =
+    isLoadingViews || isResolvingProject || (isFetchingInbox && !isPaginating) || isRefreshing
 
   // Cast placeholder messages to satisfy GroupedMessage shape for rendering
   const messagesData = isLoadingAny
@@ -645,6 +678,9 @@ const Inbox = ({ filter }: InboxProps) => {
                     onClick={handleClearAll}
                     disabled={!messages.length}
                     shortcut={{ children: getPlatformShortcutKey('c', [KeyMode.Shift]) }}
+                    data-tooltip={
+                      isFiltered ? 'Clears only the messages matching the filters' : undefined
+                    }
                   >
                     Clear all
                   </Button>
@@ -715,7 +751,7 @@ const Inbox = ({ filter }: InboxProps) => {
                     <EmptyPlaceholder
                       icon="done_all"
                       message="All caught up! No messages to show."
-                      error={errorInbox}
+                      error={errorInbox || globalError.projects}
                     />
                   )}
                 </SplitterPanel>

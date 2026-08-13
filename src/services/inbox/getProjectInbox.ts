@@ -7,6 +7,8 @@ import { TransformedInboxMessages, transformInboxMessages } from './inboxTransfo
 const PROJECT_INBOX_PAGE_SIZE = 100
 // a realtime message only ever lands at the top, so the top-up does not need a full page
 const PROJECT_INBOX_REALTIME_SIZE = 20
+// publishing a batch emits one inbox.message per version, so wait out the burst
+const PROJECT_INBOX_REALTIME_DEBOUNCE = 1000
 
 export interface ProjectInboxInfiniteArgs {
   projectName: string
@@ -108,26 +110,24 @@ export const projectInboxApi = gqlApi.injectEndpoints({
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch },
       ) {
         let token
+        let pendingTopUp: ReturnType<typeof setTimeout> | undefined
+        // an arrival dropped while a top-up is already queued still has to be answered
+        let missedArrival = false
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
-          const handlePubSub = async (topic: string, message: any) => {
-            if (topic !== 'inbox.message') return
-            if (message?.project !== queryArg.projectName) return
-
-            const isImportant = !!message?.summary?.isImportant
-            if (queryArg.important !== null && queryArg.important !== isImportant) return
-
+          const topUp = async (cursor: string) => {
             const result = await fetchPage(dispatch, queryArg, {
               last: PROJECT_INBOX_REALTIME_SIZE,
-              cursor: '',
+              cursor,
             })
             if (result.error) return
 
-            const { messages } = transformPage(result.data, queryArg.important)
+            const { messages, pageInfo } = transformPage(result.data, queryArg.important)
             if (!messages.length) return
 
+            let added = 0
             updateCachedData((draft) => {
               if (!draft?.pages?.length) return
 
@@ -137,8 +137,42 @@ export const projectInboxApi = gqlApi.injectEndpoints({
               )
 
               const newMessages = messages.filter((m) => !cachedIds.has(m.referenceId))
-              if (newMessages.length) draft.pages[0].messages.unshift(...newMessages)
+              added = newMessages.length
+              if (added) draft.pages[0].messages.unshift(...newMessages)
             })
+
+            // nothing in the page was already held, so the burst outran it - walk back
+            // until the rows we do hold come into view, otherwise the gap stays forever
+            if (added === PROJECT_INBOX_REALTIME_SIZE && pageInfo.hasPreviousPage) {
+              scheduleTopUp(pageInfo.endCursor || '')
+            } else if (missedArrival) {
+              missedArrival = false
+              scheduleTopUp('')
+            }
+          }
+
+          const scheduleTopUp = (cursor: string) => {
+            if (pendingTopUp) {
+              // it landed above the page already queued, so it needs a pass of its own
+              if (!cursor) missedArrival = true
+              return
+            }
+            pendingTopUp = setTimeout(() => {
+              pendingTopUp = undefined
+              void topUp(cursor)
+            }, PROJECT_INBOX_REALTIME_DEBOUNCE)
+          }
+
+          const handlePubSub = (topic: string, message: any) => {
+            if (topic !== 'inbox.message') return
+            if (message?.project !== queryArg.projectName) return
+            // a new message is always active, so the cleared tab can never gain one
+            if (!queryArg.active) return
+
+            const isImportant = !!message?.summary?.isImportant
+            if (queryArg.important !== null && queryArg.important !== isImportant) return
+
+            scheduleTopUp('')
           }
 
           // sub to websocket topic
@@ -149,6 +183,7 @@ export const projectInboxApi = gqlApi.injectEndpoints({
         }
         // cacheEntryRemoved will resolve when the cache subscription is no longer active
         await cacheEntryRemoved
+        if (pendingTopUp) clearTimeout(pendingTopUp)
         PubSub.unsubscribe(token)
       },
     }),
