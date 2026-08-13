@@ -42,16 +42,27 @@ export interface MoveToFolderDialogProps {
   ids: string[]
   isReview?: boolean
   isStoryboards?: boolean
+  // none of the moved items sit in a folder, so there is nothing to unset
+  canUnset?: boolean
   onMove: (targetFolderId: string) => Promise<void>
+  onUnset: () => Promise<void>
   onClose: () => void
 }
+
+const Footer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+`
 
 const MoveToFolderDialogInner: FC<MoveToFolderDialogProps> = ({
   moving,
   ids,
   isReview,
   isStoryboards,
+  canUnset,
   onMove,
+  onUnset,
   onClose,
 }) => {
   const { selectedRows } = useListsContext()
@@ -66,6 +77,11 @@ const MoveToFolderDialogInner: FC<MoveToFolderDialogProps> = ({
   const moveTo = (folderId: string) => {
     if (disabledFolderMessages.has(folderId)) return
     onMove(folderId).catch(() => {})
+    onClose()
+  }
+
+  const unset = () => {
+    onUnset().catch(() => {})
     onClose()
   }
 
@@ -88,12 +104,28 @@ const MoveToFolderDialogInner: FC<MoveToFolderDialogProps> = ({
       header={header}
       style={{ width: '100%', maxWidth: 800, height: '80vh' }}
       footer={
-        <Button
-          label="Move"
-          variant="filled"
-          disabled={!targetFolderId}
-          onClick={() => targetFolderId && moveTo(targetFolderId)}
-        />
+        <Footer>
+          <Button
+            label={moving === 'folders' ? 'Make root folder' : 'Unset folder'}
+            icon="folder_off"
+            variant="text"
+            disabled={!canUnset}
+            data-tooltip={
+              canUnset
+                ? undefined
+                : moving === 'folders'
+                ? 'Already a root folder'
+                : 'Not in a folder'
+            }
+            onClick={unset}
+          />
+          <Button
+            label="Move"
+            variant="filled"
+            disabled={!targetFolderId}
+            onClick={() => targetFolderId && moveTo(targetFolderId)}
+          />
+        </Footer>
       }
     >
       <TableContainer>

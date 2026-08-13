@@ -43,7 +43,6 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
     deleteLists,
     createReviewSessionList,
     isReview,
-    onRemoveListsFromFolder,
     onOpenFolderList,
     openNewList,
     onDeleteListFolders,
@@ -133,10 +132,10 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
           )
         : listFolders.length > 0
 
-      // "Unset folder" only makes sense when at least one selected list is in a folder
+      // lists already in a folder can still open the picker to unset it there
       const hasAnyFolder = newSelectedLists.some((list) => list.entityListFolderId)
 
-      // Move opens the folder picker dialog; unsetting the folder is one click, so it stays inline
+      // Move opens the folder picker dialog, which also hosts the unset action
       const moveMenuItems: any[] = []
       if (powerLicense) {
         moveMenuItems.push(
@@ -151,18 +150,10 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
             hidden:
               (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
               moveIds.length === 0 ||
-              !hasTargetFolders ||
+              (!hasTargetFolders && !hasAnyFolder) ||
               // Hide if user doesn't have edit permission on all selected items
               (allSelectedRowsAreLists && !userCanEditAllLists) ||
               (allSelectedRowsAreFolders && !userCanEditAllFolders),
-          },
-          {
-            label: 'Unset folder',
-            icon: FOLDER_ICON_REMOVE,
-            // failures already toast inside the mutation hook
-            command: () => onRemoveListsFromFolder(selectedListIds).catch(() => {}),
-            shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
-            hidden: !allSelectedRowsAreLists || !hasAnyFolder || !userCanEditAllLists,
           },
           {
             label: 'Make root folder',
@@ -301,7 +292,6 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
       setListDetailsOpen,
       deleteLists,
       createReviewSessionList,
-      onRemoveListsFromFolder,
       onOpenFolderList,
       onDeleteListFolders,
       onRemoveFoldersFromFolder,
