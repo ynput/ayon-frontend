@@ -70,9 +70,16 @@ const InboxSearchFilter = ({
     { projects: [projectName as string] },
     { skip: isDisabled },
   )
-  const { data: categories = [] } = useGetActivityCategoriesQuery(
+  const { data: categories = [], isLoading: isLoadingCategories } = useGetActivityCategoriesQuery(
     { projectName: projectName as string },
     { skip: isDisabled },
+  )
+
+  // feedFilterToClientFilters drops conditions whose key has no option, and onFinish writes
+  // the result back to the view - so a saved category chip must keep its option alive even
+  // before the categories arrive, or editing any other chip erases it for good
+  const hasSavedCategory = (filter?.conditions || []).some(
+    (c) => 'key' in c && c.key === 'category',
   )
 
   const options: Option[] = useMemo(() => {
@@ -100,7 +107,7 @@ const InboxSearchFilter = ({
       boolean('updates', 'Updates', 'arrow_circle_right'),
       boolean('checklists', 'Checklists', 'check_circle'),
       boolean('has_attachments', 'Attachments', 'attach_file'),
-      ...(categories.length
+      ...(categories.length || isLoadingCategories || hasSavedCategory
         ? [
             {
               id: 'category',
@@ -157,7 +164,7 @@ const InboxSearchFilter = ({
         values: generateDateOptions(),
       },
     ]
-  }, [users, categories, isImportant])
+  }, [users, categories, isImportant, isLoadingCategories, hasSavedCategory])
 
   const filters = useMemo(() => feedFilterToClientFilters(filter, options), [filter, options])
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { toast } from 'react-toastify'
 import { generateWorkingView, useViewsContext, useViewUpdateHelper } from '@shared/containers'
 import { useCreateViewMutation } from '@shared/api'
 import type { QueryFilter } from '@shared/api'
@@ -42,7 +43,13 @@ const useInboxViewSettings = (): Return => {
     createView({ viewType, payload: workingView })
       .unwrap()
       .then(() => setSelectedView(workingView.id as string))
-      .catch((error) => console.error('Failed to create inbox working view:', error))
+      .catch((error) => {
+        // without a baseline every later update aborts inside updateViewSettings, so the
+        // filters would look applied but never persist - drop the mark so it can retry
+        bootstrapped.current.delete(viewType)
+        console.error('Failed to create inbox working view:', error)
+        toast.error('Inbox filters cannot be saved right now')
+      })
   }, [viewType, viewSettings, isLoadingViews, createView, setSelectedView])
 
   // updateViewSettings clears local state by passing null, so a null project (no project

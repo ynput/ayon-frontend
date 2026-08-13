@@ -91,12 +91,16 @@ export const projectInboxApi = gqlApi.injectEndpoints({
             cursor: pageParam?.cursor,
           })
 
-          if (result.error) throw result.error
+          // passed through as-is: it carries the resolver's `detail`, which the placeholder
+          // shows. Rewrapping it loses that, and a hand-built filter is easy to get wrong.
+          if (result.error) return { error: result.error as FetchBaseQueryError }
 
           return { data: transformPage(result.data, queryArg.important) }
         } catch (e: any) {
           console.error('Error in getProjectInboxInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          return {
+            error: { status: 'FETCH_ERROR', error: String(e?.message ?? e) } as FetchBaseQueryError,
+          }
         }
       },
       keepUnusedDataFor: 30,
