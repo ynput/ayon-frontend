@@ -1,4 +1,4 @@
-import { PubSub } from '@shared/util'
+import { createRealtimeBatcher, PubSub } from '@shared/util'
 import { gqlApi } from '@shared/api'
 import type {
   GetInboxHasUnreadQuery,
@@ -56,32 +56,30 @@ export const enhancedInboxGraphql = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch },
       ) {
         let token
+        const batcher = createRealtimeBatcher(
+          (messages: { isImportant?: boolean }[]) => {
+            if (messages.some(({ isImportant }) => isImportant)) {
+              updateCachedData(() => true)
+            }
+
+            const importanceValues = [...new Set(messages.map(({ isImportant }) => isImportant))]
+            dispatch(
+              gqlApi.util.invalidateTags(
+                importanceValues.flatMap((isImportant) => [
+                  { type: 'inbox', id: `important=${isImportant}` },
+                  { type: 'inbox', id: `count-${isImportant}` },
+                ]),
+              ),
+            )
+          },
+          ({ isImportant }) => String(isImportant),
+        )
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
-          const handlePubSub = (topic: string, message: any) => {
-            if (topic !== 'inbox.message') return
-            const isImportant = message?.summary?.isImportant
-            if (isImportant) {
-              // set unread to true
-              updateCachedData(() => true)
-            }
-
-            // invalidate the getInbox cache
-            // invalidate the getInboxUnreadCount cache
-            dispatch(
-              gqlApi.util.invalidateTags([
-                { type: 'inbox', id: `important=${isImportant}` },
-                { type: 'inbox', id: `count-${isImportant}` },
-              ]),
-            )
-            dispatch(
-              gqlApi.util.invalidateTags([
-                { type: 'inbox', id: `important=${isImportant}` },
-                { type: 'inbox', id: `count-${isImportant}` },
-              ]),
-            )
+          const handlePubSub = (_topic: string, message: any) => {
+            batcher.add({ isImportant: message?.summary?.isImportant })
           }
 
           // sub to websocket topic
@@ -94,6 +92,7 @@ export const enhancedInboxGraphql = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
+        batcher.clear()
       },
     },
     GetInboxUnreadCount: {

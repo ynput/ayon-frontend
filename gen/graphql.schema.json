@@ -2413,6 +2413,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "search",
+                "description": "Fuzzy text search filter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "sortBy",
                 "description": null,
                 "type": {
@@ -3967,6 +3979,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderFilter",
+                "description": "Filter products by their parent folders using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "folderIds",
                 "description": "List of parent folder IDs to filter by",
                 "type": {
@@ -4597,7 +4621,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy",
+                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy, folderName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6183,18 +6207,6 @@
         "isOneOf": null,
         "fields": [
           {
-            "name": "Folder",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "OBJECT",
-              "name": "FolderNode",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "active",
             "description": null,
             "args": [],
@@ -6898,6 +6910,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "featuredOnlyEntityType",
+                "description": "Deprecated and noop",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"product\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filter",
                 "description": "Filter tasks using QueryFilter",
                 "type": {
@@ -6922,6 +6950,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderFilter",
+                "description": "Filter tasks by their folders using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "folderIds",
                 "description": "List of folder IDs to filter by",
                 "type": {
@@ -6936,6 +6976,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "hasHero",
+                "description": "Filter versions that have a hero version",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -7048,6 +7100,22 @@
               {
                 "name": "latestOnly",
                 "description": "DEPRECATED List only latest versions",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "latestPerFolder",
+                "description": "\nReturn only a single version - the latest one (by creation order)\nfor each folder that matches all the other given filters.\nThe result set is still ordered according to sortBy.\n",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -9426,6 +9494,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderFilter",
+                "description": "Filter products by their parent folders using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "folderIds",
                 "description": "List of parent folder IDs to filter by",
                 "type": {
@@ -10376,7 +10456,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy",
+                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy, folderName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -10665,6 +10745,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "featuredOnlyEntityType",
+                "description": "Deprecated and noop",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"product\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filter",
                 "description": "Filter tasks using QueryFilter",
                 "type": {
@@ -10689,6 +10785,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderFilter",
+                "description": "Filter tasks by their folders using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "folderIds",
                 "description": "List of folder IDs to filter by",
                 "type": {
@@ -10703,6 +10811,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "hasHero",
+                "description": "Filter versions that have a hero version",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -10815,6 +10935,22 @@
               {
                 "name": "latestOnly",
                 "description": "DEPRECATED List only latest versions",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "latestPerFolder",
+                "description": "\nReturn only a single version - the latest one (by creation order)\nfor each folder that matches all the other given filters.\nThe result set is still ordered according to sortBy.\n",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -13626,18 +13762,6 @@
         "isOneOf": null,
         "fields": [
           {
-            "name": "Folder",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "OBJECT",
-              "name": "FolderNode",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "active",
             "description": null,
             "args": [],
@@ -14420,6 +14544,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "featuredOnlyEntityType",
+                "description": "Deprecated and noop",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "\"product\"",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filter",
                 "description": "Filter tasks using QueryFilter",
                 "type": {
@@ -14444,6 +14584,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderFilter",
+                "description": "Filter tasks by their folders using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "folderIds",
                 "description": "List of folder IDs to filter by",
                 "type": {
@@ -14458,6 +14610,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "hasHero",
+                "description": "Filter versions that have a hero version",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -14570,6 +14734,22 @@
               {
                 "name": "latestOnly",
                 "description": "DEPRECATED List only latest versions",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "latestPerFolder",
+                "description": "\nReturn only a single version - the latest one (by creation order)\nfor each folder that matches all the other given filters.\nThe result set is still ordered according to sortBy.\n",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,

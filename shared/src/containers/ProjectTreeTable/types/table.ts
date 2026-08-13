@@ -41,6 +41,8 @@ export type TableRow = {
   createdAt?: string
   parentId?: string
   folderId?: string | null // all entities have a folder except root folders which will be null
+  taskId?: string | null
+  versionEntityId?: string | null
   parents?: string[]
   folder?: string // parent folder name
   product?: string // product name of product and version parent
@@ -49,6 +51,7 @@ export type TableRow = {
   taskType?: string // linked task type
   taskLabel?: string // linked task label/name
   folderType?: string // parent folder type
+  folderStatus?: string // parent folder status
   subRows?: TableRow[]
   icon?: string | null
   color?: string | null
@@ -62,6 +65,7 @@ export type TableRow = {
   assignees?: string[]
   author?: string
   attrib?: Record<string, any>
+  midnightExclusiveFields?: string[]
   links?: Record<string, LinkValue> // links to other entities, e.g. tasks, versions, products
   subtasks?: SubTaskNode[]
   latestComments?: EntityComment[]
@@ -85,13 +89,14 @@ export type MatchingFolder = FolderListItem & {
 }
 export type FolderNodeMap = Map<string, MatchingFolder>
 type TaskNode = GetTasksByParentQuery['project']['tasks']['edges'][0]['node']
-export type EditorTaskNode = Omit<TaskNode, 'links'> & {
+export type EditorTaskNode = Omit<TaskNode, 'links' | 'data'> & {
   attrib: Record<string, any>
   entityId: string
   entityType: 'task'
   groups?: { value: string; hasNextPage?: string }[]
   links: EntityLink[]
   hasVersions?: boolean
+  data: Record<string, any>
 }
 
 export type EditorVersionNode = {

@@ -36,8 +36,46 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-ki
 // Notification imports
 import { toast } from 'react-toastify'
 import { checkColumnVisibility } from '../../containers/ProjectTreeTable/utils'
-import { SettingsPanelItem } from '../SettingsPanel/SettingsPanelItemTemplate'
+import {
+  SettingsPanelItem,
+  SettingsPanelItemTemplateProps,
+} from '../SettingsPanel/SettingsPanelItemTemplate'
+import { SettingsPanelItemTemplate } from '../SettingsPanel/SettingsPanelItemTemplate'
 import { SettingHighlightedId } from '@shared/context'
+import { InputSwitch } from '@ynput/ayon-react-components'
+
+export interface SettingSwitchProps
+  extends Omit<SettingsPanelItemTemplateProps, 'onChange' | 'item'> {
+  icon?: string
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+  disabled?: boolean
+}
+
+export const SettingSwitch: FC<SettingSwitchProps> = ({
+  icon,
+  label,
+  checked,
+  onChange,
+  disabled,
+  ...props
+}) => (
+  <SettingsPanelItemTemplate
+    item={{ value: label, label, icon }}
+    isDisabled={disabled}
+    style={{ paddingRight: 8 }}
+    disableHover
+    endContent={
+      <InputSwitch
+        checked={checked}
+        disabled={disabled}
+        onChange={(event) => onChange(event.currentTarget.checked)}
+      />
+    }
+    {...props}
+  />
+)
 
 interface ColumnsSettingsProps {
   columns: SettingsPanelItem[]
@@ -69,6 +107,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   sorting,
   rowHeight,
   defaultColumnVisibility,
+  ...props
 }) => {
   // State for the currently dragged column
   const [activeId, setActiveId] = useState<string | null>(null)

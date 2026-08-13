@@ -111,7 +111,7 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
   }
 
   const groupByConfig: GroupByConfig = {
-    showEmpty: showEmptyGroups || false,
+    showEmpty: showEmptyGroups ?? true,
     entityType: '',
   }
 

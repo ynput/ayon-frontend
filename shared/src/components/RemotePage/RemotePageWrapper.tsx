@@ -2,12 +2,15 @@
 // NOTE: it must be wrapped with ViewsProvider someone (probably already by WithViews hoc)
 import { GenericViewModel } from '@shared/api'
 import {
+  DetailsPanelEntityContextType,
   updateViewSettings,
   UpdateViewSettingsFn,
+  useDetailsPanelEntityContext,
   useViewsContext,
   useViewUpdateHelper,
   ViewsContextValue,
 } from '@shared/containers'
+import { DetailsPanelContextType } from '@shared/context'
 import { FC } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
@@ -25,10 +28,22 @@ interface ViewsWithReportsSettings extends ViewsContextValue {
   updateViewSettings: UpdateViewSettingsFn
 }
 
+export interface RemotePageContext {
+  detailsPanel?: DetailsPanelContextType
+  detailsPanelEntity?: DetailsPanelEntityContextType
+}
+
 export interface RemotePageProps {
   router: RouterTypes
   toast?: any
   views?: ViewsWithReportsSettings
+  context?: RemotePageContext
+  dispatch?: any
+  useSelector?: any
+  onOpenImage?: (args: any) => void
+  onGoToFrame?: (frame: number) => void
+  onOpenViewer?: (args: any) => void
+  onUpdateEntity?: (data: { operations: any[]; entityType: string }) => void
   // project specific
   projectName?: string
   state?: any
@@ -39,12 +54,24 @@ export interface RemotePageWrapperProps {
   // project specific
   projectName?: string
   state?: any
+  dispatch?: any
+  useSelector?: any
+  onOpenImage?: (args: any) => void
+  onGoToFrame?: (frame: number) => void
+  onOpenViewer?: (args: any) => void
+  onUpdateEntity?: (data: { operations: any[]; entityType: string }) => void
 }
 
 export const RemotePageWrapper: FC<RemotePageWrapperProps> = ({
   Component,
   projectName,
   state,
+  dispatch,
+  useSelector,
+  onOpenImage,
+  onGoToFrame,
+  onOpenViewer,
+  onUpdateEntity,
   ...props
 }) => {
   const views = useViewsContext()
@@ -60,7 +87,14 @@ export const RemotePageWrapper: FC<RemotePageWrapperProps> = ({
         updateViewSettings: (...args) =>
           updateViewSettings(...args, views, onCreateView, getLatestSettings, markCacheDirty),
       }}
+      context={{}}
       state={state}
+      dispatch={dispatch}
+      useSelector={useSelector}
+      onOpenImage={onOpenImage}
+      onGoToFrame={onGoToFrame}
+      onOpenViewer={onOpenViewer}
+      onUpdateEntity={onUpdateEntity}
       toast={toast}
       {...props}
     />

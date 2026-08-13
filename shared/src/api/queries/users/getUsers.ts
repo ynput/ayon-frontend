@@ -5,7 +5,7 @@ import type {
   GetAllProjectUsersAsAssigneeQuery,
 } from '@shared/api/generated'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { parseAllAttribs } from '../overview'
+import { parseJSONField } from '../overview'
 
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {
@@ -32,7 +32,7 @@ const USER_BY_NAME_QUERY = `
 `
 const USERS_QUERY = `
   query UserList {
-    users(last: 2000, isSupport: false) {
+    users(last: 5000, isSupport: false) {
       edges {
         node {
           name
@@ -75,7 +75,7 @@ query Assignees($names: [String!]!){
 }`
 const ASSIGNEES_QUERY = `
 query Assignees($projectName: String) {
-  users(last: 2000 projectName: $projectName, isSupport: false) {
+  users(last: 5000, projectName: $projectName, isSupport: false) {
   edges {
     node {
       name
@@ -138,7 +138,7 @@ const injectedApi = gqlApi.injectEndpoints({
             self: e.node.name === selfName,
             avatarUrl: `/api/users/${e.node.name}/avatar`,
             accessGroups: e.node.accessGroups ? JSON.parse(e.node.accessGroups) : {},
-            attrib: parseAllAttribs(e.node.allAttrib),
+            attrib: parseJSONField(e.node.allAttrib),
           }))
       },
       providesTags: (users) =>
@@ -159,7 +159,7 @@ const injectedApi = gqlApi.injectEndpoints({
         res?.data?.users.edges.map((e: any) => ({
           ...e.node,
           avatarUrl: `/api/users/${e.node?.name}/avatar`,
-          attrib: parseAllAttribs(e.node.allAttrib),
+          attrib: parseJSONField(e.node.allAttrib),
         })),
       providesTags: (res) =>
         res

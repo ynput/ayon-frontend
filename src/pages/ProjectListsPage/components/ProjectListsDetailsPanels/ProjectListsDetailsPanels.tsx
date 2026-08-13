@@ -74,15 +74,7 @@ export default function ProjectListsDetailsPanels({
     )
   }, [uriEntityId, isLoadingListItems, listItemsData, listItemsFilters])
 
-  // Try to get the entity context, but it might not exist
-  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null
-  const entityContext = useDetailsPanelEntityContext()
-  try {
-    selectedEntity = entityContext.selectedEntity
-  } catch {
-    // Context not available, that's fine
-    selectedEntity = null
-  }
+  const { selectedEntity } = useDetailsPanelEntityContext()
 
   // Check if any selected rows are restricted entities
   const hasNonRestrictedSelectedRows = selectedRows.some((rowId) => {
@@ -93,7 +85,7 @@ export default function ProjectListsDetailsPanels({
   // Check if we should show the details panel
   // Don't show entity details panel if only selected entity is restricted
   const shouldShowEntityDetailsPanel =
-    (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
+    selectedEntity !== null || (selectedRows.length > 0 && hasNonRestrictedSelectedRows)
   const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
 
   const useModules = isStoryboards ? useStoryboardsCardsModules : useReviewSessionCardsModules

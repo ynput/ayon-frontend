@@ -41,10 +41,17 @@ const ClipboardContext = createContext<ClipboardContextType | undefined>(undefin
 
 const DISPLAY_PREFERRED_COLS = new Set([
   'version',
+  'version_entity',
   'product',
   'productBaseType',
-  'taskLabel',
+  'task_entity',
 ])
+
+const DISPLAY_COLUMN_FIELDS: Record<string, string> = {
+  folder_entity: 'folder',
+  task_entity: 'taskLabel',
+  version_entity: 'versionName',
+}
 
 export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   children,
@@ -200,12 +207,13 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               cellValue = commentsToText(comments)
             } else {
               // @ts-ignore
-              let foundValue = getCellValue(entity, colId)
+              const sourceField = DISPLAY_COLUMN_FIELDS[colId] || colId
+              let foundValue = getCellValue(entity, sourceField)
 
               // folder is an object on some entities (product/task) or nested under
               // product (version) - copy the display name the cell shows,
               // falling back to the last parent (parent folder name on tasks/folders)
-              if (colId === 'folder' && typeof foundValue !== 'string') {
+              if (colId === 'folder_entity' && typeof foundValue !== 'string') {
                 const folder = foundValue || (entity as any).product?.folder
                 const parents = 'parents' in entity ? entity.parents : undefined
                 foundValue = folder?.label || folder?.name || parents?.[parents.length - 1] || ''
@@ -222,7 +230,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
                   foundValue === '' ||
                   typeof foundValue === 'object')
               ) {
-                const displayValue = getCellValue(displayRow, colId)
+                const displayValue = getCellValue(displayRow, sourceField)
                 if (displayValue !== undefined && displayValue !== null && displayValue !== '') {
                   foundValue = displayValue
                 }
@@ -288,7 +296,15 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         console.error('Failed to copy to clipboard:', error)
       }
     },
-    [selectedCells, focusedCellId, gridMap, entitiesMap, getEntityById, visibleColumns, displayRowsById],
+    [
+      selectedCells,
+      focusedCellId,
+      gridMap,
+      entitiesMap,
+      getEntityById,
+      visibleColumns,
+      displayRowsById,
+    ],
   )
 
   const doesClipboardContainId = async () => {

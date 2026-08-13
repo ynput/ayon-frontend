@@ -12,7 +12,6 @@ import {
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
 import { ProjectModelWithProducts, usePowerpack } from '@shared/context'
-import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
   queryFilterToClientFilter,
@@ -28,6 +27,7 @@ interface SearchFilterWrapperProps
     Omit<SearchFilterProps, 'options' | 'onFinish' | 'filters' | 'onChange'> {
   projectInfo?: ProjectModelWithProducts
   tasksMap?: TaskNodeMap
+  keepAppliedOptionsVisible?: boolean
   scope?: BuildFilterOptions['scope']
   scopes?: ScopeWithFilterTypes[]
   queryFilters?: QueryFilter
@@ -44,13 +44,13 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   disabledFilters,
   projectInfo,
   tasksMap,
+  keepAppliedOptionsVisible = false,
   scope,
   scopes,
   config,
   pt,
   ...props
 }) => {
-  const { columnOrder } = useColumnSettingsContext()
   const { pinnedSlice, setPinnedSlice } = useSlicerContext()
   const { getFolderById } = useProjectFoldersContext()
 
@@ -79,13 +79,12 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     return false
   }
 
-  const options = useBuildFilterOptions({
+  const { options, groupOptions } = useBuildFilterOptions({
     filterTypes,
     projectNames,
     scope,
     scopes,
     data,
-    columnOrder,
     config: {
       enableExcludes: powerLicense,
       enableOperatorChange: powerLicense,
@@ -118,7 +117,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     const filtersWithPinnedSlice = pinned ? [pinned, ...filters] : filters
 
     return filtersWithPinnedSlice
-  }, [queryFilters, options])
+  }, [queryFilters, options, pinnedSlice, getFolderById])
 
   // keeps track of the filters whilst adding/removing filters
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
@@ -187,6 +186,20 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   const handleCustomRangeClose = () => dateRange.handleCustomRangeClose()
 
+  const handleAppliedOptionClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!keepAppliedOptionsVisible) return
+
+    const option = (event.target as HTMLElement).closest('li')
+    if (!option || option.dataset.parent) return
+
+    const activeFilter = localFilters.find((filter) => filter.id.split('__')[0] === option.id)
+    if (!activeFilter) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    searchFilterRef.current?.openFilter(activeFilter.id)
+  }
+
   const handleOpenCustomRangeForFilter = (filterId: string) =>
     dateRange.openCustomRangeForFilter(filterId, localFilters)
 
@@ -236,25 +249,26 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     // Dropdown closed (or filters committed) — search-chip edit session ends
     editingSearchChipRef.current = null
 
-    // Check if pinned slice was removed
+    // The pinned slice is display-only and must never be sent as a query filter.
     const pinnedId = pinnedSlice ? pinnedSlice.sliceType + '__pinned' : null
-    const isPinnedRemoved = !!pinnedId && !filters.some((f) => f.id === pinnedId)
+    const filtersWithoutPinnedSlice = pinnedId ? filters.filter((f) => f.id !== pinnedId) : filters
+    const hadPinnedFilter = !!pinnedId && localFilters.some((f) => f.id === pinnedId)
+    const isPinnedRemoved = hadPinnedFilter && !filters.some((f) => f.id === pinnedId)
 
     if (isPinnedRemoved) {
       setPinnedSlice(null)
 
       // Check if it's the only change
-      const otherFilters = filters.filter((f) => f.id !== pinnedId)
       const originalOtherFilters = localFilters.filter((f) => f.id !== pinnedId)
 
-      if (JSON.stringify(otherFilters) === JSON.stringify(originalOtherFilters)) {
+      if (JSON.stringify(filtersWithoutPinnedSlice) === JSON.stringify(originalOtherFilters)) {
         return
       }
     }
 
     validateFilters(filters, (validFilters) => {
       // Convert Filter[] back to QueryFilter and call onChange
-      const queryFilter = clientFilterToQueryFilter(validFilters)
+      const queryFilter = clientFilterToQueryFilter(validFilters.filter((f) => f.id !== pinnedId))
       onChange?.(queryFilter)
     })
   }
@@ -434,14 +448,16 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       <SearchFilter
         ref={searchFilterRef}
         options={options}
+        groupOptions={groupOptions}
         filters={localFilters}
         onChange={handleFilterChange}
         onFinish={handleFinish} // when changes are applied
-        enableMultipleSameFilters={false}
+        enableMultipleSameFilters={keepAppliedOptionsVisible}
         enableGlobalSearch={true}
         disabledFilters={disabledFilters}
+        onClickCapture={handleAppliedOptionClickCapture}
         onPasteCapture={handleDropdownPaste}
-        enableAutosuggestion={true}
+        enableAutosuggestion={false}
         pt={{
           searchBar: {
             style: {

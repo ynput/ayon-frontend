@@ -5,6 +5,7 @@ query GetProductsColumnStats(
   $productFilter: String
   $versionFilter: String
   $taskFilter: String
+  $folderFilter: String
   $folderIds: [String!]
   $productIds: [String!]
   $targets: [MetricTargetInput!]
@@ -16,6 +17,7 @@ query GetProductsColumnStats(
       filter: $productFilter
       versionFilter: $versionFilter
       taskFilter: $taskFilter
+      folderFilter: $folderFilter
       folderIds: $folderIds
       includeFolderChildren: true
     ) {

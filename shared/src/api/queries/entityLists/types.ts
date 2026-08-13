@@ -69,6 +69,7 @@ type ItemNodeData = {
     }
   }
   task?: {
+    id?: string
     folderId?: string
     taskType: string
     name?: string
@@ -99,6 +100,11 @@ export type ListItemsPageParam = {
 // websocket message summary
 export type ListItemMessage = {
   project: string
+  createdAt: string
+  updatedAt: string
+  id: string
+  status: string
+  topic: 'entity_list.changed' | 'entity_list.created' | 'entity_list.deleted'
   summary: {
     count: EntityList['count']
     entity_list_type: EntityList['entityListType']
@@ -106,6 +112,7 @@ export type ListItemMessage = {
     id?: string
     entityId?: string
     label: EntityList['label']
+    entity_list_folder_id?: EntityList['entityListFolderId']
   }
 }
 

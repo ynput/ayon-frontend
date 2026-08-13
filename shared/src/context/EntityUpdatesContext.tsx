@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { PubSub } from '@shared/util'
+import { createRealtimeBatcher, PubSub } from '@shared/util'
 import { EntityUpdatesContext } from './EntityUpdatesContextInstance'
 import { useViewsState } from '@shared/containers'
 
@@ -104,6 +104,30 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
   const [updates, setUpdates] = useState<RTEntityUpdate[]>([])
 
   useEffect(() => {
+    let eventKey = 0
+    const batcher = createRealtimeBatcher(
+      (
+        messages: {
+          key: number
+          project: string
+          topic: string
+          updateType: TopicUpdateType
+          message: any
+        }[],
+      ) => {
+        const newUpdates = messages.map(({ project, topic, updateType, message }) => ({
+          id: ++nextId.current,
+          project,
+          topic,
+          updateType,
+          entityId: message.summary?.entityId,
+          message,
+        }))
+        setUpdates((current) => [...current, ...newUpdates])
+      },
+      ({ key }) => String(key),
+      0,
+    )
     const token = PubSub.subscribeAll((_topic: string, message: any) => {
       if (!message?.topic || !matchesProject(message.project, projectNames)) return
 
@@ -112,18 +136,19 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
       // NOTE: when auto syncing is enabled we DO NOT push to updates because it is streamed in automatically
       if (!updateType || autoSyncSettings[updateType] || FORCE_AUTO_SYNC) return
 
-      const update: RTEntityUpdate = {
-        id: ++nextId.current,
+      batcher.add({
+        key: ++eventKey,
         project: message.project,
         topic: message.topic,
         updateType,
-        entityId: message.summary?.entityId,
         message,
-      }
-      setUpdates((current) => [...current, update])
+      })
     })
 
-    return () => PubSub.unsubscribe(token)
+    return () => {
+      PubSub.unsubscribe(token)
+      batcher.clear()
+    }
   }, [autoSyncSettings, projectNames])
 
   const value = useMemo<EntityUpdatesContextValue>(

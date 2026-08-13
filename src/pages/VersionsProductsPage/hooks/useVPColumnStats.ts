@@ -21,18 +21,26 @@ type Params = {
   productFilter?: string
   versionFilter?: string
   taskFilter?: string
+  folderFilter?: string
   folderIds?: string[]
   versionIds?: string[]
   productIds?: string[]
+  featuredOnly?: string[]
+  featuredOnlyEntityType?: string
+  latestPerFolder?: boolean
 }
 
 export const useVPColumnStats = ({
   productFilter,
   versionFilter,
   taskFilter,
+  folderFilter,
   folderIds,
   versionIds,
   productIds,
+  featuredOnly,
+  featuredOnlyEntityType,
+  latestPerFolder,
 }: Params) => {
   const { projectName } = useProjectContext()
   const { attribFields } = useProjectDataContext()
@@ -63,13 +71,7 @@ export const useVPColumnStats = ({
             ? ['product_base_type']
             : [],
       }),
-    [
-      attribFields,
-      columnVisibility,
-      defaultColumnVisibility,
-      columnSummaries,
-      columnSummaryScopes,
-    ],
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
   const versionTargets = useMemo(
     () =>
@@ -81,13 +83,7 @@ export const useVPColumnStats = ({
         columnSummaries,
         columnSummaryScopes,
       }),
-    [
-      attribFields,
-      columnVisibility,
-      defaultColumnVisibility,
-      columnSummaries,
-      columnSummaryScopes,
-    ],
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
 
   const columnStatsBaseArgs = {
@@ -95,12 +91,19 @@ export const useVPColumnStats = ({
     productFilter,
     versionFilter,
     taskFilter,
+    folderFilter,
     folderIds,
     versionIds,
     productIds,
   }
   const productStatsArgs = { ...columnStatsBaseArgs, targets: productTargets }
-  const versionStatsArgs = { ...columnStatsBaseArgs, targets: versionTargets }
+  const versionStatsArgs = {
+    ...columnStatsBaseArgs,
+    featuredOnly,
+    featuredOnlyEntityType,
+    latestPerFolder,
+    targets: versionTargets,
+  }
   const skip = !projectName || isLoadingViews || !powerLicense || noSummaries
 
   const productQuery = useGetProductsColumnStatsQuery(productStatsArgs, { skip })

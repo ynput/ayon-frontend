@@ -13,6 +13,7 @@ import { GroupByConfig } from '../components/GroupSettingsFallback'
 import { SummaryCalc, SummaryFormat, RowScope } from '../types/summaryTypes'
 import { isEqual } from 'lodash'
 import { checkColumnVisibility } from '../utils'
+import { normalizeColumnsConfig } from '../utils/columnIds'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
 
 interface ColumnSettingsProviderProps {
@@ -67,7 +68,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       onChange(next, allKnownIds)
     }
   }
-  const columnsConfig = config as ColumnsConfig
+  const columnsConfig = normalizeColumnsConfig(config as ColumnsConfig | undefined)
 
   const {
     columnOrder: columnOrderInit = [],
