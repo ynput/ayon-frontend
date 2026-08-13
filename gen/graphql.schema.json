@@ -6207,18 +6207,6 @@
         "isOneOf": null,
         "fields": [
           {
-            "name": "Folder",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "OBJECT",
-              "name": "FolderNode",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "active",
             "description": null,
             "args": [],
@@ -6923,7 +6911,7 @@
               },
               {
                 "name": "featuredOnlyEntityType",
-                "description": "\nSpecify entity type to group featured versions\n(either product or folder).\n",
+                "description": "Deprecated and noop",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -6988,6 +6976,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "hasHero",
+                "description": "Filter versions that have a hero version",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -10746,7 +10746,7 @@
               },
               {
                 "name": "featuredOnlyEntityType",
-                "description": "\nSpecify entity type to group featured versions\n(either product or folder).\n",
+                "description": "Deprecated and noop",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -10811,6 +10811,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "hasHero",
+                "description": "Filter versions that have a hero version",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -13750,18 +13762,6 @@
         "isOneOf": null,
         "fields": [
           {
-            "name": "Folder",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "OBJECT",
-              "name": "FolderNode",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "active",
             "description": null,
             "args": [],
@@ -14545,7 +14545,7 @@
               },
               {
                 "name": "featuredOnlyEntityType",
-                "description": "\nSpecify entity type to group featured versions\n(either product or folder).\n",
+                "description": "Deprecated and noop",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -14610,6 +14610,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "hasHero",
+                "description": "Filter versions that have a hero version",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
