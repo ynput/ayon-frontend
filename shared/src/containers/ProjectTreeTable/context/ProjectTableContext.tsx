@@ -300,7 +300,7 @@ export const ProjectTableProvider = ({
   const { attrib: projectAttrib } = useProjectContext()
   const {
     groupBy: columnSettingsGroupBy,
-    groupByConfig: { showEmpty: showEmptyGroups = false } = {},
+    groupByConfig: { showEmpty: showEmptyGroups = true } = {},
   } = useColumnSettingsContext()
 
   // DATA TO TABLE

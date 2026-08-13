@@ -144,7 +144,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [versionsSettings?.featuredVersionOrder],
   )
   const serverShowEmptyGroups = useMemo(
-    () => versionsSettings?.showEmptyGroups ?? false,
+    () => versionsSettings?.showEmptyGroups ?? true,
     [versionsSettings?.showEmptyGroups],
   )
   const serverLatestPerFolder = useMemo(

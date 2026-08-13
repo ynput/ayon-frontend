@@ -202,8 +202,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // Stable default filter to prevent unnecessary re-renders
   const EMPTY_FILTER = useMemo(() => ({ conditions: [] }), [])
 
-  console.log('queryFilters', queryFilters)
-
   // Separate the combined filters into task and folder filters
   const { task: taskFilter = EMPTY_FILTER, folder: folderFilter = EMPTY_FILTER } = useMemo(() => {
     return splitFiltersByScope(

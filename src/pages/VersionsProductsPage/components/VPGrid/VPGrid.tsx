@@ -52,7 +52,7 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
     expanded,
     updateExpanded,
   } = useVersionsDataContext()
-  const { showProducts, gridHeight, groupBy, showEmptyGroups } = useVPViewsContext()
+  const { showProducts, gridHeight, groupBy, showEmptyGroups = true } = useVPViewsContext()
   const { selectedCells, setSelectedCells, setFocusedCellId, registerGrid } =
     useSelectionCellsContext()
   const { showVersionsTable } = useVersionsSelectionContext()
