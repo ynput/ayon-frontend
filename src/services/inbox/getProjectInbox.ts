@@ -111,8 +111,10 @@ export const projectInboxApi = gqlApi.injectEndpoints({
       ) {
         let token
         let pendingTopUp: ReturnType<typeof setTimeout> | undefined
-        // an arrival dropped while a top-up is already queued still has to be answered
-        let missedArrival = false
+        // cursor of an unfinished walk back through a burst, null when there is none
+        let chaseCursor: string | null = null
+        // a websocket arrival still waiting for a pass over the newest page
+        let freshPending = false
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
@@ -144,21 +146,29 @@ export const projectInboxApi = gqlApi.injectEndpoints({
             // nothing in the page was already held, so the burst outran it - walk back
             // until the rows we do hold come into view, otherwise the gap stays forever
             if (added === PROJECT_INBOX_REALTIME_SIZE && pageInfo.hasPreviousPage) {
-              scheduleTopUp(pageInfo.endCursor || '')
-            } else if (missedArrival) {
-              missedArrival = false
-              scheduleTopUp('')
+              chaseCursor = pageInfo.endCursor || ''
+              scheduleTopUp()
+            } else if (freshPending) {
+              scheduleTopUp()
             }
           }
 
-          const scheduleTopUp = (cursor: string) => {
-            if (pendingTopUp) {
-              // it landed above the page already queued, so it needs a pass of its own
-              if (!cursor) missedArrival = true
-              return
-            }
+          const scheduleTopUp = () => {
+            if (pendingTopUp) return
+
             pendingTopUp = setTimeout(() => {
               pendingTopUp = undefined
+              // an unfinished walk goes first: letting a new arrival take the slot would
+              // re-read the newest page, find it cached and stop, stranding the rows between
+              let cursor: string
+              if (chaseCursor !== null) {
+                cursor = chaseCursor
+                chaseCursor = null
+              } else if (freshPending) {
+                cursor = ''
+                freshPending = false
+              } else return
+
               void topUp(cursor)
             }, PROJECT_INBOX_REALTIME_DEBOUNCE)
           }
@@ -172,7 +182,8 @@ export const projectInboxApi = gqlApi.injectEndpoints({
             const isImportant = !!message?.summary?.isImportant
             if (queryArg.important !== null && queryArg.important !== isImportant) return
 
-            scheduleTopUp('')
+            freshPending = true
+            scheduleTopUp()
           }
 
           // sub to websocket topic

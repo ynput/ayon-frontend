@@ -184,6 +184,7 @@ const Inbox = ({ filter }: InboxProps) => {
     isLoading: isLoadingInbox,
     isFetching: isFetchingInbox,
     isUninitialized,
+    currentData,
     error: errorInbox,
     refetch,
   } = activeQuery
@@ -201,15 +202,6 @@ const Inbox = ({ filter }: InboxProps) => {
 
   const [getInboxMessages] = useLazyGetInboxMessagesQuery()
 
-  // pagination merges into the same cache entry, so it must not blank the list the way
-  // a project/tab/filter change does
-  const [isPaginatingGlobal, setIsPaginatingGlobal] = useState(false)
-  useEffect(() => {
-    if (!isFetchingInbox && isPaginatingGlobal) setIsPaginatingGlobal(false)
-  }, [isFetchingInbox, isPaginatingGlobal])
-
-  const isPaginating = isProjectMode ? isFetchingNextPage : isPaginatingGlobal
-
   // load more messages
   const handleLoadMore = () => {
     if (!hasMore || !messages.length) return
@@ -222,7 +214,6 @@ const Inbox = ({ filter }: InboxProps) => {
 
     if (isFetchingInbox) return
 
-    setIsPaginatingGlobal(true)
     getInboxMessages({
       last,
       active: isActive,
@@ -478,10 +469,10 @@ const Inbox = ({ filter }: InboxProps) => {
 
   // project info only feeds status colours, and it reloads on every project switch -
   // gating the list on it flashes the placeholders a second time.
-  // Keyed on isFetching: RTK Query keeps the previous project's data while the new query
-  // runs, so isLoading, isSuccess and data all still describe the old project for ~500ms.
+  // currentData, not isFetching: it is undefined only while a new cache key loads (project,
+  // tab or filter change), so a websocket refetch or pagination keeps the list on screen.
   const isLoadingAny =
-    isLoadingViews || isResolvingProject || (isFetchingInbox && !isPaginating) || isRefreshing
+    isLoadingViews || isResolvingProject || (isFetchingInbox && !currentData) || isRefreshing
 
   // Cast placeholder messages to satisfy GroupedMessage shape for rendering
   const messagesData = isLoadingAny
