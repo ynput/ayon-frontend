@@ -80,6 +80,11 @@ const StyledWidget = styled.div`
         word-break: break-word;
         line-height: var(--wrap-row-height);
       }
+
+      .has-img ${StyledValue} {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
     }
   `}
 `
@@ -109,6 +114,7 @@ const StyledImg = styled.img`
   width: 20px;
   height: 20px;
   object-fit: cover;
+  flex-shrink: 0;
 
   &.avatar {
     border-radius: 50%;
@@ -214,7 +220,10 @@ export const EnumCellValue = ({
     >
       <StyledValuesContainer className="values">
         {selectedOptions.map((option, i) => (
-          <StyledValueWrapper key={option.value.toString() + i}>
+          <StyledValueWrapper
+            key={option.value.toString() + i}
+            className={clsx({ 'has-img': checkForImgSrc(option.icon) })}
+          >
             {option.icon && checkForImgSrc(option.icon) ? (
               <StyledImg
                 src={option.icon}
