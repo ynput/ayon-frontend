@@ -3,6 +3,7 @@ import { TableRow } from './types/table'
 import { ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import {
   CellWidget,
+  EntityWidget,
   MetaWidget,
   EntityNameWidget,
   GroupHeaderWidget,
@@ -25,45 +26,157 @@ import { getEntityTypeIcon } from '@shared/util'
 import { NameWidgetData } from '@shared/components/RenameForm'
 import { isEntityRestricted, READ_ONLY } from './utils/restrictedEntity'
 import { getColumnDisplayConfig } from './types/columnConfig'
+import { ENTITY_COLUMN_IDS, normalizeColumnId } from './utils/columnIds'
 import { upperFirst } from 'lodash'
 
 export const isEntityExpandable = (entityType: string) => ['folder', 'product'].includes(entityType)
 
 export const COLUMN_MIN_SIZE = 50
 
+export const COLUMN_LABELS: Record<string, string> = {
+  thumbnail: 'Thumbnail',
+  status: 'Status',
+  entityType: 'Entity type',
+  subType: 'Type',
+  assignees: 'Assignees',
+  folder_entity: 'Folder',
+  task_entity: 'Task',
+  author: 'Author',
+  version: 'Version number',
+  version_entity: 'Version',
+  product: 'Product name',
+  productBaseType: 'Base type',
+  taskType: 'Task type',
+  folderType: 'Folder type',
+  tags: 'Tags',
+  createdAt: 'Created at',
+  updatedAt: 'Updated at',
+  subtasks: 'Subtasks',
+  comments: 'Latest comments',
+}
+
+export const getColumnLabel = (columnId: string, scopes: string[] = []) => {
+  if (columnId === 'subType' && scopes.some((scope) => ['product', 'version'].includes(scope))) {
+    return 'Product type'
+  }
+  return COLUMN_LABELS[normalizeColumnId(columnId)] || columnId
+}
+
 type ColumnSortConfig = {
   sortKey?: string
+  sortDescFirst?: boolean
   enabled: boolean
+  label: string
+  scopes?: string[]
 }
 
 // TanStack column IDs are also used by the UI state. Keep API sort keys here
 // so a column can use a different identifier without leaking that detail into
 // the table state.
 export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
-  thumbnail: { enabled: false },
-  name: { sortKey: 'name', enabled: true },
-  entityType: { enabled: false },
-  status: { sortKey: 'status', enabled: true },
-  subType: { sortKey: 'taskType', enabled: true },
-  assignees: { sortKey: 'assignees', enabled: true },
-  folder: { sortKey: 'folderName', enabled: true },
-  author: { sortKey: 'author', enabled: true },
-  version: { sortKey: 'version', enabled: true },
-  product: { sortKey: 'product', enabled: true },
-  tags: { sortKey: 'tags', enabled: true },
-  createdAt: { sortKey: 'createdAt', enabled: true },
-  updatedAt: { sortKey: 'updatedAt', enabled: true },
-  subtasks: { enabled: false },
-  comments: { enabled: false },
+  thumbnail: { enabled: false, label: COLUMN_LABELS.thumbnail },
+  name: { sortKey: 'name', enabled: true, label: 'Name' },
+  entityType: { enabled: false, label: COLUMN_LABELS.entityType },
+  status: { sortKey: 'status', sortDescFirst: false, enabled: true, label: COLUMN_LABELS.status },
+  subType: {
+    sortKey: 'taskType',
+    sortDescFirst: true,
+    enabled: true,
+    label: COLUMN_LABELS.subType,
+  },
+  assignees: {
+    sortKey: 'assignees',
+    enabled: true,
+    label: COLUMN_LABELS.assignees,
+    scopes: ['task'],
+  },
+  folder_entity: {
+    sortKey: 'folderName',
+    sortDescFirst: false,
+    enabled: true,
+    label: COLUMN_LABELS.folder_entity,
+  },
+  task_entity: {
+    sortKey: 'taskName',
+    enabled: false,
+    label: COLUMN_LABELS.task_entity,
+    scopes: ['version', 'product'],
+  },
+  author: {
+    sortKey: 'author',
+    enabled: true,
+    label: COLUMN_LABELS.author,
+    scopes: ['version', 'product'],
+  },
+  version: {
+    sortKey: 'version',
+    sortDescFirst: true,
+    enabled: true,
+    label: COLUMN_LABELS.version,
+    scopes: ['version', 'product'],
+  },
+  version_entity: {
+    sortKey: 'version',
+    enabled: true,
+    label: COLUMN_LABELS.version_entity,
+    scopes: ['version', 'product'],
+  },
+  product: {
+    sortKey: 'product',
+    enabled: true,
+    label: COLUMN_LABELS.product,
+    scopes: ['version', 'product'],
+  },
+  productBaseType: {
+    sortKey: 'productBaseType',
+    enabled: true,
+    label: COLUMN_LABELS.productBaseType,
+    scopes: ['version', 'product'],
+  },
+  taskType: {
+    sortKey: 'taskType',
+    sortDescFirst: true,
+    enabled: true,
+    label: COLUMN_LABELS.taskType,
+    scopes: ['version', 'product'],
+  },
+  folderType: {
+    sortKey: 'folderType',
+    enabled: true,
+    label: COLUMN_LABELS.folderType,
+    scopes: ['version', 'product'],
+  },
+  tags: { sortKey: 'tags', enabled: true, label: COLUMN_LABELS.tags },
+  createdAt: { sortKey: 'createdAt', enabled: true, label: COLUMN_LABELS.createdAt },
+  updatedAt: { sortKey: 'updatedAt', enabled: true, label: COLUMN_LABELS.updatedAt },
+  subtasks: { enabled: false, label: COLUMN_LABELS.subtasks },
+  comments: { enabled: false, label: COLUMN_LABELS.comments },
 }
 
+type SortColumnLabel = { value: string; label: string }
+
+export const getSortableColumnOptions = (scopes?: string[], columns: SortColumnLabel[] = []) =>
+  Object.entries(COLUMN_SORT_CONFIG)
+    .filter(
+      ([, config]) =>
+        config.enabled &&
+        (!config.scopes || !scopes || config.scopes.some((scope) => scopes.includes(scope))),
+    )
+    .map(([id, config]) => ({
+      id,
+      label:
+        columns.find((column) => normalizeColumnId(column.value) === id)?.label ||
+        getColumnLabel(id, scopes),
+    }))
+
 export const isColumnSortable = (columnId: string) =>
-  COLUMN_SORT_CONFIG[columnId]?.enabled ?? !columnId.startsWith('link_')
+  COLUMN_SORT_CONFIG[normalizeColumnId(columnId)]?.enabled ?? !columnId.startsWith('link_')
 
 export const getColumnSortKey = (columnId?: string, showHierarchy = true) => {
   if (!columnId) return undefined
-  if (columnId === 'name' && !showHierarchy) return 'path'
-  return COLUMN_SORT_CONFIG[columnId]?.sortKey ?? columnId
+  const normalizedColumnId = normalizeColumnId(columnId)
+  if (normalizedColumnId === 'name' && !showHierarchy) return 'path'
+  return COLUMN_SORT_CONFIG[normalizedColumnId]?.sortKey ?? normalizedColumnId
 }
 
 // Wrapper function for sorting that pushes isLoading rows to the bottom
@@ -143,7 +256,7 @@ export type DefaultColumns =
   | 'thumbnail'
   | 'name'
   | 'entityType'
-  | 'folder'
+  | typeof ENTITY_COLUMN_IDS.folder
   | 'status'
   | 'subType'
   | 'assignees'
@@ -186,9 +299,11 @@ const buildTreeTableColumns = ({
   const staticColumns: ColumnDef<TableRow>[] = []
 
   // Helper to check if a column should be included
-  const isIncluded = (id: DefaultColumns | string) => !excluded?.includes(id)
+  const isIncluded = (id: DefaultColumns | string) =>
+    !excluded?.some((excludedId) => normalizeColumnId(excludedId) === normalizeColumnId(id))
   const canSort = (id: DefaultColumns | string) =>
-    isColumnSortable(id) && !excludedSorting?.includes(id)
+    isColumnSortable(id) &&
+    !excludedSorting?.some((excludedId) => normalizeColumnId(excludedId) === normalizeColumnId(id))
 
   // Conditionally add static columns
   if (isIncluded(ROW_SELECTION_COLUMN_ID)) {
@@ -211,7 +326,7 @@ const buildTreeTableColumns = ({
   if (isIncluded('thumbnail')) {
     staticColumns.push({
       id: 'thumbnail',
-      header: 'Thumbnail',
+      header: getColumnLabel('thumbnail'),
       size: 63,
       minSize: 24,
       enableResizing: true,
@@ -378,13 +493,13 @@ const buildTreeTableColumns = ({
       id: 'status',
       accessorKey: 'status',
       minSize: COLUMN_MIN_SIZE,
-      header: 'Status',
+      header: getColumnLabel('status'),
       sortingFn: withLoadingStateSort(
         withNameTieBreaker((a, b, c) =>
           attribSort(a, b, c, { enum: options.status, type: 'string' }),
         ),
       ),
-      sortDescFirst: true,
+      sortDescFirst: COLUMN_SORT_CONFIG.status.sortDescFirst,
       enableSorting: canSort('status'),
       enableResizing: true,
       enablePinning: true,
@@ -435,7 +550,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'entityType',
       accessorKey: 'entityType',
-      header: 'Entity Type',
+      header: getColumnLabel('entityType'),
       minSize: 20,
       enableSorting: false,
       enableResizing: true,
@@ -464,12 +579,13 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'subType',
       accessorKey: 'subType',
-      header: scopes.includes('product') || scopes.includes('version') ? 'Product type' : 'Type',
+      header: getColumnLabel('subType', scopes),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('subType'),
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
+      sortDescFirst: COLUMN_SORT_CONFIG.taskType.sortDescFirst,
       sortingFn: withLoadingStateSort(
         withNameTieBreaker((a, b, c) =>
           attribSort(a, b, c, {
@@ -536,7 +652,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'assignees',
       accessorKey: 'assignees',
-      header: 'Assignees',
+      header: getColumnLabel('assignees'),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('assignees'),
       enableResizing: true,
@@ -587,29 +703,67 @@ const buildTreeTableColumns = ({
     })
   }
 
-  if (isIncluded('folder')) {
+  if (isIncluded(ENTITY_COLUMN_IDS.folder)) {
     staticColumns.push({
-      id: 'folder',
+      id: ENTITY_COLUMN_IDS.folder,
       accessorKey: 'folder',
-      header: 'Folder name',
+      header: getColumnLabel(ENTITY_COLUMN_IDS.folder),
       minSize: COLUMN_MIN_SIZE,
+      sortDescFirst: COLUMN_SORT_CONFIG.folder_entity.sortDescFirst,
       sortingFn: withLoadingStateSort(pathSort),
-      enableSorting: canSort('folder'),
+      enableSorting: canSort(ENTITY_COLUMN_IDS.folder),
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
       cell: ({ row, column, table }) => {
-        const { value, id, type } = getValueIdType(row, column.id)
+        const { value, id, type } = getValueIdType(row, 'folder')
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
 
         return (
-          <CellWidget
+          <EntityWidget
             rowId={id}
-            className={clsx('folder', { loading: row.original.isLoading })}
+            className="folder"
             columnId={column.id}
             value={value}
-            attributeData={{ type: 'string' }}
-            isReadOnly={true}
+            entityId={row.original.folderId}
+            entityType="folder"
+            subType={row.original.folderType}
+            isLoading={row.original.isLoading}
+          />
+        )
+      },
+    })
+  }
+
+  // related task entity column for versions and products
+  if (
+    isIncluded(ENTITY_COLUMN_IDS.task) &&
+    ['version', 'product'].some((s) => scopes.includes(s))
+  ) {
+    staticColumns.push({
+      id: ENTITY_COLUMN_IDS.task,
+      accessorKey: 'taskLabel',
+      header: getColumnLabel(ENTITY_COLUMN_IDS.task),
+      minSize: COLUMN_MIN_SIZE,
+      enableSorting: canSort(ENTITY_COLUMN_IDS.task),
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(pathSort),
+      cell: ({ row, column }) => {
+        const { value, id, type } = getValueIdType(row, 'taskLabel')
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+
+        return (
+          <EntityWidget
+            rowId={id}
+            className="task_entity"
+            columnId={column.id}
+            value={value}
+            entityId={row.original.taskId}
+            entityType="task"
+            subType={row.original.taskType}
+            isLoading={row.original.isLoading}
           />
         )
       },
@@ -621,7 +775,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'author',
       accessorKey: 'author',
-      header: 'Author',
+      header: getColumnLabel('author'),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('author'),
       enableResizing: true,
@@ -649,20 +803,23 @@ const buildTreeTableColumns = ({
     })
   }
 
-  // version column for versions
-  if (isIncluded('version') && ['version', 'product'].some((s) => scopes.includes(s))) {
+  // version entity column for versions and products
+  if (
+    isIncluded(ENTITY_COLUMN_IDS.version) &&
+    ['version', 'product'].some((s) => scopes.includes(s))
+  ) {
     staticColumns.push({
-      id: 'version',
-      accessorKey: 'version',
-      header: 'Version',
+      id: ENTITY_COLUMN_IDS.version,
+      accessorKey: 'versionName',
+      header: getColumnLabel(ENTITY_COLUMN_IDS.version),
       minSize: COLUMN_MIN_SIZE,
-      enableSorting: canSort('version'),
+      enableSorting: canSort(ENTITY_COLUMN_IDS.version),
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
       sortingFn: withLoadingStateSort(pathSort),
       cell: ({ row, column }) => {
-        const { value, id, type } = getValueIdType(row, column.id)
+        const { value, id, type } = getValueIdType(row, 'versionName')
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
 
         let versionValue = row.original.versionName || value
@@ -672,12 +829,46 @@ const buildTreeTableColumns = ({
         }
 
         return (
+          <EntityWidget
+            rowId={id}
+            className="version-entity"
+            columnId={column.id}
+            value={versionValue}
+            entityId={
+              row.original.versionEntityId || (type === 'version' ? row.original.entityId : null)
+            }
+            entityType="version"
+            isLoading={row.original.isLoading}
+          />
+        )
+      },
+    })
+  }
+
+  // version number column for versions and products
+  if (isIncluded('version') && ['version', 'product'].some((s) => scopes.includes(s))) {
+    staticColumns.push({
+      id: 'version',
+      accessorKey: 'version',
+      header: getColumnLabel('version'),
+      minSize: COLUMN_MIN_SIZE,
+      sortDescFirst: COLUMN_SORT_CONFIG.version.sortDescFirst,
+      enableSorting: canSort('version'),
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(withNameTieBreaker(sortingFns.basic)),
+      cell: ({ row, column }) => {
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+
+        return (
           <CellWidget
             rowId={id}
             className={clsx('version', { loading: row.original.isLoading })}
             columnId={column.id}
-            value={versionValue}
-            attributeData={{ type: 'string' }}
+            value={value ?? ''}
+            attributeData={{ type: 'integer' }}
             isReadOnly={true}
           />
         )
@@ -690,7 +881,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'product',
       accessorKey: 'product',
-      header: 'Product name',
+      header: getColumnLabel('product'),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('product'),
       enableResizing: true,
@@ -719,7 +910,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'tags',
       accessorKey: 'tags',
-      header: 'Tags',
+      header: getColumnLabel('tags'),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('tags'),
       enableResizing: true,
@@ -757,7 +948,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'createdAt',
       accessorKey: 'createdAt',
-      header: 'Created at',
+      header: getColumnLabel('createdAt'),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('createdAt'),
       enableResizing: true,
@@ -787,7 +978,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'updatedAt',
       accessorKey: 'updatedAt',
-      header: 'Updated at',
+      header: getColumnLabel('updatedAt'),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('updatedAt'),
       enableResizing: true,
@@ -817,7 +1008,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'subtasks',
       accessorKey: 'subtasks',
-      header: 'Subtasks',
+      header: getColumnLabel('subtasks'),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: false,
       enableResizing: true,
@@ -858,7 +1049,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'comments',
       accessorKey: 'latestComments',
-      header: 'Latest comments',
+      header: getColumnLabel('comments'),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: false,
       enableResizing: true,

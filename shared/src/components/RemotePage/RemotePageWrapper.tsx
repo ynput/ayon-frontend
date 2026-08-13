@@ -37,7 +37,7 @@ export interface RemotePageProps {
   router: RouterTypes
   toast?: any
   views?: ViewsWithReportsSettings
-  context: RemotePageContext
+  context?: RemotePageContext
   dispatch?: any
   useSelector?: any
   onOpenImage?: (args: any) => void

@@ -42,9 +42,47 @@ import type { MenuItemType } from '../Menu'
 import { AddColumnItem, buildAddColumnsMenu, getAddColumnSection } from './addColumnsMenu'
 import { AddColumnMenu } from './AddColumnMenu'
 import { TableSearch } from '../TableSearch'
+import {
+  SettingsPanelItemTemplate,
+  SettingsPanelItemTemplateProps,
+} from '../SettingsPanel/SettingsPanelItemTemplate'
+import { InputSwitch } from '@ynput/ayon-react-components'
 
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'
 const NO_SCOPES: string[] = []
+
+export interface SettingSwitchProps
+  extends Omit<SettingsPanelItemTemplateProps, 'onChange' | 'item'> {
+  icon?: string
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+  disabled?: boolean
+}
+
+export const SettingSwitch: FC<SettingSwitchProps> = ({
+  icon,
+  label,
+  checked,
+  onChange,
+  disabled,
+  ...props
+}) => (
+  <SettingsPanelItemTemplate
+    item={{ value: label, label, icon }}
+    isDisabled={disabled}
+    style={{ paddingRight: 8 }}
+    disableHover
+    endContent={
+      <InputSwitch
+        checked={checked}
+        disabled={disabled}
+        onChange={(event) => onChange(event.currentTarget.checked)}
+      />
+    }
+    {...props}
+  />
+)
 
 interface ColumnsSettingsProps {
   columns: AddColumnItem[]

@@ -32,6 +32,7 @@ export const getAttributeIcon: GetAttributesIcon = (name, type, hasEnum) => {
     comment: 'comment',
     colorSpace: 'palette',
     description: 'description',
+    latest: 'verified',
   }
 
   const typeIcons: {

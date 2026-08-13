@@ -217,10 +217,13 @@ export type GetGroupedVersionsListArgs = {
   versionFilter?: string
   productFilter?: string
   taskFilter?: string
+  folderFilter?: string
   folderIds?: string[]
   desc?: boolean
   sortBy?: string
   featuredOnly?: string[]
+  featuredOnlyEntityType?: string
+  latestPerFolder?: boolean
   hasReviewables?: boolean
 }
 
@@ -235,6 +238,72 @@ export type ProductInfiniteResult = InfiniteData<GetProductsResult, ProductsPage
 export type GetProductsResult = {
   pageInfo: PageInfo
   products: ProductNode[]
+}
+
+function updateVersionList(
+  versions: VersionNode[],
+  updatedNode: VersionNode,
+  replaceVersionInSameFolder: boolean,
+  sortBy: keyof VersionNode,
+  desc: boolean,
+  insertIfMissing = true,
+): boolean {
+  if (replaceVersionInSameFolder) {
+    // A new version can have a different ID from the cached version. Since
+    // latestPerFolder allows only one visible version per folder, replace by
+    // folder instead of patching by version ID. Existing versions still use
+    // the normal ID-based patching path.
+    const folderId = updatedNode.product?.folder?.id
+    let removed = false
+
+    for (let i = versions.length - 1; i >= 0; i--) {
+      const version = versions[i]
+      if (version.id === updatedNode.id || (folderId && version.product?.folder?.id === folderId)) {
+        versions.splice(i, 1)
+        removed = true
+      }
+    }
+    if (!insertIfMissing) return removed
+  } else {
+    // Without latestPerFolder, an update only affects the version with the
+    // matching ID; an unseen version can be inserted as a new list item.
+    const index = versions.findIndex((version) => version.id === updatedNode.id)
+    if (index !== -1) {
+      versions[index] = updatedNode
+      return true
+    }
+    if (!insertIfMissing) return false
+  }
+
+  const insertIndex = findSortedInsertIndex(versions, updatedNode, sortBy, desc)
+  versions.splice(insertIndex, 0, updatedNode)
+  return true
+}
+
+function updateVersionPages(
+  pages: { versions: VersionNode[] }[],
+  updatedNode: VersionNode,
+  replaceVersionInSameFolder: boolean,
+  sortBy: keyof VersionNode,
+  desc: boolean,
+): void {
+  if (!replaceVersionInSameFolder) {
+    for (const page of pages) {
+      if (updateVersionList(page.versions, updatedNode, false, sortBy, desc, false)) {
+        return
+      }
+    }
+  } else {
+    // With latestPerFolder, inspect every loaded page so the previous
+    // version for this folder is removed wherever pagination placed it.
+    for (const page of pages) {
+      updateVersionList(page.versions, updatedNode, true, sortBy, desc, false)
+    }
+  }
+
+  if (pages.length > 0) {
+    updateVersionList(pages[0].versions, updatedNode, replaceVersionInSameFolder, sortBy, desc)
+  }
 }
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
@@ -312,6 +381,7 @@ function createVersionUpdateBatcher(
       patched?: { entityId: string; field: string; value: any; parentId?: string }[]
       attribPatched?: { entityId: string; allAttrib: string; parsedAttrib: any }[]
       fullUpdated?: VersionNode[]
+      createdVersionIds?: Set<string>
     }) => void
     getBaseFilters?: () => any
   },
@@ -324,6 +394,7 @@ function createVersionUpdateBatcher(
     const patched: { entityId: string; field: string; value: any; parentId?: string }[] = []
     const attribsToFetch = new Set<string>()
     const fullFetchIds = new Set<string>()
+    const createdVersionIds = new Set<string>()
 
     for (const { topic, message: msg } of updates) {
       const entityId = msg.summary?.entityId
@@ -334,6 +405,7 @@ function createVersionUpdateBatcher(
         deleted.push({ entityId, parentId })
       } else if (topic === 'entity.version.created') {
         fullFetchIds.add(entityId)
+        createdVersionIds.add(entityId)
       } else if (topic.startsWith('entity.version.') && topic.endsWith('_changed')) {
         const versionFound = handlers.checkVersionInCache(entityId, parentId)
         if (!versionFound) continue
@@ -369,7 +441,7 @@ function createVersionUpdateBatcher(
 
         if (!isActive()) return
         if (result.data?.versions) {
-          handlers.onBatchUpdate({ fullUpdated: result.data.versions })
+          handlers.onBatchUpdate({ fullUpdated: result.data.versions, createdVersionIds })
         }
       } catch (e) {
         console.error('Failed to fetch full version data batch', e)
@@ -557,8 +629,11 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               versionFilter: arg.versionFilter,
               productFilter: arg.productFilter,
               taskFilter: arg.taskFilter,
+              folderFilter: arg.folderFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
               featuredOnly: arg.featuredOnly,
+              featuredOnlyEntityType: arg.featuredOnlyEntityType,
+              latestPerFolder: arg.latestPerFolder,
               hasReviewables: arg.hasReviewables,
               sortBy: arg.sortBy,
             }),
@@ -570,7 +645,13 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               }
               return false
             },
-            onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
+            onBatchUpdate: ({
+              deleted,
+              patched,
+              attribPatched,
+              fullUpdated,
+              createdVersionIds,
+            }) => {
               updateCachedData((draft) => {
                 for (const page of draft?.pages || []) {
                   // Handle deletes
@@ -603,24 +684,14 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                   // Handle full updates
                   if (fullUpdated) {
                     for (const updatedNode of fullUpdated) {
-                      const vIndex = page.versions.findIndex((v) => v.id === updatedNode.id)
-                      if (vIndex !== -1) {
-                        page.versions[vIndex] = updatedNode
-                      } else {
-                        // New version not in cache, try to insert in first page if it fits sort
-                        // (This is a simplification, full refetch is usually better for new items in pagination)
-                        const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
-                        const insertIndex = findSortedInsertIndex(
-                          page.versions,
-                          updatedNode,
-                          sortKey,
-                          arg.desc || false,
-                        )
-                        // Only insert if it's within current page bounds or we are on first page
-                        if (page === draft.pages[0]) {
-                          page.versions.splice(insertIndex, 0, updatedNode)
-                        }
-                      }
+                      updateVersionPages(
+                        draft.pages,
+                        updatedNode,
+                        arg.latestPerFolder === true &&
+                          createdVersionIds?.has(updatedNode.id) === true,
+                        (arg.sortBy || 'createdAt') as keyof VersionNode,
+                        arg.desc || false,
+                      )
                     }
                   }
                 }
@@ -781,7 +852,9 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           getBaseFilters: () => ({
             versionFilter: arg.versionFilter,
             taskFilter: arg.taskFilter,
+            folderFilter: arg.folderFilter,
             productIds: arg.productIds,
+            latestPerFolder: arg.latestPerFolder,
           }),
           checkVersionInCache: (entityId, parentId) => {
             if (!parentId || !arg.productIds.includes(parentId)) return false
@@ -791,7 +864,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             })
             return found
           },
-          onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
+          onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated, createdVersionIds }) => {
             updateCachedData((draft) => {
               // Handle deletes
               if (deleted) {
@@ -823,20 +896,13 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               // Handle full updates
               if (fullUpdated) {
                 for (const updatedNode of fullUpdated) {
-                  const index = draft.versions.findIndex((v) => v.id === updatedNode.id)
-                  if (index !== -1) {
-                    draft.versions[index] = updatedNode
-                  } else {
-                    // Add at correct sorted position
-                    const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
-                    const insertIndex = findSortedInsertIndex(
-                      draft.versions,
-                      updatedNode,
-                      sortKey,
-                      arg.desc || false,
-                    )
-                    draft.versions.splice(insertIndex, 0, updatedNode)
-                  }
+                  updateVersionList(
+                    draft.versions,
+                    updatedNode,
+                    arg.latestPerFolder === true && createdVersionIds?.has(updatedNode.id) === true,
+                    (arg.sortBy || 'createdAt') as keyof VersionNode,
+                    arg.desc || false,
+                  )
                 }
               }
             })
@@ -1041,6 +1107,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               versionFilter: arg.versionFilter,
               productFilter: arg.productFilter,
               taskFilter: arg.taskFilter,
+              folderFilter: arg.folderFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
             }),
             checkVersionInCache: (entityId, parentId) => {
@@ -1141,10 +1208,13 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           versionFilter, // most of the time overridden by group filters
           productFilter,
           taskFilter,
+          folderFilter,
           folderIds,
           desc,
           sortBy,
           featuredOnly,
+          featuredOnlyEntityType,
+          latestPerFolder,
           hasReviewables,
         },
         api,
@@ -1154,21 +1224,23 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           for (const group of groups) {
             const count = group.count || 500
 
-            const queryParams: GetVersionsQueryVariables = {
+            const queryParams = {
               projectName,
               // base filters
               productFilter,
               taskFilter,
+              folderFilter,
               versionFilter,
               // specific group filter
               [groupFilterKey]: group.filter,
               folderIds: folderIds?.length ? folderIds : undefined,
               sortBy: sortBy,
               featuredOnly,
+              featuredOnlyEntityType,
+              latestPerFolder,
               hasReviewables,
-              // @ts-expect-error - group param used later on
               group: group.value,
-            }
+            } as GetVersionsQueryVariables & { group: string }
 
             if (desc) {
               queryParams.last = count
@@ -1177,9 +1249,12 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             }
 
             const promise = api.dispatch(
-              enhancedVersionsPageApi.endpoints.GetVersions.initiate(queryParams, {
-                forceRefetch: true,
-              }),
+              enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+                queryParams as GetVersionsQueryVariables,
+                {
+                  forceRefetch: true,
+                },
+              ),
             )
             promises.push(promise)
           }
@@ -1256,9 +1331,12 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             versionFilter: arg.versionFilter,
             productFilter: arg.productFilter,
             taskFilter: arg.taskFilter,
+            folderFilter: arg.folderFilter,
             folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
             sortBy: arg.sortBy,
             featuredOnly: arg.featuredOnly,
+            featuredOnlyEntityType: arg.featuredOnlyEntityType,
+            latestPerFolder: arg.latestPerFolder,
             hasReviewables: arg.hasReviewables,
           }),
           checkVersionInCache: (entityId) => {

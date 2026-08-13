@@ -69,6 +69,7 @@ type ItemNodeData = {
     }
   }
   task?: {
+    id?: string
     folderId?: string
     taskType: string
     name?: string

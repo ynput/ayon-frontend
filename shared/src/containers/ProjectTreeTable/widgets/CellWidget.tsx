@@ -52,6 +52,10 @@ const Cell = styled.div`
     border-radius: 4px;
     opacity: 1;
   }
+
+  &.entity-widget {
+    cursor: pointer;
+  }
 `
 
 // use this class to trigger the editing mode on a single click

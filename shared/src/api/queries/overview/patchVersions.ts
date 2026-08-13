@@ -13,7 +13,7 @@ import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { RootState } from '@reduxjs/toolkit/query'
 import { PatchOperation } from './updateOverview'
 import { injectedVersionsPageApi } from '../versions/getVersionsProducts'
-import type { VersionNode } from '../versions/getVersionsProducts'
+import type { ProductNode, VersionNode } from '../versions/getVersionsProducts'
 
 // Helper to get version tags for selectInvalidatedBy and invalidation
 const getVersionTags = (versions: Pick<PatchOperation, 'entityId'>[]) => {
@@ -46,6 +46,97 @@ const updateVersionWithOperation = (version: VersionNode, operationData: any): V
   return updated as VersionNode
 }
 
+const applyFolderStatusToVersions = (versions: VersionNode[], folderStatuses: Map<string, any>) => {
+  versions.forEach((version) => {
+    const folder = version.product?.folder
+    const status = folder && folderStatuses.get(folder.id)
+    if (status !== undefined && folder) folder.status = status
+  })
+}
+
+const patchFolderStatusInProducts = (products: ProductNode[], folderStatuses: Map<string, any>) => {
+  products.forEach((product) => {
+    const status = folderStatuses.get(product.folder?.id)
+    if (status !== undefined && product.folder) product.folder.status = status
+  })
+}
+
+/**
+ * Patches folder status into the nested folder data returned by versions/products queries.
+ * Folder updates are handled by the overview cache separately, so this deliberately does not
+ * invalidate version or product tags and cause those queries to reload.
+ */
+export const patchFolderStatusInVersions = (
+  folders: PatchOperation[],
+  {
+    state,
+    dispatch,
+  }: {
+    state: RootState<any, any, 'restApi'>
+    dispatch: ThunkDispatch<any, any, UnknownAction>
+  },
+  patches?: any[],
+) => {
+  const folderStatuses = new Map(
+    folders
+      .filter((op) => op.type !== 'delete' && op.entityId && op.data?.status !== undefined)
+      .map((op) => [op.entityId as string, op.data?.status]),
+  )
+  if (!folderStatuses.size) return
+
+  const entries = injectedVersionsPageApi.util.selectInvalidatedBy(state, [
+    { type: 'version', id: 'LIST' },
+    { type: 'product', id: 'LIST' },
+  ])
+
+  for (const entry of entries) {
+    if (
+      entry.endpointName === 'getVersionsInfinite' ||
+      entry.endpointName === 'getProductsInfinite'
+    ) {
+      const patch = dispatch(
+        injectedVersionsPageApi.util.updateQueryData(
+          entry.endpointName,
+          entry.originalArgs,
+          (draft: any) => {
+            for (const page of draft.pages) {
+              if (entry.endpointName === 'getVersionsInfinite') {
+                applyFolderStatusToVersions(page.versions, folderStatuses)
+              } else {
+                patchFolderStatusInProducts(page.products, folderStatuses)
+              }
+            }
+          },
+        ),
+      )
+      patches?.push(patch)
+    } else if (
+      entry.endpointName === 'getVersionsByProducts' ||
+      entry.endpointName === 'getGroupedVersionsList' ||
+      entry.endpointName === 'GetVersions' ||
+      entry.endpointName === 'GetVersionsByProductId'
+    ) {
+      const patch = dispatch(
+        injectedVersionsPageApi.util.updateQueryData(
+          entry.endpointName,
+          entry.originalArgs,
+          (draft: any) => applyFolderStatusToVersions(draft.versions, folderStatuses),
+        ),
+      )
+      patches?.push(patch)
+    } else if (entry.endpointName === 'GetProducts') {
+      const patch = dispatch(
+        injectedVersionsPageApi.util.updateQueryData(
+          entry.endpointName,
+          entry.originalArgs,
+          (draft: any) => patchFolderStatusInProducts(draft.products, folderStatuses),
+        ),
+      )
+      patches?.push(patch)
+    }
+  }
+}
+
 /**
  * Patches version updates into all relevant caches and invalidates them for refetching:
  * 1. Optimistically update getVersionsInfinite and getVersionsByProducts caches
@@ -71,9 +162,7 @@ export const patchVersions = (
   const versionEntries = injectedVersionsPageApi.util.selectInvalidatedBy(state, tags)
 
   // Get IDs of versions being deleted
-  const deleteIds = new Set(
-    versions.filter((op) => op.type === 'delete').map((op) => op.entityId),
-  )
+  const deleteIds = new Set(versions.filter((op) => op.type === 'delete').map((op) => op.entityId))
 
   // Step 2: Optimistically patch caches - handle both updates and deletes
   for (const entry of versionEntries) {
