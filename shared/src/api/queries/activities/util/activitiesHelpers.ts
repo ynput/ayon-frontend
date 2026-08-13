@@ -3,7 +3,7 @@ import type {
   GetEntitiesChecklistsQuery,
   PageInfo,
 } from '@shared/api/generated'
-import { ChecklistCount, FeedActivity, FeedActivityData } from '../types'
+import type { ChecklistCount, FeedActivity, FeedActivityData } from '../types'
 import { BaseTypes, EntityTooltipQuery, TaskTypes, VersionTypes } from '../activityQueries'
 
 // Helper function to get a nested property of an object using a string path

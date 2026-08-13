@@ -1,9 +1,12 @@
-import { Chips, ChipValue, DoneCheckbox, SubtasksManagerWrapper } from '@shared/components'
+import { Chips } from '@shared/components/Chips/Chips'
+import type { ChipValue } from '@shared/components/Chips/Chips'
+import { DoneCheckbox } from '@shared/components/DoneCheckbox/DoneCheckbox'
+import { SubtasksManagerWrapper } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { FC, useState } from 'react'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 import { Container } from '@shared/components/LinksManager/LinksManager.styled'
-import { type SubTaskNode } from '@shared/api'
+import type { SubTaskNode } from '@shared/api'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 
 export type SubtasksWidgetData = {

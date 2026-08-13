@@ -1,4 +1,5 @@
-import { GetCurrentUserApiResponse, gqlApi, usersApi } from '@shared/api/generated'
+import { gqlApi, usersApi } from '@shared/api/generated'
+import type { GetCurrentUserApiResponse } from '@shared/api/generated'
 import type {
   GetActiveUsersCountQuery,
   GetAllAssigneesQuery,

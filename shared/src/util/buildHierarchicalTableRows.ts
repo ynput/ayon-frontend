@@ -1,4 +1,4 @@
-import { SimpleTableRow } from '@shared/containers/SimpleTable'
+import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 
 /**
  * Generic folder node structure for hierarchical data
@@ -26,7 +26,9 @@ export interface BuildHierarchicalRowsConfig<TFolder, TItem> {
   /** Function to create a table row for an item */
   createItemRow: (item: TItem, parentId?: string, parentPath?: string[]) => SimpleTableRow
   /** Function to sort folder nodes */
-  sortFolderNodes: (nodes: HierarchicalFolderNode<TFolder, TItem>[]) => HierarchicalFolderNode<TFolder, TItem>[]
+  sortFolderNodes: (
+    nodes: HierarchicalFolderNode<TFolder, TItem>[],
+  ) => HierarchicalFolderNode<TFolder, TItem>[]
   /** Function to sort items within a folder */
   sortItems?: (items: TItem[]) => TItem[]
   /** Function to extract folder label */

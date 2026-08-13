@@ -3,9 +3,9 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import clsx from 'clsx'
 import * as Styled from './ListTable.styled'
-import { ColumnHeaderMenuUI, type ColumnMenuItemType } from '@shared/components'
+import { ColumnHeaderMenuUI, type ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 import HeaderActionButton from '@shared/containers/ProjectTreeTable/components/HeaderActionButton'
-import { useMenuContext } from '@shared/context'
+import { useMenuContext } from '@shared/context/MenuContext'
 import React from 'react'
 
 interface SortableTHProps<TData> {

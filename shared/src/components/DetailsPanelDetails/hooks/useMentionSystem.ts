@@ -6,22 +6,12 @@ import getMentionVersions from '@shared/containers/Feed/mentionHelpers/getMentio
 import getMentionTasks from '@shared/containers/Feed/mentionHelpers/getMentionTasks'
 import { useFeedContext } from '@shared/containers/Feed/context/FeedContext'
 import useMentionLink from '@shared/containers/Feed/components/CommentInput/hooks/useMentionLink'
+import { mentionTypeOptions } from '@shared/util/mentionTypeOptions'
 
 var Delta = Quill.import('delta')
 
 const mentionTypes = ['@', '@@', '@@@']
-export const mentionTypeOptions = {
-  '@@@': {
-    id: 'task',
-  },
-  '@@': {
-    id: 'version',
-  },
-  '@': {
-    id: 'user',
-    isCircle: true,
-  },
-}
+export { mentionTypeOptions }
 
 interface UseMentionSystemProps {
   editorRef: React.RefObject<any>

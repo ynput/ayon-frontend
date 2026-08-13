@@ -1,4 +1,4 @@
-import { useEntityUpdate } from '@shared/hooks'
+import { useEntityUpdate } from '@shared/hooks/useEntityUpdate'
 import type { DetailsPanelEntityData } from '@shared/api'
 
 interface UseEntityEditingProps {
@@ -7,7 +7,7 @@ interface UseEntityEditingProps {
 }
 
 export const useEntityEditing = ({ entities, entityType }: UseEntityEditingProps) => {
-  const enableEditing = true;
+  const enableEditing = true
 
   const { updateEntity } = useEntityUpdate({
     entities: entities.map((entity) => ({

@@ -18,12 +18,12 @@ import { useCellEditing } from '../context/CellEditingContext'
 import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
 import { useSelectionCellsContext } from '../context/SelectionCellsContext'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext } from '@shared/context/ProjectContext'
 import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
-import { NameWidgetData } from '@shared/components/RenameForm'
+import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { READ_ONLY } from '../utils'
-import { AttributeData, EnumItem, type EntityComment } from '@shared/api'
+import type { AttributeData, EnumItem, EntityComment } from '@shared/api'
 
 const Cell = styled.div`
   position: absolute;

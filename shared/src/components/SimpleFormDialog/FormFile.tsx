@@ -1,7 +1,7 @@
 import { useMemo, useCallback, useRef, DragEvent } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
-import { parseFilename } from '../ReviewablesList'
+import { parseFilename } from '@shared/util/parseFilename'
 
 export interface FormFileData {
   payload: string

@@ -1,6 +1,6 @@
-import { UseExtraSlices } from '@shared/containers/Slicer'
-import { useProjectContext } from '@shared/context'
-import { AttributeModel } from '@shared/api'
+import type { UseExtraSlices } from '../context/SlicerContext'
+import { useProjectContext } from '@shared/context/ProjectContext'
+import type { AttributeModel } from '@shared/api'
 
 type Props = {
   scopes?: string[]

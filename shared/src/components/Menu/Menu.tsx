@@ -4,7 +4,9 @@ import { MenuList } from './MenuList'
 import { MENU_PORTAL_CONTENT_ID } from './MenuContainer'
 import { copyToClipboard } from '@shared/util'
 import { Button } from '@ynput/ayon-react-components'
-import { PowerpackFeature, useMenuContext, usePowerpack } from '@shared/context'
+import type { PowerpackFeature } from '@shared/context/PowerpackContext'
+import { useMenuContext } from '@shared/context/MenuContext'
+import { usePowerpack } from '@shared/context/PowerpackContext'
 
 export interface MenuItemType {
   id: string
@@ -105,10 +107,7 @@ export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer =
     // Mouse is still inside the menu portal (the DialogContent or any descendant).
     // The user is most likely traveling across a small gap toward an adjacent sub-menu.
     // Don't close anything — the next mouseenter will reconcile state.
-    if (
-      typeof related.closest === 'function' &&
-      related.closest(`#${MENU_PORTAL_CONTENT_ID}`)
-    )
+    if (typeof related.closest === 'function' && related.closest(`#${MENU_PORTAL_CONTENT_ID}`))
       return
 
     // Mouse is targeting a known sub-menu element directly (id match) — keep open.
@@ -131,9 +130,7 @@ export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer =
     style: React.CSSProperties,
     placement: 'left' | 'right',
   ) => {
-    setSubMenus((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, style, placement } : m)),
-    )
+    setSubMenus((prev) => prev.map((m) => (m.id === id ? { ...m, style, placement } : m)))
   }
 
   return (

@@ -1,4 +1,5 @@
-import { entityListsApi, EntityListFoldersResponseModel } from '@shared/api/generated'
+import { entityListsApi } from '@shared/api/generated'
+import type { EntityListFoldersResponseModel } from '@shared/api/generated'
 
 const LIST_FOLDER_LIST_TAG = { type: 'entityListFolder' as const, id: 'LIST' }
 

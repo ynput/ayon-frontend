@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useColumnSettingsContext, useProjectTableContext } from '../context'
-import { useGetGroupedFields } from '..'
-import { TableGroupBy } from '@shared/containers'
+import { useGetGroupedFields } from './useGetGroupedFields'
+import type { TableGroupBy } from '../context/ColumnSettingsContext'
 
 const HIERARCHY_ID = 'hierarchy'
 const FOLDER_ID = 'folder'
@@ -14,7 +14,13 @@ interface UseGroupBySettingsProps {
 export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
   const { groupBy, groupByConfig, updateGroupBy, updateGroupByConfig, sorting, updateSorting } =
     useColumnSettingsContext()
-  const { modules, showHierarchy, updateShowHierarchy, hierarchyOptions: customHierarchyOptions, hierarchyActive, } = useProjectTableContext()
+  const {
+    modules,
+    showHierarchy,
+    updateShowHierarchy,
+    hierarchyOptions: customHierarchyOptions,
+    hierarchyActive,
+  } = useProjectTableContext()
   const groupByFields = useGetGroupedFields({ scope })
   if (!modules) return null
   const { GroupSettings, requiredVersion } = modules || {}
@@ -35,8 +41,7 @@ export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
   const isHierarchyActive = hierarchyActive ?? showHierarchy
   const baseVirtualGroupBy =
     groupBy ?? (hasHierarchy && isHierarchyActive ? { id: HIERARCHY_ID, desc: false } : undefined)
-  const nameSortDesc =
-    sorting?.[0]?.id === NAME_SORT_COLUMN ? !!sorting[0].desc : false
+  const nameSortDesc = sorting?.[0]?.id === NAME_SORT_COLUMN ? !!sorting[0].desc : false
   const virtualGroupBy =
     baseVirtualGroupBy?.id === FOLDER_ID || baseVirtualGroupBy?.id === HIERARCHY_ID
       ? { ...baseVirtualGroupBy, desc: nameSortDesc }

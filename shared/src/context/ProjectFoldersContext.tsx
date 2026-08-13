@@ -2,7 +2,7 @@ import { useContext, useMemo } from 'react'
 import { useGetFolderListQuery } from '@shared/api'
 
 import type { FolderListItem, FolderListModel } from '@shared/api'
-import { useQueryArgumentChangeLoading } from '@shared/hooks'
+import { useQueryArgumentChangeLoading } from '@shared/hooks/useQueryArgumentChangeLoading'
 import { ProjectFoldersContext } from './ProjectFoldersContextInstance'
 
 export interface ProjectFoldersContextValue {

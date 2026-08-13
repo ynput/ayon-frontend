@@ -7,7 +7,8 @@
 
 import { createContext, useContext, useEffect, ReactNode, FC, useCallback, useState } from 'react'
 import { buildEntityUri, parseUri } from '../util'
-import { ResolvedUriModel, useResolveUrisMutation } from '@shared/api'
+import { useResolveUrisMutation } from '@shared/api'
+import type { ResolvedUriModel } from '@shared/api'
 
 export const URL_PARAM_ID = 'uri'
 

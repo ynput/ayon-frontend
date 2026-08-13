@@ -6,9 +6,9 @@ import {
   waitForRealtimeJitter,
 } from '@shared/util'
 import { ActivitiesResult } from './activitiesHelpers'
-import type { GetActivitiesQueryVariables } from '@shared/api'
+import type { GetActivitiesQueryVariables } from '@shared/api/generated/graphql'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
-import { FeedActivity } from '../types'
+import type { FeedActivity } from '../types'
 
 type ActivitiesGqlApi = {
   endpoints: {

@@ -1,7 +1,7 @@
 import * as Styled from './EntityTooltip.styled'
-import { useFeedContext } from '@shared/containers/Feed'
+import { useFeedContext } from '@shared/containers/Feed/context/FeedContext'
 import { Status } from '@shared/containers/ProjectTreeTable/types/project'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext } from '@shared/context/ProjectContext'
 import { getEntityThumbnailUrl } from '@shared/util'
 
 interface EntityTooltipProps {

@@ -1,4 +1,6 @@
-import { Chips, LinkEntity, LinksManager } from '@shared/components'
+import { Chips } from '@shared/components/Chips/Chips'
+import type { LinkEntity } from '@shared/components/LinksManager/LinksManager'
+import { LinksManager } from '@shared/components/LinksManager/LinksManager'
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { FC } from 'react'
 import styled from 'styled-components'
@@ -7,7 +9,7 @@ import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityConte
 import { useSelectedRowsContext } from '../context/SelectedRowsContext'
 import { Container, CountBadge } from '@shared/components/LinksManager/LinksManager.styled'
 import { isEntityRestricted } from '../utils/restrictedEntity'
-import { useGlobalContext } from '@shared/context'
+import { useGlobalContext } from '@shared/context/GlobalContext'
 import { groupLinksByEntity } from '@shared/components/LinksManager/utils/groupLinks'
 
 const SHIMMER_WIDTHS = ['40px', '56px', '68px', '52px']

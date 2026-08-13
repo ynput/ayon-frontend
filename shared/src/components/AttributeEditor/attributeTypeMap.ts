@@ -1,4 +1,4 @@
-import { AttributeData } from '@shared/api'
+import type { AttributeData } from '@shared/api'
 import { getAttributeIcon } from '@shared/util'
 
 export type UIAttributeType =

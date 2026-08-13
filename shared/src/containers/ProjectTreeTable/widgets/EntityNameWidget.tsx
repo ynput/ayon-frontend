@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import clsx from 'clsx'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { getDisplayValue, type DisplayConfig, getColumnDisplayConfig } from '../types/columnConfig'
-import { EntityIcon } from '@shared/components/EntityIcon'
+import { EntityIcon } from '@shared/components/EntityIcon/EntityIcon'
 
 const Expander = styled(Button)`
   &.expander {

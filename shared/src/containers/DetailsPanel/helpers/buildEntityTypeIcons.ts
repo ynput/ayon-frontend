@@ -1,4 +1,4 @@
-import type { EntityTypeIcons } from '@shared/containers'
+import type { EntityTypeIcons } from '../components/DetailsPanelHeader/DetailsPanelHeader'
 import type { ProjectInfo } from './mergeProjectInfo'
 
 const toIconMap = (types: { name: string; icon?: string | null }[]): Record<string, string> =>

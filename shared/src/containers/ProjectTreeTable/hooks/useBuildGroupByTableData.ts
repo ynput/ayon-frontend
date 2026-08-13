@@ -3,13 +3,14 @@
 // any leftover items that do not match the groupBy field are added as a separate group ("Ungrouped")
 
 import type { GroupCountsMap } from '@shared/api'
-import { EntityGroup } from '@shared/api'
+import type { EntityGroup } from '@shared/api'
 import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
 import { linksToTableData } from '../utils'
-import { ProjectModelWithProducts, useProjectContext } from '@shared/context'
+import type { ProjectModelWithProducts } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context/ProjectContext'
 
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 

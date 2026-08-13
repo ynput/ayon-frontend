@@ -1,5 +1,5 @@
-import {
-  gqlApi,
+import { gqlApi } from '@shared/api/generated'
+import type {
   GetActivitiesByIdQuery,
   GetActivitiesQuery,
   GetActivitiesQueryVariables,
@@ -22,7 +22,7 @@ import {
   OverrideResultType,
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
-import { ChecklistCount } from './types'
+import type { ChecklistCount } from './types'
 
 type ActivityUserNode = GetActivityUsersQuery['users']['edges'][0]['node']
 
@@ -42,7 +42,7 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
     GetActivities: {
       transformResponse: (res: GetActivitiesQuery) =>
         transformActivityData(res.project.activities.edges, res.project.activities.pageInfo),
-     providesTags: provideSharedActivityTags, 
+      providesTags: provideSharedActivityTags,
     },
     GetActivitiesById: {
       transformResponse: (res: GetActivitiesByIdQuery) =>
@@ -151,7 +151,7 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
           gqlApi: enhanceActivitiesApi,
         })
       },
-providesTags: provideSharedActivityTags,
+      providesTags: provideSharedActivityTags,
     }),
     // get data for a reference tooltip based on type,id and projectName
     getEntityTooltip: build.query({

@@ -1,5 +1,5 @@
 import { OnSliceTypeChange } from './context/SlicerContext'
-import { SimpleTableRow } from '@shared/containers/SimpleTable'
+import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import { RowSelectionState } from '@tanstack/react-table'
 import { ExpandedState } from '@tanstack/react-table'
 import { FilterValue } from '@ynput/ayon-react-components'

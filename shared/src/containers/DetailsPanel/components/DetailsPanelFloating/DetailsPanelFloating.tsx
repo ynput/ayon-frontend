@@ -1,17 +1,19 @@
 import { FC, useMemo, useState } from 'react'
 import * as Styled from './DetailsPanelFloating.styled'
 import getThumbnails from '../../helpers/getThumbnails'
-import { StackedThumbnails } from '@shared/components'
+import { StackedThumbnails } from '@shared/components/Thumbnail/StackedThumbnails'
 import { upperFirst } from 'lodash'
 import { AssigneeField, getTextColor, Icon } from '@ynput/ayon-react-components'
-import { PiPWrapper, FeedFilter, ProjectContextProvider } from '@shared/context'
+import { PiPWrapper } from '@shared/context/pip'
+import { ProjectContextProvider } from '@shared/context/ProjectContext'
+import type { FeedFilter } from '@shared/context/DetailsPanelContext'
 import { useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import getAllProjectStatuses from '../../helpers/getAllProjectsStatuses'
 import FeedWrapper from '../../containers/FeedWrapper'
 import mergeProjectInfo from '../../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../../helpers/buildDetailsPanelTitles'
-import { useDetailsPanelContext } from '@shared/context'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 
 export interface DetailsPanelFloatingProps {}
 

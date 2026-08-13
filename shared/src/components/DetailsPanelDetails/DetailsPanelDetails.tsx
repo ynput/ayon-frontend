@@ -8,8 +8,8 @@ import { DescriptionSection } from './DescriptionSection'
 import { DetailsSection } from './DetailsSection'
 import styled from 'styled-components'
 import { useEntityFormData, useEntityFields, useEntityEditing } from './hooks'
-import { useProjectContext } from '@shared/context'
-import { useGlobalContext } from '@shared/context'
+import { useProjectContext } from '@shared/context/ProjectContext'
+import { useGlobalContext } from '@shared/context/GlobalContext'
 
 const StyledContainer = styled.div`
   display: flex;

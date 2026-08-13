@@ -1,4 +1,4 @@
-import { useLoadModule } from '@shared/hooks'
+import { useLoadModule } from '@shared/hooks/useLoadModule'
 import {
   createContext,
   useContext,

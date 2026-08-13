@@ -1,5 +1,5 @@
-import { AttributeModel, Permissions } from '@shared/api'
-import { useGlobalContext } from '@shared/context'
+import type { AttributeModel, Permissions } from '@shared/api'
+import { useGlobalContext } from '@shared/context/GlobalContext'
 
 export interface ProjectTableAttribute extends AttributeModel {
   readOnly?: boolean

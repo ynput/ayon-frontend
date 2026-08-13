@@ -1,4 +1,4 @@
-import { AttributeData } from '@shared/api/generated/entityLists'
+import type { AttributeData } from '@shared/api/generated/entityLists'
 import { entityTypesWithIcons, getEntityTypeIcon } from './getEntityTypeIcon'
 
 type GetAttributesIcon = (name: string, type?: AttributeData['type'], hasEnum?: boolean) => string

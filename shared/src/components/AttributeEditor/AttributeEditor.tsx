@@ -13,8 +13,8 @@ import {
 } from '@ynput/ayon-react-components'
 import { camelCase, upperFirst } from 'lodash'
 import { MinMaxField } from './components'
-import { EnumEditor } from '@shared/components/EnumEditor'
-import { AttributeData, AttributeModel } from '@shared/api'
+import { EnumEditor } from '@shared/components/EnumEditor/EnumEditor'
+import type { AttributeData, AttributeModel } from '@shared/api'
 import {
   UIAttributeType,
   UI_TYPE_OPTIONS,

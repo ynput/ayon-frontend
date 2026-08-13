@@ -3,8 +3,9 @@ import * as Styled from './FileUploadCard.styled'
 import clsx from 'clsx'
 import { useMemo, useState } from 'react'
 import { isFilePreviewable } from '../FileUploadPreview'
-import { SavedAnnotationMetadata, useFeedContext } from '@shared/containers'
-import { useDetailsPanelContext } from '@shared/context'
+import type { SavedAnnotationMetadata } from '../../index'
+import { useFeedContext } from '../../context/FeedContext'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 import { AnnotationPreview } from '../CommentInput/hooks/useAnnotationsSync'
 
 export interface FileUploadCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -137,10 +138,7 @@ const FileUploadCard = ({
       return someAnnotation?.range ?? [1, 1]
     }
 
-    return [
-      frameStart - 1 + someAnnotation.range[0],
-      frameStart - 1 + someAnnotation.range[1],
-    ]
+    return [frameStart - 1 + someAnnotation.range[0], frameStart - 1 + someAnnotation.range[1]]
   }, [someAnnotation])
 
   return (

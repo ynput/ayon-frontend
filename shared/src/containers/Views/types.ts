@@ -1,5 +1,5 @@
 import type { GetViewApiResponse } from '@shared/api'
-import type { AccessLevel } from '@shared/components'
+import type { AccessLevel } from '@shared/components/AccessUser/AccessUser'
 
 export type ViewFormData = Required<
   Pick<GetViewApiResponse, 'label' | 'scope' | 'visibility' | 'owner' | 'accessLevel'> & {

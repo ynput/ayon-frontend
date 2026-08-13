@@ -2,8 +2,8 @@
 // Each tab manages its own sub-filters
 import { FC } from 'react'
 import { Button, Spacer } from '@ynput/ayon-react-components'
-import { DetailsPanelTab } from '@shared/context'
-import { DetailsPanelEntityType } from '@shared/api'
+import type { DetailsPanelTab } from '@shared/context/DetailsPanelContext'
+import type { DetailsPanelEntityType } from '@shared/api'
 import * as Styled from './DetailsPanelTabs.styled'
 
 // Entity types that don't support the feed tab

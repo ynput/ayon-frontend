@@ -1,4 +1,4 @@
-import { FolderType, TaskType } from '@shared/api'
+import type { FolderType, TaskType } from '@shared/api'
 import { Dropdown, DropdownRef } from '@ynput/ayon-react-components'
 import { forwardRef, CSSProperties } from 'react'
 

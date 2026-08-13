@@ -1,4 +1,4 @@
-import { AttributeModel, FolderListItem } from '@shared/api'
+import type { AttributeModel, FolderListItem } from '@shared/api'
 import { ProjectTableAttribute } from '../../ProjectTreeTable/hooks/useAttributesList'
 import { SliceFilter, SliceType } from '../types'
 import { RowSelectionState } from '@tanstack/react-table'
