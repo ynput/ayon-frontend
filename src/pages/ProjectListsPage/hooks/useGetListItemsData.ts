@@ -131,8 +131,6 @@ const useGetListItemsData = ({
       parsedSortId = `entity_${parsedSortId}`
     }
 
-    console.log('parseSorting', { sorting, parsedSortId, sortId, entityType })
-
     return parsedSortId
   }
 
