@@ -99,18 +99,31 @@ const useGetListItemsData = ({
   const parseSorting = (sorting?: string): string | undefined => {
     if (!sorting) return undefined
     let sortId = COLUMN_SORT_CONFIG[sorting]?.sortKey || sorting
+
     if (singleSort?.id === 'name' && entityType === 'version') {
       sortId = 'path'
     } else if (sortId.startsWith('attrib') && sortId.includes('_')) {
       // convert attrib sorting to query format
       sortId = sortId.replace('_', '.')
-    } else if (sortId.endsWith('Type') && entityType && !sortId.startsWith(entityType)) {
-      // if the type is not native to the entity, add the parent prefix
-      sortId = 'parent' + sortId[0].toUpperCase() + sortId.slice(1)
+    } else if (sortId === 'subType') {
+      switch (entityType) {
+        case 'task':
+          sortId = 'entity_taskType'
+          break
+        case 'folder':
+          sortId = 'entity_folderType'
+          break
+        case 'product':
+          sortId = 'parent_productType'
+          break
+        case 'version':
+          sortId = 'parent_productType'
+          break
+      }
     } else if (sortId === 'product') {
       // backend resolves productName to the related product's name (per entity type)
       sortId = 'productName'
-    } else if (sorting === 'folder_entity') {
+    } else if (sorting === 'folder_entity' || sorting === 'folder') {
       sortId = 'folderPath'
     } else {
       // add entity prefix to entity fields

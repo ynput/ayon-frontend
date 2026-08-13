@@ -78,12 +78,6 @@ export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
   name: { sortKey: 'name', enabled: true, label: 'Name' },
   entityType: { enabled: false, label: COLUMN_LABELS.entityType },
   status: { sortKey: 'status', sortDescFirst: false, enabled: true, label: COLUMN_LABELS.status },
-  subType: {
-    sortKey: 'taskType',
-    sortDescFirst: true,
-    enabled: true,
-    label: COLUMN_LABELS.subType,
-  },
   assignees: {
     sortKey: 'assignees',
     enabled: true,
