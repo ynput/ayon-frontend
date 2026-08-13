@@ -43,7 +43,6 @@ const Item = styled.li`
   &.disabled {
     opacity: 0.5;
     user-select: none;
-    pointer-events: none;
     &:hover {
       background-color: unset;
     }

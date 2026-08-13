@@ -16,6 +16,7 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
     onUpdateGridHeightWithPersistence,
     latestPerFolder,
     onUpdateLatestPerFolder,
+    showProducts,
     sortBy,
     sortDesc,
     onUpdateSorting,
@@ -103,8 +104,13 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
         <SettingSwitch
           icon="folder"
           label="Latest per folder"
-          data-tooltip="Show only the latest published version per folder (1 version per folder)."
-          checked={latestPerFolder === true}
+          disabled={showProducts}
+          data-tooltip={
+            showProducts
+              ? 'Disabled when grouping by product'
+              : 'Show only the latest published version per folder (1 version per folder).'
+          }
+          checked={latestPerFolder === true && !showProducts}
           onChange={onUpdateLatestPerFolder}
         />
       ),

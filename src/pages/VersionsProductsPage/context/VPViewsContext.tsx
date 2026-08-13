@@ -148,9 +148,10 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [versionsSettings?.showEmptyGroups],
   )
   const serverLatestPerFolder = useMemo(
-    () => versionsSettings?.latestPerFolder,
-    [versionsSettings?.latestPerFolder],
+    () => versionsSettings?.latestPerFolder && serverViewGroupBy !== 'hierarchy',
+    [versionsSettings?.latestPerFolder, serverViewGroupBy],
   )
+
   const serverSortBy = useMemo(() => versionsSettings?.sortBy ?? 'name', [versionsSettings?.sortBy])
   const serverSortDesc = useMemo(
     () => versionsSettings?.sortDesc ?? false,
