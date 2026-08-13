@@ -1,21 +1,17 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useQueryParam } from 'use-query-params'
 
-// not `project`: DetailsPanelContext reads that one together with type + id to open an
-// entity, and the details panel rewrites it on every message opened, so reusing it would
-// both break the deep link and pin the inbox to whatever was last clicked
+// not `project`: the details panel owns that one and rewrites it on every message opened
 export const INBOX_PROJECT_PARAM = 'inboxProject'
 
 interface Options {
   enabled?: boolean
-  // selection stored in the current view - the source of truth once views have loaded
   viewProject: string | null
   onViewProjectChange: (projectName: string | null) => void
   isReady: boolean
 }
 
-// The selected project is stored in the view so it is saved with the rest of the filter
-// setup, and mirrored into the URL so a link opens on the same project.
+// the view owns the selection; the URL only mirrors it so a link opens on the same project
 const useInboxProject = ({
   enabled = true,
   viewProject,
@@ -51,8 +47,7 @@ const useInboxProject = ({
     [setUrlProject, onViewProjectChange],
   )
 
-  // until the views have loaded the URL is all we have, otherwise the list would flash
-  // the cross-project inbox before the stored selection arrives
+  // before the view loads the URL is all we have, or the list flashes the cross-project inbox
   const selected = isReady ? viewProject : urlProject ?? null
 
   return [enabled ? selected : null, setProject]

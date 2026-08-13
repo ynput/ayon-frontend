@@ -6,9 +6,7 @@ export const INBOX_REFERENCE_TYPES = ['mention', 'watching', 'relation']
 
 const IMPORTANT_REFERENCE_TYPES = ['mention', 'watching']
 
-// the reason chip drives the referenceTypes argument, and the reviews chip maps to
-// activityTypes + activity_data.feedback - neither is a whitelisted column, so both
-// must never reach the QueryFilter or the backend would reject them
+// neither is a whitelisted column, so they must never reach the QueryFilter
 export const REASON_FILTER_KEY = 'reason'
 export const REVIEWS_FILTER_KEY = 'reviews'
 
@@ -38,10 +36,8 @@ export const getInboxReferenceTypes = (
   return valid.length ? valid : allowed
 }
 
-// entity_path and entity_name are useless on inbox rows: user references have no entity_id,
-// so the path join yields NULL, and entity_name holds the recipient's user name.
-// activity_data.parents has no text column either - `like` casts the whole array to text
-// with ->>, so the folder names are matched inside the raw JSON.
+// not entity_path or entity_name: on inbox rows the first is always NULL and the second
+// holds the recipient. parents has no text column, so `like` matches it as raw JSON.
 const TEXT_SEARCH_KEYS = [
   'body',
   'activity_data.origin.name',
@@ -49,8 +45,7 @@ const TEXT_SEARCH_KEYS = [
   'activity_data.parents',
 ]
 
-// matching parents as raw JSON also matches its keys and type values, so these words
-// would hit nearly every row - the other three fields still search them
+// raw JSON also contains its own keys and type values, so these would hit nearly every row
 const PARENTS_STOPWORDS = new Set([
   'id',
   'name',
@@ -109,8 +104,7 @@ type BuildInboxFilterArgs = {
   uiFilter?: QueryFilter
 }
 
-// Rebuilds the get_user_inbox() predicates as a QueryFilter so the per-project
-// `activities` resolver returns the same rows the `inbox` resolver would.
+// rebuilds the get_user_inbox() predicates so `activities` returns the same rows
 export const buildInboxFilter = ({
   userName,
   isActive,
@@ -174,9 +168,8 @@ export const buildInboxFilter = ({
   return JSON.stringify({ operator: 'and', conditions })
 }
 
-// Inbox-local, not the shared feed map: the inbox groups `reviewable` rows in with
-// publishes, so the Versions chip must not hide them.
-// assignee.reassign is synthesised client-side and is not a backend type - never send it.
+// not the shared feed map: the inbox shows `reviewable` under Versions, and
+// assignee.reassign is synthesised client-side so it must never be sent
 const INBOX_ACTIVITY_TYPES: Record<string, string[]> = {
   comments: ['comment'],
   versions: ['version.publish', 'reviewable'],

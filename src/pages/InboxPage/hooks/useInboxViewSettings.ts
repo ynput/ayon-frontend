@@ -22,8 +22,6 @@ type Return = {
   isLoadingViews: boolean
 }
 
-// Inbox filter setup (project + filter chips + unread toggle) is stored in the view,
-// so it can be saved, named and shared like on the other pages.
 const useInboxViewSettings = (): Return => {
   const { viewType, viewSettings, isLoadingViews, setSelectedView } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
@@ -31,8 +29,7 @@ const useInboxViewSettings = (): Return => {
 
   const settings = viewSettings as InboxViewSettings | undefined
 
-  // Every inbox tab is its own view type, so the first visit has no view at all to write to
-  // and updates would be dropped for want of a baseline. Create the working view up front.
+  // a tab's first visit has no view to write to, and updates abort without a baseline
   const bootstrapped = useRef<Set<string>>(new Set())
   useEffect(() => {
     if (!viewType || isLoadingViews || viewSettings !== undefined) return
@@ -44,16 +41,14 @@ const useInboxViewSettings = (): Return => {
       .unwrap()
       .then(() => setSelectedView(workingView.id as string))
       .catch((error) => {
-        // without a baseline every later update aborts inside updateViewSettings, so the
-        // filters would look applied but never persist - drop the mark so it can retry
+        // drop the mark so it can retry, otherwise nothing ever persists
         bootstrapped.current.delete(viewType)
         console.error('Failed to create inbox working view:', error)
         toast.error('Inbox filters cannot be saved right now')
       })
   }, [viewType, viewSettings, isLoadingViews, createView, setSelectedView])
 
-  // updateViewSettings clears local state by passing null, so a null project (no project
-  // selected) has to be wrapped to stay distinguishable from "no local override"
+  // wrapped: updateViewSettings clears local state with null, which a null project also means
   const [localProjectName, setLocalProjectName] = useState<{ value: string | null } | null>(null)
   const [localFilter, setLocalFilter] = useState<QueryFilter | null>(null)
   const [localUnreadOnly, setLocalUnreadOnly] = useState<boolean | null>(null)

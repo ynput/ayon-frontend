@@ -21,8 +21,7 @@ interface InboxLink {
   viewType?: string
 }
 
-// each tab keeps its own saved views: the filters that make sense on Important are not the
-// ones you want on Cleared
+// a view type per tab: the filters that suit Important are not the ones you want on Cleared
 const getInboxViewType = (module: InboxFilter) => `inbox-${module}`
 
 const InboxPage = () => {
@@ -32,8 +31,7 @@ const InboxPage = () => {
   const { data: importantUnreadCount } = useGetInboxUnreadCountQuery({ important: true })
   const { data: otherUnreadCount } = useGetInboxUnreadCountQuery({ important: false })
 
-  // only the active tab renders the views portal, otherwise the empty portal span would
-  // nudge the unread counts on the other tabs
+  // an empty portal span on an inactive tab would nudge its unread count
   const viewTypeFor = (linkModule: InboxFilter) =>
     linkModule === activeModule ? getInboxViewType(linkModule) : undefined
 

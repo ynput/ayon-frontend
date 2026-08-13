@@ -27,15 +27,13 @@ const cacheArgsFor = (state: any, endpointName: string, matches: (args: any) => 
     .filter((entry: any) => entry?.endpointName === endpointName && matches(entry?.originalArgs))
     .map((entry: any) => entry.originalArgs)
 
-// The project inbox is cached per filter combination, so the entries to patch can
-// only be found by walking the cache and matching on the project.
+// both inboxes are cached per filter combination, so the entries to patch can only be
+// found by walking the cache - a hardcoded arg set no longer finds the live entry
 const getProjectInboxArgs = (state: any, projectName?: string): ProjectInboxInfiniteArgs[] =>
   projectName
     ? cacheArgsFor(state, 'getProjectInboxInfinite', (args) => args?.projectName === projectName)
     : []
 
-// The cross-project inbox is keyed by unread as well, so a hardcoded arg triple
-// no longer finds the live entry - match on the tab instead.
 const getInboxArgs = (state: any, active?: boolean, important?: boolean | null): any[] =>
   cacheArgsFor(
     state,
@@ -81,8 +79,7 @@ const enhancedRest = inboxApi.enhanceEndpoints({
 
         const patches: { undo: () => void }[] = []
 
-        // `all` is scoped to one project on the backend, so the cross-project cache must only
-        // lose that project's rows - wiping it hides every other project until the entry expires
+        // `all` is one project on the backend, so the cross-project cache must keep the rest
         const isLeaving = all
           ? (m: any) => m.projectName === projectName
           : (m: any) => ids.includes(m.referenceId)
@@ -116,8 +113,8 @@ const enhancedRest = inboxApi.enhanceEndpoints({
           // this means we are changing the active (cleared) status of the message
           // if will be moving from one cache to another
 
-          //   the cache to remove from (current tab). The recipe runs once per cached
-          //   variant of the tab, and each holds a different subset, so collect the union
+          //   the cache to remove from (current tab). Each cached variant holds a different
+          //   subset, so collect the union across them
           patchInbox({ active, important }, (draft) => {
             draft.messages.filter(isLeaving).forEach((m) => {
               movedMessages.set(m.referenceId, current(m))
@@ -160,8 +157,7 @@ const enhancedRest = inboxApi.enhanceEndpoints({
             )
           }
 
-          // project mode: drop the rows from the tab they are leaving. The tab they land
-          // in is cached per filter, so invalidate it instead of guessing which entry fits.
+          // the tab they land in is cached per filter, so invalidate rather than guess
           projectArgs
             .filter((args) => args.active === active)
             .forEach((args) =>
@@ -179,8 +175,8 @@ const enhancedRest = inboxApi.enhanceEndpoints({
           }
         } else {
           // only updating the read status of the message
-          // patch new data into the cache. Rows are not removed from an unread-filtered
-          // list here: the row the user just clicked would vanish under the cursor.
+          // not removed from an unread-filtered list: the clicked row would vanish under
+          // the cursor
           patchInbox({ active, important }, (draft) => {
             for (const id of ids) {
               const messageIndex = draft.messages.findIndex((m: any) => m.referenceId === id)

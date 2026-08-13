@@ -98,7 +98,6 @@ const Inbox = ({ filter }: InboxProps) => {
   const isActive = filterArgs.active
   const isImportant = filterArgs.important
 
-  // the whole filter setup lives in the view, so it can be saved and switched
   const {
     projectName: viewProject,
     onUpdateProjectName,
@@ -110,7 +109,6 @@ const Inbox = ({ filter }: InboxProps) => {
     isLoadingViews,
   } = useInboxViewSettings()
 
-  // filtering is only possible per project - the inbox resolver takes no filter args
   // guests get no project mode: the activities resolver rejects projects they cannot access
   const [selectedProject, setSelectedProject] = useInboxProject({
     enabled: !isGuest,
@@ -143,17 +141,13 @@ const Inbox = ({ filter }: InboxProps) => {
     [selectedProject, user, inboxFilter, isActive, isImportant, showUnreadOnly],
   )
 
-  // a stale url/storage value (renamed project, or a folder row id) would 404 the query,
-  // so the project query waits until the name is known to exist
+  // a renamed project or a folder row id would 404 the query
   const isKnownProject = !!selectedProject && projects.some((p) => p.name === selectedProject)
 
-  // both queries are skipped in this window, so it has to read as loading or the list
-  // would claim the inbox is empty before anything was fetched. On error it resolves to
-  // the error placeholder instead, otherwise the placeholders would never stop.
+  // both queries are skipped in this window, so it has to read as loading, not as empty
   const isResolvingProject = isProjectMode && !isKnownProject && !globalError.projects
 
-  // a failed project list is empty too, and dropping the selection on a network blip would
-  // wipe it from the saved view
+  // a failed project list is empty too, and clearing here would wipe the saved view
   useEffect(() => {
     if (!selectedProject || globalIsLoading.projects || globalError.projects) return
     if (!isKnownProject) setSelectedProject(null)
@@ -168,8 +162,7 @@ const Inbox = ({ filter }: InboxProps) => {
   // null, not false: false would ask the resolver for read messages only
   const unreadArg = isActive && showUnreadOnly ? true : null
 
-  // the view holds the project and the filters, so querying before it loads would fetch the
-  // cross-project inbox first and throw it away as soon as the stored setup arrives
+  // querying before the view loads fetches a cross-project inbox that is thrown away
   const globalQuery = useGetInboxMessagesQuery(
     { last: last, active: isActive, important: isImportant, unread: unreadArg },
     { skip: isProjectMode || isLoadingViews },
@@ -444,15 +437,13 @@ const Inbox = ({ filter }: InboxProps) => {
     let clearedCount = 0
 
     if (isFiltered) {
-      // the backend `all` flag ignores the filters, so a filtered list has to name the
-      // messages it is clearing - anything the filters hide must survive
+      // the backend `all` flag ignores filters, so name the messages instead
       if (!groupedMessages.length) return
       clearedCount = groupedMessages.reduce((sum, g) => sum + g.messages.length, 0)
       promises = clearGroups(groupedMessages)
       setSelected([])
       lastSelectedIndexRef.current = -1
     } else {
-      // nothing is hidden, so the cheap backend flag can clear whole projects at once
       const projectsToClear = isProjectMode
         ? [selectedProject as string]
         : projects.map((p) => p.name)
@@ -467,10 +458,8 @@ const Inbox = ({ filter }: InboxProps) => {
     }
   }
 
-  // project info only feeds status colours, and it reloads on every project switch -
-  // gating the list on it flashes the placeholders a second time.
-  // currentData, not isFetching: it is undefined only while a new cache key loads (project,
-  // tab or filter change), so a websocket refetch or pagination keeps the list on screen.
+  // currentData, not isFetching: it is undefined only while a new cache key loads, so a
+  // websocket refetch or pagination keeps the list on screen
   const isLoadingAny =
     isLoadingViews || isResolvingProject || (isFetchingInbox && !currentData) || isRefreshing
 

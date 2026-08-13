@@ -75,9 +75,8 @@ const InboxSearchFilter = ({
     { skip: isDisabled },
   )
 
-  // feedFilterToClientFilters drops conditions whose key has no option, and onFinish writes
-  // the result back to the view - so a saved category chip must keep its option alive even
-  // before the categories arrive, or editing any other chip erases it for good
+  // a condition with no matching option is dropped and written back, so a saved chip needs
+  // its option alive before the categories arrive
   const hasSavedCategory = (filter?.conditions || []).some(
     (c) => 'key' in c && c.key === 'category',
   )
