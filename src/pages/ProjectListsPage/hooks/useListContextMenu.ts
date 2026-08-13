@@ -5,8 +5,9 @@ import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
 import { useListsDataContext } from '../context/ListsDataContext'
 import { parseListFolderRowId } from '../util/buildListsTableData'
+import { buildFolderMap, wouldCreateCircularDependency } from '../util/listFolders'
 import { EntityListFolderModel } from '@shared/api'
-import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { usePowerpack, useProjectContext } from '@shared/context'
 import {
   canEditList,
@@ -30,28 +31,8 @@ export const FOLDER_ICON_ADD = 'create_new_folder'
 export const FOLDER_ICON_EDIT = 'folder_managed'
 export const FOLDER_ICON_REMOVE = 'folder_off'
 
-// Helper function to prevent circular dependencies
-const wouldCreateCircularDependency = (
-  folderId: string,
-  targetParentId: string,
-  folders: EntityListFolderModel[],
-): boolean => {
-  if (folderId === targetParentId) return true
-
-  const folderMap = new Map(folders.map((f) => [f.id, f]))
-
-  // Check if targetParentId is a descendant of folderId
-  const isDescendant = (currentId: string, ancestorId: string): boolean => {
-    const current = folderMap.get(currentId)
-    if (!current || !current.parentId) return false
-    if (current.parentId === ancestorId) return true
-    return isDescendant(current.parentId, ancestorId)
-  }
-
-  return isDescendant(targetParentId, folderId)
-}
-
-const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => {
+// enabled=false in picker mode: the table renders no row menu there
+const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], enabled = true) => {
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
   const { projectName } = useProjectContext()
@@ -62,13 +43,11 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => 
     deleteLists,
     createReviewSessionList,
     isReview,
-    onPutListsInFolder,
-    onRemoveListsFromFolder,
     onOpenFolderList,
     openNewList,
     onDeleteListFolders,
-    onPutFoldersInFolder,
     onRemoveFoldersFromFolder,
+    openMoveToFolder,
     selectAllLists,
   } = useListsContext()
   const { powerLicense } = usePowerpack()
@@ -138,137 +117,55 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => 
         : false
       const userCanEditList = selectedList ? canEditList(selectedList, userPermissions) : false
 
-      // Create recursive folder submenu
-      const createFolderHierarchy = (
-        folders: (EntityListFolderModel & { children: EntityListFolderModel[] })[],
-        excludeFolderId?: string,
-        depth = 0,
-      ): any[] => {
-        const items: any[] = []
+      const selectedListIds = newSelectedLists.map((list) => list.id)
+      const moveIds = allSelectedRowsAreFolders ? selectedFolderIds : selectedListIds
 
-        for (const folder of folders) {
-          if (folder.id === excludeFolderId) continue
+      // is there anywhere the selection can actually go? (a folder can't move into itself or its own subtree)
+      const folderMap = buildFolderMap(listFolders)
+      const hasTargetFolders = allSelectedRowsAreFolders
+        ? listFolders.some(
+            (folder) =>
+              !selectedFolderIds.includes(folder.id) &&
+              !selectedFolderIds.some((id) =>
+                wouldCreateCircularDependency(id, folder.id, folderMap),
+              ),
+          )
+        : listFolders.length > 0
 
-          const hasChildren = folder.children.length > 0
-          const childItems = hasChildren
-            ? createFolderHierarchy(
-                folder.children as (EntityListFolderModel & {
-                  children: EntityListFolderModel[]
-                })[],
-                excludeFolderId,
-                depth + 1,
-              )
-            : []
+      // lists already in a folder can still open the picker to unset it there
+      const hasAnyFolder = newSelectedLists.some((list) => list.entityListFolderId)
 
-          items.push({
-            label: folder.label,
-            icon: folder.data?.icon || FOLDER_ICON,
-            command: allSelectedRowsAreFolders
-              ? () => onPutFoldersInFolder(selectedFolderIds, folder.id)
-              : () =>
-                  onPutListsInFolder(
-                    newSelectedLists.map((l) => l.id),
-                    folder.id,
-                  ),
-            disabled:
-              allSelectedRowsAreFolders &&
-              wouldCreateCircularDependency(selectedFolderId!, folder.id, listFolders),
-            ...(hasChildren && { items: childItems }),
-          })
-        }
-
-        return items
-      }
-
-      // Create folder submenu items for lists
-      const createListFolderSubmenu = () => {
-        if (!allSelectedRowsAreLists || newSelectedLists.length === 0) {
-          return []
-        }
-
-        const submenuItems: any[] = []
-        const selectedListIds = newSelectedLists.map((list) => list.id)
-
-        // Add hierarchy items first (available destination folders)
-        if (listFolders.length > 0) {
-          const { rootFolders } = buildFolderHierarchy(listFolders)
-          const hierarchyItems = createFolderHierarchy(rootFolders)
-          submenuItems.push(...hierarchyItems)
-        }
-
-        // For multiple selections, show "Unset folder" if any list has a folder
-        // For single selection, show "Unset folder" only if that list has a folder
-        const hasAnyFolder = newSelectedLists.some((list) => list.entityListFolderId)
-        if (hasAnyFolder) {
-          if (submenuItems.length > 0) submenuItems.push({ separator: true })
-          submenuItems.push({
-            label: 'Unset folder',
-            icon: FOLDER_ICON_REMOVE,
-            command: () => {
-              onRemoveListsFromFolder(selectedListIds)
-            },
-            shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
-          })
-        }
-
-        return submenuItems
-      }
-
-      // Create folder submenu items for folders
-      const createFolderFolderSubmenu = () => {
-        if (!allSelectedRowsAreFolders || !selectedFolder) {
-          return []
-        }
-
-        const submenuItems: any[] = []
-
-        // Show available parent folders (excluding self and its descendants) first
-        const availableParents = listFolders.filter(
-          (folder) =>
-            folder.id !== selectedFolderId &&
-            !wouldCreateCircularDependency(selectedFolderId!, folder.id, listFolders),
-        )
-
-        if (availableParents.length > 0) {
-          const { rootFolders } = buildFolderHierarchy(availableParents)
-          const hierarchyItems = createFolderHierarchy(rootFolders, selectedFolderId || undefined)
-          submenuItems.push(...hierarchyItems)
-        }
-
-        // Show "Unset parent" (make root) at bottom if folder has a parent
-        if (selectedFolder.parentId) {
-          if (submenuItems.length > 0) submenuItems.push({ separator: true })
-          submenuItems.push({
-            label: 'Make root folder',
-            icon: FOLDER_ICON_REMOVE,
-            command: () => onRemoveFoldersFromFolder(selectedFolderIds),
-            shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
-          })
-        }
-
-        return submenuItems
-      }
-
-      const listFolderSubmenu = createListFolderSubmenu()
-      const folderFolderSubmenu = createFolderFolderSubmenu()
-
-      // Build move submenu (formerly "Folder")
+      // Move opens the folder picker dialog, which also hosts the unset action
       const moveMenuItems: any[] = []
       if (powerLicense) {
-        moveMenuItems.push({
-          label: allSelectedRowsAreFolders ? 'Move folder' : 'Move list',
-          icon: FOLDER_ICON,
-          items: allSelectedRowsAreLists ? listFolderSubmenu : folderFolderSubmenu,
-          // Structural disabling only (no selection); ownership handled via hidden
-          disabled: !allSelectedRowsAreLists && !allSelectedRowsAreFolders,
-          hidden:
-            (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
-            (allSelectedRowsAreLists && listFolderSubmenu.length === 0) ||
-            (allSelectedRowsAreFolders && folderFolderSubmenu.length === 0) ||
-            // Hide if user doesn't have edit permission on all selected items
-            (allSelectedRowsAreLists && !userCanEditAllLists) ||
-            (allSelectedRowsAreFolders && !userCanEditAllFolders),
-        })
+        moveMenuItems.push(
+          {
+            label: allSelectedRowsAreFolders ? 'Move folder' : 'Move list',
+            icon: FOLDER_ICON,
+            command: () =>
+              openMoveToFolder({
+                moving: allSelectedRowsAreFolders ? 'folders' : 'lists',
+                ids: moveIds,
+              }),
+            hidden:
+              (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
+              moveIds.length === 0 ||
+              (!hasTargetFolders && !hasAnyFolder) ||
+              // Hide if user doesn't have edit permission on all selected items
+              (allSelectedRowsAreLists && !userCanEditAllLists) ||
+              (allSelectedRowsAreFolders && !userCanEditAllFolders),
+          },
+          {
+            label: 'Make root folder',
+            icon: FOLDER_ICON_REMOVE,
+            command: () => onRemoveFoldersFromFolder(selectedFolderIds).catch(() => {}),
+            shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
+            hidden:
+              !allSelectedRowsAreFolders ||
+              !selectedFoldersAll.some((folder) => folder.parentId) ||
+              !userCanEditAllFolders,
+          },
+        )
       }
 
       const menuItems: any[] = [
@@ -395,12 +292,10 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => 
       setListDetailsOpen,
       deleteLists,
       createReviewSessionList,
-      onPutListsInFolder,
-      onRemoveListsFromFolder,
       onOpenFolderList,
       onDeleteListFolders,
-      onPutFoldersInFolder,
       onRemoveFoldersFromFolder,
+      openMoveToFolder,
       developerMode,
       handleCreateReviewSessionList,
       clearListItems,
@@ -409,7 +304,10 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = []) => 
     ],
   )
 
-  return useMemo(() => [buildContextMenu, ...extraBuilders], [buildContextMenu, extraBuilders])
+  return useMemo(
+    () => (enabled ? [buildContextMenu, ...extraBuilders] : []),
+    [enabled, buildContextMenu, extraBuilders],
+  )
 }
 
 export default useListContextMenu
