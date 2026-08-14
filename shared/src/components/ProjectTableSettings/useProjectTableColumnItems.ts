@@ -2,6 +2,7 @@ import {
   getLinkColumnId,
   getLinkLabel,
   getColumnLabel,
+  getNameColumnLabel,
   ENTITY_COLUMN_IDS,
   useProjectTableContext,
 } from '@shared/containers/ProjectTreeTable'
@@ -35,8 +36,7 @@ export const useProjectTableColumnItems = ({
       },
       {
         value: 'name',
-        label:
-          scopes.map((scope) => scope.charAt(0).toUpperCase() + scope.slice(1)).join('/') + ' Name',
+        label: getNameColumnLabel(scopes),
       },
       {
         value: ENTITY_COLUMN_IDS.folder,
@@ -55,7 +55,7 @@ export const useProjectTableColumnItems = ({
       {
         value: 'product',
         label: getColumnLabel('product'),
-        hidden: ['product', 'version'].some((scope) => !scopes.includes(scope)),
+        hidden: !['product', 'version'].some((scope) => scopes.includes(scope)),
       },
       {
         value: 'entityType',

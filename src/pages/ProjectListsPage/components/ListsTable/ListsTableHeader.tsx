@@ -340,9 +340,20 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     },
   ]
 
-  const visibleMenuItems = hiddenMenuItemIds.length
+  const filteredMenuItems = hiddenMenuItemIds.length
     ? menuItems.filter((item) => !item.id || !hiddenMenuItemIds.includes(item.id))
     : menuItems
+
+  // hiding items can leave dividers doubled up or dangling at either end
+  const isDivider = (item: MenuItemType) => item.id === 'divider'
+  const visibleMenuItems = filteredMenuItems.reduce<MenuItemType[]>((acc, item) => {
+    if (isDivider(item) && (!acc.length || isDivider(acc[acc.length - 1]))) return acc
+    acc.push(item)
+    return acc
+  }, [])
+  while (visibleMenuItems.length && isDivider(visibleMenuItems[visibleMenuItems.length - 1])) {
+    visibleMenuItems.pop()
+  }
 
   // Get pinned items (for buttons)
   const pinnedItems = visibleMenuItems.filter((item) => item.isPinned)

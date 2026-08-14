@@ -11,7 +11,11 @@ import useDeleteList from '../hooks/useDeleteList'
 import useUpdateList from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
-import ListsContext, { ListDetailsOpenState, OnOpenFolderListParams } from './ListsContext'
+import ListsContext, {
+  ListDetailsOpenState,
+  MoveToFolderState,
+  OnOpenFolderListParams,
+} from './ListsContext'
 import { useGetProductionAddon } from '@shared/hooks'
 import { useSessionStorage } from '@shared/hooks'
 import { buildListFolderRowId, parseListFolderRowId } from '../util/buildListsTableData'
@@ -146,6 +150,10 @@ export const ListsProvider = ({
   )
 
   const [listFolderOpen, setListFolderOpen] = useState<ListDetailsOpenState>({ isOpen: false })
+
+  const [moveToFolder, setMoveToFolder] = useState<MoveToFolderState | null>(null)
+  const openMoveToFolder = useCallback((state: MoveToFolderState) => setMoveToFolder(state), [])
+  const closeMoveToFolder = useCallback(() => setMoveToFolder(null), [])
 
   // expanded state for folder hierarchy
   const [expanded, setExpanded] = useState<ExpandedState>({})
@@ -427,6 +435,10 @@ export const ListsProvider = ({
         listFolderOpen,
         setListFolderOpen,
         onOpenFolderList, // helper function to open folder dialog in edit/create mode
+        // Move to folder dialog
+        moveToFolder,
+        openMoveToFolder,
+        closeMoveToFolder,
         // helpers
         selectAllLists,
       }}

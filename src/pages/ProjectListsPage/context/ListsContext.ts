@@ -15,6 +15,11 @@ export type ListDetailsOpenState = {
 
 export type OnOpenFolderListParams = (params: { folderId?: string; parentId?: string }) => void
 
+export type MoveToFolderState = {
+  moving: 'lists' | 'folders'
+  ids: string[]
+}
+
 export interface ListsContextType {
   rowSelection: RowSelectionState
   setRowSelection: (ids: RowSelectionState) => void
@@ -59,6 +64,10 @@ export interface ListsContextType {
   listFolderOpen: ListDetailsOpenState
   setListFolderOpen: React.Dispatch<React.SetStateAction<ListDetailsOpenState>>
   onOpenFolderList: OnOpenFolderListParams
+  // Move to folder dialog
+  moveToFolder: MoveToFolderState | null
+  openMoveToFolder: (state: MoveToFolderState) => void
+  closeMoveToFolder: () => void
   // helpers
   selectAllLists: (options?: { rowIds?: string[] }) => void
 }
