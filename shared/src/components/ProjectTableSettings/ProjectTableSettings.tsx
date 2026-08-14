@@ -2,6 +2,7 @@ import {
   getLinkColumnId,
   getLinkLabel,
   getColumnLabel,
+  getNameColumnLabel,
   ENTITY_COLUMN_IDS,
   useColumnSettingsContext,
   useProjectTableContext,
@@ -86,8 +87,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     },
     {
       value: 'name',
-      label:
-        scopes.map((scope) => scope.charAt(0).toUpperCase() + scope.slice(1)).join('/') + ' Name',
+      label: getNameColumnLabel(scopes),
     },
     {
       value: ENTITY_COLUMN_IDS.folder,
