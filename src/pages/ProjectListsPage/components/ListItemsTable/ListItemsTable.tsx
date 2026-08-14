@@ -60,8 +60,8 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
     () => [
       {
         id: 'list-attributes',
-        label: 'List attributes',
-        icon: 'format_list_bulleted',
+        label: 'Create list attribute',
+        icon: 'add',
         // the button only renders while the panel is closed, so this always opens it
         onClick: () => togglePanel('list_attributes'),
       },

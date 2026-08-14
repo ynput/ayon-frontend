@@ -10,33 +10,24 @@ export type AddColumnSection = {
   id: string
   label: string
   icon: string
-  // entity sections only exist on tables that show that entity
-  requiresScope?: string
   match: (item: AddColumnItem) => boolean
 }
 
-// entity sections claim their attributes before the generic custom-attributes section
-const ADD_COLUMN_SECTIONS: AddColumnSection[] = [
+// tables showing a single entity name their attributes after it, mixed tables stay generic
+const getAttributesLabel = (scopes: string[]) =>
+  scopes.length === 1
+    ? `${scopes[0].charAt(0).toUpperCase() + scopes[0].slice(1)} attributes`
+    : 'Attributes'
+
+const getActiveAddColumnSections = (scopes: string[] = []): AddColumnSection[] => [
   {
-    id: 'version-attributes',
-    label: 'Version attributes',
-    icon: 'layers',
-    requiresScope: 'version',
-    match: (item) => !!item.attrib?.scope?.includes('version'),
-  },
-  {
-    id: 'custom-attributes',
-    label: 'Custom attributes',
+    id: 'attributes',
+    label: getAttributesLabel(scopes),
     icon: 'text_fields',
-    match: (item) => !!item.attrib && !item.attrib.builtin,
+    match: (item) => !!item.attrib,
   },
   { id: 'links', label: 'Links', icon: 'link', match: (item) => !!item.isLink },
 ]
-
-const getActiveAddColumnSections = (scopes: string[] = []): AddColumnSection[] =>
-  ADD_COLUMN_SECTIONS.filter(
-    (section) => !section.requiresScope || scopes.includes(section.requiresScope),
-  )
 
 export const getAddColumnSection = (
   item: AddColumnItem,

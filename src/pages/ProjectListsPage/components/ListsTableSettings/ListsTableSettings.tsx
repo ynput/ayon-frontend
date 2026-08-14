@@ -43,8 +43,8 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
       extraMenuItems={[
         {
           id: 'list-attributes',
-          label: 'List attributes',
-          icon: 'format_list_bulleted',
+          label: 'Create list attribute',
+          icon: 'add',
           onClick: () => selectSetting('list_attributes'),
         },
       ]}
