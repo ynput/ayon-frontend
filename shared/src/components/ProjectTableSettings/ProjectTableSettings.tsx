@@ -106,7 +106,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     {
       value: 'product',
       label: getColumnLabel('product'),
-      hidden: ['product', 'version'].some((scope) => !scopes.includes(scope)),
+      hidden: !['product', 'version'].some((scope) => scopes.includes(scope)),
     },
     {
       value: 'entityType',
