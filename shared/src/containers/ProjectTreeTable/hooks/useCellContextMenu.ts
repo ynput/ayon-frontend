@@ -17,7 +17,12 @@ import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useMemo } from 'react'
 import { useProjectContext } from '@shared/context'
-import { newEntityDefinitions, type NewEntityOpenConfig } from '@shared/containers/NewEntity'
+import { useOptionalSlicerContext } from '@shared/containers/Slicer'
+import {
+  newEntityDefinitions,
+  type NewEntityOpenConfig,
+  type NewEntityType,
+} from '@shared/containers/NewEntity'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -97,6 +102,10 @@ const useCellContextMenu = ({
     () => [...contextContextMenuItems, ...(propsContextMenuItems || [])],
     [contextContextMenuItems, propsContextMenuItems],
   )
+  const slicer = useOptionalSlicerContext()
+  const slicerSelection =
+    slicer?.sliceType === 'hierarchy' ? slicer.rowSelection : slicer?.pinnedSlice?.rowSelection
+  const hasSlicerFolder = Object.values(slicerSelection || {}).some(Boolean)
   const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
@@ -295,29 +304,37 @@ const useCellContextMenu = ({
     hidden: cell.isGroup,
   })
 
+  // null lets the dialog run its own fallback chain
   const getSelectedParentFolderIds = (
     cell: TableCellContextData,
     selectedRows: string[],
-  ): string[] => {
+  ): string[] | null => {
     const rows = selectedRows.length ? selectedRows : [cell.entityId]
-    return rows.flatMap((rowId) => {
+    const parents = rows.flatMap((rowId) => {
       const entity = getEntityById(rowId) as (EntityMap & Record<string, any>) | undefined
       if (!entity) return []
 
       if (entity.entityType === 'folder' || !('folderId' in entity)) return [entity.id]
       return entity.folderId ? [entity.folderId] : []
     })
+    return parents.length ? parents : null
+  }
+
+  const openNewWithParents = (
+    type: NewEntityType,
+    cell: TableCellContextData,
+    selectedRows: string[],
+  ) => {
+    const parents = getSelectedParentFolderIds(cell, selectedRows)
+    onOpenNew?.(type, parents ? { parentFolderIds: parents } : undefined)
   }
 
   const createFolderItems: ContextMenuItemConstructor = (e, cell, selected, meta) => [
     {
       label: newEntityDefinitions.folder.createLabel,
       icon: newEntityDefinitions.folder.icon,
-      command: () =>
-        onOpenNew?.('folder', {
-          parentFolderIds: getSelectedParentFolderIds(cell, meta.selectedRows),
-        }),
-      hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
+      command: () => openNewWithParents('folder', cell, meta.selectedRows),
+      hidden: cell.columnId !== 'name' || !onOpenNew,
     },
     {
       label: `Create root ${newEntityDefinitions.folder.label.toLowerCase()}`,
@@ -326,19 +343,20 @@ const useCellContextMenu = ({
         clearSelection()
         onOpenNew?.('folder', { parentFolderIds: [] })
       },
-      hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
+      hidden: cell.columnId !== 'name' || !onOpenNew,
     },
   ]
 
-  const createTaskItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({
-    label: newEntityDefinitions.task.createLabel,
-    icon: newEntityDefinitions.task.icon,
-    command: () =>
-      onOpenNew?.('task', {
-        parentFolderIds: getSelectedParentFolderIds(cell, meta.selectedRows),
-      }),
-    hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
-  })
+  const createTaskItem: ContextMenuItemConstructor = (e, cell, selected, meta) => {
+    const hasParent = !!getSelectedParentFolderIds(cell, meta.selectedRows) || hasSlicerFolder
+    return {
+      label: newEntityDefinitions.task.createLabel,
+      icon: newEntityDefinitions.task.icon,
+      command: () => openNewWithParents('task', cell, meta.selectedRows),
+      hidden: cell.columnId !== 'name' || !onOpenNew,
+      disabled: !hasParent,
+    }
+  }
 
   const renameItem: ContextMenuItemConstructor = (e, cell) => ({
     label: 'Rename',

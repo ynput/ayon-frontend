@@ -255,4 +255,6 @@ export const useSlicerContext = () => {
   return context
 }
 
+export const useOptionalSlicerContext = () => useContext(SlicerContext)
+
 export default SlicerContext

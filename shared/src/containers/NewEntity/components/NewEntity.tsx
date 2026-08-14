@@ -1,4 +1,4 @@
-import React, { KeyboardEvent, useMemo, useRef, useState } from 'react'
+import React, { KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { isEmpty } from 'lodash'
 import {
   Dialog,
@@ -77,6 +77,39 @@ const StyledCreateButton = styled(Dropdown)`
   }
 `
 
+const FolderOption = styled.span`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-large);
+  height: 32px;
+  padding: 0 8px;
+  overflow: hidden;
+
+  .label {
+    white-space: nowrap;
+  }
+
+  .path {
+    margin-left: auto;
+    color: var(--md-sys-color-outline);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &.selected {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+  }
+`
+
+const RootParentNote = styled.span`
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--md-sys-color-outline);
+`
+
 const StyledCreateItem = styled.span`
   display: flex;
   align-items: center;
@@ -88,6 +121,10 @@ const StyledCreateItem = styled.span`
   .label {
     flex: 1;
     margin-right: 24px;
+  }
+
+  &.disabled {
+    opacity: 0.5;
   }
 `
 
@@ -123,97 +160,97 @@ export const NewEntity: React.FC<NewEntityProps> = ({
   const [createMore, setCreateMore] = useState(false)
   const { selectedCells } = useOptionalSelectionCellsContext() || {}
   const { rowSelection, pinnedSlice, sliceType } = useSlicerContext()
-  const { getFolderById } = useProjectFoldersContext()
+  const { folders, getFolderById } = useProjectFoldersContext()
   const projectTableContext = useOptionalProjectTableContext()
   const getEntityById = projectTableContext?.getEntityById
 
-  const [allSelectedFolderIds, parentTargetOptions] = useMemo(() => {
-    let folderIds: string[]
+  const resolvedParentFolderIds = useMemo(() => {
+    if (parentFolderIds !== null) return parentFolderIds
 
-    if (parentFolderIds !== null) {
-      folderIds = parentFolderIds
-    } else {
-      const selectedCellPositions = selectedCells
-        ? Array.from(selectedCells).map((cellId) => parseCellId(cellId))
-        : []
-      const selectedCellIds = Array.from(
-        new Set(
-          selectedCellPositions
-            .filter((cell) => cell && cell.colId !== ROW_SELECTION_COLUMN_ID)
-            .map((cell) => cell?.rowId)
-            .filter(Boolean) as string[],
-        ),
+    const selectedCellPositions = selectedCells
+      ? Array.from(selectedCells).map((cellId) => parseCellId(cellId))
+      : []
+    const selectedCellIds = Array.from(
+      new Set(
+        selectedCellPositions
+          .filter((cell) => cell && cell.colId !== ROW_SELECTION_COLUMN_ID)
+          .map((cell) => cell?.rowId)
+          .filter(Boolean) as string[],
+      ),
+    )
+    const selectedRowIds = Array.from(
+      new Set(
+        selectedCellPositions
+          .filter((cell) => cell?.colId === ROW_SELECTION_COLUMN_ID)
+          .map((cell) => cell?.rowId)
+          .filter(Boolean) as string[],
+      ),
+    )
+    const tableSelectedRowIds = selectedCellIds.length > 0 ? selectedCellIds : selectedRowIds
+
+    if (tableSelectedRowIds.length > 0) {
+      const selectedEntities = tableSelectedRowIds.map((id) => getEntityById?.(id))
+      const selectedFolders = selectedEntities.filter(
+        (entity): entity is MatchingFolder => entity?.entityType === 'folder',
       )
-      const selectedRowIds = Array.from(
-        new Set(
-          selectedCellPositions
-            .filter((cell) => cell?.colId === ROW_SELECTION_COLUMN_ID)
-            .map((cell) => cell?.rowId)
-            .filter(Boolean) as string[],
-        ),
+      const selectedTasks = selectedEntities.filter(
+        (entity): entity is EditorTaskNode => entity?.entityType === 'task',
       )
-      const tableSelectedRowIds = selectedCellIds.length > 0 ? selectedCellIds : selectedRowIds
 
-      if (tableSelectedRowIds.length > 0) {
-        const selectedEntities = tableSelectedRowIds.map((id) => getEntityById?.(id))
-        const selectedFolders = selectedEntities.filter(
-          (entity): entity is MatchingFolder => entity?.entityType === 'folder',
-        )
-        const selectedTasks = selectedEntities.filter(
-          (entity): entity is EditorTaskNode => entity?.entityType === 'task',
-        )
-
-        folderIds = Array.from(
-          new Set([
-            ...selectedFolders.map((folder) => folder.id),
-            ...selectedTasks.map((task) => task.folderId),
-          ]),
-        )
-      } else {
-        const activeRowSelection =
-          sliceType === 'hierarchy' ? rowSelection : pinnedSlice?.rowSelection || null
-        folderIds = activeRowSelection
-          ? Object.keys(activeRowSelection).filter((id) => activeRowSelection[id])
-          : []
-      }
+      const folderIds = Array.from(
+        new Set([
+          ...selectedFolders.map((folder) => folder.id),
+          ...selectedTasks.map((task) => task.folderId),
+        ]),
+      )
+      // group rows resolve to nothing, so fall through to the slicer
+      if (folderIds.length) return folderIds
     }
 
-    const options = folderIds.map((id) => {
-      const folder = getEntityById?.(id) || getFolderById(id)
-      return { value: id, label: folder?.label || folder?.name || id }
-    })
+    const activeRowSelection =
+      sliceType === 'hierarchy' ? rowSelection : pinnedSlice?.rowSelection || null
+    return activeRowSelection
+      ? Object.keys(activeRowSelection).filter((id) => activeRowSelection[id])
+      : []
+  }, [parentFolderIds, selectedCells, rowSelection, pinnedSlice, sliceType, getEntityById])
 
-    return [folderIds, options]
-  }, [
-    parentFolderIds,
-    selectedCells,
-    rowSelection,
-    pinnedSlice,
-    sliceType,
-    getEntityById,
-    getFolderById,
-  ])
+  const canCreateTask = resolvedParentFolderIds.length > 0
+
+  const folderOptions = useMemo(
+    () =>
+      [...folders]
+        .sort((a, b) => a.path.localeCompare(b.path))
+        .map((folder) => {
+          const segments = folder.path.split('/').filter(Boolean)
+          return {
+            value: folder.id,
+            label: folder.label || folder.name,
+            path: folder.path,
+            parentPath: segments.slice(0, -1).join('/'),
+          }
+        }),
+    [folders],
+  )
 
   const [manuallySelectedParents, setManuallySelectedParents] = useState<string[] | null>(null)
 
-  let selectedFolderIds =
-    manuallySelectedParents !== null ? manuallySelectedParents : allSelectedFolderIds
+  const resolvedParentsKey = resolvedParentFolderIds.join(',')
+  useEffect(() => {
+    setManuallySelectedParents(null)
+  }, [resolvedParentsKey])
 
-  // ensure we don't accidentally create things with invalid parents (e.g. selection changed)
-  selectedFolderIds = selectedFolderIds.filter((id) => allSelectedFolderIds.includes(id))
-
-  // if the filtering removed everything (e.g. selection completely changed or user deselected all), revert to full selection
-  if (selectedFolderIds.length === 0 && allSelectedFolderIds.length > 0) {
-    selectedFolderIds = allSelectedFolderIds
-  }
+  const selectedFolderIds = manuallySelectedParents ?? resolvedParentFolderIds
 
   const selectedEntitiesLabels = selectedFolderIds
-    .map((id) => parentTargetOptions.find((o) => o.value === id)?.label || '')
+    .map((id) => {
+      const folder = getEntityById?.(id) || getFolderById(id)
+      return folder?.label || folder?.name || ''
+    })
     .filter(Boolean)
 
   const parentLabel = selectedEntitiesLabels[0] || ''
 
-  const isRoot = isEmpty(allSelectedFolderIds)
+  const isRoot = isEmpty(selectedFolderIds)
 
   const [nameFocused, setNameFocused] = useState<boolean>(false)
   const [nameManuallyEdited, setNameManuallyEdited] = useState<boolean>(false)
@@ -223,7 +260,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
   //   format title
   const getDialogTitle = () => {
     let title = 'Add New '
-    if (isRoot) title += 'Root '
+    if (isRoot && entityType === 'folder') title += 'Root '
     title += entityType ? newEntityDefinitions[entityType].label : ''
     if (!isRoot) {
       if (selectedEntitiesLabels.length > 2) {
@@ -393,28 +430,35 @@ export const NewEntity: React.FC<NewEntityProps> = ({
     icon: string
     shortcut?: string
     isSequence?: boolean
-  }[] = [
-    {
-      ...newEntityDefinitions.folder,
-      value: 'folder',
-      type: 'folder',
-      shortcut: 'N',
-    },
-    {
-      label: 'Folder sequence',
-      value: 'sequence',
-      type: 'folder',
-      icon: 'topic',
-      shortcut: 'M',
-      isSequence: true,
-    },
-    {
-      ...newEntityDefinitions.task,
-      value: 'task',
-      type: 'task',
-      shortcut: 'T',
-    },
-  ]
+    disabled?: boolean
+    disabledMessage?: string
+  }[] = useMemo(
+    () => [
+      {
+        ...newEntityDefinitions.folder,
+        value: 'folder',
+        type: 'folder',
+        shortcut: 'N',
+      },
+      {
+        label: 'Folder sequence',
+        value: 'sequence',
+        type: 'folder',
+        icon: 'topic',
+        shortcut: 'M',
+        isSequence: true,
+      },
+      {
+        ...newEntityDefinitions.task,
+        value: 'task',
+        type: 'task',
+        shortcut: 'T',
+        disabled: !canCreateTask,
+        disabledMessage: 'Select a folder to create a task in',
+      },
+    ],
+    [canCreateTask],
+  )
 
   // Use the keyboard shortcuts hook
   useCreateEntityShortcuts({ options, onOpenNew, enabled: enableShortcuts })
@@ -427,7 +471,8 @@ export const NewEntity: React.FC<NewEntityProps> = ({
     }
   }
 
-  const addDisabled = !entityForm.label || !entityForm.subType
+  const missingTaskParent = entityType === 'task' && isEmpty(selectedFolderIds)
+  const addDisabled = !entityForm.label || !entityForm.subType || missingTaskParent
 
   return (
     <>
@@ -443,7 +488,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
             </>
           )}
           itemTemplate={(option) => (
-            <StyledCreateItem>
+            <StyledCreateItem className={option.disabled ? 'disabled' : undefined}>
               <Icon icon={option.icon} />
               <span className="label">{option.label}</span>
               <ShortcutTag>{option.shortcut}</ShortcutTag>
@@ -453,7 +498,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
             paddingRight: 16,
           }}
           disabled={disabled}
-          data-tooltip={disabled ? 'Enable hierarchy to create new entity' : 'Create new entity'}
+          data-tooltip="Create new entity"
         />
       )}
       {showDialog && entityType && (
@@ -491,7 +536,8 @@ export const NewEntity: React.FC<NewEntityProps> = ({
                 label={newEntityDefinitions[entityType].createLabel}
                 onClick={() => handleSubmit(createMore)}
                 active={!addDisabled || isSubmitting}
-                disabled={!entityForm.name || !entityForm.label}
+                disabled={!entityForm.name || !entityForm.label || missingTaskParent}
+                data-tooltip={missingTaskParent ? 'Select a parent folder' : undefined}
                 data-shortcut={getPlatformShortcutKey('Enter', [KeyMode.Ctrl])}
                 saving={isSubmitting}
               />
@@ -510,19 +556,31 @@ export const NewEntity: React.FC<NewEntityProps> = ({
               gap: 'var(--base-gap-large)',
             }}
           >
-            {!isRoot && (
-              <InputsContainer>
-                <InputLabel>Parent folder</InputLabel>
+            <InputsContainer>
+              <InputLabel>Parent folder</InputLabel>
+              {canCreateTask ? (
                 <Dropdown
                   value={selectedFolderIds}
-                  options={parentTargetOptions}
+                  options={folderOptions}
                   onChange={(v) => setManuallySelectedParents(v)}
-                  disabled={parentTargetOptions.length <= 1}
-                  multiSelect={true}
+                  disabled={resolvedParentFolderIds.length <= 1}
+                  multiSelect
+                  search
+                  searchFields={['label', 'path']}
+                  maxOptionsShown={100}
+                  placeholder="Project root"
+                  itemTemplate={(option, _isActive, isSelected) => (
+                    <FolderOption className={isSelected ? 'selected' : undefined}>
+                      <span className="label">{option.label}</span>
+                      {option.parentPath && <span className="path">{option.parentPath}</span>}
+                    </FolderOption>
+                  )}
                   style={{ width: '100%', minHeight: 32 }}
                 />
-              </InputsContainer>
-            )}
+              ) : (
+                <RootParentNote>Creating in the project root</RootParentNote>
+              )}
+            </InputsContainer>
             {sequenceForm.active ? (
               // @ts-ignore
               <FolderSequence
