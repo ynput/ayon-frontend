@@ -1,4 +1,4 @@
-import React, { KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
+import React, { KeyboardEvent, useMemo, useRef, useState } from 'react'
 import { isEmpty } from 'lodash'
 import {
   Dialog,
@@ -77,32 +77,6 @@ const StyledCreateButton = styled(Dropdown)`
   }
 `
 
-const FolderOption = styled.span`
-  display: flex;
-  align-items: center;
-  gap: var(--base-gap-large);
-  height: 32px;
-  padding: 0 8px;
-  overflow: hidden;
-
-  .label {
-    white-space: nowrap;
-  }
-
-  .path {
-    margin-left: auto;
-    color: var(--md-sys-color-outline);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &.selected {
-    background-color: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-  }
-`
-
 const RootParentNote = styled.span`
   display: flex;
   align-items: center;
@@ -160,7 +134,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
   const [createMore, setCreateMore] = useState(false)
   const { selectedCells } = useOptionalSelectionCellsContext() || {}
   const { rowSelection, pinnedSlice, sliceType } = useSlicerContext()
-  const { folders, getFolderById } = useProjectFoldersContext()
+  const { getFolderById } = useProjectFoldersContext()
   const projectTableContext = useOptionalProjectTableContext()
   const getEntityById = projectTableContext?.getEntityById
 
@@ -216,41 +190,35 @@ export const NewEntity: React.FC<NewEntityProps> = ({
 
   const canCreateTask = resolvedParentFolderIds.length > 0
 
-  const folderOptions = useMemo(
+  const parentTargetOptions = useMemo(
     () =>
-      [...folders]
-        .sort((a, b) => a.path.localeCompare(b.path))
-        .map((folder) => {
-          const segments = folder.path.split('/').filter(Boolean)
-          return {
-            value: folder.id,
-            label: folder.label || folder.name,
-            path: folder.path,
-            parentPath: segments.slice(0, -1).join('/'),
-          }
-        }),
-    [folders],
+      resolvedParentFolderIds.map((id) => {
+        const folder = getEntityById?.(id) || getFolderById(id)
+        return { value: id, label: folder?.label || folder?.name || id }
+      }),
+    [resolvedParentFolderIds, getEntityById, getFolderById],
   )
 
   const [manuallySelectedParents, setManuallySelectedParents] = useState<string[] | null>(null)
 
-  const resolvedParentsKey = resolvedParentFolderIds.join(',')
-  useEffect(() => {
-    setManuallySelectedParents(null)
-  }, [resolvedParentsKey])
+  let selectedFolderIds =
+    manuallySelectedParents !== null ? manuallySelectedParents : resolvedParentFolderIds
 
-  const selectedFolderIds = manuallySelectedParents ?? resolvedParentFolderIds
+  // ensure we don't accidentally create things with invalid parents (e.g. selection changed)
+  selectedFolderIds = selectedFolderIds.filter((id) => resolvedParentFolderIds.includes(id))
+
+  // if the filtering removed everything (e.g. selection completely changed or user deselected all), revert to full selection
+  if (selectedFolderIds.length === 0 && resolvedParentFolderIds.length > 0) {
+    selectedFolderIds = resolvedParentFolderIds
+  }
 
   const selectedEntitiesLabels = selectedFolderIds
-    .map((id) => {
-      const folder = getEntityById?.(id) || getFolderById(id)
-      return folder?.label || folder?.name || ''
-    })
+    .map((id) => parentTargetOptions.find((o) => o.value === id)?.label || '')
     .filter(Boolean)
 
   const parentLabel = selectedEntitiesLabels[0] || ''
 
-  const isRoot = isEmpty(selectedFolderIds)
+  const isRoot = isEmpty(resolvedParentFolderIds)
 
   const [nameFocused, setNameFocused] = useState<boolean>(false)
   const [nameManuallyEdited, setNameManuallyEdited] = useState<boolean>(false)
@@ -561,20 +529,10 @@ export const NewEntity: React.FC<NewEntityProps> = ({
               {canCreateTask ? (
                 <Dropdown
                   value={selectedFolderIds}
-                  options={folderOptions}
+                  options={parentTargetOptions}
                   onChange={(v) => setManuallySelectedParents(v)}
-                  disabled={resolvedParentFolderIds.length <= 1}
+                  disabled={parentTargetOptions.length <= 1}
                   multiSelect
-                  search
-                  searchFields={['label', 'path']}
-                  maxOptionsShown={100}
-                  placeholder="Project root"
-                  itemTemplate={(option, _isActive, isSelected) => (
-                    <FolderOption className={isSelected ? 'selected' : undefined}>
-                      <span className="label">{option.label}</span>
-                      {option.parentPath && <span className="path">{option.parentPath}</span>}
-                    </FolderOption>
-                  )}
                   style={{ width: '100%', minHeight: 32 }}
                 />
               ) : (
