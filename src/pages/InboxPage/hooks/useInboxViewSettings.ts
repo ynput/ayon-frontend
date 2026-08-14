@@ -5,7 +5,6 @@ import { useCreateViewMutation } from '@shared/api'
 import type { QueryFilter } from '@shared/api'
 
 export type InboxViewSettings = {
-  projectName?: string | null
   filter?: QueryFilter
   unreadOnly?: boolean
 }
@@ -13,8 +12,6 @@ export type InboxViewSettings = {
 const EMPTY_FILTER: QueryFilter = { operator: 'and', conditions: [] }
 
 type Return = {
-  projectName: string | null
-  onUpdateProjectName: (projectName: string | null) => void
   filter: QueryFilter
   onUpdateFilter: (filter: QueryFilter) => void
   unreadOnly: boolean
@@ -48,14 +45,8 @@ const useInboxViewSettings = (): Return => {
       })
   }, [viewType, viewSettings, isLoadingViews, createView, setSelectedView])
 
-  // wrapped: updateViewSettings clears local state with null, which a null project also means
-  const [localProjectName, setLocalProjectName] = useState<{ value: string | null } | null>(null)
   const [localFilter, setLocalFilter] = useState<QueryFilter | null>(null)
   const [localUnreadOnly, setLocalUnreadOnly] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    setLocalProjectName(null)
-  }, [settings?.projectName])
 
   useEffect(() => {
     setLocalFilter(null)
@@ -66,22 +57,8 @@ const useInboxViewSettings = (): Return => {
     setLocalUnreadOnly(null)
   }, [settings?.unreadOnly])
 
-  const projectName = localProjectName ? localProjectName.value : settings?.projectName ?? null
   const filter = localFilter ?? settings?.filter ?? EMPTY_FILTER
   const unreadOnly = localUnreadOnly ?? settings?.unreadOnly ?? false
-
-  const onUpdateProjectName = useCallback(
-    (newProjectName: string | null) => {
-      if (isLoadingViews) return
-      void updateViewSettings(
-        { projectName: newProjectName },
-        setLocalProjectName,
-        { value: newProjectName },
-        { errorMessage: 'Failed to update selected project' },
-      )
-    },
-    [updateViewSettings, isLoadingViews],
-  )
 
   const onUpdateFilter = useCallback(
     (newFilter: QueryFilter) => {
@@ -104,8 +81,6 @@ const useInboxViewSettings = (): Return => {
   )
 
   return {
-    projectName,
-    onUpdateProjectName,
     filter,
     onUpdateFilter,
     unreadOnly,

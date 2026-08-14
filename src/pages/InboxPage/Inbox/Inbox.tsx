@@ -9,7 +9,7 @@ import { InView } from 'react-intersection-observer'
 import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
 // Queries
-import { useGetInboxMessagesQuery, useLazyGetInboxMessagesQuery } from '@queries/inbox/getInbox'
+import { useGetInboxInfiniteInfiniteQuery } from '@queries/inbox/getInbox'
 import { useGetProjectInboxInfiniteInfiniteQuery } from '@queries/inbox/getProjectInbox'
 import { useGetProjectsInfoQuery } from '@shared/api'
 // Components
@@ -93,14 +93,11 @@ const Inbox = ({ filter }: InboxProps) => {
   const user = useAppSelector((state) => state.user.name)
   const isGuest = useAppSelector((state) => state.user?.data?.isGuest)
 
-  const last = 100
   const filterArgs = filters[filter] || filters.important
   const isActive = filterArgs.active
   const isImportant = filterArgs.important
 
   const {
-    projectName: viewProject,
-    onUpdateProjectName,
     filter: inboxFilter,
     onUpdateFilter,
     // the only filter that works without a project, so it is a toolbar toggle, not a chip
@@ -110,12 +107,7 @@ const Inbox = ({ filter }: InboxProps) => {
   } = useInboxViewSettings()
 
   // guests get no project mode: the activities resolver rejects projects they cannot access
-  const [selectedProject, setSelectedProject] = useInboxProject({
-    enabled: !isGuest,
-    viewProject,
-    onViewProjectChange: onUpdateProjectName,
-    isReady: !isLoadingViews,
-  })
+  const [selectedProject, setSelectedProject] = useInboxProject({ enabled: !isGuest })
   const isProjectMode = !!selectedProject
 
   // chips only reach the query in project mode, the unread toggle narrows both
@@ -147,7 +139,7 @@ const Inbox = ({ filter }: InboxProps) => {
   // both queries are skipped in this window, so it has to read as loading, not as empty
   const isResolvingProject = isProjectMode && !isKnownProject && !globalError.projects
 
-  // a failed project list is empty too, and clearing here would wipe the saved view
+  // a failed project list is empty too, so only a loaded list may clear the selection
   useEffect(() => {
     if (!selectedProject || globalIsLoading.projects || globalError.projects) return
     if (!isKnownProject) setSelectedProject(null)
@@ -162,11 +154,15 @@ const Inbox = ({ filter }: InboxProps) => {
   // null, not false: false would ask the resolver for read messages only
   const unreadArg = isActive && showUnreadOnly ? true : null
 
-  // querying before the view loads fetches a cross-project inbox that is thrown away
-  const globalQuery = useGetInboxMessagesQuery(
-    { last: last, active: isActive, important: isImportant, unread: unreadArg },
-    { skip: isProjectMode || isLoadingViews },
+  const globalArgs = useMemo(
+    () => ({ active: isActive, important: isImportant, unread: unreadArg }),
+    [isActive, isImportant, unreadArg],
   )
+
+  // querying before the view loads fetches a cross-project inbox that is thrown away
+  const globalQuery = useGetInboxInfiniteInfiniteQuery(globalArgs, {
+    skip: isProjectMode || isLoadingViews,
+  })
   const projectQuery = useGetProjectInboxInfiniteInfiniteQuery(projectArgs, {
     skip: !isKnownProject || isLoadingViews,
   })
@@ -180,40 +176,23 @@ const Inbox = ({ filter }: InboxProps) => {
     currentData,
     error: errorInbox,
     refetch,
+    data,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
   } = activeQuery
 
-  const { hasNextPage, fetchNextPage, isFetchingNextPage } = projectQuery
-
-  const projectMessages = useMemo(
-    () => (projectQuery.data?.pages || []).flatMap((page) => page.messages),
-    [projectQuery.data],
+  const pages = data?.pages
+  const messages = useMemo(() => (pages || []).flatMap((page) => page.messages), [pages])
+  const projectNames = useMemo(
+    () => [...new Set((pages || []).flatMap((page) => page.projectNames))],
+    [pages],
   )
-
-  const { messages: globalMessages = [], projectNames = [], pageInfo } = globalQuery.data || {}
-  const messages = isProjectMode ? projectMessages : globalMessages
-  const hasMore = isProjectMode ? !!hasNextPage : !!pageInfo?.hasPreviousPage
-
-  const [getInboxMessages] = useLazyGetInboxMessagesQuery()
 
   // load more messages
   const handleLoadMore = () => {
-    if (!hasMore || !messages.length) return
-
-    if (isProjectMode) {
-      if (isFetchingNextPage) return
-      fetchNextPage()
-      return
-    }
-
-    if (isFetchingInbox) return
-
-    getInboxMessages({
-      last,
-      active: isActive,
-      important: isImportant,
-      unread: unreadArg,
-      cursor: pageInfo?.endCursor,
-    })
+    if (!hasNextPage || isFetchingNextPage || !messages.length) return
+    fetchNextPage()
   }
 
   // in project mode the info is needed even when the filtered list comes back empty
@@ -225,7 +204,6 @@ const Inbox = ({ filter }: InboxProps) => {
   )
 
   const handleUpdateMessages = useUpdateInboxMessage({
-    last,
     isActive,
     isImportant: isImportant ?? false,
   })
@@ -715,7 +693,7 @@ const Inbox = ({ filter }: InboxProps) => {
                         customBody={group.body}
                       />
                     ))}
-                    {hasMore && !isLoadingInbox && !!messages.length && (
+                    {hasNextPage && !isLoadingInbox && !!messages.length && (
                       <InView
                         onChange={(inView) => inView && handleLoadMore()}
                         rootMargin={'0px 0px 500px 0px'}

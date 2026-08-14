@@ -2,11 +2,14 @@ import { gqlApi } from '@shared/api'
 import type { GetProjectInboxQuery, GetProjectInboxQueryVariables } from '@shared/api'
 import { createRealtimeBatcher, PubSub } from '@shared/util'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
-import { TransformedInboxMessages, transformInboxMessages } from './inboxTransform'
+import {
+  EMPTY_INBOX_PAGE,
+  TransformedInboxMessages,
+  transformInboxMessages,
+  unshiftNewMessages,
+} from './inboxTransform'
 
 const PROJECT_INBOX_PAGE_SIZE = 100
-// a realtime message only ever lands at the top, so the top-up does not need a full page
-const PROJECT_INBOX_REALTIME_SIZE = 20
 
 export interface ProjectInboxInfiniteArgs {
   projectName: string
@@ -32,12 +35,6 @@ const pageVariables = (
   cursor,
 })
 
-const EMPTY_PAGE: TransformedInboxMessages = {
-  messages: [],
-  projectNames: [],
-  pageInfo: { hasPreviousPage: false, startCursor: null, endCursor: null },
-}
-
 const transformPage = (
   res: GetProjectInboxQuery | undefined,
   important: boolean | null,
@@ -48,23 +45,20 @@ const transformPage = (
         { important: important ?? false },
         { truncate: true },
       )
-    : EMPTY_PAGE
+    : EMPTY_INBOX_PAGE
 
-// unsubscribed straight away: the page is read here, the infinite query owns the cache
-const fetchPage = async (
+// unsubscribed: the page is read here, the infinite query owns the cache
+const fetchPage = (
   dispatch: any,
   args: ProjectInboxInfiniteArgs,
   page: { last: number; cursor?: string | null },
-) => {
-  const request = dispatch(
-    gqlApi.endpoints.GetProjectInbox.initiate(pageVariables(args, page), { forceRefetch: true }),
+) =>
+  dispatch(
+    gqlApi.endpoints.GetProjectInbox.initiate(pageVariables(args, page), {
+      forceRefetch: true,
+      subscribe: false,
+    }),
   )
-  try {
-    return await request
-  } finally {
-    request.unsubscribe?.()
-  }
-}
 
 export const projectInboxApi = gqlApi.injectEndpoints({
   endpoints: (build) => ({
@@ -111,47 +105,19 @@ export const projectInboxApi = gqlApi.injectEndpoints({
       ) {
         let token
 
-        // returns the cursor to continue from, or null once cached rows come into view
-        const topUp = async (cursor: string): Promise<string | null> => {
-          const result = await fetchPage(dispatch, queryArg, {
-            last: PROJECT_INBOX_REALTIME_SIZE,
-            cursor,
-          })
-          if (result.error) return null
+        // one request per burst, sized to it: new rows always sort to the top and the query
+        // carries the filters. `inbox.message` names no activity, so ids cannot be asked for.
+        const batcher = createRealtimeBatcher<{ id: string }>(
+          async (burst) => {
+            const result = await fetchPage(dispatch, queryArg, { last: burst.length })
+            if (result.error) return
 
-          const { messages, pageInfo } = transformPage(result.data, queryArg.important)
-          if (!messages.length) return null
+            const { messages } = transformPage(result.data, queryArg.important)
+            if (!messages.length) return
 
-          let added = 0
-          updateCachedData((draft) => {
-            if (!draft?.pages?.length) return
-
-            const cachedIds = new Set<string>()
-            draft.pages.forEach((page) =>
-              page.messages.forEach((m) => cachedIds.add(m.referenceId)),
-            )
-
-            const newMessages = messages.filter((m) => !cachedIds.has(m.referenceId))
-            added = newMessages.length
-            if (added) draft.pages[0].messages.unshift(...newMessages)
-          })
-
-          // nothing in the page was already held, so the burst outran it - keep walking back
-          if (added === PROJECT_INBOX_REALTIME_SIZE && pageInfo.hasPreviousPage) {
-            return pageInfo.endCursor || null
-          }
-          return null
-        }
-
-        // every arrival in a window asks for the same thing, so they collapse to one entry
-        const batcher = createRealtimeBatcher<unknown>(
-          async (_messages, isActive) => {
-            let cursor: string | null = ''
-            while (cursor !== null && isActive()) {
-              cursor = await topUp(cursor)
-            }
+            updateCachedData((draft) => unshiftNewMessages(draft, messages))
           },
-          () => 'inbox.message',
+          (message) => message.id,
         )
 
         try {

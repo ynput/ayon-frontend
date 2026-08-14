@@ -69,9 +69,4 @@ export const Views = styled.span`
     display: flex;
     align-items: center;
     margin-left: -8px;
-
-    /* the views icon bleeds -16px into the tab padding; keep that only when it is last */
-    &:not(:last-child) > * {
-        margin-right: 0;
-    }
 `

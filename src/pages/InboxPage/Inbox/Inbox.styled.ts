@@ -3,7 +3,7 @@ import { Splitter } from 'primereact/splitter'
 import styled from 'styled-components'
 
 export const Tools = styled(Toolbar)`
-  padding: var(--padding-s) 0;
+  padding-bottom: var(--padding-s);
 `
 
 export const MessagesColumn = styled.div`
@@ -48,7 +48,7 @@ export const ProjectsSplitter = styled(Splitter)`
 `
 
 export const InboxSection = styled(Section)`
-  padding: 0 var(--padding-m);
+  padding: var(--padding-s) var(--padding-m) 0;
 
   overflow: hidden;
   align-items: flex-start;
@@ -96,6 +96,11 @@ export const UnreadCount = styled.div`
   border-radius: var(--border-radius-m);
   margin-right: -8px;
   background-color: var(--md-sys-color-surface-container-high);
+
+  /* the -8px bleeds into the tab padding, which the views icon takes over when it follows */
+  &:not(:last-child) {
+    margin-right: 0;
+  }
 
   &.important {
     background-color: var(--md-sys-color-primary);

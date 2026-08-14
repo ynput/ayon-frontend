@@ -1,14 +1,14 @@
 import { toast } from 'react-toastify'
 import { inboxApi, ManageInboxItemApiArg } from '@shared/api'
 import { current } from '@reduxjs/toolkit'
-import { enhancedInboxGraphql } from './getInbox'
+import { enhancedInboxGraphql, inboxInfiniteApi, type InboxInfiniteArgs } from './getInbox'
 import { projectInboxApi, type ProjectInboxInfiniteArgs } from './getProjectInbox'
+import type { InboxMessage, InboxPagesDraft } from './inboxTransform'
 
 // add some extra types for the patching
 export interface Arg extends ManageInboxItemApiArg {
   active: boolean
   important: boolean
-  last: number
   isActiveChange: boolean
   isRead: boolean
 }
@@ -37,7 +37,7 @@ const getProjectInboxArgs = (state: any, projectName?: string): ProjectInboxInfi
 const getInboxArgs = (state: any, active?: boolean, important?: boolean | null): any[] =>
   cacheArgsFor(
     state,
-    'GetInboxMessages',
+    'getInboxInfinite',
     (args) => args?.active === active && args?.important === important,
   )
 
@@ -81,31 +81,35 @@ const enhancedRest = inboxApi.enhanceEndpoints({
 
         // `all` is one project on the backend, so the cross-project cache must keep the rest
         const isLeaving = all
-          ? (m: any) => m.projectName === projectName
-          : (m: any) => ids.includes(m.referenceId)
+          ? (m: InboxMessage) => m.projectName === projectName
+          : (m: InboxMessage) => ids.includes(m.referenceId)
+
+        const removeLeaving =
+          (onRemoved?: (m: InboxMessage) => void) => (draft: InboxPagesDraft) => {
+            draft.pages.forEach((page) => {
+              if (onRemoved) page.messages.filter(isLeaving).forEach(onRemoved)
+              page.messages = page.messages.filter((m) => !isLeaving(m))
+            })
+          }
 
         const projectArgs = getProjectInboxArgs(getState(), projectName)
         const patchProjectInbox = (
           args: ProjectInboxInfiniteArgs,
-          recipe: (draft: { pages: { messages: any[] }[] }) => void,
+          recipe: (draft: InboxPagesDraft) => void,
         ) => {
           patches.push(
-            dispatch(
-              projectInboxApi.util.updateQueryData('getProjectInboxInfinite', args, recipe as any),
-            ),
+            dispatch(projectInboxApi.util.updateQueryData('getProjectInboxInfinite', args, recipe)),
           )
         }
 
         // patches every cached variant of a tab (unread on and off)
         const patchInbox = (
           tab: { active?: boolean; important?: boolean | null },
-          recipe: (draft: { messages: any[] }) => void,
+          recipe: (draft: InboxPagesDraft) => void,
         ) =>
-          getInboxArgs(getState(), tab.active, tab.important).forEach((args) =>
+          getInboxArgs(getState(), tab.active, tab.important).forEach((args: InboxInfiniteArgs) =>
             patches.push(
-              dispatch(
-                enhancedInboxGraphql.util.updateQueryData('GetInboxMessages', args, recipe as any),
-              ),
+              dispatch(inboxInfiniteApi.util.updateQueryData('getInboxInfinite', args, recipe)),
             ),
           )
 
@@ -115,14 +119,13 @@ const enhancedRest = inboxApi.enhanceEndpoints({
 
           //   the cache to remove from (current tab). Each cached variant holds a different
           //   subset, so collect the union across them
-          patchInbox({ active, important }, (draft) => {
-            draft.messages.filter(isLeaving).forEach((m) => {
+          patchInbox(
+            { active, important },
+            removeLeaving((m) => {
               movedMessages.set(m.referenceId, current(m))
               if (!m.read) clearedUnread.add(m.referenceId)
-            })
-
-            draft.messages = draft.messages.filter((m) => !isLeaving(m))
-          })
+            }),
+          )
 
           //  now where do we add the cleared message
           if (active) {
@@ -137,15 +140,12 @@ const enhancedRest = inboxApi.enhanceEndpoints({
             //   the cache to add to (cleared/important/other tab)
             patchInbox({ active: !active, important: null }, (draft) => {
               // adding message to the new cache
-              draft.messages.unshift(...messagesPatch)
+              draft.pages[0]?.messages.unshift(...messagesPatch)
             })
           } else {
             // un-clearing a message
             // remove the message from the cleared tab cache
-            patchInbox({ active: false, important: null }, (draft) => {
-              // remove the messages from cleared cache
-              draft.messages = draft.messages.filter((m) => !isLeaving(m))
-            })
+            patchInbox({ active: false, important: null }, removeLeaving())
             // we don't know if the message will go to important or other tab
             // so just invalidate all the tabs and unread counts
             tagsToInvalidate.push(
@@ -161,14 +161,12 @@ const enhancedRest = inboxApi.enhanceEndpoints({
           projectArgs
             .filter((args) => args.active === active)
             .forEach((args) =>
-              patchProjectInbox(args, (draft) => {
-                draft.pages.forEach((page) => {
-                  page.messages.filter(isLeaving).forEach((m: any) => {
-                    if (!m.read) clearedUnread.add(m.referenceId)
-                  })
-                  page.messages = page.messages.filter((m: any) => !isLeaving(m))
-                })
-              }),
+              patchProjectInbox(
+                args,
+                removeLeaving((m) => {
+                  if (!m.read) clearedUnread.add(m.referenceId)
+                }),
+              ),
             )
           if (projectName) {
             tagsToInvalidate.push({ type: 'inbox', id: `project=${projectName}/active=${!active}` })
@@ -177,35 +175,23 @@ const enhancedRest = inboxApi.enhanceEndpoints({
           // only updating the read status of the message
           // not removed from an unread-filtered list: the clicked row would vanish under
           // the cursor
-          patchInbox({ active, important }, (draft) => {
-            for (const id of ids) {
-              const messageIndex = draft.messages.findIndex((m: any) => m.referenceId === id)
-              if (messageIndex !== -1) {
-                draft.messages[messageIndex] = {
-                  ...draft.messages[messageIndex],
-                  read: newRead,
-                  active: newActive,
-                }
-              }
-            }
-          })
-
-          projectArgs.forEach((args) =>
-            patchProjectInbox(args, (draft) => {
-              for (const page of draft.pages) {
-                for (const id of ids) {
-                  const messageIndex = page.messages.findIndex((m: any) => m.referenceId === id)
-                  if (messageIndex !== -1) {
-                    page.messages[messageIndex] = {
-                      ...page.messages[messageIndex],
-                      read: newRead,
-                      active: newActive,
-                    }
+          const setReadStatus = (draft: InboxPagesDraft) => {
+            for (const page of draft.pages) {
+              for (const id of ids) {
+                const messageIndex = page.messages.findIndex((m) => m.referenceId === id)
+                if (messageIndex !== -1) {
+                  page.messages[messageIndex] = {
+                    ...page.messages[messageIndex],
+                    read: newRead,
+                    active: newActive,
                   }
                 }
               }
-            }),
-          )
+            }
+          }
+
+          patchInbox({ active, important }, setReadStatus)
+          projectArgs.forEach((args) => patchProjectInbox(args, setReadStatus))
         }
 
         // we need to update the unread count

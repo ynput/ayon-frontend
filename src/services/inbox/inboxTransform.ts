@@ -79,26 +79,21 @@ export const transformInboxMessages = (
   return { projectNames, messages, pageInfo: inbox.pageInfo }
 }
 
-// pagination: append the new page to what is already cached, keyed by referenceId
-export const mergeInboxMessages = (
-  currentCache: TransformedInboxMessages,
-  newCache: TransformedInboxMessages,
-): TransformedInboxMessages => {
-  const { messages = [], projectNames = [], pageInfo } = newCache
-  const { messages: lastMessages = [], projectNames: lastProjectNames = [] } = currentCache
+export const EMPTY_INBOX_PAGE: TransformedInboxMessages = {
+  messages: [],
+  projectNames: [],
+  pageInfo: { hasPreviousPage: false, startCursor: null, endCursor: null },
+}
 
-  const cachedIds = new Set(lastMessages.map((m: InboxMessage) => m.referenceId))
-  const newMessages = [...lastMessages, ...messages.filter((m) => !cachedIds.has(m.referenceId))]
+export type InboxPagesDraft = { pages: { messages: InboxMessage[] }[] }
 
-  const cachedProjects = new Set(lastProjectNames)
-  const newProjectNames = [
-    ...lastProjectNames,
-    ...projectNames.filter((p: string) => !cachedProjects.has(p)),
-  ]
+// realtime rows always belong at the top, and only ones no page holds yet
+export const unshiftNewMessages = (draft: InboxPagesDraft, messages: InboxMessage[]): void => {
+  if (!draft?.pages?.length) return
 
-  return {
-    messages: newMessages,
-    projectNames: newProjectNames,
-    pageInfo,
-  }
+  const cachedIds = new Set<string>()
+  draft.pages.forEach((page) => page.messages.forEach((m) => cachedIds.add(m.referenceId)))
+
+  const newMessages = messages.filter((m) => !cachedIds.has(m.referenceId))
+  if (newMessages.length) draft.pages[0].messages.unshift(...newMessages)
 }

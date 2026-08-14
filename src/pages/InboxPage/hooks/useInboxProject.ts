@@ -1,54 +1,29 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useQueryParam } from 'use-query-params'
-
-// not `project`: the details panel owns that one and rewrites it on every message opened
-export const INBOX_PROJECT_PARAM = 'inboxProject'
 
 interface Options {
   enabled?: boolean
-  viewProject: string | null
-  onViewProjectChange: (projectName: string | null) => void
-  isReady: boolean
 }
 
-// the view owns the selection; the URL only mirrors it so a link opens on the same project
-const useInboxProject = ({
-  enabled = true,
-  viewProject,
-  onViewProjectChange,
-  isReady,
-}: Options): [string | null, (projectName: string | null) => void] => {
-  const [urlProject, setUrlProject] = useQueryParam<string | undefined>(INBOX_PROJECT_PARAM)
+// the details panel rewrites the same param for the entity it opens, so the selection is
+// held here and only mirrored to the URL, never read back from it
+const useInboxProject = ({ enabled = true }: Options = {}): [
+  string | null,
+  (projectName: string | null) => void,
+] => {
+  const [urlProject, setUrlProject] = useQueryParam<string | undefined>('project')
 
-  // a link wins once on arrival, after that the view drives the URL
-  const adopted = useRef(false)
+  // a link opens on the project it names, after that the selection drives the URL
+  const [selected, setSelected] = useState<string | null>(urlProject ?? null)
 
   useEffect(() => {
-    if (!enabled || !isReady) return
+    if (!enabled) return
+    if ((selected ?? undefined) !== urlProject) setUrlProject(selected ?? undefined, 'replaceIn')
+  }, [enabled, selected, urlProject, setUrlProject])
 
-    if (!adopted.current) {
-      adopted.current = true
-      if (urlProject && urlProject !== viewProject) {
-        onViewProjectChange(urlProject)
-        return
-      }
-    }
-
-    if ((viewProject ?? undefined) !== urlProject) {
-      setUrlProject(viewProject ?? undefined, 'replaceIn')
-    }
-  }, [enabled, isReady, urlProject, viewProject, onViewProjectChange, setUrlProject])
-
-  const setProject = useCallback(
-    (projectName: string | null) => {
-      setUrlProject(projectName ?? undefined, 'replaceIn')
-      onViewProjectChange(projectName)
-    },
-    [setUrlProject, onViewProjectChange],
-  )
-
-  // before the view loads the URL is all we have, or the list flashes the cross-project inbox
-  const selected = isReady ? viewProject : urlProject ?? null
+  const setProject = useCallback((projectName: string | null) => {
+    setSelected(projectName)
+  }, [])
 
   return [enabled ? selected : null, setProject]
 }
