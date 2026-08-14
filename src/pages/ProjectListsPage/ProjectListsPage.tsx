@@ -63,8 +63,6 @@ import {
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
-import useStoryboardsCardsModules from './hooks/useStoryboardsCardsModules.tsx'
-import OpenStoryboardButton from '@pages/ReviewPage/OpenStoryboardButton.tsx'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
 import usePatchListsCaches from './hooks/usePatchListsCaches'
@@ -73,7 +71,6 @@ type ProjectListsPageProps = {
   projectName: string
   entityListTypes?: string[]
   isReview?: boolean
-  isStoryboards?: boolean
 }
 
 // The review-addon provider renders a wrapper that doesn't fill the flex column,
@@ -98,7 +95,6 @@ const ProviderFill = styled.div`
 const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
   entityListTypes,
   isReview,
-  isStoryboards,
 }) => {
   // lists page does not support grouping yet
   const modules = undefined
@@ -109,14 +105,12 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
         <ListsDataProvider
           entityListTypes={entityListTypes}
           isReview={isReview}
-          isStoryboards={isStoryboards}
         >
-          <ListsProvider isReview={isReview} isStoryboards={isStoryboards}>
+          <ListsProvider isReview={isReview}>
             <ListItemsDataProvider>
               <ListsAttributesProvider>
                 <ProjectListsWithInnerProviders
                   isReview={isReview}
-                  isStoryboards={isStoryboards}
                   modules={modules}
                 />
               </ListsAttributesProvider>
@@ -130,13 +124,11 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
 
 type ProjectListsWithInnerProvidersProps = {
   isReview?: boolean
-  isStoryboards?: boolean
   modules?: any
 }
 
 const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = ({
   isReview,
-  isStoryboards,
   modules,
 }) => {
   const { projectName, ...projectInfo } = useProjectContext()
@@ -233,7 +225,6 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                         extraColumns={extraColumns}
                         extraColumnsSettings={extraColumnsSettings}
                         isReview={isReview}
-                        isStoryboards={isStoryboards}
                         dndActiveId={dndActiveId}
                       />
                       <ListsShortcuts />
@@ -255,7 +246,6 @@ type ProjectListsProps = {
   extraColumns: TreeTableExtraColumn[]
   extraColumnsSettings: any[]
   isReview?: boolean
-  isStoryboards?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
 }
 
@@ -263,7 +253,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
   extraColumns,
   extraColumnsSettings,
   isReview,
-  isStoryboards,
   dndActiveId, // Destructure new prop
 }) => {
   const dispatch = useAppDispatch()
@@ -294,8 +283,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
 
   const pageDisplayStyle = isReview ? displayStyle : 'table' // force table view for non-review pages, as we do not have cards modules for them
 
-  const useModules = isStoryboards ? useStoryboardsCardsModules : useReviewSessionCardsModules
-
   const {
     ReviewSessionCards,
     ReviewSessionCardsProvider,
@@ -303,7 +290,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
     ReviewSessionCardsControlsRight,
     outdated: reviewSessionCardsOutdated,
     allModulesLoaded: reviewModulesLoaded,
-  } = useModules({ skip: !isReview })
+  } = useReviewSessionCardsModules({ skip: !isReview })
 
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
 
@@ -326,7 +313,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
       >
         <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
           <Section wrap>
-            <ListsTable isReview={isReview} isStoryboards={isStoryboards} />
+            <ListsTable isReview={isReview} />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={88}>
@@ -402,14 +389,10 @@ const ProjectLists: FC<ProjectListsProps> = ({
               >
                 {selectedList && (
                   <Toolbar>
-                    {isStoryboards ? (
-                      <OpenStoryboardButton projectName={projectName} />
-                    ) : (
-                      <OpenReviewSessionButton
-                        projectName={projectName}
-                        disabled={listItemsData.length === 0}
-                      />
-                    )}
+                    <OpenReviewSessionButton
+                      projectName={projectName}
+                      disabled={listItemsData.length === 0}
+                    />
                     {reviewModulesLoaded && pageDisplayStyle !== 'table' && (
                       <ReviewSessionCardsControlsLeft />
                     )}
@@ -461,7 +444,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       bundleMode={bundleMode}
                       align="right"
                     />
-                    {!reviewSessionCardsOutdated && isReview && !isStoryboards && (
+                    {!reviewSessionCardsOutdated && isReview && (
                       <TableGridPlaylistSwitch
                         value={pageDisplayStyle}
                         onChange={(style) => {
@@ -509,7 +492,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       >
                         <ProjectListsDetailsPanels
                           isReview={!!isReview}
-                          isStoryboards={!!isStoryboards}
                           displayStyle={pageDisplayStyle}
                           dispatch={dispatch}
                         />

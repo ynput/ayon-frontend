@@ -16,7 +16,6 @@ import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 
 interface ListsTableProps {
   isReview?: boolean
-  isStoryboards?: boolean
   rowContextMenuBuilders?: ListRowContextMenuBuilder[]
   // picker mode: reuse the table inside the add-to-list dialog
   picker?: boolean
@@ -30,7 +29,6 @@ interface ListsTableProps {
 
 const ListsTable: FC<ListsTableProps> = ({
   isReview,
-  isStoryboards,
   rowContextMenuBuilders = [],
   picker = false,
   foldersOnly = false,
@@ -59,10 +57,6 @@ const ListsTable: FC<ListsTableProps> = ({
   const pickerMenuId = useId()
 
   const rowContextMenuBuildersAll = useListContextMenu(rowContextMenuBuilders, !picker)
-  const sessionsLabel = useMemo(
-    () => (isStoryboards ? 'Storyboards' : 'Review sessions'),
-    [isStoryboards],
-  )
 
   const handleRename = useCallback((id: string) => openRenameList(id), [openRenameList])
   const handleSubmitRename = useCallback(
@@ -123,21 +117,21 @@ const ListsTable: FC<ListsTableProps> = ({
       >
         <Container>
           <ListsTableHeader
-            title={foldersOnly ? 'Folders' : isReview ? sessionsLabel : undefined}
+            title={foldersOnly ? 'Folders' : isReview ? 'Review sessions' : undefined}
             buttonLabels={{
               delete: {
                 tooltip: isReview
-                  ? `Delete selected ${sessionsLabel.toLowerCase()}`
+                  ? `Delete selected review sessions`
                   : 'Delete selected lists',
               },
               add: {
-                tooltip: isReview ? `Create new ${sessionsLabel.toLowerCase()}` : 'Create new list',
+                tooltip: isReview ? `Create new review sessions` : 'Create new list',
               },
               search: {
                 tooltip: foldersOnly
                   ? 'Search folders'
                   : isReview
-                  ? `Search ${sessionsLabel.toLowerCase()}`
+                  ? `Search review sessions`
                   : 'Search lists',
               },
             }}
@@ -158,7 +152,6 @@ const ListsTable: FC<ListsTableProps> = ({
             search={clientSearch}
             onSearch={setClientSearch}
             isReview={isReview}
-            isStoryboards={isStoryboards}
           />
           <SimpleTable
             data={listsTableData}

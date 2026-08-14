@@ -41,7 +41,6 @@ export interface MoveToFolderDialogProps {
   moving: 'lists' | 'folders'
   ids: string[]
   isReview?: boolean
-  isStoryboards?: boolean
   // none of the moved items sit in a folder, so there is nothing to unset
   canUnset?: boolean
   onMove: (targetFolderId: string) => Promise<void>
@@ -59,7 +58,6 @@ const MoveToFolderDialogInner: FC<MoveToFolderDialogProps> = ({
   moving,
   ids,
   isReview,
-  isStoryboards,
   canUnset,
   onMove,
   onUnset,
@@ -134,7 +132,6 @@ const MoveToFolderDialogInner: FC<MoveToFolderDialogProps> = ({
           foldersOnly
           singleSelect
           isReview={isReview}
-          isStoryboards={isStoryboards}
           onRowSubmit={moveTo}
         />
       </TableContainer>
@@ -143,7 +140,7 @@ const MoveToFolderDialogInner: FC<MoveToFolderDialogProps> = ({
 }
 
 export const MoveToFolderDialog: FC<MoveToFolderDialogProps> = (props) => {
-  const { moving, ids, isReview, isStoryboards } = props
+  const { moving, ids, isReview } = props
 
   const getDisabledFolders = useCallback(
     (folders: EntityListFolderModel[]) => {
@@ -166,10 +163,9 @@ export const MoveToFolderDialog: FC<MoveToFolderDialogProps> = (props) => {
       picker
       foldersOnly
       isReview={isReview}
-      isStoryboards={isStoryboards}
       getDisabledFolders={getDisabledFolders}
     >
-      <ListsProvider picker isReview={isReview} isStoryboards={isStoryboards}>
+      <ListsProvider picker isReview={isReview}>
         <MoveToFolderDialogInner {...props} />
       </ListsProvider>
     </ListsDataProvider>

@@ -28,7 +28,6 @@ export interface ListsContextType {
   selectedList: EntityList | undefined
   // meta
   isReview?: boolean
-  isStoryboards?: boolean
   // expanded state
   expanded: ExpandedState
   setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>

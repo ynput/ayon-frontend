@@ -14,7 +14,6 @@ const MoveToFolderDialogContainer: FC<MoveToFolderDialogContainerProps> = ({}) =
     onRemoveListsFromFolder,
     onRemoveFoldersFromFolder,
     isReview,
-    isStoryboards,
   } = useListsContext()
   const { listsData, listFolders } = useListsDataContext()
 
@@ -32,7 +31,6 @@ const MoveToFolderDialogContainer: FC<MoveToFolderDialogContainerProps> = ({}) =
       moving={moving}
       ids={ids}
       isReview={isReview}
-      isStoryboards={isStoryboards}
       canUnset={canUnset}
       onMove={(targetFolderId) =>
         moving === 'folders'
