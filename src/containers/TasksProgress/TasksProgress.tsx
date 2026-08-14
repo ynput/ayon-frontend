@@ -39,6 +39,7 @@ import { useSlicerContext } from '@shared/containers/Slicer'
 import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
+import { useProjectFoldersContext } from '@shared/context'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -129,13 +130,21 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   // when the slice type is not hierarchy we need to get the root folders
   const rootFolderIds = useRootFolders()
+  const { getParentFolderIds } = useProjectFoldersContext()
 
-  const folderIdsToFetch = resolveSelectedFolders(
-    rowSelection,
-    pinnedSlice?.rowSelection,
-    rootFolderIds,
-    sliceType,
-  )
+  const folderIdsToFetch = useMemo(() => {
+    const selectedFolderIds = resolveSelectedFolders(
+      rowSelection,
+      pinnedSlice?.rowSelection,
+      rootFolderIds,
+      sliceType,
+    )
+    const selectedFolderIdSet = new Set(selectedFolderIds)
+
+    return selectedFolderIds.filter((folderId) => {
+      return !getParentFolderIds(folderId).some((parentId) => selectedFolderIdSet.has(parentId))
+    })
+  }, [rowSelection, pinnedSlice?.rowSelection, rootFolderIds, sliceType, getParentFolderIds])
 
   const tasksProgressArgs = {
     projectName,

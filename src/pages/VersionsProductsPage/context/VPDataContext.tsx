@@ -45,7 +45,7 @@ import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slice
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
-import { OnSyncDataCallback } from '@shared/context'
+import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
 import type { FieldStats } from '@shared/api'
 import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import {
@@ -175,6 +175,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 }) => {
   const dispatch = useAppDispatch()
   const { attribFields } = useProjectDataContext()
+  const { getParentFolderIds } = useProjectFoldersContext()
   const {
     filters,
     showProducts,
@@ -285,12 +286,19 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   })
 
   // get selected folders from slicer
-  const slicerFolderIds = useSelectedFolders({
+  const selectedSlicerFolderIds = useSelectedFolders({
     rowSelection,
     sliceType,
     pinnedRowSelection: pinnedSlice?.rowSelection || null,
     entityListFolderIds: entityIds.folderIds,
   })
+  const slicerFolderIds = useMemo(() => {
+    const selectedFolderIds = new Set(selectedSlicerFolderIds)
+
+    return selectedSlicerFolderIds.filter((folderId) => {
+      return !getParentFolderIds(folderId).some((parentId) => selectedFolderIds.has(parentId))
+    })
+  }, [selectedSlicerFolderIds, getParentFolderIds])
   // combine slicer filters with version/product filters
   const combinedVersionFilter = useQueryFilters({
     queryFilters: versionFilter,
