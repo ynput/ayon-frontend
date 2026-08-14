@@ -434,7 +434,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
   const handleOpenFromMenu = (value: string) => {
     // get the full option object
     const selectedOption = options.find((option) => option.value === value)
-    if (selectedOption) {
+    if (selectedOption && !selectedOption.disabled) {
       onOpenNew(selectedOption.type, { isSequence: selectedOption.isSequence })
     }
   }
