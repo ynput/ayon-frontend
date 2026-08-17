@@ -119,7 +119,7 @@ export const useFetchOverviewData = ({
     isLoading: isLoadingFolders,
     isUninitialized: isUninitializedFolders,
     getFolderById,
-    getParentFolderIds,
+    getFolderIdsWithoutChildren,
   } = useProjectFoldersContext()
 
   const expandedParentIds = Object.entries(expanded)
@@ -401,13 +401,10 @@ export const useFetchOverviewData = ({
       )
     : undefined
 
-  const selectedFolderIdsWithoutChildren = useMemo(() => {
-    const selectedFolderIds = new Set(selectedFolders)
-
-    return selectedFolders.filter((folderId) => {
-      return !getParentFolderIds(folderId).some((parentId) => selectedFolderIds.has(parentId))
-    })
-  }, [selectedFolders, getParentFolderIds])
+  const selectedFolderIdsWithoutChildren = useMemo(
+    () => getFolderIdsWithoutChildren(selectedFolders),
+    [selectedFolders, getFolderIdsWithoutChildren],
+  )
 
   // In hierarchy mode with slicer-selected folders, use GetTasksList with folderIds to fetch
   // tasks directly under those folders in a single paginated request, rather than firing one

@@ -130,7 +130,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   // when the slice type is not hierarchy we need to get the root folders
   const rootFolderIds = useRootFolders()
-  const { getParentFolderIds } = useProjectFoldersContext()
+  const { getFolderIdsWithoutChildren } = useProjectFoldersContext()
 
   const folderIdsToFetch = useMemo(() => {
     const selectedFolderIds = resolveSelectedFolders(
@@ -139,12 +139,14 @@ const TasksProgress: FC<TasksProgressProps> = ({
       rootFolderIds,
       sliceType,
     )
-    const selectedFolderIdSet = new Set(selectedFolderIds)
-
-    return selectedFolderIds.filter((folderId) => {
-      return !getParentFolderIds(folderId).some((parentId) => selectedFolderIdSet.has(parentId))
-    })
-  }, [rowSelection, pinnedSlice?.rowSelection, rootFolderIds, sliceType, getParentFolderIds])
+    return getFolderIdsWithoutChildren(selectedFolderIds)
+  }, [
+    rowSelection,
+    pinnedSlice?.rowSelection,
+    rootFolderIds,
+    sliceType,
+    getFolderIdsWithoutChildren,
+  ])
 
   const tasksProgressArgs = {
     projectName,

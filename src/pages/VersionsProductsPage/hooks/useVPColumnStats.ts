@@ -14,7 +14,7 @@ import {
   useProjectDataContext,
   useViewsContext,
 } from '@shared/containers'
-import { usePowerpack, useProjectContext } from '@shared/context'
+import { usePowerpack, useProjectContext, useProjectFoldersContext } from '@shared/context'
 import { useMemo } from 'react'
 
 type Params = {
@@ -46,6 +46,7 @@ export const useVPColumnStats = ({
   const { attribFields } = useProjectDataContext()
   const { powerLicense } = usePowerpack()
   const { isLoadingViews } = useViewsContext()
+  const { getFolderIdsWithoutChildren } = useProjectFoldersContext()
   const { columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes } =
     useColumnSettingsContext()
 
@@ -86,13 +87,18 @@ export const useVPColumnStats = ({
     [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
   )
 
+  const folderIdsWithoutChildren = useMemo(
+    () => (folderIds ? getFolderIdsWithoutChildren(folderIds) : undefined),
+    [folderIds, getFolderIdsWithoutChildren],
+  )
+
   const columnStatsBaseArgs = {
     projectName,
     productFilter,
     versionFilter,
     taskFilter,
     folderFilter,
-    folderIds,
+    folderIds: folderIdsWithoutChildren,
     versionIds,
     productIds,
   }

@@ -175,7 +175,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 }) => {
   const dispatch = useAppDispatch()
   const { attribFields } = useProjectDataContext()
-  const { getParentFolderIds } = useProjectFoldersContext()
+  const { getFolderIdsWithoutChildren } = useProjectFoldersContext()
   const {
     filters,
     showProducts,
@@ -292,13 +292,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     pinnedRowSelection: pinnedSlice?.rowSelection || null,
     entityListFolderIds: entityIds.folderIds,
   })
-  const slicerFolderIds = useMemo(() => {
-    const selectedFolderIds = new Set(selectedSlicerFolderIds)
-
-    return selectedSlicerFolderIds.filter((folderId) => {
-      return !getParentFolderIds(folderId).some((parentId) => selectedFolderIds.has(parentId))
-    })
-  }, [selectedSlicerFolderIds, getParentFolderIds])
+  const slicerFolderIds = useMemo(
+    () => getFolderIdsWithoutChildren(selectedSlicerFolderIds),
+    [selectedSlicerFolderIds, getFolderIdsWithoutChildren],
+  )
   // combine slicer filters with version/product filters
   const combinedVersionFilter = useQueryFilters({
     queryFilters: versionFilter,
