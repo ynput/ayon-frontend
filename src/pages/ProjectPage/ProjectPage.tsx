@@ -45,7 +45,6 @@ import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { ProjectContextProvider } from '@shared/context'
 import { WithViews } from '@/hoc/WithViews'
 import { ProjectPageRemote } from '@shared/components'
-import ProjectStoryboardsPage from '@pages/ProjectListsPage/ProductStoryboardsPage'
 import {
   DetailsPanelEntityProvider,
   ProjectDataProvider,
@@ -214,7 +213,6 @@ const ProjectPageInner = () => {
   // Try checking multiple addons in one go if we wanted, or just call on demand
   const hasReview = !!getProductionAddon('review')
   const hasReports = !!getProductionAddon('reports')
-  const hasStoryboards = !!getProductionAddon('storyboards')
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
@@ -280,16 +278,6 @@ const ProjectPageInner = () => {
         module: 'reviews',
         viewType: 'reviews',
       },
-      ...(hasStoryboards
-        ? [
-            {
-              name: 'Storyboards',
-              path: `/projects/${projectName}/storyboards`,
-              module: 'storyboards',
-              viewType: 'storyboards',
-            },
-          ]
-        : []),
       ...ADDON_PAGES.map(({ name, module: addonModule, viewType }) => ({
         name,
         path: `/projects/${projectName}/${addonModule}`,
@@ -343,7 +331,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, module, hasStoryboards],
+    [addonsData, projectName, remotePages, module],
   )
 
   const activeLink = useMemo(() => {
@@ -388,14 +376,6 @@ const ProjectPageInner = () => {
           projectName={projectName}
           isLoadingAccess={addonsListLoading}
           hasReviewAddon={hasReview}
-        />
-      )
-    } else if (module === 'storyboards' && hasStoryboards) {
-      component = (
-        <ProjectStoryboardsPage
-          projectName={projectName}
-          isLoadingAccess={addonsListLoading}
-          hasStoryboardsAddon={hasStoryboards}
         />
       )
     } else if (module === 'workfiles') {
