@@ -48,7 +48,6 @@ const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
 interface ListsProviderProps {
   children: ReactNode
   isReview?: boolean
-  isStoryboards?: boolean
   // picker mode keeps selection in local state instead of URL query params
   picker?: boolean
 }
@@ -56,7 +55,6 @@ interface ListsProviderProps {
 export const ListsProvider = ({
   children,
   isReview,
-  isStoryboards,
   picker,
 }: ListsProviderProps) => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
@@ -66,7 +64,6 @@ export const ListsProvider = ({
   // Memoize the configurations for the query parameters
   const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
   const reviewParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
-  const storyboardParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
 
   const [unstableListSelection, setListSelection] = useQueryParam<RowSelectionState>(
     'list',
@@ -75,10 +72,6 @@ export const ListsProvider = ({
   const [unstableReviewSelection, setReviewSelection] = useQueryParam<RowSelectionState>(
     'review',
     reviewParamConfig, // Use memoized config
-  )
-  const [unstableStoryboardSelection, setStoryboardSelection] = useQueryParam<RowSelectionState>(
-    'storyboard',
-    storyboardParamConfig, // Use memoized config
   )
 
   // find out if and what version of the review addon is installed
@@ -92,20 +85,16 @@ export const ListsProvider = ({
     () =>
       picker
         ? pickerSelection
-        : isReview
-        ? isStoryboards
-          ? unstableStoryboardSelection
-          : unstableReviewSelection
-        : unstableListSelection,
+        : (isReview
+          ? unstableReviewSelection
+          : unstableListSelection),
     // Simpler dependencies: unstableListSelection and unstableReviewSelection are stable state references
     [
       picker,
       pickerSelection,
       unstableListSelection,
       unstableReviewSelection,
-      unstableStoryboardSelection,
       isReview,
-      isStoryboards,
     ],
   )
 
@@ -113,15 +102,13 @@ export const ListsProvider = ({
     (ids: RowSelectionState) => {
       if (picker) {
         setPickerSelection(ids)
-      } else if (isStoryboards) {
-        setStoryboardSelection(ids)
       } else if (isReview) {
         setReviewSelection(ids)
       } else {
         setListSelection(ids)
       }
     },
-    [picker, isReview, isStoryboards, setReviewSelection, setStoryboardSelection, setListSelection], // setReviewSelection and setListSelection are stable
+    [picker, isReview, setReviewSelection, setListSelection], // setReviewSelection and setListSelection are stable
   )
 
   // only rows that are selected
@@ -408,7 +395,6 @@ export const ListsProvider = ({
         createReviewSessionList,
         isCreatingList,
         isReview,
-        isStoryboards,
         // expanded state
         expanded,
         setExpanded,
