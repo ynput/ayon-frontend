@@ -14,19 +14,16 @@ import { useProjectContext } from '@shared/context'
 import { useEffect, useMemo, useState } from 'react'
 import ListDetailsPanel from '../ListDetailsPanel/ListDetailsPanel'
 import useReviewSessionCardsModules from '@pages/ProjectListsPage/hooks/useReviewSessionCardsModules'
-import useStoryboardsCardsModules from '@pages/ProjectListsPage/hooks/useStoryboardsCardsModules'
 import { ReviewsSettings } from '@shared/api'
 
 type Props = {
   isReview: boolean
-  isStoryboards: boolean
   displayStyle: ReviewsSettings['displayStyle']
   dispatch: any // if we need to provide explicit dispatch context (for review)
 }
 
 export default function ProjectListsDetailsPanels({
   isReview,
-  isStoryboards,
   displayStyle,
   dispatch,
 }: Props) {
@@ -88,9 +85,7 @@ export default function ProjectListsDetailsPanels({
     selectedEntity !== null || (selectedRows.length > 0 && hasNonRestrictedSelectedRows)
   const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
 
-  const useModules = isStoryboards ? useStoryboardsCardsModules : useReviewSessionCardsModules
-
-  const { useReviewSessionCards } = useModules({ skip: !isReview })
+  const { useReviewSessionCards } = useReviewSessionCardsModules({ skip: !isReview })
 
   const { clearHighlighted } = useReviewSessionCards()
 

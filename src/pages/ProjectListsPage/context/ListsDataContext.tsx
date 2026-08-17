@@ -35,7 +35,6 @@ interface ListsDataProviderProps {
   children: ReactNode
   entityListTypes?: string[]
   isReview?: boolean
-  isStoryboards?: boolean
   // picker mode: ignore the page's saved list filters (selection dialog, not the Lists page)
   picker?: boolean
   // folder destination picker: only the folder tree, lists are never fetched or rendered
@@ -51,7 +50,6 @@ export const ListsDataProvider = ({
   children,
   entityListTypes,
   isReview,
-  isStoryboards,
   picker,
   foldersOnly,
   listsFilter,
@@ -76,13 +74,11 @@ export const ListsDataProvider = ({
         const scope = f.data?.scope
         if (!scope || scope.length === 0) return true // no scope means available for all
         const hasReviewScope = scope.includes('review-session')
-        const hasStoryboardScope = scope.includes('storyboard');
-
         return isReview
-          ? isStoryboards ? hasStoryboardScope : hasReviewScope
+          ? hasReviewScope
           : !hasReviewScope
       }),
-    [isReview, isStoryboards, listFoldersAll],
+    [isReview, listFoldersAll],
   )
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({
