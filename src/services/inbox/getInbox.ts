@@ -1,68 +1,33 @@
 import { createRealtimeBatcher, PubSub } from '@shared/util'
 import { gqlApi } from '@shared/api'
-import type {
-  GetInboxHasUnreadQuery,
-  GetInboxMessagesQuery,
-  GetInboxUnreadCountQuery,
-} from '@shared/api'
+import type { GetInboxHasUnreadQuery, GetInboxUnreadCountQuery } from '@shared/api'
 import { TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { TransformedInboxMessages, transformInboxMessages } from './inboxTransform'
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import {
+  EMPTY_INBOX_PAGE,
+  TransformedInboxMessages,
+  transformInboxMessages,
+} from './inboxTransform'
 import { DefinitionsFromApi, OverrideResultType } from '@reduxjs/toolkit/query'
+
+const INBOX_PAGE_SIZE = 100
+
+export interface InboxInfiniteArgs {
+  active: boolean
+  important: boolean | null
+  unread: boolean | null
+}
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
 
-type UpdatedDefinitions = Omit<
-  Definitions,
-  'GetInboxMessages' | 'GetInboxUnreadCount' | 'GetInboxHasUnread'
-> & {
-  GetInboxMessages: OverrideResultType<Definitions['GetInboxMessages'], TransformedInboxMessages>
+type UpdatedDefinitions = Omit<Definitions, 'GetInboxUnreadCount' | 'GetInboxHasUnread'> & {
   GetInboxUnreadCount: OverrideResultType<Definitions['GetInboxUnreadCount'], number>
   GetInboxHasUnread: OverrideResultType<Definitions['GetInboxHasUnread'], boolean>
 }
 
 export const enhancedInboxGraphql = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
-    GetInboxMessages: {
-      transformResponse: (res: GetInboxMessagesQuery, _meta, args) =>
-        transformInboxMessages(res.inbox, args),
-      // only use active and isActive as cache keys
-      serializeQueryArgs: ({ queryArgs: { active, important } = {} }) => ({
-        active,
-        important,
-      }),
-      // when we get new data, merge it with the existing cache
-      // (pagination)
-      merge: (currentCache: TransformedInboxMessages, newCache: TransformedInboxMessages) => {
-        const { messages = [], projectNames = [], pageInfo } = newCache
-        const { messages: lastMessages = [], projectNames: lastProjectNames = [] } = currentCache
-
-        type Message = TransformedInboxMessages['messages'][0]
-
-        const newMessages = [
-          ...lastMessages,
-          ...messages.filter(
-            (m: Message) => !lastMessages.some((lm: Message) => lm.referenceId === m.referenceId),
-          ),
-        ]
-        const newProjectNames = [
-          ...lastProjectNames,
-          ...projectNames.filter((p: string) => !lastProjectNames.includes(p)),
-        ]
-
-        return {
-          messages: newMessages,
-          projectNames: newProjectNames,
-          pageInfo,
-        }
-      },
-      keepUnusedDataFor: 30,
-      providesTags: (_res, _error, { active, important } = {}) => [
-        { type: 'inbox', id: 'LIST' },
-        { type: 'inbox', id: `important=${important}` },
-        { type: 'inbox', id: `active=${active}/important=${important}` },
-      ],
-    },
     GetInboxHasUnread: {
       transformResponse: (res: GetInboxHasUnreadQuery) => !!res.inbox.edges.length,
       serializeQueryArgs: () => ({}),
@@ -121,9 +86,57 @@ export const enhancedInboxGraphql = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
   },
 })
 
-export const {
-  useGetInboxUnreadCountQuery,
-  useGetInboxHasUnreadQuery,
-  useGetInboxMessagesQuery,
-  useLazyGetInboxMessagesQuery,
-} = enhancedInboxGraphql
+export const inboxInfiniteApi = gqlApi.injectEndpoints({
+  endpoints: (build) => ({
+    getInboxInfinite: build.infiniteQuery<
+      TransformedInboxMessages,
+      InboxInfiniteArgs,
+      { cursor: string }
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: { cursor: '' },
+        getNextPageParam: (lastPage) => {
+          const { hasPreviousPage, endCursor } = lastPage.pageInfo
+          if (!hasPreviousPage || !endCursor) return undefined
+          return { cursor: endCursor }
+        },
+      },
+      queryFn: async ({ queryArg, pageParam }, api) => {
+        try {
+          const { active, important, unread } = queryArg
+          // the infinite query owns the cache, so the page query itself keeps no subscriber
+          const result = await api.dispatch(
+            gqlApi.endpoints.GetInboxMessages.initiate(
+              { last: INBOX_PAGE_SIZE, active, important, unread, cursor: pageParam?.cursor },
+              { forceRefetch: true, subscribe: false },
+            ),
+          )
+
+          // passed through as-is: rewrapping loses the resolver's `detail`
+          if (result.error) return { error: result.error as FetchBaseQueryError }
+
+          const inbox = result.data?.inbox
+          return {
+            data: inbox
+              ? transformInboxMessages(inbox, { important: important ?? false })
+              : EMPTY_INBOX_PAGE,
+          }
+        } catch (e: any) {
+          console.error('Error in getInboxInfinite queryFn:', e)
+          return {
+            error: { status: 'FETCH_ERROR', error: String(e?.message ?? e) } as FetchBaseQueryError,
+          }
+        }
+      },
+      keepUnusedDataFor: 30,
+      providesTags: (_res, _error, { active, important }) => [
+        { type: 'inbox', id: 'LIST' },
+        { type: 'inbox', id: `important=${important}` },
+        { type: 'inbox', id: `active=${active}/important=${important}` },
+      ],
+    }),
+  }),
+})
+
+export const { useGetInboxUnreadCountQuery, useGetInboxHasUnreadQuery } = enhancedInboxGraphql
+export const { useGetInboxInfiniteInfiniteQuery } = inboxInfiniteApi
