@@ -11,6 +11,12 @@ import {
 
 const PROJECT_INBOX_PAGE_SIZE = 100
 
+type InboxPubSubMessage = {
+  id: string
+  project?: string
+  summary?: { isImportant?: boolean; activityId?: string }
+}
+
 export interface ProjectInboxInfiniteArgs {
   projectName: string
   userName: string
@@ -22,14 +28,17 @@ export interface ProjectInboxInfiniteArgs {
   important: boolean | null
 }
 
+type PageParams = { last: number; cursor?: string | null; activityIds?: string[] | null }
+
 const pageVariables = (
   { projectName, userName, referenceTypes, activityTypes, filter }: ProjectInboxInfiniteArgs,
-  { last, cursor }: { last: number; cursor?: string | null },
+  { last, cursor, activityIds }: PageParams,
 ): GetProjectInboxQueryVariables => ({
   projectName,
   userName,
   referenceTypes,
   activityTypes,
+  activityIds,
   filter,
   last,
   cursor,
@@ -48,11 +57,7 @@ const transformPage = (
     : EMPTY_INBOX_PAGE
 
 // unsubscribed: the page is read here, the infinite query owns the cache
-const fetchPage = (
-  dispatch: any,
-  args: ProjectInboxInfiniteArgs,
-  page: { last: number; cursor?: string | null },
-) =>
+const fetchPage = (dispatch: any, args: ProjectInboxInfiniteArgs, page: PageParams) =>
   dispatch(
     gqlApi.endpoints.GetProjectInbox.initiate(pageVariables(args, page), {
       forceRefetch: true,
@@ -105,11 +110,22 @@ export const projectInboxApi = gqlApi.injectEndpoints({
       ) {
         let token
 
-        // one request per burst, sized to it: new rows always sort to the top and the query
-        // carries the filters. `inbox.message` names no activity, so ids cannot be asked for.
-        const batcher = createRealtimeBatcher<{ id: string }>(
+        // one request per burst, asking for exactly the new activities. the query carries the
+        // filters, so anything the current filter excludes simply comes back empty
+        const batcher = createRealtimeBatcher<InboxPubSubMessage>(
           async (burst) => {
-            const result = await fetchPage(dispatch, queryArg, { last: burst.length })
+            const activityIds = burst
+              .map((message) => message.summary?.activityId)
+              .filter((id): id is string => !!id)
+
+            // servers without `activityId` in the summary: fall back to a burst-sized page,
+            // new rows always sort to the top
+            const page: PageParams =
+              activityIds.length === burst.length
+                ? { last: activityIds.length, activityIds }
+                : { last: burst.length }
+
+            const result = await fetchPage(dispatch, queryArg, page)
             if (result.error) return
 
             const { messages } = transformPage(result.data, queryArg.important)
@@ -117,14 +133,14 @@ export const projectInboxApi = gqlApi.injectEndpoints({
 
             updateCachedData((draft) => unshiftNewMessages(draft, messages))
           },
-          (message) => message.id,
+          (message) => message.summary?.activityId ?? message.id,
         )
 
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
-          const handlePubSub = (topic: string, message: any) => {
+          const handlePubSub = (topic: string, message: InboxPubSubMessage) => {
             if (topic !== 'inbox.message') return
             if (message?.project !== queryArg.projectName) return
             // a new message is always active, so the cleared tab can never gain one

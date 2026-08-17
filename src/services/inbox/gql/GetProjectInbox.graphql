@@ -3,6 +3,7 @@ query GetProjectInbox(
   $userName: String!
   $referenceTypes: [String!]
   $activityTypes: [String!]
+  $activityIds: [String!]
   $filter: String
   $last: Int
   $cursor: String
@@ -12,6 +13,7 @@ query GetProjectInbox(
       entityNames: [$userName]
       referenceTypes: $referenceTypes
       activityTypes: $activityTypes
+      activityIds: $activityIds
       filter: $filter
       last: $last
       before: $cursor

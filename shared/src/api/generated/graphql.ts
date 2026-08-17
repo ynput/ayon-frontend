@@ -2227,6 +2227,7 @@ export type GetProjectInboxQueryVariables = Exact<{
   userName: string;
   referenceTypes?: Array<string> | string | null | undefined;
   activityTypes?: Array<string> | string | null | undefined;
+  activityIds?: Array<string> | string | null | undefined;
   filter?: string | null | undefined;
   last?: number | null | undefined;
   cursor?: string | null | undefined;
@@ -4345,12 +4346,13 @@ export const GetInboxUnreadCountDocument = new TypedDocumentString(`
 }
     `);
 export const GetProjectInboxDocument = new TypedDocumentString(`
-    query GetProjectInbox($projectName: String!, $userName: String!, $referenceTypes: [String!], $activityTypes: [String!], $filter: String, $last: Int, $cursor: String) {
+    query GetProjectInbox($projectName: String!, $userName: String!, $referenceTypes: [String!], $activityTypes: [String!], $activityIds: [String!], $filter: String, $last: Int, $cursor: String) {
   project(name: $projectName) {
     activities(
       entityNames: [$userName]
       referenceTypes: $referenceTypes
       activityTypes: $activityTypes
+      activityIds: $activityIds
       filter: $filter
       last: $last
       before: $cursor
