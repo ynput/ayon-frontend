@@ -51,6 +51,18 @@ import { InputSwitch } from '@ynput/ayon-react-components'
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'
 const NO_SCOPES: string[] = []
 
+const getColumnSettingsPath = (column: AddColumnItem, scopes: string[]) => {
+  if (column.parentScope && column.attrib) {
+    return `${column.parentScope.charAt(0).toUpperCase()}${column.parentScope.slice(1)} attributes`
+  }
+  return getAddColumnSection(column, scopes)?.label
+}
+
+const getColumnSettingsItem = (column: AddColumnItem, scopes: string[]): AddColumnItem => {
+  const path = getColumnSettingsPath(column, scopes)
+  return path ? { ...column, path } : column
+}
+
 export interface SettingSwitchProps
   extends Omit<SettingsPanelItemTemplateProps, 'onChange' | 'item'> {
   icon?: string
@@ -250,14 +262,16 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   const searchResults = useMemo(() => {
     if (typeof search !== 'string') return []
     const terms = search.toLowerCase().split(/\s+/).filter(Boolean)
-    return columns
-      .map((col) => ({ ...col, path: getAddColumnSection(col, scopes)?.label }))
-      .filter((col) => {
-        const searchable = [col.path, col.label].filter(Boolean).join(' / ').toLowerCase()
-        return terms.every((term) => searchable.includes(term))
-      })
-      // default column order, but grouped (sectioned) columns sink to the bottom
-      .toSorted((a, b) => Number(!!a.path) - Number(!!b.path))
+    return (
+      columns
+        .map((col) => ({ ...getColumnSettingsItem(col, scopes) }))
+        .filter((col) => {
+          const searchable = [col.path, col.label].filter(Boolean).join(' / ').toLowerCase()
+          return terms.every((term) => searchable.includes(term))
+        })
+        // default column order, but grouped (sectioned) columns sink to the bottom
+        .toSorted((a, b) => Number(!!a.path) - Number(!!b.path))
+    )
   }, [columns, search, scopes])
 
   // fallback for consumers rendering outside ColumnSettingsContext (e.g. ProjectsPage)
@@ -480,7 +494,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
               <ColumnItem
                 key={column.value}
                 id={`column-settings-${column.value}`}
-                column={column}
+                column={getColumnSettingsItem(column, scopes)}
                 isPinned={columnPinning.left?.includes(column.value) || false}
                 isHidden={
                   !checkColumnVisibility(columnVisibility, column.value, defaultColumnVisibility)
@@ -523,7 +537,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
                   <SortableColumnItem
                     key={column.value}
                     id={column.value}
-                    column={column}
+                    column={getColumnSettingsItem(column, scopes)}
                     isPinned={true}
                     isHidden={false}
                     isDisabled={!!groupBy && column.value === 'name'} // Disable 'name' column if grouping is enabled
@@ -549,7 +563,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
                 <SortableColumnItem
                   key={column.value}
                   id={column.value}
-                  column={column}
+                  column={getColumnSettingsItem(column, scopes)}
                   isPinned={false}
                   isHidden={false}
                   isHighlighted={highlighted === column.value}
@@ -566,7 +580,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
         <DragOverlay>
           {activeColumn && (
             <ColumnItem
-              column={activeColumn}
+              column={getColumnSettingsItem(activeColumn, scopes)}
               isPinned={columnPinning.left?.includes(activeColumn.value) || false}
               isHidden={false}
               isHighlighted={highlighted === activeColumn.value}

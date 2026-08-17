@@ -7,6 +7,7 @@ import { useLastColumnOffset } from './useLastColumnOffset'
 import { useProjectTableColumnItems } from './useProjectTableColumnItems'
 import { AddColumnMenu } from './AddColumnMenu'
 import type { MenuItemType } from '../Menu'
+import type { ParentColumnDefinition } from '@shared/containers'
 
 const ADD_COLUMN_MENU_TABLE_ID = 'add-column-menu-table'
 
@@ -27,6 +28,7 @@ interface AddColumnButtonProps {
   hiddenColumns?: string[]
   includeLinks?: boolean
   extraMenuItems?: MenuItemType[]
+  parentColumns?: ParentColumnDefinition[]
 }
 
 export const AddColumnButton: FC<AddColumnButtonProps> = ({
@@ -34,6 +36,7 @@ export const AddColumnButton: FC<AddColumnButtonProps> = ({
   hiddenColumns,
   includeLinks,
   extraMenuItems,
+  parentColumns,
 }) => {
   const { isPanelOpen } = useSettingsPanel()
   const { toggleMenuOpen } = useMenuContext()
@@ -41,6 +44,7 @@ export const AddColumnButton: FC<AddColumnButtonProps> = ({
     extraColumns,
     hiddenColumns,
     includeLinks,
+    parentColumns,
   })
   const { menuItems, hasMenuItems } = useAddColumnsMenu({
     columns: visibleColumns,

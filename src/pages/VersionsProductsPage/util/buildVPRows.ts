@@ -1,97 +1,135 @@
 import { ProductNode, VersionNode } from '@shared/api/queries'
-import { createMetaRowId, TableRow } from '@shared/containers'
+import { createMetaRowId, ProductEntityData, TableRow } from '@shared/containers'
 import { ProjectContextValue } from '@shared/context'
 
 export const HERO_SYMBOL = '★'
 
-export const buildProductRow = (
+const asString = (value: unknown): string | undefined =>
+  typeof value === 'string' ? value : undefined
+
+const buildFolderParentEntity = (folder: ProductNode['folder']) => ({
+  id: folder.id,
+  entityType: 'folder' as const,
+  name: folder.name,
+  label: folder.label || folder.name,
+  status: folder.status,
+  tags: folder.tags || [],
+  createdAt: asString(folder.createdAt),
+  updatedAt: asString(folder.updatedAt),
+  thumbnailHash: folder.thumbnailHash,
+  attrib: folder.attrib || {},
+  ownAttrib: Object.keys(folder.attrib || {}),
+  subType: folder.folderType || '',
+})
+
+const buildProductParentEntity = (product: VersionNode['product']): ProductEntityData => ({
+  id: product.id,
+  entityType: 'product',
+  name: product.name,
+  label: product.name,
+  attrib: product.attrib || {},
+  ownAttrib: Object.keys(product.attrib || {}),
+  subType: product.productType || '',
+  productBaseType: product.productBaseType || '',
+})
+
+export const buildProductTableRow = (
   product: ProductNode,
   subRows: TableRow[],
   getProductType: ProjectContextValue['getProductType'],
-): TableRow => ({
-  id: product.id,
-  name: product.name,
-  label: product.name,
-  icon: getProductType(product.productType).icon,
-  entityId: product.id,
-  entityType: 'product',
-  createdAt: product.createdAt,
-  updatedAt: product.updatedAt,
-  status: product.status,
-  tags: product.tags,
-  folderId: product.folderId,
-  versionEntityId: product.featuredVersion?.id,
-  parents: product.parents,
-  folder: product.folder.label || product.folder.name,
-  folderType: product.folder.folderType,
-  folderStatus: product.folder.status,
-  product: product.name,
-  attrib: { ...product.attrib },
-  ownAttrib: Object.keys(product.attrib || {}),
-  subType: product.productType,
-  productBaseType: product.productBaseType || '',
-  version: product.featuredVersion?.version || null,
-  versionsCount: product.versions.length,
-  versionName: product.featuredVersion?.name || '',
-  author: product.featuredVersion?.author || '',
-  latestComments: product.featuredVersion?.latestComments || [],
-  thumbnail: {
-    entityId: product.featuredVersion?.id || product.id,
-    entityType: product.featuredVersion ? 'version' : 'product',
-    updatedAt: product.featuredVersion?.updatedAt || product.updatedAt,
+): TableRow => {
+  const primary: ProductEntityData = {
+    id: product.id,
+    entityType: 'product',
+    name: product.name,
+    label: product.name,
+    status: product.status,
+    tags: product.tags || [],
+    createdAt: asString(product.createdAt),
+    updatedAt: asString(product.updatedAt),
+    attrib: { ...product.attrib },
+    ownAttrib: Object.keys(product.attrib || {}),
+    subType: product.productType,
+    productBaseType: product.productBaseType || '',
+    icon: getProductType(product.productType).icon,
+    hasReviewables: product.featuredVersion?.hasReviewables,
     thumbnailHash: product.featuredVersion?.thumbnailHash,
-  },
-  subRows,
-  links: {}, // TODO add links
-})
+    versionsCount: product.versions.length,
+    versionName: product.featuredVersion?.name || '',
+    author: product.featuredVersion?.author || '',
+    latestComments: product.featuredVersion?.latestComments || [],
+    links: {}, // TODO add links
+  }
 
-export const buildVersionRow = (version: VersionNode): TableRow => ({
+  return {
+    id: product.id,
+    primary,
+    parents: { folder: buildFolderParentEntity(product.folder) },
+    subRows,
+  }
+}
+
+export const buildVersionTableRow = (version: VersionNode): TableRow => ({
   id: version.id,
-  name: version.name,
-  label: `${version.product.name} - ${version.name} ${version.heroVersionId ? HERO_SYMBOL : ''}`,
-  entityId: version.id,
-  folderId: version.product.folder.id,
-  taskId: version.taskId || version.task?.id,
-  versionEntityId: version.id,
-  entityType: 'version',
-  createdAt: version.createdAt,
-  updatedAt: version.updatedAt,
-  thumbnailHash: version.thumbnailHash,
-  version: version.version,
-  versionName: version.name,
-  status: version.status,
-  tags: version.tags,
-  parents: version.parents,
-  folder: version.product.folder.label || version.product.folder.name,
-  folderType: version.product.folder.folderType,
-  folderStatus: version.product.folder.status,
-  product: version.product.name,
-  attrib: { ...version.product.attrib, ...version.attrib },
-  ownAttrib: Object.keys(version.attrib || {}),
-  subType: version.product.productType,
-  productBaseType: version.product.productBaseType || '',
-  taskType: version.task?.taskType,
-  taskLabel: version.task?.label || version.task?.name,
-  hasReviewables: version.hasReviewables,
-  author: version.author || '',
-  latestComments: version.latestComments || [],
-  links: {}, // TODO add links
+  primary: {
+    id: version.id,
+    entityType: 'version',
+    name: version.name,
+    label: `${version.product.name} - ${version.name} ${version.heroVersionId ? HERO_SYMBOL : ''}`,
+    status: version.status,
+    tags: version.tags || [],
+    createdAt: asString(version.createdAt),
+    updatedAt: asString(version.updatedAt),
+    thumbnailHash: version.thumbnailHash,
+    attrib: { ...version.attrib },
+    ownAttrib: Object.keys(version.attrib || {}),
+    version: version.version,
+    versionName: version.name,
+    author: version.author || '',
+    hasReviewables: version.hasReviewables,
+    latestComments: version.latestComments || [],
+    links: {}, // TODO add links
+  },
+  parents: {
+    product: buildProductParentEntity(version.product),
+    folder: buildFolderParentEntity(version.product.folder),
+    ...(version.task
+      ? {
+          task: {
+            id: version.task.id,
+            entityType: 'task' as const,
+            name: version.task.name,
+            label: version.task.label || version.task.name,
+            subType: version.task.taskType,
+            status: version.task.status,
+            attrib: version.task.attrib || {},
+            ownAttrib: version.task.ownAttrib || Object.keys(version.task.attrib || {}),
+          },
+        }
+      : {}),
+  },
 })
 
-export const buildEmptyRow = (productId: string): TableRow => ({
+export const buildEmptyTableRow = (productId: string): TableRow => ({
   id: createMetaRowId(productId, 'empty'),
-  name: 'No versions',
-  label: 'No versions',
-  entityId: productId,
-  entityType: 'product',
+  primary: {
+    id: productId,
+    entityType: 'product',
+    name: 'No versions',
+    label: 'No versions',
+    subType: '',
+  },
   metaType: 'empty',
 })
 
-export const buildErrorRow = (productId: string, errorMessage: string): TableRow => ({
+export const buildErrorTableRow = (productId: string, errorMessage: string): TableRow => ({
   id: createMetaRowId(productId, 'error'),
-  name: 'Error loading versions',
-  label: `Error: ${errorMessage}`,
-  entityId: productId,
-  entityType: 'product',
+  primary: {
+    id: productId,
+    entityType: 'product',
+    name: 'Error loading versions',
+    label: `Error: ${errorMessage}`,
+    subType: '',
+  },
   metaType: 'error',
 })

@@ -49,7 +49,6 @@ const DISPLAY_PREFERRED_COLS = new Set([
 
 const DISPLAY_COLUMN_FIELDS: Record<string, string> = {
   folder_entity: 'folder',
-  task_entity: 'taskLabel',
   version_entity: 'versionName',
 }
 
@@ -208,7 +207,13 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             } else {
               // @ts-ignore
               const sourceField = DISPLAY_COLUMN_FIELDS[colId] || colId
-              let foundValue = getCellValue(entity, sourceField)
+              let foundValue =
+                colId === 'task_entity'
+                  ? displayRow?.parents?.task?.label ||
+                    displayRow?.parents?.task?.name ||
+                    (entity as any).task?.label ||
+                    (entity as any).task?.name
+                  : getCellValue(entity, sourceField)
 
               // folder is an object on some entities (product/task) or nested under
               // product (version) - copy the display name the cell shows,

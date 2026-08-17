@@ -158,7 +158,12 @@ export type FolderAttribNode = VpFolderFragment & {
   attrib: Record<string, any> // parsed from allAttrib JSON string
 }
 export type VersionNodeRAW = GetVersionsQuery['project']['versions']['edges'][0]['node']
-export type VersionNode = VersionNodeRAW & {
+type VersionTaskNode = NonNullable<VersionNodeRAW['task']> & {
+  attrib: Record<string, any> // parsed from allAttrib JSON string
+  ownAttrib: string[]
+}
+export type VersionNode = Omit<VersionNodeRAW, 'task'> & {
+  task: VersionTaskNode | null
   attrib: Record<string, any> // parsed from allAttrib JSON string
   product: VersionNodeRAW['product'] & {
     attrib: Record<string, any> // parsed from allAttrib JSON string

@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { getDisplayValue, type DisplayConfig, getColumnDisplayConfig } from '../types/columnConfig'
 import { EntityIcon } from '@shared/components/EntityIcon'
+import type { EntityData } from '../types/table'
 import { WRAP_MIN_ROW_HEIGHT } from '../constants'
 
 const Expander = styled(Button)`
@@ -128,12 +129,9 @@ const StyledTextContent = styled.div`
 
 type EntityNameWidgetProps = {
   id: string
-  label: string
-  name: string
+  entity: EntityData
   path?: string | null
   isExpandable?: boolean
-  entityType: string
-  subType?: string | null
   isExpanded: boolean
   toggleExpandAll: (id: string) => void
   toggleExpanded: () => void
@@ -143,12 +141,9 @@ type EntityNameWidgetProps = {
 
 export const EntityNameWidget = ({
   id,
-  label,
-  name,
+  entity,
   path,
   isExpandable,
-  entityType,
-  subType,
   isExpanded,
   toggleExpandAll,
   toggleExpanded,
@@ -156,7 +151,7 @@ export const EntityNameWidget = ({
   columnDisplayConfig,
 }: EntityNameWidgetProps) => {
   // Check if this is a restricted access entity
-  const isRestricted = isEntityRestricted(entityType)
+  const isRestricted = isEntityRestricted(entity.entityType)
 
   // Determine layout based on row height
   // below the wrap threshold = single line (compact), above = stacked
@@ -189,7 +184,14 @@ export const EntityNameWidget = ({
       <StyledContentWrapper className={layout}>
         <StyledContentAbsolute>
           <StyledContent className={layout}>
-            <EntityIcon entity={{ entityType, subType: subType || undefined }} />
+            <EntityIcon
+              entity={{
+                entityType: entity.entityType,
+                subType: 'subType' in entity ? entity.subType : undefined,
+              }}
+              icon={entity.icon || undefined}
+              color={entity.color || undefined}
+            />
             <StyledTextContent className={layout}>
               {shouldShowPath && !isRestricted && (
                 <span className="path">
@@ -197,7 +199,7 @@ export const EntityNameWidget = ({
                   {isCompact && path ? '/' : ''}
                 </span>
               )}
-              <span className="label">{label || name}</span>
+              <span className="label">{entity.label || entity.name}</span>
             </StyledTextContent>
           </StyledContent>
         </StyledContentAbsolute>

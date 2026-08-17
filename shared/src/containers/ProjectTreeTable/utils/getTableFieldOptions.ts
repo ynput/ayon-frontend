@@ -45,6 +45,7 @@ export const getTableFieldOptions = ({
     })),
     status: getStatusOptions(scopes),
     folderStatus: getStatusOptions(['folder']),
+    taskStatus: getStatusOptions(['task']),
     tag: tags.map(({ name, color }) => ({ value: name, label: name, color })),
     folderType: folderTypes.map(({ name, icon, color }) => ({
       value: name,

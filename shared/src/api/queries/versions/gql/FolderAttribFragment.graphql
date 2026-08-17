@@ -11,5 +11,4 @@ fragment VPFolder on FolderNode {
   active
   hasReviewables
   allAttrib
-  status
 }

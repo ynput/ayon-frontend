@@ -13,7 +13,7 @@ import { GroupByConfig } from '../components/GroupSettingsFallback'
 import { SummaryCalc, SummaryFormat, RowScope } from '../types/summaryTypes'
 import { isEqual } from 'lodash'
 import { checkColumnVisibility } from '../utils'
-import { normalizeColumnsConfig } from '../utils/columnIds'
+import { ColumnIdAliases, normalizeColumnsConfig } from '../utils/columnIds'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
 
 interface ColumnSettingsProviderProps {
@@ -21,6 +21,7 @@ interface ColumnSettingsProviderProps {
   config?: Record<string, any>
   onChange: (config: ColumnsConfig, allColumnIds?: string[]) => void
   defaultColumnVisibility?: VisibilityState
+  columnIdAliases?: ColumnIdAliases
 }
 
 export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
@@ -28,6 +29,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   config,
   onChange,
   defaultColumnVisibility,
+  columnIdAliases,
 }) => {
   const allColumnsRef = React.useRef<string[]>([])
   const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
@@ -68,7 +70,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       onChange(next, allKnownIds)
     }
   }
-  const columnsConfig = normalizeColumnsConfig(config as ColumnsConfig | undefined)
+  const columnsConfig = normalizeColumnsConfig(config as ColumnsConfig | undefined, columnIdAliases)
 
   const {
     columnOrder: columnOrderInit = [],

@@ -105,6 +105,13 @@ export const flattenInfiniteProductsData = (data: ProductInfiniteResult): Produc
 
 export const transformVersionNode = (node: VersionNodeRAW): VersionNode => {
   const attrib = parseJSONField(node.allAttrib)
+  const task = node.task
+    ? {
+        ...node.task,
+        attrib: parseJSONField(node.task.allAttrib),
+        ownAttrib: Object.keys(parseJSONField(node.task.allAttrib)),
+      }
+    : node.task
 
   // Parse product attributes if product exists
   const product = node.product
@@ -121,6 +128,7 @@ export const transformVersionNode = (node: VersionNodeRAW): VersionNode => {
   const version = {
     ...node,
     attrib,
+    task,
     product,
   } as VersionNode
 

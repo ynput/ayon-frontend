@@ -26,60 +26,131 @@ export type FolderListItem = {
   links: EntityLink[]
 }
 
-export type TableRow = {
+export type EntityType = 'folder' | 'task' | 'product' | 'version'
+
+export interface BaseEntityData {
   id: string
-  entityId?: string
-  entityType: string
   name: string
-  label: string
-  path?: string | null | undefined
-  ownAttrib?: string[]
-  tags?: string[]
-  status?: string
-  updatedAt?: string
-  thumbnailHash?: string
-  createdAt?: string
-  parentId?: string
-  folderId?: string | null // all entities have a folder except root folders which will be null
-  taskId?: string | null
-  versionEntityId?: string | null
-  parents?: string[]
-  folder?: string // parent folder name
-  product?: string // product name of product and version parent
-  productType?: string // product name of product and version parent
-  productBaseType?: string // product base type category
-  taskType?: string // linked task type
-  taskLabel?: string // linked task label/name
-  folderType?: string // parent folder type
-  folderStatus?: string // parent folder status
-  subRows?: TableRow[]
+  label?: string
   icon?: string | null
   color?: string | null
+  path?: string | null
   img?: string | null
   hasReviewables?: boolean
-  hasVersions?: boolean
-  version?: number | null // for versions
-  versionsCount?: number // for products
-  versionName?: string // for versions
-  startContent?: JSX.Element
-  assignees?: string[]
-  author?: string
+  status?: string
+  tags?: string[]
+  createdAt?: string
+  updatedAt?: string
+  thumbnailHash?: string
   attrib?: Record<string, any>
-  midnightExclusiveFields?: string[]
-  links?: Record<string, LinkValue> // links to other entities, e.g. tasks, versions, products
-  subtasks?: SubTaskNode[]
+  ownAttrib?: string[]
+  links?: Record<string, LinkValue>
   latestComments?: EntityComment[]
-  childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
-  subType?: string | null
+}
+
+export interface FolderEntityData extends BaseEntityData {
+  entityType: 'folder'
+  subType: string
+  hasTasks?: boolean
+  hasVersions?: boolean
+}
+
+export interface TaskEntityData extends BaseEntityData {
+  entityType: 'task'
+  subType: string
+  assignees?: string[]
+  subtasks?: SubTaskNode[]
+}
+
+export interface ProductEntityData extends BaseEntityData {
+  entityType: 'product'
+  subType: string
+  productBaseType?: string
+  versionsCount?: number
+  versionName?: string
+  author?: string
+}
+
+export interface VersionEntityData extends BaseEntityData {
+  entityType: 'version'
+  version: number
+  versionName?: string
+  author?: string
+}
+
+export type EntityData = FolderEntityData | TaskEntityData | ProductEntityData | VersionEntityData
+
+export type EntityScope = 'primary' | EntityType
+
+export type ParentColumnDataType = 'string' | 'datetime' | 'list_of_strings'
+export type ParentColumnOptionKey =
+  | 'status'
+  | 'folderStatus'
+  | 'folderType'
+  | 'taskType'
+  | 'taskStatus'
+  | 'productType'
+  | 'assignee'
+  | 'tag'
+
+export type ParentColumnDefinition = {
+  scope: EntityType
+  field: string
+  label: string
+  id?: string
+  optionKey?: ParentColumnOptionKey
+  dataType?: ParentColumnDataType
+  readOnly?: boolean
+  sortable?: boolean
+  includeAttributes?: boolean
+  updateField?: string
+  fallbackToPrimary?: boolean
+}
+
+export const ENTITY_FIELD_SUPPORT: Record<string, readonly EntityType[]> = {
+  status: ['folder', 'task', 'product', 'version'],
+  subType: ['folder', 'task', 'product'],
+  assignees: ['task'],
+  author: ['version'],
+  version: ['version'],
+  productBaseType: ['product'],
+  tags: ['folder', 'task', 'product', 'version'],
+  createdAt: ['folder', 'task', 'product', 'version'],
+  updatedAt: ['folder', 'task', 'product', 'version'],
+  name: ['folder', 'task', 'product', 'version'],
+  label: ['folder', 'task', 'product', 'version'],
+  thumbnailHash: ['folder', 'task', 'product', 'version'],
+}
+
+export const isFieldSupported = (field: string, entityType: EntityType): boolean => {
+  const supportedEntityTypes = ENTITY_FIELD_SUPPORT[field]
+  return !supportedEntityTypes || supportedEntityTypes.includes(entityType)
+}
+
+export interface TableRow {
+  id: string
+  primary: EntityData
+  parents?: Partial<Record<EntityType, EntityData>>
+  midnightExclusiveFields?: string[]
   isLoading?: boolean
-  metaType?: 'empty' | 'error' // signals the row is a meta row (empty or error state)
-  group?: GroupData // signals it is a group row and has some extra data like label, color, icon
-  thumbnail?: {
-    // if you want to use a thumbnail from a different entity, e.g. latest version of a product
-    entityId: string
-    entityType: string
-    thumbnailHash?: string
-  }
+  metaType?: 'empty' | 'error'
+  group?: GroupData
+  subRows?: TableRow[]
+  childOnlyMatch?: boolean
+}
+
+export const getScopedEntity = (row: TableRow, scope: EntityScope): EntityData | undefined =>
+  scope === 'primary' ? row.primary : row.parents?.[scope]
+
+export const getScopedValue = (
+  row: TableRow,
+  scope: EntityScope,
+  field: string,
+  isAttrib = false,
+): any => {
+  const entity = getScopedEntity(row, scope)
+  if (!entity || (!isAttrib && !isFieldSupported(field, entity.entityType))) return undefined
+  return isAttrib ? entity.attrib?.[field] : entity[field as keyof EntityData]
 }
 
 export type MatchingFolder = FolderListItem & {
@@ -127,7 +198,7 @@ export type EditorVersionNode = {
   hasVersions?: boolean
 }
 
-type EditorProductNode = {
+export type EditorProductNode = {
   id: string
   entityId: string
   entityType: 'product'

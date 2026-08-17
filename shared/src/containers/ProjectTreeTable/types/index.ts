@@ -29,7 +29,13 @@ interface EnumOption extends EnumItem {
 }
 
 export type TreeTableSubType = 'folderType' | 'taskType' | 'productType'
-type BuiltInFieldOptionKey = TreeTableSubType | 'status' | 'folderStatus' | 'assignee' | 'tag'
+type BuiltInFieldOptionKey =
+  | TreeTableSubType
+  | 'status'
+  | 'folderStatus'
+  | 'taskStatus'
+  | 'assignee'
+  | 'tag'
 
 export type BuiltInFieldOptions = {
   [key in BuiltInFieldOptionKey]: EnumOption[]

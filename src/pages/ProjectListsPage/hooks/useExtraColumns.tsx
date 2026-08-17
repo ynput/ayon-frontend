@@ -1,17 +1,12 @@
-import { getValueIdType, TreeTableExtraColumn, TreeTableSubType } from '@shared/containers'
-import { CellWidget, EntityWidget } from '@shared/containers/ProjectTreeTable'
-import clsx from 'clsx'
+import type { EntityType, ParentColumnDefinition, TreeTableExtraColumn } from '@shared/containers'
 import { useMemo } from 'react'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
-import { isEntityRestricted } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
-const typeColumns: Record<
-  TreeTableSubType,
-  { value: TreeTableSubType; label: string; position?: number; readonly?: boolean }
-> = {
-  productType: { value: 'productType', label: 'Product Type' },
-  folderType: { value: 'folderType', label: 'Folder Type' },
-  taskType: { value: 'taskType', label: 'Task Type' },
+export const LISTS_COLUMN_ID_ALIASES = {
+  folderType: 'folder_subType',
+  taskType: 'task_subType',
+  productType: 'product_subType',
+  productBaseType: 'product_productBaseType',
 }
 
 interface useExtraColumnsProps {
@@ -19,154 +14,69 @@ interface useExtraColumnsProps {
 }
 
 const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
-  const extraTypeColumns = useMemo(
-    () =>
-      entityType === 'folder'
-        ? [{ ...typeColumns.folderType, position: 3, readonly: false }]
-        : entityType === 'task'
-        ? [
-            { ...typeColumns.taskType, position: 3, readonly: false },
-            { ...typeColumns.folderType, position: 4, readonly: true },
-          ]
-        : entityType === 'version'
-        ? [
-            { ...typeColumns.productType, position: 3, readonly: true },
-            { ...typeColumns.taskType, position: 4, readonly: true },
-            { ...typeColumns.folderType, position: 5, readonly: true },
-          ]
-        : [],
-    [entityType],
-  )
+  const parentColumns = useMemo<ParentColumnDefinition[]>(() => {
+    const folderType: ParentColumnDefinition = {
+      id: 'folder_subType',
+      scope: 'folder',
+      field: 'subType',
+      label: 'Folder type',
+      optionKey: 'folderType',
+      readOnly: entityType !== 'folder',
+      includeAttributes: false,
+      updateField: 'folderType',
+      fallbackToPrimary: entityType === 'folder',
+    }
+    const taskType: ParentColumnDefinition = {
+      id: 'task_subType',
+      scope: 'task',
+      field: 'subType',
+      label: 'Task type',
+      optionKey: 'taskType',
+      readOnly: entityType !== 'task',
+      includeAttributes: false,
+      updateField: 'taskType',
+      fallbackToPrimary: entityType === 'task',
+    }
+    const productType: ParentColumnDefinition = {
+      id: 'product_subType',
+      scope: 'product',
+      field: 'subType',
+      label: 'Product type',
+      optionKey: 'productType',
+      readOnly: true,
+      includeAttributes: false,
+      updateField: 'productType',
+    }
 
-  // plain readonly value columns only available on version lists
+    if (entityType === 'folder') return []
+    if (entityType === 'task') return [folderType]
+    if (entityType === 'version') {
+      return [
+        productType,
+        taskType,
+        folderType,
+        {
+          id: 'product_productBaseType',
+          scope: 'product',
+          field: 'productBaseType',
+          label: 'Base type',
+          readOnly: true,
+          includeAttributes: false,
+          sortable: false,
+        },
+      ]
+    }
+    return []
+  }, [entityType])
 
-  const versionValueColumns = useMemo<
-    {
-      value: string
-      label: string
-      position: number
-      optionsKey?: TreeTableSubType
-      accessorKey?: string
-      entityType?: 'folder' | 'task' | 'version'
-    }[]
-  >(
-    () =>
-      entityType === 'version'
-        ? [
-            {
-              value: 'productBaseType',
-              label: 'Base type',
-              position: 9,
-              optionsKey: 'productType',
-            },
-          ]
-        : [],
-    [entityType],
-  )
+  const includeParents = useMemo<EntityType[]>(() => {
+    if (entityType === 'folder') return []
+    if (entityType === 'task') return ['folder']
+    if (entityType === 'version') return ['product', 'task', 'folder']
+    return []
+  }, [entityType])
 
-  const extraColumns: TreeTableExtraColumn[] = useMemo(
-    () => [
-      ...versionValueColumns.map(
-        (valueColumn): TreeTableExtraColumn => ({
-          column: {
-            id: valueColumn.value,
-            accessorKey: valueColumn.accessorKey || valueColumn.value,
-            header: valueColumn.label,
-            // reference value of a related entity — no valid backend sort key, would 400 the query
-            enableSorting: false,
-            enableResizing: true,
-            enablePinning: true,
-            enableHiding: true,
-            cell: ({ row, column, table }) => {
-              const meta = table.options.meta
-              const { value, id, type } = getValueIdType(row, valueColumn.accessorKey || column.id)
-              const displayValue = isEntityRestricted(type) ? '' : value
-
-              if (valueColumn.entityType) {
-                return (
-                  <EntityWidget
-                    rowId={id}
-                    className={valueColumn.value}
-                    columnId={column.id}
-                    value={displayValue}
-                    entityId={row.original.taskId}
-                    entityType={valueColumn.entityType}
-                    subType={row.original.taskType}
-                    isLoading={row.original.isLoading}
-                  />
-                )
-              }
-
-              return (
-                <CellWidget
-                  rowId={id}
-                  className={clsx(valueColumn.value, { loading: row.original.isLoading })}
-                  columnId={column.id}
-                  value={displayValue}
-                  options={
-                    valueColumn.optionsKey && !isEntityRestricted(type)
-                      ? meta?.options?.[valueColumn.optionsKey]
-                      : undefined
-                  }
-                  attributeData={{ type: 'string' }}
-                  isReadOnly={true}
-                />
-              )
-            },
-          },
-          position: valueColumn.position,
-        }),
-      ),
-      ...extraTypeColumns.map(
-        (typeColumn): TreeTableExtraColumn => ({
-          column: {
-            id: typeColumn.value,
-            accessorKey: typeColumn.value,
-            enableSorting: true,
-            header: typeColumn.label,
-            enableResizing: true,
-            enablePinning: true,
-            enableHiding: true,
-            cell: ({ row, column, table }) => {
-              const meta = table.options.meta
-              const { value, id, type } = getValueIdType(row, column.id)
-              return (
-                <CellWidget
-                  rowId={id}
-                  className={clsx(typeColumn.value, { loading: row.original.isLoading })}
-                  columnId={column.id}
-                  value={isEntityRestricted(type) ? '' : value}
-                  options={isEntityRestricted(type) ? [] : meta?.options?.[typeColumn.value]}
-                  attributeData={{ type: 'string' }}
-                  isReadOnly={
-                    typeColumn.readonly ||
-                    meta?.readOnly?.includes(column.id) ||
-                    isEntityRestricted(type)
-                  }
-                  onChange={(value) =>
-                    meta?.updateEntities?.([
-                      { field: typeColumn.value, value, id, type, rowId: row.id },
-                    ])
-                  }
-                  pt={{
-                    enum: {
-                      pt: {
-                        template: {
-                          iconOnlyColor: true,
-                        },
-                      },
-                    },
-                  }}
-                />
-              )
-            },
-          },
-          position: typeColumn.position,
-        }),
-      ),
-    ],
-    [extraTypeColumns, versionValueColumns],
-  )
+  const extraColumns: TreeTableExtraColumn[] = []
 
   // some extra columns are added in buildTreeTableColumns based on the entity type
   // (author/version/product are only built for version scope) so only offer them in the
@@ -195,11 +105,14 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
         ]
       : []
 
-  const extraColumnsSettings = [...extraTypeColumns, ...versionValueColumns, ...versionExtraColumns]
+  const extraColumnsSettings = versionExtraColumns
 
   return {
     extraColumns,
     extraColumnsSettings,
+    parentColumns,
+    includeParents,
+    columnIdAliases: LISTS_COLUMN_ID_ALIASES,
   }
 }
 

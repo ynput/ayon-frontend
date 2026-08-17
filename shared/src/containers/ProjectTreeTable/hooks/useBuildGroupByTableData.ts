@@ -122,35 +122,34 @@ const defaultEntityToGroupRow = (
   const typeData = getEntityTypeData(entityType, task.taskType)
   return {
     id: task.id + ROW_ID_SEPARATOR + group, // unique id for the task in the folder
-    entityId: task.id,
-    entityType: entityType,
-    parentId: task.folderId,
-    folderId: task.folderId,
-    name: task.name || '',
-    label: task.label || task.name || '',
-    icon: typeData?.icon || null,
-    color: typeData?.color || null,
-    status: task.status,
-    assignees: task.assignees,
-    tags: task.tags,
-    img: null,
-    subRows: [],
-    subType: task.taskType || null,
-    attrib: task.attrib,
+    primary: {
+      id: task.id,
+      entityType: 'task',
+      name: task.name || '',
+      label: task.label || task.name || '',
+      path: task.parents?.join('/'),
+      hasReviewables: task.hasReviewables || false,
+      status: task.status,
+      assignees: task.assignees,
+      tags: task.tags,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt,
+      thumbnailHash: task.thumbnailHash,
+      attrib: task.attrib,
+      ownAttrib: task.ownAttrib,
+      subType: task.taskType || '',
+      icon: typeData?.icon || null,
+      color: typeData?.color || null,
+      links: linksToTableData(task.links, entityType, {
+        folderTypes: project?.folderTypes || [],
+        productTypes: Object.values(project.productTypes) || [],
+        taskTypes: project?.taskTypes || [],
+      }),
+      subtasks: task.subtasks || [],
+      latestComments: task.latestComments || [],
+    },
     midnightExclusiveFields: task.data?.schedulerSyncData?.allDay ? ['attrib_endDate'] : undefined,
-    ownAttrib: task.ownAttrib,
-    parents: task.parents || [],
-    folder: task.parents?.[task.parents.length - 1] || undefined,
-    createdAt: task.createdAt,
-    updatedAt: task.updatedAt,
-    hasReviewables: task.hasReviewables || false,
-    links: linksToTableData(task.links, entityType, {
-      folderTypes: project?.folderTypes || [],
-      productTypes: Object.values(project.productTypes) || [],
-      taskTypes: project?.taskTypes || [],
-    }),
-    subtasks: task.subtasks || [],
-    latestComments: task.latestComments || [],
+    subRows: [],
   }
 }
 
@@ -200,12 +199,16 @@ const useBuildGroupByTableData = ({
         )
         groupsMap.set(groupValue, {
           id: groupId,
-          name: groupValue,
-          entityType: 'group',
+          primary: {
+            id: groupId,
+            entityType: 'folder',
+            name: groupValue,
+            label: groupData.label,
+            subType: '',
+          },
           subRows: [],
           label: groupData.label,
           group: groupData,
-          links: {},
         })
       }
 
@@ -217,8 +220,13 @@ const useBuildGroupByTableData = ({
           const stat = groupCounts?.get(UNGROUPED_VALUE)
           ungroupedGroup = {
             id: ungroupedId,
-            name: 'Ungrouped',
-            entityType: 'group',
+            primary: {
+              id: ungroupedId,
+              entityType: 'folder',
+              name: 'Ungrouped',
+              label: 'Ungrouped',
+              subType: '',
+            },
             subRows: [],
             label: 'Ungrouped',
             group: {
@@ -227,7 +235,6 @@ const useBuildGroupByTableData = ({
               count: stat?.count,
               percentage: stat?.percentage,
             },
-            links: {},
           }
           // create ungrouped group if it doesn't exist
           groupsMap.set(UNGROUPED_VALUE, ungroupedGroup)
@@ -286,12 +293,15 @@ const useBuildGroupByTableData = ({
               if (groupRow) {
                 groupRow.subRows?.push({
                   id: `${group.value}-next-page`,
-                  name: `Load more tasks...`,
-                  entityType: NEXT_PAGE_ID,
+                  primary: {
+                    id: `${group.value}-next-page`,
+                    entityType: 'folder',
+                    name: 'Load more tasks...',
+                    label: `Next page for ${group.value}`,
+                    subType: '',
+                  },
                   subRows: [],
-                  label: `Next page for ${group.value}`,
                   group: { value: group.value, label: group.value },
-                  links: {},
                 })
               }
             }
