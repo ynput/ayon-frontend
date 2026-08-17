@@ -72,6 +72,21 @@ type WidgetAttributeData = {
 export type CellValue = string | number | boolean
 export type CellValueData = Record<string, any>
 
+const hasCellValueChanged = (
+  nextValue: CellValue | CellValue[],
+  value: CellValue | CellValue[],
+) => {
+  if (Array.isArray(nextValue) || Array.isArray(value)) {
+    if (!Array.isArray(nextValue) || !Array.isArray(value)) return true
+    return (
+      nextValue.length !== value.length ||
+      nextValue.some((item) => !value.some((currentItem) => Object.is(item, currentItem)))
+    )
+  }
+
+  return !Object.is(nextValue, value)
+}
+
 interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   rowId: string
   columnId: string
@@ -167,7 +182,7 @@ export const CellWidget: FC<EditorCellProps> = ({
       // This prevents the dialog from blinking between rows.
       moveToNextRow()
       onChange?.(newValue, key)
-    } else if (key === 'Click' && newValue != value) {
+    } else if (key === 'Click' && hasCellValueChanged(newValue, value)) {
       setEditingCellId(null)
       onChange?.(newValue, key)
     } else {

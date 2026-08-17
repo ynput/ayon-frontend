@@ -1,4 +1,4 @@
-import React, { useState, ReactNode } from 'react'
+import React, { useEffect, useState, ReactNode } from 'react'
 import * as Styled from './Menu.styled'
 import { MenuList } from './MenuList'
 import { MENU_PORTAL_CONTENT_ID } from './MenuContainer'
@@ -42,6 +42,25 @@ interface MenuProps {
   header?: ReactNode
   footer?: string
 }
+
+const findSubMenuItems = (items: MenuItemType[], id: string): MenuItemType[] | undefined => {
+  for (const item of items) {
+    if (item.id === id) return item.items?.length ? item.items : undefined
+    const nested = item.items?.length ? findSubMenuItems(item.items, id) : undefined
+    if (nested) return nested
+  }
+}
+
+// icon/selected/active matter too: toggling a column keeps the same ids but flips its checkmark
+const haveSameItems = (a: MenuItemType[], b: MenuItemType[]) =>
+  a.length === b.length &&
+  a.every(
+    (item, i) =>
+      item.id === b[i].id &&
+      item.icon === b[i].icon &&
+      item.selected === b[i].selected &&
+      item.active === b[i].active,
+  )
 
 export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer = '' }) => {
   const { setPowerpackDialog } = usePowerpack()
@@ -125,6 +144,20 @@ export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer =
     if (e.type === 'mouseenter' || e.type === 'keydown') onMenuEnter(e, menu)
     else if (e.type === 'mouseleave') onMenuLeave(e, menu)
   }
+
+  useEffect(() => {
+    setSubMenus((prev) => {
+      if (!prev.length) return prev
+      const next = prev.flatMap((subMenu) => {
+        const items = findSubMenuItems(menu, subMenu.id)
+        return items ? [{ ...subMenu, items }] : []
+      })
+      const unchanged =
+        next.length === prev.length &&
+        next.every((subMenu, i) => haveSameItems(subMenu.items, prev[i].items))
+      return unchanged ? prev : next
+    })
+  }, [menu])
 
   const handleSubMenuLayout = (
     id: string,

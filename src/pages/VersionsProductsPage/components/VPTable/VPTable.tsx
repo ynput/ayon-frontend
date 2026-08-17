@@ -1,19 +1,19 @@
-import {
-  CellWidget,
-  COLUMN_MIN_SIZE,
-  getValueIdType,
-  getColumnLabel,
-  NEXT_PAGE_ID,
-  ProjectTreeTable,
-} from '@shared/containers'
-import { FC, useMemo } from 'react'
+import { ProjectTreeTable } from '@shared/containers'
+import { FC } from 'react'
 import { useVersionsDataContext } from '../../context/VPDataContext'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
 import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
-import clsx from 'clsx'
-import type { TreeTableExtraColumn } from '@shared/containers/ProjectTreeTable/buildTreeTableColumns'
+import { AddColumnButton } from '@shared/components'
+import styled from 'styled-components'
+import { VP_EXTRA_COLUMNS, VP_PARENT_COLUMNS } from '../VPTableSettings/VPTableSettings'
 
 const VP_EXCLUDED_COLUMNS = ['assignees']
+
+const TableWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+`
 
 interface VPTableProps {
   readOnly?: string[]
@@ -39,202 +39,50 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     versionDetailItem,
   } = contextMenuItems
 
-  const extraColumns = useMemo<TreeTableExtraColumn[]>(
-    () => [
-      {
-        position: 9,
-        column: {
-          id: 'productBaseType',
-          accessorKey: 'productBaseType',
-          header: getColumnLabel('productBaseType'),
-          minSize: COLUMN_MIN_SIZE,
-          enableResizing: true,
-          enablePinning: true,
-          enableHiding: true,
-          cell: ({ row, column, table }) => {
-            const { value, id, type } = getValueIdType(row, column.id)
-            if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
-            const meta = table.options.meta as any
-            return (
-              <CellWidget
-                rowId={id}
-                className={clsx('productBaseType', { loading: row.original.isLoading })}
-                columnId={column.id}
-                value={value}
-                options={meta?.options?.productType}
-                attributeData={{ type: 'string' }}
-                isReadOnly={true}
-              />
-            )
-          },
-        },
-      },
-      {
-        position: 10,
-        column: {
-          id: 'taskType',
-          accessorKey: 'taskType',
-          header: getColumnLabel('taskType'),
-          minSize: COLUMN_MIN_SIZE,
-          enableResizing: true,
-          enablePinning: true,
-          enableHiding: true,
-
-          cell: ({ row, column, table }) => {
-            const { value, id, type } = getValueIdType(row, column.id)
-            if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
-            const meta = table.options.meta as any
-            return (
-              <CellWidget
-                rowId={id}
-                className={clsx('taskType', { loading: row.original.isLoading })}
-                columnId={column.id}
-                value={value}
-                options={meta?.options?.taskType}
-                attributeData={{ type: 'string' }}
-                isReadOnly={true}
-              />
-            )
-          },
-        },
-      },
-      {
-        position: 11,
-        column: {
-          id: 'folderType',
-          accessorKey: 'folderType',
-          header: getColumnLabel('folderType'),
-          minSize: COLUMN_MIN_SIZE,
-          enableResizing: true,
-          enablePinning: true,
-          enableHiding: true,
-          cell: ({ row, column, table }) => {
-            const { value, id, type } = getValueIdType(row, column.id)
-            if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
-            const meta = table.options.meta as any
-            return (
-              <CellWidget
-                rowId={id}
-                className={clsx('folderType', { loading: row.original.isLoading })}
-                columnId={column.id}
-                value={value}
-                options={meta?.options?.folderType}
-                attributeData={{ type: 'string' }}
-                isReadOnly={true}
-              />
-            )
-          },
-        },
-      },
-      {
-        position: 12,
-        column: {
-          id: 'folderStatus',
-          accessorKey: 'folderStatus',
-          header: 'Folder status',
-          minSize: COLUMN_MIN_SIZE,
-          enableResizing: true,
-          enablePinning: true,
-          enableHiding: true,
-          cell: ({ row, column, table }) => {
-            const { value, id, type } = getValueIdType(row, column.id)
-            if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
-            const meta = table.options.meta as any
-            const folderId = row.original.folderId
-            return (
-              <CellWidget
-                rowId={id}
-                className={clsx('folderStatus', { loading: row.original.isLoading })}
-                columnId={column.id}
-                value={value}
-                options={meta?.options?.folderStatus}
-                attributeData={{ type: 'string' }}
-                isReadOnly={
-                  !folderId ||
-                  meta?.readOnly?.includes(column.id) ||
-                  meta?.readOnly?.includes('status')
-                }
-                onChange={(value) =>
-                  folderId &&
-                  meta?.updateEntities?.({
-                    rowId: id,
-                    id: folderId,
-                    type: 'folder',
-                    field: 'status',
-                    value,
-                  })
-                }
-              />
-            )
-          },
-        },
-      },
-      {
-        position: 13,
-        column: {
-          id: 'taskLabel',
-          accessorKey: 'taskLabel',
-          header: 'Task',
-          minSize: COLUMN_MIN_SIZE,
-          enableResizing: true,
-          enablePinning: true,
-          enableHiding: true,
-          cell: ({ row, column }) => {
-            const { value, id, type } = getValueIdType(row, column.id)
-            if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
-            return (
-              <CellWidget
-                rowId={id}
-                className={clsx('taskLabel', { loading: row.original.isLoading })}
-                columnId={column.id}
-                value={value}
-                attributeData={{ type: 'string' }}
-                isReadOnly={true}
-              />
-            )
-          },
-        },
-      },
-    ],
-    [],
-  )
-
   return (
-    <ProjectTreeTable
-      scope={'versions-and-products'}
-      sliceId={''}
-      // pagination
-      onScrollBottom={() => fetchNextPage()}
-      onScrollBottomGroupBy={(groupValue: string) => fetchNextPage(groupValue)}
-      readOnly={readOnly}
-      excludedColumns={VP_EXCLUDED_COLUMNS}
-      isExpandable={showProducts}
-      isLoading={isLoading}
-      includeLinks={false}
-      showColumnSummaries
-      fieldStats={fieldStats}
-      groupFieldStats={groupFieldStats}
-      fieldStatsLoading={fieldStatsLoading}
-      fieldStatsError={fieldStatsError}
-      mainCountLabels={{ primary: 'products', secondary: 'versions' }}
-      columnsConfig={{
-        name: {
-          display: { path_compact: false, path_full: true },
-        },
-      }}
-      extraColumns={extraColumns}
-      contextMenuItems={[
-        'copy-paste',
-        'show-details',
-        'open-viewer',
-        uploadVersionItem,
-        addToListItem,
-        productDetailItem,
-        versionDetailItem,
-        deleteVersionItem,
-        deleteProductItem,
-      ]}
-    />
+    <TableWrapper>
+      <ProjectTreeTable
+        scope={'versions-and-products'}
+        sliceId={''}
+        // pagination
+        onScrollBottom={() => fetchNextPage()}
+        onScrollBottomGroupBy={(groupValue: string) => fetchNextPage(groupValue)}
+        readOnly={readOnly}
+        excludedColumns={VP_EXCLUDED_COLUMNS}
+        isExpandable={showProducts}
+        isLoading={isLoading}
+        includeLinks={false}
+        includeParents={['folder', 'product', 'task']}
+        parentColumns={VP_PARENT_COLUMNS}
+        showColumnSummaries
+        fieldStats={fieldStats}
+        groupFieldStats={groupFieldStats}
+        fieldStatsLoading={fieldStatsLoading}
+        fieldStatsError={fieldStatsError}
+        mainCountLabels={{ primary: 'products', secondary: 'versions' }}
+        columnsConfig={{
+          name: {
+            display: { path_compact: false, path_full: true },
+          },
+        }}
+        contextMenuItems={[
+          'copy-paste',
+          'show-details',
+          'open-viewer',
+          uploadVersionItem,
+          addToListItem,
+          productDetailItem,
+          versionDetailItem,
+          deleteVersionItem,
+          deleteProductItem,
+        ]}
+      />
+      <AddColumnButton
+        extraColumns={VP_EXTRA_COLUMNS}
+        parentColumns={VP_PARENT_COLUMNS}
+        includeLinks={false}
+      />
+    </TableWrapper>
   )
 }
 

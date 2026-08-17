@@ -21,18 +21,26 @@ export const LEGACY_COLUMN_ID_ALIASES: Record<string, string> = {
   taskName: ENTITY_COLUMN_IDS.task,
 }
 
-export const normalizeColumnId = (columnId: string) =>
-  LEGACY_COLUMN_ID_ALIASES[columnId] || columnId
+export type ColumnIdAliases = Record<string, string>
 
-export const normalizeColumnIdList = (columnIds: string[] = []): string[] =>
-  Array.from(new Set(columnIds.map(normalizeColumnId)))
+export const normalizeColumnId = (columnId: string, aliases: ColumnIdAliases = {}) =>
+  aliases[columnId] || LEGACY_COLUMN_ID_ALIASES[columnId] || columnId
 
-const normalizeColumnRecord = <T>(record: Record<string, T> = {}): Record<string, T> => {
+export const normalizeColumnIdList = (
+  columnIds: string[] = [],
+  aliases: ColumnIdAliases = {},
+): string[] =>
+  Array.from(new Set(columnIds.map((columnId) => normalizeColumnId(columnId, aliases))))
+
+const normalizeColumnRecord = <T>(
+  record: Record<string, T> = {},
+  aliases: ColumnIdAliases = {},
+): Record<string, T> => {
   const normalized: Record<string, T> = {}
 
   // Keep an explicitly saved canonical value when both ids are present.
   Object.entries(record).forEach(([columnId, value]) => {
-    const normalizedId = normalizeColumnId(columnId)
+    const normalizedId = normalizeColumnId(columnId, aliases)
     if (normalized[normalizedId] === undefined || normalizedId === columnId) {
       normalized[normalizedId] = value
     }
@@ -41,21 +49,24 @@ const normalizeColumnRecord = <T>(record: Record<string, T> = {}): Record<string
   return normalized
 }
 
-export const normalizeColumnsConfig = (config?: ColumnsConfig): ColumnsConfig => {
+export const normalizeColumnsConfig = (
+  config?: ColumnsConfig,
+  aliases: ColumnIdAliases = {},
+): ColumnsConfig => {
   if (!config) return {} as ColumnsConfig
 
   const columnPinning: ColumnPinningState = {
     ...config.columnPinning,
-    left: normalizeColumnIdList(config.columnPinning?.left),
-    right: normalizeColumnIdList(config.columnPinning?.right),
+    left: normalizeColumnIdList(config.columnPinning?.left, aliases),
+    right: normalizeColumnIdList(config.columnPinning?.right, aliases),
   }
 
-  const columnSizing: ColumnSizingState = normalizeColumnRecord(config.columnSizing)
-  const columnVisibility: VisibilityState = normalizeColumnRecord(config.columnVisibility)
-  const columnOrder: ColumnOrderState = normalizeColumnIdList(config.columnOrder)
+  const columnSizing: ColumnSizingState = normalizeColumnRecord(config.columnSizing, aliases)
+  const columnVisibility: VisibilityState = normalizeColumnRecord(config.columnVisibility, aliases)
+  const columnOrder: ColumnOrderState = normalizeColumnIdList(config.columnOrder, aliases)
   const sorting: SortingState | undefined = config.sorting?.map((sort) => ({
     ...sort,
-    id: normalizeColumnId(sort.id),
+    id: normalizeColumnId(sort.id, aliases),
   }))
 
   return {
@@ -65,8 +76,8 @@ export const normalizeColumnsConfig = (config?: ColumnsConfig): ColumnsConfig =>
     columnSizing,
     columnVisibility,
     sorting,
-    columnSummaries: normalizeColumnRecord(config.columnSummaries),
-    columnSummaryScopes: normalizeColumnRecord(config.columnSummaryScopes),
-    columnSummaryFormats: normalizeColumnRecord(config.columnSummaryFormats),
+    columnSummaries: normalizeColumnRecord(config.columnSummaries, aliases),
+    columnSummaryScopes: normalizeColumnRecord(config.columnSummaryScopes, aliases),
+    columnSummaryFormats: normalizeColumnRecord(config.columnSummaryFormats, aliases),
   }
 }

@@ -80,7 +80,13 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
             {shortcut}
           </ShortcutTag>
         )}
-        {active && <Icon icon="check" style={{ marginLeft: 'auto' }} />}
+        {/* keeps the slot when unchecked so toggling doesn't resize the menu */}
+        {active !== undefined && (
+          <Icon
+            icon="check"
+            style={{ marginLeft: 'auto', visibility: active ? 'visible' : 'hidden' }}
+          />
+        )}
 
         {!!items.length && <Icon icon="arrow_right" className="more" />}
       </Styled.Item>

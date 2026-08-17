@@ -6,7 +6,7 @@ import { useCallback } from 'react'
 import { InheritedDependent } from './useFolderRelationships'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { OperationModel } from '../types/operations'
-import { PatchOperation } from '../types'
+import { EntityData, PatchOperation } from '../types'
 import { HistoryEntityUpdate, UseHistoryReturn } from './useHistory'
 import { useProjectContext } from '@shared/context'
 
@@ -35,6 +35,7 @@ export type EntityUpdate = {
   type: string
   field: string
   value: CellValue | CellValue[] | null
+  entityData?: EntityData
   isAttrib?: boolean
   isLink?: boolean // link updates use different endpoint
   meta?: Record<string, any>
@@ -91,7 +92,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       // Filter out folder type updates for folders with versions
       const filteredUpdates = entityUpdates.filter((entity) => {
         if (entity.field === 'folderType' && entity.type === 'folder') {
-          const entityData = getEntityById(entity.id)
+          const entityData = getEntityById(entity.id) || entity.entityData
           if (entityData?.hasVersions) {
             return false
           }
@@ -119,8 +120,8 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       // Record history of previous values before applying update
       if (pushHistory && pushToHistory) {
         const inverseEntities: HistoryEntityUpdate[] = entityUpdates.map(
-          ({ rowId, id, type, field, isAttrib, meta }) => {
-            const entityData = getEntityById(id) as Record<string, any>
+          ({ rowId, id, type, field, isAttrib, meta, entityData: suppliedEntityData }) => {
+            const entityData = (getEntityById(id) || suppliedEntityData) as Record<string, any>
             if (!entityData) {
               throw 'Entity not found: ' + id
             }
@@ -148,8 +149,8 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
           },
         )
         const historyEntities: HistoryEntityUpdate[] = entityUpdates.flatMap(
-          ({ rowId, id, type, field, value, isAttrib, meta }) => {
-            const entityData = getEntityById(id)
+          ({ rowId, id, type, field, value, isAttrib, meta, entityData: suppliedEntityData }) => {
+            const entityData = getEntityById(id) || suppliedEntityData
             const entityId = entityData?.entityId || entityData?.id || id
 
             if (!entityData) return []
@@ -179,8 +180,8 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       // Group operations by entity type for bulk processing
       let operations: OperationWithRowId[] = []
       for (const entity of entityUpdates) {
-        let { id, type, field, value, isAttrib, meta } = entity
-        const entityData = getEntityById(id)
+        let { id, type, field, value, isAttrib, meta, entityData: suppliedEntityData } = entity
+        const entityData = getEntityById(id) || suppliedEntityData
         const entityId = entityData?.entityId || entityData?.id || id
         // Skip unsupported entity types
         let entityType = type as OperationModel['entityType']

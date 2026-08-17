@@ -21,6 +21,8 @@ interface MenuListProps {
   level: number
   id?: string
   parentRef?: HTMLElement | null
+  /** consumed here so the spread below doesn't leak it onto the DOM wrapper */
+  parentEl?: HTMLElement | null
   style?: React.CSSProperties
   /** Placement of THIS menu relative to its parent. Inherited by descendants so once
    *  a chain flips to one side it stays there. */
@@ -42,6 +44,7 @@ export const MenuList: React.FC<MenuListProps> = ({
   level,
   id = 'root-menu',
   parentRef,
+  parentEl: _parentEl,
   style,
   placement,
   onClose,
@@ -76,7 +79,8 @@ export const MenuList: React.FC<MenuListProps> = ({
     // Use the parent's visible width as the initial estimate — sub-menus tend to be
     // similar size or smaller. Falls back to 240 if parent is unusually narrow.
     const estimatedWidth = Math.max(240, parentVisibleRect.width)
-    const estimatedHeight = Math.min(items.length * 36 + 16, 480)
+    // sub-menus may run all the way to the bottom of the window and scroll from there
+    const estimatedHeight = Math.min(items.length * 36 + 16, viewportHeight - 2 * 8)
 
     // Choose horizontal placement. If an ancestor sub-menu has already flipped to the
     // left, every descendant sub-menu also goes left — DetailsPanel scenarios put the
@@ -125,6 +129,7 @@ export const MenuList: React.FC<MenuListProps> = ({
       style: {
         top: viewportTop - offsetParentRect.top,
         left: wrapperLeft - offsetParentRect.left,
+        maxHeight: viewportHeight - viewportTop - padding,
       },
       items,
       level: level,
@@ -174,7 +179,6 @@ export const MenuList: React.FC<MenuListProps> = ({
     // wrapper such that the visible-menu edge — not the wrapper edge — lines up.
     const subMenuPaddingLeft = ownVisibleRect.left - wrapperRect.left
     const visibleWidth = ownVisibleRect.width
-    const visibleHeight = ownVisibleRect.height
 
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
@@ -212,9 +216,11 @@ export const MenuList: React.FC<MenuListProps> = ({
     const desiredFirstItemTop = parentItemRect.top
     const currentFirstItemTop = firstItemRect ? firstItemRect.top : wrapperRect.top + 8
     const deltaY = desiredFirstItemTop - currentFirstItemTop
+    const contentHeight = ownVisibleEl.scrollHeight
     let viewportTop = wrapperRect.top + deltaY
-    if (viewportTop + visibleHeight > viewportHeight - padding) {
-      viewportTop = Math.max(padding, viewportHeight - visibleHeight - padding)
+    if (viewportTop + contentHeight > viewportHeight - padding) {
+      const fittedHeight = Math.min(contentHeight, viewportHeight - 2 * padding)
+      viewportTop = Math.max(padding, viewportHeight - fittedHeight - padding)
     }
 
     // Wrapper origin: visible target minus the wrapper's left padding when on the left.
@@ -233,7 +239,11 @@ export const MenuList: React.FC<MenuListProps> = ({
     // After a successful update, the new style flows back as props, the effect runs
     // once more, current ≈ target, and the guard is a no-op. No infinite loop.
     if (Math.abs(targetTop - currentTop) > 1 || Math.abs(targetLeft - currentLeft) > 1) {
-      onSubMenuLayout(id, { top: targetTop, left: targetLeft }, nextPlacement)
+      onSubMenuLayout(
+        id,
+        { top: targetTop, left: targetLeft, maxHeight: viewportHeight - viewportTop - padding },
+        nextPlacement,
+      )
     }
   }, [subMenu, items, parentRef, id, placement, style?.top, style?.left, onSubMenuLayout])
 

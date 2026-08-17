@@ -12,7 +12,7 @@ const TASKS_INFINITE_QUERY_COUNT = 100
 import { LoadingTasks } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { TableGroupBy } from '../context'
-import { linksToTableData } from '../utils'
+import { buildFolderTableRow, buildTaskTableRow, linksToTableData } from '../utils'
 import { useProjectContext } from '@shared/context'
 
 type Params = {
@@ -126,40 +126,24 @@ export default function useBuildProjectDataTable({
     // Helper function to create a task row
     const createTaskRow = (task: EditorTaskNode, parentId?: string): TableRow => {
       const typeData = getEntityTypeData('task', task.taskType)
+      const row = buildTaskTableRow(task, foldersMap.get(parentId || task.folderId))
+      row.primary.icon = typeData?.icon || null
+      row.primary.color = typeData?.color || null
+      row.primary.links = linksToTableData(task.links, 'task', project.anatomy)
+      row.subRows = []
+      return row
+    }
 
-      const links = linksToTableData(task.links, 'task', project.anatomy)
-
-      return {
-        id: task.id,
-        entityType: 'task',
-        parentId: parentId || task.folderId,
-        folderId: task.folderId,
-        name: task.name || '',
-        label: task.label || task.name || '',
-        icon: typeData?.icon || null,
-        color: typeData?.color || null,
-        status: task.status,
-        assignees: task.assignees,
-        tags: task.tags,
-        img: null,
-        subRows: [],
-        subType: task.taskType || null,
-        attrib: task.attrib,
-        midnightExclusiveFields: task.data?.schedulerSyncData?.allDay
-          ? ['attrib_endDate']
-          : undefined,
-        ownAttrib: task.ownAttrib,
-        parents: task.parents || [],
-        path: task.parents.join('/') || null, // todo: probably remove this and just use parents
-        folder: task.parents[task.parents.length - 1] || undefined,
-        updatedAt: task.updatedAt,
-        createdAt: task.createdAt,
-        thumbnailHash: task.thumbnailHash,
-        hasReviewables: task.hasReviewables || false,
-        links: links,
-        subtasks: task.subtasks || [],
-        latestComments: task.latestComments || [],
-      }
+    const createFolderRow = (
+      folder: typeof foldersMap extends Map<string, infer T> ? T : never,
+    ) => {
+      const typeData = getEntityTypeData('folder', folder.folderType)
+      const row = buildFolderTableRow(folder)
+      row.primary.icon = typeData?.icon || null
+      row.primary.color = typeData?.color || null
+      row.primary.links = linksToTableData(folder.links, 'folder', project.anatomy)
+      row.subRows = []
+      return row
     }
 
     const createRootTaskRows = (): TableRow[] => {
@@ -187,35 +171,8 @@ export default function useBuildProjectDataTable({
         // Skip folders without tasks when showEmptyFolders is off
         if (!showEmptyFolders && !hasTasks) continue
 
-        const folderTypeData = getEntityTypeData('folder', folder.folderType)
-        const links = linksToTableData(folder.links, 'folder', project.anatomy)
-
-        const row: TableRow = {
-          id: folder.id,
-          entityType: 'folder',
-          parentId: undefined, // flat — no parent nesting
-          folderId: folder.id,
-          name: folder.name || '',
-          label: folder.label || folder.name || '',
-          icon: folderTypeData?.icon || null,
-          color: folderTypeData?.color || null,
-          img: null,
-          subRows: [],
-          status: folder.status,
-          tags: folder.tags || [],
-          subType: folder.folderType || null,
-          ownAttrib: folder.ownAttrib || [],
-          path: folder.path,
-          folder: folder.parents[folder.parents.length - 1] || undefined,
-          attrib: folder.attrib || {},
-          childOnlyMatch: folder.childOnlyMatch || false,
-          updatedAt: folder.updatedAt,
-          createdAt: folder.createdAt,
-          thumbnailHash: folder.thumbnailHash,
-          hasReviewables: folder.hasReviewables || false,
-          hasVersions: folder.hasVersions || false,
-          links: links,
-        }
+        const row = createFolderRow(folder)
+        row.childOnlyMatch = folder.childOnlyMatch || false
 
         // If folder is expanded, attach task subRows
         if (expandedFolderIds.has(folder.id)) {
@@ -228,7 +185,7 @@ export default function useBuildProjectDataTable({
             if (loadingTasks[folder.id]) {
               const count = loadingTasks[folder.id]
               if (count > 0) {
-                taskRows.push(...generateLoadingRows(count, { parentId: folder.id }))
+                taskRows.push(...generateLoadingRows(count))
               }
             }
 
@@ -264,9 +221,7 @@ export default function useBuildProjectDataTable({
         // number of tasks we loading with the infinite query
         const count = TASKS_INFINITE_QUERY_COUNT
         if (count > 0) {
-          const loadingTaskRows = generateLoadingRows(count, {
-            type: 'task',
-          })
+          const loadingTaskRows = generateLoadingRows(count)
 
           flatRows.push(...loadingTaskRows)
         }
@@ -284,37 +239,8 @@ export default function useBuildProjectDataTable({
       const folder = foldersMap.get(folderId)
       if (!folder) continue
 
-      const links = linksToTableData(folder.links, 'folder', project.anatomy)
-
-      const folderTypeData = getEntityTypeData('folder', folder.folderType)
-
-      // Create row with minimal required properties
-      const row: TableRow = {
-        id: folderId,
-        entityType: 'folder',
-        parentId: folder.parentId || undefined,
-        folderId: folderId || null, // root folders have no folderId
-        name: folder.name || '',
-        label: folder.label || folder.name || '',
-        icon: folderTypeData?.icon || null,
-        color: folderTypeData?.color || null,
-        img: null,
-        subRows: [],
-        status: folder.status,
-        tags: folder.tags || [],
-        subType: folder.folderType || null,
-        ownAttrib: folder.ownAttrib || [],
-        path: folder.path,
-        folder: folder.parents[folder.parents.length - 1] || undefined,
-        attrib: folder.attrib || {},
-        childOnlyMatch: folder.childOnlyMatch || false,
-        updatedAt: folder.updatedAt,
-        createdAt: folder.createdAt,
-        thumbnailHash: folder.thumbnailHash,
-        hasReviewables: folder.hasReviewables || false,
-        hasVersions: folder.hasVersions || false,
-        links: links,
-      }
+      const row = createFolderRow(folder)
+      row.childOnlyMatch = folder.childOnlyMatch || false
 
       rowsById.set(folderId, row)
 
@@ -343,7 +269,7 @@ export default function useBuildProjectDataTable({
           if (loadingTasks[folderId]) {
             const count = loadingTasks[folderId]
             if (count > 0) {
-              const loadingTaskRows = generateLoadingRows(count, { parentId: folderId })
+              const loadingTaskRows = generateLoadingRows(count)
 
               taskRows.push(...loadingTaskRows)
             }
@@ -375,7 +301,7 @@ export default function useBuildProjectDataTable({
     if (showHierarchy && isLoadingMore) {
       const count = TASKS_INFINITE_QUERY_COUNT
       if (count > 0) {
-        rootRows.push(...generateLoadingRows(count, { type: 'task' }))
+        rootRows.push(...generateLoadingRows(count))
       }
     }
 

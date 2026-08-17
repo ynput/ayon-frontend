@@ -4,7 +4,14 @@
 
 import { TaskLink } from '@shared/api'
 import { parseRowId } from '../context'
-import { EMapResult, EntitiesMap } from '../types'
+import {
+  EMapResult,
+  EntitiesMap,
+  EntityScope,
+  EntityType,
+  getScopedValue,
+  TableRow,
+} from '../types'
 
 // Type definitions for cell identifiers
 export type CellId = string
@@ -15,6 +22,12 @@ export type ColId = string
 export interface CellPosition {
   rowId: RowId
   colId: ColId
+}
+
+export type ScopedColumn = {
+  scope: EntityScope
+  field: string
+  isAttrib: boolean
 }
 
 // Cell border position flags - used for determining which borders to show
@@ -42,8 +55,37 @@ export const parseCellId = (cellId: CellId): CellPosition | null => {
   return { rowId: match[1], colId: match[2] }
 }
 
+const ENTITY_SCOPES = new Set<EntityType>(['folder', 'task', 'product', 'version'])
+
+export const getScopedColumnId = (scope: EntityScope, field: string, isAttrib = false): ColId => {
+  const scopedField = isAttrib ? `attrib_${field}` : field
+  return scope === 'primary' ? scopedField : `${scope}_${scopedField}`
+}
+
+export const parseScopedColumnId = (columnId: ColId): ScopedColumn => {
+  const [prefix, ...rest] = columnId.split('_')
+  const scope =
+    ENTITY_SCOPES.has(prefix as EntityType) && rest.length > 0 ? (prefix as EntityType) : 'primary'
+  const scopedField = (scope === 'primary' ? [prefix, ...rest] : rest).join('_')
+  const isAttrib = scopedField.startsWith('attrib_')
+
+  return {
+    scope,
+    field: isAttrib ? scopedField.slice('attrib_'.length) : scopedField,
+    isAttrib,
+  }
+}
+
+const isTableRow = (value: unknown): value is TableRow =>
+  !!value && typeof value === 'object' && 'primary' in value
+
 export const getCellValue = (obj: any, path: string): any => {
   if (!obj || !path) return undefined
+
+  if (isTableRow(obj)) {
+    const { scope, field, isAttrib } = parseScopedColumnId(path)
+    return getScopedValue(obj, scope, field, isAttrib)
+  }
 
   const parts = path.split('_')
   let current = obj

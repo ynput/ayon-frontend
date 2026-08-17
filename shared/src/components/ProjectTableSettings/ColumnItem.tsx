@@ -39,6 +39,7 @@ const SettingsPanelItemTemplateStyled = styled(SettingsPanelItemTemplate)`
 `
 
 interface ColumnItemProps {
+  id?: string
   column: SettingsPanelItem
   isPinned: boolean
   isHidden: boolean
@@ -46,11 +47,13 @@ interface ColumnItemProps {
   isDisabled?: boolean
   dragHandleProps?: any
   dragOverlay?: boolean
+  hideDragHandle?: boolean
   onTogglePinning?: (columnId: string) => void
   onToggleVisibility?: (columnId: string) => void
 }
 
 const ColumnItem: FC<ColumnItemProps> = ({
+  id,
   column,
   isPinned,
   isHidden,
@@ -59,6 +62,7 @@ const ColumnItem: FC<ColumnItemProps> = ({
   // Dragging props
   dragHandleProps,
   dragOverlay = false,
+  hideDragHandle = false,
   // Callbacks
   onTogglePinning,
   onToggleVisibility,
@@ -82,15 +86,18 @@ const ColumnItem: FC<ColumnItemProps> = ({
 
   return (
     <SettingsPanelItemTemplateStyled
+      id={id}
       item={column}
       actions={itemActions}
       isHighlighted={isHighlighted}
       isDisabled={isDisabled}
       className={clsx({ hidden: isHidden, overlay: dragOverlay })}
       startContent={
-        <div {...dragHandleProps} className={'drag-handle'}>
-          <Icon icon="drag_indicator" />
-        </div>
+        hideDragHandle ? undefined : (
+          <div {...dragHandleProps} className="drag-handle">
+            <Icon icon="drag_indicator" />
+          </div>
+        )
       }
     />
   )

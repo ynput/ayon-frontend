@@ -66,8 +66,11 @@ export const useVPColumnStats = ({
         columnSummaries,
         columnSummaryScopes,
         extraFields:
-          checkColumnVisibility(columnVisibility, 'productBaseType', defaultColumnVisibility) &&
-          isSummaryActive('productBaseType', columnSummaries, columnSummaryScopes)
+          checkColumnVisibility(
+            columnVisibility,
+            'product_productBaseType',
+            defaultColumnVisibility,
+          ) && isSummaryActive('product_productBaseType', columnSummaries, columnSummaryScopes)
             ? ['product_base_type']
             : [],
       }),
