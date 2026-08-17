@@ -5,13 +5,15 @@ interface Options {
   enabled?: boolean
 }
 
-// the details panel rewrites the same param for the entity it opens, so the selection is
-// held here and only mirrored to the URL, never read back from it
+// not `project`: the details panel rewrites that one for every entity it opens, which would
+// silently move the inbox to another project
+const PARAM_KEY = 'inboxProject'
+
 const useInboxProject = ({ enabled = true }: Options = {}): [
   string | null,
   (projectName: string | null) => void,
 ] => {
-  const [urlProject, setUrlProject] = useQueryParam<string | undefined>('project')
+  const [urlProject, setUrlProject] = useQueryParam<string | undefined>(PARAM_KEY)
 
   // a link opens on the project it names, after that the selection drives the URL
   const [selected, setSelected] = useState<string | null>(urlProject ?? null)

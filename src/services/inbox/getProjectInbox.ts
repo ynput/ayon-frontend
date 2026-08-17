@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { gqlApi } from '@shared/api'
 import type { GetProjectInboxQuery, GetProjectInboxQueryVariables } from '@shared/api'
 import { createRealtimeBatcher, PubSub } from '@shared/util'
@@ -27,6 +28,21 @@ export interface ProjectInboxInfiniteArgs {
   active: boolean
   important: boolean | null
 }
+
+const cacheKeyOf = ({
+  projectName,
+  userName,
+  referenceTypes,
+  activityTypes,
+  filter,
+  active,
+  important,
+}: ProjectInboxInfiniteArgs) =>
+  JSON.stringify([projectName, userName, referenceTypes, activityTypes, filter, active, important])
+
+// a cache entry outlives its component by keepUnusedDataFor and keeps subscribing to the
+// websocket, so a message would top up every filter used in the last 30 seconds
+const rendered = new Map<string, number>()
 
 type PageParams = { last: number; cursor?: string | null; activityIds?: string[] | null }
 
@@ -142,6 +158,7 @@ export const projectInboxApi = gqlApi.injectEndpoints({
 
           const handlePubSub = (topic: string, message: InboxPubSubMessage) => {
             if (topic !== 'inbox.message') return
+            if (!rendered.has(cacheKeyOf(queryArg))) return
             if (message?.project !== queryArg.projectName) return
             // a new message is always active, so the cleared tab can never gain one
             if (!queryArg.active) return
@@ -167,4 +184,26 @@ export const projectInboxApi = gqlApi.injectEndpoints({
   }),
 })
 
-export const { useGetProjectInboxInfiniteInfiniteQuery } = projectInboxApi
+const { useGetProjectInboxInfiniteInfiniteQuery } = projectInboxApi
+
+export const useGetProjectInboxInfinite = (
+  args: ProjectInboxInfiniteArgs,
+  options?: { skip?: boolean },
+) => {
+  const key = cacheKeyOf(args)
+
+  useEffect(() => {
+    rendered.set(key, (rendered.get(key) ?? 0) + 1)
+    return () => {
+      const left = (rendered.get(key) ?? 1) - 1
+      if (left > 0) rendered.set(key, left)
+      else rendered.delete(key)
+    }
+  }, [key])
+
+  // an unrendered entry misses the messages it was not topped up with, so going back to it refetches
+  return useGetProjectInboxInfiniteInfiniteQuery(args, {
+    ...options,
+    refetchOnMountOrArgChange: true,
+  })
+}

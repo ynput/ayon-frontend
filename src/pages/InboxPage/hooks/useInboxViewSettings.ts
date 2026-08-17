@@ -1,7 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { toast } from 'react-toastify'
-import { generateWorkingView, useViewsContext, useViewUpdateHelper } from '@shared/containers'
-import { useCreateViewMutation } from '@shared/api'
+import { useCallback, useEffect, useState } from 'react'
+import { useViewsContext, useViewUpdateHelper } from '@shared/containers'
 import type { QueryFilter } from '@shared/api'
 
 export type InboxViewSettings = {
@@ -20,30 +18,10 @@ type Return = {
 }
 
 const useInboxViewSettings = (): Return => {
-  const { viewType, viewSettings, isLoadingViews, setSelectedView } = useViewsContext()
+  const { viewSettings, isLoadingViews } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
-  const [createView] = useCreateViewMutation()
 
   const settings = viewSettings as InboxViewSettings | undefined
-
-  // a tab's first visit has no view to write to, and updates abort without a baseline
-  const bootstrapped = useRef<Set<string>>(new Set())
-  useEffect(() => {
-    if (!viewType || isLoadingViews || viewSettings !== undefined) return
-    if (bootstrapped.current.has(viewType)) return
-    bootstrapped.current.add(viewType)
-
-    const workingView = generateWorkingView()
-    createView({ viewType, payload: workingView })
-      .unwrap()
-      .then(() => setSelectedView(workingView.id as string))
-      .catch((error) => {
-        // drop the mark so it can retry, otherwise nothing ever persists
-        bootstrapped.current.delete(viewType)
-        console.error('Failed to create inbox working view:', error)
-        toast.error('Inbox filters cannot be saved right now')
-      })
-  }, [viewType, viewSettings, isLoadingViews, createView, setSelectedView])
 
   const [localFilter, setLocalFilter] = useState<QueryFilter | null>(null)
   const [localUnreadOnly, setLocalUnreadOnly] = useState<boolean | null>(null)

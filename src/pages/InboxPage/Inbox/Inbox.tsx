@@ -10,7 +10,7 @@ import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
 // Queries
 import { useGetInboxInfiniteInfiniteQuery } from '@queries/inbox/getInbox'
-import { useGetProjectInboxInfiniteInfiniteQuery } from '@queries/inbox/getProjectInbox'
+import { useGetProjectInboxInfinite } from '@queries/inbox/getProjectInbox'
 import { useGetProjectsInfoQuery } from '@shared/api'
 // Components
 import { Button } from '@ynput/ayon-react-components'
@@ -163,7 +163,7 @@ const Inbox = ({ filter }: InboxProps) => {
   const globalQuery = useGetInboxInfiniteInfiniteQuery(globalArgs, {
     skip: isProjectMode || isLoadingViews,
   })
-  const projectQuery = useGetProjectInboxInfiniteInfiniteQuery(projectArgs, {
+  const projectQuery = useGetProjectInboxInfinite(projectArgs, {
     skip: !isKnownProject || isLoadingViews,
   })
 

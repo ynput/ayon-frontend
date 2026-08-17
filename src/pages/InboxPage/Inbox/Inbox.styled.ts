@@ -35,6 +35,10 @@ export const ProjectsSplitter = styled(Splitter)`
     z-index: 50;
   }
 
+  .projects-list-header {
+    margin-bottom: var(--base-gap-large);
+  }
+
   &.no-projects {
     & > .p-splitter-panel:first-child,
     & > .p-splitter-gutter {
