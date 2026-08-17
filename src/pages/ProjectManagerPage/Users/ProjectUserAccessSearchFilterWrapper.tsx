@@ -67,7 +67,7 @@ const ProjectUserAccessSearchFilterWrapper = ({
         onSearchChange?.(searchText)
         onChange(v.filter((f: Filter) => !f.id.startsWith(SEARCH_FILTER_ID)))
       }}
-      enableAutosuggestion={true}
+      enableAutosuggestion={false}
       enableGlobalSearch={true}
       onSearchChange={(text, filter) => {
         // only fire for root-level (no active filter panel) searches

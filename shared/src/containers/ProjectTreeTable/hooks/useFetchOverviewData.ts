@@ -393,7 +393,7 @@ export const useFetchOverviewData = ({
 
   // Create sort params for infinite query
   const singleSort = { ...sorting[0] }
-  const sortId = getColumnSortKey(singleSort?.id, showHierarchy)
+  const taskSortId = getColumnSortKey(singleSort?.id, showHierarchy, 'task')
   const tasksFolderIdsParams = selectedFolders.length
     ? Array.from(
         new Set([...foldersMap.keys(), ...(excludeSelectedFolders ? selectedFolders : [])]),
@@ -415,7 +415,7 @@ export const useFetchOverviewData = ({
       ? undefined
       : hierarchySlicerFolderIds ?? (selectedFolders.length ? selectedFolders : undefined),
     taskIds: taskIds?.length ? taskIds : undefined,
-    sortBy: sortId ? sortId.replace('_', '.') : undefined,
+    sortBy: taskSortId ? taskSortId.replace('_', '.') : undefined,
     desc: !!singleSort?.desc,
     showComments,
     includeFolderChildren: !hierarchySlicerFolderIds,
@@ -492,7 +492,7 @@ export const useFetchOverviewData = ({
   const groupTasksArgs: GetGroupedTasksListArgs = {
     projectName,
     groups: groupQueries,
-    sortBy: sortId ? sortId.replace('_', '.') : undefined,
+    sortBy: taskSortId ? taskSortId.replace('_', '.') : undefined,
     desc: !!singleSort?.desc,
     search: taskFilters.search,
     folderFilter: folderFilters.filterString,

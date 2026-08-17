@@ -10,6 +10,7 @@ const Container = styled.div`
 
   input {
     width: 100%;
+    min-width: 0;
   }
 `
 

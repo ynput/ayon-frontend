@@ -11,8 +11,6 @@ const SidePanel = styled.div<{ open: boolean }>`
   overflow: hidden;
   background-color: var(--md-sys-color-surface-container-low);
   border-radius: 4px;
-  /* firefox repaints child borders unreliably inside a rounded overflow clip */
-  box-shadow: inset 1px 0 0 var(--md-sys-color-outline-variant);
   z-index: 10;
   display: flex;
   flex-direction: column;

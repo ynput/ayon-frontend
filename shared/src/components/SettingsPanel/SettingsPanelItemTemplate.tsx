@@ -24,6 +24,10 @@ const Item = styled.li`
     min-width: 0;
   }
 
+  .label-path {
+    color: var(--md-sys-color-outline);
+  }
+
   &.highlighted {
     background-color: var(--md-sys-color-secondary-container);
     color: var(--md-sys-color-on-secondary-container);
@@ -37,10 +41,13 @@ const Item = styled.li`
     background-color: var(--md-sys-color-surface-container-high);
   }
 
+  &.no-hover:hover {
+    background-color: unset;
+  }
+
   &.disabled {
     opacity: 0.5;
     user-select: none;
-    pointer-events: none;
     &:hover {
       background-color: unset;
     }
@@ -78,12 +85,14 @@ export type SettingsPanelItem = {
   value: string
   label: string
   icon?: string
+  path?: string
 }
 
 export interface SettingsPanelItemTemplateProps extends React.HTMLAttributes<HTMLLIElement> {
   item: SettingsPanelItem
   isHighlighted?: boolean
   isDisabled?: boolean
+  disableHover?: boolean
   startContent?: React.ReactNode
   endContent?: React.ReactNode
   actions?: Action[]
@@ -91,7 +100,17 @@ export interface SettingsPanelItemTemplateProps extends React.HTMLAttributes<HTM
 
 export const SettingsPanelItemTemplate = forwardRef<HTMLLIElement, SettingsPanelItemTemplateProps>(
   (
-    { item, actions, startContent, endContent, isHighlighted, isDisabled, className, ...props },
+    {
+      item,
+      actions,
+      startContent,
+      endContent,
+      isHighlighted,
+      isDisabled,
+      disableHover,
+      className,
+      ...props
+    },
     ref,
   ) => {
     return (
@@ -99,13 +118,17 @@ export const SettingsPanelItemTemplate = forwardRef<HTMLLIElement, SettingsPanel
         className={clsx('setting-item', className, {
           highlighted: isHighlighted,
           disabled: isDisabled,
+          'no-hover': disableHover,
         })}
         {...props}
         ref={ref}
       >
         {startContent}
         {item.icon && <Icon icon={item.icon} />}
-        <span className="label">{item.label}</span>
+        <span className="label">
+          {item.path && <span className="label-path">{item.path} / </span>}
+          {item.label}
+        </span>
         <Actions className="actions">
           {actions?.map(({ icon, className, active, onClick, ...action }, index) => (
             <ActionButton

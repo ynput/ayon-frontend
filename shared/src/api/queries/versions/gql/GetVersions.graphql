@@ -5,7 +5,10 @@ query GetVersions(
   $versionFilter: String
   $productFilter: String
   $taskFilter: String
+  $folderFilter: String
   $featuredOnly: [String!]
+  $featuredOnlyEntityType: String
+  $latestPerFolder: Boolean
   $hasReviewables: Boolean
   $folderIds: [String!]
   $search: String
@@ -23,7 +26,10 @@ query GetVersions(
       filter: $versionFilter
       productFilter: $productFilter
       taskFilter: $taskFilter
+      folderFilter: $folderFilter
       featuredOnly: $featuredOnly
+      featuredOnlyEntityType: $featuredOnlyEntityType
+      latestPerFolder: $latestPerFolder
       hasReviewables: $hasReviewables
       folderIds: $folderIds
       includeFolderChildren: true

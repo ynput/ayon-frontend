@@ -37,17 +37,55 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-ki
 // Notification imports
 import { toast } from 'react-toastify'
 import { checkColumnVisibility } from '../../containers/ProjectTreeTable/utils'
-import { SettingsPanelItem } from '../SettingsPanel/SettingsPanelItemTemplate'
 import { SettingHighlightedId, useMenuContext } from '@shared/context'
 import type { MenuItemType } from '../Menu'
-import { buildAddColumnsMenu } from './addColumnsMenu'
+import { AddColumnItem, buildAddColumnsMenu, getAddColumnSection } from './addColumnsMenu'
 import { AddColumnMenu } from './AddColumnMenu'
 import { TableSearch } from '../TableSearch'
+import {
+  SettingsPanelItemTemplate,
+  SettingsPanelItemTemplateProps,
+} from '../SettingsPanel/SettingsPanelItemTemplate'
+import { InputSwitch } from '@ynput/ayon-react-components'
 
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'
+const NO_SCOPES: string[] = []
+
+export interface SettingSwitchProps
+  extends Omit<SettingsPanelItemTemplateProps, 'onChange' | 'item'> {
+  icon?: string
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+  disabled?: boolean
+}
+
+export const SettingSwitch: FC<SettingSwitchProps> = ({
+  icon,
+  label,
+  checked,
+  onChange,
+  disabled,
+  ...props
+}) => (
+  <SettingsPanelItemTemplate
+    item={{ value: label, label, icon }}
+    isDisabled={disabled}
+    style={{ paddingRight: 8 }}
+    disableHover
+    endContent={
+      <InputSwitch
+        checked={checked}
+        disabled={disabled}
+        onChange={(event) => onChange(event.currentTarget.checked)}
+      />
+    }
+    {...props}
+  />
+)
 
 interface ColumnsSettingsProps {
-  columns: SettingsPanelItem[]
+  columns: AddColumnItem[]
   highlighted?: SettingHighlightedId
   columnVisibility: VisibilityState
   updateColumnVisibility: (visibility: VisibilityState) => void
@@ -65,6 +103,7 @@ interface ColumnsSettingsProps {
   columnSummaryFormats?: ColumnsConfig['columnSummaryFormats']
   groupByConfig?: ColumnsConfig['groupByConfig']
   addColumnMenuItems?: MenuItemType[]
+  scopes?: string[]
   // when a string (including ''), the panel switches to a flat searchable list of all columns
   search?: string | null
   onSearchChange?: (search: string | null) => void
@@ -89,6 +128,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   columnSummaryFormats,
   groupByConfig,
   addColumnMenuItems,
+  scopes = NO_SCOPES,
   search,
   onSearchChange,
 }) => {
@@ -135,14 +175,11 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     }),
   )
 
-  // Separate columns into visible, hidden, and pinned
-  const { visibleColumns, hiddenColumns, pinnedColumns } = useMemo(() => {
+  // Separate columns into visible and pinned
+  const { visibleColumns, pinnedColumns } = useMemo(() => {
     // First filter columns by visibility
     const visible = columns.filter((col) =>
       checkColumnVisibility(columnVisibility, col.value, defaultColumnVisibility),
-    )
-    const hidden = columns.filter(
-      (col) => !checkColumnVisibility(columnVisibility, col.value, defaultColumnVisibility),
     )
 
     // Then separate out pinned columns from visible
@@ -151,7 +188,6 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
 
     return {
       visibleColumns: unpinnedVisible,
-      hiddenColumns: hidden,
       pinnedColumns: pinned,
     }
   }, [columns, columnVisibility, columnPinning, defaultColumnVisibility])
@@ -210,23 +246,39 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     [sortedPinnedColumns],
   )
 
-  const filteredColumns = useMemo(() => {
+  // search results show the add-column menu path so nested columns are identifiable
+  const searchResults = useMemo(() => {
     if (typeof search !== 'string') return []
-    const query = search.toLowerCase()
-    return columns.filter((col) => col.label.toLowerCase().includes(query))
-  }, [columns, search])
+    const terms = search.toLowerCase().split(/\s+/).filter(Boolean)
+    return columns
+      .map((col) => ({ ...col, path: getAddColumnSection(col, scopes)?.label }))
+      .filter((col) => {
+        const searchable = [col.path, col.label].filter(Boolean).join(' / ').toLowerCase()
+        return terms.every((term) => searchable.includes(term))
+      })
+      // default column order, but grouped (sectioned) columns sink to the bottom
+      .toSorted((a, b) => Number(!!a.path) - Number(!!b.path))
+  }, [columns, search, scopes])
 
   // fallback for consumers rendering outside ColumnSettingsContext (e.g. ProjectsPage)
   const fallbackAddColumnMenuItems = useMemo(
     () =>
       buildAddColumnsMenu({
-        columns: hiddenColumns,
-        onAdd: (columnId) => {
+        columns,
+        onToggle: (columnId) => {
           const { columnVisibility, updateColumnVisibility } = latestRef.current
-          updateColumnVisibility({ ...columnVisibility, [columnId]: true })
+          const isVisible = checkColumnVisibility(
+            columnVisibility,
+            columnId,
+            defaultColumnVisibility,
+          )
+          updateColumnVisibility({ ...columnVisibility, [columnId]: !isVisible })
         },
+        isColumnVisible: (columnId) =>
+          checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility),
+        scopes,
       }),
-    [hiddenColumns],
+    [columns, columnVisibility, defaultColumnVisibility, scopes],
   )
 
   const addColumnItems = addColumnMenuItems ?? fallbackAddColumnMenuItems
@@ -424,9 +476,10 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
         <Section>
           <SectionTitle>All Columns</SectionTitle>
           <Styled.Menu>
-            {filteredColumns.map((column) => (
+            {searchResults.map((column) => (
               <ColumnItem
                 key={column.value}
+                id={`column-settings-${column.value}`}
                 column={column}
                 isPinned={columnPinning.left?.includes(column.value) || false}
                 isHidden={
@@ -570,7 +623,7 @@ export default ColumnsSettings
 // Backward-compat wrapper that reads all data from ColumnSettingsContext
 type ColumnsSettingsWithContextProps = Pick<
   ColumnsSettingsProps,
-  'columns' | 'highlighted' | 'addColumnMenuItems' | 'search' | 'onSearchChange'
+  'columns' | 'highlighted' | 'addColumnMenuItems' | 'scopes' | 'search' | 'onSearchChange'
 >
 
 export const ColumnsSettingsWithContext: FC<ColumnsSettingsWithContextProps> = (props) => {

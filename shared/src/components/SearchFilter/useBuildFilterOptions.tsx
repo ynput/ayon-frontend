@@ -11,9 +11,15 @@ import type {
   AttributeData,
 } from '@shared/api'
 import { ColumnOrderState } from '@tanstack/react-table'
-import { Icon, Option, Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
+import {
+  Icon,
+  Option,
+  Filter,
+  SEARCH_FILTER_ID,
+  SearchFilterGroupOption,
+} from '@ynput/ayon-react-components'
 import { customRangeOption, generateDatePresetOptions } from './filterDates'
-import { isEmpty } from 'lodash'
+import { isEmpty, upperFirst } from 'lodash'
 import { SliceFilter } from '@shared/containers'
 import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
 import { useGlobalContext } from '@shared/context'
@@ -35,7 +41,7 @@ export type FilterFieldType =
   | 'attributes'
   | 'status'
   | 'tags'
-  | 'version'
+  | 'version' // version: product latest/hero/latest done/number
   | 'hasReviewables'
   | 'productName'
   | 'name'
@@ -80,6 +86,23 @@ export type BuildFilterOptions = {
   power?: boolean
 }
 
+const FILTER_OPTIONS_ORDER = new Set<FilterFieldType>([
+  'name',
+  'status',
+  'tags',
+  'assignees',
+  'author',
+  'folderType',
+  'taskType',
+  'productType',
+  'productBaseType',
+  'productName',
+  'version',
+  'hasReviewables',
+  'createdAt',
+  'updatedAt',
+])
+
 export const useBuildFilterOptions = ({
   filterTypes: globalFilterTypes = [],
   projectNames,
@@ -87,12 +110,12 @@ export const useBuildFilterOptions = ({
   scopes: customScopes,
   data,
   config,
-  columnOrder = [],
   power,
-}: BuildFilterOptions): Option[] => {
+}: BuildFilterOptions): { options: Option[]; groupOptions: SearchFilterGroupOption[] } => {
   const productTypes = data.productTypes || []
   const productBaseTypes = data.productBaseTypes || []
   let options: Option[] = []
+  const attributeOptionNames = new Map<string, string>()
 
   // Determine which scopes to use
   // If customScopes is provided, use it; otherwise, fall back to the old method
@@ -108,6 +131,12 @@ export const useBuildFilterOptions = ({
       })()
 
   const isMultiScope = scopesWithTypes.length > 1
+  const groupedFilterTypes = new Set(
+    Array.from(new Set(scopesWithTypes.flatMap(({ filterTypes }) => filterTypes))).filter(
+      (filterType) =>
+        scopesWithTypes.filter(({ filterTypes }) => filterTypes.includes(filterType)).length > 1,
+    ),
+  )
 
   // QUERIES
   //
@@ -139,19 +168,28 @@ export const useBuildFilterOptions = ({
   )
 
   const { attributes } = useGlobalContext()
+  const attributeScopeCounts = new Map<string, number>()
+  scopesWithTypes.forEach(({ scope: currentScope, filterTypes }) => {
+    if (!filterTypes.includes('attributes')) return
+
+    attributes
+      .filter((attribute) => attribute.scope?.includes(currentScope))
+      .forEach((attribute) => {
+        attributeScopeCounts.set(
+          attribute.name,
+          (attributeScopeCounts.get(attribute.name) || 0) + 1,
+        )
+      })
+  })
   //
   //
   // QUERIES
 
   // ADD OPTIONS
 
-  // Helper to get scope label (capitalize first letter)
-  const getScopeLabel = (scope: ScopeType) => scope.charAt(0).toUpperCase() + scope.slice(1)
-
   // Loop through each scope to build options
   scopesWithTypes.forEach(({ scope: currentScope, filterTypes: scopeFilterTypes }) => {
-    const scopePrefix = isMultiScope ? currentScope : undefined
-    const scopeLabel = isMultiScope ? getScopeLabel(currentScope) : undefined
+    const entityType = isMultiScope ? currentScope : undefined
 
     // TASK TYPE
     // add taskType option
@@ -162,8 +200,8 @@ export const useBuildFilterOptions = ({
           ...config,
           enableOperatorChange: false,
         },
-        scopePrefix,
-        scopeLabel,
+        entityType,
+        groupedFilterTypes.has('taskType'),
       )
       if (entitySubTypeOption) {
         // get all subTypes for the current scope (entityType)
@@ -184,8 +222,8 @@ export const useBuildFilterOptions = ({
           ...config,
           enableOperatorChange: false,
         },
-        scopePrefix,
-        scopeLabel,
+        entityType,
+        groupedFilterTypes.has('folderType'),
       )
       if (entitySubTypeOption) {
         // get all subTypes for the current scope (entityType)
@@ -206,8 +244,8 @@ export const useBuildFilterOptions = ({
           ...config,
           enableOperatorChange: false,
         },
-        scopePrefix,
-        scopeLabel,
+        entityType,
+        groupedFilterTypes.has('productType'),
       )
       if (entitySubTypeOption) {
         // get all subTypes for the current scope (entityType)
@@ -226,8 +264,8 @@ export const useBuildFilterOptions = ({
           ...config,
           enableOperatorChange: false,
         },
-        scopePrefix,
-        scopeLabel,
+        entityType,
+        groupedFilterTypes.has('productBaseType'),
       )
       if (productBaseTypeOption) {
         productBaseTypes.forEach(({ icon, name }) => {
@@ -254,7 +292,12 @@ export const useBuildFilterOptions = ({
     // PRODUCT NAME
     // add product name option
     if (scopeFilterTypes.includes('productName') && currentScope === 'product') {
-      const productNameOption = getOptionRoot('productName', config, scopePrefix, scopeLabel)
+      const productNameOption = getOptionRoot(
+        'productName',
+        config,
+        entityType,
+        groupedFilterTypes.has('productName'),
+      )
 
       if (productNameOption) {
         // Populate with product names from data as suggestions (optional since allowsCustomValues: true)
@@ -277,8 +320,8 @@ export const useBuildFilterOptions = ({
       const statusOption = getOptionRoot(
         'status',
         { ...config, enableOperatorChange: false },
-        scopePrefix,
-        scopeLabel,
+        entityType,
+        groupedFilterTypes.has('status'),
       )
 
       if (statusOption) {
@@ -305,7 +348,12 @@ export const useBuildFilterOptions = ({
     // ASSIGNEES
     // add users/assignees option
     if (scopeFilterTypes.includes('assignees')) {
-      const assigneesOption = getOptionRoot('assignees', config, scopePrefix, scopeLabel)
+      const assigneesOption = getOptionRoot(
+        'assignees',
+        config,
+        entityType,
+        groupedFilterTypes.has('assignees'),
+      )
 
       if (assigneesOption) {
         // add every user for the projects (skip duplicates)
@@ -332,7 +380,12 @@ export const useBuildFilterOptions = ({
     }
 
     if (scopeFilterTypes.includes('author')) {
-      const authorOption = getOptionRoot('author', config, scopePrefix, scopeLabel)
+      const authorOption = getOptionRoot(
+        'author',
+        config,
+        entityType,
+        groupedFilterTypes.has('author'),
+      )
       if (authorOption) {
         // add every user for the projects (skip duplicates)
         projectUsers.forEach((user) => {
@@ -352,7 +405,7 @@ export const useBuildFilterOptions = ({
     // TAGS
     // add tags options
     if (scopeFilterTypes.includes('tags')) {
-      const tagsOption = getOptionRoot('tags', config, scopePrefix, scopeLabel)
+      const tagsOption = getOptionRoot('tags', config, entityType, groupedFilterTypes.has('tags'))
 
       if (tagsOption) {
         // reduce projectsInfo to get all tags
@@ -405,11 +458,12 @@ export const useBuildFilterOptions = ({
     // VERSION
     // add version options
     if (scopeFilterTypes.includes('version')) {
-      const versionOption = getOptionRoot('version', config, scopePrefix, scopeLabel)
+      const versionOption = getOptionRoot('version', config, entityType)
 
       if (versionOption) {
-        // add featured version types as options
-        FEATURED_VERSION_TYPES.forEach((versionType) => {
+        const versionTypes = FEATURED_VERSION_TYPES
+
+        versionTypes.forEach((versionType) => {
           versionOption.values?.push({
             id: versionType.value,
             label: versionType.label,
@@ -424,7 +478,7 @@ export const useBuildFilterOptions = ({
     // NAME
     // add name filter for custom string input
     if (scopeFilterTypes.includes('name')) {
-      const nameOption = getOptionRoot('name', config, scopePrefix, scopeLabel)
+      const nameOption = getOptionRoot('name', config, entityType, groupedFilterTypes.has('name'))
 
       if (nameOption) {
         options.push(nameOption)
@@ -434,7 +488,12 @@ export const useBuildFilterOptions = ({
     // HAS REVIEWABLES
     // add hasReviewables option
     if (scopeFilterTypes.includes('hasReviewables')) {
-      const hasReviewablesOption = getOptionRoot('hasReviewables', config, scopePrefix, scopeLabel)
+      const hasReviewablesOption = getOptionRoot(
+        'hasReviewables',
+        config,
+        entityType,
+        groupedFilterTypes.has('hasReviewables'),
+      )
 
       if (hasReviewablesOption) {
         const options_list = [
@@ -456,7 +515,12 @@ export const useBuildFilterOptions = ({
 
     // CREATED AT
     if (scopeFilterTypes.includes('createdAt')) {
-      const createdAtOption = getOptionRoot('createdAt', config, scopePrefix, scopeLabel)
+      const createdAtOption = getOptionRoot(
+        'createdAt',
+        config,
+        entityType,
+        groupedFilterTypes.has('createdAt'),
+      )
       if (createdAtOption) {
         createdAtOption.values?.push(customRangeOption)
         // Preset date options are PowerPack-gated
@@ -472,7 +536,12 @@ export const useBuildFilterOptions = ({
 
     // UPDATED AT
     if (scopeFilterTypes.includes('updatedAt')) {
-      const updatedAtOption = getOptionRoot('updatedAt', config, scopePrefix, scopeLabel)
+      const updatedAtOption = getOptionRoot(
+        'updatedAt',
+        config,
+        entityType,
+        groupedFilterTypes.has('updatedAt'),
+      )
       if (updatedAtOption) {
         updatedAtOption.values?.push(customRangeOption)
         updatedAtOption.values?.push(
@@ -523,7 +592,8 @@ export const useBuildFilterOptions = ({
           attribute.data.default !== null &&
           attribute.data.inherit !== false
         // booleans excluded: unset already matches "No", so has/no value would just duplicate it
-        const supportsNullness = (isListOf || isDate || isText || isNumber) && !alwaysResolvesToValue
+        const supportsNullness =
+          (isListOf || isDate || isText || isNumber) && !alwaysResolvesToValue
         const enableRelativeValues = supportsNullness ? config?.enableRelativeValues : false
         // for the attribute, get the option root
         const option = getAttributeFieldOptionRoot(
@@ -534,8 +604,8 @@ export const useBuildFilterOptions = ({
             enableOperatorChange: enableOperatorChange,
             enableRelativeValues: enableRelativeValues,
           },
-          scopePrefix,
-          scopeLabel,
+          entityType,
+          (attributeScopeCounts.get(attribute.name) || 0) > 1,
         )
 
         const suggestValuesForTypes: AttributeData['type'][] = [
@@ -589,15 +659,39 @@ export const useBuildFilterOptions = ({
         option.values?.push(...optionValues)
 
         // add option to the list of options
+        attributeOptionNames.set(option.id, attribute.name)
         options.push(option)
       })
     }
   }) // End of scopes.forEach loop
 
-  // order options by columnOrder
-  if (columnOrder) {
-    return sortOptionsBasedOnColumns(options, columnOrder)
-  } else return options
+  // Build groups from the options so every filter field is represented without
+  // maintaining a separate list as fields are added.
+  const groupOptions = options.reduce<SearchFilterGroupOption[]>((groups, option) => {
+    if (!option.group) return groups
+    const group = typeof option.group === 'string' ? undefined : option.group
+    const groupName = group?.name || (option.group as string)
+    const isEntityGroup = scopesWithTypes.some(({ scope }) => scope === groupName)
+    if (groups.some((group) => group.name === groupName)) return groups
+
+    groups.push({
+      name: groupName,
+      label: isEntityGroup ? upperFirst(groupName) : group?.label || option.label,
+      icon: isEntityGroup ? getEntityTypeIcon(groupName) : group?.icon || option.icon,
+      color: group?.color || option.color,
+    })
+    return groups
+  }, [])
+
+  const sortedOptions = sortOptions(options, attributeOptionNames, attributes)
+  const sortedGroupOptions = sortGroupOptions(
+    groupOptions,
+    sortedOptions,
+    attributeOptionNames,
+    attributes,
+  )
+
+  return { options: sortedOptions, groupOptions: sortedGroupOptions }
 }
 
 // HELPER FUNCTIONS
@@ -680,46 +774,42 @@ const getSubTypes = (
 
 const getFormattedId = (
   base: string,
-  fieldType: FilterFieldType,
+  fieldName: FilterFieldType,
   config?: FilterConfig,
-  scopePrefix?: string,
+  entityType?: string,
 ) => {
   const { prefixes, keys } = config || {}
   let result = base
 
-  if (keys && fieldType in keys) {
-    result = `${keys[fieldType]}`
-  } else if (prefixes && fieldType in prefixes) {
-    result = `${prefixes[fieldType]}${base}`
+  if (keys && fieldName in keys) {
+    result = `${keys[fieldName]}`
+  } else if (prefixes && fieldName in prefixes) {
+    result = `${prefixes[fieldName]}${base}`
   }
 
   // Add scope prefix if provided
-  if (scopePrefix) {
-    result = `${scopePrefix}_${result}`
+  if (entityType) {
+    result = `${entityType}_${result}`
   }
 
   return result
 }
 
-const formatLabel = (baseLabel: string, scopeLabel?: string) =>
-  scopeLabel ? `${baseLabel} - ${scopeLabel}` : baseLabel
-
 const getOptionRoot = (
-  fieldType: FilterFieldType,
+  fieldName: FilterFieldType,
   config?: FilterConfig,
-  scopePrefix?: string,
-  scopeLabel?: string,
+  entityType?: string,
+  shouldGroup = false,
 ) => {
-  const getRootIdWithPrefix = (base: string) => getFormattedId(base, fieldType, config, scopePrefix)
-  const formatLabelWithScope = (baseLabel: string) => formatLabel(baseLabel, scopeLabel)
+  const getRootIdWithPrefix = (base: string) => getFormattedId(base, fieldName, config, entityType)
 
   let rootOption: Option | null = null
-  switch (fieldType) {
+  switch (fieldName) {
     case 'taskType':
       rootOption = {
         id: getRootIdWithPrefix(`taskType`),
         type: 'string',
-        label: formatLabelWithScope(`Task Type`),
+        label: 'Task Type',
         icon: getAttributeIcon('task'),
         inverted: false,
         operator: 'OR',
@@ -735,7 +825,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix(`folderType`),
         type: 'string',
-        label: formatLabelWithScope(`Folder Type`),
+        label: 'Folder Type',
         icon: getAttributeIcon('folder'),
         inverted: false,
         operator: 'OR',
@@ -751,7 +841,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix(`productType`),
         type: 'string',
-        label: formatLabelWithScope(`Product Type`),
+        label: 'Product Type',
         icon: getAttributeIcon('product'),
         inverted: false,
         operator: 'OR',
@@ -767,7 +857,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix(`productBaseType`),
         type: 'string',
-        label: formatLabelWithScope(`Product Base Type`),
+        label: 'Product Base Type',
         icon: getAttributeIcon('product'),
         inverted: false,
         operator: 'OR',
@@ -783,7 +873,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix(`productNames`),
         type: 'string',
-        label: formatLabelWithScope(`Product Name`),
+        label: 'Product Name',
         icon: getAttributeIcon('productName', 'string'),
         inverted: false,
         operator: 'OR',
@@ -799,7 +889,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('status'),
         type: 'string',
-        label: formatLabelWithScope('Status'),
+        label: 'Status',
         icon: getAttributeIcon('status'),
         inverted: false,
         operator: 'OR',
@@ -815,7 +905,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('assignees'),
         type: 'list_of_strings',
-        label: formatLabelWithScope('Assignee'),
+        label: 'Assignee',
         icon: getAttributeIcon('assignees'),
         inverted: false,
         operator: 'OR',
@@ -831,7 +921,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('author'),
         type: 'string',
-        label: formatLabelWithScope('Author'),
+        label: 'Author',
         icon: getAttributeIcon('author'),
         inverted: false,
         operator: 'OR',
@@ -847,7 +937,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('tags'),
         type: 'list_of_strings',
-        label: formatLabelWithScope('Tags'),
+        label: 'Tags',
         icon: getAttributeIcon('tags'),
         inverted: false,
         operator: 'OR',
@@ -859,27 +949,28 @@ const getOptionRoot = (
         operatorChangeable: config?.enableOperatorChange,
       }
       break
-    case 'version':
+    case 'version': // version: product latest/hero/latest done/number
       rootOption = {
         id: getRootIdWithPrefix('version'),
         type: 'string',
-        label: formatLabelWithScope('Version'),
-        icon: getAttributeIcon('version'),
+        label: 'Version',
+        icon: getEntityTypeIcon('version'),
         inverted: false,
         operator: 'OR',
         values: [],
         allowsCustomValues: true,
         allowHasValue: false,
         allowNoValue: false,
-        allowExcludes: false,
+        allowExcludes: true,
         operatorChangeable: false,
+        singleSelect: false,
       }
       break
     case 'name':
       rootOption = {
         id: getRootIdWithPrefix('name'),
         type: 'string',
-        label: formatLabelWithScope('Name'),
+        label: 'Name',
         icon: 'text_fields',
         inverted: false,
         operator: 'OR',
@@ -895,7 +986,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('hasReviewables'),
         type: 'boolean',
-        label: formatLabelWithScope('Has Reviewables'),
+        label: 'Has Reviewables',
         icon: 'play_circle',
         inverted: false,
         operator: 'OR',
@@ -912,7 +1003,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('createdAt'),
         type: 'datetime',
-        label: formatLabelWithScope('Created'),
+        label: 'Created',
         icon: 'calendar_add_on',
         inverted: false,
         operator: 'OR',
@@ -929,7 +1020,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('updatedAt'),
         type: 'datetime',
-        label: formatLabelWithScope('Updated'),
+        label: 'Updated',
         icon: 'edit_calendar',
         inverted: false,
         operator: 'OR',
@@ -948,31 +1039,74 @@ const getOptionRoot = (
     // Note: attributes are handled separately
   }
 
+  const entityLabel = upperFirst(entityType || '')
+  const fieldNameWithEntityType = (label: string) =>
+    entityType ? `${entityLabel} ${label}` : label
+
+  if ((shouldGroup || entityType) && rootOption) {
+    const groupName = entityType || fieldName
+
+    rootOption.group = {
+      name: groupName,
+      label: rootOption.label,
+      icon: rootOption.icon,
+    }
+  }
+
+  if (rootOption && entityType) {
+    rootOption.tooltip = fieldNameWithEntityType(rootOption.label)
+    rootOption.value = { label: fieldNameWithEntityType(rootOption.label) }
+  }
+
+  // except for version.version as it should show Product Version label
+  if (rootOption && fieldName === 'version' && entityType === 'version') {
+    rootOption.value = { label: 'Product Version' }
+    rootOption.tooltip = 'Product Version'
+  }
+
   return rootOption
 }
 
 const getAttributeFieldOptionRoot = (
   attribute: AttributeModel,
   config: FilterConfig & { allowsCustomValues: boolean },
-  scopePrefix?: string,
-  scopeLabel?: string,
-): Option => ({
-  id: getFormattedId(attribute.name, 'attributes', config, scopePrefix),
-  type: attribute.data.type,
-  label: scopeLabel
-    ? formatLabel(attribute.data.title || attribute.name, scopeLabel)
-    : attribute.data.title || attribute.name,
-  operator: 'OR',
-  inverted: false,
-  values: [],
-  allowsCustomValues: config?.allowsCustomValues,
-  allowHasValue: config.enableRelativeValues,
-  allowNoValue: config.enableRelativeValues,
-  allowExcludes: config?.enableExcludes,
-  operatorChangeable: config?.enableOperatorChange,
-  icon: getAttributeIcon(attribute.name, attribute.data.type, !!attribute.data.enum?.length),
-  singleSelect: ['boolean', 'datetime'].includes(attribute.data.type || ''),
-})
+  entityType?: string,
+  shouldGroup = false,
+): Option => {
+  const label = attribute.data.title || attribute.name
+  const group =
+    shouldGroup || entityType
+      ? {
+          name: entityType || attribute.name,
+          label,
+          icon: getAttributeIcon(
+            attribute.name,
+            attribute.data.type,
+            !!attribute.data.enum?.length,
+          ),
+        }
+      : undefined
+
+  return {
+    id: getFormattedId(attribute.name, 'attributes', config, entityType),
+    type: attribute.data.type,
+    label,
+
+    operator: 'OR',
+    inverted: false,
+    values: [],
+    allowsCustomValues: config?.allowsCustomValues,
+    allowHasValue: config.enableRelativeValues,
+    allowNoValue: config.enableRelativeValues,
+    allowExcludes: config?.enableExcludes,
+    operatorChangeable: config?.enableOperatorChange,
+    icon: getAttributeIcon(attribute.name, attribute.data.type, !!attribute.data.enum?.length),
+    group,
+    tooltip: entityType ? `${upperFirst(entityType)} ${label}` : undefined,
+    value: entityType ? { icon: getEntityTypeIcon(entityType) } : undefined,
+    singleSelect: ['boolean', 'datetime'].includes(attribute.data.type || ''),
+  }
+}
 
 const getAttributeOptions = (
   values?: AttributeDataValue[],
@@ -1058,33 +1192,80 @@ const getAttributeOptions = (
   return [...enumOptions, ...options]
 }
 
-const sortOptionsBasedOnColumns = (options: Option[], columnOrder: ColumnOrderState) => {
-  const columnOrderWithSubTypes = columnOrder.flatMap((col) => {
-    if (col === 'subType') {
-      return ['taskType', 'folderType']
-    }
-    return col
-  })
+const sortOptions = (
+  options: Option[],
+  attributeOptionNames: Map<string, string>,
+  attributes: AttributeModel[],
+) => {
   return [...options].sort((a, b) => {
-    const aIndex = columnOrderWithSubTypes.indexOf(a.id.replace('.', '_'))
-    const bIndex = columnOrderWithSubTypes.indexOf(b.id.replace('.', '_'))
-
-    // If both options are in columnOrder, sort them based on their index in columnOrder
-    if (aIndex !== -1 && bIndex !== -1) {
-      return aIndex - bIndex
-    }
-
-    // If only one of the options is in columnOrder, sort the one in columnOrder first
-    if (aIndex !== -1) {
-      return -1
-    }
-    if (bIndex !== -1) {
-      return 1
-    }
-
-    // If neither option is in columnOrder, keep their original order
-    return 0
+    return compareOptionOrder(
+      getOptionFieldName(a),
+      attributeOptionNames.get(a.id),
+      getOptionFieldName(b),
+      attributeOptionNames.get(b.id),
+      attributes,
+    )
   })
+}
+
+const getOptionFieldName = (option: Option) => {
+  if (option.group) {
+    return typeof option.group === 'string' ? option.group : option.group.name
+  }
+  return option.id
+}
+
+const sortGroupOptions = (
+  groupOptions: SearchFilterGroupOption[],
+  options: Option[],
+  attributeOptionNames: Map<string, string>,
+  attributes: AttributeModel[],
+) => {
+  return [...groupOptions].sort((a, b) => {
+    const aOption = options.find((option) => {
+      const group = typeof option.group === 'string' ? option.group : option.group?.name
+      return group === a.name
+    })
+    const bOption = options.find((option) => {
+      const group = typeof option.group === 'string' ? option.group : option.group?.name
+      return group === b.name
+    })
+
+    return compareOptionOrder(
+      aOption ? getOptionFieldName(aOption) : a.name,
+      aOption ? attributeOptionNames.get(aOption.id) : a.name,
+      bOption ? getOptionFieldName(bOption) : b.name,
+      bOption ? attributeOptionNames.get(bOption.id) : b.name,
+      attributes,
+    )
+  })
+}
+
+const compareOptionOrder = (
+  aId: string,
+  aAttributeName: string | undefined,
+  bId: string,
+  bAttributeName: string | undefined,
+  attributes: AttributeModel[],
+) => {
+  const attributeOrder = new Map(attributes.map((attribute, index) => [attribute.name, index]))
+  const getFilterOrder = (id: string) => {
+    let order = 0
+    for (const filterType of FILTER_OPTIONS_ORDER) {
+      if (id === filterType || id.endsWith(`_${filterType}`)) return order
+      order++
+    }
+    return Number.MAX_SAFE_INTEGER
+  }
+
+  const aOrder = aAttributeName
+    ? [1, attributeOrder.get(aAttributeName) ?? Number.MAX_SAFE_INTEGER]
+    : [0, getFilterOrder(aId)]
+  const bOrder = bAttributeName
+    ? [1, attributeOrder.get(bAttributeName) ?? Number.MAX_SAFE_INTEGER]
+    : [0, getFilterOrder(bId)]
+
+  return aOrder[0] - bOrder[0] || aOrder[1] - bOrder[1]
 }
 
 /**

@@ -26,6 +26,7 @@ export type VersionStatsArgs = {
   folderIds?: string[]
   versionIds?: string[]
   productIds?: string[]
+  latestPerFolder?: boolean
 }
 
 export type UseGroupCountsParams =

@@ -1,35 +1,39 @@
 import { FC } from 'react'
 import { ProjectTableSettings, SettingConfig } from '@shared/components'
+import { SettingSwitch } from '@shared/components/ProjectTableSettings/ColumnsSettings'
 import { SizeSlider } from '@shared/components'
 import { useVPViewsContext } from '../../context/VPViewsContext'
-import VPTableSortingSetting from './VPTableSortingSetting'
 import { FeaturedVersionOrder, FEATURED_VERSION_TYPES } from '@shared/components'
-import { useProjectTableContext } from '@shared/containers'
+import { ENTITY_COLUMN_IDS, getColumnLabel } from '@shared/containers'
 
 export const VP_EXTRA_COLUMNS = [
   {
     value: 'author',
-    label: 'Author',
+    label: getColumnLabel('author'),
   },
   {
     value: 'version',
-    label: 'Version',
+    label: getColumnLabel('version'),
+  },
+  {
+    value: ENTITY_COLUMN_IDS.version,
+    label: getColumnLabel(ENTITY_COLUMN_IDS.version),
   },
   {
     value: 'productBaseType',
-    label: 'Product base type',
+    label: getColumnLabel('productBaseType'),
   },
   {
     value: 'taskType',
-    label: 'Task type',
+    label: getColumnLabel('taskType'),
   },
   {
     value: 'folderType',
-    label: 'Folder type',
+    label: getColumnLabel('folderType'),
   },
   {
-    value: 'taskLabel',
-    label: 'Task label',
+    value: 'folderStatus',
+    label: 'Folder status',
   },
 ]
 
@@ -40,14 +44,12 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
     gridHeight,
     onUpdateGridHeight,
     onUpdateGridHeightWithPersistence,
-    sortBy,
-    sortDesc,
-    onUpdateSorting,
+    latestPerFolder,
+    onUpdateLatestPerFolder,
+    showProducts,
     featuredVersionOrder,
     onUpdateFeaturedVersionOrder,
   } = useVPViewsContext()
-
-  const { attribFieldsScoped } = useProjectTableContext()
 
   const extraColumns = VP_EXTRA_COLUMNS
 
@@ -68,27 +70,33 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
       ),
     },
     {
-      id: 'sort-by',
-      component: (
-        <VPTableSortingSetting
-          sortBy={sortBy}
-          sortDesc={sortDesc}
-          attributes={attribFieldsScoped}
-          onUpdateSorting={onUpdateSorting}
-        />
-      ),
-    },
-    {
       id: 'featured-version-order',
       title: 'Featured version',
       icon: 'layers',
       preview:
-        FEATURED_VERSION_TYPES.find((option) => option.value === featuredVersionOrder[0])?.short ||
+        FEATURED_VERSION_TYPES.find((option) => option.value === featuredVersionOrder[0])?.label ||
         '',
       component: (
         <FeaturedVersionOrder
           value={featuredVersionOrder}
           onChange={onUpdateFeaturedVersionOrder}
+        />
+      ),
+    },
+    {
+      id: 'latest-per-folder',
+      component: (
+        <SettingSwitch
+          icon="folder"
+          label="Latest per folder"
+          disabled={showProducts}
+          data-tooltip={
+            showProducts
+              ? 'Disabled when grouping by product'
+              : 'Show only the latest published version per folder (1 version per folder).'
+          }
+          checked={latestPerFolder === true && !showProducts}
+          onChange={onUpdateLatestPerFolder}
         />
       ),
     },

@@ -1,6 +1,7 @@
 import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import {
+  FolderNodeMap,
   ProjectTableProvider,
   useProjectDataContext,
   useViewsContext,
@@ -29,6 +30,8 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
   const {
     versionsTableData,
     entitiesMap,
+    allVersionsMap,
+    productsMap,
     groups,
     expanded,
     updateExpanded,
@@ -73,7 +76,42 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
   const isLoadingAll = false // replace with actual state
 
   // place holders, do we even need these?
-  const foldersMap = new Map()
+  const foldersMap = useMemo<FolderNodeMap>(() => {
+    const folderMap: FolderNodeMap = new Map()
+
+    const addFolder = (folder: {
+      id: string
+      name: string
+      label?: string | null
+      folderType: string
+      allAttrib: string
+      status: string
+    }) => {
+      if (folderMap.has(folder.id)) return
+
+      folderMap.set(folder.id, {
+        id: folder.id,
+        entityId: folder.id,
+        entityType: 'folder',
+        name: folder.name,
+        label: folder.label || folder.name,
+        path: '',
+        parents: [],
+        folderType: folder.folderType,
+        status: folder.status,
+        ownAttrib: [],
+        tags: [],
+        updatedAt: '',
+        createdAt: '',
+        links: [],
+      })
+    }
+
+    productsMap.forEach((product) => addFolder(product.folder))
+    allVersionsMap.forEach((version) => addFolder(version.product.folder))
+
+    return folderMap
+  }, [allVersionsMap, productsMap])
   const tasksMap = new Map()
 
   // external player state

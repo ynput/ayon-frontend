@@ -27,6 +27,7 @@ import type { TableRow } from './types/table'
 // Component imports
 import buildTreeTableColumns, {
   DefaultColumns,
+  getNameColumnLabel,
   isEntityExpandable,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
@@ -109,11 +110,10 @@ import { useProjectContext, usePowerpack, setDetailsPanelTabForScope } from '@sh
 import { useLoadModule } from '@shared/hooks'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
-import { upperFirst } from 'lodash'
 import { ColumnsConfig } from './types/columnConfig'
 
 type CellUpdate = (
-  entity: Omit<EntityUpdate, 'id'>,
+  entity: Omit<EntityUpdate, 'id'> & { id?: string },
   config?: { selection?: string[] },
 ) => Promise<void>
 
@@ -343,7 +343,7 @@ export const ProjectTreeTable = ({
       const { selection = [] } = config || {}
       const entitiesToUpdate: EntityUpdate[] = []
       if (!selection?.length) {
-        entitiesToUpdate.push({ ...entity, id: entity.rowId })
+        entitiesToUpdate.push({ ...entity, id: entity.id || entity.rowId })
       } else {
         // if includeSelection is true, update all the selected cells with the same columnId
         const { field, value, isAttrib } = entity
@@ -389,8 +389,7 @@ export const ProjectTreeTable = ({
   )
 
   const getNameLabelHeader = () => {
-    if (scopes.includes('version')) return 'Product / Version'
-    return scopes.map((s) => upperFirst(s)).join(' / ')
+    return getNameColumnLabel(scopes)
   }
 
   const columns = useMemo(() => {

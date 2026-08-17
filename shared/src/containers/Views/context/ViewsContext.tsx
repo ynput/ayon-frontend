@@ -58,6 +58,7 @@ export interface ViewsContextValue {
   editingViewData?: ViewData
   isLoadingEditingViewData: boolean
   isLoadingViews: boolean
+  isErrorWorkingView: boolean
 
   // Data
   shareOptions?: ShareOption[] // available users to share with (undefined means loading)
@@ -179,7 +180,11 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   //   always get your working view
-  const { currentData: workingView, isLoading: isLoadingWorkingView } = useGetWorkingViewQuery(
+  const {
+    currentData: workingView,
+    isLoading: isLoadingWorkingView,
+    isError: isErrorWorkingView,
+  } = useGetWorkingViewQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
@@ -337,6 +342,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     editingViewId,
     viewMenuItems,
     isLoadingViews,
+    isErrorWorkingView,
     // data
     shareOptions,
     setIsMenuOpen,

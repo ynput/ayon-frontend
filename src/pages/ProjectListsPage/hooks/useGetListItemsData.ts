@@ -25,6 +25,7 @@ import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { extractSearchFromFilters } from '../util/searchToQueryFilter'
 import { OnSyncDataCallback, usePowerpack, useProjectContext } from '@shared/context'
 import { useListsViewSettings, useProjectDataContext, useViewsContext } from '@shared/containers'
+import { getColumnSortKey } from '@shared/containers/ProjectTreeTable/buildTreeTableColumns'
 import { useAppDispatch } from '@state/store'
 
 // Extend EntityListItem to include links
@@ -97,26 +98,40 @@ const useGetListItemsData = ({
   const singleSort = { ...sorting[0] }
   const parseSorting = (sorting?: string): string | undefined => {
     if (!sorting) return undefined
-    let sortId = sorting
+    const sortId = getColumnSortKey(sorting, true, entityType) ?? ''
+
+    let parsedSortId = sortId
     if (singleSort?.id === 'name' && entityType === 'version') {
-      sortId = 'path'
-    } else if (sortId.startsWith('attrib') && sortId.includes('_')) {
+      parsedSortId = 'path'
+    } else if (parsedSortId.startsWith('attrib') && parsedSortId.includes('_')) {
       // convert attrib sorting to query format
-      sortId = sortId.replace('_', '.')
-    } else if (sortId.endsWith('Type') && entityType && !sortId.startsWith(entityType)) {
-      // if the type is not native to the entity, add the parent prefix
-      sortId = 'parent' + sortId[0].toUpperCase() + sortId.slice(1)
-    } else if (sortId === 'product') {
+      parsedSortId = parsedSortId.replace('_', '.')
+    } else if (sorting === 'subType') {
+      switch (entityType) {
+        case 'task':
+          parsedSortId = 'entity_taskType'
+          break
+        case 'folder':
+          parsedSortId = 'entity_folderType'
+          break
+        case 'product':
+          parsedSortId = 'parent_productType'
+          break
+        case 'version':
+          parsedSortId = 'parent_productType'
+          break
+      }
+    } else if (parsedSortId === 'product') {
       // backend resolves productName to the related product's name (per entity type)
-      sortId = 'productName'
-    } else if (sortId === 'folder') {
-      sortId = 'folderPath'
+      parsedSortId = 'productName'
+    } else if (sorting === 'folder_entity' || sorting === 'folder') {
+      parsedSortId = 'folderPath'
     } else {
       // add entity prefix to entity fields
-      sortId = `entity_${sortId}`
+      parsedSortId = `entity_${parsedSortId}`
     }
 
-    return sortId
+    return parsedSortId
   }
 
   const listItemsArgs = {

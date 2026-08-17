@@ -1,4 +1,5 @@
-import { QueryFilter, VersionsSettings } from '@shared/api'
+import { QueryFilter } from '@shared/api'
+import { VersionsSettings } from '@shared/api/generated/views'
 import { ColumnsConfig, useViewsContext } from '@shared/containers'
 import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHelper'
 import {
@@ -57,6 +58,9 @@ export type VPViewsContextValue = {
   showEmptyGroups: boolean
   onUpdateShowEmptyGroups: (showEmptyGroups: boolean) => void
 
+  latestPerFolder: boolean | undefined
+  onUpdateLatestPerFolder: (enabled: boolean) => void
+
   // Sort management
   sortBy: string | undefined
   onUpdateSortBy: (sortBy: string | undefined) => void
@@ -98,6 +102,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   const [localRowHeight, setLocalRowHeight] = useState<number | null>(null)
   const [localFeaturedVersionOrder, setLocalFeaturedVersionOrder] = useState<string[] | null>(null)
   const [localShowEmptyGroups, setLocalShowEmptyGroups] = useState<boolean | null>(null)
+  const [localLatestPerFolder, setLocalLatestPerFolder] = useState<boolean | null>(null)
   const [localSortBy, setLocalSortBy] = useState<string | undefined | null>(null)
   const [localSortDesc, setLocalSortDesc] = useState<boolean | null>(null)
 
@@ -139,9 +144,14 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [versionsSettings?.featuredVersionOrder],
   )
   const serverShowEmptyGroups = useMemo(
-    () => versionsSettings?.showEmptyGroups ?? false,
+    () => versionsSettings?.showEmptyGroups ?? true,
     [versionsSettings?.showEmptyGroups],
   )
+  const serverLatestPerFolder = useMemo(
+    () => versionsSettings?.latestPerFolder && serverViewGroupBy !== 'hierarchy',
+    [versionsSettings?.latestPerFolder, serverViewGroupBy],
+  )
+
   const serverSortBy = useMemo(() => versionsSettings?.sortBy ?? 'name', [versionsSettings?.sortBy])
   const serverSortDesc = useMemo(
     () => versionsSettings?.sortDesc ?? false,
@@ -162,6 +172,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     setLocalGridHeightImmediate(null)
     setLocalFeaturedVersionOrder(null)
     setLocalShowEmptyGroups(null)
+    setLocalLatestPerFolder(null)
   }, [
     versionsSettings?.filter,
     versionsSettings?.slicerType,
@@ -169,6 +180,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     versionsSettings?.rowHeight,
     versionsSettings?.featuredVersionOrder,
     versionsSettings?.showEmptyGroups,
+    versionsSettings?.latestPerFolder,
   ])
 
   // Use local state if available, otherwise use server state
@@ -210,6 +222,10 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   const showEmptyGroups = useMemo(
     () => (localShowEmptyGroups !== null ? localShowEmptyGroups : serverShowEmptyGroups),
     [localShowEmptyGroups, serverShowEmptyGroups],
+  )
+  const latestPerFolder = useMemo(
+    () => (localLatestPerFolder !== null ? localLatestPerFolder : serverLatestPerFolder),
+    [localLatestPerFolder, serverLatestPerFolder],
   )
   const sortBy = useMemo(
     () => (localSortBy !== null ? localSortBy : serverSortBy),
@@ -313,6 +329,12 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
       // Always sync local columns state
       setLocalColumns(tableSettings)
 
+      // Keep the API sorting state in sync with the table sorting state.
+      if (tableSettings.sorting !== undefined) {
+        setLocalSortBy(settings.sortBy)
+        setLocalSortDesc(settings.sortDesc ?? false)
+      }
+
       // Persist only the fields that changed to server
       // Skip groupBy if it was already persisted by onUpdateViewGroupBy above
       const persistSettings: Record<string, any> = {
@@ -328,8 +350,10 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
       if (settings.columns !== undefined) persistSettings.columns = settings.columns
       if (settings.showEmptyGroups !== undefined)
         persistSettings.showEmptyGroups = settings.showEmptyGroups
-      if (settings.sortBy !== undefined) persistSettings.sortBy = settings.sortBy
-      if (settings.sortDesc !== undefined) persistSettings.sortDesc = settings.sortDesc
+      if (tableSettings.sorting !== undefined) {
+        persistSettings.sortBy = settings.sortBy
+        persistSettings.sortDesc = settings.sortDesc
+      }
       if (settings.rowHeight !== undefined) persistSettings.rowHeight = settings.rowHeight
 
       // Only persist if there are actually settings to persist
@@ -423,6 +447,15 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [updateViewSettings],
   )
 
+  const onUpdateLatestPerFolder = useCallback(
+    async (enabled: boolean) => {
+      await updateViewSettings({ latestPerFolder: enabled }, setLocalLatestPerFolder, enabled, {
+        errorMessage: 'Failed to update latest per folder setting',
+      })
+    },
+    [updateViewSettings],
+  )
+
   // Sort by update handler
   const onUpdateSortBy = useCallback(
     async (newSortBy: string | undefined) => {
@@ -487,6 +520,8 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
         onUpdateGroupBy,
         showEmptyGroups,
         onUpdateShowEmptyGroups,
+        latestPerFolder,
+        onUpdateLatestPerFolder,
         sortBy,
         onUpdateSortBy,
         sortDesc,

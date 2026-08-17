@@ -7,8 +7,14 @@ const ChipsContainer = styled.div`
   display: flex;
   gap: var(--base-gap-small);
   align-items: center;
+  align-self: stretch;
   width: 100%;
   overflow: hidden;
+
+  &.multi-row {
+    flex-wrap: wrap;
+    align-content: center;
+  }
 `
 
 const Chip = styled.div`
@@ -82,10 +88,17 @@ interface ChipsProps {
   }
 }
 
+type ChipsLayout = {
+  visibleCount: number
+  rows: number
+}
+
 export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [visibleValues, setVisibleValues] = useState<ChipValue[]>([])
-  const [hiddenCount, setHiddenCount] = useState(0)
+  const [{ visibleCount, rows }, setLayout] = useState<ChipsLayout>({
+    visibleCount: 0,
+    rows: 1,
+  })
   const [offscreenChips, setOffscreenChips] = useState<ChipValue[]>([])
 
   useLayoutEffect(() => {
@@ -93,76 +106,65 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
   }, [values])
 
   useLayoutEffect(() => {
-    const calculateVisibleChips = () => {
-      if (
-        !containerRef.current ||
-        offscreenChips.length === 0 ||
-        offscreenChips.length !== values.length
-      )
-        return
+    const container = containerRef.current
+    if (!container || offscreenChips.length === 0 || offscreenChips.length !== values.length) return
 
-      const containerWidth = containerRef.current.offsetWidth
-      const chipElements = Array.from(containerRef.current.querySelectorAll('.offscreen-chip'))
-      const moreChipElement = containerRef.current.querySelector('.more-chip')
+    const chipElements = Array.from(container.querySelectorAll('.offscreen-chip'))
+    if (chipElements.length !== values.length) return
 
-      if (!chipElements.length) return
+    const gap = parseFloat(getComputedStyle(container).rowGap) || 0
+    const chipWidths = chipElements.map((el) => el.getBoundingClientRect().width)
+    const chipHeight = chipElements[0].getBoundingClientRect().height
+    // measured offscreen at its widest label, so it does not depend on the +N chip being rendered
+    const moreChipWidth =
+      container.querySelector('.offscreen-more-chip')?.getBoundingClientRect().width || 60
 
-      let totalWidth = 0
-      const newVisibleValues: ChipValue[] = []
-
-      const moreChipWidth = moreChipElement?.getBoundingClientRect().width || 60
-
-      // Always show the first chip
-      if (values.length > 0) {
-        const firstChipWidth = chipElements[0].getBoundingClientRect().width
-        newVisibleValues.push(values[0])
-        totalWidth += firstChipWidth
-      }
-
-      // Add additional chips if they fit
-      for (let i = 1; i < values.length; i++) {
-        const chipWidth = chipElements[i].getBoundingClientRect().width
-
-        // Check if the next chip can fit completely
-        if (totalWidth + chipWidth <= containerWidth) {
-          totalWidth += chipWidth
-          newVisibleValues.push(values[i])
-        } else {
-          // Check if there's room for the more chip
-          if (totalWidth + moreChipWidth <= containerWidth) {
-            // Keep current visible chips and show more chip
-            break
-          } else {
-            // Remove the last chip if we need room for the more chip
-            if (newVisibleValues.length > 1) {
-              const lastChipWidth =
-                chipElements[newVisibleValues.length - 1].getBoundingClientRect().width
-              totalWidth -= lastChipWidth
-              newVisibleValues.pop()
-            }
-            break
-          }
+    const rowsNeeded = (count: number, extraWidth: number, containerWidth: number) => {
+      let used = 1
+      let rowWidth = 0
+      const place = (width: number, isFirst: boolean) => {
+        if (isFirst) rowWidth = width
+        else if (rowWidth + gap + width <= containerWidth) rowWidth += gap + width
+        else {
+          used++
+          rowWidth = width
         }
       }
 
-      const finalHiddenCount = values.length - newVisibleValues.length
-      setVisibleValues(newVisibleValues)
-      setHiddenCount(finalHiddenCount)
+      for (let i = 0; i < count; i++) place(chipWidths[i], i === 0)
+      if (extraWidth) place(extraWidth, count === 0)
+      return used
     }
 
-    const resizeObserver = new ResizeObserver(calculateVisibleChips)
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current)
+    const calculateLayout = () => {
+      const containerWidth = container.getBoundingClientRect().width
+      const containerHeight = container.offsetHeight
+      const rows = chipHeight
+        ? Math.max(1, Math.floor((containerHeight + gap) / (chipHeight + gap)))
+        : 1
+
+      // drop chips until they and the more chip fit the rows available
+      let visibleCount = values.length
+      while (
+        visibleCount > 1 &&
+        rowsNeeded(visibleCount, visibleCount < values.length ? moreChipWidth : 0, containerWidth) >
+          rows
+      ) {
+        visibleCount--
+      }
+
+      setLayout((prev) =>
+        prev.visibleCount === visibleCount && prev.rows === rows ? prev : { visibleCount, rows },
+      )
     }
+
+    const resizeObserver = new ResizeObserver(calculateLayout)
+    resizeObserver.observe(container)
 
     // Initial calculation
-    calculateVisibleChips()
+    calculateLayout()
 
-    return () => {
-      if (containerRef.current) {
-        resizeObserver.unobserve(containerRef.current)
-      }
-    }
+    return () => resizeObserver.disconnect()
   }, [values, offscreenChips])
 
   if (disabled) return null
@@ -172,8 +174,11 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
     return <AddIcon icon="add" className={pt?.chip?.className} />
   }
 
+  const visibleValues = values.slice(0, visibleCount)
+  const hiddenCount = visibleCount ? values.length - visibleValues.length : 0
+
   return (
-    <ChipsContainer ref={containerRef}>
+    <ChipsContainer ref={containerRef} className={clsx({ 'multi-row': rows > 1 })}>
       {visibleValues.map((chip, index) => (
         <Chip
           {...pt?.chip}
@@ -202,6 +207,9 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
           {chip.suffix}
         </OffscreenChip>
       ))}
+      {offscreenChips.length > 1 && (
+        <OffscreenChip className="offscreen-more-chip">+{offscreenChips.length - 1}</OffscreenChip>
+      )}
     </ChipsContainer>
   )
 }

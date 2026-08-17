@@ -21,6 +21,8 @@ interface MenuListProps {
   level: number
   id?: string
   parentRef?: HTMLElement | null
+  /** consumed here so the spread below doesn't leak it onto the DOM wrapper */
+  parentEl?: HTMLElement | null
   style?: React.CSSProperties
   /** Placement of THIS menu relative to its parent. Inherited by descendants so once
    *  a chain flips to one side it stays there. */
@@ -42,6 +44,7 @@ export const MenuList: React.FC<MenuListProps> = ({
   level,
   id = 'root-menu',
   parentRef,
+  parentEl: _parentEl,
   style,
   placement,
   onClose,

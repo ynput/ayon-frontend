@@ -6,7 +6,7 @@ import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useProjectDataContext } from '../context/ProjectDataContext'
 import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
 import { getEntityViewierIds } from '../utils'
-import { isEntityRestricted } from '../utils/restrictedEntity'
+import { isEntityRestricted, READ_ONLY } from '../utils/restrictedEntity'
 
 export default function useKeyboardNavigation() {
   const { attribFields, getEntityById, onOpenPlayer, playerOpen } = useProjectTableContext()
@@ -65,8 +65,9 @@ export default function useKeyboardNavigation() {
       if (rowIndex === undefined || colIndex === undefined) return
 
       const isReadOnly =
-        colId.startsWith('attrib_') &&
-        attribFields.find((a) => a.name === colId.replace('attrib_', ''))?.readOnly
+        (colId.startsWith('attrib_') &&
+          attribFields.find((a) => a.name === colId.replace('attrib_', ''))?.readOnly) ||
+        target.closest('td')?.querySelector(`.${READ_ONLY}`) !== null
 
       const openPlayer = (entityId: string) => {
         // try to open the player if onOpenPlayer is defined
