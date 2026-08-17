@@ -8,6 +8,7 @@ import { useProjectTableContext } from '../context/ProjectTableContext'
 
 export type SubtasksWidgetData = {
   taskId: string
+  folderId?: string
   subtasks: SubTaskNode[]
 }
 
@@ -56,6 +57,7 @@ export const SubtasksWidget: FC<SubtasksWidgetProps> = ({
             <SubtasksManagerWrapper
               projectName={projectName}
               taskId={value.taskId}
+              folderId={value.folderId}
               subtasks={subtasks}
               selectedSubtaskIds={selectedSubtaskIds}
               onSelectSubtasks={setSelectedSubtaskIds}

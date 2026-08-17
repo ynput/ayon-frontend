@@ -14,6 +14,7 @@ export interface SubtasksManagerProps extends Omit<React.HTMLAttributes<HTMLDivE
   subtasks: SubTaskNode[]
   projectName: string
   taskId: string
+  folderId?: string // used for creating products
   selectedSubtaskIds?: string[]
   users: UserModel[]
   title?: string | null

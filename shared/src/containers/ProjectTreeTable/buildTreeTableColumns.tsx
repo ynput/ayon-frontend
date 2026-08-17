@@ -1035,6 +1035,7 @@ const buildTreeTableColumns = ({
 
         const subtasksData: SubtasksWidgetData = {
           taskId: parseGroupId(row.id) || row.original.entityId || row.original.id,
+          folderId: row.original.folderId ?? undefined,
           subtasks: value || [],
         }
 
