@@ -9003,7 +9003,19 @@
               },
               {
                 "name": "taskFilter",
-                "description": "Fitler folders by tasks",
+                "description": "Filter folders by tasks",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "taskSearch",
+                "description": "Fuzzy search folders by tasks",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",

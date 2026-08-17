@@ -3,9 +3,8 @@ import { ProjectTableSettings, SettingConfig } from '@shared/components'
 import { SettingSwitch } from '@shared/components/ProjectTableSettings/ColumnsSettings'
 import { SizeSlider } from '@shared/components'
 import { useVPViewsContext } from '../../context/VPViewsContext'
-import VPTableSortingSetting from './VPTableSortingSetting'
 import { FeaturedVersionOrder, FEATURED_VERSION_TYPES } from '@shared/components'
-import { ENTITY_COLUMN_IDS, getColumnLabel, useProjectTableContext } from '@shared/containers'
+import { ENTITY_COLUMN_IDS, getColumnLabel } from '@shared/containers'
 
 export interface VPTableSettingsProps {}
 
@@ -17,14 +16,9 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
     latestPerFolder,
     onUpdateLatestPerFolder,
     showProducts,
-    sortBy,
-    sortDesc,
-    onUpdateSorting,
     featuredVersionOrder,
     onUpdateFeaturedVersionOrder,
   } = useVPViewsContext()
-
-  const { attribFieldsScoped } = useProjectTableContext()
 
   const extraColumns = [
     {
@@ -70,17 +64,6 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
           min={90}
           max={300}
           step={10}
-        />
-      ),
-    },
-    {
-      id: 'sort-by',
-      component: (
-        <VPTableSortingSetting
-          sortBy={sortBy}
-          sortDesc={sortDesc}
-          attributes={attribFieldsScoped}
-          onUpdateSorting={onUpdateSorting}
         />
       ),
     },

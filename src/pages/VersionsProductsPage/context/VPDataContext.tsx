@@ -26,7 +26,7 @@ import {
 import { useBuildVersionsTableData } from '../hooks/useBuildVersionsTableData'
 import {
   checkColumnVisibility,
-  COLUMN_SORT_CONFIG,
+  getColumnSortKey,
   createFilterFromSlicer,
   TableRow,
   useExpandedState,
@@ -368,7 +368,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   )
 
   const resolvedSortBy = useMemo(
-    () => sortBy && (SORT_BY_FIELD_MAP[sortBy] || COLUMN_SORT_CONFIG[sortBy]?.sortKey || sortBy),
+    () => sortBy && (SORT_BY_FIELD_MAP[sortBy] || getColumnSortKey(sortBy, true, 'product')),
     [sortBy],
   )
   const queryArgs = useMemo(

@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 
 import {
   buildMetricTargets,
+  GetFolderColumnStatsQueryVariables,
+  GetTaskColumnStatsQueryVariables,
   shouldSkipColumnStats,
   useGetFolderColumnStatsQuery,
   useGetTaskColumnStatsQuery,
@@ -95,11 +97,12 @@ export const useProjectOverviewStats = ({
 
   const skip = !projectName || isLoadingViews || !powerLicense || noSummaries
 
-  const folderStatsArgs = {
+  const folderStatsArgs: GetFolderColumnStatsQueryVariables = {
     projectName,
     filter: folderFilter || undefined,
-    taskFilter: taskFilter || undefined,
     search: folderSearch || undefined,
+    taskFilter: taskFilter || undefined,
+    taskSearch: taskSearch || undefined,
     [showHierarchy ? 'parentIds' : 'ids']: selectedFolders.length ? selectedFolders : undefined,
     targets: folderTargets,
     includeFolderChildren: true,
@@ -108,7 +111,7 @@ export const useProjectOverviewStats = ({
 
   const folderQuery = useGetFolderColumnStatsQuery(folderStatsArgs, { skip })
 
-  const taskStatsArgs = {
+  const taskStatsArgs: GetTaskColumnStatsQueryVariables = {
     projectName,
     filter: taskFilter || undefined,
     folderFilter: folderFilter || undefined,

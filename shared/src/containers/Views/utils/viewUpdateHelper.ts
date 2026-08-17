@@ -77,6 +77,7 @@ export const updateViewSettings = async (
     setSelectedView,
     workingView,
     onSettingsChanged,
+    isErrorWorkingView,
   } = viewContext
 
   if (!viewType) throw new Error('No view type provided for updating view settings')
@@ -94,11 +95,11 @@ export const updateViewSettings = async (
       getLatest()
     const latestSettings = latestSettingsFromCache ?? viewSettings
 
-    // If we have no settings baseline at all (neither from cache nor from context),
+    // If we have no settings baseline at all (neither from cache nor from context), AND there is no error
     // abort to prevent writing a partial payload that would overwrite saved settings.
     // This is a defence-in-depth guard; in normal flow isLoadingViews prevents callers
     // from triggering updates before data is available.
-    if (latestSettings === undefined) {
+    if (latestSettings === undefined && !isErrorWorkingView) {
       console.warn(
         'updateViewSettings: no settings baseline available, aborting to prevent data loss.',
       )

@@ -14,6 +14,7 @@ interface ListsDataContextValue {
   listsTableData: SimpleTableRow[]
   listsMap: ListsMap
   disabledListIds: Set<string>
+  disabledFolderMessages: Map<string, string>
   listFolders: EntityListFolderModel[]
   fetchNextPage: () => void
   isLoadingAll: boolean
@@ -34,11 +35,14 @@ interface ListsDataProviderProps {
   children: ReactNode
   entityListTypes?: string[]
   isReview?: boolean
-  isStoryboards?: boolean
   // picker mode: ignore the page's saved list filters (selection dialog, not the Lists page)
   picker?: boolean
+  // folder destination picker: only the folder tree, lists are never fetched or rendered
+  foldersOnly?: boolean
   listsFilter?: (list: EntityList) => boolean
   listDisabled?: (list: EntityList) => string | undefined
+  // why folders can't be picked, keyed by folder id; batched so ancestry checks run once per render
+  getDisabledFolders?: (folders: EntityListFolderModel[]) => Map<string, string>
 }
 
 // fetch all lists and provide methods to update the lists
@@ -46,10 +50,11 @@ export const ListsDataProvider = ({
   children,
   entityListTypes,
   isReview,
-  isStoryboards,
   picker,
+  foldersOnly,
   listsFilter,
   listDisabled,
+  getDisabledFolders,
 }: ListsDataProviderProps) => {
   const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
   const { projectName, isLoading: isFetchingProject } = useProjectContext()
@@ -69,13 +74,11 @@ export const ListsDataProvider = ({
         const scope = f.data?.scope
         if (!scope || scope.length === 0) return true // no scope means available for all
         const hasReviewScope = scope.includes('review-session')
-        const hasStoryboardScope = scope.includes('storyboard');
-
         return isReview
-          ? isStoryboards ? hasStoryboardScope : hasReviewScope
+          ? hasReviewScope
           : !hasReviewScope
       }),
-    [isReview, isStoryboards, listFoldersAll],
+    [isReview, listFoldersAll],
   )
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({
@@ -105,6 +108,7 @@ export const ListsDataProvider = ({
     projectName,
     filters: listsFilters,
     entityListTypes,
+    skip: foldersOnly,
   })
 
   const listsData = useMemo(
@@ -125,10 +129,32 @@ export const ListsDataProvider = ({
     return ids
   }, [listsData, listDisabled])
 
+  const disabledFolderMessages = useMemo(
+    () => getDisabledFolders?.(listFolders) ?? new Map<string, string>(),
+    [listFolders, getDisabledFolders],
+  )
+
   // convert listsData into tableData
   const listsTableData = useMemo(
-    () => buildListsTableData(listsData, listFolders, true, powerLicense, showArchived, listDisabled),
-    [listsData, listFolders, powerLicense, showArchived, listDisabled],
+    () =>
+      buildListsTableData(
+        listsData,
+        listFolders,
+        true,
+        powerLicense,
+        showArchived,
+        listDisabled,
+        getDisabledFolders ? (folder) => disabledFolderMessages.get(folder.id) : undefined,
+      ),
+    [
+      listsData,
+      listFolders,
+      powerLicense,
+      showArchived,
+      listDisabled,
+      getDisabledFolders,
+      disabledFolderMessages,
+    ],
   )
 
   return (
@@ -138,6 +164,7 @@ export const ListsDataProvider = ({
         listsTableData,
         listsMap,
         disabledListIds,
+        disabledFolderMessages,
         listFolders,
         isLoadingAll:
           isLoadingLists ||
