@@ -24,6 +24,7 @@ export interface MenuItemType {
   disabled?: boolean
   powerFeature?: PowerpackFeature
   active?: boolean
+  reserveActiveSlot?: boolean
   hidden?: boolean
   node?: ReactNode
   [key: string]: any

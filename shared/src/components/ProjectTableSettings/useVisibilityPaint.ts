@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { VisibilityState } from '@tanstack/react-table'
 import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils'
 
+const SKIP_TOGGLE_MS = 300
+
 // base keeps rows in place for the whole drag, next is the previewed result
 type PaintState = { action: 'show' | 'hide'; base: VisibilityState; next: VisibilityState }
 
@@ -36,8 +38,9 @@ export const useVisibilityPaint = ({
   const paintRef = useRef<PaintState | null>(null)
   paintRef.current = paint
   const armedRef = useRef<{ columnId: string; action: 'show' | 'hide' } | null>(null)
-  // a drag ending back on the pressed row fires a click that would undo what was painted
-  const skipNextToggleRef = useRef(false)
+  // a drag ending back on the pressed row fires a click that would undo what was painted;
+  // a drag ending anywhere else fires no click at all, so the guard has to expire on its own
+  const skipToggleUntilRef = useRef(0)
 
   // an open sub-menu keeps the items it was opened with, so toggling must read the latest state
   const latestRef = useRef({ columnVisibility, defaultColumnVisibility, updateColumnVisibility })
@@ -61,7 +64,7 @@ export const useVisibilityPaint = ({
     armedRef.current = null
     const painted = paintRef.current
     if (!painted) return
-    skipNextToggleRef.current = true
+    skipToggleUntilRef.current = performance.now() + SKIP_TOGGLE_MS
     latestRef.current.updateColumnVisibility(painted.next)
     setPaint(null)
   }, [])
@@ -84,7 +87,7 @@ export const useVisibilityPaint = ({
   // pressing only arms the drag, a plain click still toggles through onClick
   const onPaintStart = useCallback((columnId: string) => {
     if (lockedRef.current?.(columnId)) return
-    skipNextToggleRef.current = false
+    skipToggleUntilRef.current = 0
     const { columnVisibility, defaultColumnVisibility } = latestRef.current
     const isVisible = checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)
     armedRef.current = { columnId, action: isVisible ? 'hide' : 'show' }
@@ -112,8 +115,8 @@ export const useVisibilityPaint = ({
   }, [])
 
   const toggle = useCallback((columnId: string) => {
-    if (skipNextToggleRef.current) {
-      skipNextToggleRef.current = false
+    if (performance.now() < skipToggleUntilRef.current) {
+      skipToggleUntilRef.current = 0
       return
     }
     const { columnVisibility, defaultColumnVisibility, updateColumnVisibility } = latestRef.current

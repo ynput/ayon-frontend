@@ -50,8 +50,14 @@ export const TableColumnDropIndicator = () => {
       if (header) {
         const activeIndex = headers.findIndex((el) => el.dataset.columnId === activeId)
         const overIndex = headers.indexOf(header)
-        setPosition(
-          getColumnDropLinePosition(header, activeIndex < overIndex ? 'right' : 'left'),
+        const next = getColumnDropLinePosition(header, activeIndex < overIndex ? 'right' : 'left')
+        setPosition((current) =>
+          current &&
+          current.left === next.left &&
+          current.top === next.top &&
+          current.height === next.height
+            ? current
+            : next,
         )
       }
       // the table auto-scrolls horizontally while dragging, so the target keeps moving

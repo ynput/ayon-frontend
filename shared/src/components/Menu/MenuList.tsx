@@ -291,6 +291,7 @@ export const MenuList: React.FC<MenuListProps> = ({
               disabled,
               powerFeature,
               active,
+              reserveActiveSlot,
               ...props
             } = item
 
@@ -322,6 +323,7 @@ export const MenuList: React.FC<MenuListProps> = ({
                   disabled,
                   powerFeature,
                   active,
+                  reserveActiveSlot,
                 }}
                 isLink={link}
                 onClick={(e) =>

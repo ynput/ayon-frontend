@@ -22,6 +22,8 @@ export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLElement>, '
   disabled?: boolean
   powerFeature?: string
   active?: boolean
+  // keeps the checkmark slot when unchecked so toggling doesn't resize the menu
+  reserveActiveSlot?: boolean
   target?: string
 }
 
@@ -43,6 +45,7 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
       disabled,
       powerFeature,
       active,
+      reserveActiveSlot,
       ...props
     },
     ref,
@@ -80,8 +83,7 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
             {shortcut}
           </ShortcutTag>
         )}
-        {/* keeps the slot when unchecked so toggling doesn't resize the menu */}
-        {active !== undefined && (
+        {(active || reserveActiveSlot) && (
           <Icon
             icon="check"
             style={{ marginLeft: 'auto', visibility: active ? 'visible' : 'hidden' }}

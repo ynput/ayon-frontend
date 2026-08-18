@@ -23,7 +23,6 @@ type DropTarget = {
   columnId: string
   side: 'left' | 'right'
   line: { left: number; top: number; height: number }
-  table: HTMLElement | null
 }
 // the ghost keeps the point the row was grabbed by, like the table's own column drag
 type GrabOffset = { x: number; y: number; width: number }
@@ -51,16 +50,13 @@ const findDropTarget = (x: number, y: number): DropTarget | null => {
     columnId,
     side,
     line: getColumnDropLinePosition(header, side),
-    table: header.closest('table') as HTMLElement | null,
   }
 }
 
-// the header order in the DOM is the truth: columnOrder stays empty until something reorders it
-const readColumnOrder = (table: HTMLElement | null, fallback: string[]) => {
-  const domOrder = Array.from(table?.querySelectorAll(COLUMN_HEADER_SELECTOR) ?? []).map(
-    (el) => (el as HTMLElement).dataset.columnId as string,
-  )
-  return domOrder.length ? domOrder : fallback
+// headers are virtualized, so the DOM only holds the visible slice: never read the order from it
+const resolveColumnOrder = (savedOrder: string[], allColumns: string[]) => {
+  const base = savedOrder.length ? savedOrder : allColumns
+  return [...base, ...allColumns.filter((id) => !base.includes(id))]
 }
 
 // drag a column out of the add-column menu and drop it where it belongs in the table header
@@ -78,6 +74,7 @@ export const useAddColumnDrag = () => {
     sorting,
     rowHeight,
     setColumnsConfig,
+    getAllColumns,
   } = useColumnSettingsContext()
   const { setMenuOpen } = useMenuContext()
 
@@ -105,6 +102,7 @@ export const useAddColumnDrag = () => {
     sorting,
     rowHeight,
     setColumnsConfig,
+    getAllColumns,
   })
   latestRef.current = {
     columnVisibility,
@@ -119,12 +117,13 @@ export const useAddColumnDrag = () => {
     sorting,
     rowHeight,
     setColumnsConfig,
+    getAllColumns,
   }
 
   // showing, ordering and pinning in one config: the updaters each persist the whole config
   const dropColumn = useCallback((columnId: string, target: DropTarget) => {
     const config = latestRef.current
-    const order = readColumnOrder(target.table, config.columnOrder).filter(
+    const order = resolveColumnOrder(config.columnOrder, config.getAllColumns()).filter(
       (id) => id !== columnId && !SPECIAL_COLUMNS.includes(id),
     )
     const targetIndex = order.indexOf(target.columnId)

@@ -66,6 +66,7 @@ export const buildAddColumnsMenu = ({
       icon: column.icon,
       disableClose: true,
       active: visible,
+      reserveActiveSlot: true,
       onClick: () => onToggle(column.value),
       onPointerDown: (event: React.PointerEvent) => {
         onPaintStart?.(column.value)

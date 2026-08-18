@@ -8,8 +8,7 @@ export const useLastColumnOffset = (container: HTMLDivElement | null) => {
 
   useLayoutEffect(() => {
     const wrapper = container?.parentElement
-    const table = wrapper?.querySelector('.table-container table')
-    if (!container || !wrapper || !table) return
+    if (!container || !wrapper) return
 
     const measure = () => {
       // not the table's own width: the selection column reserves more than it paints
@@ -25,10 +24,26 @@ export const useLastColumnOffset = (container: HTMLDivElement | null) => {
 
     const resizeObserver = new ResizeObserver(measure)
     resizeObserver.observe(wrapper)
-    resizeObserver.observe(table)
+
+    // the table can mount after this effect (loading or error placeholder first), so wait for it
+    const observeTable = () => {
+      const table = wrapper.querySelector('.table-container table')
+      if (!table) return false
+      resizeObserver.observe(table)
+      measure()
+      return true
+    }
+
+    const mutationObserver = new MutationObserver(() => {
+      if (observeTable()) mutationObserver.disconnect()
+    })
+    if (!observeTable()) mutationObserver.observe(wrapper, { childList: true, subtree: true })
     measure()
 
-    return () => resizeObserver.disconnect()
+    return () => {
+      resizeObserver.disconnect()
+      mutationObserver.disconnect()
+    }
   }, [container])
 
   return offset

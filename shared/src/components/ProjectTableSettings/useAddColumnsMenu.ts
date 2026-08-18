@@ -40,12 +40,12 @@ export const useAddColumnsMenu = ({ columns, scopes, extraItems }: UseAddColumns
     if (gestureRef.current.isDragging) return
     if (pressed) cancelDrag()
     onPaintEnter(columnId, pressed)
-  }, [])
+  }, [cancelDrag, onPaintEnter])
 
   const handleDragStart = useCallback((column: AddColumnItem, event: React.PointerEvent) => {
     if (gestureRef.current.isPainting) return
     armDrag(column, event)
-  }, [])
+  }, [armDrag])
 
 
   const menuItems = useMemo(
