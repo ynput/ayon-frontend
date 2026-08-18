@@ -333,7 +333,14 @@ const useCellContextMenu = ({
     {
       label: newEntityDefinitions.folder.createLabel,
       icon: newEntityDefinitions.folder.icon,
-      command: () => openNewWithParents('folder', cell, meta.selectedRows),
+      command: () => {
+        if (showHierarchy) {
+          openNewWithParents('folder', cell, meta.selectedRows)
+        } else {
+          // grouping modes: let the dialog resolve parents from the slicer
+          onOpenNew?.('folder')
+        }
+      },
       hidden: cell.columnId !== 'name' || !onOpenNew,
     },
     {

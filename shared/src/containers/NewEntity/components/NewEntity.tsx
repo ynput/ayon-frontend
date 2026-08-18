@@ -138,8 +138,9 @@ export const NewEntity: React.FC<NewEntityProps> = ({
   const { getFolderById } = useProjectFoldersContext()
   const projectTableContext = useOptionalProjectTableContext()
   const getEntityById = projectTableContext?.getEntityById
+  const showHierarchy = projectTableContext?.showHierarchy ?? true
 
-  const resolvedParentFolderIds = useMemo(() => {
+  const fullChainParentIds = useMemo(() => {
     if (parentFolderIds !== null) return parentFolderIds
 
     const selectedCellPositions = selectedCells
@@ -189,7 +190,20 @@ export const NewEntity: React.FC<NewEntityProps> = ({
       : []
   }, [parentFolderIds, selectedCells, rowSelection, pinnedSlice, sliceType, getEntityById])
 
-  const canCreateTask = resolvedParentFolderIds.length > 0
+  // Slicer-only chain: in grouping modes folders skip table selection
+  const slicerParentIds = useMemo(() => {
+    if (parentFolderIds !== null) return parentFolderIds
+    const activeRowSelection =
+      sliceType === 'hierarchy' ? rowSelection : pinnedSlice?.rowSelection || null
+    return activeRowSelection
+      ? Object.keys(activeRowSelection).filter((id) => activeRowSelection[id])
+      : []
+  }, [parentFolderIds, rowSelection, pinnedSlice, sliceType])
+
+  const resolvedParentFolderIds =
+    entityType === 'folder' && !showHierarchy ? slicerParentIds : fullChainParentIds
+
+  const canCreateTask = fullChainParentIds.length > 0
 
   const parentTargetOptions = useMemo(
     () =>
@@ -457,7 +471,10 @@ export const NewEntity: React.FC<NewEntityProps> = ({
             </>
           )}
           itemTemplate={(option) => (
-            <StyledCreateItem className={option.disabled ? 'disabled' : undefined}>
+            <StyledCreateItem
+              className={option.disabled ? 'disabled' : undefined}
+              data-tooltip={option.disabled ? option.disabledMessage : undefined}
+            >
               <Icon icon={option.icon} />
               <span className="label">{option.label}</span>
               <ShortcutTag>{option.shortcut}</ShortcutTag>
@@ -527,7 +544,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
           >
             <InputsContainer>
               <InputLabel>Parent folder</InputLabel>
-              {canCreateTask ? (
+              {resolvedParentFolderIds.length > 0 ? (
                 <Dropdown
                   value={selectedFolderIds}
                   options={parentTargetOptions}
@@ -536,6 +553,8 @@ export const NewEntity: React.FC<NewEntityProps> = ({
                   multiSelect
                   style={{ width: '100%', minHeight: 32 }}
                 />
+              ) : entityType === 'task' ? (
+                <RootParentNote>Select a folder to create a task in</RootParentNote>
               ) : (
                 <RootParentNote>Creating in the project root</RootParentNote>
               )}
