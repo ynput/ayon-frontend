@@ -14,6 +14,8 @@ interface SortableColumnItemProps {
   isDisabled?: boolean
   onTogglePinning: (columnId: string) => void
   onToggleVisibility: (columnId: string) => void
+  onPaintStart?: (columnId: string) => void
+  onPaintEnter?: (columnId: string, pressed: boolean) => void
 }
 
 const SortableColumnItem: FC<SortableColumnItemProps> = ({
@@ -25,6 +27,8 @@ const SortableColumnItem: FC<SortableColumnItemProps> = ({
   isDisabled,
   onTogglePinning,
   onToggleVisibility,
+  onPaintStart,
+  onPaintEnter,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
@@ -50,6 +54,8 @@ const SortableColumnItem: FC<SortableColumnItemProps> = ({
         isDisabled={isDisabled}
         onTogglePinning={onTogglePinning}
         onToggleVisibility={onToggleVisibility}
+        onPaintStart={onPaintStart}
+        onPaintEnter={onPaintEnter}
         dragHandleProps={{ ...attributes, ...listeners }}
       />
     </SortableItemWrapper>

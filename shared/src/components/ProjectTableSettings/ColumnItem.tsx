@@ -50,6 +50,8 @@ interface ColumnItemProps {
   hideDragHandle?: boolean
   onTogglePinning?: (columnId: string) => void
   onToggleVisibility?: (columnId: string) => void
+  onPaintStart?: (columnId: string) => void
+  onPaintEnter?: (columnId: string, pressed: boolean) => void
 }
 
 const ColumnItem: FC<ColumnItemProps> = ({
@@ -66,6 +68,8 @@ const ColumnItem: FC<ColumnItemProps> = ({
   // Callbacks
   onTogglePinning,
   onToggleVisibility,
+  onPaintStart,
+  onPaintEnter,
 }) => {
   const itemActions = useMemo(
     () => [
@@ -78,10 +82,20 @@ const ColumnItem: FC<ColumnItemProps> = ({
       {
         icon: isHidden ? 'visibility_off' : 'visibility',
         onClick: () => onToggleVisibility?.(column.value),
+        // arms a paint drag, the toggle itself still happens on click
+        onPointerDown: isDisabled ? undefined : () => onPaintStart?.(column.value),
         active: !isHidden,
       },
     ],
-    [isPinned, isHidden, column.value, onTogglePinning, onToggleVisibility],
+    [
+      isPinned,
+      isHidden,
+      isDisabled,
+      column.value,
+      onTogglePinning,
+      onToggleVisibility,
+      onPaintStart,
+    ],
   )
 
   return (
@@ -92,6 +106,7 @@ const ColumnItem: FC<ColumnItemProps> = ({
       isHighlighted={isHighlighted}
       isDisabled={isDisabled}
       className={clsx({ hidden: isHidden, overlay: dragOverlay })}
+      onPointerEnter={(event) => onPaintEnter?.(column.value, event.buttons > 0)}
       startContent={
         hideDragHandle ? undefined : (
           <div {...dragHandleProps} className="drag-handle">

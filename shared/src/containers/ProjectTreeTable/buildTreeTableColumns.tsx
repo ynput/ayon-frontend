@@ -63,6 +63,32 @@ export const getColumnLabel = (columnId: string, scopes: string[] = []) => {
   return COLUMN_LABELS[normalizeColumnId(columnId)] || columnId
 }
 
+export const COLUMN_ICONS: Record<string, string> = {
+  thumbnail: 'image',
+  name: 'title',
+  status: 'arrow_circle_right',
+  entityType: 'category',
+  subType: 'category',
+  productType: getEntityTypeIcon('product'),
+  productBaseType: 'category',
+  taskType: getEntityTypeIcon('task'),
+  folderType: getEntityTypeIcon('folder'),
+  assignees: 'person',
+  author: 'person',
+  folder_entity: getEntityTypeIcon('folder'),
+  task_entity: getEntityTypeIcon('task'),
+  version: getEntityTypeIcon('version'),
+  version_entity: getEntityTypeIcon('version'),
+  product: getEntityTypeIcon('product'),
+  tags: 'local_offer',
+  createdAt: 'calendar_month',
+  updatedAt: 'calendar_month',
+  subtasks: 'checklist',
+  comments: 'comment',
+}
+
+export const getColumnIcon = (columnId: string) => COLUMN_ICONS[normalizeColumnId(columnId)]
+
 type ColumnSortConfig = {
   sortKey?: string
   sortDescFirst?: boolean
