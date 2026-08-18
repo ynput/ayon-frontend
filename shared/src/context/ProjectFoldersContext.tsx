@@ -14,6 +14,7 @@ export interface ProjectFoldersContextValue {
     projectAttrib?: Record<string, any>,
   ) => Record<string, any>
   getParentFolderIds: (folderId: string) => string[]
+  getFolderIdsWithoutChildren: (folderIds: string[]) => string[]
   getChildFolderIds: (folderIds: string[], includeSelf?: boolean) => string[]
   isLoading: boolean
   isFetching: boolean
@@ -132,6 +133,18 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
     [folderMap],
   )
 
+  const getFolderIdsWithoutChildren = useMemo(
+    () =>
+      (folderIds: string[]): string[] => {
+        const selectedFolderIds = new Set(folderIds)
+
+        return folderIds.filter((folderId) => {
+          return !getParentFolderIds(folderId).some((parentId) => selectedFolderIds.has(parentId))
+        })
+      },
+    [getParentFolderIds],
+  )
+
   // function to get all child folder IDs recursively for a given folder IDs
   const getChildFolderIds = useMemo(
     () =>
@@ -162,6 +175,7 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
       getFolderById,
       findNonInheritedValues,
       getParentFolderIds,
+      getFolderIdsWithoutChildren,
       getChildFolderIds,
       isLoading: isLoadingFolders, // first time and when args change
       isFetching, // any background fetching
@@ -175,6 +189,7 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
       getFolderById,
       findNonInheritedValues,
       getParentFolderIds,
+      getFolderIdsWithoutChildren,
       getChildFolderIds,
       isLoadingFolders,
       isFetching,
