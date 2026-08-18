@@ -2,8 +2,23 @@ import type { EnumItem } from '@shared/api'
 import { getTextColor, Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
+import { wrapMode } from './wrapMode'
 // Inline the edit trigger class to avoid runtime import and circular dependency with CellWidget
 const EDIT_TRIGGER_CLASS = 'edit-trigger'
+
+const StyledValue = styled.span`
+  text-align: left;
+  border-radius: var(--border-radius-m);
+  padding: 0px 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+
+  &.placeholder {
+    color: var(--md-sys-color-outline);
+  }
+`
 
 const StyledWidget = styled.div`
   display: flex;
@@ -33,18 +48,45 @@ const StyledWidget = styled.div`
     }
   }
 
-  /* when value container is higher than 55px, wrap the contents */
-  &:not(.item) {
-    container-type: size;
-
-    @container (min-height: 55px) {
+  /* wrapped rows sit on a fixed row lattice, so the height clip can only land between rows */
+  ${wrapMode`
+    &.multi-select:not(.item) {
       .values {
+        --wrap-row-height: 24px;
+        --wrap-row-gap: var(--base-gap-small);
         flex-wrap: wrap;
         align-items: flex-start;
+        align-content: flex-start;
+        row-gap: var(--wrap-row-gap);
         max-height: 100%;
+        /* var() inside an unsupported round() computes to none, not to the fallback — gate it */
+        @supports (max-height: round(down, 100px, 24px)) {
+          max-height: calc(
+            round(
+                down,
+                100cqh + var(--wrap-row-gap),
+                calc(var(--wrap-row-height) + var(--wrap-row-gap))
+              ) - var(--wrap-row-gap)
+          );
+        }
+      }
+
+      .values > * {
+        min-height: var(--wrap-row-height);
+      }
+
+      ${StyledValue} {
+        white-space: normal;
+        word-break: break-word;
+        line-height: var(--wrap-row-height);
+      }
+
+      .has-img ${StyledValue} {
+        white-space: nowrap;
+        text-overflow: ellipsis;
       }
     }
-  }
+  `}
 `
 
 const StyledValuesContainer = styled.div`
@@ -68,24 +110,11 @@ const StyledValueWrapper = styled.div`
   min-width: 20px;
 `
 
-const StyledValue = styled.span`
-  text-align: left;
-  border-radius: var(--border-radius-m);
-  padding: 0px 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-
-  &.placeholder {
-    color: var(--md-sys-color-outline);
-  }
-`
-
 const StyledImg = styled.img`
   width: 20px;
   height: 20px;
   object-fit: cover;
+  flex-shrink: 0;
 
   &.avatar {
     border-radius: 50%;
@@ -181,10 +210,20 @@ export const EnumCellValue = ({
   }
 
   return (
-    <StyledWidget className={clsx(className, { selected: isSelected, item: isItem })} {...props}>
+    <StyledWidget
+      className={clsx(className, {
+        selected: isSelected,
+        item: isItem,
+        'multi-select': isMultiSelect,
+      })}
+      {...props}
+    >
       <StyledValuesContainer className="values">
         {selectedOptions.map((option, i) => (
-          <StyledValueWrapper key={option.value.toString() + i}>
+          <StyledValueWrapper
+            key={option.value.toString() + i}
+            className={clsx({ 'has-img': checkForImgSrc(option.icon) })}
+          >
             {option.icon && checkForImgSrc(option.icon) ? (
               <StyledImg
                 src={option.icon}

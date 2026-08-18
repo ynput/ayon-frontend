@@ -2,6 +2,7 @@ import {
   getLinkColumnId,
   getLinkLabel,
   getColumnLabel,
+  getNameColumnLabel,
 } from '@shared/containers/ProjectTreeTable/buildTreeTableColumns'
 import { ENTITY_COLUMN_IDS } from '@shared/containers/ProjectTreeTable/utils/columnIds'
 import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils/checkColumnVisibility'
@@ -89,8 +90,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     },
     {
       value: 'name',
-      label:
-        scopes.map((scope) => scope.charAt(0).toUpperCase() + scope.slice(1)).join('/') + ' Name',
+      label: getNameColumnLabel(scopes),
     },
     {
       value: ENTITY_COLUMN_IDS.folder,
@@ -109,7 +109,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     {
       value: 'product',
       label: getColumnLabel('product'),
-      hidden: ['product', 'version'].some((scope) => !scopes.includes(scope)),
+      hidden: !['product', 'version'].some((scope) => scopes.includes(scope)),
     },
     {
       value: 'entityType',

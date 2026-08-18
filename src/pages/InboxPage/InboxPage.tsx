@@ -6,6 +6,7 @@ import { UnreadCount } from './Inbox/Inbox.styled'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
+import { WithViews } from '@/hoc/WithViews'
 import type { InboxFilter } from './types'
 import type { ReactNode } from 'react'
 
@@ -17,19 +18,29 @@ interface InboxLink {
   tooltip?: string
   shortcut?: string
   node?: ReactNode
+  viewType?: string
 }
+
+// a view type per tab: the filters that suit Important are not the ones you want on Cleared
+const getInboxViewType = (module: InboxFilter) => `inbox-${module}`
 
 const InboxPage = () => {
   const { module } = useParams<{ module: InboxFilter }>()
+  const activeModule = module || 'important'
 
   const { data: importantUnreadCount } = useGetInboxUnreadCountQuery({ important: true })
   const { data: otherUnreadCount } = useGetInboxUnreadCountQuery({ important: false })
+
+  // an empty portal span on an inactive tab would nudge its unread count
+  const viewTypeFor = (linkModule: InboxFilter) =>
+    linkModule === activeModule ? getInboxViewType(linkModule) : undefined
 
   const links: InboxLink[] = [
     {
       name: 'Important',
       path: '/inbox/important',
       module: 'important',
+      viewType: viewTypeFor('important'),
       endContent: !!importantUnreadCount && (
         <UnreadCount className={'important'}>
           {importantUnreadCount > 99 ? '99+' : importantUnreadCount}
@@ -42,6 +53,7 @@ const InboxPage = () => {
       name: 'Other',
       path: '/inbox/other',
       module: 'other',
+      viewType: viewTypeFor('other'),
       endContent: !!otherUnreadCount && (
         <UnreadCount>{otherUnreadCount > 99 ? '99+' : otherUnreadCount}</UnreadCount>
       ),
@@ -51,6 +63,7 @@ const InboxPage = () => {
       name: 'Cleared',
       path: '/inbox/cleared',
       module: 'cleared',
+      viewType: viewTypeFor('cleared'),
     },
   ]
 
@@ -58,14 +71,16 @@ const InboxPage = () => {
   links.push({
     node: <HelpButton module={`inbox`} />,
   })
-  const title = useTitle(module || 'important', links, 'AYON', 'Inbox')
+  const title = useTitle(activeModule, links, 'AYON', 'Inbox')
 
   return (
     <>
       <DocumentTitle title={title} />
       {/* @ts-expect-error - InboxLink is compatible but TypeScript doesn't infer it */}
       <AppNavLinks links={links} />
-      <Inbox filter={module || 'important'} />
+      <WithViews viewType={getInboxViewType(activeModule)}>
+        <Inbox filter={activeModule} />
+      </WithViews>
     </>
   )
 }

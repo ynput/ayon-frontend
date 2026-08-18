@@ -27,6 +27,7 @@ import type { TableRow } from './types/table'
 // Component imports
 import buildTreeTableColumns, {
   DefaultColumns,
+  getNameColumnLabel,
   isEntityExpandable,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
@@ -112,7 +113,6 @@ import { setDetailsPanelTabForScope } from '@shared/context/DetailsPanelContext'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
-import { upperFirst } from 'lodash'
 import { ColumnsConfig } from './types/columnConfig'
 
 type CellUpdate = (
@@ -392,8 +392,7 @@ export const ProjectTreeTable = ({
   )
 
   const getNameLabelHeader = () => {
-    if (scopes.includes('version')) return 'Product / Version'
-    return scopes.map((s) => upperFirst(s)).join(' / ')
+    return getNameColumnLabel(scopes)
   }
 
   const columns = useMemo(() => {

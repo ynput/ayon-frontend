@@ -9,16 +9,13 @@ import { Menu, MenuContainer, MenuItemType } from '@shared/components'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
-import { usePowerpack, useProjectContext } from '@shared/context'
+import { usePowerpack } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import {
   canDeleteAllLists,
   canDeleteAllFolders,
   UserPermissions,
 } from '@pages/ProjectListsPage/util/listAccessControl'
-import { useCreateStoryboardMutation } from '@queries/storyboards'
-import { toast } from 'react-toastify'
-import { useSearchParams } from 'react-router-dom'
 
 export const MENU_ID = 'lists-table-menu'
 
@@ -90,27 +87,6 @@ interface ButtonsCustomization {
 
 export type ButtonType = 'delete' | 'add' | 'filter' | 'search'
 
-interface MenuItemDefinition {
-  id: string
-  label?: string
-  icon?: string
-  shortcut?: string
-  onClick?: () => void
-  isPinned?: boolean
-  disabled?: boolean
-  danger?: boolean
-  buttonProps?: {
-    icon?: string
-    tooltip?: string
-    shortcut?: string
-  }
-  className?: string
-  hiddenButtonType?: ButtonType
-  powerFeature?: string
-  selected?: boolean
-  active?: boolean
-}
-
 interface ListsTableHeaderProps {
   title?: string
   search: string | null
@@ -124,7 +100,6 @@ interface ListsTableHeaderProps {
   // overrides the default create-list flow (picker pre-populates the selected entities)
   onCreateList?: () => void
   isReview?: boolean
-  isStoryboards?: boolean
 }
 
 const ListsTableHeader: FC<ListsTableHeaderProps> = ({
@@ -137,9 +112,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   menuId = MENU_ID,
   onCreateList,
   isReview = false,
-  isStoryboards = false,
 }) => {
-  const { projectName } = useProjectContext()
   const {
     openNewList,
     onOpenFolderList,
@@ -156,8 +129,6 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   const { powerLicense } = usePowerpack()
   const { listsData, listFolders } = useListsDataContext()
   const user = useAppSelector((state) => state.user)
-
-  const [searchParams, setSearchParams] = useSearchParams()
 
   // Create user permissions object for access control checks
   const userPermissions: UserPermissions = useMemo(
@@ -218,8 +189,6 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
 
   const handleSelectAllLists = () => selectAllLists()
 
-  const [createList] = useCreateStoryboardMutation()
-
   // Define all menu items in order (matching right-to-left button order)
   const menuItems: MenuItemType[] = [
     {
@@ -248,35 +217,12 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     {
       id: 'new-list',
       label: isReview
-        ? isStoryboards
-          ? 'Create storyboard'
-          : 'Create review session'
+        ? 'Create review session'
         : 'Create list',
       icon: 'add',
       shortcut: 'N',
       onClick: async () => {
         if (onCreateList) return onCreateList()
-        if (isStoryboards) {
-          const label =
-            prompt('What would you like to call the storyboard?') ||
-            `Storyboard - ${new Date().toLocaleString()}`
-
-          const { data, error } = await createList({
-            projectName,
-            label,
-          })
-
-          if (error) {
-            return toast.error('Error creating storyboard')
-          }
-
-          setSearchParams({
-            ...searchParams,
-            storyboard: data.id,
-          })
-
-          return
-        }
         openNewList()
       },
       isPinned: true,
@@ -341,9 +287,20 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     },
   ]
 
-  const visibleMenuItems = hiddenMenuItemIds.length
+  const filteredMenuItems = hiddenMenuItemIds.length
     ? menuItems.filter((item) => !item.id || !hiddenMenuItemIds.includes(item.id))
     : menuItems
+
+  // hiding items can leave dividers doubled up or dangling at either end
+  const isDivider = (item: MenuItemType) => item.id === 'divider'
+  const visibleMenuItems = filteredMenuItems.reduce<MenuItemType[]>((acc, item) => {
+    if (isDivider(item) && (!acc.length || isDivider(acc[acc.length - 1]))) return acc
+    acc.push(item)
+    return acc
+  }, [])
+  while (visibleMenuItems.length && isDivider(visibleMenuItems[visibleMenuItems.length - 1])) {
+    visibleMenuItems.pop()
+  }
 
   // Get pinned items (for buttons)
   const pinnedItems = visibleMenuItems.filter((item) => item.isPinned)

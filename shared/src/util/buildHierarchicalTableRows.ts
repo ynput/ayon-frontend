@@ -41,6 +41,8 @@ export interface BuildHierarchicalRowsConfig<TFolder, TItem> {
   getItemCount: (node: HierarchicalFolderNode<TFolder, TItem>) => number
   /** Optional: returns true if the folder is genuinely empty, false if it has items the user can't see (e.g. restricted projects). Hides folders with restricted content regardless of showEmptyFolders. */
   getFolderIsEmpty?: (folder: TFolder) => boolean | undefined
+  /** Optional: why a folder can't be picked (row shown but not selectable); undefined = selectable */
+  getFolderDisabledMessage?: (folder: TFolder) => string | undefined
 }
 
 /**
@@ -63,6 +65,7 @@ export const buildHierarchicalTableRows = <TFolder, TItem>(
     getFolderColor,
     getItemCount,
     getFolderIsEmpty,
+    getFolderDisabledMessage,
   } = config
 
   const isFolderVisible = (node: HierarchicalFolderNode<TFolder, TItem>): boolean => {
@@ -114,6 +117,7 @@ export const buildHierarchicalTableRows = <TFolder, TItem>(
 
     const folderLabel = getFolderLabel(node.folder)
     const folderColor = getFolderColor(node.folder)
+    const folderDisabledMessage = getFolderDisabledMessage?.(node.folder)
 
     // Create folder row
     const folderRow: SimpleTableRow = {
@@ -124,6 +128,8 @@ export const buildHierarchicalTableRows = <TFolder, TItem>(
       icon: getFolderIcon(node.folder),
       iconColor: folderColor,
       iconFilled: true,
+      isDisabled: !!folderDisabledMessage,
+      disabledMessage: folderDisabledMessage,
       subRows: [],
       data: {
         id: node.id,

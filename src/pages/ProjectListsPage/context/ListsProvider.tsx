@@ -11,7 +11,11 @@ import useDeleteList from '../hooks/useDeleteList'
 import useUpdateList from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
-import ListsContext, { ListDetailsOpenState, OnOpenFolderListParams } from './ListsContext'
+import ListsContext, {
+  ListDetailsOpenState,
+  MoveToFolderState,
+  OnOpenFolderListParams,
+} from './ListsContext'
 import { useGetProductionAddon } from '@shared/hooks'
 import { useSessionStorage } from '@shared/hooks'
 import { buildListFolderRowId, parseListFolderRowId } from '../util/buildListsTableData'
@@ -44,7 +48,6 @@ const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
 interface ListsProviderProps {
   children: ReactNode
   isReview?: boolean
-  isStoryboards?: boolean
   // picker mode keeps selection in local state instead of URL query params
   picker?: boolean
 }
@@ -52,7 +55,6 @@ interface ListsProviderProps {
 export const ListsProvider = ({
   children,
   isReview,
-  isStoryboards,
   picker,
 }: ListsProviderProps) => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
@@ -62,7 +64,6 @@ export const ListsProvider = ({
   // Memoize the configurations for the query parameters
   const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
   const reviewParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
-  const storyboardParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
 
   const [unstableListSelection, setListSelection] = useQueryParam<RowSelectionState>(
     'list',
@@ -71,10 +72,6 @@ export const ListsProvider = ({
   const [unstableReviewSelection, setReviewSelection] = useQueryParam<RowSelectionState>(
     'review',
     reviewParamConfig, // Use memoized config
-  )
-  const [unstableStoryboardSelection, setStoryboardSelection] = useQueryParam<RowSelectionState>(
-    'storyboard',
-    storyboardParamConfig, // Use memoized config
   )
 
   // find out if and what version of the review addon is installed
@@ -88,20 +85,16 @@ export const ListsProvider = ({
     () =>
       picker
         ? pickerSelection
-        : isReview
-        ? isStoryboards
-          ? unstableStoryboardSelection
-          : unstableReviewSelection
-        : unstableListSelection,
+        : (isReview
+          ? unstableReviewSelection
+          : unstableListSelection),
     // Simpler dependencies: unstableListSelection and unstableReviewSelection are stable state references
     [
       picker,
       pickerSelection,
       unstableListSelection,
       unstableReviewSelection,
-      unstableStoryboardSelection,
       isReview,
-      isStoryboards,
     ],
   )
 
@@ -109,15 +102,13 @@ export const ListsProvider = ({
     (ids: RowSelectionState) => {
       if (picker) {
         setPickerSelection(ids)
-      } else if (isStoryboards) {
-        setStoryboardSelection(ids)
       } else if (isReview) {
         setReviewSelection(ids)
       } else {
         setListSelection(ids)
       }
     },
-    [picker, isReview, isStoryboards, setReviewSelection, setStoryboardSelection, setListSelection], // setReviewSelection and setListSelection are stable
+    [picker, isReview, setReviewSelection, setListSelection], // setReviewSelection and setListSelection are stable
   )
 
   // only rows that are selected
@@ -146,6 +137,10 @@ export const ListsProvider = ({
   )
 
   const [listFolderOpen, setListFolderOpen] = useState<ListDetailsOpenState>({ isOpen: false })
+
+  const [moveToFolder, setMoveToFolder] = useState<MoveToFolderState | null>(null)
+  const openMoveToFolder = useCallback((state: MoveToFolderState) => setMoveToFolder(state), [])
+  const closeMoveToFolder = useCallback(() => setMoveToFolder(null), [])
 
   // expanded state for folder hierarchy
   const [expanded, setExpanded] = useState<ExpandedState>({})
@@ -400,7 +395,6 @@ export const ListsProvider = ({
         createReviewSessionList,
         isCreatingList,
         isReview,
-        isStoryboards,
         // expanded state
         expanded,
         setExpanded,
@@ -427,6 +421,10 @@ export const ListsProvider = ({
         listFolderOpen,
         setListFolderOpen,
         onOpenFolderList, // helper function to open folder dialog in edit/create mode
+        // Move to folder dialog
+        moveToFolder,
+        openMoveToFolder,
+        closeMoveToFolder,
         // helpers
         selectAllLists,
       }}

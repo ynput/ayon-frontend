@@ -156,6 +156,11 @@ export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
 
 type SortColumnLabel = { value: string; label: string }
 
+export const getNameColumnLabel = (scopes: string[]) =>
+  scopes.includes('version')
+    ? 'Version / Product'
+    : scopes.map((scope) => scope.charAt(0).toUpperCase() + scope.slice(1)).join(' / ')
+
 export const getSortableColumnOptions = (scopes?: string[], columns: SortColumnLabel[] = []) =>
   Object.entries(COLUMN_SORT_CONFIG)
     .filter(
@@ -1030,6 +1035,7 @@ const buildTreeTableColumns = ({
 
         const subtasksData: SubtasksWidgetData = {
           taskId: parseGroupId(row.id) || row.original.entityId || row.original.id,
+          folderId: row.original.folderId ?? undefined,
           subtasks: value || [],
         }
 

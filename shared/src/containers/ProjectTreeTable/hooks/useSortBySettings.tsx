@@ -31,11 +31,10 @@ export const useSortBySettings = (columns: SortColumn[] = []) => {
 
   // The dropdown can only render a selected value whose option exists, so add
   // any active-but-unlisted sort column to the option list.
+  const optionIds = new Set(options.map((option) => option.id))
   const dropdownOptions = [
     ...options,
-    ...value
-      .filter((v) => !options.some((o) => o.id === v.id))
-      .map((v) => ({ id: v.id, label: v.label })),
+    ...value.filter((v) => !optionIds.has(v.id)).map((v) => ({ id: v.id, label: v.label })),
   ]
 
   const handleChange = (v: SortCardType[]) => {

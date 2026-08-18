@@ -214,7 +214,7 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
 export const useProjectContext = () => {
   const context = useContext(ProjectContext)
   if (context === undefined) {
-    throw new Error('useProjectContext must be used within a ProjectProviderContext')
+    throw new Error('useProjectContext must be used within a ProjectContextProvider')
   }
   return context
 }

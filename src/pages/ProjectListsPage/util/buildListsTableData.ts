@@ -20,6 +20,7 @@ export const buildListsTableData = (
   powerLicense: boolean = false,
   showArchived: boolean = false,
   getDisabledMessage?: (list: EntityList) => string | undefined,
+  getFolderDisabledMessage?: (folder: EntityListFolderModel) => string | undefined,
 ): SimpleTableRow[] => {
   // Create lookup maps
   const foldersMap = new Map<string, EntityListFolderModel>()
@@ -165,6 +166,7 @@ export const buildListsTableData = (
         getItemCount: (node) =>
           node.items.length +
           Array.from(node.children.values()).reduce((acc, child) => acc + child.items.length, 0),
+        getFolderDisabledMessage,
       })
     : []
 

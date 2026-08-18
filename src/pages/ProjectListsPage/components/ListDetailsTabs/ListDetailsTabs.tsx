@@ -5,7 +5,7 @@ export type ListDetailsTab = 'details' | 'access'
 
 const tabs: { label: string; id: ListDetailsTab; icon: string }[] = [
   { label: 'Details', id: 'details', icon: 'lists' },
-  { label: 'Sharing', id: 'access', icon: 'share' },
+  { label: 'Share', id: 'access', icon: 'share' },
 ]
 
 interface ListDetailsTabsProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
