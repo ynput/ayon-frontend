@@ -11,11 +11,12 @@ import {
 } from '@shared/api'
 import { ActionsDropdown, ActionsDropdownProps } from './ActionsDropdown'
 import ActionIcon from './ActionIcon'
-import { ActionTriggersProps, useActionTriggers } from '@shared/hooks'
+import type { ActionTriggersProps } from '@shared/hooks/useActionTriggers'
+import { useActionTriggers } from '@shared/hooks/useActionTriggers'
 import { ActionConfigDialog } from './ActionConfigDialog'
 import { InteractiveActionDialog, InteractiveForm } from './InteractiveActionDialog'
-import { BundleMode } from '@shared/util'
-import { useGlobalContext } from '@shared/context'
+import type { BundleMode } from '@shared/util/getBundleMode'
+import { useGlobalContext } from '@shared/context/GlobalContext'
 
 const placeholder = {
   identifier: 'placeholder',
@@ -95,7 +96,6 @@ export const Actions = ({
       entitySubtypes: entitySubTypesToUse,
     }
   }, [entities, entityType, entitySubTypes, projectActionsProjectName])
-
 
   useEffect(() => {
     setInteractiveForm(null)

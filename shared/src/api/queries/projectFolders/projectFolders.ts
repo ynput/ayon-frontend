@@ -1,4 +1,5 @@
-import { projectFoldersApi, ProjectFoldersResponseModel } from '@shared/api/generated'
+import { projectFoldersApi } from '@shared/api/generated'
+import type { ProjectFoldersResponseModel } from '@shared/api/generated'
 import enhancedProject, { getProjectsGraphql } from '../project/getProject'
 
 const PROJECT_FOLDER_LIST_TAG = { type: 'projectFolder' as const, id: 'LIST' }

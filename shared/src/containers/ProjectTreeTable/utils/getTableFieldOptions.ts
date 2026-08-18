@@ -1,6 +1,6 @@
-import { ProductType } from '@shared/api'
-import { BuiltInFieldOptions } from '../types'
-import { FolderType, Status, Tag, TaskType } from '../types/project'
+import type { ProductType } from '@shared/api'
+import type { BuiltInFieldOptions } from '../types'
+import type { FolderType, Status, Tag, TaskType } from '../types/project'
 
 type Params = {
   users: {

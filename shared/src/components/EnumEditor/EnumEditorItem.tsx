@@ -4,7 +4,7 @@ import { kebabCase } from 'lodash'
 import { DropdownRef, Icon } from '@ynput/ayon-react-components'
 
 import * as Styled from './EnumEditor.styled'
-import { AttributeData } from './EnumEditor'
+import type { AttributeData } from './EnumEditor'
 import clsx from 'clsx'
 
 type DivPt = Partial<React.HTMLAttributes<HTMLDivElement>>

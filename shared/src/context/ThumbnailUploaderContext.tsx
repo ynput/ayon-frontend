@@ -1,5 +1,5 @@
 import { createContext, ReactNode, RefObject, useState } from 'react'
-import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu/useCreateContextMenu'
 
 export const ThumbnailUploadContext = createContext<{
   resetFileUploadState?: Function

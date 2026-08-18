@@ -1,4 +1,4 @@
 export * from './client'
 // export base api
-import { api } from '@shared/api/base'
+import { api } from './client'
 export default api

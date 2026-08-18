@@ -1,4 +1,4 @@
-import { HeaderButton } from '@shared/containers/SimpleTable'
+import { HeaderButton } from '@shared/containers/SimpleTable/SimpleTable.styled'
 import { InputText } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'

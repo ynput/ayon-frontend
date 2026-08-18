@@ -1,8 +1,9 @@
 import { useCallback, useMemo } from 'react'
-import { SimpleTableRow } from '@shared/containers/SimpleTable'
+import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import { useGetListsInfiniteInfiniteQuery } from '@shared/api/queries/entityLists/getLists'
 import { useGetEntityListFoldersQuery } from '@shared/api'
-import { useProjectContext, usePowerpack } from '@shared/context'
+import { useProjectContext } from '@shared/context/ProjectContext'
+import { usePowerpack } from '@shared/context/PowerpackContext'
 import { getEntityTypeIcon, buildHierarchicalTableRows, HierarchicalFolderNode } from '@shared/util'
 import type { EntityList, EntityListFolderModel } from '@shared/api'
 

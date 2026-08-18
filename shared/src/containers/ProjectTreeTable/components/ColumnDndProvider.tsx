@@ -12,7 +12,7 @@ import {
   type CollisionDetection,
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
-import { useColumnSettingsContext } from '@shared/containers'
+import { useColumnSettingsContext } from '../context/ColumnSettingsContext'
 import { useColumnDragRestriction } from '../hooks/useColumnDragRestriction'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
 

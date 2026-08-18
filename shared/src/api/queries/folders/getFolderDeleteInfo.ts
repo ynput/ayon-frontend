@@ -1,4 +1,5 @@
-import { GetFolderDeleteInfoQuery, gqlApi } from '@shared/api/generated'
+import { gqlApi } from '@shared/api/generated'
+import type { GetFolderDeleteInfoQuery } from '@shared/api/generated'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 
 export type FolderDeleteInfo = {

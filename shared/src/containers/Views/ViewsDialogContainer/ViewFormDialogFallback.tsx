@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import type { ViewFormData, ViewType } from '../types'
 import type { ViewsContextValue, ViewSettings } from '../context/ViewsContext'
-import { ShareOption, UserModel } from '@shared/api'
+import type { ShareOption, UserModel } from '@shared/api'
 
 export interface ViewFormDialogProps {
   editingView: Partial<ViewFormData> & { viewId?: string }

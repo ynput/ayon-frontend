@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
 import { type QueryTasksFoldersApiArg } from '@shared/api'
 import { clientFilterToQueryFilter, expandRelativeDates, sanitizeQueryFilter } from '../utils'
-import { QueryFilter, QueryCondition } from '@shared/containers'
+import type { QueryFilter, QueryCondition } from '../types/operations'
 
 interface UseQueryFiltersProps {
   queryFilters: QueryFilter

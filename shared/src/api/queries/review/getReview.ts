@@ -1,5 +1,7 @@
-import { createRealtimeBatcher, PubSub } from '@shared/util'
-import { reviewablesApi, ReviewableModel, VersionReviewablesModel } from '@shared/api/generated'
+import { createRealtimeBatcher } from '@shared/util/realtimeUpdatesUtils'
+import PubSub from '@shared/util/pubsub'
+import { reviewablesApi } from '@shared/api/generated'
+import type { ReviewableModel, VersionReviewablesModel } from '@shared/api/generated'
 import { addonsQueries } from '../addons'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import {

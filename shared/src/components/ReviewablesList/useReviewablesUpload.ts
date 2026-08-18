@@ -4,21 +4,10 @@ import { toast } from 'react-toastify'
 
 import api, { reviewablesQueries } from '@shared/api'
 import type { UploadReviewableApiResponse } from '@shared/api'
-import type { ReviewableProgress } from '@shared/components'
+import { parseFilename } from '@shared/util/parseFilename'
+import type { ReviewableProgress } from '../ReviewableProgressCard/ReviewableProgressCard'
 
-// strip out non-ISO-8859-1 characters like Narrow No-Break Space and emojis
-// then check it is not an empty string without extension, if so replace with "unnamed"
-export const parseFilename = (filename: string) => {
-  const parsed = filename.replace(/[^\x00-\xFF]/g, '').trim()
-  // without extension
-  const nameWithoutExtension = parsed.replace(/\.[^/.]+$/, '')
-  const extension = parsed.split('.').pop()
-  if (nameWithoutExtension.length === 0) {
-    return 'unnamed' + (extension ? `.${extension}` : '')
-  } else {
-    return parsed
-  }
-}
+export { parseFilename } from '@shared/util/parseFilename'
 
 const getUploadErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {

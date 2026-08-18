@@ -2,7 +2,7 @@ import { Button, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { getDisplayValue, type DisplayConfig, getColumnDisplayConfig } from '../types/columnConfig'
-import { EntityIcon } from '@shared/components/EntityIcon'
+import { EntityIcon } from '@shared/components/EntityIcon/EntityIcon'
 import { WRAP_MIN_ROW_HEIGHT } from '../constants'
 
 const Expander = styled(Button)`

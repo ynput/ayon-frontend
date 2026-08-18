@@ -1,16 +1,15 @@
 // this is used to render a remote page and provide it with all the props it needs
 // NOTE: it must be wrapped with ViewsProvider someone (probably already by WithViews hoc)
-import { GenericViewModel } from '@shared/api'
+import type { GenericViewModel } from '@shared/api'
+import { useViewsContext } from '@shared/containers/Views/context/ViewsContext'
 import {
-  DetailsPanelEntityContextType,
   updateViewSettings,
-  UpdateViewSettingsFn,
-  useDetailsPanelEntityContext,
-  useViewsContext,
   useViewUpdateHelper,
-  ViewsContextValue,
-} from '@shared/containers'
-import { DetailsPanelContextType } from '@shared/context'
+} from '@shared/containers/Views/utils/viewUpdateHelper'
+import type { DetailsPanelEntityContextType } from '@shared/containers/ProjectTreeTable/context/DetailsPanelEntityContext'
+import type { UpdateViewSettingsFn } from '@shared/containers/Views/utils/viewUpdateHelper'
+import type { ViewsContextValue } from '@shared/containers/Views/context/ViewsContext'
+import type { DetailsPanelContextType } from '@shared/context/DetailsPanelContext'
 import { FC } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'

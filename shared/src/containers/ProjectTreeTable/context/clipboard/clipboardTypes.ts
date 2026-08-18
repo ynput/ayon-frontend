@@ -2,7 +2,7 @@ import { ReactNode } from 'react'
 import { Column } from '@tanstack/react-table'
 import { EntitiesMap, TableRow } from '../../types/table'
 import { BuiltInFieldOptions } from '../../types'
-import { EnumItem } from '@shared/api'
+import type { EnumItem } from '@shared/api'
 
 // Constants for field mappings
 export const builtInFieldMappings = {

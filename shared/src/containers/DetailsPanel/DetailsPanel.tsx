@@ -6,18 +6,21 @@ import * as Styled from './DetailsPanel.styled'
 // shared
 import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
 import type { Tag, DetailsPanelEntityType, DetailsPanelEntityData } from '@shared/api'
-import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
+import { DetailsPanelDetails } from '@shared/components/DetailsPanelDetails/DetailsPanelDetails'
+import { EntityPath } from '@shared/components/EntityPath/EntityPath'
+import { Watchers } from '@shared/components/Watchers/Watchers'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { extractEntityHierarchyFromParents } from '@shared/util'
+import { ProjectContextProvider } from '@shared/context/ProjectContext'
+import { ThumbnailUploadProvider } from '@shared/context/ThumbnailUploaderContext'
 import {
-  ProjectContextProvider,
-  ProjectModelWithProducts,
-  ThumbnailUploadProvider,
   useDetailsPanelContext,
   useScopedDetailsPanel,
-  useURIContext,
-  FeedFilter,
-} from '@shared/context'
+  setDetailsPanelTabForScope,
+} from '@shared/context/DetailsPanelContext'
+import { useURIContext } from '@shared/context/UriContext'
+import type { ProjectModelWithProducts } from '@shared/context/ProjectContext'
+import type { FeedFilter } from '@shared/context/DetailsPanelContext'
 
 import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './components/DetailsPanelFiles'
@@ -553,6 +556,5 @@ export const DetailsPanel = ({
   if (!isOpen && !entities) return null
   if (!entityType && !entities) return null
 
-  // @ts-expect-error - entityType could be undefined but we check for entities above
   return <DetailsPanelInner {...props} entityType={entityType || entities?.entityType} />
 }

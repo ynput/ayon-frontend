@@ -3,10 +3,12 @@
 
 import { FC, useMemo } from 'react'
 import { PickerEntityType } from '../EntityPickerDialog'
-import SimpleTable, { Container, SimpleTableRow } from '@shared/containers/SimpleTable'
+import SimpleTable from '@shared/containers/SimpleTable/SimpleTable'
+import { Container } from '@shared/containers/SimpleTable/SimpleTable.styled'
+import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import EntityTypeTableHeader from './EntityTypeTableHeader'
 import { upperFirst } from 'lodash'
-import { EmptyPlaceholder } from '@shared/components'
+import { EmptyPlaceholder } from '@shared/components/EmptyPlaceholder/EmptyPlaceholder'
 
 interface EntityTypeTableProps {
   entityType: PickerEntityType

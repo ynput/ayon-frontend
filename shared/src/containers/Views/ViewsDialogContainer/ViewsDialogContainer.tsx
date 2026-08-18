@@ -1,9 +1,9 @@
 import { FC } from 'react'
 import { useViewsContext } from '../context/ViewsContext'
-import { useLoadModule } from '@shared/hooks'
+import { useLoadModule } from '@shared/hooks/useLoadModule'
 import ViewFormDialogFallback from './ViewFormDialogFallback'
 import { Dialog } from '@ynput/ayon-react-components'
-import { usePowerpack } from '@shared/context'
+import { usePowerpack } from '@shared/context/PowerpackContext'
 
 export const VIEWS_DIALOG_CLASS = 'views-dialog' as const
 

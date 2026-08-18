@@ -1,9 +1,6 @@
-import { TeamSuggestionItem, UserSuggestionItem } from '@shared/api'
+import type { TeamSuggestionItem, UserSuggestionItem } from '@shared/api/generated'
 
-const getMentionUsers = (
-  users: UserSuggestionItem[] = [],
-  teams: TeamSuggestionItem[] = [],
-) => {
+const getMentionUsers = (users: UserSuggestionItem[] = [], teams: TeamSuggestionItem[] = []) => {
   const userItems = users.map((user) => ({
     type: 'user',
     id: user.name,

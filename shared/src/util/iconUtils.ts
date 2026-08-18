@@ -1,4 +1,4 @@
-import { Anatomy } from '@shared/api/generated/projects'
+import type { Anatomy } from '@shared/api/generated/projects'
 import { getEntityTypeIcon } from '@shared/util/getEntityTypeIcon'
 
 export type IconAnatomy = Pick<Anatomy, 'folder_types' | 'task_types' | 'product_base_types'>

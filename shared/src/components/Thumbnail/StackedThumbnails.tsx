@@ -2,8 +2,8 @@ import React, { useContext } from 'react'
 import styled, { css } from 'styled-components'
 import { Thumbnail } from './Thumbnail'
 import clsx from 'clsx'
-import { ThumbnailUploadContext } from '@shared/context'
-import { ThumbnailProps } from '@shared/components'
+import { ThumbnailUploadContext } from '@shared/context/ThumbnailUploaderContext'
+import type { ThumbnailProps } from './Thumbnail'
 
 type StackedStyledProps = {
   $length: number

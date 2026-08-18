@@ -1,5 +1,6 @@
 import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
-import { ProductType, useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
+import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
+import type { ProductType } from '@shared/api'
 import type {
   GetProjectsInfoResponse,
   FolderType,
@@ -20,9 +21,9 @@ import {
 } from '@ynput/ayon-react-components'
 import { customRangeOption, generateDatePresetOptions } from './filterDates'
 import { isEmpty, upperFirst } from 'lodash'
-import { SliceFilter } from '@shared/containers'
+import type { SliceFilter } from '@shared/containers/Slicer/types'
 import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
-import { useGlobalContext } from '@shared/context'
+import { useGlobalContext } from '@shared/context/GlobalContext'
 
 type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version'
 type Scope = ScopeType | ScopeType[]

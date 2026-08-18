@@ -8,9 +8,9 @@ import {
   TopicUpdateType,
   useAutoSyncSettings,
   useSyncUpdates,
-} from '@shared/context'
+} from '@shared/context/EntityUpdatesContext'
 import { Menu, MenuContainer } from '../Menu'
-import { useMenuContext } from '@shared/context'
+import { useMenuContext } from '@shared/context/MenuContext'
 import clsx from 'clsx'
 import { shouldBlockShortcuts } from '@shared/util'
 

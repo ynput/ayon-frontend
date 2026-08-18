@@ -1,4 +1,4 @@
-import { GetTasksByParentQuery } from '@shared/api'
+import type { GetTasksByParentQuery } from '@shared/api'
 import type { EntityComment, EntityLink, SubTaskNode } from '@shared/api'
 import { GroupData } from '../hooks/useBuildGroupByTableData'
 import { LinkValue } from '../utils'

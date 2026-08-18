@@ -135,7 +135,7 @@ export const buildMetricTargets = ({
 }: BuildMetricTargetsArgs): MetricTarget[] => {
   const isVisible = (columnId: string) =>
     checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)
- const isActive = (columnId: string) =>
+  const isActive = (columnId: string) =>
     isVisible(columnId) && isSummaryActive(columnId, columnSummaries, columnSummaryScopes)
 
   const targets: MetricTarget[] = []

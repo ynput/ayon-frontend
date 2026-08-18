@@ -1,4 +1,4 @@
-import { GetProductsQuery, GetVersionsQuery } from '@shared/api/generated'
+import type { GetProductsQuery, GetVersionsQuery } from '@shared/api/generated'
 import {
   GetProductsResult,
   GetVersionsResult,

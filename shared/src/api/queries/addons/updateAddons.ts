@@ -1,4 +1,4 @@
-import { UploadAddonZipFileApiArg } from '@shared/api/generated'
+import type { UploadAddonZipFileApiArg } from '@shared/api/generated'
 import getAddonsApi from './getAddons'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 

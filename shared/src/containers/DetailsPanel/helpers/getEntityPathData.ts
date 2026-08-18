@@ -1,6 +1,6 @@
-import { PathSegment } from '@shared/components'
-import { DetailsPanelEntityData } from '@shared/api'
-import { FolderListItem } from '@shared/api'
+import type { PathSegment } from '@shared/components/EntityPath/EntityPath'
+import type { DetailsPanelEntityData } from '@shared/api'
+import type { FolderListItem } from '@shared/api'
 
 type FoldersMap = Map<string, FolderListItem>
 

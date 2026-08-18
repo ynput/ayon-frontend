@@ -1,7 +1,8 @@
 import { FC } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ReviewableCardProps, ReviewableCard } from '@shared/components'
+import { ReviewableCard } from '../ReviewableCard'
+import type { ReviewableCardProps } from '../ReviewableCard'
 
 type SortableReviewableCardProps = ReviewableCardProps
 

@@ -1,4 +1,4 @@
-import { useSessionStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks/useSessionStorage'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { SliceType } from '../types'
 import { useCallback, useMemo } from 'react'

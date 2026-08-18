@@ -1,4 +1,4 @@
-import { AttributeData } from '@shared/api'
+import type { AttributeData } from '@shared/api'
 import { Cell, Row, RowData } from '@tanstack/react-table'
 import { BooleanWidget } from '../ProjectTreeTable/widgets/BooleanWidget'
 import { DateWidget } from '../ProjectTreeTable/widgets/DateWidget'

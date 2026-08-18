@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import * as Styled from './ActivityCheckbox.styled'
-import { DoneCheckbox } from '@shared/components'
+import { DoneCheckbox } from '@shared/components/DoneCheckbox/DoneCheckbox'
 
 export interface ActivityCheckboxProps {
   checked: boolean

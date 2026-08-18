@@ -1,7 +1,7 @@
 import * as Styled from './DetailsPanelSlideOut.styled'
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import { DetailsPanel } from '../../DetailsPanel'
-import { useDetailsPanelContext } from '@shared/context'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 import type { ProjectModel } from '@shared/api'
 
 export type DetailsPanelSlideOutProps = {

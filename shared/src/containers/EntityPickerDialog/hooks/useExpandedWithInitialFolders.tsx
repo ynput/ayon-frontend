@@ -4,7 +4,7 @@ import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { Dispatch, SetStateAction, useEffect, useState, useMemo } from 'react'
 import { EntityQueryResult } from './useGetEntityPickerData'
 import { getExpandedFoldersFromIds } from '../util'
-import { FolderListItem } from '@shared/api'
+import type { FolderListItem } from '@shared/api'
 
 interface useInitialExpandedFoldersProps {
   foldersSelection?: RowSelectionState
