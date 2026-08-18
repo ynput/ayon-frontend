@@ -10,6 +10,7 @@ interface EntityOption {
   icon: string
   shortcut?: string
   isSequence?: boolean
+  disabled?: boolean
 }
 
 interface UseCreateEntityShortcutsProps {
@@ -60,7 +61,7 @@ const useCreateEntityShortcuts = ({
 
       // Find option with matching shortcut
       const option = options.find((opt) => opt.shortcut === key)
-      if (option) {
+      if (option && !option.disabled) {
         e.preventDefault()
         onOpenNew(option.type, { isSequence: option.isSequence })
       }
