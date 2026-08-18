@@ -1,4 +1,4 @@
-import { PowerpackDialogType } from '@shared/context'
+import type { PowerpackDialogType } from '@shared/context/PowerpackContext'
 
 export type AddonFeatureKey = string
 

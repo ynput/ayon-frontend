@@ -120,9 +120,10 @@ type BuildMetricTargetsArgs = {
 }
 
 // Targets for the footer over the columns the user can actually see.
-// Skipped on purpose (backend SQL can't aggregate them safely yet):
-// datetime (numeric cast fails), boolean attribs (text-vs-bool compare on
-// JSONB), and list-type attribs.
+// Skipped on purpose — the backend errors on these, and one bad target fails
+// the whole query, killing every other column's stats too:
+// datetime ("cannot cast type timestamp with time zone to numeric") and
+// boolean attribs ("operator does not exist: text = boolean").
 export const buildMetricTargets = ({
   entity,
   attribs,
@@ -134,7 +135,7 @@ export const buildMetricTargets = ({
 }: BuildMetricTargetsArgs): MetricTarget[] => {
   const isVisible = (columnId: string) =>
     checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)
- const isActive = (columnId: string) =>
+  const isActive = (columnId: string) =>
     isVisible(columnId) && isSummaryActive(columnId, columnSummaries, columnSummaryScopes)
 
   const targets: MetricTarget[] = []
@@ -174,6 +175,9 @@ export const buildMetricTargets = ({
       targets.push({ field, aggregations: NUMERIC })
     } else if (type === 'string') {
       targets.push({ field, aggregations: attrib.data?.enum?.length ? ENUM : COUNTS })
+    } else if (type === 'list_of_strings' || type === 'list_of_integers') {
+      // backend buckets the whole array as one serialized value; normalizeDistribution unnests it
+      targets.push({ field, aggregations: ENUM })
     }
   }
 

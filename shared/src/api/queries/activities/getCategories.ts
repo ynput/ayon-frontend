@@ -1,6 +1,7 @@
-import { ActivityCategoriesResponseModel, activityFeedApi } from '@shared/api/generated'
+import { activityFeedApi } from '@shared/api/generated'
+import type { ActivityCategoriesResponseModel } from '@shared/api/generated'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { AccessLevel } from '@shared/components'
+import type { AccessLevel } from '@shared/components/AccessUser/AccessUser'
 
 const listTag = { type: 'category', id: 'LIST' } as const
 const settingsTag = { type: 'addonSettings', id: 'powerpack' } as const

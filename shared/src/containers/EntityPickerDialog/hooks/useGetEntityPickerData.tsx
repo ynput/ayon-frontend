@@ -3,8 +3,8 @@ import {
   SearchEntityLink,
   useGetSearchedEntitiesLinksInfiniteQuery,
 } from '@shared/api'
-import { useProjectContext } from '@shared/context'
-import { useHierarchyTable } from '@shared/hooks'
+import { useProjectContext } from '@shared/context/ProjectContext'
+import { useHierarchyTable } from '@shared/hooks/useHierarchyTable'
 import { useMemo } from 'react'
 import { PickerEntityType, PickerSearch } from '../EntityPickerDialog'
 import {
@@ -13,7 +13,7 @@ import {
   EntityAnatomy,
   entityHierarchies,
 } from '../util'
-import { SimpleTableRow } from '@shared/containers/SimpleTable'
+import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import { matchSorter } from 'match-sorter'
 
 export type EntityQueryResult = {

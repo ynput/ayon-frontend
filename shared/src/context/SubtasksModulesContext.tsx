@@ -1,6 +1,6 @@
 import { FC, ReactNode, useContext, useEffect } from 'react'
-import { useLoadModule } from '@shared/hooks'
-import { SubtasksManagerProps } from '@shared/components'
+import { useLoadModule } from '@shared/hooks/useLoadModule'
+import type { SubtasksManagerProps } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
 import { usePowerpack } from './PowerpackContext'
 import { SubtasksModulesContext } from './SubtasksModulesContextInstance'
 

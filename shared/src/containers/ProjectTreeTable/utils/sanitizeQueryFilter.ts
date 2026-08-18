@@ -1,4 +1,4 @@
-import { QueryCondition, QueryFilter } from '@shared/containers'
+import type { QueryCondition, QueryFilter } from '../types/operations'
 
 const isCondition = (c: QueryCondition | QueryFilter): c is QueryCondition => 'key' in c
 

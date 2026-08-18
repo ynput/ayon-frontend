@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import getEntityPathData from '../helpers/getEntityPathData'
 // shared
-import { PathSegment } from '@shared/components'
+import type { PathSegment } from '@shared/components/EntityPath/EntityPath'
 import { useGetProductVersionsQuery, useGetFolderListQuery } from '@shared/api'
 import type { DetailsPanelEntityData, DetailsPanelEntityType } from '@shared/api'
-import { useQueryArgumentChangeLoading } from '@shared/hooks'
+import { useQueryArgumentChangeLoading } from '@shared/hooks/useQueryArgumentChangeLoading'
 
 type Props = {
   entity: DetailsPanelEntityData

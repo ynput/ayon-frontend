@@ -23,7 +23,7 @@ import {
   createProductAndVersion,
   createVersionHelper,
 } from '@shared/util/versionUploadHelpers'
-import { parseFilename } from '@shared/components/ReviewablesList'
+import { parseFilename } from '@shared/util/parseFilename'
 import { VersionUploadContext } from './VersionUploadContextInstance'
 
 export interface FormData {

@@ -24,18 +24,19 @@ import {
 } from '@dnd-kit/sortable'
 
 // components
-import { ReviewableCard, ReviewableProgressCard } from '@shared/components'
+import { ReviewableCard } from '../ReviewableCard'
+import { ReviewableProgressCard } from '../ReviewableProgressCard'
 import SortableReviewableCard from './SortableReviewableCard'
 import * as Styled from './ReviewablesList.styled'
 import { toast } from 'react-toastify'
 
 // utils
 import { getGroupedReviewables } from './getGroupedReviewables'
-import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu/useCreateContextMenu'
 import { confirmDelete } from '@shared/util'
 import EditReviewableDialog from './EditReviewableDialog'
 import ReviewableUpload from './ReviewablesUpload'
-import { useDetailsPanelContext } from '@shared/context'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 import { useGetMyProjectPermissionsQuery } from '@shared/api'
 
 interface ReviewablesListProps {

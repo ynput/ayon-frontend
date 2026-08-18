@@ -14,7 +14,7 @@ import { useViewUpdateHelper } from '../../utils/viewUpdateHelper'
 import { useState, useEffect, useCallback } from 'react'
 
 // Import the internal QueryFilter type that the app uses
-import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import type { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 
 type Return = {
   // Filter management

@@ -1,4 +1,4 @@
-import type { FilterFieldType, ScopeWithFilterTypes } from '@shared/components'
+import type { FilterFieldType, ScopeWithFilterTypes } from './useBuildFilterOptions'
 
 type ScopeType = ScopeWithFilterTypes['scope']
 

@@ -4,7 +4,7 @@ import { detailsPanelEntityTypes } from '@shared/api'
 import * as Styled from './LinksManager.styled'
 import { LinkEntity } from './LinksManager'
 import clsx from 'clsx'
-import { EntityIcon } from '@shared/components/EntityIcon'
+import { EntityIcon } from '@shared/components/EntityIcon/EntityIcon'
 
 export interface LinkManagerItemProps {
   link: LinkEntity
@@ -61,7 +61,9 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
   const isClickable = entityTypeSupported && !link.isRestricted
   return (
     <Styled.LinkItem
-      onClick={() => !isEditingCount && isClickable && onEntityClick?.(link.entityId, link.entityType)}
+      onClick={() =>
+        !isEditingCount && isClickable && onEntityClick?.(link.entityId, link.entityType)
+      }
       data-tooltip={
         link.isRestricted
           ? isManager
@@ -76,7 +78,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
         unknown: link.isRestricted && isManager,
       })}
     >
-      <EntityIcon entity={{entityType: link.entityType}} icon={link?.icon} color={link.color} />
+      <EntityIcon entity={{ entityType: link.entityType }} icon={link?.icon} color={link.color} />
       <span className="title">
         {link.isRestricted ? (
           <span className="label">{isManager ? 'Unknown' : 'Access Restricted'}</span>
@@ -92,8 +94,8 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
           </>
         )}
       </span>
-      {!link.isRestricted && (
-        isEditingCount ? (
+      {!link.isRestricted &&
+        (isEditingCount ? (
           <Styled.CountInput
             value={editValue}
             min={1}
@@ -113,8 +115,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
           >
             x{count}
           </Styled.CountBadge>
-        )
-      )}
+        ))}
       {(!link.isRestricted || isManager) && (
         <Button
           icon={'link_off'}

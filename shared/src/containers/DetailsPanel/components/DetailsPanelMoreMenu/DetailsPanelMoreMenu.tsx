@@ -1,14 +1,16 @@
 import { useContext, useId, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { Button } from '@ynput/ayon-react-components'
-import { Menu, MenuContainer, DetailsDialog } from '@shared/components'
+import { Menu } from '@shared/components/Menu/Menu'
+import { MenuContainer } from '@shared/components/Menu/MenuContainer'
+import { DetailsDialog } from '@shared/components/DetailsDialog/DetailsDialog'
+import { useMenuContext } from '@shared/context/MenuContext'
+import { ThumbnailUploadContext } from '@shared/context/ThumbnailUploaderContext'
 import {
-  useMenuContext,
-  ThumbnailUploadContext,
   useDeleteEntitiesContextOptional,
   isDeletableEntityType,
-  type DeletableEntity,
-} from '@shared/context'
+} from '@shared/context/DeleteEntitiesContext'
+import type { DeletableEntity } from '@shared/context/DeleteEntitiesContext'
 
 import { useContextAccess } from './hooks/useContextAccess'
 import { useMenuOptions } from './hooks/useMenuOptions'
@@ -98,9 +100,7 @@ export const DetailsPanelMoreMenu = ({
   }
 
   const viewerArgs =
-    entityId && projectName
-      ? buildViewerArgs(entityType, entityId, projectName, productId)
-      : null
+    entityId && projectName ? buildViewerArgs(entityType, entityId, projectName, productId) : null
   const canOpenViewer = !!onOpenViewer && !!viewerArgs
 
   const deleteContext = useDeleteEntitiesContextOptional()
@@ -111,8 +111,8 @@ export const DetailsPanelMoreMenu = ({
     const source: SelectedEntityRef[] = selectedEntities.length
       ? selectedEntities
       : entityId
-        ? [{ entityId, entityType, projectName }]
-        : []
+      ? [{ entityId, entityType, projectName }]
+      : []
     return source
       .map((e): DeletableEntity | null => {
         const type = e.entityType || entityType

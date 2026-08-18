@@ -1,5 +1,5 @@
 import { useSetFrontendPreferencesMutation } from '@shared/api'
-import { useGlobalContext } from '@shared/context'
+import { useGlobalContext } from '@shared/context/GlobalContext'
 import { toast } from 'react-toastify'
 
 type Props = {

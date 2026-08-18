@@ -1,10 +1,11 @@
 // NOT USED IN AYON-FRONTEND, ONLY IN ADDONS
 
-import { ProjectModel, useGetProjectQuery, UserModel } from '@shared/api'
+import { useGetProjectQuery } from '@shared/api/queries/project/getProject'
+import type { ProjectModel, UserModel } from '@shared/api/generated'
 import { createContext, FC, useContext } from 'react'
 import type { toast } from 'react-toastify'
 import { useGlobalContext } from './GlobalContext'
-import { RemotePageProps } from '@shared/components'
+import type { RemotePageProps } from '@shared/components/RemotePage/RemotePageWrapper'
 
 type ToastFunc = typeof toast
 

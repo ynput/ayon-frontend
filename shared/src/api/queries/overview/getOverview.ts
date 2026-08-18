@@ -20,7 +20,7 @@ import {
   ThumbnailUpdateMessage,
   waitForRealtimeJitter,
 } from '@shared/util'
-import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
+import type { EditorTaskNode } from '@shared/containers/ProjectTreeTable/types/table'
 import type { FieldStats } from '../columnStats'
 import {
   normalizeFieldStats,

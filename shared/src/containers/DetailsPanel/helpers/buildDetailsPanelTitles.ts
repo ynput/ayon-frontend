@@ -1,4 +1,4 @@
-import { DetailsPanelEntityData, DetailsPanelEntityType } from '@shared/api'
+import type { DetailsPanelEntityData, DetailsPanelEntityType } from '@shared/api'
 
 type TitleResult = { title: string; subTitle: string }
 

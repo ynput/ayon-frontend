@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import { useGetFeedbackVerificationQuery } from '@shared/api'
-import { useGlobalContext } from '@shared/context'
+import { useGlobalContext } from '@shared/context/GlobalContext'
 import { FeedbackContext } from './FeedbackContextInstance'
 
 export type FeedbackContextType = {

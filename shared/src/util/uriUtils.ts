@@ -1,4 +1,4 @@
-import { EntityUri, SettingsUri } from '@shared/context'
+import type { EntityUri, SettingsUri } from '../context/UriContext'
 
 // helper to parse uri into base and query components
 const parseUriComponents = (uri: string): { baseUri: string; queryParams: URLSearchParams } => {

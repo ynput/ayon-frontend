@@ -6,14 +6,12 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import type {
-  EntityList,
   GetListItemsQuery,
   GetListItemsQueryVariables,
   GetListsItemsForReviewSessionQuery,
-  GetListsItemsForReviewSessionResult,
   GetListsQuery,
   GetListsQueryVariables,
-} from '@shared/api'
+} from '@shared/api/generated'
 import { parseJSONField } from '../overview'
 import {
   createRealtimeBatcher,
@@ -23,11 +21,13 @@ import {
 } from '@shared/util'
 import {
   GetListItemsResult,
+  GetListsItemsForReviewSessionResult,
   GetListsResult,
   ListItemMessage,
   ListItemsPageParam,
   ListsPageParam,
 } from './types'
+import type { EntityList } from '@shared/containers/DetailsPanel/components/DetailsPanelMoreMenu/types'
 
 const CACHE_TIME = 10 // seconds
 

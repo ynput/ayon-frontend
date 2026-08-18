@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { FEED_NEW_COMMENT, useFeedContext } from '../../../context/FeedContext'
-import { useDetailsPanelContext } from '@shared/context'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 
 type Props = {
   entityId: string

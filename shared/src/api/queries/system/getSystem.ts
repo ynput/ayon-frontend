@@ -1,4 +1,5 @@
-import { GetSiteInfoApiResponse, systemApi } from '@shared/api/generated'
+import { systemApi } from '@shared/api/generated'
+import type { GetSiteInfoApiResponse } from '@shared/api/generated'
 
 export interface GetSiteInfoResult extends GetSiteInfoApiResponse {
   uiExposureLevel: number

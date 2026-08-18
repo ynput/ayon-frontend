@@ -1,4 +1,5 @@
-import { attributesApi, AttributeModel, GetAttributeListApiResponse } from '@shared/api/generated'
+import { attributesApi } from '@shared/api/generated'
+import type { AttributeModel, GetAttributeListApiResponse } from '@shared/api/generated'
 
 type GetAttributeListResult = AttributeModel[]
 

@@ -1,15 +1,15 @@
-import {
-  useColumnSettingsContext,
-  useProjectTableContext,
-  checkColumnVisibility,
-} from '@shared/containers/ProjectTreeTable'
+import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils/checkColumnVisibility'
+import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
+import { useProjectTableContext } from '@shared/containers/ProjectTreeTable/context/ProjectTableContext'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC, useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
-import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
+import type { SettingHighlightedId } from '@shared/context/SettingsPanelContext'
+import { useSettingsPanel } from '@shared/context/SettingsPanelContext'
+import { SettingsPanel } from '@shared/components/SettingsPanel/SettingsPanel'
+import type { SettingConfig } from '@shared/components/SettingsPanel/SettingsPanel'
 import { ColumnsSettingsWithContext } from './ColumnsSettings'
-import { SizeSlider } from '@shared/components'
+import { SizeSlider } from '../SizeSlider'
 import { useGroupBySettings } from '@shared/containers/ProjectTreeTable/hooks/useGroupBySettings'
 import { useSortBySettings } from '@shared/containers/ProjectTreeTable/hooks/useSortBySettings'
 import { useAddColumnsMenu } from './useAddColumnsMenu'

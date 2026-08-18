@@ -23,16 +23,7 @@ icons['list']['check'] = getIcon('check_circle')
 icons['image'] = getIcon('attach_file')
 icons['code-block'] = getIcon('code')
 
-export const quillFormats = [
-  'header',
-  'bold',
-  'italic',
-  'strike',
-  'list',
-  'link',
-  'code-block',
-  'mention',
-]
+export { quillFormats } from '../quillFormats'
 
 export const getModules = ({ imageUploader, mentionTypeOptions, disableImageUpload = false }) => {
   const toolbar = [

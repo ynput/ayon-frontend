@@ -1,10 +1,10 @@
-import { ActivityCategory } from '@shared/api'
+import type { ActivityCategory } from '@shared/api'
 import { Dropdown, DropdownProps, StatusField } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import { CategoryTag } from './CategoryTag'
 import styled from 'styled-components'
 import { CategoryDropdownItem } from './CategoryDropdownItem'
-import { PowerpackFeature } from '@shared/context'
+import type { PowerpackFeature } from '@shared/context/PowerpackContext'
 import { toast } from 'react-toastify'
 
 export const isCategoryHidden = (

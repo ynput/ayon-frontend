@@ -37,7 +37,7 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-ki
 // Notification imports
 import { toast } from 'react-toastify'
 import { checkColumnVisibility } from '../../containers/ProjectTreeTable/utils'
-import { SettingHighlightedId, useMenuContext } from '@shared/context'
+import { useMenuContext } from '@shared/context'
 import type { MenuItemType } from '../Menu'
 import { AddColumnItem, buildAddColumnsMenu, getAddColumnSection } from './addColumnsMenu'
 import { AddColumnMenu } from './AddColumnMenu'
@@ -46,6 +46,7 @@ import {
   SettingsPanelItemTemplate,
   SettingsPanelItemTemplateProps,
 } from '../SettingsPanel/SettingsPanelItemTemplate'
+import type { SettingHighlightedId } from '@shared/context/SettingsPanelContext'
 import { InputSwitch } from '@ynput/ayon-react-components'
 
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'

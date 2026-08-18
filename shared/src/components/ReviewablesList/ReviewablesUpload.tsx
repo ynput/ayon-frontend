@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 
 // components
-import { ReviewableProgressCard } from '@shared/components'
+import { ReviewableProgressCard } from '../ReviewableProgressCard'
 import * as Styled from './ReviewablesUpload.styled'
 import { useReviewablesUpload } from './useReviewablesUpload'
 

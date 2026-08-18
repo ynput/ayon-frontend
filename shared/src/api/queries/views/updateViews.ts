@@ -1,4 +1,4 @@
-import { ViewListItemModel } from '@shared/api/generated'
+import type { ViewListItemModel } from '@shared/api/generated'
 import { getScopeTag, getViewsApi } from './getViews'
 import { v4 as uuidv4 } from 'uuid'
 
