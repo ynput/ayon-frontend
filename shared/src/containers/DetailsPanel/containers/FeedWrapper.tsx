@@ -5,7 +5,6 @@ import ActivityReferenceTooltip from '@shared/containers/Feed/components/Activit
 import { FeedProvider } from '@shared/containers/Feed/context/FeedContext'
 import type { Status, QueryFilter } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
-import { useLocalStorage } from '@shared/hooks/useLocalStorage'
 
 interface FeedWrapperProps {
   entities: any[]
