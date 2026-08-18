@@ -105,7 +105,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     checkColumnVisibility(columnVisibility, column.value, defaultColumnVisibility),
   ).length
 
-  const { menuItems: addColumnMenuItems } = useAddColumnsMenu({
+  const { menuItems: addColumnMenuItems, dragOverlay, onColumnDragStart } = useAddColumnsMenu({
     columns: visibleColumns,
     scopes,
     extraItems: extraMenuItems,
@@ -130,14 +130,18 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
         />
       ),
       component: (
-        <ColumnsSettingsWithContext
-          columns={visibleColumns}
-          highlighted={highlighted}
-          scopes={scopes}
-          search={search}
-          onSearchChange={setSearch}
-          addColumnMenuItems={addColumnMenuItems}
-        />
+        <>
+          <ColumnsSettingsWithContext
+            columns={visibleColumns}
+            highlighted={highlighted}
+            scopes={scopes}
+            search={search}
+            onSearchChange={setSearch}
+            addColumnMenuItems={addColumnMenuItems}
+            onColumnDragStart={onColumnDragStart}
+          />
+          {dragOverlay}
+        </>
       ),
     },
     hideSortBy ? null : sortBySettings,

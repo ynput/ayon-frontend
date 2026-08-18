@@ -41,6 +41,7 @@ import { useMenuContext } from '@shared/context'
 import type { MenuItemType } from '../Menu'
 import { AddColumnItem, buildAddColumnsMenu, getAddColumnSection } from './addColumnsMenu'
 import { AddColumnMenu } from './AddColumnMenu'
+import { useVisibilityPaint } from './useVisibilityPaint'
 import { TableSearch } from '../TableSearch'
 import {
   SettingsPanelItemTemplate,
@@ -51,9 +52,6 @@ import { InputSwitch } from '@ynput/ayon-react-components'
 
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'
 const NO_SCOPES: string[] = []
-
-// base keeps rows in place for the whole drag, next is the previewed result
-type PaintState = { action: 'show' | 'hide'; base: VisibilityState; next: VisibilityState }
 
 export interface SettingSwitchProps
   extends Omit<SettingsPanelItemTemplateProps, 'onChange' | 'item'> {
@@ -107,6 +105,8 @@ interface ColumnsSettingsProps {
   columnSummaryFormats?: ColumnsConfig['columnSummaryFormats']
   groupByConfig?: ColumnsConfig['groupByConfig']
   addColumnMenuItems?: MenuItemType[]
+  // dragging a row out of the panel drops the column into the table header
+  onColumnDragStart?: (column: AddColumnItem, event: React.PointerEvent) => void
   scopes?: string[]
   // when a string (including ''), the panel switches to a flat searchable list of all columns
   search?: string | null
@@ -132,6 +132,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   columnSummaryFormats,
   groupByConfig,
   addColumnMenuItems,
+  onColumnDragStart,
   scopes = NO_SCOPES,
   search,
   onSearchChange,
@@ -143,13 +144,23 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   // Add a new state to track if we're hovering over the visible section
   const [isHoveringVisibleSection, setIsHoveringVisibleSection] = useState(false)
 
+  const isColumnLocked = (columnId: string) => !!groupBy && columnId === 'name'
+
   // holding the visibility action and dragging over rows applies the same show/hide to all of them
-  const [paint, setPaint] = useState<PaintState | null>(null)
-  const paintRef = useRef<PaintState | null>(null)
-  paintRef.current = paint
-  const armedPaintRef = useRef<{ columnId: string; action: 'show' | 'hide' } | null>(null)
-  // a drag ending back on the pressed row fires a click that would undo what was painted
-  const skipNextToggleRef = useRef(false)
+  const {
+    baseVisibility,
+    displayVisibility,
+    isVisible,
+    onPaintStart: handlePaintStart,
+    onPaintEnter: handlePaintEnter,
+    toggle: toggleVisibility,
+    cancelPaint,
+  } = useVisibilityPaint({
+    columnVisibility,
+    defaultColumnVisibility,
+    updateColumnVisibility,
+    isLocked: isColumnLocked,
+  })
 
   const { toggleMenuOpen } = useMenuContext()
 
@@ -188,10 +199,8 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   )
 
   // while painting, rows stay where they were so the cursor doesn't run over a reflowing list
-  const membershipVisibility = paint?.base ?? columnVisibility
-  const displayVisibility = paint?.next ?? columnVisibility
-  const isColumnHidden = (columnId: string) =>
-    !checkColumnVisibility(displayVisibility, columnId, defaultColumnVisibility)
+  const membershipVisibility = baseVisibility
+  const isColumnHidden = (columnId: string) => !isVisible(columnId)
 
   // Separate columns into visible and pinned
   const { visibleColumns, pinnedColumns } = useMemo(() => {
@@ -285,20 +294,13 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     () =>
       buildAddColumnsMenu({
         columns,
-        onToggle: (columnId) => {
-          const { columnVisibility, updateColumnVisibility } = latestRef.current
-          const isVisible = checkColumnVisibility(
-            columnVisibility,
-            columnId,
-            defaultColumnVisibility,
-          )
-          updateColumnVisibility({ ...columnVisibility, [columnId]: !isVisible })
-        },
-        isColumnVisible: (columnId) =>
-          checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility),
+        onToggle: toggleVisibility,
+        isColumnVisible: isVisible,
+        onPaintStart: handlePaintStart,
+        onPaintEnter: handlePaintEnter,
         scopes,
       }),
-    [columns, columnVisibility, defaultColumnVisibility, scopes],
+    [columns, displayVisibility, toggleVisibility, handlePaintStart, handlePaintEnter, scopes],
   )
 
   const addColumnItems = addColumnMenuItems ?? fallbackAddColumnMenuItems
@@ -322,74 +324,6 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
         Add column
       </AddColumnListButton>
     )
-
-  // Toggle column visibility
-  const toggleVisibility = (columnId: string) => {
-    if (skipNextToggleRef.current) {
-      skipNextToggleRef.current = false
-      return
-    }
-    const { columnVisibility, updateColumnVisibility } = latestRef.current
-    const isVisible = checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)
-    updateColumnVisibility({ ...columnVisibility, [columnId]: !isVisible })
-  }
-
-  const isColumnLocked = (columnId: string) => !!groupBy && columnId === 'name'
-
-  const applyPaint = (state: PaintState, columnId: string): PaintState => {
-    const visible = state.action === 'show'
-    if (checkColumnVisibility(state.next, columnId, defaultColumnVisibility) === visible)
-      return state
-    return { ...state, next: { ...state.next, [columnId]: visible } }
-  }
-
-  // one update for the whole drag: each column would otherwise PATCH the view settings on its own
-  const commitPaint = () => {
-    armedPaintRef.current = null
-    const painted = paintRef.current
-    if (!painted) return
-    skipNextToggleRef.current = true
-    latestRef.current.updateColumnVisibility(painted.next)
-    setPaint(null)
-  }
-
-  const cancelPaint = () => {
-    armedPaintRef.current = null
-    if (paintRef.current) setPaint(null)
-  }
-
-  // pressing the visibility action only arms the drag, a plain click still toggles through onClick
-  const handlePaintStart = (columnId: string) => {
-    if (isColumnLocked(columnId)) return
-    skipNextToggleRef.current = false
-    const isVisible = checkColumnVisibility(
-      latestRef.current.columnVisibility,
-      columnId,
-      defaultColumnVisibility,
-    )
-    armedPaintRef.current = { columnId, action: isVisible ? 'hide' : 'show' }
-  }
-
-  const handlePaintEnter = (columnId: string, pressed: boolean) => {
-    const armed = armedPaintRef.current
-    if (!armed) return
-    // the release could have happened anywhere, an unpressed pointer is never a drag
-    if (!pressed) {
-      cancelPaint()
-      return
-    }
-    if (isColumnLocked(columnId)) return
-    setPaint((current) => {
-      const { columnVisibility } = latestRef.current
-      const started =
-        current ??
-        applyPaint(
-          { action: armed.action, base: columnVisibility, next: columnVisibility },
-          armed.columnId,
-        )
-      return applyPaint(started, columnId)
-    })
-  }
 
   const buildColumnsConfig = (overrides: Partial<ColumnsConfig>): ColumnsConfig => ({
     columnVisibility: { ...columnVisibility },
@@ -552,12 +486,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
 
   if (typeof search === 'string') {
     return (
-      <ColumnsContainer
-        ref={containerRef}
-        onPointerUp={commitPaint}
-        onPointerLeave={commitPaint}
-        onPointerCancel={cancelPaint}
-      >
+      <ColumnsContainer ref={containerRef} data-column-drag-origin>
         {addColumnRow}
         <AddColumnMenu menuId={ADD_COLUMN_MENU_LIST_ID} menuItems={addColumnItems} />
         <Section>
@@ -577,6 +506,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
                 onToggleVisibility={toggleVisibility}
                 onPaintStart={handlePaintStart}
                 onPaintEnter={handlePaintEnter}
+                onDragStart={(event) => onColumnDragStart?.(column, event)}
               />
             ))}
           </Styled.Menu>
@@ -593,12 +523,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <ColumnsContainer
-        ref={containerRef}
-        onPointerUp={commitPaint}
-        onPointerLeave={commitPaint}
-        onPointerCancel={cancelPaint}
-      >
+      <ColumnsContainer ref={containerRef} data-column-drag-origin>
         {addColumnRow}
         <AddColumnMenu menuId={ADD_COLUMN_MENU_LIST_ID} menuItems={addColumnItems} />
 
@@ -624,6 +549,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
                     onToggleVisibility={toggleVisibility}
                     onPaintStart={handlePaintStart}
                     onPaintEnter={handlePaintEnter}
+                    onDragStart={(event) => onColumnDragStart?.(column, event)}
                   />
                 ))}
               </Styled.Menu>
@@ -652,6 +578,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
                   onToggleVisibility={toggleVisibility}
                   onPaintStart={handlePaintStart}
                   onPaintEnter={handlePaintEnter}
+                  onDragStart={(event) => onColumnDragStart?.(column, event)}
                 />
               ))}
             </Styled.Menu>
@@ -719,7 +646,13 @@ export default ColumnsSettings
 // Backward-compat wrapper that reads all data from ColumnSettingsContext
 type ColumnsSettingsWithContextProps = Pick<
   ColumnsSettingsProps,
-  'columns' | 'highlighted' | 'addColumnMenuItems' | 'scopes' | 'search' | 'onSearchChange'
+  | 'columns'
+  | 'highlighted'
+  | 'addColumnMenuItems'
+  | 'onColumnDragStart'
+  | 'scopes'
+  | 'search'
+  | 'onSearchChange'
 >
 
 export const ColumnsSettingsWithContext: FC<ColumnsSettingsWithContextProps> = (props) => {

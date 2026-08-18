@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import React, { FC } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import ColumnItem from './ColumnItem'
@@ -16,6 +16,7 @@ interface SortableColumnItemProps {
   onToggleVisibility: (columnId: string) => void
   onPaintStart?: (columnId: string) => void
   onPaintEnter?: (columnId: string, pressed: boolean) => void
+  onDragStart?: (event: React.PointerEvent) => void
 }
 
 const SortableColumnItem: FC<SortableColumnItemProps> = ({
@@ -29,6 +30,7 @@ const SortableColumnItem: FC<SortableColumnItemProps> = ({
   onToggleVisibility,
   onPaintStart,
   onPaintEnter,
+  onDragStart,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
@@ -56,6 +58,7 @@ const SortableColumnItem: FC<SortableColumnItemProps> = ({
         onToggleVisibility={onToggleVisibility}
         onPaintStart={onPaintStart}
         onPaintEnter={onPaintEnter}
+        onDragStart={onDragStart}
         dragHandleProps={{ ...attributes, ...listeners }}
       />
     </SortableItemWrapper>

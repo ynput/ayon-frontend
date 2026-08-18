@@ -42,7 +42,7 @@ export const AddColumnButton: FC<AddColumnButtonProps> = ({
     hiddenColumns,
     includeLinks,
   })
-  const { menuItems, hasMenuItems } = useAddColumnsMenu({
+  const { menuItems, hasMenuItems, dragOverlay } = useAddColumnsMenu({
     columns: visibleColumns,
     scopes,
     extraItems: extraMenuItems,
@@ -66,6 +66,7 @@ export const AddColumnButton: FC<AddColumnButtonProps> = ({
         onClick={() => toggleMenuOpen(ADD_COLUMN_MENU_TABLE_ID)}
       />
       <AddColumnMenu menuId={ADD_COLUMN_MENU_TABLE_ID} menuItems={menuItems} />
+      {dragOverlay}
     </ButtonPosition>
   )
 }

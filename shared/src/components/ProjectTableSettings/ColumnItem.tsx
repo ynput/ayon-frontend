@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { FC, useMemo } from 'react'
+import React, { FC, useMemo } from 'react'
 import {
   SettingsPanelItemTemplate,
   SettingsPanelItem,
@@ -52,6 +52,7 @@ interface ColumnItemProps {
   onToggleVisibility?: (columnId: string) => void
   onPaintStart?: (columnId: string) => void
   onPaintEnter?: (columnId: string, pressed: boolean) => void
+  onDragStart?: (event: React.PointerEvent) => void
 }
 
 const ColumnItem: FC<ColumnItemProps> = ({
@@ -70,6 +71,7 @@ const ColumnItem: FC<ColumnItemProps> = ({
   onToggleVisibility,
   onPaintStart,
   onPaintEnter,
+  onDragStart,
 }) => {
   const itemActions = useMemo(
     () => [
@@ -107,6 +109,10 @@ const ColumnItem: FC<ColumnItemProps> = ({
       isDisabled={isDisabled}
       className={clsx({ hidden: isHidden, overlay: dragOverlay })}
       onPointerEnter={(event) => onPaintEnter?.(column.value, event.buttons > 0)}
+      onPointerDown={(event) =>
+        // the row actions arm their own gestures
+        (event.target as HTMLElement).closest('.action') ? undefined : onDragStart?.(event)
+      }
       startContent={
         hideDragHandle ? undefined : (
           <div {...dragHandleProps} className="drag-handle">

@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef } from 'react'
 import MenuItem from './MenuItem'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './Menu.styled'
+import { MENU_TOP_BOUND } from './Menu.styled'
 import type { PowerpackFeature } from '@shared/context/PowerpackContext'
 import { usePowerpack } from '@shared/context/PowerpackContext'
 import type { MenuItemType } from './Menu'
@@ -82,7 +83,10 @@ export const MenuList: React.FC<MenuListProps> = ({
     // similar size or smaller. Falls back to 240 if parent is unusually narrow.
     const estimatedWidth = Math.max(240, parentVisibleRect.width)
     // sub-menus may run all the way to the bottom of the window and scroll from there
-    const estimatedHeight = Math.min(items.length * 36 + 16, viewportHeight - 2 * 8)
+    const estimatedHeight = Math.min(
+      items.length * 36 + 16,
+      viewportHeight - MENU_TOP_BOUND - padding,
+    )
 
     // Choose horizontal placement. If an ancestor sub-menu has already flipped to the
     // left, every descendant sub-menu also goes left — DetailsPanel scenarios put the
@@ -116,8 +120,10 @@ export const MenuList: React.FC<MenuListProps> = ({
     const innerTopOffset = 8
     let viewportTop = itemRect.top - innerTopOffset
     if (viewportTop + estimatedHeight > viewportHeight - padding) {
-      viewportTop = Math.max(padding, viewportHeight - estimatedHeight - padding)
+      viewportTop = viewportHeight - estimatedHeight - padding
     }
+    // above the dialog's own box the menu is clipped and can't be scrolled back into view
+    viewportTop = Math.max(MENU_TOP_BOUND, viewportTop)
 
     // Sub-menu wrappers carry 16px paddingLeft (so their wrapper rect is wider than
     // the visible menu). When we anchor on the LEFT side, the visible menu sits 16px
@@ -222,9 +228,11 @@ export const MenuList: React.FC<MenuListProps> = ({
     const contentHeight = ownVisibleEl.scrollHeight
     let viewportTop = wrapperRect.top + deltaY
     if (viewportTop + contentHeight > viewportHeight - padding) {
-      const fittedHeight = Math.min(contentHeight, viewportHeight - 2 * padding)
-      viewportTop = Math.max(padding, viewportHeight - fittedHeight - padding)
+      const fittedHeight = Math.min(contentHeight, viewportHeight - MENU_TOP_BOUND - padding)
+      viewportTop = viewportHeight - fittedHeight - padding
     }
+    // above the dialog's own box the menu is clipped and can't be scrolled back into view
+    viewportTop = Math.max(MENU_TOP_BOUND, viewportTop)
 
     // Wrapper origin: visible target minus the wrapper's left padding when on the left.
     const wrapperLeft = nextPlacement === 'left' ? viewportLeft - subMenuPaddingLeft : viewportLeft

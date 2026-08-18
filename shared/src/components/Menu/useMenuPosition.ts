@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react'
+import { DIALOG_TOP_OFFSET, MENU_TOP_BOUND } from './Menu.styled'
 
 interface MenuPosition {
   top: number
@@ -7,8 +8,6 @@ interface MenuPosition {
   bottom?: number
   maxHeight?: number
 }
-
-const DIALOG_TOP_OFFSET = 42
 
 function calculateMenuPosition(
   targetElement: HTMLElement | null,
@@ -31,17 +30,19 @@ function calculateMenuPosition(
   let right: number | undefined
   let bottom: number | undefined
 
+  // top is relative to the dialog, which starts below the app header
+  const minTop = MENU_TOP_BOUND - DIALOG_TOP_OFFSET
+
   // Check if menu fits below, otherwise flip to above
   if (top + DIALOG_TOP_OFFSET + menuHeight > viewportHeight - padding) {
     // If it doesn't fit below, check if it fits above
     const topAbove = targetRect.top - 8 - menuHeight - DIALOG_TOP_OFFSET
-    if (topAbove >= padding) {
-      top = topAbove
-    } else {
-      // Fits neither way: keep it below the target and let it scroll to the window bottom
-      top = Math.max(padding - DIALOG_TOP_OFFSET, top)
-    }
+    // Fits neither way: keep it below the target and let it scroll to the window bottom
+    if (topAbove >= minTop) top = topAbove
   }
+
+  // above the dialog's own box the menu is clipped and can't be scrolled back into view
+  top = Math.max(minTop, top)
 
   // Horizontal positioning
   if (align === 'right') {
