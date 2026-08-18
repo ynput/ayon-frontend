@@ -1,5 +1,5 @@
 import { useLazyGetAllProjectUsersAsAssigneeQuery } from '@shared/api'
-import { UseExtraSlices } from '@shared/containers/Slicer'
+import type { UseExtraSlices } from '../context/SlicerContext'
 
 type Props = {
   projectName?: string | null

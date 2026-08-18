@@ -1,6 +1,6 @@
-import { usePowerpack } from '@shared/context'
+import { usePowerpack } from '@shared/context/PowerpackContext'
 import { UseExtraSlices } from '../context/SlicerContext'
-import { useLoadModule } from '@shared/hooks'
+import { useLoadModule } from '@shared/hooks/useLoadModule'
 import SlicerDropdownFallback from '../components/SlicerDropdownFallback'
 
 export const useSlicerRemotes = () => {

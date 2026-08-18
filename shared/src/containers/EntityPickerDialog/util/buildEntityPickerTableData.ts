@@ -1,5 +1,5 @@
-import { FolderListItem, SearchEntityLink } from '@shared/api'
-import { SimpleTableRow } from '@shared/containers/SimpleTable'
+import type { FolderListItem, SearchEntityLink } from '@shared/api'
+import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import { getEntityTypeIcon } from '@shared/util'
 
 export type EntityAnatomy = {

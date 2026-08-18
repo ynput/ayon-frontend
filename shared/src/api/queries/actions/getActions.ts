@@ -1,5 +1,5 @@
-import {
-  actionsApi,
+import { actionsApi } from '@shared/api/generated'
+import type {
   ConfigureActionApiArg,
   ConfigureActionApiResponse,
   ListAvailableActionsForContextApiArg,

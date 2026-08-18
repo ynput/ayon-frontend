@@ -18,20 +18,23 @@ import { useCellEditing } from '../context/CellEditingContext'
 import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
 import { useSelectionCellsContext } from '../context/SelectionCellsContext'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext } from '@shared/context/ProjectContext'
 import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
-import { NameWidgetData } from '@shared/components/RenameForm'
+import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { READ_ONLY } from '../utils'
-import { AttributeData, EnumItem, type EntityComment } from '@shared/api'
+import type { AttributeData, EnumItem, EntityComment } from '@shared/api'
+import { CELL_PADDING_Y } from '../constants'
 
 const Cell = styled.div`
   position: absolute;
   inset: 0;
-  padding: 4px 8px;
+  padding: ${CELL_PADDING_Y}px 8px;
   display: flex;
   align-items: center;
   overflow: hidden;
+  container-type: size;
+  container-name: cell;
 
   &:has(.markdown),
   &:has(.comments-list) {

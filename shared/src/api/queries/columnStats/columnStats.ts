@@ -1,4 +1,4 @@
-import { ColumnStats } from '@shared/api/generated'
+import type { ColumnStats } from '@shared/api/generated'
 // Shape of the backend GraphQL `ColumnStats` (connection.fieldStats).
 // `sum` and `distribution` are typed ahead of backend support so wiring them is a no-op.
 export interface FieldStats extends ColumnStats {

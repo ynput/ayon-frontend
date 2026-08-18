@@ -3,19 +3,23 @@ import { getEntityId } from '@shared/util'
 import { toast } from 'react-toastify'
 import { getSequence } from '../util/getSequence'
 import { generateLabel } from '../components/NewEntity'
-import {
+import { useUpdateOverviewEntitiesMutation } from '@shared/api'
+import type {
   PatchOperation,
-  useUpdateOverviewEntitiesMutation,
   OperationModel,
   OperationResponseModel,
   EntityNaming,
 } from '@shared/api'
-import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
-import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
+import type {
+  EditorTaskNode,
+  MatchingFolder,
+} from '@shared/containers/ProjectTreeTable/types/table'
+import { useProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContext'
 import { parseAndFormatName } from '@shared/util'
-import { useSlicerContext } from '@shared/containers/Slicer'
+import { useSlicerContext } from '@shared/containers/Slicer/context/SlicerContext'
 import { isEmpty } from 'lodash'
-import { useProjectContext, useProjectFoldersContext } from '@shared/context'
+import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
 import { NewEntityContext } from './NewEntityContextInstance'
 import { NewEntityType } from '../util/entityDefinitions'
 

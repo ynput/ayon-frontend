@@ -1,7 +1,7 @@
 import { FC } from 'react'
-import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog'
+import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog/EntityPickerDialog'
 import { useMoveEntities } from '@shared/containers/ProjectTreeTable/hooks/useMoveEntities'
-import { EntityMoveData, MultiEntityMoveData, OnMoveComplete } from './types'
+import type { EntityMoveData, MultiEntityMoveData, OnMoveComplete } from './types'
 
 interface MoveEntityDialogProps {
   projectName: string

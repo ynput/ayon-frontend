@@ -41,7 +41,7 @@ import {
   SettingsPanelItemTemplateProps,
 } from '../SettingsPanel/SettingsPanelItemTemplate'
 import { SettingsPanelItemTemplate } from '../SettingsPanel/SettingsPanelItemTemplate'
-import { SettingHighlightedId } from '@shared/context'
+import type { SettingHighlightedId } from '@shared/context/SettingsPanelContext'
 import { InputSwitch } from '@ynput/ayon-react-components'
 
 export interface SettingSwitchProps

@@ -14,7 +14,6 @@ const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
     createNewList,
     createReviewSessionList,
     isReview,
-    isStoryboards,
   } = useListsContext()
 
   // Track whether to show list selection or label input for empty review
@@ -30,12 +29,11 @@ const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
     return (
       <NewReviewSessionDialog
         isOpen={true}
-        isStoryboards={isStoryboards}
         onClose={handleClose}
         onSubmit={(id) => createReviewSessionList?.(id, { showToast: true })}
         onCreateEmpty={() => setShowLabelInput(true)}
         submitLoading={isCreatingList}
-        header={`Select a version list to create a ${isStoryboards ? 'storyboard' : 'review session'}`}
+        header="Select a version list to create a review session"
         size="md"
       />
     )

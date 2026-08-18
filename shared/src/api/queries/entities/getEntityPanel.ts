@@ -1,5 +1,5 @@
-import {
-  gqlApi,
+import { gqlApi } from '@shared/api/generated'
+import type {
   GetDetailsPanelFolderQuery,
   GetDetailsPanelRepresentationQuery,
   GetDetailsPanelTaskQuery,

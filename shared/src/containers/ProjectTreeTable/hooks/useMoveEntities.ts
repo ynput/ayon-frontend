@@ -1,17 +1,14 @@
 import { useCallback, useMemo } from 'react'
 import { toast } from 'react-toastify'
-import {
-  OperationModel,
-  OperationResponseModel,
-  useUpdateOverviewEntitiesMutation,
-} from '@shared/api'
-import { useOptionalProjectTableContext } from '@shared/containers'
-import {
+import { useUpdateOverviewEntitiesMutation } from '@shared/api'
+import type { OperationModel, OperationResponseModel } from '@shared/api'
+import { useOptionalProjectTableContext } from '../context/ProjectTableContext'
+import type {
   EntityMoveData,
   MultiEntityMoveData,
   OnMoveComplete,
-} from '@shared/containers/MoveEntityDialog'
-import { useProjectFoldersContext } from '@shared/context'
+} from '@shared/containers/MoveEntityDialog/types'
+import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
 
 export type EntityType = 'folder' | 'task'
 

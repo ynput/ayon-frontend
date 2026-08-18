@@ -14,7 +14,7 @@ import {
   Dropdown,
   DefaultItemTemplate,
 } from '@ynput/ayon-react-components'
-import { Badge } from '@shared/components'
+import { Badge } from '../Badge'
 import { FormFileUpload, FormFileDownload, type FormFileData } from './FormFile'
 
 import type { FormSelectOption, SimpleFormField } from '@shared/api'

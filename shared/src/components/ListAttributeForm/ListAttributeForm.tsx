@@ -1,8 +1,9 @@
 import { FC, useCallback, useEffect, useState, useMemo } from 'react'
 import { AttributeField, DetailsPanelAttributesEditor } from '../DetailsPanelAttributes'
-import { EntityListModel, useUpdateEntityListMutation, useGetAttributeListQuery } from '@shared/api'
+import { useUpdateEntityListMutation, useGetAttributeListQuery } from '@shared/api'
+import type { EntityListModel } from '@shared/api'
 import { toast } from 'react-toastify'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext } from '@shared/context/ProjectContext'
 
 interface ListAttributeFormProps {
   projectName: string

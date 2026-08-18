@@ -5,13 +5,15 @@ import rehypeRaw from 'rehype-raw'
 import { TextWidgetInput } from './TextWidgetInput'
 import { WidgetBaseProps } from './CellWidget'
 import styled from 'styled-components'
-import { EnumItem, AttributeData } from '@shared/api'
+import type { AttributeData } from '@shared/api/generated/entityLists'
+import type { EnumItem } from '@shared/api/generated/projects'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { parseHtmlToPlainTextWithLinks } from '@shared/util'
 import { TextContentWidget } from './TextContentWidget'
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { CellId } from '../utils/cellUtils'
+import { wrapMode } from './wrapMode'
 
 // ── Styled components ──────────────────────────────────────────────
 
@@ -30,11 +32,27 @@ export const StyledBaseTextWidget = styled.span`
     display: block;
     overflow: hidden;
     width: 100%;
+    max-height: 100%;
   }
 
   &.regular {
     display: block;
   }
+
+  ${wrapMode`
+    &:not(.markdown) {
+      white-space: normal;
+      word-break: break-word;
+      display: block;
+      overflow: hidden;
+      width: 100%;
+      max-height: 100%;
+
+      > .icon {
+        margin-right: 4px;
+      }
+    }
+  `}
 `
 
 const StyledLink = styled.a`
@@ -202,13 +220,9 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         if (rafId !== null) cancelAnimationFrame(rafId)
         rafId = requestAnimationFrame(() => {
           rafId = null
-          if (isMarkdown) {
-            // Vertical overflow (text wraps but exceeds cell height)
-            setIsOverflowing(el.scrollHeight > el.clientHeight + 1)
-          } else {
-            // Horizontal overflow (text is truncated with ellipsis)
-            setIsOverflowing(el.scrollWidth > el.clientWidth + 1)
-          }
+          setIsOverflowing(
+            el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1,
+          )
         })
       }
 
@@ -220,7 +234,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         if (rafId !== null) cancelAnimationFrame(rafId)
         observer.disconnect()
       }
-    }, [textValue, isMarkdown])
+    }, [textValue])
 
     // ── Hover tracking on parent <td>
     useEffect(() => {

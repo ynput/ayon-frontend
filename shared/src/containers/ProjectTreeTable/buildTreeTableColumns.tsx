@@ -18,12 +18,12 @@ import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './contex
 import { ROW_SELECTION_COLUMN_ID } from './constants'
 import { NEXT_PAGE_ID, parseGroupId } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
-import { AttributeData, LinkTypeModel } from '@shared/api'
+import type { AttributeData, LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { SubtasksWidgetData } from './widgets/SubtasksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
-import { NameWidgetData } from '@shared/components/RenameForm'
+import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { isEntityRestricted, READ_ONLY } from './utils/restrictedEntity'
 import { getColumnDisplayConfig } from './types/columnConfig'
 import { ENTITY_COLUMN_IDS, normalizeColumnId } from './utils/columnIds'
@@ -38,6 +38,7 @@ export const COLUMN_LABELS: Record<string, string> = {
   status: 'Status',
   entityType: 'Entity type',
   subType: 'Type',
+  productType: 'Product type',
   assignees: 'Assignees',
   folder_entity: 'Folder',
   task_entity: 'Task',
@@ -78,12 +79,6 @@ export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
   name: { sortKey: 'name', enabled: true, label: 'Name' },
   entityType: { enabled: false, label: COLUMN_LABELS.entityType },
   status: { sortKey: 'status', sortDescFirst: false, enabled: true, label: COLUMN_LABELS.status },
-  subType: {
-    sortKey: 'taskType',
-    sortDescFirst: true,
-    enabled: true,
-    label: COLUMN_LABELS.subType,
-  },
   assignees: {
     sortKey: 'assignees',
     enabled: true,
@@ -146,6 +141,12 @@ export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
     label: COLUMN_LABELS.folderType,
     scopes: ['version', 'product'],
   },
+  productType: {
+    sortKey: 'productType',
+    enabled: true,
+    label: COLUMN_LABELS.productType,
+    scopes: ['version', 'product'],
+  },
   tags: { sortKey: 'tags', enabled: true, label: COLUMN_LABELS.tags },
   createdAt: { sortKey: 'createdAt', enabled: true, label: COLUMN_LABELS.createdAt },
   updatedAt: { sortKey: 'updatedAt', enabled: true, label: COLUMN_LABELS.updatedAt },
@@ -154,6 +155,11 @@ export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
 }
 
 type SortColumnLabel = { value: string; label: string }
+
+export const getNameColumnLabel = (scopes: string[]) =>
+  scopes.includes('version')
+    ? 'Version / Product'
+    : scopes.map((scope) => scope.charAt(0).toUpperCase() + scope.slice(1)).join(' / ')
 
 export const getSortableColumnOptions = (scopes?: string[], columns: SortColumnLabel[] = []) =>
   Object.entries(COLUMN_SORT_CONFIG)
@@ -172,10 +178,15 @@ export const getSortableColumnOptions = (scopes?: string[], columns: SortColumnL
 export const isColumnSortable = (columnId: string) =>
   COLUMN_SORT_CONFIG[normalizeColumnId(columnId)]?.enabled ?? !columnId.startsWith('link_')
 
-export const getColumnSortKey = (columnId?: string, showHierarchy = true) => {
+export const getColumnSortKey = (columnId?: string, showHierarchy = true, entityType?: string) => {
   if (!columnId) return undefined
   const normalizedColumnId = normalizeColumnId(columnId)
   if (normalizedColumnId === 'name' && !showHierarchy) return 'path'
+  if (normalizedColumnId === 'subType') {
+    if (entityType === 'folder') return 'folderType'
+    if (entityType === 'product' || entityType === 'version') return 'productType'
+    if (entityType === 'task') return 'taskType'
+  }
   return COLUMN_SORT_CONFIG[normalizedColumnId]?.sortKey ?? normalizedColumnId
 }
 
@@ -1024,6 +1035,7 @@ const buildTreeTableColumns = ({
 
         const subtasksData: SubtasksWidgetData = {
           taskId: parseGroupId(row.id) || row.original.entityId || row.original.id,
+          folderId: row.original.folderId ?? undefined,
           subtasks: value || [],
         }
 

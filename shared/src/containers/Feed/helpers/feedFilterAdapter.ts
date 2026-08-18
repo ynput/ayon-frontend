@@ -67,6 +67,7 @@ export const feedFilterToClientFilters = (
         label: option.label,
         type: option.type,
         icon: option.icon,
+        singleSelect: option.singleSelect,
         operator: 'OR',
         values: rawValues.map((val) => {
           const match = option.values?.find((o) => o.id === String(val))

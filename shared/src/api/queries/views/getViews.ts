@@ -1,4 +1,5 @@
-import { ListViewsApiResponse, viewsApi } from '@shared/api/generated'
+import { viewsApi } from '@shared/api/generated'
+import type { ListViewsApiResponse } from '@shared/api/generated'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 
 export const getScopeTag = (viewType: string, projectName?: string) => {

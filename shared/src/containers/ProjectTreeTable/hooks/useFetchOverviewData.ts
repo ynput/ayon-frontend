@@ -11,21 +11,23 @@ import type {
   EntityGroup,
   QueryFilter,
 } from '@shared/api'
-import { useGroupedPagination } from '@shared/hooks'
+import { useGroupedPagination } from '@shared/hooks/useGroupedPagination'
 import { getGroupByDataType } from '@shared/util'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { determineLoadingTaskFolders } from '../utils/loadingUtils'
-import { LoadingTasks, SoftErrorAction } from '../types'
-import { getFolderIdsToQueryFromExpanded, TasksByFolderMap } from '../utils'
-import { TableGroupBy } from '../context'
+import type { LoadingTasks, SoftErrorAction } from '../types'
+import { getFolderIdsToQueryFromExpanded } from '../utils/getFolderIdsToQueryFromExpanded'
+import type { TasksByFolderMap } from '../types/table'
+import type { TableGroupBy } from '../context/ColumnSettingsContext'
 import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
 import { getGroupQueries } from '../utils/getGroupQueries'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
-import { ProjectTableModulesType } from '@shared/hooks'
+import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
 import { useGetEntityLinksQuery } from '@shared/api'
-import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
+import type { OnSyncDataCallback } from '@shared/context/EntityUpdatesContext'
+import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
 import { debounce } from 'lodash'
 import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
@@ -393,7 +395,7 @@ export const useFetchOverviewData = ({
 
   // Create sort params for infinite query
   const singleSort = { ...sorting[0] }
-  const sortId = getColumnSortKey(singleSort?.id, showHierarchy)
+  const taskSortId = getColumnSortKey(singleSort?.id, showHierarchy, 'task')
   const tasksFolderIdsParams = selectedFolders.length
     ? Array.from(
         new Set([...foldersMap.keys(), ...(excludeSelectedFolders ? selectedFolders : [])]),
@@ -415,7 +417,7 @@ export const useFetchOverviewData = ({
       ? undefined
       : hierarchySlicerFolderIds ?? (selectedFolders.length ? selectedFolders : undefined),
     taskIds: taskIds?.length ? taskIds : undefined,
-    sortBy: sortId ? sortId.replace('_', '.') : undefined,
+    sortBy: taskSortId ? taskSortId.replace('_', '.') : undefined,
     desc: !!singleSort?.desc,
     showComments,
     includeFolderChildren: !hierarchySlicerFolderIds,
@@ -492,7 +494,7 @@ export const useFetchOverviewData = ({
   const groupTasksArgs: GetGroupedTasksListArgs = {
     projectName,
     groups: groupQueries,
-    sortBy: sortId ? sortId.replace('_', '.') : undefined,
+    sortBy: taskSortId ? taskSortId.replace('_', '.') : undefined,
     desc: !!singleSort?.desc,
     search: taskFilters.search,
     folderFilter: folderFilters.filterString,

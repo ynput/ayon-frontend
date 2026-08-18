@@ -62,6 +62,12 @@ export const TableCellContent = styled.div`
   user-select: none;
   padding-right: 0;
 
+  /* header cells have content-driven height, so size containment would collapse them */
+  &:not(.header) {
+    container-type: size;
+    container-name: cell;
+  }
+
   &.bold {
     font-weight: 600;
   }

@@ -1,4 +1,4 @@
-import { useGlobalContext } from '@shared/context'
+import { useGlobalContext } from '@shared/context/GlobalContext'
 
 const useSlicerAttributesData = ({ entityTypes }: { entityTypes: string[] }) => {
   const {

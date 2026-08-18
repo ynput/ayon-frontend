@@ -14,13 +14,14 @@ import {
 } from '@shared/api'
 import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
-import { useGlobalContext, usePowerpack } from '@shared/context'
+import { useGlobalContext } from '@shared/context/GlobalContext'
+import { usePowerpack } from '@shared/context/PowerpackContext'
 import { useSelectedView } from '../hooks/useSelectedView'
 import { type UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
 import { useBaseViewMutations } from '../hooks/useBaseViewMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
 import { useViewSettingsChanged } from '../hooks/useViewSettingsChanged'
-import { useLocalStorage } from '@shared/hooks'
+import { useLocalStorage } from '@shared/hooks/useLocalStorage'
 
 export type ViewData = GetDefaultViewApiResponse
 export type ViewSettings = GetDefaultViewApiResponse['settings']
@@ -58,6 +59,7 @@ export interface ViewsContextValue {
   editingViewData?: ViewData
   isLoadingEditingViewData: boolean
   isLoadingViews: boolean
+  isErrorWorkingView: boolean
 
   // Data
   shareOptions?: ShareOption[] // available users to share with (undefined means loading)
@@ -179,7 +181,11 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   //   always get your working view
-  const { currentData: workingView, isLoading: isLoadingWorkingView } = useGetWorkingViewQuery(
+  const {
+    currentData: workingView,
+    isLoading: isLoadingWorkingView,
+    isError: isErrorWorkingView,
+  } = useGetWorkingViewQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
@@ -337,6 +343,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     editingViewId,
     viewMenuItems,
     isLoadingViews,
+    isErrorWorkingView,
     // data
     shareOptions,
     setIsMenuOpen,

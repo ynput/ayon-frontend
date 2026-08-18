@@ -1,5 +1,5 @@
 import { createContext, FC, useContext } from 'react'
-import { RouterTypes } from '@shared/components'
+import type { RouterTypes } from '@shared/components/RemotePage/RemotePageWrapper'
 
 export type RemoteAddonComponent = FC<RemoteAddonProps>
 export type RemoteAddon = {

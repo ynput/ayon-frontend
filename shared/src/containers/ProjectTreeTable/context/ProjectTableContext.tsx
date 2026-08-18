@@ -38,18 +38,20 @@ import useFolderRelationships, {
   GetInheritedDependents,
 } from '../hooks/useFolderRelationships'
 import { ProjectTableAttribute, LoadingTasks, SoftErrorAction } from '../types'
-import { QueryFilter } from '../types/folders'
+import type { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
-import { EntityGroup } from '@shared/api'
+import type { EntityGroup } from '@shared/api'
 import type { GroupCountsMap } from '@shared/api'
 import useBuildGroupByTableData, {
   GroupByEntityType,
   ROW_ID_SEPARATOR,
 } from '../hooks/useBuildGroupByTableData'
-import { PowerpackContextType, useProjectContext, OnSyncDataCallback } from '@shared/context'
+import type { PowerpackContextType } from '@shared/context/PowerpackContext'
+import { useProjectContext } from '@shared/context/ProjectContext'
+import type { OnSyncDataCallback } from '@shared/context/EntityUpdatesContext'
 import { TableGroupBy, useColumnSettingsContext } from './ColumnSettingsContext'
-import { ProjectTableModulesType } from '@shared/hooks'
-import type { SubtasksManagerProps } from '@shared/components'
+import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
+import type { SubtasksManagerProps } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
 import { RowId } from '../utils'
 import { ProjectTableContext } from './ProjectTableContextInstance'
 

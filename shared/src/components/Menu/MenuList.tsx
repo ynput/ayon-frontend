@@ -2,7 +2,8 @@ import React, { useEffect, useLayoutEffect, useRef } from 'react'
 import MenuItem from './MenuItem'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './Menu.styled'
-import { PowerpackFeature, usePowerpack } from '@shared/context'
+import type { PowerpackFeature } from '@shared/context/PowerpackContext'
+import { usePowerpack } from '@shared/context/PowerpackContext'
 import type { MenuItemType } from './Menu'
 
 interface MenuListProps {
@@ -67,7 +68,8 @@ export const MenuList: React.FC<MenuListProps> = ({
     const itemRect = itemEl.getBoundingClientRect()
     // Use the visible inner <menu> element if present — the wrapper has 16px paddingLeft
     // for sub-menus which would otherwise produce a phantom gap on flip-left chains.
-    const parentVisibleEl = (parentMenuEl.querySelector('menu') as HTMLElement | null) ?? parentMenuEl
+    const parentVisibleEl =
+      (parentMenuEl.querySelector('menu') as HTMLElement | null) ?? parentMenuEl
     const parentVisibleRect = parentVisibleEl.getBoundingClientRect()
 
     const viewportWidth = window.innerWidth
@@ -161,7 +163,8 @@ export const MenuList: React.FC<MenuListProps> = ({
     // carry 16px paddingLeft which inflates the rect on the left side and would
     // otherwise produce phantom gaps when flipping left.
     const ownVisibleEl = (wrapperEl.querySelector('menu') as HTMLElement | null) ?? wrapperEl
-    const parentVisibleEl = (parentMenuEl.querySelector('menu') as HTMLElement | null) ?? parentMenuEl
+    const parentVisibleEl =
+      (parentMenuEl.querySelector('menu') as HTMLElement | null) ?? parentMenuEl
 
     const offsetParent = (wrapperEl.offsetParent as HTMLElement | null) ?? document.body
     const offsetParentRect = offsetParent.getBoundingClientRect()
@@ -218,8 +221,7 @@ export const MenuList: React.FC<MenuListProps> = ({
     }
 
     // Wrapper origin: visible target minus the wrapper's left padding when on the left.
-    const wrapperLeft =
-      nextPlacement === 'left' ? viewportLeft - subMenuPaddingLeft : viewportLeft
+    const wrapperLeft = nextPlacement === 'left' ? viewportLeft - subMenuPaddingLeft : viewportLeft
 
     const targetTop = viewportTop - offsetParentRect.top
     const targetLeft = wrapperLeft - offsetParentRect.left
@@ -255,7 +257,7 @@ export const MenuList: React.FC<MenuListProps> = ({
               return item.node
             }
 
-            if (item?.id === 'divider' || item?.separator ) return <hr key={i} />
+            if (item?.id === 'divider' || item?.separator) return <hr key={i} />
 
             const {
               label,

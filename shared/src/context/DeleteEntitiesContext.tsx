@@ -6,13 +6,13 @@ import {
   type FolderDeleteInfo,
   type OperationModel,
 } from '@shared/api'
+import { DeleteEntitiesConfirmDialog } from '@shared/components/DeleteEntitiesConfirm/DeleteEntitiesConfirmDialog'
 import {
-  DeleteEntitiesConfirmDialog,
   buildChildrenDetails,
   buildEntityLabel,
   buildExpectedCounts,
-  type DeleteConfirmPayload,
-} from '@shared/components/DeleteEntitiesConfirm'
+} from '@shared/components/DeleteEntitiesConfirm/DeleteConfirmContent'
+import type { DeleteConfirmPayload } from '@shared/components/DeleteEntitiesConfirm/DeleteConfirmContent'
 
 export type DeletableEntityType =
   | 'folder'
@@ -128,10 +128,7 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
 
       // one batched operations request per project — caches are patched optimistically
       // by the mutation and rolled back automatically if the request fails
-      const runOperationsDelete = async (
-        entitiesToDelete: DeletableEntity[],
-        force: boolean,
-      ) => {
+      const runOperationsDelete = async (entitiesToDelete: DeletableEntity[], force: boolean) => {
         if (entitiesToDelete.length === 0) return
 
         const byProject = new Map<string, DeletableEntity[]>()

@@ -1,7 +1,7 @@
 import { Quill } from 'react-quill-ayon'
 import useReferenceTooltip from '../../../hooks/useReferenceTooltip'
-import { useDetailsPanelContext } from '@shared/context'
-import { DetailsPanelEntityType } from '@shared/api'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import type { DetailsPanelEntityType } from '@shared/api'
 
 const Inline = Quill.import('blots/inline')
 

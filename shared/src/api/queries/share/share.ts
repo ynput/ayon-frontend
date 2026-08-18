@@ -1,4 +1,5 @@
-import { accessApi, GetShareOptionsApiResponse } from '@shared/api/generated'
+import { accessApi } from '@shared/api/generated'
+import type { GetShareOptionsApiResponse } from '@shared/api/generated'
 
 const getBaseTags = (projectName?: string) => {
   const tags = [{ type: 'shared', id: 'LIST' }]

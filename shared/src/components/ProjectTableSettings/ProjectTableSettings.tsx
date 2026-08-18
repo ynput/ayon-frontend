@@ -2,18 +2,22 @@ import {
   getLinkColumnId,
   getLinkLabel,
   getColumnLabel,
-  ENTITY_COLUMN_IDS,
-  useColumnSettingsContext,
-  useProjectTableContext,
-  checkColumnVisibility,
-} from '@shared/containers/ProjectTreeTable'
+  getNameColumnLabel,
+} from '@shared/containers/ProjectTreeTable/buildTreeTableColumns'
+import { ENTITY_COLUMN_IDS } from '@shared/containers/ProjectTreeTable/utils/columnIds'
+import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils/checkColumnVisibility'
+import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
+import { useProjectTableContext } from '@shared/containers/ProjectTreeTable/context/ProjectTableContext'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
-import { SettingHighlightedId, useProjectContext, useSettingsPanel } from '@shared/context'
-import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
+import type { SettingHighlightedId } from '@shared/context/SettingsPanelContext'
+import { useProjectContext } from '@shared/context/ProjectContext'
+import { useSettingsPanel } from '@shared/context/SettingsPanelContext'
+import { SettingsPanel } from '@shared/components/SettingsPanel/SettingsPanel'
+import type { SettingConfig } from '@shared/components/SettingsPanel/SettingsPanel'
 import { ColumnsSettingsWithContext } from './ColumnsSettings'
-import { SizeSlider } from '@shared/components'
+import { SizeSlider } from '../SizeSlider'
 import { useGroupBySettings } from '@shared/containers/ProjectTreeTable/hooks/useGroupBySettings'
 import { useSortBySettings } from '@shared/containers/ProjectTreeTable/hooks/useSortBySettings'
 
@@ -86,8 +90,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     },
     {
       value: 'name',
-      label:
-        scopes.map((scope) => scope.charAt(0).toUpperCase() + scope.slice(1)).join('/') + ' Name',
+      label: getNameColumnLabel(scopes),
     },
     {
       value: ENTITY_COLUMN_IDS.folder,
@@ -106,7 +109,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     {
       value: 'product',
       label: getColumnLabel('product'),
-      hidden: ['product', 'version'].some((scope) => !scopes.includes(scope)),
+      hidden: !['product', 'version'].some((scope) => scopes.includes(scope)),
     },
     {
       value: 'entityType',

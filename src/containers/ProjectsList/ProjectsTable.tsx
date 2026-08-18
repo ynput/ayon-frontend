@@ -56,6 +56,7 @@ interface ProjectsTableProps {
   onRenameFolder?: (folderId: string) => void
   onRenameProject?: (projectName: string) => void
   containerClassName?: string
+  enableClickToDeselect?: boolean
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
   }
@@ -95,6 +96,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   onRenameFolder,
   onRenameProject,
   containerClassName,
+  enableClickToDeselect,
   pt,
 }) => {
   // Track which table has active selection: 'pinned' | 'all'
@@ -109,8 +111,16 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
     return acc
   }, {} as RowSelectionState)
 
-  const pinnedSelection = activeTable === 'pinned' ? selectionState : {}
-  const allProjectsSelection = activeTable === 'all' ? selectionState : {}
+  // a selection arriving from outside the table may not be pinned, so fall back to the
+  // full table instead of highlighting nothing
+  const canPinnedTableShowSelection = selection.some((id) => rowPinning.includes(id))
+  const effectiveTable =
+    activeTable === 'pinned' && selection.length && !canPinnedTableShowSelection
+      ? 'all'
+      : activeTable
+
+  const pinnedSelection = effectiveTable === 'pinned' ? selectionState : {}
+  const allProjectsSelection = effectiveTable === 'all' ? selectionState : {}
 
   const handlePinnedSelectionChange = (newSelection: RowSelectionState) => {
     if (activeTable !== 'pinned') {
@@ -222,6 +232,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
             onRenameProject={onRenameProject}
             onOpenProject={onOpenProject}
             onSettingsClick={onSettingsClick}
+            enableClickToDeselect={enableClickToDeselect}
             fitContent
             className="pinned-projects"
           />
@@ -256,6 +267,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
           onRenameProject={onRenameProject}
           onOpenProject={onOpenProject}
           onSettingsClick={onSettingsClick}
+          enableClickToDeselect={enableClickToDeselect}
           hidePinned={!search}
           className="all-projects"
         />

@@ -7,7 +7,7 @@ import {
   SearchFilterRef,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { type QueryFilter, UserModel } from '@shared/api'
+import type { QueryFilter, UserModel } from '@shared/api'
 import {
   subtasksFilterToClientFilters,
   clientFiltersToSubtasksFilter,

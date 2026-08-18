@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import styled from 'styled-components'
-import { TableRow, useCellEditing } from '@shared/containers'
+import type { TableRow } from '@shared/containers/ProjectTreeTable/types/table'
+import { useCellEditing } from '@shared/containers/ProjectTreeTable/context/CellEditingContext'
 import { theme } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { TableMeta } from '@tanstack/react-table'
 import { checkName, checkLabel, parseAndFormatName } from '@shared/util'
 import { toast } from 'react-toastify'
-import { EntityNaming } from '@shared/api'
-import { useProjectContext } from '@shared/context'
+import type { EntityNaming } from '@shared/api'
+import { useProjectContext } from '@shared/context/ProjectContext'
 
 const EditingContainer = styled.div`
   background: var(--md-sys-color-surface-container-lowest);

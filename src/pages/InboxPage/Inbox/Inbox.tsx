@@ -1,6 +1,6 @@
 import InboxMessage from '../InboxMessage/InboxMessage'
 import * as Styled from './Inbox.styled'
-import { useEffect, useMemo, useRef, useState, MouseEvent, KeyboardEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, MouseEvent, KeyboardEvent } from 'react'
 import clsx from 'clsx'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { useDispatch } from 'react-redux'
@@ -9,19 +9,31 @@ import { InView } from 'react-intersection-observer'
 import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
 // Queries
-import { useGetInboxMessagesQuery, useLazyGetInboxMessagesQuery } from '@queries/inbox/getInbox'
+import { useGetInboxInfiniteInfiniteQuery } from '@queries/inbox/getInbox'
+import { useGetProjectInboxInfinite } from '@queries/inbox/getProjectInbox'
 import { useGetProjectsInfoQuery } from '@shared/api'
 // Components
-import { Button, Spacer } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 import { SplitterPanel } from 'primereact/splitter'
 import EnableNotifications from '@components/EnableNotifications'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
+import ProjectsList from '@containers/ProjectsList/ProjectsList'
+import type { Hidden } from '@containers/ProjectsList/hooks/useProjectsListMenuItems'
+import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
+import InboxSearchFilter from '../components/InboxSearchFilter'
 // Hooks
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useGroupMessages from '../hooks/useGroupMessages'
 import useKeydown from '../hooks/useKeydown'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useInboxRefresh from '../hooks/useInboxRefresh'
+import useInboxProject from '../hooks/useInboxProject'
+import useInboxViewSettings from '../hooks/useInboxViewSettings'
+import {
+  buildInboxFilter,
+  getInboxActivityTypes,
+  getInboxReferenceTypes,
+} from '../util/inboxFilter'
 import { useDetailsPanelContext, useGlobalContext } from '@shared/context'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
@@ -51,6 +63,19 @@ const filters: Record<InboxFilter, InboxFilterArgs> = {
   cleared: { active: false, important: null },
 }
 
+// the panel is a picker here, so every project/folder management action is hidden
+const HIDDEN_PROJECT_ACTIONS: Hidden = {
+  'add-project': true,
+  'archive-project': true,
+  'delete-project': true,
+  'move-project': true,
+  'create-folder': true,
+  'rename-folder': true,
+  'edit-folder': true,
+  'delete-folder': true,
+  'edit-label': true,
+}
+
 interface InboxProps {
   filter: InboxFilter
 }
@@ -60,47 +85,125 @@ const Inbox = ({ filter }: InboxProps) => {
   const { setHighlightedActivities } = useDetailsPanelContext()
   const {
     projects: { all: projects },
+    isLoading: globalIsLoading,
+    error: globalError,
   } = useGlobalContext()
 
   // get all project names
   const user = useAppSelector((state) => state.user.name)
+  const isGuest = useAppSelector((state) => state.user?.data?.isGuest)
 
-  const last = 100
   const filterArgs = filters[filter] || filters.important
   const isActive = filterArgs.active
   const isImportant = filterArgs.important
 
   const {
-    data: { messages = [], projectNames = [], pageInfo } = {},
-    isLoading: isLoadingInbox,
-    isFetching: isFetchingInbox,
-    error: errorInbox,
-    refetch,
-  } = useGetInboxMessagesQuery({
-    last: last,
-    active: isActive,
-    important: isImportant,
+    filter: inboxFilter,
+    onUpdateFilter,
+    // the only filter that works without a project, so it is a toolbar toggle, not a chip
+    unreadOnly: showUnreadOnly,
+    onUpdateUnreadOnly,
+    isLoadingViews,
+  } = useInboxViewSettings()
+
+  // guests get no project mode: the activities resolver rejects projects they cannot access
+  const [selectedProject, setSelectedProject] = useInboxProject({ enabled: !isGuest })
+  const isProjectMode = !!selectedProject
+
+  // chips only reach the query in project mode, the unread toggle narrows both
+  const isFiltered =
+    (isProjectMode && !!inboxFilter?.conditions?.length) || (isActive && showUnreadOnly)
+
+  const projectArgs = useMemo(
+    () => ({
+      projectName: selectedProject as string,
+      userName: user,
+      referenceTypes: getInboxReferenceTypes(inboxFilter, isImportant),
+      activityTypes: getInboxActivityTypes(inboxFilter),
+      filter: buildInboxFilter({
+        userName: user,
+        isActive,
+        isImportant,
+        isUnread: isActive && showUnreadOnly,
+        uiFilter: inboxFilter,
+      }),
+      active: isActive,
+      important: isImportant,
+    }),
+    [selectedProject, user, inboxFilter, isActive, isImportant, showUnreadOnly],
+  )
+
+  // a renamed project or a folder row id would 404 the query
+  const isKnownProject = !!selectedProject && projects.some((p) => p.name === selectedProject)
+
+  // both queries are skipped in this window, so it has to read as loading, not as empty
+  const isResolvingProject = isProjectMode && !isKnownProject && !globalError.projects
+
+  // a failed project list is empty too, so only a loaded list may clear the selection
+  useEffect(() => {
+    if (!selectedProject || globalIsLoading.projects || globalError.projects) return
+    if (!isKnownProject) setSelectedProject(null)
+  }, [
+    selectedProject,
+    isKnownProject,
+    globalIsLoading.projects,
+    globalError.projects,
+    setSelectedProject,
+  ])
+
+  // null, not false: false would ask the resolver for read messages only
+  const unreadArg = isActive && showUnreadOnly ? true : null
+
+  const globalArgs = useMemo(
+    () => ({ active: isActive, important: isImportant, unread: unreadArg }),
+    [isActive, isImportant, unreadArg],
+  )
+
+  // querying before the view loads fetches a cross-project inbox that is thrown away
+  const globalQuery = useGetInboxInfiniteInfiniteQuery(globalArgs, {
+    skip: isProjectMode || isLoadingViews,
+  })
+  const projectQuery = useGetProjectInboxInfinite(projectArgs, {
+    skip: !isKnownProject || isLoadingViews,
   })
 
-  const { hasPreviousPage, endCursor: lastCursor } = pageInfo || {}
+  const activeQuery = isProjectMode ? projectQuery : globalQuery
 
-  const [getInboxMessages] = useLazyGetInboxMessagesQuery()
+  const {
+    isLoading: isLoadingInbox,
+    isFetching: isFetchingInbox,
+    isUninitialized,
+    currentData,
+    error: errorInbox,
+    refetch,
+    data,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = activeQuery
+
+  const pages = data?.pages
+  const messages = useMemo(() => (pages || []).flatMap((page) => page.messages), [pages])
+  const projectNames = useMemo(
+    () => [...new Set((pages || []).flatMap((page) => page.projectNames))],
+    [pages],
+  )
+
   // load more messages
   const handleLoadMore = () => {
-    if (!hasPreviousPage || isFetchingInbox || !messages.length) return
-
-    console.log('loading more messages...')
-
-    getInboxMessages({ last, active: isActive, important: isImportant, cursor: lastCursor })
+    if (!hasNextPage || isFetchingNextPage || !messages.length) return
+    fetchNextPage()
   }
 
-  const { data: projectsInfo = {}, isLoading: isLoadingInfo } = useGetProjectsInfoQuery(
-    { projects: projectNames },
-    { skip: isLoadingInbox || !projectNames?.length },
+  // in project mode the info is needed even when the filtered list comes back empty
+  const infoProjectNames = isProjectMode ? [selectedProject as string] : projectNames
+
+  const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
+    { projects: infoProjectNames },
+    { skip: isLoadingInbox || !infoProjectNames?.length },
   )
 
   const handleUpdateMessages = useUpdateInboxMessage({
-    last,
     isActive,
     isImportant: isImportant ?? false,
   })
@@ -109,7 +212,7 @@ const Inbox = ({ filter }: InboxProps) => {
   const messagesSortedByDate = useMemo(
     () =>
       [...messages].sort((a, b) =>
-        isActive ? compareAsc(new Date(b.createdAt), new Date(a.createdAt)) : 0,
+        isActive ? compareAsc(new Date(b.createdAt as string), new Date(a.createdAt as string)) : 0,
       ),
     [messages, isActive],
   )
@@ -132,7 +235,18 @@ const Inbox = ({ filter }: InboxProps) => {
 
     const firstChild = listRef.current?.firstElementChild as HTMLElement | null
     firstChild?.focus()
-  }, [listRef, isLoadingInbox, filter])
+  }, [listRef, isLoadingInbox, filter, selectedProject])
+
+  const handleProjectSelect = useCallback(
+    (ids: string[]): void => {
+      // clicking the selected row clears it, which returns to the cross-project inbox
+      if (!ids.length) return setSelectedProject(null)
+      // folder rows are group headers, their ids are not project names
+      const projectName = ids.find((id) => !parseProjectFolderRowId(id))
+      if (projectName) setSelectedProject(projectName)
+    },
+    [setSelectedProject],
+  )
 
   const handleToggleReadMessage = (id: string): void => {
     // get all the messages in the group
@@ -172,9 +286,7 @@ const Inbox = ({ filter }: InboxProps) => {
       const end = Math.max(lastSelectedIndexRef.current, currentIndex)
       newSelection = groupedMessages.slice(start, end + 1).map((m) => m.activityId)
     } else if (modifiers?.metaKey || modifiers?.ctrlKey) {
-      newSelection = selected.includes(id)
-        ? selected.filter((s) => s !== id)
-        : [...selected, id]
+      newSelection = selected.includes(id) ? selected.filter((s) => s !== id) : [...selected, id]
       lastSelectedIndexRef.current = currentIndex
     } else {
       newSelection = selected.includes(id) ? [] : [id]
@@ -209,6 +321,7 @@ const Inbox = ({ filter }: InboxProps) => {
   // REFRESH INBOX
   const [refreshInbox, { isRefreshing }] = useInboxRefresh({
     isFetching: isFetchingInbox,
+    isUninitialized,
     refetch,
     dispatch,
   })
@@ -269,16 +382,19 @@ const Inbox = ({ filter }: InboxProps) => {
     return byProject
   }
 
+  const clearGroups = (groups: GroupedMessage[]): Promise<void>[] => {
+    const status = isActive ? 'inactive' : 'unread'
+    const byProject = groupReferenceIdsByProject(groups)
+    return Object.entries(byProject).map(([projectName, { ids, reads }]) =>
+      handleUpdateMessages(ids, status, projectName, true, reads.every(Boolean)),
+    )
+  }
+
   const clearSelected = (): void => {
     const groups = getSelectedGroups()
     if (!groups.length) return
 
-    const status = isActive ? 'inactive' : 'unread'
-    const byProject = groupReferenceIdsByProject(groups)
-    Object.entries(byProject).forEach(([projectName, { ids, reads }]) => {
-      const isRead = reads.every(Boolean)
-      handleUpdateMessages(ids, status, projectName, true, isRead)
-    })
+    clearGroups(groups)
     setSelected([])
     lastSelectedIndexRef.current = -1
   }
@@ -295,22 +411,35 @@ const Inbox = ({ filter }: InboxProps) => {
   }
 
   const handleClearAll = async (): Promise<void> => {
-    let promises = []
-    // for all projects, clear all messages
-    for (const project of projects) {
-      const promise = clearMessages(null, [], project.name, true)
-      promises.push(promise)
+    let promises: Promise<void>[] = []
+    let clearedCount = 0
+
+    if (isFiltered) {
+      // the backend `all` flag ignores filters, so name the messages instead
+      if (!groupedMessages.length) return
+      clearedCount = groupedMessages.reduce((sum, g) => sum + g.messages.length, 0)
+      promises = clearGroups(groupedMessages)
+      setSelected([])
+      lastSelectedIndexRef.current = -1
+    } else {
+      const projectsToClear = isProjectMode
+        ? [selectedProject as string]
+        : projects.map((p) => p.name)
+      promises = projectsToClear.map((project) => clearMessages(null, [], project, true))
     }
 
     try {
       await Promise.all(promises)
-      toast.success('All messages cleared')
+      toast.success(isFiltered ? `Cleared ${clearedCount} messages` : 'All messages cleared')
     } catch (error) {
       console.error(error)
     }
   }
 
-  const isLoadingAny = isLoadingInbox || isLoadingInfo || isRefreshing
+  // currentData, not isFetching: it is undefined only while a new cache key loads, so a
+  // websocket refetch or pagination keeps the list on screen
+  const isLoadingAny =
+    isLoadingViews || isResolvingProject || (isFetchingInbox && !currentData) || isRefreshing
 
   // Cast placeholder messages to satisfy GroupedMessage shape for rendering
   const messagesData = isLoadingAny
@@ -465,104 +594,141 @@ const Inbox = ({ filter }: InboxProps) => {
     <>
       {/* @ts-expect-error - Shortcuts component has complex typing */}
       <Shortcuts shortcuts={shortcuts} deps={[messagesData, selected]} />
-      <Styled.Tools>
-        {/* <InputText placeholder="Search..." /> */}
-        <Spacer />
-        <EnableNotifications />
-        {isActive && (
-          <Button
-            icon="done_all"
-            onClick={handleClearAll}
-            disabled={!messages.length}
-            shortcut={{ children: getPlatformShortcutKey('c', [KeyMode.Shift]) }}
-          >
-            Clear all
-          </Button>
-        )}
-        <Button icon="refresh" onClick={refreshInbox} shortcut={{ children: 'R' }}>
-          Refresh
-        </Button>
-      </Styled.Tools>
       <Styled.InboxSection direction="row">
-        <DetailsPanelSplitter
-          layout="horizontal"
+        <Styled.ProjectsSplitter
+          stateKey="inbox-projects-splitter"
+          stateStorage="local"
           style={{ width: '100%', height: '100%' }}
-          stateKey="inbox-splitter"
+          className={clsx({ 'no-projects': isGuest })}
         >
-          <SplitterPanel size={60} style={{ minWidth: 300, overflow: 'hidden' }}>
-            <Styled.MessagesList
-              ref={listRef}
-              onMouseMove={() => setUsingKeyboard(false)}
-              onKeyDown={handleKeyDown}
-              className={clsx({ isLoading: isLoadingInbox })}
-            >
-              {messagesData.map((group, i: number) => (
-                <InboxMessage
-                  key={group.activityId}
-                  rowIndex={i}
-                  path={group.path}
-                  type={group.activityType}
-                  entityType={group.entityType ?? undefined}
-                  entityId={group.entityId ?? undefined}
-                  projectName={group.projectName}
-                  date={group.date}
-                  userName={group.userName}
-                  isRead={group.read || group.active}
-                  unReadCount={group.unRead}
-                  onSelect={handleMessageSelect}
-                  isSelected={selected.includes(group.activityId)}
-                  disableHover={usingKeyboard}
-                  onClear={
-                    !selected.length || selected.includes(group.activityId)
-                      ? () => handleClearMessage(group.activityId)
-                      : undefined
-                  }
-                  clearLabel={isActive ? 'Clear' : 'Unclear'}
-                  clearIcon={isActive ? 'done' : 'replay'}
-                  id={group.activityId}
-                  ids={group.groupIds}
-                  messages={group.messages}
-                  changes={group.changes}
-                  isPlaceholder={group.isPlaceholder}
-                  projectsInfo={projectsInfo}
-                  isMultiple={group.isMultiple}
-                  onContextMenu={handleContextMenu}
-                  customBody={group.body}
-                />
-              ))}
-              {hasPreviousPage && !isLoadingInbox && !!messages.length && (
-                <InView
-                  onChange={(inView) => inView && handleLoadMore()}
-                  rootMargin={'0px 0px 500px 0px'}
-                  root={listRef.current}
-                >
-                  <Styled.LoadMore onClick={handleLoadMore}>
-                    {isFetchingInbox ? 'Loading more...' : 'Load more'}
-                  </Styled.LoadMore>
-                </InView>
-              )}
-            </Styled.MessagesList>
-            {!isLoadingAny && (errorInbox || !messagesData.length) && (
-              <EmptyPlaceholder
-                icon="done_all"
-                message="All caught up! No messages to show."
-                error={errorInbox}
-              />
-            )}
-          </SplitterPanel>
-          <SplitterPanel
-            size={40}
-            style={{ minWidth: 300, overflow: 'visible' }}
-            className="details"
-          >
-            <InboxDetailsPanel
-              messages={messagesData}
-              selected={selected}
-              projectsInfo={projectsInfo}
-              onClose={() => setSelected([])}
+          <SplitterPanel size={18} style={{ minWidth: 180 }}>
+            <ProjectsList
+              selection={selectedProject ? [selectedProject] : []}
+              onSelect={handleProjectSelect}
+              allowEmptySelection
+              hidden={HIDDEN_PROJECT_ACTIONS}
             />
           </SplitterPanel>
-        </DetailsPanelSplitter>
+          <SplitterPanel size={82} style={{ overflow: 'hidden' }}>
+            <Styled.MessagesColumn>
+              <Styled.Tools>
+                <InboxSearchFilter
+                  filter={inboxFilter}
+                  onChange={onUpdateFilter}
+                  projectName={selectedProject}
+                  isImportant={isImportant}
+                  isLoading={isLoadingInbox || isLoadingViews}
+                />
+                {/* clearing a message also marks it read, so unread is meaningless on the cleared tab */}
+                {isActive && (
+                  <Button
+                    icon="mark_email_unread"
+                    selected={showUnreadOnly}
+                    onClick={() => onUpdateUnreadOnly(!showUnreadOnly)}
+                  >
+                    Unread only
+                  </Button>
+                )}
+                <EnableNotifications />
+                {isActive && (
+                  <Button
+                    icon="done_all"
+                    onClick={handleClearAll}
+                    disabled={!messages.length}
+                    shortcut={{ children: getPlatformShortcutKey('c', [KeyMode.Shift]) }}
+                    data-tooltip={
+                      isFiltered ? 'Clears only the messages matching the filters' : undefined
+                    }
+                  >
+                    Clear all
+                  </Button>
+                )}
+                <Button icon="refresh" onClick={refreshInbox} shortcut={{ children: 'R' }}>
+                  Refresh
+                </Button>
+              </Styled.Tools>
+              <DetailsPanelSplitter
+                layout="horizontal"
+                style={{ width: '100%' }}
+                stateKey="inbox-splitter"
+              >
+                <SplitterPanel size={60} style={{ minWidth: 300, overflow: 'hidden' }}>
+                  <Styled.MessagesList
+                    ref={listRef}
+                    onMouseMove={() => setUsingKeyboard(false)}
+                    onKeyDown={handleKeyDown}
+                    className={clsx({ isLoading: isLoadingInbox })}
+                  >
+                    {messagesData.map((group, i: number) => (
+                      <InboxMessage
+                        key={group.activityId}
+                        rowIndex={i}
+                        path={group.path}
+                        type={group.activityType}
+                        entityType={group.entityType ?? undefined}
+                        entityId={group.entityId ?? undefined}
+                        projectName={group.projectName}
+                        date={group.date}
+                        userName={group.userName}
+                        isRead={group.read || group.active}
+                        unReadCount={group.unRead}
+                        onSelect={handleMessageSelect}
+                        isSelected={selected.includes(group.activityId)}
+                        disableHover={usingKeyboard}
+                        onClear={
+                          !selected.length || selected.includes(group.activityId)
+                            ? () => handleClearMessage(group.activityId)
+                            : undefined
+                        }
+                        clearLabel={isActive ? 'Clear' : 'Unclear'}
+                        clearIcon={isActive ? 'done' : 'replay'}
+                        id={group.activityId}
+                        ids={group.groupIds}
+                        messages={group.messages}
+                        changes={group.changes}
+                        isPlaceholder={group.isPlaceholder}
+                        projectsInfo={projectsInfo}
+                        isMultiple={group.isMultiple}
+                        onContextMenu={handleContextMenu}
+                        customBody={group.body}
+                      />
+                    ))}
+                    {hasNextPage && !isLoadingInbox && !!messages.length && (
+                      <InView
+                        onChange={(inView) => inView && handleLoadMore()}
+                        rootMargin={'0px 0px 500px 0px'}
+                        root={listRef.current}
+                      >
+                        <Styled.LoadMore onClick={handleLoadMore}>
+                          {isFetchingInbox ? 'Loading more...' : 'Load more'}
+                        </Styled.LoadMore>
+                      </InView>
+                    )}
+                  </Styled.MessagesList>
+                  {!isLoadingAny && (errorInbox || !messagesData.length) && (
+                    <EmptyPlaceholder
+                      icon="done_all"
+                      message="All caught up! No messages to show."
+                      error={errorInbox || globalError.projects}
+                    />
+                  )}
+                </SplitterPanel>
+                <SplitterPanel
+                  size={40}
+                  style={{ minWidth: 300, overflow: 'visible' }}
+                  className="details"
+                >
+                  <InboxDetailsPanel
+                    messages={messagesData}
+                    selected={selected}
+                    projectsInfo={projectsInfo}
+                    onClose={() => setSelected([])}
+                  />
+                </SplitterPanel>
+              </DetailsPanelSplitter>
+            </Styled.MessagesColumn>
+          </SplitterPanel>
+        </Styled.ProjectsSplitter>
       </Styled.InboxSection>
     </>
   )

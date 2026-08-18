@@ -9,10 +9,11 @@ import {
   StyledHiddenMarkdown,
   StyledMarkdown,
 } from '@shared/components/DetailsPanelDetails/DescriptionSection.styles'
-import { DescriptionSection } from '@shared/components/DetailsPanelDetails'
+import { DescriptionSection } from '@shared/components/DetailsPanelDetails/DescriptionSection'
 import InputMarkdownConvert from '@shared/containers/Feed/components/CommentInput/InputMarkdownConvert'
 import { convertToMarkdown } from '@shared/containers/Feed/components/CommentInput/quillToMarkdown'
-import { mentionTypeOptions, useQuillFormats } from '@shared/components/DetailsPanelDetails/hooks'
+import { mentionTypeOptions } from '@shared/components/DetailsPanelDetails/hooks/useMentionSystem'
+import { useQuillFormats } from '@shared/components/DetailsPanelDetails/hooks/useQuillFormats'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import emoji from 'remark-emoji'

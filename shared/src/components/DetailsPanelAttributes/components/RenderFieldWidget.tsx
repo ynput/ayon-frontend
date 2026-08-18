@@ -8,7 +8,8 @@ import {
   DateWidget,
   EnumWidget,
 } from '@shared/containers/ProjectTreeTable/widgets'
-import { useScopedStatuses, useScopedTypes } from '@shared/hooks'
+import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
+import { useScopedTypes } from '@shared/hooks/useScopedTypes'
 // Import AttributeField as a type to avoid runtime circular dependency with DetailsPanelAttributesEditor
 import type { AttributeField } from '../DetailsPanelAttributesEditor'
 import type { DetailsPanelEntityData, EnumItem } from '@shared/api'

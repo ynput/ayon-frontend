@@ -4,7 +4,7 @@
 import { Dialog, InputText, Button, FormRow } from '@ynput/ayon-react-components'
 import { camelCase, upperFirst } from 'lodash'
 import { FC, useState, useEffect, useRef } from 'react'
-import { parseFilename } from '../ReviewablesList'
+import { parseFilename } from '@shared/util/parseFilename'
 
 const prefix = 'review'
 const buildDefaultName = (file?: File | null) => {

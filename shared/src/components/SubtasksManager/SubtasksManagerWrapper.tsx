@@ -6,7 +6,8 @@ import {
   UserModel,
   useUpdateSubtasksMutation,
 } from '@shared/api'
-import { useNavigate } from 'react-router'
+import { ProjectContextValue, useProjectContext } from '@shared/context'
+import { useNavigate } from 'react-router-dom'
 
 type UpdateSubtasksMutation = ReturnType<typeof useUpdateSubtasksMutation>[0]
 
@@ -14,11 +15,13 @@ export interface SubtasksManagerProps extends Omit<React.HTMLAttributes<HTMLDivE
   subtasks: SubTaskNode[]
   projectName: string
   taskId: string
+  folderId?: string // used for creating products
   selectedSubtaskIds?: string[]
   users: UserModel[]
   title?: string | null
   filters?: QueryFilter
   actionsPortalClassName?: string
+  projectContext: ProjectContextValue
   onClose?: () => void
   onSelectSubtasks?: (subtaskIds: string[]) => void
   updateSubtasks: UpdateSubtasksMutation
@@ -36,6 +39,7 @@ export const SubtasksManagerWrapper = ({
 }: SubtasksManagerWrapperProps) => {
   const [updateSubtasks] = useUpdateSubtasksMutation()
   const { data: users = [] } = useGetUsersAssigneeQuery({ projectName: props.projectName })
+  const projectContext = useProjectContext()
 
   return (
     <SubtasksManager
@@ -43,6 +47,7 @@ export const SubtasksManagerWrapper = ({
       updateSubtasks={updateSubtasks}
       users={users}
       onNotFound={props.onNotFound}
+      projectContext={projectContext}
     />
   )
 }

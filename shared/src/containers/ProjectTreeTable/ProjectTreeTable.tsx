@@ -27,6 +27,7 @@ import type { TableRow } from './types/table'
 // Component imports
 import buildTreeTableColumns, {
   DefaultColumns,
+  getNameColumnLabel,
   isEntityExpandable,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
@@ -36,7 +37,8 @@ import { TableFooterRow } from './components/TableFooterRow'
 import type { FieldStats } from '@shared/api'
 import { getCommonPinningStyles, getColumnWidth } from './utils/pinningUtils'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
-import { InfoMessage, FilterErrorActions } from '@shared/components'
+import InfoMessage from '@shared/components/InfoMessage/InfoMessage'
+import { FilterErrorActions } from '@shared/components/FilterErrorActions/FilterErrorActions'
 import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
@@ -58,7 +60,7 @@ import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import useDynamicRowHeight from './hooks/useDynamicRowHeight'
 
-import { useProjectDataContext } from '@shared/containers'
+import { useProjectDataContext } from './context/ProjectDataContext'
 
 // Utility function imports
 import { isGroupId } from './hooks/useBuildGroupByTableData'
@@ -73,7 +75,7 @@ import {
   MainCountLabels,
   SummaryCellContentProps,
 } from './types'
-import { EnumItem } from '@shared/api'
+import type { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext, parseRowId } from './context/ProjectTableContext'
 import {
   checkColumnVisibility,
@@ -95,7 +97,7 @@ import {
   type UniqueIdentifier,
   // Removed: DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, DragEndEvent, DragStartEvent, Active, Over, useSensor, useSensors
 } from '@dnd-kit/core'
-import type { NewEntityOpenConfig } from '@shared/containers/NewEntity'
+import type { NewEntityOpenConfig } from '@shared/containers/NewEntity/context/NewEntityContext'
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import {
   SortableContext,
@@ -105,11 +107,12 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { useProjectContext, usePowerpack, setDetailsPanelTabForScope } from '@shared/context'
-import { useLoadModule } from '@shared/hooks'
+import { useProjectContext } from '@shared/context/ProjectContext'
+import { usePowerpack } from '@shared/context/PowerpackContext'
+import { setDetailsPanelTabForScope } from '@shared/context/DetailsPanelContext'
+import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
-import { upperFirst } from 'lodash'
 import { ColumnsConfig } from './types/columnConfig'
 
 type CellUpdate = (
@@ -389,8 +392,7 @@ export const ProjectTreeTable = ({
   )
 
   const getNameLabelHeader = () => {
-    if (scopes.includes('version')) return 'Product / Version'
-    return scopes.map((s) => upperFirst(s)).join(' / ')
+    return getNameColumnLabel(scopes)
   }
 
   const columns = useMemo(() => {

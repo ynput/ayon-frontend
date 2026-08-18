@@ -329,6 +329,12 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
       // Always sync local columns state
       setLocalColumns(tableSettings)
 
+      // Keep the API sorting state in sync with the table sorting state.
+      if (tableSettings.sorting !== undefined) {
+        setLocalSortBy(settings.sortBy)
+        setLocalSortDesc(settings.sortDesc ?? false)
+      }
+
       // Persist only the fields that changed to server
       // Skip groupBy if it was already persisted by onUpdateViewGroupBy above
       const persistSettings: Record<string, any> = {
@@ -344,8 +350,10 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
       if (settings.columns !== undefined) persistSettings.columns = settings.columns
       if (settings.showEmptyGroups !== undefined)
         persistSettings.showEmptyGroups = settings.showEmptyGroups
-      if (settings.sortBy !== undefined) persistSettings.sortBy = settings.sortBy
-      if (settings.sortDesc !== undefined) persistSettings.sortDesc = settings.sortDesc
+      if (tableSettings.sorting !== undefined) {
+        persistSettings.sortBy = settings.sortBy
+        persistSettings.sortDesc = settings.sortDesc
+      }
       if (settings.rowHeight !== undefined) persistSettings.rowHeight = settings.rowHeight
 
       // Only persist if there are actually settings to persist

@@ -27,7 +27,7 @@ export async function typeWithDelay(quill, retain, type, delay = 1) {
   }
 }
 
-import { parseFilename } from '@shared/components'
+import { parseFilename } from '@shared/util/parseFilename'
 import axios from 'axios'
 const abortController = new AbortController()
 const cancelToken = axios.CancelToken
