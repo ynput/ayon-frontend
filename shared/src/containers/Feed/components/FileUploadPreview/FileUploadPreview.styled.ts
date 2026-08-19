@@ -106,4 +106,18 @@ export const ScrollableContent = styled.div`
     inset: 56px;
     overflow: auto;
   }
+
+  &.fill {
+    position: absolute;
+    inset: 56px 0 0 0;
+    display: flex;
+  }
+`
+
+export const PlayerWrapper = styled.div`
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 `
