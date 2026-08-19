@@ -22,6 +22,8 @@ type ProbeResult =
 const isPlayable = ({ duration, width, height }: VideoMetadata) =>
   Number.isFinite(duration) && duration > 0 && width > 0 && height > 0
 
+const PROBE_TIMEOUT_MS = 10000
+
 const useVideoMetadata = (url: string): ProbeResult => {
   const [result, setResult] = useState<ProbeResult>({ status: 'loading' })
 
@@ -31,7 +33,11 @@ const useVideoMetadata = (url: string): ProbeResult => {
     const probe = document.createElement('video')
     probe.preload = 'metadata'
 
+    // a stalled media pipeline never fires loadedmetadata nor error
+    const timeout = setTimeout(() => setResult({ status: 'error' }), PROBE_TIMEOUT_MS)
+
     const handleLoaded = () => {
+      clearTimeout(timeout)
       const metadata = {
         duration: probe.duration,
         width: probe.videoWidth,
@@ -39,13 +45,17 @@ const useVideoMetadata = (url: string): ProbeResult => {
       }
       setResult(isPlayable(metadata) ? { status: 'ready', metadata } : { status: 'error' })
     }
-    const handleError = () => setResult({ status: 'error' })
+    const handleError = () => {
+      clearTimeout(timeout)
+      setResult({ status: 'error' })
+    }
 
     probe.addEventListener('loadedmetadata', handleLoaded)
     probe.addEventListener('error', handleError)
     probe.src = url
 
     return () => {
+      clearTimeout(timeout)
       probe.removeEventListener('loadedmetadata', handleLoaded)
       probe.removeEventListener('error', handleError)
       probe.removeAttribute('src')

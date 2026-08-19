@@ -120,4 +120,10 @@ export const PlayerWrapper = styled.div`
   flex: 1;
   min-height: 0;
   overflow: hidden;
+
+  /* the player's root splitter has no intrinsic size */
+  > * {
+    flex: 1;
+    min-width: 0;
+  }
 `

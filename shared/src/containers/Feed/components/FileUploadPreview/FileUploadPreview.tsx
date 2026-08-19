@@ -115,6 +115,7 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
+        e.stopPropagation()
         handleClose()
         return
       }
