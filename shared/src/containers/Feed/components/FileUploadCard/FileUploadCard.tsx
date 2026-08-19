@@ -97,6 +97,7 @@ const FileUploadCard = ({
   const inProgress = progress && progress < 100
 
   const [imageError, setImageError] = useState(false)
+  const [posterError, setPosterError] = useState(false)
   const { feedAnnotationsEnabled } = useDetailsPanelContext()
   const { entities } = useFeedContext()
 
@@ -107,6 +108,8 @@ const FileUploadCard = ({
 
   const isPreviewable = isFilePreviewable(mime || '.' + extension)
   const isImage = mime?.includes('image/') || Boolean(unsavedAnnotation)
+  const isVideo = Boolean(mime?.includes('video/')) && !unsavedAnnotation
+  const posterSrc = isVideo && src ? `${src}/thumbnail` : undefined
 
   const downloadComponent = (
     <>
@@ -172,6 +175,17 @@ const FileUploadCard = ({
                 display: imageError ? 'none' : 'block',
               }}
             />
+          </Styled.ImageWrapper>
+        )}
+        {posterSrc && !posterError && (
+          <Styled.ImageWrapper
+            className={clsx({
+              'image-wrapper': true,
+              isDownloadable: isDownloadable || isPreviewable,
+            })}
+          >
+            <img src={posterSrc} onError={() => setPosterError(true)} />
+            <Styled.PlayIcon />
           </Styled.ImageWrapper>
         )}
         <Styled.Buttons className="expand-buttons">
