@@ -269,6 +269,11 @@ export const ImageWrapper = styled.div`
       }
     }
   }
+
+  /* failed thumbnail: let the videocam type icon show through, keep the card playable */
+  &.posterError {
+    background-color: transparent;
+  }
 `
 
 export const Buttons = styled.div`

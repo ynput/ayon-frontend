@@ -189,11 +189,12 @@ const FileUploadCard = ({
             />
           </Styled.ImageWrapper>
         )}
-        {posterSrc && !posterError && (
+        {posterSrc && (
           <Styled.ImageWrapper
             className={clsx({
               'image-wrapper': true,
               isDownloadable: isDownloadable || isPreviewable,
+              posterError,
             })}
             onClick={toggleInlinePlayback}
             onDoubleClick={() => {
@@ -206,13 +207,14 @@ const FileUploadCard = ({
                 ref={videoRef}
                 src={src}
                 autoPlay
+                playsInline
                 onPlay={() => setIsPaused(false)}
                 onPause={() => setIsPaused(true)}
                 onEnded={() => setInlinePlaying(false)}
                 onError={() => setInlinePlaying(false)}
               />
             ) : (
-              <img src={posterSrc} onError={() => setPosterError(true)} />
+              !posterError && <img src={posterSrc} onError={() => setPosterError(true)} />
             )}
             {(!inlinePlaying || isPaused) && <Styled.PlayIcon />}
           </Styled.ImageWrapper>

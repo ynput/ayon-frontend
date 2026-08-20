@@ -123,6 +123,11 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({
       const move = navigation[e.code]
       if (!move) return
 
+      if (e.target instanceof HTMLElement) {
+        const { tagName, isContentEditable } = e.target
+        if (tagName === 'INPUT' || tagName === 'TEXTAREA' || isContentEditable) return
+      }
+
       e.preventDefault()
       e.stopPropagation()
       const [canNavigate, navigate] = move
