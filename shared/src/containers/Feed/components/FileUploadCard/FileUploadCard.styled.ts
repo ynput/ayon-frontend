@@ -219,13 +219,8 @@ export const ContentWrapper = styled.div`
       }
     }
 
-    &.isPlaying:hover {
-      .image-wrapper::after {
-        opacity: 0;
-      }
-      .playable {
-        display: none;
-      }
+    &.isPlaying:hover .image-wrapper::after {
+      opacity: 0;
     }
   }
 `
@@ -307,6 +302,8 @@ export const PlayIcon = styled(PlayableIcon)`
   left: 50%;
   right: unset;
   translate: -50% -50%;
+  z-index: 2;
+  pointer-events: none;
 
   .icon {
     font-size: var(--icon-size);
