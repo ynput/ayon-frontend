@@ -1,7 +1,7 @@
 import { Button, getFileSizeString, Icon } from '@ynput/ayon-react-components'
 import * as Styled from './FileUploadCard.styled'
 import clsx from 'clsx'
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { isFilePreviewable } from '../FileUploadPreview'
 import type { SavedAnnotationMetadata } from '../../index'
 import { useFeedContext } from '../../context/FeedContext'
@@ -98,16 +98,6 @@ const FileUploadCard = ({
 
   const [imageError, setImageError] = useState(false)
   const [posterError, setPosterError] = useState(false)
-  const [inlinePlaying, setInlinePlaying] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
-  const videoRef = useRef<HTMLVideoElement>(null)
-
-  const toggleInlinePlayback = () => {
-    if (!inlinePlaying) return setInlinePlaying(true)
-    const video = videoRef.current
-    if (!video) return
-    video.paused ? video.play() : video.pause()
-  }
   const { feedAnnotationsEnabled } = useDetailsPanelContext()
   const { entities } = useFeedContext()
 
@@ -168,8 +158,6 @@ const FileUploadCard = ({
         className={clsx('content-wrapper', {
           isPreviewable,
           isUnsavedAnnotation: Boolean(unsavedAnnotation),
-          isVideo,
-          isPlaying: inlinePlaying,
         })}
       >
         <Icon icon={getIconForType(mime || '.' + extension)} className="type-icon" />
@@ -196,27 +184,9 @@ const FileUploadCard = ({
               isDownloadable: isDownloadable || isPreviewable,
               posterError,
             })}
-            onClick={toggleInlinePlayback}
-            onDoubleClick={() => {
-              setInlinePlaying(false)
-              onExpand?.()
-            }}
           >
-            {inlinePlaying ? (
-              <video
-                ref={videoRef}
-                src={src}
-                autoPlay
-                playsInline
-                onPlay={() => setIsPaused(false)}
-                onPause={() => setIsPaused(true)}
-                onEnded={() => setInlinePlaying(false)}
-                onError={() => setInlinePlaying(false)}
-              />
-            ) : (
-              !posterError && <img src={posterSrc} onError={() => setPosterError(true)} />
-            )}
-            {(!inlinePlaying || isPaused) && <Styled.PlayIcon />}
+            {!posterError && <img src={posterSrc} onError={() => setPosterError(true)} />}
+            <Styled.PlayIcon />
           </Styled.ImageWrapper>
         )}
         <Styled.Buttons className="expand-buttons">

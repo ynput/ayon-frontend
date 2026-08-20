@@ -121,6 +121,11 @@ export const PlayerWrapper = styled.div`
   min-height: 0;
   overflow: hidden;
 
+  /* EmptyPlaceholder defaults to top: 30%, center it in the lightbox */
+  .empty-placeholder {
+    top: 50%;
+  }
+
   /* the player's root splitter has no intrinsic size */
   > * {
     flex: 1;
