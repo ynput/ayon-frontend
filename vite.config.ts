@@ -150,6 +150,9 @@ export default ({ mode }) => {
           replacement: fileURLToPath(new URL('./shared/src/context', import.meta.url)),
         },
       ],
+      // @ynput/ayon-player asks for a newer styled-components, which yarn installs nested —
+      // two stylesheet managers on the same data-styled attribute break rehydration
+      dedupe: ['styled-components', 'react', 'react-dom'],
     },
   })
 }
