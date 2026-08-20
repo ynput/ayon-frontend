@@ -98,6 +98,7 @@ const FileUploadCard = ({
 
   const [imageError, setImageError] = useState(false)
   const [posterError, setPosterError] = useState(false)
+  const [inlinePlaying, setInlinePlaying] = useState(false)
   const { feedAnnotationsEnabled } = useDetailsPanelContext()
   const { entities } = useFeedContext()
 
@@ -158,6 +159,8 @@ const FileUploadCard = ({
         className={clsx('content-wrapper', {
           isPreviewable,
           isUnsavedAnnotation: Boolean(unsavedAnnotation),
+          isVideo,
+          isPlaying: inlinePlaying,
         })}
       >
         <Icon icon={getIconForType(mime || '.' + extension)} className="type-icon" />
@@ -183,9 +186,20 @@ const FileUploadCard = ({
               'image-wrapper': true,
               isDownloadable: isDownloadable || isPreviewable,
             })}
+            onClick={() => setInlinePlaying(true)}
+            onDoubleClick={() => {
+              setInlinePlaying(false)
+              onExpand?.()
+            }}
           >
-            <img src={posterSrc} onError={() => setPosterError(true)} />
-            <Styled.PlayIcon />
+            {inlinePlaying ? (
+              <video src={src} controls autoPlay onError={() => setInlinePlaying(false)} />
+            ) : (
+              <>
+                <img src={posterSrc} onError={() => setPosterError(true)} />
+                <Styled.PlayIcon />
+              </>
+            )}
           </Styled.ImageWrapper>
         )}
         <Styled.Buttons className="expand-buttons">

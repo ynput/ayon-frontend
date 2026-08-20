@@ -189,6 +189,45 @@ export const ContentWrapper = styled.div`
   &:hover .image-wrapper::after {
     opacity: 0.8;
   }
+
+  /* video cards play inline on click, so the expand button moves to the corner
+     and the play glyph stays visible under the cursor */
+  &.isVideo {
+    &:hover .playable {
+      display: flex;
+    }
+
+    .expand-buttons {
+      left: 2px;
+      top: 2px;
+      right: auto;
+      width: auto;
+      height: auto;
+      z-index: 2;
+    }
+
+    .expand-buttons button {
+      width: 28px;
+      height: 28px;
+      padding: 2px;
+      border-radius: var(--border-radius-m);
+      opacity: 1;
+      background-color: var(--md-sys-color-surface-container-high);
+
+      &:hover {
+        background-color: var(--md-sys-color-surface-container-highest);
+      }
+    }
+
+    &.isPlaying:hover {
+      .image-wrapper::after {
+        opacity: 0;
+      }
+      .playable {
+        display: none;
+      }
+    }
+  }
 `
 
 export const ImageWrapper = styled.div`
@@ -207,6 +246,16 @@ export const ImageWrapper = styled.div`
     transition: scale 0.2s ease;
   }
 
+  video {
+    position: absolute;
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    height: calc(100% - 20px);
+    width: 100%;
+    z-index: 1;
+  }
+
   &::after {
     content: '';
     position: absolute;
@@ -214,6 +263,7 @@ export const ImageWrapper = styled.div`
     background-color: var(--md-sys-color-surface-container-lowest);
     opacity: 0;
     transition: opacity 0.1s ease;
+    pointer-events: none;
   }
 
   &.isDownloadable {
