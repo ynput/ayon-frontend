@@ -10,6 +10,7 @@ import type { MenuItemType } from './Menu'
 export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLElement>, 'label'> {
   label?: string | string[]
   icon?: string
+  hoverIcon?: string
   img?: string
   highlighted?: boolean
   notification?: boolean
@@ -32,6 +33,7 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
     {
       label,
       icon,
+      hoverIcon,
       img,
       highlighted,
       notification,
@@ -73,7 +75,13 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
         {...props}
         aria-label={labelsArray.join(', ')}
       >
-        {(icon || isPowerFeature) && <Icon icon={isPowerFeature ? 'bolt' : icon!} />}
+        {(icon || isPowerFeature) && (
+          <Icon
+            icon={isPowerFeature ? 'bolt' : icon!}
+            className={hoverIcon && !isPowerFeature ? 'hover-swap-default' : undefined}
+          />
+        )}
+        {hoverIcon && !isPowerFeature && <Icon icon={hoverIcon} className="hover-swap" />}
         {img && <Styled.Img src={img} alt={`${label} icon`} />}
         {labelsArray.map((label, index) => (
           <span key={index}>{label}</span>

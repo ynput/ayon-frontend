@@ -12,6 +12,7 @@ import {
   ColumnDropLine,
   getColumnDropLinePosition,
 } from '@shared/containers/ProjectTreeTable/components/ColumnDropIndicator'
+import { TABLE_CONTAINER_ATTR } from '@shared/containers/ProjectTreeTable/hooks/useColumnDragRestriction'
 import { useMenuContext } from '@shared/context'
 import { MENU_PORTAL_CONTENT_ID } from '../Menu/MenuContainer'
 import type { AddColumnItem } from './addColumnsMenu'
@@ -36,12 +37,31 @@ type DragState = {
 // the menu portal and the settings panel both host draggable column items
 const ORIGIN_SELECTOR = `#${MENU_PORTAL_CONTENT_ID}, [data-column-drag-origin]`
 
+// anywhere over the table body counts too: project x up onto the header row
+const findHeaderByX = (x: number, y: number): HTMLElement | undefined => {
+  const container = document.querySelector(`[${TABLE_CONTAINER_ATTR}]`)
+  const rect = container?.getBoundingClientRect()
+  if (!rect || x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) return undefined
+  const headers = Array.from(
+    document.querySelectorAll<HTMLElement>(COLUMN_HEADER_SELECTOR),
+  ).filter((el) => !SPECIAL_COLUMNS.includes(el.dataset.columnId || ''))
+  const hit = headers.find((el) => {
+    const r = el.getBoundingClientRect()
+    return x >= r.left && x < r.right
+  })
+  // past the last column still drops, snapping to the nearest edge
+  if (hit || !headers.length) return hit
+  const last = headers[headers.length - 1]
+  return x >= last.getBoundingClientRect().right ? last : headers[0]
+}
+
 const findDropTarget = (x: number, y: number): DropTarget | null => {
   // the menu dialog covers the page, so hit-test through the whole stack of elements
-  const header = document
-    .elementsFromPoint(x, y)
-    .map((el) => (el as HTMLElement).closest?.(COLUMN_HEADER_SELECTOR))
-    .find(Boolean) as HTMLElement | undefined
+  const header =
+    (document
+      .elementsFromPoint(x, y)
+      .map((el) => (el as HTMLElement).closest?.(COLUMN_HEADER_SELECTOR))
+      .find(Boolean) as HTMLElement | undefined) ?? findHeaderByX(x, y)
   const columnId = header?.dataset.columnId
   if (!header || !columnId || SPECIAL_COLUMNS.includes(columnId)) return null
   const rect = header.getBoundingClientRect()
@@ -218,9 +238,24 @@ export const useAddColumnDrag = () => {
     }
   }, [dropColumn, cancelDrag, setMenuOpen])
 
+  // re-measured on every render: drag state updates each pointermove anyway
+  const tableRect = drag
+    ? document.querySelector(`[${TABLE_CONTAINER_ATTR}]`)?.getBoundingClientRect()
+    : undefined
+
   const dragOverlay = drag
     ? createPortal(
         <>
+          {tableRect && (
+            <DropZone
+              style={{
+                left: tableRect.left,
+                top: tableRect.top,
+                width: tableRect.width,
+                height: tableRect.height,
+              }}
+            />
+          )}
           <Ghost
             style={{
               left: drag.x - drag.grab.x,
@@ -242,6 +277,16 @@ export const useAddColumnDrag = () => {
 }
 
 const clsxTarget = (drag: DragState) => (drag.target ? 'over-target' : '')
+
+const DropZone = styled.div`
+  position: fixed;
+  box-sizing: border-box;
+  z-index: 999;
+  pointer-events: none;
+  border: 1px dashed var(--md-sys-color-primary);
+  border-radius: 4px;
+  background-color: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+`
 
 const Ghost = styled.div`
   position: fixed;

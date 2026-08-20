@@ -64,6 +64,7 @@ export const buildAddColumnsMenu = ({
       id: column.value,
       label: column.label,
       icon: column.icon,
+      hoverIcon: onDragStart ? 'drag_indicator' : undefined,
       disableClose: true,
       active: visible,
       reserveActiveSlot: true,

@@ -12,6 +12,7 @@ export interface MenuItemType {
   id: string
   label?: string | string[]
   icon?: string
+  hoverIcon?: string
   img?: string
   highlighted?: boolean
   notification?: boolean

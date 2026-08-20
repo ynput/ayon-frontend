@@ -179,6 +179,18 @@ export const Item = styled.li`
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest);
   }
+  
+  .hover-swap {
+    display: none;
+  }
+  &:hover {
+    .hover-swap-default {
+      display: none;
+    }
+    .hover-swap {
+      display: inline-block;
+    }
+  }
 
   .more {
     margin-left: auto;
