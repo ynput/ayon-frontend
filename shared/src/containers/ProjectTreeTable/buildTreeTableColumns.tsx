@@ -608,7 +608,8 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
-        const fieldId = type === 'folder' ? 'folderType' : 'taskType'
+        const isProductType = type === 'product' || type === 'version'
+        const fieldId = type === 'folder' ? 'folderType' : isProductType ? 'productType' : 'taskType'
         const meta = table.options.meta
         const folderHasVersions = type === 'folder' && row.original.hasVersions
         return (
@@ -623,7 +624,7 @@ const buildTreeTableColumns = ({
                 ? meta?.options?.folderType
                 : type === 'task'
                 ? meta?.options?.taskType
-                : type === 'product' || type === 'version'
+                : isProductType
                 ? meta?.options?.productType
                 : []
             }
@@ -635,6 +636,7 @@ const buildTreeTableColumns = ({
               )
             }
             isReadOnly={
+              isProductType ||
               meta?.readOnly?.includes(column.id) ||
               meta?.readOnly?.includes(fieldId) ||
               folderHasVersions
