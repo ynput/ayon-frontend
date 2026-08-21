@@ -5,8 +5,8 @@ export type BooleanCalc = 'checked' | 'notChecked'
 export type TextCalc = 'filled' | 'notFilled'
 // enum bar mode: value distribution vs filled/empty split
 export type EnumCalc = 'values' | 'fill'
-// main (name) column: per-type hover breakdown; plain count is the absent default
-export type MainCalc = 'breakdown'
+// main (name) column: plain count (also the absent default) or per-type hover breakdown
+export type MainCalc = 'count' | 'breakdown'
 
 export type SummaryCalc = NumberCalc | BooleanCalc | TextCalc | EnumCalc | MainCalc
 

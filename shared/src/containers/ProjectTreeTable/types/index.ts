@@ -35,9 +35,7 @@ export type BuiltInFieldOptions = {
   [key in BuiltInFieldOptionKey]: EnumOption[]
 }
 
-// Which subType each side of the main count breaks down by, per page: folders +
-// tasks on Overview, products on Versions/Products (versions have no subType).
-// Absent = the host doesn't request those distributions, so no Breakdown option.
+// which subType each side of the main count breaks down by; a side with no subType stays unset
 export type MainBreakdownFields = {
   primary?: TreeTableSubType
   secondary?: TreeTableSubType
@@ -65,7 +63,6 @@ export interface SummaryCellContentProps {
   parentScopeApplicable?: boolean
   // unique entity rows in the current selection; addon shows "N selected" in the main count cell
   selectedCount?: number
-  // set only where the host requests subType distributions for the name column;
-  // addon hides the Breakdown aggregation when absent
+  // absent = host fetches no subType distributions, addon hides the Breakdown aggregation
   mainBreakdownFields?: MainBreakdownFields
 }
