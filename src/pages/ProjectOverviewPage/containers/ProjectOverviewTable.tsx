@@ -79,6 +79,7 @@ const ProjectOverviewTable = ({}: Props) => {
         groupFieldStats={folderStats}
         fieldStatsLoading={folderStatsLoading || taskStatsLoading}
         fieldStatsError={folderStatsError || taskStatsError}
+        mainBreakdownFields={{ primary: 'folderType', secondary: 'taskType' }}
         onVisibleRowsChange={setVisibleEntityIds}
       />
     </Section>

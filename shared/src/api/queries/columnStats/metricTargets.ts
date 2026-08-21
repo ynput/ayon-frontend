@@ -153,8 +153,12 @@ export const buildMetricTargets = ({
     targets.push({ field: 'assignees', aggregations: ENUM })
   }
 
+  // no visibility check: it's opt-in, and a name column missing from both maps would kill this
+  const nameBreakdown =
+    columnSummaries?.['name'] === 'breakdown' &&
+    isSummaryActive('name', columnSummaries, columnSummaryScopes)
   const subTypeField = SUB_TYPE_FIELD[entity]
-  if (subTypeField && isActive('subType')) {
+  if (subTypeField && (isActive('subType') || nameBreakdown)) {
     targets.push({ field: subTypeField, aggregations: ENUM })
   }
 
