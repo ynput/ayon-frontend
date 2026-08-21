@@ -104,6 +104,7 @@ export const useAddColumnDrag = () => {
     x: number
     y: number
     origin: HTMLElement | null
+    immediate: boolean
     grab: GrabOffset
   } | null>(null)
   const dragRef = useRef<DragState | null>(null)
@@ -175,7 +176,7 @@ export const useAddColumnDrag = () => {
     if (dragRef.current) setDrag(null)
   }, [])
 
-  // press an item, then leave the menu or panel: inside them the same gesture paints instead
+  // press an item, then leave the menu or panel: inside them the same gesture paints instead;
   const armDrag = useCallback((column: AddColumnItem, event: React.PointerEvent) => {
     const item = event.currentTarget as HTMLElement
     const rect = item.getBoundingClientRect()
@@ -184,6 +185,7 @@ export const useAddColumnDrag = () => {
       x: event.clientX,
       y: event.clientY,
       origin: item.closest(ORIGIN_SELECTOR) as HTMLElement | null,
+      immediate: !!(event.target as HTMLElement).closest?.('.hover-swap'),
       grab: {
         x: event.clientX - rect.left,
         y: event.clientY - rect.top,
@@ -207,7 +209,7 @@ export const useAddColumnDrag = () => {
       const armed = armedRef.current
       if (!armed) return
       if (Math.abs(x - armed.x) < DRAG_THRESHOLD && Math.abs(y - armed.y) < DRAG_THRESHOLD) return
-      if (isOverOrigin(x, y, armed.origin)) return
+      if (!armed.immediate && isOverOrigin(x, y, armed.origin)) return
       setDrag({ column: armed.column, x, y, grab: armed.grab, target: findDropTarget(x, y) })
     }
 
@@ -215,6 +217,7 @@ export const useAddColumnDrag = () => {
       const current = dragRef.current
       armedRef.current = null
       if (!current) return
+      suppressNextClick()
       if (current.target) {
         dropColumn(current.column.value, current.target)
         setMenuOpen(false)
@@ -278,12 +281,20 @@ export const useAddColumnDrag = () => {
 
 const clsxTarget = (drag: DragState) => (drag.target ? 'over-target' : '')
 
+const suppressNextClick = () => {
+  const block = (event: MouseEvent) => {
+    event.stopPropagation()
+    event.preventDefault()
+  }
+  window.addEventListener('click', block, true)
+  setTimeout(() => window.removeEventListener('click', block, true), 0)
+}
+
 const DropZone = styled.div`
   position: fixed;
   box-sizing: border-box;
   z-index: 999;
   pointer-events: none;
-  border: 1px dashed var(--md-sys-color-primary);
   border-radius: 4px;
   background-color: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
 `

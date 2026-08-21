@@ -105,7 +105,12 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     checkColumnVisibility(columnVisibility, column.value, defaultColumnVisibility),
   ).length
 
-  const { menuItems: addColumnMenuItems, dragOverlay, onColumnDragStart } = useAddColumnsMenu({
+  const {
+    menuItems: addColumnMenuItems,
+    dragOverlay,
+    onColumnDragStart,
+    isColumnDragging,
+  } = useAddColumnsMenu({
     columns: visibleColumns,
     scopes,
     extraItems: extraMenuItems,
@@ -139,6 +144,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
             onSearchChange={setSearch}
             addColumnMenuItems={addColumnMenuItems}
             onColumnDragStart={onColumnDragStart}
+            isColumnDragging={isColumnDragging}
           />
           {dragOverlay}
         </>

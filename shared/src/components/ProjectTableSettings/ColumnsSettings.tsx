@@ -105,8 +105,8 @@ interface ColumnsSettingsProps {
   columnSummaryFormats?: ColumnsConfig['columnSummaryFormats']
   groupByConfig?: ColumnsConfig['groupByConfig']
   addColumnMenuItems?: MenuItemType[]
-  // dragging a row out of the panel drops the column into the table header
   onColumnDragStart?: (column: AddColumnItem, event: React.PointerEvent) => void
+  isColumnDragging?: boolean
   scopes?: string[]
   // when a string (including ''), the panel switches to a flat searchable list of all columns
   search?: string | null
@@ -133,6 +133,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   groupByConfig,
   addColumnMenuItems,
   onColumnDragStart,
+  isColumnDragging,
   scopes = NO_SCOPES,
   search,
   onSearchChange,
@@ -587,7 +588,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
 
         {/* Drag Overlay */}
         <DragOverlay>
-          {activeColumn && (
+          {activeColumn && !isColumnDragging && (
             <ColumnItem
               column={activeColumn}
               isPinned={columnPinning.left?.includes(activeColumn.value) || false}
@@ -650,6 +651,7 @@ type ColumnsSettingsWithContextProps = Pick<
   | 'highlighted'
   | 'addColumnMenuItems'
   | 'onColumnDragStart'
+  | 'isColumnDragging'
   | 'scopes'
   | 'search'
   | 'onSearchChange'

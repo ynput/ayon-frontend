@@ -73,5 +73,11 @@ export const useAddColumnsMenu = ({ columns, scopes, extraItems }: UseAddColumns
     ],
   )
 
-  return { menuItems, hasMenuItems: !!menuItems.length, dragOverlay, onColumnDragStart: armDrag }
+  return {
+    menuItems,
+    hasMenuItems: !!menuItems.length,
+    dragOverlay,
+    onColumnDragStart: armDrag,
+    isColumnDragging: isDragging,
+  }
 }

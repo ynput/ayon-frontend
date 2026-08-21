@@ -182,6 +182,7 @@ export const Item = styled.li`
   
   .hover-swap {
     display: none;
+    cursor: grab;
   }
   &:hover {
     .hover-swap-default {

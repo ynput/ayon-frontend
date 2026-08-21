@@ -19,6 +19,20 @@ const SettingsPanelItemTemplateStyled = styled(SettingsPanelItemTemplate)`
     height: 20px;
   }
 
+  .hover-swap {
+    display: none;
+    cursor: grab;
+  }
+
+  &.drag-reveal:hover {
+    .hover-swap {
+      display: inline-block;
+    }
+    .hover-swap ~ .icon {
+      display: none;
+    }
+  }
+
   &.overlay {
     box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.1);
   }
@@ -107,14 +121,22 @@ const ColumnItem: FC<ColumnItemProps> = ({
       actions={itemActions}
       isHighlighted={isHighlighted}
       isDisabled={isDisabled}
-      className={clsx({ hidden: isHidden, overlay: dragOverlay })}
+      className={clsx({
+        hidden: isHidden,
+        overlay: dragOverlay,
+        'drag-reveal': hideDragHandle && !!onDragStart,
+      })}
       onPointerEnter={(event) => onPaintEnter?.(column.value, event.buttons > 0)}
       onPointerDown={(event) =>
         // the row actions arm their own gestures
         (event.target as HTMLElement).closest('.action') ? undefined : onDragStart?.(event)
       }
       startContent={
-        hideDragHandle ? undefined : (
+        hideDragHandle ? (
+          onDragStart ? (
+            <Icon icon="drag_indicator" className="hover-swap" />
+          ) : undefined
+        ) : (
           <div {...dragHandleProps} className="drag-handle">
             <Icon icon="drag_indicator" />
           </div>
