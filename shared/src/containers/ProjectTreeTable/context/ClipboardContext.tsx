@@ -489,7 +489,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       // First pass: validate all values
       for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
         const rowId = sortedRows[rowIndex]
-        const isFolder = getEntityDataById<'folder'>(rowId, entitiesMap)?.entityType === 'folder'
+        const rowEntityType = getEntityDataById(rowId, entitiesMap)?.entityType
+        const isFolder = rowEntityType === 'folder'
+        const isProductType = rowEntityType === 'product' || rowEntityType === 'version'
 
         const pasteRowIndex = rowIndex % parsedData.length
         const clipboardRow = parsedData[pasteRowIndex]
@@ -501,6 +503,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         // Validate each mapped value
         for (const colId of selectedColIds) {
+          if (colId === 'subType' && isProductType) continue
           const pasteValue = mappedValues[colId] || ''
 
           const isValid = validateClipboardData({
@@ -827,6 +830,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
           // Special handling for subType (convert to folderType or taskType)
           if (colId === 'subType') {
+            if (entityType === 'product' || entityType === 'version') continue
             fieldToUpdate = isFolder ? 'folderType' : 'taskType'
             isAttrib = false
 
