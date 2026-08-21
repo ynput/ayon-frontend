@@ -154,8 +154,7 @@ export const buildMetricTargets = ({
   }
 
   // name breakdown needs the type distribution even when the subType column is hidden
-  const nameBreakdown =
-    (entity === 'folder' || entity === 'task') && columnSummaries?.['name'] === 'breakdown'
+  const nameBreakdown = columnSummaries?.['name'] === 'breakdown'
   const subTypeField = SUB_TYPE_FIELD[entity]
   if (subTypeField && (isActive('subType') || nameBreakdown)) {
     targets.push({ field: subTypeField, aggregations: ENUM })
