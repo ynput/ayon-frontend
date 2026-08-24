@@ -41,7 +41,7 @@ import { ProjectNode, UserNode } from '@shared/api'
 import LoadingPage from '@pages/LoadingPage'
 import { useQueryParam } from 'use-query-params'
 import { uuid } from 'short-uuid'
-import ProjectUserAccesAccessGroupPanel from './ProjectUserAccessAccessGroupPanel'
+import ProjectUserAccessAccessGroupPanel from './ProjectUserAccessAccessGroupPanel'
 import EmptyPlaceholder, {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
@@ -383,7 +383,7 @@ const ProjectUserAccess = () => {
           .map((item: { name: string }) => item.name)
           .map((accessGroup) => {
             return (
-              <ProjectUserAccesAccessGroupPanel
+              <ProjectUserAccessAccessGroupPanel
                 key={`panel-${accessGroup}`}
                 header={accessGroup}
                 isExpanded={
@@ -414,7 +414,7 @@ const ProjectUserAccess = () => {
                   onRemove={onRemove(accessGroup)}
                   isLoading={isLoadingUsers}
                 />
-              </ProjectUserAccesAccessGroupPanel>
+              </ProjectUserAccessAccessGroupPanel>
             )
           })}
       </AccessGroupsWrapper>
