@@ -42,9 +42,10 @@ import LoadingPage from '@pages/LoadingPage'
 import { useQueryParam } from 'use-query-params'
 import { uuid } from 'short-uuid'
 import ProjectUserAccesAccessGroupPanel from './ProjectUserAccessAccessGroupPanel'
-import {
+import EmptyPlaceholder, {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
+  Placeholder,
 } from '@shared/components/EmptyPlaceholder'
 import { useSessionStorage } from '@shared/hooks'
 
@@ -57,7 +58,7 @@ const StyledButton = styled(Button)`
 `
 
 const ProjectUserAccess = () => {
-  const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
+  const { data: accessGroupList = [], error } = useGetAccessGroupsQuery({
     projectName: '_',
   })
 
@@ -417,6 +418,7 @@ const ProjectUserAccess = () => {
             )
           })}
       </AccessGroupsWrapper>
+      {error && <EmptyPlaceholder error={error} />}
     </>
   )
 
