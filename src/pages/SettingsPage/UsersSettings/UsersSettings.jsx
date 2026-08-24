@@ -7,10 +7,14 @@ import RenameUserDialog from './RenameUserDialog'
 // utils
 import './users.scss'
 import useSearchFilter from '@hooks/useSearchFilter'
-import { useGetUsersQuery } from '@shared/api'
+import {
+  useGetUsersQuery,
+  useDeleteUserMutation,
+  useUpdateUserMutation,
+  useGetStudioAccessGroupsQuery,
+} from '@shared/api'
 import UserDetail from './userDetail'
 import UserList from './UserList'
-import { useDeleteUserMutation, useUpdateUserMutation } from '@shared/api'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useSelector } from 'react-redux'
 import UsersOverview from './UsersOverview'
@@ -18,7 +22,6 @@ import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import NewUser from './newUser'
 import NewServiceUser from './newServiceUser'
-import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import Shortcuts from '@containers/Shortcuts'
 import DeleteUserDialog from './DeleteUserDialog'
 import InviteUserDialog from './InviteUserDialog'
@@ -95,9 +98,7 @@ const UsersSettings = () => {
   }
 
   // GET ACCESS GROUPS QUERY
-  const { data: accessGroupsData } = useGetAccessGroupsQuery({
-    projectName: '_',
-  })
+  const { data: accessGroupsData } = useGetStudioAccessGroupsQuery()
 
   // MUTATION HOOK
   const [deleteUser] = useDeleteUserMutation()
