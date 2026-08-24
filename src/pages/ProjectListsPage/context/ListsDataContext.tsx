@@ -1,7 +1,7 @@
 import { createContext, useContext, ReactNode, useMemo } from 'react'
 import { EntityList, EntityListFolderModel, useGetEntityListFoldersQuery } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
-import { Filter } from '@ynput/ayon-react-components'
+import { Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
 import { useQueryArgumentChangeLoading, useUserProjectConfig, useLocalStorage } from '@shared/hooks'
 import useGetListsData from '../hooks/useGetListsData'
 import { buildListsTableData } from '../util'
@@ -95,6 +95,12 @@ export const ListsDataProvider = ({
     await updatePageConfig({ listsFilters: filters })
   }
 
+  // search chips filter client side only, they must never refire the lists query
+  const serverFilters = useMemo(
+    () => listsFilters.filter((f) => !f.id.startsWith(SEARCH_FILTER_ID)),
+    [listsFilters],
+  )
+
   const [showArchived, setShowArchived] = useLocalStorage<boolean>('lists-show-archived', false)
 
   const {
@@ -106,7 +112,7 @@ export const ListsDataProvider = ({
     refetch,
   } = useGetListsData({
     projectName,
-    filters: listsFilters,
+    filters: serverFilters,
     entityListTypes,
     skip: foldersOnly,
   })
