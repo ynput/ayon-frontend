@@ -148,6 +148,11 @@ export const getScopedValue = (
   field: string,
   isAttrib = false,
 ): any => {
+  if (row.group) {
+    if (isAttrib || scope !== 'primary' || field !== 'name') return undefined
+    return row.primary.name
+  }
+
   const entity = getScopedEntity(row, scope)
   if (!entity || (!isAttrib && !isFieldSupported(field, entity.entityType))) return undefined
   return isAttrib ? entity.attrib?.[field] : entity[field as keyof EntityData]

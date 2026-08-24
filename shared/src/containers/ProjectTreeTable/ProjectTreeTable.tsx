@@ -1698,7 +1698,9 @@ const TD = ({
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
           expandable:
-            !!cell.row.originalSubRows && isEntityExpandable(cell.row.original.primary.entityType),
+            !isGroup &&
+            !!cell.row.originalSubRows &&
+            isEntityExpandable(cell.row.original.primary.entityType),
           'multiple-selected': isMultipleSelected,
         },
         className,
@@ -1778,7 +1780,7 @@ const TD = ({
         if (isGroup && cell.column.id !== 'name') return clearSelection()
 
         // check if this is a restricted entity - prevent editing
-        const isRestricted = isEntityRestricted(cell.row.original.primary.entityType)
+        const isRestricted = isGroup || isEntityRestricted(cell.row.original.primary.entityType)
 
         // if clicking on an edit trigger, start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {

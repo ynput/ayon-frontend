@@ -8,7 +8,7 @@ import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
-import { linksToTableData } from '../utils'
+import { buildTaskTableRow } from '../utils'
 import { ProjectModelWithProducts, useProjectContext } from '@shared/context'
 
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
@@ -116,39 +116,22 @@ const defaultEntityToGroupRow = (
   task: EditorTaskNode,
   group: string | undefined,
   entityType: string,
-  project: ProjectModelWithProducts,
+  entities: EntitiesMap,
   getEntityTypeData: ReturnType<typeof useGetEntityTypeData>,
 ): TableRow & { subRows: TableRow[] } => {
   const typeData = getEntityTypeData(entityType, task.taskType)
+  const parentFolder = entities.get(task.folderId)
+  const row = buildTaskTableRow(
+    task,
+    parentFolder?.entityType === 'folder' ? parentFolder : undefined,
+  )
+
+  row.primary.icon = typeData?.icon || null
+  row.primary.color = typeData?.color || null
+
   return {
-    id: task.id + ROW_ID_SEPARATOR + group, // unique id for the task in the folder
-    primary: {
-      id: task.id,
-      entityType: 'task',
-      name: task.name || '',
-      label: task.label || task.name || '',
-      path: task.parents?.join('/'),
-      hasReviewables: task.hasReviewables || false,
-      status: task.status,
-      assignees: task.assignees,
-      tags: task.tags,
-      createdAt: task.createdAt,
-      updatedAt: task.updatedAt,
-      thumbnailHash: task.thumbnailHash,
-      attrib: task.attrib,
-      ownAttrib: task.ownAttrib,
-      subType: task.taskType || '',
-      icon: typeData?.icon || null,
-      color: typeData?.color || null,
-      links: linksToTableData(task.links, entityType, {
-        folderTypes: project?.folderTypes || [],
-        productTypes: Object.values(project.productTypes) || [],
-        taskTypes: project?.taskTypes || [],
-      }),
-      subtasks: task.subtasks || [],
-      latestComments: task.latestComments || [],
-    },
-    midnightExclusiveFields: task.data?.schedulerSyncData?.allDay ? ['attrib_endDate'] : undefined,
+    ...row,
+    id: task.id + ROW_ID_SEPARATOR + group,
     subRows: [],
   }
 }
@@ -171,7 +154,7 @@ const useBuildGroupByTableData = ({
       // Use provided groupRowFunc or fall back to default
       const baseRow = groupRowFunc
         ? groupRowFunc(task)
-        : defaultEntityToGroupRow(task, group, entityType, project, getEntityTypeData)
+        : defaultEntityToGroupRow(task, group, entityType, entities, getEntityTypeData)
 
       // Ensure group-specific fields are set
       return {
@@ -180,7 +163,7 @@ const useBuildGroupByTableData = ({
         subRows: baseRow.subRows || [],
       }
     },
-    [groupRowFunc, getEntityTypeData, entityType, project],
+    [groupRowFunc, getEntityTypeData, entityType, entities],
   )
 
   return useCallback(
@@ -207,18 +190,17 @@ const useBuildGroupByTableData = ({
             subType: '',
           },
           subRows: [],
-          label: groupData.label,
           group: groupData,
         })
       }
 
       const ungroupedId = buildGroupId(UNGROUPED_VALUE)
       // gets the "Ungrouped" group, creating it if it doesn't exist
-      const getUnGroupedGroup = () => {
+      const getUnGroupedGroup = (): TableRow => {
         let ungroupedGroup = groupsMap.get(UNGROUPED_VALUE)
         if (!ungroupedGroup) {
           const stat = groupCounts?.get(UNGROUPED_VALUE)
-          ungroupedGroup = {
+          const newUngroupedGroup: TableRow = {
             id: ungroupedId,
             primary: {
               id: ungroupedId,
@@ -228,7 +210,6 @@ const useBuildGroupByTableData = ({
               subType: '',
             },
             subRows: [],
-            label: 'Ungrouped',
             group: {
               value: UNGROUPED_VALUE,
               label: 'Ungrouped',
@@ -237,7 +218,8 @@ const useBuildGroupByTableData = ({
             },
           }
           // create ungrouped group if it doesn't exist
-          groupsMap.set(UNGROUPED_VALUE, ungroupedGroup)
+          groupsMap.set(UNGROUPED_VALUE, newUngroupedGroup)
+          ungroupedGroup = newUngroupedGroup
         }
         return ungroupedGroup
       }
