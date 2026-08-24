@@ -85,7 +85,6 @@ const ProjectOverviewPage: FC = () => {
     projectInfo,
     setQueryFilters,
     displayFilters,
-    showHierarchy,
     viewGroupBy,
     viewGroupByDesc,
     updateViewGroupBy,
@@ -247,7 +246,7 @@ const ProjectOverviewPage: FC = () => {
         <SplitterPanel size={slicerSize[1]}>
           <Section wrap direction="column" style={{ height: '100%' }}>
             <Toolbar>
-              <ProjectNewEntityHost disabled={!showHierarchy} showButton />
+              <ProjectNewEntityHost showButton />
               <OverviewActions />
               <SearchFilterWrapper
                 queryFilters={displayFilters}

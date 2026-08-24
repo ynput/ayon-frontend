@@ -95,9 +95,7 @@ export const buildAddColumnsMenu = ({
       id: section.id,
       label: section.label,
       icon: section.icon,
-      items: (sectioned.get(section.id) as AddColumnItem[])
-        .toSorted((a, b) => a.label.localeCompare(b.label))
-        .map(toMenuItem),
+      items: (sectioned.get(section.id) as AddColumnItem[]).map(toMenuItem),
     }))
 
   const groups = [topLevel.map(toMenuItem), sectionItems, extraItems].filter(

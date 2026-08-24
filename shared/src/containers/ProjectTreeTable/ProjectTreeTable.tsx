@@ -74,6 +74,7 @@ import {
   ProjectTableAttribute,
   BuiltInFieldOptions,
   MainCountLabels,
+  MainBreakdownFields,
   SummaryCellContentProps,
 } from './types'
 import type { EnumItem } from '@shared/api'
@@ -175,6 +176,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   fieldStatsLoading?: boolean // footer stats still loading - click-through shimmer over values
   fieldStatsError?: any // error fetching footer stats
   mainCountLabels?: MainCountLabels // labels for the main cell dual count (defaults folders/tasks)
+  mainBreakdownFields?: MainBreakdownFields // subTypes the name summary breaks down by, per side
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
   onColumnVisibleChange?: (changes: Record<string, boolean>) => void
@@ -213,6 +215,7 @@ export const ProjectTreeTable = ({
   fieldStatsLoading,
   fieldStatsError,
   mainCountLabels,
+  mainBreakdownFields,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
   onColumnVisibleChange,
@@ -809,6 +812,7 @@ export const ProjectTreeTable = ({
                     fieldOptions={options}
                     parentScopeApplicable={parentScopeApplicable}
                     selectedCount={selectedRowCount}
+                    mainBreakdownFields={mainBreakdownFields}
                   />
                 )}
                 // Power feature cell for community users (hidden for now), shows a bolt hint in the name column:

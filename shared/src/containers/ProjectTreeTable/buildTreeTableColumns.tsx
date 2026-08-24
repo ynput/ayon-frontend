@@ -22,7 +22,7 @@ import type { AttributeData, LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { SubtasksWidgetData } from './widgets/SubtasksWidget'
 import { Icon } from '@ynput/ayon-react-components'
-import { getEntityTypeIcon } from '@shared/util'
+import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
 import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { isEntityRestricted, READ_ONLY } from './utils/restrictedEntity'
 import { getColumnDisplayConfig } from './types/columnConfig'
@@ -63,31 +63,29 @@ export const getColumnLabel = (columnId: string, scopes: string[] = []) => {
   return COLUMN_LABELS[normalizeColumnId(columnId)] || columnId
 }
 
+// only ids getAttributeIcon can't resolve from the name alone
 export const COLUMN_ICONS: Record<string, string> = {
   thumbnail: 'image',
   name: 'title',
-  status: 'arrow_circle_right',
   entityType: 'category',
   subType: 'category',
-  productType: getEntityTypeIcon('product'),
   productBaseType: 'category',
+  productType: getEntityTypeIcon('product'),
   taskType: getEntityTypeIcon('task'),
   folderType: getEntityTypeIcon('folder'),
-  assignees: 'person',
-  author: 'person',
   folder_entity: getEntityTypeIcon('folder'),
   task_entity: getEntityTypeIcon('task'),
-  version: getEntityTypeIcon('version'),
   version_entity: getEntityTypeIcon('version'),
-  product: getEntityTypeIcon('product'),
-  tags: 'local_offer',
-  createdAt: 'calendar_month',
-  updatedAt: 'calendar_month',
+  createdAt: getAttributeIcon('createdAt', 'datetime'),
+  updatedAt: getAttributeIcon('updatedAt', 'datetime'),
   subtasks: 'checklist',
-  comments: 'comment',
+  comments: getAttributeIcon('comment'),
 }
 
-export const getColumnIcon = (columnId: string) => COLUMN_ICONS[normalizeColumnId(columnId)]
+export const getColumnIcon = (columnId: string) => {
+  const id = normalizeColumnId(columnId)
+  return COLUMN_ICONS[id] ?? getAttributeIcon(id)
+}
 
 type ColumnSortConfig = {
   sortKey?: string
@@ -634,7 +632,8 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
-        const fieldId = type === 'folder' ? 'folderType' : 'taskType'
+        const isProductType = type === 'product' || type === 'version'
+        const fieldId = type === 'folder' ? 'folderType' : isProductType ? 'productType' : 'taskType'
         const meta = table.options.meta
         const folderHasVersions = type === 'folder' && row.original.hasVersions
         return (
@@ -649,7 +648,7 @@ const buildTreeTableColumns = ({
                 ? meta?.options?.folderType
                 : type === 'task'
                 ? meta?.options?.taskType
-                : type === 'product' || type === 'version'
+                : isProductType
                 ? meta?.options?.productType
                 : []
             }
@@ -661,6 +660,7 @@ const buildTreeTableColumns = ({
               )
             }
             isReadOnly={
+              isProductType ||
               meta?.readOnly?.includes(column.id) ||
               meta?.readOnly?.includes(fieldId) ||
               folderHasVersions

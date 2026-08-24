@@ -227,6 +227,8 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         fieldStatsLoading={fieldStatsLoading}
         fieldStatsError={fieldStatsError}
         mainCountLabels={{ primary: 'products', secondary: 'versions' }}
+        // versions have no subType, so only the products side breaks down
+        mainBreakdownFields={{ primary: 'productType' }}
         columnsConfig={{
           name: {
             display: { path_compact: false, path_full: true },
