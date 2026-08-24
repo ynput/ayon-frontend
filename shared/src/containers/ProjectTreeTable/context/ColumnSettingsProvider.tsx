@@ -43,6 +43,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
   }
+  const getAllColumns = () => allColumnsRef.current
   const onChangeWithColumns = (next: ColumnsConfig) => {
     const allKnownIds = allColumnsRef.current
     // Expand sparse columnVisibility to explicit values for all known columns so that
@@ -451,6 +452,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       value={{
         // all columns ref
         setAllColumns,
+        getAllColumns,
         // column visibility
         columnVisibility,
         defaultColumnVisibility,

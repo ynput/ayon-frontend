@@ -12,13 +12,14 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
-import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributesShortcutButton'
+import { AddColumnButton } from '@shared/components'
 import { UniqueIdentifier } from '@dnd-kit/core'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, useSettingsPanel } from '@shared/context'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
+  extraColumnsSettings: { value: string; label: string }[]
   isLoading?: boolean
   isReview?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
@@ -27,12 +28,14 @@ interface ListItemsTableProps {
 
 const ListItemsTable: FC<ListItemsTableProps> = ({
   extraColumns,
+  extraColumnsSettings,
   isLoading,
   isReview,
   dndActiveId, // Destructure new prop
   viewOnly,
 }) => {
   const { projectName } = useProjectContext()
+  const { togglePanel } = useSettingsPanel()
   const { selectedLists, selectedList } = useListsContext()
   const {
     isError,
@@ -51,6 +54,19 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   const [hiddenColumns, readOnly] = useMemo(
     () => getColumnConfigFromType(selectedList?.entityType),
     [selectedList],
+  )
+
+  const listAttributesMenuItems = useMemo(
+    () => [
+      {
+        id: 'list-attributes',
+        label: 'Create list attribute',
+        icon: 'add',
+        // the button only renders while the panel is closed, so this always opens it
+        onClick: () => togglePanel('list_attributes'),
+      },
+    ],
+    [togglePanel],
   )
 
   if (!selectedList)
@@ -111,7 +127,11 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         mainCountLabels={mainCountLabels}
       />
       <ListItemsShortcuts />
-      <ListsAttributesShortcutButton />
+      <AddColumnButton
+        extraColumns={extraColumnsSettings}
+        hiddenColumns={hiddenColumns}
+        extraMenuItems={listAttributesMenuItems}
+      />
     </div>
   )
 }
