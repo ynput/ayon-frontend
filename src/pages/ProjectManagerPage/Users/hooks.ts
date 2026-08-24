@@ -2,7 +2,7 @@ import { $Any } from '@types'
 import { useState } from 'react'
 import { SelectionStatus } from './types'
 import { useSetFrontendPreferencesMutation } from '@shared/api'
-import { useUpdateAccessGroupsMutation } from '@queries/accessGroups/updateAccessGroups'
+import { useSetProjectsAccessMutation } from '@queries/accessGroups/updateAccessGroups'
 import { useGetProjectsAccessQuery } from '@queries/accessGroups/getAccessGroups'
 import { Filter } from '@ynput/ayon-react-components'
 import { useGlobalContext } from '@shared/context'
@@ -12,7 +12,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     selectedProject ? [selectedProject] : [],
   )
 
-  const [updateAccessGroups] = useUpdateAccessGroupsMutation()
+  const [setProjectsAccess] = useSetProjectsAccessMutation()
   const { isLoading, data: usersData } = useGetProjectsAccessQuery({ projects: selectedProjects })
 
   const accessGroupUsers: $Any = {}
@@ -39,7 +39,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
       }
     }
     try {
-      updateAccessGroups({ payload: multiUpdateData, selectedProjects })
+      setProjectsAccess({ payload: multiUpdateData })
     } catch (error: $Any) {
       console.log(error)
       return error.details
@@ -82,7 +82,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     }
 
     try {
-      updateAccessGroups({ payload: multiUpdateData, selectedProjects })
+      setProjectsAccess({ payload: multiUpdateData })
     } catch (error: $Any) {
       console.log(error)
       return error.details
