@@ -56,7 +56,7 @@ const ListsFiltersBar = forwardRef<SearchFilterRef, ListsFiltersBarProps>(({ onS
         filters={filters}
         onChange={setFilters}
         onFinish={setListsFilters}
-        onSearchChange={setLiveSearch}
+        onSearchChange={(value, filter) => setLiveSearch(filter ? '' : value)}
         enableGlobalSearch
         globalSearchConfig={{ enableMultiple: false }}
         enableAutosuggestion={false}
