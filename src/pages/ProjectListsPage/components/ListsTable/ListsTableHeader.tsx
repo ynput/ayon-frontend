@@ -1,10 +1,11 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
 import { Header, HeaderButton } from '@shared/containers/SimpleTable'
-import { theme } from '@ynput/ayon-react-components'
-import { FC, useMemo } from 'react'
+import { SearchFilterRef, theme } from '@ynput/ayon-react-components'
+import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import ListsSearch from './ListsSearch'
+import ListsFiltersBar from './ListsFiltersBar'
 import { Menu, MenuContainer, MenuItemType } from '@shared/components'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
@@ -100,6 +101,8 @@ interface ListsTableHeaderProps {
   // overrides the default create-list flow (picker pre-populates the selected entities)
   onCreateList?: () => void
   isReview?: boolean
+  // main lists mode: merged search + filter bar instead of the plain search input
+  filtersBar?: boolean
 }
 
 const ListsTableHeader: FC<ListsTableHeaderProps> = ({
@@ -112,6 +115,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   menuId = MENU_ID,
   onCreateList,
   isReview = false,
+  filtersBar = false,
 }) => {
   const {
     openNewList,
@@ -119,11 +123,21 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     selectedRows,
     deleteLists,
     onDeleteListFolders,
+    listsFiltersOpen,
     setListsFiltersOpen,
     selectAllLists,
   } = useListsContext()
 
-  const { showArchived, setShowArchived, listsFilters } = useListsDataContext()
+  const { showArchived, setShowArchived, listsFilters, setListsFilters } = useListsDataContext()
+
+  const filtersBarRef = useRef<SearchFilterRef>(null)
+  const barVisible = filtersBar && (listsFiltersOpen || listsFilters.length > 0)
+
+  // the bar mounts on the state flip, so the ref is only there next frame
+  const openFiltersBar = () => {
+    setListsFiltersOpen(true)
+    requestAnimationFrame(() => filtersBarRef.current?.open())
+  }
 
   const { menuOpen, toggleMenuOpen } = useMenuContext()
   const { powerLicense } = usePowerpack()
@@ -195,7 +209,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       id: 'search',
       label: 'Search',
       icon: 'search',
-      onClick: () => onSearch(''),
+      onClick: () => (filtersBar ? openFiltersBar() : onSearch('')),
       isPinned: true,
       buttonProps: {
         icon: 'search',
@@ -268,7 +282,15 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
             id: 'filter',
             label: 'Filter lists',
             icon: 'filter_list',
-            onClick: () => setListsFiltersOpen(true),
+            onClick: () => {
+              if (!filtersBar) return setListsFiltersOpen(true)
+              if (barVisible) {
+                setListsFilters([])
+                setListsFiltersOpen(false)
+              } else {
+                openFiltersBar()
+              }
+            },
             isPinned: false,
             selected: listsFilters.length > 0,
             active: listsFilters.length > 0,
@@ -342,9 +364,11 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
             )}
         </StyledButtons>
       </HeaderTop>
-      {typeof search === 'string' && (
-        <ListsSearch value={search} onChange={onSearch} onClose={() => onSearch(null)} />
-      )}
+      {filtersBar
+        ? barVisible && <ListsFiltersBar ref={filtersBarRef} onSearch={onSearch} />
+        : typeof search === 'string' && (
+            <ListsSearch value={search} onChange={onSearch} onClose={() => onSearch(null)} />
+          )}
     </HeaderStyled>
   )
 }

@@ -10,7 +10,6 @@ import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { ListsDataProvider } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
-import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
 import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
 import {
   ListsAttributesProvider,
@@ -524,7 +523,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
           </Section>
         </SplitterPanel>
       </Splitter>
-      <ListsFiltersDialog />
     </main>
   )
 }
