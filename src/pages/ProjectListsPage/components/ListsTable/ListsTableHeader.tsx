@@ -285,7 +285,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
             onClick: () => {
               if (!filtersBar) return setListsFiltersOpen(true)
               if (barVisible) {
-                setListsFilters([])
+                if (listsFilters.length) setListsFilters([])
                 setListsFiltersOpen(false)
               } else {
                 openFiltersBar()

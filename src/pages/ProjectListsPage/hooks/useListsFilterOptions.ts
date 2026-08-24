@@ -94,7 +94,7 @@ const getAttributeValuesFromLists = (
 
 const useListsFilterOptions = (): Option[] => {
   const { listsData } = useListsDataContext()
-  const { ...projectInfo } = useProjectContext()
+  const projectInfo = useProjectContext()
 
   // Fetch list-scoped attributes
   const { data: allAttributes = [] } = useGetAttributeListQuery()

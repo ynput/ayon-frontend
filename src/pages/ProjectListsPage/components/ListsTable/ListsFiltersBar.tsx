@@ -11,6 +11,10 @@ import useListsFilterOptions from '@pages/ProjectListsPage/hooks/useListsFilterO
 
 const Container = styled.div`
   padding: 4px;
+  /* header is a centering column flex: without this the bar hugs its content
+     and jumps to the middle whenever a value dropdown empties the bar */
+  width: 100%;
+  min-width: 0;
 `
 
 interface ListsFiltersBarProps {

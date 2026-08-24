@@ -97,6 +97,7 @@ export default ({ mode }) => {
       },
     },
     resolve: {
+      dedupe: ['react', 'react-dom', 'styled-components'],
       alias: [
         { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
         {
