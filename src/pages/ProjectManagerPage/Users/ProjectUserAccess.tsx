@@ -9,7 +9,7 @@ import Shortcuts from '@containers/Shortcuts'
 import { useShortcutsContext } from '@context/ShortcutsContext'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
-import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
+import { useGetStudioAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { useGetUsersQuery } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
 
@@ -58,9 +58,7 @@ const StyledButton = styled(Button)`
 `
 
 const ProjectUserAccess = () => {
-  const { data: accessGroupList = [], error } = useGetAccessGroupsQuery({
-    projectName: '_',
-  })
+  const { data: accessGroupList = [], error } = useGetStudioAccessGroupsQuery()
 
   const [selectedProject] = useQueryParam('project')
 

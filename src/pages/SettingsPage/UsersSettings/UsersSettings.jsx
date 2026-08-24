@@ -18,7 +18,7 @@ import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import NewUser from './newUser'
 import NewServiceUser from './newServiceUser'
-import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
+import { useGetStudioAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import Shortcuts from '@containers/Shortcuts'
 import DeleteUserDialog from './DeleteUserDialog'
 import InviteUserDialog from './InviteUserDialog'
@@ -95,9 +95,7 @@ const UsersSettings = () => {
   }
 
   // GET ACCESS GROUPS QUERY
-  const { data: accessGroupsData } = useGetAccessGroupsQuery({
-    projectName: '_',
-  })
+  const { data: accessGroupsData } = useGetStudioAccessGroupsQuery()
 
   // MUTATION HOOK
   const [deleteUser] = useDeleteUserMutation()

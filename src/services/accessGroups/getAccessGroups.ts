@@ -56,7 +56,7 @@ const enhancedApi = accessApi.injectEndpoints({
 
 enhancedApi.enhanceEndpoints({
   endpoints: {
-    getAccessGroups: {
+    getStudioAccessGroups: {
       // @ts-expect-error: {code: 403, details: "Only managers can access the studio level settings"}
       transformErrorResponse: (err) => err?.detail || 'Error fetching access groups',
       providesTags: (result) =>
@@ -78,7 +78,7 @@ enhancedApi.enhanceEndpoints({
 })
 
 export const {
-  useGetAccessGroupsQuery,
+  useGetStudioAccessGroupsQuery,
   useGetAccessGroupQuery,
   useGetAccessGroupSchemaQuery,
   useGetProjectsAccessQuery,
