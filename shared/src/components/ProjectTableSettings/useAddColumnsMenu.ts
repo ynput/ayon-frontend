@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useRef } from 'react'
 import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
-import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils'
 import { buildAddColumnsMenu, AddColumnItem } from './addColumnsMenu'
+import { useVisibilityPaint } from './useVisibilityPaint'
+import { useAddColumnDrag } from './useAddColumnDrag'
 import type { MenuItemType } from '../Menu'
 
 interface UseAddColumnsMenuProps {
@@ -14,28 +15,69 @@ export const useAddColumnsMenu = ({ columns, scopes, extraItems }: UseAddColumns
   const { columnVisibility, defaultColumnVisibility, updateColumnVisibility } =
     useColumnSettingsContext()
 
-  // an open sub-menu keeps the items it was opened with, so toggling must read the latest state
-  const latestRef = useRef({ columnVisibility, defaultColumnVisibility, updateColumnVisibility })
-  latestRef.current = { columnVisibility, defaultColumnVisibility, updateColumnVisibility }
+  const {
+    displayVisibility,
+    isVisible,
+    onPaintStart,
+    onPaintEnter,
+    toggle,
+    cancelPaint,
+    isPainting,
+  } = useVisibilityPaint({
+    columnVisibility,
+    defaultColumnVisibility,
+    updateColumnVisibility,
+  })
 
-  const toggleColumn = useCallback((columnId: string) => {
-    const { columnVisibility, defaultColumnVisibility, updateColumnVisibility } = latestRef.current
-    const isVisible = checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)
-    updateColumnVisibility({ ...columnVisibility, [columnId]: !isVisible })
-  }, [])
+  const { armDrag, cancelDrag, isDragging, dragOverlay } = useAddColumnDrag()
+
+  // one press, two possible gestures: painting inside the menu, dragging a column out of it
+  const gestureRef = useRef({ isPainting, isDragging, cancelPaint })
+  gestureRef.current = { isPainting, isDragging, cancelPaint }
+
+  // moving onto another item means the gesture is a paint, not a drag out to the table
+  const handlePaintEnter = useCallback((columnId: string, pressed: boolean) => {
+    if (gestureRef.current.isDragging) return
+    if (pressed) cancelDrag()
+    onPaintEnter(columnId, pressed)
+  }, [cancelDrag, onPaintEnter])
+
+  const handleDragStart = useCallback((column: AddColumnItem, event: React.PointerEvent) => {
+    if (gestureRef.current.isPainting) return
+    armDrag(column, event)
+  }, [armDrag])
+
 
   const menuItems = useMemo(
     () =>
       buildAddColumnsMenu({
         columns,
-        onToggle: toggleColumn,
-        isColumnVisible: (columnId) =>
-          checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility),
+        onToggle: toggle,
+        isColumnVisible: isVisible,
+        onPaintStart,
+        onPaintEnter: handlePaintEnter,
+        onDragStart: handleDragStart,
         scopes,
         extraItems,
       }),
-    [columns, columnVisibility, defaultColumnVisibility, toggleColumn, scopes, extraItems],
+    // displayVisibility drives the checkmarks, including the preview while painting
+    [
+      columns,
+      displayVisibility,
+      toggle,
+      onPaintStart,
+      handlePaintEnter,
+      handleDragStart,
+      scopes,
+      extraItems,
+    ],
   )
 
-  return { menuItems, hasMenuItems: !!menuItems.length }
+  return {
+    menuItems,
+    hasMenuItems: !!menuItems.length,
+    dragOverlay,
+    onColumnDragStart: armDrag,
+    isColumnDragging: isDragging,
+  }
 }

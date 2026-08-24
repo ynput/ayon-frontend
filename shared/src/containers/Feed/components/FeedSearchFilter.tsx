@@ -7,11 +7,12 @@ import {
   SearchFilterRef,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { type QueryFilter, type ActivityCategory, ChecklistCount } from '@shared/api'
+import type { QueryFilter, ActivityCategory, ChecklistCount } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
 import { feedFilterToClientFilters, clientFiltersToFeedFilter } from '../helpers/feedFilterAdapter'
 import { generateDateOptions } from '@shared/components/SearchFilter/filterDates'
-import { useDateRangeFilter, CustomDateRangeDialog } from '@shared/components/SearchFilter'
+import { useDateRangeFilter } from '@shared/components/SearchFilter/useDateRangeFilter'
+import { CustomDateRangeDialog } from '@shared/components/SearchFilter/CustomDateRangeDialog'
 
 const Wrapper = styled.div`
   padding: 4px 8px;

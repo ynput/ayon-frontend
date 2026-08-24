@@ -1,8 +1,8 @@
 // create table data for the hierarchy
-import { SimpleTableRow } from '@shared/containers/SimpleTable'
+import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import type { FolderType, FolderListItem } from '@shared/api'
 import { useCallback, useMemo } from 'react'
-import { useProjectFoldersContext } from '@shared/context'
+import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
 
 type Props = {
   projectName: string | null

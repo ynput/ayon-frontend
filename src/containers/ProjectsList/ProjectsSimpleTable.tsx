@@ -31,6 +31,7 @@ interface ProjectsSimpleTableProps extends React.HTMLAttributes<HTMLDivElement> 
   fitContent?: boolean
   hidePinned?: boolean
   onSettingsClick?: (projectId: string) => void
+  enableClickToDeselect?: boolean
 }
 
 export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
@@ -53,6 +54,7 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
   fitContent,
   hidePinned,
   onSettingsClick,
+  enableClickToDeselect = false,
   ...props
 }) => {
   const navigate = useNavigate()
@@ -163,7 +165,7 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
       isLoading={!!isLoading}
       isMultiSelect={multiSelect}
       error={error}
-      enableClickToDeselect={false}
+      enableClickToDeselect={enableClickToDeselect}
       enableNonFolderIndent={true}
       fitContent={fitContent}
       rowContextMenuBuilders={readonly ? [] : rowContextMenuBuilders}

@@ -1,4 +1,4 @@
-import { useSessionStorage } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks/useSessionStorage'
 
 export const SLICER_SPLITTER_STATE_KEY = 'slicer-splitter'
 export const SLICER_SPLITTER_PANEL_CONFIG = {

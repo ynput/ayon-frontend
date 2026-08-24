@@ -5,6 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import buildProjectsTableData, { buildProjectFolderRowId } from './buildProjectsTableData'
 import { MENU_ID } from './ProjectsListTableHeader'
 import useProjectMenuController from './hooks/useProjectMenuController'
+import type { Hidden } from './hooks/useProjectsListMenuItems'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { useQueryParam } from 'use-query-params'
 import { useLocalStorage } from '@shared/hooks'
@@ -19,8 +20,10 @@ interface ProjectsListProps {
   selection: string[]
   onSelect: (ids: string[]) => void
   multiSelect?: boolean
+  allowEmptySelection?: boolean
   onNewProject?: () => void
   onNoProjectSelected?: (projectName: string) => void
+  hidden?: Hidden
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
   }
@@ -30,8 +33,10 @@ const ProjectsList: FC<ProjectsListProps> = ({
   selection,
   onSelect,
   multiSelect,
+  allowEmptySelection,
   onNewProject,
   onNoProjectSelected,
+  hidden,
   pt,
 }) => {
   // GET USER PREFERENCES (moved to hook)
@@ -78,10 +83,10 @@ const ProjectsList: FC<ProjectsListProps> = ({
       onSelect([selectedProjects[0].name])
     }
     // if there is no project selected, select the first one
-    if (projects.length && !selection.length) {
+    if (!allowEmptySelection && projects.length && !selection.length) {
       onSelect([projects[0].name])
     }
-  }, [multiSelect, selection, selectedProjects, onSelect, projects])
+  }, [multiSelect, selection, selectedProjects, onSelect, projects, allowEmptySelection])
 
   // state
   // search state
@@ -196,6 +201,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     showArchived,
     onSelectAll: toggleSelectAll,
     onShowArchivedToggle,
+    hidden,
     onFolderCreated: handleFolderCreated,
     onFoldersCreated: handleFoldersCreated,
   })
@@ -221,8 +227,9 @@ const ProjectsList: FC<ProjectsListProps> = ({
         selection={selection}
         onSelect={onSelect}
         onOpenProject={onOpenProject}
+        enableClickToDeselect={allowEmptySelection}
         title="Projects"
-        showAddProject={canCreateProject}
+        showAddProject={canCreateProject && !hidden?.['add-project']}
         onNewProject={onNewProject}
         toggleMenu={toggleMenu}
         onSelectAll={toggleSelectAll}
@@ -238,7 +245,10 @@ const ProjectsList: FC<ProjectsListProps> = ({
         pt={pt}
       />
       <ProjectFolderFormDialog {...folderDialogProps} />
-      <ProjectsShortcuts onOpenFolderDialog={handleOpenFolderDialog} disabled={!powerLicense} />
+      <ProjectsShortcuts
+        onOpenFolderDialog={handleOpenFolderDialog}
+        disabled={!powerLicense || !!hidden?.['create-folder']}
+      />
     </>
   )
 }

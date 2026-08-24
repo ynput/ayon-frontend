@@ -15,11 +15,17 @@ export interface TransformedInboxMessages {
   projectNames: string[]
   pageInfo: GetInboxMessagesQuery['inbox']['pageInfo']
 }
-;[]
+
+// the inbox resolver truncates in SQL, the activities resolver does not
+const BODY_LIMIT = 200
+
+const truncateBody = (body: string): string =>
+  body.length > BODY_LIMIT ? `${body.slice(0, BODY_LIMIT).replace(/\n/g, ' ')}...` : body
 
 export const transformInboxMessages = (
   inbox: GetInboxMessagesQuery['inbox'],
   { important = false }: GetInboxMessagesQueryVariables | void = {},
+  { truncate = false }: { truncate?: boolean } = {},
 ): TransformedInboxMessages => {
   const messages: InboxMessage[] = []
   const projectNames: string[] = []
@@ -38,6 +44,7 @@ export const transformInboxMessages = (
 
     const transformedMessage = {
       ...message,
+      body: truncate ? truncateBody(message.body) : message.body,
       folderName: '',
       thumbnail: { icon: 'folder' },
       entityId: message.origin?.id,
@@ -70,4 +77,23 @@ export const transformInboxMessages = (
   }
 
   return { projectNames, messages, pageInfo: inbox.pageInfo }
+}
+
+export const EMPTY_INBOX_PAGE: TransformedInboxMessages = {
+  messages: [],
+  projectNames: [],
+  pageInfo: { hasPreviousPage: false, startCursor: null, endCursor: null },
+}
+
+export type InboxPagesDraft = { pages: { messages: InboxMessage[] }[] }
+
+// realtime rows always belong at the top, and only ones no page holds yet
+export const unshiftNewMessages = (draft: InboxPagesDraft, messages: InboxMessage[]): void => {
+  if (!draft?.pages?.length) return
+
+  const cachedIds = new Set<string>()
+  draft.pages.forEach((page) => page.messages.forEach((m) => cachedIds.add(m.referenceId)))
+
+  const newMessages = messages.filter((m) => !cachedIds.has(m.referenceId))
+  if (newMessages.length) draft.pages[0].messages.unshift(...newMessages)
 }

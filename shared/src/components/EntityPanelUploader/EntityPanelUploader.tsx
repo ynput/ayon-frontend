@@ -1,7 +1,7 @@
 import { ChangeEvent, RefObject, useRef, useState } from 'react'
 import clsx from 'clsx'
 
-import { ThumbnailWrapper } from '@shared/containers'
+import { ThumbnailWrapper } from '@shared/containers/DetailsPanel/components/DetailsPanelHeader/DetailsPanelHeader.styled'
 import {
   useCreateVersionMutation,
   useUpdateEntitiesMutation,
@@ -12,9 +12,9 @@ import Dropzone, { DropzoneType } from './Dropzone'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useReviewablesUpload } from '../ReviewablesList'
-import { useDetailsPanelContext } from '@shared/context'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 import EntityPanelUploaderDialog from './EntityPanelUploaderDialog'
-import { useOptionalVersionUploadContext } from '@shared/components'
+import { useOptionalVersionUploadContext } from '../VersionUploader/context/VersionUploadContext'
 import {
   sanitizeProductName,
   createProductHelper,

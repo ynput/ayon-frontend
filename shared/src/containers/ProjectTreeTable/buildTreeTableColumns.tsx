@@ -28,12 +28,12 @@ import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './contex
 import { ROW_SELECTION_COLUMN_ID } from './constants'
 import { NEXT_PAGE_ID, parseGroupId } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
-import { AttributeData, LinkTypeModel } from '@shared/api'
+import type { AttributeData, LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { SubtasksWidgetData } from './widgets/SubtasksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
-import { NameWidgetData } from '@shared/components/RenameForm'
+import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { isEntityRestricted, READ_ONLY } from './utils/restrictedEntity'
 import { getColumnDisplayConfig } from './types/columnConfig'
 import { ENTITY_COLUMN_IDS, normalizeColumnId } from './utils/columnIds'
@@ -72,6 +72,32 @@ export const getColumnLabel = (columnId: string, scopes: string[] = []) => {
   }
   return COLUMN_LABELS[normalizeColumnId(columnId)] || columnId
 }
+
+export const COLUMN_ICONS: Record<string, string> = {
+  thumbnail: 'image',
+  name: 'title',
+  status: 'arrow_circle_right',
+  entityType: 'category',
+  subType: 'category',
+  productType: getEntityTypeIcon('product'),
+  productBaseType: 'category',
+  taskType: getEntityTypeIcon('task'),
+  folderType: getEntityTypeIcon('folder'),
+  assignees: 'person',
+  author: 'person',
+  folder_entity: getEntityTypeIcon('folder'),
+  task_entity: getEntityTypeIcon('task'),
+  version: getEntityTypeIcon('version'),
+  version_entity: getEntityTypeIcon('version'),
+  product: getEntityTypeIcon('product'),
+  tags: 'local_offer',
+  createdAt: 'calendar_month',
+  updatedAt: 'calendar_month',
+  subtasks: 'checklist',
+  comments: 'comment',
+}
+
+export const getColumnIcon = (columnId: string) => COLUMN_ICONS[normalizeColumnId(columnId)]
 
 type ColumnSortConfig = {
   sortKey?: string
@@ -1260,6 +1286,7 @@ const buildTreeTableColumns = ({
 
         const subtasksData: SubtasksWidgetData = {
           taskId: parseGroupId(row.id) || row.original.primary.id,
+          folderId: row.original.folderId ?? undefined,
           subtasks: value || [],
         }
 

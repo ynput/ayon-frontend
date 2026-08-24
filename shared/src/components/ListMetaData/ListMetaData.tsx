@@ -1,6 +1,6 @@
 // displays the meta data for a list
 
-import { EntityListModel } from '@shared/api'
+import type { EntityListModel } from '@shared/api'
 import { format } from 'date-fns'
 import { FC } from 'react'
 import { DetailsSection } from '../DetailsPanelDetails'

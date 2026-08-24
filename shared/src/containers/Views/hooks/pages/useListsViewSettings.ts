@@ -9,8 +9,8 @@
  */
 
 import { useViewsContext } from '../../context/ViewsContext'
-import { OverviewSettings } from '@shared/api'
-import { ColumnsConfig } from '@shared/containers/ProjectTreeTable'
+import type { OverviewSettings } from '@shared/api'
+import type { ColumnsConfig } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
 import {
   convertColumnConfigToTanstackStates,
   convertTanstackStatesToColumnConfig,
@@ -19,7 +19,7 @@ import { useViewUpdateHelper } from '../../utils/viewUpdateHelper'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 
 // Import the internal QueryFilter type that the app uses
-import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import type { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 
 export type ListsViewSettings = {
   // Filter management

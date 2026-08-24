@@ -1,4 +1,4 @@
-import { EnumItem } from '@shared/api'
+import type { EnumItem } from '@shared/api'
 import { getTextColor, Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'

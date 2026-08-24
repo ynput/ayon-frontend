@@ -4,7 +4,7 @@ import { forwardRef, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
-import { AttributeData, EnumItem } from '@shared/api'
+import type { AttributeData, EnumItem } from '@shared/api'
 import { wrapMode } from './wrapMode'
 
 const StyledDropdown = styled(Dropdown)<{ $multiSelect?: boolean }>`

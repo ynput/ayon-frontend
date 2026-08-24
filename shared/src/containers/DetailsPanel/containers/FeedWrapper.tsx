@@ -1,9 +1,10 @@
 import { FC } from 'react'
 
-import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
+import { Feed } from '@shared/containers/Feed/Feed'
+import ActivityReferenceTooltip from '@shared/containers/Feed/components/ActivityReferenceTooltip/ActivityReferenceTooltip'
+import { FeedProvider } from '@shared/containers/Feed/context/FeedContext'
 import type { Status, QueryFilter } from '@shared/api'
-import { useDetailsPanelContext } from '@shared/context'
-import { useLocalStorage } from '@shared/hooks'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 
 interface FeedWrapperProps {
   entities: any[]

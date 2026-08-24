@@ -1,4 +1,4 @@
-import { Menu } from '@shared/components'
+import { Menu } from '@shared/components/Menu/Menu'
 import { copyToClipboard } from '@shared/util'
 
 interface ActivityCommentMenuProps {

@@ -1,4 +1,4 @@
-import { Status } from '@shared/api'
+import type { Status } from '@shared/api'
 
 // Define the reusable function
 const getAllProjectStatuses = (

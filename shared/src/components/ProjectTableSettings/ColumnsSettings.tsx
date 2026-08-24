@@ -37,15 +37,17 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-ki
 // Notification imports
 import { toast } from 'react-toastify'
 import { checkColumnVisibility } from '../../containers/ProjectTreeTable/utils'
-import { SettingHighlightedId, useMenuContext } from '@shared/context'
+import { useMenuContext } from '@shared/context'
 import type { MenuItemType } from '../Menu'
 import { AddColumnItem, buildAddColumnsMenu, getAddColumnSection } from './addColumnsMenu'
 import { AddColumnMenu } from './AddColumnMenu'
+import { useVisibilityPaint } from './useVisibilityPaint'
 import { TableSearch } from '../TableSearch'
 import {
   SettingsPanelItemTemplate,
   SettingsPanelItemTemplateProps,
 } from '../SettingsPanel/SettingsPanelItemTemplate'
+import type { SettingHighlightedId } from '@shared/context/SettingsPanelContext'
 import { InputSwitch } from '@ynput/ayon-react-components'
 
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'
@@ -115,6 +117,8 @@ interface ColumnsSettingsProps {
   columnSummaryFormats?: ColumnsConfig['columnSummaryFormats']
   groupByConfig?: ColumnsConfig['groupByConfig']
   addColumnMenuItems?: MenuItemType[]
+  onColumnDragStart?: (column: AddColumnItem, event: React.PointerEvent) => void
+  isColumnDragging?: boolean
   scopes?: string[]
   // when a string (including ''), the panel switches to a flat searchable list of all columns
   search?: string | null
@@ -140,6 +144,8 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   columnSummaryFormats,
   groupByConfig,
   addColumnMenuItems,
+  onColumnDragStart,
+  isColumnDragging,
   scopes = NO_SCOPES,
   search,
   onSearchChange,
@@ -150,6 +156,24 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   const [isDraggingFromPinned, setIsDraggingFromPinned] = useState(false)
   // Add a new state to track if we're hovering over the visible section
   const [isHoveringVisibleSection, setIsHoveringVisibleSection] = useState(false)
+
+  const isColumnLocked = (columnId: string) => !!groupBy && columnId === 'name'
+
+  // holding the visibility action and dragging over rows applies the same show/hide to all of them
+  const {
+    baseVisibility,
+    displayVisibility,
+    isVisible,
+    onPaintStart: handlePaintStart,
+    onPaintEnter: handlePaintEnter,
+    toggle: toggleVisibility,
+    cancelPaint,
+  } = useVisibilityPaint({
+    columnVisibility,
+    defaultColumnVisibility,
+    updateColumnVisibility,
+    isLocked: isColumnLocked,
+  })
 
   const { toggleMenuOpen } = useMenuContext()
 
@@ -187,11 +211,15 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     }),
   )
 
+  // while painting, rows stay where they were so the cursor doesn't run over a reflowing list
+  const membershipVisibility = baseVisibility
+  const isColumnHidden = (columnId: string) => !isVisible(columnId)
+
   // Separate columns into visible and pinned
   const { visibleColumns, pinnedColumns } = useMemo(() => {
     // First filter columns by visibility
     const visible = columns.filter((col) =>
-      checkColumnVisibility(columnVisibility, col.value, defaultColumnVisibility),
+      checkColumnVisibility(membershipVisibility, col.value, defaultColumnVisibility),
     )
 
     // Then separate out pinned columns from visible
@@ -202,7 +230,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
       visibleColumns: unpinnedVisible,
       pinnedColumns: pinned,
     }
-  }, [columns, columnVisibility, columnPinning, defaultColumnVisibility])
+  }, [columns, membershipVisibility, columnPinning, defaultColumnVisibility])
 
   // Sort columns based on columnOrder
   const sortedVisibleColumns = useMemo(() => {
@@ -264,7 +292,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     const terms = search.toLowerCase().split(/\s+/).filter(Boolean)
     return (
       columns
-        .map((col) => ({ ...getColumnSettingsItem(col, scopes) }))
+        .map((col) => ({ ...col, path: getAddColumnSection(col, scopes)?.label }))
         .filter((col) => {
           const searchable = [col.path, col.label].filter(Boolean).join(' / ').toLowerCase()
           return terms.every((term) => searchable.includes(term))
@@ -279,20 +307,13 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     () =>
       buildAddColumnsMenu({
         columns,
-        onToggle: (columnId) => {
-          const { columnVisibility, updateColumnVisibility } = latestRef.current
-          const isVisible = checkColumnVisibility(
-            columnVisibility,
-            columnId,
-            defaultColumnVisibility,
-          )
-          updateColumnVisibility({ ...columnVisibility, [columnId]: !isVisible })
-        },
-        isColumnVisible: (columnId) =>
-          checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility),
+        onToggle: toggleVisibility,
+        isColumnVisible: isVisible,
+        onPaintStart: handlePaintStart,
+        onPaintEnter: handlePaintEnter,
         scopes,
       }),
-    [columns, columnVisibility, defaultColumnVisibility, scopes],
+    [columns, displayVisibility, toggleVisibility, handlePaintStart, handlePaintEnter, scopes],
   )
 
   const addColumnItems = addColumnMenuItems ?? fallbackAddColumnMenuItems
@@ -316,13 +337,6 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
         Add column
       </AddColumnListButton>
     )
-
-  // Toggle column visibility
-  const toggleVisibility = (columnId: string) => {
-    const isVisible = checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)
-    const newState = { ...columnVisibility, [columnId]: !isVisible }
-    updateColumnVisibility(newState)
-  }
 
   const buildColumnsConfig = (overrides: Partial<ColumnsConfig>): ColumnsConfig => ({
     columnVisibility: { ...columnVisibility },
@@ -371,6 +385,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     const id = event.active.id as string
     setActiveId(id)
     setIsDraggingFromPinned(columnPinning.left?.includes(id) || false)
+    cancelPaint()
   }
 
   // Track when dragging over different sections
@@ -484,7 +499,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
 
   if (typeof search === 'string') {
     return (
-      <ColumnsContainer ref={containerRef}>
+      <ColumnsContainer ref={containerRef} data-column-drag-origin>
         {addColumnRow}
         <AddColumnMenu menuId={ADD_COLUMN_MENU_LIST_ID} menuItems={addColumnItems} />
         <Section>
@@ -496,14 +511,15 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
                 id={`column-settings-${column.value}`}
                 column={getColumnSettingsItem(column, scopes)}
                 isPinned={columnPinning.left?.includes(column.value) || false}
-                isHidden={
-                  !checkColumnVisibility(columnVisibility, column.value, defaultColumnVisibility)
-                }
+                isHidden={isColumnHidden(column.value)}
                 isHighlighted={highlighted === column.value}
-                isDisabled={!!groupBy && column.value === 'name'}
+                isDisabled={isColumnLocked(column.value)}
                 hideDragHandle
                 onTogglePinning={togglePinning}
                 onToggleVisibility={toggleVisibility}
+                onPaintStart={handlePaintStart}
+                onPaintEnter={handlePaintEnter}
+                onDragStart={(event) => onColumnDragStart?.(column, event)}
               />
             ))}
           </Styled.Menu>
@@ -520,7 +536,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <ColumnsContainer ref={containerRef}>
+      <ColumnsContainer ref={containerRef} data-column-drag-origin>
         {addColumnRow}
         <AddColumnMenu menuId={ADD_COLUMN_MENU_LIST_ID} menuItems={addColumnItems} />
 
@@ -539,11 +555,14 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
                     id={column.value}
                     column={getColumnSettingsItem(column, scopes)}
                     isPinned={true}
-                    isHidden={false}
-                    isDisabled={!!groupBy && column.value === 'name'} // Disable 'name' column if grouping is enabled
+                    isHidden={isColumnHidden(column.value)}
+                    isDisabled={isColumnLocked(column.value)}
                     isHighlighted={highlighted === column.value}
                     onTogglePinning={togglePinning}
                     onToggleVisibility={toggleVisibility}
+                    onPaintStart={handlePaintStart}
+                    onPaintEnter={handlePaintEnter}
+                    onDragStart={(event) => onColumnDragStart?.(column, event)}
                   />
                 ))}
               </Styled.Menu>
@@ -565,11 +584,14 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
                   id={column.value}
                   column={getColumnSettingsItem(column, scopes)}
                   isPinned={false}
-                  isHidden={false}
+                  isHidden={isColumnHidden(column.value)}
                   isHighlighted={highlighted === column.value}
-                  isDisabled={!!groupBy && column.value === 'name'} // Disable 'name' column if grouping is enabled
+                  isDisabled={isColumnLocked(column.value)}
                   onTogglePinning={togglePinning}
                   onToggleVisibility={toggleVisibility}
+                  onPaintStart={handlePaintStart}
+                  onPaintEnter={handlePaintEnter}
+                  onDragStart={(event) => onColumnDragStart?.(column, event)}
                 />
               ))}
             </Styled.Menu>
@@ -578,7 +600,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
 
         {/* Drag Overlay */}
         <DragOverlay>
-          {activeColumn && (
+          {activeColumn && !isColumnDragging && (
             <ColumnItem
               column={getColumnSettingsItem(activeColumn, scopes)}
               isPinned={columnPinning.left?.includes(activeColumn.value) || false}
@@ -637,7 +659,14 @@ export default ColumnsSettings
 // Backward-compat wrapper that reads all data from ColumnSettingsContext
 type ColumnsSettingsWithContextProps = Pick<
   ColumnsSettingsProps,
-  'columns' | 'highlighted' | 'addColumnMenuItems' | 'scopes' | 'search' | 'onSearchChange'
+  | 'columns'
+  | 'highlighted'
+  | 'addColumnMenuItems'
+  | 'onColumnDragStart'
+  | 'isColumnDragging'
+  | 'scopes'
+  | 'search'
+  | 'onSearchChange'
 >
 
 export const ColumnsSettingsWithContext: FC<ColumnsSettingsWithContextProps> = (props) => {

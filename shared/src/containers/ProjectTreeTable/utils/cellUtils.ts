@@ -2,7 +2,7 @@
  * Shared cell utilities for table operations
  */
 
-import { TaskLink } from '@shared/api'
+import type { TaskLink } from '@shared/api'
 import { parseRowId } from '../context'
 import {
   EMapResult,

@@ -11,7 +11,7 @@ import { useRef } from 'react'
 import { upperFirst } from 'lodash'
 import ActionIcon from '../ActionIcon'
 import styled from 'styled-components'
-import { IconModel } from '@shared/api'
+import type { IconModel } from '@shared/api'
 import { BundleMode } from '@shared/util'
 
 const ActionItemContainer = styled.div`

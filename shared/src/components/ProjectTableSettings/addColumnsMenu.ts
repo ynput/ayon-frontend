@@ -1,3 +1,4 @@
+import type React from 'react'
 import type { MenuItemType } from '../Menu'
 import type { SettingsPanelItem } from '../SettingsPanel/SettingsPanelItemTemplate'
 import type { EntityType } from '@shared/containers'
@@ -55,12 +56,20 @@ export const buildAddColumnsMenu = ({
   columns,
   onToggle,
   isColumnVisible,
+  onPaintStart,
+  onPaintEnter,
+  onDragStart,
   scopes = [],
   extraItems = [],
 }: {
   columns: AddColumnItem[]
   onToggle: (columnId: string) => void
   isColumnVisible: (columnId: string) => boolean
+  // pressing an item and dragging over others applies the same show/hide to all of them
+  onPaintStart?: (columnId: string) => void
+  onPaintEnter?: (columnId: string, pressed: boolean) => void
+  // pressing an item and dragging out of the menu drops the column into the table header
+  onDragStart?: (column: AddColumnItem, event: React.PointerEvent) => void
   scopes?: string[]
   // page actions appended at the end, e.g. Lists' "List attributes"
   extraItems?: MenuItemType[]
@@ -71,9 +80,17 @@ export const buildAddColumnsMenu = ({
       id: column.value,
       label: column.label,
       icon: column.icon,
+      hoverIcon: onDragStart ? 'drag_indicator' : undefined,
       disableClose: true,
       active: visible,
+      reserveActiveSlot: true,
       onClick: () => onToggle(column.value),
+      onPointerDown: (event: React.PointerEvent) => {
+        onPaintStart?.(column.value)
+        onDragStart?.(column, event)
+      },
+      onPointerEnter: (event: React.PointerEvent) =>
+        onPaintEnter?.(column.value, event.buttons > 0),
     }
   }
 

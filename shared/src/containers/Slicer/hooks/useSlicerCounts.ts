@@ -1,13 +1,13 @@
 import { useMemo } from 'react'
 import type { GroupCountsMap } from '@shared/api'
-import { useSlicerContext } from '@shared/containers'
+import { useSlicerContext } from '../context/SlicerContext'
 import {
   useGroupCounts,
   type UseGroupCountsParams,
   type TaskStatsArgs,
   type VersionStatsArgs,
-} from '@shared/containers'
-import { UNGROUPED_VALUE } from '@shared/containers'
+} from '../../ProjectTreeTable/hooks/useGroupCounts'
+import { UNGROUPED_VALUE } from '../../ProjectTreeTable/hooks/useBuildGroupByTableData'
 
 export type SlicerCountsSource =
   | { entity: 'task'; args: TaskStatsArgs }

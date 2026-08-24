@@ -61,8 +61,14 @@ const Actions = styled.div`
 `
 
 const ActionButton = styled(Button)`
-  background-color: unset;
-  padding: 4px;
+  && {
+    background-color: unset;
+    padding: 4px;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
+  }
 
   &.active {
     .icon {

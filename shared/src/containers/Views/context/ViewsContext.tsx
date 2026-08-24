@@ -14,13 +14,14 @@ import {
 } from '@shared/api'
 import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
-import { useGlobalContext, usePowerpack } from '@shared/context'
+import { useGlobalContext } from '@shared/context/GlobalContext'
+import { usePowerpack } from '@shared/context/PowerpackContext'
 import { useSelectedView } from '../hooks/useSelectedView'
 import { type UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
 import { useBaseViewMutations } from '../hooks/useBaseViewMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
 import { useViewSettingsChanged } from '../hooks/useViewSettingsChanged'
-import { useLocalStorage } from '@shared/hooks'
+import { useLocalStorage } from '@shared/hooks/useLocalStorage'
 
 export type ViewData = GetDefaultViewApiResponse
 export type ViewSettings = GetDefaultViewApiResponse['settings']

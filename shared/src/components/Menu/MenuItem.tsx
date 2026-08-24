@@ -4,12 +4,13 @@ import * as Styled from './Menu.styled'
 import { isArray } from 'lodash'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
-import { usePowerpack } from '@shared/context'
-import { MenuItemType } from './Menu'
+import { usePowerpack } from '@shared/context/PowerpackContext'
+import type { MenuItemType } from './Menu'
 
 export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLElement>, 'label'> {
   label?: string | string[]
   icon?: string
+  hoverIcon?: string
   img?: string
   highlighted?: boolean
   notification?: boolean
@@ -22,6 +23,8 @@ export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLElement>, '
   disabled?: boolean
   powerFeature?: string
   active?: boolean
+  // keeps the checkmark slot when unchecked so toggling doesn't resize the menu
+  reserveActiveSlot?: boolean
   target?: string
 }
 
@@ -30,6 +33,7 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
     {
       label,
       icon,
+      hoverIcon,
       img,
       highlighted,
       notification,
@@ -43,6 +47,7 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
       disabled,
       powerFeature,
       active,
+      reserveActiveSlot,
       ...props
     },
     ref,
@@ -70,7 +75,13 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
         {...props}
         aria-label={labelsArray.join(', ')}
       >
-        {(icon || isPowerFeature) && <Icon icon={isPowerFeature ? 'bolt' : icon!} />}
+        {(icon || isPowerFeature) && (
+          <Icon
+            icon={isPowerFeature ? 'bolt' : icon!}
+            className={hoverIcon && !isPowerFeature ? 'hover-swap-default' : undefined}
+          />
+        )}
+        {hoverIcon && !isPowerFeature && <Icon icon={hoverIcon} className="hover-swap" />}
         {img && <Styled.Img src={img} alt={`${label} icon`} />}
         {labelsArray.map((label, index) => (
           <span key={index}>{label}</span>
@@ -80,8 +91,7 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
             {shortcut}
           </ShortcutTag>
         )}
-        {/* keeps the slot when unchecked so toggling doesn't resize the menu */}
-        {active !== undefined && (
+        {(active || reserveActiveSlot) && (
           <Icon
             icon="check"
             style={{ marginLeft: 'auto', visibility: active ? 'visible' : 'hidden' }}

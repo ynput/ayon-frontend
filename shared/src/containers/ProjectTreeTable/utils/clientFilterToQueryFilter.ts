@@ -1,5 +1,5 @@
 import { getFilterFromId } from '@ynput/ayon-react-components'
-import { QueryCondition, QueryFilter } from '../types/operations'
+import type { QueryCondition, QueryFilter } from '../types/operations'
 import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
 import { createRelativeValue } from './expandRelativeDates'
 const NO_DATE = 'no-date'

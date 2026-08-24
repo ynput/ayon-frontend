@@ -3,7 +3,7 @@ import type { ViewType } from '../types'
 import type { ViewData, ViewSettings } from '../context/ViewsContext'
 import { isViewStudioScope } from '../utils/isViewStudioScope'
 import { UseViewMutations } from './useViewsMutations'
-import { ViewListItemModel } from '@shared/api'
+import type { ViewListItemModel } from '@shared/api'
 import { toast } from 'react-toastify'
 
 type Props = {

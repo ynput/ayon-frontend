@@ -5,7 +5,7 @@ export * from './summaryTypes'
 
 import type { FieldStats } from '@shared/api'
 import type { MainCountLabels, RowScope, SummaryCalc, SummaryFormat } from './summaryTypes'
-import { AttributeModel, EnumItem } from '@shared/api'
+import type { AttributeModel, EnumItem } from '@shared/api'
 import { OperationModel } from './operations'
 
 export interface ProjectTableAttribute extends Omit<AttributeModel, 'position'> {

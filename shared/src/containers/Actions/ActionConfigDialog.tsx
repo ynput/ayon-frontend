@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { toast } from 'react-toastify'
-import { SimpleFormDialog } from '@shared/components'
-import type { SimpleFormValueDict } from '@shared/components'
+import { SimpleFormDialog } from '@shared/components/SimpleFormDialog/SimpleFormDialog'
+import type { SimpleFormValueDict } from '@shared/components/SimpleFormDialog/SimpleFormDialog'
 
 import { useGetActionConfigQuery, useSetActionConfigMutation } from '@shared/api'
 import type { ActionContext, BaseActionManifest } from '@shared/api'

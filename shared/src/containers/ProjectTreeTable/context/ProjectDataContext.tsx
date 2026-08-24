@@ -1,7 +1,7 @@
 import { ReactNode, useContext, useMemo } from 'react'
 import { useGetUsersAssigneeQuery, useGetMyProjectPermissionsQuery } from '@shared/api'
 import useAttributeFields, { ProjectTableAttribute } from '../hooks/useAttributesList'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext } from '@shared/context/ProjectContext'
 import { ProjectDataContext } from './ProjectDataContextInstance'
 
 type User = {

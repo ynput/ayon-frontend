@@ -3,7 +3,7 @@
 
 import { Spacer } from '@ynput/ayon-react-components'
 import * as Styled from './TabHeaderAndFilters.styled'
-import { QueryFilter, QueryCondition, EnumItem } from '@shared/api'
+import type { QueryFilter, QueryCondition, EnumItem } from '@shared/api'
 import { useState, useRef, useEffect } from 'react'
 import clsx from 'clsx'
 

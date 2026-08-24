@@ -1,8 +1,10 @@
-import { SubtasksManagerWrapper, SubtasksManagerWrapperProps } from '@shared/components'
+import { SubtasksManagerWrapper } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
+import type { SubtasksManagerWrapperProps } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
 import { FC, useMemo, useState } from 'react'
 import TabHeaderAndFilters from '../components/TabHeaderAndFilters/TabHeaderAndFilters'
 import SubtasksSearchFilter from '../components/SubtasksSearchFilter/SubtasksSearchFilter'
-import { QueryFilter, useGetUsersAssigneeQuery } from '@shared/api'
+import { useGetUsersAssigneeQuery } from '@shared/api'
+import type { QueryFilter } from '@shared/api'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
 
 interface DetailsPanelSubtasksProps extends SubtasksManagerWrapperProps {}

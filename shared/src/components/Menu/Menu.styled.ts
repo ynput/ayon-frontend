@@ -1,11 +1,17 @@
 import styled, { keyframes } from 'styled-components'
 
+// the dialog starts below the app header, so menus positioned above it are clipped and unscrollable
+export const DIALOG_TOP_OFFSET = 42
+export const MENU_EDGE_PADDING = 8
+// highest viewport y a menu may occupy
+export const MENU_TOP_BOUND = DIALOG_TOP_OFFSET + MENU_EDGE_PADDING
+
 // DIALOG (CONTAINER)
 export const Dialog = styled.dialog`
   position: fixed;
   margin: 0;
   inset: 0;
-  top: 42px;
+  top: ${DIALOG_TOP_OFFSET}px;
   width: auto;
   height: auto;
   z-index: 1000;
@@ -172,6 +178,19 @@ export const Item = styled.li`
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest);
+  }
+  
+  .hover-swap {
+    display: none;
+    cursor: grab;
+  }
+  &:hover {
+    .hover-swap-default {
+      display: none;
+    }
+    .hover-swap {
+      display: inline-block;
+    }
   }
 
   .more {

@@ -10,7 +10,7 @@ import {
 } from 'react'
 import { createRealtimeBatcher, PubSub } from '@shared/util'
 import { EntityUpdatesContext } from './EntityUpdatesContextInstance'
-import { useViewsState } from '@shared/containers'
+import { useViewsState } from '@shared/containers/Views/utils/viewUpdateHelper'
 
 // removes the option to disable auto sync
 export const FORCE_AUTO_SYNC = true

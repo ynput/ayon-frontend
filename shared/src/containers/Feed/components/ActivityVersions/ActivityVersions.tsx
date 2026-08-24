@@ -4,8 +4,8 @@ import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import * as Styled from './ActivityVersions.styled'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
-import { useDetailsPanelContext } from '@shared/context'
-import { Status } from '@shared/api'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import type { Status } from '@shared/api'
 import { FieldValue } from '../ActivityFieldChange/FieldValue'
 
 interface Version {
@@ -84,7 +84,11 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
                   </Styled.Title>
                   <Styled.Title>
                     <Styled.VersionName className="version">{name}</Styled.VersionName> -
-                    <FieldValue icon={status?.icon} color={status?.color} name={status?.name || ''} />
+                    <FieldValue
+                      icon={status?.icon}
+                      color={status?.color}
+                      name={status?.name || ''}
+                    />
                   </Styled.Title>
                 </div>
                 <Styled.Thumbnail

@@ -16,8 +16,9 @@ import { ColumnDef } from '@tanstack/react-table'
 import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useMemo } from 'react'
-import { useProjectContext } from '@shared/context'
-import { newEntityDefinitions, type NewEntityOpenConfig } from '@shared/containers/NewEntity'
+import { useProjectContext } from '@shared/context/ProjectContext'
+import { newEntityDefinitions } from '@shared/containers/NewEntity/util/entityDefinitions'
+import type { NewEntityOpenConfig } from '@shared/containers/NewEntity/context/NewEntityContext'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 

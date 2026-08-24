@@ -5,10 +5,13 @@ import {
   ColumnSizingState,
   SortingState,
 } from '@tanstack/react-table'
-import { ColumnItemModel, OverviewSettings } from '@shared/api/generated/views'
-import { ColumnsConfig, TableGroupBy } from '@shared/containers'
-import { GroupByConfig } from '@shared/containers/ProjectTreeTable/components/GroupSettingsFallback'
-import {
+import type { ColumnItemModel, OverviewSettings } from '@shared/api/generated/views'
+import type {
+  ColumnsConfig,
+  TableGroupBy,
+} from '../containers/ProjectTreeTable/context/ColumnSettingsContext'
+import type { GroupByConfig } from '../containers/ProjectTreeTable/components/GroupSettingsFallback'
+import type {
   SummaryCalc,
   SummaryFormat,
   RowScope,

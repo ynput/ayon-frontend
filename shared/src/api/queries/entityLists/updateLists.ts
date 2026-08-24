@@ -1,6 +1,6 @@
 import { entityListsApi } from '@shared/api/generated'
 import gqlApi from './getLists'
-import { CreateSessionFromListApiArg, CreateSessionFromListApiResponse } from './types'
+import type { CreateSessionFromListApiArg, CreateSessionFromListApiResponse } from './types'
 
 const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
   endpoints: {

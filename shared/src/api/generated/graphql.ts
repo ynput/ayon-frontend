@@ -2208,6 +2208,7 @@ export type GetInboxMessagesQueryVariables = Exact<{
   last?: number | null | undefined;
   active?: boolean | null | undefined;
   important?: boolean | null | undefined;
+  unread?: boolean | null | undefined;
   cursor?: string | null | undefined;
 }>;
 
@@ -2222,6 +2223,20 @@ export type GetInboxUnreadCountQueryVariables = Exact<{
 
 
 export type GetInboxUnreadCountQuery = { inbox: { edges: Array<{ node: { referenceId: string, read: boolean } }> } };
+
+export type GetProjectInboxQueryVariables = Exact<{
+  projectName: string;
+  userName: string;
+  referenceTypes?: Array<string> | string | null | undefined;
+  activityTypes?: Array<string> | string | null | undefined;
+  activityIds?: Array<string> | string | null | undefined;
+  filter?: string | null | undefined;
+  last?: number | null | undefined;
+  cursor?: string | null | undefined;
+}>;
+
+
+export type GetProjectInboxQuery = { project: { activities: { pageInfo: { hasPreviousPage: boolean, startCursor: string | null, endCursor: string | null }, edges: Array<{ cursor: string | null, node: { projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: unknown, updatedAt: unknown, active: boolean, read: boolean, author: { name: string, attrib: { fullName: string | null } } | null, origin: { id: string, name: string, label: string | null, type: string, subtype: string | null } | null, parents: Array<{ type: string, name: string, label: string | null }> } }> } } };
 
 export type GetMarketInstallEventsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -4300,11 +4315,12 @@ export const GetInboxHasUnreadDocument = new TypedDocumentString(`
 }
     `);
 export const GetInboxMessagesDocument = new TypedDocumentString(`
-    query GetInboxMessages($last: Int, $active: Boolean, $important: Boolean, $cursor: String) {
+    query GetInboxMessages($last: Int, $active: Boolean, $important: Boolean, $unread: Boolean, $cursor: String) {
   inbox(
     last: $last
     showActiveMessages: $active
     showImportantMessages: $important
+    showUnreadMessages: $unread
     before: $cursor
   ) {
     pageInfo {
@@ -4368,6 +4384,63 @@ export const GetInboxUnreadCountDocument = new TypedDocumentString(`
   }
 }
     `);
+export const GetProjectInboxDocument = new TypedDocumentString(`
+    query GetProjectInbox($projectName: String!, $userName: String!, $referenceTypes: [String!], $activityTypes: [String!], $activityIds: [String!], $filter: String, $last: Int, $cursor: String) {
+  project(name: $projectName) {
+    activities(
+      entityNames: [$userName]
+      referenceTypes: $referenceTypes
+      activityTypes: $activityTypes
+      activityIds: $activityIds
+      filter: $filter
+      last: $last
+      before: $cursor
+    ) {
+      pageInfo {
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+      edges {
+        cursor
+        node {
+          ...MessageFragment
+        }
+      }
+    }
+  }
+}
+    fragment MessageFragment on ActivityNode {
+  projectName
+  activityId
+  activityType
+  activityData
+  referenceType
+  referenceId
+  body
+  createdAt
+  updatedAt
+  active
+  read
+  author {
+    name
+    attrib {
+      fullName
+    }
+  }
+  origin {
+    id
+    name
+    label
+    type
+    subtype
+  }
+  parents {
+    type
+    name
+    label
+  }
+}`);
 export const GetMarketInstallEventsDocument = new TypedDocumentString(`
     query GetMarketInstallEvents {
   events(last: 100, topics: ["addon.install_from_url"]) {
@@ -4618,6 +4691,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetInboxUnreadCount: build.query<GetInboxUnreadCountQuery, GetInboxUnreadCountQueryVariables | void>({
       query: (variables) => ({ document: GetInboxUnreadCountDocument as unknown as string, variables })
+    }),
+    GetProjectInbox: build.query<GetProjectInboxQuery, GetProjectInboxQueryVariables>({
+      query: (variables) => ({ document: GetProjectInboxDocument as unknown as string, variables })
     }),
     GetMarketInstallEvents: build.query<GetMarketInstallEventsQuery, GetMarketInstallEventsQueryVariables | void>({
       query: (variables) => ({ document: GetMarketInstallEventsDocument as unknown as string, variables })

@@ -2,9 +2,9 @@ import { forwardRef, MouseEvent } from 'react'
 import { ActiveSegment } from './EntityPath.styled'
 import { classNames } from 'primereact/utils'
 import { PathSegment } from './EntityPath'
-import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu/useCreateContextMenu'
 import { copyToClipboard } from '@shared/util'
-import { useDetailsPanelContext } from '@shared/context'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 
 interface SegmentProviderProps extends React.HTMLAttributes<HTMLDivElement> {
   segment?: PathSegment

@@ -8,7 +8,7 @@ import { useProjectTableContext } from '../context/ProjectTableContext'
 import { OperationModel } from '../types/operations'
 import { EntityData, PatchOperation } from '../types'
 import { HistoryEntityUpdate, UseHistoryReturn } from './useHistory'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext } from '@shared/context/ProjectContext'
 
 const getErrorMessage = (
   errorCode: string | undefined,

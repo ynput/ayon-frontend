@@ -7,7 +7,7 @@ import {
   getIconForFeedback,
   getVerbForFeedback,
 } from '../ActivityVersionReview/ActivityVersionReview'
-import { FeedActivity } from '@shared/api'
+import type { FeedActivity } from '@shared/api'
 import { clsx } from 'clsx'
 
 type Props = {

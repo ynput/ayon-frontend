@@ -11,7 +11,7 @@ import getOverviewApi from './getOverview'
 import { patchDetailsPanelEntity } from '../entities'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
-import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
+import type { EditorTaskNode } from '@shared/containers/ProjectTreeTable/types/table'
 import { getUpdatedEntityIds } from './filterRefetchUtils'
 import {
   refetchTasksForCacheEntry,

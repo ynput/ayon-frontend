@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { useMenuContext } from '@shared/context'
+import { useMenuContext } from '@shared/context/MenuContext'
 import { Menu, MenuContainer } from './Menu'
 import type { MenuItemType } from './Menu'
 
