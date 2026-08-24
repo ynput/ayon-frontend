@@ -84,6 +84,27 @@ export const getCellValue = (obj: any, path: string): any => {
 
   if (isTableRow(obj)) {
     const { scope, field, isAttrib } = parseScopedColumnId(path)
+    if (!isAttrib && scope === 'primary') {
+      if (['author', 'version', 'versionName'].includes(field)) {
+        const version =
+          obj.parents?.version || (obj.primary.entityType === 'version' ? obj.primary : undefined)
+        if (version && field in version) return version[field as keyof typeof version]
+      }
+
+      if (field === 'latestComments') {
+        return obj.primary.entityType === 'product'
+          ? obj.parents?.version?.latestComments || []
+          : obj.primary.latestComments || []
+      }
+
+      if (field === 'product') {
+        return (
+          obj.parents?.product?.label ||
+          obj.parents?.product?.name ||
+          (obj.primary.entityType === 'product' ? obj.primary.label || obj.primary.name : undefined)
+        )
+      }
+    }
     return getScopedValue(obj, scope, field, isAttrib)
   }
 

@@ -1,5 +1,6 @@
 import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
 import {
+  EntityData,
   EntityScope,
   EntityType,
   getScopedEntity,
@@ -7,6 +8,7 @@ import {
   isFieldSupported,
   ParentColumnDefinition,
   TableRow,
+  VersionEntityData,
 } from './types/table'
 import { ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import {
@@ -17,7 +19,7 @@ import {
   GroupHeaderWidget,
   ThumbnailWidget,
 } from './widgets'
-import { getCellId, getCellValue, getScopedColumnId, parseScopedColumnId } from './utils/cellUtils'
+import { getCellId, getScopedColumnId, parseScopedColumnId } from './utils/cellUtils'
 import { LinkColumnHeader, TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
@@ -230,9 +232,35 @@ const pathSort: SortingFn<any> = (rowA, rowB) => {
   return naturalSortCollator.compare(labelA, labelB)
 }
 
+const getVersionEntity = (row: TableRow): VersionEntityData | undefined => {
+  const parent = row.parents?.version
+  if (parent?.entityType === 'version') return parent
+  return row.primary.entityType === 'version' ? row.primary : undefined
+}
+
+const getProductEntity = (row: TableRow): EntityData | undefined =>
+  row.parents?.product || (row.primary.entityType === 'product' ? row.primary : undefined)
+
+const getThumbnailEntity = (row: TableRow): EntityData | undefined =>
+  row.primary.entityType === 'product' ? getVersionEntity(row) : row.primary
+
+const getPrimaryAttributeEntity = (row: TableRow, attribute: ProjectTableAttribute): EntityData => {
+  const isVersionOnly = attribute.scope?.length === 1 && attribute.scope[0] === 'version'
+  return row.primary.entityType === 'product' && isVersionOnly
+    ? getVersionEntity(row) || row.primary
+    : row.primary
+}
+
+const getPrimaryAttributeValue = (row: TableRow, attribute: ProjectTableAttribute) => {
+  const entity = getPrimaryAttributeEntity(row, attribute)
+  return entity === row.primary
+    ? getScopedValue(row, 'primary', attribute.name, true)
+    : entity.attrib?.[attribute.name]
+}
+
 const valueLengthSort: SortingFn<any> = (rowA, rowB, columnId) => {
-  const valueA = getCellValue(rowA.original, columnId)
-  const valueB = getCellValue(rowB.original, columnId)
+  const valueA = rowA.getValue(columnId)
+  const valueB = rowB.getValue(columnId)
   const lengthA = Array.isArray(valueA) ? valueA.length : valueA ? String(valueA).length : 0
   const lengthB = Array.isArray(valueB) ? valueB.length : valueB ? String(valueB).length : 0
   return lengthA - lengthB
@@ -241,8 +269,8 @@ const valueLengthSort: SortingFn<any> = (rowA, rowB, columnId) => {
 type AttribSortingFn = (rowA: any, rowB: any, columnId: string, attribute?: AttributeData) => number
 // sort by the order of the enum options
 const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
-  const valueA = getCellValue(rowA.original, columnId)
-  const valueB = getCellValue(rowB.original, columnId)
+  const valueA = rowA.getValue(columnId)
+  const valueB = rowB.getValue(columnId)
   // if attrib is defined and has enum options, use them
   if (attrib && attrib.enum) {
     const indexA = attrib.enum.findIndex((o) => o.value === valueA)
@@ -468,9 +496,10 @@ const createThumbnailColumn = (scope: EntityScope): ColumnDef<TableRow> => ({
   enableResizing: true,
   enableSorting: false,
   cell: ({ row, column, table }) => {
-    if (row.original.group || row.original.metaType) return null
+    if (row.original.group || row.original.metaType || row.original.isLoading) return null
     const meta = table.options.meta
-    const entity = getScopedEntity(row.original, scope)
+    const entity =
+      scope === 'primary' ? getThumbnailEntity(row.original) : getScopedEntity(row.original, scope)
     if (!meta || !entity) return null
 
     return (
@@ -955,7 +984,7 @@ const buildTreeTableColumns = ({
   if (isIncluded('author') && ['version', 'product'].some((s) => scopes.includes(s))) {
     staticColumns.push({
       id: 'author',
-      accessorFn: (row) => getScopedValue(row, 'primary', 'author'),
+      accessorFn: (row) => getVersionEntity(row)?.author,
       header: getColumnLabel('author'),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('author'),
@@ -965,12 +994,14 @@ const buildTreeTableColumns = ({
       sortingFn: withLoadingStateSort(pathSort),
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
-        const { value, id, type } = getValueIdType(row, column.id)
+        const versionEntity = getVersionEntity(row.original)
+        const value = versionEntity?.author || ''
+        const type = versionEntity?.entityType || row.original.primary.entityType
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
 
         return (
           <CellWidget
-            rowId={id}
+            rowId={row.id}
             className={clsx('author', { loading: row.original.isLoading })}
             columnId={column.id}
             value={[value]}
@@ -991,7 +1022,7 @@ const buildTreeTableColumns = ({
   ) {
     staticColumns.push({
       id: ENTITY_COLUMN_IDS.version,
-      accessorFn: (row) => getScopedValue(row, 'primary', 'versionName'),
+      accessorFn: (row) => getVersionEntity(row)?.versionName || getVersionEntity(row)?.name,
       header: getColumnLabel(ENTITY_COLUMN_IDS.version),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort(ENTITY_COLUMN_IDS.version),
@@ -1000,24 +1031,23 @@ const buildTreeTableColumns = ({
       enableHiding: true,
       sortingFn: withLoadingStateSort(pathSort),
       cell: ({ row, column }) => {
-        const { value, id, type } = getValueIdType(row, 'versionName')
+        const versionEntity = getVersionEntity(row.original)
+        const value = versionEntity?.versionName || versionEntity?.name || ''
+        const type = versionEntity?.entityType || row.original.primary.entityType
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
-        const versionEntity =
-          row.original.parents?.version ||
-          (row.original.primary.entityType === 'version' ? row.original.primary : undefined)
-
-        let versionValue =
-          ('versionName' in row.original.primary && row.original.primary.versionName) || value
+        let versionValue = value
         if (row.original.primary.entityType === 'product') {
           // show summary of versions for products
-          versionValue = `${row.original.primary.versionName} (${
-            row.original.primary.versionsCount || 0
-          } versions)`
+          versionValue = versionEntity
+            ? `${versionEntity.versionName || versionEntity.name} (${
+                row.original.primary.versionsCount || 0
+              } versions)`
+            : ''
         }
 
         return (
           <EntityWidget
-            rowId={id}
+            rowId={row.id}
             className="version-entity"
             columnId={column.id}
             value={versionValue}
@@ -1034,7 +1064,7 @@ const buildTreeTableColumns = ({
   if (isIncluded('version') && ['version', 'product'].some((s) => scopes.includes(s))) {
     staticColumns.push({
       id: 'version',
-      accessorKey: 'version',
+      accessorFn: (row) => getVersionEntity(row)?.version,
       header: getColumnLabel('version'),
       minSize: COLUMN_MIN_SIZE,
       sortDescFirst: COLUMN_SORT_CONFIG.version.sortDescFirst,
@@ -1044,15 +1074,17 @@ const buildTreeTableColumns = ({
       enableHiding: true,
       sortingFn: withLoadingStateSort(withNameTieBreaker(sortingFns.basic)),
       cell: ({ row, column }) => {
-        const { value, id, type } = getValueIdType(row, column.id)
+        const versionEntity = getVersionEntity(row.original)
+        const value = versionEntity?.version ?? 0
+        const type = versionEntity?.entityType || row.original.primary.entityType
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
 
         return (
           <CellWidget
-            rowId={id}
+            rowId={row.id}
             className={clsx('version', { loading: row.original.isLoading })}
             columnId={column.id}
-            value={value ?? ''}
+            value={value}
             attributeData={{ type: 'integer' }}
             isReadOnly={true}
           />
@@ -1065,7 +1097,7 @@ const buildTreeTableColumns = ({
   if (isIncluded('product') && ['version', 'product'].some((s) => scopes.includes(s))) {
     staticColumns.push({
       id: 'product',
-      accessorFn: (row) => row.parents?.product?.label || row.parents?.product?.name,
+      accessorFn: (row) => getProductEntity(row)?.label || getProductEntity(row)?.name,
       header: getColumnLabel('product'),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('product'),
@@ -1074,12 +1106,14 @@ const buildTreeTableColumns = ({
       enableHiding: true,
       sortingFn: withLoadingStateSort(pathSort),
       cell: ({ row, column }) => {
-        const { value, id, type } = getValueIdType(row, column.id)
+        const productEntity = getProductEntity(row.original)
+        const value = productEntity?.label || productEntity?.name || ''
+        const type = productEntity?.entityType || row.original.primary.entityType
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
 
         return (
           <CellWidget
-            rowId={id}
+            rowId={row.id}
             className={clsx('product', { loading: row.original.isLoading })}
             columnId={column.id}
             value={value}
@@ -1237,7 +1271,10 @@ const buildTreeTableColumns = ({
   ) {
     staticColumns.push({
       id: 'comments',
-      accessorFn: (row) => row.primary.latestComments,
+      accessorFn: (row) =>
+        row.primary.entityType === 'product'
+          ? row.parents?.version?.latestComments || []
+          : row.primary.latestComments || [],
       header: getColumnLabel('comments'),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: false,
@@ -1245,7 +1282,14 @@ const buildTreeTableColumns = ({
       enablePinning: true,
       enableHiding: true,
       cell: ({ row, column }) => {
-        const { value, id, type } = getValueIdType(row, 'latestComments')
+        const isProductRow = row.original.primary.entityType === 'product'
+        const entity = isProductRow
+          ? row.original.parents?.version || row.original.primary
+          : row.original.primary
+        const value = isProductRow
+          ? row.original.parents?.version?.latestComments || []
+          : row.original.primary.latestComments || []
+        const type = entity.entityType
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
 
         // loading placeholder rows have no entityType yet — let them through so the skeleton shows
@@ -1255,7 +1299,7 @@ const buildTreeTableColumns = ({
 
         return (
           <CellWidget
-            rowId={id}
+            rowId={row.id}
             className={clsx('comments', { loading: row.original.isLoading })}
             columnId={column.id}
             value={''}
@@ -1284,7 +1328,7 @@ const buildTreeTableColumns = ({
     .map((attrib) => {
       const attribColumn: ColumnDef<TableRow> = {
         id: 'attrib_' + attrib.name,
-        accessorFn: (row) => getScopedValue(row, 'primary', attrib.name, true),
+        accessorFn: (row) => getPrimaryAttributeValue(row, attrib),
         header: attrib.data.title || attrib.name,
         minSize: COLUMN_MIN_SIZE,
         filterFn: 'fuzzy' as FilterFnOption<TableRow>,
@@ -1298,11 +1342,15 @@ const buildTreeTableColumns = ({
         cell: ({ row, column, table }) => {
           const meta = table.options.meta
           const columnIdParsed = column.id.replace('attrib_', '')
-          const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
-          const isInherited = !row.original.primary.ownAttrib?.includes(columnIdParsed)
+          const { type: rowType } = getValueIdType(row, columnIdParsed, 'attrib')
+          const entity = getPrimaryAttributeEntity(row.original, attrib)
+          const value = getPrimaryAttributeValue(row.original, attrib)
+          const id = entity.id
+          const type = entity.entityType
+          const isInherited = !entity.ownAttrib?.includes(columnIdParsed)
           if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
           const outOfScopeAndNoValue =
-            !attrib.scope?.includes(type as (typeof attrib.scope)[number]) &&
+            !attrib.scope?.includes(rowType as (typeof attrib.scope)[number]) &&
             (value === null || value === undefined)
 
           // if the attribute is not in scope, we should nothing
@@ -1310,7 +1358,7 @@ const buildTreeTableColumns = ({
 
           return (
             <CellWidget
-              rowId={id}
+              rowId={row.id}
               className={clsx('attrib', { loading: row.original.isLoading })}
               columnId={column.id}
               value={value}
@@ -1330,8 +1378,21 @@ const buildTreeTableColumns = ({
               }
               onChange={(value) =>
                 meta?.updateEntities?.(
-                  { field: columnIdParsed, value, type, isAttrib: true, rowId: row.id },
-                  { selection: !!attrib.data.enum?.length ? meta?.selection : undefined },
+                  {
+                    field: columnIdParsed,
+                    value,
+                    type,
+                    id,
+                    isAttrib: true,
+                    rowId: row.id,
+                    entityData: entity,
+                  },
+                  {
+                    selection:
+                      entity === row.original.primary && !!attrib.data.enum?.length
+                        ? meta?.selection
+                        : undefined,
+                  },
                 )
               }
             />
@@ -1409,10 +1470,8 @@ const buildTreeTableColumns = ({
       )
 
   const linkColumns: ColumnDef<TableRow>[] = includeLinks ? createLinkColumns('primary') : []
-
   const parentColumnFields = new Set([
     'status',
-    'subType',
     'assignees',
     'author',
     'version',
@@ -1496,23 +1555,47 @@ export const getValueIdType = (
   type: string
 } => {
   const { scope, field: scopedField, isAttrib } = parseScopedColumnId(field)
-  const entity = getScopedEntity(row.original, scope) || row.original.primary
+  const scopedEntity = getScopedEntity(row.original, scope)
+  const entity = scopedEntity || row.original.primary
+  const versionEntity = getVersionEntity(row.original)
+  const productEntity = getProductEntity(row.original)
+  const isVersionField =
+    scope === 'primary' && !isAttrib && ['author', 'version', 'versionName'].includes(scopedField)
+  const isProductField = scope === 'primary' && !isAttrib && scopedField === 'product'
+  const isCommentsField =
+    nestedField === 'latestComments' && row.original.primary.entityType === 'product'
+  const valueEntity = isVersionField
+    ? versionEntity || entity
+    : isProductField
+    ? productEntity || entity
+    : isCommentsField
+    ? versionEntity || entity
+    : entity
   const value =
     nestedField === 'attrib'
       ? getScopedValue(row.original, scope, scopedField, true)
       : nestedField === 'links'
-      ? entity.links?.[scopedField.replace(/^link_/, '')]
+      ? valueEntity.links?.[scopedField.replace(/^link_/, '')]
       : nestedField === 'subtasks'
-      ? entity.entityType === 'task'
-        ? entity.subtasks
+      ? valueEntity.entityType === 'task'
+        ? valueEntity.subtasks
         : undefined
       : nestedField === 'latestComments'
-      ? entity.latestComments
+      ? row.original.primary.entityType === 'product'
+        ? versionEntity?.latestComments || row.original.primary.latestComments
+        : entity.latestComments
       : field === 'folder'
       ? row.original.parents?.folder?.label || row.original.parents?.folder?.name
       : field === 'product'
-      ? row.original.parents?.product?.label || row.original.parents?.product?.name
-      : getScopedValue(row.original, scope, scopedField, isAttrib)
+      ? productEntity?.label || productEntity?.name
+      : valueEntity === entity
+      ? getScopedValue(row.original, scope, scopedField, isAttrib)
+      : getScopedValue(
+          row.original,
+          valueEntity === row.original.primary ? 'primary' : 'version',
+          scopedField,
+          isAttrib,
+        )
 
-  return { value, id: entity.id, type: entity.entityType }
+  return { value, id: valueEntity.id, type: valueEntity.entityType }
 }

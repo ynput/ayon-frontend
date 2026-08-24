@@ -1,5 +1,5 @@
 import { ProductNode, VersionNode } from '@shared/api/queries'
-import { createMetaRowId, ProductEntityData, TableRow } from '@shared/containers'
+import { createMetaRowId, ProductEntityData, TableRow, VersionEntityData } from '@shared/containers'
 import { ProjectContextValue } from '@shared/context'
 
 export const HERO_SYMBOL = '★'
@@ -33,6 +33,27 @@ const buildProductParentEntity = (product: VersionNode['product']): ProductEntit
   productBaseType: product.productBaseType || '',
 })
 
+const buildFeaturedVersionParentEntity = (
+  version: NonNullable<ProductNode['featuredVersion']>,
+): VersionEntityData => ({
+  id: version.id,
+  entityType: 'version',
+  name: version.name,
+  label: version.name,
+  status: version.status,
+  tags: version.tags || [],
+  createdAt: asString(version.createdAt),
+  updatedAt: asString(version.updatedAt),
+  thumbnailHash: version.thumbnailHash,
+  attrib: { ...version.attrib },
+  ownAttrib: Object.keys(version.attrib || {}),
+  version: version.version,
+  versionName: version.name,
+  author: version.author || '',
+  hasReviewables: version.hasReviewables,
+  latestComments: version.latestComments || [],
+})
+
 export const buildProductTableRow = (
   product: ProductNode,
   subRows: TableRow[],
@@ -52,19 +73,19 @@ export const buildProductTableRow = (
     subType: product.productType,
     productBaseType: product.productBaseType || '',
     icon: getProductType(product.productType).icon,
-    hasReviewables: product.featuredVersion?.hasReviewables,
-    thumbnailHash: product.featuredVersion?.thumbnailHash,
     versionsCount: product.versions.length,
-    versionName: product.featuredVersion?.name || '',
-    author: product.featuredVersion?.author || '',
-    latestComments: product.featuredVersion?.latestComments || [],
     links: {}, // TODO add links
   }
 
   return {
     id: product.id,
     primary,
-    parents: { folder: buildFolderParentEntity(product.folder) },
+    parents: {
+      folder: buildFolderParentEntity(product.folder),
+      ...(product.featuredVersion
+        ? { version: buildFeaturedVersionParentEntity(product.featuredVersion) }
+        : {}),
+    },
     subRows,
   }
 }

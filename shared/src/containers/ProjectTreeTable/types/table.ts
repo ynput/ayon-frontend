@@ -118,8 +118,8 @@ export const ENTITY_FIELD_SUPPORT: Record<string, readonly EntityType[]> = {
   createdAt: ['folder', 'task', 'product', 'version'],
   updatedAt: ['folder', 'task', 'product', 'version'],
   name: ['folder', 'task', 'product', 'version'],
-  label: ['folder', 'task', 'product', 'version'],
-  thumbnailHash: ['folder', 'task', 'product', 'version'],
+  label: ['folder', 'task', 'version'],
+  thumbnailHash: ['folder', 'task', 'version'],
 }
 
 export const isFieldSupported = (field: string, entityType: EntityType): boolean => {
