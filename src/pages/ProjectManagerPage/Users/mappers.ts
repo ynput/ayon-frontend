@@ -1,10 +1,15 @@
-import { AccessGroupUsers, ListingError, SelectedAccessGroupUsers, SelectionStatus } from './types'
+import type {
+  AccessGroupUsers,
+  ListingError,
+  SelectedAccessGroupUsers,
+  SelectionStatus,
+} from './types'
 import { Filter, FilterValue, Option } from '@ynput/ayon-react-components'
 import { ProjectNode, UserNode } from '@shared/api'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import { $Any } from '@types'
 import { matchSorter } from 'match-sorter'
-import { GetProjectsUsersApiResponse, ProjectUserData } from '@queries/accessGroups/getAccessGroups'
+import type { GetProjectsUsersApiResponse, ProjectUserData } from '@shared/api'
 
 // Safe Set helpers – avoid relying on nonstandard Set.prototype methods
 const setIntersection = <T>(a: Set<T>, b: Set<T>): Set<T> => {

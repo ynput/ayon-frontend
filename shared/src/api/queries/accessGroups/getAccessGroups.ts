@@ -1,4 +1,4 @@
-import { projectsApi, accessApi } from '@shared/api'
+import { projectsApi, accessApi } from '@shared/api/generated'
 
 export type ProjectUserData = {
   [project: string]: {

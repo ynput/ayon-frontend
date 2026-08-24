@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { useGetStudioAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
+import { useGetStudioAccessGroupsQuery } from '@shared/api'
 import { $Any } from '@types'
 import { getProjectAccessSearchFilterBuilder } from './mappers'
 import { Filter, SearchFilter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'

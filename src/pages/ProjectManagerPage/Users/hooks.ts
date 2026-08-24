@@ -1,10 +1,11 @@
 import { $Any } from '@types'
 import { useState } from 'react'
 import { SelectionStatus } from './types'
-import { useSetFrontendPreferencesMutation } from '@shared/api'
-import { useSetProjectsAccessMutation } from '@queries/accessGroups/updateAccessGroups'
-import { useGetProjectsAccessQuery } from '@queries/accessGroups/getAccessGroups'
-import { Filter } from '@ynput/ayon-react-components'
+import {
+  useSetFrontendPreferencesMutation,
+  useSetProjectsAccessMutation,
+  useGetProjectsAccessQuery,
+} from '@shared/api'
 import { useGlobalContext } from '@shared/context'
 
 const useProjectAccessGroupData = (selectedProject: string) => {
@@ -124,4 +125,4 @@ const useUserPreferencesExpandedPanels = (): [
   return [expandedAccessGroups, setExpandedAccessGroups]
 }
 
-export { useProjectAccessGroupData, useUserPageFilters, useUserPreferencesExpandedPanels }
+export { useProjectAccessGroupData, useUserPreferencesExpandedPanels }

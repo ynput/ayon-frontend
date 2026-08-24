@@ -9,16 +9,14 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import SettingsEditor from '@containers/SettingsEditor'
-import { useGetStudioAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { isEqual } from 'lodash'
-import {
-  useGetAccessGroupQuery,
-  useGetAccessGroupSchemaQuery,
-} from '@queries/accessGroups/getAccessGroups'
 import {
   useDeleteAccessGroupMutation,
   useSaveAccessGroupMutation,
-} from '@queries/accessGroups/updateAccessGroups'
+  useGetStudioAccessGroupsQuery,
+  useGetAccessGroupQuery,
+  useGetAccessGroupSchemaQuery,
+} from '@shared/api'
 import { confirmDelete } from '@shared/util'
 
 const PROJECT_GROUP_MSG = 'Clear project overrides'
