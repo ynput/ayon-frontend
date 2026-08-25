@@ -10,6 +10,15 @@ const Container = styled.div`
      and jumps to the middle whenever a value dropdown empties the bar */
   width: 100%;
   min-width: 0;
+
+  /* the bar stacks under the plain search input: a magnifier would read as a second search box */
+  .search-bar > .icon.search {
+    font-size: 0;
+    &::after {
+      content: 'filter_list';
+      font-size: 20px;
+    }
+  }
 `
 
 const ListsFiltersBar = forwardRef<SearchFilterRef>((_props, ref) => {
