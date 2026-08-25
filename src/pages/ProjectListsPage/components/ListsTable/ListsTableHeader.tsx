@@ -21,6 +21,8 @@ export const MENU_ID = 'lists-table-menu'
 
 const HeaderStyled = styled(Header)`
   flex-direction: column;
+  /* rows bring their own padding, the flex gap would double it */
+  gap: 0;
 `
 
 const HeaderTop = styled(Header)`
@@ -136,6 +138,11 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   const openFiltersBar = () => {
     setListsFiltersOpen(true)
     requestAnimationFrame(() => filtersBarRef.current?.open())
+  }
+
+  const closeFiltersBar = () => {
+    if (listsFilters.length) setListsFilters([])
+    setListsFiltersOpen(false)
   }
 
   const { menuOpen, toggleMenuOpen } = useMenuContext()
@@ -283,8 +290,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
             icon: 'filter_list',
             onClick: () => {
               if (!barVisible) return openFiltersBar()
-              if (listsFilters.length) setListsFilters([])
-              setListsFiltersOpen(false)
+              closeFiltersBar()
             },
             isPinned: false,
             selected: listsFilters.length > 0,
@@ -362,7 +368,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       {typeof search === 'string' && (
         <TableSearch value={search} onChange={onSearch} onClose={() => onSearch(null)} />
       )}
-      {barVisible && <ListsFiltersBar ref={filtersBarRef} />}
+      {barVisible && <ListsFiltersBar ref={filtersBarRef} onClose={closeFiltersBar} />}
     </HeaderStyled>
   )
 }
