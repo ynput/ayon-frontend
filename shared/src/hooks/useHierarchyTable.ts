@@ -84,6 +84,22 @@ export const useHierarchyTable = ({ projectName, folderTypes, includeColors = fa
       }
     }
 
+    // ancestor labels, so search can match a child by its parent path
+    const parentsCache = new Map<string, string[]>()
+    const getParents = (id: string): string[] => {
+      const cached = parentsCache.get(id)
+      if (cached) return cached
+      const row = hashTable.get(id)
+      const parentRow = row?.parentId ? hashTable.get(row.parentId) : undefined
+      const parents = parentRow ? [...getParents(parentRow.id), parentRow.label || ''] : []
+      parentsCache.set(id, parents)
+      return parents
+    }
+    for (const row of hashTable.values()) {
+      const parents = getParents(row.id)
+      if (parents.length) row.parents = parents
+    }
+
     return dataTree
   }
 
