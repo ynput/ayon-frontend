@@ -101,7 +101,7 @@ interface ListsTableHeaderProps {
   // overrides the default create-list flow (picker pre-populates the selected entities)
   onCreateList?: () => void
   isReview?: boolean
-  // main lists mode: merged search + filter bar instead of the plain search input
+  // main lists mode: inline filter bar under the header, stacked below the search input
   filtersBar?: boolean
 }
 
@@ -209,7 +209,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       id: 'search',
       label: 'Search',
       icon: 'search',
-      onClick: () => (filtersBar ? openFiltersBar() : onSearch('')),
+      onClick: () => onSearch(''),
       isPinned: true,
       buttonProps: {
         icon: 'search',
@@ -283,13 +283,9 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
             label: 'Filter lists',
             icon: 'filter_list',
             onClick: () => {
-              if (!filtersBar) return setListsFiltersOpen(true)
-              if (barVisible) {
-                if (listsFilters.length) setListsFilters([])
-                setListsFiltersOpen(false)
-              } else {
-                openFiltersBar()
-              }
+              if (!barVisible) return openFiltersBar()
+              if (listsFilters.length) setListsFilters([])
+              setListsFiltersOpen(false)
             },
             isPinned: false,
             selected: listsFilters.length > 0,
@@ -364,11 +360,10 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
             )}
         </StyledButtons>
       </HeaderTop>
-      {filtersBar
-        ? barVisible && <ListsFiltersBar ref={filtersBarRef} onSearch={onSearch} />
-        : typeof search === 'string' && (
-            <ListsSearch value={search} onChange={onSearch} onClose={() => onSearch(null)} />
-          )}
+      {typeof search === 'string' && (
+        <ListsSearch value={search} onChange={onSearch} onClose={() => onSearch(null)} />
+      )}
+      {barVisible && <ListsFiltersBar ref={filtersBarRef} />}
     </HeaderStyled>
   )
 }
