@@ -2462,7 +2462,7 @@
   dependencies:
     tslib "^2.6.3"
 
-"@ynput/ayon-player@1.0.0":
+"@ynput/ayon-player@1.0.1":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@ynput/ayon-player/-/ayon-player-1.0.0.tgz#207c81f05317f32d2e4e0073575912362492ea8f"
   integrity sha512-/09aMBl0BgqKw4ptAu7fAOyt8UvLjVDXFMQ08Tp0BlwLHomafDOIYHrGK4CLuFl3A0co2np6ZnoBBFu1Y/ekyA==
