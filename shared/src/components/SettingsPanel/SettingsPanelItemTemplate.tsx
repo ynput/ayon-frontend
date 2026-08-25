@@ -21,6 +21,11 @@ const Item = styled.li`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .label-path {
+    color: var(--md-sys-color-outline);
   }
 
   &.highlighted {
@@ -56,8 +61,14 @@ const Actions = styled.div`
 `
 
 const ActionButton = styled(Button)`
-  background-color: unset;
-  padding: 4px;
+  && {
+    background-color: unset;
+    padding: 4px;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
+  }
 
   &.active {
     .icon {
@@ -80,6 +91,7 @@ export type SettingsPanelItem = {
   value: string
   label: string
   icon?: string
+  path?: string
 }
 
 export interface SettingsPanelItemTemplateProps extends React.HTMLAttributes<HTMLLIElement> {
@@ -119,7 +131,10 @@ export const SettingsPanelItemTemplate = forwardRef<HTMLLIElement, SettingsPanel
       >
         {startContent}
         {item.icon && <Icon icon={item.icon} />}
-        <span className="label">{item.label}</span>
+        <span className="label">
+          {item.path && <span className="label-path">{item.path} / </span>}
+          {item.label}
+        </span>
         <Actions className="actions">
           {actions?.map(({ icon, className, active, onClick, ...action }, index) => (
             <ActionButton

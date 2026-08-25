@@ -10,6 +10,7 @@ const Container = styled.div`
 
   input {
     width: 100%;
+    min-width: 0;
   }
 `
 
@@ -20,15 +21,16 @@ const CloseButton = styled(HeaderButton)`
   transform: translateY(-50%);
 `
 
-interface EntityTypeTableSearchProps {
+export interface TableSearchProps {
   value: string
   onChange: (value: string) => void
   onClose: () => void
+  className?: string
 }
 
-const EntityTypeTableSearch: FC<EntityTypeTableSearchProps> = ({ value, onChange, onClose }) => {
+export const TableSearch: FC<TableSearchProps> = ({ value, onChange, onClose, className }) => {
   return (
-    <Container>
+    <Container className={className}>
       <InputText
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -44,5 +46,3 @@ const EntityTypeTableSearch: FC<EntityTypeTableSearchProps> = ({ value, onChange
     </Container>
   )
 }
-
-export default EntityTypeTableSearch

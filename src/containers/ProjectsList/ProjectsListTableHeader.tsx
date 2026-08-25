@@ -1,5 +1,4 @@
-import { Menu, MenuContainer, MenuItemType } from '@shared/components'
-import ListsSearch from '@pages/ProjectListsPage/components/ListsTable/ListsSearch'
+import { Menu, MenuContainer, MenuItemType, TableSearch } from '@shared/components'
 import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
@@ -165,7 +164,7 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
         </StyledButtons>
       </HeaderTop>
       {typeof search === 'string' && (
-        <ListsSearch value={search} onChange={onSearch} onClose={() => onSearch(undefined)} />
+        <TableSearch value={search} onChange={onSearch} onClose={() => onSearch(undefined)} />
       )}
     </HeaderStyled>
   )

@@ -9,16 +9,14 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import SettingsEditor from '@containers/SettingsEditor'
-import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { isEqual } from 'lodash'
-import {
-  useGetAccessGroupQuery,
-  useGetAccessGroupSchemaQuery,
-} from '@queries/accessGroups/getAccessGroups'
 import {
   useDeleteAccessGroupMutation,
   useSaveAccessGroupMutation,
-} from '@queries/accessGroups/updateAccessGroups'
+  useGetStudioAccessGroupsQuery,
+  useGetAccessGroupQuery,
+  useGetAccessGroupSchemaQuery,
+} from '@shared/api'
 import { confirmDelete } from '@shared/util'
 
 const PROJECT_GROUP_MSG = 'Clear project overrides'
@@ -34,12 +32,10 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
     },
     { skip: !accessGroupName },
   )
-  const { data: schema } = useGetAccessGroupSchemaQuery(
-    projectName ? { projectName } : {},
-  )
+  const { data: schema } = useGetAccessGroupSchemaQuery(projectName ? { projectName } : {})
 
-  const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
-    projectName: projectName || '_',
+  const { data: accessGroupList = [] } = useGetStudioAccessGroupsQuery({
+    projectName: projectName,
   })
 
   const isProjectLevel = useMemo(() => {
