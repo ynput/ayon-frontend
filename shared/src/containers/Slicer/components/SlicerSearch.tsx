@@ -45,7 +45,7 @@ const SlicerSearch = ({ value, onChange }: Props) => {
         <StyledInput
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Search"
+          placeholder="Search (use , for multiple)"
           autoFocus
           onKeyDown={handleInputKeydown}
         />
