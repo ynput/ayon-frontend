@@ -3,8 +3,7 @@ import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Button, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
-import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
-import { useDeleteAccessGroupMutation } from '@queries/accessGroups/updateAccessGroups'
+import { useDeleteAccessGroupMutation, useGetStudioAccessGroupsQuery } from '@shared/api'
 import NewAccessGroup from './NewAccessGroup'
 import { confirmDelete } from '@shared/util'
 import clsx from 'clsx'
@@ -19,8 +18,8 @@ const AccessGroupList = ({
   const [showNewAccessGroup, setShowNewAccessGroup] = useState(false)
 
   // Load user list
-  const { data: accessGroupList = [], isLoading } = useGetAccessGroupsQuery({
-    projectName: projectName || '_',
+  const { data: accessGroupList = [], isLoading } = useGetStudioAccessGroupsQuery({
+    projectName: projectName,
   })
 
   const [deleteAccessGroup] = useDeleteAccessGroupMutation()

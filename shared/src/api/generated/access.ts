@@ -9,6 +9,12 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getStudioAccessGroups: build.query<
+      GetStudioAccessGroupsApiResponse,
+      GetStudioAccessGroupsApiArg
+    >({
+      query: () => ({ url: `/api/accessGroups` }),
+    }),
     getAccessGroups: build.query<GetAccessGroupsApiResponse, GetAccessGroupsApiArg>({
       query: (queryArg) => ({ url: `/api/accessGroups/${queryArg.projectName}` }),
     }),
@@ -21,7 +27,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/accessGroups/${queryArg.accessGroupName}/${queryArg.projectName}`,
         method: 'PUT',
-        body: queryArg.data,
+        body: queryArg.permissions,
       }),
     }),
     deleteAccessGroup: build.mutation<DeleteAccessGroupApiResponse, DeleteAccessGroupApiArg>({
@@ -49,6 +55,9 @@ export type GetAccessGroupSchemaApiResponse = /** status 200 Successful Response
 export type GetAccessGroupSchemaApiArg = {
   projectName?: string
 }
+export type GetStudioAccessGroupsApiResponse =
+  /** status 200 Successful Response */ AccessGroupObject[]
+export type GetStudioAccessGroupsApiArg = void
 export type GetAccessGroupsApiResponse = /** status 200 Successful Response */ AccessGroupObject[]
 export type GetAccessGroupsApiArg = {
   projectName: string
@@ -62,7 +71,7 @@ export type SaveAccessGroupApiResponse = unknown
 export type SaveAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
-  data: Permissions
+  permissions: Permissions
 }
 export type DeleteAccessGroupApiResponse = unknown
 export type DeleteAccessGroupApiArg = {

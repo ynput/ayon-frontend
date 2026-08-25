@@ -4,9 +4,8 @@ import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { SearchFilterRef, theme } from '@ynput/ayon-react-components'
 import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
-import ListsSearch from './ListsSearch'
 import ListsFiltersBar from './ListsFiltersBar'
-import { Menu, MenuContainer, MenuItemType } from '@shared/components'
+import { Menu, MenuContainer, MenuItemType, TableSearch } from '@shared/components'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
@@ -361,7 +360,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
         </StyledButtons>
       </HeaderTop>
       {typeof search === 'string' && (
-        <ListsSearch value={search} onChange={onSearch} onClose={() => onSearch(null)} />
+        <TableSearch value={search} onChange={onSearch} onClose={() => onSearch(null)} />
       )}
       {barVisible && <ListsFiltersBar ref={filtersBarRef} />}
     </HeaderStyled>

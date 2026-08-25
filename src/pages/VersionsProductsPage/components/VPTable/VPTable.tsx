@@ -12,8 +12,17 @@ import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsCo
 import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
 import clsx from 'clsx'
 import type { TreeTableExtraColumn } from '@shared/containers/ProjectTreeTable/buildTreeTableColumns'
+import { AddColumnButton } from '@shared/components'
+import styled from 'styled-components'
+import { VP_EXTRA_COLUMNS } from '../VPTableSettings/VPTableSettings'
 
 const VP_EXCLUDED_COLUMNS = ['assignees']
+
+const TableWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+`
 
 interface VPTableProps {
   readOnly?: string[]
@@ -200,43 +209,46 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   )
 
   return (
-    <ProjectTreeTable
-      scope={'versions-and-products'}
-      sliceId={''}
-      // pagination
-      onScrollBottom={() => fetchNextPage()}
-      onScrollBottomGroupBy={(groupValue: string) => fetchNextPage(groupValue)}
-      readOnly={readOnly}
-      excludedColumns={VP_EXCLUDED_COLUMNS}
-      isExpandable={showProducts}
-      isLoading={isLoading}
-      includeLinks={false}
-      showColumnSummaries
-      fieldStats={fieldStats}
-      groupFieldStats={groupFieldStats}
-      fieldStatsLoading={fieldStatsLoading}
-      fieldStatsError={fieldStatsError}
-      mainCountLabels={{ primary: 'products', secondary: 'versions' }}
-      // versions have no subType, so only the products side breaks down
-      mainBreakdownFields={{ primary: 'productType' }}
-      columnsConfig={{
-        name: {
-          display: { path_compact: false, path_full: true },
-        },
-      }}
-      extraColumns={extraColumns}
-      contextMenuItems={[
-        'copy-paste',
-        'show-details',
-        'open-viewer',
-        uploadVersionItem,
-        addToListItem,
-        productDetailItem,
-        versionDetailItem,
-        deleteVersionItem,
-        deleteProductItem,
-      ]}
-    />
+    <TableWrapper>
+      <ProjectTreeTable
+        scope={'versions-and-products'}
+        sliceId={''}
+        // pagination
+        onScrollBottom={() => fetchNextPage()}
+        onScrollBottomGroupBy={(groupValue: string) => fetchNextPage(groupValue)}
+        readOnly={readOnly}
+        excludedColumns={VP_EXCLUDED_COLUMNS}
+        isExpandable={showProducts}
+        isLoading={isLoading}
+        includeLinks={false}
+        showColumnSummaries
+        fieldStats={fieldStats}
+        groupFieldStats={groupFieldStats}
+        fieldStatsLoading={fieldStatsLoading}
+        fieldStatsError={fieldStatsError}
+        mainCountLabels={{ primary: 'products', secondary: 'versions' }}
+        // versions have no subType, so only the products side breaks down
+        mainBreakdownFields={{ primary: 'productType' }}
+        columnsConfig={{
+          name: {
+            display: { path_compact: false, path_full: true },
+          },
+        }}
+        extraColumns={extraColumns}
+        contextMenuItems={[
+          'copy-paste',
+          'show-details',
+          'open-viewer',
+          uploadVersionItem,
+          addToListItem,
+          productDetailItem,
+          versionDetailItem,
+          deleteVersionItem,
+          deleteProductItem,
+        ]}
+      />
+      <AddColumnButton extraColumns={VP_EXTRA_COLUMNS} includeLinks={false} />
+    </TableWrapper>
   )
 }
 

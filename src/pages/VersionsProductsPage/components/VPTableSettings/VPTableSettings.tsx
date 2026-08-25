@@ -6,6 +6,37 @@ import { useVPViewsContext } from '../../context/VPViewsContext'
 import { FeaturedVersionOrder, FEATURED_VERSION_TYPES } from '@shared/components'
 import { ENTITY_COLUMN_IDS, getColumnLabel } from '@shared/containers'
 
+export const VP_EXTRA_COLUMNS = [
+  {
+    value: 'author',
+    label: getColumnLabel('author'),
+  },
+  {
+    value: 'version',
+    label: getColumnLabel('version'),
+  },
+  {
+    value: ENTITY_COLUMN_IDS.version,
+    label: getColumnLabel(ENTITY_COLUMN_IDS.version),
+  },
+  {
+    value: 'productBaseType',
+    label: getColumnLabel('productBaseType'),
+  },
+  {
+    value: 'taskType',
+    label: getColumnLabel('taskType'),
+  },
+  {
+    value: 'folderType',
+    label: getColumnLabel('folderType'),
+  },
+  {
+    value: 'folderStatus',
+    label: 'Folder status',
+  },
+]
+
 export interface VPTableSettingsProps {}
 
 export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
@@ -20,36 +51,7 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
     onUpdateFeaturedVersionOrder,
   } = useVPViewsContext()
 
-  const extraColumns = [
-    {
-      value: 'author',
-      label: getColumnLabel('author'),
-    },
-    {
-      value: 'version',
-      label: getColumnLabel('version'),
-    },
-    {
-      value: ENTITY_COLUMN_IDS.version,
-      label: getColumnLabel(ENTITY_COLUMN_IDS.version),
-    },
-    {
-      value: 'productBaseType',
-      label: getColumnLabel('productBaseType'),
-    },
-    {
-      value: 'taskType',
-      label: getColumnLabel('taskType'),
-    },
-    {
-      value: 'folderType',
-      label: getColumnLabel('folderType'),
-    },
-    {
-      value: 'folderStatus',
-      label: 'Folder status',
-    },
-  ]
+  const extraColumns = VP_EXTRA_COLUMNS
 
   const extraSettings: SettingConfig[] = [
     {

@@ -8,7 +8,7 @@ import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { mapInitialAccessGroupStates } from './mappers'
 import { AccessGroupUsers, SelectionStatus } from './types'
 import * as Styled from './ProjectUserAccessAssignDialog.styled'
-import { ProjectUserData } from '@queries/accessGroups/getAccessGroups'
+import type { ProjectUserData } from '@shared/api'
 
 const icons: { [key in SelectionStatus]: string | undefined } = {
   [SelectionStatus.None]: 'add',

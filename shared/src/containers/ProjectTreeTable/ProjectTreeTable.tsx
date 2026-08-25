@@ -47,6 +47,7 @@ import { useSelectionCellsContext } from './context/SelectionCellsContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettingsContext } from './context/ColumnSettingsContext'
+import { TableColumnDropIndicator } from './components/ColumnDropIndicator'
 import { useMenuContext } from '../../context/MenuContext'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
 
@@ -916,6 +917,7 @@ export const ProjectTreeTable = ({
         {tableUiContent}
         {dragOverlayPortal}
         <ColumnDragOverlay table={table} />
+        <TableColumnDropIndicator />
       </>
     )
   } else {
@@ -923,6 +925,7 @@ export const ProjectTreeTable = ({
       <>
         {tableUiContent}
         <ColumnDragOverlay table={table} />
+        <TableColumnDropIndicator />
       </>
     )
   }
@@ -1037,9 +1040,6 @@ const TableHeadRow = ({
   columnOrderIds,
 }: TableHeadRowProps) => {
   const virtualColumns = columnVirtualizer.getVirtualItems()
-  const { active } = useDndContext()
-  const isColumnDrag = active?.data?.current?.type === 'column'
-  const isDraggedColumnPinned = isColumnDrag && (active?.data?.current?.isPinned ?? false)
 
   return (
     <Styled.ColumnHeader key={headerGroup.id} style={{ display: 'flex' }}>
@@ -1067,8 +1067,6 @@ const TableHeadRow = ({
               canResize={header.column.getCanResize()}
               sortableRows={sortableRows}
               isDraggable={isDraggable}
-              isColumnDrag={isColumnDrag}
-              isDraggedColumnPinned={isDraggedColumnPinned}
             />
           )
         })}
@@ -1092,8 +1090,6 @@ interface TableHeadCellProps {
   isReadOnly?: boolean
   sortableRows?: boolean
   isDraggable?: boolean
-  isColumnDrag?: boolean
-  isDraggedColumnPinned?: boolean
 }
 
 const TableHeadCell = ({
@@ -1107,8 +1103,6 @@ const TableHeadCell = ({
   isReadOnly,
   sortableRows,
   isDraggable = true,
-  isColumnDrag,
-  isDraggedColumnPinned,
 }: TableHeadCellProps) => {
   const { column } = header
   const sorting = column.getIsSorted()
@@ -1139,8 +1133,6 @@ const TableHeadCell = ({
     disabled: !isDraggable,
   })
 
-  const isDraggingInSameSection = isColumnDrag && isDraggedColumnPinned === isThisColumnPinned
-
   // Build drag styles
   const getDragStyle = (): CSSProperties => {
     if (isDragging) {
@@ -1150,13 +1142,6 @@ const TableHeadCell = ({
         visibility: 'hidden',
         zIndex: 200,
       }
-    }
-    if (isDraggingInSameSection && transform) {
-      // For pinned columns, temporarily remove sticky positioning during drag animation
-      const pinnedOverride = isThisColumnPinned
-        ? { position: 'relative' as const, left: 'auto' }
-        : {}
-      return { transform: CSS.Translate.toString(transform), transition, ...pinnedOverride }
     }
     return {}
   }
@@ -1170,6 +1155,7 @@ const TableHeadCell = ({
   return (
     <Styled.HeaderCell
       ref={setNodeRef}
+      data-column-id={column.id}
       className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),

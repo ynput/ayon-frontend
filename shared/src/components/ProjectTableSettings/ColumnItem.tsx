@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { FC, useMemo } from 'react'
+import React, { FC, useMemo } from 'react'
 import {
   SettingsPanelItemTemplate,
   SettingsPanelItem,
@@ -17,6 +17,20 @@ const SettingsPanelItemTemplateStyled = styled(SettingsPanelItemTemplate)`
   .drag-handle {
     cursor: grab;
     height: 20px;
+  }
+
+  .hover-swap {
+    display: none;
+    cursor: grab;
+  }
+
+  &.drag-reveal:hover {
+    .hover-swap {
+      display: inline-block;
+    }
+    .hover-swap ~ .icon {
+      display: none;
+    }
   }
 
   &.overlay {
@@ -39,6 +53,7 @@ const SettingsPanelItemTemplateStyled = styled(SettingsPanelItemTemplate)`
 `
 
 interface ColumnItemProps {
+  id?: string
   column: SettingsPanelItem
   isPinned: boolean
   isHidden: boolean
@@ -46,11 +61,16 @@ interface ColumnItemProps {
   isDisabled?: boolean
   dragHandleProps?: any
   dragOverlay?: boolean
+  hideDragHandle?: boolean
   onTogglePinning?: (columnId: string) => void
   onToggleVisibility?: (columnId: string) => void
+  onPaintStart?: (columnId: string) => void
+  onPaintEnter?: (columnId: string, pressed: boolean) => void
+  onDragStart?: (event: React.PointerEvent) => void
 }
 
 const ColumnItem: FC<ColumnItemProps> = ({
+  id,
   column,
   isPinned,
   isHidden,
@@ -59,9 +79,13 @@ const ColumnItem: FC<ColumnItemProps> = ({
   // Dragging props
   dragHandleProps,
   dragOverlay = false,
+  hideDragHandle = false,
   // Callbacks
   onTogglePinning,
   onToggleVisibility,
+  onPaintStart,
+  onPaintEnter,
+  onDragStart,
 }) => {
   const itemActions = useMemo(
     () => [
@@ -74,23 +98,49 @@ const ColumnItem: FC<ColumnItemProps> = ({
       {
         icon: isHidden ? 'visibility_off' : 'visibility',
         onClick: () => onToggleVisibility?.(column.value),
+        // arms a paint drag, the toggle itself still happens on click
+        onPointerDown: isDisabled ? undefined : () => onPaintStart?.(column.value),
         active: !isHidden,
       },
     ],
-    [isPinned, isHidden, column.value, onTogglePinning, onToggleVisibility],
+    [
+      isPinned,
+      isHidden,
+      isDisabled,
+      column.value,
+      onTogglePinning,
+      onToggleVisibility,
+      onPaintStart,
+    ],
   )
 
   return (
     <SettingsPanelItemTemplateStyled
+      id={id}
       item={column}
       actions={itemActions}
       isHighlighted={isHighlighted}
       isDisabled={isDisabled}
-      className={clsx({ hidden: isHidden, overlay: dragOverlay })}
+      className={clsx({
+        hidden: isHidden,
+        overlay: dragOverlay,
+        'drag-reveal': hideDragHandle && !!onDragStart,
+      })}
+      onPointerEnter={(event) => onPaintEnter?.(column.value, event.buttons > 0)}
+      onPointerDown={(event) =>
+        // the row actions arm their own gestures
+        (event.target as HTMLElement).closest('.action') ? undefined : onDragStart?.(event)
+      }
       startContent={
-        <div {...dragHandleProps} className={'drag-handle'}>
-          <Icon icon="drag_indicator" />
-        </div>
+        hideDragHandle ? (
+          onDragStart ? (
+            <Icon icon="drag_indicator" className="hover-swap" />
+          ) : undefined
+        ) : (
+          <div {...dragHandleProps} className="drag-handle">
+            <Icon icon="drag_indicator" />
+          </div>
+        )
       }
     />
   )
