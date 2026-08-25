@@ -153,8 +153,18 @@ export const buildMetricTargets = ({
     targets.push({ field: 'assignees', aggregations: ENUM })
   }
 
+  // no visibility check: it's opt-in, and a name column missing from both maps would kill this
+  const nameScope = columnSummaryScopes?.['name'] ?? 'all'
+  // group entities sit on the primary scope, row entities on the secondary one
+  const nameScopeCoversEntity = ['folder', 'product'].includes(entity)
+    ? nameScope === 'all' || nameScope === 'primary'
+    : nameScope === 'all' || nameScope === 'secondary'
+  const nameBreakdown =
+    columnSummaries?.['name'] === 'breakdown' &&
+    isSummaryActive('name', columnSummaries, columnSummaryScopes) &&
+    nameScopeCoversEntity
   const subTypeField = SUB_TYPE_FIELD[entity]
-  if (subTypeField && isActive('subType')) {
+  if (subTypeField && (isActive('subType') || nameBreakdown)) {
     targets.push({ field: subTypeField, aggregations: ENUM })
   }
 

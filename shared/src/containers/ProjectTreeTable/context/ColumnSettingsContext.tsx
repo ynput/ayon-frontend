@@ -38,6 +38,8 @@ export type ColumnsConfig = {
 export interface ColumnSettingsContextType {
   // All column IDs reference
   setAllColumns: (allColumnIds: string[]) => void
+  // every known column in definition order, which is the order the table falls back to
+  getAllColumns: () => string[]
 
   // Column Visibility
   columnVisibility: VisibilityState

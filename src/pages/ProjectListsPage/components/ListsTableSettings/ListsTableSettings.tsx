@@ -2,7 +2,7 @@ import { useListsAttributesContext } from '@pages/ProjectListsPage/context/Lists
 import { FC } from 'react'
 import { toast } from 'react-toastify'
 import { ProjectTableSettings } from '@shared/components'
-import { SettingHighlightedId } from '@shared/context'
+import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
 import { confirmDelete } from '@shared/util'
 import { useListsModuleContext } from '@pages/ProjectListsPage/context/ListsModulesContext'
 import { useListsContext } from '@pages/ProjectListsPage/context'
@@ -23,6 +23,7 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
   const { listAttributes, entityAttribFields, updateAttributes, isUpdating, isLoadingNewList } =
     useListsAttributesContext()
   const { ListsAttributesSettings, requiredVersion } = useListsModuleContext()
+  const { selectSetting } = useSettingsPanel()
 
   // mirror the table's excluded columns so the panel doesn't offer dead toggles
   // (e.g. subType is excluded for version/product lists where productType is the real column)
@@ -39,6 +40,14 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
     <ProjectTableSettings
       extraColumns={extraColumns}
       hiddenColumns={hiddenColumns}
+      extraMenuItems={[
+        {
+          id: 'list-attributes',
+          label: 'Create list attribute',
+          icon: 'add',
+          onClick: () => selectSetting('list_attributes'),
+        },
+      ]}
       highlighted={highlightedSetting}
       hiddenSettings={['group-by']}
       hideSortBy={isReview}

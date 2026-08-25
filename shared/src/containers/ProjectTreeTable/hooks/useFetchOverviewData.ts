@@ -417,9 +417,11 @@ export const useFetchOverviewData = ({
     if (taskIds?.length) {
       // we are getting specific task ids so we do not need to tasks based on folder ids
       return undefined
-    } else {
+    } else if (selectedFolderIdsWithoutChildren?.length) {
       // we are in hierarchy slicer mode, so we return the selected folders
       return selectedFolderIdsWithoutChildren
+    } else {
+      return undefined
     }
   }
 

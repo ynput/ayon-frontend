@@ -476,6 +476,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         ) : (
                           <ListItemsTable
                             extraColumns={extraColumns}
+                            extraColumnsSettings={extraColumnsSettings}
                             isReview={isReview && !reviewSessionCardsOutdated}
                             dndActiveId={dndActiveId} // Pass prop
                             viewOnly={(selectedList?.accessLevel || 0) < 20}

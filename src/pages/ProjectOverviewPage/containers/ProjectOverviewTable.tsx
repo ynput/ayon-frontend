@@ -10,6 +10,16 @@ import { useProjectContext } from '@shared/context'
 import { mergeFieldStats, totalRowsFromStats } from '@shared/api'
 import type { FieldStats } from '@shared/api'
 import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
+import { AddColumnButton } from '@shared/components'
+import styled from 'styled-components'
+
+const TableWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* Section centers its children, which would collapse this box */
+  align-self: stretch;
+`
 
 type Props = {}
 
@@ -57,30 +67,34 @@ const ProjectOverviewTable = ({}: Props) => {
 
   return (
     <Section style={{ height: '100%' }}>
-      <ProjectTreeTable
-        scope={scope}
-        sliceId={''}
-        // pagination
-        onScrollBottom={handleScrollBottom}
-        onScrollBottomGroupBy={handleScrollBottomGroupBy}
-        // metadata
-        onOpenNew={onOpenNew}
-        clientSorting={showHierarchy || isFlatFolderView}
-        onColumnVisibleChangeSubscribed={['link_*']}
-        onColumnVisibleChange={(changes) => {
-          if (Object.values(changes).some((v) => v)) {
-            setLinksVisible(true)
-          } else {
-            setLinksVisible(false)
-          }
-        }}
-        showColumnSummaries
-        fieldStats={fieldStats}
-        groupFieldStats={folderStats}
-        fieldStatsLoading={folderStatsLoading || taskStatsLoading}
-        fieldStatsError={folderStatsError || taskStatsError}
-        onVisibleRowsChange={setVisibleEntityIds}
-      />
+      <TableWrapper>
+        <ProjectTreeTable
+          scope={scope}
+          sliceId={''}
+          // pagination
+          onScrollBottom={handleScrollBottom}
+          onScrollBottomGroupBy={handleScrollBottomGroupBy}
+          // metadata
+          onOpenNew={onOpenNew}
+          clientSorting={showHierarchy || isFlatFolderView}
+          onColumnVisibleChangeSubscribed={['link_*']}
+          onColumnVisibleChange={(changes) => {
+            if (Object.values(changes).some((v) => v)) {
+              setLinksVisible(true)
+            } else {
+              setLinksVisible(false)
+            }
+          }}
+          showColumnSummaries
+          fieldStats={fieldStats}
+          groupFieldStats={folderStats}
+          fieldStatsLoading={folderStatsLoading || taskStatsLoading}
+          fieldStatsError={folderStatsError || taskStatsError}
+          mainBreakdownFields={{ primary: 'folderType', secondary: 'taskType' }}
+          onVisibleRowsChange={setVisibleEntityIds}
+        />
+        <AddColumnButton />
+      </TableWrapper>
     </Section>
   )
 }

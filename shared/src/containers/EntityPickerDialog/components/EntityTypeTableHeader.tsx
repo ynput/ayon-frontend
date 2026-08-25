@@ -2,7 +2,7 @@ import { Header, HeaderButton } from '@shared/containers/SimpleTable/SimpleTable
 import { theme } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
-import EntityTypeTableSearch from './EntityTypeTableSearch'
+import { TableSearch } from '@shared/components/TableSearch'
 
 const HeaderStyled = styled(Header)`
   flex-direction: column;
@@ -86,11 +86,7 @@ const EntityTypeTableHeader: FC<EntityTypeTableHeaderProps> = ({
         </StyledButtons>
       </HeaderTop>
       {typeof search === 'string' && (
-        <EntityTypeTableSearch
-          value={search}
-          onChange={onSearch}
-          onClose={() => onSearch(undefined)}
-        />
+        <TableSearch value={search} onChange={onSearch} onClose={() => onSearch(undefined)} />
       )}
     </HeaderStyled>
   )
