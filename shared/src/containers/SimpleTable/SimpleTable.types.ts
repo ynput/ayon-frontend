@@ -9,7 +9,7 @@ declare module '@tanstack/react-table' {
     fuzzy: (
       row: Row<any>,
       columnId: string,
-      searchValue: string,
+      searchValue: string[][],
       addMeta: (meta: any) => void,
     ) => boolean
   }

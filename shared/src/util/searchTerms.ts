@@ -1,21 +1,27 @@
-import { rankItem, rankings, RankingInfo } from '@tanstack/match-sorter-utils'
+import { rankItem, rankings, Ranking, RankingInfo } from '@tanstack/match-sorter-utils'
 
-// Canonical client-side search tokenization: comma = OR, space = AND within a comma part.
+// Client-side search tokenization for SimpleTable: comma = OR, space = AND within a comma part.
 export const parseSearchQuery = (query: string): string[][] =>
   query
     .split(',')
     .map((part) => part.trim().split(/\s+/).filter(Boolean))
     .filter((terms) => terms.length > 0)
 
-const noMatch: RankingInfo = Object.freeze({
-  rankedValue: '',
-  rank: rankings.NO_MATCH,
-  accessorIndex: -1,
-  accessorThreshold: rankings.CONTAINS,
-  passed: false,
-})
+const rankOf = (rank: Ranking, passed: boolean): RankingInfo =>
+  Object.freeze({
+    rankedValue: '',
+    rank,
+    accessorIndex: -1,
+    accessorThreshold: rankings.CONTAINS,
+    passed,
+  })
+
+const noMatch = rankOf(rankings.NO_MATCH, false)
+const emptyQuery = rankOf(rankings.CONTAINS, true)
 
 export const matchSearchQuery = (haystack: string, groups: string[][]): RankingInfo => {
+  if (!groups.length) return emptyQuery
+
   let best: RankingInfo | null = null
 
   for (const terms of groups) {

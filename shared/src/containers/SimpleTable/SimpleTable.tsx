@@ -46,7 +46,7 @@ const toggleRowAndDescendants = <TData,>(row: Row<TData>, expanded: boolean) => 
 }
 
 // Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
-const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
+const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue: string[][], addMeta) => {
   const cellValue = row.getValue(columnId)
   // convert non-string cell values to string
   let searchString =
@@ -64,10 +64,7 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
   }
 
   // searchValue is already parsed into OR/AND groups by resolveFilterValue
-  const groups = searchValue as string[][]
-  if (!groups.length) return true
-
-  const itemRank = matchSearchQuery(searchString, groups)
+  const itemRank = matchSearchQuery(searchString, searchValue)
   addMeta({ itemRank })
 
   return itemRank.passed
