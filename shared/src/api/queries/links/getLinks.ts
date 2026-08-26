@@ -32,7 +32,7 @@ export type SearchEntityLink = {
   icon: string | undefined
   subType: string | undefined
   hasReviewables?: boolean
-  // representations have none, products use their latest version's
+  // representations have none, products use their featured version's
   thumbnail?: EntityLinkThumbnail
 }
 
@@ -215,7 +215,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     label: productNode.name,
                     parents: productNode.parents || [],
                     subType: productNode.subType,
-                    thumbnail: getNodeThumbnail('version', productNode.latestVersion),
+                    thumbnail: getNodeThumbnail('version', productNode.featuredVersion),
                   }
                 case 'version':
                   const versionNode = node as SearchedVersionNode

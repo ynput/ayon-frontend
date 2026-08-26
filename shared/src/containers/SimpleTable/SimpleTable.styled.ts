@@ -239,6 +239,11 @@ export const Cell = styled.div`
     &.circle {
       border-radius: 50%;
     }
+
+    /* reserves the slot so rows stay aligned, without drawing an empty box */
+    &.empty {
+      background-color: transparent;
+    }
   }
 `
 

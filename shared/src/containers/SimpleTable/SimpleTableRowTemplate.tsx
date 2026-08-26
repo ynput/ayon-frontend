@@ -136,15 +136,6 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
         }}
         title={isDisabled ? disabledMessage : undefined}
       >
-        <RowExpander
-          isRowExpandable={isRowExpandable}
-          isRowExpanded={isRowExpanded}
-          isTableExpandable={isTableExpandable}
-          onExpandClick={onExpandClick}
-          enableNonFolderIndent={enableNonFolderIndent}
-          {...pt?.expander}
-        />
-        {startContent && startContent}
         {img && imgStatus === 'loaded' ? (
           <img
             src={img}
@@ -168,6 +159,15 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
             />
           )
         )}
+        <RowExpander
+          isRowExpandable={isRowExpandable}
+          isRowExpanded={isRowExpanded}
+          isTableExpandable={isTableExpandable}
+          onExpandClick={onExpandClick}
+          enableNonFolderIndent={enableNonFolderIndent}
+          {...pt?.expander}
+        />
+        {startContent && startContent}
         {icon && (
           <Icon
             icon={icon}

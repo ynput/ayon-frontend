@@ -1888,7 +1888,7 @@ export type GetSearchedProductsQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedProductsQuery = { project: { name: string, products: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'ProductNode', id: string, name: string, parents: Array<string>, subType: string, latestVersion: { id: string, thumbnailHash: string } | null } }> } } };
+export type GetSearchedProductsQuery = { project: { name: string, products: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'ProductNode', id: string, name: string, parents: Array<string>, subType: string, featuredVersion: { id: string, thumbnailHash: string } | null } }> } } };
 
 export type GetSearchedRepresentationsQueryVariables = Exact<{
   projectName: string;
@@ -2515,7 +2515,7 @@ export const GetSearchedProductsDocument = new TypedDocumentString(`
         node {
           ...OverviewEntityLinkNodeFragment
           subType: productType
-          latestVersion {
+          featuredVersion {
             id
             thumbnailHash
           }

@@ -68,7 +68,7 @@ query GetSearchedProducts(
         node {
           ...OverviewEntityLinkNodeFragment
           subType: productType
-          latestVersion {
+          featuredVersion {
             id
             thumbnailHash
           }

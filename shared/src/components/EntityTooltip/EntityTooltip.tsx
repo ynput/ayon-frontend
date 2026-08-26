@@ -64,13 +64,17 @@ export const EntityTooltip: React.FC<EntityTooltipProps> = ({
   const statuses = projectInfo?.statuses || project?.statuses || []
 
   const statusObject = statuses.find((s: Status) => s.name === status)
-  const thumbnailUrl = getEntityThumbnailUrl({
-    entityId: entityId || '',
-    entityType,
-    thumbnailHash,
-    thumbnailId,
-    projectName: resolvedProjectName || '',
-  })
+  // wait for the query so the url is built once, with its hash
+  const thumbnailUrl = data
+    ? getEntityThumbnailUrl({
+        entityId: entityId || '',
+        entityType,
+        thumbnailHash,
+        thumbnailId,
+        projectName: resolvedProjectName || '',
+        placeholder: 'none',
+      })
+    : null
 
   const icons: Record<string, string | undefined> = {
     task: taskTypes.find((type) => type.name === taskType)?.icon,
