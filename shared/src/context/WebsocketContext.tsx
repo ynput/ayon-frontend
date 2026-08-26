@@ -149,7 +149,7 @@ export const SocketProvider = ({
 
       const { topic, sender, summary, status } = data || {}
 
-      if (serverRestartingVisible && topic === 'server.started' && status === 'finished') {
+      if (serverRestartingVisible && (topic === 'heartbeat' || (topic === 'server.started' && status === 'finished'))) {
         console.log('Server replica booted')
         debouncedResetCall()
         return
