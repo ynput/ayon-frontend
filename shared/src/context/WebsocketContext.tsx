@@ -117,6 +117,17 @@ export const SocketProvider = ({
   // Using useRef to persist the closure state across renders
   const messageStatsRef = useRef({ callCount: 0, lastCall: Date.now() })
 
+
+  const debouncedResetCall = debounce(() => {
+    // all replicas should start about the same time, 
+    // so we can reset the API state after a short delay
+    console.log('Resetting API state due to server restart')
+    setServerRestartingVisible(false)
+    dispatch(api.util.resetApiState())
+  }, 1000)
+
+
+
   const onMessage = useCallback(
     (message: any) => {
       // If the function is called more than 100 times per second, return early.
@@ -136,7 +147,14 @@ export const SocketProvider = ({
         return
       }
 
-      const { topic, sender, summary } = data || {}
+      const { topic, sender, summary, status } = data || {}
+
+      if (serverRestartingVisible && topic === 'server.started' && status === 'finished') {
+        console.log('Server replica booted')
+        debouncedResetCall()
+        return
+      }
+
       if (topic === 'heartbeat') return
 
       if (topic === 'server.restart_requested') setServerRestartingVisible(true)
@@ -161,16 +179,16 @@ export const SocketProvider = ({
 
       PubSub.publish(topic, data)
     },
-    [setServerRestartingVisible],
+    [setServerRestartingVisible, serverRestartingVisible],
   )
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
-      if (serverRestartingVisible) {
-        setServerRestartingVisible(false)
-        // clear ayonApi
-        dispatch(api.util.resetApiState())
-      }
+      // if (serverRestartingVisible) {
+      //   setServerRestartingVisible(false)
+      //   // clear ayonApi
+      //   dispatch(api.util.resetApiState())
+      // }
       // @ts-ignore
       getWebSocket().onmessage = onMessage
       subscribe()
