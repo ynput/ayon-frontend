@@ -230,6 +230,7 @@ export const Cell = styled.div`
     width: auto;
     height: 24px;
     max-height: 24px;
+    flex: none;
     object-fit: cover;
     aspect-ratio: 1;
     background-color: var(--md-sys-color-surface-container-lowest);
@@ -237,10 +238,6 @@ export const Cell = styled.div`
 
     &.circle {
       border-radius: 50%;
-    }
-
-    &.square {
-      border-radius: 4px;
     }
   }
 `
