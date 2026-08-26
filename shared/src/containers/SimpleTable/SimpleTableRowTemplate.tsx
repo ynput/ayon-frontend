@@ -112,6 +112,9 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
     ref,
   ) => {
     const [renameValue, setRenameValue] = useState(renameInitialValue ?? value)
+    const [imgError, setImgError] = useState(false)
+
+    useEffect(() => setImgError(false), [img])
 
     useEffect(() => {
       if (isRenaming) {
@@ -143,7 +146,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
           {...pt?.expander}
         />
         {startContent && startContent}
-        {img && (
+        {img && !imgError && (
           <img
             src={img}
             {...pt?.img}
@@ -152,6 +155,10 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
             style={{
               aspectRatio: imgRatio.toString(),
               ...pt?.img?.style,
+            }}
+            onError={(event) => {
+              pt?.img?.onError?.(event)
+              setImgError(true)
             }}
           />
         )}

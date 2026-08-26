@@ -4,7 +4,14 @@ import type {
   PageInfo,
 } from '@shared/api/generated'
 import type { ChecklistCount, FeedActivity, FeedActivityData } from '../types'
-import { BaseTypes, EntityTooltipQuery, TaskTypes, VersionTypes } from '../activityQueries'
+import {
+  BaseTypes,
+  EntityTooltipQuery,
+  FolderTypes,
+  TaskTypes,
+  VersionTypes,
+  WorkfileTypes,
+} from '../activityQueries'
 
 // Helper function to get a nested property of an object using a string path
 const getNestedProperty = <T extends Record<string, any>, R = any>(
@@ -109,6 +116,8 @@ export type EntityTooltip = {
   thumbnailHash?: string
   updatedAt?: string
   taskType?: string
+  folderType?: string
+  productType?: string
   users?: { name: string; avatarUrl: string }[]
   path?: string
 }
@@ -166,6 +175,49 @@ const transformVersionTooltip: TransformVersionTooltip = (data) => {
   return tooltip
 }
 
+type TransformFolderTooltip = (data: BaseTypes & FolderTypes) => EntityTooltip
+
+const transformFolderTooltip: TransformFolderTooltip = (data) => {
+  const { id, name, label, status, thumbnailId, thumbnailHash, updatedAt, folderType, parents } =
+    data || {}
+
+  return {
+    id,
+    name,
+    title: label || name,
+    type: 'folder',
+    subTitle: parents?.[parents.length - 1] || '',
+    status,
+    thumbnailId,
+    thumbnailHash,
+    updatedAt,
+    folderType,
+    users: [],
+    path: parents?.[parents.length - 2],
+  }
+}
+
+type TransformWorkfileTooltip = (data: BaseTypes & WorkfileTypes) => EntityTooltip
+
+const transformWorkfileTooltip: TransformWorkfileTooltip = (data) => {
+  const { id, name, status, thumbnailId, thumbnailHash, updatedAt, task } = data || {}
+
+  return {
+    id,
+    name,
+    title: name,
+    type: 'workfile',
+    subTitle: task?.label || task?.name || '',
+    status,
+    thumbnailId,
+    thumbnailHash,
+    updatedAt,
+    taskType: task?.taskType,
+    users: [],
+    path: task?.folder?.path?.split('/').pop(),
+  }
+}
+
 // different types have different tooltip data, we need to create a single data model
 export const transformTooltipData = (data: EntityTooltipQuery['data']['project'], type: string) => {
   switch (type) {
@@ -175,6 +227,12 @@ export const transformTooltipData = (data: EntityTooltipQuery['data']['project']
     case 'version':
       // @ts-ignore
       return transformVersionTooltip(data.version)
+    case 'folder':
+      // @ts-ignore
+      return transformFolderTooltip(data.folder)
+    case 'workfile':
+      // @ts-ignore
+      return transformWorkfileTooltip(data.workfile)
     default:
       return {}
   }

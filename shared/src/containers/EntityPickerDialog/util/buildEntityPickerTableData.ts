@@ -1,6 +1,6 @@
 import type { FolderListItem, SearchEntityLink } from '@shared/api'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
-import { getEntityTypeIcon } from '@shared/util'
+import { getEntityThumbnailUrl, getEntityTypeIcon } from '@shared/util'
 
 export type EntityAnatomy = {
   name: string
@@ -10,6 +10,7 @@ export type EntityAnatomy = {
 
 export const buildEntityPickerTableData = (
   data: SearchEntityLink[],
+  projectName: string,
   anatomies?: EntityAnatomy[],
 ): SimpleTableRow[] => {
   return data.map((entity) => {
@@ -21,6 +22,9 @@ export const buildEntityPickerTableData = (
       parents: entity.parents,
       icon: anatomy?.icon || getEntityTypeIcon(entity.entityType),
       iconColor: anatomy?.color,
+      img: entity.thumbnail
+        ? getEntityThumbnailUrl({ projectName, ...entity.thumbnail, placeholder: 'none' })
+        : null,
       subRows: [],
       data: {
         id: entity.id,
@@ -34,6 +38,7 @@ export const buildEntityPickerTableData = (
 
 export const buildFolderPickerTableData = (
   data: FolderListItem[],
+  projectName: string,
   anatomies: EntityAnatomy[],
 ): SimpleTableRow[] => {
   return data.map((folder) => {
@@ -45,6 +50,13 @@ export const buildFolderPickerTableData = (
       path: '/' + folder.path,
       icon: anatomy?.icon || getEntityTypeIcon('folder'),
       iconColor: anatomy?.color,
+      img: getEntityThumbnailUrl({
+        projectName,
+        entityType: 'folder',
+        entityId: folder.id,
+        thumbnailHash: folder.thumbnailHash,
+        placeholder: 'none',
+      }),
       subRows: [],
       data: {
         id: folder.id,

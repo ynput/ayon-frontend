@@ -3,14 +3,21 @@ import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.
 import type { FolderType, FolderListItem } from '@shared/api'
 import { useCallback, useMemo } from 'react'
 import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
+import { getEntityThumbnailUrl } from '@shared/util'
 
 type Props = {
   projectName: string | null
   folderTypes: FolderType[]
   includeColors?: boolean
+  includeThumbnails?: boolean
 }
 
-export const useHierarchyTable = ({ projectName, folderTypes, includeColors = false }: Props) => {
+export const useHierarchyTable = ({
+  projectName,
+  folderTypes,
+  includeColors = false,
+  includeThumbnails = false,
+}: Props) => {
   const { folders, isLoading } = useProjectFoldersContext()
 
   const getFolderIcon = (type: string) => {
@@ -24,6 +31,18 @@ export const useHierarchyTable = ({ projectName, folderTypes, includeColors = fa
     return folderType?.color
   }
 
+  // the folder list has no thumbnailId, so ask the API to 404 instead of serving a blank image
+  const getFolderThumbnail = (folder: FolderListItem) => {
+    if (!includeThumbnails || !projectName) return null
+    return getEntityThumbnailUrl({
+      projectName,
+      entityType: 'folder',
+      entityId: folder.id,
+      thumbnailHash: folder.thumbnailHash,
+      placeholder: 'none',
+    })
+  }
+
   const folderToTableRow = (folder: FolderListItem): Omit<SimpleTableRow, 'subRows'> => ({
     id: folder.id,
     parentId: folder.parentId,
@@ -31,7 +50,7 @@ export const useHierarchyTable = ({ projectName, folderTypes, includeColors = fa
     label: folder.label || folder.name,
     icon: getFolderIcon(folder.folderType),
     iconColor: getFolderColor(folder.folderType),
-    img: null,
+    img: getFolderThumbnail(folder),
     data: {
       id: folder.id,
       name: folder.name,
@@ -93,7 +112,7 @@ export const useHierarchyTable = ({ projectName, folderTypes, includeColors = fa
     const rows = createDataTree(folders)
 
     return rows
-  }, [folders, folderTypes, isLoading])
+  }, [folders, folderTypes, isLoading, includeThumbnails, projectName])
 
   const getHierarchyData = useCallback(async () => {
     return tableData
