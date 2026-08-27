@@ -84,6 +84,21 @@ export const useHierarchyTable = ({ projectName, folderTypes, includeColors = fa
       }
     }
 
+    // ancestor labels, so search can match a child by its parent path
+    const stack: SimpleTableRow[] = []
+    for (const row of hashTable.values()) {
+      if (!row.parentId || !hashTable.has(row.parentId)) stack.push(row)
+    }
+    while (stack.length) {
+      const row = stack.pop()!
+      // siblings share one array
+      const childParents = [...(row.parents ?? []), row.label || '']
+      for (const child of row.subRows) {
+        child.parents = childParents
+        stack.push(child)
+      }
+    }
+
     return dataTree
   }
 
