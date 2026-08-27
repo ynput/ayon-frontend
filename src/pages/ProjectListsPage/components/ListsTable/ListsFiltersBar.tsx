@@ -31,11 +31,19 @@ const Container = styled.div`
 
 const CloseButton = styled(HeaderButton)`
   position: absolute;
-  top: 50%;
   right: 6px;
-  transform: translateY(-50%);
+  top: 50%;
+  transform: translateY(calc(-50% - 2px));
   /* the bar itself sits at 301 */
   z-index: 302;
+
+  &.hasIcon {
+    padding: 2px;
+  }
+
+  .icon {
+    font-size: 18px;
+  }
 `
 
 interface ListsFiltersBarProps {
