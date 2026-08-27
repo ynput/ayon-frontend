@@ -240,6 +240,10 @@ export const Cell = styled.div`
       border-radius: 50%;
     }
 
+    &.square {
+      border-radius: 2px;
+    }
+
     /* reserves the slot so rows stay aligned, without drawing an empty box */
     &.empty {
       background-color: transparent;

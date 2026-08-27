@@ -8,14 +8,19 @@ const resolved = new Map<string, Exclude<ImageStatus, 'loading'>>()
 
 const getResolved = (src?: string | null) => (src ? resolved.get(src) : 'error')
 
+type Resolved = { src?: string | null; status: ImageStatus }
+
 // preloads off-DOM so a missing image never flashes the browser's broken-image icon
 export const useImageStatus = (src?: string | null): ImageStatus => {
-  const [status, setStatus] = useState<ImageStatus>(() => getResolved(src) || 'loading')
+  const [state, setState] = useState<Resolved>(() => ({
+    src,
+    status: getResolved(src) || 'loading',
+  }))
 
   useEffect(() => {
     const known = getResolved(src)
     if (known) {
-      setStatus(known)
+      setState({ src, status: known })
       return
     }
 
@@ -24,7 +29,7 @@ export const useImageStatus = (src?: string | null): ImageStatus => {
 
     const resolve = (next: Exclude<ImageStatus, 'loading'>) => {
       resolved.set(url, next)
-      if (!cancelled) setStatus(next)
+      if (!cancelled) setState({ src: url, status: next })
     }
 
     const image = new Image()
@@ -35,7 +40,7 @@ export const useImageStatus = (src?: string | null): ImageStatus => {
       return
     }
 
-    setStatus('loading')
+    setState({ src, status: 'loading' })
     image.onload = () => resolve('loaded')
     image.onerror = () => resolve('error')
 
@@ -44,5 +49,6 @@ export const useImageStatus = (src?: string | null): ImageStatus => {
     }
   }, [src])
 
-  return status
+  // the effect runs after paint, so never report a status that belongs to a previous url
+  return state.src === src ? state.status : getResolved(src) || 'loading'
 }

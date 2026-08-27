@@ -1,7 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ENTITY_TOOLTIP_TYPES } from '@shared/components/EntityTooltip'
-
-const HOVER_DELAY = 500
 
 type HoveredRow = {
   id: string
@@ -12,12 +10,8 @@ type HoveredRow = {
 export const useRowTooltip = (entityType: string) => {
   const isEnabled = ENTITY_TOOLTIP_TYPES.includes(entityType)
   const [hovered, setHovered] = useState<HoveredRow | null>(null)
-  const timeout = useRef<ReturnType<typeof setTimeout>>()
 
-  const close = useCallback(() => {
-    clearTimeout(timeout.current)
-    setHovered(null)
-  }, [])
+  const close = useCallback(() => setHovered(null), [])
 
   useEffect(() => close, [close, entityType])
 
@@ -31,17 +25,15 @@ export const useRowTooltip = (entityType: string) => {
     (event: React.MouseEvent<HTMLTableRowElement>) => {
       if (!isEnabled) return
       const id = event.currentTarget.id
-      const anchor = (event.target as HTMLElement).closest('.image, .text') as HTMLElement | null
+      const anchor = (event.target as HTMLElement).closest(
+        '.image, .value, .path',
+      ) as HTMLElement | null
 
       if (!id || !anchor) return close()
       if (hovered?.id === id) return
 
       const { left, top, width } = anchor.getBoundingClientRect()
-      clearTimeout(timeout.current)
-      timeout.current = setTimeout(
-        () => setHovered({ id, pos: { left: left + width / 2, top } }),
-        HOVER_DELAY,
-      )
+      setHovered({ id, pos: { left: left + width / 2, top } })
     },
     [isEnabled, hovered, close],
   )
