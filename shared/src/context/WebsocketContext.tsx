@@ -47,6 +47,11 @@ export const SocketProvider = ({
   const [topics, setTopics] = useState([])
   const [getInfo] = useLazyGetSiteInfoQuery()
 
+  const isServerRestarting = useRef(false)
+  useEffect(() => {
+    isServerRestarting.current = serverRestartingVisible
+  }, [serverRestartingVisible])
+
   const wsOpts: Options = {
     shouldReconnect: () => {
       if (DISABLE_WS) return false
@@ -149,7 +154,7 @@ export const SocketProvider = ({
 
       const { topic, sender, summary, status } = data || {}
 
-      if (serverRestartingVisible && (topic === 'heartbeat' || (topic === 'server.started' && status === 'finished'))) {
+      if (isServerRestarting.current && (topic === 'heartbeat' || (topic === 'server.started' && status === 'finished'))) {
         console.log('Server replica booted')
         debouncedResetCall()
         return
@@ -157,7 +162,10 @@ export const SocketProvider = ({
 
       if (topic === 'heartbeat') return
 
-      if (topic === 'server.restart_requested') setServerRestartingVisible(true)
+      if (topic === 'server.restart_requested') {
+        console.log("Server restart requested")
+        setServerRestartingVisible(true)
+      }
 
       if (['import.data'].includes(topic)) {
         if (sender !== window.senderId) return // ignore import.data messages from other users
@@ -179,16 +187,11 @@ export const SocketProvider = ({
 
       PubSub.publish(topic, data)
     },
-    [setServerRestartingVisible, serverRestartingVisible],
+    [setServerRestartingVisible],
   )
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
-      // if (serverRestartingVisible) {
-      //   setServerRestartingVisible(false)
-      //   // clear ayonApi
-      //   dispatch(api.util.resetApiState())
-      // }
       // @ts-ignore
       getWebSocket().onmessage = onMessage
       subscribe()
