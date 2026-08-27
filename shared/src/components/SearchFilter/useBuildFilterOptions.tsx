@@ -1,4 +1,4 @@
-import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import { hasEnumOptions, getAttributeIcon, getEntityTypeIcon } from '@shared/util'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import type { ProductType } from '@shared/api'
 import type {
@@ -1083,7 +1083,7 @@ const getAttributeFieldOptionRoot = (
           icon: getAttributeIcon(
             attribute.name,
             attribute.data.type,
-            !!attribute.data.enum?.length,
+            hasEnumOptions(attribute.data),
           ),
         }
       : undefined
@@ -1101,7 +1101,7 @@ const getAttributeFieldOptionRoot = (
     allowNoValue: config.enableRelativeValues,
     allowExcludes: config?.enableExcludes,
     operatorChangeable: config?.enableOperatorChange,
-    icon: getAttributeIcon(attribute.name, attribute.data.type, !!attribute.data.enum?.length),
+    icon: getAttributeIcon(attribute.name, attribute.data.type, hasEnumOptions(attribute.data)),
     group,
     tooltip: entityType ? `${upperFirst(entityType)} ${label}` : undefined,
     value: entityType ? { icon: getEntityTypeIcon(entityType) } : undefined,
