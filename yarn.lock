@@ -2462,10 +2462,10 @@
   dependencies:
     tslib "^2.6.3"
 
-"@ynput/ayon-player@1.0.1":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-player/-/ayon-player-1.0.0.tgz#207c81f05317f32d2e4e0073575912362492ea8f"
-  integrity sha512-/09aMBl0BgqKw4ptAu7fAOyt8UvLjVDXFMQ08Tp0BlwLHomafDOIYHrGK4CLuFl3A0co2np6ZnoBBFu1Y/ekyA==
+"@ynput/ayon-player@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-player/-/ayon-player-1.0.2.tgz#0a932b0be848542b4270dccf9de85c4cbc1d9c44"
+  integrity sha512-2k6VYRm48/YJcjoXE/g+LDEExR39lB9bLU4ancekBDAiUxRU4p6glu0nj7VyGAcy3KMlag53IFD9TJIw2djZIQ==
   dependencies:
     "@dnd-kit/core" "6.3.1"
     "@dnd-kit/sortable" "^10.0.0"
@@ -2476,14 +2476,11 @@
     lodash "^4.18.1"
     panzoom "^9.4.4"
     primeicons "6.0.1"
-    react "^18.0.0"
     react-datepicker "4.11.0"
-    react-dom "^18.0.0"
     react-redux "9.2.0"
     react-router-dom "6.30.3"
     react-toastify "^9.0.3"
     sass "1.99.0"
-    styled-components "^6.5.2"
 
 "@ynput/ayon-react-components@^1.19.9":
   version "1.19.9"
@@ -6439,7 +6436,7 @@ react-datepicker@4.25.0:
     react-onclickoutside "^6.13.0"
     react-popper "^2.3.0"
 
-react-dom@18.3.1, react-dom@^18.0.0:
+react-dom@18.3.1:
   version "18.3.1"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-18.3.1.tgz#c2265d79511b57d479b3dd3fdfa51536494c5cb4"
   integrity sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==
@@ -6616,7 +6613,7 @@ react-use-websocket@4.13.0:
   resolved "https://registry.yarnpkg.com/react-use-websocket/-/react-use-websocket-4.13.0.tgz#9db1dbac6dc8ba2fdc02a5bba06205fbf6406736"
   integrity sha512-anMuVoV//g2N76Wxqvqjjo1X48r9Np3y1/gMl7arX84tAPXdy5R7sB5lO5hvCzQRYjqXwV8XMAiEBOUbyrZFrw==
 
-react@18.3.1, react@^18.0.0:
+react@18.3.1:
   version "18.3.1"
   resolved "https://registry.yarnpkg.com/react/-/react-18.3.1.tgz#49ab892009c53933625bd16b2533fc754cab2891"
   integrity sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==
@@ -7422,16 +7419,6 @@ styled-components@6.4.0:
   version "6.4.0"
   resolved "https://registry.yarnpkg.com/styled-components/-/styled-components-6.4.0.tgz#0f1972bba17b125e059c2dd4d06c9a5a65d00e0e"
   integrity sha512-BL1EDFpt+q10eAeZB0q9ps6pSlPejaBQWBkiuM16pyoVTG4NhZrPrZK0cqNbrozxSsYwUsJ9SQYN6NyeKJYX9A==
-  dependencies:
-    "@emotion/is-prop-valid" "1.4.0"
-    css-to-react-native "3.2.0"
-    csstype "3.2.3"
-    stylis "4.3.6"
-
-styled-components@^6.5.2:
-  version "6.5.3"
-  resolved "https://registry.yarnpkg.com/styled-components/-/styled-components-6.5.3.tgz#3f9bf71579cba7e075b7217b8a1ec6f38e75cc0e"
-  integrity sha512-vAX79sfpmUerP9fsTTxoTrBDE0RuO4ahjInyWYoohNgqrdg63Ms4q6FJ/o2Fyity82NU3cujOT8Ewl9TThBdwg==
   dependencies:
     "@emotion/is-prop-valid" "1.4.0"
     css-to-react-native "3.2.0"
