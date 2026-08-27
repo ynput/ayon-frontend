@@ -56,6 +56,8 @@ export default defineConfig({
       external: [
         ...Object.keys(pkg.peerDependencies || {}),
         ...Object.keys(pkg.dependencies || {}),
+        // subpath imports (e.g. @ynput/ayon-player/model) are not covered by the exact names above
+        /^@ynput\/ayon-player(\/.*)?$/,
       ],
       output: {
         entryFileNames: (chunkInfo) => `${chunkInfo.name}.[format].js`,

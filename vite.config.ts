@@ -125,7 +125,34 @@ export default ({ mode }) => {
           find: '@shared',
           replacement: fileURLToPath(new URL('./shared/src', import.meta.url)),
         },
+        // @ynput/ayon-player externalises these — point them at the local shared source
+        // so the player shares our React contexts instead of getting a second copy
+        {
+          find: '@ynput/ayon-frontend-shared/ContextMenu',
+          replacement: fileURLToPath(
+            new URL('./shared/src/containers/ContextMenu', import.meta.url),
+          ),
+        },
+        {
+          find: '@ynput/ayon-frontend-shared/Feed',
+          replacement: fileURLToPath(new URL('./shared/src/containers/Feed', import.meta.url)),
+        },
+        {
+          find: '@ynput/ayon-frontend-shared/api',
+          replacement: fileURLToPath(new URL('./shared/src/api', import.meta.url)),
+        },
+        {
+          find: '@ynput/ayon-frontend-shared/components',
+          replacement: fileURLToPath(new URL('./shared/src/components', import.meta.url)),
+        },
+        {
+          find: '@ynput/ayon-frontend-shared/context',
+          replacement: fileURLToPath(new URL('./shared/src/context', import.meta.url)),
+        },
       ],
+      // @ynput/ayon-player asks for a newer styled-components, which yarn installs nested —
+      // two stylesheet managers on the same data-styled attribute break rehydration
+      dedupe: ['styled-components', 'react', 'react-dom'],
     },
   })
 }

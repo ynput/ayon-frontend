@@ -106,4 +106,29 @@ export const ScrollableContent = styled.div`
     inset: 56px;
     overflow: auto;
   }
+
+  &.fill {
+    position: absolute;
+    inset: 56px 0 0 0;
+    display: flex;
+  }
+`
+
+export const PlayerWrapper = styled.div`
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+
+  /* EmptyPlaceholder defaults to top: 30%, center it in the lightbox */
+  .empty-placeholder {
+    top: 50%;
+  }
+
+  /* the player's root splitter has no intrinsic size */
+  > * {
+    flex: 1;
+    min-width: 0;
+  }
 `

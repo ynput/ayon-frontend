@@ -35,6 +35,11 @@
       "@state/*": ["./features/*"],
       "@helpers/*": ["./helpers/*"],
       "@shared/*": ["../shared/src/*"],
+      "@ynput/ayon-frontend-shared/ContextMenu": ["../shared/src/containers/ContextMenu"],
+      "@ynput/ayon-frontend-shared/Feed": ["../shared/src/containers/Feed"],
+      "@ynput/ayon-frontend-shared/api": ["../shared/src/api"],
+      "@ynput/ayon-frontend-shared/components": ["../shared/src/components"],
+      "@ynput/ayon-frontend-shared/context": ["../shared/src/context"],
       "@/*": ["./*"]
     }
   },
