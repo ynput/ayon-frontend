@@ -5,7 +5,8 @@ import * as Styled from '../FileUploadPreview.styled'
 
 // the player drags in its own dependency tree, so only fetch it once a video is expanded
 // (it also imports back from the shared Feed entry, which a static import would make a cycle)
-const VideoPlayer = lazy(() => import('./VideoPlayer'))
+const importVideoPlayer = () => import('./VideoPlayer')
+const VideoPlayer = lazy(importVideoPlayer)
 
 type VideoMetadata = {
   duration: number
@@ -24,42 +25,84 @@ const isPlayable = ({ duration, width, height }: VideoMetadata) =>
 
 const PROBE_TIMEOUT_MS = 10000
 
+const describeMediaError = (error: MediaError | null) =>
+  error ? `code ${error.code}${error.message ? `: ${error.message}` : ''}` : 'no MediaError'
+
 const useVideoMetadata = (url: string): ProbeResult => {
   const [result, setResult] = useState<ProbeResult>({ status: 'loading' })
 
   useEffect(() => {
     setResult({ status: 'loading' })
 
-    const probe = document.createElement('video')
-    probe.preload = 'metadata'
+    let cancelled = false
+    let probe: HTMLVideoElement | null = null
+    let timeout: ReturnType<typeof setTimeout>
 
-    // a stalled media pipeline never fires loadedmetadata nor error
-    const timeout = setTimeout(() => setResult({ status: 'error' }), PROBE_TIMEOUT_MS)
+    const cleanupProbe = () => {
+      if (!probe) return
+      probe.removeEventListener('loadedmetadata', handleLoaded)
+      probe.removeEventListener('error', handleError)
+      probe.removeAttribute('src')
+      probe.load()
+      probe = null
+    }
 
-    const handleLoaded = () => {
+    function handleLoaded() {
+      if (cancelled || !probe) return
       clearTimeout(timeout)
       const metadata = {
         duration: probe.duration,
         width: probe.videoWidth,
         height: probe.videoHeight,
       }
-      setResult(isPlayable(metadata) ? { status: 'ready', metadata } : { status: 'error' })
+      if (isPlayable(metadata)) {
+        cleanupProbe()
+        setResult({ status: 'ready', metadata })
+        return
+      }
+      fail(`unusable metadata ${JSON.stringify(metadata)}`)
     }
-    const handleError = () => {
+
+    function handleError() {
+      if (cancelled) return
       clearTimeout(timeout)
+      fail(describeMediaError(probe?.error ?? null))
+    }
+
+    // preload=metadata only reads the head of the file; a video whose moov atom sits after
+    // mdat needs the whole thing before duration and dimensions are known
+    const fail = (reason: string) => {
+      const wasMetadataOnly = probe?.preload === 'metadata'
+      cleanupProbe()
+      if (wasMetadataOnly) {
+        console.warn(`[VideoMime] metadata probe failed (${reason}), retrying with full preload`)
+        startProbe('auto')
+        return
+      }
+      console.warn(`[VideoMime] video cannot be played: ${reason}`, url)
       setResult({ status: 'error' })
     }
 
-    probe.addEventListener('loadedmetadata', handleLoaded)
-    probe.addEventListener('error', handleError)
-    probe.src = url
+    function startProbe(preload: 'metadata' | 'auto') {
+      probe = document.createElement('video')
+      probe.preload = preload
+      probe.muted = true
+      probe.playsInline = true
+
+      // a stalled media pipeline never fires loadedmetadata nor error
+      timeout = setTimeout(() => !cancelled && fail('timed out'), PROBE_TIMEOUT_MS)
+
+      probe.addEventListener('loadedmetadata', handleLoaded)
+      probe.addEventListener('error', handleError)
+      probe.src = url
+    }
+
+    startProbe('metadata')
 
     return () => {
+      cancelled = true
       clearTimeout(timeout)
-      probe.removeEventListener('loadedmetadata', handleLoaded)
-      probe.removeEventListener('error', handleError)
-      probe.removeAttribute('src')
-      probe.load()
+      cleanupProbe()
     }
   }, [url])
 
@@ -78,6 +121,11 @@ const VideoMime = ({ file }: VideoMimeProps) => {
   const { id, projectName, name } = file
   const url = getFileURL(id, projectName)
   const probe = useVideoMetadata(url)
+
+  // Suspense would only start the chunk request once the probe resolves, serialising two slow steps
+  useEffect(() => {
+    importVideoPlayer()
+  }, [])
 
   if (probe.status === 'error') {
     return (

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { Player, clearMemoizedPlayables } from '@ynput/ayon-player'
+import { Player, compactPlayerControls, clearMemoizedPlayables } from '@ynput/ayon-player'
 import { ClipType } from '@ynput/ayon-player/model'
 import type { Clip, ReviewableContext } from '@ynput/ayon-player/model'
 import { useGlobalContext } from '@shared/context'
 import * as Styled from '../FileUploadPreview.styled'
+
+const playerInitialState = { loop: true, audio: true }
 
 // comment attachments carry no ffprobe metadata, so fps/codec are informational defaults
 const DEFAULT_FPS = 24
@@ -20,6 +22,7 @@ const emptyClipContext: ReviewableContext = {
   versionStatus: '',
   versionAuthor: '',
   versionAuthorFullName: '',
+  versionNumber: 0,
   versionAttributes: {},
   productName: '',
   productType: '',
@@ -98,6 +101,8 @@ const VideoPlayer = ({
         theatreContainerRef={containerRef}
         showHeader={false}
         showReviewables={false}
+        controls={compactPlayerControls}
+        initial={playerInitialState}
       />
     </Styled.PlayerWrapper>
   )
