@@ -1,13 +1,10 @@
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
-import { Filter, Option, SearchFilter, SearchFilterRef } from '@ynput/ayon-react-components'
-import { FC, useEffect, useMemo, useRef, useState } from 'react'
-import { entityTypeOptions } from '../NewListDialog/NewListDialog'
-import { createPortal } from 'react-dom'
-import styled from 'styled-components'
-import { useListsContext } from '@pages/ProjectListsPage/context'
+import { useMemo } from 'react'
+import { Option } from '@ynput/ayon-react-components'
 import { AttributeData, EnumItem, EntityList, useGetAttributeListQuery } from '@shared/api'
 import { useProjectContext } from '@shared/context'
 import { getAttributeIcon } from '@shared/util'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
+import { entityTypeOptions } from '../components/NewListDialog/NewListDialog'
 
 // Helper function to aggregate attribute values from lists
 const getAttributeValuesFromLists = (
@@ -95,39 +92,12 @@ const getAttributeValuesFromLists = (
   return [...enumOptions, ...options]
 }
 
-const Dialog = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  display: flex;
-
-  & > * {
-    max-width: 600px;
-    position: absolute;
-    top: 25%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-`
-
-interface ListsFiltersDialogProps {}
-
-const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
-  const { listsFilters, setListsFilters, listsData } = useListsDataContext()
-  const { listsFiltersOpen, setListsFiltersOpen } = useListsContext()
-  const { ...projectInfo } = useProjectContext()
-
-  const filtersRef = useRef<SearchFilterRef>(null)
+const useListsFilterOptions = (): Option[] => {
+  const { listsData } = useListsDataContext()
+  const projectInfo = useProjectContext()
 
   // Fetch list-scoped attributes
   const { data: allAttributes = [] } = useGetAttributeListQuery()
-
-  useEffect(() => {
-    if (listsFiltersOpen && filtersRef.current) {
-      filtersRef.current.open()
-    }
-  }, [listsFiltersOpen, filtersRef])
 
   const options = useMemo<Option[]>(() => {
     const opts: Option[] = [
@@ -226,54 +196,7 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
     return opts
   }, [allAttributes, listsData, projectInfo])
 
-  // keeps track of the filters whilst adding/removing filters
-  const [filters, setFilters] = useState<Filter[]>(listsFilters)
-
-  // update filters when it changes
-  useEffect(() => {
-    setFilters(listsFilters)
-  }, [listsFilters, setFilters])
-
-  //   on keydown, close the dialog
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // only close if already open and not focused on an input
-      if (e.key === 'Escape' && listsFiltersOpen && document.activeElement?.tagName !== 'INPUT') {
-        setListsFiltersOpen(false)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [setListsFiltersOpen, listsFiltersOpen])
-
-  if (!listsFiltersOpen) return null
-
-  return createPortal(
-    <Dialog
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          setListsFiltersOpen(false)
-        }
-      }}
-    >
-      <SearchFilter
-        options={options}
-        filters={filters}
-        onChange={setFilters}
-        onFinish={(v) => {
-          setListsFilters(v) // update the filters in the context
-          setListsFiltersOpen(false) // close the dialog
-        }}
-        enableAutosuggestion={false}
-        ref={filtersRef}
-      />
-    </Dialog>,
-    document.body,
-  )
+  return options
 }
 
-export default ListsFiltersDialog
+export default useListsFilterOptions
