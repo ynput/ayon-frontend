@@ -1,7 +1,7 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { startCase } from 'lodash'
 import styled from 'styled-components'
-import { Dropdown, FormRow } from '@ynput/ayon-react-components'
+import { Dropdown, FormRow, Icon } from '@ynput/ayon-react-components'
 
 import { EnumEditor } from '@shared/components/EnumEditor/EnumEditor'
 import type { NormalizedData } from '@shared/components/EnumEditor/EnumEditor'
@@ -9,8 +9,10 @@ import { FormField } from '@shared/components/SimpleFormDialog/SimpleFormDialog'
 import type { SimpleFormValue } from '@shared/components/SimpleFormDialog/SimpleFormDialog'
 import { useListEnumsQuery } from '@shared/api'
 import type { AttributeData, EnumResolverInfo, SimpleFormField } from '@shared/api'
+import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
 
 const CUSTOM_ENUM_SOURCE = '__custom__'
+const PREVIEW_LIMIT = 5
 
 const Container = styled.div`
   display: flex;
@@ -22,6 +24,72 @@ const Container = styled.div`
 const Message = styled.span`
   color: var(--md-sys-color-outline);
 `
+
+const Preview = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--base-gap-small);
+  padding: var(--padding-m);
+  border-radius: var(--border-radius-m);
+  background-color: var(--md-sys-color-surface-container);
+`
+
+const PreviewItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  overflow: hidden;
+
+  .label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  img {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+`
+
+const isImageIcon = (icon?: string) => !!icon && (icon.startsWith('/') || icon.startsWith('http'))
+
+interface EnumResolverPreviewProps {
+  resolver: string
+  settings: Record<string, any>
+}
+
+const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({ resolver, settings }) => {
+  const data = useMemo(
+    () => ({ enumResolver: resolver, enumResolverSettings: settings } as AttributeData),
+    [resolver, settings],
+  )
+  const { options, isLoading, isError } = useAttributeEnumOptions(data)
+
+  if (isLoading) return <Message>Loading options…</Message>
+  if (isError) return <Message>Could not load options for "{resolver}".</Message>
+  if (!options.length) return <Message>This enum currently has no items.</Message>
+
+  const hidden = options.length - PREVIEW_LIMIT
+
+  return (
+    <Preview>
+      {options.slice(0, PREVIEW_LIMIT).map((option) => (
+        <PreviewItem key={String(option.value)}>
+          {isImageIcon(option.icon as string) ? (
+            <img src={option.icon as string} alt="" />
+          ) : (
+            option.icon && <Icon icon={option.icon as string} style={{ color: option.color }} />
+          )}
+          <span className="label">{option.label}</span>
+        </PreviewItem>
+      ))}
+      {hidden > 0 && <Message>+{hidden} more</Message>}
+    </Preview>
+  )
+}
 
 export interface EnumSourceFieldProps {
   enumValues: NormalizedData[] | undefined
@@ -102,6 +170,9 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
               />
             </FormRow>
           ))}
+          {selectedResolver && (
+            <EnumResolverPreview resolver={selectedResolver.name} settings={settings} />
+          )}
         </>
       )}
     </Container>
