@@ -1,4 +1,4 @@
-import { hasEnumOptions, getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import { hasEnumOptions, isEnumIconImage, getAttributeIcon, getEntityTypeIcon } from '@shared/util'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import type { ProductType } from '@shared/api'
 import type {
@@ -23,7 +23,9 @@ import { customRangeOption, generateDatePresetOptions } from './filterDates'
 import { isEmpty, upperFirst } from 'lodash'
 import type { SliceFilter } from '@shared/containers/Slicer/types'
 import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
+import { useContext } from 'react'
 import { useGlobalContext } from '@shared/context/GlobalContext'
+import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContextInstance'
 
 type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version'
 type Scope = ScopeType | ScopeType[]
@@ -168,7 +170,10 @@ export const useBuildFilterOptions = ({
     },
   )
 
-  const { attributes } = useGlobalContext()
+  const { attributes: globalAttributes } = useGlobalContext()
+  // project attributes carry resolved dynamic enums, global ones are raw
+  const projectData = useContext(ProjectDataContext)
+  const attributes = projectData?.attribFields?.length ? projectData.attribFields : globalAttributes
   const attributeScopeCounts = new Map<string, number>()
   scopesWithTypes.forEach(({ scope: currentScope, filterTypes }) => {
     if (!filterTypes.includes('attributes')) return
@@ -1120,12 +1125,15 @@ const getAttributeOptions = (
   // add the enum values first
   if (enums) {
     enums.forEach((enumItem) => {
+      const icon = enumItem.icon as string | undefined
+      const isImage = isEnumIconImage(icon)
       enumOptions.push({
         id: enumItem.value.toString(),
         type: type,
         label: enumItem.label,
         values: [],
-        icon: enumItem.icon as string,
+        icon: isImage ? null : icon,
+        img: isImage ? icon : undefined,
         color: enumItem.color,
         pt: {
           style: { color: 'inherit' },

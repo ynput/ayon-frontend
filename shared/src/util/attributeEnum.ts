@@ -13,3 +13,6 @@ export const getEnumItemIcon = (icon: EnumItem['icon']): string | undefined => {
   const model = icon as IconModel
   return model.type === 'url' ? model.url : model.name
 }
+
+export const isEnumIconImage = (icon?: string): boolean =>
+  !!icon && /^(\/|\.\/|\.\.\/|https?:\/\/)/.test(icon)

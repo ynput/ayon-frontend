@@ -10,6 +10,7 @@ import type { SimpleFormValue } from '@shared/components/SimpleFormDialog/Simple
 import { useListEnumsQuery } from '@shared/api'
 import type { AttributeData, EnumResolverInfo, SimpleFormField } from '@shared/api'
 import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
+import { isEnumIconImage } from '@shared/util/attributeEnum'
 
 const CUSTOM_ENUM_SOURCE = '__custom__'
 const PREVIEW_LIMIT = 5
@@ -54,8 +55,6 @@ const PreviewItem = styled.div`
   }
 `
 
-const isImageIcon = (icon?: string) => !!icon && (icon.startsWith('/') || icon.startsWith('http'))
-
 interface EnumResolverPreviewProps {
   resolver: string
   settings: Record<string, any>
@@ -78,7 +77,7 @@ const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({ resolver, settings 
     <Preview>
       {options.slice(0, PREVIEW_LIMIT).map((option) => (
         <PreviewItem key={String(option.value)}>
-          {isImageIcon(option.icon as string) ? (
+          {isEnumIconImage(option.icon as string) ? (
             <img src={option.icon as string} alt="" />
           ) : (
             option.icon && <Icon icon={option.icon as string} style={{ color: option.color }} />
