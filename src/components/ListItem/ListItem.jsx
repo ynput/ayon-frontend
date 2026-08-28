@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react'
 import * as Styled from './ListItem.styled'
 import { Icon } from '@ynput/ayon-react-components'
+import { EnumCellValue } from '@shared/containers/ProjectTreeTable/widgets/EnumCellValue'
 import { addDays, formatDistanceToNow, isSameDay, isValid } from 'date-fns'
 import clsx from 'clsx'
 
@@ -39,6 +40,8 @@ const ListItem = forwardRef(
 
     // path but with last /folderName removed
     const hoverPath = `${task.projectName}/${task.folderPath.split('/').slice(0, -1).join('/')}`
+
+    const tags = task.tagsInfo || []
 
     const endDateDate = task.dueDate && new Date(task.dueDate)
 
@@ -87,6 +90,13 @@ const ListItem = forwardRef(
           multipleSelected={selectedLength}
           onChange={(v) => onUpdate('status', v)}
         />
+
+        <Styled.Tags
+          className="tags"
+          data-tooltip={tags.length ? tags.map((tag) => tag.label).join(', ') : undefined}
+        >
+          <EnumCellValue selectedOptions={tags} isMultiSelect isReadOnly />
+        </Styled.Tags>
 
         <Styled.ItemThumbnail src={task.thumbnailUrl} icon={task.taskIcon} />
 
