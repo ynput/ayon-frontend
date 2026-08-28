@@ -22,7 +22,8 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import clsx from 'clsx'
 import useRowKeydown, { RowKeyboardEvent } from './hooks/useRowKeydown'
 
-import { rankItem, compareItems, rankings } from '@tanstack/match-sorter-utils'
+import { compareItems } from '@tanstack/match-sorter-utils'
+import { parseSearchQuery, matchSearchQuery } from '@shared/util'
 import { useSimpleTableContext } from './context/SimpleTableContext'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { EmptyPlaceholder } from '@shared/components/EmptyPlaceholder/EmptyPlaceholder'
@@ -45,7 +46,7 @@ const toggleRowAndDescendants = <TData,>(row: Row<TData>, expanded: boolean) => 
 }
 
 // Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
-const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
+const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue: string[][], addMeta) => {
   const cellValue = row.getValue(columnId)
   // convert non-string cell values to string
   let searchString =
@@ -62,18 +63,14 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
     )
   }
 
-  // Rank the item with CONTAINS threshold to avoid overly permissive fuzzy matches
-  // This ensures the search term must be a substring, not just scattered characters
-  const itemRank = rankItem(searchString, searchValue, { threshold: rankings.CONTAINS })
+  // searchValue is already parsed into OR/AND groups by resolveFilterValue
+  const itemRank = matchSearchQuery(searchString, searchValue)
+  addMeta({ itemRank })
 
-  // Store the itemRank info
-  addMeta({
-    itemRank,
-  })
-
-  // Return if the item should be filtered in/out
   return itemRank.passed
 }
+// parse once per filter pass instead of once per row
+fuzzyFilter.resolveFilterValue = parseSearchQuery
 
 // Define a custom fuzzy sort function that will sort by rank if the row has ranking information
 const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {

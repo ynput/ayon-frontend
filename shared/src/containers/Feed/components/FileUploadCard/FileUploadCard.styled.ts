@@ -1,5 +1,6 @@
 import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
 
 export const File = styled.div`
   position: relative;
@@ -178,7 +179,8 @@ export const ContentWrapper = styled.div`
       .expand-buttons {
         display: flex;
       }
-      .type-icon {
+      .type-icon,
+      .playable {
         display: none;
       }
     }
@@ -212,6 +214,7 @@ export const ImageWrapper = styled.div`
     background-color: var(--md-sys-color-surface-container-lowest);
     opacity: 0;
     transition: opacity 0.1s ease;
+    pointer-events: none;
   }
 
   &.isDownloadable {
@@ -221,6 +224,11 @@ export const ImageWrapper = styled.div`
         z-index: 10;
       }
     }
+  }
+
+  /* failed thumbnail: let the videocam type icon show through */
+  &.posterError {
+    background-color: transparent;
   }
 `
 
@@ -245,5 +253,20 @@ export const ExpandButton = styled(Button)`
   &:hover {
     background: none;
     opacity: 1;
+  }
+`
+
+/* the footer overlays the bottom 20px, so shift the glyph up to sit centered on the poster */
+export const PlayIcon = styled(PlayableIcon)`
+  --icon-size: 32px;
+  top: calc(50% - 10px);
+  left: 50%;
+  right: unset;
+  translate: -50% -50%;
+  z-index: 2;
+  pointer-events: none;
+
+  .icon {
+    font-size: var(--icon-size);
   }
 `

@@ -32,6 +32,7 @@ export * from './replaceRoot'
 export * from './realtimeUpdatesUtils'
 export * from './parseFilename'
 export * from './mentionTypeOptions'
+export * from './searchTerms'
 
 import isHTMLElement from './isHTMLElement'
 export { isHTMLElement }
