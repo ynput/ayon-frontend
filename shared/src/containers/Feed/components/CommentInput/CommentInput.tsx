@@ -799,6 +799,7 @@ const CommentInput: FC<CommentInputProps> = ({
                 active={!!editorValue || !!files.length}
                 onClick={handleSubmit}
                 disabled={isLoading}
+                saving={isSubmitting}
               />
             </Styled.SubmitButtons>
           </Styled.Footer>
