@@ -10,6 +10,8 @@ import {
 } from '@shared/containers/ProjectTreeTable/widgets'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
 import { useScopedTypes } from '@shared/hooks/useScopedTypes'
+import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
+import { getEnumItemIcon, hasEnumOptions } from '@shared/util/attributeEnum'
 // Import AttributeField as a type to avoid runtime circular dependency with DetailsPanelAttributesEditor
 import type { AttributeField } from '../DetailsPanelAttributesEditor'
 import type { DetailsPanelEntityData, EnumItem } from '@shared/api'
@@ -49,6 +51,7 @@ interface RenderFieldWidgetProps {
   onExpand?: () => void
   entities?: DetailsPanelEntityData[]
   entityType?: string
+  projectName?: string
 }
 
 const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
@@ -62,6 +65,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   onExpand,
   entities = [],
   entityType = 'task',
+  projectName,
 }) => {
   const { type, widget } = field.data
   const widgetCommonProps = {
@@ -75,6 +79,12 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   const projectNames = entities.map((entity) => entity.projectName)
   const scopedStatuses = useScopedStatuses(projectNames, [entityType])
   const scopedTypes = useScopedTypes(projectNames, entityType)
+  // resolvers are project scoped; a multi project selection uses the first project
+  const enumProjectName = projectName || projectNames[0]
+  const { options: attributeEnumOptions, isLoading: isLoadingEnum } = useAttributeEnumOptions(
+    field.data,
+    { projectName: enumProjectName, skip: !enumProjectName },
+  )
   const isMidnightExclusive =
     field.name === 'attrib.endDate' &&
     entities.length > 0 &&
@@ -104,7 +114,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         />
       )
 
-    case !!field.data.enum: {
+    case hasEnumOptions(field.data): {
       const isListType = type?.includes('list')
       let valueArray = []
 
@@ -117,11 +127,12 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
       }
 
       // Use scoped statuses/types based on field name
-      let enumOptions: EnumItem[] = (field.data.enum || []).map((item) => ({
+      let enumOptions: EnumItem[] = attributeEnumOptions.map((item) => ({
         value: item.value,
         label: item.label,
-        icon: typeof item.icon === 'string' ? item.icon : undefined,
+        icon: getEnumItemIcon(item.icon),
         color: item.color,
+        group: item.group,
       }))
       if (
         field.name === 'status' &&
@@ -175,7 +186,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
           onCancelEdit={onCancelEdit}
           align="right"
-          enableCustomValues={field.enableCustomValues ?? false}
+          enableCustomValues={field.enableCustomValues || isLoadingEnum}
           search={field.enableSearch ?? enumOptions.length >= 5}
           sortBySelected={!enumOptions}
           {...widgetCommonProps}

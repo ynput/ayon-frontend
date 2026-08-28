@@ -220,12 +220,14 @@ const Attributes = () => {
                 style={{ maxWidth: 150 }}
                 sortable
                 sortField="data.type"
-                body={(rowData) => getUiTypeLabel(rowData.data?.type, rowData.data?.enum)}
+                body={(rowData) =>
+                  getUiTypeLabel(rowData.data?.type, rowData.data?.enum, rowData.data?.enumResolver)
+                }
                 sortFunction={(e) => {
                   const dir = e.order ?? 1
                   return [...e.data].sort((a, b) => {
-                    const la = getUiTypeLabel(a.data?.type, a.data?.enum)
-                    const lb = getUiTypeLabel(b.data?.type, b.data?.enum)
+                    const la = getUiTypeLabel(a.data?.type, a.data?.enum, a.data?.enumResolver)
+                    const lb = getUiTypeLabel(b.data?.type, b.data?.enum, b.data?.enumResolver)
                     return la.localeCompare(lb) * dir
                   })
                 }}

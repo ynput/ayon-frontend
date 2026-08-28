@@ -8,6 +8,8 @@ import {
   InputSwitch,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import { useResolvedAttributeEnums } from '@shared/hooks'
+import { hasEnumOptions } from '@shared/util'
 
 export const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
@@ -26,7 +28,10 @@ const UserAttribForm = ({
   customFormRow,
 }) => {
   // separate custom attrib
-  const [builtin, custom] = attributes.reduce(
+  const { attributes: resolvedAttributes, enumSubscriptions } =
+    useResolvedAttributeEnums(attributes)
+
+  const [builtin, custom] = resolvedAttributes.reduce(
     (acc, cur) => {
       if (!cur.builtin && cur.builtin !== undefined) {
         // add to custom if not already present
@@ -45,7 +50,7 @@ const UserAttribForm = ({
     [[], []],
   )
 
-  const CustomFormRow = customFormRow !== undefined ? customFormRow : FormRow;
+  const CustomFormRow = customFormRow !== undefined ? customFormRow : FormRow
 
   const buildForms = (attribs) =>
     attribs.map(({ name, data, input }) => {
@@ -66,12 +71,12 @@ const UserAttribForm = ({
             autoComplete="new-password"
           />
         )
-      } else if (data.enum) {
+      } else if (hasEnumOptions(data)) {
         widget = (
           <Dropdown
             widthExpand
             value={(data.type === 'list_of_strings' ? formData[name] : [formData[name]]) || []}
-            options={data.enum}
+            options={data.enum || []}
             multiSelect={data.type === 'list_of_strings'}
             onChange={(v) =>
               setFormData((fd) => {
@@ -124,6 +129,7 @@ const UserAttribForm = ({
 
   return (
     <>
+      {enumSubscriptions}
       <FormLayout>
         {buildForms(builtin)}
         {!!custom.length && (

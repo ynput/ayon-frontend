@@ -1,11 +1,12 @@
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { usersApi } from '@shared/api/generated'
+import { USER_ENUM_TAGS } from '../enums'
 
 const updateUserApi = usersApi.enhanceEndpoints({
   endpoints: {
     deleteUser: {
       transformErrorResponse: (res) => res.data,
-      invalidatesTags: () => [{ type: 'user', id: 'LIST' }],
+      invalidatesTags: () => [{ type: 'user', id: 'LIST' }, ...USER_ENUM_TAGS],
     },
     deleteAvatar: {
       invalidatesTags: (_result, _error, { userName }) => [
@@ -64,6 +65,7 @@ const updateUser = updateUserApi.injectEndpoints({
         { type: 'userPool', id: 'LIST' },
         { type: 'feedback', id: 'LIST' },
         'info',
+        ...USER_ENUM_TAGS,
       ],
     }),
     updateUserName: build.mutation({
@@ -75,6 +77,7 @@ const updateUser = updateUserApi.injectEndpoints({
       invalidatesTags: (_result, _error, { name }) => [
         { type: 'user', id: name },
         { type: 'user', id: 'LIST' },
+        ...USER_ENUM_TAGS,
       ],
       transformErrorResponse: (res) => res.data,
     }),
@@ -94,7 +97,7 @@ const updateUser = updateUserApi.injectEndpoints({
         body: user,
       }),
       transformErrorResponse: (res) => res.data,
-      invalidatesTags: [{ type: 'user', id: 'LIST' }],
+      invalidatesTags: [{ type: 'user', id: 'LIST' }, ...USER_ENUM_TAGS],
     }),
     updateUserAPIKey: build.mutation({
       query: ({ name, apiKey }) => ({

@@ -73,6 +73,7 @@ const tagTypes = [
   'dependencyPackage',
   'detail',
   'entities',
+  'enum',
   'entitiesVersions',
   'entity',
   'entityActivities',

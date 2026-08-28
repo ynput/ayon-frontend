@@ -14,6 +14,7 @@ import {
   useSetEntityListAttributesDefinitionMutation,
 } from '@shared/api'
 import type { EntityListAttributeDefinition } from '@shared/api'
+import { useResolvedAttributeEnums } from '@shared/hooks'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { useProjectContext } from '@shared/context'
@@ -66,9 +67,14 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
   ]
   const entityAttribFields = [...scopedAttribFields, ...highLevelAttribs]
 
-  const listAttributes = useMemo(
+  const filteredListAttributes = useMemo(
     () => listAttributesData.filter((attribute) => !entityAttribFields.includes(attribute.name)),
     [listAttributesData, entityAttribFields],
+  )
+
+  const { attributes: listAttributes, enumSubscriptions } = useResolvedAttributeEnums(
+    filteredListAttributes,
+    projectName,
   )
 
   // Track loading state when list changes and reset when fetch completes
@@ -123,6 +129,7 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
 
   return (
     <ListsAttributesContext.Provider value={contextValue}>
+      {enumSubscriptions}
       {children}
     </ListsAttributesContext.Provider>
   )

@@ -22,7 +22,7 @@ import type { AttributeData, LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { SubtasksWidgetData } from './widgets/SubtasksWidget'
 import { Icon } from '@ynput/ayon-react-components'
-import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import { getAttributeIcon, getEntityTypeIcon, hasEnumOptions } from '@shared/util'
 import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { isEntityRestricted, READ_ONLY } from './utils/restrictedEntity'
 import { getColumnDisplayConfig } from './types/columnConfig'
@@ -1163,8 +1163,13 @@ const buildTreeTableColumns = ({
               className={clsx('attrib', { loading: row.original.isLoading })}
               columnId={column.id}
               value={value}
-              attributeData={{ type: attrib.data.type || 'string', widget: attrib.data.widget }}
+              attributeData={{
+                type: attrib.data.type || 'string',
+                widget: attrib.data.widget,
+                enumResolver: attrib.data.enumResolver,
+              }}
               options={attrib.data.enum || []}
+              enableCustomValues={!!attrib.enumIsLoading}
               midnightExclusiveFields={row.original.midnightExclusiveFields}
               isCollapsed={!!row.original.childOnlyMatch}
               isInherited={isInherited}
@@ -1179,7 +1184,7 @@ const buildTreeTableColumns = ({
               onChange={(value) =>
                 meta?.updateEntities?.(
                   { field: columnIdParsed, value, type, isAttrib: true, rowId: row.id },
-                  { selection: !!attrib.data.enum?.length ? meta?.selection : undefined },
+                  { selection: hasEnumOptions(attrib.data) ? meta?.selection : undefined },
                 )
               }
             />

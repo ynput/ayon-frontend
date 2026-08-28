@@ -117,7 +117,7 @@ const DropdownItemTemplate = (option: FormSelectOption) => {
   )
 }
 
-const FormField = ({ field, value, onChange }: FormFieldProps) => {
+export const FormField = ({ field, value, onChange }: FormFieldProps) => {
   if (field.type === 'text') {
     const parsedValue = typeof value === 'string' ? value : ''
     if (field.multiline) {

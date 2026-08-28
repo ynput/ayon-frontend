@@ -11,6 +11,7 @@ import { useProjectContext } from '@shared/context'
 import { useMemo } from 'react'
 import { AddColumnItem } from './addColumnsMenu'
 import { getAttributeIcon } from '@shared/util/getAttributeIcon'
+import { hasEnumOptions } from '@shared/util'
 
 interface UseProjectTableColumnItemsProps {
   extraColumns?: { value: string; label: string }[]
@@ -112,7 +113,7 @@ export const useProjectTableColumnItems = ({
         .map((field) => ({
           value: `attrib_${field.name}`,
           label: field.data.title || field.name,
-          icon: getAttributeIcon(field.name, field.data.type, !!field.data.enum),
+          icon: getAttributeIcon(field.name, field.data.type, hasEnumOptions(field.data)),
           attrib: { builtin: field.builtin, scope: field.scope },
         })),
       ...(linkTypes && includeLinks
