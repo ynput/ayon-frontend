@@ -54,7 +54,8 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
   id,
   ...props
 }) => {
-  const valid = projectName && entityType && entityId
+  // TODO: products have no thumbnail endpoint, resolve to the featured version's thumbnail instead
+  const valid = projectName && entityType && entityId && entityType !== 'product'
   const thumbnailUrl = getEntityThumbnailUrl({ projectName, entityType, entityId, thumbnailHash })
 
   return (
