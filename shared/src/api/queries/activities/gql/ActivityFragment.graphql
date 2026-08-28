@@ -21,6 +21,7 @@ fragment ActivityFragment on ActivityNode {
     name
     size
     mime
+    mediaInfo
   }
   origin {
     id

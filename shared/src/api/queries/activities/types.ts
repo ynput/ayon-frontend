@@ -37,11 +37,20 @@ export type FeedActivityAuthor = {
   }
 }
 
+export type FeedActivityMediaInfo = {
+  frameRate?: number
+  duration?: number
+  width?: number
+  height?: number
+  codec?: string
+}
+
 export type FeedActivityFile = {
   id: string
   name?: string | null
   size: string
   mime?: string | null
+  mediaInfo?: FeedActivityMediaInfo | null
   author?: string | null
   createdAt?: string | null
   updatedAt?: string | null
