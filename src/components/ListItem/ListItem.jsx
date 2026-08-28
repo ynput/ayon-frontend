@@ -91,13 +91,6 @@ const ListItem = forwardRef(
           onChange={(v) => onUpdate('status', v)}
         />
 
-        <Styled.Tags
-          className="tags"
-          data-tooltip={tags.length ? tags.map((tag) => tag.label).join(', ') : undefined}
-        >
-          <EnumCellValue selectedOptions={tags} isMultiSelect isReadOnly />
-        </Styled.Tags>
-
         <Styled.ItemThumbnail src={task.thumbnailUrl} icon={task.taskIcon} />
 
         {/* FOLDER LABEL */}
@@ -112,6 +105,13 @@ const ListItem = forwardRef(
           </Styled.Name>
           <Styled.Name className="task-label">{task.label || task.name}</Styled.Name>
         </Styled.Task>
+
+        <Styled.Tags
+          className="tags"
+          data-tooltip={tags.length ? tags.map((tag) => tag.label).join(', ') : undefined}
+        >
+          <EnumCellValue selectedOptions={tags} isMultiSelect isReadOnly />
+        </Styled.Tags>
 
         {/* PATH SHOW ON HOVER */}
         <Styled.Path className="path">{hoverPath}</Styled.Path>

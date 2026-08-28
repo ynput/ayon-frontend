@@ -130,8 +130,9 @@ export const Tags = styled.div`
   display: flex;
   align-items: center;
   height: 22px;
-  min-width: 160px;
-  max-width: 160px;
+  flex: 1 1 160px;
+  min-width: 60px;
+  max-width: 360px;
   overflow: hidden;
 
   /* keep leading tags readable and clip at the cell edge instead of squashing every chip */
