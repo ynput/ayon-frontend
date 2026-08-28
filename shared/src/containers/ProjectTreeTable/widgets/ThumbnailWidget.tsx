@@ -36,7 +36,7 @@ const StyledPlayableIcon = styled(PlayableIcon)`
 interface ThumbnailWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
   projectName: string
   entityType: string
-  entityId: string
+  entityId?: string
   thumbnailHash?: string
   icon?: string | null
   isPlayable?: boolean
