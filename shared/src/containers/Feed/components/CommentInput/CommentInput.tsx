@@ -492,9 +492,18 @@ const CommentInput: FC<CommentInputProps> = ({
     setIsDropping(true)
   }
 
+  const removeFileUploading = (name: string) => {
+    setFilesUploading((prev) => prev.filter((file: any) => file.name !== parseFilename(name)))
+  }
+
   const uploadAnnotations = useAnnotationsUpload({
     projectName,
     onSuccess: handleFileUploaded,
+    onProgress: handleFileProgress,
+    // seed progress so the card switches to uploading before the export finishes
+    onStart: (annotation) =>
+      handleFileProgress({ loaded: 1, total: 100 }, { name: annotation.name, type: 'image/png' }),
+    onError: (annotation) => removeFileUploading(annotation.name),
   })
 
   const handleSubmit = async () => {
