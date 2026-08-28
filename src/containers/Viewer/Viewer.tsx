@@ -120,21 +120,23 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
   // check if a specific product is selected
   const versionsAndReviewables: GetReviewablesResponse[] = useMemo(() => {
-    if (!hasMultipleProducts) return allVersionsAndReviewables
+    let filtered: GetReviewablesResponse[]
+    if (!hasMultipleProducts) filtered = allVersionsAndReviewables
     else if (selectedProductId) {
       // filter out the versions for the selected product
-      return allVersionsAndReviewables.filter((v) => v.productId === selectedProductId)
+      filtered = allVersionsAndReviewables.filter((v) => v.productId === selectedProductId)
     } else {
       // find the version (and therefor product) with the reviewable that was last createdAt
       const latestProductId = sortedVersionsReviewableDates[0].productId
       if (latestProductId) {
-        return allVersionsAndReviewables.filter((v) => v.productId === latestProductId)
+        filtered = allVersionsAndReviewables.filter((v) => v.productId === latestProductId)
       } else {
         // return first product
         const firstProduct = allVersionsAndReviewables[0]
-        return allVersionsAndReviewables.filter((v) => v.productId === firstProduct.productId)
+        filtered = allVersionsAndReviewables.filter((v) => v.productId === firstProduct.productId)
       }
     }
+   return [...filtered].sort((a, b) => parseInt(a.version, 10) - parseInt(b.version, 10))
   }, [allVersionsAndReviewables, selectedProductId])
   // if hasMultipleProducts and no selectedProductId, select the first product
   useEffect(() => {
