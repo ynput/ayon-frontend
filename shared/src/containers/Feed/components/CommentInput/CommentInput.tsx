@@ -119,6 +119,7 @@ const CommentInput: FC<CommentInputProps> = ({
   const [filesUploading, setFilesUploading] = useState<UploadingFile[]>([])
   const [isDropping, setIsDropping] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadedAnnotations, setUploadedAnnotations] = useState<SavedAnnotationMetadata[]>([])
 
   const { annotations, removeAnnotation, goToAnnotation } = useAnnotationsSync({
     entityId: entities[0]?.id,
@@ -519,15 +520,18 @@ const CommentInput: FC<CommentInputProps> = ({
 
       // upload any annotations first
       let annotationFiles = []
-      let annotationMetadata: SavedAnnotationMetadata[] | undefined = undefined
+      let newAnnotations = uploadedAnnotations
       if (annotations.length) {
         const { files, metadata } = await uploadAnnotations(annotations)
         annotationFiles = files
-        // get current files data
-        const { annotations: annotationsData = [] } = data || {}
-        // merge existing annotations data with new metadata
-        annotationMetadata = [...annotationsData, ...metadata]
+        newAnnotations = [...newAnnotations, ...metadata]
       }
+
+      // get current files data and merge it with the new metadata
+      const { annotations: annotationsData = [] } = data || {}
+      const annotationMetadata: SavedAnnotationMetadata[] | undefined = newAnnotations.length
+        ? [...annotationsData, ...newAnnotations]
+        : undefined
 
       // convert to markdown
       const [markdown] = convertToMarkdown(editorValue)
@@ -550,10 +554,12 @@ const CommentInput: FC<CommentInputProps> = ({
         setFiles([])
         try {
           await onSubmit(markdownParsed, uploadedFiles, newData)
+          setUploadedAnnotations([])
         } catch (error) {
           // error is handled in rtk query mutation
           setEditorValue(submittedValue)
           setFiles(uploadedFiles)
+          setUploadedAnnotations(newAnnotations)
           return
         }
       }
