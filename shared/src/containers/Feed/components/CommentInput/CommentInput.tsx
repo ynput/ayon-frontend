@@ -49,6 +49,13 @@ const EMPTY_EDITOR_VALUE = '<p><br></p>'
 
 const mentionTypes = ['@', '@@', '@@@']
 
+type UploadingFile = {
+  name: string
+  progress: number
+  type: string
+  order: number
+}
+
 interface CommentInputProps {
   initValue: string | null
   initFiles?: any[]
@@ -109,7 +116,7 @@ const CommentInput: FC<CommentInputProps> = ({
   const [editorValue, setEditorValue] = useState('')
   // file uploads
   const [files, setFiles] = useState(initFiles)
-  const [filesUploading, setFilesUploading] = useState([])
+  const [filesUploading, setFilesUploading] = useState<UploadingFile[]>([])
   const [isDropping, setIsDropping] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -426,7 +433,7 @@ const CommentInput: FC<CommentInputProps> = ({
     onClose && onClose()
   }
 
-  const handleFileUploaded = ({ file, data }: any) => {
+  const handleFileUploaded = ({ file, data }: any, isAnnotationLayer = false) => {
     const fileName = parseFilename(file.name)
     const newFile = {
       id: data.id,
@@ -434,12 +441,13 @@ const CommentInput: FC<CommentInputProps> = ({
       mime: file.type,
       size: file.size,
       order: files.length,
+      isAnnotationLayer,
     }
 
     setFiles((prev) => [...prev, newFile])
     // remove from uploading
     setFilesUploading((prev) =>
-      prev.filter((uploading: any) => parseFilename(uploading.name) !== fileName),
+      prev.filter((uploading) => parseFilename(uploading.name) !== fileName),
     )
 
     return newFile
@@ -454,7 +462,7 @@ const CommentInput: FC<CommentInputProps> = ({
       setFiles((prev) => prev.filter((file) => file.id !== id))
       // remove from uploading
       setFilesUploading((prev) => {
-        return prev.filter((file: any) => parseFilename(file.name) !== parseFilename(name))
+        return prev.filter((file) => parseFilename(file.name) !== parseFilename(name))
       })
     }
   }
@@ -463,17 +471,16 @@ const CommentInput: FC<CommentInputProps> = ({
     const progress = Math.round((e.loaded * 100) / e.total)
     if (progress !== 100) {
       const fileName = parseFilename(file.name)
-      const uploadProgress = {
-        name: fileName,
-        progress,
-        type: file.type,
-        order: files.length + filesUploading.length,
-      }
 
-      // @ts-ignore
       setFilesUploading((prev) => {
-        // replace or add new progress
-        const newProgress = prev.filter((name: any) => parseFilename(name.name) !== fileName)
+        const existing = prev.find((item) => parseFilename(item.name) === fileName)
+        const newProgress = prev.filter((item) => parseFilename(item.name) !== fileName)
+        const uploadProgress: UploadingFile = {
+          name: fileName,
+          progress,
+          type: file.type,
+          order: existing?.order ?? files.length + prev.length,
+        }
         return [...newProgress, uploadProgress]
       })
     }
@@ -493,7 +500,7 @@ const CommentInput: FC<CommentInputProps> = ({
   }
 
   const removeFileUploading = (name: string) => {
-    setFilesUploading((prev) => prev.filter((file: any) => file.name !== parseFilename(name)))
+    setFilesUploading((prev) => prev.filter((file) => file.name !== parseFilename(name)))
   }
 
   const uploadAnnotations = useAnnotationsUpload({
@@ -537,13 +544,16 @@ const CommentInput: FC<CommentInputProps> = ({
       }
 
       if ((markdownParsed || uploadedFiles.length) && onSubmit) {
+        const submittedValue = editorValue
+        // clear before the optimistic comment renders, otherwise both show the same files
+        setEditorValue('')
+        setFiles([])
         try {
           await onSubmit(markdownParsed, uploadedFiles, newData)
-          // only clear if onSubmit is successful
-          setEditorValue('')
-          setFiles([])
         } catch (error) {
           // error is handled in rtk query mutation
+          setEditorValue(submittedValue)
+          setFiles(uploadedFiles)
           return
         }
       }
@@ -610,9 +620,11 @@ const CommentInput: FC<CommentInputProps> = ({
     [projectName, setFiles, setFilesUploading],
   )
 
-  const allFiles = [...annotations, ...(files || []), ...filesUploading].sort(
-    (a, b) => a.order - b.order,
-  )
+  const allFiles = [
+    ...annotations,
+    ...(files || []).filter((file: any) => !file.isAnnotationLayer),
+    ...filesUploading,
+  ].sort((a, b) => a.order - b.order)
   const compactGrid = allFiles.length > 3
 
   // disable version mentions for folders

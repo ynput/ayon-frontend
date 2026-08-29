@@ -5,7 +5,7 @@ import { SavedAnnotationMetadata } from '../../../index'
 
 type Props = {
   projectName: string
-  onSuccess: (data: any) => any
+  onSuccess: (data: any, isAnnotationLayer?: boolean) => any
   onProgress?: (e: any, file: any) => void
   onStart?: (annotation: any) => void
   onError?: (annotation: any) => void
@@ -35,7 +35,12 @@ const useAnnotationsUpload = ({ projectName, onSuccess, onProgress, onStart, onE
       uploadFile(transparentFile, projectName, () => {}),
     ])
 
-    return { annotation, uploads }
+    // swap this annotation for its uploaded file straight away, without waiting for the others
+    const [compositeUpload, transparentUpload] = uploads
+    const files = [onSuccess(compositeUpload), onSuccess(transparentUpload, true)]
+    removeAnnotation?.(annotation.id)
+
+    return { annotation, uploads, files }
   }
 
   const uploadAnnotations = async (annotations: any[]) => {
@@ -57,11 +62,9 @@ const useAnnotationsUpload = ({ projectName, onSuccess, onProgress, onStart, onE
 
       res.forEach((result) => {
         if (result.status === 'fulfilled') {
-          const { uploads, annotation } = result.value
+          const { uploads, annotation, files } = result.value
 
-          uploads.forEach((upload: any) => {
-            successfulFiles.push(onSuccess(upload))
-          })
+          successfulFiles.push(...files)
 
           metadata.push({
             range: annotation.range,
@@ -69,8 +72,6 @@ const useAnnotationsUpload = ({ projectName, onSuccess, onProgress, onStart, onE
             composite: uploads[0].data.id,
             transparent: uploads[1].data.id,
           })
-
-          removeAnnotation?.(annotation.id)
         } else {
           toast.error('Upload failed: ' + result.reason.message)
         }
