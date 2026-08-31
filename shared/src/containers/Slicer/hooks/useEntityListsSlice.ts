@@ -27,7 +27,7 @@ const sortLists = (lists: EntityList[]): EntityList[] =>
     return bDate.getTime() - aDate.getTime()
   })
 
-export const useEntityListsSlice = (entityTypes?: string[], enabled: boolean = true) => {
+export const useEntityListsSlice = (enabled: boolean = true) => {
   const { projectName } = useProjectContext()
   const { powerLicense } = usePowerpack()
 
@@ -51,10 +51,7 @@ export const useEntityListsSlice = (entityTypes?: string[], enabled: boolean = t
   const tableData: SimpleTableRow[] = useMemo(() => {
     if (!listsData?.pages) return []
 
-    const allListsRaw = listsData.pages.flatMap((page) => page.lists)
-    const allLists = entityTypes?.length
-      ? allListsRaw.filter((list) => entityTypes.includes(list.entityType))
-      : allListsRaw
+    const allLists = listsData.pages.flatMap((page) => page.lists)
 
     // If we have power license and folders, build hierarchical structure
     if (powerLicense && listFolders.length > 0) {
@@ -214,7 +211,7 @@ export const useEntityListsSlice = (entityTypes?: string[], enabled: boolean = t
         listId: list.id,
       },
     }))
-  }, [listsData, powerLicense, listFolders, entityTypes])
+  }, [listsData, powerLicense, listFolders])
 
   const isExpandable = powerLicense && listFolders.length > 0
 
