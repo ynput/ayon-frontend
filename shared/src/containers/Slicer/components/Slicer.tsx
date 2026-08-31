@@ -39,7 +39,7 @@ export interface SlicerProps {
 
 export const Slicer: FC<SlicerProps> = ({
   sliceFields = [],
-  entityTypes,
+  entityTypes = ['task'],
   pinnedSliceType,
   countsSource,
   onAddToList,
