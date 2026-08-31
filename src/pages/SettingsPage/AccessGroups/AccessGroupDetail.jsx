@@ -13,7 +13,7 @@ import { isEqual } from 'lodash'
 import {
   useDeleteAccessGroupMutation,
   useSaveAccessGroupMutation,
-  useGetStudioAccessGroupsQuery,
+  useGetAccessGroupsQuery,
   useGetAccessGroupQuery,
   useGetAccessGroupSchemaQuery,
 } from '@shared/api'
@@ -34,8 +34,8 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   )
   const { data: schema } = useGetAccessGroupSchemaQuery(projectName ? { projectName } : {})
 
-  const { data: accessGroupList = [] } = useGetStudioAccessGroupsQuery({
-    projectName: projectName,
+  const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
+    projectName: projectName || '_',
   })
 
   const isProjectLevel = useMemo(() => {
@@ -64,7 +64,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
       await saveAccessGroup({
         accessGroupName,
         projectName: projectName || '_',
-        data: formData,
+        permissions: formData,
       }).unwrap()
       toast.success('Project access group settings saved')
     } catch (err) {

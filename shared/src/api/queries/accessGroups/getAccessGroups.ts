@@ -73,12 +73,22 @@ enhancedApi.enhanceEndpoints({
         { type: 'accessGroup', id: 'LIST' },
       ],
     },
+    getAccessGroups: {
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ name }) => ({ type: 'accessGroup', id: name })),
+              { type: 'accessGroup', id: 'LIST' },
+            ]
+          : [{ type: 'accessGroup', id: 'LIST' }],
+    },
     getAccessGroupSchema: {},
   },
 })
 
 export const {
   useGetStudioAccessGroupsQuery,
+  useGetAccessGroupsQuery,
   useGetAccessGroupQuery,
   useGetAccessGroupSchemaQuery,
   useGetProjectsAccessQuery,
