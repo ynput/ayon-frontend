@@ -22,7 +22,32 @@ class PermissionsPage {
     await this.page.getByRole('button', { name: 'Read & Write' }).first().click();
     await this.page.getByRole('button', { name: 'Read & Write' }).nth(1).click();
     await this.page.getByRole('button', { name: 'Read & Write' }).nth(2).click();
+    const savedPermissions = this.page.waitForResponse(
+      (response) =>
+        response.request().method() === 'PUT' &&
+        response.url().includes('/api/accessGroups/') &&
+        response.ok(),
+    )
     await this.page.getByRole('button', { name: 'check Save Changes' }).click();
+    await savedPermissions
+    await expect(this.page.getByText('Project access group settings saved')).toBeVisible()
+
+    await this.expectProjectPermissionsPersisted(accessGroup)
+  }
+
+  // reload from the server so a save that never reached the backend fails here
+  async expectProjectPermissionsPersisted(accessGroup: string) {
+    const groupReloaded = this.page.waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        response.url().includes(`/api/accessGroups/${accessGroup}/`) &&
+        response.ok(),
+    )
+    await this.goto()
+    await this.page.getByRole('cell', { name: accessGroup }).click()
+
+    const permissions = await (await groupReloaded).json()
+    expect(permissions.project).toMatchObject({ anatomy: 2, access: 2, settings: 2 })
   }
 
   async delete(accessGroup: string) {
