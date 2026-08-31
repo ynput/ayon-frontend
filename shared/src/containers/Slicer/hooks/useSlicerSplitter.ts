@@ -19,6 +19,9 @@ const useSlicerSplitter = () => {
   return [slicerSize, handleResizeEnd] as const
 }
 
+// header plus a few rows; below this the stack scrolls instead of crushing panels
+export const SLICER_MIN_PANEL_HEIGHT = 180
+
 // vertical split between stacked slicer panels; equal split whenever the panel count changes
 export const useSlicerPanelHeights = (page: string, panelCount: number) => {
   const [storedSizes, setStoredSizes] = useSessionStorage<number[]>(

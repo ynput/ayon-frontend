@@ -5,7 +5,7 @@ import type { OnAddToList } from '../hooks/useHierarchyContextMenuItems'
 import type { SliceType } from '../types'
 import { SliceTypeField } from '../types'
 import { useSlicerContext } from '../context/SlicerContext'
-import { useSlicerPanelHeights } from '../hooks/useSlicerSplitter'
+import { SLICER_MIN_PANEL_HEIGHT, useSlicerPanelHeights } from '../hooks/useSlicerSplitter'
 import type { GetSlicerCountsSource, SlicerCountsSource } from '../hooks/useSlicerCounts'
 import { usePowerpack } from '@shared/context/PowerpackContext'
 import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
@@ -81,19 +81,30 @@ export const Slicer: FC<SlicerProps> = ({
       {visibleSlices.length === 1 ? (
         <SlicerPanel panel={visibleSlices[0]} isPrimary showRemove={false} {...panelProps} />
       ) : (
-        <Splitter
-          layout="vertical"
-          // remount so primereact picks up new panel sizes when the arrangement changes
-          key={visibleSlices.map((s) => s.id).join('|')}
-          onResizeEnd={handlePanelResizeEnd}
-          style={{ width: '100%', height: '100%', overflow: 'hidden' }}
-        >
-          {visibleSlices.map((panel, index) => (
-            <SplitterPanel key={panel.id} size={panelHeights[index]} minSize={10} style={{ overflow: 'hidden' }}>
-              <SlicerPanel panel={panel} isPrimary={index === 0} showRemove {...panelProps} />
-            </SplitterPanel>
-          ))}
-        </Splitter>
+        <div style={{ height: '100%', width: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
+          <Splitter
+            layout="vertical"
+            // remount so primereact picks up new panel sizes when the arrangement changes
+            key={visibleSlices.map((s) => s.id).join('|')}
+            onResizeEnd={handlePanelResizeEnd}
+            style={{
+              width: '100%',
+              height: `max(100%, ${visibleSlices.length * SLICER_MIN_PANEL_HEIGHT}px)`,
+              overflow: 'hidden',
+            }}
+          >
+            {visibleSlices.map((panel, index) => (
+              <SplitterPanel
+                key={panel.id}
+                size={panelHeights[index]}
+                minSize={Math.min(10, Math.floor(100 / visibleSlices.length))}
+                style={{ overflow: 'hidden' }}
+              >
+                <SlicerPanel panel={panel} isPrimary={index === 0} showRemove {...panelProps} />
+              </SplitterPanel>
+            ))}
+          </Splitter>
+        </div>
       )}
       <MoveEntityDialog
         projectName={projectName}
