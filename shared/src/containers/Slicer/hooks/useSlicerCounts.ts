@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import type { GroupCountsMap } from '@shared/api'
-import { useSlicerContext } from '../context/SlicerContext'
 import {
   useGroupCounts,
   type UseGroupCountsParams,
@@ -13,6 +12,9 @@ export type SlicerCountsSource =
   | { entity: 'task'; args: TaskStatsArgs }
   | { entity: 'version'; args: VersionStatsArgs }
 
+// per-panel args: each panel's source excludes its own filter but keeps the others'
+export type GetSlicerCountsSource = (sliceType: string) => SlicerCountsSource | undefined
+
 export type SlicerCounts = {
   counts: GroupCountsMap | undefined
   total: number
@@ -24,21 +26,26 @@ const EMPTY_COUNTS: GroupCountsMap = new Map()
 
 export const useSlicerCounts = (
   source: SlicerCountsSource | undefined,
+  sliceType: string,
+  allSliceTypes?: string[],
   skip?: boolean,
-  sliceTypeOverride?: string,
 ): SlicerCounts => {
-  const { sliceType: contextSliceType } = useSlicerContext()
-  const sliceType = sliceTypeOverride ?? contextSliceType
-
   const groupBy = useMemo(() => ({ id: sliceType, desc: false }), [sliceType])
+  // sibling panels' fields ride along so one request serves every panel's badges
+  const extraGroupBys = useMemo(
+    () =>
+      (allSliceTypes ?? []).filter((t) => t !== sliceType).map((t) => ({ id: t, desc: false })),
+    [allSliceTypes, sliceType],
+  )
   const disabled = !!skip || !source
 
   const params: UseGroupCountsParams =
     source?.entity === 'version'
-      ? { entity: 'version', groupBy, args: source.args, skip: disabled }
+      ? { entity: 'version', groupBy, extraGroupBys, args: source.args, skip: disabled }
       : {
           entity: 'task',
           groupBy,
+          extraGroupBys,
           args: (source?.args ?? { projectName: '' }) as TaskStatsArgs,
           skip: disabled,
         }

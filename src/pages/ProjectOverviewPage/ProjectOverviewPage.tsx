@@ -9,7 +9,7 @@ import {
   SLICER_PAGES_CONFIG,
   useSlicerContext,
   useSlicerSplitter,
-  type SlicerCountsSource,
+  type GetSlicerCountsSource,
 } from '@shared/containers/Slicer'
 
 // arc
@@ -90,15 +90,15 @@ const ProjectOverviewPage: FC = () => {
     updateViewGroupBy,
     tasksMap,
     updateExpanded,
-    slicerCountsArgs,
+    getSlicerCountsArgs,
     onSyncData,
     movingEntities,
     closeMoveDialog,
   } = useProjectOverviewContext()
 
-  const slicerCountsSource = useMemo<SlicerCountsSource>(
-    () => ({ entity: 'task', args: slicerCountsArgs }),
-    [slicerCountsArgs],
+  const slicerCountsSource = useCallback<GetSlicerCountsSource>(
+    (sliceType) => ({ entity: 'task', args: getSlicerCountsArgs(sliceType) }),
+    [getSlicerCountsArgs],
   )
   const { buildReviewContextMenu } = useEntityListsContext()
   const { getParentFolderIds } = useProjectFoldersContext()

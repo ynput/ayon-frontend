@@ -13,6 +13,7 @@ import {
   useProjectDataContext,
   useFetchOverviewData,
   useQueryFilters,
+  buildQueryFilters,
   useEntitiesMap,
   useSelectedFolders,
   useScopedAttributeFields,
@@ -265,17 +266,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     config: { searchKey: 'name' },
   })
 
-  // Same base filters WITHOUT the slice merged in — for slicer value counts, so a
-  // selected slice value keeps its siblings' true counts (no self-zeroing).
-  const baseTaskFilter = useQueryFilters({
-    queryFilters: taskFilter,
-    config: { searchKey: 'name' },
-  })
-  const baseFolderFilter = useQueryFilters({
-    queryFilters: folderFilter,
-    config: { searchKey: 'name' },
-  })
-
   // Use the shared hook to handle filter logic (for backward compatibility)
   const queryFiltersResult = useQueryFilters({
     queryFilters,
@@ -308,23 +298,50 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     [rawEntityIds.taskIds, parentMaps, folderScope],
   )
 
-  // Slicer value counts: exclude the active slice's own filter (base*Filter, no
-  // sliceFilter) so a selected value keeps its siblings' true counts; keep the
-  // hierarchy/entity-list ids so counts still match the filtered table.
-  const slicerCountsArgs = useMemo(
-    () => ({
-      projectName,
-      filter: baseTaskFilter.filterString || undefined,
-      folderFilter: baseFolderFilter.filterString || undefined,
-      search: baseTaskFilter.search || undefined,
-      folderIds: selectedFolders.length ? selectedFolders : undefined,
-      taskIds: selectedTaskIds.length ? selectedTaskIds : undefined,
-    }),
+  // Slicer value counts: each panel's args exclude its OWN filter (so a selected
+  // value keeps its siblings' true counts) but keep every other panel's filter
+  // plus the hierarchy/entity-list ids — facet counts that match the filtered
+  // table. With nothing selected all panels produce identical args, so their
+  // stats queries collapse onto one shared cache entry.
+  const getSlicerCountsArgs = useCallback(
+    (sliceType: string) => {
+      const otherSliceFilters = sliceFilters.filter((f) => f.id !== sliceType)
+      const { task: otherTaskFilters, folder: otherFolderFilters } = splitClientFiltersByScope(
+        otherSliceFilters,
+        ['task', 'folder'],
+        {
+          status: 'task',
+          taskType: 'task',
+          assignees: 'task',
+          folderType: 'folder',
+          ...attribScopeMap,
+        },
+      )
+      const countsTaskFilter = buildQueryFilters({
+        queryFilters: taskFilter,
+        sliceFilters: otherTaskFilters,
+        config: { searchKey: 'name' },
+      })
+      const countsFolderFilter = buildQueryFilters({
+        queryFilters: folderFilter,
+        sliceFilters: otherFolderFilters,
+        config: { searchKey: 'name' },
+      })
+      return {
+        projectName,
+        filter: countsTaskFilter.filterString || undefined,
+        folderFilter: countsFolderFilter.filterString || undefined,
+        search: countsTaskFilter.search || undefined,
+        folderIds: selectedFolders.length ? selectedFolders : undefined,
+        taskIds: selectedTaskIds.length ? selectedTaskIds : undefined,
+      }
+    },
     [
+      sliceFilters,
+      attribScopeMap,
+      taskFilter,
+      folderFilter,
       projectName,
-      baseTaskFilter.filterString,
-      baseFolderFilter.filterString,
-      baseTaskFilter.search,
       selectedFolders,
       selectedTaskIds,
     ],
@@ -446,7 +463,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
           filterString: combinedFolderFilter.filterString,
           search: combinedFolderFilter.search,
         },
-        slicerCountsArgs,
+        getSlicerCountsArgs,
         selectedFolders,
         selectedTaskIds,
         // Backward compatibility for ProjectTableProvider (uses taskFilters)

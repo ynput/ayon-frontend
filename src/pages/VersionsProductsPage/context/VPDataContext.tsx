@@ -32,6 +32,7 @@ import {
   useExpandedState,
   useProjectDataContext,
   useQueryFilters,
+  buildQueryFilters,
   useSelectedFolders,
   useViewsContext,
 } from '@shared/containers'
@@ -98,16 +99,18 @@ interface VersionsDataContextValue {
     featuredOnly?: string[]
     featuredOnlyEntityType?: string
   }
-  // like columnStatsArgs but with the active slice's own filter excluded — so
-  // slicer value counts show each value's true population (no self-zeroing)
-  slicerCountsArgs: {
+  // like columnStatsArgs but with the panel's own filter excluded — so slicer
+  // value counts show each value's true population (no self-zeroing)
+  getSlicerCountsArgs: (sliceType: string) => {
     projectName: string
     productFilter?: string
     versionFilter?: string
     taskFilter?: string
+    folderFilter?: string
     folderIds?: string[]
     versionIds?: string[]
     productIds?: string[]
+    latestPerFolder?: boolean
   }
   fieldStats: FieldStats[]
   groupFieldStats: FieldStats[]
@@ -353,15 +356,6 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     config: { searchKey: 'name' },
   })
 
-  // same base filters WITHOUT the slice merged in — used for slicer value counts
-  const baseVersionFilter = useQueryFilters({ queryFilters: versionFilter })
-  const baseProductFilter = useQueryFilters({ queryFilters: productFilter })
-  const baseTaskFilter = useQueryFilters({ queryFilters: taskFilter })
-  const baseFolderFilter = useQueryFilters({
-    queryFilters: folderFilter,
-    config: { searchKey: 'name' },
-  })
-
   // When entity list has task IDs, merge them into the task filter
   const entityListTaskFilterString = useMemo(() => {
     if (!scopedTaskIds.length) return combinedTaskFilter.filterString
@@ -382,30 +376,79 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     })
   }, [scopedTaskIds, combinedTaskFilter.filterString])
 
-  // Slicer value counts: exclude the active slice's own filter (base*Filter, no
-  // sliceFilter) so a selected value keeps its siblings' true counts; keep the
-  // hierarchy/entity-list ids so counts still match the filtered table.
-  const slicerCountsArgs = useMemo(
-    () => ({
-      projectName,
-      versionFilter: baseVersionFilter.filterString,
-      productFilter: baseProductFilter.filterString,
-      taskFilter: baseTaskFilter.filterString,
-      folderFilter: baseFolderFilter.filterString,
-      folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
-      versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
-      productIds: scopedProductIds.length ? scopedProductIds : undefined,
-      latestPerFolder,
-    }),
+  // Slicer value counts: each panel's args exclude its OWN filter (so a selected
+  // value keeps its siblings' true counts) but keep every other panel's filter
+  // plus the hierarchy/entity-list ids — facet counts that match the filtered
+  // table. With nothing selected all panels produce identical args, so their
+  // stats queries collapse onto one shared cache entry.
+  const getSlicerCountsArgs = useCallback(
+    (sliceType: string) => {
+      const otherSliceFilters = sliceFilters.filter((f) => f.id !== sliceType)
+      const {
+        version: otherVersionFilters,
+        product: otherProductFilters,
+        task: otherTaskFilters,
+        folder: otherFolderFilters,
+      } = splitClientFiltersByScope(otherSliceFilters, ['version', 'product', 'task', 'folder'], {
+        status: 'version',
+        taskType: 'task',
+        productType: 'product',
+        assignees: 'task',
+        author: 'version',
+        folderType: 'folder',
+        ...attribScopeMap,
+      })
+      const countsVersionFilter = buildQueryFilters({
+        queryFilters: versionFilter,
+        sliceFilters: otherVersionFilters,
+      })
+      const countsProductFilter = buildQueryFilters({
+        queryFilters: productFilter,
+        sliceFilters: otherProductFilters,
+      })
+      const countsTaskFilter = buildQueryFilters({
+        queryFilters: taskFilter,
+        sliceFilters: otherTaskFilters,
+      })
+      const countsFolderFilter = buildQueryFilters({
+        queryFilters: folderFilter,
+        sliceFilters: otherFolderFilters,
+        config: { searchKey: 'name' },
+      })
+      // a task-list panel narrows via task ids, like entityListTaskFilterString
+      const countsTaskFilterString = scopedTaskIds.length
+        ? JSON.stringify({
+            conditions: [
+              ...(countsTaskFilter.filter?.conditions || []),
+              { key: 'id', operator: 'in', value: scopedTaskIds },
+            ],
+            operator: 'and',
+          })
+        : countsTaskFilter.filterString
+      return {
+        projectName,
+        versionFilter: countsVersionFilter.filterString,
+        productFilter: countsProductFilter.filterString,
+        taskFilter: countsTaskFilterString,
+        folderFilter: countsFolderFilter.filterString,
+        folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
+        versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
+        productIds: scopedProductIds.length ? scopedProductIds : undefined,
+        latestPerFolder,
+      }
+    },
     [
+      sliceFilters,
+      attribScopeMap,
+      versionFilter,
+      productFilter,
+      taskFilter,
+      folderFilter,
       projectName,
-      baseVersionFilter.filterString,
-      baseProductFilter.filterString,
-      baseTaskFilter.filterString,
-      baseFolderFilter.filterString,
       slicerFolderIds,
       scopedVersionIds,
       scopedProductIds,
+      scopedTaskIds,
       latestPerFolder,
     ],
   )
@@ -787,7 +830,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       featuredOnlyEntityType: versionStatsArgs.featuredOnlyEntityType,
       latestPerFolder: versionStatsArgs.latestPerFolder,
     },
-    slicerCountsArgs,
+    getSlicerCountsArgs,
     fieldStats,
     groupFieldStats,
     fieldStatsLoading,

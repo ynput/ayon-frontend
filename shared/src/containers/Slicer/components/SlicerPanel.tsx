@@ -5,7 +5,11 @@ import { ExpandedState, Row, RowSelectionState } from '@tanstack/react-table'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 
 import useTableDataBySlice from '../hooks/useTableDataBySlice'
-import { useSlicerCounts, type SlicerCountsSource } from '../hooks/useSlicerCounts'
+import {
+  useSlicerCounts,
+  type GetSlicerCountsSource,
+  type SlicerCountsSource,
+} from '../hooks/useSlicerCounts'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
 import { useHierarchyContextMenuItems } from '../hooks/useHierarchyContextMenuItems'
@@ -32,7 +36,7 @@ export interface SlicerPanelProps {
   sliceFields: SliceTypeField[]
   entityTypes?: string[]
   pinnedSliceType?: SliceType
-  countsSource?: SlicerCountsSource
+  countsSource?: SlicerCountsSource | GetSlicerCountsSource
   onAddToList?: OnAddToList
   openMoveDialog: OpenMoveDialog
   splitEnabled?: boolean
@@ -82,7 +86,16 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     [setPanelExpanded, panel.id],
   )
 
-  const { counts, filled, complete } = useSlicerCounts(countsSource, undefined, panel.sliceType)
+  const resolvedCountsSource = useMemo(
+    () => (typeof countsSource === 'function' ? countsSource(panel.sliceType) : countsSource),
+    [countsSource, panel.sliceType],
+  )
+  const allSliceTypes = useMemo(() => slices.map((s) => s.sliceType), [slices])
+  const { counts, filled, complete } = useSlicerCounts(
+    resolvedCountsSource,
+    panel.sliceType,
+    allSliceTypes,
+  )
 
   const handlePanelSliceTypeChange = useCallback<OnSliceTypeChange>(
     (newSliceType, pinCurrent) => {

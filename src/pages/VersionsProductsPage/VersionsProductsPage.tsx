@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useCallback, useState } from 'react'
 import VersionsProductsPageProviders from './providers'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -6,7 +6,7 @@ import {
   Slicer,
   SLICER_PAGES_CONFIG,
   useSlicerSplitter,
-  type SlicerCountsSource,
+  type GetSlicerCountsSource,
 } from '@shared/containers/Slicer'
 import { useProjectContext, useSettingsPanel } from '@shared/context'
 import { useVersionsDataContext } from './context/VPDataContext'
@@ -36,11 +36,11 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
   const { showGrid } = useVPViewsContext()
   const { showVersionsTable } = useVersionsSelectionContext()
   const { projectName } = useProjectContext()
-  const { slicerCountsArgs } = useVersionsDataContext()
+  const { getSlicerCountsArgs } = useVersionsDataContext()
 
-  const slicerCountsSource = useMemo<SlicerCountsSource>(
-    () => ({ entity: 'version', args: slicerCountsArgs }),
-    [slicerCountsArgs],
+  const slicerCountsSource = useCallback<GetSlicerCountsSource>(
+    (sliceType) => ({ entity: 'version', args: getSlicerCountsArgs(sliceType) }),
+    [getSlicerCountsArgs],
   )
 
   // modal dialog state for product and version details

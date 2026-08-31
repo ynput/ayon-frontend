@@ -6,7 +6,7 @@ import type { SliceType } from '../types'
 import { SliceTypeField } from '../types'
 import { useSlicerContext } from '../context/SlicerContext'
 import { useSlicerPanelHeights } from '../hooks/useSlicerSplitter'
-import type { SlicerCountsSource } from '../hooks/useSlicerCounts'
+import type { GetSlicerCountsSource, SlicerCountsSource } from '../hooks/useSlicerCounts'
 import { usePowerpack } from '@shared/context/PowerpackContext'
 import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
 import { MoveEntityDialog } from '@shared/containers/MoveEntityDialog/MoveEntityDialog'
@@ -17,7 +17,8 @@ export interface SlicerProps {
   sliceFields: SliceTypeField[]
   entityTypes?: string[] // entity types
   pinnedSliceType?: SliceType // when changing slice type, pinned the current slice
-  countsSource?: SlicerCountsSource // entity + filter args for per-value count badges
+  // entity + filter args for per-value count badges; function form resolves per panel
+  countsSource?: SlicerCountsSource | GetSlicerCountsSource
   onAddToList?: OnAddToList
   enableSplit?: boolean // offer splitting into multiple stacked panels (license gated)
 }
