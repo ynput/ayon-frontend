@@ -7,6 +7,7 @@ import type { QueryFilter, QueryCondition } from '../types/operations'
 interface UseQueryFiltersProps {
   queryFilters: QueryFilter
   sliceFilter?: Filter | null
+  sliceFilters?: (Filter | null)[] | null
   config?: {
     searchKey?: string
   }
@@ -23,16 +24,18 @@ interface QueryFiltersResult {
 export const useQueryFilters = ({
   queryFilters,
   sliceFilter,
+  sliceFilters,
   config: { searchKey } = {},
 }: UseQueryFiltersProps): QueryFiltersResult => {
   return useMemo(() => {
     let combinedQueryFilter = queryFilters
 
-    // If there's a slice filter, convert it and merge it with the query filters
-    if (sliceFilter?.values?.length) {
-      const sliceQueryFilter = clientFilterToQueryFilter([sliceFilter])
+    // Merge every slice filter's conditions into the query filters (AND across panels)
+    const allSliceFilters = [sliceFilter, ...(sliceFilters || [])]
+    for (const filter of allSliceFilters) {
+      if (!filter?.values?.length) continue
+      const sliceQueryFilter = clientFilterToQueryFilter([filter])
 
-      // Merge the slice filter with existing query filters for data fetching
       if (sliceQueryFilter.conditions?.length) {
         const existingConditions = combinedQueryFilter?.conditions || []
         combinedQueryFilter = {
@@ -119,5 +122,5 @@ export const useQueryFilters = ({
       combinedFilters: expandedQueryFilter,
       displayFilters: displayQueryFilter,
     }
-  }, [queryFilters, sliceFilter])
+  }, [queryFilters, sliceFilter, sliceFilters])
 }

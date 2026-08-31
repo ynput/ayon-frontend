@@ -28,7 +28,7 @@ import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTree
 
 // Views hooks
 import {
-  createFilterFromSlicer,
+  createFiltersFromSlicer,
   useOverviewViewSettings,
   useViewsContext,
   useViewUpdateHelper,
@@ -37,7 +37,7 @@ import {
 // Local context and hooks
 import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
 import { useProjectOverviewStats } from '../hooks/useProjectOverviewStats'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, useProjectFoldersContext, usePowerpack } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 import { ProjectOverviewContext } from './ProjectOverviewContextInstance'
 import { useAppDispatch } from '@state/store'
@@ -51,7 +51,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { projectName, ...projectInfo } = useProjectContext()
   const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
 
-  const { rowSelection, sliceType, pinnedSlice } = useSlicerContext()
+  const { slices, getPanelSelection } = useSlicerContext()
+  const { powerLicense, isLoading: isLoadingPowerLicense } = usePowerpack()
+  const { getChildFolderIds } = useProjectFoldersContext()
+
+  // panels 2+ are license-gated; hold the first fetch until the license resolves
+  const isLicensePending = slices.length > 1 && isLoadingPowerLicense
 
   const {
     sorting,
@@ -60,10 +65,19 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     columnVisibility,
   } = useColumnSettingsContext()
 
-  const sliceFilter = createFilterFromSlicer({
-    slice: { rowSelection, sliceType },
-    attribFields: attribFields,
-  })
+  // without a license only the first panel renders, so only it may contribute
+  const sliceSelections = useMemo(() => {
+    const all = slices.map((slice) => ({
+      sliceType: slice.sliceType,
+      rowSelection: getPanelSelection(slice.id),
+    }))
+    return powerLicense ? all : all.slice(0, 1)
+  }, [slices, getPanelSelection, powerLicense])
+
+  const sliceFilters = useMemo(
+    () => createFiltersFromSlicer({ slices: sliceSelections, attribFields }),
+    [sliceSelections, attribFields],
+  )
 
   // filter out attribFields by scope
   const scopedAttribFields = useScopedAttributeFields({
@@ -229,28 +243,25 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     [attribFields],
   )
 
-  const {
-    task: [slicerTaskFilter],
-    folder: [slicerFolderFilter],
-  } = useMemo(() => {
-    return splitClientFiltersByScope(sliceFilter ? [sliceFilter] : null, validScopes, {
+  const { task: slicerTaskFilters, folder: slicerFolderFilters } = useMemo(() => {
+    return splitClientFiltersByScope(sliceFilters, validScopes, {
       status: 'task', // status defaults to task for overview
       taskType: 'task',
       assignees: 'task',
       folderType: 'folder',
       ...attribScopeMap,
     })
-  }, [sliceFilter, attribScopeMap])
+  }, [sliceFilters, attribScopeMap])
 
   // Combine slicer filters with task/folder filters
   const combinedTaskFilter = useQueryFilters({
     queryFilters: taskFilter,
-    sliceFilter: slicerTaskFilter,
+    sliceFilters: slicerTaskFilters,
     config: { searchKey: 'name' },
   })
   const combinedFolderFilter = useQueryFilters({
     queryFilters: folderFilter,
-    sliceFilter: slicerFolderFilter,
+    sliceFilters: slicerFolderFilters,
     config: { searchKey: 'name' },
   })
 
@@ -268,23 +279,34 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // Use the shared hook to handle filter logic (for backward compatibility)
   const queryFiltersResult = useQueryFilters({
     queryFilters,
-    sliceFilter,
+    sliceFilters,
     config: { searchKey: 'name' },
   })
 
   // Resolve entity list selections to IDs
-  const { entityIds, rawEntityIds } = useSelectedEntityIds({
-    rowSelection,
-    sliceType,
+  const { entityIds, rawEntityIds, parentMaps } = useSelectedEntityIds({
+    slices: sliceSelections,
     projectName,
   })
 
-  const selectedFolders = useSelectedFolders({
-    rowSelection,
-    sliceType,
-    pinnedRowSelection: pinnedSlice?.rowSelection || null,
+  const { selectedFolders, folderScope, listPanelSelected } = useSelectedFolders({
+    slices: sliceSelections,
     entityListFolderIds: entityIds.folderIds,
+    getChildFolderIds,
   })
+
+  // list tasks narrowed to the hierarchy panel's subtree; ids not yet in
+  // parentMaps pass through (the map lags rawEntityIds by one resolve)
+  const selectedTaskIds = useMemo(
+    () =>
+      folderScope
+        ? rawEntityIds.taskIds.filter((id) => {
+            const folderId = parentMaps.taskFolderIds[id]
+            return !folderId || folderScope.has(folderId)
+          })
+        : rawEntityIds.taskIds,
+    [rawEntityIds.taskIds, parentMaps, folderScope],
+  )
 
   // Slicer value counts: exclude the active slice's own filter (base*Filter, no
   // sliceFilter) so a selected value keeps its siblings' true counts; keep the
@@ -296,7 +318,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
       folderFilter: baseFolderFilter.filterString || undefined,
       search: baseTaskFilter.search || undefined,
       folderIds: selectedFolders.length ? selectedFolders : undefined,
-      taskIds: rawEntityIds.taskIds.length ? rawEntityIds.taskIds : undefined,
+      taskIds: selectedTaskIds.length ? selectedTaskIds : undefined,
     }),
     [
       projectName,
@@ -304,7 +326,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
       baseFolderFilter.filterString,
       baseTaskFilter.search,
       selectedFolders,
-      rawEntityIds.taskIds,
+      selectedTaskIds,
     ],
   )
 
@@ -325,7 +347,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     folderSearch: combinedFolderFilter.search,
     taskSearch: combinedTaskFilter.search,
     selectedFolders,
-    selectedTaskIds: rawEntityIds.taskIds,
+    selectedTaskIds,
     showHierarchy,
   })
 
@@ -346,8 +368,9 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
-    excludeSelectedFolders: sliceType !== 'entityList',
-    taskIds: rawEntityIds.taskIds,
+    // hierarchy ids are scope roots (excluded from rows); list ids are results
+    excludeSelectedFolders: !listPanelSelected,
+    taskIds: selectedTaskIds,
     taskFilters: {
       filter: combinedTaskFilter.filter as any,
       filterString: combinedTaskFilter.filterString,
@@ -368,7 +391,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     modules,
     skipLinks,
     showComments,
-    isLoadingViews,
+    isLoadingViews: isLoadingViews || isLicensePending,
     onCollapseAll: () => setExpanded({}),
     visibleEntityIds,
     folderStatsArgs,
@@ -425,7 +448,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         },
         slicerCountsArgs,
         selectedFolders,
-        selectedTaskIds: rawEntityIds.taskIds,
+        selectedTaskIds,
         // Backward compatibility for ProjectTableProvider (uses taskFilters)
         queryFilters: {
           filter: combinedTaskFilter.filter,

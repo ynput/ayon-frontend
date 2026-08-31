@@ -1,21 +1,27 @@
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
-import type { RowSelectionState } from '@tanstack/react-table'
 import { entityListsApi, type EntityListEnities } from '@shared/api/generated'
 import {
   resolveEntityParents,
+  type EntityParentMaps,
   type SelectedEntityIds,
 } from '@shared/api/queries/entityLists/resolveEntityParents'
-import type { SliceType } from '../types'
+import type { SliceSelection } from '../util/createFilterFromSlicer'
 
-export type { SelectedEntityIds }
+export type { EntityParentMaps, SelectedEntityIds }
 
 const EMPTY_IDS: SelectedEntityIds = {
   folderIds: [],
   taskIds: [],
   versionIds: [],
   productIds: [],
+}
+
+const EMPTY_MAPS: EntityParentMaps = {
+  taskFolderIds: {},
+  versionFolderIds: {},
+  productFolderIds: {},
 }
 
 const collectEntityIds = (results: EntityListEnities[]): SelectedEntityIds => {
@@ -45,42 +51,47 @@ const collectEntityIds = (results: EntityListEnities[]): SelectedEntityIds => {
 
 /**
  * Resolves entity list slicer selections to actual entity IDs.
- * When sliceType is 'entityList', fetches entity IDs from each selected list,
- * then resolves cross-entity parent references (e.g. task → folder, version → folder/task).
+ * When a panel with sliceType 'entityList' exists, fetches entity IDs from each
+ * selected list, then resolves cross-entity parent references
+ * (e.g. task → folder, version → folder/task).
  */
 export const useSelectedEntityIds = ({
-  rowSelection,
-  sliceType,
+  slices,
   projectName,
 }: {
-  rowSelection: RowSelectionState
-  sliceType: SliceType
+  slices: SliceSelection[]
   projectName: string
 }): {
   entityIds: SelectedEntityIds
   rawEntityIds: SelectedEntityIds
+  parentMaps: EntityParentMaps
   isLoading: boolean
 } => {
   const dispatch = useDispatch<ThunkDispatch<unknown, unknown, UnknownAction>>()
   const [entityIds, setEntityIds] = useState<SelectedEntityIds>(EMPTY_IDS)
   const [rawEntityIds, setRawEntityIds] = useState<SelectedEntityIds>(EMPTY_IDS)
+  const [parentMaps, setParentMaps] = useState<EntityParentMaps>(EMPTY_MAPS)
   const [isLoading, setIsLoading] = useState(false)
 
+  const listRowSelection = slices.find((slice) => slice.sliceType === 'entityList')?.rowSelection
+
   useEffect(() => {
-    if (sliceType !== 'entityList' || !projectName) {
+    if (!listRowSelection || !projectName) {
       setEntityIds(EMPTY_IDS)
       setRawEntityIds(EMPTY_IDS)
+      setParentMaps(EMPTY_MAPS)
       return
     }
 
     // Get selected list IDs from rowSelection, filtering out folder-grouped rows
-    const selectedListIds = Object.keys(rowSelection).filter(
-      (id) => rowSelection[id] && !id.startsWith('folder-'),
+    const selectedListIds = Object.keys(listRowSelection).filter(
+      (id) => listRowSelection[id] && !id.startsWith('folder-'),
     )
 
     if (!selectedListIds.length) {
       setEntityIds(EMPTY_IDS)
       setRawEntityIds(EMPTY_IDS)
+      setParentMaps(EMPTY_MAPS)
       return
     }
 
@@ -105,16 +116,22 @@ export const useSelectedEntityIds = ({
         }
 
         // Step 2: Resolve cross-entity parent references
-        const resolvedIds = await resolveEntityParents(rawIds, projectName, dispatch)
+        const { parentMaps: resolvedMaps, ...resolvedIds } = await resolveEntityParents(
+          rawIds,
+          projectName,
+          dispatch,
+        )
 
         if (!cancelled) {
           setEntityIds(resolvedIds)
+          setParentMaps(resolvedMaps)
         }
       } catch (err) {
         console.error('Error fetching entity list IDs:', err)
         if (!cancelled) {
           setEntityIds(EMPTY_IDS)
           setRawEntityIds(EMPTY_IDS)
+          setParentMaps(EMPTY_MAPS)
         }
       } finally {
         if (!cancelled) setIsLoading(false)
@@ -126,7 +143,7 @@ export const useSelectedEntityIds = ({
     return () => {
       cancelled = true
     }
-  }, [sliceType, rowSelection, projectName, dispatch])
+  }, [listRowSelection, projectName, dispatch])
 
-  return { entityIds, rawEntityIds, isLoading }
+  return { entityIds, rawEntityIds, parentMaps, isLoading }
 }

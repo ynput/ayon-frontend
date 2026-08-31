@@ -27,7 +27,7 @@ import { useBuildVersionsTableData } from '../hooks/useBuildVersionsTableData'
 import {
   checkColumnVisibility,
   getColumnSortKey,
-  createFilterFromSlicer,
+  createFiltersFromSlicer,
   TableRow,
   useExpandedState,
   useProjectDataContext,
@@ -45,7 +45,7 @@ import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slice
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
-import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
+import { OnSyncDataCallback, useProjectFoldersContext, usePowerpack } from '@shared/context'
 import type { FieldStats } from '@shared/api'
 import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import {
@@ -175,7 +175,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 }) => {
   const dispatch = useAppDispatch()
   const { attribFields } = useProjectDataContext()
-  const { getFolderIdsWithoutChildren } = useProjectFoldersContext()
+  const { getFolderIdsWithoutChildren, getChildFolderIds } = useProjectFoldersContext()
   const {
     filters,
     showProducts,
@@ -186,7 +186,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     groupBy,
     columns,
   } = useVPViewsContext()
-  const { isLoadingViews } = useViewsContext()
+  const { isLoadingViews: isLoadingViewSettings } = useViewsContext()
 
   // comments are the heaviest field to resolve, so only fetch them when the column is shown
   const showComments = useMemo(
@@ -239,11 +239,25 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   })
 
   // SLICER
-  const { rowSelection, sliceType, pinnedSlice } = useSlicerContext()
-  const sliceFilter = createFilterFromSlicer({
-    slice: { rowSelection, sliceType },
-    attribFields: attribFields,
-  })
+  const { slices, getPanelSelection } = useSlicerContext()
+  const { powerLicense, isLoading: isLoadingPowerLicense } = usePowerpack()
+
+  // panels 2+ are license-gated; hold the first fetch until the license resolves
+  const isLoadingViews = isLoadingViewSettings || (slices.length > 1 && isLoadingPowerLicense)
+
+  // without a license only the first panel renders, so only it may contribute
+  const sliceSelections = useMemo(() => {
+    const all = slices.map((slice) => ({
+      sliceType: slice.sliceType,
+      rowSelection: getPanelSelection(slice.id),
+    }))
+    return powerLicense ? all : all.slice(0, 1)
+  }, [slices, getPanelSelection, powerLicense])
+
+  const sliceFilters = useMemo(
+    () => createFiltersFromSlicer({ slices: sliceSelections, attribFields }),
+    [sliceSelections, attribFields],
+  )
 
   // Separate slicer filters into different types
   const vpValidScopes: ('version' | 'product' | 'task' | 'folder')[] = [
@@ -263,12 +277,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   )
 
   const {
-    version: [slicerVersionFilter],
-    product: [slicerProductFilter],
-    task: [slicerTaskFilter],
-    folder: [slicerFolderFilter],
+    version: slicerVersionFilters,
+    product: slicerProductFilters,
+    task: slicerTaskFilters,
+    folder: slicerFolderFilters,
   } = useMemo(() => {
-    return splitClientFiltersByScope(sliceFilter ? [sliceFilter] : null, vpValidScopes, {
+    return splitClientFiltersByScope(sliceFilters, vpValidScopes, {
       status: 'version',
       taskType: 'task',
       productType: 'product',
@@ -277,41 +291,65 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       folderType: 'folder',
       ...attribScopeMap,
     })
-  }, [sliceFilter, attribScopeMap])
+  }, [sliceFilters, attribScopeMap])
   // Resolve entity list selections to IDs
-  const { entityIds, rawEntityIds } = useSelectedEntityIds({
-    rowSelection,
-    sliceType,
+  const { entityIds, rawEntityIds, parentMaps } = useSelectedEntityIds({
+    slices: sliceSelections,
     projectName,
   })
 
   // get selected folders from slicer
-  const selectedSlicerFolderIds = useSelectedFolders({
-    rowSelection,
-    sliceType,
-    pinnedRowSelection: pinnedSlice?.rowSelection || null,
+  const { selectedFolders: selectedSlicerFolderIds, folderScope } = useSelectedFolders({
+    slices: sliceSelections,
     entityListFolderIds: entityIds.folderIds,
+    getChildFolderIds,
   })
   const slicerFolderIds = useMemo(
     () => getFolderIdsWithoutChildren(selectedSlicerFolderIds),
     [selectedSlicerFolderIds, getFolderIdsWithoutChildren],
   )
+
+  // list entities narrowed to the hierarchy panel's subtree; ids not yet in
+  // parentMaps pass through (the maps lag rawEntityIds by one resolve)
+  const scopeEntityIds = useCallback(
+    (ids: string[], folderIdMap: Record<string, string>) =>
+      folderScope
+        ? ids.filter((id) => {
+            const folderId = folderIdMap[id]
+            return !folderId || folderScope.has(folderId)
+          })
+        : ids,
+    [folderScope],
+  )
+  const scopedVersionIds = useMemo(
+    () => scopeEntityIds(entityIds.versionIds, parentMaps.versionFolderIds),
+    [scopeEntityIds, entityIds.versionIds, parentMaps],
+  )
+  const scopedProductIds = useMemo(
+    () => scopeEntityIds(entityIds.productIds, parentMaps.productFolderIds),
+    [scopeEntityIds, entityIds.productIds, parentMaps],
+  )
+  const scopedTaskIds = useMemo(
+    () => scopeEntityIds(rawEntityIds.taskIds, parentMaps.taskFolderIds),
+    [scopeEntityIds, rawEntityIds.taskIds, parentMaps],
+  )
+
   // combine slicer filters with version/product filters
   const combinedVersionFilter = useQueryFilters({
     queryFilters: versionFilter,
-    sliceFilter: slicerVersionFilter,
+    sliceFilters: slicerVersionFilters,
   })
   const combinedProductFilter = useQueryFilters({
     queryFilters: productFilter,
-    sliceFilter: slicerProductFilter,
+    sliceFilters: slicerProductFilters,
   })
   const combinedTaskFilter = useQueryFilters({
     queryFilters: taskFilter,
-    sliceFilter: slicerTaskFilter,
+    sliceFilters: slicerTaskFilters,
   })
   const combinedFolderFilter = useQueryFilters({
     queryFilters: folderFilter,
-    sliceFilter: slicerFolderFilter,
+    sliceFilters: slicerFolderFilters,
     config: { searchKey: 'name' },
   })
 
@@ -326,12 +364,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   // When entity list has task IDs, merge them into the task filter
   const entityListTaskFilterString = useMemo(() => {
-    if (!rawEntityIds.taskIds.length) return combinedTaskFilter.filterString
+    if (!scopedTaskIds.length) return combinedTaskFilter.filterString
 
     const taskIdCondition = {
       key: 'id',
       operator: 'in',
-      value: rawEntityIds.taskIds,
+      value: scopedTaskIds,
     }
 
     const existingFilter = combinedTaskFilter.filterString
@@ -342,7 +380,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       conditions: [...(existingFilter.conditions || []), taskIdCondition],
       operator: 'and',
     })
-  }, [rawEntityIds.taskIds, combinedTaskFilter.filterString])
+  }, [scopedTaskIds, combinedTaskFilter.filterString])
 
   // Slicer value counts: exclude the active slice's own filter (base*Filter, no
   // sliceFilter) so a selected value keeps its siblings' true counts; keep the
@@ -355,8 +393,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       taskFilter: baseTaskFilter.filterString,
       folderFilter: baseFolderFilter.filterString,
       folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
-      versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
-      productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
+      versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
+      productIds: scopedProductIds.length ? scopedProductIds : undefined,
       latestPerFolder,
     }),
     [
@@ -366,8 +404,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       baseTaskFilter.filterString,
       baseFolderFilter.filterString,
       slicerFolderIds,
-      entityIds.versionIds,
-      entityIds.productIds,
+      scopedVersionIds,
+      scopedProductIds,
       latestPerFolder,
     ],
   )
@@ -384,8 +422,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       taskFilter: entityListTaskFilterString,
       folderFilter: combinedFolderFilter.filterString,
       folderIds: slicerFolderIds,
-      versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
-      productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
+      versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
+      productIds: scopedProductIds.length ? scopedProductIds : undefined,
       sortBy: resolvedSortBy,
       desc: sortDesc,
       showComments,
@@ -397,8 +435,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       entityListTaskFilterString,
       combinedFolderFilter.filterString,
       slicerFolderIds,
-      entityIds.versionIds,
-      entityIds.productIds,
+      scopedVersionIds,
+      scopedProductIds,
       resolvedSortBy,
       sortDesc,
       showComments,
@@ -420,8 +458,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     taskFilter: entityListTaskFilterString,
     folderFilter: combinedFolderFilter.filterString,
     folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
-    versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
-    productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
+    versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
+    productIds: scopedProductIds.length ? scopedProductIds : undefined,
     featuredOnly: featuredVersionFilter,
     featuredOnlyEntityType: featuredVersionFilter?.length ? 'product' : undefined,
     latestPerFolder,
@@ -743,8 +781,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       folderFilter: combinedFolderFilter.filterString,
       // empty array means "match nothing" backend-side — omit when no slice
       folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
-      versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
-      productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
+      versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
+      productIds: scopedProductIds.length ? scopedProductIds : undefined,
       featuredOnly: versionStatsArgs.featuredOnly,
       featuredOnlyEntityType: versionStatsArgs.featuredOnlyEntityType,
       latestPerFolder: versionStatsArgs.latestPerFolder,

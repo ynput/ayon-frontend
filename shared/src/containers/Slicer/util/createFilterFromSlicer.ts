@@ -1,13 +1,15 @@
-import type { AttributeModel, FolderListItem } from '@shared/api'
+import type { AttributeModel } from '@shared/api'
 import { ProjectTableAttribute } from '../../ProjectTreeTable/hooks/useAttributesList'
 import { SliceFilter, SliceType } from '../types'
 import { RowSelectionState } from '@tanstack/react-table'
+
+export type SliceSelection = { sliceType: SliceType; rowSelection: RowSelectionState }
 
 export type CreateFilterFromSlicer = ({
   slice,
   attribFields,
 }: {
-  slice: { sliceType: SliceType; rowSelection: RowSelectionState } | null
+  slice: SliceSelection | null
   attribFields: ProjectTableAttribute[]
 }) => SliceFilter | null
 
@@ -50,3 +52,16 @@ export const createFilterFromSlicer: CreateFilterFromSlicer = ({ slice, attribFi
 
   return filter
 }
+
+// value-dimension panels only; hierarchy and entityList contribute folder/entity ids instead
+export const createFiltersFromSlicer = ({
+  slices,
+  attribFields,
+}: {
+  slices: SliceSelection[]
+  attribFields: ProjectTableAttribute[]
+}): SliceFilter[] =>
+  slices
+    .filter((slice) => slice.sliceType !== 'hierarchy' && slice.sliceType !== 'entityList')
+    .map((slice) => createFilterFromSlicer({ slice, attribFields }))
+    .filter((filter): filter is SliceFilter => !!filter)

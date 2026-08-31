@@ -4,12 +4,14 @@ import {
   ForwardRefExoticComponent,
   RefAttributes,
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
 } from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import type { SliceType } from '../types'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
-import { useSessionStorage } from '@shared/hooks/useSessionStorage'
+import { readSessionStorage, useSessionStorage } from '@shared/hooks/useSessionStorage'
 import type { ProjectModel, Assignees, AttributeModel, ProductType } from '@shared/api'
 import { SlicerDropdownFallbackProps } from '../components/SlicerDropdownFallback'
 import { DropdownRef } from '@ynput/ayon-react-components'
@@ -55,6 +57,10 @@ export const SLICER_PAGES_CONFIG: SlicerConfig = {
 }
 
 export type OnSliceTypeChange = (sliceType: SliceType, pinCurrent?: boolean) => void
+
+// pages where every panel contributes to data fetching (pinnedSlice is retired there);
+// these are SlicerProvider `page` values — the versions/products page is 'products'
+const MIGRATED_PAGES = ['overview', 'products']
 
 export type SlicerConfig = {
   [page: string]: {
@@ -133,13 +139,40 @@ export const SlicerProvider = ({
   onAddToList,
   ...props
 }: SlicerProviderProps) => {
+  // this is used to store another slice type whilst the user is viewing a different slice type
+  // mostly used for preserving the hierarchy selection when switching to another slice type
+  const [pinnedSlice, setPinnedSlice] = useSessionStorage<PinnedSlice | null>(
+    `slicer-pinned-slice-${page}`,
+    null,
+  )
+
   const slicerViewSettings = viewSettings as SlicerViewSettings | undefined
-  const viewSliceTypes = slicerViewSettings?.sliceTypes?.length
-    ? slicerViewSettings.sliceTypes
+  const storedSliceTypes = slicerViewSettings?.sliceTypes
+  const viewSliceTypes = storedSliceTypes?.length
+    ? storedSliceTypes
     : [slicerViewSettings?.sliceType ?? 'hierarchy']
+
+  // pre-upgrade views kept the folder selection alive through an invisible pinned
+  // hierarchy slice; surface it as a real second panel so the result set survives
+  const migratePinnedHierarchy =
+    MIGRATED_PAGES.includes(page) &&
+    !props.sliceType &&
+    !storedSliceTypes?.length &&
+    viewSliceTypes[0] !== 'hierarchy' &&
+    pinnedSlice?.sliceType === 'hierarchy' &&
+    Object.values(pinnedSlice.rowSelection || {}).some(Boolean)
+
   const sliceTypes = useMemo(
-    () => [...new Set(props.sliceType ? [props.sliceType] : viewSliceTypes)],
-    [props.sliceType, viewSliceTypes.join('|')],
+    () => [
+      ...new Set(
+        props.sliceType
+          ? [props.sliceType]
+          : migratePinnedHierarchy
+          ? [...viewSliceTypes, 'hierarchy']
+          : viewSliceTypes,
+      ),
+    ],
+    [props.sliceType, viewSliceTypes.join('|'), migratePinnedHierarchy],
   )
   const slices = useMemo<SlicePanel[]>(
     () => sliceTypes.map((t) => ({ id: t, sliceType: t })),
@@ -163,13 +196,6 @@ export const SlicerProvider = ({
     ...props,
   })
 
-  // this is used to store another slice type whilst the user is viewing a different slice type
-  // mostly used for preserving the hierarchy selection when switching to another slice type
-  const [pinnedSlice, setPinnedSlice] = useSessionStorage<PinnedSlice | null>(
-    `slicer-pinned-slice-${page}`,
-    null,
-  )
-
   const onRowSelectionChange = useCallback<OnRowSelectionChange>(
     (selection) => {
       setRowSelection(selection) // updates either hierarchy or other selection based on slice type
@@ -185,6 +211,58 @@ export const SlicerProvider = ({
     },
     [updateViewSettings],
   )
+
+  // persist the migrated arrangement; the pinned selection is copied into the
+  // hierarchy bucket so the new panel starts with the same folder scope
+  const hasMigratedPinned = useRef(false)
+  useEffect(() => {
+    if (!migratePinnedHierarchy || isLoadingViews || hasMigratedPinned.current) return
+    hasMigratedPinned.current = true
+    setPanelSelection('hierarchy', pinnedSlice!.rowSelection)
+    setPanelExpanded('hierarchy', pinnedSlice!.expanded)
+    persistSliceTypes(sliceTypes)
+  }, [migratePinnedHierarchy, isLoadingViews])
+
+  // pre-upgrade views stored the active value slice's selection in one shared
+  // per-page bucket (no sliceType suffix); move it into that slice's own bucket
+  const hasMigratedLegacyBucket = useRef(false)
+  useEffect(() => {
+    if (
+      hasMigratedLegacyBucket.current ||
+      isLoadingViews ||
+      props.sliceType ||
+      props.rowSelection ||
+      props.setRowSelection ||
+      storedSliceTypes?.length
+    )
+      return
+    hasMigratedLegacyBucket.current = true
+    const legacySelectionKey = `slicer-selection-${projectName}-${page}`
+    const legacyExpandedKey = `slicer-expanded-${projectName}-${page}`
+    const activeType = viewSliceTypes[0]
+    if (activeType !== 'hierarchy') {
+      const legacySelection = readSessionStorage<RowSelectionState | null>(legacySelectionKey, null)
+      if (legacySelection && Object.keys(legacySelection).length) {
+        setPanelSelection(activeType, (current) =>
+          Object.keys(current).length ? current : legacySelection,
+        )
+        const legacyExpanded = readSessionStorage<ExpandedState | null>(legacyExpandedKey, null)
+        if (legacyExpanded) setPanelExpanded(activeType, legacyExpanded)
+      }
+    }
+    sessionStorage.removeItem(legacySelectionKey)
+    sessionStorage.removeItem(legacyExpandedKey)
+  }, [isLoadingViews, storedSliceTypes])
+
+  // migrated pages no longer read pinnedSlice for data fetching — drop any pin
+  // not awaiting migration so the filter bar stops advertising a dead filter.
+  // Waiting for storedSliceTypes keeps the migration source alive while the
+  // settings write is in flight.
+  useEffect(() => {
+    if (MIGRATED_PAGES.includes(page) && !props.sliceType && !isLoadingViews) {
+      if (pinnedSlice && !migratePinnedHierarchy) setPinnedSlice(null)
+    }
+  }, [page, props.sliceType, isLoadingViews, pinnedSlice, migratePinnedHierarchy, setPinnedSlice])
 
   const onSliceTypeChange = useCallback<OnSliceTypeChange>(
     (newSliceType, pinCurrent) => {

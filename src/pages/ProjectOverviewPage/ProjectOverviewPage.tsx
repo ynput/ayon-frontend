@@ -237,7 +237,6 @@ const ProjectOverviewPage: FC = () => {
             <Slicer
               sliceFields={SLICER_PAGES_CONFIG.overview.fields}
               entityTypes={['task', 'folder']}
-              pinnedSliceType="hierarchy"
               countsSource={slicerCountsSource}
               onAddToList={onAddToList}
               enableSplit
