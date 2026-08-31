@@ -13,7 +13,7 @@ import { useSessionStorage } from '@shared/hooks/useSessionStorage'
 import type { ProjectModel, Assignees, AttributeModel, ProductType } from '@shared/api'
 import { SlicerDropdownFallbackProps } from '../components/SlicerDropdownFallback'
 import { DropdownRef } from '@ynput/ayon-react-components'
-import { PinnedSlice, SliceTypeField } from '../types'
+import { PinnedSlice, SlicePanel, SlicerViewSettings, SliceTypeField } from '../types'
 import type { ViewSettings } from '@shared/containers/Views/context/ViewsContext'
 import type { UpdateViewSettingsFn } from '@shared/containers/Views/utils/viewUpdateHelper'
 import { SlicerContext } from './SlicerContextInstance'
@@ -84,6 +84,14 @@ export interface SlicerContextValue {
   onExpandedChange: (expanded: ExpandedState) => void
   sliceType: SliceType
   onSliceTypeChange: OnSliceTypeChange
+  slices: SlicePanel[]
+  addSlicePanel: (sliceType?: SliceType) => void
+  removeSlicePanel: (panelId: string) => void
+  setPanelSliceType: (panelId: string, sliceType: SliceType) => void
+  getPanelSelection: (panelId: string) => RowSelectionState
+  setPanelSelection: (panelId: string, selection: React.SetStateAction<RowSelectionState>) => void
+  getPanelExpanded: (panelId: string) => ExpandedState
+  setPanelExpanded: (panelId: string, expanded: React.SetStateAction<ExpandedState>) => void
   isViewSyncPending: boolean
   pinnedSlice: PinnedSlice | null
   setPinnedSlice: React.Dispatch<React.SetStateAction<PinnedSlice | null>>
@@ -124,11 +132,31 @@ export const SlicerProvider = ({
   onAddToList,
   ...props
 }: SlicerProviderProps) => {
-  // @ts-expect-error - sliceType can be on a view
-  const sliceType = props.sliceType ?? viewSettings?.sliceType ?? 'hierarchy'
+  const slicerViewSettings = viewSettings as SlicerViewSettings | undefined
+  const viewSliceTypes = slicerViewSettings?.sliceTypes?.length
+    ? slicerViewSettings.sliceTypes
+    : [slicerViewSettings?.sliceType ?? 'hierarchy']
+  const sliceTypes = useMemo(
+    () => [...new Set(props.sliceType ? [props.sliceType] : viewSliceTypes)],
+    [props.sliceType, viewSliceTypes.join('|')],
+  )
+  const slices = useMemo<SlicePanel[]>(
+    () => sliceTypes.map((t) => ({ id: t, sliceType: t })),
+    [sliceTypes],
+  )
+  const sliceType = slices[0].sliceType
 
-  const { rowSelection, setRowSelection, expanded, setExpanded } = useSlicerRowSelection({
-    sliceType,
+  const {
+    rowSelection,
+    setRowSelection,
+    expanded,
+    setExpanded,
+    getPanelSelection,
+    setPanelSelection,
+    getPanelExpanded,
+    setPanelExpanded,
+  } = useSlicerRowSelection({
+    sliceTypes,
     page,
     projectName,
     ...props,
@@ -148,14 +176,23 @@ export const SlicerProvider = ({
     [setRowSelection],
   )
 
+  const persistSliceTypes = useCallback(
+    (next: SliceType[]) => {
+      const noOp = () => {}
+      // sliceType mirrors sliceTypes[0] so older clients keep a valid single dimension
+      updateViewSettings({ sliceTypes: next, sliceType: next[0] }, noOp, noOp, {})
+    },
+    [updateViewSettings],
+  )
+
   const onSliceTypeChange = useCallback<OnSliceTypeChange>(
     (newSliceType, pinCurrent) => {
+      // a dimension may only appear in one panel
+      if (sliceTypes.slice(1).includes(newSliceType)) return
       if (props.onSliceTypeChange) {
         props.onSliceTypeChange(newSliceType, pinCurrent)
       } else {
-        const noOp = () => {}
-        // update the view settings with the new slice type
-        updateViewSettings({ sliceType: newSliceType }, noOp, noOp, {})
+        persistSliceTypes([newSliceType, ...sliceTypes.slice(1)])
       }
 
       // remove current row selection as it is no longer relevant to the new slice type
@@ -166,9 +203,8 @@ export const SlicerProvider = ({
         setRowSelection(pinnedSlice.rowSelection, newSliceType)
         setExpanded(pinnedSlice.expanded, newSliceType)
         setPinnedSlice(null)
-      } else {
-        // clear pinned slice if switching to a different slice type
-        console.log('Clearing current pinned slice as switching to a different slice type')
+      } else if (newSliceType !== 'hierarchy') {
+        // hierarchy keeps its project-wide selection
         setRowSelection({}, newSliceType)
         setExpanded({}, newSliceType)
       }
@@ -184,7 +220,8 @@ export const SlicerProvider = ({
       }
     },
     [
-      updateViewSettings,
+      persistSliceTypes,
+      sliceTypes,
       rowSelection,
       setRowSelection,
       pinnedSlice,
@@ -192,6 +229,41 @@ export const SlicerProvider = ({
       expanded,
       setExpanded,
     ],
+  )
+
+  const clearPanelState = useCallback(
+    (newSliceType: SliceType) => {
+      if (newSliceType === 'hierarchy') return
+      setPanelSelection(newSliceType, {})
+      setPanelExpanded(newSliceType, {})
+    },
+    [setPanelSelection, setPanelExpanded],
+  )
+
+  const addSlicePanel = useCallback(
+    (newSliceType?: SliceType) => {
+      if (!newSliceType || sliceTypes.includes(newSliceType)) return
+      persistSliceTypes([...sliceTypes, newSliceType])
+      clearPanelState(newSliceType)
+    },
+    [sliceTypes, persistSliceTypes, clearPanelState],
+  )
+
+  const removeSlicePanel = useCallback(
+    (panelId: string) => {
+      if (sliceTypes.length <= 1 || !sliceTypes.includes(panelId)) return
+      persistSliceTypes(sliceTypes.filter((t) => t !== panelId))
+    },
+    [sliceTypes, persistSliceTypes],
+  )
+
+  const setPanelSliceType = useCallback(
+    (panelId: string, newSliceType: SliceType) => {
+      if (!sliceTypes.includes(panelId) || sliceTypes.includes(newSliceType)) return
+      persistSliceTypes(sliceTypes.map((t) => (t === panelId ? newSliceType : t)))
+      clearPanelState(newSliceType)
+    },
+    [sliceTypes, persistSliceTypes, clearPanelState],
   )
 
   const onExpandedChange = useCallback(
@@ -213,6 +285,15 @@ export const SlicerProvider = ({
       // SLICE TYPE
       sliceType,
       onSliceTypeChange,
+      // SLICE PANELS
+      slices,
+      addSlicePanel,
+      removeSlicePanel,
+      setPanelSliceType,
+      getPanelSelection,
+      setPanelSelection,
+      getPanelExpanded,
+      setPanelExpanded,
       // ROW SELECTION
       rowSelection,
       onRowSelectionChange,
@@ -232,6 +313,14 @@ export const SlicerProvider = ({
       SlicerDropdown,
       sliceType,
       onSliceTypeChange,
+      slices,
+      addSlicePanel,
+      removeSlicePanel,
+      setPanelSliceType,
+      getPanelSelection,
+      setPanelSelection,
+      getPanelExpanded,
+      setPanelExpanded,
       rowSelection,
       onRowSelectionChange,
       pinnedSlice,

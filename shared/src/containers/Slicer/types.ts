@@ -12,6 +12,18 @@ export type SliceType =
   | 'entityList'
   | string
 
+// panel id doubles as the slice type: a dimension may only appear in one panel
+export interface SlicePanel {
+  id: string
+  sliceType: SliceType
+}
+
+// view settings are an untyped dict on the server; slicer keys are declared FE-side
+export interface SlicerViewSettings {
+  sliceType?: SliceType
+  sliceTypes?: SliceType[]
+}
+
 export interface SliceFilter extends FilterValue {
   values: { id: string; label: string }[]
 }
