@@ -11,12 +11,14 @@ interface ListMetaDataProps {
 }
 
 export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading }) => {
-  const listData = { ...(list?.data || {}) }
-  // remove category and count from the meta data
-  // @ts-expect-error
-  delete listData.category
-  // @ts-expect-error
-  delete listData.count
+  // data also holds structured entries (list attribute definitions, review session
+  // sections/grouping) which have no meaningful string rendering
+  const listData = Object.fromEntries(
+    Object.entries(list?.data || {}).filter(
+      ([key, value]) =>
+        !['category', 'count'].includes(key) && value !== null && typeof value !== 'object',
+    ),
+  )
 
   const metaData = {
     Id: list?.id,
