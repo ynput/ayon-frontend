@@ -19,4 +19,23 @@ const useSlicerSplitter = () => {
   return [slicerSize, handleResizeEnd] as const
 }
 
+// vertical split between stacked slicer panels; equal split whenever the panel count changes
+export const useSlicerPanelHeights = (page: string, panelCount: number) => {
+  const [storedSizes, setStoredSizes] = useSessionStorage<number[]>(
+    `slicer-splitter-vertical-${page}`,
+    [],
+  )
+
+  const sizes =
+    storedSizes.length === panelCount
+      ? storedSizes
+      : Array(panelCount).fill(100 / panelCount)
+
+  const handleResizeEnd = (props: { sizes: number[] }) => {
+    setStoredSizes(props.sizes)
+  }
+
+  return [sizes, handleResizeEnd] as const
+}
+
 export default useSlicerSplitter

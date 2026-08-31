@@ -240,6 +240,7 @@ const ProjectOverviewPage: FC = () => {
               pinnedSliceType="hierarchy"
               countsSource={slicerCountsSource}
               onAddToList={onAddToList}
+              enableSplit
             />
           </Section>
         </SplitterPanel>

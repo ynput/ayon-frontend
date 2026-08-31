@@ -75,6 +75,7 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
               pinnedSliceType="hierarchy"
               entityTypes={['version', 'task', 'folder']}
               countsSource={slicerCountsSource}
+              enableSplit
             />
           </Section>
         </SplitterPanel>

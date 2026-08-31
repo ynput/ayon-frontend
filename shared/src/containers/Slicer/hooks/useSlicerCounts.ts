@@ -25,8 +25,10 @@ const EMPTY_COUNTS: GroupCountsMap = new Map()
 export const useSlicerCounts = (
   source: SlicerCountsSource | undefined,
   skip?: boolean,
+  sliceTypeOverride?: string,
 ): SlicerCounts => {
-  const { sliceType } = useSlicerContext()
+  const { sliceType: contextSliceType } = useSlicerContext()
+  const sliceType = sliceTypeOverride ?? contextSliceType
 
   const groupBy = useMemo(() => ({ id: sliceType, desc: false }), [sliceType])
   const disabled = !!skip || !source

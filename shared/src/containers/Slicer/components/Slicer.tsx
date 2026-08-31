@@ -1,33 +1,17 @@
 import { FC, useCallback, useState } from 'react'
-import SimpleTable from '@shared/containers/SimpleTable/SimpleTable'
-import { Container, Header } from '@shared/containers/SimpleTable/SimpleTable.styled'
-import { Row } from '@tanstack/react-table'
-import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
+import { Splitter, SplitterPanel } from 'primereact/splitter'
 
-import useTableDataBySlice from '../hooks/useTableDataBySlice'
-import { useSlicerCounts, type SlicerCountsSource } from '../hooks/useSlicerCounts'
-import SlicerSearch from './SlicerSearch'
-import clsx from 'clsx'
-import { useHierarchyContextMenuItems } from '../hooks/useHierarchyContextMenuItems'
 import type { OnAddToList } from '../hooks/useHierarchyContextMenuItems'
 import type { SliceType } from '../types'
-import { SimpleTableProvider } from '@shared/containers/SimpleTable/context/SimpleTableContext'
-import { RowSelectionState } from '@tanstack/react-table'
 import { SliceTypeField } from '../types'
 import { useSlicerContext } from '../context/SlicerContext'
-import styled from 'styled-components'
-import { ExpandedState } from '@tanstack/react-table'
-import { SyncButton } from '@shared/components/SyncButton/SyncButton'
+import { useSlicerPanelHeights } from '../hooks/useSlicerSplitter'
+import type { SlicerCountsSource } from '../hooks/useSlicerCounts'
+import { usePowerpack } from '@shared/context/PowerpackContext'
 import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
 import { MoveEntityDialog } from '@shared/containers/MoveEntityDialog/MoveEntityDialog'
 import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
-
-const DropdownSkeleton = styled.div`
-  height: 28px;
-  border-radius: 4px;
-  background: var(--md-sys-color-surface-container);
-  width: 100px;
-`
+import SlicerPanel from './SlicerPanel'
 
 export interface SlicerProps {
   sliceFields: SliceTypeField[]
@@ -35,6 +19,7 @@ export interface SlicerProps {
   pinnedSliceType?: SliceType // when changing slice type, pinned the current slice
   countsSource?: SlicerCountsSource // entity + filter args for per-value count badges
   onAddToList?: OnAddToList
+  enableSplit?: boolean // offer splitting into multiple stacked panels (license gated)
 }
 
 export const Slicer: FC<SlicerProps> = ({
@@ -43,19 +28,13 @@ export const Slicer: FC<SlicerProps> = ({
   pinnedSliceType,
   countsSource,
   onAddToList,
+  enableSplit,
 }) => {
-  const [globalFilter, setGlobalFilter] = useState('')
-  const {
-    SlicerDropdown,
-    rowSelection,
-    onRowSelectionChange,
-    expanded,
-    onExpandedChange,
-    isViewSyncPending,
-    onOpenViewer,
-    onAddToList: contextOnAddToList,
-    projectName,
-  } = useSlicerContext()
+  const { slices, page, setPanelExpanded, projectName } = useSlicerContext()
+  const { powerLicense } = usePowerpack()
+
+  const splitEnabled = !!enableSplit && powerLicense
+  const visibleSlices = splitEnabled ? slices : slices.slice(0, 1)
 
   const [movingEntities, setMovingEntities] = useState<MultiEntityMoveData | null>(null)
   const openMoveDialog = useCallback<OpenMoveDialog>((data) => {
@@ -65,12 +44,12 @@ export const Slicer: FC<SlicerProps> = ({
     setMovingEntities(null)
   }, [])
 
-  const { refetch, getParentFolderIds } = useProjectFoldersContext()
+  const { getParentFolderIds } = useProjectFoldersContext()
 
   const handleMoveComplete = useCallback(
     (folderId: string) => {
       const folderIdsToExpand = [folderId, ...getParentFolderIds(folderId)]
-      onExpandedChange(
+      setPanelExpanded('hierarchy', (expanded) =>
         typeof expanded === 'boolean'
           ? expanded
             ? expanded
@@ -81,112 +60,46 @@ export const Slicer: FC<SlicerProps> = ({
             },
       )
     },
-    [expanded, getParentFolderIds, onExpandedChange],
+    [getParentFolderIds, setPanelExpanded],
   )
 
-  const handleSync = async () => refetch()
+  const [panelHeights, handlePanelResizeEnd] = useSlicerPanelHeights(page, visibleSlices.length)
 
-  const { counts, filled, complete } = useSlicerCounts(countsSource)
-
-  const {
-    sliceOptions,
-    sliceType,
-    handleSliceTypeChange,
-    table: { data: sliceTableData, isExpandable },
-    sliceMap,
-    isLoading: isLoadingSliceTableData,
-  } = useTableDataBySlice({
+  const panelProps = {
     sliceFields,
     entityTypes,
-    counts,
-    filled,
-    countsComplete: complete,
-  })
-
-  const hierarchyContextMenu = useHierarchyContextMenuItems(
-    onAddToList || contextOnAddToList,
-    sliceMap,
-    onOpenViewer,
+    pinnedSliceType,
+    countsSource,
+    onAddToList,
     openMoveDialog,
-  )
-  const rowContextMenuBuilders =
-    sliceType === 'hierarchy' ? hierarchyContextMenu.rowContextMenuBuilders : []
-
-  const handleSelectionChange = (s: RowSelectionState) => {
-    onRowSelectionChange?.(s)
+    splitEnabled,
   }
 
   return (
-    <Container>
-      <Header>
-        {isViewSyncPending ? (
-          <DropdownSkeleton />
-        ) : (
-          <SlicerDropdown
-            options={sliceOptions || []}
-            value={[sliceType]}
-            sliceTypes={sliceFields.map((field) => field.value)}
-            onChange={(value: any) =>
-              handleSliceTypeChange(value[0] as SliceType, pinnedSliceType === sliceType)
-            }
-            className={clsx('slicer-dropdown', { 'single-option': sliceOptions.length === 1 })}
-            disableOpen={sliceOptions.length === 1}
-          />
-        )}
-        <SlicerSearch value={globalFilter} onChange={setGlobalFilter} />
-        <SyncButton
-          topics={['entity.folder.created']}
-          onSync={async () => {
-            await handleSync()
-          }}
-          hideWhenNoUpdates
-        />
-      </Header>
-      <SimpleTableProvider
-        {...{
-          rowSelection,
-          onRowSelectionChange: handleSelectionChange,
-          expanded,
-          setExpanded: onExpandedChange as React.Dispatch<React.SetStateAction<ExpandedState>>,
-          data: sliceMap,
-        }}
-      >
-        <SimpleTable
-          data={sliceTableData}
-          isExpandable={isExpandable}
-          isLoading={isLoadingSliceTableData || isViewSyncPending}
-          forceUpdateTable={sliceType}
-          globalFilter={globalFilter}
-          onRename={
-            sliceType === 'hierarchy'
-              ? (_id: string, row: Row<SimpleTableRow>) =>
-                  hierarchyContextMenu.onRename(row.original)
-              : undefined
-          }
-          renamingId={sliceType === 'hierarchy' ? hierarchyContextMenu.renamingRow?.id : null}
-          renameInitialValue={
-            sliceType === 'hierarchy' ? hierarchyContextMenu.renameInitialValue : undefined
-          }
-          onSubmitRename={
-            sliceType === 'hierarchy'
-              ? (_id, value) => hierarchyContextMenu.onSubmitRename(value)
-              : undefined
-          }
-          onCancelRename={
-            sliceType === 'hierarchy' ? hierarchyContextMenu.onCancelRename : undefined
-          }
-          onRowOptionClick={
-            sliceType === 'hierarchy' ? hierarchyContextMenu.onOptionClick : undefined
-          }
-          rowContextMenuBuilders={rowContextMenuBuilders}
-        />
-      </SimpleTableProvider>
+    <>
+      {visibleSlices.length === 1 ? (
+        <SlicerPanel panel={visibleSlices[0]} isPrimary showRemove={false} {...panelProps} />
+      ) : (
+        <Splitter
+          layout="vertical"
+          // remount so primereact picks up new panel sizes when the arrangement changes
+          key={visibleSlices.map((s) => s.id).join('|')}
+          onResizeEnd={handlePanelResizeEnd}
+          style={{ width: '100%', height: '100%', overflow: 'hidden' }}
+        >
+          {visibleSlices.map((panel, index) => (
+            <SplitterPanel key={panel.id} size={panelHeights[index]} minSize={10} style={{ overflow: 'hidden' }}>
+              <SlicerPanel panel={panel} isPrimary={index === 0} showRemove {...panelProps} />
+            </SplitterPanel>
+          ))}
+        </Splitter>
+      )}
       <MoveEntityDialog
         projectName={projectName}
         movingEntities={movingEntities}
         onClose={closeMoveDialog}
         onMoveComplete={handleMoveComplete}
       />
-    </Container>
+    </>
   )
 }

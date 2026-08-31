@@ -6,6 +6,7 @@ import { Slice, SliceData, SliceTypeField, TableData } from '../types'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import type { SliceType } from '../types'
 import { useSlicerContext } from '../context/SlicerContext'
+import type { OnSliceTypeChange } from '../context/SlicerContext'
 import useSlicerAttributesData from './useSlicerAttributesData'
 import { useEntityListsSlice } from './useEntityListsSlice'
 import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
@@ -19,6 +20,9 @@ interface TableDataBySliceProps {
   counts?: GroupCountsMap
   filled?: number
   countsComplete?: boolean
+  // per-panel overrides; defaults keep the single-panel (first slice) behaviour
+  sliceType?: SliceType
+  onSliceTypeChange?: OnSliceTypeChange
 }
 
 const getRowCount = (
@@ -123,8 +127,17 @@ const useTableDataBySlice = ({
   counts,
   filled = 0,
   countsComplete = false,
+  sliceType: sliceTypeOverride,
+  onSliceTypeChange: onSliceTypeChangeOverride,
 }: TableDataBySliceProps): TableData => {
-  const { sliceType, onSliceTypeChange, useExtraSlices, isLoadingExtraSlices } = useSlicerContext()
+  const {
+    sliceType: contextSliceType,
+    onSliceTypeChange: contextOnSliceTypeChange,
+    useExtraSlices,
+    isLoadingExtraSlices,
+  } = useSlicerContext()
+  const sliceType = sliceTypeOverride ?? contextSliceType
+  const onSliceTypeChange = onSliceTypeChangeOverride ?? contextOnSliceTypeChange
   const { projectName } = useProjectContext()
   const { formatAttribute } = useExtraSlices()
 

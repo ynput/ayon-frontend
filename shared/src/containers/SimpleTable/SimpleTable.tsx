@@ -137,6 +137,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   children,
   pt,
   fitContent,
+  rowIdPrefix,
   ...props
 }) => {
   const {
@@ -150,6 +151,11 @@ const SimpleTable: FC<SimpleTableProps> = ({
   } = useSimpleTableContext()
   const lastSelectedIdRef = useRef<string | null>(null)
   const tableRef = useRef<Table<SimpleTableRow> | null>(null)
+  // read via ref so the memoized arrow-nav callback sees the current prefix after a dimension change
+  const rowIdPrefixRef = useRef(rowIdPrefix)
+  rowIdPrefixRef.current = rowIdPrefix
+  const toDomId = (id: string) =>
+    rowIdPrefixRef.current ? `${rowIdPrefixRef.current}-${id}` : id
   const [showRowContextMenu] = useCreateContextMenu()
 
   // Refs for values used inside the columns memo.
@@ -317,8 +323,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
           requestAnimationFrame(() => {
             const container = tableContainerRef.current
             const nextRowElement = container
-              ? container.querySelector(`#${CSS.escape(nextRow.id)}`)
-              : document.getElementById(nextRow.id)
+              ? container.querySelector(`#${CSS.escape(toDomId(nextRow.id))}`)
+              : document.getElementById(toDomId(nextRow.id))
             const nextCell = nextRowElement?.querySelector('[tabindex="0"]') as HTMLElement
             if (nextCell) {
               nextCell.focus()
@@ -651,7 +657,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
                   data-index={virtualRow.index} //needed for dynamic row height measurement
                   ref={measureElementRef} //measure dynamic row height
                   key={row.id}
-                  id={row.id}
+                  id={toDomId(row.id)}
                   onContextMenu={(e) => handleRowContextMenu(row.id, virtualRow.index, e)}
                   {...pt?.row}
                   style={{
