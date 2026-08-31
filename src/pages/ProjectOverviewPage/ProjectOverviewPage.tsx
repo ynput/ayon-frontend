@@ -236,7 +236,6 @@ const ProjectOverviewPage: FC = () => {
           <Section wrap style={{ height: '100%' }}>
             <Slicer
               sliceFields={SLICER_PAGES_CONFIG.overview.fields}
-              entityTypes={['task', 'folder']}
               pinnedSliceType="hierarchy"
               countsSource={slicerCountsSource}
               onAddToList={onAddToList}

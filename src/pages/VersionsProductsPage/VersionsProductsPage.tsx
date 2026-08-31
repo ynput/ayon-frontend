@@ -73,7 +73,6 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
             <Slicer
               sliceFields={SLICER_PAGES_CONFIG.versions.fields}
               pinnedSliceType="hierarchy"
-              entityTypes={['version', 'task', 'folder']}
               countsSource={slicerCountsSource}
             />
           </Section>
