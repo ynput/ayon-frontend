@@ -28,7 +28,11 @@ export {
   clampDraggedHeights,
 } from './slicerPanelLayout'
 
-export const useSlicerPanelHeights = (page: string, panelIds: string[], containerHeight: number) => {
+export const useSlicerPanelHeights = (
+  page: string,
+  panelIds: string[],
+  collapsed: string[] = [],
+) => {
   const [stored, setStoredHeights] = useSessionStorage<SlicerPanelHeights>(
     `slicer-panel-heights-${page}`,
     {},
@@ -37,13 +41,18 @@ export const useSlicerPanelHeights = (page: string, panelIds: string[], containe
   const [clampCount, setClampCount] = useState(0)
 
   const heights = Array.isArray(stored) ? {} : stored
-  const { sizes, minSize, height } = resolvePanelLayout(heights, panelIds, containerHeight)
+  const { sizes, minSize, height } = resolvePanelLayout(heights, panelIds, collapsed)
 
   const handleResizeEnd = (props: { sizes: number[] }) => {
-    const dragged = clampDraggedHeights(props.sizes, height, containerHeight)
+    const dragged = clampDraggedHeights(props.sizes, height)
+    // a collapsed panel has no height of its own to remember
     setStoredHeights({
       ...heights,
-      ...Object.fromEntries(panelIds.map((id, index) => [id, dragged[index]])),
+      ...Object.fromEntries(
+        panelIds
+          .map((id, index) => [id, dragged[index]] as const)
+          .filter(([id]) => !collapsed.includes(id)),
+      ),
     })
     const clamped = dragged.some(
       (h, index) => Math.abs(h - (props.sizes[index] / 100) * height) > 1,
@@ -55,7 +64,7 @@ export const useSlicerPanelHeights = (page: string, panelIds: string[], containe
     sizes,
     minSize,
     height,
-    layoutKey: `${panelIds.join('|')}#${clampCount}`,
+    layoutKey: `${panelIds.join('|')}#${collapsed.join('|')}#${clampCount}`,
     handleResizeEnd,
   }
 }

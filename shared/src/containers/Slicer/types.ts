@@ -22,6 +22,7 @@ export interface SlicePanel {
 export interface SlicerViewSettings {
   sliceType?: SliceType
   sliceTypes?: SliceType[]
+  collapsedSliceTypes?: SliceType[]
 }
 
 export interface SliceFilter extends FilterValue {

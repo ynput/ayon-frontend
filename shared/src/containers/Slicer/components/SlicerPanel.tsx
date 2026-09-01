@@ -10,6 +10,7 @@ import {
   type GetSlicerCountsSource,
   type SlicerCountsSource,
 } from '../hooks/useSlicerCounts'
+import { Icon } from '@ynput/ayon-react-components'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
 import { useHierarchyContextMenuItems } from '../hooks/useHierarchyContextMenuItems'
@@ -21,6 +22,7 @@ import styled from 'styled-components'
 import { SyncButton } from '@shared/components/SyncButton/SyncButton'
 import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
+import SlicerPanelSummary from './SlicerPanelSummary'
 
 const DropdownSkeleton = styled.div`
   height: 28px;
@@ -35,6 +37,21 @@ const HeaderActions = styled.div`
   align-items: center;
   gap: var(--base-gap-small);
   margin-left: auto;
+  flex-shrink: 0;
+`
+
+// the column is narrow: the dimension name shrinks rather than being pushed out, and a
+// collapsed panel gives the name up entirely so the selection summary has room
+const PanelHeader = styled(Header)`
+  .slicer-dropdown {
+    flex: 0 1 auto;
+    min-width: 48px;
+  }
+
+  .slice-icon {
+    flex-shrink: 0;
+    color: var(--md-sys-color-outline);
+  }
 `
 
 export const SPLIT_SLICER_OPTION = '__splitSlicer__'
@@ -78,6 +95,8 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     SlicerDropdown,
     addSlicePanel,
     removeSlicePanel,
+    collapsedPanels,
+    togglePanelCollapsed,
     setPanelSliceType,
     getPanelSelection,
     setPanelSelection,
@@ -152,6 +171,9 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
   })
 
   const isHierarchy = sliceType === 'hierarchy'
+  const isCollapsed = collapsedPanels.includes(panel.id)
+  const sliceTypeIcon =
+    sliceOptions.find((option) => option.value === sliceType)?.icon || 'table_rows'
 
   const hierarchyContextMenu = useHierarchyContextMenuItems(
     onAddToList || contextOnAddToList,
@@ -195,8 +217,12 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
 
   return (
     <Container>
-      <Header>
-        {isViewSyncPending ? (
+      <PanelHeader className={clsx({ collapsed: isCollapsed })}>
+        {isCollapsed ? (
+          // the dropdown would eat the width the summary needs, so a collapsed panel shows
+          // its dimension as an icon and switches type once expanded again
+          <Icon icon={sliceTypeIcon} className="slice-icon" />
+        ) : isViewSyncPending ? (
           <DropdownSkeleton />
         ) : (
           <SlicerDropdown
@@ -208,8 +234,9 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
             disableOpen={dropdownOptions.length === 1}
           />
         )}
+        {isCollapsed && <SlicerPanelSummary rowSelection={rowSelection} sliceMap={sliceMap} />}
         <HeaderActions>
-          <SlicerSearch value={globalFilter} onChange={setGlobalFilter} />
+          {!isCollapsed && <SlicerSearch value={globalFilter} onChange={setGlobalFilter} />}
           {isHierarchy && (
             <SyncButton
               topics={['entity.folder.created']}
@@ -219,12 +246,12 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
               hideWhenNoUpdates
             />
           )}
-          {canSplit && (
+          {showRemove && (
             <HeaderButton
-              icon="add"
-              data-tooltip="Split slicer"
+              icon={isCollapsed ? 'expand_content' : 'collapse_content'}
+              data-tooltip={isCollapsed ? 'Expand panel' : 'Collapse panel'}
               data-tooltip-delay={0}
-              onClick={handleSplit}
+              onClick={() => togglePanelCollapsed(panel.id)}
             />
           )}
           {showRemove && (
@@ -236,39 +263,41 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
             />
           )}
         </HeaderActions>
-      </Header>
-      <SimpleTableProvider
-        {...{
-          rowSelection,
-          onRowSelectionChange: handleSelectionChange,
-          expanded,
-          setExpanded: handleExpandedChange,
-          data: sliceMap,
-        }}
-      >
-        <SimpleTable
-          data={sliceTableData}
-          isExpandable={isExpandable}
-          isLoading={isLoadingSliceTableData || isViewSyncPending}
-          forceUpdateTable={sliceType}
-          globalFilter={globalFilter}
-          rowIdPrefix={`slicer-${panel.id}`}
-          onRename={
-            isHierarchy
-              ? (_id: string, row: Row<SimpleTableRow>) =>
-                  hierarchyContextMenu.onRename(row.original)
-              : undefined
-          }
-          renamingId={isHierarchy ? hierarchyContextMenu.renamingRow?.id : null}
-          renameInitialValue={isHierarchy ? hierarchyContextMenu.renameInitialValue : undefined}
-          onSubmitRename={
-            isHierarchy ? (_id, value) => hierarchyContextMenu.onSubmitRename(value) : undefined
-          }
-          onCancelRename={isHierarchy ? hierarchyContextMenu.onCancelRename : undefined}
-          onRowOptionClick={isHierarchy ? hierarchyContextMenu.onOptionClick : undefined}
-          rowContextMenuBuilders={rowContextMenuBuilders}
-        />
-      </SimpleTableProvider>
+      </PanelHeader>
+      {!isCollapsed && (
+        <SimpleTableProvider
+          {...{
+            rowSelection,
+            onRowSelectionChange: handleSelectionChange,
+            expanded,
+            setExpanded: handleExpandedChange,
+            data: sliceMap,
+          }}
+        >
+          <SimpleTable
+            data={sliceTableData}
+            isExpandable={isExpandable}
+            isLoading={isLoadingSliceTableData || isViewSyncPending}
+            forceUpdateTable={sliceType}
+            globalFilter={globalFilter}
+            rowIdPrefix={`slicer-${panel.id}`}
+            onRename={
+              isHierarchy
+                ? (_id: string, row: Row<SimpleTableRow>) =>
+                    hierarchyContextMenu.onRename(row.original)
+                : undefined
+            }
+            renamingId={isHierarchy ? hierarchyContextMenu.renamingRow?.id : null}
+            renameInitialValue={isHierarchy ? hierarchyContextMenu.renameInitialValue : undefined}
+            onSubmitRename={
+              isHierarchy ? (_id, value) => hierarchyContextMenu.onSubmitRename(value) : undefined
+            }
+            onCancelRename={isHierarchy ? hierarchyContextMenu.onCancelRename : undefined}
+            onRowOptionClick={isHierarchy ? hierarchyContextMenu.onOptionClick : undefined}
+            rowContextMenuBuilders={rowContextMenuBuilders}
+          />
+        </SimpleTableProvider>
+      )}
     </Container>
   )
 }

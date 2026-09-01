@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useRef, useState } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 import type { OnAddToList } from '../hooks/useHierarchyContextMenuItems'
@@ -31,7 +31,7 @@ export const Slicer: FC<SlicerProps> = ({
   onAddToList,
   enableSplit,
 }) => {
-  const { slices, page, setPanelExpanded, projectName } = useSlicerContext()
+  const { slices, page, setPanelExpanded, projectName, collapsedPanels } = useSlicerContext()
   const { powerLicense } = usePowerpack()
 
   const splitEnabled = !!enableSplit && powerLicense
@@ -64,16 +64,6 @@ export const Slicer: FC<SlicerProps> = ({
     [getParentFolderIds, setPanelExpanded],
   )
 
-  const stackRef = useRef<HTMLDivElement>(null)
-  const [stackHeight, setStackHeight] = useState(0)
-  useEffect(() => {
-    const el = stackRef.current
-    if (!el) return
-    const observer = new ResizeObserver(([entry]) => setStackHeight(entry.contentRect.height))
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [visibleSlices.length])
-
   const panelIds = visibleSlices.map((panel) => panel.id)
   const {
     sizes: panelSizes,
@@ -81,7 +71,7 @@ export const Slicer: FC<SlicerProps> = ({
     height: stackTotalHeight,
     layoutKey,
     handleResizeEnd: handlePanelResizeEnd,
-  } = useSlicerPanelHeights(page, panelIds, stackHeight)
+  } = useSlicerPanelHeights(page, panelIds, collapsedPanels)
 
   const [searchByPanel, setSearchByPanel] = useState<Record<string, string>>({})
   const handleSearchChange = useCallback(
@@ -122,10 +112,7 @@ export const Slicer: FC<SlicerProps> = ({
           {...panelProps}
         />
       ) : (
-        <div
-          ref={stackRef}
-          style={{ height: '100%', width: '100%', overflowY: 'auto', overflowX: 'hidden' }}
-        >
+        <div style={{ height: '100%', width: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
           <Splitter
             layout="vertical"
             // remount so primereact picks up new panel sizes when the arrangement changes
@@ -133,7 +120,7 @@ export const Slicer: FC<SlicerProps> = ({
             onResizeEnd={handlePanelResizeEnd}
             style={{
               width: '100%',
-              height: stackTotalHeight || '100%',
+              height: stackTotalHeight,
               overflow: 'hidden',
             }}
           >

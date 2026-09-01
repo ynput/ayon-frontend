@@ -100,6 +100,8 @@ export interface SlicerContextValue {
   setPanelSelection: (panelId: string, selection: React.SetStateAction<RowSelectionState>) => void
   getPanelExpanded: (panelId: string) => ExpandedState
   setPanelExpanded: (panelId: string, expanded: React.SetStateAction<ExpandedState>) => void
+  collapsedPanels: string[]
+  togglePanelCollapsed: (panelId: string) => void
   isViewSyncPending: boolean
   pinnedSlice: PinnedSlice | null
   setPinnedSlice: React.Dispatch<React.SetStateAction<PinnedSlice | null>>
@@ -181,6 +183,12 @@ export const SlicerProvider = ({
     ],
     [props.sliceType, viewSliceTypes.join('|'), migratePinnedHierarchy],
   )
+  const collapsedSliceTypes = slicerViewSettings?.collapsedSliceTypes
+  const collapsedPanels = useMemo(
+    () => collapsedSliceTypes ?? [],
+    [collapsedSliceTypes?.join('|')],
+  )
+
   const slices = useMemo<SlicePanel[]>(
     () => sliceTypes.map((t) => ({ id: t, sliceType: t })),
     [sliceTypes],
@@ -211,12 +219,31 @@ export const SlicerProvider = ({
   )
 
   const persistSliceTypes = useCallback(
-    (next: SliceType[]) => {
+    (next: SliceType[], collapsed?: SliceType[]) => {
       const noOp = () => {}
       // sliceType mirrors sliceTypes[0] so older clients keep a valid single dimension
-      updateViewSettings({ sliceTypes: next, sliceType: next[0] }, noOp, noOp, {})
+      updateViewSettings(
+        {
+          sliceTypes: next,
+          sliceType: next[0],
+          collapsedSliceTypes: (collapsed ?? collapsedPanels).filter((t) => next.includes(t)),
+        },
+        noOp,
+        noOp,
+        {},
+      )
     },
-    [updateViewSettings],
+    [updateViewSettings, collapsedPanels],
+  )
+
+  const togglePanelCollapsed = useCallback(
+    (panelId: string) => {
+      const next = collapsedPanels.includes(panelId)
+        ? collapsedPanels.filter((t) => t !== panelId)
+        : [...collapsedPanels, panelId]
+      persistSliceTypes(sliceTypes, next)
+    },
+    [collapsedPanels, persistSliceTypes, sliceTypes],
   )
 
   // persist the migrated arrangement; the pinned selection is copied into the
@@ -353,10 +380,14 @@ export const SlicerProvider = ({
   const setPanelSliceType = useCallback(
     (panelId: string, newSliceType: SliceType) => {
       if (!sliceTypes.includes(panelId) || sliceTypes.includes(newSliceType)) return
-      persistSliceTypes(sliceTypes.map((t) => (t === panelId ? newSliceType : t)))
+      // the slice type doubles as the panel id, so collapsed follows the rename
+      persistSliceTypes(
+        sliceTypes.map((t) => (t === panelId ? newSliceType : t)),
+        collapsedPanels.map((t) => (t === panelId ? newSliceType : t)),
+      )
       clearPanelState(newSliceType)
     },
-    [sliceTypes, persistSliceTypes, clearPanelState],
+    [sliceTypes, persistSliceTypes, clearPanelState, collapsedPanels],
   )
 
   const onExpandedChange = useCallback(
@@ -388,6 +419,8 @@ export const SlicerProvider = ({
       setPanelSelection,
       getPanelExpanded,
       setPanelExpanded,
+      collapsedPanels,
+      togglePanelCollapsed,
       // ROW SELECTION
       rowSelection,
       onRowSelectionChange,
@@ -409,6 +442,8 @@ export const SlicerProvider = ({
       sliceType,
       onSliceTypeChange,
       slices,
+      collapsedPanels,
+      togglePanelCollapsed,
       addSlicePanel,
       removeSlicePanel,
       setPanelSliceType,
