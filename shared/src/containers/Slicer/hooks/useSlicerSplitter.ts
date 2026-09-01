@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { useSessionStorage } from '@shared/hooks/useSessionStorage'
-import { clampDraggedHeights, resolvePanelLayout } from './slicerPanelLayout'
+import {
+  SLICER_MIN_PANEL_HEIGHT,
+  clampDraggedHeights,
+  resolvePanelLayout,
+} from './slicerPanelLayout'
 import type { SlicerPanelHeights } from './slicerPanelLayout'
 
 export const SLICER_SPLITTER_STATE_KEY = 'slicer-splitter'
@@ -32,6 +36,7 @@ export const useSlicerPanelHeights = (
   page: string,
   panelIds: string[],
   collapsed: string[] = [],
+  containerHeight: number = 0,
 ) => {
   const [stored, setStoredHeights] = useSessionStorage<SlicerPanelHeights>(
     `slicer-panel-heights-${page}`,
@@ -41,10 +46,15 @@ export const useSlicerPanelHeights = (
   const [clampCount, setClampCount] = useState(0)
 
   const heights = Array.isArray(stored) ? {} : stored
-  const { sizes, minSize, height } = resolvePanelLayout(heights, panelIds, collapsed)
+  const { sizes, mins, minSize, height, heights: panelHeights } = resolvePanelLayout(
+    heights,
+    panelIds,
+    collapsed,
+    containerHeight,
+  )
 
   const handleResizeEnd = (props: { sizes: number[] }) => {
-    const dragged = clampDraggedHeights(props.sizes, height)
+    const dragged = clampDraggedHeights(props.sizes, height, mins)
     // a collapsed panel has no height of its own to remember
     setStoredHeights({
       ...heights,
@@ -60,10 +70,17 @@ export const useSlicerPanelHeights = (
     if (clamped) setClampCount((count) => count + 1)
   }
 
+  // the last panel has no gutter below it, so it is resized on its own and takes the
+  // stack past the column height
+  const setPanelHeight = (panelId: string, panelHeight: number) =>
+    setStoredHeights({ ...heights, [panelId]: Math.max(panelHeight, SLICER_MIN_PANEL_HEIGHT) })
+
   return {
     sizes,
     minSize,
     height,
+    panelHeights,
+    setPanelHeight,
     layoutKey: `${panelIds.join('|')}#${collapsed.join('|')}#${clampCount}`,
     handleResizeEnd,
   }

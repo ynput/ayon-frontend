@@ -1,5 +1,6 @@
-import { FC, useCallback, useEffect, useState } from 'react'
+import { FC, useCallback, useEffect, useRef, useState } from 'react'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
+import styled from 'styled-components'
 
 import type { OnAddToList } from '../hooks/useHierarchyContextMenuItems'
 import type { SliceType } from '../types'
@@ -12,6 +13,20 @@ import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
 import { MoveEntityDialog } from '@shared/containers/MoveEntityDialog/MoveEntityDialog'
 import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
 import SlicerPanel from './SlicerPanel'
+import { SLICER_MIN_PANEL_HEIGHT } from '../hooks/slicerPanelLayout'
+
+// the splitter only puts gutters between panels, so the last one gets its own
+const BottomGutter = styled.div`
+  height: 4px;
+  cursor: row-resize;
+  background-color: var(--md-sys-color-surface-container);
+  user-select: none;
+  touch-action: none;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest);
+  }
+`
 
 export interface SlicerProps {
   sliceFields: SliceTypeField[]
@@ -64,14 +79,54 @@ export const Slicer: FC<SlicerProps> = ({
     [getParentFolderIds, setPanelExpanded],
   )
 
+  const stackRef = useRef<HTMLDivElement>(null)
+  const [columnHeight, setColumnHeight] = useState(0)
+  useEffect(() => {
+    const el = stackRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => setColumnHeight(entry.contentRect.height))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [visibleSlices.length])
+
   const panelIds = visibleSlices.map((panel) => panel.id)
+  // a lone panel must not collapse: there would be nothing left of the slicer
+  const canCollapse = visibleSlices.length > 1
   const {
     sizes: panelSizes,
     minSize,
     height: stackTotalHeight,
     layoutKey,
+    panelHeights,
+    setPanelHeight,
     handleResizeEnd: handlePanelResizeEnd,
-  } = useSlicerPanelHeights(page, panelIds, collapsedPanels)
+  } = useSlicerPanelHeights(page, panelIds, canCollapse ? collapsedPanels : [], columnHeight)
+
+  const lastPanelId = panelIds[panelIds.length - 1]
+  const lastPanelCollapsed = canCollapse && collapsedPanels.includes(lastPanelId)
+  const handleLastPanelResize = (event: React.PointerEvent<HTMLDivElement>) => {
+    // without this the browser starts a native drag and the pointerup never arrives,
+    // which would leave the move handler running over the whole page
+    event.preventDefault()
+    const gutter = event.currentTarget
+    const startY = event.clientY
+    const startHeight = panelHeights[panelHeights.length - 1] ?? SLICER_MIN_PANEL_HEIGHT
+
+    const onMove = (moveEvent: PointerEvent) =>
+      setPanelHeight(lastPanelId, startHeight + moveEvent.clientY - startY)
+    const onEnd = () => {
+      gutter.removeEventListener('pointermove', onMove)
+      gutter.removeEventListener('pointerup', onEnd)
+      gutter.removeEventListener('pointercancel', onEnd)
+      gutter.removeEventListener('lostpointercapture', onEnd)
+    }
+
+    gutter.setPointerCapture(event.pointerId)
+    gutter.addEventListener('pointermove', onMove)
+    gutter.addEventListener('pointerup', onEnd)
+    gutter.addEventListener('pointercancel', onEnd)
+    gutter.addEventListener('lostpointercapture', onEnd)
+  }
 
   const [searchByPanel, setSearchByPanel] = useState<Record<string, string>>({})
   const handleSearchChange = useCallback(
@@ -91,6 +146,7 @@ export const Slicer: FC<SlicerProps> = ({
 
   const panelProps = {
     visibleSlices,
+    canCollapse,
     sliceFields,
     entityTypes,
     pinnedSliceType,
@@ -112,7 +168,10 @@ export const Slicer: FC<SlicerProps> = ({
           {...panelProps}
         />
       ) : (
-        <div style={{ height: '100%', width: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
+        <div
+          ref={stackRef}
+          style={{ height: '100%', width: '100%', overflowY: 'auto', overflowX: 'hidden' }}
+        >
           <Splitter
             layout="vertical"
             // remount so primereact picks up new panel sizes when the arrangement changes
@@ -142,6 +201,7 @@ export const Slicer: FC<SlicerProps> = ({
               </SplitterPanel>
             ))}
           </Splitter>
+          {!lastPanelCollapsed && <BottomGutter onPointerDown={handleLastPanelResize} />}
         </div>
       )}
       <MoveEntityDialog

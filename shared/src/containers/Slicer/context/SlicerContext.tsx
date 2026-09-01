@@ -372,7 +372,9 @@ export const SlicerProvider = ({
   const removeSlicePanel = useCallback(
     (panelId: string) => {
       if (sliceTypes.length <= 1 || !sliceTypes.includes(panelId)) return
-      persistSliceTypes(sliceTypes.filter((t) => t !== panelId))
+      const next = sliceTypes.filter((t) => t !== panelId)
+      // a lone panel is always expanded, so drop the state rather than leave it stale
+      persistSliceTypes(next, next.length > 1 ? undefined : [])
     },
     [sliceTypes, persistSliceTypes],
   )

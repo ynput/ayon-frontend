@@ -70,6 +70,7 @@ export interface SlicerPanelProps {
   onAddToList?: OnAddToList
   openMoveDialog: OpenMoveDialog
   splitEnabled?: boolean
+  canCollapse?: boolean
   isPrimary?: boolean
   showRemove?: boolean
   search: string
@@ -86,6 +87,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
   onAddToList,
   openMoveDialog,
   splitEnabled,
+  canCollapse,
   isPrimary,
   showRemove,
   search: globalFilter,
@@ -171,7 +173,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
   })
 
   const isHierarchy = sliceType === 'hierarchy'
-  const isCollapsed = collapsedPanels.includes(panel.id)
+  const isCollapsed = !!canCollapse && collapsedPanels.includes(panel.id)
   const sliceTypeIcon =
     sliceOptions.find((option) => option.value === sliceType)?.icon || 'table_rows'
 
@@ -246,7 +248,15 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
               hideWhenNoUpdates
             />
           )}
-          {showRemove && (
+          {canSplit && isPrimary && (
+            <HeaderButton
+              icon="add"
+              data-tooltip="Split slicer"
+              data-tooltip-delay={0}
+              onClick={handleSplit}
+            />
+          )}
+          {canCollapse && (
             <HeaderButton
               icon={isCollapsed ? 'expand_content' : 'collapse_content'}
               data-tooltip={isCollapsed ? 'Expand panel' : 'Collapse panel'}
