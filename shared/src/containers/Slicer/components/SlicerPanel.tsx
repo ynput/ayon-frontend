@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo, useState } from 'react'
+import { FC, useCallback, useMemo } from 'react'
 import SimpleTable from '@shared/containers/SimpleTable/SimpleTable'
 import { Container, Header, HeaderButton } from '@shared/containers/SimpleTable/SimpleTable.styled'
 import { ExpandedState, Row, RowSelectionState } from '@tanstack/react-table'
@@ -29,6 +29,14 @@ const DropdownSkeleton = styled.div`
   width: 100px;
 `
 
+// static position so SlicerSearch's absolute input still spans the whole header
+const HeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  margin-left: auto;
+`
+
 export const SPLIT_SLICER_OPTION = '__splitSlicer__'
 
 export interface SlicerPanelProps {
@@ -42,6 +50,8 @@ export interface SlicerPanelProps {
   splitEnabled?: boolean
   isPrimary?: boolean
   showRemove?: boolean
+  search: string
+  onSearchChange: (value: string) => void
 }
 
 export const SlicerPanel: FC<SlicerPanelProps> = ({
@@ -55,8 +65,9 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
   splitEnabled,
   isPrimary,
   showRemove,
+  search: globalFilter,
+  onSearchChange: setGlobalFilter,
 }) => {
-  const [globalFilter, setGlobalFilter] = useState('')
   const {
     SlicerDropdown,
     slices,
@@ -190,32 +201,34 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
             disableOpen={dropdownOptions.length === 1}
           />
         )}
-        <SlicerSearch value={globalFilter} onChange={setGlobalFilter} />
-        {isHierarchy && (
-          <SyncButton
-            topics={['entity.folder.created']}
-            onSync={async () => {
-              await refetch()
-            }}
-            hideWhenNoUpdates
-          />
-        )}
-        {canSplit && (
-          <HeaderButton
-            icon="add"
-            data-tooltip="Split slicer"
-            data-tooltip-delay={0}
-            onClick={handleSplit}
-          />
-        )}
-        {showRemove && (
-          <HeaderButton
-            icon="close"
-            data-tooltip="Remove panel"
-            data-tooltip-delay={0}
-            onClick={() => removeSlicePanel(panel.id)}
-          />
-        )}
+        <HeaderActions>
+          <SlicerSearch value={globalFilter} onChange={setGlobalFilter} />
+          {isHierarchy && (
+            <SyncButton
+              topics={['entity.folder.created']}
+              onSync={async () => {
+                await refetch()
+              }}
+              hideWhenNoUpdates
+            />
+          )}
+          {canSplit && (
+            <HeaderButton
+              icon="add"
+              data-tooltip="Split slicer"
+              data-tooltip-delay={0}
+              onClick={handleSplit}
+            />
+          )}
+          {showRemove && (
+            <HeaderButton
+              icon="close"
+              data-tooltip="Remove panel"
+              data-tooltip-delay={0}
+              onClick={() => removeSlicePanel(panel.id)}
+            />
+          )}
+        </HeaderActions>
       </Header>
       <SimpleTableProvider
         {...{

@@ -1,11 +1,11 @@
-import { FC, useCallback, useState } from 'react'
+import { FC, useCallback, useEffect, useRef, useState } from 'react'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 import type { OnAddToList } from '../hooks/useHierarchyContextMenuItems'
 import type { SliceType } from '../types'
 import { SliceTypeField } from '../types'
 import { useSlicerContext } from '../context/SlicerContext'
-import { SLICER_MIN_PANEL_HEIGHT, useSlicerPanelHeights } from '../hooks/useSlicerSplitter'
+import { useSlicerPanelHeights } from '../hooks/useSlicerSplitter'
 import type { GetSlicerCountsSource, SlicerCountsSource } from '../hooks/useSlicerCounts'
 import { usePowerpack } from '@shared/context/PowerpackContext'
 import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
@@ -64,7 +64,30 @@ export const Slicer: FC<SlicerProps> = ({
     [getParentFolderIds, setPanelExpanded],
   )
 
-  const [panelHeights, handlePanelResizeEnd] = useSlicerPanelHeights(page, visibleSlices.length)
+  const stackRef = useRef<HTMLDivElement>(null)
+  const [stackHeight, setStackHeight] = useState(0)
+  useEffect(() => {
+    const el = stackRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => setStackHeight(entry.contentRect.height))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [visibleSlices.length])
+
+  const {
+    sizes: panelSizes,
+    minSize,
+    height: stackTotalHeight,
+    layoutKey,
+    handleResizeEnd: handlePanelResizeEnd,
+  } = useSlicerPanelHeights(page, visibleSlices.length, stackHeight)
+
+  const [searchByPanel, setSearchByPanel] = useState<Record<string, string>>({})
+  const handleSearchChange = useCallback(
+    (panelId: string, value: string) =>
+      setSearchByPanel((prev) => ({ ...prev, [panelId]: value })),
+    [],
+  )
 
   const panelProps = {
     sliceFields,
@@ -79,28 +102,45 @@ export const Slicer: FC<SlicerProps> = ({
   return (
     <>
       {visibleSlices.length === 1 ? (
-        <SlicerPanel panel={visibleSlices[0]} isPrimary showRemove={false} {...panelProps} />
+        <SlicerPanel
+          panel={visibleSlices[0]}
+          isPrimary
+          showRemove={false}
+          search={searchByPanel[visibleSlices[0].id] ?? ''}
+          onSearchChange={(value) => handleSearchChange(visibleSlices[0].id, value)}
+          {...panelProps}
+        />
       ) : (
-        <div style={{ height: '100%', width: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
+        <div
+          ref={stackRef}
+          style={{ height: '100%', width: '100%', overflowY: 'auto', overflowX: 'hidden' }}
+        >
           <Splitter
             layout="vertical"
             // remount so primereact picks up new panel sizes when the arrangement changes
-            key={visibleSlices.map((s) => s.id).join('|')}
+            key={`${visibleSlices.map((s) => s.id).join('|')}-${layoutKey}`}
             onResizeEnd={handlePanelResizeEnd}
             style={{
               width: '100%',
-              height: `max(100%, ${visibleSlices.length * SLICER_MIN_PANEL_HEIGHT}px)`,
+              height: stackTotalHeight || '100%',
               overflow: 'hidden',
             }}
           >
             {visibleSlices.map((panel, index) => (
               <SplitterPanel
                 key={panel.id}
-                size={panelHeights[index]}
-                minSize={Math.min(10, Math.floor(100 / visibleSlices.length))}
+                size={panelSizes[index]}
+                minSize={minSize}
                 style={{ overflow: 'hidden' }}
               >
-                <SlicerPanel panel={panel} isPrimary={index === 0} showRemove {...panelProps} />
+                <SlicerPanel
+                  panel={panel}
+                  isPrimary={index === 0}
+                  showRemove
+                  search={searchByPanel[panel.id] ?? ''}
+                  onSearchChange={(value) => handleSearchChange(panel.id, value)}
+                  {...panelProps}
+                />
               </SplitterPanel>
             ))}
           </Splitter>
