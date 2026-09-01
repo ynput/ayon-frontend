@@ -148,9 +148,13 @@ export const SlicerProvider = ({
 
   const slicerViewSettings = viewSettings as SlicerViewSettings | undefined
   const storedSliceTypes = slicerViewSettings?.sliceTypes
+  const legacySliceType = slicerViewSettings?.sliceType
+  // an older client updates only sliceType, so let it win over a now stale sliceTypes[0]
   const viewSliceTypes = storedSliceTypes?.length
-    ? storedSliceTypes
-    : [slicerViewSettings?.sliceType ?? 'hierarchy']
+    ? legacySliceType && legacySliceType !== storedSliceTypes[0]
+      ? [legacySliceType, ...storedSliceTypes.slice(1)]
+      : storedSliceTypes
+    : [legacySliceType ?? 'hierarchy']
 
   // pre-upgrade views kept the folder selection alive through an invisible pinned
   // hierarchy slice; surface it as a real second panel so the result set survives

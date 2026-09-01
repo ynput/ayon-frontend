@@ -90,11 +90,18 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     () => (typeof countsSource === 'function' ? countsSource(panel.sliceType) : countsSource),
     [countsSource, panel.sliceType],
   )
-  const allSliceTypes = useMemo(() => slices.map((s) => s.sliceType), [slices])
+  // a sibling's field only rides along when its args match ours, i.e. same cache entry
+  const sharedSliceTypes = useMemo(() => {
+    const all = slices.map((s) => s.sliceType)
+    if (typeof countsSource !== 'function') return all
+    const key = (source?: SlicerCountsSource) => JSON.stringify([source?.entity, source?.args])
+    const own = key(resolvedCountsSource)
+    return all.filter((t) => t === panel.sliceType || key(countsSource(t)) === own)
+  }, [countsSource, resolvedCountsSource, slices, panel.sliceType])
   const { counts, filled, complete } = useSlicerCounts(
     resolvedCountsSource,
     panel.sliceType,
-    allSliceTypes,
+    sharedSliceTypes,
   )
 
   const handlePanelSliceTypeChange = useCallback<OnSliceTypeChange>(
