@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
-import { fileURLToPath, URL } from 'url'
 import { federation } from '@module-federation/vite'
+import { aliases } from './aliases'
 import { dependencies } from './package.json'
 
 export default ({ mode }) => {
@@ -97,59 +97,7 @@ export default ({ mode }) => {
       },
     },
     resolve: {
-      alias: [
-        { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
-        {
-          find: '@containers',
-          replacement: fileURLToPath(new URL('./src/containers', import.meta.url)),
-        },
-        { find: '@hooks', replacement: fileURLToPath(new URL('./src/hooks', import.meta.url)) },
-        {
-          find: '@components',
-          replacement: fileURLToPath(new URL('./src/components', import.meta.url)),
-        },
-        { find: '@api', replacement: fileURLToPath(new URL('./src/api', import.meta.url)) },
-        {
-          find: '@types',
-          replacement: fileURLToPath(new URL('./src/types', import.meta.url)),
-        },
-        {
-          find: '@queries',
-          replacement: fileURLToPath(new URL('./src/services', import.meta.url)),
-        },
-        { find: '@pages', replacement: fileURLToPath(new URL('./src/pages', import.meta.url)) },
-        { find: '@context', replacement: fileURLToPath(new URL('./src/context', import.meta.url)) },
-        { find: '@state', replacement: fileURLToPath(new URL('./src/features', import.meta.url)) },
-        { find: '@helpers', replacement: fileURLToPath(new URL('./src/helpers', import.meta.url)) },
-        {
-          find: '@shared',
-          replacement: fileURLToPath(new URL('./shared/src', import.meta.url)),
-        },
-        // @ynput/ayon-player externalises these — point them at the local shared source
-        // so the player shares our React contexts instead of getting a second copy
-        {
-          find: '@ynput/ayon-frontend-shared/ContextMenu',
-          replacement: fileURLToPath(
-            new URL('./shared/src/containers/ContextMenu', import.meta.url),
-          ),
-        },
-        {
-          find: '@ynput/ayon-frontend-shared/Feed',
-          replacement: fileURLToPath(new URL('./shared/src/containers/Feed', import.meta.url)),
-        },
-        {
-          find: '@ynput/ayon-frontend-shared/api',
-          replacement: fileURLToPath(new URL('./shared/src/api', import.meta.url)),
-        },
-        {
-          find: '@ynput/ayon-frontend-shared/components',
-          replacement: fileURLToPath(new URL('./shared/src/components', import.meta.url)),
-        },
-        {
-          find: '@ynput/ayon-frontend-shared/context',
-          replacement: fileURLToPath(new URL('./shared/src/context', import.meta.url)),
-        },
-      ],
+      alias: aliases,
       // @ynput/ayon-player asks for a newer styled-components, which yarn installs nested —
       // two stylesheet managers on the same data-styled attribute break rehydration
       dedupe: ['styled-components', 'react', 'react-dom'],

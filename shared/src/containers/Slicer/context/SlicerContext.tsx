@@ -184,10 +184,7 @@ export const SlicerProvider = ({
     [props.sliceType, viewSliceTypes.join('|'), migratePinnedHierarchy],
   )
   const collapsedSliceTypes = slicerViewSettings?.collapsedSliceTypes
-  const collapsedPanels = useMemo(
-    () => collapsedSliceTypes ?? [],
-    [collapsedSliceTypes?.join('|')],
-  )
+  const collapsedPanels = useMemo(() => collapsedSliceTypes ?? [], [collapsedSliceTypes?.join('|')])
 
   const slices = useMemo<SlicePanel[]>(
     () => sliceTypes.map((t) => ({ id: t, sliceType: t })),
@@ -253,7 +250,8 @@ export const SlicerProvider = ({
   const migrationKey = `${projectName}-${page}`
   const migratedPinned = useRef(new Set<string>())
   useEffect(() => {
-    if (!migratePinnedHierarchy || isLoadingViews || migratedPinned.current.has(migrationKey)) return
+    if (!migratePinnedHierarchy || isLoadingViews || migratedPinned.current.has(migrationKey))
+      return
     migratedPinned.current.add(migrationKey)
     // the hierarchy bucket is shared across pages, so never replace a live selection
     if (!Object.keys(getPanelSelection('hierarchy')).length) {

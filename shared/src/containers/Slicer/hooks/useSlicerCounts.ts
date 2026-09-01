@@ -33,8 +33,7 @@ export const useSlicerCounts = (
   const groupBy = useMemo(() => ({ id: sliceType, desc: false }), [sliceType])
   // sibling panels' fields ride along so one request serves every panel's badges
   const extraGroupBys = useMemo(
-    () =>
-      (allSliceTypes ?? []).filter((t) => t !== sliceType).map((t) => ({ id: t, desc: false })),
+    () => (allSliceTypes ?? []).filter((t) => t !== sliceType).map((t) => ({ id: t, desc: false })),
     [allSliceTypes, sliceType],
   )
   const disabled = !!skip || !source

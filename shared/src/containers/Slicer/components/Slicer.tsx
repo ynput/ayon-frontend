@@ -23,10 +23,14 @@ const BottomGutter = styled.div`
   user-select: none;
   touch-action: none;
 
-  &:hover {
+  &:hover,
+  &:focus-visible {
     background-color: var(--md-sys-color-surface-container-highest);
+    outline: none;
   }
 `
+
+const KEYBOARD_RESIZE_STEP = 24
 
 export interface SlicerProps {
   sliceFields: SliceTypeField[]
@@ -128,10 +132,16 @@ export const Slicer: FC<SlicerProps> = ({
     gutter.addEventListener('lostpointercapture', onEnd)
   }
 
+  const handleLastPanelKeys = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = event.key === 'ArrowUp' ? -KEYBOARD_RESIZE_STEP : KEYBOARD_RESIZE_STEP
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
+    event.preventDefault()
+    setPanelHeight(lastPanelId, (panelHeights[panelHeights.length - 1] ?? 0) + step)
+  }
+
   const [searchByPanel, setSearchByPanel] = useState<Record<string, string>>({})
   const handleSearchChange = useCallback(
-    (panelId: string, value: string) =>
-      setSearchByPanel((prev) => ({ ...prev, [panelId]: value })),
+    (panelId: string, value: string) => setSearchByPanel((prev) => ({ ...prev, [panelId]: value })),
     [],
   )
   // a removed panel must not hand its search text to the next panel of the same type
@@ -201,7 +211,16 @@ export const Slicer: FC<SlicerProps> = ({
               </SplitterPanel>
             ))}
           </Splitter>
-          {!lastPanelCollapsed && <BottomGutter onPointerDown={handleLastPanelResize} />}
+          {!lastPanelCollapsed && (
+            <BottomGutter
+              role="separator"
+              aria-orientation="horizontal"
+              aria-label="Resize last slicer panel"
+              tabIndex={0}
+              onPointerDown={handleLastPanelResize}
+              onKeyDown={handleLastPanelKeys}
+            />
+          )}
         </div>
       )}
       <MoveEntityDialog

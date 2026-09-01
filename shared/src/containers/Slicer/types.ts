@@ -2,7 +2,7 @@ import { OnSliceTypeChange } from './context/SlicerContext'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import { RowSelectionState } from '@tanstack/react-table'
 import { ExpandedState } from '@tanstack/react-table'
-import { FilterValue } from '@ynput/ayon-react-components'
+import { Filter, FilterValue } from '@ynput/ayon-react-components'
 export type SliceType =
   | 'hierarchy'
   | 'assignees'
@@ -25,8 +25,8 @@ export interface SlicerViewSettings {
   collapsedSliceTypes?: SliceType[]
 }
 
-export interface SliceFilter extends FilterValue {
-  values: { id: string; label: string }[]
+export interface SliceFilter extends Filter {
+  values: FilterValue[]
 }
 
 export type FilterBySliceData = {

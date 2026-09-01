@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { entityListsApi, type EntityListEnities } from '@shared/api/generated'
@@ -71,34 +71,35 @@ export const useSelectedEntityIds = ({
   const [entityIds, setEntityIds] = useState<SelectedEntityIds>(EMPTY_IDS)
   const [rawEntityIds, setRawEntityIds] = useState<SelectedEntityIds>(EMPTY_IDS)
   const [parentMaps, setParentMaps] = useState<EntityParentMaps>(EMPTY_MAPS)
-  const [isLoading, setIsLoading] = useState(false)
+  // what the ids in state were resolved from; anything else means they are stale
+  const [resolvedKey, setResolvedKey] = useState('')
 
   const listRowSelection = slices.find((slice) => slice.sliceType === 'entityList')?.rowSelection
 
+  // Get selected list IDs from rowSelection, filtering out folder-grouped rows
+  const selectedListIds = useMemo(
+    () =>
+      Object.keys(listRowSelection ?? {})
+        .filter((id) => listRowSelection?.[id] && !id.startsWith('folder-'))
+        .sort(),
+    [listRowSelection],
+  )
+
+  // consumers skip their queries while this is loading, so it has to flip in the same
+  // render as the selection rather than a render later from inside the effect
+  const requestKey =
+    selectedListIds.length && projectName ? `${projectName}|${selectedListIds}` : ''
+
   useEffect(() => {
-    if (!listRowSelection || !projectName) {
+    if (!requestKey) {
       setEntityIds(EMPTY_IDS)
       setRawEntityIds(EMPTY_IDS)
       setParentMaps(EMPTY_MAPS)
-      setIsLoading(false)
-      return
-    }
-
-    // Get selected list IDs from rowSelection, filtering out folder-grouped rows
-    const selectedListIds = Object.keys(listRowSelection).filter(
-      (id) => listRowSelection[id] && !id.startsWith('folder-'),
-    )
-
-    if (!selectedListIds.length) {
-      setEntityIds(EMPTY_IDS)
-      setRawEntityIds(EMPTY_IDS)
-      setParentMaps(EMPTY_MAPS)
-      setIsLoading(false)
+      setResolvedKey('')
       return
     }
 
     let cancelled = false
-    setIsLoading(true)
 
     const fetchEntityIds = async () => {
       try {
@@ -136,7 +137,7 @@ export const useSelectedEntityIds = ({
           setParentMaps(EMPTY_MAPS)
         }
       } finally {
-        if (!cancelled) setIsLoading(false)
+        if (!cancelled) setResolvedKey(requestKey)
       }
     }
 
@@ -145,7 +146,7 @@ export const useSelectedEntityIds = ({
     return () => {
       cancelled = true
     }
-  }, [listRowSelection, projectName, dispatch])
+  }, [requestKey, selectedListIds, projectName, dispatch])
 
-  return { entityIds, rawEntityIds, parentMaps, isLoading }
+  return { entityIds, rawEntityIds, parentMaps, isLoading: requestKey !== resolvedKey }
 }

@@ -101,7 +101,12 @@ export const SlicerPanelSummary: FC<SlicerPanelSummaryProps> = ({ rowSelection, 
   return (
     <Chips ref={ref}>
       {shown.map((row) => (
-        <Chip key={row.id} data-chip title={row.label || row.name}>
+        <Chip
+          key={row.id}
+          data-chip
+          title={row.label || row.name}
+          aria-label={row.label || row.name}
+        >
           {row.startContent ??
             (row.img ? (
               <img src={row.img} alt="" />

@@ -14,6 +14,10 @@ type UseSlicerRowSelectionProps = {
   setExpanded?: React.Dispatch<React.SetStateAction<ExpandedState>>
 }
 
+// panel heights are written on every pointer move of a resize, so only the buckets this
+// hook actually reads may invalidate it
+const READ_BUCKET_PREFIXES = ['slicer-selection-', 'slicer-expanded-']
+
 // hierarchy buckets are shared across pages, other slice types get one bucket per page
 const getSelectionKey = (projectName: string, page: string, sliceType: SliceType) =>
   sliceType === 'hierarchy'
@@ -39,7 +43,7 @@ export const useSlicerRowSelection = ({
       const key =
         (event as CustomEvent<{ key?: string }>).detail?.key ??
         ('key' in event ? event.key : undefined)
-      if (key && !key.startsWith('slicer-')) return
+      if (key && !READ_BUCKET_PREFIXES.some((prefix) => key.startsWith(prefix))) return
       setStorageVersion((v) => v + 1)
     }
     window.addEventListener('session-storage', handler)
@@ -52,7 +56,7 @@ export const useSlicerRowSelection = ({
 
   // reuse parsed values while the raw string is unchanged so references stay stable
   const cacheRef = useRef<Map<string, { raw: string | null; value: any }>>(new Map())
-  const readBucket = useCallback(<T,>(key: string, fallback: T): T => {
+  const readBucket = useCallback(<T>(key: string, fallback: T): T => {
     const raw = typeof window === 'undefined' ? null : sessionStorage.getItem(key)
     const cached = cacheRef.current.get(key)
     if (cached && cached.raw === raw) return cached.value

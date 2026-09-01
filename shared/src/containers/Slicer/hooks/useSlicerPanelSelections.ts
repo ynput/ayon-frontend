@@ -13,9 +13,7 @@ export interface SlicerPanelSelections {
   isLicensePending: boolean
 }
 
-export const useSlicerPanelSelections = (
-  attribFields: AttributeModel[],
-): SlicerPanelSelections => {
+export const useSlicerPanelSelections = (attribFields: AttributeModel[]): SlicerPanelSelections => {
   const { slices, getPanelSelection } = useSlicerContext()
   const { powerLicense, isLoading: isLoadingPowerLicense } = usePowerpack()
 

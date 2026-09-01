@@ -1,6 +1,6 @@
-import type { AttributeModel } from '@shared/api'
 import type { ProjectTableAttribute } from '../../ProjectTreeTable/hooks/useAttributesList'
 import type { SliceFilter, SliceType } from '../types'
+import type { Filter } from '@ynput/ayon-react-components'
 import type { RowSelectionState } from '@tanstack/react-table'
 
 export type SliceSelection = { sliceType: SliceType; rowSelection: RowSelectionState }
@@ -14,7 +14,7 @@ export type CreateFilterFromSlicer = ({
 }) => SliceFilter | null
 
 export const createFilterFromSlicer: CreateFilterFromSlicer = ({ slice, attribFields }) => {
-  const sliceFilterTypes = {
+  const sliceFilterTypes: Record<string, Filter['type']> = {
     assignees: 'list_of_strings',
     status: 'string',
     taskType: 'string',
@@ -26,12 +26,12 @@ export const createFilterFromSlicer: CreateFilterFromSlicer = ({ slice, attribFi
       // @ts-ignore
       acc['attrib.' + field.name] = field.data.type
       return acc
-    }, {} as Record<string, AttributeModel['data']['type']>),
+    }, {} as Record<string, Filter['type']>),
   }
 
   const filter: SliceFilter | null = (() => {
     if (!slice) return null
-    const sliceType = sliceFilterTypes[slice?.sliceType as keyof typeof sliceFilterTypes]
+    const sliceType = sliceFilterTypes[slice?.sliceType]
 
     const values = Object.entries(slice.rowSelection)
       .filter(([sliceId, selected]) => !!sliceId && selected)

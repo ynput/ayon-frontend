@@ -43,7 +43,7 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "shared/src/**/*.test.ts", "shared/src/**/*.test.tsx", "vitest.setup.ts"],
   "exclude": ["node_modules", "dist"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -46,12 +46,13 @@ export const useSlicerPanelHeights = (
   const [clampCount, setClampCount] = useState(0)
 
   const heights = Array.isArray(stored) ? {} : stored
-  const { sizes, mins, minSize, height, heights: panelHeights } = resolvePanelLayout(
-    heights,
-    panelIds,
-    collapsed,
-    containerHeight,
-  )
+  const {
+    sizes,
+    mins,
+    minSize,
+    height,
+    heights: panelHeights,
+  } = resolvePanelLayout(heights, panelIds, collapsed, containerHeight)
 
   const handleResizeEnd = (props: { sizes: number[] }) => {
     const dragged = clampDraggedHeights(props.sizes, height, mins)
