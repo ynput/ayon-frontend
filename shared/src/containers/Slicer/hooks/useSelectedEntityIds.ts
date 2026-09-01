@@ -80,6 +80,7 @@ export const useSelectedEntityIds = ({
       setEntityIds(EMPTY_IDS)
       setRawEntityIds(EMPTY_IDS)
       setParentMaps(EMPTY_MAPS)
+      setIsLoading(false)
       return
     }
 
@@ -92,6 +93,7 @@ export const useSelectedEntityIds = ({
       setEntityIds(EMPTY_IDS)
       setRawEntityIds(EMPTY_IDS)
       setParentMaps(EMPTY_MAPS)
+      setIsLoading(false)
       return
     }
 

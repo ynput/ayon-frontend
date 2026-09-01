@@ -34,7 +34,14 @@ export const useSlicerRowSelection = ({
   const [storageVersion, setStorageVersion] = useState(0)
 
   useEffect(() => {
-    const handler = () => setStorageVersion((v) => v + 1)
+    // any storage write fires this, so ignore keys no slicer bucket reads
+    const handler = (event: Event | StorageEvent) => {
+      const key =
+        (event as CustomEvent<{ key?: string }>).detail?.key ??
+        ('key' in event ? event.key : undefined)
+      if (key && !key.startsWith('slicer-')) return
+      setStorageVersion((v) => v + 1)
+    }
     window.addEventListener('session-storage', handler)
     window.addEventListener('storage', handler)
     return () => {

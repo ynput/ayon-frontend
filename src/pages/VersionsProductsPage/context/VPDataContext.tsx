@@ -27,13 +27,13 @@ import { useBuildVersionsTableData } from '../hooks/useBuildVersionsTableData'
 import {
   checkColumnVisibility,
   getColumnSortKey,
-  createFiltersFromSlicer,
   TableRow,
   useExpandedState,
   useProjectDataContext,
   useQueryFilters,
   buildQueryFilters,
   useSelectedFolders,
+  scopeIdsToFolders,
   useViewsContext,
 } from '@shared/containers'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
@@ -42,11 +42,14 @@ import {
   splitClientFiltersByScope,
   splitFiltersByScope,
 } from '@shared/components/SearchFilter/useBuildFilterOptions'
-import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
+import {
+  useSelectedEntityIds,
+  useSlicerPanelSelections,
+} from '@shared/containers/Slicer'
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
-import { OnSyncDataCallback, useProjectFoldersContext, usePowerpack } from '@shared/context'
+import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
 import type { FieldStats } from '@shared/api'
 import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import {
@@ -242,25 +245,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   })
 
   // SLICER
-  const { slices, getPanelSelection } = useSlicerContext()
-  const { powerLicense, isLoading: isLoadingPowerLicense } = usePowerpack()
 
-  // panels 2+ are license-gated; hold the first fetch until the license resolves
-  const isLoadingViews = isLoadingViewSettings || (slices.length > 1 && isLoadingPowerLicense)
-
-  // without a license only the first panel renders, so only it may contribute
-  const sliceSelections = useMemo(() => {
-    const all = slices.map((slice) => ({
-      sliceType: slice.sliceType,
-      rowSelection: getPanelSelection(slice.id),
-    }))
-    return powerLicense ? all : all.slice(0, 1)
-  }, [slices, getPanelSelection, powerLicense])
-
-  const sliceFilters = useMemo(
-    () => createFiltersFromSlicer({ slices: sliceSelections, attribFields }),
-    [sliceSelections, attribFields],
-  )
+  const { sliceSelections, sliceFilters, isLicensePending } =
+    useSlicerPanelSelections(attribFields)
+  const isLoadingViews = isLoadingViewSettings || isLicensePending
 
   // Separate slicer filters into different types
   const vpValidScopes: ('version' | 'product' | 'task' | 'folder')[] = [
@@ -296,10 +284,19 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     })
   }, [sliceFilters, attribScopeMap])
   // Resolve entity list selections to IDs
-  const { entityIds, rawEntityIds, parentMaps } = useSelectedEntityIds({
+  const {
+    entityIds,
+    rawEntityIds,
+    parentMaps,
+    isLoading: isResolvingListIds,
+  } = useSelectedEntityIds({
     slices: sliceSelections,
     projectName,
   })
+
+  // hold the fetch until the list ids resolve, otherwise the table shows the whole
+  // project for a beat before narrowing
+  const isLoadingSlicerData = isLoadingViews || isResolvingListIds
 
   // get selected folders from slicer
   const { selectedFolders: selectedSlicerFolderIds, folderScope } = useSelectedFolders({
@@ -312,29 +309,18 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     [selectedSlicerFolderIds, getFolderIdsWithoutChildren],
   )
 
-  // list entities narrowed to the hierarchy panel's subtree; ids not yet in
-  // parentMaps pass through (the maps lag rawEntityIds by one resolve)
-  const scopeEntityIds = useCallback(
-    (ids: string[], folderIdMap: Record<string, string>) =>
-      folderScope
-        ? ids.filter((id) => {
-            const folderId = folderIdMap[id]
-            return !folderId || folderScope.has(folderId)
-          })
-        : ids,
-    [folderScope],
-  )
+  // list entities narrowed to the hierarchy panel's subtree
   const scopedVersionIds = useMemo(
-    () => scopeEntityIds(entityIds.versionIds, parentMaps.versionFolderIds),
-    [scopeEntityIds, entityIds.versionIds, parentMaps],
+    () => scopeIdsToFolders(entityIds.versionIds, parentMaps.versionFolderIds, folderScope),
+    [entityIds.versionIds, parentMaps, folderScope],
   )
   const scopedProductIds = useMemo(
-    () => scopeEntityIds(entityIds.productIds, parentMaps.productFolderIds),
-    [scopeEntityIds, entityIds.productIds, parentMaps],
+    () => scopeIdsToFolders(entityIds.productIds, parentMaps.productFolderIds, folderScope),
+    [entityIds.productIds, parentMaps, folderScope],
   )
   const scopedTaskIds = useMemo(
-    () => scopeEntityIds(rawEntityIds.taskIds, parentMaps.taskFolderIds),
-    [scopeEntityIds, rawEntityIds.taskIds, parentMaps],
+    () => scopeIdsToFolders(rawEntityIds.taskIds, parentMaps.taskFolderIds, folderScope),
+    [rawEntityIds.taskIds, parentMaps, folderScope],
   )
 
   // combine slicer filters with version/product filters
@@ -597,7 +583,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     isUninitialized: isProductsUninitialized,
     error: productsError,
   } = useGetProductsInfiniteQuery(productArguments, {
-    skip: !showProducts || isLoadingViews,
+    skip: !showProducts || isLoadingSlicerData,
     initialPageParam: {
       cursor: '',
       desc: sortDesc,
@@ -614,7 +600,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     isUninitialized: isVersionsUninitialized,
     error: versionsError,
   } = useGetVersionsInfiniteQuery(versionArguments, {
-    skip: showProducts || isLoadingViews,
+    skip: showProducts || isLoadingSlicerData,
     initialPageParam: {
       cursor: '',
       desc: sortDesc,
@@ -639,7 +625,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   const isLoadingTable = useQueryArgumentChangeLoading(
     { ...queryArgs, featuredVersionOrder },
-    isFetchingProducts || isFetchingVersions || isLoadingViews,
+    isFetchingProducts || isFetchingVersions || isLoadingSlicerData,
   )
 
   // Dynamic pagination based on showProducts
@@ -671,7 +657,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     isFetching: isFetchingChildren,
     isLoading: isLoadingChildren,
     isUninitialized: isChildrenUninitialized,
-  } = useGetVersionsByProductsQuery(childVersionsArgs, { skip: !showProducts || isLoadingViews })
+  } = useGetVersionsByProductsQuery(childVersionsArgs, { skip: !showProducts || isLoadingSlicerData })
 
   const isLoadingChildVersions = useQueryArgumentChangeLoading(
     childVersionsArgs,

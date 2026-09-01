@@ -66,11 +66,9 @@ export const buildQueryFilters = ({
         return false // remove search condition
       }
 
-      // Extract name filter (can be scoped like 'task_name' or 'folder_name' or just 'name')
-      if (
-        searchKey &&
-        (queryCondition.key === searchKey || queryCondition.key?.endsWith('_' + searchKey))
-      ) {
+      // scope prefixes are stripped before this point, so match the bare key only —
+      // a suffix match would also swallow attribs like attrib.client_name
+      if (searchKey && queryCondition.key === searchKey) {
         const val = queryCondition.value
         // Name filters use 'like' operator with wildcards, extract the actual search term
         if (val !== undefined && val !== null) {

@@ -22,6 +22,7 @@ import { SlicerContext } from './SlicerContextInstance'
 import { useSlicerRemotes } from '../hooks/useSlicerRemotes'
 import { useSlicerRowSelection } from '../hooks/useSlicerRowSelection'
 import type { OnAddToList, OnOpenViewer } from '../hooks/useHierarchyContextMenuItems'
+import { usePowerpack } from '@shared/context/PowerpackContext'
 
 export const SLICER_PAGES_CONFIG: SlicerConfig = {
   progress: {
@@ -146,6 +147,8 @@ export const SlicerProvider = ({
     null,
   )
 
+  const { powerLicense } = usePowerpack()
+
   const slicerViewSettings = viewSettings as SlicerViewSettings | undefined
   const storedSliceTypes = slicerViewSettings?.sliceTypes
   const legacySliceType = slicerViewSettings?.sliceType
@@ -218,21 +221,27 @@ export const SlicerProvider = ({
 
   // persist the migrated arrangement; the pinned selection is copied into the
   // hierarchy bucket so the new panel starts with the same folder scope
-  const hasMigratedPinned = useRef(false)
+  // the provider instance is reused across pages and projects, so the guards track
+  // which target has already been migrated rather than whether one ever ran
+  const migrationKey = `${projectName}-${page}`
+  const migratedPinned = useRef(new Set<string>())
   useEffect(() => {
-    if (!migratePinnedHierarchy || isLoadingViews || hasMigratedPinned.current) return
-    hasMigratedPinned.current = true
-    setPanelSelection('hierarchy', pinnedSlice!.rowSelection)
-    setPanelExpanded('hierarchy', pinnedSlice!.expanded)
+    if (!migratePinnedHierarchy || isLoadingViews || migratedPinned.current.has(migrationKey)) return
+    migratedPinned.current.add(migrationKey)
+    // the hierarchy bucket is shared across pages, so never replace a live selection
+    if (!Object.keys(getPanelSelection('hierarchy')).length) {
+      setPanelSelection('hierarchy', pinnedSlice!.rowSelection)
+      setPanelExpanded('hierarchy', pinnedSlice!.expanded)
+    }
     persistSliceTypes(sliceTypes)
-  }, [migratePinnedHierarchy, isLoadingViews])
+  }, [migratePinnedHierarchy, isLoadingViews, migrationKey])
 
   // pre-upgrade views stored the active value slice's selection in one shared
   // per-page bucket (no sliceType suffix); move it into that slice's own bucket
-  const hasMigratedLegacyBucket = useRef(false)
+  const migratedLegacyBucket = useRef(new Set<string>())
   useEffect(() => {
     if (
-      hasMigratedLegacyBucket.current ||
+      migratedLegacyBucket.current.has(migrationKey) ||
       isLoadingViews ||
       props.sliceType ||
       props.rowSelection ||
@@ -240,7 +249,7 @@ export const SlicerProvider = ({
       storedSliceTypes?.length
     )
       return
-    hasMigratedLegacyBucket.current = true
+    migratedLegacyBucket.current.add(migrationKey)
     const legacySelectionKey = `slicer-selection-${projectName}-${page}`
     const legacyExpandedKey = `slicer-expanded-${projectName}-${page}`
     const activeType = viewSliceTypes[0]
@@ -256,7 +265,7 @@ export const SlicerProvider = ({
     }
     sessionStorage.removeItem(legacySelectionKey)
     sessionStorage.removeItem(legacyExpandedKey)
-  }, [isLoadingViews, storedSliceTypes])
+  }, [isLoadingViews, storedSliceTypes, migrationKey])
 
   // migrated pages no longer read pinnedSlice for data fetching — drop any pin
   // not awaiting migration so the filter bar stops advertising a dead filter.
@@ -270,12 +279,13 @@ export const SlicerProvider = ({
 
   const onSliceTypeChange = useCallback<OnSliceTypeChange>(
     (newSliceType, pinCurrent) => {
-      // a dimension may only appear in one panel
-      if (sliceTypes.slice(1).includes(newSliceType)) return
+      // a dimension may only appear in one panel; without a license the extra panels are
+      // stored but not rendered, so they give up the dimension instead of blocking it
+      if (powerLicense && sliceTypes.slice(1).includes(newSliceType)) return
       if (props.onSliceTypeChange) {
         props.onSliceTypeChange(newSliceType, pinCurrent)
       } else {
-        persistSliceTypes([newSliceType, ...sliceTypes.slice(1)])
+        persistSliceTypes([newSliceType, ...sliceTypes.slice(1).filter((t) => t !== newSliceType)])
       }
 
       // remove current row selection as it is no longer relevant to the new slice type
@@ -294,7 +304,6 @@ export const SlicerProvider = ({
 
       // if pinCurrent is true, store the current slice type and selection data in local storage
       if (pinCurrent) {
-        console.log('Pinning current slice type and selection data', rowSelection)
         setPinnedSlice({
           sliceType,
           rowSelection,
@@ -311,6 +320,7 @@ export const SlicerProvider = ({
       setPinnedSlice,
       expanded,
       setExpanded,
+      powerLicense,
     ],
   )
 

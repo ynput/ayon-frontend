@@ -1,7 +1,7 @@
 import type { AttributeModel } from '@shared/api'
-import { ProjectTableAttribute } from '../../ProjectTreeTable/hooks/useAttributesList'
-import { SliceFilter, SliceType } from '../types'
-import { RowSelectionState } from '@tanstack/react-table'
+import type { ProjectTableAttribute } from '../../ProjectTreeTable/hooks/useAttributesList'
+import type { SliceFilter, SliceType } from '../types'
+import type { RowSelectionState } from '@tanstack/react-table'
 
 export type SliceSelection = { sliceType: SliceType; rowSelection: RowSelectionState }
 
@@ -33,9 +33,9 @@ export const createFilterFromSlicer: CreateFilterFromSlicer = ({ slice, attribFi
     if (!slice) return null
     const sliceType = sliceFilterTypes[slice?.sliceType as keyof typeof sliceFilterTypes]
 
-    const values = Object.keys(slice.rowSelection)
-      .filter((sliceId) => !!sliceId)
-      .map((sliceId) => ({
+    const values = Object.entries(slice.rowSelection)
+      .filter(([sliceId, selected]) => !!sliceId && selected)
+      .map(([sliceId]) => ({
         id: sliceId,
         label: sliceId,
       }))

@@ -16,6 +16,7 @@ import {
   buildQueryFilters,
   useEntitiesMap,
   useSelectedFolders,
+  scopeIdsToFolders,
   useScopedAttributeFields,
   useExpandedState,
   createLocalStorageKey,
@@ -29,16 +30,18 @@ import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTree
 
 // Views hooks
 import {
-  createFiltersFromSlicer,
   useOverviewViewSettings,
   useViewsContext,
   useViewUpdateHelper,
 } from '@shared/containers'
 
 // Local context and hooks
-import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
+import {
+  useSelectedEntityIds,
+  useSlicerPanelSelections,
+} from '@shared/containers/Slicer'
 import { useProjectOverviewStats } from '../hooks/useProjectOverviewStats'
-import { useProjectContext, useProjectFoldersContext, usePowerpack } from '@shared/context'
+import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 import { ProjectOverviewContext } from './ProjectOverviewContextInstance'
 import { useAppDispatch } from '@state/store'
@@ -52,12 +55,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { projectName, ...projectInfo } = useProjectContext()
   const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
 
-  const { slices, getPanelSelection } = useSlicerContext()
-  const { powerLicense, isLoading: isLoadingPowerLicense } = usePowerpack()
   const { getChildFolderIds } = useProjectFoldersContext()
 
-  // panels 2+ are license-gated; hold the first fetch until the license resolves
-  const isLicensePending = slices.length > 1 && isLoadingPowerLicense
 
   const {
     sorting,
@@ -66,19 +65,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     columnVisibility,
   } = useColumnSettingsContext()
 
-  // without a license only the first panel renders, so only it may contribute
-  const sliceSelections = useMemo(() => {
-    const all = slices.map((slice) => ({
-      sliceType: slice.sliceType,
-      rowSelection: getPanelSelection(slice.id),
-    }))
-    return powerLicense ? all : all.slice(0, 1)
-  }, [slices, getPanelSelection, powerLicense])
-
-  const sliceFilters = useMemo(
-    () => createFiltersFromSlicer({ slices: sliceSelections, attribFields }),
-    [sliceSelections, attribFields],
-  )
+  const { sliceSelections, sliceFilters, isLicensePending } =
+    useSlicerPanelSelections(attribFields)
 
   // filter out attribFields by scope
   const scopedAttribFields = useScopedAttributeFields({
@@ -274,7 +262,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   })
 
   // Resolve entity list selections to IDs
-  const { entityIds, rawEntityIds, parentMaps } = useSelectedEntityIds({
+  const {
+    entityIds,
+    rawEntityIds,
+    parentMaps,
+    isLoading: isResolvingListIds,
+  } = useSelectedEntityIds({
     slices: sliceSelections,
     projectName,
   })
@@ -285,16 +278,9 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     getChildFolderIds,
   })
 
-  // list tasks narrowed to the hierarchy panel's subtree; ids not yet in
-  // parentMaps pass through (the map lags rawEntityIds by one resolve)
+  // list tasks narrowed to the hierarchy panel's subtree
   const selectedTaskIds = useMemo(
-    () =>
-      folderScope
-        ? rawEntityIds.taskIds.filter((id) => {
-            const folderId = parentMaps.taskFolderIds[id]
-            return !folderId || folderScope.has(folderId)
-          })
-        : rawEntityIds.taskIds,
+    () => scopeIdsToFolders(rawEntityIds.taskIds, parentMaps.taskFolderIds, folderScope),
     [rawEntityIds.taskIds, parentMaps, folderScope],
   )
 
@@ -408,7 +394,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     modules,
     skipLinks,
     showComments,
-    isLoadingViews: isLoadingViews || isLicensePending,
+    isLoadingViews: isLoadingViews || isLicensePending || isResolvingListIds,
     onCollapseAll: () => setExpanded({}),
     visibleEntityIds,
     folderStatsArgs,

@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import { useSessionStorage } from '@shared/hooks/useSessionStorage'
+import { clampDraggedHeights, resolvePanelLayout } from './slicerPanelLayout'
+import type { SlicerPanelHeights } from './slicerPanelLayout'
 
 export const SLICER_SPLITTER_STATE_KEY = 'slicer-splitter'
 export const SLICER_SPLITTER_PANEL_CONFIG = {
@@ -19,43 +22,42 @@ const useSlicerSplitter = () => {
   return [slicerSize, handleResizeEnd] as const
 }
 
-// header plus a few rows; below this the stack grows and scrolls instead of crushing panels
-export const SLICER_MIN_PANEL_HEIGHT = 180
+export {
+  SLICER_MIN_PANEL_HEIGHT,
+  resolvePanelLayout,
+  clampDraggedHeights,
+} from './slicerPanelLayout'
 
-// stacked slicer panels keep pixel heights, so enlarging one pushes the stack past the
-// column height (scrolls) instead of shrinking its neighbours below the minimum
-export const useSlicerPanelHeights = (
-  page: string,
-  panelCount: number,
-  containerHeight: number,
-) => {
-  const [stored, setStoredHeights] = useSessionStorage<number[]>(
+export const useSlicerPanelHeights = (page: string, panelIds: string[], containerHeight: number) => {
+  const [stored, setStoredHeights] = useSessionStorage<SlicerPanelHeights>(
     `slicer-panel-heights-${page}`,
-    [],
+    {},
   )
+  // primereact keeps its own sizes after a drag, so a clamped drag has to remount it
+  const [clampCount, setClampCount] = useState(0)
 
-  const heights: number[] =
-    stored.length === panelCount
-      ? stored.map((h) => Math.max(h, SLICER_MIN_PANEL_HEIGHT))
-      : Array(panelCount).fill(SLICER_MIN_PANEL_HEIGHT)
-
-  const sum = heights.reduce((total, h) => total + h, 0)
-  const total = Math.max(containerHeight, sum)
-  const sizes = heights.map((h) => (h / sum) * 100)
-  // primereact must allow the drag past the floor; the release below clamps it back up
-  // and the stack grows instead, so a neighbour never ends up smaller than the minimum
-  const minSize = 2
+  const heights = Array.isArray(stored) ? {} : stored
+  const { sizes, minSize, height } = resolvePanelLayout(heights, panelIds, containerHeight)
 
   const handleResizeEnd = (props: { sizes: number[] }) => {
-    setStoredHeights(
-      props.sizes.map((size) => Math.max((size / 100) * total, SLICER_MIN_PANEL_HEIGHT)),
+    const dragged = clampDraggedHeights(props.sizes, height, containerHeight)
+    setStoredHeights({
+      ...heights,
+      ...Object.fromEntries(panelIds.map((id, index) => [id, dragged[index]])),
+    })
+    const clamped = dragged.some(
+      (h, index) => Math.abs(h - (props.sizes[index] / 100) * height) > 1,
     )
+    if (clamped) setClampCount((count) => count + 1)
   }
 
-  // primereact keeps its own sizes after a drag, so the host remounts it on this signature
-  const layoutKey = heights.map(Math.round).join('|')
-
-  return { sizes, minSize, height: total, layoutKey, handleResizeEnd }
+  return {
+    sizes,
+    minSize,
+    height,
+    layoutKey: `${panelIds.join('|')}#${clampCount}`,
+    handleResizeEnd,
+  }
 }
 
 export default useSlicerSplitter

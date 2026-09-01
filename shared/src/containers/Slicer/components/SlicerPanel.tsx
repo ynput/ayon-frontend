@@ -39,8 +39,13 @@ const HeaderActions = styled.div`
 
 export const SPLIT_SLICER_OPTION = '__splitSlicer__'
 
+type SlicerDropdownOption = SliceTypeField & { disabled?: boolean; disabledMessage?: string }
+
 export interface SlicerPanelProps {
   panel: SlicePanelData
+  // panels actually rendered; without a license the rest stay stored but must not
+  // reserve slice types or ride along on counts
+  visibleSlices: SlicePanelData[]
   sliceFields: SliceTypeField[]
   entityTypes?: string[]
   pinnedSliceType?: SliceType
@@ -56,6 +61,7 @@ export interface SlicerPanelProps {
 
 export const SlicerPanel: FC<SlicerPanelProps> = ({
   panel,
+  visibleSlices,
   sliceFields,
   entityTypes = ['task'],
   pinnedSliceType,
@@ -70,7 +76,6 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
 }) => {
   const {
     SlicerDropdown,
-    slices,
     addSlicePanel,
     removeSlicePanel,
     setPanelSliceType,
@@ -103,12 +108,12 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
   )
   // a sibling's field only rides along when its args match ours, i.e. same cache entry
   const sharedSliceTypes = useMemo(() => {
-    const all = slices.map((s) => s.sliceType)
+    const all = visibleSlices.map((s) => s.sliceType)
     if (typeof countsSource !== 'function') return all
     const key = (source?: SlicerCountsSource) => JSON.stringify([source?.entity, source?.args])
     const own = key(resolvedCountsSource)
     return all.filter((t) => t === panel.sliceType || key(countsSource(t)) === own)
-  }, [countsSource, resolvedCountsSource, slices, panel.sliceType])
+  }, [countsSource, resolvedCountsSource, visibleSlices, panel.sliceType])
   const { counts, filled, complete } = useSlicerCounts(
     resolvedCountsSource,
     panel.sliceType,
@@ -123,6 +128,11 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     [isPrimary, onSliceTypeChange, setPanelSliceType, panel.id],
   )
 
+  const usedSliceTypes = useMemo(
+    () => visibleSlices.filter((s) => s.id !== panel.id).map((s) => s.sliceType),
+    [visibleSlices, panel.id],
+  )
+
   const {
     sliceOptions,
     sliceType,
@@ -132,6 +142,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({
     sliceFields,
+    usedSliceTypes,
     entityTypes,
     counts,
     filled,
@@ -150,21 +161,17 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
   )
   const rowContextMenuBuilders = isHierarchy ? hierarchyContextMenu.rowContextMenuBuilders : []
 
-  const usedSliceTypes = useMemo(
-    () => slices.filter((s) => s.id !== panel.id).map((s) => s.sliceType),
-    [slices, panel.id],
-  )
   const unusedSliceTypes = useMemo(
     () =>
       sliceOptions
         .map((o) => o.value)
-        .filter((value) => !slices.some((s) => s.sliceType === value)),
-    [sliceOptions, slices],
+        .filter((value) => !visibleSlices.some((s) => s.sliceType === value)),
+    [sliceOptions, visibleSlices],
   )
   const canSplit = !!splitEnabled && unusedSliceTypes.length > 0
 
   const dropdownOptions = useMemo(() => {
-    const options: any[] = sliceOptions.map((option) =>
+    const options: SlicerDropdownOption[] = sliceOptions.map((option) =>
       usedSliceTypes.includes(option.value)
         ? { ...option, disabled: true, disabledMessage: 'Already used by another panel' }
         : option,
@@ -177,8 +184,8 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
 
   const handleSplit = () => addSlicePanel(unusedSliceTypes[0])
 
-  const handleDropdownChange = (value: string[]) => {
-    const selected = value[0] as SliceType
+  const handleDropdownChange = (value: (string | number)[]) => {
+    const selected = String(value[0]) as SliceType
     if (selected === SPLIT_SLICER_OPTION) {
       handleSplit()
       return
@@ -196,7 +203,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
             options={dropdownOptions}
             value={[sliceType]}
             sliceTypes={sliceFields.map((field) => field.value)}
-            onChange={(value: any) => handleDropdownChange(value)}
+            onChange={(value) => handleDropdownChange(value)}
             className={clsx('slicer-dropdown', { 'single-option': dropdownOptions.length === 1 })}
             disableOpen={dropdownOptions.length === 1}
           />

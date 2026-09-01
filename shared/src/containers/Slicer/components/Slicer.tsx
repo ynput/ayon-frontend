@@ -74,13 +74,14 @@ export const Slicer: FC<SlicerProps> = ({
     return () => observer.disconnect()
   }, [visibleSlices.length])
 
+  const panelIds = visibleSlices.map((panel) => panel.id)
   const {
     sizes: panelSizes,
     minSize,
     height: stackTotalHeight,
     layoutKey,
     handleResizeEnd: handlePanelResizeEnd,
-  } = useSlicerPanelHeights(page, visibleSlices.length, stackHeight)
+  } = useSlicerPanelHeights(page, panelIds, stackHeight)
 
   const [searchByPanel, setSearchByPanel] = useState<Record<string, string>>({})
   const handleSearchChange = useCallback(
@@ -88,8 +89,18 @@ export const Slicer: FC<SlicerProps> = ({
       setSearchByPanel((prev) => ({ ...prev, [panelId]: value })),
     [],
   )
+  // a removed panel must not hand its search text to the next panel of the same type
+  const panelIdKey = panelIds.join('|')
+  useEffect(() => {
+    setSearchByPanel((prev) => {
+      const kept = Object.keys(prev).filter((id) => panelIds.includes(id))
+      if (kept.length === Object.keys(prev).length) return prev
+      return Object.fromEntries(kept.map((id) => [id, prev[id]]))
+    })
+  }, [panelIdKey])
 
   const panelProps = {
+    visibleSlices,
     sliceFields,
     entityTypes,
     pinnedSliceType,
@@ -118,7 +129,7 @@ export const Slicer: FC<SlicerProps> = ({
           <Splitter
             layout="vertical"
             // remount so primereact picks up new panel sizes when the arrangement changes
-            key={`${visibleSlices.map((s) => s.id).join('|')}-${layoutKey}`}
+            key={layoutKey}
             onResizeEnd={handlePanelResizeEnd}
             style={{
               width: '100%',
