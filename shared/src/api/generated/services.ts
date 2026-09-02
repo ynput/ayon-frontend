@@ -70,6 +70,7 @@ export type ServiceDataModel = {
   storagePath?: string
   registryAuth?: RegistryAuth
   image?: string
+  error?: string
 }
 export type ServiceModel = {
   name: string
@@ -119,6 +120,7 @@ export type PatchServiceRequestModel = {
   storagePath?: string
   registryAuth?: RegistryAuth
   shouldRun?: boolean
+  error?: string
   hostname?: string
   /** Deprecated, use top level fields instead */
   config?: ServiceConfigModel
