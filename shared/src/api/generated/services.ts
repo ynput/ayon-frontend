@@ -57,6 +57,10 @@ export type HostHeartbeatApiResponse = /** status 200 Successful Response */ Hea
 export type HostHeartbeatApiArg = {
   heartbeatRequestModel: HeartbeatRequestModel
 }
+export type RegistryAuth = {
+  username: string
+  password: string
+}
 export type ServiceDataModel = {
   volumes?: string[]
   ports?: string[]
@@ -64,6 +68,7 @@ export type ServiceDataModel = {
   user?: string
   env?: object
   storagePath?: string
+  registryAuth?: RegistryAuth
   image?: string
 }
 export type ServiceModel = {
@@ -96,6 +101,7 @@ export type ServiceConfigModel = {
   user?: string
   env?: object
   storagePath?: string
+  registryAuth?: RegistryAuth
 }
 export type SpawnServiceRequestModel = {
   addonName: string
@@ -111,6 +117,7 @@ export type PatchServiceRequestModel = {
   user?: string
   env?: object
   storagePath?: string
+  registryAuth?: RegistryAuth
   shouldRun?: boolean
   hostname?: string
   /** Deprecated, use top level fields instead */
