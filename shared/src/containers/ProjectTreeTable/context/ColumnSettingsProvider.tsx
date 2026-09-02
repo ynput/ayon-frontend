@@ -14,6 +14,7 @@ import { SummaryCalc, SummaryFormat, RowScope } from '../types/summaryTypes'
 import { isEqual } from 'lodash'
 import { checkColumnVisibility } from '../utils'
 import { normalizeColumnsConfig } from '../utils/columnIds'
+import { registerPendingColumnWrites } from '../utils/pendingColumnWrites'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
 
 interface ColumnSettingsProviderProps {
@@ -34,7 +35,22 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const rowHeightTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const columnOrderTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const prevRowHeightRef = React.useRef<number | undefined>(undefined)
+  const incomingColumnsKeyRef = React.useRef<string>('')
   const lockedAspectRatioRef = React.useRef<number | null>(null)
+  // latest render's config + writer, so a debounced write always lands on current state
+  const latestConfigRef = React.useRef<ColumnsConfig>({} as ColumnsConfig)
+  const commitRef = React.useRef<(next: ColumnsConfig) => void>(() => {})
+  const pendingSizingRef = React.useRef<{ sizing: ColumnSizingState; key: string } | null>(null)
+  const pendingOrderRef = React.useRef<{
+    order: ColumnOrderState
+    pinning: ColumnPinningState
+    key: string
+  } | null>(null)
+  const pendingRowHeightRef = React.useRef<{
+    rowHeight: number
+    thumbnailWidth: number
+    key: string
+  } | null>(null)
   // Internal state for immediate updates (similar to column sizing)
   const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
   const [internalRowHeight, setInternalRowHeight] = useState<number | null>(null)
@@ -97,8 +113,74 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       clearTimeout(rowHeightTimeoutRef.current)
       rowHeightTimeoutRef.current = null
     }
+    pendingRowHeightRef.current = null
   }
   prevRowHeightRef.current = configRowHeight
+
+  // Identifies the layout we are currently editing. A view switch replaces it, which is how
+  // the debounced writes below know their payload belongs to a view that is no longer open.
+  const incomingColumnsKey = JSON.stringify([columnsSizingExternal, columnOrderInit])
+  incomingColumnsKeyRef.current = incomingColumnsKey
+  latestConfigRef.current = columnsConfig
+  commitRef.current = onChangeWithColumns
+
+  // Writes everything still waiting on a debounce. Called by the debounce timers themselves and,
+  // through the registry, by a view save - which reads the persisted settings and would otherwise
+  // miss a resize the user made a moment earlier. All pending payloads go out as a single config:
+  // each write rebuilds the whole columns array, so separate calls would clobber each other.
+  const flushPendingWrites = () => {
+    const pendingSizing = pendingSizingRef.current
+    const pendingOrder = pendingOrderRef.current
+    const pendingRowHeight = pendingRowHeightRef.current
+    pendingSizingRef.current = null
+    pendingOrderRef.current = null
+    pendingRowHeightRef.current = null
+    ;[resizingTimeoutRef, columnOrderTimeoutRef, rowHeightTimeoutRef].forEach((timeout) => {
+      if (timeout.current) {
+        clearTimeout(timeout.current)
+        timeout.current = null
+      }
+    })
+
+    const currentKey = incomingColumnsKeyRef.current
+    const next: ColumnsConfig = { ...latestConfigRef.current }
+    let hasChanges = false
+
+    // a different view was loaded while we waited: the payload belongs to the previous one
+    if (pendingSizing && pendingSizing.key === currentKey) {
+      next.columnSizing = pendingSizing.sizing
+      hasChanges = true
+    }
+    if (pendingOrder && pendingOrder.key === currentKey) {
+      next.columnOrder = pendingOrder.order
+      next.columnPinning = pendingOrder.pinning
+      hasChanges = true
+    }
+    if (pendingRowHeight && pendingRowHeight.key === currentKey) {
+      next.rowHeight = pendingRowHeight.rowHeight
+      next.columnSizing = { ...next.columnSizing, thumbnail: pendingRowHeight.thumbnailWidth }
+      hasChanges = true
+    }
+
+    if (hasChanges) {
+      commitRef.current(next)
+    }
+
+    if (pendingSizing || pendingRowHeight) {
+      setInternalColumnSizing(null)
+    }
+    if (pendingOrder) {
+      setInternalColumnOrder(null)
+    }
+    if (pendingRowHeight) {
+      setInternalRowHeight(null)
+      lockedAspectRatioRef.current = null
+    }
+  }
+  const flushRef = React.useRef(flushPendingWrites)
+  flushRef.current = flushPendingWrites
+
+  React.useEffect(() => registerPendingColumnWrites(() => flushRef.current()), [])
 
   // Use internal row height during adjustments, otherwise use config value
   const rowHeight = internalRowHeight ?? configRowHeight
@@ -189,6 +271,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
   const setColumnSizing = (sizing: ColumnSizingState) => {
     setInternalColumnSizing(sizing)
+    pendingSizingRef.current = { sizing, key: incomingColumnsKey }
 
     // if there is a timeout already set, clear it
     if (resizingTimeoutRef.current) {
@@ -197,13 +280,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     // set a timeout that tracks if the column sizing has finished
     resizingTimeoutRef.current = setTimeout(() => {
       // we have finished resizing now!
-      // update the external column sizing
-      onChangeWithColumns({
-        ...columnsConfig,
-        columnSizing: sizing,
-      })
-      // reset the internal column sizing to not be used anymore
-      setInternalColumnSizing(null)
+      flushRef.current()
     }, 500)
   }
 
@@ -264,6 +341,11 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
     // Update UI immediately (optimistic)
     setInternalColumnOrder(filteredOrder)
+    pendingOrderRef.current = {
+      order: filteredOrder,
+      pinning: newPinning,
+      key: incomingColumnsKey,
+    }
 
     // Clear any existing timeout to debounce API calls
     if (columnOrderTimeoutRef.current) {
@@ -272,13 +354,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
     // Debounce API call to avoid excessive requests
     columnOrderTimeoutRef.current = setTimeout(() => {
-      onChangeWithColumns({
-        ...columnsConfig,
-        columnOrder: filteredOrder,
-        columnPinning: newPinning,
-      })
-      // Clear internal state after persistence
-      setInternalColumnOrder(null)
+      flushRef.current()
     }, 300)
   }
 
@@ -372,6 +448,12 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         thumbnail: newThumbnailWidth,
       })
 
+      pendingRowHeightRef.current = {
+        rowHeight: newRowHeight,
+        thumbnailWidth: newThumbnailWidth,
+        key: incomingColumnsKeyRef.current,
+      }
+
       // Clear any existing timeout to debounce API calls
       if (rowHeightTimeoutRef.current) {
         clearTimeout(rowHeightTimeoutRef.current)
@@ -379,29 +461,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
       // Debounce API call to avoid excessive requests
       rowHeightTimeoutRef.current = setTimeout(() => {
-        // Persist to API
-        onChangeWithColumns({
-          ...columnsConfig,
-          rowHeight: newRowHeight,
-          columnSizing: {
-            ...columnsSizingExternal,
-            thumbnail: newThumbnailWidth,
-          },
-        })
-
-        // Clean up internal state after API call completes
-        setInternalRowHeight(null)
-        setInternalColumnSizing(null)
-        lockedAspectRatioRef.current = null
+        flushRef.current()
       }, 300)
     },
-    [
-      columnsConfig,
-      onChangeWithColumns,
-      columnsSizingExternal,
-      configRowHeight,
-      internalColumnSizing,
-    ],
+    [columnsSizingExternal, configRowHeight, internalColumnSizing],
   )
 
   // Remove redundant local updater functions in favor of unified updaters with all columns
