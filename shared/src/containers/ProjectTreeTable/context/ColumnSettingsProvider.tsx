@@ -37,7 +37,6 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const prevRowHeightRef = React.useRef<number | undefined>(undefined)
   const incomingColumnsKeyRef = React.useRef<string>('')
   const lockedAspectRatioRef = React.useRef<number | null>(null)
-  // latest render's config + writer, so a debounced write always lands on current state
   const latestConfigRef = React.useRef<ColumnsConfig>({} as ColumnsConfig)
   const commitRef = React.useRef<(next: ColumnsConfig) => void>(() => {})
   const pendingSizingRef = React.useRef<{ sizing: ColumnSizingState; key: string } | null>(null)
@@ -117,17 +116,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   }
   prevRowHeightRef.current = configRowHeight
 
-  // Identifies the layout we are currently editing. A view switch replaces it, which is how
-  // the debounced writes below know their payload belongs to a view that is no longer open.
+  // identifies the layout being edited, so a debounced write can tell a view switch happened
   const incomingColumnsKey = JSON.stringify([columnsSizingExternal, columnOrderInit])
   incomingColumnsKeyRef.current = incomingColumnsKey
   latestConfigRef.current = columnsConfig
   commitRef.current = onChangeWithColumns
 
-  // Writes everything still waiting on a debounce. Called by the debounce timers themselves and,
-  // through the registry, by a view save - which reads the persisted settings and would otherwise
-  // miss a resize the user made a moment earlier. All pending payloads go out as a single config:
-  // each write rebuilds the whole columns array, so separate calls would clobber each other.
+  // one config for everything pending: each write rebuilds the whole columns array
   const flushPendingWrites = () => {
     const pendingSizing = pendingSizingRef.current
     const pendingOrder = pendingOrderRef.current

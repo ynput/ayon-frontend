@@ -299,10 +299,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           projectName,
         })(state)
 
-        // Views from listViews carry no settings, so merging one into getDefaultView would
-        // leave the previously selected view's settings under the new view's id, and every
-        // consumer (and the next settings write, which uses this cache as its baseline)
-        // would read the wrong layout. Only patch when the full view is already cached.
+        // listViews entries have no settings, so patch only when the full view is cached
         const workingView = getViewsApi.endpoints.getWorkingView.select({
           viewType,
           projectName,
@@ -314,7 +311,6 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
 
         // check if there is even a cache for the default view
         if (currentDefaultView?.isSuccess && currentDefaultView.data?.id) {
-          // Optimistically update the default view, when we have the whole view to write
           const patch = cachedView
             ? dispatch(
                 getViewsApi.util.updateQueryData(

@@ -32,12 +32,9 @@ export const useSaveViewFromCurrent = ({
         throw 'viewType are required for saving a view from another view'
       }
 
-      // a resize or reorder can still be sitting in its debounce - persist it first, otherwise
-      // the settings we are about to copy would not contain the change the user just made
+      // a resize can still be sitting in its debounce, so write it before copying the settings
       flushPendingColumnWrites()
 
-      // the flush writes straight to the cache, so read the settings back rather than using the
-      // value captured when this callback was created
       const latestSettings =
         (
           viewsQueries.endpoints.getDefaultView.select({ viewType, projectName })(
