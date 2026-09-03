@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useState } from 'react'
 import * as Styled from './SimpleTable.styled'
 import { Icon, IconProps, InputText, Spacer } from '@ynput/ayon-react-components'
+import { useImageStatus } from '@shared/hooks/useImageStatus'
 import clsx from 'clsx'
 
 export interface TableRowAction extends IconProps {
@@ -85,7 +86,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       iconFilled,
       img,
       imgShape = 'square',
-      imgRatio = 1,
+      imgRatio,
       isRowExpandable,
       isRowExpanded,
       isTableExpandable,
@@ -112,6 +113,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
     ref,
   ) => {
     const [renameValue, setRenameValue] = useState(renameInitialValue ?? value)
+    const imgStatus = useImageStatus(img)
 
     useEffect(() => {
       if (isRenaming) {
@@ -142,19 +144,30 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
           enableNonFolderIndent={enableNonFolderIndent}
           {...pt?.expander}
         />
-        {startContent && startContent}
-        {img && (
+        {img && imgStatus === 'loaded' ? (
           <img
             src={img}
             {...pt?.img}
             alt=""
             className={clsx('image', imgShape, pt?.img?.className)}
             style={{
-              aspectRatio: imgRatio.toString(),
+              aspectRatio: (imgRatio ?? 1).toString(),
               ...pt?.img?.style,
             }}
           />
+        ) : (
+          // keep the slot so rows don't shift when a thumbnail is missing
+          imgRatio !== undefined && (
+            <div
+              className={clsx('image', imgShape, 'empty', pt?.img?.className)}
+              style={{
+                aspectRatio: imgRatio.toString(),
+                ...pt?.img?.style,
+              }}
+            />
+          )
         )}
+        {startContent}
         {icon && (
           <Icon
             icon={icon}

@@ -230,6 +230,7 @@ export const Cell = styled.div`
     width: auto;
     height: 24px;
     max-height: 24px;
+    flex: none;
     object-fit: cover;
     aspect-ratio: 1;
     background-color: var(--md-sys-color-surface-container-lowest);
@@ -240,7 +241,12 @@ export const Cell = styled.div`
     }
 
     &.square {
-      border-radius: 4px;
+      border-radius: 2px;
+    }
+
+    /* reserves the slot so rows stay aligned, without drawing an empty box */
+    &.empty {
+      background-color: transparent;
     }
   }
 `

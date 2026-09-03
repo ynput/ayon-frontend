@@ -1,7 +1,8 @@
 // Show's all data for a specific entity type with parent ids and optional search
 // When entity type is folder, the data defaults to a tree table when not searching and a flat table when searching
 
-import { FC, useMemo } from 'react'
+import { FC } from 'react'
+import { createPortal } from 'react-dom'
 import { PickerEntityType } from '../EntityPickerDialog'
 import SimpleTable from '@shared/containers/SimpleTable/SimpleTable'
 import { Container } from '@shared/containers/SimpleTable/SimpleTable.styled'
@@ -9,9 +10,12 @@ import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.
 import EntityTypeTableHeader from './EntityTypeTableHeader'
 import { upperFirst } from 'lodash'
 import { EmptyPlaceholder } from '@shared/components/EmptyPlaceholder/EmptyPlaceholder'
+import { EntityTooltip } from '@shared/components/EntityTooltip'
+import { useRowTooltip } from '../hooks/useRowTooltip'
 
 interface EntityTypeTableProps {
   entityType: PickerEntityType
+  projectName: string
   tableData: SimpleTableRow[] // Folder data if this is a folder table
   isLoading?: boolean // Whether folders are loading
   error?: string // Error message if any
@@ -25,6 +29,7 @@ interface EntityTypeTableProps {
 
 const EntityTypeTable: FC<EntityTypeTableProps> = ({
   entityType,
+  projectName,
   tableData,
   isLoading = false,
   error,
@@ -35,6 +40,8 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
   onRowSubmit,
   onScrollBottom,
 }) => {
+  const tooltip = useRowTooltip(entityType)
+
   const handleDoubleClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
     e.preventDefault()
     const id = e.currentTarget.id
@@ -59,14 +66,27 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
         isLoading={isLoading}
         isExpandable={isFolderHierarchy}
         rowHeight={34}
+        imgRatio={16 / 9}
         isMultiSelect={isMultiSelect}
         onScrollBottom={onScrollBottom}
         pt={{
           row: {
             onDoubleClick: handleDoubleClick,
+            onMouseOver: tooltip.onMouseOver,
+            onMouseLeave: tooltip.onMouseLeave,
           },
         }}
       />
+      {tooltip.hovered &&
+        createPortal(
+          <EntityTooltip
+            entityType={entityType}
+            entityId={tooltip.hovered.id}
+            projectName={projectName}
+            pos={tooltip.hovered.pos}
+          />,
+          document.body,
+        )}
     </Container>
   )
 }
