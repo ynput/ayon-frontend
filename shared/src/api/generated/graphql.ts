@@ -2025,8 +2025,8 @@ export type GetProjectLatestQueryVariables = Exact<{
 export type GetProjectLatestQuery = { project: { name: string } };
 
 export type GetProjectsQueryVariables = Exact<{
-  last?: number | null | undefined;
-  before?: string | null | undefined;
+  first?: number | null | undefined;
+  after?: string | null | undefined;
 }>;
 
 
@@ -3730,8 +3730,8 @@ export const GetProjectLatestDocument = new TypedDocumentString(`
 }
     `);
 export const GetProjectsDocument = new TypedDocumentString(`
-    query GetProjects($last: Int, $before: String) {
-  projects(last: $last, before: $before, includeSkeleton: true) {
+    query GetProjects($first: Int, $after: String) {
+  projects(first: $first, after: $after, includeSkeleton: true) {
     edges {
       cursor
       node {

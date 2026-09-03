@@ -20,12 +20,14 @@ const getSystemApi = systemApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
         result
           ? [
               'info',
+              // setAttributeList invalidates the id-less tag, so provide it too
+              'attribute',
               ...(result.attributes || []).map((attr) => ({
                 type: 'attribute' as const,
                 id: attr.name,
               })),
             ]
-          : ['info'],
+          : ['info', 'attribute'],
     },
     listFrontendModules: {
       providesTags: ['info'],
