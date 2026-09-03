@@ -49,6 +49,13 @@ const EMPTY_EDITOR_VALUE = '<p><br></p>'
 
 const mentionTypes = ['@', '@@', '@@@']
 
+type UploadingFile = {
+  name: string
+  progress: number
+  type: string
+  order: number
+}
+
 interface CommentInputProps {
   initValue: string | null
   initFiles?: any[]
@@ -109,9 +116,10 @@ const CommentInput: FC<CommentInputProps> = ({
   const [editorValue, setEditorValue] = useState('')
   // file uploads
   const [files, setFiles] = useState(initFiles)
-  const [filesUploading, setFilesUploading] = useState([])
+  const [filesUploading, setFilesUploading] = useState<UploadingFile[]>([])
   const [isDropping, setIsDropping] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadedAnnotations, setUploadedAnnotations] = useState<SavedAnnotationMetadata[]>([])
 
   const { annotations, removeAnnotation, goToAnnotation } = useAnnotationsSync({
     entityId: entities[0]?.id,
@@ -426,7 +434,7 @@ const CommentInput: FC<CommentInputProps> = ({
     onClose && onClose()
   }
 
-  const handleFileUploaded = ({ file, data }: any) => {
+  const handleFileUploaded = ({ file, data }: any, isAnnotationLayer = false) => {
     const fileName = parseFilename(file.name)
     const newFile = {
       id: data.id,
@@ -434,12 +442,13 @@ const CommentInput: FC<CommentInputProps> = ({
       mime: file.type,
       size: file.size,
       order: files.length,
+      isAnnotationLayer,
     }
 
     setFiles((prev) => [...prev, newFile])
     // remove from uploading
     setFilesUploading((prev) =>
-      prev.filter((uploading: any) => parseFilename(uploading.name) !== fileName),
+      prev.filter((uploading) => parseFilename(uploading.name) !== fileName),
     )
 
     return newFile
@@ -454,7 +463,7 @@ const CommentInput: FC<CommentInputProps> = ({
       setFiles((prev) => prev.filter((file) => file.id !== id))
       // remove from uploading
       setFilesUploading((prev) => {
-        return prev.filter((file: any) => parseFilename(file.name) !== parseFilename(name))
+        return prev.filter((file) => parseFilename(file.name) !== parseFilename(name))
       })
     }
   }
@@ -463,17 +472,16 @@ const CommentInput: FC<CommentInputProps> = ({
     const progress = Math.round((e.loaded * 100) / e.total)
     if (progress !== 100) {
       const fileName = parseFilename(file.name)
-      const uploadProgress = {
-        name: fileName,
-        progress,
-        type: file.type,
-        order: files.length + filesUploading.length,
-      }
 
-      // @ts-ignore
       setFilesUploading((prev) => {
-        // replace or add new progress
-        const newProgress = prev.filter((name: any) => parseFilename(name.name) !== fileName)
+        const existing = prev.find((item) => parseFilename(item.name) === fileName)
+        const newProgress = prev.filter((item) => parseFilename(item.name) !== fileName)
+        const uploadProgress: UploadingFile = {
+          name: fileName,
+          progress,
+          type: file.type,
+          order: existing?.order ?? files.length + prev.length,
+        }
         return [...newProgress, uploadProgress]
       })
     }
@@ -492,9 +500,18 @@ const CommentInput: FC<CommentInputProps> = ({
     setIsDropping(true)
   }
 
+  const removeFileUploading = (name: string) => {
+    setFilesUploading((prev) => prev.filter((file) => file.name !== parseFilename(name)))
+  }
+
   const uploadAnnotations = useAnnotationsUpload({
     projectName,
     onSuccess: handleFileUploaded,
+    onProgress: handleFileProgress,
+    // seed progress so the card switches to uploading before the export finishes
+    onStart: (annotation) =>
+      handleFileProgress({ loaded: 1, total: 100 }, { name: annotation.name, type: 'image/png' }),
+    onError: (annotation) => removeFileUploading(annotation.name),
   })
 
   const handleSubmit = async () => {
@@ -503,15 +520,18 @@ const CommentInput: FC<CommentInputProps> = ({
 
       // upload any annotations first
       let annotationFiles = []
-      let annotationMetadata: SavedAnnotationMetadata[] | undefined = undefined
+      let newAnnotations = uploadedAnnotations
       if (annotations.length) {
         const { files, metadata } = await uploadAnnotations(annotations)
         annotationFiles = files
-        // get current files data
-        const { annotations: annotationsData = [] } = data || {}
-        // merge existing annotations data with new metadata
-        annotationMetadata = [...annotationsData, ...metadata]
+        newAnnotations = [...newAnnotations, ...metadata]
       }
+
+      // get current files data and merge it with the new metadata
+      const { annotations: annotationsData = [] } = data || {}
+      const annotationMetadata: SavedAnnotationMetadata[] | undefined = newAnnotations.length
+        ? [...annotationsData, ...newAnnotations]
+        : undefined
 
       // convert to markdown
       const [markdown] = convertToMarkdown(editorValue)
@@ -528,13 +548,18 @@ const CommentInput: FC<CommentInputProps> = ({
       }
 
       if ((markdownParsed || uploadedFiles.length) && onSubmit) {
+        const submittedValue = editorValue
+        // clear before the optimistic comment renders, otherwise both show the same files
+        setEditorValue('')
+        setFiles([])
         try {
           await onSubmit(markdownParsed, uploadedFiles, newData)
-          // only clear if onSubmit is successful
-          setEditorValue('')
-          setFiles([])
+          setUploadedAnnotations([])
         } catch (error) {
           // error is handled in rtk query mutation
+          setEditorValue(submittedValue)
+          setFiles(uploadedFiles)
+          setUploadedAnnotations(newAnnotations)
           return
         }
       }
@@ -601,9 +626,11 @@ const CommentInput: FC<CommentInputProps> = ({
     [projectName, setFiles, setFilesUploading],
   )
 
-  const allFiles = [...annotations, ...(files || []), ...filesUploading].sort(
-    (a, b) => a.order - b.order,
-  )
+  const allFiles = [
+    ...annotations,
+    ...(files || []).filter((file: any) => !file.isAnnotationLayer),
+    ...filesUploading,
+  ].sort((a, b) => a.order - b.order)
   const compactGrid = allFiles.length > 3
 
   // disable version mentions for folders
@@ -799,6 +826,7 @@ const CommentInput: FC<CommentInputProps> = ({
                 active={!!editorValue || !!files.length}
                 onClick={handleSubmit}
                 disabled={isLoading}
+                saving={isSubmitting}
               />
             </Styled.SubmitButtons>
           </Styled.Footer>
