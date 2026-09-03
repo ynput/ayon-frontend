@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { compareBuild } from 'semver'
-import { Dialog, Dropdown } from '@ynput/ayon-react-components'
+import { Dialog, Dropdown, InputSwitch } from '@ynput/ayon-react-components'
 import {
   FormLayout,
   FormRow,
@@ -80,6 +80,10 @@ const ServiceDialog = ({ onHide, editService = null }) => {
   const { data: hostsData } = useListHostsQuery()
   const { hosts = [] } = hostsData || {}
 
+  const [useRegistryAuth, setUseRegistryAuth] = useState(false)
+  const [registryUsername, setRegistryUsername] = useState('')
+  const [registryPassword, setRegistryPassword] = useState('')
+
   // Initialize form with existing service data when in edit mode
   useEffect(() => {
     if (isEditMode) {
@@ -119,6 +123,15 @@ const ServiceDialog = ({ onHide, editService = null }) => {
             .join('\n'),
         )
       }
+
+      const auth = editService.data?.registryAuth
+      if (auth) {
+        setUseRegistryAuth(true)
+        setRegistryUsername(auth.username || '')
+        setRegistryPassword(auth.password || '')
+      }
+
+
     }
   }, [isEditMode, editService, addonData])
 
@@ -201,6 +214,13 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       }, {})
     }
 
+    if (useRegistryAuth) {
+      serviceConfig.registryAuth = {
+        username: registryUsername,
+        password: registryPassword,
+      }
+    }
+
     const serviceData = {
       addonName: selectedAddon.name,
       addonVersion: selectedVersion,
@@ -208,6 +228,7 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       hostname: selectedHost,
       config: serviceConfig,
     }
+
 
     try {
       if (isEditMode) {
@@ -264,10 +285,10 @@ const ServiceDialog = ({ onHide, editService = null }) => {
   const canSubmit = isEditMode
     ? !!selectedHost
     : selectedAddon?.name &&
-      selectedVersion &&
-      selectedService &&
-      selectedHost &&
-      serviceName?.length
+    selectedVersion &&
+    selectedService &&
+    selectedHost &&
+    serviceName?.length
 
   const footer = (
     <Toolbar>
@@ -392,6 +413,27 @@ const ServiceDialog = ({ onHide, editService = null }) => {
           Add multiple environment variables by adding them on a new line.
         </FormRow>
       </FormLayout>
+
+
+      <Divider>Registry settings</Divider>
+      <FormLayout>
+
+        <FormRow label="Registry login">
+          <InputSwitch checked={useRegistryAuth} onChange={() => setUseRegistryAuth(!useRegistryAuth)} />
+        </FormRow>
+
+        {useRegistryAuth && (
+          <>
+            <FormRow label="Registry username">
+              <InputText value={registryUsername} onChange={(e) => setRegistryUsername(e.target.value)} />
+            </FormRow>
+            <FormRow label="Registry password">
+              <InputText value={registryPassword} onChange={(e) => setRegistryPassword(e.target.value)} type="password" />
+            </FormRow>
+          </>
+        )}
+      </FormLayout>
+
     </Dialog>
   )
 }
