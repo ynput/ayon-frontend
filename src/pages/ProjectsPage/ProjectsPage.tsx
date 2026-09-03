@@ -227,6 +227,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
       </Toolbar>
       {hasReachedPageLimit && (
         <InfoMessage
+          role="status"
           variant="warning"
           message={`Showing ${projects.length} projects. Some projects are not listed.`}
         />

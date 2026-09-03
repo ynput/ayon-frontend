@@ -61,8 +61,9 @@ export const useGetProjectsData = ({
   }, [projectFolders])
 
   // every project is needed up front: sorting, grouping, filtering and search all run client-side
-  const hasReachedPageLimit = pages.length >= MAX_PROJECT_PAGES
-  const isDraining = !!hasNextPage && !hasReachedPageLimit
+  const hasReachedPageLimit = !!hasNextPage && pages.length >= MAX_PROJECT_PAGES
+  // stop on error, otherwise a failing page retries forever
+  const isDraining = !!hasNextPage && !hasReachedPageLimit && !error
 
   useEffect(() => {
     if (!isDraining || isFetchingNextPage) return
