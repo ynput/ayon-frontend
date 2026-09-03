@@ -140,7 +140,7 @@
     "@ynput/ayon-frontend-shared": "^0.3.54",
     "@ynput/ayon-player": "1.0.0",
     "@ynput/ayon-react-components": "^1.19.9",
-    "axios": "1.19.0",
+    "axios": "1.20.0",
     "clsx": "2.1.1",
     "custom-protocol-check": "1.4.0",
     "date-fns": "3.6.0",
@@ -160,7 +160,7 @@
     "remark-gfm": "4.0.1",
     "short-uuid": "4.2.2",
     "turndown": "7.2.4",
-    "uuid": "14.0.1"
+    "uuid": "14.0.2"
   },
   "resolutions": {
     "graphql-request": "7.4.0",
