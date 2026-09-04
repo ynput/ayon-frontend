@@ -1,9 +1,11 @@
 import { useCallback } from 'react'
+import { useStore } from 'react-redux'
 import type { ViewType } from '../types'
 import type { ViewData, ViewSettings } from '../context/ViewsContext'
 import { isViewStudioScope } from '../utils/isViewStudioScope'
 import { UseViewMutations } from './useViewsMutations'
-import type { ViewListItemModel } from '@shared/api'
+import { viewsQueries, type ViewListItemModel } from '@shared/api'
+import { flushPendingColumnWrites } from '@shared/containers/ProjectTreeTable/utils/pendingColumnWrites'
 import { toast } from 'react-toastify'
 
 type Props = {
@@ -21,6 +23,8 @@ export const useSaveViewFromCurrent = ({
   sourceSettings,
   onUpdateView,
 }: Props) => {
+  const store = useStore()
+
   // save the views settings from another views settings (uses update)
   const onSaveViewFromCurrent = useCallback(
     async (viewId: string) => {
@@ -28,8 +32,18 @@ export const useSaveViewFromCurrent = ({
         throw 'viewType are required for saving a view from another view'
       }
 
+      // a resize can still be sitting in its debounce, so write it before copying the settings
+      flushPendingColumnWrites()
+
+      const latestSettings =
+        (
+          viewsQueries.endpoints.getDefaultView.select({ viewType, projectName })(
+            store.getState() as any,
+          ).data as ViewData | undefined
+        )?.settings ?? sourceSettings
+
       // get the fromView settings
-      if (!sourceSettings) {
+      if (!latestSettings) {
         throw 'sourceView is required for saving a view from another view'
       }
 
@@ -37,7 +51,7 @@ export const useSaveViewFromCurrent = ({
         await onUpdateView(
           viewId,
           {
-            settings: sourceSettings,
+            settings: latestSettings,
           },
           isViewStudioScope(viewId, viewsList),
         )
@@ -52,7 +66,7 @@ export const useSaveViewFromCurrent = ({
         throw errorMessage
       }
     },
-    [viewType, projectName, sourceSettings],
+    [viewType, projectName, sourceSettings, store, viewsList, onUpdateView],
   )
 
   return { onSaveViewFromCurrent }

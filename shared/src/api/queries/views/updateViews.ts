@@ -299,39 +299,37 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           projectName,
         })(state)
 
+        // listViews entries have no settings, so patch only when the full view is cached
+        const workingView = getViewsApi.endpoints.getWorkingView.select({
+          viewType,
+          projectName,
+        })(state).data
+        const cachedView =
+          workingView?.id === viewId
+            ? workingView
+            : getViewsApi.endpoints.getView.select({ viewId, viewType, projectName })(state).data
+
         // check if there is even a cache for the default view
         if (currentDefaultView?.isSuccess && currentDefaultView.data?.id) {
-          // Optimistically update the default view
-          const patch = dispatch(
-            getViewsApi.util.updateQueryData(
-              'getDefaultView',
-              { viewType, projectName },
-              (draft) => {
-                if (draft) {
-                  // Try to find the view in the listViews cache
-                  const listViewData = getViewsApi.endpoints.listViews.select({
-                    viewType,
-                    projectName,
-                  })(state)
-                  const view = listViewData?.data?.find((v) => v.id === viewId)
-
-                  if (view) {
-                    // If the view is found in the listViews cache, update the getDefaultView cache with the full view data
-                    Object.assign(draft, view)
-                  } else {
-                    // If the view is not found, only update the ID
-                    draft.id = viewId
-                  }
-                }
-              },
-            ),
-          )
+          const patch = cachedView
+            ? dispatch(
+                getViewsApi.util.updateQueryData(
+                  'getDefaultView',
+                  { viewType, projectName },
+                  (draft) => {
+                    if (draft) {
+                      Object.assign(draft, cachedView)
+                    }
+                  },
+                ),
+              )
+            : undefined
 
           try {
             await queryFulfilled
           } catch (error) {
             // If the query failed, we need to roll back the optimistic update
-            patch.undo()
+            patch?.undo()
             console.error('Failed to set default view:', error)
           }
         } else {
