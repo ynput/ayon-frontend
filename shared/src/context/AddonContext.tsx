@@ -10,6 +10,7 @@ export type RemoteAddon = {
   viewType?: string // if the addon is using views
   slicer?: { fields: string[] }
   projectList?: { multiSelect?: boolean; enabled: boolean }
+  disableGlobalShortcuts?: boolean
 }
 
 export interface RemoteAddonProps {

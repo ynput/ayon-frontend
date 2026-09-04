@@ -34,6 +34,8 @@ function ShortcutsProvider(props) {
   // allow shortcuts
   const [allowed, setAllowed] = useState([])
 
+  const [allDisabled, setAllDisabled] = useState(false)
+
   // last key pressed should be reset after 200ms
   useEffect(() => {
     const timer = setTimeout(() => setLastPressed(null), 400)
@@ -166,12 +168,14 @@ function ShortcutsProvider(props) {
 
   // Add event listeners
   useEffect(() => {
+    if (allDisabled) return
+
     window.addEventListener('keydown', handleKeyPress)
     // Remove event listeners on cleanup
     return () => {
       window.removeEventListener('keydown', handleKeyPress)
     }
-  }, [handleKeyPress])
+  }, [handleKeyPress, allDisabled])
 
   // create function that can be used in components to add shortcuts, when the component mounts
   // and removes them when it unmounts
@@ -215,6 +219,7 @@ function ShortcutsProvider(props) {
         removeShortcuts,
         setDisabled,
         setAllowed,
+        setAllDisabled,
       }}
     >
       {props.children}
