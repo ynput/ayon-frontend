@@ -94,6 +94,7 @@ export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   onRowDoubleClick?: (id: string, row: Row<SimpleTableRow>) => void
   onRowOptionClick?: (row: SimpleTableRow, selectedRows: string[]) => void
   fitContent?: boolean
+  rowIdPrefix?: string // namespaces rendered row DOM ids (multiple tables can share row ids)
   rowContextMenuBuilders?: SimpleTableRowContextMenuBuilder[]
   children?: (
     props: SimpleTableCellTemplateProps,
