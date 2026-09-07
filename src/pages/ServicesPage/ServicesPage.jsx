@@ -49,8 +49,12 @@ const formatStatus = (rowData) => {
     return <StatusBadge className="unreachable">Worker unreachable</StatusBadge>
 
   if (rowData.data?.error) {
-    const err_message = rowData.data.error
-    return <StatusBadge className="unreachable" data-tooltip={err_message}>Error</StatusBadge>
+    const errMessage = rowData.data.error
+    return (
+      <StatusBadge className="unreachable" data-tooltip={errMessage}>
+        Error
+      </StatusBadge>
+    )
   }
 
   if (!rowData.shouldRun)
