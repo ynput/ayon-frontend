@@ -214,12 +214,9 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       }, {})
     }
 
-    if (useRegistryAuth) {
-      serviceConfig.registryAuth = {
-        username: registryUsername,
-        password: registryPassword,
-      }
-    }
+    serviceConfig.registryAuth = useRegistryAuth
+      ? { username: registryUsername, password: registryPassword }
+      : null
 
     const serviceData = {
       addonName: selectedAddon.name,
@@ -282,13 +279,17 @@ const ServiceDialog = ({ onHide, editService = null }) => {
     }
   }
 
-  const canSubmit = isEditMode
-    ? !!selectedHost
-    : selectedAddon?.name &&
-    selectedVersion &&
-    selectedService &&
-    selectedHost &&
-    serviceName?.length
+  const registryAuthValid =
+    !useRegistryAuth || (registryUsername?.length > 0 && registryPassword?.length > 0)
+
+  const canSubmit =
+    (isEditMode
+      ? !!selectedHost
+      : selectedAddon?.name &&
+        selectedVersion &&
+        selectedService &&
+        selectedHost &&
+        serviceName?.length) && registryAuthValid
 
   const footer = (
     <Toolbar>
