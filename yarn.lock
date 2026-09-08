@@ -2148,7 +2148,7 @@
   dependencies:
     undici-types "~6.21.0"
 
-"@types/papaparse@^5.5.2":
+"@types/papaparse@5.5.2":
   version "5.5.2"
   resolved "https://registry.yarnpkg.com/@types/papaparse/-/papaparse-5.5.2.tgz#cb450a1cd183deb43728e593eb1ac2da60f4fa4d"
   integrity sha512-gFnFp/JMzLHCwRf7tQHrNnfhN4eYBVYYI897CGX4MY1tzY9l2aLkVyx2IlKZ/SAqDbB3I1AOZW5gTMGGsqWliA==
@@ -2458,15 +2458,10 @@ acorn@^8.11.0, acorn@^8.16.0, acorn@^8.4.1:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.16.0.tgz#4ce79c89be40afe7afe8f3adb902a1f1ce9ac08a"
   integrity sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==
 
-adm-zip@0.5.10:
-  version "0.5.10"
-  resolved "https://registry.yarnpkg.com/adm-zip/-/adm-zip-0.5.10.tgz#4a51d5ab544b1f5ce51e1b9043139b639afff45b"
-  integrity sha512-x0HvcHqVJNTPk/Bw8JbLWlWoo6Wwnsug0fnYYro1HBrjxZ3G7/AZk7Ahv8JwDe1uIcz8eBqvu86FuF1POiG7vQ==
-
-adm-zip@^0.5.10:
-  version "0.5.18"
-  resolved "https://registry.yarnpkg.com/adm-zip/-/adm-zip-0.5.18.tgz#283a05f2bf1e3fd315f0f31cde29b7a6e3c1619d"
-  integrity sha512-ufJnssQGbxzLNS1Ho9bCtX4rQKCCvoVuDLHoJyc3F9dOGDB4BkWs2Ci0kv53lqocAEQ/Cbi+I2XCsNYGqVYqng==
+adm-zip@0.5.10, adm-zip@0.6.0, adm-zip@^0.5.10:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/adm-zip/-/adm-zip-0.6.0.tgz#bbc5c6c333755e967a06dd98747f431e1d53a3cf"
+  integrity sha512-XleryMhbuksdKtofnWZ9Sk+4CUTbms4Mb/EU32SZwToAyZ5RgVos/ki8n+yr0LWHOGKuakbXTuuYNHLQjhddgg==
 
 agent-base@6:
   version "6.0.2"
@@ -3593,10 +3588,10 @@ eslint-plugin-prettier@5.5.5:
     prettier-linter-helpers "^1.0.1"
     synckit "^0.11.12"
 
-eslint-plugin-react-hooks@7.0.1:
-  version "7.0.1"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-react-hooks/-/eslint-plugin-react-hooks-7.0.1.tgz#66e258db58ece50723ef20cc159f8aa908219169"
-  integrity sha512-O0d0m04evaNzEPoSW+59Mezf8Qt0InfgGIBJnpC0h3NH/WjUAR7BIKUfysC6todmtiZ/A0oUVS8Gce0WhBrHsA==
+eslint-plugin-react-hooks@7.1.1:
+  version "7.1.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-react-hooks/-/eslint-plugin-react-hooks-7.1.1.tgz#e6742cad75d970c0a3f30d7d3fa80a4784f55927"
+  integrity sha512-f2I7Gw6JbvCexzIInuSbZpfdQ44D7iqdWX01FKLvrPgqxoE7oMj8clOfto8U6vYiz4yd5oKu39rRSVOe1zRu0g==
   dependencies:
     "@babel/core" "^7.24.4"
     "@babel/parser" "^7.24.4"
@@ -3604,10 +3599,10 @@ eslint-plugin-react-hooks@7.0.1:
     zod "^3.25.0 || ^4.0.0"
     zod-validation-error "^3.5.0 || ^4.0.0"
 
-eslint-plugin-react-refresh@0.5.2:
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-react-refresh/-/eslint-plugin-react-refresh-0.5.2.tgz#39e11021be10e1cd9adab2bdeabc65b17222409f"
-  integrity sha512-hmgTH57GfzoTFjVN0yBwTggnsVUF2tcqi7RJZHqi9lIezSs4eFyAMktA68YD4r5kNw1mxyY4dmkyoFDb3FIqrA==
+eslint-plugin-react-refresh@0.5.6:
+  version "0.5.6"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-react-refresh/-/eslint-plugin-react-refresh-0.5.6.tgz#9d01abd6815f8ceb5ba255b1b2b93ed5062a0614"
+  integrity sha512-uZnh24On2bk478AkaDAKcpRiYhS3qFSaSNvpXxV6/Ek/BBDICkWGG7MnBSfjnIlCVBei5vsLlIeQYxbF22+Udg==
 
 eslint-plugin-react@7.37.5:
   version "7.37.5"
@@ -3633,10 +3628,10 @@ eslint-plugin-react@7.37.5:
     string.prototype.matchall "^4.0.12"
     string.prototype.repeat "^1.0.0"
 
-eslint-plugin-simple-import-sort@12.1.1:
-  version "12.1.1"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-simple-import-sort/-/eslint-plugin-simple-import-sort-12.1.1.tgz#e64bfdaf91c5b98a298619aa634a9f7aa43b709e"
-  integrity sha512-6nuzu4xwQtE3332Uz0to+TxDQYRLTKRESSc2hefVT48Zc8JthmN23Gx9lnYhu0FtkRSL1oxny3kJ2aveVhmOVA==
+eslint-plugin-simple-import-sort@14.0.0:
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-simple-import-sort/-/eslint-plugin-simple-import-sort-14.0.0.tgz#a07d4aa63ebf043e8d55497b4e2a3035bf800849"
+  integrity sha512-NUJO0+XFCkk+o5EsAJruTgnfMEpeWrPWeJS15UVF60GgXmqz1BJ9/3hzlvG7lkL8Bubzos5cCLptThbFfPnSMQ==
 
 eslint-scope@^9.1.2:
   version "9.1.2"
@@ -5957,7 +5952,7 @@ panzoom@^9.4.4:
     ngraph.events "^1.2.2"
     wheel "^1.0.0"
 
-papaparse@^5.5.3:
+papaparse@5.5.3:
   version "5.5.3"
   resolved "https://registry.yarnpkg.com/papaparse/-/papaparse-5.5.3.tgz#07f8994dec516c6dab266e952bed68e1de59fa9a"
   integrity sha512-5QvjGxYVjxO59MGU2lHVYpRWBBtKHnlIAcSe1uNFCkkptUh63NFRj0FJQm7nR67puEruUci/ZkjmEFrjCAyP4A==
@@ -6945,6 +6940,13 @@ shell-quote@^1.7.3:
   resolved "https://registry.yarnpkg.com/shell-quote/-/shell-quote-1.10.0.tgz#482033e192e4f5c07151521ffa03400ec71b1b0f"
   integrity sha512-w1aiOKwKuRgtwAReIIj89puqg+I7GvX4IbLrvmhXbzQsj1+Zwi4VO3+fa6ZF91TWSjIxoEkKnMeHcLEODK5ZXA==
 
+short-uuid@6.0.3:
+  version "6.0.3"
+  resolved "https://registry.yarnpkg.com/short-uuid/-/short-uuid-6.0.3.tgz#6cbb02acc6879d9540cd5735ff2166ce2ff63459"
+  integrity sha512-UMZ3rYOoid307EqWsPTnoBUSOB51Fi28vUMPigUsSCmbaSvslyf/SlXZWOn4btj8tokhBTBkPFKVKKlIolEG1w==
+  dependencies:
+    any-base "^1.1.0"
+
 short-uuid@^5.2.0:
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/short-uuid/-/short-uuid-5.2.0.tgz#49378f8c5335a603bc801c279ae521c5d22532dc"
@@ -6952,13 +6954,6 @@ short-uuid@^5.2.0:
   dependencies:
     any-base "^1.1.0"
     uuid "^9.0.1"
-
-short-uuid@^6.0.3:
-  version "6.0.3"
-  resolved "https://registry.yarnpkg.com/short-uuid/-/short-uuid-6.0.3.tgz#6cbb02acc6879d9540cd5735ff2166ce2ff63459"
-  integrity sha512-UMZ3rYOoid307EqWsPTnoBUSOB51Fi28vUMPigUsSCmbaSvslyf/SlXZWOn4btj8tokhBTBkPFKVKKlIolEG1w==
-  dependencies:
-    any-base "^1.1.0"
 
 should-equal@^2.0.0:
   version "2.0.0"
@@ -7519,10 +7514,10 @@ undici-types@~7.19.0:
   resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-7.19.2.tgz#1b67fc26d0f157a0cba3a58a5b5c1e2276b8ba2a"
   integrity sha512-qYVnV5OEm2AW8cJMCpdV20CDyaN3g0AjDlOGf1OW4iaDEx8MwdtChUp4zu4H0VP3nDRF/8RKWH+IPp9uW0YGZg==
 
-undici@7.24.7, undici@7.28.0:
-  version "7.28.0"
-  resolved "https://registry.yarnpkg.com/undici/-/undici-7.28.0.tgz#97d64564198b285bc281f0e8e29597e3d11fe7ec"
-  integrity sha512-cRZYrTDwWznlnRiPjggAGxZXanty6M8RV1ff8Wm4LWXBp7/IG8v5DnOm74DtUBp9OONpK75YlPnIjQqX0dBDtA==
+undici@7.24.7, undici@7.29.0:
+  version "7.29.0"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-7.29.0.tgz#ae0f6f62e06e057a9cbb7b2b5fde2bb74f791b8f"
+  integrity sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==
 
 unicode-emoji-modifier-base@^1.0.0:
   version "1.0.0"
@@ -7969,15 +7964,10 @@ wrap-ansi@^9.0.0:
     string-width "^7.0.0"
     strip-ansi "^7.1.0"
 
-ws@8.18.0:
-  version "8.18.0"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-8.18.0.tgz#0d7505a6eafe2b0e712d232b42279f53bc289bbc"
-  integrity sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==
-
-ws@^8.18.3, ws@^8.20.0:
-  version "8.20.0"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-8.20.0.tgz#4cd9532358eba60bc863aad1623dfb045a4d4af8"
-  integrity sha512-sAt8BhgNbzCtgGbt2OxmpuryO63ZoDk/sqaB/znQm94T4fCEsy/yV+7CdC1kJhOU9lboAEU7R3kquuycDoibVA==
+ws@8.18.0, ws@8.21.3, ws@^8.18.3, ws@^8.20.0:
+  version "8.21.3"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-8.21.3.tgz#660b4faddb6a3e575c86e078126919961f4de4fc"
+  integrity sha512-201TZ/kPWxoPr/OKWjquZR1SWKXcvxdH+e1xrx89b3YbmzLMFCLfnaG1HFIgWzJOEWZ7MvpK++odZufgYR50Rw==
 
 y18n@^5.0.5:
   version "5.0.8"
