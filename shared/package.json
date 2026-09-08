@@ -132,7 +132,7 @@
     "typescript": "5.9.3",
     "vite": "7.3.5",
     "vite-plugin-dts": "4.5.3",
-    "vite-plugin-linter": "3.1.1"
+    "vite-plugin-linter": "4.0.0"
   },
   "dependencies": {
     "@tanstack/match-sorter-utils": "8.19.4",
