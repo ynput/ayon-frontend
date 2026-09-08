@@ -158,7 +158,7 @@
     "remark-directive-rehype": "0.4.2",
     "remark-emoji": "4.0.1",
     "remark-gfm": "4.0.1",
-    "short-uuid": "4.2.2",
+    "short-uuid": "6.0.3",
     "turndown": "7.2.4",
     "uuid": "14.0.1"
   },
