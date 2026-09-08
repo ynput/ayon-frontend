@@ -165,6 +165,7 @@
   "resolutions": {
     "graphql-request": "7.4.0",
     "lodash": "4.18.1",
-    "axios": "1.20.0"
+    "axios": "1.20.0",
+    "undici": "7.28.0"
   }
 }
