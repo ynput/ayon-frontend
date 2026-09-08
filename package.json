@@ -131,7 +131,7 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.58.1",
     "vite": "7.3.5",
-    "vite-plugin-linter": "3.1.1"
+    "vite-plugin-linter": "4.0.0"
   },
   "resolutions": {
     "graphql-request": "7.4.0",
