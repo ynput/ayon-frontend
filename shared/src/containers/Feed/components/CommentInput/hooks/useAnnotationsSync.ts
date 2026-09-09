@@ -1,10 +1,13 @@
 import { useEffect } from 'react'
 import { FEED_NEW_COMMENT, useFeedContext } from '../../../context/FeedContext'
 import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { parseFilename } from '@shared/util/parseFilename'
+
+type UploadingFile = { name: string }
 
 type Props = {
   entityId: string
-  filesUploading: File[]
+  filesUploading: UploadingFile[]
 }
 
 export type AnnotationPreview = any & {
@@ -15,7 +18,7 @@ export type AnnotationPreview = any & {
 export const filterEntityAnnotations = (
   annotations: Record<string, any>,
   entityId: string,
-  filesUploading: File[],
+  filesUploading: UploadingFile[],
 ): AnnotationPreview[] => {
   if (!entityId) {
     console.warn('filterEntityAnnotations: entityId is empty')
@@ -31,7 +34,7 @@ export const filterEntityAnnotations = (
     .filter(
       (annotation) =>
         annotation.versionId === entityId &&
-        !filesUploading.some((file) => file.name === annotation.name),
+        !filesUploading.some((file) => file.name === parseFilename(annotation.name)),
     )
     .map((annotationFile) => ({
       ...annotationFile,

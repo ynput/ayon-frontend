@@ -75,7 +75,7 @@ class ImageUploader {
           this.options.onUpload && this.options.onUpload(data)
         },
         (error) => {
-          this.options.onReject && this.options.onReject(error)
+          this.options.onReject && this.options.onReject(error, file)
           console.warn(error)
         },
       )
