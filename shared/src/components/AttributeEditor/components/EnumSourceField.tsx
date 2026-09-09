@@ -10,7 +10,7 @@ import type { SimpleFormValue } from '@shared/components/SimpleFormDialog/Simple
 import { useListEnumsQuery } from '@shared/api'
 import type { AttributeData, EnumResolverInfo, SimpleFormField } from '@shared/api'
 import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
-import { isEnumIconImage } from '@shared/util/attributeEnum'
+import { getEnumItemIcon, isEnumIconImage } from '@shared/util/attributeEnum'
 
 const CUSTOM_ENUM_SOURCE = '__custom__'
 const PREVIEW_LIMIT = 5
@@ -40,6 +40,7 @@ const PreviewItem = styled.div`
   align-items: center;
   gap: var(--base-gap-small);
   overflow: hidden;
+  height: 20px;
 
   .label {
     overflow: hidden;
@@ -52,6 +53,29 @@ const PreviewItem = styled.div`
     height: 20px;
     border-radius: 50%;
     object-fit: cover;
+  }
+
+  .icon-slot {
+    flex: none;
+    width: 20px;
+  }
+`
+
+const MoreMessage = styled(Message)`
+  display: flex;
+  align-items: center;
+  height: 20px;
+`
+
+const SkeletonItem = styled(PreviewItem)`
+  border-radius: var(--border-radius-m);
+
+  &:nth-child(2n) {
+    width: 80%;
+  }
+
+  &:last-of-type {
+    width: 64px;
   }
 `
 
@@ -67,25 +91,48 @@ const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({ resolver, settings 
   )
   const { options, isLoading, isError } = useAttributeEnumOptions(data)
 
-  if (isLoading) return <Message>Loading options…</Message>
-  if (isError) return <Message>Could not load options for "{resolver}".</Message>
-  if (!options.length) return <Message>This enum currently has no items.</Message>
+  if (isLoading)
+    return (
+      <Preview>
+        {Array.from({ length: PREVIEW_LIMIT + 1 }).map((_, index) => (
+          <SkeletonItem key={index} className="loading" />
+        ))}
+      </Preview>
+    )
+  if (isError)
+    return (
+      <Preview>
+        <Message>Could not load options for "{resolver}".</Message>
+      </Preview>
+    )
+  if (!options.length)
+    return (
+      <Preview>
+        <Message>This enum currently has no items.</Message>
+      </Preview>
+    )
 
   const hidden = options.length - PREVIEW_LIMIT
+  const preview = options
+    .slice(0, PREVIEW_LIMIT)
+    .map((option) => ({ option, icon: getEnumItemIcon(option.icon) }))
+  const hasIcons = preview.some(({ icon }) => !!icon)
 
   return (
     <Preview>
-      {options.slice(0, PREVIEW_LIMIT).map((option) => (
+      {preview.map(({ option, icon }) => (
         <PreviewItem key={String(option.value)}>
-          {isEnumIconImage(option.icon as string) ? (
-            <img src={option.icon as string} alt="" />
+          {isEnumIconImage(icon) ? (
+            <img src={icon} alt="" />
+          ) : icon ? (
+            <Icon icon={icon} style={{ color: option.color }} />
           ) : (
-            option.icon && <Icon icon={option.icon as string} style={{ color: option.color }} />
+            hasIcons && <span className="icon-slot" />
           )}
           <span className="label">{option.label}</span>
         </PreviewItem>
       ))}
-      {hidden > 0 && <Message>+{hidden} more</Message>}
+      {hidden > 0 && <MoreMessage>+{hidden} more</MoreMessage>}
     </Preview>
   )
 }
