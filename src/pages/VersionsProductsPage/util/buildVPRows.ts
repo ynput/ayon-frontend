@@ -36,8 +36,8 @@ export const buildProductRow = (
   author: product.featuredVersion?.author || '',
   latestComments: product.featuredVersion?.latestComments || [],
   thumbnail: {
-    entityId: product.featuredVersion?.id || product.id,
-    entityType: product.featuredVersion ? 'version' : 'product',
+    entityId: product.featuredVersion?.id,
+    entityType: 'version',
     updatedAt: product.featuredVersion?.updatedAt || product.updatedAt,
     thumbnailHash: product.featuredVersion?.thumbnailHash,
   },

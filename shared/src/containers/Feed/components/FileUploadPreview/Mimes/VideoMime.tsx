@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
+import type { FeedActivityMediaInfo } from '@shared/api'
 import { getFileURL } from '../fileUtils'
 import * as Styled from '../FileUploadPreview.styled'
 
@@ -12,6 +13,8 @@ type VideoMetadata = {
   duration: number
   width: number
   height: number
+  fps?: number
+  codec?: string
 }
 
 type ProbeResult =
@@ -28,7 +31,8 @@ const PROBE_TIMEOUT_MS = 10000
 const describeMediaError = (error: MediaError | null) =>
   error ? `code ${error.code}${error.message ? `: ${error.message}` : ''}` : 'no MediaError'
 
-const useVideoMetadata = (url: string): ProbeResult => {
+// files uploaded before the server started ffprobing have no mediaInfo, so the browser probe stays
+const useVideoMetadata = (url: string, mediaInfo?: FeedActivityMediaInfo | null): ProbeResult => {
   const [result, setResult] = useState<ProbeResult>({ status: 'loading' })
 
   useEffect(() => {
@@ -106,7 +110,19 @@ const useVideoMetadata = (url: string): ProbeResult => {
     }
   }, [url])
 
-  return result
+  if (result.status !== 'ready') return result
+
+  return {
+    status: 'ready',
+    metadata: {
+      ...result.metadata,
+      duration: mediaInfo?.duration || result.metadata.duration,
+      width: mediaInfo?.width || result.metadata.width,
+      height: mediaInfo?.height || result.metadata.height,
+      fps: mediaInfo?.frameRate,
+      codec: mediaInfo?.codec,
+    },
+  }
 }
 
 interface VideoMimeProps {
@@ -114,13 +130,14 @@ interface VideoMimeProps {
     id: string
     projectName: string
     name: string
+    mediaInfo?: FeedActivityMediaInfo | null
   }
 }
 
 const VideoMime = ({ file }: VideoMimeProps) => {
-  const { id, projectName, name } = file
+  const { id, projectName, name, mediaInfo } = file
   const url = getFileURL(id, projectName)
-  const probe = useVideoMetadata(url)
+  const probe = useVideoMetadata(url, mediaInfo)
 
   // Suspense would only start the chunk request once the probe resolves, serialising two slow steps
   useEffect(() => {
@@ -157,6 +174,8 @@ const VideoMime = ({ file }: VideoMimeProps) => {
         duration={probe.metadata.duration}
         width={probe.metadata.width}
         height={probe.metadata.height}
+        fps={probe.metadata.fps}
+        codec={probe.metadata.codec}
       />
     </Suspense>
   )

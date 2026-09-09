@@ -9,7 +9,7 @@ import * as Styled from '../FileUploadPreview.styled'
 
 const playerInitialState = { loop: true, audio: true }
 
-// comment attachments carry no ffprobe metadata, so fps/codec are informational defaults
+// pre-ffprobe uploads carry no metadata and the browser can't report fps
 const DEFAULT_FPS = 24
 const DEFAULT_CODEC = 'h264'
 
@@ -41,6 +41,8 @@ export interface VideoPlayerProps {
   duration: number
   width: number
   height: number
+  fps?: number
+  codec?: string
 }
 
 const VideoPlayer = ({
@@ -51,6 +53,8 @@ const VideoPlayer = ({
   duration,
   width,
   height,
+  fps,
+  codec,
 }: VideoPlayerProps) => {
   const { user } = useGlobalContext()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -72,15 +76,15 @@ const VideoPlayer = ({
         type: ClipType.VIDEO,
         url,
         position: 0,
-        fps: DEFAULT_FPS,
-        codec: DEFAULT_CODEC,
+        fps: fps || DEFAULT_FPS,
+        codec: codec || DEFAULT_CODEC,
         duration,
         width,
         height,
         context: emptyClipContext,
       },
     ],
-    [id, name, url, duration, width, height],
+    [id, name, url, duration, width, height, fps, codec],
   )
 
   const playerContext = useMemo(

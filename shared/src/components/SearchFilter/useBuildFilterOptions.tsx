@@ -1054,8 +1054,8 @@ const getOptionRoot = (
 
     rootOption.group = {
       name: groupName,
-      label: rootOption.label,
-      icon: rootOption.icon,
+      label: entityType ? upperFirst(entityType) : rootOption.label,
+      icon: entityType ? getEntityTypeIcon(entityType) : rootOption.icon,
     }
   }
 
@@ -1084,12 +1084,10 @@ const getAttributeFieldOptionRoot = (
     shouldGroup || entityType
       ? {
           name: entityType || attribute.name,
-          label,
-          icon: getAttributeIcon(
-            attribute.name,
-            attribute.data.type,
-            hasEnumOptions(attribute.data),
-          ),
+          label: entityType ? upperFirst(entityType) : label,
+          icon: entityType
+            ? getEntityTypeIcon(entityType)
+            : getAttributeIcon(attribute.name, attribute.data.type, hasEnumOptions(attribute.data)),
         }
       : undefined
 
