@@ -202,7 +202,7 @@ const useTableDataBySlice = ({
     getData: getEntityListsData,
     isLoading: isLoadingLists,
     isExpandable: isEntityListExpandable,
-  } = useEntityListsSlice(entityTypes, sliceType === 'entityList')
+  } = useEntityListsSlice(sliceType === 'entityList')
   const isLoadingData =
     isLoadingHierarchy ||
     isLoadingProject ||
