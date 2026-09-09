@@ -491,7 +491,9 @@ const CommentInput: FC<CommentInputProps> = ({
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     setIsDropping(false)
     // upload file
-    handleFileDrop(e, projectName, handleFileProgress, handleFileUploaded)
+    handleFileDrop(e, projectName, handleFileProgress, handleFileUploaded, (file: File) =>
+      removeFileUploading(file.name),
+    )
   }
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -514,7 +516,11 @@ const CommentInput: FC<CommentInputProps> = ({
     onError: (annotation) => removeFileUploading(annotation.name),
   })
 
+  const isUploading = filesUploading.length > 0
+  const isSaving = isSubmitting || isUploading
+
   const handleSubmit = async () => {
+    if (isSaving) return
     try {
       setIsSubmitting(true)
 
@@ -620,6 +626,7 @@ const CommentInput: FC<CommentInputProps> = ({
           projectName,
           onUpload: handleFileUploaded,
           onUploadProgress: handleFileProgress,
+          onReject: (_error: any, file: File) => removeFileUploading(file.name),
         },
         mentionTypeOptions,
       }),
@@ -825,8 +832,8 @@ const CommentInput: FC<CommentInputProps> = ({
                 className="comment"
                 active={!!editorValue || !!files.length}
                 onClick={handleSubmit}
-                disabled={isLoading}
-                saving={isSubmitting}
+                disabled={isLoading || isSaving}
+                saving={isSaving}
               />
             </Styled.SubmitButtons>
           </Styled.Footer>
