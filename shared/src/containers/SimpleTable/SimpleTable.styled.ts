@@ -234,7 +234,14 @@ export const Cell = styled.div`
     object-fit: cover;
     aspect-ratio: 1;
     background-color: var(--md-sys-color-surface-container-lowest);
-    margin-right: 4px;
+
+    &.img-start {
+      margin-right: 4px;
+    }
+
+    &.img-end {
+      margin-left: 4px;
+    }
 
     &.circle {
       border-radius: 50%;

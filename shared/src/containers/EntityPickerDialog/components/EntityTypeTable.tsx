@@ -67,6 +67,7 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
         isExpandable={isFolderHierarchy}
         rowHeight={34}
         imgRatio={16 / 9}
+        imgPosition="end"
         isMultiSelect={isMultiSelect}
         onScrollBottom={onScrollBottom}
         pt={{
