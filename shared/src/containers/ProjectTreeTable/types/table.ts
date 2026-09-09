@@ -76,7 +76,7 @@ export type TableRow = {
   group?: GroupData // signals it is a group row and has some extra data like label, color, icon
   thumbnail?: {
     // if you want to use a thumbnail from a different entity, e.g. latest version of a product
-    entityId: string
+    entityId?: string
     entityType: string
     thumbnailHash?: string
   }

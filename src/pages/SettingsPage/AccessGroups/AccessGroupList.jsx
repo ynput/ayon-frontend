@@ -3,7 +3,7 @@ import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Button, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
-import { useDeleteAccessGroupMutation, useGetStudioAccessGroupsQuery } from '@shared/api'
+import { useDeleteAccessGroupMutation, useGetAccessGroupsQuery } from '@shared/api'
 import NewAccessGroup from './NewAccessGroup'
 import { confirmDelete } from '@shared/util'
 import clsx from 'clsx'
@@ -18,8 +18,8 @@ const AccessGroupList = ({
   const [showNewAccessGroup, setShowNewAccessGroup] = useState(false)
 
   // Load user list
-  const { data: accessGroupList = [], isLoading } = useGetStudioAccessGroupsQuery({
-    projectName: projectName,
+  const { data: accessGroupList = [], isLoading } = useGetAccessGroupsQuery({
+    projectName: projectName || '_',
   })
 
   const [deleteAccessGroup] = useDeleteAccessGroupMutation()
@@ -46,7 +46,6 @@ const AccessGroupList = ({
     onSelectAccessGroup({ name, isProjectLevel: true })
   }
 
-  // FIXME: this doesn't update when access group details updates
   const getRowClass = (rowData) => {
     return { 'changed-project': rowData.isProjectLevel, loading: isLoading }
   }

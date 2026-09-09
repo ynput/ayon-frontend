@@ -20,8 +20,6 @@ const VersionsListTable: FC<VersionsListTableProps> = ({}) => {
   const { versionsTableRef, focusGrid } = useVPFocusContext()
   const ratio = useMemo(() => guessImgRatio(rowHeight, columns), [rowHeight, columns])
 
-  console.log({ productsMap })
-
   const versionsTableData = useMemo(
     () => buildVersionsTableRows({ projectName, productsMap, productIds: selectedProducts }),
     [selectedProducts, productsMap, projectName],

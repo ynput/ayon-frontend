@@ -100,11 +100,13 @@ export const VersionsSelectionProvider: FC<VersionsSelectionProviderProps> = ({ 
 
   const [selectedVersions, setSelectedVersions] = useState<string[]>([])
 
+  const versionsKey = versions.join(',')
   useEffect(() => {
     if (showVersionDetails) {
       setSelectedVersions(versions)
     }
-  }, [versions])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [versionsKey])
 
   const clearSelection = useCallback(() => {
     setSelectedVersions([])
