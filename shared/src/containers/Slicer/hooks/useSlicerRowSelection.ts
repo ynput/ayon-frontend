@@ -14,8 +14,8 @@ type UseSlicerRowSelectionProps = {
   setExpanded?: React.Dispatch<React.SetStateAction<ExpandedState>>
 }
 
-// panel heights are written on every pointer move of a resize, so only the buckets this
-// hook actually reads may invalidate it
+// every slicer session-storage write fires the same event, so only the buckets this hook
+// actually reads may invalidate it
 const READ_BUCKET_PREFIXES = ['slicer-selection-', 'slicer-expanded-']
 
 // hierarchy buckets are shared across pages, other slice types get one bucket per page
@@ -69,7 +69,8 @@ export const useSlicerRowSelection = ({
 
   const getPanelSelection = useCallback(
     (sliceType: SliceType): RowSelectionState => {
-      if (props.rowSelection && sliceType === firstSliceType) return props.rowSelection
+      if (props.rowSelection !== undefined && sliceType === firstSliceType)
+        return props.rowSelection
       return readBucket(getSelectionKey(projectName, page, sliceType), {})
     },
     // storageVersion invalidates memoized reads when any bucket changes
@@ -91,7 +92,8 @@ export const useSlicerRowSelection = ({
 
   const getPanelExpanded = useCallback(
     (sliceType: SliceType): ExpandedState => {
-      if (props.expanded && sliceType === firstSliceType) return props.expanded
+      // ExpandedState may be `false`, which is a controlled value like any other
+      if (props.expanded !== undefined && sliceType === firstSliceType) return props.expanded
       return readBucket(getExpandedKey(projectName, page, sliceType), {})
     },
     [props.expanded, firstSliceType, projectName, page, readBucket, storageVersion],

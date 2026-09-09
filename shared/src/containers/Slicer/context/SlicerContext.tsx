@@ -313,18 +313,29 @@ export const SlicerProvider = ({
         persistSliceTypes([newSliceType, ...sliceTypes.slice(1).filter((t) => t !== newSliceType)])
       }
 
+      // the first panel is still the old type until the new arrangement lands, so a
+      // controlled consumer has to be written to directly rather than by slice type
+      const setPrimarySelection = (selection: RowSelectionState) =>
+        props.setRowSelection
+          ? props.setRowSelection(selection)
+          : setRowSelection(selection, newSliceType)
+      const setPrimaryExpanded = (nextExpanded: ExpandedState) =>
+        props.setExpanded
+          ? props.setExpanded(nextExpanded)
+          : setExpanded(nextExpanded, newSliceType)
+
       // remove current row selection as it is no longer relevant to the new slice type
 
       // if going to pinned slice type, restore the pinned slice selection and expanded state
       // and remove the pinned slice
       if (pinnedSlice && newSliceType === pinnedSlice.sliceType) {
-        setRowSelection(pinnedSlice.rowSelection, newSliceType)
-        setExpanded(pinnedSlice.expanded, newSliceType)
+        setPrimarySelection(pinnedSlice.rowSelection)
+        setPrimaryExpanded(pinnedSlice.expanded)
         setPinnedSlice(null)
       } else if (newSliceType !== 'hierarchy') {
         // hierarchy keeps its project-wide selection
-        setRowSelection({}, newSliceType)
-        setExpanded({}, newSliceType)
+        setPrimarySelection({})
+        setPrimaryExpanded({})
       }
 
       // if pinCurrent is true, store the current slice type and selection data in local storage
@@ -345,6 +356,8 @@ export const SlicerProvider = ({
       setPinnedSlice,
       expanded,
       setExpanded,
+      props.setRowSelection,
+      props.setExpanded,
       powerLicense,
     ],
   )

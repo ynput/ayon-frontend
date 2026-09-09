@@ -42,10 +42,7 @@ import {
   splitClientFiltersByScope,
   splitFiltersByScope,
 } from '@shared/components/SearchFilter/useBuildFilterOptions'
-import {
-  useSelectedEntityIds,
-  useSlicerPanelSelections,
-} from '@shared/containers/Slicer'
+import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containers/Slicer'
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
@@ -246,8 +243,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   // SLICER
 
-  const { sliceSelections, sliceFilters, isLicensePending } =
-    useSlicerPanelSelections(attribFields)
+  const { sliceSelections, sliceFilters, isLicensePending } = useSlicerPanelSelections(attribFields)
   const isLoadingViews = isLoadingViewSettings || isLicensePending
 
   // Separate slicer filters into different types
@@ -657,7 +653,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     isFetching: isFetchingChildren,
     isLoading: isLoadingChildren,
     isUninitialized: isChildrenUninitialized,
-  } = useGetVersionsByProductsQuery(childVersionsArgs, { skip: !showProducts || isLoadingSlicerData })
+  } = useGetVersionsByProductsQuery(childVersionsArgs, {
+    skip: !showProducts || isLoadingSlicerData,
+  })
 
   const isLoadingChildVersions = useQueryArgumentChangeLoading(
     childVersionsArgs,

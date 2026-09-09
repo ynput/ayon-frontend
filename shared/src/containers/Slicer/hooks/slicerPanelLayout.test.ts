@@ -14,29 +14,38 @@ describe('resolvePanelLayout', () => {
     expect(height).toBe(600)
   })
 
-  test('panels that do not fit keep their height and the stack grows', () => {
+  test('panels that outgrow the column are squeezed back into it instead of scrolling', () => {
     const { heights, height } = resolvePanelLayout(
       { a: 400, b: 300, c: 200 },
       ['a', 'b', 'c'],
       [],
       600,
     )
-    expect(heights).toEqual([400, 300, 200])
-    expect(height).toBe(900)
+    expect(heights.reduce((a, b) => a + b, 0)).toBe(600)
+    expect(heights[0]).toBeGreaterThan(heights[1])
+    expect(heights[1]).toBeGreaterThan(heights[2])
+    expect(height).toBe(600)
+  })
+
+  test('the stack only outgrows the column when the minimums alone do not fit', () => {
+    const { heights, height } = resolvePanelLayout({}, ['a', 'b', 'c'], [], 400)
+    expect(heights).toEqual([MIN, MIN, MIN])
+    expect(height).toBe(MIN * 3)
   })
 
   test('a stored height below the minimum is lifted back to it', () => {
-    const { heights } = resolvePanelLayout({ a: 500, b: 20 }, ['a', 'b'], [], 400)
-    expect(heights).toEqual([500, MIN])
+    const { heights } = resolvePanelLayout({ a: 500, b: 20 }, ['a', 'b'], [], 800)
+    expect(heights).toEqual([500 + 60, MIN + 60])
   })
 
-  test('adding a panel keeps the heights of the existing ones', () => {
-    const { heights } = resolvePanelLayout({ a: 500, b: 300 }, ['a', 'b', 'c'], [], 400)
-    expect(heights).toEqual([500, 300, MIN])
+  test('adding a panel takes the room from the ones that have it to spare', () => {
+    const { heights } = resolvePanelLayout({ a: 500, b: 300 }, ['a', 'b', 'c'], [], 800)
+    expect(heights.reduce((a, b) => a + b, 0)).toBe(800)
+    expect(heights[2]).toBe(MIN)
   })
 
   test('heights follow the panel, not its position', () => {
-    const { heights } = resolvePanelLayout({ a: 500, b: 300 }, ['b', 'a'], [], 400)
+    const { heights } = resolvePanelLayout({ a: 500, b: 300 }, ['b', 'a'], [], 800)
     expect(heights).toEqual([300, 500])
   })
 
@@ -59,7 +68,7 @@ describe('resolvePanelLayout', () => {
   })
 
   test('sizes add up to the whole stack', () => {
-    const { sizes } = resolvePanelLayout({ a: 400, b: 200 }, ['a', 'b'], [], 0)
+    const { sizes } = resolvePanelLayout({ a: 400, b: 200 }, ['a', 'b'], [], 600)
     expect(Math.round(sizes.reduce((a, b) => a + b, 0))).toBe(100)
     expect(sizes).toEqual([(400 / 600) * 100, (200 / 600) * 100])
   })

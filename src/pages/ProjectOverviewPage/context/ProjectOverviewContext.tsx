@@ -29,17 +29,10 @@ import {
 import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable'
 
 // Views hooks
-import {
-  useOverviewViewSettings,
-  useViewsContext,
-  useViewUpdateHelper,
-} from '@shared/containers'
+import { useOverviewViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers'
 
 // Local context and hooks
-import {
-  useSelectedEntityIds,
-  useSlicerPanelSelections,
-} from '@shared/containers/Slicer'
+import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containers/Slicer'
 import { useProjectOverviewStats } from '../hooks/useProjectOverviewStats'
 import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
@@ -57,7 +50,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
 
   const { getChildFolderIds } = useProjectFoldersContext()
 
-
   const {
     sorting,
     groupBy: panelGroupBy,
@@ -65,8 +57,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     columnVisibility,
   } = useColumnSettingsContext()
 
-  const { sliceSelections, sliceFilters, isLicensePending } =
-    useSlicerPanelSelections(attribFields)
+  const { sliceSelections, sliceFilters, isLicensePending } = useSlicerPanelSelections(attribFields)
 
   // filter out attribFields by scope
   const scopedAttribFields = useScopedAttributeFields({

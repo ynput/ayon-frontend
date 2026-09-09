@@ -13,24 +13,27 @@ import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
 import { MoveEntityDialog } from '@shared/containers/MoveEntityDialog/MoveEntityDialog'
 import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
 import SlicerPanel from './SlicerPanel'
-import { SLICER_MIN_PANEL_HEIGHT } from '../hooks/slicerPanelLayout'
 
-// the splitter only puts gutters between panels, so the last one gets its own
-const BottomGutter = styled.div`
-  height: 4px;
-  cursor: row-resize;
-  background-color: var(--md-sys-color-surface-container);
-  user-select: none;
-  touch-action: none;
+// a collapsed panel is fixed at its header height, so the gutters either side of it have
+// nothing to resize. primereact renders panel, gutter, panel, ... as siblings.
+const PanelStack = styled.div<{ $deadGutters: number[] }>`
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
 
-  &:hover,
-  &:focus-visible {
-    background-color: var(--md-sys-color-surface-container-highest);
-    outline: none;
-  }
+  ${({ $deadGutters }) =>
+    $deadGutters
+      .map(
+        (index) => `
+    & > .p-splitter > :nth-child(${index * 2 + 2}) {
+      pointer-events: none;
+      cursor: default;
+    }
+  `,
+      )
+      .join('')}
 `
-
-const KEYBOARD_RESIZE_STEP = 24
 
 export interface SlicerProps {
   sliceFields: SliceTypeField[]
@@ -53,8 +56,10 @@ export const Slicer: FC<SlicerProps> = ({
   const { slices, page, setPanelExpanded, projectName, collapsedPanels } = useSlicerContext()
   const { powerLicense } = usePowerpack()
 
-  const splitEnabled = !!enableSplit && powerLicense
-  const visibleSlices = splitEnabled ? slices : slices.slice(0, 1)
+  // the split affordance stays visible without a license and sells the power feature; the
+  // panels behind it do not, so a stored arrangement silently falls back to its first panel
+  const splitEnabled = !!enableSplit
+  const visibleSlices = splitEnabled && powerLicense ? slices : slices.slice(0, 1)
 
   const [movingEntities, setMovingEntities] = useState<MultiEntityMoveData | null>(null)
   const openMoveDialog = useCallback<OpenMoveDialog>((data) => {
@@ -101,47 +106,23 @@ export const Slicer: FC<SlicerProps> = ({
     minSize,
     height: stackTotalHeight,
     layoutKey,
-    panelHeights,
-    setPanelHeight,
     handleResizeEnd: handlePanelResizeEnd,
   } = useSlicerPanelHeights(page, panelIds, canCollapse ? collapsedPanels : [], columnHeight)
 
-  const lastPanelId = panelIds[panelIds.length - 1]
-  const lastPanelCollapsed = canCollapse && collapsedPanels.includes(lastPanelId)
-  const handleLastPanelResize = (event: React.PointerEvent<HTMLDivElement>) => {
-    // without this the browser starts a native drag and the pointerup never arrives,
-    // which would leave the move handler running over the whole page
-    event.preventDefault()
-    const gutter = event.currentTarget
-    const startY = event.clientY
-    const startHeight = panelHeights[panelHeights.length - 1] ?? SLICER_MIN_PANEL_HEIGHT
+  const deadGutters = panelIds
+    .slice(0, -1)
+    .map((id, index) =>
+      canCollapse && (collapsedPanels.includes(id) || collapsedPanels.includes(panelIds[index + 1]))
+        ? index
+        : -1,
+    )
+    .filter((index) => index >= 0)
 
-    const onMove = (moveEvent: PointerEvent) =>
-      setPanelHeight(lastPanelId, startHeight + moveEvent.clientY - startY)
-    const onEnd = () => {
-      gutter.removeEventListener('pointermove', onMove)
-      gutter.removeEventListener('pointerup', onEnd)
-      gutter.removeEventListener('pointercancel', onEnd)
-      gutter.removeEventListener('lostpointercapture', onEnd)
-    }
-
-    gutter.setPointerCapture(event.pointerId)
-    gutter.addEventListener('pointermove', onMove)
-    gutter.addEventListener('pointerup', onEnd)
-    gutter.addEventListener('pointercancel', onEnd)
-    gutter.addEventListener('lostpointercapture', onEnd)
-  }
-
-  const handleLastPanelKeys = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    const step = event.key === 'ArrowUp' ? -KEYBOARD_RESIZE_STEP : KEYBOARD_RESIZE_STEP
-    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
-    event.preventDefault()
-    setPanelHeight(lastPanelId, (panelHeights[panelHeights.length - 1] ?? 0) + step)
-  }
-
-  const [searchByPanel, setSearchByPanel] = useState<Record<string, string>>({})
+  // an undefined entry is a closed search box, '' an open and empty one
+  const [searchByPanel, setSearchByPanel] = useState<Record<string, string | undefined>>({})
   const handleSearchChange = useCallback(
-    (panelId: string, value: string) => setSearchByPanel((prev) => ({ ...prev, [panelId]: value })),
+    (panelId: string, value: string | undefined) =>
+      setSearchByPanel((prev) => ({ ...prev, [panelId]: value })),
     [],
   )
   // a removed panel must not hand its search text to the next panel of the same type
@@ -173,15 +154,12 @@ export const Slicer: FC<SlicerProps> = ({
           panel={visibleSlices[0]}
           isPrimary
           showRemove={false}
-          search={searchByPanel[visibleSlices[0].id] ?? ''}
+          search={searchByPanel[visibleSlices[0].id]}
           onSearchChange={(value) => handleSearchChange(visibleSlices[0].id, value)}
           {...panelProps}
         />
       ) : (
-        <div
-          ref={stackRef}
-          style={{ height: '100%', width: '100%', overflowY: 'auto', overflowX: 'hidden' }}
-        >
+        <PanelStack ref={stackRef} $deadGutters={deadGutters}>
           <Splitter
             layout="vertical"
             // remount so primereact picks up new panel sizes when the arrangement changes
@@ -204,24 +182,14 @@ export const Slicer: FC<SlicerProps> = ({
                   panel={panel}
                   isPrimary={index === 0}
                   showRemove
-                  search={searchByPanel[panel.id] ?? ''}
+                  search={searchByPanel[panel.id]}
                   onSearchChange={(value) => handleSearchChange(panel.id, value)}
                   {...panelProps}
                 />
               </SplitterPanel>
             ))}
           </Splitter>
-          {!lastPanelCollapsed && (
-            <BottomGutter
-              role="separator"
-              aria-orientation="horizontal"
-              aria-label="Resize last slicer panel"
-              tabIndex={0}
-              onPointerDown={handleLastPanelResize}
-              onKeyDown={handleLastPanelKeys}
-            />
-          )}
-        </div>
+        </PanelStack>
       )}
       <MoveEntityDialog
         projectName={projectName}

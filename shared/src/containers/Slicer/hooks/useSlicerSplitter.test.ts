@@ -50,12 +50,6 @@ describe('useSlicerPanelHeights', () => {
     expect(result.current.layoutKey).not.toBe(before)
   })
 
-  test('dragging the last panel never stores less than the minimum', () => {
-    const { result } = renderHeights(['a', 'b'])
-    act(() => result.current.setPanelHeight('b', 20))
-    expect(stored().b).toBe(MIN)
-  })
-
   test('heights left over from the old array format are ignored, not crashed on', () => {
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify([12, 88]))
     const { result } = renderHeights(['a', 'b'])

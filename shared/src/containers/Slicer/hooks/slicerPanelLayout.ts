@@ -20,9 +20,33 @@ export const panelMinHeights = (
 ): number[] =>
   panelIds.map((id) => (collapsed.includes(id) ? SLICER_COLLAPSED_PANEL_HEIGHT : minHeight))
 
-// panels keep the pixel height they were given and never get squeezed below it: the stack
-// grows past the column and scrolls instead. Spare room goes to the expanded panels, so
-// the dividers always have something to give and take.
+// spare room is shared out between the expanded panels, and an overgrown stack is squeezed
+// back into the column, down to the floors. Only the floors themselves may overflow.
+const fitToHeight = (
+  stack: number[],
+  mins: number[],
+  target: number,
+  flexible: boolean[],
+): number[] => {
+  const sum = stack.reduce((total, h) => total + h, 0)
+  const count = flexible.filter(Boolean).length
+  if (!count || sum === target) return stack
+
+  if (sum < target) {
+    const slack = (target - sum) / count
+    return stack.map((h, index) => (flexible[index] ? h + slack : h))
+  }
+
+  const room = stack.map((h, index) => (flexible[index] ? h - mins[index] : 0))
+  const totalRoom = room.reduce((total, r) => total + r, 0)
+  if (!totalRoom) return stack
+
+  const excess = sum - target
+  return stack.map((h, index) => h - excess * (room[index] / totalRoom))
+}
+
+// panels never go below their floor, and the stack only outgrows the column when the
+// floors alone do not fit. Stored heights are a preference, not a reservation.
 export const resolvePanelLayout = (
   stored: SlicerPanelHeights,
   panelIds: string[],
@@ -39,15 +63,12 @@ export const resolvePanelLayout = (
     collapsed.includes(id) ? mins[index] : Math.max(stored[id] ?? minHeight, minHeight),
   )
 
-  const sum = stack.reduce((total, h) => total + h, 0)
-  const expanded = panelIds.filter((id) => !collapsed.includes(id)).length
+  const flexible = panelIds.map((id) => !collapsed.includes(id))
+  const minsTotal = mins.reduce((total, min) => total + min, 0)
   // with nothing expanded there is nowhere to put the spare room, and sizes that do not
   // add up to 100% get stretched by the splitter's flex-grow
-  const height = expanded ? Math.max(containerHeight, sum) : sum
-  const slack = expanded ? (height - sum) / expanded : 0
-  const heights = panelIds.map((id, index) =>
-    collapsed.includes(id) ? stack[index] : stack[index] + slack,
-  )
+  const height = flexible.some(Boolean) ? Math.max(containerHeight, minsTotal) : minsTotal
+  const heights = fitToHeight(stack, mins, height, flexible)
 
   return {
     heights,

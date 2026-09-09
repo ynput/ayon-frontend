@@ -154,8 +154,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   // read via ref so the memoized arrow-nav callback sees the current prefix after a dimension change
   const rowIdPrefixRef = useRef(rowIdPrefix)
   rowIdPrefixRef.current = rowIdPrefix
-  const toDomId = (id: string) =>
-    rowIdPrefixRef.current ? `${rowIdPrefixRef.current}-${id}` : id
+  const toDomId = (id: string) => (rowIdPrefixRef.current ? `${rowIdPrefixRef.current}-${id}` : id)
   const [showRowContextMenu] = useCreateContextMenu()
 
   // Refs for values used inside the columns memo.

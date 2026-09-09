@@ -1,10 +1,6 @@
 import { useState } from 'react'
 import { useSessionStorage } from '@shared/hooks/useSessionStorage'
-import {
-  SLICER_MIN_PANEL_HEIGHT,
-  clampDraggedHeights,
-  resolvePanelLayout,
-} from './slicerPanelLayout'
+import { clampDraggedHeights, resolvePanelLayout } from './slicerPanelLayout'
 import type { SlicerPanelHeights } from './slicerPanelLayout'
 
 export const SLICER_SPLITTER_STATE_KEY = 'slicer-splitter'
@@ -71,17 +67,11 @@ export const useSlicerPanelHeights = (
     if (clamped) setClampCount((count) => count + 1)
   }
 
-  // the last panel has no gutter below it, so it is resized on its own and takes the
-  // stack past the column height
-  const setPanelHeight = (panelId: string, panelHeight: number) =>
-    setStoredHeights({ ...heights, [panelId]: Math.max(panelHeight, SLICER_MIN_PANEL_HEIGHT) })
-
   return {
     sizes,
     minSize,
     height,
     panelHeights,
-    setPanelHeight,
     layoutKey: `${panelIds.join('|')}#${collapsed.join('|')}#${clampCount}`,
     handleResizeEnd,
   }

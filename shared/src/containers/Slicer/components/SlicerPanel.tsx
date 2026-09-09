@@ -21,6 +21,7 @@ import { OnSliceTypeChange, useSlicerContext } from '../context/SlicerContext'
 import styled from 'styled-components'
 import { SyncButton } from '@shared/components/SyncButton/SyncButton'
 import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
+import { usePowerpack } from '@shared/context/PowerpackContext'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
 import SlicerPanelSummary from './SlicerPanelSummary'
 
@@ -31,26 +32,60 @@ const DropdownSkeleton = styled.div`
   width: 100px;
 `
 
-// static position so SlicerSearch's absolute input still spans the whole header
 const HeaderActions = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
   margin-left: auto;
   flex-shrink: 0;
+
+  // the open search box takes the whole header rather than sitting on top of the buttons
+  &.searching {
+    flex: 1;
+    min-width: 0;
+  }
 `
 
-// the column is narrow: the dimension name shrinks rather than being pushed out, and a
-// collapsed panel gives the name up entirely so the selection summary has room
+// the column is narrow: the dimension name shrinks rather than being pushed out
 const PanelHeader = styled(Header)`
   .slicer-dropdown {
     flex: 0 1 auto;
     min-width: 48px;
   }
 
-  .slice-icon {
+  &.collapsed {
+    cursor: pointer;
+  }
+
+  .collapse-toggle .icon {
+    transition: transform 0.15s;
+  }
+
+  .collapse-toggle.collapsed .icon {
+    transform: rotate(-90deg);
+  }
+
+  .power-feature .icon {
+    color: var(--md-sys-color-tertiary);
+  }
+`
+
+const SliceLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  min-width: 0;
+  flex: 0 1 auto;
+  padding: 0 4px;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .icon {
     flex-shrink: 0;
-    color: var(--md-sys-color-outline);
   }
 `
 
@@ -73,8 +108,9 @@ export interface SlicerPanelProps {
   canCollapse?: boolean
   isPrimary?: boolean
   showRemove?: boolean
-  search: string
-  onSearchChange: (value: string) => void
+  // undefined while the search box is closed
+  search: string | undefined
+  onSearchChange: (value: string | undefined) => void
 }
 
 export const SlicerPanel: FC<SlicerPanelProps> = ({
@@ -90,8 +126,8 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
   canCollapse,
   isPrimary,
   showRemove,
-  search: globalFilter,
-  onSearchChange: setGlobalFilter,
+  search,
+  onSearchChange,
 }) => {
   const {
     SlicerDropdown,
@@ -111,6 +147,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
   } = useSlicerContext()
 
   const { refetch } = useProjectFoldersContext()
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
 
   const rowSelection = getPanelSelection(panel.id)
   const expanded = getPanelExpanded(panel.id)
@@ -174,8 +211,14 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
 
   const isHierarchy = sliceType === 'hierarchy'
   const isCollapsed = !!canCollapse && collapsedPanels.includes(panel.id)
-  const sliceTypeIcon =
-    sliceOptions.find((option) => option.value === sliceType)?.icon || 'table_rows'
+  const sliceOption = sliceOptions.find((option) => option.value === sliceType)
+  const sliceTypeIcon = sliceOption?.icon || 'table_rows'
+  const sliceTypeLabel = sliceOption?.label || sliceType
+
+  const isSearching = search !== undefined
+  const globalFilter = search ?? ''
+  // the hierarchy panel is named after the tree, but what it lists is folders
+  const searchSubject = isHierarchy ? 'Folders' : sliceTypeLabel
 
   const hierarchyContextMenu = useHierarchyContextMenuItems(
     onAddToList || contextOnAddToList,
@@ -201,12 +244,15 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
         : option,
     )
     if (canSplit) {
-      options.push({ label: 'Split slicer', value: SPLIT_SLICER_OPTION, icon: 'splitscreen' })
+      options.push({ label: 'Split slicer', value: SPLIT_SLICER_OPTION, icon: 'splitscreen_add' })
     }
     return options
   }, [sliceOptions, usedSliceTypes, canSplit])
 
-  const handleSplit = () => addSlicePanel(unusedSliceTypes[0])
+  const handleSplit = () => {
+    if (!powerLicense) return setPowerpackDialog('slicer')
+    addSlicePanel(unusedSliceTypes[0])
+  }
 
   const handleDropdownChange = (value: (string | number)[]) => {
     const selected = String(value[0]) as SliceType
@@ -219,26 +265,55 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
 
   return (
     <Container>
-      <PanelHeader className={clsx({ collapsed: isCollapsed })}>
+      <PanelHeader
+        className={clsx({ collapsed: isCollapsed })}
+        // like vscode: the whole header of a collapsed panel opens it again
+        onClick={isCollapsed ? () => togglePanelCollapsed(panel.id) : undefined}
+      >
+        {canCollapse && (
+          <HeaderButton
+            icon="expand_more"
+            className={clsx('collapse-toggle', { collapsed: isCollapsed })}
+            data-tooltip={isCollapsed ? 'Expand panel' : 'Collapse panel'}
+            data-tooltip-delay={0}
+            onClick={() => togglePanelCollapsed(panel.id)}
+          />
+        )}
         {isCollapsed ? (
-          // the dropdown would eat the width the summary needs, so a collapsed panel shows
-          // its dimension as an icon and switches type once expanded again
-          <Icon icon={sliceTypeIcon} className="slice-icon" />
+          // the dropdown cannot be used from a collapsed panel, but the dimension it
+          // shows has to read the same as the dropdown does when open
+          <SliceLabel>
+            <Icon icon={sliceTypeIcon} />
+            <span>{sliceTypeLabel}</span>
+          </SliceLabel>
         ) : isViewSyncPending ? (
           <DropdownSkeleton />
         ) : (
-          <SlicerDropdown
-            options={dropdownOptions}
-            value={[sliceType]}
-            sliceTypes={sliceFields.map((field) => field.value)}
-            onChange={(value) => handleDropdownChange(value)}
-            className={clsx('slicer-dropdown', { 'single-option': dropdownOptions.length === 1 })}
-            disableOpen={dropdownOptions.length === 1}
-          />
+          !isSearching && (
+            <SlicerDropdown
+              options={dropdownOptions}
+              value={[sliceType]}
+              sliceTypes={sliceFields.map((field) => field.value)}
+              onChange={(value) => handleDropdownChange(value)}
+              className={clsx('slicer-dropdown', { 'single-option': dropdownOptions.length === 1 })}
+              disableOpen={dropdownOptions.length === 1}
+            />
+          )
         )}
         {isCollapsed && <SlicerPanelSummary rowSelection={rowSelection} sliceMap={sliceMap} />}
-        <HeaderActions>
-          {!isCollapsed && <SlicerSearch value={globalFilter} onChange={setGlobalFilter} />}
+        <HeaderActions
+          className={clsx({ searching: isSearching })}
+          // the buttons act on the panel, not on the collapsed header they sit in
+          onClick={(event) => event.stopPropagation()}
+        >
+          {!isCollapsed && (
+            <SlicerSearch
+              open={isSearching}
+              value={globalFilter}
+              subject={searchSubject}
+              onChange={onSearchChange}
+            />
+          )}
           {isHierarchy && (
             <SyncButton
               topics={['entity.folder.created']}
@@ -248,23 +323,16 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
               hideWhenNoUpdates
             />
           )}
-          {canSplit && isPrimary && (
+          {canSplit && isPrimary && !isSearching && (
             <HeaderButton
-              icon="add"
-              data-tooltip="Split slicer"
+              icon="splitscreen_add"
+              className={clsx({ 'power-feature': !powerLicense })}
+              data-tooltip={powerLicense ? 'Split slicer' : 'Power feature - Slicer'}
               data-tooltip-delay={0}
               onClick={handleSplit}
             />
           )}
-          {canCollapse && (
-            <HeaderButton
-              icon={isCollapsed ? 'expand_content' : 'collapse_content'}
-              data-tooltip={isCollapsed ? 'Expand panel' : 'Collapse panel'}
-              data-tooltip-delay={0}
-              onClick={() => togglePanelCollapsed(panel.id)}
-            />
-          )}
-          {showRemove && (
+          {showRemove && !isSearching && (
             <HeaderButton
               icon="close"
               data-tooltip="Remove panel"
