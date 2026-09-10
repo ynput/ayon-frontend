@@ -1,12 +1,12 @@
 import { FC, useMemo } from 'react'
 import { startCase } from 'lodash'
 import styled from 'styled-components'
-import { Dropdown, FormRow, Icon } from '@ynput/ayon-react-components'
+import { Dropdown, Icon } from '@ynput/ayon-react-components'
 
 import { EnumEditor } from '@shared/components/EnumEditor/EnumEditor'
 import type { NormalizedData } from '@shared/components/EnumEditor/EnumEditor'
-import { FormField } from '@shared/components/SimpleFormDialog/SimpleFormDialog'
-import type { SimpleFormValue } from '@shared/components/SimpleFormDialog/SimpleFormDialog'
+import { SimpleForm } from '@shared/components/SimpleForm'
+import type { SimpleFormValueDict } from '@shared/components/SimpleForm'
 import { useListEnumsQuery } from '@shared/api'
 import type { AttributeData, EnumResolverInfo, SimpleFormField } from '@shared/api'
 import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
@@ -14,6 +14,7 @@ import { getEnumItemIcon, isEnumIconImage } from '@shared/util/attributeEnum'
 
 const CUSTOM_ENUM_SOURCE = '__custom__'
 const PREVIEW_LIMIT = 5
+const EMPTY_FIELDS: SimpleFormField[] = []
 
 const Container = styled.div`
   display: flex;
@@ -166,8 +167,15 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
 
   const selectedSource = enumResolver || CUSTOM_ENUM_SOURCE
   const selectedResolver = resolvers.find((resolver) => resolver.name === enumResolver)
-  const settingsFields = selectedResolver?.settingsForm || []
-  const settings = (enumResolverSettings as Record<string, any>) || {}
+  const settingsFields = selectedResolver?.settingsForm || EMPTY_FIELDS
+  const settings = (enumResolverSettings as SimpleFormValueDict) || {}
+
+  // Seed only: SimpleForm reseeds on values identity, so echoing settings back would loop
+  const initialSettings = useMemo(
+    () => (enumResolverSettings as SimpleFormValueDict) || {},
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [enumResolver],
+  )
 
   const handleSourceChange = (value: string[]) => {
     const source = value[0]
@@ -179,10 +187,6 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
       onChangeResolverSettings(undefined)
       onChangeEnum(undefined)
     }
-  }
-
-  const handleSettingChange = (name: string, value: SimpleFormValue) => {
-    onChangeResolverSettings({ ...settings, [name]: value })
   }
 
   return (
@@ -207,15 +211,14 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
               Resolver "{enumResolver}" is not available on this server. Options will be empty.
             </Message>
           )}
-          {settingsFields.map((field: SimpleFormField) => (
-            <FormRow key={field.name} label={field.label || startCase(field.name)}>
-              <FormField
-                field={field}
-                value={settings[field.name]}
-                onChange={(value) => handleSettingChange(field.name, value)}
-              />
-            </FormRow>
-          ))}
+          {settingsFields.length > 0 && (
+            <SimpleForm
+              key={enumResolver}
+              fields={settingsFields}
+              values={initialSettings}
+              onChange={onChangeResolverSettings}
+            />
+          )}
           {selectedResolver && (
             <EnumResolverPreview resolver={selectedResolver.name} settings={settings} />
           )}

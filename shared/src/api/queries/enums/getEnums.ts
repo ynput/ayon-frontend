@@ -5,16 +5,8 @@ export type EnumResolverParams = Record<string, string | number | boolean | unde
 
 export const ENUM_RESOLVERS_TAG = { type: 'enum' as const, id: 'RESOLVERS' }
 
-// Enums fed by the user/team tables, so their mutations invalidate only these
-export const USER_ENUM_TAGS = [
-  { type: 'enum' as const, id: 'users' },
-  { type: 'enum' as const, id: 'usersAndTeams' },
-]
-
-export const TEAM_ENUM_TAGS = [
-  { type: 'enum' as const, id: 'teams' },
-  { type: 'enum' as const, id: 'usersAndTeams' },
-]
+// The users resolver also serves teams (mode=teams|both), so both tables feed it
+export const USERS_ENUM_TAGS = [{ type: 'enum' as const, id: 'users' }]
 
 const buildParams = (params?: EnumResolverParams) => {
   const entries = Object.entries(params || {}).filter(
