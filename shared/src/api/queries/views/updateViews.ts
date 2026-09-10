@@ -55,6 +55,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
 
         // Also update the getWorkingView cache if this is a working view
         let workingViewPatch
+        let seededWorkingView = false
         if (payload.working) {
           const newWorkingView = {
             ...payload,
@@ -85,6 +86,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
                 newWorkingView as any,
               ),
             )
+            seededWorkingView = true
           }
         }
 
@@ -132,6 +134,26 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           patch.undo()
           if (workingViewPatch) workingViewPatch.undo()
           if (baseViewPatch) baseViewPatch.undo()
+          // An upsert has no undo, and a refetch would keep the seeded data alongside the error,
+          // so drop the cache entry: otherwise the client id of a view the server never created
+          // is reused by later settings writes, which then patch a view that does not exist.
+          if (seededWorkingView) {
+            const state: any = getState()
+            const queries = state[getViewsApi.reducerPath]?.queries ?? {}
+            const cacheKey = Object.keys(queries).find((key) => {
+              const entry = queries[key]
+              return (
+                entry?.endpointName === 'getWorkingView' &&
+                entry?.originalArgs?.viewType === arg.viewType &&
+                entry?.originalArgs?.projectName === arg.projectName
+              )
+            })
+            if (cacheKey) {
+              dispatch(
+                getViewsApi.internalActions.removeQueryResult({ queryCacheKey: cacheKey as any }),
+              )
+            }
+          }
         }
       },
       transformErrorResponse: (error: any) => error.data?.detail,

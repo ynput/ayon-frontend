@@ -1,16 +1,24 @@
-// Column layout is persisted on a debounce; saving a view has to write what is still waiting.
+// Column layout is persisted on a debounce; saving a view has to write what is still waiting,
+// and switching views has to throw it away instead of writing it into the new view.
 
-type FlushPendingColumnWrites = () => void
+type PendingColumnWriter = {
+  flush: () => void
+  drop: () => void
+}
 
-const pendingWriters = new Set<FlushPendingColumnWrites>()
+const pendingWriters = new Set<PendingColumnWriter>()
 
-export const registerPendingColumnWrites = (flush: FlushPendingColumnWrites) => {
-  pendingWriters.add(flush)
+export const registerPendingColumnWrites = (writer: PendingColumnWriter) => {
+  pendingWriters.add(writer)
   return () => {
-    pendingWriters.delete(flush)
+    pendingWriters.delete(writer)
   }
 }
 
 export const flushPendingColumnWrites = () => {
-  pendingWriters.forEach((flush) => flush())
+  pendingWriters.forEach((writer) => writer.flush())
+}
+
+export const dropPendingColumnWrites = () => {
+  pendingWriters.forEach((writer) => writer.drop())
 }

@@ -39,6 +39,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const columnOrderTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const prevRowHeightRef = React.useRef<number | undefined>(undefined)
   const incomingColumnsKeyRef = React.useRef<string>('')
+  const prevLayoutKeyRef = React.useRef<string | undefined>(undefined)
   const lockedAspectRatioRef = React.useRef<number | null>(null)
   const latestConfigRef = React.useRef<ColumnsConfig>({} as ColumnsConfig)
   const commitRef = React.useRef<(next: ColumnsConfig) => void>(() => {})
@@ -103,34 +104,12 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     columnSummaryFormats: columnSummaryFormatsInit = {},
   } = columnsConfig || {}
 
-  // Clear internal row height when config changes (e.g., when switching views)
-  // This happens during render, before the component uses the value
-  if (prevRowHeightRef.current !== configRowHeight && prevRowHeightRef.current !== undefined) {
-    // Config changed, clear internal state
-    if (internalRowHeight !== null) {
-      setInternalRowHeight(null)
-    }
-    // Clear any pending timeout
-    if (rowHeightTimeoutRef.current) {
-      clearTimeout(rowHeightTimeoutRef.current)
-      rowHeightTimeoutRef.current = null
-    }
-    pendingRowHeightRef.current = null
-  }
-  prevRowHeightRef.current = configRowHeight
-
   // identifies the layout being edited, so a debounced write can tell a view switch happened
   // two views can hold identical sizing/order, so only fall back to serialising it when no id is given
   const incomingColumnsKey = layoutId ?? JSON.stringify([columnsSizingExternal, columnOrderInit])
   incomingColumnsKeyRef.current = incomingColumnsKey
-  latestConfigRef.current = columnsConfig
-  commitRef.current = onChangeWithColumns
 
-  // one config for everything pending: each write rebuilds the whole columns array
-  const flushPendingWrites = () => {
-    const pendingSizing = pendingSizingRef.current
-    const pendingOrder = pendingOrderRef.current
-    const pendingRowHeight = pendingRowHeightRef.current
+  const clearPendingWrites = () => {
     pendingSizingRef.current = null
     pendingOrderRef.current = null
     pendingRowHeightRef.current = null
@@ -140,6 +119,54 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         timeout.current = null
       }
     })
+  }
+
+  // Another layout loaded underneath us: everything optimistic belongs to the previous one.
+  // Runs during render so the new view is never drawn with the old view's sizing.
+  if (prevLayoutKeyRef.current !== undefined && prevLayoutKeyRef.current !== incomingColumnsKey) {
+    clearPendingWrites()
+    lockedAspectRatioRef.current = null
+    if (internalColumnSizing !== null) {
+      setInternalColumnSizing(null)
+    }
+    if (internalColumnOrder !== null) {
+      setInternalColumnOrder(null)
+    }
+    if (internalRowHeight !== null) {
+      setInternalRowHeight(null)
+    }
+  }
+  prevLayoutKeyRef.current = incomingColumnsKey
+
+  // Clear internal row height when config changes (e.g., when switching views)
+  // This happens during render, before the component uses the value
+  if (prevRowHeightRef.current !== configRowHeight && prevRowHeightRef.current !== undefined) {
+    // Config changed, clear internal state
+    if (internalRowHeight !== null) {
+      setInternalRowHeight(null)
+    }
+    // the row height write carries the thumbnail width, so its optimistic sizing goes with it
+    if (internalColumnSizing !== null) {
+      setInternalColumnSizing(null)
+    }
+    lockedAspectRatioRef.current = null
+    // Clear any pending timeout
+    if (rowHeightTimeoutRef.current) {
+      clearTimeout(rowHeightTimeoutRef.current)
+      rowHeightTimeoutRef.current = null
+    }
+    pendingRowHeightRef.current = null
+  }
+  prevRowHeightRef.current = configRowHeight
+  latestConfigRef.current = columnsConfig
+  commitRef.current = onChangeWithColumns
+
+  // one config for everything pending: each write rebuilds the whole columns array
+  const flushPendingWrites = () => {
+    const pendingSizing = pendingSizingRef.current
+    const pendingOrder = pendingOrderRef.current
+    const pendingRowHeight = pendingRowHeightRef.current
+    clearPendingWrites()
 
     const currentKey = incomingColumnsKeyRef.current
     const next: ColumnsConfig = { ...latestConfigRef.current }
@@ -179,7 +206,25 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const flushRef = React.useRef(flushPendingWrites)
   flushRef.current = flushPendingWrites
 
-  React.useEffect(() => registerPendingColumnWrites(() => flushRef.current()), [])
+  // the view being left keeps its debounced layout: throw the write away, don't commit it
+  const dropPendingWrites = () => {
+    clearPendingWrites()
+    lockedAspectRatioRef.current = null
+    setInternalColumnSizing(null)
+    setInternalColumnOrder(null)
+    setInternalRowHeight(null)
+  }
+  const dropRef = React.useRef(dropPendingWrites)
+  dropRef.current = dropPendingWrites
+
+  React.useEffect(
+    () =>
+      registerPendingColumnWrites({
+        flush: () => flushRef.current(),
+        drop: () => dropRef.current(),
+      }),
+    [],
+  )
 
   // Use internal row height during adjustments, otherwise use config value
   const rowHeight = internalRowHeight ?? configRowHeight
