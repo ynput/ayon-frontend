@@ -372,15 +372,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       return
     }
 
-    // Find the label text from the chip (format: "Created At:")
-    const labelEl = chipEl.querySelector('.label')
-    if (!labelEl) return
-    const chipLabel = labelEl.textContent?.replace(/:$/, '').trim()
-    if (!chipLabel) return
-
-    // Match against datetime filters in localFilters
     const datetimeFilter = localFilters.find(
-      (f) => f.type === 'datetime' && f.label === chipLabel && f.values && f.values.length > 0,
+      (f) => f.id === chipId && f.type === 'datetime' && f.values && f.values.length > 0,
     )
 
     if (!datetimeFilter) return

@@ -123,12 +123,8 @@ export const useDateRangeFilter = (): UseDateRangeFilterReturn => {
     const chipEl = target.closest('.search-filter-item')
     if (!chipEl) return
 
-    const labelEl = chipEl.querySelector('.label')
-    const chipLabel = labelEl?.textContent?.replace(/:$/, '').trim()
-    if (!chipLabel) return
-
     const datetimeFilter = localFilters.find(
-      (f) => f.type === 'datetime' && f.label === chipLabel && f.values?.length,
+      (f) => f.id === chipEl.id && f.type === 'datetime' && f.values?.length,
     )
     if (!datetimeFilter) return
 
