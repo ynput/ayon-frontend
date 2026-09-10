@@ -1,4 +1,10 @@
-import { hasEnumOptions, isEnumIconImage, getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import {
+  hasEnumOptions,
+  isEnumIconImage,
+  getAttributeIcon,
+  getEntityTypeIcon,
+  getSelectableEnumItems,
+} from '@shared/util'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import type { ProductType } from '@shared/api'
 import type {
@@ -1122,7 +1128,8 @@ const getAttributeOptions = (
 
   // add the enum values first
   if (enums) {
-    enums.forEach((enumItem) => {
+    const usedValues = (values || []).flatMap((value) => (Array.isArray(value) ? value : [value]))
+    getSelectableEnumItems(enums, usedValues as (string | number | boolean)[]).forEach((enumItem) => {
       const icon = enumItem.icon as string | undefined
       const isImage = isEnumIconImage(icon)
       enumOptions.push({

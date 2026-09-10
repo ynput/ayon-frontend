@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { useGlobalContext } from '@shared/context/GlobalContext'
 import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContextInstance'
-import { hasEnumOptions } from '@shared/util'
+import { hasEnumOptions, getSelectableEnumItems } from '@shared/util'
 
 const useSlicerAttributesData = ({ entityTypes }: { entityTypes: string[] }) => {
   const {
@@ -13,9 +13,15 @@ const useSlicerAttributesData = ({ entityTypes }: { entityTypes: string[] }) => 
   const projectData = useContext(ProjectDataContext)
   const source = projectData?.attribFields?.length ? projectData.attribFields : attributes
 
+  // Slicer rows are choices only, so hidden items are dropped here
   const enumAttributes = source
     .filter((attr) => hasEnumOptions(attr.data))
     .filter((attrib) => entityTypes.some((et) => attrib.scope?.includes(et as any)))
+    .map((attr) =>
+      attr.data.enum?.some((item) => item.hidden)
+        ? { ...attr, data: { ...attr.data, enum: getSelectableEnumItems(attr.data.enum) } }
+        : attr,
+    )
 
   return { attributes: enumAttributes, isLoading }
 }

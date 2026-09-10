@@ -9,7 +9,7 @@ import {
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { useResolvedAttributeEnums } from '@shared/hooks'
-import { hasEnumOptions } from '@shared/util'
+import { hasEnumOptions, getSelectableEnumItems } from '@shared/util'
 
 export const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
@@ -72,11 +72,12 @@ const UserAttribForm = ({
           />
         )
       } else if (hasEnumOptions(data)) {
+        const value = (data.type === 'list_of_strings' ? formData[name] : [formData[name]]) || []
         widget = (
           <Dropdown
             widthExpand
-            value={(data.type === 'list_of_strings' ? formData[name] : [formData[name]]) || []}
-            options={data.enum || []}
+            value={value}
+            options={getSelectableEnumItems(data.enum || [], value)}
             multiSelect={data.type === 'list_of_strings'}
             onChange={(v) =>
               setFormData((fd) => {

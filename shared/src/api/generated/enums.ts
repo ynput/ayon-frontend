@@ -39,6 +39,8 @@ export type EnumItem = {
   shortName?: string
   disabled?: boolean
   disabledMessage?: string
+  /** Enum item is not offered for selection, but resolves when already used */
+  hidden?: boolean
 }
 export type FormSelectOption = {
   value: string

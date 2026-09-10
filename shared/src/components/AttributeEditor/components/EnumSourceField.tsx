@@ -10,7 +10,7 @@ import type { SimpleFormValueDict } from '@shared/components/SimpleForm'
 import { useListEnumsQuery } from '@shared/api'
 import type { AttributeData, EnumResolverInfo, SimpleFormField } from '@shared/api'
 import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
-import { getEnumItemIcon, isEnumIconImage } from '@shared/util/attributeEnum'
+import { getEnumItemIcon, getSelectableEnumItems, isEnumIconImage } from '@shared/util/attributeEnum'
 
 const CUSTOM_ENUM_SOURCE = '__custom__'
 const PREVIEW_LIMIT = 5
@@ -90,7 +90,8 @@ const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({ resolver, settings 
     () => ({ enumResolver: resolver, enumResolverSettings: settings } as AttributeData),
     [resolver, settings],
   )
-  const { options, isLoading, isError } = useAttributeEnumOptions(data)
+  const { options: allOptions, isLoading, isError, errorMessage } = useAttributeEnumOptions(data)
+  const options = getSelectableEnumItems(allOptions)
 
   if (isLoading)
     return (
@@ -103,13 +104,19 @@ const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({ resolver, settings 
   if (isError)
     return (
       <Preview>
-        <Message>Could not load options for "{resolver}".</Message>
+        <Message>
+          Could not load options for "{resolver}"{errorMessage ? `: ${errorMessage}` : '.'}
+        </Message>
       </Preview>
     )
   if (!options.length)
     return (
       <Preview>
-        <Message>This enum currently has no items.</Message>
+        <Message>
+          {allOptions.length
+            ? `${allOptions.length} items resolved, all hidden from selection.`
+            : 'This enum currently has no items.'}
+        </Message>
       </Preview>
     )
 

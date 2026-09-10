@@ -14,6 +14,12 @@ export interface AttributeEnumState {
   options: EnumItem[]
   isLoading: boolean
   isError: boolean
+  errorMessage?: string
+}
+
+const getErrorMessage = (error: unknown): string | undefined => {
+  const detail = (error as { data?: { detail?: unknown } } | undefined)?.data?.detail
+  return typeof detail === 'string' ? detail : undefined
 }
 
 // Options for one attribute: static data.enum, or resolved through the backend enum registry.
@@ -36,6 +42,7 @@ export const useAttributeEnumOptions = (
     data: resolved,
     isFetching,
     isError,
+    error,
   } = useGetEnumOptionsQuery(
     { enumName: resolver as string, params },
     { skip: !resolver || !!skip },
@@ -49,7 +56,12 @@ export const useAttributeEnumOptions = (
     return resolved.map((item) => ({ ...item, icon: getEnumItemIcon(item.icon) }))
   }, [resolver, resolved, data?.enum])
 
-  return { options, isLoading: !!resolver && isFetching, isError: !!resolver && isError }
+  return {
+    options,
+    isLoading: !!resolver && isFetching,
+    isError: !!resolver && isError,
+    errorMessage: resolver && isError ? getErrorMessage(error) : undefined,
+  }
 }
 
 export interface EnumAttributeLike {

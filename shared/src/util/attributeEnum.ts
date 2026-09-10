@@ -20,3 +20,15 @@ export const getEnumItemIcon = (icon: EnumItem['icon']): string | undefined => {
 
 export const isEnumIconImage = (icon?: string): boolean =>
   !!icon && /^(\/|\.\/|\.\.\/|https?:\/\/)/.test(icon)
+
+type HideableEnumItem = { value: string | number | boolean; hidden?: boolean }
+
+// Hidden items are kept only while selected, so an existing value still shows its label
+export const getSelectableEnumItems = <T extends HideableEnumItem>(
+  items: T[],
+  selectedValues: (string | number | boolean)[] = [],
+): T[] => {
+  if (!items.some((item) => item.hidden)) return items
+  const selected = new Set(selectedValues.map(String))
+  return items.filter((item) => !item.hidden || selected.has(String(item.value)))
+}
