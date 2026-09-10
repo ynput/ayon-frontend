@@ -56,26 +56,36 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
         // Also update the getWorkingView cache if this is a working view
         let workingViewPatch
         if (payload.working) {
+          const newWorkingView = {
+            ...payload,
+            working: true,
+            scope: arg.projectName ? 'project' : 'studio',
+            visibility: 'private',
+            owner: user,
+          }
+
           workingViewPatch = dispatch(
             getViewsApi.util.updateQueryData(
               'getWorkingView',
               { viewType: arg.viewType, projectName: arg.projectName },
               (draft) => {
+                if (!draft) return newWorkingView as any
                 // Preserve the existing ID if there's already a working view
-                const existingId = draft?.id
-                const updatedWorkingView = {
-                  ...payload,
-                  working: true,
-                  scope: arg.projectName ? 'project' : 'studio',
-                  visibility: 'private',
-                  owner: user,
-                  ...(existingId && { id: existingId }), // Keep existing ID if it exists
-                }
-                // Update the working view cache with the new view data
-                Object.assign(draft, updatedWorkingView)
+                Object.assign(draft, { ...newWorkingView, id: draft.id })
               },
             ),
           )
+
+          // No cache entry yet (first edit of a named view), so seed it with the view we just created
+          if (!workingViewPatch?.patches?.length) {
+            dispatch(
+              getViewsApi.util.upsertQueryData(
+                'getWorkingView',
+                { viewType: arg.viewType, projectName: arg.projectName },
+                newWorkingView as any,
+              ),
+            )
+          }
         }
 
         let baseViewPatch

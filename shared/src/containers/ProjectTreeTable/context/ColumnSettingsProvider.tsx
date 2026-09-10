@@ -22,6 +22,8 @@ interface ColumnSettingsProviderProps {
   config?: Record<string, any>
   onChange: (config: ColumnsConfig, allColumnIds?: string[]) => void
   defaultColumnVisibility?: VisibilityState
+  // identity of the view being edited: a debounced write is dropped when this changes underneath it
+  layoutId?: string
 }
 
 export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
@@ -29,6 +31,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   config,
   onChange,
   defaultColumnVisibility,
+  layoutId,
 }) => {
   const allColumnsRef = React.useRef<string[]>([])
   const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
@@ -117,7 +120,8 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   prevRowHeightRef.current = configRowHeight
 
   // identifies the layout being edited, so a debounced write can tell a view switch happened
-  const incomingColumnsKey = JSON.stringify([columnsSizingExternal, columnOrderInit])
+  // two views can hold identical sizing/order, so only fall back to serialising it when no id is given
+  const incomingColumnsKey = layoutId ?? JSON.stringify([columnsSizingExternal, columnOrderInit])
   incomingColumnsKeyRef.current = incomingColumnsKey
   latestConfigRef.current = columnsConfig
   commitRef.current = onChangeWithColumns

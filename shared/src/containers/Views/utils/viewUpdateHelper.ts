@@ -17,6 +17,7 @@ import {
   viewsQueries,
 } from '@shared/api'
 import { generateWorkingView } from './generateWorkingView'
+import { recordSettingsWrite } from './settingsWriteTick'
 import { toast } from 'react-toastify'
 import { SetStateAction, useCallback, useRef, useState } from 'react'
 import { useStore } from 'react-redux'
@@ -136,6 +137,7 @@ export const updateViewSettings = async (
     // reflects `newSettings`. Signal this so any subsequent sync call in the
     // same tick reads the fresh cache instead of the stale closure baseline.
     markCacheDirty()
+    recordSettingsWrite(viewType, projectName, newSettings)
 
     // if not already on the working view: set that the settings have been changed to show the little blue save button and switch to the working view
     // Note: selectedView?.id is always a real UUID from the server, never the WORKING_VIEW_ID sentinel.

@@ -1,11 +1,11 @@
 import { useCallback } from 'react'
-import { useStore } from 'react-redux'
 import type { ViewType } from '../types'
-import type { ViewData, ViewSettings } from '../context/ViewsContext'
+import type { ViewSettings } from '../context/ViewsContext'
 import { isViewStudioScope } from '../utils/isViewStudioScope'
 import { UseViewMutations } from './useViewsMutations'
-import { viewsQueries, type ViewListItemModel } from '@shared/api'
+import type { ViewListItemModel } from '@shared/api'
 import { flushPendingColumnWrites } from '@shared/containers/ProjectTreeTable/utils/pendingColumnWrites'
+import { getSettingsWrittenThisTick } from '../utils/settingsWriteTick'
 import { toast } from 'react-toastify'
 
 type Props = {
@@ -23,8 +23,6 @@ export const useSaveViewFromCurrent = ({
   sourceSettings,
   onUpdateView,
 }: Props) => {
-  const store = useStore()
-
   // save the views settings from another views settings (uses update)
   const onSaveViewFromCurrent = useCallback(
     async (viewId: string) => {
@@ -35,12 +33,9 @@ export const useSaveViewFromCurrent = ({
       // a resize can still be sitting in its debounce, so write it before copying the settings
       flushPendingColumnWrites()
 
-      const latestSettings =
-        (
-          viewsQueries.endpoints.getDefaultView.select({ viewType, projectName })(
-            store.getState() as any,
-          ).data as ViewData | undefined
-        )?.settings ?? sourceSettings
+      // the flush writes synchronously, but neither cache nor context reflects it yet this tick
+      const latestSettings: ViewSettings | undefined =
+        getSettingsWrittenThisTick(viewType, projectName) ?? sourceSettings
 
       // get the fromView settings
       if (!latestSettings) {
@@ -66,7 +61,7 @@ export const useSaveViewFromCurrent = ({
         throw errorMessage
       }
     },
-    [viewType, projectName, sourceSettings, store, viewsList, onUpdateView],
+    [viewType, projectName, sourceSettings, viewsList, onUpdateView],
   )
 
   return { onSaveViewFromCurrent }
