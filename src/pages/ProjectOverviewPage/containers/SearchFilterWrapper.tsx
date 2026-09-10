@@ -127,9 +127,6 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   // Custom date range
   const dateRange = useDateRangeFilter()
 
-  // Track which datetime filter the user is currently interacting with
-  const lastInteractedFilterRef = useRef<string | null>(null)
-
   // Active search-chip edit: set when user clicks a search chip to edit it.
   // The dropdown opens in edit mode; our Enter interceptor updates/removes the chip.
   const editingSearchChipRef = useRef<string | null>(null)
@@ -143,43 +140,10 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     setLocalFilters(filters)
   }, [JSON.stringify(filters)]) // Update filters when filters change
 
-  // Track the active datetime filter from onChange events
-  const handleFilterChange = (newFilters: Filter[]) => {
-    // Check if a relative date filter is being clicked to edit it
-    // If so, auto-open the edit dialog instead of allowing dropdown
-    const modifiedDatetimeFilter = newFilters.find(
-      (f) => f.type === 'datetime' && f.id !== lastInteractedFilterRef.current,
-    )
-    if (
-      modifiedDatetimeFilter &&
-      modifiedDatetimeFilter.values &&
-      modifiedDatetimeFilter.values.length > 0
-    ) {
-      const rangeValue = modifiedDatetimeFilter.values[0]
-      if (rangeValue.id && rangeValue.id.startsWith('custom-')) {
-        // This is a custom date range — check if it matches a relative pattern
-        const idParts = rangeValue.id.replace('custom-', '')
-        const firstEndIndex = idParts.indexOf('Z')
-        if (firstEndIndex > 0) {
-          const startISO = idParts.substring(0, firstEndIndex + 1)
-          const endISO = idParts.substring(firstEndIndex + 2)
-          const relativePattern = detectRelativeDatePattern(startISO, endISO)
-
-          if (relativePattern) {
-            // It's a relative date — auto-open edit dialog
-            handleOpenCustomRangeForFilter(modifiedDatetimeFilter.id)
-            lastInteractedFilterRef.current = modifiedDatetimeFilter.id
-            return
-          }
-        }
-      }
-    }
-    lastInteractedFilterRef.current = null
-
+  const handleFilterChange = (newFilters: Filter[]) =>
     dateRange.wrapFilterChange(newFilters, localFilters, (cleaned) =>
       validateFilters(cleaned, setLocalFilters),
     )
-  }
 
   const handleCustomRangeApply = () =>
     dateRange.handleCustomRangeApply(localFilters, options, handleFinish, searchFilterRef)
