@@ -218,15 +218,6 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       ? { username: registryUsername, password: registryPassword }
       : null
 
-    const serviceData = {
-      addonName: selectedAddon.name,
-      addonVersion: selectedVersion,
-      service: selectedService,
-      hostname: selectedHost,
-      config: serviceConfig,
-    }
-
-
     try {
       if (isEditMode) {
         // Update existing service
@@ -269,6 +260,13 @@ const ServiceDialog = ({ onHide, editService = null }) => {
         }
       } else {
         // Create new service
+        const serviceData = {
+          addonName: selectedAddon.name,
+          addonVersion: selectedVersion,
+          service: selectedService,
+          hostname: selectedHost,
+          config: serviceConfig,
+        }
         await spawnService({ name: serviceName, spawnServiceRequestModel: serviceData }).unwrap()
         toast.success(`Service spawned`)
         onHide()
