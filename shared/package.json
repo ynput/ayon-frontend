@@ -116,7 +116,7 @@
     "@reduxjs/toolkit": "2.11.2",
     "@rtk-query/graphql-request-base-query": "2.3.2",
     "@tanstack/react-table": "8.21.3",
-    "@ynput/ayon-react-components": "1.17.1",
+    "@ynput/ayon-react-components": "^1.19.10",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-redux": "9.2.0",
@@ -137,9 +137,8 @@
   "dependencies": {
     "@tanstack/match-sorter-utils": "8.19.4",
     "@tanstack/react-virtual": "3.13.23",
-    "@ynput/ayon-frontend-shared": "^0.3.54",
     "@ynput/ayon-player": "1.0.2",
-    "@ynput/ayon-react-components": "^1.19.9",
+    "@ynput/ayon-react-components": "^1.19.10",
     "axios": "1.20.0",
     "clsx": "2.1.1",
     "custom-protocol-check": "1.4.0",
@@ -158,7 +157,6 @@
     "remark-directive-rehype": "0.4.2",
     "remark-emoji": "4.0.1",
     "remark-gfm": "4.0.1",
-    "short-uuid": "6.0.3",
     "turndown": "7.2.4",
     "uuid": "14.0.1"
   },

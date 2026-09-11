@@ -2,7 +2,7 @@ import { TableRow } from '../types/table'
 import { FolderNodeMap } from '../types/table'
 import { LoadingTasks } from '../types'
 import type { AttributeModel } from '@shared/api'
-import { uuid } from 'short-uuid'
+import { v4 as uuid } from 'uuid'
 
 /**
  * Generates an array of placeholder rows for loading state

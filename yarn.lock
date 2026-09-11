@@ -2434,12 +2434,10 @@
     react-toastify "^9.0.3"
     sass "1.99.0"
 
-"@ynput/ayon-react-components@^1.19.9":
-  version "1.19.9"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.19.9.tgz#543de358a27e4621c05cc03aa807bea4d986cb36"
-  integrity sha512-0pvf80Lysgkhk2UvbsF0Sz5BA+OBrvAhIuzAxcka8kJYhz6WRW/RGtb+5LU8/r3kGDHNxPvxyHE/sK8s5FZnvg==
-  dependencies:
-    short-uuid "^5.2.0"
+"@ynput/ayon-react-components@^1.19.10":
+  version "1.19.10"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.19.10.tgz#10c6330da895c7c998025fd8bb178c37d684dbb8"
+  integrity sha512-22BhHi3ENnX5tVarkiaj7FQVOYQquc5xcqvKphQQ41StFI5LpGdm4UbQkb1z43B4s6hVxz0buyGlLRc42G3xlQ==
 
 acorn-jsx@^5.3.2:
   version "5.3.2"
@@ -2549,11 +2547,6 @@ ansi-styles@^6.2.1, ansi-styles@^6.2.3:
   version "6.2.3"
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-6.2.3.tgz#c044d5dcc521a076413472597a1acb1f103c4041"
   integrity sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==
-
-any-base@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/any-base/-/any-base-1.1.0.tgz#ae101a62bc08a597b4c9ab5b7089d456630549fe"
-  integrity sha512-uMgjozySS8adZZYePpaWs8cxB9/kdzmpX6SgJZ+wbz1K5eYk5QMYDVJaZKhxyIHUdnnJkfR7SVgStgH7LkGUyg==
 
 arg@^4.1.0:
   version "4.1.3"
@@ -6940,21 +6933,6 @@ shell-quote@^1.7.3:
   resolved "https://registry.yarnpkg.com/shell-quote/-/shell-quote-1.10.0.tgz#482033e192e4f5c07151521ffa03400ec71b1b0f"
   integrity sha512-w1aiOKwKuRgtwAReIIj89puqg+I7GvX4IbLrvmhXbzQsj1+Zwi4VO3+fa6ZF91TWSjIxoEkKnMeHcLEODK5ZXA==
 
-short-uuid@6.0.3:
-  version "6.0.3"
-  resolved "https://registry.yarnpkg.com/short-uuid/-/short-uuid-6.0.3.tgz#6cbb02acc6879d9540cd5735ff2166ce2ff63459"
-  integrity sha512-UMZ3rYOoid307EqWsPTnoBUSOB51Fi28vUMPigUsSCmbaSvslyf/SlXZWOn4btj8tokhBTBkPFKVKKlIolEG1w==
-  dependencies:
-    any-base "^1.1.0"
-
-short-uuid@^5.2.0:
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/short-uuid/-/short-uuid-5.2.0.tgz#49378f8c5335a603bc801c279ae521c5d22532dc"
-  integrity sha512-296/Nzi4DmANh93iYBwT4NoYRJuHnKEzefrkSagQbTH/A6NTaB68hSPDjm5IlbI5dx9FXdmtqPcj6N5H+CPm6w==
-  dependencies:
-    any-base "^1.1.0"
-    uuid "^9.0.1"
-
 should-equal@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/should-equal/-/should-equal-2.0.0.tgz#6072cf83047360867e68e98b09d71143d04ee0c3"
@@ -7709,11 +7687,6 @@ uuid@14.0.1:
   version "14.0.1"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-14.0.1.tgz#8a5975b3e038902bfd169a10b5202f5ec0cf3faf"
   integrity sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==
-
-uuid@^9.0.1:
-  version "9.0.1"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-9.0.1.tgz#e188d4c8853cc722220392c424cd637f32293f30"
-  integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
 
 v8-compile-cache-lib@^3.0.1:
   version "3.0.1"

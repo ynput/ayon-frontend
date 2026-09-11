@@ -1558,191 +1558,6 @@
   resolved "https://registry.yarnpkg.com/@vue/shared/-/shared-3.5.25.tgz#21edcff133a5a04f72c4e4c6142260963fe5afbe"
   integrity sha512-AbOPdQQnAnzs58H2FrrDxYj/TJfmeS2jdfEEhgiKINy+bnOANmVizIEgq1r+C5zsbs6l1CCQxtcj71rwNQ4jWg==
 
-"@ynput/ayon-frontend-shared@^0.3.36":
-  version "0.3.36"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-frontend-shared/-/ayon-frontend-shared-0.3.36.tgz#c02df3f1292882a1c1366307194a91f07559fad1"
-  integrity sha512-Hrjk2CCusrrItfKZ4OwjYkL1Z+24KtcP9mWETGZwb8DDWxVbK+uE5utif3nZKwnEG/OuxtNMq6n5ElxxmuNW+A==
-  dependencies:
-    "@tanstack/match-sorter-utils" "8.19.4"
-    "@tanstack/react-virtual" "3.13.23"
-    "@ynput/ayon-react-components" "1.17.1"
-    axios "1.16.1"
-    clsx "2.1.1"
-    custom-protocol-check "1.4.0"
-    date-fns "3.6.0"
-    lodash "4.18.1"
-    primeicons "7.0.0"
-    primereact "9.6.2"
-    primereact-context "npm:primereact@9.2.3"
-    quill-magic-url "4.2.0"
-    react-markdown "10.1.0"
-    react-perfect-scrollbar "1.5.8"
-    react-quill-ayon "2.0.2"
-    react-toastify "9.1.3"
-    rehype-raw "7.0.0"
-    remark-directive "3.0.1"
-    remark-directive-rehype "0.4.2"
-    remark-emoji "4.0.1"
-    remark-gfm "4.0.1"
-    short-uuid "4.2.2"
-    turndown "7.2.4"
-    uuid "14.0.0"
-
-"@ynput/ayon-frontend-shared@^0.3.37":
-  version "0.3.37"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-frontend-shared/-/ayon-frontend-shared-0.3.37.tgz#0ffeea60f09cfaa380c6e7c1e86f2ff6fdc80ec2"
-  integrity sha512-mQpZrjJBpgDISPwQsm6r61y5QAin7fGxTJOZlJWTOdfikUS7SyR2decN9gbKBd+N8eDmW29goaFOhJDxzCE6LQ==
-  dependencies:
-    "@tanstack/match-sorter-utils" "8.19.4"
-    "@tanstack/react-virtual" "3.13.23"
-    "@ynput/ayon-frontend-shared" "^0.3.36"
-    "@ynput/ayon-react-components" "^1.18.8"
-    axios "1.16.1"
-    clsx "2.1.1"
-    custom-protocol-check "1.4.0"
-    date-fns "3.6.0"
-    lodash "4.18.1"
-    primeicons "7.0.0"
-    primereact "9.6.2"
-    primereact-context "npm:primereact@9.2.3"
-    quill-magic-url "4.2.0"
-    react-markdown "10.1.0"
-    react-perfect-scrollbar "1.5.8"
-    react-quill-ayon "2.0.2"
-    react-toastify "9.1.3"
-    rehype-raw "7.0.0"
-    remark-directive "3.0.1"
-    remark-directive-rehype "0.4.2"
-    remark-emoji "4.0.1"
-    remark-gfm "4.0.1"
-    short-uuid "4.2.2"
-    turndown "7.2.4"
-    uuid "14.0.0"
-
-"@ynput/ayon-frontend-shared@^0.3.40":
-  version "0.3.40"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-frontend-shared/-/ayon-frontend-shared-0.3.40.tgz#d71399db32133a0d184657c24671c2c78c678434"
-  integrity sha512-Zj3JrPE0XABoGMBvYc44ysXtq1cDBzlDXybE3iRBniOfV95r6/mynKL+BurnypDMCerPD9B05V0FWqN93z8GdA==
-  dependencies:
-    "@tanstack/match-sorter-utils" "8.19.4"
-    "@tanstack/react-virtual" "3.13.23"
-    "@ynput/ayon-frontend-shared" "^0.3.37"
-    "@ynput/ayon-react-components" "^1.18.8"
-    axios "1.16.1"
-    clsx "2.1.1"
-    custom-protocol-check "1.4.0"
-    date-fns "3.6.0"
-    lodash "4.18.1"
-    primeicons "7.0.0"
-    primereact "9.6.2"
-    primereact-context "npm:primereact@9.2.3"
-    quill-magic-url "4.2.0"
-    react-markdown "10.1.0"
-    react-perfect-scrollbar "1.5.8"
-    react-quill-ayon "2.0.2"
-    react-toastify "9.1.3"
-    rehype-raw "7.0.0"
-    remark-directive "3.0.1"
-    remark-directive-rehype "0.4.2"
-    remark-emoji "4.0.1"
-    remark-gfm "4.0.1"
-    short-uuid "4.2.2"
-    turndown "7.2.4"
-    uuid "14.0.0"
-
-"@ynput/ayon-frontend-shared@^0.3.43":
-  version "0.3.43"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-frontend-shared/-/ayon-frontend-shared-0.3.43.tgz#790e5a1dcf3c1684dfb0ecc3e0de53a068fcb72e"
-  integrity sha512-wuqdUwNsUYMHRtepmlG9UJmlNdrDMLbQGOxEEi2cJa/PJtTMkcIen7BDX7A0Idg3BVQvITLu8r4Wt/86nG/Dqg==
-  dependencies:
-    "@tanstack/match-sorter-utils" "8.19.4"
-    "@tanstack/react-virtual" "3.13.23"
-    "@ynput/ayon-frontend-shared" "^0.3.40"
-    "@ynput/ayon-react-components" "^1.18.8"
-    axios "1.16.1"
-    clsx "2.1.1"
-    custom-protocol-check "1.4.0"
-    date-fns "3.6.0"
-    lodash "4.18.1"
-    primeicons "7.0.0"
-    primereact "9.6.2"
-    primereact-context "npm:primereact@9.2.3"
-    quill-magic-url "4.2.0"
-    react-markdown "10.1.0"
-    react-perfect-scrollbar "1.5.8"
-    react-quill-ayon "2.0.2"
-    react-toastify "9.1.3"
-    rehype-raw "7.0.0"
-    remark-directive "3.0.1"
-    remark-directive-rehype "0.4.2"
-    remark-emoji "4.0.1"
-    remark-gfm "4.0.1"
-    short-uuid "4.2.2"
-    turndown "7.2.4"
-    uuid "14.0.0"
-
-"@ynput/ayon-frontend-shared@^0.3.51":
-  version "0.3.51"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-frontend-shared/-/ayon-frontend-shared-0.3.51.tgz#900ef6263cae21af793a082b16de51148803fa95"
-  integrity sha512-4NLH9WmyFSaxRqQDZytA1gk0pjr5ccusmKiwYV7e29wWl/lasAoyZ4COuahQaRGT3sx4GIHoo0x+WMrDdnQ/1A==
-  dependencies:
-    "@tanstack/match-sorter-utils" "8.19.4"
-    "@tanstack/react-virtual" "3.13.23"
-    "@ynput/ayon-frontend-shared" "^0.3.43"
-    "@ynput/ayon-react-components" "^1.18.8"
-    axios "1.16.1"
-    clsx "2.1.1"
-    custom-protocol-check "1.4.0"
-    date-fns "3.6.0"
-    lodash "4.18.1"
-    primeicons "7.0.0"
-    primereact "9.6.2"
-    primereact-context "npm:primereact@9.2.3"
-    quill-magic-url "4.2.0"
-    react-markdown "10.1.0"
-    react-perfect-scrollbar "1.5.8"
-    react-quill-ayon "2.0.2"
-    react-toastify "9.1.3"
-    rehype-raw "7.0.0"
-    remark-directive "3.0.1"
-    remark-directive-rehype "0.4.2"
-    remark-emoji "4.0.1"
-    remark-gfm "4.0.1"
-    short-uuid "4.2.2"
-    turndown "7.2.4"
-    uuid "14.0.0"
-
-"@ynput/ayon-frontend-shared@^0.3.54":
-  version "0.3.54"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-frontend-shared/-/ayon-frontend-shared-0.3.54.tgz#3f34440fefcaa8318cb3b64c9bbf558696ee88d1"
-  integrity sha512-QJ6Jwm3ClhPHGC0R73ObBR+A/0+9sIgrUAzM9Pz1ELdluZkgUWRfqF4Q2xWwJsgL+rxMOcdZaN9NZKtg+dGsiA==
-  dependencies:
-    "@tanstack/match-sorter-utils" "8.19.4"
-    "@tanstack/react-virtual" "3.13.23"
-    "@ynput/ayon-frontend-shared" "^0.3.51"
-    "@ynput/ayon-react-components" "^1.18.8"
-    axios "1.18.1"
-    clsx "2.1.1"
-    custom-protocol-check "1.4.0"
-    date-fns "3.6.0"
-    lodash "4.18.1"
-    primeicons "7.0.0"
-    primereact "9.6.2"
-    primereact-context "npm:primereact@9.2.3"
-    quill-magic-url "4.2.0"
-    react-markdown "10.1.0"
-    react-perfect-scrollbar "1.5.8"
-    react-quill-ayon "2.0.2"
-    react-toastify "9.1.3"
-    rehype-raw "7.0.0"
-    remark-directive "3.0.1"
-    remark-directive-rehype "0.4.2"
-    remark-emoji "4.0.1"
-    remark-gfm "4.0.1"
-    short-uuid "4.2.2"
-    turndown "7.2.4"
-    uuid "14.0.1"
-
 "@ynput/ayon-player@1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@ynput/ayon-player/-/ayon-player-1.0.2.tgz#0a932b0be848542b4270dccf9de85c4cbc1d9c44"
@@ -1763,26 +1578,10 @@
     react-toastify "^9.0.3"
     sass "1.99.0"
 
-"@ynput/ayon-react-components@1.17.1":
-  version "1.17.1"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.17.1.tgz#18ddd98ab7861812e57e802b9d606c7945c0e6a0"
-  integrity sha512-Sk43DMF+imc9P86BG+KPQvTpS6Dv34QVwM6oIa3p0P6kCZF9asUOxDnLZEZlNlrEcJ028r7mlHjAkw0Reu+xtw==
-  dependencies:
-    short-uuid "^5.2.0"
-
-"@ynput/ayon-react-components@^1.18.8":
-  version "1.18.8"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.18.8.tgz#e600537a32e51fd2c0c601ee0f6f0994b324880f"
-  integrity sha512-dpFyLavFfxepYGIoyinpoaZwEKCC+Uj49OMNj8Bj//EQQfqzMBdgb0AIqJtXBVyTkxXgBhKbIWry6fZEWNclhA==
-  dependencies:
-    short-uuid "^5.2.0"
-
-"@ynput/ayon-react-components@^1.19.9":
-  version "1.19.9"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.19.9.tgz#543de358a27e4621c05cc03aa807bea4d986cb36"
-  integrity sha512-0pvf80Lysgkhk2UvbsF0Sz5BA+OBrvAhIuzAxcka8kJYhz6WRW/RGtb+5LU8/r3kGDHNxPvxyHE/sK8s5FZnvg==
-  dependencies:
-    short-uuid "^5.2.0"
+"@ynput/ayon-react-components@^1.19.10":
+  version "1.19.10"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.19.10.tgz#10c6330da895c7c998025fd8bb178c37d684dbb8"
+  integrity sha512-22BhHi3ENnX5tVarkiaj7FQVOYQquc5xcqvKphQQ41StFI5LpGdm4UbQkb1z43B4s6hVxz0buyGlLRc42G3xlQ==
 
 acorn-jsx@^5.3.2:
   version "5.3.2"
@@ -1894,11 +1693,6 @@ ansi-colors@4.1.3, ansi-colors@^4.1.3:
   resolved "https://registry.yarnpkg.com/ansi-colors/-/ansi-colors-4.1.3.tgz#37611340eb2243e70cc604cad35d63270d48781b"
   integrity sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw==
 
-any-base@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/any-base/-/any-base-1.1.0.tgz#ae101a62bc08a597b4c9ab5b7089d456630549fe"
-  integrity sha512-uMgjozySS8adZZYePpaWs8cxB9/kdzmpX6SgJZ+wbz1K5eYk5QMYDVJaZKhxyIHUdnnJkfR7SVgStgH7LkGUyg==
-
 argparse@~1.0.9:
   version "1.0.10"
   resolved "https://registry.yarnpkg.com/argparse/-/argparse-1.0.10.tgz#bcd6791ea5ae09725e17e5ad988134cd40b3d911"
@@ -1916,7 +1710,7 @@ at-least-node@^1.0.0:
   resolved "https://registry.yarnpkg.com/at-least-node/-/at-least-node-1.0.0.tgz#602cd4b46e844ad4effc92a8011a3c46e0238dc2"
   integrity sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==
 
-axios@1.13.5, axios@1.16.1, axios@1.18.1, axios@1.20.0:
+axios@1.13.5, axios@1.20.0:
   version "1.20.0"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.20.0.tgz#515513445aa60e71d04b6521ca6210829ccb4786"
   integrity sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg==
@@ -4369,29 +4163,6 @@ shebang-regex@^3.0.0:
   resolved "https://registry.yarnpkg.com/shebang-regex/-/shebang-regex-3.0.0.tgz#ae16f1644d873ecad843b0307b143362d4c42172"
   integrity sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==
 
-short-uuid@4.2.2:
-  version "4.2.2"
-  resolved "https://registry.yarnpkg.com/short-uuid/-/short-uuid-4.2.2.tgz#4bb3d926da04a4a5f34420d17b5551fd6d9d535c"
-  integrity sha512-IE7hDSGV2U/VZoCsjctKX6l5t5ak2jE0+aeGJi3KtvjIUNuZVmHVYUjNBhmo369FIWGDtaieRaO8A83Lvwfpqw==
-  dependencies:
-    any-base "^1.1.0"
-    uuid "^8.3.2"
-
-short-uuid@6.0.3:
-  version "6.0.3"
-  resolved "https://registry.yarnpkg.com/short-uuid/-/short-uuid-6.0.3.tgz#6cbb02acc6879d9540cd5735ff2166ce2ff63459"
-  integrity sha512-UMZ3rYOoid307EqWsPTnoBUSOB51Fi28vUMPigUsSCmbaSvslyf/SlXZWOn4btj8tokhBTBkPFKVKKlIolEG1w==
-  dependencies:
-    any-base "^1.1.0"
-
-short-uuid@^5.2.0:
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/short-uuid/-/short-uuid-5.2.0.tgz#49378f8c5335a603bc801c279ae521c5d22532dc"
-  integrity sha512-296/Nzi4DmANh93iYBwT4NoYRJuHnKEzefrkSagQbTH/A6NTaB68hSPDjm5IlbI5dx9FXdmtqPcj6N5H+CPm6w==
-  dependencies:
-    any-base "^1.1.0"
-    uuid "^9.0.1"
-
 skin-tone@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/skin-tone/-/skin-tone-2.0.0.tgz#4e3933ab45c0d4f4f781745d64b9f4c208e41237"
@@ -4628,25 +4399,10 @@ use-sync-external-store@^1.4.0:
   resolved "https://registry.yarnpkg.com/use-sync-external-store/-/use-sync-external-store-1.6.0.tgz#b174bfa65cb2b526732d9f2ac0a408027876f32d"
   integrity sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==
 
-uuid@14.0.0:
-  version "14.0.0"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-14.0.0.tgz#0af883220163d264ffe0c084f6b8a89b9666966d"
-  integrity sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==
-
 uuid@14.0.1:
   version "14.0.1"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-14.0.1.tgz#8a5975b3e038902bfd169a10b5202f5ec0cf3faf"
   integrity sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==
-
-uuid@^8.3.2:
-  version "8.3.2"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
-  integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
-
-uuid@^9.0.1:
-  version "9.0.1"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-9.0.1.tgz#e188d4c8853cc722220392c424cd637f32293f30"
-  integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
 
 vfile-location@^5.0.0:
   version "5.0.3"
