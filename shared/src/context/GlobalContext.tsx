@@ -44,7 +44,11 @@ type Props = {
 }
 
 export const GlobalProvider = ({ children, skip = false }: Props) => {
-  const { data: siteInfo, isLoading, error } = useGetSiteInfoQuery({ full: true }, { skip })
+  const {
+    data: siteInfo = {} as GetSiteInfoResult,
+    isLoading,
+    error,
+  } = useGetSiteInfoQuery({ full: true }, { skip })
   const { data: user, isLoading: isLoadingUser, error: userError } = useGetCurrentUserQuery()
   const {
     data: allProjects = [],
@@ -93,9 +97,9 @@ export const GlobalProvider = ({ children, skip = false }: Props) => {
 export const useGlobalContext = () => {
   const context = useContext(GlobalContext)
 
-  if (context === undefined) {
-    throw new Error('useGlobalContext must be used within a GlobalProvider')
-  }
+  // if (context === undefined) {
+  //   throw new Error('useGlobalContext must be used within a GlobalProvider')
+  // }
 
-  return context
+  return context || ({} as GlobalContextType)
 }
