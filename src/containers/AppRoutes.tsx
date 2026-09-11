@@ -1,4 +1,4 @@
-import { FC, lazy } from 'react'
+import { FC, lazy, PropsWithChildren, useEffect } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
@@ -21,8 +21,20 @@ import { useLoadRemotePages } from '../remote/useLoadRemotePages'
 import LoadingPage from '@pages/LoadingPage'
 import { RemoteAddon, useGlobalContext } from '@shared/context'
 import { toast } from 'react-toastify'
+import { useShortcutsContext } from '@context/ShortcutsContext'
 
 interface AppRoutesProps {}
+
+function RemotePageWrapper({ children, remote }: PropsWithChildren & { remote: RemoteAddon }) {
+  const { setAllDisabled } = useShortcutsContext()
+
+  useEffect(() => {
+    if (!remote.disableGlobalShortcuts) return
+    setAllDisabled(true)
+  }, [remote.disableGlobalShortcuts])
+
+  return <>{children}</>
+}
 
 const AppRoutes: FC<AppRoutesProps> = () => {
   const { user } = useGlobalContext()
@@ -43,12 +55,14 @@ const AppRoutes: FC<AppRoutesProps> = () => {
           key={remote.id}
           path={remote.path}
           element={
-            <remote.component
-              router={{
-                ...{ useParams, useNavigate, useLocation, useSearchParams },
-              }}
-              toast={toast}
-            />
+            <RemotePageWrapper remote={remote}>
+              <remote.component
+                router={{
+                  ...{ useParams, useNavigate, useLocation, useSearchParams },
+                }}
+                toast={toast}
+              />
+            </RemotePageWrapper>
           }
         />
       ))}
