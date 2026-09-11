@@ -10,7 +10,6 @@ import {
   type GetSlicerCountsSource,
   type SlicerCountsSource,
 } from '../hooks/useSlicerCounts'
-import { Icon } from '@ynput/ayon-react-components'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
 import { useHierarchyContextMenuItems } from '../hooks/useHierarchyContextMenuItems'
@@ -82,10 +81,6 @@ const SliceLabel = styled.div`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .icon {
-    flex-shrink: 0;
   }
 `
 
@@ -212,7 +207,6 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
   const isHierarchy = sliceType === 'hierarchy'
   const isCollapsed = !!canCollapse && collapsedPanels.includes(panel.id)
   const sliceOption = sliceOptions.find((option) => option.value === sliceType)
-  const sliceTypeIcon = sliceOption?.icon || 'table_rows'
   const sliceTypeLabel = sliceOption?.label || sliceType
 
   const isSearching = search !== undefined
@@ -283,7 +277,6 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
           // the dropdown cannot be used from a collapsed panel, but the dimension it
           // shows has to read the same as the dropdown does when open
           <SliceLabel>
-            <Icon icon={sliceTypeIcon} />
             <span>{sliceTypeLabel}</span>
           </SliceLabel>
         ) : isViewSyncPending ? (
