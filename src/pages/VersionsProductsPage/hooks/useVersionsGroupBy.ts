@@ -115,6 +115,8 @@ const useVersionsGroupBy = ({
     sortBy: versionArguments.sortBy,
     desc: versionArguments.desc,
     folderIds: versionArguments.folderIds,
+    versionIds: versionArguments.versionIds,
+    productIds: versionArguments.productIds,
     featuredOnly: versionArguments.featuredOnly,
     featuredOnlyEntityType: versionArguments.featuredOnlyEntityType,
     latestPerFolder: versionArguments.latestPerFolder,

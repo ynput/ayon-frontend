@@ -7,6 +7,7 @@ import type { QueryFilter, QueryCondition } from '../types/operations'
 interface UseQueryFiltersProps {
   queryFilters: QueryFilter
   sliceFilter?: Filter | null
+  sliceFilters?: (Filter | null)[] | null
   config?: {
     searchKey?: string
   }
@@ -20,104 +21,107 @@ interface QueryFiltersResult {
   displayFilters: QueryFilter // For SearchFilterWrapper (excludes slice filters, except hierarchy)
 }
 
-export const useQueryFilters = ({
+export const buildQueryFilters = ({
   queryFilters,
   sliceFilter,
+  sliceFilters,
   config: { searchKey } = {},
 }: UseQueryFiltersProps): QueryFiltersResult => {
-  return useMemo(() => {
-    let combinedQueryFilter = queryFilters
+  let combinedQueryFilter = queryFilters
 
-    // If there's a slice filter, convert it and merge it with the query filters
-    if (sliceFilter?.values?.length) {
-      const sliceQueryFilter = clientFilterToQueryFilter([sliceFilter])
+  // Merge every slice filter's conditions into the query filters (AND across panels)
+  const allSliceFilters = [sliceFilter, ...(sliceFilters || [])]
+  for (const filter of allSliceFilters) {
+    if (!filter?.values?.length) continue
+    const sliceQueryFilter = clientFilterToQueryFilter([filter])
 
-      // Merge the slice filter with existing query filters for data fetching
-      if (sliceQueryFilter.conditions?.length) {
-        const existingConditions = combinedQueryFilter?.conditions || []
-        combinedQueryFilter = {
-          conditions: [...existingConditions, ...sliceQueryFilter.conditions],
-          operator: 'and',
-        }
+    if (sliceQueryFilter.conditions?.length) {
+      const existingConditions = combinedQueryFilter?.conditions || []
+      combinedQueryFilter = {
+        conditions: [...existingConditions, ...sliceQueryFilter.conditions],
+        operator: 'and',
       }
     }
+  }
 
-    // Create display filters (for SearchFilterWrapper)
-    // This excludes slice filters, except for hierarchy when slice type changes
-    let displayQueryFilter = queryFilters
+  // Create display filters (for SearchFilterWrapper)
+  // This excludes slice filters, except for hierarchy when slice type changes
+  let displayQueryFilter = queryFilters
 
-    //  extract text search and name filter conditions, remove them from combinedQueryFilter and merge to fuzzySearchFilter
-    let fuzzySearchFilter = ''
+  //  extract text search and name filter conditions, remove them from combinedQueryFilter and merge to fuzzySearchFilter
+  let fuzzySearchFilter = ''
 
-    if (combinedQueryFilter?.conditions?.length) {
-      const searchValues: string[] = []
+  if (combinedQueryFilter?.conditions?.length) {
+    const searchValues: string[] = []
 
-      const remainingConditions = combinedQueryFilter.conditions.filter((condition) => {
-        const queryCondition = condition as QueryCondition
+    const remainingConditions = combinedQueryFilter.conditions.filter((condition) => {
+      const queryCondition = condition as QueryCondition
 
-        // Extract global text search filter
-        if (queryCondition.key === SEARCH_FILTER_ID) {
-          const val = queryCondition.value
-          if (val !== undefined && val !== null && String(val).trim() !== '') {
-            searchValues.push(String(val))
-          }
-          return false // remove search condition
+      // Extract global text search filter
+      if (queryCondition.key === SEARCH_FILTER_ID) {
+        const val = queryCondition.value
+        if (val !== undefined && val !== null && String(val).trim() !== '') {
+          searchValues.push(String(val))
         }
+        return false // remove search condition
+      }
 
-        // Extract name filter (can be scoped like 'task_name' or 'folder_name' or just 'name')
-        if (
-          (searchKey && queryCondition.key === searchKey) ||
-          queryCondition.key?.endsWith('_' + 'searchKey')
-        ) {
-          const val = queryCondition.value
-          // Name filters use 'like' operator with wildcards, extract the actual search term
-          if (val !== undefined && val !== null) {
-            if (Array.isArray(val)) {
-              val.forEach((v) => {
-                const searchTerm = String(v).replace(/%/g, '').trim()
-                if (searchTerm) {
-                  searchValues.push(searchTerm)
-                }
-              })
-            } else {
-              const searchTerm = String(val).replace(/%/g, '').trim()
+      // scope prefixes are stripped before this point, so match the bare key only —
+      // a suffix match would also swallow attribs like attrib.client_name
+      if (searchKey && queryCondition.key === searchKey) {
+        const val = queryCondition.value
+        // Name filters use 'like' operator with wildcards, extract the actual search term
+        if (val !== undefined && val !== null) {
+          if (Array.isArray(val)) {
+            val.forEach((v) => {
+              const searchTerm = String(v).replace(/%/g, '').trim()
               if (searchTerm) {
                 searchValues.push(searchTerm)
               }
+            })
+          } else {
+            const searchTerm = String(val).replace(/%/g, '').trim()
+            if (searchTerm) {
+              searchValues.push(searchTerm)
             }
           }
-          return false // remove name condition
         }
+        return false // remove name condition
+      }
 
-        return true
-      })
+      return true
+    })
 
-      // Join chips with commas — backend resolvers split on comma for OR semantics
-      // (each chip = one AND-group, chips are OR'd). Space-join would AND all terms.
-      fuzzySearchFilter = searchValues.join(', ')
+    // Join chips with commas — backend resolvers split on comma for OR semantics
+    // (each chip = one AND-group, chips are OR'd). Space-join would AND all terms.
+    fuzzySearchFilter = searchValues.join(', ')
 
-      // If there are remaining conditions, keep them; otherwise set empty conditions
-      combinedQueryFilter = remainingConditions.length
-        ? { ...combinedQueryFilter, conditions: remainingConditions }
-        : { ...combinedQueryFilter, conditions: [] }
-    }
+    // If there are remaining conditions, keep them; otherwise set empty conditions
+    combinedQueryFilter = remainingConditions.length
+      ? { ...combinedQueryFilter, conditions: remainingConditions }
+      : { ...combinedQueryFilter, conditions: [] }
+  }
 
-    // Expand relative date values (e.g., "relative:today:0") to actual ISO dates
-    // before sending to the backend API
-    const expandedQueryFilter = combinedQueryFilter?.conditions?.length
-      ? sanitizeQueryFilter(expandRelativeDates(combinedQueryFilter))
-      : combinedQueryFilter
+  // Expand relative date values (e.g., "relative:today:0") to actual ISO dates
+  // before sending to the backend API
+  const expandedQueryFilter = combinedQueryFilter?.conditions?.length
+    ? sanitizeQueryFilter(expandRelativeDates(combinedQueryFilter))
+    : combinedQueryFilter
 
-    const queryFilterString = expandedQueryFilter?.conditions?.length
-      ? JSON.stringify(expandedQueryFilter)
-      : ''
+  const queryFilterString = expandedQueryFilter?.conditions?.length
+    ? JSON.stringify(expandedQueryFilter)
+    : ''
 
-    return {
-      filterString: queryFilterString,
-      filter: expandedQueryFilter,
-      search: fuzzySearchFilter,
-      combinedFilters: expandedQueryFilter,
-      displayFilters: displayQueryFilter,
-    }
-  }, [queryFilters, sliceFilter])
+  return {
+    filterString: queryFilterString,
+    filter: expandedQueryFilter,
+    search: fuzzySearchFilter,
+    combinedFilters: expandedQueryFilter,
+    displayFilters: displayQueryFilter,
+  }
+}
+
+export const useQueryFilters = (props: UseQueryFiltersProps): QueryFiltersResult => {
+  const { queryFilters, sliceFilter, sliceFilters } = props
+  return useMemo(() => buildQueryFilters(props), [queryFilters, sliceFilter, sliceFilters])
 }

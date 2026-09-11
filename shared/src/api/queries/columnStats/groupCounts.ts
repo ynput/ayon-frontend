@@ -67,7 +67,7 @@ export const groupByToStatsTarget = (
 // Map a stats target field to the canonical fieldStats columnName. Attribute
 // targets are dot-paths (inherited_attributes.x / attrib.x) that canonicalColumnId
 // (underscore-based) won't normalize, so resolve those to attrib_<name> here.
-const targetToColumnId = (field: string): string => {
+export const targetToColumnId = (field: string): string => {
   const dot = field.indexOf('.')
   if (dot !== -1) return 'attrib_' + field.slice(dot + 1)
   return canonicalColumnId(field)

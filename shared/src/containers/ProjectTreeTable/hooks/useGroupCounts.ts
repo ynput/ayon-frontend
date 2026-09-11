@@ -4,8 +4,9 @@ import {
   useGetVersionsColumnStatsQuery,
   groupByToStatsTarget,
   selectGroupCounts,
+  targetToColumnId,
 } from '@shared/api'
-import type { FieldStats, GroupCountsMap } from '@shared/api'
+import type { FieldStats, GroupCountsMap, MetricTarget } from '@shared/api'
 import type { TableGroupBy } from '../context'
 import { UNGROUPED_VALUE } from './useBuildGroupByTableData'
 
@@ -23,6 +24,7 @@ export type VersionStatsArgs = {
   versionFilter?: string
   productFilter?: string
   taskFilter?: string
+  folderFilter?: string
   folderIds?: string[]
   versionIds?: string[]
   productIds?: string[]
@@ -30,8 +32,21 @@ export type VersionStatsArgs = {
 }
 
 export type UseGroupCountsParams =
-  | { entity: 'task'; groupBy?: TableGroupBy; args: TaskStatsArgs; skip?: boolean }
-  | { entity: 'version'; groupBy?: TableGroupBy; args: VersionStatsArgs; skip?: boolean }
+  | {
+      entity: 'task'
+      groupBy?: TableGroupBy
+      // extra groupings whose targets ride along in the same request (e.g. sibling slicer panels)
+      extraGroupBys?: TableGroupBy[]
+      args: TaskStatsArgs
+      skip?: boolean
+    }
+  | {
+      entity: 'version'
+      groupBy?: TableGroupBy
+      extraGroupBys?: TableGroupBy[]
+      args: VersionStatsArgs
+      skip?: boolean
+    }
 
 export type GroupCountsResult = {
   counts: GroupCountsMap | undefined
@@ -43,19 +58,32 @@ export type GroupCountsResult = {
 }
 
 const EMPTY: FieldStats[] = []
+const MAX_HEAL_ATTEMPTS = 3
 
 // Filter-aware per-group counts for the active grouping. Requests a single
 // Distribution target for the grouped field via the column-stats query, so for
 // licensed users it shares the footer's cache entry (targets are stripped from
 // the cache key) — no duplicate fetch. Not gated by the PowerPack license.
 export const useGroupCounts = (params: UseGroupCountsParams): GroupCountsResult => {
-  const { entity, groupBy, skip } = params
+  const { entity, groupBy, extraGroupBys, skip } = params
 
   const target = useMemo(
     () => (groupBy ? groupByToStatsTarget(groupBy, entity) : null),
     [groupBy, entity],
   )
-  const targets = useMemo(() => (target ? [target] : undefined), [target])
+  const targets = useMemo(() => {
+    if (!target) return undefined
+    const fields = new Set([target.field])
+    const extras: MetricTarget[] = []
+    for (const extra of extraGroupBys ?? []) {
+      const extraTarget = groupByToStatsTarget(extra, entity)
+      if (extraTarget && !fields.has(extraTarget.field)) {
+        fields.add(extraTarget.field)
+        extras.push(extraTarget)
+      }
+    }
+    return [target, ...extras]
+  }, [target, extraGroupBys, entity])
   const disabled = !!skip || !target
 
   const projectName = params.args.projectName
@@ -88,25 +116,30 @@ export const useGroupCounts = (params: UseGroupCountsParams): GroupCountsResult 
 
   // Self-heal: the shared cache entry (targets stripped from the key) can settle
   // without our field's stats when we joined another subscriber's in-flight fetch.
-  const retriedFieldsRef = useRef(new Set<string>())
+  const healAttemptsRef = useRef(new Map<string, number>())
   const noStatsFieldsRef = useRef(new Set<string>())
   const argsKey = useMemo(() => JSON.stringify(params.args), [params.args])
   useEffect(() => {
     // new args = new cache entry, where the race can recur — allow healing again
-    retriedFieldsRef.current.clear()
+    healAttemptsRef.current.clear()
+    noStatsFieldsRef.current.clear()
   }, [argsKey])
   useEffect(() => {
     if (disabled || !target || !hasData || active.isFetching || complete) return
     const field = target.field
     if (noStatsFieldsRef.current.has(field)) return
-    if (retriedFieldsRef.current.has(field)) {
-      // a forced fetch already carried our targets — the field has no distribution stats
+    if (fieldStats.some((s) => s.columnName === targetToColumnId(field))) {
+      // a fetch carried our field and returned no distribution — nothing left to heal
       noStatsFieldsRef.current.add(field)
       return
     }
-    retriedFieldsRef.current.add(field)
+    // no stat row = our targets never reached the server (RTK swallows a refetch
+    // dispatched while the shared entry is still pending) — retry, bounded
+    const attempts = healAttemptsRef.current.get(field) ?? 0
+    if (attempts >= MAX_HEAL_ATTEMPTS) return
+    healAttemptsRef.current.set(field, attempts + 1)
     active.refetch()
-  }, [disabled, target, hasData, active.isFetching, complete, active.refetch])
+  }, [disabled, target, hasData, active.isFetching, complete, fieldStats, active.refetch])
 
   return {
     counts,
