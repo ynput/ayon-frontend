@@ -15,6 +15,9 @@ import { getEnumItemIcon, getSelectableEnumItems, isEnumIconImage } from '@share
 const CUSTOM_ENUM_SOURCE = '__custom__'
 const PREVIEW_LIMIT = 5
 const EMPTY_FIELDS: SimpleFormField[] = []
+const EMPTY_PREVIEW_MESSAGE = 'No preview items found.'
+const CONTEXT_PARAMS_MESSAGE =
+  'This could be because in context parameters (project_name) are required to get the items.'
 
 const Container = styled.div`
   display: flex;
@@ -30,7 +33,7 @@ const Message = styled.span`
 const Preview = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--base-gap-small);
+  gap: var(--base-gap-large);
   padding: var(--padding-m);
   border-radius: var(--border-radius-m);
   background-color: var(--md-sys-color-surface-container);
@@ -82,10 +85,15 @@ const SkeletonItem = styled(PreviewItem)`
 
 interface EnumResolverPreviewProps {
   resolver: string
+  acceptedParams: EnumResolverInfo['acceptedParams']
   settings: Record<string, any>
 }
 
-const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({ resolver, settings }) => {
+const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({
+  resolver,
+  acceptedParams,
+  settings,
+}) => {
   const data = useMemo(
     () => ({ enumResolver: resolver, enumResolverSettings: settings } as AttributeData),
     [resolver, settings],
@@ -113,14 +121,13 @@ const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({ resolver, settings 
     return (
       <Preview>
         <Message>
-          {allOptions.length
-            ? `${allOptions.length} items resolved, all hidden from selection.`
-            : 'This enum currently has no items.'}
+          {EMPTY_PREVIEW_MESSAGE}
+          {'project_name' in (acceptedParams || {}) && ` ${CONTEXT_PARAMS_MESSAGE}`}
         </Message>
       </Preview>
     )
 
-  const hidden = options.length - PREVIEW_LIMIT
+  const remaining = options.length - PREVIEW_LIMIT
   const preview = options
     .slice(0, PREVIEW_LIMIT)
     .map((option) => ({ option, icon: getEnumItemIcon(option.icon) }))
@@ -140,7 +147,7 @@ const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({ resolver, settings 
           <span className="label">{option.label}</span>
         </PreviewItem>
       ))}
-      {hidden > 0 && <MoreMessage>+{hidden} more</MoreMessage>}
+      {remaining > 0 && <MoreMessage>+{remaining} more</MoreMessage>}
     </Preview>
   )
 }
@@ -227,7 +234,11 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
             />
           )}
           {selectedResolver && (
-            <EnumResolverPreview resolver={selectedResolver.name} settings={settings} />
+            <EnumResolverPreview
+              resolver={selectedResolver.name}
+              acceptedParams={selectedResolver.acceptedParams}
+              settings={settings}
+            />
           )}
         </>
       )}
