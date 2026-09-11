@@ -22,6 +22,8 @@ export interface EntityTooltipProps {
     top?: number
   }
   projectInfo?: EntityTooltipProjectInfo
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }
 
 export const EntityTooltip: React.FC<EntityTooltipProps> = ({
@@ -30,6 +32,8 @@ export const EntityTooltip: React.FC<EntityTooltipProps> = ({
   projectName,
   pos: { left = 0, top = 0 } = {},
   projectInfo,
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   const project = useOptionalProjectContext()
   const resolvedProjectName = projectName || project?.projectName
@@ -88,6 +92,8 @@ export const EntityTooltip: React.FC<EntityTooltipProps> = ({
   return (
     <Styled.TooltipEntityCard
       style={{ left, top, maxWidth: width }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       title={title}
       header={subTitle}
       path={path}

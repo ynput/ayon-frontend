@@ -23,7 +23,7 @@ export const buildEntityPickerTableData = (
       icon: anatomy?.icon || getEntityTypeIcon(entity.entityType),
       iconColor: anatomy?.color,
       img: entity.thumbnail
-        ? getEntityThumbnailUrl({ projectName, ...entity.thumbnail, placeholder: 'none' })
+        ? getEntityThumbnailUrl({ projectName, ...entity.thumbnail })
         : null,
       subRows: [],
       data: {
@@ -31,6 +31,8 @@ export const buildEntityPickerTableData = (
         name: entity.name,
         label: entity.label || entity.name,
         entityType: entity.entityType,
+        // a product has no tooltip data of its own, so point at its featured version
+        tooltip: entity.entityType === 'product' ? entity.thumbnail : undefined,
       },
     }
   })
@@ -55,7 +57,6 @@ export const buildFolderPickerTableData = (
         entityType: 'folder',
         entityId: folder.id,
         thumbnailHash: folder.thumbnailHash,
-        placeholder: 'none',
       }),
       subRows: [],
       data: {

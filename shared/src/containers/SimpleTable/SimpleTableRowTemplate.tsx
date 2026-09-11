@@ -1,7 +1,6 @@
 import { forwardRef, useEffect, useState } from 'react'
 import * as Styled from './SimpleTable.styled'
 import { Icon, IconProps, InputText, Spacer } from '@ynput/ayon-react-components'
-import { useImageStatus } from '@shared/hooks/useImageStatus'
 import clsx from 'clsx'
 
 export interface TableRowAction extends IconProps {
@@ -115,7 +114,6 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
     ref,
   ) => {
     const [renameValue, setRenameValue] = useState(renameInitialValue ?? value)
-    const imgStatus = useImageStatus(img)
 
     useEffect(() => {
       if (isRenaming) {
@@ -123,30 +121,29 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       }
     }, [value, isRenaming, renameInitialValue])
 
-    const thumbnail =
-      img && imgStatus === 'loaded' ? (
-        <img
-          src={img}
-          {...pt?.img}
-          alt=""
+    const thumbnail = img ? (
+      <img
+        src={img}
+        {...pt?.img}
+        alt=""
+        className={clsx('image', imgShape, `img-${imgPosition}`, pt?.img?.className)}
+        style={{
+          aspectRatio: (imgRatio ?? 1).toString(),
+          ...pt?.img?.style,
+        }}
+      />
+    ) : (
+      // keep the slot so rows don't shift when a thumbnail is missing
+      imgRatio !== undefined && (
+        <div
           className={clsx('image', imgShape, `img-${imgPosition}`, pt?.img?.className)}
           style={{
-            aspectRatio: (imgRatio ?? 1).toString(),
+            aspectRatio: imgRatio.toString(),
             ...pt?.img?.style,
           }}
         />
-      ) : (
-        // keep the slot so rows don't shift when a thumbnail is missing
-        imgRatio !== undefined && (
-          <div
-            className={clsx('image', imgShape, `img-${imgPosition}`, 'empty', pt?.img?.className)}
-            style={{
-              aspectRatio: imgRatio.toString(),
-              ...pt?.img?.style,
-            }}
-          />
-        )
       )
+    )
 
     return (
       <Styled.Cell

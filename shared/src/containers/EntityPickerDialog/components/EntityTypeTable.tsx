@@ -40,7 +40,7 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
   onRowSubmit,
   onScrollBottom,
 }) => {
-  const tooltip = useRowTooltip(entityType)
+  const tooltip = useRowTooltip(entityType, tableData)
 
   const handleDoubleClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
     e.preventDefault()
@@ -81,10 +81,11 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
       {tooltip.hovered &&
         createPortal(
           <EntityTooltip
-            entityType={entityType}
-            entityId={tooltip.hovered.id}
+            entityType={tooltip.hovered.entityType}
+            entityId={tooltip.hovered.entityId}
             projectName={projectName}
             pos={tooltip.hovered.pos}
+            {...tooltip.tooltipProps}
           />,
           document.body,
         )}

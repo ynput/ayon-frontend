@@ -31,7 +31,6 @@ export const useHierarchyTable = ({
     return folderType?.color
   }
 
-  // the folder list has no thumbnailId, so ask the API to 404 instead of serving a blank image
   const getFolderThumbnail = (folder: FolderListItem) => {
     if (!includeThumbnails || !projectName) return null
     return getEntityThumbnailUrl({
@@ -39,7 +38,6 @@ export const useHierarchyTable = ({
       entityType: 'folder',
       entityId: folder.id,
       thumbnailHash: folder.thumbnailHash,
-      placeholder: 'none',
     })
   }
 

@@ -233,7 +233,6 @@ export const Cell = styled.div`
     flex: none;
     object-fit: cover;
     aspect-ratio: 1;
-    background-color: var(--md-sys-color-surface-container-lowest);
 
     &.img-start {
       margin-right: 4px;
@@ -249,11 +248,6 @@ export const Cell = styled.div`
 
     &.square {
       border-radius: 2px;
-    }
-
-    /* reserves the slot so rows stay aligned, without drawing an empty box */
-    &.empty {
-      background-color: transparent;
     }
   }
 `
