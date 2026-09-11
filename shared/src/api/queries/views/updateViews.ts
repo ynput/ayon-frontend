@@ -55,27 +55,39 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
 
         // Also update the getWorkingView cache if this is a working view
         let workingViewPatch
+        let seededWorkingView = false
         if (payload.working) {
+          const newWorkingView = {
+            ...payload,
+            working: true,
+            scope: arg.projectName ? 'project' : 'studio',
+            visibility: 'private',
+            owner: user,
+          }
+
           workingViewPatch = dispatch(
             getViewsApi.util.updateQueryData(
               'getWorkingView',
               { viewType: arg.viewType, projectName: arg.projectName },
               (draft) => {
+                if (!draft) return newWorkingView as any
                 // Preserve the existing ID if there's already a working view
-                const existingId = draft?.id
-                const updatedWorkingView = {
-                  ...payload,
-                  working: true,
-                  scope: arg.projectName ? 'project' : 'studio',
-                  visibility: 'private',
-                  owner: user,
-                  ...(existingId && { id: existingId }), // Keep existing ID if it exists
-                }
-                // Update the working view cache with the new view data
-                Object.assign(draft, updatedWorkingView)
+                Object.assign(draft, { ...newWorkingView, id: draft.id })
               },
             ),
           )
+
+          // No cache entry yet (first edit of a named view), so seed it with the view we just created
+          if (!workingViewPatch?.patches?.length) {
+            dispatch(
+              getViewsApi.util.upsertQueryData(
+                'getWorkingView',
+                { viewType: arg.viewType, projectName: arg.projectName },
+                newWorkingView as any,
+              ),
+            )
+            seededWorkingView = true
+          }
         }
 
         let baseViewPatch
@@ -122,6 +134,26 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           patch.undo()
           if (workingViewPatch) workingViewPatch.undo()
           if (baseViewPatch) baseViewPatch.undo()
+          // An upsert has no undo, and a refetch would keep the seeded data alongside the error,
+          // so drop the cache entry: otherwise the client id of a view the server never created
+          // is reused by later settings writes, which then patch a view that does not exist.
+          if (seededWorkingView) {
+            const state: any = getState()
+            const queries = state[getViewsApi.reducerPath]?.queries ?? {}
+            const cacheKey = Object.keys(queries).find((key) => {
+              const entry = queries[key]
+              return (
+                entry?.endpointName === 'getWorkingView' &&
+                entry?.originalArgs?.viewType === arg.viewType &&
+                entry?.originalArgs?.projectName === arg.projectName
+              )
+            })
+            if (cacheKey) {
+              dispatch(
+                getViewsApi.internalActions.removeQueryResult({ queryCacheKey: cacheKey as any }),
+              )
+            }
+          }
         }
       },
       transformErrorResponse: (error: any) => error.data?.detail,
@@ -299,39 +331,37 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           projectName,
         })(state)
 
+        // listViews entries have no settings, so patch only when the full view is cached
+        const workingView = getViewsApi.endpoints.getWorkingView.select({
+          viewType,
+          projectName,
+        })(state).data
+        const cachedView =
+          workingView?.id === viewId
+            ? workingView
+            : getViewsApi.endpoints.getView.select({ viewId, viewType, projectName })(state).data
+
         // check if there is even a cache for the default view
         if (currentDefaultView?.isSuccess && currentDefaultView.data?.id) {
-          // Optimistically update the default view
-          const patch = dispatch(
-            getViewsApi.util.updateQueryData(
-              'getDefaultView',
-              { viewType, projectName },
-              (draft) => {
-                if (draft) {
-                  // Try to find the view in the listViews cache
-                  const listViewData = getViewsApi.endpoints.listViews.select({
-                    viewType,
-                    projectName,
-                  })(state)
-                  const view = listViewData?.data?.find((v) => v.id === viewId)
-
-                  if (view) {
-                    // If the view is found in the listViews cache, update the getDefaultView cache with the full view data
-                    Object.assign(draft, view)
-                  } else {
-                    // If the view is not found, only update the ID
-                    draft.id = viewId
-                  }
-                }
-              },
-            ),
-          )
+          const patch = cachedView
+            ? dispatch(
+                getViewsApi.util.updateQueryData(
+                  'getDefaultView',
+                  { viewType, projectName },
+                  (draft) => {
+                    if (draft) {
+                      Object.assign(draft, cachedView)
+                    }
+                  },
+                ),
+              )
+            : undefined
 
           try {
             await queryFulfilled
           } catch (error) {
             // If the query failed, we need to roll back the optimistic update
-            patch.undo()
+            patch?.undo()
             console.error('Failed to set default view:', error)
           }
         } else {

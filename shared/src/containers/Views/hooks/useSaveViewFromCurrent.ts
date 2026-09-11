@@ -1,9 +1,11 @@
 import { useCallback } from 'react'
 import type { ViewType } from '../types'
-import type { ViewData, ViewSettings } from '../context/ViewsContext'
+import type { ViewSettings } from '../context/ViewsContext'
 import { isViewStudioScope } from '../utils/isViewStudioScope'
 import { UseViewMutations } from './useViewsMutations'
 import type { ViewListItemModel } from '@shared/api'
+import { flushPendingColumnWrites } from '@shared/containers/ProjectTreeTable/utils/pendingColumnWrites'
+import { getSettingsWrittenThisTick } from '../utils/settingsWriteTick'
 import { toast } from 'react-toastify'
 
 type Props = {
@@ -28,8 +30,15 @@ export const useSaveViewFromCurrent = ({
         throw 'viewType are required for saving a view from another view'
       }
 
+      // a resize can still be sitting in its debounce, so write it before copying the settings
+      flushPendingColumnWrites()
+
+      // the flush writes synchronously, but neither cache nor context reflects it yet this tick
+      const latestSettings: ViewSettings | undefined =
+        getSettingsWrittenThisTick(viewType, projectName) ?? sourceSettings
+
       // get the fromView settings
-      if (!sourceSettings) {
+      if (!latestSettings) {
         throw 'sourceView is required for saving a view from another view'
       }
 
@@ -37,7 +46,7 @@ export const useSaveViewFromCurrent = ({
         await onUpdateView(
           viewId,
           {
-            settings: sourceSettings,
+            settings: latestSettings,
           },
           isViewStudioScope(viewId, viewsList),
         )
@@ -52,7 +61,7 @@ export const useSaveViewFromCurrent = ({
         throw errorMessage
       }
     },
-    [viewType, projectName, sourceSettings],
+    [viewType, projectName, sourceSettings, viewsList, onUpdateView],
   )
 
   return { onSaveViewFromCurrent }
