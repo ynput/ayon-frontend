@@ -46,6 +46,7 @@ export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLD
   img?: string | null
   imgShape?: 'square' | 'circle'
   imgRatio?: number
+  imgPosition?: 'start' | 'end'
   isRowExpandable?: boolean
   isRowExpanded?: boolean
   isTableExpandable?: boolean
@@ -85,7 +86,8 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       iconFilled,
       img,
       imgShape = 'square',
-      imgRatio = 1,
+      imgRatio,
+      imgPosition = 'start',
       isRowExpandable,
       isRowExpanded,
       isTableExpandable,
@@ -119,6 +121,30 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       }
     }, [value, isRenaming, renameInitialValue])
 
+    const thumbnail = img ? (
+      <img
+        src={img}
+        {...pt?.img}
+        alt=""
+        className={clsx('image', imgShape, `img-${imgPosition}`, pt?.img?.className)}
+        style={{
+          aspectRatio: (imgRatio ?? 1).toString(),
+          ...pt?.img?.style,
+        }}
+      />
+    ) : (
+      // keep the slot so rows don't shift when a thumbnail is missing
+      imgRatio !== undefined && (
+        <div
+          className={clsx('image', imgShape, `img-${imgPosition}`, pt?.img?.className)}
+          style={{
+            aspectRatio: imgRatio.toString(),
+            ...pt?.img?.style,
+          }}
+        />
+      )
+    )
+
     return (
       <Styled.Cell
         {...props}
@@ -142,19 +168,8 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
           enableNonFolderIndent={enableNonFolderIndent}
           {...pt?.expander}
         />
-        {startContent && startContent}
-        {img && (
-          <img
-            src={img}
-            {...pt?.img}
-            alt=""
-            className={clsx('image', imgShape, pt?.img?.className)}
-            style={{
-              aspectRatio: imgRatio.toString(),
-              ...pt?.img?.style,
-            }}
-          />
-        )}
+        {imgPosition === 'start' && thumbnail}
+        {startContent}
         {icon && (
           <Icon
             icon={icon}
@@ -223,6 +238,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
             )}
           </>
         )}
+        {imgPosition === 'end' && thumbnail}
         {endContent && endContent}
       </Styled.Cell>
     )

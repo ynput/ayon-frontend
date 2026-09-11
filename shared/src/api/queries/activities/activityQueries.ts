@@ -29,11 +29,30 @@ export type VersionTypes = {
   }
 }
 
+export type FolderTypes = {
+  label?: string
+  folderType?: string
+  parents?: Array<string>
+}
+
+export type WorkfileTypes = {
+  task?: {
+    name: string
+    label?: string
+    taskType?: string
+    folder?: {
+      path: string
+    }
+  }
+}
+
 export type EntityTooltipQuery = {
   data: {
     project: {
       task?: BaseTypes & TaskTypes
       version?: BaseTypes & VersionTypes
+      folder?: BaseTypes & FolderTypes
+      workfile?: BaseTypes & WorkfileTypes
     }
   }
 }
@@ -57,6 +76,23 @@ export const getTypeFields = (type: string): string => {
         product {
           name
           productType
+          folder {
+            path
+          }
+        }
+      `
+    case 'folder':
+      return `
+        label
+        folderType
+        parents
+      `
+    case 'workfile':
+      return `
+        task {
+          name
+          label
+          taskType
           folder {
             path
           }

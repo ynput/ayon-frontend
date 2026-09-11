@@ -258,6 +258,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
             <EntityTypeTable
               key={tableEntityType}
               entityType={tableEntityType}
+              projectName={projectName}
               search={search[tableEntityType]}
               tableData={processTableDataWithDisabled(entityData[tableEntityType]?.table || [])}
               isFolderHierarchy={tableEntityType === 'folder' && !search.folder}

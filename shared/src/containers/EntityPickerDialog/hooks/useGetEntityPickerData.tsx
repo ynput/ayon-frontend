@@ -61,6 +61,7 @@ export const useGetEntityPickerData = ({
     projectName,
     folderTypes: project?.folderTypes || [],
     includeColors: true,
+    includeThumbnails: true,
   })
 
   const foldersData = useMemo(() => {
@@ -74,10 +75,10 @@ export const useGetEntityPickerData = ({
   const foldersTable = useMemo(
     () =>
       search.folder
-        ? buildFolderPickerTableData(foldersData, project?.folderTypes || [])
+        ? buildFolderPickerTableData(foldersData, projectName, project?.folderTypes || [])
         : hierarchTable,
 
-    [foldersData, hierarchTable, search.folder, project],
+    [foldersData, hierarchTable, search.folder, project, projectName],
   )
 
   const folder: EntityQueryResult = {
@@ -187,8 +188,8 @@ const useGetEntityTypeData = (
 
   //   convert to table rows
   const table = useMemo(
-    () => buildEntityPickerTableData(entities, anatomies),
-    [entities, anatomies],
+    () => buildEntityPickerTableData(entities, projectName, anatomies),
+    [entities, projectName, anatomies],
   )
 
   return {
