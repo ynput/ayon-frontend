@@ -1,4 +1,7 @@
 import { api } from '@shared/api/base'
+// QueryFilter is already generated (identically) from several other tags -
+// reuse events.ts's copy here rather than redeclaring it.
+import type { QueryFilter } from './events'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     listAvailableActionsForContext: build.mutation<
@@ -107,12 +110,34 @@ export type IconModel = {
   /** The URL of the icon (for type url) */
   url?: string
 }
-export type FormSelectOption = {
-  value: string
-  label: string
-  icon?: string
+export type FormOptionItem = {
+  value: string | number | boolean
+  label?: string
+  description?: string
+  group?: string
+  icon?: string | IconModel
   color?: string
+  shortName?: string
+  disabled?: boolean
+  disabledMessage?: string
+  hidden?: boolean
   badges?: string[]
+}
+/** @deprecated use FormOptionItem */
+export type FormSelectOption = FormOptionItem
+export type FormFieldPatch = {
+  value?: string | number | number | boolean | string[] | number[] | number[] | null
+  label?: string
+  placeholder?: any
+  options?: FormOptionItem[]
+  readOnly?: boolean
+  disabled?: boolean
+  hidden?: boolean
+  highlight?: 'info' | 'warning' | 'error'
+}
+export type FormFieldRule = {
+  when: QueryFilter
+  set: FormFieldPatch
 }
 export type SimpleFormField = {
   type: 'text' | 'boolean' | 'select' | 'multiselect' | 'hidden' | 'integer' | 'float' | 'label' | 'file'
@@ -123,11 +148,17 @@ export type SimpleFormField = {
   regex?: string
   multiline?: boolean
   syntax?: string
-  options?: FormSelectOption[]
+  options?: FormOptionItem[]
   highlight?: 'info' | 'warning' | 'error'
   min?: number | number
   max?: number | number
   valid_extensions?: string[]
+  readOnly?: boolean
+  disabled?: boolean
+  hidden?: boolean
+  enumResolver?: string
+  enumResolverParams?: { [key: string]: any }
+  rules?: FormFieldRule[]
 }
 export type BaseActionManifest = {
   /** The identifier of the action */

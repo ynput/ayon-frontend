@@ -12,8 +12,7 @@ import {
   Button,
 } from '@ynput/ayon-react-components'
 import { camelCase, upperFirst } from 'lodash'
-import { MinMaxField } from './components'
-import { EnumEditor } from '@shared/components/EnumEditor/EnumEditor'
+import { MinMaxField, EnumSourceField } from './components'
 import type { AttributeData, AttributeModel } from '@shared/api'
 import {
   UIAttributeType,
@@ -77,6 +76,8 @@ const initFormData: AttributeForm = {
     example: '',
     default: undefined,
     enum: undefined,
+    enumResolver: undefined,
+    enumResolverSettings: undefined,
     widget: undefined,
     minLength: undefined,
     maxLength: undefined,
@@ -177,14 +178,16 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
 
   const [formData, setFormData] = useState<AttributeForm | null>(initData)
   const [uiType, setUiType] = useState<UIAttributeType>(() =>
-    backendToUiType(initData?.data?.type, initData?.data?.enum),
+    backendToUiType(initData?.data?.type, initData?.data?.enum, initData?.data?.enumResolver),
   )
   const [isDecimal, setIsDecimal] = useState<boolean>(() => initData?.data?.type === 'float')
 
   useEffect(() => {
     if (!!attribute) {
       setFormData(attribute)
-      setUiType(backendToUiType(attribute.data?.type, attribute.data?.enum))
+      setUiType(
+        backendToUiType(attribute.data?.type, attribute.data?.enum, attribute.data?.enumResolver),
+      )
       setIsDecimal(attribute.data?.type === 'float')
     }
   }, [attribute])
@@ -273,11 +276,13 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
     booleanDefault: CustomFieldRenderer
   } = {
     enum: (value = [], onChange) => (
-      <EnumEditor
-        values={value}
-        onChange={(val) => {
-          onChange(val?.length ? val : undefined)
-        }}
+      <EnumSourceField
+        enumValues={value}
+        enumResolver={formData?.data?.enumResolver}
+        enumResolverSettings={formData?.data?.enumResolverSettings}
+        onChangeEnum={onChange}
+        onChangeResolver={(name) => setData('enumResolver', name)}
+        onChangeResolverSettings={(settings) => setData('enumResolverSettings', settings)}
       />
     ),
     inherit: (value, onChange) => (
@@ -311,6 +316,8 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
     // Clear enum when switching away from select/multi_select
     if (newUiType !== 'select' && newUiType !== 'multi_select') {
       setData('enum', undefined)
+      setData('enumResolver', undefined)
+      setData('enumResolverSettings', undefined)
     }
     // Clear regex if not supported by the new type
     if (newUiType !== 'text' && formData?.data?.regex) {

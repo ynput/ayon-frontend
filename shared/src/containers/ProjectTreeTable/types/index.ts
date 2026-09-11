@@ -10,6 +10,8 @@ import { OperationModel } from './operations'
 
 export interface ProjectTableAttribute extends Omit<AttributeModel, 'position'> {
   readOnly?: boolean
+  enumIsLoading?: boolean
+  enumHasError?: boolean
 }
 
 export type LoadingTasks = Record<string, number> // show number of loading tasks per folder or root

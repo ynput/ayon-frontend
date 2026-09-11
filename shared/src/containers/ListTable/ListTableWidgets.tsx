@@ -4,6 +4,7 @@ import { BooleanWidget } from '../ProjectTreeTable/widgets/BooleanWidget'
 import { DateWidget } from '../ProjectTreeTable/widgets/DateWidget'
 import { EnumWidget } from '../ProjectTreeTable/widgets/EnumWidget'
 import { TextWidget, TextWidgetType } from '../ProjectTreeTable/widgets/TextWidget'
+import { hasEnumOptions } from '@shared/util'
 
 export type ListTableAttributeType = NonNullable<AttributeData['type']>
 
@@ -35,7 +36,7 @@ export type ListTableDataTypeWidgets<TData extends RowData> = Partial<
   Record<ListTableAttributeType, ListTableWidgetRenderer<TData>>
 >
 
-const isEnumAttribute = (attributeData?: AttributeData) => !!attributeData?.enum?.length
+const isEnumAttribute = (attributeData?: AttributeData) => hasEnumOptions(attributeData)
 
 const stringifyScalarValue = (value: unknown) => {
   if (value === null || value === undefined) return ''

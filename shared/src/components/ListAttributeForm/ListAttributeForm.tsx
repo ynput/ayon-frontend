@@ -157,6 +157,7 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
   return (
     <DetailsPanelAttributesEditor
       enableEditing={canEdit}
+      projectName={projectName}
       fields={fields}
       form={form}
       isLoading={isLoading}

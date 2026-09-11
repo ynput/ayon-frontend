@@ -1,4 +1,10 @@
-import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import {
+  hasEnumOptions,
+  isEnumIconImage,
+  getAttributeIcon,
+  getEntityTypeIcon,
+  getSelectableEnumItems,
+} from '@shared/util'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import type { ProductType } from '@shared/api'
 import type {
@@ -23,7 +29,9 @@ import { customRangeOption, generateDatePresetOptions } from './filterDates'
 import { isEmpty, upperFirst } from 'lodash'
 import type { SliceFilter } from '@shared/containers/Slicer/types'
 import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
+import { useContext } from 'react'
 import { useGlobalContext } from '@shared/context/GlobalContext'
+import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContextInstance'
 
 type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version'
 type Scope = ScopeType | ScopeType[]
@@ -168,7 +176,10 @@ export const useBuildFilterOptions = ({
     },
   )
 
-  const { attributes } = useGlobalContext()
+  const { attributes: globalAttributes } = useGlobalContext()
+  // project attributes carry resolved dynamic enums, global ones are raw
+  const projectData = useContext(ProjectDataContext)
+  const attributes = projectData?.attribFields?.length ? projectData.attribFields : globalAttributes
   const attributeScopeCounts = new Map<string, number>()
   scopesWithTypes.forEach(({ scope: currentScope, filterTypes }) => {
     if (!filterTypes.includes('attributes')) return
@@ -1082,7 +1093,7 @@ const getAttributeFieldOptionRoot = (
           label: entityType ? upperFirst(entityType) : label,
           icon: entityType
             ? getEntityTypeIcon(entityType)
-            : getAttributeIcon(attribute.name, attribute.data.type, !!attribute.data.enum?.length),
+            : getAttributeIcon(attribute.name, attribute.data.type, hasEnumOptions(attribute.data)),
         }
       : undefined
 
@@ -1099,7 +1110,7 @@ const getAttributeFieldOptionRoot = (
     allowNoValue: config.enableRelativeValues,
     allowExcludes: config?.enableExcludes,
     operatorChangeable: config?.enableOperatorChange,
-    icon: getAttributeIcon(attribute.name, attribute.data.type, !!attribute.data.enum?.length),
+    icon: getAttributeIcon(attribute.name, attribute.data.type, hasEnumOptions(attribute.data)),
     group,
     tooltip: entityType ? `${upperFirst(entityType)} ${label}` : undefined,
     value: entityType ? { icon: getEntityTypeIcon(entityType) } : undefined,
@@ -1117,13 +1128,17 @@ const getAttributeOptions = (
 
   // add the enum values first
   if (enums) {
-    enums.forEach((enumItem) => {
+    const usedValues = (values || []).flatMap((value) => (Array.isArray(value) ? value : [value]))
+    getSelectableEnumItems(enums, usedValues as (string | number | boolean)[]).forEach((enumItem) => {
+      const icon = enumItem.icon as string | undefined
+      const isImage = isEnumIconImage(icon)
       enumOptions.push({
         id: enumItem.value.toString(),
         type: type,
         label: enumItem.label,
         values: [],
-        icon: enumItem.icon as string,
+        icon: isImage ? null : icon,
+        img: isImage ? icon : undefined,
         color: enumItem.color,
         pt: {
           style: { color: 'inherit' },

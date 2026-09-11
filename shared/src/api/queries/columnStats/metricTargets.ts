@@ -2,6 +2,7 @@ import type { VisibilityState } from '@tanstack/react-table'
 import { StatsOperation } from '@shared/api/generated'
 import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils/checkColumnVisibility'
 import type { SummaryCalc, RowScope } from '@shared/containers/ProjectTreeTable/types/summaryTypes'
+import { hasEnumOptions } from '@shared/util'
 
 export type MetricTarget = {
   field: string // column or dot-path for JSONB, e.g. 'status' / 'attrib.fps'
@@ -184,7 +185,7 @@ export const buildMetricTargets = ({
     if (type === 'integer' || type === 'float') {
       targets.push({ field, aggregations: NUMERIC })
     } else if (type === 'string') {
-      targets.push({ field, aggregations: attrib.data?.enum?.length ? ENUM : COUNTS })
+      targets.push({ field, aggregations: hasEnumOptions(attrib.data) ? ENUM : COUNTS })
     } else if (type === 'list_of_strings' || type === 'list_of_integers') {
       // backend buckets the whole array as one serialized value; normalizeDistribution unnests it
       targets.push({ field, aggregations: ENUM })
