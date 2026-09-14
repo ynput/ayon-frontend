@@ -4,6 +4,11 @@ import type { SettingsPanelItem } from '../SettingsPanel/SettingsPanelItemTempla
 import type { EntityType } from '@shared/containers'
 import { getEntityTypeIcon } from '@shared/util'
 
+export const DEFAULT_COLUMN_ICON = 'text_fields'
+
+export const getDefaultColumnIcon = ({ parentScope }: Pick<AddColumnItem, 'parentScope'>) =>
+  parentScope ? getEntityTypeIcon(parentScope) : DEFAULT_COLUMN_ICON
+
 export type AddColumnItem = SettingsPanelItem & {
   attrib?: { builtin?: boolean; scope?: string[] }
   isLink?: boolean
@@ -79,7 +84,7 @@ export const buildAddColumnsMenu = ({
     return {
       id: column.value,
       label: column.label,
-      icon: column.icon,
+      icon: column.icon ?? getDefaultColumnIcon(column),
       hoverIcon: onDragStart ? 'drag_indicator' : undefined,
       disableClose: true,
       active: visible,

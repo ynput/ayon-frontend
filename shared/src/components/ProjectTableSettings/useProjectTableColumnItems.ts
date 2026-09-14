@@ -10,12 +10,12 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectContext } from '@shared/context'
 import { useMemo } from 'react'
-import { AddColumnItem } from './addColumnsMenu'
+import { AddColumnItem, DEFAULT_COLUMN_ICON } from './addColumnsMenu'
 import { getAttributeIcon } from '@shared/util/getAttributeIcon'
 import type { ParentColumnDefinition } from '@shared/containers'
 
 interface UseProjectTableColumnItemsProps {
-  extraColumns?: { value: string; label: string }[]
+  extraColumns?: { value: string; label: string; icon?: string }[]
   hiddenColumns?: string[]
   includeLinks?: boolean
   parentColumns?: ParentColumnDefinition[]
@@ -156,11 +156,15 @@ export const useProjectTableColumnItems = ({
           .map((field) => ({
             value: getScopedColumnId(scope, field.name, true),
             label: field.data.title || field.name,
+            icon: getAttributeIcon(field.name, field.data.type, !!field.data.enum),
             attrib: { builtin: field.builtin, scope: field.scope },
             parentScope: scope,
           })),
       ),
-      ...extraColumns,
+      ...extraColumns.map((column) => ({
+        ...column,
+        icon: column.icon ?? DEFAULT_COLUMN_ICON,
+      })),
     ],
     [scopes, attribFields, linkTypes, includeLinks, parentColumns, extraColumns],
   )

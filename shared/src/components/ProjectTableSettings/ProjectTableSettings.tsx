@@ -50,7 +50,7 @@ export type OverviewSettingsChange = (setting: 'columns' | 'group-by', value: an
 
 export type ProjectTableSettingsProps = {
   settings?: SettingConfig[]
-  extraColumns?: { value: string; label: string }[]
+  extraColumns?: { value: string; label: string; icon?: string }[]
   hiddenColumns?: string[]
   hiddenSettings?: ('columns' | 'row-height' | 'group-by' | 'sort-by')[]
   highlighted?: SettingHighlightedId

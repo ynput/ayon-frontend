@@ -23,7 +23,7 @@ const ButtonPosition = styled.div`
 `
 
 interface AddColumnButtonProps {
-  extraColumns?: { value: string; label: string }[]
+  extraColumns?: { value: string; label: string; icon?: string }[]
   hiddenColumns?: string[]
   includeLinks?: boolean
   extraMenuItems?: MenuItemType[]

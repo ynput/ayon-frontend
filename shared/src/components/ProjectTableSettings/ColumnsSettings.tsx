@@ -39,7 +39,12 @@ import { toast } from 'react-toastify'
 import { checkColumnVisibility } from '../../containers/ProjectTreeTable/utils'
 import { useMenuContext } from '@shared/context'
 import type { MenuItemType } from '../Menu'
-import { AddColumnItem, buildAddColumnsMenu, getAddColumnSection } from './addColumnsMenu'
+import {
+  AddColumnItem,
+  buildAddColumnsMenu,
+  getDefaultColumnIcon,
+  getAddColumnSection,
+} from './addColumnsMenu'
 import { AddColumnMenu } from './AddColumnMenu'
 import { useVisibilityPaint } from './useVisibilityPaint'
 import { TableSearch } from '../TableSearch'
@@ -62,7 +67,7 @@ const getColumnSettingsPath = (column: AddColumnItem, scopes: string[]) => {
 
 const getColumnSettingsItem = (column: AddColumnItem, scopes: string[]): AddColumnItem => {
   const path = getColumnSettingsPath(column, scopes)
-  return path ? { ...column, path } : column
+  return { ...column, icon: column.icon ?? getDefaultColumnIcon(column), ...(path ? { path } : {}) }
 }
 
 export interface SettingSwitchProps
