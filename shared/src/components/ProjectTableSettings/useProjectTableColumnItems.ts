@@ -142,6 +142,7 @@ export const useProjectTableColumnItems = ({
       ...parentColumns.map((column) => ({
         value: column.id || getScopedColumnId(column.scope, column.field),
         label: column.label,
+        field: column.field,
         parentScope: column.scope,
       })),
       ...Array.from(

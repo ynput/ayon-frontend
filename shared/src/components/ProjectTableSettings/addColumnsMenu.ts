@@ -2,15 +2,20 @@ import type React from 'react'
 import type { MenuItemType } from '../Menu'
 import type { SettingsPanelItem } from '../SettingsPanel/SettingsPanelItemTemplate'
 import type { EntityType } from '@shared/containers'
+import { getColumnIcon } from '@shared/containers/ProjectTreeTable'
 import { getEntityTypeIcon } from '@shared/util'
 
 export const DEFAULT_COLUMN_ICON = 'text_fields'
 
-export const getDefaultColumnIcon = ({ parentScope }: Pick<AddColumnItem, 'parentScope'>) =>
-  parentScope ? getEntityTypeIcon(parentScope) : DEFAULT_COLUMN_ICON
+export const getDefaultColumnIcon = ({
+  field,
+  parentScope,
+}: Pick<AddColumnItem, 'field' | 'parentScope'>) =>
+  field ? getColumnIcon(field) : parentScope ? getEntityTypeIcon(parentScope) : DEFAULT_COLUMN_ICON
 
 export type AddColumnItem = SettingsPanelItem & {
   attrib?: { builtin?: boolean; scope?: string[] }
+  field?: string
   isLink?: boolean
   parentScope?: EntityType
 }
