@@ -22,6 +22,8 @@ const PARENT_DIALOG_WIDTH = 700
 // Slightly smaller than the attribute dialog so it reads as stacked on top of it
 const STACK_INSET = 40
 const CONTEXT_PARAM_TYPES = ['string', 'integer', 'float', 'boolean']
+// The server passes the current user itself, sending it again fails the request
+const SERVER_CONTEXT_PARAMS = ['user']
 
 type ContextValue = string | number | boolean | undefined
 type ParamType = EnumResolverInfo['acceptedParams'][string]
@@ -146,7 +148,10 @@ export const EnumPlaygroundDialog: FC<EnumPlaygroundDialogProps> = ({
 
   const settingNames = new Set((resolver.settingsForm || []).map((field) => field.name))
   const contextParams = Object.entries(resolver.acceptedParams || {}).filter(
-    ([name, type]) => !settingNames.has(name) && CONTEXT_PARAM_TYPES.includes(type),
+    ([name, type]) =>
+      !settingNames.has(name) &&
+      !SERVER_CONTEXT_PARAMS.includes(name) &&
+      CONTEXT_PARAM_TYPES.includes(type),
   )
 
   const params = useMemo(
