@@ -32,6 +32,9 @@ const RowFieldGroup = styled.div`
   align-items: center;
 `
 
+// Must match the server's ATTRIBUTE_NAME_REGEX, one invalid name rejects the whole attribute set
+const ATTRIBUTE_NAME_REGEX = /^[a-zA-Z0-9]{2,64}$/
+
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
   { value: 'folder', label: 'Folder' },
@@ -223,7 +226,8 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
   if (formData) {
     if (isNew) {
       if (existingNames.includes(formData.name)) internalError = 'This attribute already exists'
-      else if (!formData.name.match('^[a-zA-Z_]{2,64}$')) error = 'Invalid attribute name'
+      else if (!ATTRIBUTE_NAME_REGEX.test(formData.name))
+        internalError = 'Invalid attribute name: use 2-64 letters or digits, no spaces or symbols'
     } // name validation
   }
 
