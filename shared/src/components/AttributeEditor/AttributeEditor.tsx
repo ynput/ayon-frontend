@@ -280,6 +280,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
         enumValues={value}
         enumResolver={formData?.data?.enumResolver}
         enumResolverSettings={formData?.data?.enumResolverSettings}
+        scope={formData?.scope}
         onChangeEnum={onChange}
         onChangeResolver={(name) => setData('enumResolver', name)}
         onChangeResolverSettings={(settings) => setData('enumResolverSettings', settings)}

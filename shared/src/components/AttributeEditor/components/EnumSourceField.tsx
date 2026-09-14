@@ -5,10 +5,16 @@ import { Dropdown, Icon } from '@ynput/ayon-react-components'
 
 import { EnumEditor } from '@shared/components/EnumEditor/EnumEditor'
 import type { NormalizedData } from '@shared/components/EnumEditor/EnumEditor'
+import { InfoMessage } from '@shared/components/InfoMessage'
 import { SimpleForm } from '@shared/components/SimpleForm'
 import type { SimpleFormValueDict } from '@shared/components/SimpleForm'
 import { useListEnumsQuery } from '@shared/api'
-import type { AttributeData, EnumResolverInfo, SimpleFormField } from '@shared/api'
+import type {
+  AttributeData,
+  AttributeModel,
+  EnumResolverInfo,
+  SimpleFormField,
+} from '@shared/api'
 import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
 import { getEnumItemIcon, getSelectableEnumItems, isEnumIconImage } from '@shared/util/attributeEnum'
 
@@ -18,6 +24,35 @@ const EMPTY_FIELDS: SimpleFormField[] = []
 const EMPTY_PREVIEW_MESSAGE = 'No preview items found.'
 const CONTEXT_PARAMS_MESSAGE =
   'This could be because in context parameters (project_name) are required to get the items.'
+const SEARCH_THRESHOLD = 5
+
+type AttributeScope = AttributeModel['scope']
+
+// acceptedParams says what a resolver takes, not what it needs, so resolvers are never hidden
+const getContextNotice = (
+  acceptedParams: EnumResolverInfo['acceptedParams'] | undefined,
+  scope: AttributeScope,
+): { variant: 'info' | 'warning'; message: string } | null => {
+  if (!acceptedParams || !('project_name' in acceptedParams)) return null
+
+  const scopes = scope || []
+  const isUserOnly = scopes.length > 0 && scopes.every((s) => s === 'user')
+  if (isUserOnly) {
+    return {
+      variant: 'warning',
+      message:
+        'This resolver accepts project_name, but user attributes have no project. Users get the options shown in the preview.',
+    }
+  }
+
+  const userNote = scopes.includes('user')
+    ? ' User attributes have no project and get the options shown in the preview.'
+    : ' The preview is resolved without a project.'
+  return {
+    variant: 'info',
+    message: `Options depend on the project where the attribute is used.${userNote}`,
+  }
+}
 
 const Container = styled.div`
   display: flex;
@@ -156,6 +191,7 @@ export interface EnumSourceFieldProps {
   enumValues: NormalizedData[] | undefined
   enumResolver: AttributeData['enumResolver']
   enumResolverSettings: AttributeData['enumResolverSettings']
+  scope?: AttributeScope
   onChangeEnum: (value: NormalizedData[] | undefined) => void
   onChangeResolver: (name: string | undefined) => void
   onChangeResolverSettings: (settings: Record<string, any> | undefined) => void
@@ -165,6 +201,7 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
   enumValues,
   enumResolver,
   enumResolverSettings,
+  scope,
   onChangeEnum,
   onChangeResolver,
   onChangeResolverSettings,
@@ -183,6 +220,7 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
   const selectedResolver = resolvers.find((resolver) => resolver.name === enumResolver)
   const settingsFields = selectedResolver?.settingsForm || EMPTY_FIELDS
   const settings = (enumResolverSettings as SimpleFormValueDict) || {}
+  const contextNotice = getContextNotice(selectedResolver?.acceptedParams, scope)
 
   // Seed only: SimpleForm reseeds on values identity, so echoing settings back would loop
   const initialSettings = useMemo(
@@ -211,6 +249,7 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
         onChange={handleSourceChange}
         disabled={isLoading || isError}
         minSelected={1}
+        searchOnNumber={SEARCH_THRESHOLD}
         widthExpand
       />
       {selectedSource === CUSTOM_ENUM_SOURCE ? (
@@ -224,6 +263,9 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
             <Message>
               Resolver "{enumResolver}" is not available on this server. Options will be empty.
             </Message>
+          )}
+          {contextNotice && (
+            <InfoMessage variant={contextNotice.variant} message={contextNotice.message} />
           )}
           {settingsFields.length > 0 && (
             <SimpleForm
