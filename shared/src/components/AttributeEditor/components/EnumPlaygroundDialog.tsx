@@ -13,8 +13,11 @@ import {
 import { useGetEnumOptionsQuery } from '@shared/api'
 import type { EnumItem, EnumResolverInfo, EnumResolverParams } from '@shared/api'
 import { useGlobalContext } from '@shared/context/GlobalContext'
-import { getEnumErrorMessage } from '@shared/hooks/useAttributeEnumOptions'
-import { getEnumItemIcon, getSelectableEnumItems } from '@shared/util/attributeEnum'
+import {
+  getEnumErrorText,
+  getEnumItemIcon,
+  getSelectableEnumItems,
+} from '@shared/util/attributeEnum'
 import { EnumItemIcon, EnumItemRow } from './EnumItemRow'
 
 const SKELETON_ROWS = 8
@@ -159,20 +162,21 @@ export const EnumPlaygroundDialog: FC<EnumPlaygroundDialogProps> = ({
     [settings, context],
   )
 
-  const { data, isFetching, isError, error } = useGetEnumOptionsQuery({
+  const { data, isFetching, isError: isRequestError } = useGetEnumOptionsQuery({
     enumName: resolver.name,
     params,
   })
 
   const items = useMemo(
     () =>
-      getSelectableEnumItems(data || []).map((item) => ({
+      getSelectableEnumItems(data?.items || []).map((item) => ({
         ...item,
         icon: getEnumItemIcon(item.icon),
       })),
     [data],
   )
 
+  const isError = isRequestError || !!data?.error
   const query = search.trim().toLowerCase()
   const filteredItems = query ? items.filter((item) => matchesSearch(item, query)) : items
   const hasIcons = filteredItems.some((item) => !!item.icon)
@@ -189,10 +193,7 @@ export const EnumPlaygroundDialog: FC<EnumPlaygroundDialogProps> = ({
         <EnumItemRow key={index} className="loading" />
       ))
     }
-    if (isError) {
-      const detail = getEnumErrorMessage(error)
-      return <Message>Could not load items{detail ? `: ${detail}` : '.'}</Message>
-    }
+    if (isError) return <Message>{getEnumErrorText(data?.error)}</Message>
     if (!items.length) {
       const hint =
         'project_name' in (resolver.acceptedParams || {}) && !context.project_name

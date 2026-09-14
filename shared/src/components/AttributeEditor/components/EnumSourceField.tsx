@@ -1,4 +1,4 @@
-import { FC, MouseEvent, useMemo, useState } from 'react'
+import { FC, KeyboardEvent, useMemo, useState } from 'react'
 import { startCase } from 'lodash'
 import styled from 'styled-components'
 import { Button, Dropdown } from '@ynput/ayon-react-components'
@@ -76,11 +76,33 @@ const Preview = styled.div`
   background-color: var(--md-sys-color-surface-container);
 `
 
-const MoreMessage = styled(Message)`
+const MoreButton = styled.button`
   display: flex;
   align-items: center;
+  align-self: flex-start;
   height: 20px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: var(--md-sys-color-outline);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--md-sys-color-on-surface);
+    text-decoration: underline;
+  }
 `
+
+const ClickableInfoMessage = styled(InfoMessage)`
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(1.15);
+  }
+`
+
+type OpenPlayground = (e: { currentTarget: HTMLElement }) => void
 
 const SkeletonItem = styled(EnumItemRow)`
   &:nth-child(2n) {
@@ -96,12 +118,14 @@ interface EnumResolverPreviewProps {
   resolver: string
   acceptedParams: EnumResolverInfo['acceptedParams']
   settings: Record<string, any>
+  onShowMore: OpenPlayground
 }
 
 const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({
   resolver,
   acceptedParams,
   settings,
+  onShowMore,
 }) => {
   const data = useMemo(
     () => ({ enumResolver: resolver, enumResolverSettings: settings } as AttributeData),
@@ -150,7 +174,11 @@ const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({
           <span className="label">{option.label}</span>
         </EnumItemRow>
       ))}
-      {remaining > 0 && <MoreMessage>+{remaining} more</MoreMessage>}
+      {remaining > 0 && (
+        <MoreButton type="button" onClick={onShowMore}>
+          +{remaining} more
+        </MoreButton>
+      )}
     </Preview>
   )
 }
@@ -178,7 +206,7 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
   const [playgroundHeight, setPlaygroundHeight] = useState<number | null>(null)
 
   // Attribute dialog height follows its content, so the playground copies it on open
-  const openPlayground = (e: MouseEvent<HTMLElement>) => {
+  const openPlayground: OpenPlayground = (e) => {
     const dialog = e.currentTarget.closest<HTMLElement>('.dialog')
     setPlaygroundHeight(dialog?.offsetHeight ?? 0)
   }
@@ -240,7 +268,19 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
             </Message>
           )}
           {contextNotice && (
-            <InfoMessage variant={contextNotice.variant} message={contextNotice.message} />
+            <ClickableInfoMessage
+              variant={contextNotice.variant}
+              message={`${contextNotice.message} Click to try it in the playground.`}
+              role="button"
+              tabIndex={0}
+              onClick={openPlayground}
+              onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  openPlayground(e)
+                }
+              }}
+            />
           )}
           {settingsFields.length > 0 && (
             <SimpleForm
@@ -256,6 +296,7 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
                 resolver={selectedResolver.name}
                 acceptedParams={selectedResolver.acceptedParams}
                 settings={settings}
+                onShowMore={openPlayground}
               />
               <Button
                 variant="text"

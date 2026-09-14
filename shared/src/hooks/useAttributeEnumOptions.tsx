@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { useGetEnumOptionsQuery } from '@shared/api'
-import { getEnumItemIcon } from '@shared/util/attributeEnum'
+import { getEnumErrorText, getEnumItemIcon } from '@shared/util/attributeEnum'
 import type { AttributeData, EnumItem } from '@shared/api'
 
 const EMPTY_OPTIONS: EnumItem[] = []
@@ -15,11 +15,6 @@ export interface AttributeEnumState {
   isLoading: boolean
   isError: boolean
   errorMessage?: string
-}
-
-export const getEnumErrorMessage = (error: unknown): string | undefined => {
-  const detail = (error as { data?: { detail?: unknown } } | undefined)?.data?.detail
-  return typeof detail === 'string' ? detail : undefined
 }
 
 // Options for one attribute: static data.enum, or resolved through the backend enum registry.
@@ -41,8 +36,7 @@ export const useAttributeEnumOptions = (
   const {
     data: resolved,
     isFetching,
-    isError,
-    error,
+    isError: isRequestError,
   } = useGetEnumOptionsQuery(
     { enumName: resolver as string, params },
     { skip: !resolver || !!skip },
@@ -53,14 +47,16 @@ export const useAttributeEnumOptions = (
     if (!resolver) return data?.enum || EMPTY_OPTIONS
     if (!resolved) return EMPTY_OPTIONS
     // resolvers may return an IconModel, widgets expect a plain icon string
-    return resolved.map((item) => ({ ...item, icon: getEnumItemIcon(item.icon) }))
+    return resolved.items.map((item) => ({ ...item, icon: getEnumItemIcon(item.icon) }))
   }, [resolver, resolved, data?.enum])
+
+  const isError = !!resolver && !isFetching && (isRequestError || !!resolved?.error)
 
   return {
     options,
     isLoading: !!resolver && isFetching,
-    isError: !!resolver && isError,
-    errorMessage: resolver && isError ? getEnumErrorMessage(error) : undefined,
+    isError,
+    errorMessage: isError ? resolved?.error : undefined,
   }
 }
 
@@ -86,7 +82,7 @@ const AttributeEnumSubscription: FC<SubscriptionProps> = ({
 
   useEffect(() => {
     onResolved(attribute.name, state)
-  }, [attribute.name, state.options, state.isLoading, state.isError, onResolved])
+  }, [attribute.name, state.options, state.isLoading, state.isError, state.errorMessage, onResolved])
 
   return null
 }
@@ -119,7 +115,7 @@ export const AttributeEnumResolver: FC<AttributeEnumResolverProps> = ({
 
 export type ResolvedEnumAttribute<T> = T & {
   enumIsLoading?: boolean
-  enumHasError?: boolean
+  enumError?: string
 }
 
 // Single place that merges resolved options back into an attribute list.
@@ -136,7 +132,8 @@ export const useResolvedAttributeEnums = <T extends EnumAttributeLike>(
         previous &&
         previous.options === state.options &&
         previous.isLoading === state.isLoading &&
-        previous.isError === state.isError
+        previous.isError === state.isError &&
+        previous.errorMessage === state.errorMessage
       ) {
         return current
       }
@@ -152,7 +149,7 @@ export const useResolvedAttributeEnums = <T extends EnumAttributeLike>(
         return {
           ...attribute,
           enumIsLoading: state ? state.isLoading : true,
-          enumHasError: !!state?.isError,
+          enumError: state?.isError ? getEnumErrorText(state.errorMessage) : undefined,
           data: { ...attribute.data, enum: state?.options || EMPTY_OPTIONS },
         }
       }),

@@ -11,7 +11,12 @@ import {
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
 import { useScopedTypes } from '@shared/hooks/useScopedTypes'
 import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
-import { getEnumItemIcon, hasEnumOptions } from '@shared/util/attributeEnum'
+import {
+  getEnumErrorText,
+  getEnumItemIcon,
+  hasEnumOptions,
+  toDropdownErrorText,
+} from '@shared/util/attributeEnum'
 // Import AttributeField as a type to avoid runtime circular dependency with DetailsPanelAttributesEditor
 import type { AttributeField } from '../DetailsPanelAttributesEditor'
 import type { DetailsPanelEntityData, EnumItem } from '@shared/api'
@@ -81,10 +86,13 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   const scopedTypes = useScopedTypes(projectNames, entityType)
   // resolvers are project scoped; a multi project selection uses the first project
   const enumProjectName = projectName || projectNames[0]
-  const { options: attributeEnumOptions, isLoading: isLoadingEnum } = useAttributeEnumOptions(
-    field.data,
-    { projectName: enumProjectName, skip: !enumProjectName },
-  )
+  const {
+    options: attributeEnumOptions,
+    isLoading: isLoadingEnum,
+    isError: isEnumError,
+    errorMessage: enumErrorMessage,
+  } = useAttributeEnumOptions(field.data, { projectName: enumProjectName, skip: !enumProjectName })
+  const enumError = isEnumError ? getEnumErrorText(enumErrorMessage) : undefined
   const isMidnightExclusive =
     field.name === 'attrib.endDate' &&
     entities.length > 0 &&
@@ -174,6 +182,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
 
       return (
         <StyledEnumWidget
+          data-tooltip={enumError}
           value={valueArray}
           options={enumOptions}
           type={type}
@@ -183,7 +192,14 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
               className: 'enum',
             },
           }}
-          placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
+          placeholder={
+            enumError
+              ? `Could not load ${labelValue}`
+              : isMixed
+              ? `Mixed ${labelValue}`
+              : `Select ${labelValue}...`
+          }
+          error={toDropdownErrorText(enumError)}
           onCancelEdit={onCancelEdit}
           align="right"
           enableCustomValues={field.enableCustomValues || isLoadingEnum}

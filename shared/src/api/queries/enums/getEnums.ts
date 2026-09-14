@@ -1,3 +1,4 @@
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { enumsApi } from '@shared/api/generated'
 import type { EnumItem } from '@shared/api/generated'
 
@@ -15,6 +16,17 @@ const buildParams = (params?: EnumResolverParams) => {
   return entries.length ? Object.fromEntries(entries) : undefined
 }
 
+export type EnumOptionsResult = {
+  items: EnumItem[]
+  error?: string
+}
+
+const getErrorDetail = (error: FetchBaseQueryError): string => {
+  const detail = (error.data as { detail?: unknown } | undefined)?.detail
+  if (typeof detail === 'string') return detail
+  return `Request failed (${error.status})`
+}
+
 const enhancedApi = enumsApi.enhanceEndpoints({
   endpoints: {
     listEnums: {
@@ -26,11 +38,23 @@ const enhancedApi = enumsApi.enhanceEndpoints({
 // Re-declared because the generated getEnum cannot pass resolver query params
 const enumsQueries = enhancedApi.injectEndpoints({
   endpoints: (build) => ({
-    getEnumOptions: build.query<EnumItem[], { enumName: string; params?: EnumResolverParams }>({
-      query: ({ enumName, params }) => ({
-        url: `/api/enum/${enumName}`,
-        params: buildParams(params),
-      }),
+    getEnumOptions: build.query<
+      EnumOptionsResult,
+      { enumName: string; params?: EnumResolverParams }
+    >({
+      // Failures are cached as data: RTK refetches a rejected query for every new subscriber
+      async queryFn({ enumName, params }, _api, _extraOptions, baseQuery) {
+        const result = await baseQuery({
+          url: `/api/enum/${enumName}`,
+          params: buildParams(params),
+        })
+        if (result.error) {
+          return {
+            data: { items: [], error: getErrorDetail(result.error as FetchBaseQueryError) },
+          }
+        }
+        return { data: { items: result.data as EnumItem[] } }
+      },
       providesTags: (_result, _error, { enumName }) => [{ type: 'enum', id: enumName }],
     }),
   }),

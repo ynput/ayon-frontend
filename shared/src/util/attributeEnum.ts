@@ -18,6 +18,13 @@ export const getEnumItemIcon = (icon: EnumItem['icon']): string | undefined => {
   return isUnresolvedTemplate(model.url) ? undefined : model.url
 }
 
+export const getEnumErrorText = (message?: string): string =>
+  message ? `Could not load options: ${message}` : 'Could not load options'
+
+// Dropdown renders its error through CSS `content: '...'`, where quotes and backslashes break out
+export const toDropdownErrorText = (text?: string): string | undefined =>
+  text?.replace(/'/g, '’').replace(/[\\\n]/g, ' ')
+
 export const isEnumIconImage = (icon?: string): boolean =>
   !!icon && /^(\/|\.\/|\.\.\/|https?:\/\/)/.test(icon)
 

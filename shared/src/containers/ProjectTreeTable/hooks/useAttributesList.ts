@@ -4,7 +4,7 @@ import { useGlobalContext } from '@shared/context/GlobalContext'
 export interface ProjectTableAttribute extends AttributeModel {
   readOnly?: boolean
   enumIsLoading?: boolean
-  enumHasError?: boolean
+  enumError?: string
 }
 
 interface UseAttributeFieldsParams {

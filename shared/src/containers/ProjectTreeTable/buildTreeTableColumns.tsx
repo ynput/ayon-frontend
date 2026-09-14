@@ -22,7 +22,12 @@ import type { AttributeData, LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { SubtasksWidgetData } from './widgets/SubtasksWidget'
 import { Icon } from '@ynput/ayon-react-components'
-import { getAttributeIcon, getEntityTypeIcon, hasEnumOptions } from '@shared/util'
+import {
+  getAttributeIcon,
+  getEntityTypeIcon,
+  hasEnumOptions,
+  toDropdownErrorText,
+} from '@shared/util'
 import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { isEntityRestricted, READ_ONLY } from './utils/restrictedEntity'
 import { getColumnDisplayConfig } from './types/columnConfig'
@@ -1170,6 +1175,8 @@ const buildTreeTableColumns = ({
               }}
               options={attrib.data.enum || []}
               enableCustomValues={!!attrib.enumIsLoading}
+              tooltip={attrib.enumError}
+              pt={{ enum: { error: toDropdownErrorText(attrib.enumError) } }}
               midnightExclusiveFields={row.original.midnightExclusiveFields}
               isCollapsed={!!row.original.childOnlyMatch}
               isInherited={isInherited}
