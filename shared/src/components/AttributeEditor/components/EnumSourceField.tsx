@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, MouseEvent, useMemo, useState } from 'react'
 import { startCase } from 'lodash'
 import styled from 'styled-components'
 import { Button, Dropdown } from '@ynput/ayon-react-components'
@@ -175,7 +175,13 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
   onChangeResolverSettings,
 }) => {
   const { data: resolvers = [], isLoading, isError } = useListEnumsQuery()
-  const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false)
+  const [playgroundHeight, setPlaygroundHeight] = useState<number | null>(null)
+
+  // Attribute dialog height follows its content, so the playground copies it on open
+  const openPlayground = (e: MouseEvent<HTMLElement>) => {
+    const dialog = e.currentTarget.closest<HTMLElement>('.dialog')
+    setPlaygroundHeight(dialog?.offsetHeight ?? 0)
+  }
 
   const sourceOptions = [
     { value: CUSTOM_ENUM_SOURCE, label: 'Custom' },
@@ -255,16 +261,17 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
                 variant="text"
                 icon="science"
                 label="Open playground"
-                onClick={() => setIsPlaygroundOpen(true)}
+                onClick={openPlayground}
                 style={{ alignSelf: 'flex-start' }}
               />
             </>
           )}
-          {isPlaygroundOpen && selectedResolver && (
+          {playgroundHeight !== null && selectedResolver && (
             <EnumPlaygroundDialog
               resolver={selectedResolver}
               settings={settings}
-              onClose={() => setIsPlaygroundOpen(false)}
+              height={playgroundHeight || undefined}
+              onClose={() => setPlaygroundHeight(null)}
             />
           )}
         </>

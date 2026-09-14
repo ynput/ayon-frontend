@@ -18,6 +18,9 @@ import { getEnumItemIcon, getSelectableEnumItems } from '@shared/util/attributeE
 import { EnumItemIcon, EnumItemRow } from './EnumItemRow'
 
 const SKELETON_ROWS = 8
+const PARENT_DIALOG_WIDTH = 700
+// Slightly smaller than the attribute dialog so it reads as stacked on top of it
+const STACK_INSET = 40
 const CONTEXT_PARAM_TYPES = ['string', 'integer', 'float', 'boolean']
 
 type ContextValue = string | number | boolean | undefined
@@ -27,6 +30,8 @@ const Body = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-large);
+  flex: 1;
+  min-height: 0;
 `
 
 const Summary = styled.span`
@@ -37,7 +42,8 @@ const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-large);
-  height: 400px;
+  flex: 1;
+  min-height: 200px;
   overflow-y: auto;
   padding: var(--padding-m);
   border-radius: var(--border-radius-m);
@@ -125,12 +131,14 @@ const matchesSearch = (item: EnumItem, query: string) =>
 export interface EnumPlaygroundDialogProps {
   resolver: EnumResolverInfo
   settings: Record<string, any>
+  height?: number
   onClose: () => void
 }
 
 export const EnumPlaygroundDialog: FC<EnumPlaygroundDialogProps> = ({
   resolver,
   settings,
+  height,
   onClose,
 }) => {
   const [context, setContext] = useState<Record<string, ContextValue>>({})
@@ -203,8 +211,11 @@ export const EnumPlaygroundDialog: FC<EnumPlaygroundDialogProps> = ({
       isOpen
       header={`${startCase(resolver.name)} playground`}
       onClose={onClose}
-      size="md"
-      style={{ width: 640 }}
+      size="full"
+      style={{
+        width: PARENT_DIALOG_WIDTH - STACK_INSET,
+        height: height ? height - STACK_INSET : '80%',
+      }}
       onKeyDown={handleKeyDown}
     >
       <Body>
