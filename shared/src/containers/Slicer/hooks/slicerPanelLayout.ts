@@ -1,7 +1,7 @@
-// header plus a few rows; the floor shrinks towards the absolute one so the stack fits the column
-export const SLICER_MIN_PANEL_HEIGHT = 180
-// header plus two rows; only below this does the stack scroll
-export const SLICER_ABSOLUTE_MIN_PANEL_HEIGHT = 100
+// header plus a few rows for a panel never resized; shrinks towards the min so the stack fits
+export const SLICER_DEFAULT_PANEL_HEIGHT = 180
+// header plus two rows; a drag cannot go lower, and only below this does the stack scroll
+export const SLICER_MIN_PANEL_HEIGHT = 100
 // a collapsed panel is its header and nothing else
 export const SLICER_COLLAPSED_PANEL_HEIGHT = 34
 
@@ -23,7 +23,7 @@ export const panelMinHeights = (
   panelIds.map((id) => (collapsed.includes(id) ? SLICER_COLLAPSED_PANEL_HEIGHT : minHeight))
 
 // spare room is shared out between the expanded panels, and an overgrown stack is squeezed
-// back into the column, down to the floors. Only the floors themselves may overflow.
+// back into the column, down to the mins. Only the mins themselves may overflow.
 const fitToHeight = (
   stack: number[],
   mins: number[],
@@ -47,14 +47,14 @@ const fitToHeight = (
   return stack.map((h, index) => h - excess * (room[index] / totalRoom))
 }
 
-// panels never go below their floor, and the stack only outgrows the column when the
-// floors alone do not fit. Stored heights are a preference, not a reservation.
+// panels never go below their min, and the stack only outgrows the column when the
+// mins alone do not fit. Stored heights are a preference, not a reservation.
 export const resolvePanelLayout = (
   stored: SlicerPanelHeights,
   panelIds: string[],
   collapsed: string[] = [],
   containerHeight: number = 0,
-  minHeight: number = SLICER_MIN_PANEL_HEIGHT,
+  defaultHeight: number = SLICER_DEFAULT_PANEL_HEIGHT,
 ): SlicerPanelLayout => {
   if (!panelIds.length) {
     return { heights: [], mins: [], sizes: [], minSize: 2, height: containerHeight }
@@ -62,20 +62,20 @@ export const resolvePanelLayout = (
 
   const expandedCount = panelIds.filter((id) => !collapsed.includes(id)).length
   const collapsedTotal = (panelIds.length - expandedCount) * SLICER_COLLAPSED_PANEL_HEIGHT
-  const floor =
+  const initialHeight =
     containerHeight && expandedCount
       ? Math.min(
-          minHeight,
+          defaultHeight,
           Math.max(
-            SLICER_ABSOLUTE_MIN_PANEL_HEIGHT,
+            SLICER_MIN_PANEL_HEIGHT,
             Math.floor((containerHeight - collapsedTotal) / expandedCount),
           ),
         )
-      : minHeight
+      : defaultHeight
 
-  const mins = panelMinHeights(panelIds, collapsed, floor)
+  const mins = panelMinHeights(panelIds, collapsed)
   const stack = panelIds.map((id, index) =>
-    collapsed.includes(id) ? mins[index] : Math.max(stored[id] ?? floor, floor),
+    collapsed.includes(id) ? mins[index] : Math.max(stored[id] ?? initialHeight, mins[index]),
   )
 
   const flexible = panelIds.map((id) => !collapsed.includes(id))
@@ -89,7 +89,7 @@ export const resolvePanelLayout = (
     heights,
     mins,
     sizes: heights.map((h) => (h / height) * 100),
-    // primereact must allow the drag past the floor; clampDraggedHeights puts it back
+    // primereact must allow the drag past the min; clampDraggedHeights puts it back
     minSize: 2,
     height,
   }
@@ -102,7 +102,7 @@ export const clampDraggedHeights = (
 ): number[] => {
   const heights = sizes.map((size, index) => Math.max((size / 100) * totalHeight, mins[index]))
 
-  // a drag redistributes, it does not resize the stack: lifting a panel off its floor takes
+  // a drag redistributes, it does not resize the stack: lifting a panel off its min takes
   // the difference from the panels that still have room above theirs
   const target = Math.max(
     totalHeight,

@@ -23,6 +23,7 @@ const useSlicerSplitter = () => {
 }
 
 export {
+  SLICER_DEFAULT_PANEL_HEIGHT,
   SLICER_MIN_PANEL_HEIGHT,
   resolvePanelLayout,
   clampDraggedHeights,
