@@ -61,4 +61,6 @@ const enumsQueries = enhancedApi.injectEndpoints({
   overrideExisting: false,
 })
 
+export const enumOptionsQueries = enumsQueries
+
 export const { useListEnumsQuery, useGetEnumOptionsQuery } = enumsQueries

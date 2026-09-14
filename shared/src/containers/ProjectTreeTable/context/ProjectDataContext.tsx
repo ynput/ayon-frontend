@@ -1,6 +1,6 @@
 import { ReactNode, useContext, useMemo } from 'react'
 import { useGetUsersAssigneeQuery, useGetMyProjectPermissionsQuery } from '@shared/api'
-import { useResolvedAttributeEnums } from '@shared/hooks'
+import { AttributeEnumRequestProvider, useResolvedAttributeEnums } from '@shared/hooks'
 import useAttributeFields, { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { useProjectContext } from '@shared/context/ProjectContext'
 import { ProjectDataContext } from './ProjectDataContextInstance'
@@ -44,11 +44,12 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     isLoading: isLoadingAttribs,
   } = useAttributeFields({ projectPermissions })
 
-  // Resolved once here and merged into data.enum, so consumers read a plain list
-  const { attributes: resolvedAttribFields, enumSubscriptions } = useResolvedAttributeEnums(
-    attribFields,
-    projectName,
-  )
+  // Merged into data.enum here, fetched only once a visible column, filter or slicer asks for it
+  const {
+    attributes: resolvedAttribFields,
+    enumSubscriptions,
+    requestAttributeEnums,
+  } = useResolvedAttributeEnums(attribFields, projectName, { lazy: true })
 
   // GET USERS
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
@@ -105,7 +106,9 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
   return (
     <ProjectDataContext.Provider value={value}>
       {enumSubscriptions}
-      {children}
+      <AttributeEnumRequestProvider onRequest={requestAttributeEnums}>
+        {children}
+      </AttributeEnumRequestProvider>
     </ProjectDataContext.Provider>
   )
 }

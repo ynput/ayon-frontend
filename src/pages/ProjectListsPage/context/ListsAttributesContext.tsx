@@ -14,7 +14,7 @@ import {
   useSetEntityListAttributesDefinitionMutation,
 } from '@shared/api'
 import type { EntityListAttributeDefinition } from '@shared/api'
-import { useResolvedAttributeEnums } from '@shared/hooks'
+import { AttributeEnumRequestProvider, useResolvedAttributeEnums } from '@shared/hooks'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { useProjectContext } from '@shared/context'
@@ -72,10 +72,11 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
     [listAttributesData, entityAttribFields],
   )
 
-  const { attributes: listAttributes, enumSubscriptions } = useResolvedAttributeEnums(
-    filteredListAttributes,
-    projectName,
-  )
+  const {
+    attributes: listAttributes,
+    enumSubscriptions,
+    requestAttributeEnums,
+  } = useResolvedAttributeEnums(filteredListAttributes, projectName, { lazy: true })
 
   // Track loading state when list changes and reset when fetch completes
   useEffect(() => {
@@ -130,7 +131,9 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
   return (
     <ListsAttributesContext.Provider value={contextValue}>
       {enumSubscriptions}
-      {children}
+      <AttributeEnumRequestProvider onRequest={requestAttributeEnums}>
+        {children}
+      </AttributeEnumRequestProvider>
     </ListsAttributesContext.Provider>
   )
 }
