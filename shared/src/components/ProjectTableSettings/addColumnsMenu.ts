@@ -130,7 +130,10 @@ export const buildAddColumnsMenu = ({
           id: section.id,
           label: section.label,
           icon: section.icon,
-          items: sectionColumns.toSorted((a, b) => a.label.localeCompare(b.label)).map(toMenuItem),
+          items: (section.id === 'attributes'
+            ? sectionColumns
+            : sectionColumns.toSorted((a, b) => a.label.localeCompare(b.label))
+          ).map(toMenuItem),
         }
       }
 
@@ -147,9 +150,7 @@ export const buildAddColumnsMenu = ({
                   id: `${section.id}-attributes`,
                   label: `${parentScope.charAt(0).toUpperCase()}${parentScope.slice(1)} attributes`,
                   icon: 'text_fields',
-                  items: attributeColumns
-                    .toSorted((a, b) => a.label.localeCompare(b.label))
-                    .map(toMenuItem),
+                  items: attributeColumns.map(toMenuItem),
                 },
               ]
             : []),
