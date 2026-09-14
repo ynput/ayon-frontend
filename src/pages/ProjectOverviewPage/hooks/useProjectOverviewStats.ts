@@ -14,7 +14,7 @@ import {
   useScopedAttributeFields,
 } from '@shared/containers/ProjectTreeTable'
 import { useViewsContext } from '@shared/containers'
-import { usePowerpack, useProjectContext } from '@shared/context'
+import { usePowerpack, useProjectContext, useProjectFoldersContext } from '@shared/context'
 
 interface UseProjectOverviewStatsParams {
   folderFilter?: string
@@ -39,6 +39,7 @@ export const useProjectOverviewStats = ({
   const { attribFields } = useProjectDataContext()
   const { powerLicense } = usePowerpack()
   const { isLoadingViews } = useViewsContext()
+  const { getFolderIdsWithoutChildren } = useProjectFoldersContext()
   const {
     columnVisibility,
     defaultColumnVisibility,
@@ -97,13 +98,20 @@ export const useProjectOverviewStats = ({
 
   const skip = !projectName || isLoadingViews || !powerLicense || noSummaries
 
+  const selectedFolderIdsWithoutChildren = useMemo(
+    () => getFolderIdsWithoutChildren(selectedFolders),
+    [selectedFolders, getFolderIdsWithoutChildren],
+  )
+
   const folderStatsArgs: GetFolderColumnStatsQueryVariables = {
     projectName,
     filter: folderFilter || undefined,
     search: folderSearch || undefined,
     taskFilter: taskFilter || undefined,
     taskSearch: taskSearch || undefined,
-    [showHierarchy ? 'parentIds' : 'ids']: selectedFolders.length ? selectedFolders : undefined,
+    [showHierarchy ? 'parentIds' : 'ids']: selectedFolderIdsWithoutChildren.length
+      ? selectedFolderIdsWithoutChildren
+      : undefined,
     targets: folderTargets,
     includeFolderChildren: true,
     hideEmptyFolders: groupByConfig?.showEmpty === false && !showHierarchy ? true : undefined,
@@ -116,7 +124,9 @@ export const useProjectOverviewStats = ({
     filter: taskFilter || undefined,
     folderFilter: folderFilter || undefined,
     search: taskSearch || undefined,
-    folderIds: selectedFolders.length ? selectedFolders : undefined,
+    folderIds: selectedFolderIdsWithoutChildren.length
+      ? selectedFolderIdsWithoutChildren
+      : undefined,
     taskIds: selectedTaskIds.length ? selectedTaskIds : undefined,
     targets: taskTargets,
   }

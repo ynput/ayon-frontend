@@ -1,18 +1,12 @@
 import api from './getAccessGroups'
 
-const setAccessGroups = api.injectEndpoints({
-  endpoints: (build) => ({
-    createAccessGroup: build.mutation({
-      query: ({ name }) => ({
-        url: `/api/accessGroups/${name}/_`,
-        method: 'PUT',
-        body: {},
-      }),
-      invalidatesTags: [{ type: 'accessGroup', id: 'LIST' }],
-    }),
-    updateAccessGroups: build.mutation({
-      query: (queryArg) => ({ url: `/api/access`, method: 'POST', body: queryArg.payload }),
-      async onQueryStarted({ payload, selectedProjects }, { dispatch, queryFulfilled }) {
+const updateAccessGroupsApi = api.enhanceEndpoints({
+  endpoints: {
+    setProjectsAccess: {
+      async onQueryStarted({ payload }, { dispatch, queryFulfilled }) {
+        const selectedProjects = [
+          ...new Set(Object.values(payload).flatMap((projects) => Object.keys(projects))),
+        ]
         const patchResult = dispatch(
           api.util.updateQueryData(
             // @ts-ignore
@@ -57,15 +51,7 @@ const setAccessGroups = api.injectEndpoints({
 
         return invalidations
       },
-    }),
-  }),
-  overrideExisting: true,
-})
-
-export const { useCreateAccessGroupMutation, useUpdateAccessGroupsMutation } = setAccessGroups
-
-const updateAccessGroupsApi = api.enhanceEndpoints({
-  endpoints: {
+    },
     saveAccessGroup: {
       invalidatesTags: () => [{ type: 'accessGroup', id: 'LIST' }],
     },
@@ -75,5 +61,9 @@ const updateAccessGroupsApi = api.enhanceEndpoints({
   },
 })
 
-export const { useSaveAccessGroupMutation, useDeleteAccessGroupMutation } = updateAccessGroupsApi
+export const {
+  useSetProjectsAccessMutation,
+  useSaveAccessGroupMutation,
+  useDeleteAccessGroupMutation,
+} = updateAccessGroupsApi
 export { updateAccessGroupsApi as accessQueries }

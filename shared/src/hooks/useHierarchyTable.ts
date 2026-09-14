@@ -3,14 +3,21 @@ import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.
 import type { FolderType, FolderListItem } from '@shared/api'
 import { useCallback, useMemo } from 'react'
 import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
+import { getEntityThumbnailUrl } from '@shared/util'
 
 type Props = {
   projectName: string | null
   folderTypes: FolderType[]
   includeColors?: boolean
+  includeThumbnails?: boolean
 }
 
-export const useHierarchyTable = ({ projectName, folderTypes, includeColors = false }: Props) => {
+export const useHierarchyTable = ({
+  projectName,
+  folderTypes,
+  includeColors = false,
+  includeThumbnails = false,
+}: Props) => {
   const { folders, isLoading } = useProjectFoldersContext()
 
   const getFolderIcon = (type: string) => {
@@ -24,6 +31,16 @@ export const useHierarchyTable = ({ projectName, folderTypes, includeColors = fa
     return folderType?.color
   }
 
+  const getFolderThumbnail = (folder: FolderListItem) => {
+    if (!includeThumbnails || !projectName) return null
+    return getEntityThumbnailUrl({
+      projectName,
+      entityType: 'folder',
+      entityId: folder.id,
+      thumbnailHash: folder.thumbnailHash,
+    })
+  }
+
   const folderToTableRow = (folder: FolderListItem): Omit<SimpleTableRow, 'subRows'> => ({
     id: folder.id,
     parentId: folder.parentId,
@@ -31,7 +48,7 @@ export const useHierarchyTable = ({ projectName, folderTypes, includeColors = fa
     label: folder.label || folder.name,
     icon: getFolderIcon(folder.folderType),
     iconColor: getFolderColor(folder.folderType),
-    img: null,
+    img: getFolderThumbnail(folder),
     data: {
       id: folder.id,
       name: folder.name,
@@ -84,6 +101,21 @@ export const useHierarchyTable = ({ projectName, folderTypes, includeColors = fa
       }
     }
 
+    // ancestor labels, so search can match a child by its parent path
+    const stack: SimpleTableRow[] = []
+    for (const row of hashTable.values()) {
+      if (!row.parentId || !hashTable.has(row.parentId)) stack.push(row)
+    }
+    while (stack.length) {
+      const row = stack.pop()!
+      // siblings share one array
+      const childParents = [...(row.parents ?? []), row.label || '']
+      for (const child of row.subRows) {
+        child.parents = childParents
+        stack.push(child)
+      }
+    }
+
     return dataTree
   }
 
@@ -93,7 +125,7 @@ export const useHierarchyTable = ({ projectName, folderTypes, includeColors = fa
     const rows = createDataTree(folders)
 
     return rows
-  }, [folders, folderTypes, isLoading])
+  }, [folders, folderTypes, isLoading, includeThumbnails, projectName])
 
   const getHierarchyData = useCallback(async () => {
     return tableData

@@ -1,4 +1,5 @@
 // export all queries
+export * from './accessGroups'
 export * from './actions'
 export * from './activities'
 export * from './addons'

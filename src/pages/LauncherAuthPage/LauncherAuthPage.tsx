@@ -65,7 +65,14 @@ const LauncherAuthPage: FC<LauncherAuthPageProps> = ({ user, redirect }) => {
 
       if (response.token) {
         // redirect to redirect with token as query param
-        window.location.href = `${redirect}?token=${response.token}`
+        const redirectUrl = new URL(redirect, window.location.origin)
+        if (!['http:', 'https:'].includes(redirectUrl.protocol)) {
+          toast.error('Invalid launcher redirect URL')
+          return
+        }
+
+        redirectUrl.searchParams.set('token', response.token)
+        window.location.href = redirectUrl.toString()
       }
     } catch (error) {
       console.error(error)

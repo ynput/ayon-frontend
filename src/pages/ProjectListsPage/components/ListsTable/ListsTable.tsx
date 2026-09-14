@@ -152,6 +152,7 @@ const ListsTable: FC<ListsTableProps> = ({
             search={clientSearch}
             onSearch={setClientSearch}
             isReview={isReview}
+            filtersBar={!picker && !isReview}
           />
           <SimpleTable
             data={listsTableData}

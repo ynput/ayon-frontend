@@ -626,7 +626,7 @@ const Inbox = ({ filter }: InboxProps) => {
                     selected={showUnreadOnly}
                     onClick={() => onUpdateUnreadOnly(!showUnreadOnly)}
                   >
-                    Unread only
+                    Unread
                   </Button>
                 )}
                 <EnableNotifications />

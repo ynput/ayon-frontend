@@ -307,14 +307,17 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           // Try to extract created ID if provided, though standard behavior might vary
           listId = payloadData?.id
 
-          if (payloadData) {
-            // invalidate the list caches
-            const tags = [
-              { type: 'entityList', id: listId },
-              { type: 'entityListItemsColumnStats', id: listId },
-            ]
-            dispatch(entityListsQueriesGql.util.invalidateTags(tags))
-          }
+          // 'LIST' invalidates getListsInfinite — a new list id matches no existing cache tag
+          const tags = [
+            { type: 'entityList', id: 'LIST' },
+            ...(listId
+              ? [
+                  { type: 'entityList', id: listId },
+                  { type: 'entityListItemsColumnStats', id: listId },
+                ]
+              : []),
+          ]
+          dispatch(entityListsQueriesGql.util.invalidateTags(tags))
 
           toast.success(`Review session ${label} created`)
         } else {

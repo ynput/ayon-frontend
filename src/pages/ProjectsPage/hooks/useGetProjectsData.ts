@@ -7,7 +7,9 @@ import {
   type ProjectFolderModel,
 } from '@shared/api'
 import { GROUP_BY_FOLDER_KEY } from '../constants'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+
+const MAX_PROJECT_PAGES = 10
 
 type Props = {
   groupBy?: string | null
@@ -23,9 +25,9 @@ type Value = {
   projectsMap: ProjectMap
   projectFolders: ProjectFolderModel[]
   foldersMap: FolderMap
-  fetchNextPage: () => void
   hasNextPage: boolean
   isFetchingNextPage: boolean
+  hasReachedPageLimit: boolean
   isLoading: boolean
   error: string
 }
@@ -58,6 +60,16 @@ export const useGetProjectsData = ({
     return map
   }, [projectFolders])
 
+  // every project is needed up front: sorting, grouping, filtering and search all run client-side
+  const hasReachedPageLimit = !!hasNextPage && pages.length >= MAX_PROJECT_PAGES
+  // stop on error, otherwise a failing page retries forever
+  const isDraining = !!hasNextPage && !hasReachedPageLimit && !error
+
+  useEffect(() => {
+    if (!isDraining || isFetchingNextPage) return
+    fetchNextPage()
+  }, [isDraining, isFetchingNextPage, fetchNextPage])
+
   const projects = useMemo(() => pages.flatMap((page) => page.projects), [pages])
 
   const projectsMap = useMemo<ProjectMap>(() => {
@@ -73,9 +85,9 @@ export const useGetProjectsData = ({
     projectsMap,
     projectFolders,
     foldersMap,
-    fetchNextPage,
-    hasNextPage: hasNextPage ?? false,
+    hasNextPage: isDraining,
     isFetchingNextPage,
+    hasReachedPageLimit,
     isLoading,
     error: String(error),
   }

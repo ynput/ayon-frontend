@@ -41,6 +41,12 @@ export type BuiltInFieldOptions = {
   [key in BuiltInFieldOptionKey]: EnumOption[]
 }
 
+// which subType each side of the main count breaks down by; a side with no subType stays unset
+export type MainBreakdownFields = {
+  primary?: TreeTableSubType
+  secondary?: TreeTableSubType
+}
+
 // Props contract for one summary footer cell's content, implemented by the
 // powerpack `summaries/SummaryCellContent` remote module. The host owns the
 // footer row structure (borders, widths, pinning); the remote renders only
@@ -63,4 +69,6 @@ export interface SummaryCellContentProps {
   parentScopeApplicable?: boolean
   // unique entity rows in the current selection; addon shows "N selected" in the main count cell
   selectedCount?: number
+  // absent = host fetches no subType distributions, addon hides the Breakdown aggregation
+  mainBreakdownFields?: MainBreakdownFields
 }

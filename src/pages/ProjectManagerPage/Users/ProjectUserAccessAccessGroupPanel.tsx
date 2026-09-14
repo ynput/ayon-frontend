@@ -10,7 +10,7 @@ type Props = {
   onToggleExpand: $Any
 }
 
-const ProjectUserAccesAccessGroupPanel = ({
+const ProjectUserAccessAccessGroupPanel = ({
   header,
   children,
   isExpanded,
@@ -26,12 +26,8 @@ const ProjectUserAccesAccessGroupPanel = ({
         </div>
       </Styled.Header>
 
-      <Styled.BodyExpander
-        className={clsx({ expanded: isExpanded })}
-      >
-        <Styled.Body
-          className={clsx(isExpanded ? 'expanded' : 'collapsed')}
-        >
+      <Styled.BodyExpander className={clsx({ expanded: isExpanded })}>
+        <Styled.Body className={clsx(isExpanded ? 'expanded' : 'collapsed')}>
           {children}
         </Styled.Body>
       </Styled.BodyExpander>
@@ -39,4 +35,4 @@ const ProjectUserAccesAccessGroupPanel = ({
   )
 }
 
-export default ProjectUserAccesAccessGroupPanel
+export default ProjectUserAccessAccessGroupPanel

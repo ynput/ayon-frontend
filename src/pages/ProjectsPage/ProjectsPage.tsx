@@ -22,19 +22,17 @@ import {
 import * as Styled from './ProjectsPage.styled'
 import {
   Button,
-  Dialog,
   SortCardType,
   SortingDropdown,
   Toolbar,
 } from '@ynput/ayon-react-components'
-import { PROJECTS_PER_PAGE } from '@shared/api'
 import { ProjectDetailsPanel } from './components/ProjectDetailsPanel/ProjectDetailsPanel'
 import { ProjectsPageTableSettings } from './components/ProjectsPageTableSettings'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useShortcuts from '@hooks/useShortcuts'
 import { SettingsPanelProvider, usePowerpack, useSettingsPanel } from '@shared/context'
-import { CustomizeButton, PowerpackButton } from '@shared/components'
+import { CustomizeButton, InfoMessage, PowerpackButton } from '@shared/components'
 import { useSessionStorage } from '@shared/hooks'
 import { DEFAULT_COLUMNS_PROJECT, GROUP_BY_FOLDER_KEY } from './constants'
 import useProjectMenuController from '@containers/ProjectsList/hooks/useProjectMenuController'
@@ -58,9 +56,9 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   // Get all projects data
   const {
     projects,
-    fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    hasReachedPageLimit,
     projectsMap,
     foldersMap,
     projectFolders,
@@ -227,6 +225,13 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
         />
         <CustomizeButton />
       </Toolbar>
+      {hasReachedPageLimit && (
+        <InfoMessage
+          role="status"
+          variant="warning"
+          message={`Showing ${projects.length} projects. Some projects are not listed.`}
+        />
+      )}
       <Splitter
         layout="horizontal"
         stateKey="projects-splitter-settings"
@@ -302,20 +307,6 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
           <SplitterPanel style={{ maxWidth: 0 }} />
         )}
       </Splitter>
-      {hasNextPage && (
-        <Dialog
-          size="sm"
-          isOpen={true}
-          onClose={() => {}}
-          hideCancelButton
-          showCloseButton={false}
-          header={`Congratulations you have more than ${projects.length} projects.`}
-        >
-          <Button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-            {isFetchingNextPage ? 'Loading...' : `Click here to load ${PROJECTS_PER_PAGE} more`}
-          </Button>
-        </Dialog>
-      )}
       <ProjectFolderFormDialog {...folderDialogProps} />
     </Styled.PageContainer>
   )

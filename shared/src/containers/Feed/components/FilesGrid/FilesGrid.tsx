@@ -47,7 +47,7 @@ const FilesGrid: React.FC<FilesGridProps> = ({
     <Styled.Grid className={clsx({ compact: isCompact })} {...props}>
       {files.map((file, index) => (
         <FileUploadCard
-          key={index}
+          key={file.id || file.name}
           id={file.id || file.name}
           name={file.name}
           mime={file.mime || file.type}

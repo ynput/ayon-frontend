@@ -1,4 +1,4 @@
-import { projectsApi, accessApi } from '@shared/api'
+import { projectsApi, accessApi } from '@shared/api/generated'
 
 export type ProjectUserData = {
   [project: string]: {
@@ -56,7 +56,9 @@ const enhancedApi = accessApi.injectEndpoints({
 
 enhancedApi.enhanceEndpoints({
   endpoints: {
-    getAccessGroups: {
+    getStudioAccessGroups: {
+      // @ts-expect-error: {code: 403, details: "Only managers can access the studio level settings"}
+      transformErrorResponse: (err) => err?.detail || 'Error fetching access groups',
       providesTags: (result) =>
         result
           ? [
@@ -71,11 +73,21 @@ enhancedApi.enhanceEndpoints({
         { type: 'accessGroup', id: 'LIST' },
       ],
     },
+    getAccessGroups: {
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ name }) => ({ type: 'accessGroup', id: name })),
+              { type: 'accessGroup', id: 'LIST' },
+            ]
+          : [{ type: 'accessGroup', id: 'LIST' }],
+    },
     getAccessGroupSchema: {},
   },
 })
 
 export const {
+  useGetStudioAccessGroupsQuery,
   useGetAccessGroupsQuery,
   useGetAccessGroupQuery,
   useGetAccessGroupSchemaQuery,

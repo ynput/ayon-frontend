@@ -1,6 +1,6 @@
 const axios = require('axios')
 const fs = require('fs')
-const { exec } = require('child_process')
+const { spawn } = require('child_process')
 const path = require('path')
 require('dotenv').config({ path: path.join(__dirname, '../.env.local') })
 
@@ -20,20 +20,25 @@ async function getToken() {
 
     // copy token to clipboard
     const platform = process.platform
-    const clipboardCmd =
+    const clipboardProcess =
       platform === 'darwin'
-        ? `echo "${response.data.token}" | pbcopy`
+        ? spawn('pbcopy')
         : platform === 'win32'
-        ? `echo ${response.data.token} | clip`
-        : `echo "${response.data.token}" | xclip -selection clipboard`
+        ? spawn('clip')
+        : spawn('xclip', ['-selection', 'clipboard'])
 
-    exec(clipboardCmd, (err) => {
-      if (err) {
-        console.error('Failed to copy token to clipboard:', err)
-      } else {
+    clipboardProcess.on('error', (err) => {
+      console.error('Failed to copy token to clipboard:', err)
+    })
+    clipboardProcess.on('close', (code) => {
+      if (code === 0) {
         console.log('Token copied to clipboard.')
+      } else {
+        console.error('Failed to copy token to clipboard.')
       }
     })
+    clipboardProcess.stdin.write(response.data.token)
+    clipboardProcess.stdin.end()
   } catch (error) {
     console.error('Error getting token', error)
   }

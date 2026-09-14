@@ -22,7 +22,8 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import clsx from 'clsx'
 import useRowKeydown, { RowKeyboardEvent } from './hooks/useRowKeydown'
 
-import { rankItem, compareItems, rankings } from '@tanstack/match-sorter-utils'
+import { compareItems } from '@tanstack/match-sorter-utils'
+import { parseSearchQuery, matchSearchQuery } from '@shared/util'
 import { useSimpleTableContext } from './context/SimpleTableContext'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { EmptyPlaceholder } from '@shared/components/EmptyPlaceholder/EmptyPlaceholder'
@@ -45,7 +46,7 @@ const toggleRowAndDescendants = <TData,>(row: Row<TData>, expanded: boolean) => 
 }
 
 // Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
-const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
+const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue: string[][], addMeta) => {
   const cellValue = row.getValue(columnId)
   // convert non-string cell values to string
   let searchString =
@@ -62,18 +63,14 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
     )
   }
 
-  // Rank the item with CONTAINS threshold to avoid overly permissive fuzzy matches
-  // This ensures the search term must be a substring, not just scattered characters
-  const itemRank = rankItem(searchString, searchValue, { threshold: rankings.CONTAINS })
+  // searchValue is already parsed into OR/AND groups by resolveFilterValue
+  const itemRank = matchSearchQuery(searchString, searchValue)
+  addMeta({ itemRank })
 
-  // Store the itemRank info
-  addMeta({
-    itemRank,
-  })
-
-  // Return if the item should be filtered in/out
   return itemRank.passed
 }
+// parse once per filter pass instead of once per row
+fuzzyFilter.resolveFilterValue = parseSearchQuery
 
 // Define a custom fuzzy sort function that will sort by rank if the row has ranking information
 const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
@@ -98,13 +95,6 @@ function getRowRange<TData extends RowData>(
   idA: string,
   idB: string,
 ): Array<Row<TData>> {
-  const range: Array<Row<TData>> = []
-  // If idA and idB are the same, or one is not found, handle appropriately
-  if (idA === idB) {
-    const singleRow = rows.find((row) => row.id === idA)
-    return singleRow ? [singleRow] : []
-  }
-
   let indexA = -1
   let indexB = -1
 
@@ -119,10 +109,7 @@ function getRowRange<TData extends RowData>(
   const start = Math.min(indexA, indexB)
   const end = Math.max(indexA, indexB)
 
-  for (let i = start; i <= end; i++) {
-    range.push(rows[i])
-  }
-  return range
+  return rows.slice(start, end + 1)
 }
 
 const SimpleTable: FC<SimpleTableProps> = ({
@@ -138,6 +125,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   meta,
   rowHeight,
   imgRatio,
+  imgPosition,
   onScrollBottom,
   onRename,
   renamingId,
@@ -210,14 +198,16 @@ const SimpleTable: FC<SimpleTableProps> = ({
       isCtrlOrMeta: boolean,
     ): RowSelectionState => {
       const currentId = rowId
-      const allProcessableRows = tableInstance.getFilteredRowModel().flatRows
-      const currentRow = allProcessableRows.find((r) => r.id === currentId)
+      const rowModel = tableInstance.getRowModel()
+      const visibleRows = rowModel.rows
+      const currentRow = rowModel.rowsById[currentId]
+      const currentSelection = tableInstance.getState().rowSelection || {}
 
-      if (!currentRow) return { ...(tableInstance.getState().rowSelection || {}) }
+      if (!currentRow) return { ...currentSelection }
 
       // Prevent selection of disabled rows
       if (currentRow.original.isDisabled) {
-        return { ...(tableInstance.getState().rowSelection || {}) }
+        return { ...currentSelection }
       }
 
       // If click-to-deselect is enabled and only one row is selected and it's the current row
@@ -225,8 +215,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
         enableClickToDeselect &&
         !isShift &&
         !isCtrlOrMeta &&
-        Object.keys(tableInstance.getState().rowSelection || {}).length === 1 &&
-        (tableInstance.getState().rowSelection || {})[currentId]
+        Object.keys(currentSelection).length === 1 &&
+        currentSelection[currentId]
       ) {
         tableInstance.setRowSelection({})
         lastSelectedIdRef.current = null
@@ -236,19 +226,18 @@ const SimpleTable: FC<SimpleTableProps> = ({
       let nextSelection: RowSelectionState
       if (isMultiSelect && isShift && lastSelectedIdRef.current) {
         const lastId = lastSelectedIdRef.current
-        const anchorRow = allProcessableRows.find((r) => r.id === lastId)
+        const rowsToToggle = getRowRange(visibleRows, currentId, lastId)
 
-        if (!anchorRow) {
-          nextSelection = { [currentId]: true }
+        if (rowsToToggle.length === 0) {
+          nextSelection = { ...currentSelection, [currentId]: true }
         } else {
-          const rowsToToggle = getRowRange(allProcessableRows, currentId, lastId)
-          nextSelection = {}
+          nextSelection = { ...currentSelection }
           rowsToToggle.forEach((r) => (nextSelection[r.id] = true))
         }
       } else if (isMultiSelect && isCtrlOrMeta) {
         // write a concrete object from live state; toggleSelected()'s functional updater runs
         // against a stale rowSelection closure and drops the other selected rows
-        nextSelection = { ...(tableInstance.getState().rowSelection || {}) }
+        nextSelection = { ...currentSelection }
         if (nextSelection[currentId]) {
           delete nextSelection[currentId]
         } else {
@@ -256,7 +245,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
         }
       } else {
         // If it's already selected and it's the only one, don't update selection to avoid unnecessary re-renders
-        nextSelection = { ...(tableInstance.getState().rowSelection || {}) }
+        nextSelection = { ...currentSelection }
         if (!(Object.keys(nextSelection).length === 1 && nextSelection[currentId])) {
           nextSelection = { [currentId]: true }
         }
@@ -429,6 +418,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
             img: row.original.img,
             imgShape: row.original.imgShape,
             imgRatio: imgRatio,
+            imgPosition: imgPosition,
             isRowExpandable: row.getCanExpand(),
             enableNonFolderIndent,
             isRowExpanded: row.getIsExpanded(),
@@ -473,6 +463,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
       enableClickToDeselect,
       enableNonFolderIndent,
       imgRatio,
+      imgPosition,
       onRowOptionClick,
     ],
   )

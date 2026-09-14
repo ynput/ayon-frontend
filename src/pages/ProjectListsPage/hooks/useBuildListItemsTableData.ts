@@ -39,8 +39,9 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         icon: isRestricted ? RESTRICTED_ENTITY_ICON : entityTypeData?.icon,
         color: isRestricted ? '' : entityTypeData?.color,
         folderId: extractFolderId(item, item.entityType),
-        // @ts-expect-error - thumbnailHash does exist on products, that's it
-        thumbnailHash: item.thumbnailHash,
+        taskId: item.task?.id,
+        versionEntityId: item.entityType === 'version' ? item.id : undefined,
+        thumbnailHash: 'thumbnailHash' in item ? item.thumbnailHash : undefined,
         folder: extractFolder(item, item.entityType),
         parents: item.parents || [],
         tags: item.tags,

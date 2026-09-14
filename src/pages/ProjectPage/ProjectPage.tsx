@@ -68,7 +68,7 @@ interface AddonPageConfig {
 
 const ADDON_PAGES: AddonPageConfig[] = [
   {
-    name: 'Scheduler',
+    name: 'Schedule',
     module: 'scheduler',
     viewType: 'scheduler',
     Splash: SchedulerSplashscreen,

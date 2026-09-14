@@ -9,8 +9,7 @@ import Shortcuts from '@containers/Shortcuts'
 import { useShortcutsContext } from '@context/ShortcutsContext'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
-import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
-import { useGetUsersQuery } from '@shared/api'
+import { useGetUsersQuery, useGetStudioAccessGroupsQuery } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
 
 import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
@@ -40,9 +39,9 @@ import SplitterContainerTwoPanes from './SplitterTwoPanes'
 import { ProjectNode, UserNode } from '@shared/api'
 import LoadingPage from '@pages/LoadingPage'
 import { useQueryParam } from 'use-query-params'
-import { uuid } from 'short-uuid'
-import ProjectUserAccesAccessGroupPanel from './ProjectUserAccessAccessGroupPanel'
-import {
+import { v4 as uuid } from 'uuid'
+import ProjectUserAccessAccessGroupPanel from './ProjectUserAccessAccessGroupPanel'
+import EmptyPlaceholder, {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
 } from '@shared/components/EmptyPlaceholder'
@@ -57,9 +56,7 @@ const StyledButton = styled(Button)`
 `
 
 const ProjectUserAccess = () => {
-  const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
-    projectName: '_',
-  })
+  const { data: accessGroupList = [], error } = useGetStudioAccessGroupsQuery()
 
   const [selectedProject] = useQueryParam('project')
 
@@ -382,7 +379,7 @@ const ProjectUserAccess = () => {
           .map((item: { name: string }) => item.name)
           .map((accessGroup) => {
             return (
-              <ProjectUserAccesAccessGroupPanel
+              <ProjectUserAccessAccessGroupPanel
                 key={`panel-${accessGroup}`}
                 header={accessGroup}
                 isExpanded={
@@ -413,10 +410,11 @@ const ProjectUserAccess = () => {
                   onRemove={onRemove(accessGroup)}
                   isLoading={isLoadingUsers}
                 />
-              </ProjectUserAccesAccessGroupPanel>
+              </ProjectUserAccessAccessGroupPanel>
             )
           })}
       </AccessGroupsWrapper>
+      {error && <EmptyPlaceholder error={error} />}
     </>
   )
 

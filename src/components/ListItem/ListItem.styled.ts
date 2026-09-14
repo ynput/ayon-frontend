@@ -126,6 +126,21 @@ export const ItemThumbnail = styled(ThumbnailSimple)`
   }
 `
 
+export const Tags = styled.div`
+  display: flex;
+  align-items: center;
+  height: 22px;
+  flex: 1 1 160px;
+  min-width: 60px;
+  max-width: 360px;
+  overflow: hidden;
+
+  /* keep leading tags readable and clip at the cell edge instead of squashing every chip */
+  .values > * {
+    flex-shrink: 0;
+  }
+`
+
 export const Folder = styled.span`
   max-width: 300px;
   overflow: hidden;
