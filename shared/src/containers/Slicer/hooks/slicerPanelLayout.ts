@@ -1,5 +1,7 @@
-// header plus a few rows; a panel never goes below this, the stack scrolls instead
+// header plus a few rows; the floor shrinks towards the absolute one so the stack fits the column
 export const SLICER_MIN_PANEL_HEIGHT = 180
+// header plus two rows; only below this does the stack scroll
+export const SLICER_ABSOLUTE_MIN_PANEL_HEIGHT = 100
 // a collapsed panel is its header and nothing else
 export const SLICER_COLLAPSED_PANEL_HEIGHT = 34
 
@@ -58,9 +60,22 @@ export const resolvePanelLayout = (
     return { heights: [], mins: [], sizes: [], minSize: 2, height: containerHeight }
   }
 
-  const mins = panelMinHeights(panelIds, collapsed, minHeight)
+  const expandedCount = panelIds.filter((id) => !collapsed.includes(id)).length
+  const collapsedTotal = (panelIds.length - expandedCount) * SLICER_COLLAPSED_PANEL_HEIGHT
+  const floor =
+    containerHeight && expandedCount
+      ? Math.min(
+          minHeight,
+          Math.max(
+            SLICER_ABSOLUTE_MIN_PANEL_HEIGHT,
+            Math.floor((containerHeight - collapsedTotal) / expandedCount),
+          ),
+        )
+      : minHeight
+
+  const mins = panelMinHeights(panelIds, collapsed, floor)
   const stack = panelIds.map((id, index) =>
-    collapsed.includes(id) ? mins[index] : Math.max(stored[id] ?? minHeight, minHeight),
+    collapsed.includes(id) ? mins[index] : Math.max(stored[id] ?? floor, floor),
   )
 
   const flexible = panelIds.map((id) => !collapsed.includes(id))

@@ -153,7 +153,6 @@ export const Slicer: FC<SlicerProps> = ({
         <SlicerPanel
           panel={visibleSlices[0]}
           isPrimary
-          showRemove={false}
           search={searchByPanel[visibleSlices[0].id]}
           onSearchChange={(value) => handleSearchChange(visibleSlices[0].id, value)}
           {...panelProps}
@@ -181,7 +180,6 @@ export const Slicer: FC<SlicerProps> = ({
                 <SlicerPanel
                   panel={panel}
                   isPrimary={index === 0}
-                  showRemove
                   search={searchByPanel[panel.id]}
                   onSearchChange={(value) => handleSearchChange(panel.id, value)}
                   {...panelProps}

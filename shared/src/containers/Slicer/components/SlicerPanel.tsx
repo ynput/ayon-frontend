@@ -102,7 +102,6 @@ export interface SlicerPanelProps {
   splitEnabled?: boolean
   canCollapse?: boolean
   isPrimary?: boolean
-  showRemove?: boolean
   // undefined while the search box is closed
   search: string | undefined
   onSearchChange: (value: string | undefined) => void
@@ -120,7 +119,6 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
   splitEnabled,
   canCollapse,
   isPrimary,
-  showRemove,
   search,
   onSearchChange,
 }) => {
@@ -325,7 +323,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
               onClick={handleSplit}
             />
           )}
-          {showRemove && !isSearching && (
+          {!isPrimary && !isSearching && (
             <HeaderButton
               icon="close"
               data-tooltip="Remove panel"
