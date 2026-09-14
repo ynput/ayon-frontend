@@ -17,7 +17,7 @@ export interface AttributeEnumState {
   errorMessage?: string
 }
 
-const getErrorMessage = (error: unknown): string | undefined => {
+export const getEnumErrorMessage = (error: unknown): string | undefined => {
   const detail = (error as { data?: { detail?: unknown } } | undefined)?.data?.detail
   return typeof detail === 'string' ? detail : undefined
 }
@@ -60,7 +60,7 @@ export const useAttributeEnumOptions = (
     options,
     isLoading: !!resolver && isFetching,
     isError: !!resolver && isError,
-    errorMessage: resolver && isError ? getErrorMessage(error) : undefined,
+    errorMessage: resolver && isError ? getEnumErrorMessage(error) : undefined,
   }
 }
 

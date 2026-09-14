@@ -1,7 +1,7 @@
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import { startCase } from 'lodash'
 import styled from 'styled-components'
-import { Dropdown, Icon } from '@ynput/ayon-react-components'
+import { Button, Dropdown } from '@ynput/ayon-react-components'
 
 import { EnumEditor } from '@shared/components/EnumEditor/EnumEditor'
 import type { NormalizedData } from '@shared/components/EnumEditor/EnumEditor'
@@ -16,7 +16,9 @@ import type {
   SimpleFormField,
 } from '@shared/api'
 import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
-import { getEnumItemIcon, getSelectableEnumItems, isEnumIconImage } from '@shared/util/attributeEnum'
+import { getEnumItemIcon, getSelectableEnumItems } from '@shared/util/attributeEnum'
+import { EnumItemIcon, EnumItemRow } from './EnumItemRow'
+import { EnumPlaygroundDialog } from './EnumPlaygroundDialog'
 
 const CUSTOM_ENUM_SOURCE = '__custom__'
 const PREVIEW_LIMIT = 5
@@ -74,41 +76,13 @@ const Preview = styled.div`
   background-color: var(--md-sys-color-surface-container);
 `
 
-const PreviewItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--base-gap-small);
-  overflow: hidden;
-  height: 20px;
-
-  .label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  img {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-
-  .icon-slot {
-    flex: none;
-    width: 20px;
-  }
-`
-
 const MoreMessage = styled(Message)`
   display: flex;
   align-items: center;
   height: 20px;
 `
 
-const SkeletonItem = styled(PreviewItem)`
-  border-radius: var(--border-radius-m);
-
+const SkeletonItem = styled(EnumItemRow)`
   &:nth-child(2n) {
     width: 80%;
   }
@@ -171,16 +145,10 @@ const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({
   return (
     <Preview>
       {preview.map(({ option, icon }) => (
-        <PreviewItem key={String(option.value)}>
-          {isEnumIconImage(icon) ? (
-            <img src={icon} alt="" />
-          ) : icon ? (
-            <Icon icon={icon} style={{ color: option.color }} />
-          ) : (
-            hasIcons && <span className="icon-slot" />
-          )}
+        <EnumItemRow key={String(option.value)}>
+          <EnumItemIcon icon={icon} color={option.color} reserveSpace={hasIcons} />
           <span className="label">{option.label}</span>
-        </PreviewItem>
+        </EnumItemRow>
       ))}
       {remaining > 0 && <MoreMessage>+{remaining} more</MoreMessage>}
     </Preview>
@@ -207,6 +175,7 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
   onChangeResolverSettings,
 }) => {
   const { data: resolvers = [], isLoading, isError } = useListEnumsQuery()
+  const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false)
 
   const sourceOptions = [
     { value: CUSTOM_ENUM_SOURCE, label: 'Custom' },
@@ -276,10 +245,26 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
             />
           )}
           {selectedResolver && (
-            <EnumResolverPreview
-              resolver={selectedResolver.name}
-              acceptedParams={selectedResolver.acceptedParams}
+            <>
+              <EnumResolverPreview
+                resolver={selectedResolver.name}
+                acceptedParams={selectedResolver.acceptedParams}
+                settings={settings}
+              />
+              <Button
+                variant="text"
+                icon="science"
+                label="Open playground"
+                onClick={() => setIsPlaygroundOpen(true)}
+                style={{ alignSelf: 'flex-start' }}
+              />
+            </>
+          )}
+          {isPlaygroundOpen && selectedResolver && (
+            <EnumPlaygroundDialog
+              resolver={selectedResolver}
               settings={settings}
+              onClose={() => setIsPlaygroundOpen(false)}
             />
           )}
         </>
