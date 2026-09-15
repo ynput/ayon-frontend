@@ -70,12 +70,14 @@ export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
     readOnly: false,
   },
   {
+{
     id: 'product_productBaseType',
     scope: 'product',
     field: 'productBaseType',
     label: 'Product base type',
     fallbackToPrimary: true,
-  },
+    readOnly: true,
+  }
 ]
 
 export const VP_COLUMN_ID_ALIASES = {
