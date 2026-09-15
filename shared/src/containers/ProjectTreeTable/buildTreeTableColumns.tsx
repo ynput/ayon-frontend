@@ -832,7 +832,8 @@ const buildTreeTableColumns = ({
         const { value, id, type } = getValueIdType(row, column.id)
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
         const isProductType = type === 'product' || type === 'version'
-        const fieldId = type === 'folder' ? 'folderType' : isProductType ? 'productType' : 'taskType'
+        const fieldId =
+          type === 'folder' ? 'folderType' : isProductType ? 'productType' : 'taskType'
         const meta = table.options.meta
         const folderHasVersions =
           type === 'folder' &&
@@ -1286,7 +1287,7 @@ const buildTreeTableColumns = ({
 
         const subtasksData: SubtasksWidgetData = {
           taskId: parseGroupId(row.id) || row.original.primary.id,
-          folderId: row.original.folderId ?? undefined,
+          folderId: row.original.parents?.folder?.id ?? undefined,
           subtasks: value || [],
         }
 
