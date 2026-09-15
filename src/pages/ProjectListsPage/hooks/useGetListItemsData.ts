@@ -9,6 +9,7 @@ import {
   useGetEntityLinksQuery,
   useGetListItemsColumnStatsQuery,
   useGetListItemsInfiniteInfiniteQuery,
+  SubTaskNode,
 } from '@shared/api'
 import type { EntityListItem, FieldStats, GetListItemsResult, StatsEntity } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
@@ -29,8 +30,9 @@ import { getColumnSortKey } from '@shared/containers/ProjectTreeTable/buildTreeT
 import { useAppDispatch } from '@state/store'
 
 // Extend EntityListItem to include links
-export type EntityListItemWithLinks = EntityListItem & {
+export type EntityListItemWithLinks = Omit<EntityListItem, 'subtasks'> & {
   links: EntityLink[]
+  subtasks?: SubTaskNode[]
 }
 
 interface UseGetListItemsDataProps {
@@ -99,6 +101,13 @@ const useGetListItemsData = ({
   const parseSorting = (sorting?: string): string | undefined => {
     if (!sorting) return undefined
     const sortId = getColumnSortKey(sorting, true, entityType) ?? ''
+    const scopedTypeSortKeys: Record<string, string> = {
+      folder_subType: entityType === 'folder' ? 'entity_folderType' : 'parentFolderType',
+      task_subType: entityType === 'task' ? 'entity_taskType' : 'parentTaskType',
+      product_subType: entityType === 'product' ? 'entity_productType' : 'parentProductType',
+    }
+
+    if (scopedTypeSortKeys[sorting]) return scopedTypeSortKeys[sorting]
 
     let parsedSortId = sortId
     if (singleSort?.id === 'name' && entityType === 'version') {

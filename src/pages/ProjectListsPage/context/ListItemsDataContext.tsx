@@ -6,7 +6,12 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import useGetListItemsData, { EntityListItemWithLinks } from '../hooks/useGetListItemsData'
 import { useListsContext } from './ListsContext'
-import { FolderNodeMap, TableRow, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
+import {
+  FolderNodeMap,
+  MatchingFolder,
+  TableRow,
+  TaskNodeMap,
+} from '@shared/containers/ProjectTreeTable'
 import useDeleteListItems, { UseDeleteListItemsReturn } from '../hooks/useDeleteListItems'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { useEntityListsContext } from './EntityListsContext'
@@ -222,9 +227,28 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     listItemsData,
   })
 
-  const foldersMap: FolderNodeMap = new Map(
-    // @ts-ignore
-    listItemsData.filter((item) => item.entityType === 'folder'),
+  const foldersMap = useMemo<FolderNodeMap>(
+    () =>
+      new Map(
+        listItemsData
+          .filter((item) => item.entityType === 'folder')
+          .map(
+            (item) =>
+              [
+                item.entityId,
+                {
+                  ...item,
+                  id: item.entityId,
+                  entityId: item.entityId,
+                  entityType: 'folder',
+                  path: item.parents?.join('/') || '',
+                  parents: item.parents || [],
+                  folderType: item.folderType || '',
+                } as MatchingFolder,
+              ] as const,
+          ),
+      ),
+    [listItemsData],
   )
   const tasksMap: TaskNodeMap = new Map()
 

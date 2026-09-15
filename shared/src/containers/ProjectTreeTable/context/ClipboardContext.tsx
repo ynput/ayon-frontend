@@ -49,7 +49,6 @@ const DISPLAY_PREFERRED_COLS = new Set([
 
 const DISPLAY_COLUMN_FIELDS: Record<string, string> = {
   folder_entity: 'folder',
-  task_entity: 'taskLabel',
   version_entity: 'versionName',
 }
 
@@ -194,7 +193,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
             // special handling of link cells
             if (colId.startsWith('link_')) {
-              // @ts-expect-error - only complaining about missing __typename
               cellValue = getLinkEntityIdsByColumnId(entity.links, colId)
             } else if (colId === 'subtasks') {
               // Special handling for subtasks - convert to TSV format
@@ -208,7 +206,13 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             } else {
               // @ts-ignore
               const sourceField = DISPLAY_COLUMN_FIELDS[colId] || colId
-              let foundValue = getCellValue(entity, sourceField)
+              let foundValue =
+                colId === 'task_entity'
+                  ? displayRow?.parents?.task?.label ||
+                    displayRow?.parents?.task?.name ||
+                    (entity as any).task?.label ||
+                    (entity as any).task?.name
+                  : getCellValue(entity, sourceField)
 
               // folder is an object on some entities (product/task) or nested under
               // product (version) - copy the display name the cell shows,
@@ -241,7 +245,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
                 const field = attribFields.find((f) => f.name === colId.replace('attrib_', ''))
                 if (field && field.data.type === 'boolean') {
                   foundValue = false // default boolean value
-                } else if (field && field.data.type.includes('list_of')) {
+                } else if (field && field.data.type?.includes('list_of')) {
                   foundValue = [] // default list value
                 }
               }
@@ -255,7 +259,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
                 cellValue =
                   getEntityPath(entity.entityId || entity.id, entitiesMap) ||
                   (displayRow as any)?.label ||
-                  displayRow?.name ||
+                  displayRow?.primary?.name ||
                   (entity as any).label ||
                   entity.name ||
                   ''

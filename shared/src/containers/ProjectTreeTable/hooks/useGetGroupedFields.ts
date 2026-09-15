@@ -13,7 +13,7 @@ export const isAttribGroupable = (
 ) => {
   const typesToCheck = allowedTypes || allowedGroupByFields
   const hasValidType =
-    typesToCheck.includes(attrib.data.type) &&
+    typesToCheck.includes(attrib.data.type || '') &&
     (!entityType || attrib.scope?.includes(entityType as (typeof attrib.scope)[0]))
 
   if (!hasValidType) return false

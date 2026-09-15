@@ -12,7 +12,7 @@ import {
 import { useAppSelector } from '@state/store'
 import { FC, useCallback, useMemo } from 'react'
 import { useVersionsDataContext } from '../context/VPDataContext'
-import { buildVersionRow } from '../util'
+import { buildVersionTableRow } from '../util'
 import { useVPViewsContext } from '../context/VPViewsContext'
 import { useProjectContext, useSubtasksModulesContext } from '@shared/context'
 
@@ -135,7 +135,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       groupCountsComplete={groupCountsComplete}
       groupByConfig={{ entityType: 'version' }}
       hierarchyOptions={hierarchyOptions}
-      groupRowFunc={buildVersionRow}
+      groupRowFunc={buildVersionTableRow}
       expanded={expanded}
       updateExpanded={updateExpanded}
       isInitialized={isInitialized}

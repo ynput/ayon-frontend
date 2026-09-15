@@ -5,6 +5,8 @@ import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
 import { EmptyPlaceholder, FilterErrorActions } from '@shared/components'
 import {
   BuildTreeTableColumnsProps,
+  EntityType,
+  ParentColumnDefinition,
   ProjectTreeTable,
   isFilterError,
   getFilterErrorMessage,
@@ -20,6 +22,8 @@ import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
   extraColumnsSettings: { value: string; label: string }[]
+  parentColumns: ParentColumnDefinition[]
+  includeParents: EntityType[]
   isLoading?: boolean
   isReview?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
@@ -29,6 +33,8 @@ interface ListItemsTableProps {
 const ListItemsTable: FC<ListItemsTableProps> = ({
   extraColumns,
   extraColumnsSettings,
+  parentColumns,
+  includeParents,
   isLoading,
   isReview,
   dndActiveId, // Destructure new prop
@@ -106,6 +112,8 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         readOnly={readOnly}
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
+        includeParents={includeParents}
+        parentColumns={parentColumns}
         isLoading={isLoading}
         sortableRows={!viewOnly}
         enableSorting={!isReview}
@@ -131,6 +139,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         extraColumns={extraColumnsSettings}
         hiddenColumns={hiddenColumns}
         extraMenuItems={listAttributesMenuItems}
+        parentColumns={parentColumns}
       />
     </div>
   )

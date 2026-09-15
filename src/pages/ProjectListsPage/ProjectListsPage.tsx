@@ -101,17 +101,11 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
   return (
     <ReviewCardsSettingsProvider>
       <ListsModuleProvider>
-        <ListsDataProvider
-          entityListTypes={entityListTypes}
-          isReview={isReview}
-        >
+        <ListsDataProvider entityListTypes={entityListTypes} isReview={isReview}>
           <ListsProvider isReview={isReview}>
             <ListItemsDataProvider>
               <ListsAttributesProvider>
-                <ProjectListsWithInnerProviders
-                  isReview={isReview}
-                  modules={modules}
-                />
+                <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
               </ListsAttributesProvider>
             </ListItemsDataProvider>
           </ListsProvider>
@@ -167,7 +161,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   })
   const { reorderListItem } = useListItemsDataContext() // Get reorderListItem
 
-  const { extraColumns, extraColumnsSettings } = useExtraColumns({
+  const listColumnConfig = useExtraColumns({
     // @ts-expect-error - we do not support product right now
     entityType: selectedList?.entityType,
   })
@@ -186,6 +180,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
         config={columns}
         onChange={onUpdateColumns}
         defaultColumnVisibility={defaultColumnVisibility}
+        columnIdAliases={listColumnConfig.columnIdAliases}
       >
         <DndContextWrapper reorderListItem={reorderListItem}>
           {(dndActiveId) => (
@@ -221,8 +216,11 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                   <SelectedRowsProvider>
                     <CellEditingProvider>
                       <ProjectLists
-                        extraColumns={extraColumns}
-                        extraColumnsSettings={extraColumnsSettings}
+                        extraColumns={listColumnConfig.extraColumns}
+                        extraColumnsSettings={listColumnConfig.extraColumnsSettings}
+                        parentColumns={listColumnConfig.parentColumns}
+                        includeParents={listColumnConfig.includeParents}
+                        columnIdAliases={listColumnConfig.columnIdAliases}
                         isReview={isReview}
                         dndActiveId={dndActiveId}
                       />
@@ -244,6 +242,9 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
 type ProjectListsProps = {
   extraColumns: TreeTableExtraColumn[]
   extraColumnsSettings: any[]
+  parentColumns: ReturnType<typeof useExtraColumns>['parentColumns']
+  includeParents: ReturnType<typeof useExtraColumns>['includeParents']
+  columnIdAliases: ReturnType<typeof useExtraColumns>['columnIdAliases']
   isReview?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
 }
@@ -251,6 +252,9 @@ type ProjectListsProps = {
 const ProjectLists: FC<ProjectListsProps> = ({
   extraColumns,
   extraColumnsSettings,
+  parentColumns,
+  includeParents,
+  columnIdAliases,
   isReview,
   dndActiveId, // Destructure new prop
 }) => {
@@ -476,6 +480,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
                           <ListItemsTable
                             extraColumns={extraColumns}
                             extraColumnsSettings={extraColumnsSettings}
+                            parentColumns={parentColumns}
+                            includeParents={includeParents}
                             isReview={isReview && !reviewSessionCardsOutdated}
                             dndActiveId={dndActiveId} // Pass prop
                             viewOnly={(selectedList?.accessLevel || 0) < 20}
@@ -508,6 +514,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       {pageDisplayStyle === 'table' ? (
                         <ListsTableSettings
                           extraColumns={extraColumnsSettings}
+                          parentColumns={parentColumns}
+                          columnIdAliases={columnIdAliases}
                           highlightedSetting={highlightedSetting}
                           onGoTo={handleGoToCustomAttrib}
                         />

@@ -39,7 +39,12 @@ import { toast } from 'react-toastify'
 import { checkColumnVisibility } from '../../containers/ProjectTreeTable/utils'
 import { useMenuContext } from '@shared/context'
 import type { MenuItemType } from '../Menu'
-import { AddColumnItem, buildAddColumnsMenu, getAddColumnSection } from './addColumnsMenu'
+import {
+  AddColumnItem,
+  buildAddColumnsMenu,
+  getDefaultColumnIcon,
+  getAddColumnSection,
+} from './addColumnsMenu'
 import { AddColumnMenu } from './AddColumnMenu'
 import { useVisibilityPaint } from './useVisibilityPaint'
 import { TableSearch } from '../TableSearch'
@@ -52,6 +57,18 @@ import { InputSwitch } from '@ynput/ayon-react-components'
 
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'
 const NO_SCOPES: string[] = []
+
+const getColumnSettingsPath = (column: AddColumnItem, scopes: string[]) => {
+  if (column.parentScope && column.attrib) {
+    return `${column.parentScope.charAt(0).toUpperCase()}${column.parentScope.slice(1)} attributes`
+  }
+  return getAddColumnSection(column, scopes)?.label
+}
+
+const getColumnSettingsItem = (column: AddColumnItem, scopes: string[]): AddColumnItem => {
+  const path = getColumnSettingsPath(column, scopes)
+  return { ...column, icon: column.icon ?? getDefaultColumnIcon(column), ...(path ? { path } : {}) }
+}
 
 export interface SettingSwitchProps
   extends Omit<SettingsPanelItemTemplateProps, 'onChange' | 'item'> {
@@ -497,7 +514,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
               <ColumnItem
                 key={column.value}
                 id={`column-settings-${column.value}`}
-                column={column}
+                column={getColumnSettingsItem(column, scopes)}
                 isPinned={columnPinning.left?.includes(column.value) || false}
                 isHidden={isColumnHidden(column.value)}
                 isHighlighted={highlighted === column.value}
@@ -541,7 +558,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
                   <SortableColumnItem
                     key={column.value}
                     id={column.value}
-                    column={column}
+                    column={getColumnSettingsItem(column, scopes)}
                     isPinned={true}
                     isHidden={isColumnHidden(column.value)}
                     isDisabled={isColumnLocked(column.value)}
@@ -570,7 +587,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
                 <SortableColumnItem
                   key={column.value}
                   id={column.value}
-                  column={column}
+                  column={getColumnSettingsItem(column, scopes)}
                   isPinned={false}
                   isHidden={isColumnHidden(column.value)}
                   isHighlighted={highlighted === column.value}
@@ -590,7 +607,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
         <DragOverlay>
           {activeColumn && !isColumnDragging && (
             <ColumnItem
-              column={activeColumn}
+              column={getColumnSettingsItem(activeColumn, scopes)}
               isPinned={columnPinning.left?.includes(activeColumn.value) || false}
               isHidden={false}
               isHighlighted={highlighted === activeColumn.value}

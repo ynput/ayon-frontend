@@ -11,11 +11,17 @@ import { v4 as uuid } from 'uuid'
  * @returns Array of TableRow objects with loading state
  */
 export const generateLoadingRows = (count = 50, attrib = {}): TableRow[] => {
-  // @ts-ignore
   return new Array(count).fill(0).map((_, index) => ({
     id: uuid(),
+    primary: {
+      id: `loading-${index}`,
+      entityType: 'folder',
+      name: '',
+      label: '',
+      subType: '',
+      attrib,
+    },
     isLoading: true,
-    ...attrib,
   }))
 }
 
