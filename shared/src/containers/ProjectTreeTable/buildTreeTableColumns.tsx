@@ -265,6 +265,14 @@ const getVersionEntity = (row: TableRow): VersionEntityData | undefined => {
 const getProductEntity = (row: TableRow): EntityData | undefined =>
   row.parents?.product || (row.primary.entityType === 'product' ? row.primary : undefined)
 
+const getPrimarySubType = (row: TableRow) => {
+  if (row.primary.entityType === 'version') {
+    const product = getProductEntity(row)
+    return product?.entityType === 'product' ? product.subType : undefined
+  }
+  return getScopedValue(row, 'primary', 'subType')
+}
+
 const getThumbnailEntity = (row: TableRow): EntityData | undefined =>
   row.primary.entityType === 'product' ? getVersionEntity(row) : row.primary
 
@@ -812,7 +820,7 @@ const buildTreeTableColumns = ({
   if (isIncluded('subType')) {
     staticColumns.push({
       id: 'subType',
-      accessorFn: (row) => getScopedValue(row, 'primary', 'subType'),
+      accessorFn: getPrimarySubType,
       header: getColumnLabel('subType', scopes),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('subType'),
@@ -1629,6 +1637,13 @@ export const getValueIdType = (
     scope === 'primary' && !isAttrib && ['author', 'version', 'versionName'].includes(scopedField)
   const isProductField = scope === 'primary' && !isAttrib && scopedField === 'product'
 
+  // Determine if the current field is the product type of a version's primary entity.
+  const isVersionPrimaryProductType =
+    scope === 'primary' &&
+    !isAttrib &&
+    scopedField === 'subType' &&
+    row.original.primary.entityType === 'version'
+
   // Most values come from the scoped entity. Start there, then redirect to a
   // related entity only when the requested field requires it. The order is
   // intentional: regular version fields take precedence over product fields,
@@ -1638,6 +1653,9 @@ export const getValueIdType = (
   if (isVersionField && versionEntity) {
     // Author, version number, and version name come from the featured version.
     valueEntity = versionEntity
+  } else if (isVersionPrimaryProductType && productEntity) {
+    // Versions expose their product type through the product parent.
+    valueEntity = productEntity
   } else if (isProductField && productEntity) {
     // The product column displays the product parent of the current row.
     valueEntity = productEntity
@@ -1674,12 +1692,8 @@ export const getValueIdType = (
   } else {
     // A redirected value (such as a version field on a product row) must be
     // read using the entity's actual scope, not the original column scope.
-    value = getScopedValue(
-      row.original,
-      valueEntity === row.original.primary ? 'primary' : 'version',
-      scopedField,
-      isAttrib,
-    )
+    const valueScope = valueEntity.entityType === 'version' ? 'version' : 'product'
+    value = getScopedValue(row.original, valueScope, scopedField, isAttrib)
   }
 
   // The returned id and type identify the entity that owns the value. Widgets
