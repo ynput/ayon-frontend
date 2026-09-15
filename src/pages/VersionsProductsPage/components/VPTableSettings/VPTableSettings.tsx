@@ -34,11 +34,14 @@ export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
     dataType: 'list_of_strings',
   },
   {
+{
     id: 'folder_updatedAt',
     scope: 'folder',
     field: 'updatedAt',
     label: 'Folder updated at',
     dataType: 'datetime',
+    readOnly: true,
+  }
   },
   {
     id: 'folder_createdAt',
