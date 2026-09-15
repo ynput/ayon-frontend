@@ -263,7 +263,7 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
   const valueA = getCellValue(rowA.original, columnId)
   const valueB = getCellValue(rowB.original, columnId)
   // if attrib is defined and has enum options, use them
-  if (attrib && attrib.enum) {
+  if (attrib?.enum?.length) {
     const indexA = attrib.enum.findIndex((o) => o.value === valueA)
     const indexB = attrib.enum.findIndex((o) => o.value === valueB)
     return indexA - indexB

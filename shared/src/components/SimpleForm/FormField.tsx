@@ -30,6 +30,13 @@ const DropdownItemTemplate = (option: FormOptionItem) => {
   )
 }
 
+// Dropdown works with string ids; option values can be numbers or booleans
+const toDropdownOptions = (options: FormOptionItem[] = []) =>
+  options.map((option) => ({ ...option, value: `${option.value}` }))
+
+const toOptionValue = (options: FormOptionItem[] = [], selected: string) =>
+  options.find((option) => `${option.value}` === selected)?.value ?? selected
+
 export interface FormFieldProps {
   field: SimpleFormField
   value: SimpleFormValue
@@ -106,13 +113,13 @@ export const FormField = ({ field, value, onChange }: FormFieldProps) => {
   }
 
   if (field.type === 'select') {
-    const parsedValue = typeof value === 'string' ? value : ''
+    const parsedValue = value === undefined || value === null || value === '' ? '' : `${value}`
     return (
       <Dropdown
         widthExpand
-        options={field.options || []}
+        options={toDropdownOptions(field.options)}
         value={parsedValue ? [parsedValue] : []}
-        onSelectionChange={(e) => onChange(e[0])}
+        onSelectionChange={(e) => onChange(toOptionValue(field.options, e[0]) as SimpleFormValue)}
         className={`form-field`}
         multiSelect={false}
         itemTemplate={DropdownItemTemplate}
@@ -127,9 +134,11 @@ export const FormField = ({ field, value, onChange }: FormFieldProps) => {
     return (
       <Dropdown
         widthExpand
-        options={field.options || []}
+        options={toDropdownOptions(field.options)}
         value={parsedValue}
-        onSelectionChange={(e) => onChange(e)}
+        onSelectionChange={(e) =>
+          onChange(e.map((selected) => toOptionValue(field.options, selected)) as SimpleFormValue)
+        }
         className={`form-field`}
         multiSelect={true}
         itemTemplate={DropdownItemTemplate}

@@ -91,7 +91,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
     isLoading: isLoadingEnum,
     isError: isEnumError,
     errorMessage: enumErrorMessage,
-  } = useAttributeEnumOptions(field.data, { projectName: enumProjectName, skip: !enumProjectName })
+  } = useAttributeEnumOptions(field.data, { projectName: enumProjectName })
   const enumError = isEnumError ? getEnumErrorText(enumErrorMessage) : undefined
   const isMidnightExclusive =
     field.name === 'attrib.endDate' &&

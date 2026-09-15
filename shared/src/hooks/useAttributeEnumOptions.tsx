@@ -93,8 +93,9 @@ export const useAttributeEnumOptions = (
     [resolver, data?.enumResolverSettings, projectName],
   )
 
+  // currentData, not data: after an args change (e.g. project switch) the previous result is not reused
   const {
-    data: resolved,
+    currentData: resolved,
     isFetching,
     isError: isRequestError,
   } = useGetEnumOptionsQuery(args, { skip: !resolver || !!skip })
@@ -110,7 +111,8 @@ export const useAttributeEnumOptions = (
 
   return {
     options,
-    isLoading: !!resolver && isFetching,
+    // a background refetch (tag invalidation) keeps the cached options, so it is not a load
+    isLoading: !!resolver && isFetching && !resolved,
     isError,
     errorMessage: isError ? resolved?.error : undefined,
   }
@@ -269,14 +271,16 @@ export const useResolvedAttributeEnums = <T extends EnumAttributeLike>(
       attributes.map((attribute): ResolvedEnumAttribute<T> => {
         if (!attribute.data?.enumResolver) return attribute
         const state = states[getAttributeEnumCacheKey(attribute, projectName)]
+        const isSubscribed =
+          !lazy || requested.has(getAttributeEnumRequestKey(attribute.name, projectName))
         return {
           ...attribute,
-          enumIsLoading: state ? state.isLoading : true,
+          enumIsLoading: state ? state.isLoading : isSubscribed,
           enumError: state?.isError ? getEnumErrorText(state.errorMessage) : undefined,
           data: { ...attribute.data, enum: state?.options || EMPTY_OPTIONS },
         }
       }),
-    [attributes, projectName, states],
+    [attributes, lazy, projectName, requested, states],
   )
 
   const subscribedAttributes = useMemo(

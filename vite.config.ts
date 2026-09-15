@@ -154,5 +154,7 @@ export default ({ mode }) => {
       // two stylesheet managers on the same data-styled attribute break rehydration
       dedupe: ['styled-components', 'react', 'react-dom'],
     },
+    // TEMP (local ARC link test): new deps browser hash so Chrome does not reuse cached ARC chunks
+    optimizeDeps: { esbuildOptions: { define: { __ARC_LINK_BUILD__: '"1789463951"' } } },
   })
 }
