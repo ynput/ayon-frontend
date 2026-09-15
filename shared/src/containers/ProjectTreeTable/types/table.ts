@@ -78,7 +78,16 @@ export interface VersionEntityData extends BaseEntityData {
   author?: string
 }
 
-export type EntityData = FolderEntityData | TaskEntityData | ProductEntityData | VersionEntityData
+export interface RestrictedEntityData extends BaseEntityData {
+  entityType: 'unknown'
+}
+
+export type EntityData =
+  | FolderEntityData
+  | TaskEntityData
+  | ProductEntityData
+  | VersionEntityData
+  | RestrictedEntityData
 
 export type EntityScope = 'primary' | EntityType
 

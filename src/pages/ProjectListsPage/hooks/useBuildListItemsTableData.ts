@@ -10,6 +10,7 @@ import type { EntityListItemWithLinks } from './useGetListItemsData'
 import { useProjectContext } from '@shared/context'
 import {
   isEntityRestricted,
+  RESTRICTED_ENTITY_TYPE,
   RESTRICTED_ENTITY_NAME,
   RESTRICTED_ENTITY_LABEL,
   RESTRICTED_ENTITY_ICON,
@@ -93,6 +94,10 @@ const buildPrimaryEntity = (item: EntityListItemWithLinks, isRestricted: boolean
     ownAttrib: item.ownAttrib
       ? [...item.ownAttrib, ...item.ownItemAttrib]
       : Object.keys(item.attrib || {}),
+  }
+
+  if (isRestricted) {
+    return { ...common, entityType: RESTRICTED_ENTITY_TYPE }
   }
 
   switch (entityType) {
