@@ -14,6 +14,6 @@ export const getFieldOptions = (
 ): FormOptionItem[] | undefined => {
   if (field.type !== 'select' && field.type !== 'multiselect') return undefined
   if (patch?.options) return patch.options
-  if (field.enumResolver) return resolvedOptions[field.name]?.options ?? []
+  if (field.enum_resolver) return resolvedOptions[field.name]?.options ?? []
   return field.options ?? []
 }

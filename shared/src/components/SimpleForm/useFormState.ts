@@ -15,7 +15,7 @@ export interface FormStateApi {
 /**
  * Owns every "moving part" of a SimpleForm: the field values themselves,
  * which rules currently match (and the FormFieldPatch that follows from
- * that), live enumResolver options, and the two derived-state clamps that
+ * that), live enum_resolver options, and the two derived-state clamps that
  * keep formData consistent with both of those:
  *  - a rule forcing a value (e.g. clearing a field while it's read-only)
  *  - a select/multiselect whose options changed out from under its value
@@ -35,7 +35,7 @@ export const useFormState = (
   // merged FormFieldPatch to apply on top of that field's static definition
   const patches = useMemo(() => computeFieldPatches(fields, formData || {}), [fields, formData])
 
-  // live options for every field with an `enumResolver`, re-fetched whenever
+  // live options for every field with an `enum_resolver`, re-fetched whenever
   // its (template-resolved) params change
   const resolvedOptions = useResolvedOptions(fields, formData || {})
 
@@ -57,7 +57,7 @@ export const useFormState = (
   }, [patches, formData])
 
   // A select/multiselect's options can change (a rule swaps them, or an
-  // enumResolver re-fetches after a dependency changed) - if the current
+  // enum_resolver re-fetches after a dependency changed) - if the current
   // value is no longer one of them, it must be cleared, or the field would
   // keep pointing at a now-invalid option.
   useEffect(() => {
@@ -72,7 +72,7 @@ export const useFormState = (
       let options: FormOptionItem[]
       if (patch?.options) {
         options = patch.options
-      } else if (field.enumResolver) {
+      } else if (field.enum_resolver) {
         const resolved = resolvedOptions[field.name]
         // still loading (or hasn't started yet) - the empty list right now
         // doesn't mean the value is actually invalid, so don't touch it
