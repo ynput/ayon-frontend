@@ -224,6 +224,8 @@ export type GetGroupedVersionsListArgs = {
   taskFilter?: string
   folderFilter?: string
   folderIds?: string[]
+  versionIds?: string[]
+  productIds?: string[]
   desc?: boolean
   sortBy?: string
   featuredOnly?: string[]
@@ -1215,6 +1217,8 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           taskFilter,
           folderFilter,
           folderIds,
+          versionIds,
+          productIds,
           desc,
           sortBy,
           featuredOnly,
@@ -1239,6 +1243,8 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               // specific group filter
               [groupFilterKey]: group.filter,
               folderIds: folderIds?.length ? folderIds : undefined,
+              versionIds: versionIds?.length ? versionIds : undefined,
+              productIds: productIds?.length ? productIds : undefined,
               sortBy: sortBy,
               featuredOnly,
               featuredOnlyEntityType,

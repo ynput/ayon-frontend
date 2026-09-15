@@ -22,8 +22,9 @@ export const writeSessionStorage = <T>(key: string, value: T): void => {
   if (typeof window === 'undefined') return
   try {
     sessionStorage.setItem(key, JSON.stringify(value))
-    // Dispatches to the same tab to keep other mounted hooks in sync
-    window.dispatchEvent(new Event('session-storage'))
+    // Dispatches to the same tab to keep other mounted hooks in sync; the key lets
+    // listeners ignore writes they don't care about
+    window.dispatchEvent(new CustomEvent('session-storage', { detail: { key } }))
   } catch (e) {
     console.error(e)
   }
@@ -52,6 +53,8 @@ export function useSessionStorage<T>(
     function handler(e: Event | StorageEvent) {
       // If it's a native StorageEvent (e.g., from an iframe), check the key
       if ('key' in e && e.key && e.key !== key) return
+      const changedKey = (e as CustomEvent<{ key?: string }>).detail?.key
+      if (changedKey && changedKey !== key) return
 
       const ssi = sessionStorage.getItem(key)
       setValue(parseJSONString(ssi, defaultValueRef.current))
@@ -78,7 +81,7 @@ export function useSessionStorage<T>(
 
           sessionStorage.setItem(key, JSON.stringify(nextValue))
           if (typeof window !== 'undefined') {
-            window.dispatchEvent(new Event('session-storage'))
+            window.dispatchEvent(new CustomEvent('session-storage', { detail: { key } }))
           }
           return nextValue
         })
