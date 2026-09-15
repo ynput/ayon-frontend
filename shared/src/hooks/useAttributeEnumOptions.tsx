@@ -53,9 +53,31 @@ export const fetchAttributeEnumOptions = async (
     const result = await request.unwrap()
     if (result.error) throw new Error(result.error)
     return normalizeEnumItems(result.items)
+  } catch (error) {
+    throw toEnumRequestError(error)
   } finally {
     request.unsubscribe()
   }
+}
+
+// unwrap() rejects with plain RTK objects ({ status, data }, { status, error } or { message }), not Error instances
+const toEnumRequestError = (error: unknown): Error => {
+  if (error instanceof Error) return error
+  const {
+    message,
+    data,
+    status,
+    error: reason,
+  } = (error || {}) as {
+    message?: unknown
+    data?: { detail?: unknown }
+    status?: unknown
+    error?: unknown // FETCH_ERROR / PARSING_ERROR / TIMEOUT_ERROR reason
+  }
+  if (typeof data?.detail === 'string') return new Error(data.detail)
+  if (typeof reason === 'string') return new Error(reason)
+  if (typeof message === 'string') return new Error(message)
+  return new Error(status ? `Request failed (${status})` : 'Request failed')
 }
 
 // Options for one attribute: static data.enum, or resolved through the backend enum registry.
