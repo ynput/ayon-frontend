@@ -8,7 +8,7 @@ import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
-import { buildTaskTableRow } from '../utils'
+import { buildTaskTableRow, linksToTableData } from '../utils'
 import type { ProjectModelWithProducts } from '@shared/context/ProjectContext'
 import { useProjectContext } from '@shared/context/ProjectContext'
 
@@ -157,6 +157,10 @@ const useBuildGroupByTableData = ({
         ? groupRowFunc(task)
         : defaultEntityToGroupRow(task, group, entityType, entities, getEntityTypeData)
 
+      if (entityType === 'task') {
+        baseRow.primary.links = linksToTableData(task.links, 'task', project.anatomy)
+      }
+
       // Ensure group-specific fields are set
       return {
         ...baseRow,
@@ -164,7 +168,7 @@ const useBuildGroupByTableData = ({
         subRows: baseRow.subRows || [],
       }
     },
-    [groupRowFunc, getEntityTypeData, entityType, entities],
+    [groupRowFunc, getEntityTypeData, entityType, entities, project],
   )
 
   return useCallback(
