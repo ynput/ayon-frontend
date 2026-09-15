@@ -1603,6 +1603,8 @@ export const getValueIdType = (
   id: string
   type: string
 } => {
+  // Group rows are synthetic rows. They have a name for the group header, but
+  // do not have an entity whose fields can be read or edited.
   if (row.original.group) {
     return {
       value: field === 'name' ? row.original.primary.name : undefined,
@@ -1611,48 +1613,76 @@ export const getValueIdType = (
     }
   }
 
+  // A column can point at the primary entity or at one of its related entities
+  // (for example, a product row can expose fields from its featured version).
   const { scope, field: scopedField, isAttrib } = parseScopedColumnId(field)
   const scopedEntity = getScopedEntity(row.original, scope)
   const entity = scopedEntity || row.original.primary
+
+  // Keep the related entities available separately because they are also used
+  // by fields that are stored on the row's parents rather than in the scope.
   const versionEntity = getVersionEntity(row.original)
   const productEntity = getProductEntity(row.original)
+
+  const isProductRow = row.original.primary.entityType === 'product'
   const isVersionField =
     scope === 'primary' && !isAttrib && ['author', 'version', 'versionName'].includes(scopedField)
   const isProductField = scope === 'primary' && !isAttrib && scopedField === 'product'
-  const isCommentsField =
-    nestedField === 'latestComments' && row.original.primary.entityType === 'product'
-  const valueEntity = isVersionField
-    ? versionEntity || entity
-    : isProductField
-    ? productEntity || entity
-    : isCommentsField
-    ? versionEntity || entity
-    : entity
-  const value =
-    nestedField === 'attrib'
-      ? getScopedValue(row.original, scope, scopedField, true)
-      : nestedField === 'links'
-      ? valueEntity.links?.[scopedField.replace(/^link_/, '')]
-      : nestedField === 'subtasks'
-      ? valueEntity.entityType === 'task'
-        ? valueEntity.subtasks
-        : undefined
-      : nestedField === 'latestComments'
-      ? row.original.primary.entityType === 'product'
-        ? versionEntity?.latestComments || row.original.primary.latestComments
-        : entity.latestComments
-      : field === 'folder'
-      ? row.original.parents?.folder?.label || row.original.parents?.folder?.name
-      : field === 'product'
-      ? productEntity?.label || productEntity?.name
-      : valueEntity === entity
-      ? getScopedValue(row.original, scope, scopedField, isAttrib)
-      : getScopedValue(
-          row.original,
-          valueEntity === row.original.primary ? 'primary' : 'version',
-          scopedField,
-          isAttrib,
-        )
 
+  // Most values come from the scoped entity. Start there, then redirect to a
+  // related entity only when the requested field requires it. The order is
+  // intentional: regular version fields take precedence over product fields,
+  // which take precedence over the product-comments redirect.
+  let valueEntity = entity
+
+  if (isVersionField && versionEntity) {
+    // Author, version number, and version name come from the featured version.
+    valueEntity = versionEntity
+  } else if (isProductField && productEntity) {
+    // The product column displays the product parent of the current row.
+    valueEntity = productEntity
+  } else if (nestedField === 'latestComments' && isProductRow && versionEntity) {
+    // Product comments are normally read from the featured version.
+    valueEntity = versionEntity
+  }
+
+  let value: any
+
+  // Nested fields are requested by widgets and are not regular entity fields.
+  // Resolve them first so they do not fall through to scoped field lookup.
+  if (nestedField === 'attrib') {
+    value = getScopedValue(row.original, scope, scopedField, true)
+  } else if (nestedField === 'links') {
+    value = valueEntity.links?.[scopedField.replace(/^link_/, '')]
+  } else if (nestedField === 'subtasks') {
+    value = valueEntity.entityType === 'task' ? valueEntity.subtasks : undefined
+  } else if (nestedField === 'latestComments') {
+    // Products show comments from their featured version. Product comments
+    // remain a fallback for rows where that version has no comments.
+    value = isProductRow
+      ? versionEntity?.latestComments || row.original.primary.latestComments
+      : entity.latestComments
+  } else if (field === 'folder') {
+    // Folder and product columns display parent entities rather than a field
+    // on the current scoped entity.
+    value = row.original.parents?.folder?.label || row.original.parents?.folder?.name
+  } else if (field === 'product') {
+    value = productEntity?.label || productEntity?.name
+  } else if (valueEntity === entity) {
+    // The normal case: read the requested field from the selected scope.
+    value = getScopedValue(row.original, scope, scopedField, isAttrib)
+  } else {
+    // A redirected value (such as a version field on a product row) must be
+    // read using the entity's actual scope, not the original column scope.
+    value = getScopedValue(
+      row.original,
+      valueEntity === row.original.primary ? 'primary' : 'version',
+      scopedField,
+      isAttrib,
+    )
+  }
+
+  // The returned id and type identify the entity that owns the value. Widgets
+  // use them for updates, links, and deciding which entity-specific UI to show.
   return { value, id: valueEntity.id, type: valueEntity.entityType }
 }
