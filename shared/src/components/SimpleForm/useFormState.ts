@@ -26,10 +26,14 @@ export const useFormState = (
 ): FormStateApi => {
   const [formData, setFormData] = useState<SimpleFormValueDict | null>(null)
 
+  // a refetch hands over equal fields with a new identity; that must not wipe edits
+  const fieldsKey = useMemo(() => JSON.stringify(fields), [fields])
+
+  // values only seed the form; edits made so far win over them
   useEffect(() => {
-    setFormData(getDefaults(fields, values || {}))
+    setFormData((prev) => getDefaults(fields, { ...values, ...prev }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields, values])
+  }, [fieldsKey])
 
   // `rules` matched against the current values - a map of fieldName -> the
   // merged FormFieldPatch to apply on top of that field's static definition

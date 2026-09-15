@@ -225,13 +225,6 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
   const settings = (enumResolverSettings as SimpleFormValueDict) || {}
   const contextNotice = getContextNotice(selectedResolver?.acceptedParams, scope)
 
-  // Seed only: SimpleForm reseeds on values identity, so echoing settings back would loop
-  const initialSettings = useMemo(
-    () => (enumResolverSettings as SimpleFormValueDict) || {},
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [enumResolver],
-  )
-
   const handleSourceChange = (value: string[]) => {
     const source = value[0]
     if (!source || source === CUSTOM_ENUM_SOURCE) {
@@ -286,7 +279,7 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
             <SimpleForm
               key={enumResolver}
               fields={settingsFields}
-              values={initialSettings}
+              values={settings}
               onChange={onChangeResolverSettings}
             />
           )}
