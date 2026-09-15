@@ -36,7 +36,6 @@ export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
     sortable: false,
   },
   {
-{
     id: 'folder_updatedAt',
     scope: 'folder',
     field: 'updatedAt',
@@ -44,10 +43,8 @@ export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
     dataType: 'datetime',
     readOnly: true,
     sortable: false,
-  }
   },
   {
-{
     id: 'folder_createdAt',
     scope: 'folder',
     field: 'createdAt',
@@ -55,7 +52,6 @@ export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
     dataType: 'datetime',
     readOnly: true,
     sortable: false,
-  }
   },
   {
     id: 'task_subType',
@@ -75,14 +71,13 @@ export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
     sortable: false,
   },
   {
-{
     id: 'product_productBaseType',
     scope: 'product',
     field: 'productBaseType',
     label: 'Product base type',
     fallbackToPrimary: true,
     readOnly: true,
-  }
+  },
 ]
 
 export const VP_COLUMN_ID_ALIASES = {

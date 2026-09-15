@@ -215,6 +215,7 @@ export const isColumnSortable = (columnId: string) =>
 export const getColumnSortKey = (columnId?: string, showHierarchy = true, entityType?: string) => {
   if (!columnId) return undefined
   const normalizedColumnId = normalizeColumnId(columnId)
+  if (parseScopedColumnId(normalizedColumnId).scope !== 'primary') return undefined
   if (normalizedColumnId === 'name' && !showHierarchy) return 'path'
   if (normalizedColumnId === 'subType') {
     if (entityType === 'folder') return 'folderType'
@@ -413,7 +414,7 @@ const createParentColumn = (definition: ParentColumnDefinition): ColumnDef<Table
     header: definition.label,
     accessorFn: getValue,
     minSize: COLUMN_MIN_SIZE,
-    enableSorting: definition.sortable ?? isColumnSortable(id),
+    enableSorting: false,
     enableResizing: true,
     enablePinning: true,
     enableHiding: true,
@@ -473,7 +474,7 @@ const createParentAttributeColumn = (
     header: getScopedHeader(scope, attribute.data.title || attribute.name),
     accessorFn: (row) => getScopedValue(row, scope, attribute.name, true),
     minSize: COLUMN_MIN_SIZE,
-    enableSorting: isColumnSortable(id),
+    enableSorting: false,
     enableResizing: true,
     enablePinning: true,
     enableHiding: true,
