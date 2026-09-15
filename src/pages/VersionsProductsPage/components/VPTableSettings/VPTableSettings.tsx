@@ -15,6 +15,7 @@ export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
     label: 'Folder status',
     optionKey: 'folderStatus',
     readOnly: false,
+    sortable: false,
     updateField: 'status',
   },
   {
@@ -32,6 +33,7 @@ export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
     label: 'Folder tags',
     optionKey: 'tag',
     dataType: 'list_of_strings',
+    sortable: false,
   },
   {
 {
@@ -41,6 +43,7 @@ export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
     label: 'Folder updated at',
     dataType: 'datetime',
     readOnly: true,
+    sortable: false,
   }
   },
   {
@@ -51,6 +54,7 @@ export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
     label: 'Folder created at',
     dataType: 'datetime',
     readOnly: true,
+    sortable: false,
   }
   },
   {
@@ -68,6 +72,7 @@ export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
     label: 'Task status',
     optionKey: 'taskStatus',
     readOnly: false,
+    sortable: false,
   },
   {
 {

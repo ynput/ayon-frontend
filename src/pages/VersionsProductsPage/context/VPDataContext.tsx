@@ -63,6 +63,9 @@ const SORT_BY_FIELD_MAP: Record<string, string> = {
   name: 'path',
   subType: 'productType',
   folder_entity: 'folderName',
+  folder_subType: 'folderType',
+  task_subType: 'taskType',
+  product_productBaseType: 'productBaseType',
   product: 'productName',
 }
 
