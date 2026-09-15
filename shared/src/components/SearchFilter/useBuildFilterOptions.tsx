@@ -626,6 +626,7 @@ export const useBuildFilterOptions = ({
         if (attribute.data.enumResolver) {
           const attributeData = attribute.data
           // resolvers are project scoped; a multi project filter uses the first project
+          option.loadValuesKey = projectNames?.[0]
           option.loadValues = async () =>
             getAttributeOptions(
               realData,
