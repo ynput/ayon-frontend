@@ -44,11 +44,14 @@ export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
   }
   },
   {
+{
     id: 'folder_createdAt',
     scope: 'folder',
     field: 'createdAt',
     label: 'Folder created at',
     dataType: 'datetime',
+    readOnly: true,
+  }
   },
   {
     id: 'task_subType',
