@@ -112,7 +112,11 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
     extraColumnsSettings,
     parentColumns,
     includeParents,
-    columnIdAliases: LISTS_COLUMN_ID_ALIASES,
+columnIdAliases: {
+      ...LISTS_COLUMN_ID_ALIASES,
+      ...(entityType === 'folder' ? { folderType: 'subType' } : {}),
+      ...(entityType === 'task' ? { taskType: 'subType' } : {}),
+    }
   }
 }
 
