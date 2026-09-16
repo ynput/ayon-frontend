@@ -212,9 +212,8 @@ const enhancedRest = inboxApi.enhanceEndpoints({
         try {
           await queryFulfilled
 
-          // invalidate tags AFTER the query is fulfilled and for ALL apis
+          // invalidate tags AFTER the query is fulfilled
           if (tagsToInvalidate.length) {
-            dispatch(inboxApi.util.invalidateTags(tagsToInvalidate))
             dispatch(inboxApi.util.invalidateTags(tagsToInvalidate))
           }
         } catch (error: any) {

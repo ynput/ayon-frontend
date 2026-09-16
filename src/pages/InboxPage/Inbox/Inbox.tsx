@@ -198,8 +198,9 @@ const Inbox = ({ filter }: InboxProps) => {
   // in project mode the info is needed even when the filtered list comes back empty
   const infoProjectNames = isProjectMode ? [selectedProject as string] : projectNames
 
+  // anatomy is one request per listed project and nothing here reads it
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
-    { projects: infoProjectNames },
+    { projects: infoProjectNames, anatomy: false },
     { skip: isLoadingInbox || !infoProjectNames?.length },
   )
 
