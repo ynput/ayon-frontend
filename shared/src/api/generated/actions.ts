@@ -156,8 +156,8 @@ export type SimpleFormField = {
   readOnly?: boolean
   disabled?: boolean
   hidden?: boolean
-  enumResolver?: string
-  enumResolverParams?: { [key: string]: any }
+  enum_resolver?: string
+  enum_resolver_params?: { [key: string]: any }
   rules?: FormFieldRule[]
 }
 export type BaseActionManifest = {

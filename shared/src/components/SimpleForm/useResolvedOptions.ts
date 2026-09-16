@@ -29,7 +29,7 @@ export const useResolvedOptions = (
 ): ResolvedOptionsState => {
   const [state, setState] = useState<ResolvedOptionsState>({})
 
-  const resolverFields = fields.filter((field) => !!field.enumResolver)
+  const resolverFields = fields.filter((field) => !!field.enum_resolver)
 
   // Field identity + resolved params, used both to fetch and as an effect
   // dependency (JSON.stringify gives a cheap deep-equality key without
@@ -37,8 +37,8 @@ export const useResolvedOptions = (
   const paramsKey = JSON.stringify(
     resolverFields.map((field) => [
       field.name,
-      field.enumResolver,
-      resolveTemplates(field.enumResolverParams || {}, values),
+      field.enum_resolver,
+      resolveTemplates(field.enum_resolver_params || {}, values),
     ]),
   )
 
@@ -47,7 +47,7 @@ export const useResolvedOptions = (
     let cancelled = false
 
     resolverFields.forEach((field) => {
-      const rawParams = field.enumResolverParams || {}
+      const rawParams = field.enum_resolver_params || {}
       const templateVars = extractTemplateVars(rawParams)
       const missingDependency = templateVars.some((name) => isUnset(values[name]))
 
@@ -64,7 +64,7 @@ export const useResolvedOptions = (
       }))
 
       axios
-        .get<FormOptionItem[]>(`/api/enum/${field.enumResolver}`, { params })
+        .get<FormOptionItem[]>(`/api/enum/${field.enum_resolver}`, { params })
         .then((response) => {
           if (cancelled) return
           setState((prev) => ({

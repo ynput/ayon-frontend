@@ -20,7 +20,7 @@ export interface SimpleFormProps {
 
 /**
  * The embeddable AYON simple form: renders `fields` (as built by
- * ayon_server.forms.SimpleForm) with live rule evaluation and enumResolver
+ * ayon_server.forms.SimpleForm) with live rule evaluation and enum_resolver
  * fetching. Owns its own field state - drop it in a dialog, a page, a
  * sidebar, wherever; `onChange` is how a parent reads the current values.
  *
@@ -55,20 +55,24 @@ export const SimpleForm = ({ fields, values, onChange, className, style }: Simpl
         const effectiveField = { ...field, ...patch } as SimpleFormField
         if (options !== undefined) {
           effectiveField.options = options
-          const loading = field.enumResolver && resolvedOptions[field.name]?.loading
+          const loading = field.enum_resolver && resolvedOptions[field.name]?.loading
           if (loading && effectiveField.placeholder === undefined) {
             effectiveField.placeholder = 'Loading...'
           }
         }
 
-        if (effectiveField.hidden) return null
+        const rowStyle: React.CSSProperties = {}
+
+        if (effectiveField.hidden) {
+          rowStyle.display = 'none'
+        }
 
         if (effectiveField.type === 'label') {
           return <FormLabel key={field.name} field={effectiveField} />
         }
 
         return (
-          <FormRow key={field.name} label={effectiveField.label || ''}>
+          <FormRow key={field.name} label={effectiveField.label || ''} style={rowStyle}>
             <FormField
               field={effectiveField}
               value={formData[field.name]}
