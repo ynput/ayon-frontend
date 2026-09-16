@@ -1,6 +1,15 @@
 import InboxMessage from '../InboxMessage/InboxMessage'
 import * as Styled from './Inbox.styled'
-import { useCallback, useEffect, useMemo, useRef, useState, MouseEvent, KeyboardEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  Fragment,
+  MouseEvent,
+  KeyboardEvent,
+} from 'react'
 import clsx from 'clsx'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { useDispatch } from 'react-redux'
@@ -21,6 +30,7 @@ import ProjectsList from '@containers/ProjectsList/ProjectsList'
 import type { Hidden } from '@containers/ProjectsList/hooks/useProjectsListMenuItems'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 import InboxSearchFilter from '../components/InboxSearchFilter'
+import InboxDateDivider, { getDayKey } from '../components/InboxDateDivider'
 // Hooks
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useGroupMessages from '../hooks/useGroupMessages'
@@ -234,8 +244,9 @@ const Inbox = ({ filter }: InboxProps) => {
     lastSelectedIndexRef.current = -1
     if (!listRef.current || isLoadingInbox) return
 
-    const firstChild = listRef.current?.firstElementChild as HTMLElement | null
-    firstChild?.focus()
+    // a day divider can be the first child, and it takes no focus
+    const firstMessage = listRef.current?.querySelector('.inbox-message') as HTMLElement | null
+    firstMessage?.focus()
   }, [listRef, isLoadingInbox, filter, selectedProject])
 
   const handleProjectSelect = useCallback(
@@ -446,6 +457,9 @@ const Inbox = ({ filter }: InboxProps) => {
   const messagesData = isLoadingAny
     ? (placeholderMessages as unknown as GroupedMessage[])
     : groupedMessages
+
+  // the cleared tab is not sorted by date, so day dividers would be meaningless there
+  const showDayDividers = isActive && !isLoadingAny
 
   const getHoveredMessageId = (e: MouseEvent | KeyboardEvent, closest = ''): string | null => {
     // get the message list item
@@ -661,39 +675,46 @@ const Inbox = ({ filter }: InboxProps) => {
                     className={clsx({ isLoading: isLoadingInbox })}
                   >
                     {messagesData.map((group, i: number) => (
-                      <InboxMessage
-                        key={group.activityId}
-                        rowIndex={i}
-                        path={group.path}
-                        type={group.activityType}
-                        entityType={group.entityType ?? undefined}
-                        entitySubType={group.entitySubType ?? undefined}
-                        entityId={group.entityId ?? undefined}
-                        projectName={group.projectName}
-                        date={group.date}
-                        userName={group.userName}
-                        isRead={group.read || group.active}
-                        unReadCount={group.unRead}
-                        onSelect={handleMessageSelect}
-                        isSelected={selected.includes(group.activityId)}
-                        disableHover={usingKeyboard}
-                        onClear={
-                          !selected.length || selected.includes(group.activityId)
-                            ? () => handleClearMessage(group.activityId)
-                            : undefined
-                        }
-                        clearLabel={isActive ? 'Clear' : 'Unclear'}
-                        clearIcon={isActive ? 'done' : 'replay'}
-                        id={group.activityId}
-                        ids={group.groupIds}
-                        messages={group.messages}
-                        changes={group.changes}
-                        isPlaceholder={group.isPlaceholder}
-                        projectsInfo={projectsInfo}
-                        isMultiple={group.isMultiple}
-                        onContextMenu={handleContextMenu}
-                        customBody={group.body}
-                      />
+                      <Fragment key={group.activityId}>
+                        {showDayDividers &&
+                          !!getDayKey(group.date) &&
+                          getDayKey(group.date) !== getDayKey(messagesData[i - 1]?.date) && (
+                            <InboxDateDivider date={group.date as string} />
+                          )}
+                        <InboxMessage
+                          rowIndex={i}
+                          path={group.path}
+                          type={group.activityType}
+                          entityType={group.entityType ?? undefined}
+                          entitySubType={group.entitySubType ?? undefined}
+                          entityId={group.entityId ?? undefined}
+                          projectName={group.projectName}
+                          date={group.date}
+                          userName={group.userName}
+                          isRead={group.read || group.active}
+                          unReadCount={group.unRead}
+                          onSelect={handleMessageSelect}
+                          isSelected={selected.includes(group.activityId)}
+                          disableHover={usingKeyboard}
+                          onClear={
+                            !selected.length || selected.includes(group.activityId)
+                              ? () => handleClearMessage(group.activityId)
+                              : undefined
+                          }
+                          clearLabel={isActive ? 'Clear' : 'Unclear'}
+                          clearIcon={isActive ? 'done' : 'replay'}
+                          id={group.activityId}
+                          ids={group.groupIds}
+                          messages={group.messages}
+                          changes={group.changes}
+                          isPlaceholder={group.isPlaceholder}
+                          projectsInfo={projectsInfo}
+                          isMultiple={group.isMultiple}
+                          onContextMenu={handleContextMenu}
+                          customBody={group.body}
+                          showUserTeams={!isGuest}
+                        />
+                      </Fragment>
                     ))}
                     {hasNextPage && !isLoadingInbox && !!messages.length && (
                       <InView

@@ -45,6 +45,11 @@ export const Message = styled.li`
     border-top-color: var(--md-sys-color-outline-variant);
   }
 
+  /* the day divider already draws its own line */
+  .inbox-date-divider + & {
+    border-top-color: transparent;
+  }
+
   /* last child margin */
   &:last-child {
     margin-bottom: 32px;

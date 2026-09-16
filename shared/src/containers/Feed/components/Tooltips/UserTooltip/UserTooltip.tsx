@@ -1,19 +1,44 @@
+import { Icon } from '@ynput/ayon-react-components'
+import { teamsApi } from '@shared/api'
 import UserTooltipItem from '../UserTooltipItem'
 import * as Styled from './UserTooltip.styled'
 
 interface UserTooltipProps {
   name?: string
   label?: string
+  /** when set, the tooltip also lists the teams this user belongs to in that project */
+  projectName?: string
   pos: {
     top: number
     left: number
   }
 }
 
-const UserTooltip = ({ name, label, pos }: UserTooltipProps) => {
+const UserTooltip = ({ name, label, projectName, pos }: UserTooltipProps) => {
+  // only runs while the tooltip is mounted, so nothing is fetched until a hover
+  const { data: teams = [] } = teamsApi.useGetTeamsQuery(
+    { projectName: projectName as string, showMembers: true },
+    { skip: !projectName || !name },
+  )
+
+  const memberships = teams
+    .map((team) => ({ team, member: team.members?.find((m) => m.name === name) }))
+    .filter((membership) => !!membership.member)
+
   return (
-    <Styled.Popup style={{ ...pos }}>
+    <Styled.Popup style={{ ...pos }} className={memberships.length ? 'with-teams' : undefined}>
       <UserTooltipItem name={name || ''} fullName={label} showSubtitle size={32} />
+      {memberships.length > 0 && (
+        <Styled.Teams>
+          {memberships.map(({ team, member }) => (
+            <Styled.TeamItem key={team.name}>
+              <Icon icon={member?.leader ? 'star' : 'group'} />
+              <span>{team.name}</span>
+              {!!member?.roles?.length && <span className="label">{member.roles.join(', ')}</span>}
+            </Styled.TeamItem>
+          ))}
+        </Styled.Teams>
+      )}
     </Styled.Popup>
   )
 }
