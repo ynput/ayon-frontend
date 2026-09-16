@@ -1,7 +1,10 @@
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
 import { teamsApi } from '@shared/api'
 import UserTooltipItem from '../UserTooltipItem'
 import * as Styled from './UserTooltip.styled'
+
+const VIEWPORT_MARGIN = 8
 
 interface UserTooltipProps {
   name?: string
@@ -25,8 +28,26 @@ const UserTooltip = ({ name, label, projectName, pos }: UserTooltipProps) => {
     .map((team) => ({ team, member: team.members?.find((m) => m.name === name) }))
     .filter((membership) => !!membership.member)
 
+  const popupRef = useRef<HTMLSpanElement>(null)
+  const [left, setLeft] = useState(pos.left)
+
+  // the popup is centred on the anchor, which pushes it off screen near an edge
+  useLayoutEffect(() => {
+    const width = popupRef.current?.offsetWidth
+    if (!width) return
+
+    const half = width / 2
+    const max = window.innerWidth - half - VIEWPORT_MARGIN
+    const min = half + VIEWPORT_MARGIN
+    setLeft(Math.min(Math.max(pos.left, min), Math.max(min, max)))
+  }, [pos.left, memberships.length])
+
   return (
-    <Styled.Popup style={{ ...pos }} className={memberships.length ? 'with-teams' : undefined}>
+    <Styled.Popup
+      ref={popupRef}
+      style={{ ...pos, left }}
+      className={memberships.length ? 'with-teams' : undefined}
+    >
       <UserTooltipItem name={name || ''} fullName={label} showSubtitle size={32} />
       {memberships.length > 0 && (
         <Styled.Teams>

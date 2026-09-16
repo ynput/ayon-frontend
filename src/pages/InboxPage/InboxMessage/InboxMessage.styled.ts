@@ -7,7 +7,7 @@ const showClearButton = css`
     .clear {
       display: flex;
     }
-    .user-image,
+    /* the avatar stays: it carries the user tooltip, and only the date has to make room */
     .date {
       display: none;
     }
@@ -187,8 +187,8 @@ export const Right = styled.div`
 
 export const Date = styled.span`
   /* wide enough for a locale date plus time, right aligned so rows line up */
-  min-width: 110px;
-  max-width: 110px;
+  min-width: 128px;
+  max-width: 128px;
   text-align: right;
   white-space: nowrap;
   overflow: hidden;
