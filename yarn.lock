@@ -2434,12 +2434,10 @@
     react-toastify "^9.0.3"
     sass "1.99.0"
 
-"@ynput/ayon-react-components@^1.19.9":
-  version "1.19.9"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.19.9.tgz#543de358a27e4621c05cc03aa807bea4d986cb36"
-  integrity sha512-0pvf80Lysgkhk2UvbsF0Sz5BA+OBrvAhIuzAxcka8kJYhz6WRW/RGtb+5LU8/r3kGDHNxPvxyHE/sK8s5FZnvg==
-  dependencies:
-    short-uuid "^5.2.0"
+"@ynput/ayon-react-components@^1.20.0":
+  version "1.20.0"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.20.0.tgz#5a405ca46e82d53e4ad0ee59fabdd59aea065712"
+  integrity sha512-+eCnWQiASwuCGll3V1BMr30gO+qwJ30BdIZoji56nLsy3oBLr5XjTmyNo+IKM2dHnfCTdoxRPreNxqvMVlZBiw==
 
 acorn-jsx@^5.3.2:
   version "5.3.2"
@@ -6947,14 +6945,6 @@ short-uuid@6.0.3:
   dependencies:
     any-base "^1.1.0"
 
-short-uuid@^5.2.0:
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/short-uuid/-/short-uuid-5.2.0.tgz#49378f8c5335a603bc801c279ae521c5d22532dc"
-  integrity sha512-296/Nzi4DmANh93iYBwT4NoYRJuHnKEzefrkSagQbTH/A6NTaB68hSPDjm5IlbI5dx9FXdmtqPcj6N5H+CPm6w==
-  dependencies:
-    any-base "^1.1.0"
-    uuid "^9.0.1"
-
 should-equal@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/should-equal/-/should-equal-2.0.0.tgz#6072cf83047360867e68e98b09d71143d04ee0c3"
@@ -7709,11 +7699,6 @@ uuid@14.0.1:
   version "14.0.1"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-14.0.1.tgz#8a5975b3e038902bfd169a10b5202f5ec0cf3faf"
   integrity sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==
-
-uuid@^9.0.1:
-  version "9.0.1"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-9.0.1.tgz#e188d4c8853cc722220392c424cd637f32293f30"
-  integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
 
 v8-compile-cache-lib@^3.0.1:
   version "3.0.1"
