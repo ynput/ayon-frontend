@@ -24,6 +24,14 @@ export type ValidationError = {
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
+export type ManageInboxItemFilter = {
+  /** Filter by the active flag when provided */
+  active?: boolean
+  /** Filter by read state when provided */
+  read?: boolean
+  /** Filter by whether the item belongs to the Important split */
+  important?: boolean
+}
 export type ManageInboxItemRequest = {
   projectName: string
   /** List of reference_ids of items to be managed */
@@ -32,4 +40,6 @@ export type ManageInboxItemRequest = {
   all?: boolean
   /** Status to set for the items */
   status: 'unread' | 'read' | 'inactive'
+  /** Optional filter selecting which inbox items should be updated */
+  itemFilter?: ManageInboxItemFilter
 }

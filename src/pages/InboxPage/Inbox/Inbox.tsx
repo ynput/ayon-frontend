@@ -20,7 +20,7 @@ import { compareAsc } from 'date-fns'
 // Queries
 import { useGetInboxInfiniteInfiniteQuery } from '@queries/inbox/getInbox'
 import { useGetProjectInboxInfinite } from '@queries/inbox/getProjectInbox'
-import { useGetProjectsInfoQuery } from '@shared/api'
+import { useGetProjectsInfoQuery, type ManageInboxItemFilter } from '@shared/api'
 // Components
 import { Button } from '@ynput/ayon-react-components'
 import { SplitterPanel } from 'primereact/splitter'
@@ -121,8 +121,8 @@ const Inbox = ({ filter }: InboxProps) => {
   const isProjectMode = !!selectedProject
 
   // chips only reach the query in project mode, the unread toggle narrows both
-  const isFiltered =
-    (isProjectMode && !!inboxFilter?.conditions?.length) || (isActive && showUnreadOnly)
+  const isChipFiltered = isProjectMode && !!inboxFilter?.conditions?.length
+  const isFiltered = isChipFiltered || (isActive && showUnreadOnly)
 
   const projectArgs = useMemo(
     () => ({
@@ -350,6 +350,7 @@ const Inbox = ({ filter }: InboxProps) => {
     messagesToClear: InboxMessageType[] = [],
     projectName: string,
     allMessages?: boolean,
+    itemFilter?: ManageInboxItemFilter,
   ): Promise<void> => {
     if (selected.length) {
       // select next message in the list
@@ -363,7 +364,7 @@ const Inbox = ({ filter }: InboxProps) => {
     const isRead = messagesToClear.every((m) => m.read)
     const status = isActive ? 'inactive' : 'unread'
 
-    handleUpdateMessages(idsToClear, status, projectName, true, isRead, allMessages)
+    handleUpdateMessages(idsToClear, status, projectName, true, isRead, allMessages, itemFilter)
   }
 
   const handleClearMessage = (id: string): void => {
@@ -422,27 +423,41 @@ const Inbox = ({ filter }: InboxProps) => {
     })
   }
 
-  const handleClearAll = async (): Promise<void> => {
+  const handleClearAll = async (onlyRead = false): Promise<void> => {
     let promises: Promise<void>[] = []
     let clearedCount = 0
 
-    if (isFiltered) {
-      // the backend `all` flag ignores filters, so name the messages instead
-      if (!groupedMessages.length) return
-      clearedCount = groupedMessages.reduce((sum, g) => sum + g.messages.length, 0)
-      promises = clearGroups(groupedMessages)
+    // the unread toggle hides exactly the rows Clear read targets, so it keeps the backend path
+    const isNarrowed = onlyRead ? isChipFiltered : isFiltered
+
+    if (isNarrowed) {
+      // the backend cannot see the chip filters, so name the messages instead
+      const groupsToClear = onlyRead ? groupedMessages.filter((g) => g.read) : groupedMessages
+      if (!groupsToClear.length) return
+      clearedCount = groupsToClear.reduce((sum, g) => sum + g.messages.length, 0)
+      promises = clearGroups(groupsToClear)
       setSelected([])
       lastSelectedIndexRef.current = -1
     } else {
       const projectsToClear = isProjectMode
         ? [selectedProject as string]
         : projects.map((p) => p.name)
-      promises = projectsToClear.map((project) => clearMessages(null, [], project, true))
+      // active+important keep the tab split: without them the backend clears every reference
+      // of the user in the project, including the other tab and already cleared rows
+      const itemFilter: ManageInboxItemFilter = {
+        active: true,
+        important: !!isImportant,
+        ...(onlyRead && { read: true }),
+      }
+      promises = projectsToClear.map((project) =>
+        clearMessages(null, [], project, true, itemFilter),
+      )
     }
 
     try {
       await Promise.all(promises)
-      toast.success(isFiltered ? `Cleared ${clearedCount} messages` : 'All messages cleared')
+      if (isNarrowed) toast.success(`Cleared ${clearedCount} messages`)
+      else toast.success(onlyRead ? 'Read messages cleared' : 'All messages cleared')
     } catch (error) {
       console.error(error)
     }
@@ -589,7 +604,7 @@ const Inbox = ({ filter }: InboxProps) => {
       },
       {
         key: 'C',
-        action: handleClearAll,
+        action: () => handleClearAll(),
       },
       {
         key: 'x',
@@ -646,17 +661,31 @@ const Inbox = ({ filter }: InboxProps) => {
                 )}
                 <EnableNotifications />
                 {isActive && (
-                  <Button
-                    icon="done_all"
-                    onClick={handleClearAll}
-                    disabled={!messages.length}
-                    shortcut={{ children: getPlatformShortcutKey('c', [KeyMode.Shift]) }}
-                    data-tooltip={
-                      isFiltered ? 'Clears only the messages matching the filters' : undefined
-                    }
-                  >
-                    Clear all
-                  </Button>
+                  <>
+                    <Button
+                      icon="drafts"
+                      onClick={() => handleClearAll(true)}
+                      disabled={!messages.length}
+                      data-tooltip={
+                        isChipFiltered
+                          ? 'Clears only the read messages matching the filters'
+                          : 'Clears read messages, unread ones stay'
+                      }
+                    >
+                      Clear read
+                    </Button>
+                    <Button
+                      icon="done_all"
+                      onClick={() => handleClearAll()}
+                      disabled={!messages.length}
+                      shortcut={{ children: getPlatformShortcutKey('c', [KeyMode.Shift]) }}
+                      data-tooltip={
+                        isFiltered ? 'Clears only the messages matching the filters' : undefined
+                      }
+                    >
+                      Clear all
+                    </Button>
+                  </>
                 )}
                 <Button icon="refresh" onClick={refreshInbox} shortcut={{ children: 'R' }}>
                   Refresh

@@ -11,6 +11,8 @@ export interface Arg extends ManageInboxItemApiArg {
   important: boolean
   isActiveChange: boolean
   isRead: boolean
+  // `all` clears read rows only - mirrors itemFilter.read on the request
+  onlyRead?: boolean
 }
 
 // When reading a message, we need to update the unread count
@@ -50,6 +52,7 @@ const enhancedRest = inboxApi.enhanceEndpoints({
           important,
           isActiveChange,
           isRead,
+          onlyRead,
           manageInboxItemRequest: { ids = [], status, all, projectName },
         }: Arg,
         { dispatch, getState, queryFulfilled },
@@ -81,7 +84,7 @@ const enhancedRest = inboxApi.enhanceEndpoints({
 
         // `all` is one project on the backend, so the cross-project cache must keep the rest
         const isLeaving = all
-          ? (m: InboxMessage) => m.projectName === projectName
+          ? (m: InboxMessage) => m.projectName === projectName && (!onlyRead || m.read)
           : (m: InboxMessage) => ids.includes(m.referenceId)
 
         const removeLeaving =
@@ -199,7 +202,8 @@ const enhancedRest = inboxApi.enhanceEndpoints({
           // clearing marks the rows read, so only the unread ones move the badge
           if (clearedUnread.size) patchUnreadCount(dispatch, clearedUnread.size, important)
           // `all` clears beyond what the cache held, so the exact figure must come from the server
-          if (all) tagsToInvalidate.push({ type: 'inbox', id: 'unreadCount' })
+          // clearing read rows only cannot move the badge, so it needs no refetch
+          if (all && !onlyRead) tagsToInvalidate.push({ type: 'inbox', id: 'unreadCount' })
         } else if (status === 'unread' && !isActiveChange) {
           // a message being marked as unread (in other or important)
           // so increase the unread count
