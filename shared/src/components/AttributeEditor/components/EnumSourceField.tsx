@@ -9,52 +9,25 @@ import { InfoMessage } from '@shared/components/InfoMessage'
 import { SimpleForm } from '@shared/components/SimpleForm'
 import type { SimpleFormValueDict } from '@shared/components/SimpleForm'
 import { useListEnumsQuery } from '@shared/api'
-import type {
-  AttributeData,
-  AttributeModel,
-  EnumResolverInfo,
-  SimpleFormField,
-} from '@shared/api'
+import type { AttributeData, EnumResolverInfo, SimpleFormField } from '@shared/api'
 import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
 import { getEnumItemIcon, getSelectableEnumItems } from '@shared/util/attributeEnum'
 import { EnumItemIcon, EnumItemRow } from './EnumItemRow'
-import { EnumPlaygroundDialog } from './EnumPlaygroundDialog'
+import { EnumDebugDialog } from './EnumDebugDialog'
 
 const CUSTOM_ENUM_SOURCE = '__custom__'
 const PREVIEW_LIMIT = 5
 const EMPTY_FIELDS: SimpleFormField[] = []
 const EMPTY_PREVIEW_MESSAGE = 'No preview items found.'
-const CONTEXT_PARAMS_MESSAGE =
-  'This could be because in context parameters (project_name) are required to get the items.'
 const SEARCH_THRESHOLD = 5
 
-type AttributeScope = AttributeModel['scope']
-
-// acceptedParams says what a resolver takes, not what it needs, so resolvers are never hidden
-const getContextNotice = (
-  acceptedParams: EnumResolverInfo['acceptedParams'] | undefined,
-  scope: AttributeScope,
-): { variant: 'info' | 'warning'; message: string } | null => {
-  if (!acceptedParams || !('project_name' in acceptedParams)) return null
-
-  const scopes = scope || []
-  const isUserOnly = scopes.length > 0 && scopes.every((s) => s === 'user')
-  if (isUserOnly) {
-    return {
-      variant: 'warning',
-      message:
-        'This resolver accepts project_name, but user attributes have no project. Users get the options shown in the preview.',
-    }
-  }
-
-  const userNote = scopes.includes('user')
-    ? ' User attributes have no project and get the options shown in the preview.'
-    : ' The preview is resolved without a project.'
-  return {
-    variant: 'info',
-    message: `Options depend on the project where the attribute is used.${userNote}`,
-  }
+const CONTEXT_PARAM_MESSAGES: Record<string, string> = {
+  project_name: 'The select options will change based on the project it is used in.',
+  user: 'The select options will change based on the user that is selected.',
 }
+
+const getContextParams = (acceptedParams: EnumResolverInfo['acceptedParams'] | undefined) =>
+  Object.keys(CONTEXT_PARAM_MESSAGES).filter((name) => name in (acceptedParams || {}))
 
 const Container = styled.div`
   display: flex;
@@ -102,8 +75,6 @@ const ClickableInfoMessage = styled(InfoMessage)`
   }
 `
 
-type OpenPlayground = (e: { currentTarget: HTMLElement }) => void
-
 const SkeletonItem = styled(EnumItemRow)`
   &:nth-child(2n) {
     width: 80%;
@@ -118,7 +89,7 @@ interface EnumResolverPreviewProps {
   resolver: string
   acceptedParams: EnumResolverInfo['acceptedParams']
   settings: Record<string, any>
-  onShowMore: OpenPlayground
+  onShowMore: () => void
 }
 
 const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({
@@ -133,6 +104,7 @@ const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({
   )
   const { options: allOptions, isLoading, isError, errorMessage } = useAttributeEnumOptions(data)
   const options = getSelectableEnumItems(allOptions)
+  const contextParams = getContextParams(acceptedParams)
 
   if (isLoading)
     return (
@@ -155,7 +127,10 @@ const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({
       <Preview>
         <Message>
           {EMPTY_PREVIEW_MESSAGE}
-          {'project_name' in (acceptedParams || {}) && ` ${CONTEXT_PARAMS_MESSAGE}`}
+          {contextParams.length > 0 &&
+            ` This could be because in context parameters (${contextParams.join(
+              ', ',
+            )}) are required to get the items.`}
         </Message>
       </Preview>
     )
@@ -187,7 +162,6 @@ export interface EnumSourceFieldProps {
   enumValues: NormalizedData[] | undefined
   enumResolver: AttributeData['enumResolver']
   enumResolverSettings: AttributeData['enumResolverSettings']
-  scope?: AttributeScope
   onChangeEnum: (value: NormalizedData[] | undefined) => void
   onChangeResolver: (name: string | undefined) => void
   onChangeResolverSettings: (settings: Record<string, any> | undefined) => void
@@ -197,19 +171,13 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
   enumValues,
   enumResolver,
   enumResolverSettings,
-  scope,
   onChangeEnum,
   onChangeResolver,
   onChangeResolverSettings,
 }) => {
   const { data: resolvers = [], isLoading, isError } = useListEnumsQuery()
-  const [playgroundHeight, setPlaygroundHeight] = useState<number | null>(null)
-
-  // Attribute dialog height follows its content, so the playground copies it on open
-  const openPlayground: OpenPlayground = (e) => {
-    const dialog = e.currentTarget.closest<HTMLElement>('.dialog')
-    setPlaygroundHeight(dialog?.offsetHeight ?? 0)
-  }
+  const [isDebugOpen, setIsDebugOpen] = useState(false)
+  const openDebug = () => setIsDebugOpen(true)
 
   const sourceOptions = [
     { value: CUSTOM_ENUM_SOURCE, label: 'Custom' },
@@ -223,7 +191,9 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
   const selectedResolver = resolvers.find((resolver) => resolver.name === enumResolver)
   const settingsFields = selectedResolver?.settingsForm || EMPTY_FIELDS
   const settings = (enumResolverSettings as SimpleFormValueDict) || {}
-  const contextNotice = getContextNotice(selectedResolver?.acceptedParams, scope)
+  const contextMessage = getContextParams(selectedResolver?.acceptedParams)
+    .map((name) => CONTEXT_PARAM_MESSAGES[name])
+    .join(' ')
 
   const handleSourceChange = (value: string[]) => {
     const source = value[0]
@@ -260,17 +230,16 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
               Resolver "{enumResolver}" is not available on this server. Options will be empty.
             </Message>
           )}
-          {contextNotice && (
+          {contextMessage && (
             <ClickableInfoMessage
-              variant={contextNotice.variant}
-              message={`${contextNotice.message} Click to try it in the playground.`}
+              message={contextMessage}
               role="button"
               tabIndex={0}
-              onClick={openPlayground}
+              onClick={openDebug}
               onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
-                  openPlayground(e)
+                  openDebug()
                 }
               }}
             />
@@ -289,23 +258,22 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
                 resolver={selectedResolver.name}
                 acceptedParams={selectedResolver.acceptedParams}
                 settings={settings}
-                onShowMore={openPlayground}
+                onShowMore={openDebug}
               />
               <Button
                 variant="text"
-                icon="science"
+                icon="bug_report"
                 label="Debug"
-                onClick={openPlayground}
+                onClick={openDebug}
                 style={{ alignSelf: 'flex-start' }}
               />
             </>
           )}
-          {playgroundHeight !== null && selectedResolver && (
-            <EnumPlaygroundDialog
+          {isDebugOpen && selectedResolver && (
+            <EnumDebugDialog
               resolver={selectedResolver}
               settings={settings}
-              height={playgroundHeight || undefined}
-              onClose={() => setPlaygroundHeight(null)}
+              onClose={() => setIsDebugOpen(false)}
             />
           )}
         </>

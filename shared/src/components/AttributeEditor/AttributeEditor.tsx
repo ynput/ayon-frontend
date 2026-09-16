@@ -11,7 +11,7 @@ import {
   Dialog,
   Button,
 } from '@ynput/ayon-react-components'
-import { camelCase, upperFirst } from 'lodash'
+import { camelCase, startCase, upperFirst } from 'lodash'
 import { MinMaxField, EnumSourceField } from './components'
 import type { AttributeData, AttributeModel } from '@shared/api'
 import {
@@ -284,9 +284,8 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
         enumValues={value}
         enumResolver={formData?.data?.enumResolver}
         enumResolverSettings={formData?.data?.enumResolverSettings}
-        scope={formData?.scope}
         onChangeEnum={onChange}
-        onChangeResolver={(name) => setData('enumResolver', name)}
+        onChangeResolver={handleResolverChange}
         onChangeResolverSettings={(settings) => setData('enumResolverSettings', settings)}
       />
     ),
@@ -302,6 +301,14 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
         onChange={(e) => onChange((e.target as HTMLInputElement).checked)}
       />
     ),
+  }
+
+  const handleResolverChange = (resolverName: string | undefined) => {
+    setData('enumResolver', resolverName)
+    if (!resolverName) return
+
+    if (!formData?.data?.title) setData('title', startCase(resolverName))
+    if (isNew && !formData?.name) setTopLevelData('name', camelCase(resolverName))
   }
 
   const handleTitleChange = (e: React.ChangeEvent) => {
