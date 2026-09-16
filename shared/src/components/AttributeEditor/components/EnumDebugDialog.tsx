@@ -123,7 +123,7 @@ const ProjectParamField: FC<ParamFieldProps> = ({ value, onChange }) => {
 }
 
 const UserParamField: FC<ParamFieldProps> = ({ value, onChange }) => {
-  const { data: users = [], isLoading } = useGetAllAssigneesQuery()
+  const { data: users = [], isLoading } = useGetAllAssigneesQuery({})
   const options = users.map((user) => ({
     value: user.name,
     label: user.fullName || user.name,
