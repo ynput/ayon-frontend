@@ -1,5 +1,5 @@
 import { useManageInboxItemMutation } from '@queries/inbox/updateInbox'
-import { ManageInboxItemRequest } from '@shared/api'
+import { ManageInboxItemFilter, ManageInboxItemRequest } from '@shared/api'
 
 type Config = {
   isActive: boolean
@@ -17,6 +17,7 @@ const useUpdateInboxMessage = ({ isActive, isImportant }: Config) => {
     isActiveChange = false,
     isRead = false,
     isAll = false,
+    itemFilter?: ManageInboxItemFilter,
   ) => {
     if (ids?.length > 0 || isAll) {
       // cacheKeyArgs are not used in the patch but are used to match the cache key to a query (for optimistic updates)
@@ -25,6 +26,7 @@ const useUpdateInboxMessage = ({ isActive, isImportant }: Config) => {
         important: isImportant,
         isActiveChange,
         isRead,
+        onlyRead: itemFilter?.read === true,
       }
       // update the messages in the backend to toggle read status
       // we use optimistic updates inside updateMessages query
@@ -35,6 +37,7 @@ const useUpdateInboxMessage = ({ isActive, isImportant }: Config) => {
             projectName: projectName,
             ids: ids,
             all: isAll,
+            itemFilter,
           },
           ...cacheKeyArgs,
         }).unwrap()

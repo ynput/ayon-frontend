@@ -7,7 +7,7 @@ const showClearButton = css`
     .clear {
       display: flex;
     }
-    .user-image,
+    /* the avatar stays: it carries the user tooltip, and only the date has to make room */
     .date {
       display: none;
     }
@@ -43,6 +43,11 @@ export const Message = styled.li`
 
   &:not(:first-child) {
     border-top-color: var(--md-sys-color-outline-variant);
+  }
+
+  /* the day divider already draws its own line */
+  .inbox-date-divider + & {
+    border-top-color: transparent;
   }
 
   /* last child margin */
@@ -181,9 +186,13 @@ export const Right = styled.div`
 `
 
 export const Date = styled.span`
-  min-width: 50px;
-  max-width: 50px;
+  /* wide enough for a locale date plus time, right aligned so rows line up */
+  min-width: 128px;
+  max-width: 128px;
+  text-align: right;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   margin-right: var(--padding-m);
 `
 

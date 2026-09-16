@@ -1,6 +1,15 @@
 import InboxMessage from '../InboxMessage/InboxMessage'
 import * as Styled from './Inbox.styled'
-import { useCallback, useEffect, useMemo, useRef, useState, MouseEvent, KeyboardEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  Fragment,
+  MouseEvent,
+  KeyboardEvent,
+} from 'react'
 import clsx from 'clsx'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { useDispatch } from 'react-redux'
@@ -11,7 +20,7 @@ import { compareAsc } from 'date-fns'
 // Queries
 import { useGetInboxInfiniteInfiniteQuery } from '@queries/inbox/getInbox'
 import { useGetProjectInboxInfinite } from '@queries/inbox/getProjectInbox'
-import { useGetProjectsInfoQuery } from '@shared/api'
+import { useGetProjectsInfoQuery, type ManageInboxItemFilter } from '@shared/api'
 // Components
 import { Button } from '@ynput/ayon-react-components'
 import { SplitterPanel } from 'primereact/splitter'
@@ -21,6 +30,7 @@ import ProjectsList from '@containers/ProjectsList/ProjectsList'
 import type { Hidden } from '@containers/ProjectsList/hooks/useProjectsListMenuItems'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 import InboxSearchFilter from '../components/InboxSearchFilter'
+import InboxDateDivider, { getDayKey } from '../components/InboxDateDivider'
 // Hooks
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useGroupMessages from '../hooks/useGroupMessages'
@@ -111,8 +121,8 @@ const Inbox = ({ filter }: InboxProps) => {
   const isProjectMode = !!selectedProject
 
   // chips only reach the query in project mode, the unread toggle narrows both
-  const isFiltered =
-    (isProjectMode && !!inboxFilter?.conditions?.length) || (isActive && showUnreadOnly)
+  const isChipFiltered = isProjectMode && !!inboxFilter?.conditions?.length
+  const isFiltered = isChipFiltered || (isActive && showUnreadOnly)
 
   const projectArgs = useMemo(
     () => ({
@@ -198,8 +208,9 @@ const Inbox = ({ filter }: InboxProps) => {
   // in project mode the info is needed even when the filtered list comes back empty
   const infoProjectNames = isProjectMode ? [selectedProject as string] : projectNames
 
+  // anatomy is one request per listed project and nothing here reads it
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
-    { projects: infoProjectNames },
+    { projects: infoProjectNames, anatomy: false },
     { skip: isLoadingInbox || !infoProjectNames?.length },
   )
 
@@ -233,8 +244,9 @@ const Inbox = ({ filter }: InboxProps) => {
     lastSelectedIndexRef.current = -1
     if (!listRef.current || isLoadingInbox) return
 
-    const firstChild = listRef.current?.firstElementChild as HTMLElement | null
-    firstChild?.focus()
+    // a day divider can be the first child, and it takes no focus
+    const firstMessage = listRef.current?.querySelector('.inbox-message') as HTMLElement | null
+    firstMessage?.focus()
   }, [listRef, isLoadingInbox, filter, selectedProject])
 
   const handleProjectSelect = useCallback(
@@ -338,6 +350,7 @@ const Inbox = ({ filter }: InboxProps) => {
     messagesToClear: InboxMessageType[] = [],
     projectName: string,
     allMessages?: boolean,
+    itemFilter?: ManageInboxItemFilter,
   ): Promise<void> => {
     if (selected.length) {
       // select next message in the list
@@ -351,7 +364,7 @@ const Inbox = ({ filter }: InboxProps) => {
     const isRead = messagesToClear.every((m) => m.read)
     const status = isActive ? 'inactive' : 'unread'
 
-    handleUpdateMessages(idsToClear, status, projectName, true, isRead, allMessages)
+    handleUpdateMessages(idsToClear, status, projectName, true, isRead, allMessages, itemFilter)
   }
 
   const handleClearMessage = (id: string): void => {
@@ -410,27 +423,41 @@ const Inbox = ({ filter }: InboxProps) => {
     })
   }
 
-  const handleClearAll = async (): Promise<void> => {
+  const handleClearAll = async (onlyRead = false): Promise<void> => {
     let promises: Promise<void>[] = []
     let clearedCount = 0
 
-    if (isFiltered) {
-      // the backend `all` flag ignores filters, so name the messages instead
-      if (!groupedMessages.length) return
-      clearedCount = groupedMessages.reduce((sum, g) => sum + g.messages.length, 0)
-      promises = clearGroups(groupedMessages)
+    // the unread toggle hides exactly the rows Clear read targets, so it keeps the backend path
+    const isNarrowed = onlyRead ? isChipFiltered : isFiltered
+
+    if (isNarrowed) {
+      // the backend cannot see the chip filters, so name the messages instead
+      const groupsToClear = onlyRead ? groupedMessages.filter((g) => g.read) : groupedMessages
+      if (!groupsToClear.length) return
+      clearedCount = groupsToClear.reduce((sum, g) => sum + g.messages.length, 0)
+      promises = clearGroups(groupsToClear)
       setSelected([])
       lastSelectedIndexRef.current = -1
     } else {
       const projectsToClear = isProjectMode
         ? [selectedProject as string]
         : projects.map((p) => p.name)
-      promises = projectsToClear.map((project) => clearMessages(null, [], project, true))
+      // active+important keep the tab split: without them the backend clears every reference
+      // of the user in the project, including the other tab and already cleared rows
+      const itemFilter: ManageInboxItemFilter = {
+        active: true,
+        important: !!isImportant,
+        ...(onlyRead && { read: true }),
+      }
+      promises = projectsToClear.map((project) =>
+        clearMessages(null, [], project, true, itemFilter),
+      )
     }
 
     try {
       await Promise.all(promises)
-      toast.success(isFiltered ? `Cleared ${clearedCount} messages` : 'All messages cleared')
+      if (isNarrowed) toast.success(`Cleared ${clearedCount} messages`)
+      else toast.success(onlyRead ? 'Read messages cleared' : 'All messages cleared')
     } catch (error) {
       console.error(error)
     }
@@ -445,6 +472,9 @@ const Inbox = ({ filter }: InboxProps) => {
   const messagesData = isLoadingAny
     ? (placeholderMessages as unknown as GroupedMessage[])
     : groupedMessages
+
+  // the cleared tab is not sorted by date, so day dividers would be meaningless there
+  const showDayDividers = isActive && !isLoadingAny
 
   const getHoveredMessageId = (e: MouseEvent | KeyboardEvent, closest = ''): string | null => {
     // get the message list item
@@ -574,7 +604,7 @@ const Inbox = ({ filter }: InboxProps) => {
       },
       {
         key: 'C',
-        action: handleClearAll,
+        action: () => handleClearAll(),
       },
       {
         key: 'x',
@@ -631,17 +661,31 @@ const Inbox = ({ filter }: InboxProps) => {
                 )}
                 <EnableNotifications />
                 {isActive && (
-                  <Button
-                    icon="done_all"
-                    onClick={handleClearAll}
-                    disabled={!messages.length}
-                    shortcut={{ children: getPlatformShortcutKey('c', [KeyMode.Shift]) }}
-                    data-tooltip={
-                      isFiltered ? 'Clears only the messages matching the filters' : undefined
-                    }
-                  >
-                    Clear all
-                  </Button>
+                  <>
+                    <Button
+                      icon="drafts"
+                      onClick={() => handleClearAll(true)}
+                      disabled={!messages.length}
+                      data-tooltip={
+                        isChipFiltered
+                          ? 'Clears only the read messages matching the filters'
+                          : 'Clears read messages, unread ones stay'
+                      }
+                    >
+                      Clear read
+                    </Button>
+                    <Button
+                      icon="done_all"
+                      onClick={() => handleClearAll()}
+                      disabled={!messages.length}
+                      shortcut={{ children: getPlatformShortcutKey('c', [KeyMode.Shift]) }}
+                      data-tooltip={
+                        isFiltered ? 'Clears only the messages matching the filters' : undefined
+                      }
+                    >
+                      Clear all
+                    </Button>
+                  </>
                 )}
                 <Button icon="refresh" onClick={refreshInbox} shortcut={{ children: 'R' }}>
                   Refresh
@@ -660,38 +704,46 @@ const Inbox = ({ filter }: InboxProps) => {
                     className={clsx({ isLoading: isLoadingInbox })}
                   >
                     {messagesData.map((group, i: number) => (
-                      <InboxMessage
-                        key={group.activityId}
-                        rowIndex={i}
-                        path={group.path}
-                        type={group.activityType}
-                        entityType={group.entityType ?? undefined}
-                        entityId={group.entityId ?? undefined}
-                        projectName={group.projectName}
-                        date={group.date}
-                        userName={group.userName}
-                        isRead={group.read || group.active}
-                        unReadCount={group.unRead}
-                        onSelect={handleMessageSelect}
-                        isSelected={selected.includes(group.activityId)}
-                        disableHover={usingKeyboard}
-                        onClear={
-                          !selected.length || selected.includes(group.activityId)
-                            ? () => handleClearMessage(group.activityId)
-                            : undefined
-                        }
-                        clearLabel={isActive ? 'Clear' : 'Unclear'}
-                        clearIcon={isActive ? 'done' : 'replay'}
-                        id={group.activityId}
-                        ids={group.groupIds}
-                        messages={group.messages}
-                        changes={group.changes}
-                        isPlaceholder={group.isPlaceholder}
-                        projectsInfo={projectsInfo}
-                        isMultiple={group.isMultiple}
-                        onContextMenu={handleContextMenu}
-                        customBody={group.body}
-                      />
+                      <Fragment key={group.activityId}>
+                        {showDayDividers &&
+                          !!getDayKey(group.date) &&
+                          getDayKey(group.date) !== getDayKey(messagesData[i - 1]?.date) && (
+                            <InboxDateDivider date={group.date as string} />
+                          )}
+                        <InboxMessage
+                          rowIndex={i}
+                          path={group.path}
+                          type={group.activityType}
+                          entityType={group.entityType ?? undefined}
+                          entitySubType={group.entitySubType ?? undefined}
+                          entityId={group.entityId ?? undefined}
+                          projectName={group.projectName}
+                          date={group.date}
+                          userName={group.userName}
+                          isRead={group.read || group.active}
+                          unReadCount={group.unRead}
+                          onSelect={handleMessageSelect}
+                          isSelected={selected.includes(group.activityId)}
+                          disableHover={usingKeyboard}
+                          onClear={
+                            !selected.length || selected.includes(group.activityId)
+                              ? () => handleClearMessage(group.activityId)
+                              : undefined
+                          }
+                          clearLabel={isActive ? 'Clear' : 'Unclear'}
+                          clearIcon={isActive ? 'done' : 'replay'}
+                          id={group.activityId}
+                          ids={group.groupIds}
+                          messages={group.messages}
+                          changes={group.changes}
+                          isPlaceholder={group.isPlaceholder}
+                          projectsInfo={projectsInfo}
+                          isMultiple={group.isMultiple}
+                          onContextMenu={handleContextMenu}
+                          customBody={group.body}
+                          showUserTeams={!isGuest}
+                        />
+                      </Fragment>
                     ))}
                     {hasNextPage && !isLoadingInbox && !!messages.length && (
                       <InView

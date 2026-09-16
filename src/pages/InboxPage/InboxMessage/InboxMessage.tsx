@@ -1,14 +1,16 @@
 import * as Styled from './InboxMessage.styled'
 import clsx from 'clsx'
+import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { isValid } from 'date-fns'
 import { isToday } from 'date-fns'
-import { format } from 'date-fns'
 import UserImage from '@shared/components/UserImage'
 
 import InboxMessageStatus from './InboxMessageStatus/InboxMessageStatus'
+import InboxCategoryDots from './InboxCategoryDots'
 import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDate'
-import { useMemo, MouseEvent, HTMLAttributes } from 'react'
+import { useEffect, useMemo, useRef, useState, MouseEvent, HTMLAttributes } from 'react'
+import UserTooltip from '@shared/containers/Feed/components/Tooltips/UserTooltip/UserTooltip'
 import RemoveMarkdown from 'remove-markdown'
 import Typography from '@/theme/typography.module.css'
 import { getEntityTypeIcon } from '@shared/util'
@@ -79,6 +81,52 @@ const activityTypeIconsMultiple: Record<string, string> = {
   'assignee.reassign': 'swap_horiz',
 }
 
+type ActivityTypeLabelResolver = (message: InboxMessageType) => string
+
+const activityTypeLabels: Record<string, string | ActivityTypeLabelResolver> = {
+  comment: 'Comment',
+  'version.publish': 'Version published',
+  'version.review': (message: InboxMessageType) => {
+    const data = message.activityData as unknown as { feedback: VersionReviewFeedback }
+    switch (data.feedback) {
+      case VersionReviewFeedback.APPROVE:
+        return 'Approved'
+      case VersionReviewFeedback.REQUEST_CHANGES:
+        return 'Changes requested'
+      default:
+        return 'Review'
+    }
+  },
+  'assignee.add': 'Assigned',
+  'assignee.remove': 'Unassigned',
+  'assignee.reassign': 'Reassigned',
+  reviewable: 'Reviewable uploaded',
+}
+
+const activityTypeLabelsMultiple: Record<string, string> = {
+  comment: 'Comments',
+  'version.publish': 'Versions published',
+  'version.review': 'Reviews',
+  'assignee.add': 'Assigned',
+  'assignee.remove': 'Unassigned',
+  'assignee.reassign': 'Reassigned',
+  reviewable: 'Versions published',
+}
+
+const USER_TOOLTIP_DELAY = 400
+
+const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
+  day: 'numeric',
+  month: 'short',
+  hour: 'numeric',
+  minute: '2-digit',
+})
+
+const fullDateTimeFormat = new Intl.DateTimeFormat(undefined, {
+  dateStyle: 'full',
+  timeStyle: 'short',
+})
+
 const getDateString = (date: string): string => {
   const dateObj = new Date(date)
   if (!isValid(dateObj)) return ''
@@ -86,9 +134,35 @@ const getDateString = (date: string): string => {
   const today = isToday(dateObj)
   if (today) return getFuzzyDate(dateObj)
 
-  const dateFormat = 'MMM d'
+  return dateTimeFormat.format(dateObj)
+}
 
-  return format(dateObj, dateFormat)
+const getFullDateString = (date: string): string | undefined => {
+  const dateObj = new Date(date)
+  if (!isValid(dateObj)) return undefined
+
+  return fullDateTimeFormat.format(dateObj)
+}
+
+const getCategoryNames = (messages: InboxMessageType[] = []): string[] => {
+  const names: string[] = []
+  for (const message of messages) {
+    const data = message.activityData as unknown as { category?: string } | undefined
+    if (data?.category && !names.includes(data.category)) names.push(data.category)
+  }
+  return names
+}
+
+const getProductNames = (messages: InboxMessageType[] = []): string[] => {
+  const names: string[] = []
+  for (const message of messages) {
+    const data = message.activityData as unknown as
+      | { context?: { productName?: string } }
+      | undefined
+    const productName = data?.context?.productName
+    if (productName && !names.includes(productName)) names.push(productName)
+  }
+  return names
 }
 
 interface InboxMessageProps extends Omit<HTMLAttributes<HTMLLIElement>, 'onSelect'> {
@@ -99,6 +173,7 @@ interface InboxMessageProps extends Omit<HTMLAttributes<HTMLLIElement>, 'onSelec
   userName?: string
   type?: InboxActivityType | string
   entityType?: string | null
+  entitySubType?: string | null
   entityId?: string | null
   date?: string
   changes?: string[]
@@ -116,6 +191,7 @@ interface InboxMessageProps extends Omit<HTMLAttributes<HTMLLIElement>, 'onSelec
   isMultiple?: boolean
   customBody?: string
   rowIndex: number
+  showUserTeams?: boolean
 }
 
 const InboxMessage = ({
@@ -126,6 +202,7 @@ const InboxMessage = ({
   userName,
   type,
   entityType,
+  entitySubType,
   entityId,
   date,
   changes,
@@ -143,6 +220,7 @@ const InboxMessage = ({
   isMultiple, // are there multiple messages in this group
   customBody, // custom body for special message types (e.g. reassignment)
   rowIndex = 0,
+  showUserTeams, // guests get no teams from the server, so don't ask
   ...props
 }: InboxMessageProps) => {
   const typeIcon = useMemo(() => {
@@ -161,6 +239,15 @@ const InboxMessage = ({
 
     return icon
   }, [type])
+
+  const typeTooltip = useMemo(() => {
+    if (!type || !messages || messages.length === 0) return undefined
+
+    if (isMultiple) return activityTypeLabelsMultiple[type]
+
+    const label = activityTypeLabels[type]
+    return typeof label === 'function' ? label(messages[0]) : label
+  }, [type, messages, isMultiple])
 
   const iconColor = useMemo(() => {
     if (type !== 'version.review' || !messages || messages.length === 0) {
@@ -195,6 +282,44 @@ const InboxMessage = ({
     () => (customBody ? customBody : getMessageBody(messages as MessageForBody[])),
     [customBody, messages],
   )
+
+  const pathTooltip = useMemo(() => {
+    const pathText = path.join(' - ')
+    if (!pathText) return undefined
+    // grouped publishes show only the parent folder, so name the products they cover
+    const products = isMultiple ? getProductNames(messages) : []
+    return products.length ? `${pathText} — ${products.join(', ')}` : pathText
+  }, [path, isMultiple, messages])
+
+  const [userTooltipPos, setUserTooltipPos] = useState<{ top: number; left: number } | null>(null)
+  const userTooltipTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  useEffect(() => () => clearTimeout(userTooltipTimeout.current), [])
+
+  // the delay stops a mouse sweeping down the list from firing a teams request per row
+  const handleUserMouseEnter = (e: MouseEvent<HTMLSpanElement>): void => {
+    if (isPlaceholder || !userName) return
+    const { top, left, width } = e.currentTarget.getBoundingClientRect()
+    userTooltipTimeout.current = setTimeout(
+      () => setUserTooltipPos({ top, left: left + width / 2 }),
+      USER_TOOLTIP_DELAY,
+    )
+  }
+
+  const handleUserMouseLeave = (): void => {
+    clearTimeout(userTooltipTimeout.current)
+    setUserTooltipPos(null)
+  }
+
+  const authorFullName = messages?.[0]?.author?.attrib?.fullName || undefined
+
+  const categoryNames = useMemo(() => getCategoryNames(messages), [messages])
+
+  const entityTooltip = useMemo(() => {
+    if (!entityType) return undefined
+    const label = entityType.charAt(0).toUpperCase() + entityType.slice(1)
+    return entitySubType ? `${label}: ${entitySubType}` : label
+  }, [entityType, entitySubType])
 
   let statusChanges: InboxStatusChange[] = []
   const isStatusChange = type === 'status.change'
@@ -236,14 +361,30 @@ const InboxMessage = ({
           icon={getEntityTypeIcon(entityType || '')}
           className={clsx({ loading: isPlaceholder })}
           showBorder={false}
+          data-tooltip={isPlaceholder ? undefined : entityTooltip}
         />
-        <span className={clsx('title', { loading: isPlaceholder })}>{path.join(' - ')}</span>
+        <span
+          className={clsx('title', { loading: isPlaceholder })}
+          data-tooltip={isPlaceholder ? undefined : pathTooltip}
+        >
+          {path.join(' - ')}
+        </span>
       </Styled.Left>
       <Styled.Middle className={clsx('middle', { loading: isPlaceholder })}>
         <Styled.Unread className={clsx(Typography.bodySmall, { hide: (unReadCount ?? 0) < 2 })}>
           {unReadCount}
         </Styled.Unread>
-        {!isStatusChange && <Icon icon={typeIcon} className="type" style={{ color: iconColor }} />}
+        {!isStatusChange && (
+          <Icon
+            icon={typeIcon}
+            className="type"
+            style={{ color: iconColor }}
+            data-tooltip={typeTooltip}
+          />
+        )}
+        {!!categoryNames.length && !isPlaceholder && (
+          <InboxCategoryDots projectName={projectName} categories={categoryNames} />
+        )}
         {isStatusChange ? (
           <InboxMessageStatus statuses={statusChanges} />
         ) : (
@@ -263,8 +404,25 @@ const InboxMessage = ({
             {clearLabel}
           </Styled.ClearButton>
         )}
-        <UserImage name={userName || ''} size={20} className={'n-shimmer'} />
-        <Styled.Date className="date">{getDateString(date || '')}</Styled.Date>
+        <span onMouseEnter={handleUserMouseEnter} onMouseLeave={handleUserMouseLeave}>
+          <UserImage name={userName || ''} size={20} className={'n-shimmer'} />
+        </span>
+        {userTooltipPos &&
+          createPortal(
+            <UserTooltip
+              name={userName}
+              label={authorFullName}
+              projectName={showUserTeams ? projectName : undefined}
+              pos={userTooltipPos}
+            />,
+            document.body,
+          )}
+        <Styled.Date
+          className="date"
+          data-tooltip={isPlaceholder ? undefined : getFullDateString(date || '')}
+        >
+          {getDateString(date || '')}
+        </Styled.Date>
       </Styled.Right>
     </Styled.Message>
   )
