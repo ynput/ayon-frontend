@@ -294,7 +294,7 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
               <Button
                 variant="text"
                 icon="science"
-                label="Open playground"
+                label="Debug"
                 onClick={openPlayground}
                 style={{ alignSelf: 'flex-start' }}
               />
