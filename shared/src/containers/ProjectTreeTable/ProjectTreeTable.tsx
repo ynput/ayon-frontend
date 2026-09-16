@@ -22,7 +22,7 @@ import {
 import clsx from 'clsx'
 
 // Type imports
-import type { TableRow } from './types/table'
+import type { EntityType, ParentColumnDefinition, TableRow } from './types/table'
 
 // Component imports
 import buildTreeTableColumns, {
@@ -163,6 +163,8 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   excludedSorting?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
   includeLinks?: boolean
+  includeParents?: EntityType[]
+  parentColumns?: ParentColumnDefinition[]
   isLoading?: boolean
   isExpandable?: boolean // if true, show the expand/collapse icons
   enableSorting?: boolean
@@ -202,6 +204,8 @@ export const ProjectTreeTable = ({
   excludedSorting,
   extraColumns,
   includeLinks,
+  includeParents,
+  parentColumns,
   isLoading: isLoadingProp,
   isExpandable,
   enableSorting = true,
@@ -406,6 +410,7 @@ export const ProjectTreeTable = ({
       attribs: columnAttribs,
       links: linkTypes,
       includeLinks,
+      includeParents,
       showHierarchy,
       isFlatFolderView,
       options,
@@ -414,6 +419,7 @@ export const ProjectTreeTable = ({
       excludedSorting,
       groupBy,
       nameLabel: getNameLabelHeader(),
+      parentColumns,
     })
 
     if (sortableRows && enableSorting) {
@@ -443,6 +449,8 @@ export const ProjectTreeTable = ({
     options,
     linkTypes,
     includeLinks,
+    includeParents,
+    parentColumns,
     extraColumns,
     excludedColumns,
     excludedSorting,
@@ -1682,7 +1690,7 @@ const TD = ({
   const isPinned = cell.column.getIsPinned()
   const isLastLeftPinnedColumn = isPinned === 'left' && cell.column.getIsLastColumn('left')
   const isRowSelectionColumn = cell.column.id === ROW_SELECTION_COLUMN_ID
-  const isGroup = cell.row.original.entityType === 'group'
+  const isGroup = !!cell.row.original.group
   const isMultipleSelected = selectedCells.size > 1
 
   return (
@@ -1699,7 +1707,9 @@ const TD = ({
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
           expandable:
-            !!cell.row.originalSubRows && isEntityExpandable(cell.row.original.entityType),
+            !isGroup &&
+            !!cell.row.originalSubRows &&
+            isEntityExpandable(cell.row.original.primary.entityType),
           'multiple-selected': isMultipleSelected,
         },
         className,
@@ -1731,7 +1741,7 @@ const TD = ({
         if (e.detail === 2) {
           // comments cells are read-only but their double-click opens the details panel, so don't block them here
           const isReadOnly = isTargetReadOnly(e) && cell.column.id !== 'comments'
-          if (isReadOnly || isEntityRestricted(cell.row.original.entityType) || isGroup) {
+          if (isReadOnly || isEntityRestricted(cell.row.original.primary.entityType) || isGroup) {
             e.preventDefault()
             return
           }
@@ -1759,7 +1769,7 @@ const TD = ({
           // thumbnail: open viewer
           else if (cell.column.id === 'thumbnail') {
             if (onOpenPlayer) {
-              const entity = getEntityById(cell.row.original.entityId || cell.row.id)
+              const entity = getEntityById(cell.row.original.primary.id)
               if (entity) {
                 const targetIds = getEntityViewierIds(entity)
                 onOpenPlayer(targetIds, { quickView: true })
@@ -1779,7 +1789,7 @@ const TD = ({
         if (isGroup && cell.column.id !== 'name') return clearSelection()
 
         // check if this is a restricted entity - prevent editing
-        const isRestricted = isEntityRestricted(cell.row.original.entityType)
+        const isRestricted = isGroup || isEntityRestricted(cell.row.original.primary.entityType)
 
         // if clicking on an edit trigger, start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {
@@ -1806,6 +1816,7 @@ const TD = ({
             }, 0)
             return
           }
+          setEditingCellId(null)
         }
 
         proceedWithSelection()

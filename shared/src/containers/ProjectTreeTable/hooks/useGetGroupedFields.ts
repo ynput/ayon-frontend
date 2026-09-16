@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { ProjectTableAttribute } from '../types'
 import { useColumnSettingsContext, useProjectTableContext } from '../context'
-import { getAttributeIcon } from '@shared/util'
-import { hasEnumOptions } from '@shared/util'
+import { getAttributeIcon, hasEnumOptions } from '@shared/util'
 
 // @martastain says list_of_* is a pita to implement, so we are not supporting it for now
 export const allowedGroupByFields = ['string', 'integer', 'float']
@@ -14,7 +13,7 @@ export const isAttribGroupable = (
 ) => {
   const typesToCheck = allowedTypes || allowedGroupByFields
   const hasValidType =
-    typesToCheck.includes(attrib.data.type) &&
+    typesToCheck.includes(attrib.data.type || '') &&
     (!entityType || attrib.scope?.includes(entityType as (typeof attrib.scope)[0]))
 
   if (!hasValidType) return false

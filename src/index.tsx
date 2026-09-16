@@ -23,7 +23,8 @@ import './styles/loadingShimmer.scss'
 import './styles/index.scss'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 
-import { generate } from 'short-uuid'
+import { v4 as uuid } from 'uuid'
+
 import { SocketProvider } from '@shared/context'
 
 // generate unique session id
@@ -33,7 +34,7 @@ declare global {
   }
 }
 
-window.senderId = generate()
+window.senderId = uuid()
 
 axios.interceptors.response.use(
   (response: AxiosResponse) => {

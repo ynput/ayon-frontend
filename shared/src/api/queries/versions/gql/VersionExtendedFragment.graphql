@@ -5,6 +5,8 @@ fragment VersionExtended on VersionNode {
     taskType
     label
     name
+    status
+    allAttrib
   }
   product {
     id

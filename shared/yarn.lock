@@ -636,18 +636,26 @@
   resolved "https://registry.yarnpkg.com/@graphql-typed-document-node/core/-/core-3.2.0.tgz#5f3d96ec6b2354ad6d8a28bf216a1d97b5426861"
   integrity sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==
 
-"@humanfs/core@^0.19.1":
-  version "0.19.1"
-  resolved "https://registry.yarnpkg.com/@humanfs/core/-/core-0.19.1.tgz#17c55ca7d426733fe3c561906b8173c336b40a77"
-  integrity sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==
+"@humanfs/core@^0.19.2":
+  version "0.19.2"
+  resolved "https://registry.yarnpkg.com/@humanfs/core/-/core-0.19.2.tgz#a8272ca03b2acf492670222b2320b6c421bfde60"
+  integrity sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==
+  dependencies:
+    "@humanfs/types" "^0.15.0"
 
 "@humanfs/node@^0.16.6":
-  version "0.16.7"
-  resolved "https://registry.yarnpkg.com/@humanfs/node/-/node-0.16.7.tgz#822cb7b3a12c5a240a24f621b5a2413e27a45f26"
-  integrity sha512-/zUx+yOsIrG4Y43Eh2peDeKCxlRt/gET6aHfaKpuq267qXdYDFViVHfMaLyygZOnl0kGWxFIgsBy8QFuTLUXEQ==
+  version "0.16.8"
+  resolved "https://registry.yarnpkg.com/@humanfs/node/-/node-0.16.8.tgz#8f800cccc13f4f8cd3116e2d9c0a94939da3e3ed"
+  integrity sha512-gE1eQNZ3R++kTzFUpdGlpmy8kDZD/MLyHqDwqjkVQI0JMdI1D51sy1H958PNXYkM2rAac7e5/CnIKZrHtPh3BQ==
   dependencies:
-    "@humanfs/core" "^0.19.1"
+    "@humanfs/core" "^0.19.2"
+    "@humanfs/types" "^0.15.0"
     "@humanwhocodes/retry" "^0.4.0"
+
+"@humanfs/types@^0.15.0":
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/@humanfs/types/-/types-0.15.0.tgz#f2a09f62012390b2bff3fc6fb248ddec8c09a090"
+  integrity sha512-ZZ1w0aoQkwuUuC7Yf+7sdeaNfqQiiLcSRbfI08oAxqLtpXQr9AIVX7Ay7HLDuiLYAaFPu8oBYNq/QIi9URHJ3Q==
 
 "@humanwhocodes/module-importer@^1.0.1":
   version "1.0.1"
@@ -1558,191 +1566,6 @@
   resolved "https://registry.yarnpkg.com/@vue/shared/-/shared-3.5.25.tgz#21edcff133a5a04f72c4e4c6142260963fe5afbe"
   integrity sha512-AbOPdQQnAnzs58H2FrrDxYj/TJfmeS2jdfEEhgiKINy+bnOANmVizIEgq1r+C5zsbs6l1CCQxtcj71rwNQ4jWg==
 
-"@ynput/ayon-frontend-shared@^0.3.36":
-  version "0.3.36"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-frontend-shared/-/ayon-frontend-shared-0.3.36.tgz#c02df3f1292882a1c1366307194a91f07559fad1"
-  integrity sha512-Hrjk2CCusrrItfKZ4OwjYkL1Z+24KtcP9mWETGZwb8DDWxVbK+uE5utif3nZKwnEG/OuxtNMq6n5ElxxmuNW+A==
-  dependencies:
-    "@tanstack/match-sorter-utils" "8.19.4"
-    "@tanstack/react-virtual" "3.13.23"
-    "@ynput/ayon-react-components" "1.17.1"
-    axios "1.16.1"
-    clsx "2.1.1"
-    custom-protocol-check "1.4.0"
-    date-fns "3.6.0"
-    lodash "4.18.1"
-    primeicons "7.0.0"
-    primereact "9.6.2"
-    primereact-context "npm:primereact@9.2.3"
-    quill-magic-url "4.2.0"
-    react-markdown "10.1.0"
-    react-perfect-scrollbar "1.5.8"
-    react-quill-ayon "2.0.2"
-    react-toastify "9.1.3"
-    rehype-raw "7.0.0"
-    remark-directive "3.0.1"
-    remark-directive-rehype "0.4.2"
-    remark-emoji "4.0.1"
-    remark-gfm "4.0.1"
-    short-uuid "4.2.2"
-    turndown "7.2.4"
-    uuid "14.0.0"
-
-"@ynput/ayon-frontend-shared@^0.3.37":
-  version "0.3.37"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-frontend-shared/-/ayon-frontend-shared-0.3.37.tgz#0ffeea60f09cfaa380c6e7c1e86f2ff6fdc80ec2"
-  integrity sha512-mQpZrjJBpgDISPwQsm6r61y5QAin7fGxTJOZlJWTOdfikUS7SyR2decN9gbKBd+N8eDmW29goaFOhJDxzCE6LQ==
-  dependencies:
-    "@tanstack/match-sorter-utils" "8.19.4"
-    "@tanstack/react-virtual" "3.13.23"
-    "@ynput/ayon-frontend-shared" "^0.3.36"
-    "@ynput/ayon-react-components" "^1.18.8"
-    axios "1.16.1"
-    clsx "2.1.1"
-    custom-protocol-check "1.4.0"
-    date-fns "3.6.0"
-    lodash "4.18.1"
-    primeicons "7.0.0"
-    primereact "9.6.2"
-    primereact-context "npm:primereact@9.2.3"
-    quill-magic-url "4.2.0"
-    react-markdown "10.1.0"
-    react-perfect-scrollbar "1.5.8"
-    react-quill-ayon "2.0.2"
-    react-toastify "9.1.3"
-    rehype-raw "7.0.0"
-    remark-directive "3.0.1"
-    remark-directive-rehype "0.4.2"
-    remark-emoji "4.0.1"
-    remark-gfm "4.0.1"
-    short-uuid "4.2.2"
-    turndown "7.2.4"
-    uuid "14.0.0"
-
-"@ynput/ayon-frontend-shared@^0.3.40":
-  version "0.3.40"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-frontend-shared/-/ayon-frontend-shared-0.3.40.tgz#d71399db32133a0d184657c24671c2c78c678434"
-  integrity sha512-Zj3JrPE0XABoGMBvYc44ysXtq1cDBzlDXybE3iRBniOfV95r6/mynKL+BurnypDMCerPD9B05V0FWqN93z8GdA==
-  dependencies:
-    "@tanstack/match-sorter-utils" "8.19.4"
-    "@tanstack/react-virtual" "3.13.23"
-    "@ynput/ayon-frontend-shared" "^0.3.37"
-    "@ynput/ayon-react-components" "^1.18.8"
-    axios "1.16.1"
-    clsx "2.1.1"
-    custom-protocol-check "1.4.0"
-    date-fns "3.6.0"
-    lodash "4.18.1"
-    primeicons "7.0.0"
-    primereact "9.6.2"
-    primereact-context "npm:primereact@9.2.3"
-    quill-magic-url "4.2.0"
-    react-markdown "10.1.0"
-    react-perfect-scrollbar "1.5.8"
-    react-quill-ayon "2.0.2"
-    react-toastify "9.1.3"
-    rehype-raw "7.0.0"
-    remark-directive "3.0.1"
-    remark-directive-rehype "0.4.2"
-    remark-emoji "4.0.1"
-    remark-gfm "4.0.1"
-    short-uuid "4.2.2"
-    turndown "7.2.4"
-    uuid "14.0.0"
-
-"@ynput/ayon-frontend-shared@^0.3.43":
-  version "0.3.43"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-frontend-shared/-/ayon-frontend-shared-0.3.43.tgz#790e5a1dcf3c1684dfb0ecc3e0de53a068fcb72e"
-  integrity sha512-wuqdUwNsUYMHRtepmlG9UJmlNdrDMLbQGOxEEi2cJa/PJtTMkcIen7BDX7A0Idg3BVQvITLu8r4Wt/86nG/Dqg==
-  dependencies:
-    "@tanstack/match-sorter-utils" "8.19.4"
-    "@tanstack/react-virtual" "3.13.23"
-    "@ynput/ayon-frontend-shared" "^0.3.40"
-    "@ynput/ayon-react-components" "^1.18.8"
-    axios "1.16.1"
-    clsx "2.1.1"
-    custom-protocol-check "1.4.0"
-    date-fns "3.6.0"
-    lodash "4.18.1"
-    primeicons "7.0.0"
-    primereact "9.6.2"
-    primereact-context "npm:primereact@9.2.3"
-    quill-magic-url "4.2.0"
-    react-markdown "10.1.0"
-    react-perfect-scrollbar "1.5.8"
-    react-quill-ayon "2.0.2"
-    react-toastify "9.1.3"
-    rehype-raw "7.0.0"
-    remark-directive "3.0.1"
-    remark-directive-rehype "0.4.2"
-    remark-emoji "4.0.1"
-    remark-gfm "4.0.1"
-    short-uuid "4.2.2"
-    turndown "7.2.4"
-    uuid "14.0.0"
-
-"@ynput/ayon-frontend-shared@^0.3.51":
-  version "0.3.51"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-frontend-shared/-/ayon-frontend-shared-0.3.51.tgz#900ef6263cae21af793a082b16de51148803fa95"
-  integrity sha512-4NLH9WmyFSaxRqQDZytA1gk0pjr5ccusmKiwYV7e29wWl/lasAoyZ4COuahQaRGT3sx4GIHoo0x+WMrDdnQ/1A==
-  dependencies:
-    "@tanstack/match-sorter-utils" "8.19.4"
-    "@tanstack/react-virtual" "3.13.23"
-    "@ynput/ayon-frontend-shared" "^0.3.43"
-    "@ynput/ayon-react-components" "^1.18.8"
-    axios "1.16.1"
-    clsx "2.1.1"
-    custom-protocol-check "1.4.0"
-    date-fns "3.6.0"
-    lodash "4.18.1"
-    primeicons "7.0.0"
-    primereact "9.6.2"
-    primereact-context "npm:primereact@9.2.3"
-    quill-magic-url "4.2.0"
-    react-markdown "10.1.0"
-    react-perfect-scrollbar "1.5.8"
-    react-quill-ayon "2.0.2"
-    react-toastify "9.1.3"
-    rehype-raw "7.0.0"
-    remark-directive "3.0.1"
-    remark-directive-rehype "0.4.2"
-    remark-emoji "4.0.1"
-    remark-gfm "4.0.1"
-    short-uuid "4.2.2"
-    turndown "7.2.4"
-    uuid "14.0.0"
-
-"@ynput/ayon-frontend-shared@^0.3.54":
-  version "0.3.54"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-frontend-shared/-/ayon-frontend-shared-0.3.54.tgz#3f34440fefcaa8318cb3b64c9bbf558696ee88d1"
-  integrity sha512-QJ6Jwm3ClhPHGC0R73ObBR+A/0+9sIgrUAzM9Pz1ELdluZkgUWRfqF4Q2xWwJsgL+rxMOcdZaN9NZKtg+dGsiA==
-  dependencies:
-    "@tanstack/match-sorter-utils" "8.19.4"
-    "@tanstack/react-virtual" "3.13.23"
-    "@ynput/ayon-frontend-shared" "^0.3.51"
-    "@ynput/ayon-react-components" "^1.18.8"
-    axios "1.18.1"
-    clsx "2.1.1"
-    custom-protocol-check "1.4.0"
-    date-fns "3.6.0"
-    lodash "4.18.1"
-    primeicons "7.0.0"
-    primereact "9.6.2"
-    primereact-context "npm:primereact@9.2.3"
-    quill-magic-url "4.2.0"
-    react-markdown "10.1.0"
-    react-perfect-scrollbar "1.5.8"
-    react-quill-ayon "2.0.2"
-    react-toastify "9.1.3"
-    rehype-raw "7.0.0"
-    remark-directive "3.0.1"
-    remark-directive-rehype "0.4.2"
-    remark-emoji "4.0.1"
-    remark-gfm "4.0.1"
-    short-uuid "4.2.2"
-    turndown "7.2.4"
-    uuid "14.0.1"
-
 "@ynput/ayon-player@1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@ynput/ayon-player/-/ayon-player-1.0.2.tgz#0a932b0be848542b4270dccf9de85c4cbc1d9c44"
@@ -1762,6 +1585,11 @@
     react-router-dom "6.30.3"
     react-toastify "^9.0.3"
     sass "1.99.0"
+
+"@ynput/ayon-react-components@^1.19.10":
+  version "1.19.10"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.19.10.tgz#10c6330da895c7c998025fd8bb178c37d684dbb8"
+  integrity sha512-22BhHi3ENnX5tVarkiaj7FQVOYQquc5xcqvKphQQ41StFI5LpGdm4UbQkb1z43B4s6hVxz0buyGlLRc42G3xlQ==
 
 "@ynput/ayon-react-components@1.17.1":
   version "1.17.1"
@@ -1892,11 +1720,6 @@ ansi-colors@4.1.3, ansi-colors@^4.1.3:
   resolved "https://registry.yarnpkg.com/ansi-colors/-/ansi-colors-4.1.3.tgz#37611340eb2243e70cc604cad35d63270d48781b"
   integrity sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw==
 
-any-base@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/any-base/-/any-base-1.1.0.tgz#ae101a62bc08a597b4c9ab5b7089d456630549fe"
-  integrity sha512-uMgjozySS8adZZYePpaWs8cxB9/kdzmpX6SgJZ+wbz1K5eYk5QMYDVJaZKhxyIHUdnnJkfR7SVgStgH7LkGUyg==
-
 argparse@~1.0.9:
   version "1.0.10"
   resolved "https://registry.yarnpkg.com/argparse/-/argparse-1.0.10.tgz#bcd6791ea5ae09725e17e5ad988134cd40b3d911"
@@ -1914,7 +1737,7 @@ at-least-node@^1.0.0:
   resolved "https://registry.yarnpkg.com/at-least-node/-/at-least-node-1.0.0.tgz#602cd4b46e844ad4effc92a8011a3c46e0238dc2"
   integrity sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==
 
-axios@1.13.5, axios@1.16.1, axios@1.18.1, axios@1.20.0:
+axios@1.13.5, axios@1.20.0:
   version "1.20.0"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.20.0.tgz#515513445aa60e71d04b6521ca6210829ccb4786"
   integrity sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg==
@@ -1939,10 +1762,10 @@ balanced-match@^4.0.2:
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-4.0.4.tgz#bfb10662feed8196a2c62e7c68e17720c274179a"
   integrity sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==
 
-baseline-browser-mapping@^2.9.0:
-  version "2.9.2"
-  resolved "https://registry.yarnpkg.com/baseline-browser-mapping/-/baseline-browser-mapping-2.9.2.tgz#0ae89ec3e10e07c368b77def89db8044409461d1"
-  integrity sha512-PxSsosKQjI38iXkmb3d0Y32efqyA0uW4s41u4IVBsLlWLhCiYNpH/AfNOVWRqCQBlD8TFJTz6OUWNd4DFJCnmw==
+baseline-browser-mapping@^2.11.20:
+  version "2.11.22"
+  resolved "https://registry.yarnpkg.com/baseline-browser-mapping/-/baseline-browser-mapping-2.11.22.tgz#d8b612f54517d8b3a31734623779e5ab8c5ff0b9"
+  integrity sha512-pWc4w51fBFd7mav43/zKRC+RI6f4yfzQoVlfvE8dECePyfkn1bzLp01Fj0QACcyCZyFhiEMyD2qScfKRWgWibA==
 
 bezier-easing@^2.0.3:
   version "2.1.0"
@@ -1964,15 +1787,15 @@ brace-expansion@^5.0.8:
     balanced-match "^4.0.2"
 
 browserslist@^4.24.0:
-  version "4.28.1"
-  resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.28.1.tgz#7f534594628c53c63101079e27e40de490456a95"
-  integrity sha512-ZC5Bd0LgJXgwGqUknZY/vkUQ04r8NXnJZ3yYi4vDmSiZmC/pdSN0NbNRPxZpbtO4uAfDUAFffO8IZoM3Gj8IkA==
+  version "4.28.9"
+  resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.28.9.tgz#07ce6b449b90af880eb9bfb7cd39372cc4f71c8c"
+  integrity sha512-EWazOblFYUvlGZcfGhPUPmYh3nikUxBVb+y9MJun5f3hBi812X+8MSQTujLBtgK3cf51fJWbWfOjyeO954d+Eg==
   dependencies:
-    baseline-browser-mapping "^2.9.0"
-    caniuse-lite "^1.0.30001759"
-    electron-to-chromium "^1.5.263"
-    node-releases "^2.0.27"
-    update-browserslist-db "^1.2.0"
+    baseline-browser-mapping "^2.11.20"
+    caniuse-lite "^1.0.30001810"
+    electron-to-chromium "^1.5.420"
+    node-releases "^2.0.54"
+    update-browserslist-db "^1.3.2"
 
 call-bind-apply-helpers@^1.0.0, call-bind-apply-helpers@^1.0.1, call-bind-apply-helpers@^1.0.2:
   version "1.0.2"
@@ -2000,10 +1823,10 @@ call-bound@^1.0.2:
     call-bind-apply-helpers "^1.0.2"
     get-intrinsic "^1.3.0"
 
-caniuse-lite@^1.0.30001759:
-  version "1.0.30001759"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001759.tgz#d569e7b010372c6b0ca3946e30dada0a2e9d5006"
-  integrity sha512-Pzfx9fOKoKvevQf8oCXoyNRQ5QyxJj+3O0Rqx2V5oxT61KGx8+n6hV/IUyJeifUci2clnmmKVpvtiqRzgiWjSw==
+caniuse-lite@^1.0.30001810:
+  version "1.0.30001810"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001810.tgz#4970b477dea3278374de9bc43aa8f5d39fc3cda2"
+  integrity sha512-TITQPUkaz+aVk5GL6NhOdwk1aEaNTSDPsGFWrTuhKGtjTF70jL/Oht2W4c6rXUe5fu7Ie19VIahAXHIIiWWNeg==
 
 ccount@^2.0.0:
   version "2.0.1"
@@ -2242,10 +2065,10 @@ dunder-proto@^1.0.1:
     es-errors "^1.3.0"
     gopd "^1.2.0"
 
-electron-to-chromium@^1.5.263:
-  version "1.5.264"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.5.264.tgz#38d2262e290bf5b424ba1488e072c7b0163400be"
-  integrity sha512-1tEf0nLgltC3iy9wtlYDlQDc5Rg9lEKVjEmIHJ21rI9OcqkvD45K1oyNIRA4rR1z3LgJ7KeGzEBojVcV6m4qjA==
+electron-to-chromium@^1.5.420:
+  version "1.5.427"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.5.427.tgz#f8693d109cf116d4a6efa98bc620b9fc7f265f67"
+  integrity sha512-n14zb3FdsChZ2BNobqNHAJMcP3ifFv4paox2LvCrfVAQcqGiSURgbJl+PfMpHVCNFkStnNc+RRVtPBTVW5PDgw==
 
 emojilib@^2.4.0:
   version "2.4.0"
@@ -3714,10 +3537,10 @@ node-emoji@^2.1.0:
     emojilib "^2.4.0"
     skin-tone "^2.0.0"
 
-node-releases@^2.0.27:
-  version "2.0.27"
-  resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.27.tgz#eedca519205cf20f650f61d56b070db111231e4e"
-  integrity sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==
+node-releases@^2.0.54:
+  version "2.0.55"
+  resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.55.tgz#c52faedb68001dcfe77495b5ed1ac5827a1788fc"
+  integrity sha512-mIrE/Cw9y+9Au6dS5vDKDhQza9YvG6w+ZrS6X+ZzA7yFW/soAeaups4Qzn1bL6g5FVy8WtP79+0j82oPIbqRjQ==
 
 node-schedule@2.1.1:
   version "2.1.1"
@@ -4367,29 +4190,6 @@ shebang-regex@^3.0.0:
   resolved "https://registry.yarnpkg.com/shebang-regex/-/shebang-regex-3.0.0.tgz#ae16f1644d873ecad843b0307b143362d4c42172"
   integrity sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==
 
-short-uuid@4.2.2:
-  version "4.2.2"
-  resolved "https://registry.yarnpkg.com/short-uuid/-/short-uuid-4.2.2.tgz#4bb3d926da04a4a5f34420d17b5551fd6d9d535c"
-  integrity sha512-IE7hDSGV2U/VZoCsjctKX6l5t5ak2jE0+aeGJi3KtvjIUNuZVmHVYUjNBhmo369FIWGDtaieRaO8A83Lvwfpqw==
-  dependencies:
-    any-base "^1.1.0"
-    uuid "^8.3.2"
-
-short-uuid@6.0.3:
-  version "6.0.3"
-  resolved "https://registry.yarnpkg.com/short-uuid/-/short-uuid-6.0.3.tgz#6cbb02acc6879d9540cd5735ff2166ce2ff63459"
-  integrity sha512-UMZ3rYOoid307EqWsPTnoBUSOB51Fi28vUMPigUsSCmbaSvslyf/SlXZWOn4btj8tokhBTBkPFKVKKlIolEG1w==
-  dependencies:
-    any-base "^1.1.0"
-
-short-uuid@^5.2.0:
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/short-uuid/-/short-uuid-5.2.0.tgz#49378f8c5335a603bc801c279ae521c5d22532dc"
-  integrity sha512-296/Nzi4DmANh93iYBwT4NoYRJuHnKEzefrkSagQbTH/A6NTaB68hSPDjm5IlbI5dx9FXdmtqPcj6N5H+CPm6w==
-  dependencies:
-    any-base "^1.1.0"
-    uuid "^9.0.1"
-
 skin-tone@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/skin-tone/-/skin-tone-2.0.0.tgz#4e3933ab45c0d4f4f781745d64b9f4c208e41237"
@@ -4606,10 +4406,10 @@ upath@2.0.1:
   resolved "https://registry.yarnpkg.com/upath/-/upath-2.0.1.tgz#50c73dea68d6f6b990f51d279ce6081665d61a8b"
   integrity sha512-1uEe95xksV1O0CYKXo8vQvN1JEbtJp7lb7C5U9HMsIp6IVwntkH/oNUzyVNQSd4S1sYk2FpSSW44FqMc8qee5w==
 
-update-browserslist-db@^1.2.0:
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/update-browserslist-db/-/update-browserslist-db-1.2.2.tgz#cfb4358afa08b3d5731a2ecd95eebf4ddef8033e"
-  integrity sha512-E85pfNzMQ9jpKkA7+TJAi4TJN+tBCuWh5rUcS/sv6cFi+1q9LYDwDI5dpUL0u/73EElyQ8d3TEaeW4sPedBqYA==
+update-browserslist-db@^1.3.2:
+  version "1.3.3"
+  resolved "https://registry.yarnpkg.com/update-browserslist-db/-/update-browserslist-db-1.3.3.tgz#197e21fb2561fa89f8b94fad605a2b296a18993a"
+  integrity sha512-pJ2sYawQS0R/WI928Gj5GlPhTGzbMelq0+4INtSYNDV9ErKJcX6xjGWkoG/VnB3dpUm00zALaqkrUD77pO5TDQ==
   dependencies:
     escalade "^3.2.0"
     picocolors "^1.1.1"
@@ -4626,25 +4426,10 @@ use-sync-external-store@^1.4.0:
   resolved "https://registry.yarnpkg.com/use-sync-external-store/-/use-sync-external-store-1.6.0.tgz#b174bfa65cb2b526732d9f2ac0a408027876f32d"
   integrity sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==
 
-uuid@14.0.0:
-  version "14.0.0"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-14.0.0.tgz#0af883220163d264ffe0c084f6b8a89b9666966d"
-  integrity sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==
-
 uuid@14.0.1:
   version "14.0.1"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-14.0.1.tgz#8a5975b3e038902bfd169a10b5202f5ec0cf3faf"
   integrity sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==
-
-uuid@^8.3.2:
-  version "8.3.2"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
-  integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
-
-uuid@^9.0.1:
-  version "9.0.1"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-9.0.1.tgz#e188d4c8853cc722220392c424cd637f32293f30"
-  integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
 
 vfile-location@^5.0.0:
   version "5.0.3"

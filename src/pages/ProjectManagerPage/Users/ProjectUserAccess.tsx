@@ -39,12 +39,11 @@ import SplitterContainerTwoPanes from './SplitterTwoPanes'
 import { ProjectNode, UserNode } from '@shared/api'
 import LoadingPage from '@pages/LoadingPage'
 import { useQueryParam } from 'use-query-params'
-import { uuid } from 'short-uuid'
+import { v4 as uuid } from 'uuid'
 import ProjectUserAccessAccessGroupPanel from './ProjectUserAccessAccessGroupPanel'
 import EmptyPlaceholder, {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
-  Placeholder,
 } from '@shared/components/EmptyPlaceholder'
 import { useSessionStorage } from '@shared/hooks'
 

@@ -124,6 +124,10 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                         ...existingItem.attrib,
                         ...(patchItem.attrib || {}), // Merge attrib safely
                       },
+                      data: {
+                        ...existingItem.data,
+                        ...(patchItem.data || {}),
+                      },
                     }
                     Object.assign(page.items[itemIndex], updatedItem)
 
@@ -218,9 +222,14 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                   const list = page.items[listIndex]
                   const newListItem = {
                     ...list,
+                    ...entityListItemPatchModel,
                     attrib: {
                       ...list.attrib,
                       ...entityListItemPatchModel.attrib,
+                    },
+                    data: {
+                      ...list.data,
+                      ...entityListItemPatchModel.data,
                     },
                   }
                   // Update the list with the new data
