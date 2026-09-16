@@ -122,10 +122,9 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   }
 
   // Another layout loaded underneath us: everything optimistic belongs to the previous one.
-  // Runs during render so the new view is never drawn with the old view's sizing.
+  // Only state is reset here, during render, so the new view is never drawn with the old view's
+  // sizing; the timers and pending payloads go in the layout effect below.
   if (prevLayoutKeyRef.current !== undefined && prevLayoutKeyRef.current !== incomingColumnsKey) {
-    clearPendingWrites()
-    lockedAspectRatioRef.current = null
     if (internalColumnSizing !== null) {
       setInternalColumnSizing(null)
     }
@@ -149,17 +148,26 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     if (internalColumnSizing !== null) {
       setInternalColumnSizing(null)
     }
+  }
+  prevRowHeightRef.current = configRowHeight
+  latestConfigRef.current = columnsConfig
+  commitRef.current = onChangeWithColumns
+
+  // Cancelling timers and dropping payloads cannot be undone, so it waits for the commit: an
+  // abandoned render must not throw away a write the layout still showing on screen needs.
+  React.useLayoutEffect(() => {
+    clearPendingWrites()
     lockedAspectRatioRef.current = null
-    // Clear any pending timeout
+  }, [incomingColumnsKey])
+
+  React.useLayoutEffect(() => {
     if (rowHeightTimeoutRef.current) {
       clearTimeout(rowHeightTimeoutRef.current)
       rowHeightTimeoutRef.current = null
     }
     pendingRowHeightRef.current = null
-  }
-  prevRowHeightRef.current = configRowHeight
-  latestConfigRef.current = columnsConfig
-  commitRef.current = onChangeWithColumns
+    lockedAspectRatioRef.current = null
+  }, [configRowHeight])
 
   // one config for everything pending: each write rebuilds the whole columns array
   const flushPendingWrites = () => {
