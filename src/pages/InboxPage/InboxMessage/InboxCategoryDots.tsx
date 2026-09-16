@@ -33,7 +33,11 @@ const InboxCategoryDots = ({ projectName, categories }: InboxCategoryDotsProps) 
   if (!known.length) return null
 
   return (
-    <Dots className="categories">
+    <Dots
+      className="categories"
+      role="img"
+      aria-label={known.map((category) => category.name).join(', ')}
+    >
       {known.map((category) => (
         <Dot key={category.name} style={{ backgroundColor: category.color }} data-tooltip={category.name} />
       ))}
