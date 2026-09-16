@@ -19,7 +19,7 @@ export interface ListAccessFormProps {
   isLoading: boolean
   isReview?: boolean
 }
-const ENTITY_PARAMS = ['uri', 'type', 'project', 'id', 'activity']
+
 export const ListAccessForm: FC<ListAccessFormProps> = ({
   list,
   projectName,
@@ -53,9 +53,10 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
   } = useListsModuleContext()
 
   const handleCopyLink = () => {
-    const url = new URL(window.location.href)
-    ENTITY_PARAMS.forEach((param) => url.searchParams.delete(param))
-    copyToClipboard(url.toString())
+    const path = isReview
+      ? `/projects/${projectName}/reviews/${list.id}`
+      : `/projects/${projectName}/lists?list=${list.id}`
+    copyToClipboard(new URL(path, window.location.origin).toString())
   }
 
   if (!currentUser) return 'Loading user...'
