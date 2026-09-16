@@ -181,9 +181,13 @@ export const Right = styled.div`
 `
 
 export const Date = styled.span`
-  min-width: 50px;
-  max-width: 50px;
+  /* wide enough for a locale date plus time, right aligned so rows line up */
+  min-width: 110px;
+  max-width: 110px;
+  text-align: right;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   margin-right: var(--padding-m);
 `
 

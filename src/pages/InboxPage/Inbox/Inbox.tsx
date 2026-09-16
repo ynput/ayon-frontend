@@ -667,6 +667,7 @@ const Inbox = ({ filter }: InboxProps) => {
                         path={group.path}
                         type={group.activityType}
                         entityType={group.entityType ?? undefined}
+                        entitySubType={group.entitySubType ?? undefined}
                         entityId={group.entityId ?? undefined}
                         projectName={group.projectName}
                         date={group.date}
