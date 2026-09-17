@@ -31,9 +31,20 @@ const Details = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-large);
-  width: 360px;
+  width: 480px;
   flex: none;
   overflow-y: auto;
+  overflow-x: hidden;
+
+  /* ARC FormRow labels size to their text; pin them so both sections share one column */
+  .label:has(+ .field) {
+    width: 200px;
+    min-width: 200px;
+    flex: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 `
 
 const Section = styled.section`
@@ -88,9 +99,8 @@ const RawData = styled.pre`
   background-color: var(--md-sys-color-surface-container);
   font-family: monospace;
   font-size: 12px;
-  white-space: pre;
-  overflow: auto;
-  max-height: 400px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 `
 
 const Message = styled.span`
@@ -223,12 +233,6 @@ export const EnumDebugDialog: FC<EnumDebugDialogProps> = ({ resolver, settings, 
     )
   }
 
-  const renderRawData = (): ReactNode => {
-    if (isFetching) return <Message>Loading...</Message>
-    const raw = data?.error ? { error: data.error } : data?.items
-    return <RawData>{JSON.stringify(raw ?? null, null, 2)}</RawData>
-  }
-
   const renderList = () => {
     if (isFetching) {
       return Array.from({ length: SKELETON_ROWS }).map((_, index) => (
@@ -260,7 +264,7 @@ export const EnumDebugDialog: FC<EnumDebugDialogProps> = ({ resolver, settings, 
       header={`Debug: ${startCase(resolver.name)}`}
       onClose={onClose}
       size="full"
-      style={{ width: 1000, maxWidth: '95vw', height: '80%' }}
+      style={{ width: 1400, maxWidth: '95vw', height: '90%' }}
       onKeyDown={handleKeyDown}
     >
       <Body>
@@ -278,8 +282,8 @@ export const EnumDebugDialog: FC<EnumDebugDialogProps> = ({ resolver, settings, 
             )}
           </Section>
           <Section>
-            <SectionTitle>Data</SectionTitle>
-            {renderRawData()}
+            <SectionTitle>Enum Resolver Data</SectionTitle>
+            <RawData>{JSON.stringify(resolver, null, 2)}</RawData>
           </Section>
         </Details>
         <Results>
@@ -291,7 +295,9 @@ export const EnumDebugDialog: FC<EnumDebugDialogProps> = ({ resolver, settings, 
           />
           {!isFetching && !isError && items.length > 0 && (
             <Summary>
-              {query ? `${filteredItems.length} of ${items.length} items` : `${items.length} items`}
+              {query
+                ? `${filteredItems.length} of ${items.length} ${items.length === 1 ? 'item' : 'items'}`
+                : `${items.length} ${items.length === 1 ? 'item' : 'items'}`}
             </Summary>
           )}
           <List>{renderList()}</List>
