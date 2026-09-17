@@ -264,7 +264,7 @@ export const EnumDebugDialog: FC<EnumDebugDialogProps> = ({ resolver, settings, 
       header={`Debug: ${startCase(resolver.name)}`}
       onClose={onClose}
       size="full"
-      style={{ width: 1400, maxWidth: '95vw', height: '90%' }}
+      style={{ width: '95vw', maxWidth: '95vw', height: '95vh', maxHeight: '95vh' }}
       onKeyDown={handleKeyDown}
     >
       <Body>
