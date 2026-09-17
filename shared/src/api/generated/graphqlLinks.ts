@@ -1885,10 +1885,12 @@ export type GetSearchedProductsQueryVariables = Exact<{
   first?: number | null | undefined;
   before?: string | null | undefined;
   last?: number | null | undefined;
+  hasReviewables?: boolean | null | undefined;
+  includeTask?: boolean | null | undefined;
 }>;
 
 
-export type GetSearchedProductsQuery = { project: { name: string, products: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'ProductNode', id: string, name: string, parents: Array<string>, subType: string, featuredVersion: { id: string, thumbnailHash: string } | null } }> } } };
+export type GetSearchedProductsQuery = { project: { name: string, products: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'ProductNode', id: string, name: string, parents: Array<string>, subType: string, featuredVersion: { id: string, thumbnailHash: string, task?: { name: string } | null } | null } }> } } };
 
 export type GetSearchedRepresentationsQueryVariables = Exact<{
   projectName: string;
@@ -1924,10 +1926,12 @@ export type GetSearchedVersionsQueryVariables = Exact<{
   first?: number | null | undefined;
   before?: string | null | undefined;
   last?: number | null | undefined;
+  hasReviewables?: boolean | null | undefined;
+  includeTask?: boolean | null | undefined;
 }>;
 
 
-export type GetSearchedVersionsQuery = { project: { name: string, versions: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'VersionNode', thumbnailHash: string, hasReviewables: boolean, id: string, name: string, parents: Array<string> } }> } } };
+export type GetSearchedVersionsQuery = { project: { name: string, versions: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'VersionNode', thumbnailHash: string, hasReviewables: boolean, id: string, name: string, parents: Array<string>, task?: { name: string } | null } }> } } };
 
 export type GetSearchedWorkfilesQueryVariables = Exact<{
   projectName: string;
@@ -2492,12 +2496,13 @@ export const GetSearchedFoldersDocument = new TypedDocumentString(`
   }
 }`);
 export const GetSearchedProductsDocument = new TypedDocumentString(`
-    query GetSearchedProducts($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
+    query GetSearchedProducts($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $hasReviewables: Boolean, $includeTask: Boolean = false) {
   project(name: $projectName) {
     name
     products(
       search: $search
       folderIds: $parentIds
+      hasReviewables: $hasReviewables
       after: $after
       first: $first
       before: $before
@@ -2518,6 +2523,9 @@ export const GetSearchedProductsDocument = new TypedDocumentString(`
           featuredVersion {
             id
             thumbnailHash
+            task @include(if: $includeTask) {
+              name
+            }
           }
         }
       }
@@ -2634,12 +2642,13 @@ export const GetSearchedTasksDocument = new TypedDocumentString(`
   }
 }`);
 export const GetSearchedVersionsDocument = new TypedDocumentString(`
-    query GetSearchedVersions($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
+    query GetSearchedVersions($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $hasReviewables: Boolean, $includeTask: Boolean = false) {
   project(name: $projectName) {
     name
     versions(
       search: $search
       productIds: $parentIds
+      hasReviewables: $hasReviewables
       after: $after
       first: $first
       before: $before
@@ -2656,6 +2665,9 @@ export const GetSearchedVersionsDocument = new TypedDocumentString(`
         node {
           ...OverviewEntityLinkNodeFragment
           thumbnailHash
+          task @include(if: $includeTask) {
+            name
+          }
         }
       }
     }

@@ -32,6 +32,7 @@ export type SearchEntityLink = {
   icon: string | undefined
   subType: string | undefined
   hasReviewables?: boolean
+  taskName?: string
   // representations have none, products use their featured version's
   thumbnail?: EntityLinkThumbnail
 }
@@ -47,6 +48,8 @@ export type GetSearchedEntitiesLinksArgs = {
   search?: string
   parentIds?: string[] // Optional parent IDs to filter entities
   sortBy?: string
+  hasReviewables?: boolean // products and versions only
+  includeTask?: boolean // products and versions only
 }
 
 type GetSearchedEntity =
@@ -94,7 +97,8 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
       keepUnusedDataFor: 5,
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
-          const { projectName, entityType, search, parentIds } = queryArg
+          const { projectName, entityType, search, parentIds, hasReviewables, includeTask } =
+            queryArg
           const { cursor } = pageParam
 
           // Build query variables
@@ -110,6 +114,8 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
 
           variables.search = search || ''
           variables.parentIds = parentIds
+          variables.hasReviewables = hasReviewables
+          variables.includeTask = !!includeTask
 
           let result: GetSearchedEntity
           // Use the appropriate generated query based on entity type
@@ -215,6 +221,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     label: productNode.name,
                     parents: productNode.parents || [],
                     subType: productNode.subType,
+                    taskName: productNode.featuredVersion?.task?.name,
                     thumbnail: getNodeThumbnail('version', productNode.featuredVersion),
                   }
                 case 'version':
@@ -226,6 +233,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     label: versionNode.name,
                     parents: versionNode.parents || [],
                     hasReviewables: versionNode.hasReviewables,
+                    taskName: versionNode.task?.name,
                     thumbnail: getNodeThumbnail('version', versionNode),
                   }
                 case 'representation':

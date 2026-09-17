@@ -40,6 +40,8 @@ interface useGetEntityPickerDataProps {
   entityType: PickerEntityType // which entity type we are picking for
   search: PickerSearch
   selection: Record<PickerEntityType, string[]>
+  reviewablesOnly?: boolean // hide products and versions without reviewables
+  includeTask?: boolean // fetch task names for products and versions
 }
 
 export const useGetEntityPickerData = ({
@@ -47,6 +49,8 @@ export const useGetEntityPickerData = ({
   entityType,
   search,
   selection,
+  reviewablesOnly,
+  includeTask,
 }: useGetEntityPickerDataProps): EntityPickerDataReturn => {
   const entityDependencies = entityHierarchies[entityType] || []
 
@@ -117,6 +121,7 @@ export const useGetEntityPickerData = ({
       folder.data,
     ),
     project?.productTypes,
+    { includeTask, hasReviewables: reviewablesOnly || undefined },
   )
   const version = useGetEntityTypeData(
     projectName,
@@ -127,6 +132,8 @@ export const useGetEntityPickerData = ({
       entityHierarchies['version'][entityHierarchies['version'].length - 2],
       product.data,
     ),
+    undefined,
+    { includeTask, hasReviewables: reviewablesOnly || undefined },
   )
   const representation = useGetEntityTypeData(
     projectName,
@@ -159,6 +166,11 @@ export const useGetEntityPickerData = ({
   }
 }
 
+type EntityTypeDataOptions = {
+  includeTask?: boolean
+  hasReviewables?: boolean
+}
+
 const useGetEntityTypeData = (
   projectName: string,
   entityType: PickerEntityType,
@@ -166,6 +178,7 @@ const useGetEntityTypeData = (
   skip: boolean,
   parentIds?: string[],
   anatomies?: EntityAnatomy[],
+  { includeTask, hasReviewables }: EntityTypeDataOptions = {},
 ) => {
   const { data, isFetching, hasNextPage, fetchNextPage, isFetchingNextPage, error } =
     useGetSearchedEntitiesLinksInfiniteQuery(
@@ -174,6 +187,8 @@ const useGetEntityTypeData = (
         entityType,
         search,
         parentIds,
+        hasReviewables,
+        includeTask: includeTask || undefined,
       },
       // skip if this is folder hierarchy (we already have the folders) or if we're waiting for parent selection
       {

@@ -2,14 +2,14 @@
 // Each entity type has it's own table
 
 import { RowSelectionState } from '@tanstack/react-table'
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { entityHierarchies } from './util'
 import EntityTypeTable from './components/EntityTypeTable'
 import { SimpleTableProvider } from '@shared/containers/SimpleTable/context/SimpleTableContext'
-import { Button, Dialog, DialogProps } from '@ynput/ayon-react-components'
+import { Button, Dialog, DialogProps, SwitchButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { useGetEntityPickerData } from './hooks/useGetEntityPickerData'
-import { upperFirst } from 'lodash'
+import { omit, upperFirst } from 'lodash'
 import useExpandedWithInitialFolders from './hooks/useExpandedWithInitialFolders'
 import { usePreserveChildSelectionByName } from './hooks/usePreserveChildSelectionByName'
 
@@ -56,6 +56,8 @@ interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
   disabledMessage?: string // Default tooltip message for disabled items
   getDisabledMessage?: (id: string) => string | undefined // Custom message per disabled item
   reviewableRequired?: boolean // When entityType is 'version', disable versions without reviewables
+  showReviewablesSwitch?: boolean // Show a "Show reviewables only" switch (on by default)
+  showTaskNames?: boolean // Show task names on products (featured version) and versions
   isLoading?: boolean // Whether the submit action is loading
 }
 
@@ -71,6 +73,8 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   disabledMessage = 'Cannot select this item',
   getDisabledMessage,
   reviewableRequired,
+  showReviewablesSwitch,
+  showTaskNames,
   isLoading,
   ...props
 }) => {
@@ -118,12 +122,35 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     ]),
   ) as Record<PickerEntityType, string[]>
 
+  // Get the complete hierarchy for the target entity type!
+  const entityHierarchy = entityHierarchies[entityType]
+
+  const hasReviewableTables =
+    entityHierarchy.includes('product') || entityHierarchy.includes('version')
+  const [reviewablesOnlyEnabled, setReviewablesOnlyEnabled] = useState(true)
+  const reviewablesOnly = !!showReviewablesSwitch && hasReviewableTables && reviewablesOnlyEnabled
+
   const entityData = useGetEntityPickerData({
     entityType,
     projectName,
     search,
     selection: entitySelection,
+    reviewablesOnly,
+    includeTask: showTaskNames,
   })
+
+  // drop selected rows the switch hides, so submit never returns them
+  useEffect(() => {
+    if (!reviewablesOnly) return
+    for (const type of ['product', 'version'] as const) {
+      const { data, isLoading } = entityData[type]
+      if (isLoading) continue
+      const loadedIds = new Set(data.map((entity) => entity.id))
+      const selection = rowSelection[type]
+      const hiddenIds = Object.keys(selection).filter((id) => selection[id] && !loadedIds.has(id))
+      if (hiddenIds.length) setEntityRowSelection(omit(selection, hiddenIds), type)
+    }
+  }, [reviewablesOnly, entityData.product, entityData.version, rowSelection])
 
   // When reviewableRequired is set and we're picking versions, disable any
   // version returned by the query that does not have reviewables.
@@ -157,9 +184,6 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     foldersSelection: initSelectionState.folder,
     foldersData: entityData.folder,
   })
-
-  // Get the complete hierarchy for the target entity type!
-  const entityHierarchy = entityHierarchies[entityType]
 
   usePreserveChildSelectionByName({
     entityHierarchy,
@@ -245,6 +269,14 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
         </>
       }
     >
+      {showReviewablesSwitch && hasReviewableTables && (
+        <SwitchButton
+          label="Show reviewables only"
+          value={reviewablesOnlyEnabled}
+          onClick={() => setReviewablesOnlyEnabled(!reviewablesOnlyEnabled)}
+          style={{ width: 'fit-content' }}
+        />
+      )}
       <TablesContainer>
         {entityHierarchy.map((tableEntityType) => (
           <SimpleTableProvider
