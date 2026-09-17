@@ -141,6 +141,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         icon: getEnumItemIcon(item.icon),
         color: item.color,
         group: item.group,
+        hidden: item.hidden,
       }))
       if (
         field.name === 'status' &&
