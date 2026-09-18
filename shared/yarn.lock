@@ -1591,6 +1591,25 @@
   resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.19.10.tgz#10c6330da895c7c998025fd8bb178c37d684dbb8"
   integrity sha512-22BhHi3ENnX5tVarkiaj7FQVOYQquc5xcqvKphQQ41StFI5LpGdm4UbQkb1z43B4s6hVxz0buyGlLRc42G3xlQ==
 
+"@ynput/ayon-react-components@1.17.1":
+  version "1.17.1"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.17.1.tgz#18ddd98ab7861812e57e802b9d606c7945c0e6a0"
+  integrity sha512-Sk43DMF+imc9P86BG+KPQvTpS6Dv34QVwM6oIa3p0P6kCZF9asUOxDnLZEZlNlrEcJ028r7mlHjAkw0Reu+xtw==
+  dependencies:
+    short-uuid "^5.2.0"
+
+"@ynput/ayon-react-components@^1.18.8":
+  version "1.18.8"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.18.8.tgz#e600537a32e51fd2c0c601ee0f6f0994b324880f"
+  integrity sha512-dpFyLavFfxepYGIoyinpoaZwEKCC+Uj49OMNj8Bj//EQQfqzMBdgb0AIqJtXBVyTkxXgBhKbIWry6fZEWNclhA==
+  dependencies:
+    short-uuid "^5.2.0"
+
+"@ynput/ayon-react-components@^1.20.0":
+  version "1.20.0"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.20.0.tgz#5a405ca46e82d53e4ad0ee59fabdd59aea065712"
+  integrity sha512-+eCnWQiASwuCGll3V1BMr30gO+qwJ30BdIZoji56nLsy3oBLr5XjTmyNo+IKM2dHnfCTdoxRPreNxqvMVlZBiw==
+
 acorn-jsx@^5.3.2:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/acorn-jsx/-/acorn-jsx-5.3.2.tgz#7ed5bb55908b3b2f1bc55c6af1653bada7f07937"

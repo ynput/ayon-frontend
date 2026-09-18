@@ -19,6 +19,14 @@ import { isEqual } from 'lodash'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 
+// Validation errors point at an index (loc: ['body', 'attributes', 44, 'name']), not a name
+const getSaveErrorReason = (err, attributes) => {
+  const invalid = err?.data?.errors?.find((e) => e.loc?.[1] === 'attributes')
+  if (!invalid) return err?.data?.detail
+  const name = attributes[invalid.loc[2]]?.name
+  return `${name ? `"${name}" ` : ''}${invalid.loc[3] || ''} ${invalid.msg}`.trim()
+}
+
 const Attributes = () => {
   const [attributes, setAttributes] = useState([])
   const [selectedAttribute, setSelectedAttribute] = useState(null)
@@ -61,7 +69,8 @@ const Attributes = () => {
       })
       .catch((err) => {
         console.error(err)
-        toast.error('Unable to set attributes')
+        const reason = getSaveErrorReason(err, attributes)
+        toast.error(reason ? `Unable to set attributes: ${reason}` : 'Unable to set attributes')
       })
   }
 
@@ -220,12 +229,14 @@ const Attributes = () => {
                 style={{ maxWidth: 150 }}
                 sortable
                 sortField="data.type"
-                body={(rowData) => getUiTypeLabel(rowData.data?.type, rowData.data?.enum)}
+                body={(rowData) =>
+                  getUiTypeLabel(rowData.data?.type, rowData.data?.enum, rowData.data?.enumResolver)
+                }
                 sortFunction={(e) => {
                   const dir = e.order ?? 1
                   return [...e.data].sort((a, b) => {
-                    const la = getUiTypeLabel(a.data?.type, a.data?.enum)
-                    const lb = getUiTypeLabel(b.data?.type, b.data?.enum)
+                    const la = getUiTypeLabel(a.data?.type, a.data?.enum, a.data?.enumResolver)
+                    const lb = getUiTypeLabel(b.data?.type, b.data?.enum, b.data?.enumResolver)
                     return la.localeCompare(lb) * dir
                   })
                 }}

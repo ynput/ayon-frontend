@@ -113,6 +113,7 @@ import { useProjectContext } from '@shared/context/ProjectContext'
 import { usePowerpack } from '@shared/context/PowerpackContext'
 import { setDetailsPanelTabForScope } from '@shared/context/DetailsPanelContext'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
+import { useRequestAttributeEnums } from '@shared/hooks/useAttributeEnumOptions'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { ColumnsConfig } from './types/columnConfig'
@@ -616,6 +617,21 @@ export const ProjectTreeTable = ({
       onColumnVisibleChange(changes)
     }
   }, [virtualItems, onColumnVisibleChange, onColumnVisibleChangeSubscribed, visibleColumns, table])
+
+  const requestAttributeEnums = useRequestAttributeEnums()
+  const neededEnumAttribs = [
+    ...virtualItems.map((item) => visibleColumns[item.index]?.id),
+    groupFieldId?.startsWith('attrib.')
+      ? `attrib_${groupFieldId.slice('attrib.'.length)}`
+      : undefined,
+  ]
+    .filter((id): id is string => !!id?.startsWith('attrib_'))
+    .map((id) => id.slice('attrib_'.length))
+    .join(',')
+
+  useEffect(() => {
+    if (neededEnumAttribs) requestAttributeEnums(neededEnumAttribs.split(','))
+  }, [neededEnumAttribs, requestAttributeEnums])
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 

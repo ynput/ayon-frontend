@@ -11,9 +11,8 @@ import {
   Dialog,
   Button,
 } from '@ynput/ayon-react-components'
-import { camelCase, upperFirst } from 'lodash'
-import { MinMaxField } from './components'
-import { EnumEditor } from '@shared/components/EnumEditor/EnumEditor'
+import { camelCase, startCase, upperFirst } from 'lodash'
+import { MinMaxField, EnumSourceField } from './components'
 import type { AttributeData, AttributeModel } from '@shared/api'
 import {
   UIAttributeType,
@@ -32,6 +31,9 @@ const RowFieldGroup = styled.div`
   gap: var(--base-gap-large);
   align-items: center;
 `
+
+// Must match the server's ATTRIBUTE_NAME_REGEX, one invalid name rejects the whole attribute set
+const ATTRIBUTE_NAME_REGEX = /^[a-zA-Z0-9]{2,64}$/
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -77,6 +79,8 @@ const initFormData: AttributeForm = {
     example: '',
     default: undefined,
     enum: undefined,
+    enumResolver: undefined,
+    enumResolverSettings: undefined,
     widget: undefined,
     minLength: undefined,
     maxLength: undefined,
@@ -177,14 +181,16 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
 
   const [formData, setFormData] = useState<AttributeForm | null>(initData)
   const [uiType, setUiType] = useState<UIAttributeType>(() =>
-    backendToUiType(initData?.data?.type, initData?.data?.enum),
+    backendToUiType(initData?.data?.type, initData?.data?.enum, initData?.data?.enumResolver),
   )
   const [isDecimal, setIsDecimal] = useState<boolean>(() => initData?.data?.type === 'float')
 
   useEffect(() => {
     if (!!attribute) {
       setFormData(attribute)
-      setUiType(backendToUiType(attribute.data?.type, attribute.data?.enum))
+      setUiType(
+        backendToUiType(attribute.data?.type, attribute.data?.enum, attribute.data?.enumResolver),
+      )
       setIsDecimal(attribute.data?.type === 'float')
     }
   }, [attribute])
@@ -220,7 +226,8 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
   if (formData) {
     if (isNew) {
       if (existingNames.includes(formData.name)) internalError = 'This attribute already exists'
-      else if (!formData.name.match('^[a-zA-Z_]{2,64}$')) error = 'Invalid attribute name'
+      else if (!ATTRIBUTE_NAME_REGEX.test(formData.name))
+        internalError = 'Invalid attribute name: use 2-64 letters or digits, no spaces or symbols'
     } // name validation
   }
 
@@ -273,11 +280,13 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
     booleanDefault: CustomFieldRenderer
   } = {
     enum: (value = [], onChange) => (
-      <EnumEditor
-        values={value}
-        onChange={(val) => {
-          onChange(val?.length ? val : undefined)
-        }}
+      <EnumSourceField
+        enumValues={value}
+        enumResolver={formData?.data?.enumResolver}
+        enumResolverSettings={formData?.data?.enumResolverSettings}
+        onChangeEnum={onChange}
+        onChangeResolver={handleResolverChange}
+        onChangeResolverSettings={(settings) => setData('enumResolverSettings', settings)}
       />
     ),
     inherit: (value, onChange) => (
@@ -292,6 +301,14 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
         onChange={(e) => onChange((e.target as HTMLInputElement).checked)}
       />
     ),
+  }
+
+  const handleResolverChange = (resolverName: string | undefined) => {
+    setData('enumResolver', resolverName)
+    if (!resolverName) return
+
+    if (!formData?.data?.title) setData('title', startCase(resolverName))
+    if (isNew && !formData?.name) setTopLevelData('name', camelCase(resolverName))
   }
 
   const handleTitleChange = (e: React.ChangeEvent) => {
@@ -311,6 +328,8 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
     // Clear enum when switching away from select/multi_select
     if (newUiType !== 'select' && newUiType !== 'multi_select') {
       setData('enum', undefined)
+      setData('enumResolver', undefined)
+      setData('enumResolverSettings', undefined)
     }
     // Clear regex if not supported by the new type
     if (newUiType !== 'text' && formData?.data?.regex) {

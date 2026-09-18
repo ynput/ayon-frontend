@@ -6,6 +6,7 @@ import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 import type { AttributeData, EnumItem } from '@shared/api'
 import { wrapMode } from './wrapMode'
+import { getSelectableEnumItems } from '@shared/util/attributeEnum'
 
 const StyledDropdown = styled(Dropdown)<{ $multiSelect?: boolean }>`
   height: 100%;
@@ -81,7 +82,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     const hasMultipleValues = selectedOptions.length > 1
 
     // Merge valid options with invalid options for the dropdown
-    const allOptions = [...options, ...invalidOptions]
+    const allOptions = [...getSelectableEnumItems(options, valueAsStrings), ...invalidOptions]
 
     const dropdownRef = useRef<DropdownRef>(null)
 

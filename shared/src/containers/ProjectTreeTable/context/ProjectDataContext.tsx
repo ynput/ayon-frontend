@@ -1,5 +1,6 @@
 import { ReactNode, useContext, useMemo } from 'react'
 import { useGetUsersAssigneeQuery, useGetMyProjectPermissionsQuery } from '@shared/api'
+import { AttributeEnumRequestProvider, useResolvedAttributeEnums } from '@shared/hooks'
 import useAttributeFields, { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { useProjectContext } from '@shared/context/ProjectContext'
 import { ProjectDataContext } from './ProjectDataContextInstance'
@@ -43,6 +44,13 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     isLoading: isLoadingAttribs,
   } = useAttributeFields({ projectPermissions })
 
+  // Merged into data.enum here, fetched only once a visible column, filter or slicer asks for it
+  const {
+    attributes: resolvedAttribFields,
+    enumSubscriptions,
+    requestAttributeEnums,
+  } = useResolvedAttributeEnums(attribFields, projectName, { lazy: true })
+
   // GET USERS
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
@@ -77,7 +85,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
       isLoading: isLoadingProject || isLoadingAttribs,
 
       users,
-      attribFields,
+      attribFields: resolvedAttribFields,
       writableFields,
       canWriteNamePermission,
       canWriteLabelPermission,
@@ -88,14 +96,21 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
       isLoadingAttribs,
 
       users,
-      attribFields,
+      resolvedAttribFields,
       writableFields,
       canWriteNamePermission,
       canWriteLabelPermission,
     ],
   )
 
-  return <ProjectDataContext.Provider value={value}>{children}</ProjectDataContext.Provider>
+  return (
+    <ProjectDataContext.Provider value={value}>
+      {enumSubscriptions}
+      <AttributeEnumRequestProvider onRequest={requestAttributeEnums}>
+        {children}
+      </AttributeEnumRequestProvider>
+    </ProjectDataContext.Provider>
+  )
 }
 
 export const useProjectDataContext = () => {

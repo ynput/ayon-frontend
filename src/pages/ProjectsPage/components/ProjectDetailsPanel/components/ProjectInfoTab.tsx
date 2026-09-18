@@ -162,6 +162,7 @@ const ProjectInfoTab: FC<ProjectInfoTabProps> = ({ projectName, project, isLoadi
         enableEditing={true}
         onChange={handleChange}
         entityType="project"
+        projectName={projectName}
       />
 
       <DetailsSection fields={detailFields} form={detailForm} isLoading={isLoading} />

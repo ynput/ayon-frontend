@@ -1,5 +1,5 @@
 import type { AttributeData } from '@shared/api'
-import { getAttributeIcon } from '@shared/util'
+import { getAttributeIcon, hasEnumOptions } from '@shared/util'
 
 export type UIAttributeType =
   | 'text'
@@ -72,10 +72,11 @@ export const UI_TYPE_EXCLUDE: Partial<Record<UIAttributeType, (keyof AttributeDa
 export const backendToUiType = (
   type: AttributeData['type'] | undefined,
   enumValues?: AttributeData['enum'],
+  enumResolver?: AttributeData['enumResolver'],
 ): UIAttributeType => {
   switch (type) {
     case 'string':
-      return enumValues?.length ? 'select' : 'text'
+      return hasEnumOptions({ enum: enumValues, enumResolver }) ? 'select' : 'text'
     case 'list_of_strings':
       return 'multi_select'
     case 'integer':
@@ -122,10 +123,11 @@ const UI_MAPPED_BACKEND_TYPES: ReadonlyArray<AttributeData['type']> = [
 export const getUiTypeLabel = (
   type: AttributeData['type'] | undefined,
   enumValues?: AttributeData['enum'],
+  enumResolver?: AttributeData['enumResolver'],
 ): string => {
   // Unknown / unsupported backend types fall back to the raw type string
   // so the table doesn't mislabel them (e.g. list_of_integers, dict).
   if (!type || !UI_MAPPED_BACKEND_TYPES.includes(type)) return type ?? ''
-  const uiType = backendToUiType(type, enumValues)
+  const uiType = backendToUiType(type, enumValues, enumResolver)
   return UI_TYPE_OPTIONS.find((o) => o.value === uiType)?.label ?? type
 }

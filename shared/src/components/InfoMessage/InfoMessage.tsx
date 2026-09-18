@@ -20,8 +20,8 @@ export const InfoMessage = forwardRef<HTMLDivElement, InfoMessageProps>(
   ({ variant = 'info', message, icon, action, ...props }, ref) => {
     return (
       <Styled.MessageCard
-        className={clsx('message', props.className, variant)}
         {...props}
+        className={clsx('message', props.className, variant)}
         ref={ref}
       >
         <div className="content">
