@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { updateChangedKeys, parseContext } from '../../helpers'
 import AccessEditorDialog, { AccessOption, AccessValues } from './AccessEditorDialog'
 import { AccessPreviewButton } from './AccessPreviewButton'
@@ -33,6 +33,10 @@ const AccessWidget = (props: AccessWidgetProps) => {
 
   const [value, setValue] = useState<AccessValues>(props.formData || {})
   const [isOpen, setIsOpen] = useState(false)
+
+  useEffect(() => {
+    setValue(props.formData || {})
+  }, [props.formData])
 
   const valueMap = useMemo(() => {
     if (!value) return []
