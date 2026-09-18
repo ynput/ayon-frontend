@@ -242,6 +242,7 @@ const SelectWidget = (props: $Any) => {
           ? () => setValue(props.options.enumOptions.map((opt: $Any) => opt.value))
           : undefined
       }
+      valueIconMode="all"
     />
   )
 }
