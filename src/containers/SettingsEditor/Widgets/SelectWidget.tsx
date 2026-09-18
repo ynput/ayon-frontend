@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Dropdown, InputSwitch } from '@ynput/ayon-react-components'
+import { DefaultItemTemplate, Dropdown, InputSwitch } from '@ynput/ayon-react-components'
 
 import { updateChangedKeys, equiv, parseContext } from '../helpers'
 import { $Any } from '@types'
@@ -11,6 +11,7 @@ import {
   getEnumErrorText,
   getEnumItemIcon,
   getSelectableEnumItems,
+  isEnumIconImage,
   toDropdownErrorText,
 } from '@shared/util/attributeEnum'
 
@@ -20,6 +21,38 @@ const StyledDropdown = styled(Dropdown)`
     width: 0;
   }
 `
+
+const EnumOptionImage = styled.img`
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+`
+
+// The library's default item template renders `option.icon` through its material-symbols
+// <Icon>, which can't display an IconModel{type: 'url'} icon - render those as <img> instead.
+const enumItemTemplate = (
+  option: $Any,
+  isActive: boolean,
+  isSelected: boolean,
+  _index: number,
+  mixedSelected: string[],
+  multiSelect?: boolean,
+) => {
+  const isImage = isEnumIconImage(option.icon)
+  return (
+    <DefaultItemTemplate
+      option={isImage ? { ...option, icon: undefined } : option}
+      dataKey="value"
+      labelKey="label"
+      selected={isSelected ? [option.value] : []}
+      mixedSelected={mixedSelected}
+      value={isActive ? [option.value] : []}
+      multiSelect={multiSelect}
+      startContent={isImage ? <EnumOptionImage src={option.icon} alt="" /> : undefined}
+    />
+  )
+}
 
 const SwitchboxContainer = styled.div`
   display: flex;
@@ -61,7 +94,12 @@ const SwitchboxButton = styled.button`
   }
 `
 
-const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
+const SwitchboxMessage = styled.div`
+  font-size: 12px;
+  color: var(--md-sys-color-outline);
+`
+
+const Switchbox = ({ options, value, onSelectionChange, message }: $Any) => {
   const isSelected = (val: $Any) => {
     if (Array.isArray(value)) {
       return value.includes(val)
@@ -98,6 +136,7 @@ const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
 
   return (
     <SwitchboxContainer>
+      {message && <SwitchboxMessage>{message}</SwitchboxMessage>}
       {options.length > 0 && (
         <SwitchboxButtonGroup>
           <SwitchboxButton onClick={selectAll} disabled={allSelected} title="Select all options">
@@ -231,6 +270,14 @@ const SelectWidget = (props: $Any) => {
     }
   }
 
+  // Only pay for the custom item template when an option actually has an image icon;
+  // otherwise the library's own material-symbols item rendering is used as-is.
+  const hasImageIcon = options.some((opt) => isEnumIconImage(opt.icon))
+  const itemTemplate = hasImageIcon
+    ? (option: $Any, isActive: boolean, isSelected: boolean, index: number, mixedSelected: string[]) =>
+        enumItemTemplate(option, isActive, isSelected, index, mixedSelected, props.multiple)
+    : undefined
+
   const onFocus = (e: $Any) => {
     props.formContext?.onSetBreadcrumbs(path)
     props.onFocus(e)
@@ -258,27 +305,36 @@ const SelectWidget = (props: $Any) => {
     renderableValue = [value]
   }
 
+  const placeholder = enumOptionsError
+    ? 'Could not load options'
+    : isEnumOptionsLoading
+    ? 'Loading options...'
+    : props.schema?.placeholder
+  const disabled = props.schema?.disabled || isEnumOptionsLoading
+
   if (isSortableMultiselect && props.multiple) {
     return (
       <OrderedListWidget
         value={(value as string[]) || []}
         options={options}
         onChange={setValue as (value: string[]) => void}
-        placeholder={props.schema?.placeholder}
-        disabled={props.schema?.disabled}
+        placeholder={placeholder}
+        disabled={disabled}
+        dropdownProps={{ error: toDropdownErrorText(enumOptionsError), itemTemplate }}
       />
     )
   }
 
   if (widget === 'switchbox' && props.multiple) {
-    return <Switchbox options={options} value={value} onSelectionChange={setValue} />
+    return (
+      <Switchbox
+        options={options}
+        value={value}
+        onSelectionChange={setValue}
+        message={enumOptionsError || (isEnumOptionsLoading ? 'Loading options...' : undefined)}
+      />
+    )
   }
-
-  const placeholder = enumOptionsError
-    ? 'Could not load options'
-    : isEnumOptionsLoading
-    ? 'Loading options...'
-    : props.schema?.placeholder
 
   return (
     <StyledDropdown
@@ -291,10 +347,11 @@ const SelectWidget = (props: $Any) => {
       onFocus={onFocus}
       placeholder={placeholder}
       error={toDropdownErrorText(enumOptionsError)}
+      itemTemplate={itemTemplate}
       className={`form-field`}
       multiSelect={props.multiple}
       style={hlstyle}
-      disabled={props.schema?.disabled || isEnumOptionsLoading}
+      disabled={disabled}
       onSelectAll={
         props.multiple && options.length > 10
           ? () => setValue(options.map((opt) => opt.value))
