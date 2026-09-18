@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Dropdown, InputSwitch } from '@ynput/ayon-react-components'
 
 import { updateChangedKeys, equiv, parseContext } from '../helpers'
@@ -6,6 +6,13 @@ import { $Any } from '@types'
 import styled from 'styled-components'
 import OrderedListWidget from './OrderedListWidget'
 import { isEqual } from 'lodash'
+import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
+import {
+  getEnumErrorText,
+  getEnumItemIcon,
+  getSelectableEnumItems,
+  toDropdownErrorText,
+} from '@shared/util/attributeEnum'
 
 const StyledDropdown = styled(Dropdown)`
   max-width: 800px;
@@ -137,6 +144,37 @@ const SelectWidget = (props: $Any) => {
     widget === 'sortable_multiselect' ||
     (props.multiple && /applications_profiles_\d+_applications$/.test(props.id))
 
+
+  const enumResolverName = props.schema && props.schema['x-enum-resolver']
+  const enumResolverSettings = props.schema && props.schema['x-enum-resolver-settings']
+
+  const enumResolverData = useMemo(
+    () =>
+      enumResolverName
+        ? { enumResolver: enumResolverName, enumResolverSettings }
+        : undefined,
+    [enumResolverName, enumResolverSettings],
+  )
+
+  // Project/site scoped settings must always resolve enums with a project_name; if it
+  // is not known yet, wait rather than fetching studio-wide (and possibly wrong) options.
+  const settingsLevel = props.formContext?.level
+  const headerProjectName = props.formContext?.headerProjectName
+  const requiresProjectScope = settingsLevel === 'project' || settingsLevel === 'site'
+
+  const {
+    options: resolvedEnumOptions,
+    isLoading: isEnumOptionsLoading,
+    isError: isEnumOptionsError,
+    errorMessage: enumOptionsErrorMessage,
+  } = useAttributeEnumOptions(enumResolverData, {
+    projectName: headerProjectName,
+    skip: !enumResolverName || (requiresProjectScope && !headerProjectName),
+  })
+
+  const enumOptionsError = isEnumOptionsError ? getEnumErrorText(enumOptionsErrorMessage) : undefined
+
+
   useEffect(() => {
     // Sync the local state with the formData
     // For sortable multiselect, order matters - use isEqual instead of equiv
@@ -172,12 +210,25 @@ const SelectWidget = (props: $Any) => {
     }, 100)
   }, [value])
 
-  const enumLabels = props.schema?.enumLabels || {}
-  const options = []
-  for (const opt of props.options.enumOptions) {
-    const _value = opt.value
-    const label = enumLabels[_value] || _value
-    options.push({ label, value: _value })
+  let options: { label: string; value: $Any; icon?: string; color?: string }[]
+  if (enumResolverName) {
+    // Backend-resolved options carry their own labels; enumLabels only applies to static enums.
+    // icon/color are rendered natively by Dropdown's default item/value templates.
+    const selectedValues = Array.isArray(value) ? value : value !== null ? [value] : []
+    options = getSelectableEnumItems(resolvedEnumOptions, selectedValues).map((opt) => ({
+      label: opt.label,
+      value: opt.value,
+      icon: getEnumItemIcon(opt.icon),
+      color: opt.color,
+    }))
+  } else {
+    const enumLabels = props.schema?.enumLabels || {}
+    options = []
+    for (const opt of props.options.enumOptions) {
+      const _value = opt.value
+      const label = enumLabels[_value] || _value
+      options.push({ label, value: _value })
+    }
   }
 
   const onFocus = (e: $Any) => {
@@ -223,6 +274,12 @@ const SelectWidget = (props: $Any) => {
     return <Switchbox options={options} value={value} onSelectionChange={setValue} />
   }
 
+  const placeholder = enumOptionsError
+    ? 'Could not load options'
+    : isEnumOptionsLoading
+    ? 'Loading options...'
+    : props.schema?.placeholder
+
   return (
     <StyledDropdown
       widthExpand
@@ -232,14 +289,15 @@ const SelectWidget = (props: $Any) => {
       onSelectionChange={props.multiple ? setValue : (e) => setValue(e[0])}
       onBlur={props.onBlur}
       onFocus={onFocus}
-      placeholder={props.schema?.placeholder}
+      placeholder={placeholder}
+      error={toDropdownErrorText(enumOptionsError)}
       className={`form-field`}
       multiSelect={props.multiple}
       style={hlstyle}
-      disabled={props.schema?.disabled}
+      disabled={props.schema?.disabled || isEnumOptionsLoading}
       onSelectAll={
-        props.multiple && props.options.enumOptions.length > 10
-          ? () => setValue(props.options.enumOptions.map((opt: $Any) => opt.value))
+        props.multiple && options.length > 10
+          ? () => setValue(options.map((opt) => opt.value))
           : undefined
       }
     />
