@@ -1,0 +1,25 @@
+# Checks which of the given ids have reviewables, independent of search and paging
+
+query GetReviewableProductIds($projectName: String!, $ids: [String!]!, $first: Int) {
+  project(name: $projectName) {
+    products(ids: $ids, hasReviewables: true, first: $first) {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }
+}
+
+query GetReviewableVersionIds($projectName: String!, $ids: [String!]!, $first: Int) {
+  project(name: $projectName) {
+    versions(ids: $ids, hasReviewables: true, first: $first) {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }
+}

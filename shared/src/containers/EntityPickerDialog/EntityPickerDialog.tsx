@@ -2,13 +2,14 @@
 // Each entity type has it's own table
 
 import { RowSelectionState } from '@tanstack/react-table'
-import { FC, useMemo, useState } from 'react'
-import { entityHierarchies } from './util'
+import { FC, useState } from 'react'
+import { entityHierarchies, isReviewableEntity } from './util'
 import EntityTypeTable from './components/EntityTypeTable'
 import { SimpleTableProvider } from '@shared/containers/SimpleTable/context/SimpleTableContext'
 import { Button, Dialog, DialogProps, SwitchButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { useGetEntityPickerData } from './hooks/useGetEntityPickerData'
+import { useGetReviewableEntityIdsQuery } from '@shared/api'
 import { upperFirst } from 'lodash'
 import useExpandedWithInitialFolders from './hooks/useExpandedWithInitialFolders'
 import { usePreserveChildSelectionByName } from './hooks/usePreserveChildSelectionByName'
@@ -140,24 +141,17 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     includeTask: showTaskNames,
   })
 
-  const targetData = entityData[entityType]
-  // a missing row only proves the switch hid it once the data is complete —
-  // searching, paging and errors shorten it too
-  const canTrustAbsence =
-    reviewablesOnly &&
-    !targetData.isLoading &&
-    !targetData.error &&
-    !targetData.hasNextPage &&
-    !search[entityType]
-
-  const visibleTargetIds = useMemo(
-    () => (canTrustAbsence ? new Set(targetData.data.map((entity) => entity.id)) : null),
-    [canTrustAbsence, targetData.data],
+  // the switch hides rows server side, so the selection is checked by id rather
+  // than by absence from the current page
+  const targetSelection = entitySelection[entityType]
+  const { data: reviewableSelectedIds } = useGetReviewableEntityIdsQuery(
+    { projectName, entityType, ids: targetSelection },
+    { skip: !reviewablesOnly || !isReviewableEntity(entityType) || !targetSelection.length },
   )
 
-  const selectedIds = visibleTargetIds
-    ? entitySelection[entityType].filter((id) => visibleTargetIds.has(id))
-    : entitySelection[entityType]
+  const selectedIds = reviewableSelectedIds
+    ? targetSelection.filter((id) => reviewableSelectedIds.includes(id))
+    : targetSelection
 
   // When reviewableRequired is set and we're picking versions, disable any
   // version returned by the query that does not have reviewables.

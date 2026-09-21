@@ -2,6 +2,7 @@ import {
   FolderListItem,
   GetSearchedEntitiesLinksArgs,
   SearchEntityLink,
+  useGetReviewableEntityIdsQuery,
   useGetSearchedEntitiesLinksInfiniteQuery,
 } from '@shared/api'
 import { useProjectContext } from '@shared/context/ProjectContext'
@@ -16,9 +17,6 @@ import {
 } from '../util'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import { matchSorter } from 'match-sorter'
-
-// the entity types the reviewables switch filters server side
-const FILTERED_PARENTS: PickerEntityType[] = ['product', 'version']
 
 export type EntityQueryResult = {
   data: (SearchEntityLink | FolderListItem)[]
@@ -99,28 +97,28 @@ export const useGetEntityPickerData = ({
   const getParentIds = (
     parentType: PickerEntityType,
     parentData: { id: string }[] = [],
-    canTrustAbsence = false,
+    reviewableParentIds?: string[],
   ) => {
     const parentSelection = selection[parentType]
     if (!parentSelection?.length) {
       return parentData.map((entity) => entity.id)
     }
-    // the reviewables switch hides parents server side, so a hidden parent must not scope its children
-    if (!canTrustAbsence || !FILTERED_PARENTS.includes(parentType)) {
+    // a parent the switch hides must not scope its children
+    if (!reviewableParentIds) {
       return parentSelection
     }
-    const visibleIds = new Set(parentData.map((entity) => entity.id))
-    const visibleSelection = parentSelection.filter((id) => visibleIds.has(id))
+    const visibleSelection = parentSelection.filter((id) => reviewableParentIds.includes(id))
     return visibleSelection.length ? visibleSelection : parentData.map((entity) => entity.id)
   }
 
-  // a missing row only proves the switch hid it once the data is complete
-  const isComplete = (result: EntityQueryResult, parentType: PickerEntityType) =>
-    !!reviewablesOnly &&
-    !result.isLoading &&
-    !result.error &&
-    !result.hasNextPage &&
-    !search[parentType]
+  const { data: reviewableProductIds } = useGetReviewableEntityIdsQuery(
+    { projectName, entityType: 'product', ids: selection.product },
+    { skip: !reviewablesOnly || !selection.product?.length },
+  )
+  const { data: reviewableVersionIds } = useGetReviewableEntityIdsQuery(
+    { projectName, entityType: 'version', ids: selection.version },
+    { skip: !reviewablesOnly || !selection.version?.length },
+  )
 
   const task = useGetEntityTypeData(
     projectName,
@@ -150,7 +148,7 @@ export const useGetEntityPickerData = ({
     getParentIds(
       entityHierarchies['version'][entityHierarchies['version'].length - 2],
       product.data,
-      isComplete(product, 'product'),
+      reviewableProductIds,
     ),
     undefined,
     { includeTask, hasReviewables: reviewablesOnly || undefined },
@@ -163,7 +161,7 @@ export const useGetEntityPickerData = ({
     getParentIds(
       entityHierarchies['representation'][entityHierarchies['representation'].length - 2],
       version.data,
-      isComplete(version, 'version'),
+      reviewableVersionIds,
     ),
   )
   const workfile = useGetEntityTypeData(

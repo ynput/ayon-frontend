@@ -1865,6 +1865,22 @@ export type GetRepresentationsLinksQuery = { project: { representations: { edges
                 | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
                | null }> } } }> } } };
 
+export type GetReviewableProductIdsQueryVariables = Exact<{
+  projectName: string;
+  ids: Array<string> | string;
+  first?: number | null | undefined;
+}>;
+
+export type GetReviewableProductIdsQuery = { project: { products: { edges: Array<{ node: { id: string } }> } } };
+
+export type GetReviewableVersionIdsQueryVariables = Exact<{
+  projectName: string;
+  ids: Array<string> | string;
+  first?: number | null | undefined;
+}>;
+
+export type GetReviewableVersionIdsQuery = { project: { versions: { edges: Array<{ node: { id: string } }> } } };
+
 export type GetSearchedFoldersQueryVariables = Exact<{
   projectName: string;
   search?: string | null | undefined;
@@ -2448,6 +2464,34 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
     hasReviewables
   }
 }`);
+export const GetReviewableProductIdsDocument = new TypedDocumentString(`
+    query GetReviewableProductIds($projectName: String!, $ids: [String!]!, $first: Int) {
+  project(name: $projectName) {
+    products(ids: $ids, hasReviewables: true, first: $first) {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }
+}
+    `);
+
+export const GetReviewableVersionIdsDocument = new TypedDocumentString(`
+    query GetReviewableVersionIds($projectName: String!, $ids: [String!]!, $first: Int) {
+  project(name: $projectName) {
+    versions(ids: $ids, hasReviewables: true, first: $first) {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }
+}
+    `);
+
 export const GetSearchedFoldersDocument = new TypedDocumentString(`
     query GetSearchedFolders($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
@@ -2774,6 +2818,14 @@ const injectedRtkApi = api.injectEndpoints({
     GetRepresentationsLinks: build.query<GetRepresentationsLinksQuery, GetRepresentationsLinksQueryVariables>({
       query: (variables) => ({ document: GetRepresentationsLinksDocument as unknown as string, variables })
     }),
+    GetReviewableProductIds: build.query<GetReviewableProductIdsQuery, GetReviewableProductIdsQueryVariables>({
+      query: (variables) => ({ document: GetReviewableProductIdsDocument as unknown as string, variables })
+    }),
+
+    GetReviewableVersionIds: build.query<GetReviewableVersionIdsQuery, GetReviewableVersionIdsQueryVariables>({
+      query: (variables) => ({ document: GetReviewableVersionIdsDocument as unknown as string, variables })
+    }),
+
     GetSearchedFolders: build.query<GetSearchedFoldersQuery, GetSearchedFoldersQueryVariables>({
       query: (variables) => ({ document: GetSearchedFoldersDocument as unknown as string, variables })
     }),
