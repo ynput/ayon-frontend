@@ -150,7 +150,6 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
               )
             })
             .catch((error) => {
-              console.error('Failed to create subfolders:', error)
               const errorMessage =
                 (error as any)?.data?.detail || 'Failed to create subfolders. Please try again.'
               toast.error(errorMessage)
@@ -172,7 +171,6 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
               toast.success('Project folder created successfully')
             })
             .catch((error) => {
-              console.error('Failed to create folder:', error)
               const errorMessage =
                 (error as any)?.data?.detail || 'Failed to create folder. Please try again.'
               toast.error(errorMessage)
@@ -193,7 +191,6 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
               toast.success('Project folder created successfully')
             })
             .catch((error) => {
-              console.error('Failed to create folder:', error)
               const errorMessage =
                 (error as any)?.data?.detail || 'Failed to create folder. Please try again.'
               toast.error(errorMessage)
@@ -201,7 +198,6 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
         }
       }
     } catch (error) {
-      console.error(`Failed to ${mode} folder:`, error)
       const errorMessage =
         (error as any)?.data?.detail || `Failed to ${mode} folder. Please try again.`
       setError(errorMessage)

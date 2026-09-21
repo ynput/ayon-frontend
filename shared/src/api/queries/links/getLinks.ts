@@ -9,6 +9,7 @@ import {
   gqlLinksApi,
 } from '@shared/api/generated'
 import { createRealtimeBatcher, PubSub } from '@shared/util'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 export const ENTITIES_INFINITE_QUERY_COUNT = 50 // Number of items to fetch per page
 
@@ -265,7 +266,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
           }
         } catch (error: any) {
           console.error('Error in getSearchedEntitiesLinks queryFn:', error)
-          return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(error) }
         }
       },
     }),

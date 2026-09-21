@@ -34,7 +34,6 @@ export const getViewsApi = viewsApi.enhanceEndpoints<TagTypes, UpdatedDefinition
                 .map((v) => ({ type: 'view' as const, id: v.id })),
             ]
           : [VIEW_LIST_TAG],
-      transformErrorResponse: (error: any) => error.data?.detail,
     },
     getWorkingView: {
       providesTags: (result, _e, { viewType, projectName }) => [
@@ -42,25 +41,21 @@ export const getViewsApi = viewsApi.enhanceEndpoints<TagTypes, UpdatedDefinition
         getScopeTag(viewType, projectName),
         VIEW_LIST_TAG,
       ],
-      transformErrorResponse: (error: any) => error.data?.detail,
     },
     getView: {
       providesTags: (result, error, arg) => [{ type: 'view', id: arg.viewId }, VIEW_LIST_TAG],
-      transformErrorResponse: (error: any) => error.data?.detail,
     },
     getDefaultView: {
       providesTags: (result, _e, { viewType, projectName }) =>
         result
           ? [{ type: 'view', id: result.id }, getScopeTag(viewType, projectName)]
           : [getScopeTag(viewType, projectName)],
-      transformErrorResponse: (error: any) => error.data?.detail,
     },
     getBaseView: {
       providesTags: (result, _e, { viewType, projectName }) =>
         result
           ? [{ type: 'view', id: result.id }, getScopeTag(viewType, projectName)]
           : [getScopeTag(viewType, projectName)],
-      transformErrorResponse: (error: any) => error.data?.detail,
     },
   },
 })

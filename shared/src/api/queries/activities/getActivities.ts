@@ -16,13 +16,9 @@ import {
 } from './util/activitiesHelpers'
 import { ENTITY_TOOLTIP, EntityTooltipQuery } from './activityQueries'
 
-import {
-  DefinitionsFromApi,
-  FetchBaseQueryError,
-  OverrideResultType,
-  TagTypesFromApi,
-} from '@reduxjs/toolkit/query'
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import type { ChecklistCount } from './types'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 type ActivityUserNode = GetActivityUsersQuery['users']['edges'][0]['node']
 
@@ -135,7 +131,7 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
           }
         } catch (e: any) {
           console.error('Error in getActivitiesInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       async onCacheEntryAdded(

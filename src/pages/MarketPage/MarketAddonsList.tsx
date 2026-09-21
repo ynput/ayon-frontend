@@ -9,6 +9,7 @@ import { ListItemType } from '@components/MarketAddonCard/MarketAddonCard'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { useExpandedGroups } from './hooks'
+import { getRequestErrorString } from '@shared/util'
 
 const StyledAddonList = styled.div`
   display: flex;
@@ -161,10 +162,7 @@ const MarketAddonsList = ({
   if (error) {
     return (
       <EmptyPlaceholder
-        error={
-          // @ts-ignore
-          error?.data?.detail || JSON.stringify(error)
-        }
+        error={getRequestErrorString(error)}
         style={{ position: 'relative', left: 0, top: '-10%', transform: 'unset', flex: 1 }}
       />
     )

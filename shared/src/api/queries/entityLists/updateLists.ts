@@ -69,7 +69,6 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           })
         }
       },
-      transformErrorResponse: (error: any) => error.data.detail,
       invalidatesTags: (_s, _e, { listId }) => {
         const tags = [{ type: 'entityList', id: listId }]
         return tags
@@ -198,7 +197,6 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         ]
         return tags
       },
-      transformErrorResponse: (error: any) => error.data.detail,
     },
     updateEntityListItem: {
       async onQueryStarted(
@@ -286,7 +284,6 @@ const updateListsInjectedApi = updateListsEnhancedApi.injectEndpoints({
         method: 'POST',
         body: queryArg.sessionFromListRequest,
       }),
-      transformErrorResponse: (error: any) => error.data.detail,
       invalidatesTags: () => [{ type: 'entityList', id: 'LIST' }],
     }),
   }),

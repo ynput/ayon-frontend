@@ -23,6 +23,11 @@ import {
   determineLoadingVP,
   extractFilters,
 } from '../util'
+import { getRequestErrorString } from '@shared/util'
+
+const getQueryErrorMessage = (error: unknown): string => {
+  return getRequestErrorString(error)
+}
 import { useBuildVersionsTableData } from '../hooks/useBuildVersionsTableData'
 import {
   checkColumnVisibility,
@@ -654,22 +659,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   })
 
   const error = showProducts
-    ? // @ts-ignore
-      productsError && String(productsError.error)
-    : // @ts-ignore
-      versionsError && String(versionsError.error)
+    ? getQueryErrorMessage(productsError)
+    : getQueryErrorMessage(versionsError)
 
   // Track shown errors to avoid duplicate toasts
   const shownErrorsRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     const errors = [
-      // @ts-ignore
-      productsError && String(productsError.error),
-      // @ts-ignore
-      versionsError && String(versionsError.error),
-      // @ts-ignore
-      childVersionsError && String(childVersionsError.error),
+      getQueryErrorMessage(productsError),
+      getQueryErrorMessage(versionsError),
+      getQueryErrorMessage(childVersionsError),
     ].filter(Boolean) as string[]
 
     errors.forEach((errorMsg) => {

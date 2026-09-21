@@ -5,14 +5,12 @@ import type {
   ListAvailableActionsForContextApiArg,
   ListAvailableActionsForContextApiResponse,
 } from '@shared/api/generated'
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 const enhancedApi = actionsApi.enhanceEndpoints({
   endpoints: {
     executeAction: {},
-    listAvailableActionsForContext: {
-      transformErrorResponse: (error: any) => error.data?.detail || 'Unknown error',
-    },
+    listAvailableActionsForContext: {},
   },
 })
 
@@ -29,7 +27,7 @@ const injectedActionsApi = enhancedApi.injectEndpoints({
         )
 
         if (res.error) {
-          return { error: res.error as FetchBaseQueryError }
+          return { error: normalizeQueryError(res.error) }
         }
 
         return { data: res.data }
@@ -50,7 +48,7 @@ const injectedActionsApi = enhancedApi.injectEndpoints({
         // get the data from the rest actionsApi
         const res = await dispatch(actionsApi.endpoints.configureAction.initiate(args))
         if (res.error) {
-          return { error: res.error as FetchBaseQueryError }
+          return { error: normalizeQueryError(res.error) }
         }
         return { data: res.data }
       },
@@ -63,7 +61,7 @@ const injectedActionsApi = enhancedApi.injectEndpoints({
         // get the data from the rest actionsApi
         const res = await dispatch(actionsApi.endpoints.configureAction.initiate(args))
         if (res.error) {
-          return { error: res.error as FetchBaseQueryError }
+          return { error: normalizeQueryError(res.error) }
         }
         return { data: res.data }
       },

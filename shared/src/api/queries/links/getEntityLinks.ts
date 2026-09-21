@@ -12,6 +12,7 @@ import {
 import { formatEntityLabel } from './utils/formatEntityLinks'
 import { toast } from 'react-toastify'
 import { createRealtimeBatcher, PubSub, waitForRealtimeJitter } from '@shared/util'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 /**
  * Custom queryFn for fetching entity links with optimized caching behavior.
@@ -182,7 +183,7 @@ const injectedQueries = foldersApi.injectEndpoints({
         } catch (error: any) {
           console.error(`Error in getEntityLinks queryFn for ${entityType}:`, error)
           toast.error(`Error fetching ${entityType} links`)
-          return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(error) }
         }
       },
       // 2. We should not create new caches when the entityIds argument changes.
