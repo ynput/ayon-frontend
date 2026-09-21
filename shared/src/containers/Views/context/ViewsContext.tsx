@@ -278,6 +278,9 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   // Reset working view to default (empty) settings
   const resetWorkingView = useCallback(async () => {
+    // the reset awaits a base-view fetch before it writes, long enough for a debounced column
+    // write to land and restore the layout the user just discarded
+    dropPendingColumnWrites()
     try {
       await onResetWorkingView({
         existingWorkingViewId: workingView?.id,
