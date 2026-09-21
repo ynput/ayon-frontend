@@ -20,7 +20,11 @@ import { compareAsc } from 'date-fns'
 // Queries
 import { useGetInboxInfiniteInfiniteQuery } from '@queries/inbox/getInbox'
 import { useGetProjectInboxInfinite } from '@queries/inbox/getProjectInbox'
-import { useGetProjectsInfoQuery, type ManageInboxItemFilter } from '@shared/api'
+import {
+  useGetProjectsCategoriesQuery,
+  useGetProjectsInfoQuery,
+  type ManageInboxItemFilter,
+} from '@shared/api'
 // Components
 import { Button } from '@ynput/ayon-react-components'
 import { SplitterPanel } from 'primereact/splitter'
@@ -211,6 +215,12 @@ const Inbox = ({ filter }: InboxProps) => {
   // anatomy is one request per listed project and nothing here reads it
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
     { projects: infoProjectNames, anatomy: false },
+    { skip: isLoadingInbox || !infoProjectNames?.length },
+  )
+
+  // fetched once for the whole list, the rows only look their categories up
+  const { data: projectsCategories = {} } = useGetProjectsCategoriesQuery(
+    { projects: infoProjectNames },
     { skip: isLoadingInbox || !infoProjectNames?.length },
   )
 
@@ -445,8 +455,9 @@ const Inbox = ({ filter }: InboxProps) => {
       // active+important keep the tab split: without them the backend clears every reference
       // of the user in the project, including the other tab and already cleared rows
       const itemFilter: ManageInboxItemFilter = {
-        active: true,
-        important: !!isImportant,
+        active: isActive,
+        // the cleared tab holds both splits, so it must not constrain important
+        ...(isImportant !== null && { important: isImportant }),
         ...(onlyRead && { read: true }),
       }
       promises = projectsToClear.map((project) =>
@@ -456,7 +467,9 @@ const Inbox = ({ filter }: InboxProps) => {
 
     try {
       await Promise.all(promises)
-      if (isNarrowed) toast.success(`Cleared ${clearedCount} messages`)
+      if (isNarrowed)
+        toast.success(`${isActive ? 'Cleared' : 'Uncleared'} ${clearedCount} messages`)
+      else if (!isActive) toast.success('All messages uncleared')
       else toast.success(onlyRead ? 'Read messages cleared' : 'All messages cleared')
     } catch (error) {
       console.error(error)
@@ -738,6 +751,7 @@ const Inbox = ({ filter }: InboxProps) => {
                           changes={group.changes}
                           isPlaceholder={group.isPlaceholder}
                           projectsInfo={projectsInfo}
+                          projectsCategories={projectsCategories}
                           isMultiple={group.isMultiple}
                           onContextMenu={handleContextMenu}
                           customBody={group.body}

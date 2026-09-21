@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
-import { teamsApi } from '@shared/api'
+import clsx from 'clsx'
+import { useGetTeamsQuery } from '@shared/api'
 import UserTooltipItem from '../UserTooltipItem'
 import * as Styled from './UserTooltip.styled'
 
@@ -19,7 +20,7 @@ interface UserTooltipProps {
 
 const UserTooltip = ({ name, label, projectName, pos }: UserTooltipProps) => {
   // only runs while the tooltip is mounted, so nothing is fetched until a hover
-  const { data: teams = [] } = teamsApi.useGetTeamsQuery(
+  const { data: teams = [] } = useGetTeamsQuery(
     { projectName: projectName as string, showMembers: true },
     { skip: !projectName || !name },
   )
@@ -46,7 +47,7 @@ const UserTooltip = ({ name, label, projectName, pos }: UserTooltipProps) => {
     <Styled.Popup
       ref={popupRef}
       style={{ ...pos, left }}
-      className={memberships.length ? 'with-teams' : undefined}
+      className={clsx({ 'with-teams': memberships.length > 0 })}
     >
       <UserTooltipItem name={name || ''} fullName={label} showSubtitle size={32} />
       {memberships.length > 0 && (

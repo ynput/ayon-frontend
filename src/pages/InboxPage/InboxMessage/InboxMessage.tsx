@@ -1,21 +1,20 @@
 import * as Styled from './InboxMessage.styled'
 import clsx from 'clsx'
-import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { isValid } from 'date-fns'
 import { isToday } from 'date-fns'
-import UserImage from '@shared/components/UserImage'
 
 import InboxMessageStatus from './InboxMessageStatus/InboxMessageStatus'
 import InboxCategoryDots from './InboxCategoryDots'
+import InboxMessageUser from './InboxMessageUser'
 import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDate'
-import { useEffect, useMemo, useRef, useState, MouseEvent, HTMLAttributes } from 'react'
-import UserTooltip from '@shared/containers/Feed/components/Tooltips/UserTooltip/UserTooltip'
+import { useMemo, MouseEvent, HTMLAttributes } from 'react'
 import RemoveMarkdown from 'remove-markdown'
 import Typography from '@/theme/typography.module.css'
 import { getEntityTypeIcon } from '@shared/util'
 import type { InboxMessage as InboxMessageType } from '@/services/inbox/inboxTransform'
 import type { InboxActivityType, InboxStatusChange, ProjectsInfo } from '../types'
+import type { ProjectsCategories } from '@shared/api'
 import { VersionReviewFeedback } from '@shared/containers/Feed/components/CommentInput/types'
 
 interface MessageForBody {
@@ -113,8 +112,6 @@ const activityTypeLabelsMultiple: Record<string, string> = {
   reviewable: 'Versions published',
 }
 
-const USER_TOOLTIP_DELAY = 400
-
 const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
   month: 'short',
@@ -153,18 +150,6 @@ const getCategoryNames = (messages: InboxMessageType[] = []): string[] => {
   return names
 }
 
-const getProductNames = (messages: InboxMessageType[] = []): string[] => {
-  const names: string[] = []
-  for (const message of messages) {
-    const data = message.activityData as unknown as
-      | { context?: { productName?: string } }
-      | undefined
-    const productName = data?.context?.productName
-    if (productName && !names.includes(productName)) names.push(productName)
-  }
-  return names
-}
-
 interface InboxMessageProps extends Omit<HTMLAttributes<HTMLLIElement>, 'onSelect'> {
   id: string
   ids?: string[]
@@ -188,6 +173,7 @@ interface InboxMessageProps extends Omit<HTMLAttributes<HTMLLIElement>, 'onSelec
   isPlaceholder?: boolean
   onSelect?: (id: string, ids: string[], e: MouseEvent<HTMLLIElement>, rowIndex?:number) => void
   projectsInfo?: ProjectsInfo
+  projectsCategories?: ProjectsCategories
   isMultiple?: boolean
   customBody?: string
   rowIndex: number
@@ -217,6 +203,7 @@ const InboxMessage = ({
   isPlaceholder, // shimmer effects
   onSelect,
   projectsInfo = {},
+  projectsCategories,
   isMultiple, // are there multiple messages in this group
   customBody, // custom body for special message types (e.g. reassignment)
   rowIndex = 0,
@@ -283,37 +270,17 @@ const InboxMessage = ({
     [customBody, messages],
   )
 
-  const pathTooltip = useMemo(() => {
-    const pathText = path.join(' - ')
-    if (!pathText) return undefined
-    // grouped publishes show only the parent folder, so name the products they cover
-    const products = isMultiple ? getProductNames(messages) : []
-    return products.length ? `${pathText} — ${products.join(', ')}` : pathText
-  }, [path, isMultiple, messages])
-
-  const [userTooltipPos, setUserTooltipPos] = useState<{ top: number; left: number } | null>(null)
-  const userTooltipTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
-
-  useEffect(() => () => clearTimeout(userTooltipTimeout.current), [])
-
-  // the delay stops a mouse sweeping down the list from firing a teams request per row
-  const handleUserMouseEnter = (e: MouseEvent<HTMLSpanElement>): void => {
-    if (isPlaceholder || !userName) return
-    const { top, left, width } = e.currentTarget.getBoundingClientRect()
-    userTooltipTimeout.current = setTimeout(
-      () => setUserTooltipPos({ top, left: left + width / 2 }),
-      USER_TOOLTIP_DELAY,
-    )
-  }
-
-  const handleUserMouseLeave = (): void => {
-    clearTimeout(userTooltipTimeout.current)
-    setUserTooltipPos(null)
-  }
-
   const authorFullName = messages?.[0]?.author?.attrib?.fullName || undefined
 
-  const categoryNames = useMemo(() => getCategoryNames(messages), [messages])
+  const categories = useMemo(() => {
+    const names = getCategoryNames(messages)
+    if (!names.length || !projectName) return []
+    const known = projectsCategories?.[projectName] || []
+
+    return names
+      .map((name) => known.find((category) => category.name === name))
+      .filter((category) => !!category)
+  }, [messages, projectsCategories, projectName])
 
   const entityTooltip = useMemo(() => {
     if (!entityType) return undefined
@@ -363,12 +330,7 @@ const InboxMessage = ({
           showBorder={false}
           data-tooltip={isPlaceholder ? undefined : entityTooltip}
         />
-        <span
-          className={clsx('title', { loading: isPlaceholder })}
-          data-tooltip={isPlaceholder ? undefined : pathTooltip}
-        >
-          {path.join(' - ')}
-        </span>
+        <span className={clsx('title', { loading: isPlaceholder })}>{path.join(' - ')}</span>
       </Styled.Left>
       <Styled.Middle className={clsx('middle', { loading: isPlaceholder })}>
         <Styled.Unread className={clsx(Typography.bodySmall, { hide: (unReadCount ?? 0) < 2 })}>
@@ -382,9 +344,7 @@ const InboxMessage = ({
             data-tooltip={typeTooltip}
           />
         )}
-        {!!categoryNames.length && !isPlaceholder && (
-          <InboxCategoryDots projectName={projectName} categories={categoryNames} />
-        )}
+        {!isPlaceholder && <InboxCategoryDots categories={categories} />}
         {isStatusChange ? (
           <InboxMessageStatus statuses={statusChanges} />
         ) : (
@@ -404,19 +364,12 @@ const InboxMessage = ({
             {clearLabel}
           </Styled.ClearButton>
         )}
-        <span onMouseEnter={handleUserMouseEnter} onMouseLeave={handleUserMouseLeave}>
-          <UserImage name={userName || ''} size={20} className={'n-shimmer'} />
-        </span>
-        {userTooltipPos &&
-          createPortal(
-            <UserTooltip
-              name={userName}
-              label={authorFullName}
-              projectName={showUserTeams ? projectName : undefined}
-              pos={userTooltipPos}
-            />,
-            document.body,
-          )}
+        <InboxMessageUser
+          userName={userName}
+          fullName={authorFullName}
+          projectName={showUserTeams ? projectName : undefined}
+          isPlaceholder={isPlaceholder}
+        />
         <Styled.Date
           className="date"
           data-tooltip={isPlaceholder ? undefined : getFullDateString(date || '')}

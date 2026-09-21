@@ -1,14 +1,7 @@
-import { isThisYear, isToday, isValid, isYesterday } from 'date-fns'
+import { format, isThisYear, isToday, isValid, isYesterday } from 'date-fns'
 import styled from 'styled-components'
 import Typography from '@/theme/typography.module.css'
 import clsx from 'clsx'
-
-const dayFormat = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'long' })
-const dayWithYearFormat = new Intl.DateTimeFormat(undefined, {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-})
 
 export const getDayKey = (date?: string): string | null => {
   if (!date) return null
@@ -23,7 +16,7 @@ const getDayLabel = (date: string): string => {
   if (isToday(dateObj)) return 'Today'
   if (isYesterday(dateObj)) return 'Yesterday'
 
-  return isThisYear(dateObj) ? dayFormat.format(dateObj) : dayWithYearFormat.format(dateObj)
+  return format(dateObj, isThisYear(dateObj) ? 'd MMMM' : 'd MMMM yyyy')
 }
 
 const Divider = styled.li`

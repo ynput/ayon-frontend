@@ -1,10 +1,14 @@
 import styled from 'styled-components'
-import { useGetActivityCategoriesQuery } from '@shared/api'
+import type { ActivityCategory } from '@shared/api'
 
 const Dots = styled.span`
   display: flex;
   align-items: center;
-  gap: 4px;
+
+  /* stacked like the user avatars */
+  & > * + * {
+    margin-left: -3px;
+  }
 `
 
 const Dot = styled.span`
@@ -12,34 +16,29 @@ const Dot = styled.span`
   height: 8px;
   min-width: 8px;
   border-radius: 50%;
+  /* ring in the row colour keeps overlapping dots apart */
+  box-shadow: 0 0 0 1px var(--md-sys-color-surface-container-low);
 `
 
 interface InboxCategoryDotsProps {
-  projectName?: string
-  categories: string[]
+  categories: ActivityCategory[]
 }
 
-const InboxCategoryDots = ({ projectName, categories }: InboxCategoryDotsProps) => {
-  // rendered only for rows that carry a category, so nothing is fetched for a plain inbox
-  const { data: projectCategories = [] } = useGetActivityCategoriesQuery(
-    { projectName: projectName as string },
-    { skip: !projectName },
-  )
-
-  const known = categories
-    .map((name) => projectCategories.find((category) => category.name === name))
-    .filter((category): category is (typeof projectCategories)[number] => !!category)
-
-  if (!known.length) return null
+const InboxCategoryDots = ({ categories }: InboxCategoryDotsProps) => {
+  if (!categories.length) return null
 
   return (
     <Dots
       className="categories"
       role="img"
-      aria-label={known.map((category) => category.name).join(', ')}
+      aria-label={categories.map((category) => category.name).join(', ')}
     >
-      {known.map((category) => (
-        <Dot key={category.name} style={{ backgroundColor: category.color }} data-tooltip={category.name} />
+      {categories.map((category) => (
+        <Dot
+          key={category.name}
+          style={{ backgroundColor: category.color }}
+          data-tooltip={category.name}
+        />
       ))}
     </Dots>
   )

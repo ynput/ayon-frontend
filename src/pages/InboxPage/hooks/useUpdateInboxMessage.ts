@@ -27,6 +27,7 @@ const useUpdateInboxMessage = ({ isActive, isImportant }: Config) => {
         isActiveChange,
         isRead,
         onlyRead: itemFilter?.read === true,
+        isAll,
       }
       // update the messages in the backend to toggle read status
       // we use optimistic updates inside updateMessages query
@@ -35,8 +36,8 @@ const useUpdateInboxMessage = ({ isActive, isImportant }: Config) => {
           manageInboxItemRequest: {
             status: status,
             projectName: projectName,
-            ids: ids,
-            all: isAll,
+            // an empty ids array matches nothing on the backend, the all path must omit it
+            ids: isAll ? undefined : ids,
             itemFilter,
           },
           ...cacheKeyArgs,
