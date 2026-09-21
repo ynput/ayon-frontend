@@ -22,12 +22,7 @@ import {
 } from '@shared/util'
 import type { EditorTaskNode } from '@shared/containers/ProjectTreeTable/types/table'
 import type { FieldStats } from '../columnStats'
-import {
-  normalizeFieldStats,
-  mergeFieldStats,
-  hasNewTargetFields,
-  transformStatsError,
-} from '../columnStats'
+import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,
@@ -177,7 +172,7 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     GetFolderColumnStats: {
       transformResponse: (res: GetFolderColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.folders?.fieldStats ?? []),
-      transformErrorResponse: (error: any) => transformStatsError(error, 'folder'),
+      transformErrorResponse: (error: any) => error.data.detail,
       serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
@@ -187,7 +182,7 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     GetTaskColumnStats: {
       transformResponse: (res: GetTaskColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.tasks?.fieldStats ?? []),
-      transformErrorResponse: (error: any) => transformStatsError(error, 'task'),
+      transformErrorResponse: (error: any) => error.data.detail,
       serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),

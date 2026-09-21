@@ -137,6 +137,17 @@ const prepareHeaders = (headers: any) => {
 export const client = new GraphQLClient(`${window.location.origin}/graphql`)
 
 const customErrors = (error: ClientError): FetchBaseQueryError => {
+  if (error.response.errors?.length) {
+    return {
+      status: error.response.status,
+      data: {
+        code: error.response.status,
+        detail: error.response.errors.map(({ message }) => message).join('; '),
+        errors: error.response.errors,
+      },
+    }
+  }
+
   let data: unknown = error.response
 
   if (typeof error.response.body === 'string') {
@@ -181,8 +192,13 @@ const baseQueryWithRedirect: typeof polymorphBaseQuery = async (args, api, extra
   try {
     const result = await polymorphBaseQuery(args, api, extraOptions)
 
-    const restStatus = result?.error?.status
-    if (restStatus === 401) {
+    // debug log errors
+    if (result?.error) {
+      console.error(`ERROR [${api.endpoint}]`, result.error)
+    }
+
+    // redirect to login if unauthorized
+    if (result?.error?.status === 401) {
       shouldRedirectToLogin()
     }
 
