@@ -1586,10 +1586,10 @@
     react-toastify "^9.0.3"
     sass "1.99.0"
 
-"@ynput/ayon-react-components@^1.19.10":
-  version "1.19.10"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.19.10.tgz#10c6330da895c7c998025fd8bb178c37d684dbb8"
-  integrity sha512-22BhHi3ENnX5tVarkiaj7FQVOYQquc5xcqvKphQQ41StFI5LpGdm4UbQkb1z43B4s6hVxz0buyGlLRc42G3xlQ==
+"@ynput/ayon-react-components@^1.21.0":
+  version "1.21.0"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.21.0.tgz#dff66ed645aa173b575ad87ccf8451705630a306"
+  integrity sha512-0EQHIjBGaRY5jwi4Wj3A/ngotTR7S4K2O0lPExlmTaSMNGIZ6vBolHcpAMUtiB3eXiFsgFhad9bsWSk+trFa0g==
 
 acorn-jsx@^5.3.2:
   version "5.3.2"
