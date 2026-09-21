@@ -69,7 +69,6 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           })
         }
       },
-      transformErrorResponse: (error: any) => error.data.detail,
       invalidatesTags: (_s, _e, { listId }) => {
         const tags = [{ type: 'entityList', id: listId }]
         return tags
@@ -123,6 +122,10 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                       attrib: {
                         ...existingItem.attrib,
                         ...(patchItem.attrib || {}), // Merge attrib safely
+                      },
+                      data: {
+                        ...existingItem.data,
+                        ...(patchItem.data || {}),
                       },
                     }
                     Object.assign(page.items[itemIndex], updatedItem)
@@ -194,7 +197,6 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         ]
         return tags
       },
-      transformErrorResponse: (error: any) => error.data.detail,
     },
     updateEntityListItem: {
       async onQueryStarted(
@@ -218,9 +220,14 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                   const list = page.items[listIndex]
                   const newListItem = {
                     ...list,
+                    ...entityListItemPatchModel,
                     attrib: {
                       ...list.attrib,
                       ...entityListItemPatchModel.attrib,
+                    },
+                    data: {
+                      ...list.data,
+                      ...entityListItemPatchModel.data,
                     },
                   }
                   // Update the list with the new data
@@ -277,7 +284,6 @@ const updateListsInjectedApi = updateListsEnhancedApi.injectEndpoints({
         method: 'POST',
         body: queryArg.sessionFromListRequest,
       }),
-      transformErrorResponse: (error: any) => error.data.detail,
       invalidatesTags: () => [{ type: 'entityList', id: 'LIST' }],
     }),
   }),

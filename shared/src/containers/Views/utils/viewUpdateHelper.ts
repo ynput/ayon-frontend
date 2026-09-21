@@ -168,7 +168,6 @@ export const updateViewSettings = async (
       onSettingsChanged(false)
     }
 
-    console.error(error)
     const errorMsg = options.errorMessage || `Failed to update view settings: ${error}`
     toast.error(errorMsg)
   }

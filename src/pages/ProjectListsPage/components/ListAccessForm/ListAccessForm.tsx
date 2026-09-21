@@ -11,6 +11,7 @@ import { useGlobalContext, usePowerpack } from '@shared/context'
 import { FC } from 'react'
 import { toast } from 'react-toastify'
 import { Section } from '../ListDetailsPanel/ListDetailsPanel.styled'
+import { copyToClipboard } from '@shared/util'
 
 export interface ListAccessFormProps {
   list: EntityListModel
@@ -51,6 +52,13 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
     GuestAccess,
   } = useListsModuleContext()
 
+  const handleCopyLink = () => {
+    const path = isReview
+      ? `/projects/${projectName}/reviews/${list.id}`
+      : `/projects/${projectName}/lists?list=${list.id}`
+    copyToClipboard(new URL(path, window.location.origin).toString())
+  }
+
   if (!currentUser) return 'Loading user...'
 
   if (requiredVersion.access)
@@ -73,6 +81,7 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
             }).unwrap()
           }
           onError={(error) => toast.error(error)}
+          onCopyLink={handleCopyLink}
         />
       </Section>
       {isReview && (list.accessLevel || 0) >= 30 && (

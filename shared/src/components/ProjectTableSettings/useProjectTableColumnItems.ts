@@ -5,17 +5,20 @@ import {
   getColumnIcon,
   getNameColumnLabel,
   ENTITY_COLUMN_IDS,
+  getScopedColumnId,
   useProjectTableContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectContext } from '@shared/context'
 import { useMemo } from 'react'
-import { AddColumnItem } from './addColumnsMenu'
+import { AddColumnItem, DEFAULT_COLUMN_ICON } from './addColumnsMenu'
 import { getAttributeIcon } from '@shared/util/getAttributeIcon'
+import type { ParentColumnDefinition } from '@shared/containers'
 
 interface UseProjectTableColumnItemsProps {
-  extraColumns?: { value: string; label: string }[]
+  extraColumns?: { value: string; label: string; icon?: string }[]
   hiddenColumns?: string[]
   includeLinks?: boolean
+  parentColumns?: ParentColumnDefinition[]
 }
 
 const NO_EXTRA_COLUMNS: { value: string; label: string }[] = []
@@ -26,6 +29,7 @@ export const useProjectTableColumnItems = ({
   extraColumns = NO_EXTRA_COLUMNS,
   hiddenColumns = NO_HIDDEN_COLUMNS,
   includeLinks = true,
+  parentColumns = [],
 }: UseProjectTableColumnItemsProps) => {
   const { linkTypes } = useProjectContext()
   const { attribFields, scopes } = useProjectTableContext()
@@ -135,9 +139,35 @@ export const useProjectTableColumnItems = ({
               },
             ])
         : []),
-      ...extraColumns,
+      ...parentColumns.map((column) => ({
+        value: column.id || getScopedColumnId(column.scope, column.field),
+        label: column.label,
+        field: column.field,
+        parentScope: column.scope,
+      })),
+      ...Array.from(
+        new Set(
+          parentColumns
+            .filter((column) => column.includeAttributes !== false)
+            .map((column) => column.scope),
+        ),
+      ).flatMap((scope) =>
+        attribFields
+          .filter((field) => !field.scope || field.scope.includes(scope))
+          .map((field) => ({
+            value: getScopedColumnId(scope, field.name, true),
+            label: field.data.title || field.name,
+            icon: getAttributeIcon(field.name, field.data.type, !!field.data.enum),
+            attrib: { builtin: field.builtin, scope: field.scope },
+            parentScope: scope,
+          })),
+      ),
+      ...extraColumns.map((column) => ({
+        ...column,
+        icon: column.icon ?? DEFAULT_COLUMN_ICON,
+      })),
     ],
-    [scopes, attribFields, linkTypes, includeLinks, extraColumns],
+    [scopes, attribFields, linkTypes, includeLinks, parentColumns, extraColumns],
   )
 
   const visibleColumns = useMemo(

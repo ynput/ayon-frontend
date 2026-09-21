@@ -46,28 +46,52 @@ const updateVersionWithOperation = (version: VersionNode, operationData: any): V
   return updated as VersionNode
 }
 
-const applyFolderStatusToVersions = (versions: VersionNode[], folderStatuses: Map<string, any>) => {
+const updateNestedEntityWithOperation = (entity: any, operation: PatchOperation) => {
+  if (!operation.data) return
+
+  Object.entries(operation.data).forEach(([key, value]) => {
+    if (key === 'attrib') return
+    entity[key] = value
+  })
+
+  if (operation.data.attrib) {
+    entity.attrib = { ...entity.attrib, ...operation.data.attrib }
+  }
+}
+
+const patchVersionParents = (
+  versions: VersionNode[],
+  operationsByEntityId: Map<string, PatchOperation>,
+) => {
   versions.forEach((version) => {
-    const folder = version.product?.folder
-    const status = folder && folderStatuses.get(folder.id)
-    if (status !== undefined && folder) folder.status = status
+    const parents = [version.task, version.product, version.product?.folder]
+    parents.forEach((parent) => {
+      if (!parent) return
+      const operation = operationsByEntityId.get(parent.id)
+      if (operation) updateNestedEntityWithOperation(parent, operation)
+    })
   })
 }
 
-const patchFolderStatusInProducts = (products: ProductNode[], folderStatuses: Map<string, any>) => {
+const patchProductParents = (
+  products: ProductNode[],
+  operationsByEntityId: Map<string, PatchOperation>,
+) => {
   products.forEach((product) => {
-    const status = folderStatuses.get(product.folder?.id)
-    if (status !== undefined && product.folder) product.folder.status = status
+    const folder = product.folder
+    if (!folder) return
+    const operation = operationsByEntityId.get(folder.id)
+    if (operation) updateNestedEntityWithOperation(folder, operation)
   })
 }
 
 /**
- * Patches folder status into the nested folder data returned by versions/products queries.
- * Folder updates are handled by the overview cache separately, so this deliberately does not
- * invalidate version or product tags and cause those queries to reload.
+ * Patches updated task, product, and folder data into nested parent data returned by
+ * versions/products queries. Parent entities are not the primary cache entity for these queries,
+ * so they need a separate optimistic patch.
  */
-export const patchFolderStatusInVersions = (
-  folders: PatchOperation[],
+export const patchParentEntitiesInVersions = (
+  operations: PatchOperation[],
   {
     state,
     dispatch,
@@ -77,12 +101,18 @@ export const patchFolderStatusInVersions = (
   },
   patches?: any[],
 ) => {
-  const folderStatuses = new Map(
-    folders
-      .filter((op) => op.type !== 'delete' && op.entityId && op.data?.status !== undefined)
-      .map((op) => [op.entityId as string, op.data?.status]),
+  const operationsByEntityId = new Map(
+    operations
+      .filter(
+        (op) =>
+          op.type !== 'delete' &&
+          op.entityId &&
+          op.data &&
+          ['task', 'product', 'folder'].includes(op.entityType),
+      )
+      .map((op) => [op.entityId as string, op]),
   )
-  if (!folderStatuses.size) return
+  if (!operationsByEntityId.size) return
 
   const entries = injectedVersionsPageApi.util.selectInvalidatedBy(state, [
     { type: 'version', id: 'LIST' },
@@ -90,21 +120,27 @@ export const patchFolderStatusInVersions = (
   ])
 
   for (const entry of entries) {
-    if (
-      entry.endpointName === 'getVersionsInfinite' ||
-      entry.endpointName === 'getProductsInfinite'
-    ) {
+    if (entry.endpointName === 'getVersionsInfinite') {
       const patch = dispatch(
         injectedVersionsPageApi.util.updateQueryData(
           entry.endpointName,
           entry.originalArgs,
           (draft: any) => {
             for (const page of draft.pages) {
-              if (entry.endpointName === 'getVersionsInfinite') {
-                applyFolderStatusToVersions(page.versions, folderStatuses)
-              } else {
-                patchFolderStatusInProducts(page.products, folderStatuses)
-              }
+              patchVersionParents(page.versions, operationsByEntityId)
+            }
+          },
+        ),
+      )
+      patches?.push(patch)
+    } else if (entry.endpointName === 'getProductsInfinite') {
+      const patch = dispatch(
+        injectedVersionsPageApi.util.updateQueryData(
+          entry.endpointName,
+          entry.originalArgs,
+          (draft: any) => {
+            for (const page of draft.pages) {
+              patchProductParents(page.products, operationsByEntityId)
             }
           },
         ),
@@ -120,7 +156,7 @@ export const patchFolderStatusInVersions = (
         injectedVersionsPageApi.util.updateQueryData(
           entry.endpointName,
           entry.originalArgs,
-          (draft: any) => applyFolderStatusToVersions(draft.versions, folderStatuses),
+          (draft: any) => patchVersionParents(draft.versions, operationsByEntityId),
         ),
       )
       patches?.push(patch)
@@ -129,7 +165,7 @@ export const patchFolderStatusInVersions = (
         injectedVersionsPageApi.util.updateQueryData(
           entry.endpointName,
           entry.originalArgs,
-          (draft: any) => patchFolderStatusInProducts(draft.products, folderStatuses),
+          (draft: any) => patchProductParents(draft.products, operationsByEntityId),
         ),
       )
       patches?.push(patch)

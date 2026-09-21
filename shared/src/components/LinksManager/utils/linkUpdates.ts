@@ -1,4 +1,5 @@
 import { toast } from 'react-toastify'
+import { getRequestErrorString } from '@shared/util'
 
 export type LinkToRemove = {
   id: string
@@ -67,7 +68,6 @@ export const removeMultipleLinks = async (
       throw errors.map((error) => error || 'Unknown error').join(', ')
     }
   } catch (error: any) {
-    console.error('Error removing links:', error)
     toast.error(`Failed to remove links: ${error}`)
     throw error
   }
@@ -110,10 +110,9 @@ export const addMultipleLinks = async (
     const results = await Promise.all(addPromises)
     const errors = results.filter((result) => 'error' in result)
     if (errors.length > 0) {
-      throw errors.map((error) => error.error || 'Unknown error').join(', ')
+      throw errors.map((error) => getRequestErrorString(error.error) || 'Unknown error').join(', ')
     }
   } catch (error: any) {
-    console.error('Error adding links:', error)
     toast.error(`Failed to add links: ${error}`)
     throw error
   }

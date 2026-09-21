@@ -156,7 +156,6 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           }
         }
       },
-      transformErrorResponse: (error: any) => error.data?.detail,
       // updates the view list cache for a specific view type and project
       invalidatesTags: (_r, _e, { viewType, projectName, payload }) => [
         { type: 'view', id: payload.id },
@@ -232,7 +231,6 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           patches.forEach((patch) => patch.undo())
         }
       },
-      transformErrorResponse: (error: any) => error.data?.detail,
       invalidatesTags: (_r, _e, { viewType, projectName, viewId, payload }) => {
         const tags: any[] = []
 
@@ -309,10 +307,8 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
         } catch (error) {
           // If the query failed, roll back all optimistic updates
           patches.forEach((patch) => patch.undo())
-          console.error('Failed to delete view:', error)
         }
       },
-      transformErrorResponse: (error: any) => error.data?.detail,
       // updates the view list cache for a specific view type and project
       invalidatesTags: (_r, _e, { viewType, projectName, viewId }) => [
         { type: 'view', id: viewId },
@@ -372,7 +368,6 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           // it will be handled by the invalidation below
         }
       },
-      transformErrorResponse: (error: any) => error.data?.detail,
       // updates the default view cache for a specific view type and project
       invalidatesTags: (_r, _e, { viewType, projectName, setDefaultViewRequestModel }) => [
         { type: 'view', id: setDefaultViewRequestModel.viewId },

@@ -13,7 +13,7 @@ import { GroupByConfig } from '../components/GroupSettingsFallback'
 import { SummaryCalc, SummaryFormat, RowScope } from '../types/summaryTypes'
 import { isEqual } from 'lodash'
 import { checkColumnVisibility } from '../utils'
-import { normalizeColumnsConfig } from '../utils/columnIds'
+import { ColumnIdAliases, normalizeColumnsConfig } from '../utils/columnIds'
 import { registerPendingColumnWrites } from '../utils/pendingColumnWrites'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../constants'
 
@@ -24,6 +24,7 @@ interface ColumnSettingsProviderProps {
   defaultColumnVisibility?: VisibilityState
   // identity of the view being edited: a debounced write is dropped when this changes underneath it
   layoutId?: string
+  columnIdAliases?: ColumnIdAliases
 }
 
 export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
@@ -32,6 +33,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   onChange,
   defaultColumnVisibility,
   layoutId,
+  columnIdAliases,
 }) => {
   const allColumnsRef = React.useRef<string[]>([])
   const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
@@ -88,7 +90,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       onChange(next, allKnownIds)
     }
   }
-  const columnsConfig = normalizeColumnsConfig(config as ColumnsConfig | undefined)
+  const columnsConfig = normalizeColumnsConfig(config as ColumnsConfig | undefined, columnIdAliases)
 
   const {
     columnOrder: columnOrderInit = [],

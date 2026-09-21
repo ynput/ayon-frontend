@@ -18,8 +18,6 @@ import {
   useScopedAttributeFields,
   useExpandedState,
   createLocalStorageKey,
-  extractErrorMessage,
-  extractQueryErrorMessage,
   ProjectOverviewProviderProps,
   useColumnSettingsContext,
   checkColumnVisibility,
@@ -43,6 +41,7 @@ import { ProjectOverviewContext } from './ProjectOverviewContextInstance'
 import { useAppDispatch } from '@state/store'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
+import { getRequestErrorString } from '@shared/util'
 
 export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewProviderProps) => {
   const dispatch = useAppDispatch()
@@ -380,9 +379,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
 
   // combine foldersMap and tasksMap into a single map
   const entitiesMap = useEntitiesMap({ foldersMap, tasksMap })
-
   const error =
-    extractErrorMessage(groupingError) || extractQueryErrorMessage(dataError) || undefined
+    getRequestErrorString(groupingError) || getRequestErrorString(dataError) || undefined
 
   return (
     <ProjectOverviewContext.Provider

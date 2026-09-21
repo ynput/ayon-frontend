@@ -49,7 +49,6 @@ export const useSelectedView = ({ viewType, projectName }: Props): Return => {
         projectName,
       }).unwrap()
     } catch (error) {
-      console.error('Failed to set default view:', error)
       toast.warn(`Failed to set default view: ${error}`)
     }
   }

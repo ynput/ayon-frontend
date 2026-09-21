@@ -1,4 +1,4 @@
-import { getEntityId } from '@shared/util'
+import { getEntityId, getRequestErrorString } from '@shared/util'
 import { formatISO } from 'date-fns'
 import { toast } from 'react-toastify'
 import { useFeedContext } from '../context/FeedContext'
@@ -175,8 +175,7 @@ const useCommentMutations = ({
     // check if any of the results have errors and throw an error if so
     const errors = results.filter((result) => result.error)
     if (errors.length > 0) {
-      const errorMessage = errors[0].error?.data?.detail || 'Failed to create comment'
-      console.error(errorMessage, errors)
+      const errorMessage = getRequestErrorString(errors[0].error) || 'Failed to create comment'
       toast.error(errorMessage)
       throw new Error(errorMessage)
     }
@@ -216,8 +215,7 @@ const useCommentMutations = ({
         ...argsForCachingMatching,
       })
     } catch (error: any) {
-      console.error(error)
-      toast.error(error?.data?.detail)
+      toast.error(getRequestErrorString(error))
       // so higher level can detect the error
       throw error
     }

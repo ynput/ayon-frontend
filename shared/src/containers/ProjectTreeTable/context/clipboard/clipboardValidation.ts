@@ -1,6 +1,7 @@
 import { validateEntityId } from '@shared/util'
 import { ColumnEnums, builtInFieldMappings, ParsedClipboardData } from './clipboardTypes'
 import { clipboardError } from './clipboardUtils'
+import { ProjectTableAttribute } from '../..'
 
 // Columns that should have case-insensitive matching and value correction like assignees
 const CASE_INSENSITIVE_COLUMNS = ['assignees', 'status', 'subType']
@@ -16,10 +17,7 @@ export const validateClipboardData = (params: {
   rowIndex: number
   colIndex: number
   isSingleCellValue: boolean
-  attribFields?: Array<{
-    name: string
-    data: { type: string; enum?: Array<{ value: string | number | boolean; label: string }> }
-  }>
+  attribFields?: ProjectTableAttribute[]
 }): boolean => {
   const {
     colId,
@@ -105,11 +103,12 @@ export const validateClipboardData = (params: {
         // Skip invalid assignees
       } else {
         // For other columns, fail validation
-        const displayName = colId === 'subType'
-          ? `${isFolder ? 'folder' : 'task'} type`
-          : colId === 'status'
-          ? 'status'
-          : colId
+        const displayName =
+          colId === 'subType'
+            ? `${isFolder ? 'folder' : 'task'} type`
+            : colId === 'status'
+            ? 'status'
+            : colId
         clipboardError(`Invalid ${displayName} value: "${pasteValue}". Paste operation cancelled.`)
         return false
       }

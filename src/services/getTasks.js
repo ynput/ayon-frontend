@@ -40,7 +40,6 @@ const getTasks = api.injectEndpoints({
       }),
       transformResponse: (response, meta, { userName }) =>
         parseTasksList(response.data?.project?.tasks?.edges, userName),
-      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
       providesTags: ['project'],
     }),
   }),

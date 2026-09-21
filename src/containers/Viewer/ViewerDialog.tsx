@@ -2,6 +2,7 @@ import { Dialog } from '@ynput/ayon-react-components'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { closeViewer } from '@state/viewer'
 import { useEffect } from 'react'
+import { useRef } from 'react'
 import Viewer from './Viewer'
 import styled from 'styled-components'
 import { isHTMLElement } from '@shared/util'
@@ -38,6 +39,14 @@ const ViewerDialog = () => {
   const folderId = useAppSelector((state) => state.viewer.folderId)
   const projectName = useAppSelector((state) => state.viewer.projectName)
   const fullscreen = useAppSelector((state) => state.viewer.fullscreen)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const isOpen = Boolean((productId || taskId || folderId) && projectName)
+
+  useEffect(() => {
+    if (isOpen) {
+      dialogRef.current?.focus()
+    }
+  }, [isOpen])
 
   const handleClose = () => {
     // close the dialog
@@ -74,13 +83,21 @@ const ViewerDialog = () => {
     return () => document.removeEventListener('keydown', handleEscape)
   }, [productId, taskId, folderId, fullscreen, slideOut?.entityId])
 
-  if ((!productId && !taskId && !folderId) || !projectName) {
+  if (!isOpen) {
     return null
   }
 
   return (
     <>
-      <StyledDialog isOpen hideCancelButton size="full" onClose={() => {}} id="viewer-dialog">
+      <StyledDialog
+        ref={dialogRef}
+        isOpen
+        tabIndex={-1}
+        hideCancelButton
+        size="full"
+        onClose={() => {}}
+        id="viewer-dialog"
+      >
         <Viewer onClose={handleClose} />
       </StyledDialog>
     </>

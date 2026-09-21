@@ -15,6 +15,7 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import { parseJSONField } from '../overview'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 type Definitions = DefinitionsFromApi<typeof projectsApi>
 type TagTypes = TagTypesFromApi<typeof projectsApi>
 // update the definitions to include the new types
@@ -25,12 +26,10 @@ type UpdatedDefinitions = Omit<Definitions, 'getProject'> & {
 const enhancedProject = projectsApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     getProject: {
-      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
       providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
     },
     listProjects: {
       transformResponse: (res: ListProjectsApiResponse) => res?.projects || [],
-      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
       providesTags: (_res, _error, { active }) => [
         { type: 'project' },
         { type: 'projects', id: (active ?? false).toString() },
@@ -59,7 +58,7 @@ type GQLDefinitions = DefinitionsFromApi<typeof gqlApi>
 type GQLUpdatedDefinitions = Omit<GQLDefinitions, 'GetProjects'> & {
   GetProjects: OverrideResultType<GQLDefinitions['GetProjects'], GetProjectsResult>
 }
-//  it is impossible to group by folder or search with pagination, so just load tons and hope no one has more than 5 k projects.
+// keep high until ayon-backend#1109: a page shortened by access filtering looks like the last page
 export const PROJECTS_PER_PAGE = 2000
 
 // enhance graphql - used only for the infinite query below
@@ -77,23 +76,23 @@ const enhancedGraphql = gqlApi.enhanceEndpoints<TagTypes, GQLUpdatedDefinitions>
   },
 })
 
-type ProjectsPageParam = { cursor: string; last?: number }
+type ProjectsPageParam = { cursor: string; first?: number }
 
 export const getProjectsGraphql = enhancedGraphql.injectEndpoints({
   endpoints: (build) => ({
     getProjectsInfinite: build.infiniteQuery<
       GetProjectsResult,
-      Omit<GetProjectsQueryVariables, 'last' | 'before'>,
+      Omit<GetProjectsQueryVariables, 'first' | 'after'>,
       ProjectsPageParam
     >({
       infiniteQueryOptions: {
-        initialPageParam: { cursor: '', last: PROJECTS_PER_PAGE },
+        initialPageParam: { cursor: '', first: PROJECTS_PER_PAGE },
         getNextPageParam: (lastPage) => {
           const { pageInfo } = lastPage
-          if (!pageInfo.hasPreviousPage || !pageInfo.endCursor) return undefined
+          if (!pageInfo.hasNextPage || !pageInfo.endCursor) return undefined
           return {
             cursor: pageInfo.endCursor,
-            last: PROJECTS_PER_PAGE,
+            first: PROJECTS_PER_PAGE,
           }
         },
       },
@@ -101,8 +100,8 @@ export const getProjectsGraphql = enhancedGraphql.injectEndpoints({
         try {
           const queryParams: GetProjectsQueryVariables = {
             ...queryArg,
-            before: pageParam?.cursor || undefined,
-            last: pageParam?.last,
+            after: pageParam?.cursor || undefined,
+            first: pageParam?.first,
           }
 
           const result = await api.dispatch(
@@ -124,7 +123,7 @@ export const getProjectsGraphql = enhancedGraphql.injectEndpoints({
           }
         } catch (e: any) {
           console.error('Error in getProjectsInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       providesTags: (result) => {

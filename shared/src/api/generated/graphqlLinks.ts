@@ -1875,7 +1875,7 @@ export type GetSearchedFoldersQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedFoldersQuery = { project: { name: string, folders: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'FolderNode', label: string | null, id: string, name: string, parents: Array<string>, subType: string } }> } } };
+export type GetSearchedFoldersQuery = { project: { name: string, folders: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'FolderNode', label: string | null, thumbnailHash: string, id: string, name: string, parents: Array<string>, subType: string } }> } } };
 
 export type GetSearchedProductsQueryVariables = Exact<{
   projectName: string;
@@ -1888,7 +1888,7 @@ export type GetSearchedProductsQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedProductsQuery = { project: { name: string, products: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'ProductNode', id: string, name: string, parents: Array<string>, subType: string } }> } } };
+export type GetSearchedProductsQuery = { project: { name: string, products: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'ProductNode', id: string, name: string, parents: Array<string>, subType: string, featuredVersion: { id: string, thumbnailHash: string } | null } }> } } };
 
 export type GetSearchedRepresentationsQueryVariables = Exact<{
   projectName: string;
@@ -1914,7 +1914,7 @@ export type GetSearchedTasksQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedTasksQuery = { project: { name: string, tasks: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'TaskNode', label: string | null, id: string, name: string, parents: Array<string>, subType: string } }> } } };
+export type GetSearchedTasksQuery = { project: { name: string, tasks: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'TaskNode', label: string | null, thumbnailHash: string, id: string, name: string, parents: Array<string>, subType: string } }> } } };
 
 export type GetSearchedVersionsQueryVariables = Exact<{
   projectName: string;
@@ -1927,7 +1927,7 @@ export type GetSearchedVersionsQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedVersionsQuery = { project: { name: string, versions: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> } }> } } };
+export type GetSearchedVersionsQuery = { project: { name: string, versions: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'VersionNode', thumbnailHash: string, hasReviewables: boolean, id: string, name: string, parents: Array<string> } }> } } };
 
 export type GetSearchedWorkfilesQueryVariables = Exact<{
   projectName: string;
@@ -1940,7 +1940,7 @@ export type GetSearchedWorkfilesQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedWorkfilesQuery = { project: { name: string, workfiles: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> } }> } } };
+export type GetSearchedWorkfilesQuery = { project: { name: string, workfiles: { pageInfo: { startCursor: string | null, endCursor: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ cursor: string | null, node: { __typename: 'WorkfileNode', thumbnailHash: string, id: string, name: string, parents: Array<string> } }> } } };
 
 export type OverviewEntityLinkFragmentFragment = { id: string, direction: string, linkType: string, entityType: string, node:
     | { __typename: 'FolderNode', label: string | null, id: string, name: string, parents: Array<string>, subType: string }
@@ -2468,6 +2468,7 @@ export const GetSearchedFoldersDocument = new TypedDocumentString(`
           ...OverviewEntityLinkNodeFragment
           subType: folderType
           label
+          thumbnailHash
         }
       }
     }
@@ -2514,6 +2515,10 @@ export const GetSearchedProductsDocument = new TypedDocumentString(`
         node {
           ...OverviewEntityLinkNodeFragment
           subType: productType
+          featuredVersion {
+            id
+            thumbnailHash
+          }
         }
       }
     }
@@ -2605,6 +2610,7 @@ export const GetSearchedTasksDocument = new TypedDocumentString(`
           ...OverviewEntityLinkNodeFragment
           label
           subType: taskType
+          thumbnailHash
         }
       }
     }
@@ -2649,6 +2655,7 @@ export const GetSearchedVersionsDocument = new TypedDocumentString(`
         cursor
         node {
           ...OverviewEntityLinkNodeFragment
+          thumbnailHash
         }
       }
     }
@@ -2693,6 +2700,7 @@ export const GetSearchedWorkfilesDocument = new TypedDocumentString(`
         cursor
         node {
           ...OverviewEntityLinkNodeFragment
+          thumbnailHash
         }
       }
     }

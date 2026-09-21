@@ -9,12 +9,19 @@ import {
   gqlLinksApi,
 } from '@shared/api/generated'
 import { createRealtimeBatcher, PubSub } from '@shared/util'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 export const ENTITIES_INFINITE_QUERY_COUNT = 50 // Number of items to fetch per page
 
 // Define page param type for infinite query
 type EntitySearchPageParam = {
   cursor: string
+}
+
+export type EntityLinkThumbnail = {
+  entityType: string
+  entityId: string
+  thumbnailHash?: string
 }
 
 export type SearchEntityLink = {
@@ -26,6 +33,8 @@ export type SearchEntityLink = {
   icon: string | undefined
   subType: string | undefined
   hasReviewables?: boolean
+  // representations have none, products use their featured version's
+  thumbnail?: EntityLinkThumbnail
 }
 
 export type GetSearchedEntitiesLinksResult = {
@@ -55,6 +64,17 @@ type SearchedVersionNode = GetSearchedVersionsQuery['project']['versions']['edge
 type SearchedRepresentationNode =
   GetSearchedRepresentationsQuery['project']['representations']['edges'][0]['node']
 type SearchedWorkfileNode = GetSearchedWorkfilesQuery['project']['workfiles']['edges'][0]['node']
+
+type ThumbnailNode = { id: string; thumbnailHash?: string | null }
+
+// thumbnails are inherited (a folder can serve a child's), so we never gate on thumbnailId
+const getNodeThumbnail = (
+  entityType: string,
+  node?: ThumbnailNode | null,
+): EntityLinkThumbnail | undefined =>
+  node
+    ? { entityType, entityId: node.id, thumbnailHash: node.thumbnailHash || undefined }
+    : undefined
 
 const injectedQueries = gqlLinksApi.injectEndpoints({
   endpoints: (build) => ({
@@ -174,6 +194,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     label: taskNode.label || taskNode.name,
                     parents: taskNode.parents || [],
                     subType: taskNode.subType,
+                    thumbnail: getNodeThumbnail('task', taskNode),
                   }
                 case 'folder':
                   const folderNode = node as SearchedFolderNode
@@ -184,6 +205,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     label: folderNode.label || folderNode.name,
                     parents: folderNode.parents || [],
                     subType: folderNode.subType,
+                    thumbnail: getNodeThumbnail('folder', folderNode),
                   }
                 case 'product':
                   const productNode = node as SearchedProductNode
@@ -194,6 +216,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     label: productNode.name,
                     parents: productNode.parents || [],
                     subType: productNode.subType,
+                    thumbnail: getNodeThumbnail('version', productNode.featuredVersion),
                   }
                 case 'version':
                   const versionNode = node as SearchedVersionNode
@@ -204,6 +227,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     label: versionNode.name,
                     parents: versionNode.parents || [],
                     hasReviewables: versionNode.hasReviewables,
+                    thumbnail: getNodeThumbnail('version', versionNode),
                   }
                 case 'representation':
                   const representationNode = node as SearchedRepresentationNode
@@ -222,6 +246,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     name: workfileNode.name,
                     label: workfileNode.name,
                     parents: workfileNode.parents || [],
+                    thumbnail: getNodeThumbnail('workfile', workfileNode),
                   }
                 default:
                   return null
@@ -241,7 +266,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
           }
         } catch (error: any) {
           console.error('Error in getSearchedEntitiesLinks queryFn:', error)
-          return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(error) }
         }
       },
     }),

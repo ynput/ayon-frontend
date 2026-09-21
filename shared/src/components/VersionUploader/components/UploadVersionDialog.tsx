@@ -3,6 +3,7 @@ import { FC } from 'react'
 import { useVersionUploadContext } from '../context/VersionUploadContext'
 import { UploadVersionForm } from './UploadVersionForm'
 import styled from 'styled-components'
+import { getRequestErrorString } from '@shared/util'
 
 const toVersionString = (number: number) => {
   // Convert the number to a string
@@ -50,6 +51,7 @@ export const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
   // Use existing productId if available, otherwise use created one
   const currentProductId = productId || createdProductId
   const currentVersionId = createdVersionId
+  const hasError = typeof error === 'string' ? error.length > 0 : Boolean(error)
 
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
@@ -88,7 +90,7 @@ export const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
         versionId={currentVersionId}
         productId={currentProductId}
       />
-      {error && <ErrorMessage className="error">{JSON.stringify(error)}</ErrorMessage>}
+      {hasError && <ErrorMessage className="error">{getRequestErrorString(error)}</ErrorMessage>}
     </Dialog>
   )
 }

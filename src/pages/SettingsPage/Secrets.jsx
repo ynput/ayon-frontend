@@ -10,7 +10,7 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
-import { confirmDelete } from '@shared/util'
+import { confirmDelete, getRequestErrorString } from '@shared/util'
 import { copyToClipboard } from '@shared/util'
 
 const SecretList = styled.div`
@@ -61,11 +61,8 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
         resetForm()
       }
     } catch (error) {
-      console.error(error)
-
-      if (error.data?.detail) {
-        toast.error(error.data.detail)
-      }
+      const message = getRequestErrorString(error)
+      if (message) toast.error(message)
     }
   }
 

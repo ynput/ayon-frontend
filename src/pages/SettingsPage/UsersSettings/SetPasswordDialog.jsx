@@ -6,6 +6,7 @@ import { Dialog, SaveButton } from '@ynput/ayon-react-components'
 import { InputPassword, FormLayout, FormRow } from '@ynput/ayon-react-components'
 
 import { useUpdateUserPasswordMutation } from '@shared/api'
+import { getRequestErrorString } from '@shared/util'
 
 const SetPasswordDialog = ({ onHide, selectedUsers }) => {
   const [password, setPassword] = useState('')
@@ -35,8 +36,7 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
       toast.success('Password changed')
     } catch (error) {
       // FAIL
-      console.error(error)
-      toast.error(error.detail)
+      toast.error(getRequestErrorString(error))
     }
   }
   return (

@@ -26,7 +26,6 @@ export const AppMenu = ({ user, ...props }) => {
       await restartOnBoarding().unwrap()
       window.location.reload()
     } catch (error) {
-      console.error(error)
       toast.error('Failed to launch bootstrap setup')
     }
   }

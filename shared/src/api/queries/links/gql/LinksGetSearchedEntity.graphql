@@ -29,6 +29,7 @@ query GetSearchedFolders(
           ...OverviewEntityLinkNodeFragment
           subType: folderType
           label
+          thumbnailHash
         }
       }
     }
@@ -67,6 +68,10 @@ query GetSearchedProducts(
         node {
           ...OverviewEntityLinkNodeFragment
           subType: productType
+          featuredVersion {
+            id
+            thumbnailHash
+          }
         }
       }
     }
@@ -142,6 +147,7 @@ query GetSearchedTasks(
           ...OverviewEntityLinkNodeFragment
           label
           subType: taskType
+          thumbnailHash
         }
       }
     }
@@ -178,6 +184,7 @@ query GetSearchedVersions(
         cursor
         node {
           ...OverviewEntityLinkNodeFragment
+          thumbnailHash
         }
       }
     }
@@ -214,6 +221,7 @@ query GetSearchedWorkfiles(
         cursor
         node {
           ...OverviewEntityLinkNodeFragment
+          thumbnailHash
         }
       }
     }

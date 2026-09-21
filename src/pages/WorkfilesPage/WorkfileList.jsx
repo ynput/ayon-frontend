@@ -90,7 +90,6 @@ const WorkfileList = ({ style }) => {
           }).unwrap()
           dispatch(setFocusedWorkfiles([]))
         } catch (error) {
-          console.error(error)
           toast.error('Error deleting workfile')
         }
       },
@@ -140,7 +139,6 @@ const WorkfileList = ({ style }) => {
   )
 
   if (isError) {
-    console.error(error)
     return 'Error...'
   }
 

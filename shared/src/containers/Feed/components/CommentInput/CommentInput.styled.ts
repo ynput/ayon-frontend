@@ -270,10 +270,6 @@ export const Comment = styled.div<CommentProps>`
     user-select: none;
   }
 
-  &.isSubmitting {
-    opacity: 0.3;
-  }
-
   /* toolbar styles */
   .ql-toolbar.ql-snow {
     border: none;
