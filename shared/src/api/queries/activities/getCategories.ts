@@ -29,7 +29,6 @@ const categoriesApi = activityFeedApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
     getActivityCategories: {
       transformResponse: (res: ActivityCategoriesResponseModel) =>
         res.categories as ActivityCategory[],
-      transformErrorResponse: (error: any) => error.data?.detail || 'An error occurred.',
       providesTags: (result) =>
         result
           ? [

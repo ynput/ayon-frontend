@@ -31,7 +31,6 @@ const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }: RenameUserDialog
 
       onSuccess(newName)
     } catch (error) {
-      console.error(error)
       toast.error('Unable to rename user: ' + name)
     }
 

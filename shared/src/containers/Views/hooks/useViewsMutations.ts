@@ -56,7 +56,6 @@ export const useViewsMutations = ({
   const [updateView] = useUpdateViewMutation()
   const [setDefaultView] = useSetDefaultViewMutation()
 
-
   const onCreateView = useCallback<R['onCreateView']>(
     async (payload, isStudioScope) => {
       if (!viewType) {
@@ -74,7 +73,6 @@ export const useViewsMutations = ({
           onCreate(payload as ViewData)
         }
       } catch (error) {
-        console.error('Failed to create view:', error)
         throw error
       }
     },
@@ -99,7 +97,6 @@ export const useViewsMutations = ({
           onUpdate({ ...payload, id: viewId } as ViewData)
         }
       } catch (error) {
-        console.error('Failed to update view:', error)
         throw error
       }
     },
@@ -123,7 +120,6 @@ export const useViewsMutations = ({
           onDelete(viewId)
         }
       } catch (error) {
-        console.error('Failed to delete view:', error)
         throw error
       }
     },
@@ -145,16 +141,16 @@ export const useViewsMutations = ({
         dispatch(
           viewsQueries.util.invalidateTags([
             { type: 'Views', id: `base-${viewType}-${projectName}` },
-            { type: 'Views', id: `base-${viewType}` }
-          ])
+            { type: 'Views', id: `base-${viewType}` },
+          ]),
         )
 
         // 1. Try to fetch project base view first (force fresh fetch, no subscription)
         const projectBaseViewPromise = dispatch(
           viewsQueries.endpoints.getBaseView.initiate(
             { viewType, projectName },
-            { subscribe: false, forceRefetch: true }
-          )
+            { subscribe: false, forceRefetch: true },
+          ),
         )
         const projectBaseViewResult = await projectBaseViewPromise
         const projectBaseView = projectBaseViewResult.data
@@ -163,7 +159,11 @@ export const useViewsMutations = ({
         let baseViewSource = 'default'
 
         // Check if project base view exists and has settings
-        if (projectBaseView && projectBaseView.settings && Object.keys(projectBaseView.settings).length > 0) {
+        if (
+          projectBaseView &&
+          projectBaseView.settings &&
+          Object.keys(projectBaseView.settings).length > 0
+        ) {
           templateSettings = projectBaseView.settings
           baseViewSource = 'project'
         } else {
@@ -171,14 +171,18 @@ export const useViewsMutations = ({
           const studioBaseViewPromise = dispatch(
             viewsQueries.endpoints.getBaseView.initiate(
               { viewType },
-              { subscribe: false, forceRefetch: true }
-            )
+              { subscribe: false, forceRefetch: true },
+            ),
           )
           const studioBaseViewResult = await studioBaseViewPromise
           const studioBaseView = studioBaseViewResult.data
 
           // Check if studio base view exists and has settings
-          if (studioBaseView && studioBaseView.settings && Object.keys(studioBaseView.settings).length > 0) {
+          if (
+            studioBaseView &&
+            studioBaseView.settings &&
+            Object.keys(studioBaseView.settings).length > 0
+          ) {
             templateSettings = studioBaseView.settings
             baseViewSource = 'studio'
           }
@@ -186,7 +190,7 @@ export const useViewsMutations = ({
         }
 
         // Determine the view ID to use - use existing working view ID or generate new one
-        const viewId: string = existingWorkingViewId ?? generateWorkingView().id as string
+        const viewId: string = existingWorkingViewId ?? (generateWorkingView().id as string)
 
         // Prepare the working view payload with base view settings
         const workingViewPayload = {
@@ -231,15 +235,16 @@ export const useViewsMutations = ({
 
         if (notify) {
           const message =
-            baseViewSource === 'project' ? 'View reset to project default view' :
-            baseViewSource === 'studio' ? 'View reset to studio default view' :
-            'View reset to default settings'
+            baseViewSource === 'project'
+              ? 'View reset to project default view'
+              : baseViewSource === 'studio'
+              ? 'View reset to studio default view'
+              : 'View reset to default settings'
           toast.success(message)
         }
 
         return viewId
       } catch (error) {
-        console.error('Failed to reset working view:', error)
         if (notify) toast.error('Failed to reset view to default')
         throw error
       }

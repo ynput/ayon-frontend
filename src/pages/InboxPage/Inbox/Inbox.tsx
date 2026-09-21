@@ -431,9 +431,7 @@ const Inbox = ({ filter }: InboxProps) => {
     try {
       await Promise.all(promises)
       toast.success(isFiltered ? `Cleared ${clearedCount} messages` : 'All messages cleared')
-    } catch (error) {
-      console.error(error)
-    }
+    } catch (error) {}
   }
 
   // currentData, not isFetching: it is undefined only while a new cache key loads, so a

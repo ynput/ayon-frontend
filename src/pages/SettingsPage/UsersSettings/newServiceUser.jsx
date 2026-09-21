@@ -9,6 +9,7 @@ import { useAddUserMutation } from '@shared/api'
 import { copyToClipboard } from '@shared/util'
 import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
+import { getRequestErrorString } from '@shared/util'
 
 import UserAttribForm from './UserAttribForm'
 import { uniqueId } from 'lodash'
@@ -53,7 +54,7 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
   const preparePayload = (formData, apiKey) => {
     const payload = {
       data: { isService: true },
-      active: true,
+      active: 'fdsfds',
       name: formData.Username,
       apiKey: apiKey,
     }
@@ -84,8 +85,7 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
         usernameRef.current?.focus()
       }
     } catch (error) {
-      console.error(error)
-      toast.error(`Unable to create user: ${error.detail}`)
+      toast.error(`Unable to create user: ${getRequestErrorString(error)}`)
     }
   }
 

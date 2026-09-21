@@ -10,6 +10,7 @@ import type {
   BaseQueryExtraOptions,
   BaseQueryResult,
 } from './baseQueryTypes'
+import { normalizeQueryError } from './queryError'
 
 // https://github.com/reduxjs/redux-toolkit/discussions/3161
 const combineBaseQueries =
@@ -198,18 +199,24 @@ const baseQueryWithRedirect: typeof polymorphBaseQuery = async (args, api, extra
     }
 
     // redirect to login if unauthorized
-    if (result?.error?.status === 401) {
-      shouldRedirectToLogin()
+    if (result?.error) {
+      const error = normalizeQueryError(result.error)
+      if (error.status === 401) {
+        shouldRedirectToLogin()
+      }
+
+      return { ...result, error }
     }
 
     return result
   } catch (error: any) {
-    if (error?.response && error.response?.status === 401) {
+    const normalizedError = normalizeQueryError(error)
+    if (normalizedError.status === 401) {
       shouldRedirectToLogin()
     } else {
       console.error(error)
     }
-    throw error
+    return { error: normalizedError }
   }
 }
 

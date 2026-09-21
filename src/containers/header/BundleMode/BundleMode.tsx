@@ -94,7 +94,6 @@ const BundleModeSelector: FC<BundleModeSelectorProps> = ({}) => {
 
       // if the request fails, revert the switch
     } catch (error) {
-      console.error(error)
       const errorMessage = (error as any)?.details || 'Unknown error'
       toast.error('Unable to update developer mode: ' + errorMessage)
       // reset switch on error
@@ -129,7 +128,6 @@ const BundleModeSelector: FC<BundleModeSelectorProps> = ({}) => {
 
       await Promise.all(promises)
     } catch (error) {
-      console.error(error)
       toast.error('Failed to update bundle mode')
     }
   }
