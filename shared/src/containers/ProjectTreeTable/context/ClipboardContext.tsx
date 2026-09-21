@@ -995,7 +995,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         try {
           await Promise.all(updatePromises)
         } catch (error: any) {
-          console.error('Error updating entities:', error)
           clipboardError(`Paste failed: ${error || error?.message || 'Unknown error'}`)
         }
       }

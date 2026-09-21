@@ -88,7 +88,6 @@ import {
   isFilterError,
   getFilterErrorMessage,
   getEntitiesLabelFromScopes,
-  extractQueryErrorMessage,
 } from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
 
@@ -117,6 +116,7 @@ import { useRequestAttributeEnums } from '@shared/hooks/useAttributeEnumOptions'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { ColumnsConfig } from './types/columnConfig'
+import { getRequestErrorString } from '@shared/util'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'> & { id?: string },
@@ -1461,7 +1461,7 @@ const TableBody = ({
                   onClick={onResetView}
                 />
               )}
-              <FilterErrorActions errorMessage={extractQueryErrorMessage(error)} />
+              <FilterErrorActions errorMessage={getRequestErrorString(error)} />
             </EmptyPlaceholder>
           ) : (
             <EmptyPlaceholder message="No items found" error={error}>

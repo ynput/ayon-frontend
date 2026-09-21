@@ -27,8 +27,6 @@ const useDownload = (onDownload) => {
 
       onDownload(name)
     } catch (error) {
-      console.error(error)
-
       setError(error?.message || 'Error downloading addon')
 
       toast.error(error?.message || 'Error downloading addon')

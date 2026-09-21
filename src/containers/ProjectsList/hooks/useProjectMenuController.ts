@@ -18,7 +18,7 @@ import type { ProjectFolderFormData } from '@pages/ProjectManagerPage/components
 import useProjectListUserPreferences from './useProjectListUserPreferences'
 import useProjectListMenuItems, { type Hidden } from './useProjectsListMenuItems'
 import { useProjectFolderActions } from './useProjectFolderActions'
-import { confirmDelete, getProjectDisplayName } from '@shared/util'
+import { confirmDelete, getProjectDisplayName, getRequestErrorString } from '@shared/util'
 
 type ProjectFolderDialogProps = {
   isOpen: boolean
@@ -148,7 +148,7 @@ export const useProjectMenuController = ({
       try {
         await updateProject({ projectName, projectPatchModel: { active } }).unwrap()
       } catch (error: any) {
-        toast.error(error?.data?.detail || 'Failed to update project state')
+        toast.error(getRequestErrorString(error) || 'Failed to update project state')
       }
     },
     [updateProject, showArchived, selection, projects, onSelect],

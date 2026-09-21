@@ -1,9 +1,9 @@
 import { createRealtimeBatcher } from '@shared/util/realtimeUpdatesUtils'
 import PubSub from '@shared/util/pubsub'
 import { reviewablesApi } from '@shared/api/generated'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 import type { ReviewableModel, VersionReviewablesModel } from '@shared/api/generated'
 import { addonsQueries } from '../addons'
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import {
   Summary,
   GetReviewablesResponse,
@@ -261,16 +261,15 @@ const getReviewApi = enhancedApi.injectEndpoints({
 
         if (!query)
           return {
-            error: { status: 'CUSTOM_ERROR', error: 'No query found' } as FetchBaseQueryError,
+            error: normalizeQueryError('No query found', 400),
           }
 
         const result = await dispatch(query)
 
         if (result.error) {
-          const error = result.error as FetchBaseQueryError
+          const error = normalizeQueryError(result.error)
 
-          console.error(error)
-          return { error: error }
+          return { error }
         } else {
           const data = result.data as GetReviewablesResponse[]
           return { data }
@@ -331,7 +330,6 @@ const getReviewApi = enhancedApi.injectEndpoints({
 
           return { data: hasTranscoder }
         } else if (res.error) {
-          console.error(res.error)
           return { data: false }
         } else return { data: false }
       },

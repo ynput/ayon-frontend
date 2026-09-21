@@ -2,13 +2,13 @@ import { useEffect } from 'react'
 import { gqlApi } from '@shared/api'
 import type { GetProjectInboxQuery, GetProjectInboxQueryVariables } from '@shared/api'
 import { createRealtimeBatcher, PubSub } from '@shared/util'
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import {
   EMPTY_INBOX_PAGE,
   TransformedInboxMessages,
   transformInboxMessages,
   unshiftNewMessages,
 } from './inboxTransform'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 const PROJECT_INBOX_PAGE_SIZE = 100
 
@@ -104,14 +104,12 @@ export const projectInboxApi = gqlApi.injectEndpoints({
           })
 
           // passed through as-is: rewrapping loses the resolver's `detail`
-          if (result.error) return { error: result.error as FetchBaseQueryError }
+          if (result.error) return { error: normalizeQueryError(result.error) }
 
           return { data: transformPage(result.data, queryArg.important) }
         } catch (e: any) {
           console.error('Error in getProjectInboxInfinite queryFn:', e)
-          return {
-            error: { status: 'FETCH_ERROR', error: String(e?.message ?? e) } as FetchBaseQueryError,
-          }
+          return { error: normalizeQueryError(e) }
         }
       },
       keepUnusedDataFor: 30,

@@ -10,7 +10,6 @@ import {
   ProjectTreeTable,
   isFilterError,
   getFilterErrorMessage,
-  extractQueryErrorMessage,
 } from '@shared/containers/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
@@ -18,6 +17,7 @@ import { AddColumnButton } from '@shared/components'
 import { UniqueIdentifier } from '@dnd-kit/core'
 import { useProjectContext, useSettingsPanel } from '@shared/context'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
+import { getRequestErrorString } from '@shared/util'
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
@@ -90,11 +90,11 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
       return (
         <EmptyPlaceholder message={getFilterErrorMessage('List items')} icon="filter_alt_off">
           <Button label="Reset filters" icon="replay" onClick={resetFilters} />
-          <FilterErrorActions errorMessage={extractQueryErrorMessage(error)} />
+          <FilterErrorActions errorMessage={getRequestErrorString(error)} />
         </EmptyPlaceholder>
       )
     }
-    const errorMessage = extractQueryErrorMessage(error) || 'Error loading list items.'
+    const errorMessage = getRequestErrorString(error) || 'Error loading list items.'
     return (
       <EmptyPlaceholder error={errorMessage} ynputError={false}>
         <Button label="Reset" icon="replay" onClick={resetFilters} />

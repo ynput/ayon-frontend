@@ -1,19 +1,16 @@
 // Need to use the React-specific entry point to allow generating React hooks
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { graphqlRequestBaseQuery } from '@rtk-query/graphql-request-base-query'
-import type {
-  BaseQueryApi,
-  BaseQueryFn,
-  FetchArgs,
-  FetchBaseQueryError,
-} from '@reduxjs/toolkit/query'
-import { GraphQLClient, ClientError } from 'graphql-request'
+import type { BaseQueryApi, BaseQueryFn, FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { GraphQLClient } from 'graphql-request'
+import type { ClientError } from 'graphql-request'
 import type {
   BaseQueryArg,
   BaseQueryError,
   BaseQueryExtraOptions,
   BaseQueryResult,
 } from './baseQueryTypes'
+import { normalizeQueryError } from './queryError'
 
 // https://github.com/reduxjs/redux-toolkit/discussions/3161
 const combineBaseQueries =
@@ -141,11 +138,40 @@ const prepareHeaders = (headers: any) => {
 
 export const client = new GraphQLClient(`${window.location.origin}/graphql`)
 
+const customErrors = (error: ClientError): FetchBaseQueryError => {
+  if (error.response.errors?.length) {
+    return {
+      status: error.response.status,
+      data: {
+        code: error.response.status,
+        detail: error.response.errors.map(({ message }) => message).join('; '),
+        errors: error.response.errors,
+      },
+    }
+  }
+
+  let data: unknown = error.response
+
+  if (typeof error.response.body === 'string') {
+    try {
+      data = JSON.parse(error.response.body)
+    } catch {
+      data = error.response.body
+    }
+  }
+
+  return {
+    status: error.response.status,
+    data,
+  }
+}
+
 const baseGraphqlQuery = graphqlRequestBaseQuery({
   prepareHeaders: prepareHeaders,
   url: '/graphql',
   // @ts-ignore
   client: client,
+  customErrors,
 })
 
 // check for 401 and redirect to login
@@ -168,19 +194,30 @@ const baseQueryWithRedirect: typeof polymorphBaseQuery = async (args, api, extra
   try {
     const result = await polymorphBaseQuery(args, api, extraOptions)
 
-    // @ts-ignore
-    if (result?.error?.status === 401) {
-      shouldRedirectToLogin()
+    // debug log errors
+    if (result?.error) {
+      console.error(`ERROR [${api.endpoint}]`, result.error)
+    }
+
+    // redirect to login if unauthorized
+    if (result?.error) {
+      const error = normalizeQueryError(result.error)
+      if (error.status === 401) {
+        shouldRedirectToLogin()
+      }
+
+      return { ...result, error }
     }
 
     return result
   } catch (error: any) {
-    if (error?.response && error.response?.status === 401) {
+    const normalizedError = normalizeQueryError(error)
+    if (normalizedError.status === 401) {
       shouldRedirectToLogin()
     } else {
       console.error(error)
     }
-    throw error
+    return { error: normalizedError }
   }
 }
 

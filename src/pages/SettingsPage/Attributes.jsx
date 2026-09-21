@@ -49,7 +49,6 @@ const Attributes = () => {
   }, [data, attributes])
 
   if (isError) {
-    console.error(error)
     toast.error('Unable to load attribute list')
   }
 
@@ -68,7 +67,6 @@ const Attributes = () => {
         toast.success('Attribute set saved')
       })
       .catch((err) => {
-        console.error(err)
         const reason = getSaveErrorReason(err, attributes)
         toast.error(reason ? `Unable to set attributes: ${reason}` : 'Unable to set attributes')
       })

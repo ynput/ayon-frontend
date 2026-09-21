@@ -4,6 +4,7 @@ import { current } from '@reduxjs/toolkit'
 import { enhancedInboxGraphql, inboxInfiniteApi, type InboxInfiniteArgs } from './getInbox'
 import { projectInboxApi, type ProjectInboxInfiniteArgs } from './getProjectInbox'
 import type { InboxMessage, InboxPagesDraft } from './inboxTransform'
+import { getRequestErrorString } from '@shared/util'
 
 // add some extra types for the patching
 export interface Arg extends ManageInboxItemApiArg {
@@ -218,8 +219,7 @@ const enhancedRest = inboxApi.enhanceEndpoints({
             dispatch(inboxApi.util.invalidateTags(tagsToInvalidate))
           }
         } catch (error: any) {
-          const message = `Error: ${error?.error?.data?.detail}`
-          console.error(message, error)
+          const message = `Error: ${getRequestErrorString(error)}`
           toast.error(message)
           patches.forEach((patch) => patch.undo())
         }

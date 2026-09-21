@@ -1,6 +1,6 @@
 import { activityFeedApi } from '@shared/api/generated'
 import type { GetEntityWatchersApiArg } from '@shared/api/generated'
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 const enhancedApi = activityFeedApi.enhanceEndpoints({
   endpoints: {
@@ -34,6 +34,7 @@ const injectedApi = enhancedApi.injectEndpoints({
               const result = await dispatch(
                 enhancedApi.endpoints.getEntityWatchers.initiate(entity, { forceRefetch: true }),
               )
+              if (result.error) throw result.error
               return {
                 ...entity,
                 watchers: result.data?.watchers || [],
@@ -43,9 +44,8 @@ const injectedApi = enhancedApi.injectEndpoints({
 
           return { data: entitiesWatchers }
         } catch (error) {
-          // handle errors appropriately
           console.error(error)
-          throw error
+          return { error: normalizeQueryError(error) }
         }
       },
       providesTags: (_result, _error, { entities }) =>
@@ -62,23 +62,23 @@ const injectedApi2 = injectedApi.injectEndpoints({
   endpoints: (build) => ({
     setEntitiesWatchers: build.mutation<undefined, SetEntitiesWatchersApiArg>({
       async queryFn({ entities = [] }, { dispatch }) {
-        const promises = entities.map((entity) =>
-          dispatch(
+        const promises = entities.map(async (entity) => {
+          const result = await dispatch(
             enhancedApi.endpoints.setEntityWatchers.initiate({
               entityId: entity.entityId,
               entityType: entity.entityType,
               projectName: entity.projectName,
               watchersModel: { watchers: entity.watchers },
             }),
-          ),
-        )
+          )
+          if (result.error) throw result.error
+        })
 
         try {
           await Promise.all(promises)
           return { data: undefined }
         } catch (e: any) {
-          const error = { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError
-          return { error }
+          return { error: normalizeQueryError(e) }
         }
       },
       async onQueryStarted({ entities }, { dispatch, queryFulfilled, getState }) {
@@ -117,8 +117,6 @@ const injectedApi2 = injectedApi.injectEndpoints({
 
           await queryFulfilled
         } catch (error: any) {
-          const message = `Error: ${error?.error?.data?.detail}` as any
-          console.error(message, error)
           patches.forEach((patch) => patch?.undo())
         }
       },

@@ -56,7 +56,6 @@ const useReorderListItem = ({
           // any extra callbacks after the reorder
           onReorderFinished?.()
         } catch (error: any) {
-          console.error('Error sorting: ', error)
           toast.error('Error sorting: ' + error)
         }
       }

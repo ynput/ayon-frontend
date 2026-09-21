@@ -17,20 +17,11 @@ const FILTER_ERROR_SIGNATURES = [
 
 // Minimal structural shape so any QueryFilter variant (the table's folders type
 // or the wider @shared/api one) can be passed without a cast.
+import { getRequestErrorString } from '@shared/util'
+
 export type ActiveFilters = {
   filter?: { conditions?: unknown[] } | null
   search?: string | null
-}
-
-// Pulls a message out of the assorted error shapes these queries produce:
-// infinite-query FETCH_ERROR wrappers ({ error }), RTK validation errors
-// ({ data: { detail } }), a plain Error, or a bare string.
-export const extractQueryErrorMessage = (error: unknown): string => {
-  if (!error) return ''
-  if (typeof error === 'string') return error
-  if (error instanceof Error) return error.message
-  const e = error as any
-  return e.data?.detail ?? e.error ?? e.message ?? ''
 }
 
 export const hasActiveFilters = (filters?: ActiveFilters): boolean => {
@@ -43,7 +34,7 @@ export const hasActiveFilters = (filters?: ActiveFilters): boolean => {
 // otherwise-unexplained load failure.
 export const isFilterError = (error: unknown, filters?: ActiveFilters): boolean => {
   if (!error) return false
-  const message = extractQueryErrorMessage(error).toLowerCase()
+  const message = getRequestErrorString(error).toLowerCase()
   if (FILTER_ERROR_SIGNATURES.some((signature) => message.includes(signature))) return true
   return hasActiveFilters(filters)
 }

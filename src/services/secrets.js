@@ -10,7 +10,6 @@ const secrets = api.injectEndpoints({
 
       providesTags: ['secrets'],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
 
     setSecret: build.mutation({
