@@ -54,7 +54,7 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
   const preparePayload = (formData, apiKey) => {
     const payload = {
       data: { isService: true },
-      active: 'fdsfds',
+      active: true,
       name: formData.Username,
       apiKey: apiKey,
     }
