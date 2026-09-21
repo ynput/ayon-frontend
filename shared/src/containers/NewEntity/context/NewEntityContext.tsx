@@ -1,5 +1,5 @@
 import React, { createContext, useState, ReactNode, useContext } from 'react'
-import { getEntityId } from '@shared/util'
+import { getEntityId, getRequestErrorString } from '@shared/util'
 import { toast } from 'react-toastify'
 import { getSequence } from '../util/getSequence'
 import { generateLabel } from '../components/NewEntity'
@@ -427,8 +427,9 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
       }
     } catch (error: any) {
       console.log(error)
-      toast.error(error.error || '')
-      throw new Error(error?.data?.details)
+      const detail = getRequestErrorString(error)
+      toast.error(detail)
+      throw new Error(detail)
     }
   }
 

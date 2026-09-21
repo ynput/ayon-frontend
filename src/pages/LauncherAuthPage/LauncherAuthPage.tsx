@@ -5,6 +5,7 @@ import { Button, Panel, SaveButton, theme, Toolbar } from '@ynput/ayon-react-com
 import { FC } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
+import { getRequestErrorString } from '@shared/util'
 
 const Container = styled(Panel)`
   position: fixed;
@@ -75,7 +76,6 @@ const LauncherAuthPage: FC<LauncherAuthPageProps> = ({ user, redirect }) => {
         window.location.href = redirectUrl.toString()
       }
     } catch (error) {
-      console.error(error)
       toast.error('Failed to connect to AYON launcher')
     }
   }
@@ -87,7 +87,6 @@ const LauncherAuthPage: FC<LauncherAuthPageProps> = ({ user, redirect }) => {
       // @ts-expect-error - no args are defined
       logout({ redirect: window.location.href })
     } catch (error) {
-      console.error(error)
       toast.error('Failed to switch account')
     }
   }
@@ -114,7 +113,7 @@ const LauncherAuthPage: FC<LauncherAuthPageProps> = ({ user, redirect }) => {
           Confirm
         </SaveButton>
       </Toolbar>
-      {error && <Error>{JSON.stringify(error)}</Error>}
+      {error && <Error>{getRequestErrorString(error)}</Error>}
     </Container>
   )
 }

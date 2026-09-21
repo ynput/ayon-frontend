@@ -47,7 +47,6 @@ const ReplaceListItemsDialog: FC = () => {
         toast.success(`Items replaced successfully`)
         setItemIdsToReplace(null)
       } catch (error) {
-        console.error('Error replacing items:', error)
         toast.error(`Error replacing items: ${error}`)
       } finally {
         setIsReplacing(false)

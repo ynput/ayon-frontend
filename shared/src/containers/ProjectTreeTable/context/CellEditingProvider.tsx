@@ -240,7 +240,6 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
           await handleUpdateEntities(entityUpdates, true)
         } catch (error) {
           toast.error('Failed to clear selected cells')
-          console.error('Error clearing selected cells:', error)
         }
       }
 
@@ -250,7 +249,6 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
           await inheritFromParent(entityInheriting, true)
         } catch (error) {
           toast.error('Failed to inherit parent values for cleared cells')
-          console.error('Error clearing inherited cells:', error)
         }
       }
 
@@ -281,7 +279,6 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
           await Promise.all(subtasksPromises)
         } catch (error) {
           toast.error('Failed to clear subtasks')
-          console.error('Error clearing subtasks:', error)
         }
       }
 

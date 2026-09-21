@@ -17,7 +17,7 @@ import {
   ThumbnailUpdateMessage,
   waitForRealtimeJitter,
 } from '@shared/util'
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 import {
   detailsPanelEntityTypes,
   transformDetailsPanelQueriesData,
@@ -138,12 +138,7 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
     getEntitiesDetailsPanel: build.query<DetailsPanelEntityData[], GetEntitiesDetailsPanelArgs>({
       async queryFn({ entities = [], entityType }, { dispatch }) {
         if (!detailsPanelEntityTypes.includes(entityType)) {
-          return {
-            error: {
-              status: 'CUSTOM_ERROR',
-              error: 'Entity type not supported',
-            } as FetchBaseQueryError,
-          }
+          return { error: normalizeQueryError('Entity type not supported', 400) }
         }
 
         try {
@@ -168,7 +163,7 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
           return { data: entitiesData }
         } catch (e: any) {
           console.error(e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       async onCacheEntryAdded(

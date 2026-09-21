@@ -6,6 +6,8 @@ import { detailsPanelQueries } from './getEntityPanel'
 import { dashboardQueries, getKanbanTasks } from '../userDashboard'
 import { patchOverviewFolders, patchOverviewTasks } from '../overview'
 import { patchDetailsPanel } from './patchDetailsPanel'
+import { normalizeQueryError } from '@shared/api/base/queryError'
+import { getRequestErrorString } from '@shared/util'
 
 const patchKanban = (
   { assignees = [], projects = [] },
@@ -297,8 +299,7 @@ const updateEntity = api.injectEndpoints({
             dispatch(dashboardQueries.util.invalidateTags(invalidationTagsAfterComplete))
           }
         } catch (error) {
-          console.error('error updating ' + entityType, error)
-          toast.error(error?.error?.data?.detail || 'Failed to update task')
+          toast.error(getRequestErrorString(error) || 'Failed to update task')
           patchResults.forEach((result) => result?.undo())
         }
       },
@@ -366,13 +367,13 @@ const updateEntity = api.injectEndpoints({
             // revert the overview patches
             overviewPatches.forEach((patch) => patch?.undo())
 
-            throw 'Failed to update some tasks'
+            return { error: normalizeQueryError('Failed to update some tasks', 400) }
           }
 
           return { data: operations }
         } catch (error) {
           console.error(error)
-          return { error }
+          return { error: normalizeQueryError(error) }
         }
       },
       invalidatesTags: (result, error, { operations, entityType }) => {

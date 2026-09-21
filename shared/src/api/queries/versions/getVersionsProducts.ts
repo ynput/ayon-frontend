@@ -15,7 +15,6 @@
 
 import {
   DefinitionsFromApi,
-  FetchBaseQueryError,
   InfiniteData,
   OverrideResultType,
   TagTypesFromApi,
@@ -41,6 +40,7 @@ import {
   transformProductsResponse,
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 import { parseJSONField } from '../overview'
 import {
   getSupportedEntityPatch,
@@ -52,12 +52,7 @@ import {
 import PubSub from '@shared/util/pubsub'
 import { subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import type { FieldStats } from '../columnStats'
-import {
-  normalizeFieldStats,
-  mergeFieldStats,
-  hasNewTargetFields,
-  transformStatsError,
-} from '../columnStats'
+import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
 
 const CACHE_TIME = 10 // seconds
 
@@ -347,7 +342,6 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
     GetProductsColumnStats: {
       transformResponse: (res: GetProductsColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.products?.fieldStats ?? []),
-      transformErrorResponse: (error: any) => transformStatsError(error, 'product'),
       serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
@@ -357,7 +351,6 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
     GetVersionsColumnStats: {
       transformResponse: (res: GetVersionsColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.versions?.fieldStats ?? []),
-      transformErrorResponse: (error: any) => transformStatsError(error, 'version'),
       serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
@@ -589,12 +582,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             }
           } catch (e: any) {
             console.error('Error in getVersionsInfiniteQuery queryFn:', e)
-            return {
-              error: {
-                status: 'FETCH_ERROR',
-                error: parseGQLErrorMessage(e.message),
-              } as FetchBaseQueryError,
-            }
+            return { error: normalizeQueryError(e) }
           }
         },
         providesTags: provideTagsForVersionsInfinite,
@@ -1002,12 +990,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             }
           } catch (e: any) {
             console.error('Error in getProductsInfiniteQuery queryFn:', e)
-            return {
-              error: {
-                status: 'FETCH_ERROR',
-                error: parseGQLErrorMessage(e.message),
-              } as FetchBaseQueryError,
-            }
+            return { error: normalizeQueryError(e) }
           }
         },
         providesTags: provideTagsForProductsInfinite,
@@ -1298,12 +1281,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           }
         } catch (error: any) {
           console.error('Error in getGroupedVersionsList queryFn:', error)
-          return {
-            error: {
-              status: 'FETCH_ERROR',
-              error: parseGQLErrorMessage(error.message),
-            } as FetchBaseQueryError,
-          }
+          return { error: normalizeQueryError(error) }
         }
       },
       providesTags: provideTagsForVersionsResult,

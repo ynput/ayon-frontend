@@ -18,6 +18,7 @@ import {
   useGetInstallEventsQuery,
 } from '@queries/releases/getReleases'
 import { useSessionStorage } from '@shared/hooks'
+import { getRequestErrorString } from '@shared/util'
 
 type Props = {
   releaseInfo: GetReleaseInfoApiResponse | undefined
@@ -141,8 +142,7 @@ export const useInstallRelease = ({
 
       setEvents(events)
     } catch (error) {
-      console.error('Error getting release install urls', error)
-      setError(JSON.stringify(error))
+      setError(getRequestErrorString(error))
       setIsSubmitting(false)
     }
   }
@@ -153,7 +153,7 @@ export const useInstallRelease = ({
     installRelease,
     isSubmitting,
     eventsWithProgress,
-    error || JSON.stringify(progressError),
+    error || getRequestErrorString(progressError),
     setEvents,
   ]
 }
