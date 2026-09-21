@@ -2,14 +2,14 @@
 // Each entity type has it's own table
 
 import { RowSelectionState } from '@tanstack/react-table'
-import { FC, useEffect, useState } from 'react'
+import { FC, useMemo, useState } from 'react'
 import { entityHierarchies } from './util'
 import EntityTypeTable from './components/EntityTypeTable'
 import { SimpleTableProvider } from '@shared/containers/SimpleTable/context/SimpleTableContext'
 import { Button, Dialog, DialogProps, SwitchButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { useGetEntityPickerData } from './hooks/useGetEntityPickerData'
-import { omit, upperFirst } from 'lodash'
+import { upperFirst } from 'lodash'
 import useExpandedWithInitialFolders from './hooks/useExpandedWithInitialFolders'
 import { usePreserveChildSelectionByName } from './hooks/usePreserveChildSelectionByName'
 
@@ -125,10 +125,11 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   // Get the complete hierarchy for the target entity type!
   const entityHierarchy = entityHierarchies[entityType]
 
-  const hasReviewableTables =
-    entityHierarchy.includes('product') || entityHierarchy.includes('version')
+  const canFilterReviewables =
+    !!showReviewablesSwitch &&
+    (entityHierarchy.includes('product') || entityHierarchy.includes('version'))
   const [reviewablesOnlyEnabled, setReviewablesOnlyEnabled] = useState(true)
-  const reviewablesOnly = !!showReviewablesSwitch && hasReviewableTables && reviewablesOnlyEnabled
+  const reviewablesOnly = canFilterReviewables && reviewablesOnlyEnabled
 
   const entityData = useGetEntityPickerData({
     entityType,
@@ -139,18 +140,19 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     includeTask: showTaskNames,
   })
 
-  // drop selected rows the switch hides, so submit never returns them
-  useEffect(() => {
-    if (!reviewablesOnly) return
-    for (const type of ['product', 'version'] as const) {
-      const { data, isLoading } = entityData[type]
-      if (isLoading) continue
-      const loadedIds = new Set(data.map((entity) => entity.id))
-      const selection = rowSelection[type]
-      const hiddenIds = Object.keys(selection).filter((id) => selection[id] && !loadedIds.has(id))
-      if (hiddenIds.length) setEntityRowSelection(omit(selection, hiddenIds), type)
-    }
-  }, [reviewablesOnly, entityData.product, entityData.version, rowSelection])
+  const targetData = entityData[entityType]
+  // the switch filters server side, so a selected row can drop out of the data
+  const visibleTargetIds = useMemo(
+    () =>
+      reviewablesOnly && !targetData.isLoading
+        ? new Set(targetData.data.map((entity) => entity.id))
+        : null,
+    [reviewablesOnly, targetData.isLoading, targetData.data],
+  )
+
+  const selectedIds = visibleTargetIds
+    ? entitySelection[entityType].filter((id) => visibleTargetIds.has(id))
+    : entitySelection[entityType]
 
   // When reviewableRequired is set and we're picking versions, disable any
   // version returned by the query that does not have reviewables.
@@ -234,12 +236,10 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
 
   const handleSubmit = () => {
     // check the target entity has a selection
-    if (!entitySelection[entityType]?.length) {
+    if (!selectedIds.length) {
       return
     }
-    const selection = isMultiSelect
-      ? entitySelection[entityType]
-      : entitySelection[entityType].slice(0, 1)
+    const selection = isMultiSelect ? selectedIds : selectedIds.slice(0, 1)
     // Call the onSubmit callback with the selected entity ids
     onSubmit(selection)
   }
@@ -261,7 +261,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
           <Button
             label={`Select ${entityType}${isMultiSelect ? 's' : ''}`}
             variant="filled"
-            disabled={!entitySelection[entityType]?.length || isLoading}
+            disabled={!selectedIds.length || isLoading}
             // @ts-ignore
             loading={isLoading}
             onClick={handleSubmit}
@@ -269,7 +269,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
         </>
       }
     >
-      {showReviewablesSwitch && hasReviewableTables && (
+      {canFilterReviewables && (
         <SwitchButton
           label="Show reviewables only"
           value={reviewablesOnlyEnabled}

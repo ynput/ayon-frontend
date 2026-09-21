@@ -1,5 +1,6 @@
 import {
   FolderListItem,
+  GetSearchedEntitiesLinksArgs,
   SearchEntityLink,
   useGetSearchedEntitiesLinksInfiniteQuery,
 } from '@shared/api'
@@ -15,6 +16,9 @@ import {
 } from '../util'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import { matchSorter } from 'match-sorter'
+
+// the entity types the reviewables switch filters server side
+const FILTERED_PARENTS: PickerEntityType[] = ['product', 'version']
 
 export type EntityQueryResult = {
   data: (SearchEntityLink | FolderListItem)[]
@@ -92,15 +96,22 @@ export const useGetEntityPickerData = ({
   }
 
   //   if there is a selection on the parent we user that, otherwise we use all parent ids of parent data
-  const getParentIds = (parentType: PickerEntityType, parentData: { id: string }[] = []) => {
+  const getParentIds = (
+    parentType: PickerEntityType,
+    parentData: { id: string }[] = [],
+    isParentLoading = false,
+  ) => {
     const parentSelection = selection[parentType]
-    if (parentSelection?.length > 0) {
-      return parentSelection
-    } else if (parentData) {
+    if (!parentSelection?.length) {
       return parentData.map((entity) => entity.id)
-    } else {
-      return undefined
     }
+    // the reviewables switch hides parents server side, so a hidden parent must not scope its children
+    if (!reviewablesOnly || isParentLoading || !FILTERED_PARENTS.includes(parentType)) {
+      return parentSelection
+    }
+    const visibleIds = new Set(parentData.map((entity) => entity.id))
+    const visibleSelection = parentSelection.filter((id) => visibleIds.has(id))
+    return visibleSelection.length ? visibleSelection : parentData.map((entity) => entity.id)
   }
 
   const task = useGetEntityTypeData(
@@ -131,6 +142,7 @@ export const useGetEntityPickerData = ({
     getParentIds(
       entityHierarchies['version'][entityHierarchies['version'].length - 2],
       product.data,
+      product.isLoading,
     ),
     undefined,
     { includeTask, hasReviewables: reviewablesOnly || undefined },
@@ -143,6 +155,7 @@ export const useGetEntityPickerData = ({
     getParentIds(
       entityHierarchies['representation'][entityHierarchies['representation'].length - 2],
       version.data,
+      version.isLoading,
     ),
   )
   const workfile = useGetEntityTypeData(
@@ -166,10 +179,7 @@ export const useGetEntityPickerData = ({
   }
 }
 
-type EntityTypeDataOptions = {
-  includeTask?: boolean
-  hasReviewables?: boolean
-}
+type EntityTypeDataOptions = Pick<GetSearchedEntitiesLinksArgs, 'includeTask' | 'hasReviewables'>
 
 const useGetEntityTypeData = (
   projectName: string,
