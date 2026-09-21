@@ -141,13 +141,18 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   })
 
   const targetData = entityData[entityType]
-  // the switch filters server side, so a selected row can drop out of the data
+  // a missing row only proves the switch hid it once the data is complete —
+  // searching, paging and errors shorten it too
+  const canTrustAbsence =
+    reviewablesOnly &&
+    !targetData.isLoading &&
+    !targetData.error &&
+    !targetData.hasNextPage &&
+    !search[entityType]
+
   const visibleTargetIds = useMemo(
-    () =>
-      reviewablesOnly && !targetData.isLoading
-        ? new Set(targetData.data.map((entity) => entity.id))
-        : null,
-    [reviewablesOnly, targetData.isLoading, targetData.data],
+    () => (canTrustAbsence ? new Set(targetData.data.map((entity) => entity.id)) : null),
+    [canTrustAbsence, targetData.data],
   )
 
   const selectedIds = visibleTargetIds
