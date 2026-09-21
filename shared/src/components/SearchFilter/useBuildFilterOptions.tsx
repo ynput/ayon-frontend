@@ -30,9 +30,7 @@ import { isEmpty, upperFirst } from 'lodash'
 import type { SliceFilter } from '@shared/containers/Slicer/types'
 import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
 import { useContext } from 'react'
-import { useDispatch } from 'react-redux'
-import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
-import { fetchAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
+import { useFetchAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
 import { useGlobalContext } from '@shared/context/GlobalContext'
 import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContextInstance'
 
@@ -124,7 +122,7 @@ export const useBuildFilterOptions = ({
   config,
   power,
 }: BuildFilterOptions): { options: Option[]; groupOptions: SearchFilterGroupOption[] } => {
-  const dispatch = useDispatch<ThunkDispatch<any, any, UnknownAction>>()
+  const fetchAttributeEnumOptions = useFetchAttributeEnumOptions()
   const productTypes = data.productTypes || []
   const productBaseTypes = data.productBaseTypes || []
   let options: Option[] = []
@@ -630,7 +628,7 @@ export const useBuildFilterOptions = ({
           option.loadValues = async () =>
             getAttributeOptions(
               realData,
-              await fetchAttributeEnumOptions(dispatch, attributeData, projectNames?.[0]),
+              await fetchAttributeEnumOptions(attributeData, projectNames?.[0]),
               type,
             )
         }

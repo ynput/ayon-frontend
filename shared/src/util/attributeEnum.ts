@@ -39,3 +39,16 @@ export const getSelectableEnumItems = <T extends HideableEnumItem>(
   const selected = new Set(selectedValues.map(String))
   return items.filter((item) => !item.hidden || selected.has(String(item.value)))
 }
+
+// Params the app fills in from where the attribute is used, never from the saved resolver settings
+export const ENUM_CONTEXT_PARAMS = ['project_name', 'user'] as const
+
+export type EnumContextParam = (typeof ENUM_CONTEXT_PARAMS)[number]
+
+type AcceptedParams = Record<string, unknown> | undefined | null
+
+export const isEnumContextParam = (name: string): name is EnumContextParam =>
+  (ENUM_CONTEXT_PARAMS as readonly string[]).includes(name)
+
+export const getEnumContextParams = (acceptedParams: AcceptedParams): EnumContextParam[] =>
+  ENUM_CONTEXT_PARAMS.filter((name) => name in (acceptedParams || {}))

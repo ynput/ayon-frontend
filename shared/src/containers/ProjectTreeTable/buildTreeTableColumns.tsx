@@ -1427,7 +1427,7 @@ const buildTreeTableColumns = ({
                 enumResolver: attrib.data.enumResolver,
               }}
               options={attrib.data.enum || []}
-              enableCustomValues={!!attrib.enumIsLoading}
+              isLoadingOptions={!!attrib.enumIsLoading}
               tooltip={attrib.enumError}
               pt={{ enum: { error: toDropdownErrorText(attrib.enumError) } }}
               midnightExclusiveFields={row.original.midnightExclusiveFields}

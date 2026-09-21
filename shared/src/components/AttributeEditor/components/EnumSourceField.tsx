@@ -11,7 +11,12 @@ import type { SimpleFormValueDict } from '@shared/components/SimpleForm'
 import { useListEnumsQuery } from '@shared/api'
 import type { AttributeData, EnumResolverInfo, SimpleFormField } from '@shared/api'
 import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
-import { getEnumItemIcon, getSelectableEnumItems } from '@shared/util/attributeEnum'
+import {
+  getEnumContextParams,
+  getEnumItemIcon,
+  getSelectableEnumItems,
+} from '@shared/util/attributeEnum'
+import type { EnumContextParam } from '@shared/util/attributeEnum'
 import { EnumItemIcon, EnumItemRow } from './EnumItemRow'
 import { EnumDebugDialog } from './EnumDebugDialog'
 
@@ -21,13 +26,10 @@ const EMPTY_FIELDS: SimpleFormField[] = []
 const EMPTY_PREVIEW_MESSAGE = 'No preview items found.'
 const SEARCH_THRESHOLD = 5
 
-const CONTEXT_PARAM_MESSAGES: Record<string, string> = {
+const CONTEXT_PARAM_MESSAGES: Record<EnumContextParam, string> = {
   project_name: 'The select options will change based on the project it is used in.',
   user: 'The select options will change based on the user that is selected.',
 }
-
-const getContextParams = (acceptedParams: EnumResolverInfo['acceptedParams'] | undefined) =>
-  Object.keys(CONTEXT_PARAM_MESSAGES).filter((name) => name in (acceptedParams || {}))
 
 const Container = styled.div`
   display: flex;
@@ -69,6 +71,11 @@ const MoreButton = styled.button`
 
 const ClickableInfoMessage = styled(InfoMessage)`
   cursor: pointer;
+  padding: var(--padding-s) var(--padding-m);
+
+  .content {
+    gap: var(--base-gap-small);
+  }
 
   &:hover {
     filter: brightness(1.15);
@@ -104,7 +111,7 @@ const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({
   )
   const { options: allOptions, isLoading, isError, errorMessage } = useAttributeEnumOptions(data)
   const options = getSelectableEnumItems(allOptions)
-  const contextParams = getContextParams(acceptedParams)
+  const contextParams = getEnumContextParams(acceptedParams)
 
   if (isLoading)
     return (
@@ -191,7 +198,7 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
   const selectedResolver = resolvers.find((resolver) => resolver.name === enumResolver)
   const settingsFields = selectedResolver?.settingsForm || EMPTY_FIELDS
   const settings = (enumResolverSettings as SimpleFormValueDict) || {}
-  const contextMessage = getContextParams(selectedResolver?.acceptedParams)
+  const contextMessage = getEnumContextParams(selectedResolver?.acceptedParams)
     .map((name) => CONTEXT_PARAM_MESSAGES[name])
     .join(' ')
 

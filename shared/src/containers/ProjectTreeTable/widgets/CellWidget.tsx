@@ -101,6 +101,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isFocused?: boolean
   isReadOnly?: boolean
   enableCustomValues?: boolean
+  isLoadingOptions?: boolean
   isLinksLoading?: boolean
   folderId?: string | null
   midnightExclusiveFields?: string[]
@@ -135,6 +136,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   isPlaceholder,
   isReadOnly,
   enableCustomValues,
+  isLoadingOptions,
   isLinksLoading,
   folderId,
   midnightExclusiveFields,
@@ -316,6 +318,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             type={type}
             onOpen={() => setEditingCellId(cellId)}
             enableCustomValues={enableCustomValues}
+            isLoadingOptions={isLoadingOptions}
             {...sharedProps}
             {...pt?.enum}
           />

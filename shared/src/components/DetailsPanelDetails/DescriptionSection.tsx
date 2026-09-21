@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, BorderedSection } from '@ynput/ayon-react-components'
 import ReactQuill from 'react-quill-ayon'
 import clsx from 'clsx'
-import { BorderedSection } from './BorderedSection'
 import { QuillListStyles } from '../QuillListStyles'
 import {
   StyledContent,

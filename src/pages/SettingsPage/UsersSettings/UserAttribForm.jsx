@@ -8,17 +8,22 @@ import {
   InputSwitch,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { useResolvedAttributeEnums } from '@shared/hooks'
+import { AttributeEnumsProvider, useAttributeEnums } from '@shared/hooks'
 import { hasEnumOptions, getSelectableEnumItems } from '@shared/util'
 
 export const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
 `
 
-const UserAttribForm = ({
+const UserAttribForm = ({ attributes, ...props }) => (
+  <AttributeEnumsProvider attributes={attributes}>
+    <UserAttribFormFields {...props} />
+  </AttributeEnumsProvider>
+)
+
+const UserAttribFormFields = ({
   formData,
   setFormData,
-  attributes,
   password,
   passwordConfirm,
   setPasswordConfirm,
@@ -27,11 +32,11 @@ const UserAttribForm = ({
   showAvatarUrl = true,
   customFormRow,
 }) => {
-  // separate custom attrib
-  const { attributes: resolvedAttributes, enumSubscriptions } =
-    useResolvedAttributeEnums(attributes)
+  // attributes carry their resolved dynamic enum options
+  const attributes = useAttributeEnums()
 
-  const [builtin, custom] = resolvedAttributes.reduce(
+  // separate custom attrib
+  const [builtin, custom] = attributes.reduce(
     (acc, cur) => {
       if (!cur.builtin && cur.builtin !== undefined) {
         // add to custom if not already present
@@ -129,18 +134,15 @@ const UserAttribForm = ({
     })
 
   return (
-    <>
-      {enumSubscriptions}
-      <FormLayout>
-        {buildForms(builtin)}
-        {!!custom.length && (
-          <>
-            <DividerSmallStyled />
-            {buildForms(custom)}
-          </>
-        )}
-      </FormLayout>
-    </>
+    <FormLayout>
+      {buildForms(builtin)}
+      {!!custom.length && (
+        <>
+          <DividerSmallStyled />
+          {buildForms(custom)}
+        </>
+      )}
+    </FormLayout>
   )
 }
 

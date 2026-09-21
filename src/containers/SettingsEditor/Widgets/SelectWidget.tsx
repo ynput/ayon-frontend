@@ -357,6 +357,7 @@ const SelectWidget = (props: $Any) => {
           ? () => setValue(options.map((opt) => opt.value))
           : undefined
       }
+      valueIconMode="all"
     />
   )
 }

@@ -203,7 +203,8 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           error={toDropdownErrorText(enumError)}
           onCancelEdit={onCancelEdit}
           align="right"
-          enableCustomValues={field.enableCustomValues || isLoadingEnum}
+          enableCustomValues={field.enableCustomValues}
+          isLoadingOptions={isLoadingEnum}
           search={field.enableSearch ?? enumOptions.length >= 5}
           sortBySelected={!enumOptions}
           {...widgetCommonProps}

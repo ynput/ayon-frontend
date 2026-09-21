@@ -1,8 +1,10 @@
 import { FC, KeyboardEvent, ReactNode, useMemo, useState } from 'react'
 import { startCase } from 'lodash'
+import { matchSorter } from 'match-sorter'
 import styled from 'styled-components'
 import { Dialog, Dropdown, FormLayout, FormRow, InputText } from '@ynput/ayon-react-components'
 
+import { JsonViewer } from '@shared/components/JsonViewer'
 import { SimpleForm } from '@shared/components/SimpleForm'
 import type { SimpleFormValueDict } from '@shared/components/SimpleForm'
 import { useGetAllAssigneesQuery, useGetEnumOptionsQuery } from '@shared/api'
@@ -12,7 +14,9 @@ import {
   getEnumErrorText,
   getEnumItemIcon,
   getSelectableEnumItems,
+  isEnumContextParam,
 } from '@shared/util/attributeEnum'
+import type { EnumContextParam } from '@shared/util/attributeEnum'
 import { EnumItemIcon, EnumItemRow } from './EnumItemRow'
 
 const SKELETON_ROWS = 8
@@ -31,8 +35,8 @@ const Details = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-large);
-  width: 480px;
-  flex: none;
+  flex: 0.5;
+  min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
 
@@ -92,17 +96,6 @@ const ItemRow = styled(EnumItemRow)`
   }
 `
 
-const RawData = styled.pre`
-  margin: 0;
-  padding: var(--padding-m);
-  border-radius: var(--border-radius-m);
-  background-color: var(--md-sys-color-surface-container);
-  font-family: monospace;
-  font-size: 12px;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-`
-
 const Message = styled.span`
   color: var(--md-sys-color-outline);
 `
@@ -152,15 +145,12 @@ const UserParamField: FC<ParamFieldProps> = ({ value, onChange }) => {
   )
 }
 
-const PARAM_FIELDS: Record<string, FC<ParamFieldProps>> = {
+const PARAM_FIELDS: Record<EnumContextParam, FC<ParamFieldProps>> = {
   project_name: ProjectParamField,
   user: UserParamField,
 }
 
-const matchesSearch = (item: EnumItem, query: string) =>
-  [item.label, String(item.value), item.description, ...(item.fulltext || [])].some((text) =>
-    text?.toLowerCase().includes(query),
-  )
+const SEARCH_KEYS = ['label', (item: EnumItem) => String(item.value), 'description', 'fulltext']
 
 export interface EnumDebugDialogProps {
   resolver: EnumResolverInfo
@@ -169,15 +159,17 @@ export interface EnumDebugDialogProps {
 }
 
 export const EnumDebugDialog: FC<EnumDebugDialogProps> = ({ resolver, settings, onClose }) => {
-  const [context, setContext] = useState<Record<string, ContextValue>>({})
+  const [context, setContext] = useState<Partial<Record<EnumContextParam, ContextValue>>>({})
   const [formValues, setFormValues] = useState<SimpleFormValueDict>(settings)
   const [search, setSearch] = useState('')
 
+  const { user: currentUser } = useGlobalContext()
   const settingsFields = resolver.settingsForm || []
   const settingNames = new Set(settingsFields.map((field) => field.name))
-  const contextParams = Object.keys(resolver.acceptedParams || {}).filter(
-    (name) => !settingNames.has(name),
-  )
+  const acceptedParams = resolver.acceptedParams || {}
+  const contextParams = Object.keys(acceptedParams).filter((name) => !settingNames.has(name))
+  // every resolver runs as the caller; only admins may resolve it as somebody else
+  const canResolveAsUser = !!currentUser?.data?.isAdmin && !('user' in acceptedParams)
 
   const params = useMemo(
     () => ({ ...formValues, ...context } as EnumResolverParams),
@@ -199,8 +191,17 @@ export const EnumDebugDialog: FC<EnumDebugDialogProps> = ({ resolver, settings, 
   )
 
   const isError = isRequestError || !!data?.error
-  const query = search.trim().toLowerCase()
-  const filteredItems = query ? items.filter((item) => matchesSearch(item, query)) : items
+  const query = search.trim()
+  const filteredItems = useMemo(
+    () =>
+      query
+        ? matchSorter(items, query, {
+            keys: SEARCH_KEYS,
+            threshold: matchSorter.rankings.CONTAINS,
+          })
+        : items,
+    [items, query],
+  )
   const hasIcons = filteredItems.some((item) => !!item.icon)
 
   // The dialog is portaled, but React still bubbles keys to the attribute dialog behind it
@@ -210,15 +211,24 @@ export const EnumDebugDialog: FC<EnumDebugDialogProps> = ({ resolver, settings, 
   }
 
   const renderContextParams = (): ReactNode => {
-    if (!contextParams.length) return <Message>This resolver has no context params.</Message>
+    if (!contextParams.length && !canResolveAsUser)
+      return <Message>This resolver has no context params.</Message>
 
     return (
       <FormLayout>
+        {canResolveAsUser && (
+          <FormRow label="user">
+            <UserParamField
+              value={context.user}
+              onChange={(value) => setContext((current) => ({ ...current, user: value }))}
+            />
+          </FormRow>
+        )}
         {contextParams.map((name) => {
-          const ParamField = PARAM_FIELDS[name]
+          const ParamField = isEnumContextParam(name) ? PARAM_FIELDS[name] : undefined
           return (
             <FormRow key={name} label={name}>
-              {ParamField ? (
+              {ParamField && isEnumContextParam(name) ? (
                 <ParamField
                   value={context[name]}
                   onChange={(value) => setContext((current) => ({ ...current, [name]: value }))}
@@ -283,7 +293,7 @@ export const EnumDebugDialog: FC<EnumDebugDialogProps> = ({ resolver, settings, 
           </Section>
           <Section>
             <SectionTitle>Enum Resolver Data</SectionTitle>
-            <RawData>{JSON.stringify(resolver, null, 2)}</RawData>
+            <JsonViewer value={resolver} wrap />
           </Section>
         </Details>
         <Results>

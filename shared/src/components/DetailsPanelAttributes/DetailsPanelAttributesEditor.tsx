@@ -4,9 +4,8 @@ import { FC, useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import clsx from 'clsx'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, BorderedSection } from '@ynput/ayon-react-components'
 import RenderFieldWidget from './components/RenderFieldWidget'
-import { BorderedSection } from '../DetailsPanelDetails/BorderedSection'
 import { FieldLabel } from '../DetailsPanelDetails/FieldLabel'
 
 const FormRow = styled.div`
