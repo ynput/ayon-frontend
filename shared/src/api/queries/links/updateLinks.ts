@@ -296,7 +296,7 @@ const enhancedApi = linksApi.enhanceEndpoints({
         const linkTypeName = linkType?.split('|')[0] as string
 
         try {
-          if (sourceEntity.entityType && targetEntity) {
+          if (sourceEntity && sourceEntity.entityType && targetEntity) {
             // Get the source entity data based on its type
             const sourcePromise = getEntityDataByType(
               sourceEntityType,
