@@ -28,7 +28,7 @@ const SEARCH_THRESHOLD = 5
 
 const CONTEXT_PARAM_MESSAGES: Record<EnumContextParam, string> = {
   project_name: 'The select options will change based on the project it is used in.',
-  user: 'The select options will change based on the user that is selected.',
+  user: 'The select options will change based on the current user.',
 }
 
 const Container = styled.div`
@@ -40,6 +40,7 @@ const Container = styled.div`
 
 const Message = styled.span`
   color: var(--md-sys-color-outline);
+  white-space: pre-line;
 `
 
 const Preview = styled.div`
@@ -190,7 +191,7 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
     { value: CUSTOM_ENUM_SOURCE, label: 'Custom' },
     ...resolvers.map((resolver: EnumResolverInfo) => ({
       value: resolver.name,
-      label: startCase(resolver.name),
+      label: resolver.label || startCase(resolver.name),
     })),
   ]
 
@@ -237,6 +238,7 @@ export const EnumSourceField: FC<EnumSourceFieldProps> = ({
               Resolver "{enumResolver}" is not available on this server. Options will be empty.
             </Message>
           )}
+          {selectedResolver?.description && <Message>{selectedResolver.description}</Message>}
           {contextMessage && (
             <ClickableInfoMessage
               message={contextMessage}

@@ -76,6 +76,10 @@ export type SimpleFormField = {
 export type EnumResolverInfo = {
   /** Resolver name */
   name: string
+  /** Optional human-readable label for the resolver */
+  label?: string
+  /** Optional human-readable description for the resolver */
+  description?: string
   /** Dictionary of accepted query parameters and their type names */
   acceptedParams: {
     [key: string]:

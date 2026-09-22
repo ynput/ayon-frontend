@@ -12,10 +12,6 @@ import { getAttributeIcon, getEntityTypeIcon, hasEnumOptions } from '@shared/uti
 import { useProjectContext } from '@shared/context/ProjectContext'
 import type { GroupCountsMap } from '@shared/api'
 import { UNGROUPED_VALUE } from '../../ProjectTreeTable/hooks/useBuildGroupByTableData'
-import { useRequestAttributeEnums } from '@shared/hooks/useAttributeEnumOptions'
-
-const isEnumLoading = (attribute: object) =>
-  !!(attribute as { enumIsLoading?: boolean }).enumIsLoading
 
 interface TableDataBySliceProps {
   sliceFields: SliceTypeField[]
@@ -144,8 +140,16 @@ const useTableDataBySlice = ({
     })
 
   const showAttributes = sliceFields.some((field) => field.value === 'attributes')
+  const slicedAttribName = sliceType?.startsWith('attrib.')
+    ? sliceType.slice('attrib.'.length)
+    : undefined
+  const enumRequest = useMemo(
+    () => (slicedAttribName ? [slicedAttribName] : []),
+    [slicedAttribName],
+  )
   const { attributes: slicerAttribs, isLoading: isLoadingAttribs } = useSlicerAttributesData({
     entityTypes,
+    request: enumRequest,
   })
 
   if (showAttributes && typeof formatAttribute === 'function') {
@@ -160,13 +164,8 @@ const useTableDataBySlice = ({
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const requestAttributeEnums = useRequestAttributeEnums()
-  const selectedSliceAttrib = slicerAttribs.find((attr) => 'attrib.' + attr.name === sliceType)
-  const isSelectedAttribLoading = !!selectedSliceAttrib && isEnumLoading(selectedSliceAttrib)
-
-  useEffect(() => {
-    if (selectedSliceAttrib) requestAttributeEnums([selectedSliceAttrib.name])
-  }, [selectedSliceAttrib?.name, requestAttributeEnums])
+  const selectedSliceAttrib = slicerAttribs.find((attr) => attr.name === slicedAttribName)
+  const isSelectedAttribLoading = !!selectedSliceAttrib?.enumIsLoading
 
   // project info
   const {
@@ -257,7 +256,7 @@ const useTableDataBySlice = ({
   for (const attrib of slicerAttribs) {
     builtInSlices['attrib.' + attrib.name] = {
       getData: () => getAttribute(attrib),
-      isLoading: isLoadingAttribs || isEnumLoading(attrib),
+      isLoading: isLoadingAttribs || !!attrib.enumIsLoading,
       isExpandable: false,
       isAttribute: true,
     }

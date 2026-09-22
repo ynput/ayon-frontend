@@ -1,10 +1,35 @@
 import type { EnumItem, IconModel } from '@shared/api/generated/attributes'
 
-type EnumSource = { enum?: unknown[] | null; enumResolver?: string | null } | undefined | null
+type EnumSource =
+  | { enum?: unknown[] | null; enumResolver?: string | null; enumResolverSettings?: unknown }
+  | undefined
+  | null
 
 // Static options or a backend resolver both make an attribute an enum
 export const hasEnumOptions = (data: EnumSource): boolean =>
   !!data?.enum?.length || !!data?.enumResolver
+
+// Static options are already there, only a resolver needs a request
+export const hasEnumResolver = (data: EnumSource): boolean => !!data?.enumResolver
+
+const sortResolverSettings = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(sortResolverSettings)
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, nestedValue]) => [key, sortResolverSettings(nestedValue)]),
+    )
+  }
+  return value
+}
+
+// Two attributes pointing at the same resolver and settings share one request
+export const getAttributeEnumKey = (data: EnumSource): string =>
+  JSON.stringify({
+    enumResolver: data?.enumResolver ?? '',
+    enumResolverSettings: sortResolverSettings(data?.enumResolverSettings ?? {}),
+  })
 
 // Addon icons arrive as templates ("{addon_url}/icons/x.png") that only /api/actions expands
 const isUnresolvedTemplate = (icon?: string) => !!icon && icon.includes('{')
@@ -17,6 +42,10 @@ export const getEnumItemIcon = (icon: EnumItem['icon']): string | undefined => {
   if (model.type !== 'url') return model.name
   return isUnresolvedTemplate(model.url) ? undefined : model.url
 }
+
+// Resolvers may return an IconModel where widgets expect a plain icon string
+export const normalizeEnumItems = <T extends { icon?: EnumItem['icon'] }>(items: T[]): T[] =>
+  items.map((item) => ({ ...item, icon: getEnumItemIcon(item.icon) }))
 
 export const getEnumErrorText = (message?: string): string =>
   message ? `Could not load options: ${message}` : 'Could not load options'

@@ -167,9 +167,12 @@ export const EnumDebugDialog: FC<EnumDebugDialogProps> = ({ resolver, settings, 
   const settingsFields = resolver.settingsForm || []
   const settingNames = new Set(settingsFields.map((field) => field.name))
   const acceptedParams = resolver.acceptedParams || {}
-  const contextParams = Object.keys(acceptedParams).filter((name) => !settingNames.has(name))
   // every resolver runs as the caller; only admins may resolve it as somebody else
-  const canResolveAsUser = !!currentUser?.data?.isAdmin && !('user' in acceptedParams)
+  const isAdmin = !!currentUser?.data?.isAdmin
+  const contextParams = Object.keys(acceptedParams).filter(
+    (name) => !settingNames.has(name) && (name !== 'user' || isAdmin),
+  )
+  const canResolveAsUser = isAdmin && !('user' in acceptedParams)
 
   const params = useMemo(
     () => ({ ...formValues, ...context } as EnumResolverParams),

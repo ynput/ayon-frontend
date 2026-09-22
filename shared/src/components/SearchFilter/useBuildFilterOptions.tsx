@@ -179,7 +179,7 @@ export const useBuildFilterOptions = ({
   )
 
   const { attributes: globalAttributes } = useGlobalContext()
-  // project attributes carry resolved dynamic enums, global ones are raw
+  // project attributes are already filtered by the user's read permissions
   const projectData = useContext(ProjectDataContext)
   const attributes = projectData?.attribFields?.length ? projectData.attribFields : globalAttributes
   const attributeScopeCounts = new Map<string, number>()

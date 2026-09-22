@@ -14,7 +14,6 @@ import {
   useSetEntityListAttributesDefinitionMutation,
 } from '@shared/api'
 import type { EntityListAttributeDefinition } from '@shared/api'
-import { AttributeEnumsProvider, useAttributeEnums } from '@shared/hooks'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { useProjectContext } from '@shared/context'
@@ -30,6 +29,18 @@ export interface ListsAttributesContextValue {
 
 const ListsAttributesContext = createContext<ListsAttributesContextValue | undefined>(undefined)
 
+const HIGH_LEVEL_ATTRIBS = [
+  'name',
+  'label',
+  'status',
+  'tags',
+  'assignees',
+  'subType',
+  'folderType',
+  'productType',
+  'taskType',
+]
+
 interface ListsAttributesProviderProps {
   children: ReactNode
 }
@@ -39,7 +50,10 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
   const { attribFields } = useProjectDataContext()
   const { selectedList } = useListsContext()
 
-  const { data: listAttributesData = [] } = useGetEntityListAttributesDefinitionQuery(
+  const [isLoadingNewList, setIsLoadingNewList] = useState(false)
+  const previousListIdRef = useRef<string | null>(null)
+
+  const { data: listAttributesData = [], isFetching } = useGetEntityListAttributesDefinitionQuery(
     {
       listId: selectedList?.id || '',
       projectName,
@@ -53,51 +67,10 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
     .map((field) => field.name)
   const entityAttribFields = [...scopedAttribFields, ...HIGH_LEVEL_ATTRIBS]
 
-  const filteredListAttributes = useMemo(
+  const listAttributes = useMemo(
     () => listAttributesData.filter((attribute) => !entityAttribFields.includes(attribute.name)),
     [listAttributesData, entityAttribFields],
   )
-
-  // dynamic enums are merged into data.enum, fetched only once a column or filter asks
-  return (
-    <AttributeEnumsProvider attributes={filteredListAttributes} projectName={projectName} lazy>
-      <ListsAttributes entityAttribFields={entityAttribFields}>{children}</ListsAttributes>
-    </AttributeEnumsProvider>
-  )
-}
-
-const HIGH_LEVEL_ATTRIBS = [
-  'name',
-  'label',
-  'status',
-  'tags',
-  'assignees',
-  'subType',
-  'folderType',
-  'productType',
-  'taskType',
-]
-
-interface ListsAttributesProps extends ListsAttributesProviderProps {
-  entityAttribFields: string[]
-}
-
-const ListsAttributes = ({ children, entityAttribFields }: ListsAttributesProps) => {
-  const { projectName } = useProjectContext()
-  const { selectedList } = useListsContext()
-
-  const [isLoadingNewList, setIsLoadingNewList] = useState(false)
-  const previousListIdRef = useRef<string | null>(null)
-
-  const { isFetching } = useGetEntityListAttributesDefinitionQuery(
-    {
-      listId: selectedList?.id || '',
-      projectName,
-    },
-    { skip: !selectedList?.id },
-  )
-
-  const listAttributes = useAttributeEnums<EntityListAttributeDefinition>()
 
   // Track loading state when list changes and reset when fetch completes
   useEffect(() => {
@@ -150,7 +123,9 @@ const ListsAttributes = ({ children, entityAttribFields }: ListsAttributesProps)
   )
 
   return (
-    <ListsAttributesContext.Provider value={contextValue}>{children}</ListsAttributesContext.Provider>
+    <ListsAttributesContext.Provider value={contextValue}>
+      {children}
+    </ListsAttributesContext.Provider>
   )
 }
 

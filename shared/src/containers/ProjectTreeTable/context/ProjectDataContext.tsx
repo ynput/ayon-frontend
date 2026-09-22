@@ -1,6 +1,5 @@
 import { ReactNode, useContext, useMemo } from 'react'
 import { useGetUsersAssigneeQuery, useGetMyProjectPermissionsQuery } from '@shared/api'
-import { AttributeEnumsProvider, useAttributeEnums } from '@shared/hooks'
 import useAttributeFields, { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { useProjectContext } from '@shared/context/ProjectContext'
 import { ProjectDataContext } from './ProjectDataContextInstance'
@@ -28,46 +27,21 @@ interface ProjectDataProviderProps {
 }
 
 export const ProjectDataProvider = ({ children, projectName }: ProjectDataProviderProps) => {
+  // GET PROJECT DATA
+  const { isLoading: isLoadingProject, isSuccess: isSuccessProject } = useProjectContext()
+
+  // GET PERMISSIONS
   const { data: projectPermissions } = useGetMyProjectPermissionsQuery(
     { projectName },
     { skip: !projectName },
   )
-  const { attribFields, writableFields, isLoading } = useAttributeFields({ projectPermissions })
-
-  // dynamic enums are merged into data.enum, fetched only once a column, filter or slicer asks
-  return (
-    <AttributeEnumsProvider attributes={attribFields} projectName={projectName} lazy>
-      <ProjectData
-        projectName={projectName}
-        projectPermissions={projectPermissions}
-        writableFields={writableFields}
-        isLoadingAttribs={isLoading}
-      >
-        {children}
-      </ProjectData>
-    </AttributeEnumsProvider>
-  )
-}
-
-interface ProjectDataProps extends ProjectDataProviderProps {
-  projectPermissions: ReturnType<typeof useGetMyProjectPermissionsQuery>['data']
-  writableFields?: string[]
-  isLoadingAttribs: boolean
-}
-
-const ProjectData = ({
-  children,
-  projectName,
-  projectPermissions,
-  writableFields,
-  isLoadingAttribs,
-}: ProjectDataProps) => {
-  // GET PROJECT DATA
-  const { isLoading: isLoadingProject, isSuccess: isSuccessProject } = useProjectContext()
-
   const { attrib_write } = projectPermissions || {}
 
-  const resolvedAttribFields = useAttributeEnums<ProjectTableAttribute>()
+  const {
+    attribFields,
+    writableFields,
+    isLoading: isLoadingAttribs,
+  } = useAttributeFields({ projectPermissions })
 
   // GET USERS
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
@@ -103,7 +77,7 @@ const ProjectData = ({
       isLoading: isLoadingProject || isLoadingAttribs,
 
       users,
-      attribFields: resolvedAttribFields,
+      attribFields,
       writableFields,
       canWriteNamePermission,
       canWriteLabelPermission,
@@ -114,7 +88,7 @@ const ProjectData = ({
       isLoadingAttribs,
 
       users,
-      resolvedAttribFields,
+      attribFields,
       writableFields,
       canWriteNamePermission,
       canWriteLabelPermission,

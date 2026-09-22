@@ -8,20 +8,15 @@ import {
   InputSwitch,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { AttributeEnumsProvider, useAttributeEnums } from '@shared/hooks'
+import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import { hasEnumOptions, getSelectableEnumItems } from '@shared/util'
 
 export const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
 `
 
-const UserAttribForm = ({ attributes, ...props }) => (
-  <AttributeEnumsProvider attributes={attributes}>
-    <UserAttribFormFields {...props} />
-  </AttributeEnumsProvider>
-)
-
-const UserAttribFormFields = ({
+const UserAttribForm = ({
+  attributes: attributeFields,
   formData,
   setFormData,
   password,
@@ -33,7 +28,7 @@ const UserAttribFormFields = ({
   customFormRow,
 }) => {
   // attributes carry their resolved dynamic enum options
-  const attributes = useAttributeEnums()
+  const attributes = useAttributeEnums(attributeFields)
 
   // separate custom attrib
   const [builtin, custom] = attributes.reduce(
