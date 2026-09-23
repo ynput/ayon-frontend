@@ -225,7 +225,7 @@ const DetailsPanelHeader = ({
                 shimmer={isLoading}
                 thumbnails={thumbnails}
                 onClick={isThumbnailClickable ? handleThumbnailClick : undefined}
-                hoverIcon={isPlayable ? 'open_in_full' : undefined}
+                hoverIcon={isPlayable ? 'play_circle' : undefined}
               />
               {isPlayable && <PlayableIcon />}
             </div>
