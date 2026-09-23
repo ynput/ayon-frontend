@@ -2,7 +2,6 @@ import {
   FolderListItem,
   GetSearchedEntitiesLinksArgs,
   SearchEntityLink,
-  useGetReviewableEntityIdsQuery,
   useGetSearchedEntitiesLinksInfiniteQuery,
 } from '@shared/api'
 import { useProjectContext } from '@shared/context/ProjectContext'
@@ -94,31 +93,19 @@ export const useGetEntityPickerData = ({
   }
 
   //   if there is a selection on the parent we user that, otherwise we use all parent ids of parent data
-  const getParentIds = (
-    parentType: PickerEntityType,
-    parentData: { id: string }[] = [],
-    reviewableParentIds?: string[],
-  ) => {
+  const getParentIds = (parentType: PickerEntityType, parentData: { id: string }[] = []) => {
     const parentSelection = selection[parentType]
-    if (!parentSelection?.length) {
-      return parentData.map((entity) => entity.id)
-    }
-    // a parent the switch hides must not scope its children
-    if (!reviewableParentIds) {
+    if (parentSelection?.length > 0) {
       return parentSelection
+    } else if (parentData) {
+      return parentData.map((entity) => entity.id)
+    } else {
+      return undefined
     }
-    const visibleSelection = parentSelection.filter((id) => reviewableParentIds.includes(id))
-    return visibleSelection.length ? visibleSelection : parentData.map((entity) => entity.id)
   }
 
-  const { data: reviewableProductIds } = useGetReviewableEntityIdsQuery(
-    { projectName, entityType: 'product', ids: selection.product },
-    { skip: !reviewablesOnly || !selection.product?.length },
-  )
-  const { data: reviewableVersionIds } = useGetReviewableEntityIdsQuery(
-    { projectName, entityType: 'version', ids: selection.version },
-    { skip: !reviewablesOnly || !selection.version?.length },
-  )
+  // false would ask the server for entities *without* reviewables, so the filter is either true or absent
+  const reviewableOptions = { includeTask, hasReviewables: reviewablesOnly || undefined }
 
   const task = useGetEntityTypeData(
     projectName,
@@ -138,7 +125,7 @@ export const useGetEntityPickerData = ({
       folder.data,
     ),
     project?.productTypes,
-    { includeTask, hasReviewables: reviewablesOnly || undefined },
+    reviewableOptions,
   )
   const version = useGetEntityTypeData(
     projectName,
@@ -148,10 +135,9 @@ export const useGetEntityPickerData = ({
     getParentIds(
       entityHierarchies['version'][entityHierarchies['version'].length - 2],
       product.data,
-      reviewableProductIds,
     ),
     undefined,
-    { includeTask, hasReviewables: reviewablesOnly || undefined },
+    reviewableOptions,
   )
   const representation = useGetEntityTypeData(
     projectName,
@@ -161,7 +147,6 @@ export const useGetEntityPickerData = ({
     getParentIds(
       entityHierarchies['representation'][entityHierarchies['representation'].length - 2],
       version.data,
-      reviewableVersionIds,
     ),
   )
   const workfile = useGetEntityTypeData(
@@ -204,7 +189,7 @@ const useGetEntityTypeData = (
         search,
         parentIds,
         hasReviewables,
-        includeTask: includeTask || undefined,
+        includeTask,
       },
       // skip if this is folder hierarchy (we already have the folders) or if we're waiting for parent selection
       {

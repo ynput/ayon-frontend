@@ -11,9 +11,3 @@ export const entityHierarchies: EntityHierarchies = {
   task: ['folder', 'task'],
   workfile: ['folder', 'task', 'workfile'],
 }
-
-// the entity types the reviewables switch filters server side
-export const isReviewableEntity = (
-  entityType: PickerEntityType,
-): entityType is 'product' | 'version' =>
-  entityType === 'product' || entityType === 'version'

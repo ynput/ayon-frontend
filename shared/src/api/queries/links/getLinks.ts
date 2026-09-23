@@ -11,8 +11,6 @@ import {
 import { createRealtimeBatcher, PubSub } from '@shared/util'
 
 export const ENTITIES_INFINITE_QUERY_COUNT = 50 // Number of items to fetch per page
-// a picker selection never gets near this, so the check never needs a second page
-const REVIEWABLE_IDS_QUERY_COUNT = 500
 
 // Define page param type for infinite query
 type EntitySearchPageParam = {
@@ -52,12 +50,6 @@ export type GetSearchedEntitiesLinksArgs = {
   sortBy?: string
   hasReviewables?: boolean // products and versions only
   includeTask?: boolean // products and versions only
-}
-
-export type GetReviewableEntityIdsArgs = {
-  projectName: string
-  entityType: string // 'product' | 'version'
-  ids: string[]
 }
 
 type GetSearchedEntity =
@@ -285,34 +277,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
         }
       },
     }),
-    getReviewableEntityIds: build.query<string[], GetReviewableEntityIdsArgs>({
-      queryFn: async ({ projectName, entityType, ids }, api) => {
-        try {
-          if (!ids.length) return { data: [] }
-          const variables = { projectName, ids, first: REVIEWABLE_IDS_QUERY_COUNT }
-
-          if (entityType === 'product') {
-            const result = await api
-              .dispatch(gqlLinksApi.endpoints.GetReviewableProductIds.initiate(variables))
-              .unwrap()
-            return { data: result.project.products.edges.map((edge) => edge.node.id) }
-          }
-          if (entityType === 'version') {
-            const result = await api
-              .dispatch(gqlLinksApi.endpoints.GetReviewableVersionIds.initiate(variables))
-              .unwrap()
-            return { data: result.project.versions.edges.map((edge) => edge.node.id) }
-          }
-          // an empty result would read as "none are reviewable" and drop the whole selection
-          throw new Error(`${entityType} has no reviewables filter`)
-        } catch (error: any) {
-          console.error('Error in getReviewableEntityIds queryFn:', error)
-          return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
-        }
-      },
-    }),
   }),
 })
 
-export const { useGetSearchedEntitiesLinksInfiniteQuery, useGetReviewableEntityIdsQuery } =
-  injectedQueries
+export const { useGetSearchedEntitiesLinksInfiniteQuery } = injectedQueries

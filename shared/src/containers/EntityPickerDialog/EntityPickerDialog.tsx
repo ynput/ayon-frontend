@@ -3,16 +3,16 @@
 
 import { RowSelectionState } from '@tanstack/react-table'
 import { FC, useState } from 'react'
-import { entityHierarchies, isReviewableEntity } from './util'
+import { entityHierarchies } from './util'
 import EntityTypeTable from './components/EntityTypeTable'
 import { SimpleTableProvider } from '@shared/containers/SimpleTable/context/SimpleTableContext'
 import { Button, Dialog, DialogProps, SwitchButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { useGetEntityPickerData } from './hooks/useGetEntityPickerData'
-import { useGetReviewableEntityIdsQuery } from '@shared/api'
 import { upperFirst } from 'lodash'
 import useExpandedWithInitialFolders from './hooks/useExpandedWithInitialFolders'
 import { usePreserveChildSelectionByName } from './hooks/usePreserveChildSelectionByName'
+import { useDeselectHiddenRows } from './hooks/useDeselectHiddenRows'
 
 const COL_MAX_WIDTH = 600
 
@@ -126,9 +126,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   // Get the complete hierarchy for the target entity type!
   const entityHierarchy = entityHierarchies[entityType]
 
-  const canFilterReviewables =
-    !!showReviewablesSwitch &&
-    (entityHierarchy.includes('product') || entityHierarchy.includes('version'))
+  const canFilterReviewables = !!showReviewablesSwitch && entityHierarchy.includes('product')
   const [reviewablesOnlyEnabled, setReviewablesOnlyEnabled] = useState(true)
   const reviewablesOnly = canFilterReviewables && reviewablesOnlyEnabled
 
@@ -140,18 +138,6 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     reviewablesOnly,
     includeTask: showTaskNames,
   })
-
-  // the switch hides rows server side, so the selection is checked by id rather
-  // than by absence from the current page
-  const targetSelection = entitySelection[entityType]
-  const { data: reviewableSelectedIds } = useGetReviewableEntityIdsQuery(
-    { projectName, entityType, ids: targetSelection },
-    { skip: !reviewablesOnly || !isReviewableEntity(entityType) || !targetSelection.length },
-  )
-
-  const selectedIds = reviewableSelectedIds
-    ? targetSelection.filter((id) => reviewableSelectedIds.includes(id))
-    : targetSelection
 
   // When reviewableRequired is set and we're picking versions, disable any
   // version returned by the query that does not have reviewables.
@@ -187,6 +173,13 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   })
 
   usePreserveChildSelectionByName({
+    entityHierarchy,
+    entityData,
+    rowSelection,
+    setEntityRowSelection,
+  })
+
+  useDeselectHiddenRows({
     entityHierarchy,
     entityData,
     rowSelection,
@@ -235,10 +228,12 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
 
   const handleSubmit = () => {
     // check the target entity has a selection
-    if (!selectedIds.length) {
+    if (!entitySelection[entityType]?.length) {
       return
     }
-    const selection = isMultiSelect ? selectedIds : selectedIds.slice(0, 1)
+    const selection = isMultiSelect
+      ? entitySelection[entityType]
+      : entitySelection[entityType].slice(0, 1)
     // Call the onSubmit callback with the selected entity ids
     onSubmit(selection)
   }
@@ -260,7 +255,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
           <Button
             label={`Select ${entityType}${isMultiSelect ? 's' : ''}`}
             variant="filled"
-            disabled={!selectedIds.length || isLoading}
+            disabled={!entitySelection[entityType]?.length || isLoading}
             // @ts-ignore
             loading={isLoading}
             onClick={handleSubmit}
@@ -273,7 +268,11 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
           label="Show reviewables only"
           value={reviewablesOnlyEnabled}
           onClick={() => setReviewablesOnlyEnabled(!reviewablesOnlyEnabled)}
-          style={{ width: 'fit-content' }}
+          style={{
+            width: 'fit-content',
+            marginLeft: 'auto',
+            marginBottom: 'var(--base-gap-large)',
+          }}
         />
       )}
       <TablesContainer>
