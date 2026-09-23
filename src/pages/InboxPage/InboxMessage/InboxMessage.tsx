@@ -120,13 +120,6 @@ const getDateString = (date: string): string => {
   return format(dateObj, 'MMM d, h:mm a')
 }
 
-const getFullDateString = (date: string): string | undefined => {
-  const dateObj = new Date(date)
-  if (!isValid(dateObj)) return undefined
-
-  return format(dateObj, 'EEEE, dd MMM yyyy h:mm a')
-}
-
 const getCategoryNames = (messages: InboxMessageType[] = []): string[] => {
   const names: string[] = []
   for (const message of messages) {
@@ -350,12 +343,7 @@ const InboxMessage = ({
           </Styled.ClearButton>
         )}
         <UserImage name={userName || ''} size={20} className={'n-shimmer'} />
-        <Styled.Date
-          className="date"
-          data-tooltip={isPlaceholder ? undefined : getFullDateString(date || '')}
-        >
-          {getDateString(date || '')}
-        </Styled.Date>
+        <Styled.Date className="date">{getDateString(date || '')}</Styled.Date>
       </Styled.Right>
     </Styled.Message>
   )

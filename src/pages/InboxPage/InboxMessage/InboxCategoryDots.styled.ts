@@ -16,5 +16,5 @@ export const Dot = styled.span`
   min-width: 8px;
   border-radius: 50%;
   /* ring in the row colour keeps overlapping dots apart */
-  box-shadow: 0 0 0 1px var(--md-sys-color-surface-container-low);
+  box-shadow: 0 0 0 1px var(--inbox-row-bg, var(--md-sys-color-surface-container-low));
 `

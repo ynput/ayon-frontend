@@ -26,10 +26,11 @@ export const Message = styled.li`
   cursor: pointer;
   user-select: none;
 
-  background-color: var(--md-sys-color-surface-container-low);
+  --inbox-row-bg: var(--md-sys-color-surface-container-low);
+  background-color: var(--inbox-row-bg);
 
   &:hover:not(.disableHover):not(.placeholder) {
-    background-color: var(--md-sys-color-surface-container-low-hover);
+    --inbox-row-bg: var(--md-sys-color-surface-container-low-hover);
 
     ${showClearButton}
   }
@@ -58,13 +59,13 @@ export const Message = styled.li`
 
   &.isSelected:not(.placeholder) {
     border-radius: var(--border-radius-m);
-    background-color: var(--md-sys-color-primary-container);
+    --inbox-row-bg: var(--md-sys-color-primary-container);
     color: var(--md-sys-color-on-primary-container);
     &:hover {
-      background-color: var(--md-sys-color-primary-container-hover);
+      --inbox-row-bg: var(--md-sys-color-primary-container-hover);
     }
     &:active {
-      background-color: var(--md-sys-color-primary-container-active);
+      --inbox-row-bg: var(--md-sys-color-primary-container-active);
     }
 
     /* remove focus visible border if selected */
