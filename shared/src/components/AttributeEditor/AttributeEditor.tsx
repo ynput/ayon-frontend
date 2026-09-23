@@ -269,7 +269,12 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
     }
   })
 
-  const typeFields = UI_TYPE_FIELDS[uiType] ?? []
+  const typeFields = [
+    ...(UI_TYPE_FIELDS[uiType] ?? []),
+    ...(uiType === 'select' && formData?.data?.type === 'list_of_strings'
+      ? (['minItems', 'maxItems'] as (keyof AttributeData)[])
+      : []),
+  ]
   const typeExclude = UI_TYPE_EXCLUDE[uiType] ?? []
   dataFields = [...dataFields, ...typeFields].filter((f) => !typeExclude.includes(f))
 
@@ -325,11 +330,13 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
     setUiType(newUiType)
     setData('type', uiTypeToBackend(newUiType, isDecimal))
 
-    // Clear enum when switching away from select/multi_select
-    if (newUiType !== 'select' && newUiType !== 'multi_select') {
+    // Clear enum when switching away from select
+    if (newUiType !== 'select') {
       setData('enum', undefined)
       setData('enumResolver', undefined)
       setData('enumResolverSettings', undefined)
+      setData('minItems', undefined)
+      setData('maxItems', undefined)
     }
     // Clear regex if not supported by the new type
     if (newUiType !== 'text' && formData?.data?.regex) {
@@ -418,6 +425,22 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
                   />
                 )}
               </RowFieldGroup>
+            </FormRow>
+          )}
+          {!excludes.includes('type') && uiType === 'select' && (
+            <FormRow label="Multi-select" data-tooltip="Allow multiple values to be selected">
+              <InputSwitch
+                checked={formData.data.type === 'list_of_strings'}
+                disabled={formData.builtin || !isNew}
+                onChange={(e) => {
+                  const checked = (e.target as HTMLInputElement).checked
+                  setData('type', checked ? 'list_of_strings' : 'string')
+                  if (!checked) {
+                    setData('minItems', undefined)
+                    setData('maxItems', undefined)
+                  }
+                }}
+              />
             </FormRow>
           )}
           {!excludes.includes('type') && uiType === 'number' && (
