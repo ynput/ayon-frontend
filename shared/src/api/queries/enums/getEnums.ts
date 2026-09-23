@@ -56,6 +56,8 @@ const enhancedApi = enumsApi.enhanceEndpoints({
   endpoints: {
     listEnums: {
       providesTags: [ENUM_RESOLVERS_TAG],
+      // the batch reads it without subscribing, so nothing else keeps the registry around
+      keepUnusedDataFor: 600,
     },
   },
 })

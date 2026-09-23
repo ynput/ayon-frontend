@@ -1,5 +1,10 @@
 import { useCallback, useMemo } from 'react'
-import { getEnumOptionsArgs, useGetEnumOptionsQuery, useLazyGetEnumOptionsQuery } from '@shared/api'
+import {
+  getEnumOptionsArgs,
+  useGetEnumOptionsQuery,
+  useLazyGetEnumOptionsQuery,
+  useListEnumsQuery,
+} from '@shared/api'
 import { normalizeEnumItems } from '@shared/util/attributeEnum'
 import type { AttributeData, EnumItem } from '@shared/api'
 
@@ -7,7 +12,22 @@ const EMPTY_OPTIONS: EnumItem[] = []
 
 export interface UseAttributeEnumOptionsParams {
   projectName?: string
+  // reaches only the resolvers that accept a `user` param
+  userName?: string
   skip?: boolean
+}
+
+// A resolver only gets the context params it accepts, same rule (and cache keys) as the batch query
+const useAcceptedParams = (resolver?: string) => {
+  const { data: resolvers } = useListEnumsQuery(undefined, { skip: !resolver })
+
+  return useMemo(
+    () => ({
+      isRegistryLoaded: !!resolvers,
+      acceptedParams: resolvers?.find(({ name }) => name === resolver)?.acceptedParams,
+    }),
+    [resolvers, resolver],
+  )
 }
 
 export interface AttributeEnumState {
@@ -25,18 +45,23 @@ export type FetchAttributeEnumOptions = (
 // Imperative variant for lazy consumers (e.g. a filter dropdown); shares the query cache with the hook
 export const useFetchAttributeEnumOptions = (): FetchAttributeEnumOptions => {
   const [fetchEnumOptions] = useLazyGetEnumOptionsQuery()
+  const { data: resolvers } = useListEnumsQuery()
 
   return useCallback(
     async (data, projectName) => {
+      const acceptedParams = resolvers?.find(({ name }) => name === data.enumResolver)?.acceptedParams
       try {
-        const result = await fetchEnumOptions(getEnumOptionsArgs(data, { projectName }), true).unwrap()
+        const result = await fetchEnumOptions(
+          getEnumOptionsArgs(data, { projectName }, acceptedParams),
+          true,
+        ).unwrap()
         if (result.error) throw new Error(result.error)
         return normalizeEnumItems(result.items)
       } catch (error) {
         throw toEnumRequestError(error)
       }
     },
-    [fetchEnumOptions],
+    [fetchEnumOptions, resolvers],
   )
 }
 
@@ -63,14 +88,15 @@ const toEnumRequestError = (error: unknown): Error => {
 // Options for one attribute: static data.enum, or resolved through the backend enum registry.
 export const useAttributeEnumOptions = (
   data: AttributeData | undefined,
-  { projectName, skip }: UseAttributeEnumOptionsParams = {},
+  { projectName, userName, skip }: UseAttributeEnumOptionsParams = {},
 ): AttributeEnumState => {
   const resolver = data?.enumResolver
+  const { acceptedParams, isRegistryLoaded } = useAcceptedParams(resolver)
 
   const args = useMemo(
-    () => getEnumOptionsArgs(data, { projectName }),
+    () => getEnumOptionsArgs(data, { projectName, userName }, acceptedParams),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [resolver, data?.enumResolverSettings, projectName],
+    [resolver, data?.enumResolverSettings, projectName, userName, acceptedParams],
   )
 
   // currentData, not data: after an args change (e.g. project switch) the previous result is not reused
@@ -78,7 +104,10 @@ export const useAttributeEnumOptions = (
     currentData: resolved,
     isFetching,
     isError: isRequestError,
-  } = useGetEnumOptionsQuery(args, { skip: !resolver || !!skip })
+  } = useGetEnumOptionsQuery(args, {
+    // waiting for the registry keeps the cache key final: no request is sent with params that get dropped
+    skip: !resolver || !!skip || !isRegistryLoaded,
+  })
 
   const options = useMemo(() => {
     if (!resolver) return data?.enum || EMPTY_OPTIONS
@@ -91,7 +120,7 @@ export const useAttributeEnumOptions = (
   return {
     options,
     // a background refetch (tag invalidation) keeps the cached options, so it is not a load
-    isLoading: !!resolver && isFetching && !resolved,
+    isLoading: !!resolver && !skip && (!isRegistryLoaded || (isFetching && !resolved)),
     isError,
     errorMessage: isError ? resolved?.error : undefined,
   }
