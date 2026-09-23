@@ -24,24 +24,24 @@ export type EnumOptionsResult = {
 
 export type EnumResolverSource = Pick<AttributeData, 'enumResolver' | 'enumResolverSettings'>
 
+// The `user` context param is never sent: the backend resolves it from the session,
+// and only admins may pass another user (see EnumDebugDialog)
 export type EnumContext = {
   projectName?: string
-  userName?: string
 }
 
 // Context params go in last: they are the live page scope and must win over saved settings
 export const getEnumOptionsArgs = (
   data: EnumResolverSource | undefined,
-  { projectName, userName }: EnumContext = {},
+  { projectName }: EnumContext = {},
   acceptedParams?: Record<string, unknown>,
 ) => {
   const params: EnumResolverParams = {
     ...((data?.enumResolverSettings as Record<string, any>) || {}),
   }
-  // a resolver that ignores a context param must not get a cache entry per project or per user
+  // a resolver that ignores project_name must not get a cache entry per project
   const accepts = (name: string) => !acceptedParams || name in acceptedParams
   if (projectName && accepts('project_name')) params.project_name = projectName
-  if (userName && accepts('user')) params.user = userName
 
   return { enumName: data?.enumResolver as string, params }
 }
@@ -110,7 +110,7 @@ export const buildEnumOptionsRequest = (data: EnumResolverSource): EnumOptionsBa
 const enumOptionsBatchQueries = enumsQueries.injectEndpoints({
   endpoints: (build) => ({
     getEnumOptionsBatch: build.query<EnumOptionsBatchResult, EnumOptionsBatchArgs>({
-      async queryFn({ requests, projectName, userName }, api) {
+      async queryFn({ requests, projectName }, api) {
         // without the registry every param is sent, which is what the app did before
         const acceptedParams = new Map<string, Record<string, unknown>>()
         try {
@@ -128,7 +128,7 @@ const enumOptionsBatchQueries = enumsQueries.injectEndpoints({
           [...unique.values()].map(async (request) => {
             const args = getEnumOptionsArgs(
               request,
-              { projectName, userName },
+              { projectName },
               acceptedParams.size ? acceptedParams.get(request.enumResolver) : undefined,
             )
             // an already cached resolver resolves without a request
@@ -159,6 +159,7 @@ export const enumOptionsQueries = enumOptionsBatchQueries
 
 export const {
   useListEnumsQuery,
+  useLazyListEnumsQuery,
   useGetEnumOptionsQuery,
   useLazyGetEnumOptionsQuery,
   useGetEnumOptionsBatchQuery,

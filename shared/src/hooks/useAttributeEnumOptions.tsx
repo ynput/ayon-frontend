@@ -3,6 +3,7 @@ import {
   getEnumOptionsArgs,
   useGetEnumOptionsQuery,
   useLazyGetEnumOptionsQuery,
+  useLazyListEnumsQuery,
   useListEnumsQuery,
 } from '@shared/api'
 import { normalizeEnumItems } from '@shared/util/attributeEnum'
@@ -12,21 +13,20 @@ const EMPTY_OPTIONS: EnumItem[] = []
 
 export interface UseAttributeEnumOptionsParams {
   projectName?: string
-  // reaches only the resolvers that accept a `user` param
-  userName?: string
   skip?: boolean
 }
 
 // A resolver only gets the context params it accepts, same rule (and cache keys) as the batch query
 const useAcceptedParams = (resolver?: string) => {
-  const { data: resolvers } = useListEnumsQuery(undefined, { skip: !resolver })
+  const { data: resolvers, isError } = useListEnumsQuery(undefined, { skip: !resolver })
 
   return useMemo(
     () => ({
-      isRegistryLoaded: !!resolvers,
+      // a failed registry is settled too: every param is sent, same fallback as the batch
+      isRegistryLoaded: !!resolvers || isError,
       acceptedParams: resolvers?.find(({ name }) => name === resolver)?.acceptedParams,
     }),
-    [resolvers, resolver],
+    [resolvers, isError, resolver],
   )
 }
 
@@ -45,10 +45,14 @@ export type FetchAttributeEnumOptions = (
 // Imperative variant for lazy consumers (e.g. a filter dropdown); shares the query cache with the hook
 export const useFetchAttributeEnumOptions = (): FetchAttributeEnumOptions => {
   const [fetchEnumOptions] = useLazyGetEnumOptionsQuery()
-  const { data: resolvers } = useListEnumsQuery()
+  const [fetchResolvers] = useLazyListEnumsQuery()
 
   return useCallback(
     async (data, projectName) => {
+      // wait for the registry so the params, and with them the cache key, match the hooks
+      const resolvers = await fetchResolvers(undefined, true)
+        .unwrap()
+        .catch(() => undefined)
       const acceptedParams = resolvers?.find(({ name }) => name === data.enumResolver)?.acceptedParams
       try {
         const result = await fetchEnumOptions(
@@ -61,7 +65,7 @@ export const useFetchAttributeEnumOptions = (): FetchAttributeEnumOptions => {
         throw toEnumRequestError(error)
       }
     },
-    [fetchEnumOptions, resolvers],
+    [fetchEnumOptions, fetchResolvers],
   )
 }
 
@@ -88,15 +92,15 @@ const toEnumRequestError = (error: unknown): Error => {
 // Options for one attribute: static data.enum, or resolved through the backend enum registry.
 export const useAttributeEnumOptions = (
   data: AttributeData | undefined,
-  { projectName, userName, skip }: UseAttributeEnumOptionsParams = {},
+  { projectName, skip }: UseAttributeEnumOptionsParams = {},
 ): AttributeEnumState => {
   const resolver = data?.enumResolver
   const { acceptedParams, isRegistryLoaded } = useAcceptedParams(resolver)
 
   const args = useMemo(
-    () => getEnumOptionsArgs(data, { projectName, userName }, acceptedParams),
+    () => getEnumOptionsArgs(data, { projectName }, acceptedParams),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [resolver, data?.enumResolverSettings, projectName, userName, acceptedParams],
+    [resolver, data?.enumResolverSettings, projectName, acceptedParams],
   )
 
   // currentData, not data: after an args change (e.g. project switch) the previous result is not reused

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { buildEnumOptionsRequest, useGetEnumOptionsBatchQuery } from '@shared/api'
 import type { EnumOptionsBatchRequest } from '@shared/api'
 import {
@@ -14,14 +14,12 @@ export type AttributeEnumsRequest = string[] | 'all'
 
 export interface UseAttributeEnumsParams {
   projectName?: string
-  // reaches only the resolvers that accept a `user` param
-  userName?: string
   request?: AttributeEnumsRequest
 }
 
 export const useAttributeEnums = <T extends EnumAttributeLike>(
   attributes: T[],
-  { projectName, userName, request = 'all' }: UseAttributeEnumsParams = {},
+  { projectName, request = 'all' }: UseAttributeEnumsParams = {},
 ): ResolvedEnumAttribute<T>[] => {
   // callers rebuild the request list every render, so memoize on its content
   const requestKey = request === 'all' ? 'all' : [...request].sort().join('\u0000')
@@ -43,11 +41,16 @@ export const useAttributeEnums = <T extends EnumAttributeLike>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attributes, requestKey])
 
-  // data, not currentData: a growing request list keeps the options already merged in
-  const { data: resolved, isError } = useGetEnumOptionsBatchQuery(
-    { requests, projectName, userName },
+  const { data, currentData, isError } = useGetEnumOptionsBatchQuery(
+    { requests, projectName },
     { skip: !requests.length },
   )
+
+  // A growing request list keeps the options already merged in, but result keys carry no
+  // project, so after a project switch the previous project's options must not pass as resolved
+  const dataProjectRef = useRef(projectName)
+  if (currentData) dataProjectRef.current = projectName
+  const resolved = dataProjectRef.current === projectName ? data : currentData
 
   return useMemo(() => {
     if (!requests.length) return attributes as ResolvedEnumAttribute<T>[]
