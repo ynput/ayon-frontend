@@ -1,7 +1,7 @@
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { enumsApi } from '@shared/api/generated'
 import type { AttributeData, EnumItem } from '@shared/api/generated'
-import { getAttributeEnumKey } from '@shared/util/attributeEnum'
+import { sortKeysDeep } from '@shared/util/attributeEnum'
 
 export type EnumResolverParams = Record<string, string | number | boolean | undefined | null>
 
@@ -22,6 +22,12 @@ export type EnumOptionsResult = {
   error?: string
 }
 
+export type EnumOptionsArgs = { enumName: string; params?: EnumResolverParams }
+
+// Same resolver and params (in any order) share one cache entry and one request
+export const getEnumOptionsKey = ({ enumName, params }: EnumOptionsArgs): string =>
+  JSON.stringify({ enumName, params: sortKeysDeep(buildParams(params) ?? {}) })
+
 export type EnumResolverSource = Pick<AttributeData, 'enumResolver' | 'enumResolverSettings'>
 
 // The `user` context param is never sent: the backend resolves it from the session,
@@ -35,7 +41,7 @@ export const getEnumOptionsArgs = (
   data: EnumResolverSource | undefined,
   { projectName }: EnumContext = {},
   acceptedParams?: Record<string, unknown>,
-) => {
+): EnumOptionsArgs => {
   const params: EnumResolverParams = {
     ...((data?.enumResolverSettings as Record<string, any>) || {}),
   }
@@ -56,8 +62,6 @@ const enhancedApi = enumsApi.enhanceEndpoints({
   endpoints: {
     listEnums: {
       providesTags: [ENUM_RESOLVERS_TAG],
-      // the batch query reads these without subscribing, so only this keeps them around
-      keepUnusedDataFor: 600,
     },
   },
 })
@@ -65,10 +69,7 @@ const enhancedApi = enumsApi.enhanceEndpoints({
 // Re-declared because the generated getEnum cannot pass resolver query params
 const enumsQueries = enhancedApi.injectEndpoints({
   endpoints: (build) => ({
-    getEnumOptions: build.query<
-      EnumOptionsResult,
-      { enumName: string; params?: EnumResolverParams }
-    >({
+    getEnumOptions: build.query<EnumOptionsResult, EnumOptionsArgs>({
       // Failures are cached as data: RTK refetches a rejected query for every new subscriber
       async queryFn({ enumName, params }, _api, _extraOptions, baseQuery) {
         const result = await baseQuery({
@@ -89,66 +90,35 @@ const enumsQueries = enhancedApi.injectEndpoints({
   overrideExisting: false,
 })
 
-// enumResolver is required here: the caller filters non-resolver attributes out first
-export type EnumOptionsBatchRequest = EnumResolverSource & { key: string; enumResolver: string }
-
-export type EnumOptionsBatchArgs = EnumContext & {
-  requests: EnumOptionsBatchRequest[]
-}
+export type EnumOptionsBatchArgs = { requests: EnumOptionsArgs[] }
 
 export type EnumOptionsBatchResult = Record<string, EnumOptionsResult>
 
-// Context is deliberately out of the key: it only decides which params a resolver is sent
-export const buildEnumOptionsRequest = (data: EnumResolverSource): EnumOptionsBatchRequest => ({
-  key: getAttributeEnumKey(data),
-  enumResolver: data.enumResolver as string,
-  enumResolverSettings: data.enumResolverSettings,
-})
-
-// Resolves many attributes at once by composing the single-resolver cache, it never fetches itself
+// Many getEnumOptions in one query: composes the single-resolver cache, never fetches itself
 const enumOptionsBatchQueries = enumsQueries.injectEndpoints({
   endpoints: (build) => ({
     getEnumOptionsBatch: build.query<EnumOptionsBatchResult, EnumOptionsBatchArgs>({
-      async queryFn({ requests, projectName }, api) {
-        // without the registry every param is sent, which is what the app did before
-        const acceptedParams = new Map<string, Record<string, unknown>>()
-        try {
-          const resolvers = await api
-            .dispatch(enumsQueries.endpoints.listEnums.initiate(undefined, { subscribe: false }))
-            .unwrap()
-          resolvers.forEach((resolver) => acceptedParams.set(resolver.name, resolver.acceptedParams))
-        } catch {
-          // keep resolving: a missing registry only costs a wider cache key
-        }
-
-        const unique = new Map(requests.map((request) => [request.key, request]))
+      async queryFn({ requests }, api) {
+        const unique = new Map(requests.map((request) => [getEnumOptionsKey(request), request]))
 
         const entries = await Promise.all(
-          [...unique.values()].map(async (request) => {
-            const args = getEnumOptionsArgs(
-              request,
-              { projectName },
-              acceptedParams.size ? acceptedParams.get(request.enumResolver) : undefined,
-            )
-            // an already cached resolver resolves without a request
+          [...unique].map(async ([key, request]) => {
             const result = await api
               .dispatch(
-                enumsQueries.endpoints.getEnumOptions.initiate(args, {
+                enumsQueries.endpoints.getEnumOptions.initiate(request, {
                   subscribe: false,
                   // a forced batch refetch must reach the single-resolver entries too
                   forceRefetch: api.forced,
                 }),
               )
               .unwrap()
-            return [request.key, result] as const
+            return [key, result] as const
           }),
         )
         return { data: Object.fromEntries(entries) }
       },
-      providesTags: (_result, _error, { requests }) => [
-        ENUM_RESOLVERS_TAG,
-        ...requests.map(({ enumResolver }) => ({ type: 'enum' as const, id: enumResolver })),
-      ],
+      providesTags: (_result, _error, { requests }) =>
+        requests.map(({ enumName }) => ({ type: 'enum' as const, id: enumName })),
     }),
   }),
   overrideExisting: false,

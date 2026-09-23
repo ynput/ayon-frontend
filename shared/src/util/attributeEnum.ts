@@ -12,24 +12,17 @@ export const hasEnumOptions = (data: EnumSource): boolean =>
 // Static options are already there, only a resolver needs a request
 export const hasEnumResolver = (data: EnumSource): boolean => !!data?.enumResolver
 
-const sortResolverSettings = (value: unknown): unknown => {
-  if (Array.isArray(value)) return value.map(sortResolverSettings)
+export const sortKeysDeep = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(sortKeysDeep)
   if (value && typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>)
         .sort(([left], [right]) => left.localeCompare(right))
-        .map(([key, nestedValue]) => [key, sortResolverSettings(nestedValue)]),
+        .map(([key, nestedValue]) => [key, sortKeysDeep(nestedValue)]),
     )
   }
   return value
 }
-
-// Two attributes pointing at the same resolver and settings share one request
-export const getAttributeEnumKey = (data: EnumSource): string =>
-  JSON.stringify({
-    enumResolver: data?.enumResolver ?? '',
-    enumResolverSettings: sortResolverSettings(data?.enumResolverSettings ?? {}),
-  })
 
 // Addon icons arrive as templates ("{addon_url}/icons/x.png") that only /api/actions expands
 const isUnresolvedTemplate = (icon?: string) => !!icon && icon.includes('{')
