@@ -33,15 +33,20 @@ export const Card = styled.div`
   }
 
   .hover-icon {
-    inset: unset;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    z-index: 1;
     font-size: 30px;
+    color: var(--md-sys-color-on-surface);
+  }
 
-    border-radius: 50%;
-
-    background-color: rgba(0, 0, 0, 0.7);
+  /* dims the whole thumbnail behind the hover icon */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: var(--md-sys-color-surface-container-lowest);
+    opacity: 0;
+    transition: opacity 0.1s ease;
+    pointer-events: none;
   }
 
   /* hide the image until it has been loaded */
@@ -77,6 +82,10 @@ export const Card = styled.div`
       /* show play icon */
       .hover-icon {
         opacity: 1;
+      }
+
+      &.hasHoverIcon::after {
+        opacity: 0.8;
       }
 
       /* if :has a hover-icon hide the type-cion */

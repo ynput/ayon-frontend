@@ -70,6 +70,7 @@ export const Thumbnail = ({
         loaded,
         error,
         clickable: !!props.onClick,
+        hasHoverIcon: !!hoverIcon,
         border: showBorder,
       })}
       {...props}

@@ -148,6 +148,8 @@ const DetailsPanelHeader = ({
   )
 
   const isMultiple = entities.length > 1
+  const isPlayable = !isMultiple && !!firstEntity?.hasReviewables
+  const isThumbnailClickable = thumbnails.length === 1
 
   const { updateEntity } = useEntityUpdate({
     entities: entities.map((e) => ({
@@ -222,10 +224,10 @@ const DetailsPanelHeader = ({
                 isLoading={isLoading}
                 shimmer={isLoading}
                 thumbnails={thumbnails}
-                onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
-                hoverIcon={'play_circle'}
+                onClick={isThumbnailClickable ? handleThumbnailClick : undefined}
+                hoverIcon={isPlayable ? 'open_in_full' : undefined}
               />
-              {!isMultiple && firstEntity?.hasReviewables && <PlayableIcon />}
+              {isPlayable && <PlayableIcon />}
             </div>
             <Styled.Content className={clsx({ loading: isLoading })}>
               <Styled.Title>
