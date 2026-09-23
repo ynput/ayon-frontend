@@ -56,7 +56,7 @@ const enhancedApi = enumsApi.enhanceEndpoints({
   endpoints: {
     listEnums: {
       providesTags: [ENUM_RESOLVERS_TAG],
-      // the batch reads it without subscribing, so nothing else keeps the registry around
+      // the batch query reads these without subscribing, so only this keeps them around
       keepUnusedDataFor: 600,
     },
   },
@@ -83,7 +83,6 @@ const enumsQueries = enhancedApi.injectEndpoints({
         return { data: { items: result.data as EnumItem[] } }
       },
       providesTags: (_result, _error, { enumName }) => [{ type: 'enum', id: enumName }],
-      // the batch query subscribes to nothing, so this is the only thing keeping entries around
       keepUnusedDataFor: 600,
     }),
   }),
