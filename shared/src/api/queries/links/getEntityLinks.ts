@@ -230,6 +230,7 @@ const injectedQueries = foldersApi.injectEndpoints({
                   .filter((link) => link.node !== null)
                   .map((link) => ({ type: 'link', id: link.node!.id as string })),
               ),
+              ...arg.entityIds.map((id) => ({ type: 'link', id })),
               { type: 'link', id: `${arg.projectName}-${arg.entityType}` },
             ]
           : [{ type: 'link', id: `${arg.projectName}-${arg.entityType}` }],

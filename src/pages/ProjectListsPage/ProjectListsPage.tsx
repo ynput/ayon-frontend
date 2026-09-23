@@ -124,6 +124,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   isReview,
   modules,
 }) => {
+  const dispatch = useAppDispatch()
   const { projectName, ...projectInfo } = useProjectContext()
   const {
     selectedListId,
@@ -211,6 +212,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                 useNavigate={useNavigate}
                 useLocation={useLocation}
                 useSearchParams={useSearchParams}
+                dispatch={dispatch}
               >
                 <SelectionCellsProvider>
                   <SelectedRowsProvider>

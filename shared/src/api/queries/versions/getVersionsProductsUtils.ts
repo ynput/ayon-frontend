@@ -13,9 +13,9 @@ import { parseJSONField } from '../overview'
 
 // TAGS
 const VERSION_TYPE = 'version' as const
-const versionsListTag = { type: VERSION_TYPE, id: 'LIST' }
+export const versionsListTag = { type: VERSION_TYPE, id: 'LIST' }
 const PRODUCT_TYPE = 'product' as const
-const productsListTag = { type: PRODUCT_TYPE, id: 'LIST' }
+export const productsListTag = { type: PRODUCT_TYPE, id: 'LIST' }
 
 const ENTITY_TAGS = {
   version: { type: VERSION_TYPE, list: versionsListTag },

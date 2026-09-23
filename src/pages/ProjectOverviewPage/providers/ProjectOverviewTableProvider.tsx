@@ -15,7 +15,7 @@ import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable
 import useTableQueriesHelper from '../hooks/useTableQueriesHelper'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 import useTableOpenViewer from '../hooks/useTableOpenViewer'
-import { useAppSelector } from '@state/store'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { useViewsContext } from '@shared/containers'
 import { ProjectTableModulesType } from '@shared/hooks'
 
@@ -87,6 +87,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
   const powerpack = usePowerpack()
   const { SubtasksManager } = useSubtasksModulesContext()
 
+  const dispatch = useAppDispatch()
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
   const handleOpenPlayer = useTableOpenViewer({ projectName: props.projectName })
 
@@ -112,6 +113,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         useNavigate={useNavigate}
         useLocation={useLocation}
         useSearchParams={useSearchParams}
+        dispatch={dispatch}
       >
         <SelectionCellsProvider>
           <SelectedRowsProvider>
