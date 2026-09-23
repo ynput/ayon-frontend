@@ -1,7 +1,7 @@
 import { format, isThisYear, isToday, isValid, isYesterday } from 'date-fns'
-import styled from 'styled-components'
-import Typography from '@/theme/typography.module.css'
 import clsx from 'clsx'
+import * as Styled from './InboxDateDivider.styled'
+import Typography from '@/theme/typography.module.css'
 
 export const getDayKey = (date?: string): string | null => {
   if (!date) return null
@@ -19,30 +19,14 @@ const getDayLabel = (date: string): string => {
   return format(dateObj, isThisYear(dateObj) ? 'd MMMM' : 'd MMMM yyyy')
 }
 
-const Divider = styled.li`
-  display: flex;
-  align-items: center;
-  gap: var(--base-gap-large);
-  padding: var(--padding-m) var(--padding-s) var(--base-gap-small);
-
-  color: var(--md-sys-color-outline);
-  user-select: none;
-
-  &::after {
-    content: '';
-    flex: 1;
-    border-top: 1px solid var(--md-sys-color-outline-variant);
-  }
-`
-
 interface InboxDateDividerProps {
   date: string
 }
 
 const InboxDateDivider = ({ date }: InboxDateDividerProps) => (
-  <Divider className={clsx('inbox-date-divider', Typography.titleSmall)}>
+  <Styled.Divider className={clsx('inbox-date-divider', Typography.titleSmall)}>
     {getDayLabel(date)}
-  </Divider>
+  </Styled.Divider>
 )
 
 export default InboxDateDivider

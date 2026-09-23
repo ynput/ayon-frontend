@@ -7,7 +7,7 @@ const showClearButton = css`
     .clear {
       display: flex;
     }
-    /* the avatar stays: it carries the user tooltip, and only the date has to make room */
+    .user-image,
     .date {
       display: none;
     }
@@ -80,7 +80,10 @@ export const Message = styled.li`
     & + * {
       border-top-color: transparent;
     }
+  }
 
+  /* a multi-selection shows the button on hover only, one row keeps it pinned */
+  &.isSelected:not(.placeholder):not(.multiSelected) {
     ${showClearButton}
   }
 

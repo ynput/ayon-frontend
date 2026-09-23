@@ -1,12 +1,11 @@
 import * as Styled from './InboxMessage.styled'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
-import { isValid } from 'date-fns'
-import { isToday } from 'date-fns'
+import { format, isToday, isValid } from 'date-fns'
 
 import InboxMessageStatus from './InboxMessageStatus/InboxMessageStatus'
 import InboxCategoryDots from './InboxCategoryDots'
-import InboxMessageUser from './InboxMessageUser'
+import UserImage from '@shared/components/UserImage'
 import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDate'
 import { useMemo, MouseEvent, HTMLAttributes } from 'react'
 import RemoveMarkdown from 'remove-markdown'
@@ -112,33 +111,20 @@ const activityTypeLabelsMultiple: Record<string, string> = {
   reviewable: 'Versions published',
 }
 
-const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
-  day: 'numeric',
-  month: 'short',
-  hour: 'numeric',
-  minute: '2-digit',
-})
-
-const fullDateTimeFormat = new Intl.DateTimeFormat(undefined, {
-  dateStyle: 'full',
-  timeStyle: 'short',
-})
-
 const getDateString = (date: string): string => {
   const dateObj = new Date(date)
   if (!isValid(dateObj)) return ''
 
-  const today = isToday(dateObj)
-  if (today) return getFuzzyDate(dateObj)
+  if (isToday(dateObj)) return getFuzzyDate(dateObj)
 
-  return dateTimeFormat.format(dateObj)
+  return format(dateObj, 'MMM d, h:mm a')
 }
 
 const getFullDateString = (date: string): string | undefined => {
   const dateObj = new Date(date)
   if (!isValid(dateObj)) return undefined
 
-  return fullDateTimeFormat.format(dateObj)
+  return format(dateObj, 'EEEE, dd MMM yyyy h:mm a')
 }
 
 const getCategoryNames = (messages: InboxMessageType[] = []): string[] => {
@@ -169,15 +155,15 @@ interface InboxMessageProps extends Omit<HTMLAttributes<HTMLLIElement>, 'onSelec
   unReadCount?: number
   projectName?: string
   isSelected?: boolean
+  isMultiSelected?: boolean
   disableHover?: boolean
   isPlaceholder?: boolean
-  onSelect?: (id: string, ids: string[], e: MouseEvent<HTMLLIElement>, rowIndex?:number) => void
+  onSelect?: (id: string, ids: string[], e: MouseEvent<HTMLLIElement>, rowIndex?: number) => void
   projectsInfo?: ProjectsInfo
   projectsCategories?: ProjectsCategories
   isMultiple?: boolean
   customBody?: string
   rowIndex: number
-  showUserTeams?: boolean
 }
 
 const InboxMessage = ({
@@ -199,6 +185,7 @@ const InboxMessage = ({
   unReadCount,
   projectName,
   isSelected,
+  isMultiSelected, // part of a selection of more than one row
   disableHover, // remove all hover effects
   isPlaceholder, // shimmer effects
   onSelect,
@@ -207,7 +194,6 @@ const InboxMessage = ({
   isMultiple, // are there multiple messages in this group
   customBody, // custom body for special message types (e.g. reassignment)
   rowIndex = 0,
-  showUserTeams, // guests get no teams from the server, so don't ask
   ...props
 }: InboxMessageProps) => {
   const typeIcon = useMemo(() => {
@@ -270,8 +256,6 @@ const InboxMessage = ({
     [customBody, messages],
   )
 
-  const authorFullName = messages?.[0]?.author?.attrib?.fullName || undefined
-
   const categories = useMemo(() => {
     const names = getCategoryNames(messages)
     if (!names.length || !projectName) return []
@@ -312,6 +296,7 @@ const InboxMessage = ({
       tabIndex={0}
       className={clsx('inbox-message', {
         isSelected,
+        multiSelected: isMultiSelected,
         isRead,
         disableHover,
         placeholder: isPlaceholder,
@@ -364,12 +349,7 @@ const InboxMessage = ({
             {clearLabel}
           </Styled.ClearButton>
         )}
-        <InboxMessageUser
-          userName={userName}
-          fullName={authorFullName}
-          projectName={showUserTeams ? projectName : undefined}
-          isPlaceholder={isPlaceholder}
-        />
+        <UserImage name={userName || ''} size={20} className={'n-shimmer'} />
         <Styled.Date
           className="date"
           data-tooltip={isPlaceholder ? undefined : getFullDateString(date || '')}

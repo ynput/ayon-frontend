@@ -362,13 +362,13 @@ const Inbox = ({ filter }: InboxProps) => {
     allMessages?: boolean,
     itemFilter?: ManageInboxItemFilter,
   ): Promise<void> => {
-    if (selected.length) {
+    if (id && selected.includes(id)) {
       // select next message in the list
       const selectedMessageIndex = groupedMessages.findIndex((m) => m.activityId === id)
       const nextMessage = groupedMessages[selectedMessageIndex + 1]
       if (nextMessage) handleMessageSelect(nextMessage.activityId)
       else setSelected([])
-    } else setSelected([])
+    } else if (!id) setSelected([])
 
     const idsToClear = allMessages ? [] : messagesToClear.map((m) => m.referenceId)
     const isRead = messagesToClear.every((m) => m.read)
@@ -442,7 +442,12 @@ const Inbox = ({ filter }: InboxProps) => {
 
     if (isNarrowed) {
       // the backend cannot see the chip filters, so name the messages instead
-      const groupsToClear = onlyRead ? groupedMessages.filter((g) => g.read) : groupedMessages
+      // read rows leave one by one, the same as the itemFilter path, so a group can split
+      const groupsToClear = onlyRead
+        ? groupedMessages
+            .map((g) => ({ ...g, messages: g.messages.filter((m) => m.read) }))
+            .filter((g) => g.messages.length)
+        : groupedMessages
       if (!groupsToClear.length) return
       clearedCount = groupsToClear.reduce((sum, g) => sum + g.messages.length, 0)
       promises = clearGroups(groupsToClear)
@@ -489,6 +494,11 @@ const Inbox = ({ filter }: InboxProps) => {
   // the cleared tab is not sorted by date, so day dividers would be meaningless there
   const showDayDividers = isActive && !isLoadingAny
 
+  // the inline button on any selected row acts on the whole selection
+  const isMultiSelected = selected.length > 1
+  const clearVerb = isActive ? 'Clear' : 'Unclear'
+  const hasReadMessages = messages.some((m) => m.read)
+
   const getHoveredMessageId = (e: MouseEvent | KeyboardEvent, closest = ''): string | null => {
     // get the message list item
     const target = (e.target as HTMLElement).closest('.inbox-message' + closest)
@@ -513,22 +523,12 @@ const Inbox = ({ filter }: InboxProps) => {
   }
 
   const handleClearShortcut = (e: MouseEvent | KeyboardEvent): void => {
-    if (selected.length > 1) {
-      clearSelected()
-      return
-    }
-
     const id = getHoveredMessageId(e, '.clearable')
-    if (!id) return
 
-    // if something is selected, check if the selected message is the same as the target
-    // if it is, clear it
-    if (selected.length) {
-      if (selected.includes(id)) handleClearMessage(id)
-    } else {
-      // if nothing is selected, clear the target
-      handleClearMessage(id)
-    }
+    // a hovered row outside the selection is cleared on its own, like its button
+    if (id && !selected.includes(id)) return handleClearMessage(id)
+    if (selected.length > 1) return clearSelected()
+    if (id) handleClearMessage(id)
   }
 
   const contextMenu = (id: string, isMulti = false): InboxContextMenuItem[] => {
@@ -678,7 +678,7 @@ const Inbox = ({ filter }: InboxProps) => {
                     <Button
                       icon="drafts"
                       onClick={() => handleClearAll(true)}
-                      disabled={!messages.length}
+                      disabled={!hasReadMessages}
                       data-tooltip={
                         isChipFiltered
                           ? 'Clears only the read messages matching the filters'
@@ -737,13 +737,18 @@ const Inbox = ({ filter }: InboxProps) => {
                           unReadCount={group.unRead}
                           onSelect={handleMessageSelect}
                           isSelected={selected.includes(group.activityId)}
+                          isMultiSelected={isMultiSelected && selected.includes(group.activityId)}
                           disableHover={usingKeyboard}
                           onClear={
-                            !selected.length || selected.includes(group.activityId)
-                              ? () => handleClearMessage(group.activityId)
-                              : undefined
+                            isMultiSelected && selected.includes(group.activityId)
+                              ? clearSelected
+                              : () => handleClearMessage(group.activityId)
                           }
-                          clearLabel={isActive ? 'Clear' : 'Unclear'}
+                          clearLabel={
+                            isMultiSelected && selected.includes(group.activityId)
+                              ? `${clearVerb} selection`
+                              : clearVerb
+                          }
                           clearIcon={isActive ? 'done' : 'replay'}
                           id={group.activityId}
                           ids={group.groupIds}
@@ -755,7 +760,6 @@ const Inbox = ({ filter }: InboxProps) => {
                           isMultiple={group.isMultiple}
                           onContextMenu={handleContextMenu}
                           customBody={group.body}
-                          showUserTeams={!isGuest}
                         />
                       </Fragment>
                     ))}

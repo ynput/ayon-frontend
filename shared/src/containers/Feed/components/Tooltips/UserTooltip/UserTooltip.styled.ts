@@ -37,41 +37,5 @@ export const Popup = styled.span`
 
   animation: ${popInAnimation} 50ms ease-out;
   transform-origin: left bottom;
-
-  &.with-teams {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-    min-width: 180px;
-  }
-`
-
-export const Teams = styled.ul`
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-`
-
-export const TeamItem = styled.li`
-  display: flex;
-  align-items: center;
-  gap: var(--base-gap-large);
-
-  span {
-    white-space: nowrap;
-  }
-
-  .icon {
-    font-size: 20px;
-  }
-
-  .label {
-    color: var(--md-sys-color-outline);
-    font-size: 0.85em;
-  }
 `
 

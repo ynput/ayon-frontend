@@ -9,8 +9,6 @@ const enhancedTeamsApi = teamsApi.enhanceEndpoints({
         result
           ? [TEAM_LIST_TAG, ...result.map((team) => ({ type: 'team' as const, id: team.name }))]
           : [TEAM_LIST_TAG],
-      // teams rarely change and hover tooltips mount and unmount constantly
-      keepUnusedDataFor: 600,
     },
     updateTeams: {
       invalidatesTags: [TEAM_LIST_TAG],
