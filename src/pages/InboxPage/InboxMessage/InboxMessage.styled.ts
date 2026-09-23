@@ -7,9 +7,13 @@ const showClearButton = css`
     .clear {
       display: flex;
     }
-    .user-image,
     .date {
       display: none;
+    }
+    &.multiSelected {
+      .user-image {
+        display: none;
+      }
     }
   }
 `
@@ -189,15 +193,20 @@ export const Right = styled.div`
   justify-content: flex-end;
 `
 
-export const Date = styled.span`
+export const DateContainer = styled.div`
   /* wide enough for a locale date plus time, right aligned so rows line up */
   min-width: 128px;
   max-width: 128px;
+  display: flex;
+  justify-content: flex-end;
+  margin-right: var(--padding-m);
+`
+
+export const Date = styled.span`
   text-align: right;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-right: var(--padding-m);
 `
 
 export const ClearButton = styled(Button)`

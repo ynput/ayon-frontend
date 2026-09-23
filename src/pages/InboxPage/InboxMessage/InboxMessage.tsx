@@ -330,20 +330,22 @@ const InboxMessage = ({
         )}
       </Styled.Middle>
       <Styled.Right className={clsx('right', { loading: isPlaceholder })}>
-        {onClear && (
-          <Styled.ClearButton
-            id={'clear-' + id}
-            icon={clearIcon}
-            className="clear"
-            variant="filled"
-            onClick={onClear}
-            shortcut={{ children: 'C' }}
-          >
-            {clearLabel}
-          </Styled.ClearButton>
-        )}
         <UserImage name={userName || ''} size={20} className={'n-shimmer'} />
-        <Styled.Date className="date">{getDateString(date || '')}</Styled.Date>
+        <Styled.DateContainer>
+          {onClear && (
+            <Styled.ClearButton
+              id={'clear-' + id}
+              icon={clearIcon}
+              className="clear"
+              variant="filled"
+              onClick={onClear}
+              shortcut={{ children: 'C' }}
+            >
+              {clearLabel}
+            </Styled.ClearButton>
+          )}
+          <Styled.Date className="date">{getDateString(date || '')}</Styled.Date>
+        </Styled.DateContainer>
       </Styled.Right>
     </Styled.Message>
   )
