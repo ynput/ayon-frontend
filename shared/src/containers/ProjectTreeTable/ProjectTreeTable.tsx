@@ -112,6 +112,7 @@ import { useProjectContext } from '@shared/context/ProjectContext'
 import { usePowerpack } from '@shared/context/PowerpackContext'
 import { setDetailsPanelTabForScope } from '@shared/context/DetailsPanelContext'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
+import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { ColumnsConfig } from './types/columnConfig'
@@ -291,6 +292,26 @@ export const ProjectTreeTable = ({
 
   const { writableFields } = useProjectDataContext()
 
+  // Options are only resolved for attributes the table can show: a hidden column never fetches
+  const enumAttribRequest = useMemo(() => {
+    const groupAttrib = groupFieldId?.startsWith('attrib.')
+      ? groupFieldId.slice('attrib.'.length)
+      : undefined
+
+    return attribFields
+      .filter(
+        (field) =>
+          field.name === groupAttrib ||
+          checkColumnVisibility(columnVisibility, `attrib_${field.name}`, defaultColumnVisibility),
+      )
+      .map((field) => field.name)
+  }, [attribFields, columnVisibility, defaultColumnVisibility, groupFieldId])
+
+  const resolvedAttribFields = useAttributeEnums(attribFields, {
+    projectName,
+    request: enumAttribRequest,
+  })
+
   const isLoading = isLoadingProp || isLoadingData
 
   const {
@@ -395,8 +416,8 @@ export const ProjectTreeTable = ({
   )
 
   const columnAttribs = useMemo(
-    () => (isInitialized ? attribFields : loadingAttrib),
-    [attribFields, loadingAttrib, isInitialized],
+    () => (isInitialized ? resolvedAttribFields : loadingAttrib),
+    [resolvedAttribFields, loadingAttrib, isInitialized],
   )
 
   const getNameLabelHeader = () => {
@@ -668,13 +689,13 @@ export const ProjectTreeTable = ({
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
 
   const attribByField = useMemo(() => {
-    return attribFields.reduce((acc: Record<string, EnumItem[]>, attrib) => {
+    return resolvedAttribFields.reduce((acc: Record<string, EnumItem[]>, attrib) => {
       if (attrib.data?.enum?.length) {
         acc[attrib.name] = attrib.data?.enum
       }
       return acc
     }, {})
-  }, [attribFields])
+  }, [resolvedAttribFields])
 
   const rowOrderIds = useMemo(() => tableData.map((row) => row.id), [tableData])
   // Get column IDs for drag-and-drop from context columnOrder (exclude non-draggable columns)
@@ -778,7 +799,7 @@ export const ProjectTreeTable = ({
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}
               showHierarchy={showHierarchy}
-              attribs={attribFields}
+              attribs={resolvedAttribFields}
               onOpenNew={onOpenNew}
               rowOrderIds={rowOrderIds}
               sortableRows={sortableRows}
@@ -807,7 +828,7 @@ export const ProjectTreeTable = ({
                 renderCellContent={(columnId) => (
                   <RemoteSummaryCellContent
                     columnId={columnId}
-                    attribs={attribFields}
+                    attribs={resolvedAttribFields}
                     fieldStats={fieldStats}
                     groupFieldStats={groupFieldStats}
                     calc={columnSummaries[columnId]}

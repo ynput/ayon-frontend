@@ -1,13 +1,7 @@
 import type { AttributeData } from '@shared/api'
-import { getAttributeIcon } from '@shared/util'
+import { getAttributeIcon, hasEnumOptions } from '@shared/util'
 
-export type UIAttributeType =
-  | 'text'
-  | 'select'
-  | 'multi_select'
-  | 'number'
-  | 'checkbox'
-  | 'datetime'
+export type UIAttributeType = 'text' | 'select' | 'number' | 'checkbox' | 'datetime'
 
 export interface UITypeWidget {
   isDefault?: boolean
@@ -46,11 +40,6 @@ export const UI_TYPE_OPTIONS: UITypeOption[] = [
     ],
   },
   { value: 'select', label: 'Select', icon: getAttributeIcon('select', 'string', true) },
-  {
-    value: 'multi_select',
-    label: 'Multi-select',
-    icon: getAttributeIcon('multi_select', 'list_of_strings', true),
-  },
   { value: 'number', label: 'Number', icon: getAttributeIcon('number', 'integer') },
   { value: 'checkbox', label: 'Checkbox', icon: getAttributeIcon('checkbox', 'boolean') },
   { value: 'datetime', label: 'Date and time', icon: getAttributeIcon('datetime', 'datetime') },
@@ -59,7 +48,6 @@ export const UI_TYPE_OPTIONS: UITypeOption[] = [
 export const UI_TYPE_FIELDS: Record<UIAttributeType, (keyof AttributeData)[]> = {
   text: ['minLength', 'maxLength', 'regex'],
   select: ['enum'],
-  multi_select: ['enum', 'minItems', 'maxItems'],
   number: ['ge', 'gt', 'le', 'lt'],
   checkbox: [],
   datetime: [],
@@ -72,12 +60,13 @@ export const UI_TYPE_EXCLUDE: Partial<Record<UIAttributeType, (keyof AttributeDa
 export const backendToUiType = (
   type: AttributeData['type'] | undefined,
   enumValues?: AttributeData['enum'],
+  enumResolver?: AttributeData['enumResolver'],
 ): UIAttributeType => {
   switch (type) {
     case 'string':
-      return enumValues?.length ? 'select' : 'text'
+      return hasEnumOptions({ enum: enumValues, enumResolver }) ? 'select' : 'text'
     case 'list_of_strings':
-      return 'multi_select'
+      return 'select'
     case 'integer':
     case 'float':
       return 'number'
@@ -99,8 +88,6 @@ export const uiTypeToBackend = (
       return 'string'
     case 'select':
       return 'string'
-    case 'multi_select':
-      return 'list_of_strings'
     case 'number':
       return isDecimal ? 'float' : 'integer'
     case 'checkbox':
@@ -122,10 +109,12 @@ const UI_MAPPED_BACKEND_TYPES: ReadonlyArray<AttributeData['type']> = [
 export const getUiTypeLabel = (
   type: AttributeData['type'] | undefined,
   enumValues?: AttributeData['enum'],
+  enumResolver?: AttributeData['enumResolver'],
 ): string => {
   // Unknown / unsupported backend types fall back to the raw type string
   // so the table doesn't mislabel them (e.g. list_of_integers, dict).
   if (!type || !UI_MAPPED_BACKEND_TYPES.includes(type)) return type ?? ''
-  const uiType = backendToUiType(type, enumValues)
+  if (type === 'list_of_strings') return 'Select (multiple)'
+  const uiType = backendToUiType(type, enumValues, enumResolver)
   return UI_TYPE_OPTIONS.find((o) => o.value === uiType)?.label ?? type
 }

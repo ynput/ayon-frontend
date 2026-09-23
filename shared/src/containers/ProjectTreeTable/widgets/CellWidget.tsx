@@ -67,6 +67,7 @@ export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 type WidgetAttributeData = {
   type: AttributeData['type'] | 'links' | 'name' | 'subtasks' | 'comments'
   widget?: AttributeData['widget']
+  enumResolver?: AttributeData['enumResolver']
 }
 
 export type CellValue = string | number | boolean
@@ -100,6 +101,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isFocused?: boolean
   isReadOnly?: boolean
   enableCustomValues?: boolean
+  isLoadingOptions?: boolean
   isLinksLoading?: boolean
   folderId?: string | null
   midnightExclusiveFields?: string[]
@@ -134,6 +136,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   isPlaceholder,
   isReadOnly,
   enableCustomValues,
+  isLoadingOptions,
   isLinksLoading,
   folderId,
   midnightExclusiveFields,
@@ -275,7 +278,7 @@ export const CellWidget: FC<EditorCellProps> = ({
         return <CommentsWidget value={valueData as EntityComment[] | undefined} {...sharedProps} />
       }
 
-      case !!options.length: {
+      case !!options.length || !!attributeData?.enumResolver: {
         const enumValue = Array.isArray(value) ? value : [value]
         if (isReadOnly) {
           const selectedOptions = options.filter((option) => enumValue.includes(option.value))
@@ -315,6 +318,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             type={type}
             onOpen={() => setEditingCellId(cellId)}
             enableCustomValues={enableCustomValues}
+            isLoadingOptions={isLoadingOptions}
             {...sharedProps}
             {...pt?.enum}
           />

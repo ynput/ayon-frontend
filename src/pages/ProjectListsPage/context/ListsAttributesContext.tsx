@@ -29,6 +29,18 @@ export interface ListsAttributesContextValue {
 
 const ListsAttributesContext = createContext<ListsAttributesContextValue | undefined>(undefined)
 
+const HIGH_LEVEL_ATTRIBS = [
+  'name',
+  'label',
+  'status',
+  'tags',
+  'assignees',
+  'subType',
+  'folderType',
+  'productType',
+  'taskType',
+]
+
 interface ListsAttributesProviderProps {
   children: ReactNode
 }
@@ -53,18 +65,7 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
   const scopedAttribFields = attribFields
     .filter((field) => field.scope?.includes(selectedList?.entityType as ListEntityType))
     .map((field) => field.name)
-  const highLevelAttribs = [
-    'name',
-    'label',
-    'status',
-    'tags',
-    'assignees',
-    'subType',
-    'folderType',
-    'productType',
-    'taskType',
-  ]
-  const entityAttribFields = [...scopedAttribFields, ...highLevelAttribs]
+  const entityAttribFields = [...scopedAttribFields, ...HIGH_LEVEL_ATTRIBS]
 
   const listAttributes = useMemo(
     () => listAttributesData.filter((attribute) => !entityAttribFields.includes(attribute.name)),

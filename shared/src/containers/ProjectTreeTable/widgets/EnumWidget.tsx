@@ -6,6 +6,7 @@ import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 import type { AttributeData, EnumItem } from '@shared/api'
 import { wrapMode } from './wrapMode'
+import { getSelectableEnumItems } from '@shared/util/attributeEnum'
 
 const StyledDropdown = styled(Dropdown)<{ $multiSelect?: boolean }>`
   height: 100%;
@@ -30,6 +31,7 @@ export interface EnumWidgetProps
   autoOpen?: boolean
   isReadOnly?: boolean
   enableCustomValues?: boolean
+  isLoadingOptions?: boolean
   pt?: {
     template?: Partial<EnumTemplateProps>
   }
@@ -47,6 +49,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
       autoOpen = true,
       isReadOnly,
       enableCustomValues,
+      isLoadingOptions,
       onOpen,
       onChange,
       onCancelEdit,
@@ -69,10 +72,12 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
         const invalidOption = {
           label: val,
           value: val,
-          color: enableCustomValues
-            ? 'var(--md-sys-color-surface-container)'
-            : 'var(--md-sys-color-error)',
-          icon: enableCustomValues ? undefined : 'warning',
+          // options that are still loading cannot be validated against yet
+          color:
+            enableCustomValues || isLoadingOptions
+              ? 'var(--md-sys-color-surface-container)'
+              : 'var(--md-sys-color-error)',
+          icon: enableCustomValues || isLoadingOptions ? undefined : 'warning',
         }
         selectedOptions = [...selectedOptions, invalidOption]
         invalidOptions.push(invalidOption)
@@ -81,7 +86,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     const hasMultipleValues = selectedOptions.length > 1
 
     // Merge valid options with invalid options for the dropdown
-    const allOptions = [...options, ...invalidOptions]
+    const allOptions = [...getSelectableEnumItems(options, valueAsStrings), ...invalidOptions]
 
     const dropdownRef = useRef<DropdownRef>(null)
 

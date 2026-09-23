@@ -1,10 +1,11 @@
 import { usersApi } from '@shared/api/generated'
+import { USERS_ENUM_TAGS } from '../enums'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 
 const updateUserApi = usersApi.enhanceEndpoints({
   endpoints: {
     deleteUser: {
-      invalidatesTags: () => [{ type: 'user', id: 'LIST' }],
+      invalidatesTags: () => [{ type: 'user', id: 'LIST' }, ...USERS_ENUM_TAGS],
     },
     deleteAvatar: {
       invalidatesTags: (_result, _error, { userName }) => [
@@ -59,6 +60,7 @@ const updateUser = updateUserApi.injectEndpoints({
         { type: 'userPool', id: 'LIST' },
         { type: 'feedback', id: 'LIST' },
         'info',
+        ...USERS_ENUM_TAGS,
       ],
     }),
     updateUserName: build.mutation({
@@ -70,6 +72,7 @@ const updateUser = updateUserApi.injectEndpoints({
       invalidatesTags: (_result, _error, { name }) => [
         { type: 'user', id: name },
         { type: 'user', id: 'LIST' },
+        ...USERS_ENUM_TAGS,
       ],
     }),
     updateUserPassword: build.mutation({
@@ -86,7 +89,7 @@ const updateUser = updateUserApi.injectEndpoints({
         method: 'PUT',
         body: user,
       }),
-      invalidatesTags: [{ type: 'user', id: 'LIST' }],
+      invalidatesTags: [{ type: 'user', id: 'LIST' }, ...USERS_ENUM_TAGS],
     }),
     updateUserAPIKey: build.mutation({
       query: ({ name, apiKey }) => ({

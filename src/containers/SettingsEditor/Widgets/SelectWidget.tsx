@@ -1,11 +1,19 @@
-import { useState, useEffect } from 'react'
-import { Dropdown, InputSwitch } from '@ynput/ayon-react-components'
+import { useState, useEffect, useMemo } from 'react'
+import { DefaultItemTemplate, Dropdown, InputSwitch } from '@ynput/ayon-react-components'
 
 import { updateChangedKeys, equiv, parseContext } from '../helpers'
 import { $Any } from '@types'
 import styled from 'styled-components'
 import OrderedListWidget from './OrderedListWidget'
 import { isEqual } from 'lodash'
+import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
+import {
+  getEnumErrorText,
+  getEnumItemIcon,
+  getSelectableEnumItems,
+  isEnumIconImage,
+  toDropdownErrorText,
+} from '@shared/util/attributeEnum'
 
 const StyledDropdown = styled(Dropdown)`
   max-width: 800px;
@@ -13,6 +21,38 @@ const StyledDropdown = styled(Dropdown)`
     width: 0;
   }
 `
+
+const EnumOptionImage = styled.img`
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+`
+
+// The library's default item template renders `option.icon` through its material-symbols
+// <Icon>, which can't display an IconModel{type: 'url'} icon - render those as <img> instead.
+const enumItemTemplate = (
+  option: $Any,
+  isActive: boolean,
+  isSelected: boolean,
+  _index: number,
+  mixedSelected: string[],
+  multiSelect?: boolean,
+) => {
+  const isImage = isEnumIconImage(option.icon)
+  return (
+    <DefaultItemTemplate
+      option={isImage ? { ...option, icon: undefined } : option}
+      dataKey="value"
+      labelKey="label"
+      selected={isSelected ? [option.value] : []}
+      mixedSelected={mixedSelected}
+      value={isActive ? [option.value] : []}
+      multiSelect={multiSelect}
+      startContent={isImage ? <EnumOptionImage src={option.icon} alt="" /> : undefined}
+    />
+  )
+}
 
 const SwitchboxContainer = styled.div`
   display: flex;
@@ -54,7 +94,12 @@ const SwitchboxButton = styled.button`
   }
 `
 
-const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
+const SwitchboxMessage = styled.div`
+  font-size: 12px;
+  color: var(--md-sys-color-outline);
+`
+
+const Switchbox = ({ options, value, onSelectionChange, message }: $Any) => {
   const isSelected = (val: $Any) => {
     if (Array.isArray(value)) {
       return value.includes(val)
@@ -91,6 +136,7 @@ const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
 
   return (
     <SwitchboxContainer>
+      {message && <SwitchboxMessage>{message}</SwitchboxMessage>}
       {options.length > 0 && (
         <SwitchboxButtonGroup>
           <SwitchboxButton onClick={selectAll} disabled={allSelected} title="Select all options">
@@ -137,6 +183,37 @@ const SelectWidget = (props: $Any) => {
     widget === 'sortable_multiselect' ||
     (props.multiple && /applications_profiles_\d+_applications$/.test(props.id))
 
+
+  const enumResolverName = props.schema && props.schema['x-enum-resolver']
+  const enumResolverSettings = props.schema && props.schema['x-enum-resolver-settings']
+
+  const enumResolverData = useMemo(
+    () =>
+      enumResolverName
+        ? { enumResolver: enumResolverName, enumResolverSettings }
+        : undefined,
+    [enumResolverName, enumResolverSettings],
+  )
+
+  // Project/site scoped settings must always resolve enums with a project_name; if it
+  // is not known yet, wait rather than fetching studio-wide (and possibly wrong) options.
+  const settingsLevel = props.formContext?.level
+  const headerProjectName = props.formContext?.headerProjectName
+  const requiresProjectScope = settingsLevel === 'project' || settingsLevel === 'site'
+
+  const {
+    options: resolvedEnumOptions,
+    isLoading: isEnumOptionsLoading,
+    isError: isEnumOptionsError,
+    errorMessage: enumOptionsErrorMessage,
+  } = useAttributeEnumOptions(enumResolverData, {
+    projectName: headerProjectName,
+    skip: !enumResolverName || (requiresProjectScope && !headerProjectName),
+  })
+
+  const enumOptionsError = isEnumOptionsError ? getEnumErrorText(enumOptionsErrorMessage) : undefined
+
+
   useEffect(() => {
     // Sync the local state with the formData
     // For sortable multiselect, order matters - use isEqual instead of equiv
@@ -172,13 +249,34 @@ const SelectWidget = (props: $Any) => {
     }, 100)
   }, [value])
 
-  const enumLabels = props.schema?.enumLabels || {}
-  const options = []
-  for (const opt of props.options.enumOptions) {
-    const _value = opt.value
-    const label = enumLabels[_value] || _value
-    options.push({ label, value: _value })
+  let options: { label: string; value: $Any; icon?: string; color?: string }[]
+  if (enumResolverName) {
+    // Backend-resolved options carry their own labels; enumLabels only applies to static enums.
+    // icon/color are rendered natively by Dropdown's default item/value templates.
+    const selectedValues = Array.isArray(value) ? value : value !== null ? [value] : []
+    options = getSelectableEnumItems(resolvedEnumOptions, selectedValues).map((opt) => ({
+      label: opt.label,
+      value: opt.value,
+      icon: getEnumItemIcon(opt.icon),
+      color: opt.color,
+    }))
+  } else {
+    const enumLabels = props.schema?.enumLabels || {}
+    options = []
+    for (const opt of props.options.enumOptions) {
+      const _value = opt.value
+      const label = enumLabels[_value] || _value
+      options.push({ label, value: _value })
+    }
   }
+
+  // Only pay for the custom item template when an option actually has an image icon;
+  // otherwise the library's own material-symbols item rendering is used as-is.
+  const hasImageIcon = options.some((opt) => isEnumIconImage(opt.icon))
+  const itemTemplate = hasImageIcon
+    ? (option: $Any, isActive: boolean, isSelected: boolean, index: number, mixedSelected: string[]) =>
+        enumItemTemplate(option, isActive, isSelected, index, mixedSelected, props.multiple)
+    : undefined
 
   const onFocus = (e: $Any) => {
     props.formContext?.onSetBreadcrumbs(path)
@@ -207,20 +305,35 @@ const SelectWidget = (props: $Any) => {
     renderableValue = [value]
   }
 
+  const placeholder = enumOptionsError
+    ? 'Could not load options'
+    : isEnumOptionsLoading
+    ? 'Loading options...'
+    : props.schema?.placeholder
+  const disabled = props.schema?.disabled || isEnumOptionsLoading
+
   if (isSortableMultiselect && props.multiple) {
     return (
       <OrderedListWidget
         value={(value as string[]) || []}
         options={options}
         onChange={setValue as (value: string[]) => void}
-        placeholder={props.schema?.placeholder}
-        disabled={props.schema?.disabled}
+        placeholder={placeholder}
+        disabled={disabled}
+        dropdownProps={{ error: toDropdownErrorText(enumOptionsError), itemTemplate }}
       />
     )
   }
 
   if (widget === 'switchbox' && props.multiple) {
-    return <Switchbox options={options} value={value} onSelectionChange={setValue} />
+    return (
+      <Switchbox
+        options={options}
+        value={value}
+        onSelectionChange={setValue}
+        message={enumOptionsError || (isEnumOptionsLoading ? 'Loading options...' : undefined)}
+      />
+    )
   }
 
   return (
@@ -232,14 +345,16 @@ const SelectWidget = (props: $Any) => {
       onSelectionChange={props.multiple ? setValue : (e) => setValue(e[0])}
       onBlur={props.onBlur}
       onFocus={onFocus}
-      placeholder={props.schema?.placeholder}
+      placeholder={placeholder}
+      error={toDropdownErrorText(enumOptionsError)}
+      itemTemplate={itemTemplate}
       className={`form-field`}
       multiSelect={props.multiple}
       style={hlstyle}
-      disabled={props.schema?.disabled}
+      disabled={disabled}
       onSelectAll={
-        props.multiple && props.options.enumOptions.length > 10
-          ? () => setValue(props.options.enumOptions.map((opt: $Any) => opt.value))
+        props.multiple && options.length > 10
+          ? () => setValue(options.map((opt) => opt.value))
           : undefined
       }
       valueIconMode="all"
