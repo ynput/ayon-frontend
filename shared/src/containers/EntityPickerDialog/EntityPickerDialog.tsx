@@ -57,7 +57,8 @@ interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
   disabledMessage?: string // Default tooltip message for disabled items
   getDisabledMessage?: (id: string) => string | undefined // Custom message per disabled item
   reviewableRequired?: boolean // When entityType is 'version', disable versions without reviewables
-  showReviewablesSwitch?: boolean // Show a "Show reviewables only" switch (on by default)
+  showReviewablesSwitch?: boolean // Show a "Show reviewables only" switch
+  defaultReviewablesOnly?: boolean // Initial value of the reviewables switch
   showTaskNames?: boolean // Show task names on products (featured version) and versions
   isLoading?: boolean // Whether the submit action is loading
 }
@@ -75,6 +76,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   getDisabledMessage,
   reviewableRequired,
   showReviewablesSwitch,
+  defaultReviewablesOnly = false,
   showTaskNames,
   isLoading,
   ...props
@@ -127,7 +129,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   const entityHierarchy = entityHierarchies[entityType]
 
   const canFilterReviewables = !!showReviewablesSwitch && entityHierarchy.includes('product')
-  const [reviewablesOnlyEnabled, setReviewablesOnlyEnabled] = useState(true)
+  const [reviewablesOnlyEnabled, setReviewablesOnlyEnabled] = useState(defaultReviewablesOnly)
   const reviewablesOnly = canFilterReviewables && reviewablesOnlyEnabled
 
   const entityData = useGetEntityPickerData({

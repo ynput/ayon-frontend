@@ -95,6 +95,7 @@ const ReplaceListItemsDialog: FC = () => {
       // @ts-ignore
       initialSelection={initialSelection}
       isLoading={isReplacing}
+      showReviewablesSwitch={entityType === 'version'}
       disabledIds={initialSelection[entityType] ? Object.keys(initialSelection[entityType]) : []}
     />
   )
