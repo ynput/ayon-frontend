@@ -70,7 +70,7 @@ export const useMentionSystem = ({
 
   const shownMentionOptions = mentionOptions.slice(0, 5)
 
-  useMentionLink({ projectName: projectName ?? '' })
+  useMentionLink({ projectName: projectName ?? '', editorRef })
 
   // Reset mention state when editing stops
   useEffect(() => {
