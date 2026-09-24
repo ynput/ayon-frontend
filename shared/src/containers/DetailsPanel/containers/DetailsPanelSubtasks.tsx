@@ -6,6 +6,7 @@ import SubtasksSearchFilter from '../components/SubtasksSearchFilter/SubtasksSea
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import type { QueryFilter } from '@shared/api'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
+import { useDetailsPanelContext } from '@shared/context'
 
 interface DetailsPanelSubtasksProps extends SubtasksManagerWrapperProps {}
 
@@ -13,6 +14,7 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
   const [subtasksFilters, setSubtasksFilters] = useState<QueryFilter>({})
   const [searchText, setSearchText] = useState('')
   const [selectedSubtaskIds, setSelectedSubtaskIds] = useState<string[]>([])
+  const { dispatch } = useDetailsPanelContext()
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ projectName: props.projectName })
 
@@ -58,6 +60,7 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
         onSelectSubtasks={setSelectedSubtaskIds}
         filters={mergedFilters}
         actionsPortalClassName="panel-header-filters"
+        dispatch={dispatch}
       />
     </>
   )

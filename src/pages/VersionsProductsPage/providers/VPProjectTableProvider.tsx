@@ -9,7 +9,7 @@ import {
   useGroupCounts,
   useSlicerContext,
 } from '@shared/containers'
-import { useAppSelector } from '@state/store'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { FC, useCallback, useMemo } from 'react'
 import { useVersionsDataContext } from '../context/VPDataContext'
 import { buildVersionTableRow } from '../util'
@@ -113,6 +113,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
     return folderMap
   }, [allVersionsMap, productsMap])
   const tasksMap = new Map()
+  const dispatch = useAppDispatch()
 
   // external player state
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
@@ -154,6 +155,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       useNavigate={useNavigate}
       useLocation={useLocation}
       useSearchParams={useSearchParams}
+      dispatch={dispatch}
     >
       {children}
     </ProjectTableProvider>
