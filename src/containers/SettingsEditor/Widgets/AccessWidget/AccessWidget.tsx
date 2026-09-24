@@ -1,8 +1,16 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { updateChangedKeys, parseContext } from '../../helpers'
-import AccessEditorDialog, { AccessOption, AccessValues } from './AccessEditorDialog'
+import AccessEditorDialog, {
+  AccessOption,
+  AccessValues,
+  DEFAULT_SHARE_OPTIONS,
+} from './AccessEditorDialog'
 import { AccessPreviewButton } from './AccessPreviewButton'
-import { EVERYONE_GROUP_KEY } from '@shared/components/ShareOptionIcon/ShareOptionIcon'
+import {
+  EVERY_GUESTS_KEY,
+  EVERYONE_GROUP_KEY,
+} from '@shared/components/ShareOptionIcon/ShareOptionIcon'
+import { useGetShareOptionsQuery } from '@shared/api/queries/share/share'
 
 const CATEGORIES_ACCESS_ID = 'activity_categories'
 const categoryAccessOptions: AccessOption[] = [
@@ -15,7 +23,7 @@ export interface AccessWidgetProps {
   formData?: AccessValues | null
   onChange: (value: AccessValues) => void
   defaultAccess?: AccessValues
-  options?: { defaultAccess?: AccessValues }
+  options?: { defaultAccess?: AccessValues; previewMode?: 'default' | 'compact' }
   formContext?: {
     headerProjectName?: string
   }
@@ -27,6 +35,18 @@ export interface AccessWidgetProps {
 
 const DEFAULT_ACCESS_PLACEHOLDER: AccessValues = { [EVERYONE_GROUP_KEY]: 30 }
 const DEFAULT_ACCESS_CATEGORIES: AccessValues = { [EVERYONE_GROUP_KEY]: 0 }
+
+const getFallbackShareOptionLabel = (key: string) => {
+  if (key === EVERYONE_GROUP_KEY) return 'Everyone'
+  if (key === EVERY_GUESTS_KEY) return 'All Guests'
+
+  const label = key
+    .replace(/^(group|team|user|guest):/, '')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+
+  return label ? label[0].toUpperCase() + label.slice(1) : key
+}
 
 const areAccessValuesEqual = (left: AccessValues, right: AccessValues) =>
   Object.keys(left).length === Object.keys(right).length &&
@@ -49,13 +69,25 @@ const AccessWidget = (props: AccessWidgetProps) => {
   }, [props.formData])
 
   const effectiveValue = Object.keys(value).length ? value : defaultAccess
+  const needsShareOptions = Object.keys(effectiveValue).some(
+    (key) => key !== EVERYONE_GROUP_KEY && key !== EVERY_GUESTS_KEY,
+  )
+  const { data: apiShareOptions } = useGetShareOptionsQuery(
+    { projectName: projectName || undefined },
+    { skip: !needsShareOptions },
+  )
 
-  const valueMap = useMemo(() => {
-    return Object.entries(effectiveValue).map(([key, accessLevel]) => ({
+  const shareOptions = [...DEFAULT_SHARE_OPTIONS, ...(apiShareOptions || [])]
+  const valueMap = Object.entries(effectiveValue).map(([key, accessLevel]) => {
+    const option = shareOptions.find((option) => option.value === key || option.name === key)
+    return {
       name: key,
+      label: option?.label?.trim() || getFallbackShareOptionLabel(key),
+      shareType: option?.shareType,
+      iconName: option?.name,
       accessLevel,
-    }))
-  }, [effectiveValue])
+    }
+  })
 
   const onDialogSubmit = (commitValue: AccessValues | null) => {
     console.log('Dialog submitted with value:', commitValue)
@@ -81,7 +113,12 @@ const AccessWidget = (props: AccessWidgetProps) => {
 
   return (
     <>
-      <AccessPreviewButton value={valueMap} onClick={() => setIsOpen(true)} />
+      <AccessPreviewButton
+        value={valueMap}
+        accessOptions={isCategoriesAccess ? categoryAccessOptions : undefined}
+        mode={props.options?.previewMode ?? (isCategoriesAccess ? 'compact' : 'default')}
+        onClick={() => setIsOpen(true)}
+      />
       {isOpen && (
         <AccessEditorDialog
           projectName={projectName}
