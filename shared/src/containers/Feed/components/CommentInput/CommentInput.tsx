@@ -163,7 +163,7 @@ const CommentInput: FC<CommentInputProps> = ({
   // When editing, set selection to the end of the editor
   useSetCursorEnd({ initHeight, editorRef, isEditing })
   // create a new quill format for mentions and registers it
-  useMentionLink({ projectName })
+  useMentionLink({ projectName, editorRef })
 
   // focus on editor when opened
   useEffect(() => {
