@@ -4,8 +4,11 @@ import api, {
   productsListTag,
   QueryFilter,
   SubTaskNode,
+  UpdateEntitiesArgs,
+  UpdateEntityOperation,
   useGetUsersAssigneeQuery,
   UserModel,
+  useUpdateEntitiesMutation,
   useUpdateSubtasksMutation,
 } from '@shared/api'
 import { ProjectContextValue, useProjectContext } from '@shared/context'
@@ -39,6 +42,7 @@ export interface SubtasksManagerProps extends Omit<React.HTMLAttributes<HTMLDivE
   onClose?: () => void
   onSelectSubtasks?: (subtaskIds: string[]) => void
   updateSubtasks: UpdateSubtasksMutation
+  updateEntities: (args: UpdateEntitiesArgs) => Promise<UpdateEntityOperation[]>
   useNavigate: typeof useNavigate
   onLink?: (change: EntityLinkChange) => void
   onNotFound?: () => void // when remote module is not found
@@ -58,6 +62,7 @@ export const SubtasksManagerWrapper = ({
   ...props
 }: SubtasksManagerWrapperProps) => {
   const [updateSubtasks] = useUpdateSubtasksMutation()
+  const [updateEntities] = useUpdateEntitiesMutation()
   const { data: users = [] } = useGetUsersAssigneeQuery({ projectName: props.projectName })
   const projectContext = useProjectContext()
 
@@ -85,6 +90,7 @@ export const SubtasksManagerWrapper = ({
       users={users}
       projectContext={projectContext}
       onLink={handleProductLinkChange}
+      updateEntities={(args) => updateEntities(args).unwrap()}
     />
   )
 }

@@ -1,19 +1,64 @@
-// @ts-nocheck
-
 import api from './getEntity'
 import { toast } from 'react-toastify'
-import { detailsPanelQueries } from './getEntityPanel'
 import { dashboardQueries, getKanbanTasks } from '../userDashboard'
 import { patchOverviewFolders, patchOverviewTasks } from '../overview'
 import { patchDetailsPanel } from './patchDetailsPanel'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 import { getRequestErrorString } from '@shared/util'
+import { gqlApi } from '@shared/api/generated'
+import type { GetTasksProgressQuery, KanbanNode, OperationModel } from '@shared/api/generated'
+import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+import type { RootState } from '@reduxjs/toolkit/query'
+
+type EntityType = OperationModel['entityType']
+type EntityData = Record<string, unknown> & {
+  name?: string
+  assignees?: string[]
+  attrib?: Record<string, unknown> & { priority?: string; endDate?: string }
+}
+
+export type UpdateEntityArgs = {
+  projectName: string
+  entityId: string
+  entityType: EntityType
+  data: EntityData
+  currentAssignees?: string[]
+}
+
+export type UpdateEntityOperation = Omit<UpdateEntityArgs, 'entityId'> & {
+  id: string
+  meta?: { folderId?: string }
+}
+
+export type UpdateEntitiesArgs = {
+  operations: UpdateEntityOperation[]
+  entityType: EntityType
+}
+
+type CacheContext = {
+  state: RootState<any, any, any>
+  dispatch: ThunkDispatch<any, unknown, UnknownAction>
+}
+type UndoPatch = { undo: () => void }
+type KanbanArgs = { assignees: string[]; projects: string[] }
+type KanbanPatch = {
+  newAssignees?: string[]
+  taskId: string
+  data?: EntityData
+  taskData?: KanbanNode
+}
+type ProgressTask = GetTasksProgressQuery['project']['tasks']['edges'][number]['node']
+type ProgressFolder = ProgressTask['folder'] & {
+  projectName: string
+  tasks: ProgressTask[]
+  path?: string
+}
 
 const patchKanban = (
-  { assignees = [], projects = [] },
-  { newAssignees, taskId, data, taskData },
-  { dispatch },
-) => {
+  { assignees, projects }: KanbanArgs,
+  { newAssignees, taskId, data, taskData }: KanbanPatch,
+  { dispatch }: Pick<CacheContext, 'dispatch'>,
+): [UndoPatch, boolean] => {
   let kanbanPatched = false
   const patchResult = dispatch(
     dashboardQueries.util.updateQueryData(
@@ -25,16 +70,14 @@ const patchKanban = (
         // if the data include attrib.priority it needs to be transformed to just priority
         // this is because priority is a top level field on kanban query
         if (data?.attrib?.priority) {
-          const { priority } = patchData.attrib
-          patchData = { ...patchData, priority }
+          patchData = { ...patchData, priority: data.attrib.priority }
         }
         // if the data include attrib.endDate it needs to be transformed to dueDate
         // this is because dueDate is a top level field on kanban query
         // NOTE TO SELF: Lets try to do these transforms after the cache the future.
         if (data?.attrib?.endDate) {
-          const { endDate } = patchData.attrib
-          patchData = { ...patchData, dueDate: endDate }
-          delete patchData.attrib.endDate
+          const { endDate, ...attrib } = data.attrib
+          patchData = { ...patchData, attrib, dueDate: endDate }
         }
 
         if (taskIndex === -1) {
@@ -57,23 +100,29 @@ const patchKanban = (
             draft.splice(taskIndex, 1)
           } else {
             // task found: update the task in the cache
-            const newData = { ...draft[taskIndex], ...patchData }
-            draft[taskIndex] = newData
+            Object.assign(draft[taskIndex], patchData)
           }
         }
       },
     ),
   )
 
-  return [patchResult, kanbanPatched]
+  return [patchResult as unknown as UndoPatch, kanbanPatched]
 }
 
 // try to patch the progress view if there are queries that need to be updated
-const patchProgressView = ({ operations = [], state, dispatch, entityType }) => {
+const patchProgressView = ({
+  operations,
+  state,
+  dispatch,
+  entityType,
+}: UpdateEntitiesArgs & CacheContext): UndoPatch[] => {
   // create invalidation tags for progress view
   const invalidationTags = operations.map((o) => ({ type: 'progress', id: o.id }))
   // find the entries that need to be updated
-  let entries = api.util.selectInvalidatedBy(state, invalidationTags)
+  const entries = gqlApi.util
+    .selectInvalidatedBy(state, invalidationTags)
+    .filter((entry) => entry.endpointName === 'GetTasksProgress')
   // if there are no entries, return
   if (!entries.length) return []
 
@@ -81,7 +130,8 @@ const patchProgressView = ({ operations = [], state, dispatch, entityType }) => 
     // patch each entry with updated task data
     const patches = entries.map((entry) =>
       dispatch(
-        api.util.updateQueryData(entry.endpointName, entry.originalArgs, (draft) => {
+        gqlApi.util.updateQueryData('GetTasksProgress', entry.originalArgs, (cachedData) => {
+          const draft = cachedData as unknown as ProgressFolder[]
           for (const operation of operations) {
             const entityId = operation.id
             const patch = operation.data
@@ -94,7 +144,7 @@ const patchProgressView = ({ operations = [], state, dispatch, entityType }) => 
               const task = folder.tasks?.find((task) => task.id === entityId)
               if (!task) throw new Error('Patching progress view: task not found')
               // update task
-              const newTask = { ...task, ...patch }
+              const newTask = Object.assign({}, task, patch)
               // update folder
               const newFolder = {
                 ...folder,
@@ -108,7 +158,7 @@ const patchProgressView = ({ operations = [], state, dispatch, entityType }) => 
               if (!folder) throw new Error('Patching progress view: folder not found')
 
               // If name is being updated, also update the path
-              let updatedPatch = { ...patch }
+              const updatedPatch = { ...patch }
               if (patch.name && folder.path) {
                 // Construct new path by replacing the last segment with the new name
                 const pathParts = folder.path.split('/')
@@ -126,18 +176,18 @@ const patchProgressView = ({ operations = [], state, dispatch, entityType }) => 
         }),
       ),
     )
-    return patches
+    return patches as unknown as UndoPatch[]
   } catch (error) {
     console.error(error)
     // invalidate the progress view queries instead
-    dispatch(api.util.invalidateTags(invalidationTags))
+    dispatch(gqlApi.util.invalidateTags(invalidationTags))
     return []
   }
 }
 
 const updateEntity = api.injectEndpoints({
   endpoints: (build) => ({
-    updateEntity: build.mutation({
+    updateEntity: build.mutation<unknown, UpdateEntityArgs>({
       query: ({ projectName, entityId, data, entityType }) => ({
         url: `/api/projects/${projectName}/${entityType}s/${entityId}`,
         method: 'PATCH',
@@ -154,21 +204,32 @@ const updateEntity = api.injectEndpoints({
         return tags
       },
       async onQueryStarted(
-        { projectName, entityId, data, currentAssignees, entityType },
+        { projectName, entityId, data, currentAssignees = [], entityType },
         { dispatch, queryFulfilled, getState },
       ) {
         const state = getState()
-        const patchResults = []
+        const patchResults: UndoPatch[] = []
 
         let invalidationTagsAfterComplete = []
         // if task, patch the GetKanban query
         if (entityType === 'task') {
-          const dashboardProjects = getState().dashboard?.selectedProjects || []
-          const dashboardUsers = getState().dashboard?.tasks.assignees || []
-          const dashboardAssigneesIsMe = getState().dashboard?.tasks.assigneesFilter === 'me'
+          const dashboardState = getState() as unknown as {
+            dashboard?: {
+              selectedProjects?: string[]
+              tasks?: { assignees?: string[]; assigneesFilter?: string }
+            }
+            user?: { name?: string }
+          }
+          const dashboardProjects = dashboardState.dashboard?.selectedProjects || []
+          const dashboardUsers = dashboardState.dashboard?.tasks?.assignees || []
+          const dashboardAssigneesIsMe = dashboardState.dashboard?.tasks?.assigneesFilter === 'me'
           const newAssignees = data.assignees
 
-          const cacheUsers = dashboardAssigneesIsMe ? [getState().user?.name] : dashboardUsers
+          const cacheUsers = dashboardAssigneesIsMe
+            ? dashboardState.user?.name
+              ? [dashboardState.user.name]
+              : []
+            : dashboardUsers
 
           const entityAssignees = [...new Set([...currentAssignees, ...(newAssignees || [])])]
           const hasSomeAssignees = entityAssignees.some((assignee) => cacheUsers.includes(assignee))
@@ -194,7 +255,7 @@ const updateEntity = api.injectEndpoints({
                   let newTask = response.find((task) => task.id === entityId)
                   if (newTask) {
                     // add newAssignees as the actual DB hasn't been updated yet
-                    newTask = { ...newTask, assignees: newAssignees }
+                    newTask = { ...newTask, assignees: newAssignees ?? newTask.assignees }
 
                     patchKanban(
                       { assignees: cacheUsers, projects: dashboardProjects },
@@ -245,7 +306,9 @@ const updateEntity = api.injectEndpoints({
           }
 
           // invalidate any other caches
-          let entries = dashboardQueries.util.selectInvalidatedBy(state, tags)
+          const entries = dashboardQueries.util
+            .selectInvalidatedBy(state, tags)
+            .filter((entry) => entry.endpointName === 'GetKanban')
           let entriesToInvalidate = []
 
           // for each entry try to patch the data into the cache first
@@ -304,10 +367,10 @@ const updateEntity = api.injectEndpoints({
         }
       },
     }),
-    updateEntities: build.mutation({
+    updateEntities: build.mutation<UpdateEntityOperation[], UpdateEntitiesArgs>({
       async queryFn({ operations = [], entityType }, { dispatch, getState }) {
         try {
-          const state = getState()
+          const state = getState() as CacheContext['state']
           const promises = []
           for (const { projectName, data, id, currentAssignees = [] } of operations) {
             const promise = dispatch(
@@ -322,13 +385,13 @@ const updateEntity = api.injectEndpoints({
             promises.push(promise)
           }
 
-          let progressPatches = []
+          let progressPatches: UndoPatch[] = []
           if (entityType === 'task' || entityType === 'folder') {
             // patch the progress page
             progressPatches = patchProgressView({ operations, state, dispatch, entityType })
           }
 
-          const overviewPatches = []
+          const overviewPatches: UndoPatch[] = []
           // convert id in operations to entityId
           const operationsWithEntityId = operations.map((o) => ({ ...o, entityId: o.id }))
           if (entityType === 'task' || entityType === 'folder') {
@@ -355,7 +418,9 @@ const updateEntity = api.injectEndpoints({
           const results = await Promise.allSettled(promises)
 
           // did any of the requests fail?
-          const someError = results.some((result) => result.value?.error)
+          const someError = results.some(
+            (result) => result.status === 'rejected' || !!result.value.error,
+          )
           if (someError) {
             dispatch(
               api.util.invalidateTags(operations.map((o) => ({ type: 'kanBanTask', id: o.id }))),
