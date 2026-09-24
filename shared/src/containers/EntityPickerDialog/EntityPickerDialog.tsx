@@ -6,12 +6,13 @@ import { FC, useState } from 'react'
 import { entityHierarchies } from './util'
 import EntityTypeTable from './components/EntityTypeTable'
 import { SimpleTableProvider } from '@shared/containers/SimpleTable/context/SimpleTableContext'
-import { Button, Dialog, DialogProps } from '@ynput/ayon-react-components'
+import { Button, Dialog, DialogProps, SwitchButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { useGetEntityPickerData } from './hooks/useGetEntityPickerData'
 import { upperFirst } from 'lodash'
 import useExpandedWithInitialFolders from './hooks/useExpandedWithInitialFolders'
 import { usePreserveChildSelectionByName } from './hooks/usePreserveChildSelectionByName'
+import { useDeselectHiddenRows } from './hooks/useDeselectHiddenRows'
 
 const COL_MAX_WIDTH = 600
 
@@ -56,6 +57,9 @@ interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
   disabledMessage?: string // Default tooltip message for disabled items
   getDisabledMessage?: (id: string) => string | undefined // Custom message per disabled item
   reviewableRequired?: boolean // When entityType is 'version', disable versions without reviewables
+  showReviewablesSwitch?: boolean // Show a "Show reviewables only" switch
+  defaultReviewablesOnly?: boolean // Initial value of the reviewables switch
+  showTaskNames?: boolean // Show task names on products (featured version) and versions
   isLoading?: boolean // Whether the submit action is loading
 }
 
@@ -71,6 +75,9 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   disabledMessage = 'Cannot select this item',
   getDisabledMessage,
   reviewableRequired,
+  showReviewablesSwitch,
+  defaultReviewablesOnly = false,
+  showTaskNames,
   isLoading,
   ...props
 }) => {
@@ -118,11 +125,20 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     ]),
   ) as Record<PickerEntityType, string[]>
 
+  // Get the complete hierarchy for the target entity type!
+  const entityHierarchy = entityHierarchies[entityType]
+
+  const canFilterReviewables = !!showReviewablesSwitch && entityHierarchy.includes('product')
+  const [reviewablesOnlyEnabled, setReviewablesOnlyEnabled] = useState(defaultReviewablesOnly)
+  const reviewablesOnly = canFilterReviewables && reviewablesOnlyEnabled
+
   const entityData = useGetEntityPickerData({
     entityType,
     projectName,
     search,
     selection: entitySelection,
+    reviewablesOnly,
+    includeTask: showTaskNames,
   })
 
   // When reviewableRequired is set and we're picking versions, disable any
@@ -158,10 +174,14 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     foldersData: entityData.folder,
   })
 
-  // Get the complete hierarchy for the target entity type!
-  const entityHierarchy = entityHierarchies[entityType]
-
   usePreserveChildSelectionByName({
+    entityHierarchy,
+    entityData,
+    rowSelection,
+    setEntityRowSelection,
+  })
+
+  useDeselectHiddenRows({
     entityHierarchy,
     entityData,
     rowSelection,
@@ -245,6 +265,18 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
         </>
       }
     >
+      {canFilterReviewables && (
+        <SwitchButton
+          label="Show reviewables only"
+          value={reviewablesOnlyEnabled}
+          onClick={() => setReviewablesOnlyEnabled(!reviewablesOnlyEnabled)}
+          style={{
+            width: 'fit-content',
+            marginLeft: 'auto',
+            marginBottom: 'var(--base-gap-large)',
+          }}
+        />
+      )}
       <TablesContainer>
         {entityHierarchy.map((tableEntityType) => (
           <SimpleTableProvider
