@@ -1,4 +1,5 @@
-import type { GetKanbanProjectUsersQuery } from '@shared/api/generated'
+import type { GetKanbanProjectUsersQuery, UserAttribModel } from '@shared/api/generated'
+import type { TypedAttrib } from '../attributes/attribValues'
 
 type AccessGroups = {
   [key: string]: string[]
@@ -6,8 +7,13 @@ type AccessGroups = {
 
 export type ProjectUser = Omit<
   GetKanbanProjectUsersQuery['users']['edges'][0]['node'],
-  'accessGroups'
-> & { accessGroups: AccessGroups; projects: string[]; avatarUrl: string }
+  'accessGroups' | 'attrib'
+> & {
+  accessGroups: AccessGroups
+  projects: string[]
+  avatarUrl: string
+  attrib: TypedAttrib<UserAttribModel>
+}
 
 export type FeedActivityOrigin = {
   id: string

@@ -5,7 +5,9 @@ import {
   ProjectModel,
   KanbanNode,
   Anatomy,
+  UserAttribModel,
 } from '@shared/api/generated'
+import { getAttrib, type TypedAttrib } from '../attributes/attribValues'
 import { projectQueries } from '../project'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 import PubSub from '@shared/util/pubsub'
@@ -28,8 +30,13 @@ export type GetKanbanResponse = KanbanNode[]
 // GetKanbanProjectUsers response type
 export type KanbanProjectUserNode = Omit<
   GetKanbanProjectUsersQuery['users']['edges'][0]['node'],
-  'accessGroups'
-> & { accessGroups: AccessGroups; projects: string[]; avatarUrl: string }
+  'accessGroups' | 'attrib'
+> & {
+  accessGroups: AccessGroups
+  projects: string[]
+  avatarUrl: string
+  attrib: TypedAttrib<UserAttribModel>
+}
 export type GetKanbanProjectUsersResponse = KanbanProjectUserNode[]
 
 export interface MessageSummary {
@@ -356,6 +363,7 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
 
           return {
             ...user,
+            attrib: getAttrib<UserAttribModel>(user.attrib),
             accessGroups: accessGroups,
             projects: projectsAccess,
             avatarUrl,

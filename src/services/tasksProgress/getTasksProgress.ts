@@ -13,8 +13,13 @@ import {
 } from '@shared/util'
 import { gqlApi } from '@shared/api'
 import { GetProgressTaskQuery, GetTasksProgressQuery } from '@shared/api'
+import { getAttrib } from '@shared/api'
+import type { TaskAttribModel, TypedAttrib } from '@shared/api'
 
-export type ProgressTask = GetTasksProgressQuery['project']['tasks']['edges'][0]['node']
+export type ProgressTask = Omit<
+  GetTasksProgressQuery['project']['tasks']['edges'][0]['node'],
+  'attrib'
+> & { attrib: TypedAttrib<TaskAttribModel> }
 
 export type ProgressTaskFolder = ProgressTask['folder']
 export interface FolderGroup extends ProgressTaskFolder {
@@ -29,6 +34,14 @@ type GroupedTasksType = {
   [key: string]: FolderGroup
 }
 
+// type the attribute values (the GraphQL `attrib` field is untyped JSON)
+const toProgressTask = (
+  node: GetTasksProgressQuery['project']['tasks']['edges'][0]['node'],
+): ProgressTask => ({
+  ...node,
+  attrib: getAttrib<TaskAttribModel>(node.attrib),
+})
+
 const transformTasksProgress = (data: GetTasksProgressQuery): GetTasksProgressResult => {
   const groupedTasks: GroupedTasksType = {}
 
@@ -41,9 +54,7 @@ const transformTasksProgress = (data: GetTasksProgressQuery): GetTasksProgressRe
         tasks: [],
       }
     }
-    groupedTasks[folder.id].tasks.push({
-      ...edge.node,
-    })
+    groupedTasks[folder.id].tasks.push(toProgressTask(edge.node))
   })
 
   const foldersWithTasks = Object.values(groupedTasks)
@@ -250,7 +261,8 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
     // GetProgressTask: a single task for the tasks progress table
     // used mainly for realtime updates to patch the task in the cache
     GetProgressTask: {
-      transformResponse: (result: GetProgressTaskQuery) => result.project.task,
+      transformResponse: (result: GetProgressTaskQuery) =>
+        result.project.task && toProgressTask(result.project.task),
     },
   },
 })

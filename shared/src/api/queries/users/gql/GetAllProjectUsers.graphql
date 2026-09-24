@@ -4,9 +4,7 @@ query GetAllProjectUsersAsAssignee($projectName: String) {
       node {
         name
         updatedAt
-        attrib {
-          fullName
-        }
+        attrib(names: ["fullName"])
       }
     }
   }
