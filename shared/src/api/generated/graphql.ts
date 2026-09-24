@@ -1812,7 +1812,7 @@ export type GetDetailsPanelRepresentationQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelRepresentationQuery = { project: { representation: { id: string, versionId: string, name: string, status: string, tags: Array<string>, updatedAt: unknown, createdAt: unknown, allAttrib: string, context: string | null, parents: Array<string>, version: { id: string, thumbnailId: string | null, name: string, updatedAt: unknown, createdAt: unknown, productId: string, version: number, author: string | null, task: { id: string, name: string, label: string | null, assignees: Array<string>, taskType: string } | null, product: { id: string, name: string, productType: string, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string }, latestVersion: { version: number } | null } } } | null } };
+export type GetDetailsPanelRepresentationQuery = { project: { representation: { id: string, versionId: string, name: string, status: string, tags: Array<string>, updatedAt: unknown, createdAt: unknown, allAttrib: string, context: string | null, parents: Array<string>, version: { id: string, thumbnailId: string | null, name: string, updatedAt: unknown, createdAt: unknown, productId: string, version: number, author: string | null, task: { id: string, name: string, label: string | null, assignees: Array<string>, taskType: string } | null, product: { id: string, name: string, productType: string, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string }, latestVersion: { id: string, version: number, name: string, active: boolean } | null } } } | null } };
 
 export type GetDetailsPanelTaskQueryVariables = Exact<{
   projectName: string;
@@ -1828,7 +1828,7 @@ export type GetDetailsPanelVersionQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelVersionQuery = { project: { projectName: string, code: string, version: { id: string, version: number, name: string, author: string | null, status: string, tags: Array<string>, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, thumbnailId: string | null, hasReviewables: boolean, parents: Array<string>, allAttrib: string, product: { id: string, name: string, productType: string, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string }, latestVersion: { version: number } | null }, task: { id: string, name: string, label: string | null, assignees: Array<string>, taskType: string } | null, representations: { edges: Array<{ node: { id: string, name: string, fileCount: number, files: Array<{ path: string }> } }> } } | null } };
+export type GetDetailsPanelVersionQuery = { project: { projectName: string, code: string, version: { id: string, version: number, name: string, author: string | null, status: string, tags: Array<string>, updatedAt: unknown, createdAt: unknown, thumbnailHash: string, thumbnailId: string | null, hasReviewables: boolean, parents: Array<string>, allAttrib: string, product: { id: string, name: string, productType: string, folder: { id: string, name: string, label: string | null, path: string | null, folderType: string }, latestVersion: { id: string, version: number, name: string, active: boolean } | null }, task: { id: string, name: string, label: string | null, assignees: Array<string>, taskType: string } | null, representations: { edges: Array<{ node: { id: string, name: string, fileCount: number, files: Array<{ path: string }> } }> } } | null } };
 
 export type GetProductVersionsQueryVariables = Exact<{
   projectName: string;
@@ -1840,7 +1840,7 @@ export type GetProductVersionsQuery = { project: { product: { versionList: Array
 
 export type DetailsPanelFolderFragmentFragment = { id: string, name: string, label: string | null, path: string | null, folderType: string };
 
-export type DetailsPanelProductFragmentFragment = { id: string, name: string, productType: string, latestVersion: { version: number } | null };
+export type DetailsPanelProductFragmentFragment = { id: string, name: string, productType: string, latestVersion: { id: string, version: number, name: string, active: boolean } | null };
 
 export type DetailsPanelRepresentationFragmentFragment = { id: string, name: string, fileCount: number, files: Array<{ path: string }> };
 
@@ -2356,7 +2356,10 @@ export const DetailsPanelProductFragmentFragmentDoc = new TypedDocumentString(`
   name
   productType
   latestVersion {
+    id
     version
+    name
+    active
   }
 }
     `, {"fragmentName":"DetailsPanelProductFragment"});
@@ -3038,7 +3041,10 @@ fragment DetailsPanelProductFragment on ProductNode {
   name
   productType
   latestVersion {
+    id
     version
+    name
+    active
   }
 }
 fragment DetailsPanelTaskFragment on TaskNode {
@@ -3173,7 +3179,10 @@ fragment DetailsPanelProductFragment on ProductNode {
   name
   productType
   latestVersion {
+    id
     version
+    name
+    active
   }
 }
 fragment DetailsPanelRepresentationFragment on RepresentationNode {
