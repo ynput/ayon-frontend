@@ -39,8 +39,6 @@ const PreviewChip = styled.span`
   }
 `
 
-const LevelIcon = styled(Icon)``
-
 const accessLevelIcons: Record<AccessLevel, string> = {
   0: 'block',
   10: 'visibility',
