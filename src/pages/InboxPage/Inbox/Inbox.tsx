@@ -38,7 +38,7 @@ import InboxDateDivider, { getDayKey } from '../components/InboxDateDivider'
 // Hooks
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useGroupMessages from '../hooks/useGroupMessages'
-import useKeydown from '../hooks/useKeydown'
+import useKeydown, { MESSAGE_ID_PREFIX } from '../hooks/useKeydown'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useInboxRefresh from '../hooks/useInboxRefresh'
 import useInboxProject from '../hooks/useInboxProject'
@@ -342,7 +342,15 @@ const Inbox = ({ filter }: InboxProps) => {
 
   const resolveVersionJump = (versionId: string) => {
     const group = groupedMessages.find((g) => g.entityId === versionId)
-    return group ? () => handleMessageSelect(group.activityId) : undefined
+    if (!group) return
+    return () => {
+      handleMessageSelect(group.activityId)
+      const row = listRef.current?.querySelector(
+        `#${MESSAGE_ID_PREFIX}${group.activityId}`,
+      ) as HTMLElement | null
+      row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      row?.focus({ preventScroll: true })
+    }
   }
 
   // REFRESH INBOX
