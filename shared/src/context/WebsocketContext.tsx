@@ -118,9 +118,9 @@ export const SocketProvider = ({
   }, [overloaded, setOverloaded])
 
   // onMessage is a function that is called when a message comes in from the websocket
-  // it is a closure that keeps track of the number of calls and the last call time
-  // Using useRef to persist the closure state across renders
-  const messageStatsRef = useRef({ callCount: 0, lastCall: Date.now() })
+  // it keeps track of the number of messages received in the current one second window
+  // Using useRef to persist the state across renders
+  const messageStatsRef = useRef({ callCount: 0, windowStart: Date.now() })
 
 
   const debouncedResetCall = debounce(() => {
@@ -135,8 +135,14 @@ export const SocketProvider = ({
 
   const onMessage = useCallback(
     (message: any) => {
-      // If the function is called more than 100 times per second, return early.
+      // If the function is called more than 1000 times per second, return early.
       const threshold = 1000
+      const now = Date.now()
+      // start a new window every second, so the guard recovers once the rate drops
+      if (now - messageStatsRef.current.windowStart >= 1000) {
+        messageStatsRef.current.windowStart = now
+        messageStatsRef.current.callCount = 0
+      }
       if (messageStatsRef.current.callCount > threshold) {
         setOverloaded(true)
         return console.log(
@@ -173,15 +179,9 @@ export const SocketProvider = ({
         return // for other events, ignore my own messages
       }
 
-      const now = Date.now()
-      if (now - messageStatsRef.current.lastCall < 1000) {
-        messageStatsRef.current.callCount += 1
-      } else {
-        messageStatsRef.current.callCount = 0
-      }
+      messageStatsRef.current.callCount += 1
 
       console.log('Event RX', data)
-      messageStatsRef.current.lastCall = now
 
       if (topic === 'shout' && data?.summary?.text) toast.info(summary.text)
 
