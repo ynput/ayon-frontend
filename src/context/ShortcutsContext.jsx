@@ -107,6 +107,8 @@ function ShortcutsProvider(props) {
 
   const handleKeyPress = useCallback(
     (e) => {
+      // held key would otherwise trigger double-key combos like m+m
+      if (e.repeat) return
       // check target isn't an input
       if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return
       // check we are not in quill editor
