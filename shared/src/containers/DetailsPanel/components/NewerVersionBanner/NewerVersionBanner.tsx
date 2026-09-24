@@ -28,7 +28,7 @@ export const NewerVersionBanner: FC<NewerVersionBannerProps> = ({
 
   return (
     <InfoMessage
-      variant="warning"
+      variant="info"
       style={{ margin: 'var(--padding-m) var(--padding-m) 0' }}
       message={`A newer version (${latestVersion.name}) exists.`}
       action={
