@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useGetMyPermissionsQuery, UserPermissionsModel } from '@shared/api'
 import { Module } from '@pages/ProjectManagerPage/mappers'
 
@@ -176,9 +177,15 @@ class UserPermissions {
 const useUserProjectPermissions = (
   hasLimitedPermissions?: boolean,
 ): { isLoading: boolean; permissions: UserPermissions | undefined } => {
-  const { data: permissions = {}, isLoading } = useGetMyPermissionsQuery()
+  const { data: permissions, isLoading } = useGetMyPermissionsQuery()
 
-  return { isLoading, permissions: new UserPermissions(permissions, hasLimitedPermissions) }
+  // keep the same instance while the permissions do not change, so consumers can memoize on it
+  const userPermissions = useMemo(
+    () => new UserPermissions(permissions || {}, hasLimitedPermissions),
+    [permissions, hasLimitedPermissions],
+  )
+
+  return { isLoading, permissions: userPermissions }
 }
 
 export { UserPermissions, PermissionLevel }
