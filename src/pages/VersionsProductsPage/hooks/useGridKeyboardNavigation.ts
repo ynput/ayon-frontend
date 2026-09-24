@@ -180,10 +180,17 @@ export const useGridKeyboardNavigation = ({
       const container = gridContainerRef.current
       if (!container) return
 
+      // the open player holds focus, so row nav keys no longer come from the grid
+      const isRowNavKey = e.key === 'ArrowUp' || e.key === 'ArrowDown'
+      const fromOpenPlayer =
+        playerOpen &&
+        isRowNavKey &&
+        !!(document.activeElement as HTMLElement | null)?.closest('#viewer-dialog')
+
       // Check if the grid container itself is focused or any of its children
       const isGridFocused =
         document.activeElement === container || container.contains(document.activeElement)
-      if (!isGridFocused) return
+      if (!isGridFocused && !fromOpenPlayer) return
 
       // Use current position if available, otherwise get from selection
       let currentIndex = currentPositionRef.current
@@ -196,16 +203,16 @@ export const useGridKeyboardNavigation = ({
 
       const columnsCount = calculateColumnsCount()
 
-      // If player is open, only allow arrow keys with cmd/ctrl modifier
-      const isArrowKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)
-      const hasModifier = e.metaKey || e.ctrlKey
-      if (playerOpen && isArrowKey && !hasModifier) return
+      // left/right step the open player's reviewables, and up/down step one item
+      // at a time because the grid layout is hidden behind the player
+      if (playerOpen && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return
+      const rowStep = playerOpen ? 1 : columnsCount
 
       switch (e.key) {
         case 'ArrowUp':
           e.preventDefault()
-          if (currentIndex >= columnsCount) {
-            selectItem(currentIndex - columnsCount, e.shiftKey)
+          if (currentIndex >= rowStep) {
+            selectItem(currentIndex - rowStep, e.shiftKey)
           }
           break
 
@@ -214,8 +221,8 @@ export const useGridKeyboardNavigation = ({
           if (currentIndex === -1) {
             // No selection, select first item
             selectItem(0, false)
-          } else if (currentIndex + columnsCount < gridData.length) {
-            selectItem(currentIndex + columnsCount, e.shiftKey)
+          } else if (currentIndex + rowStep < gridData.length) {
+            selectItem(currentIndex + rowStep, e.shiftKey)
           }
           break
 
@@ -298,12 +305,11 @@ export const useGridKeyboardNavigation = ({
   )
 
   useEffect(() => {
-    const container = gridContainerRef.current
-    if (!container) return
-
-    container.addEventListener('keydown', handleKeyDown)
-    return () => container.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown, gridContainerRef])
+    // on document, not the grid container: while the player is open the keys
+    // come from the dialog, which is portalled outside the grid
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
 
   // Reset position tracking when selection changes externally (e.g., mouse click)
   const resetPositionTracking = useCallback(() => {
