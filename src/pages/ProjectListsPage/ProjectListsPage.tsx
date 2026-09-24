@@ -48,7 +48,7 @@ import { UniqueIdentifier } from '@dnd-kit/core'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
 import { MoveToFolderDialogContainer } from './components/MoveToFolderDialog'
-import { useSlicerContext, useViewsContext } from '@shared/containers/index.ts'
+import { useSlicerContext, useViewLayoutId, useViewsContext } from '@shared/containers/index.ts'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
 import DndContextWrapper from './components/DndContextWrapper'
 import { toast } from 'react-toastify'
@@ -138,6 +138,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
   const { resetWorkingView } = useViewsContext()
+  const layoutId = useViewLayoutId()
   const { setPinnedSlice } = useSlicerContext()
   const handleResetView = useCallback(async () => {
     setPinnedSlice(null)
@@ -181,6 +182,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
         config={columns}
         onChange={onUpdateColumns}
         defaultColumnVisibility={defaultColumnVisibility}
+        layoutId={layoutId}
         columnIdAliases={listColumnConfig.columnIdAliases}
       >
         <DndContextWrapper reorderListItem={reorderListItem}>

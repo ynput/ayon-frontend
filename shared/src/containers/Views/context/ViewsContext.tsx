@@ -22,6 +22,7 @@ import { useBaseViewMutations } from '../hooks/useBaseViewMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
 import { useViewSettingsChanged } from '../hooks/useViewSettingsChanged'
 import { useLocalStorage } from '@shared/hooks/useLocalStorage'
+import { dropPendingColumnWrites } from '@shared/containers/ProjectTreeTable/utils/pendingColumnWrites'
 
 export type ViewData = GetDefaultViewApiResponse
 export type ViewSettings = GetDefaultViewApiResponse['settings']
@@ -277,6 +278,9 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   // Reset working view to default (empty) settings
   const resetWorkingView = useCallback(async () => {
+    // the reset awaits a base-view fetch before it writes, long enough for a debounced column
+    // write to land and restore the layout the user just discarded
+    dropPendingColumnWrites()
     try {
       await onResetWorkingView({
         existingWorkingViewId: workingView?.id,
@@ -305,6 +309,11 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     setCollapsed: setCollapsedSections,
     onResetWorkingView: resetWorkingView,
     onSelect: (viewId) => {
+      // the selection only lands once the mutation settles, so a debounced column write started on
+      // the old view would still commit and pull the user back to it
+      if (viewId !== selectedView?.id) {
+        dropPendingColumnWrites()
+      }
       setSelectedView(viewId)
       // reset the settings changed state when switching views
       setViewSettingsChanged(false)

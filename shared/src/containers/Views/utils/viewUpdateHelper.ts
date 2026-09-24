@@ -17,6 +17,7 @@ import {
   viewsQueries,
 } from '@shared/api'
 import { generateWorkingView } from './generateWorkingView'
+import { getSettingsWrittenThisTick, recordSettingsWrite } from './settingsWriteTick'
 import { toast } from 'react-toastify'
 import { SetStateAction, useCallback, useRef, useState } from 'react'
 import { useStore } from 'react-redux'
@@ -136,6 +137,7 @@ export const updateViewSettings = async (
     // reflects `newSettings`. Signal this so any subsequent sync call in the
     // same tick reads the fresh cache instead of the stale closure baseline.
     markCacheDirty()
+    recordSettingsWrite(viewType, projectName, newSettings)
 
     // if not already on the working view: set that the settings have been changed to show the little blue save button and switch to the working view
     // Note: selectedView?.id is always a real UUID from the server, never the WORKING_VIEW_ID sentinel.
@@ -223,6 +225,14 @@ export const useViewUpdateHelper = () => {
     const storeWorkingViewId = workingViewEntry?.data?.id
     // Prefer the store's working view ID over the potentially stale context closure value.
     const resolvedWorkingViewId = storeWorkingViewId || workingView?.id
+
+    // A write already made this tick is the freshest baseline, and the caches below may not
+    // show it yet: a seeded working view arrives through upsertQueryData, which is async.
+    // Every write targets the working view, so this is the right baseline whenever it exists.
+    const sameTickSettings = getSettingsWrittenThisTick(viewType, projectName)
+    if (sameTickSettings) {
+      return { settings: sameTickSettings, workingViewId: resolvedWorkingViewId }
+    }
 
     // 2. Determine the currently targeted view ID.
     // Use the store's getDefaultView cache (updated optimistically by setSelectedView) so that

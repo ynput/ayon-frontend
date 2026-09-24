@@ -4,7 +4,12 @@ import { useGroupByRemoteModules } from '@shared/hooks'
 import { SettingsPanelProvider } from '@shared/context'
 import { ProjectOverviewProvider } from '../context/ProjectOverviewContext'
 import ProjectOverviewTableProvider from './ProjectOverviewTableProvider'
-import { useOverviewViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers'
+import {
+  useOverviewViewSettings,
+  useViewLayoutId,
+  useViewsContext,
+  useViewUpdateHelper,
+} from '@shared/containers'
 import { DEFAULT_COLUMNS_FOLDER, DEFAULT_COLUMNS_TASK } from '@pages/ProjectsPage/constants'
 
 // thumbnail, name, type, status are there by default unless specified
@@ -23,6 +28,8 @@ const ProjectOverviewDataProvider: FC = () => {
     updateViewSettings,
   })
 
+  const layoutId = useViewLayoutId()
+
   const modules = useGroupByRemoteModules()
 
   return (
@@ -30,6 +37,7 @@ const ProjectOverviewDataProvider: FC = () => {
       config={columns}
       onChange={onUpdateColumns}
       defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
+      layoutId={layoutId}
     >
       <ColumnDndProvider>
         <ProjectOverviewProvider modules={modules}>
