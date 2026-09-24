@@ -184,8 +184,11 @@ const polymorphBaseQuery = combineBaseQueries(baseQuery, {
 
 const baseQueryWithRedirect: typeof polymorphBaseQuery = async (args, api, extraOptions) => {
   const url = window.location.pathname
+  const requestUrl: string = (typeof args === 'string' ? args : (args as any)?.url) || ''
   const shouldRedirectToLogin = () => {
-    if (!url.includes('connect') && !url.startsWith('/login')) {
+    // a 401 from the Ynput Cloud connect endpoints does not mean the user session expired
+    if (requestUrl.startsWith('/api/connect')) return
+    if (!url.startsWith('/login')) {
       console.error('Unauthorized: 401 error')
       window.location.href = '/login'
     }
