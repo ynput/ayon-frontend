@@ -203,9 +203,7 @@ export const useGridKeyboardNavigation = ({
 
       const columnsCount = calculateColumnsCount()
 
-      // left/right step the open player's reviewables, and up/down step one item
-      // at a time because the grid layout is hidden behind the player
-      if (playerOpen && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return
+      // up/down step one item at a time while the player hides the grid layout
       const rowStep = playerOpen ? 1 : columnsCount
 
       switch (e.key) {

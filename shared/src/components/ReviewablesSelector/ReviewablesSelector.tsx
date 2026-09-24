@@ -113,6 +113,15 @@ const ReviewablesSelector = forwardRef<ReviewablesSelectorHandle, ReviewablesSel
   // if no reviewables, return null
   if (!reviewables.length) return <div />
 
+  // w/s jump to the neighbouring reviewable, so a hovered neighbour advertises its key
+  const selectedIndex = reviewables.findIndex(({ fileId }) => selected.includes(fileId))
+  const shortcutForIndex = (index: number) => {
+    if (reviewables.length < 2 || selectedIndex === -1) return undefined
+    if (index === selectedIndex - 1) return 'W'
+    if (index === selectedIndex + 1) return 'S'
+    return undefined
+  }
+
   return (
     <Styled.ReviewablesSelector>
       <Styled.Scrollable
@@ -122,9 +131,10 @@ const ReviewablesSelector = forwardRef<ReviewablesSelectorHandle, ReviewablesSel
           scrollContainerRef.current = el
         }}
       >
-        {reviewables.map(({ fileId, label, tag, selectionVariant, contextMenuItems }) => (
+        {reviewables.map(({ fileId, label, tag, selectionVariant, contextMenuItems }, index) => (
           <Card
             key={fileId}
+            shortcut={shortcutForIndex(index)}
             projectName={projectName}
             fileId={fileId}
             label={label}
