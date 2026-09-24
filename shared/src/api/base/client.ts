@@ -179,7 +179,8 @@ const baseQuery = fetchBaseQuery({ baseUrl: '/', prepareHeaders: prepareHeaders 
 
 const polymorphBaseQuery = combineBaseQueries(baseQuery, {
   baseQuery: baseGraphqlQuery,
-  predicate: (args: any) => !!args.document && !!args.variables,
+  // variables are optional for graphql queries, the document alone identifies a graphql request
+  predicate: (args: any) => !!args?.document,
 })
 
 const baseQueryWithRedirect: typeof polymorphBaseQuery = async (args, api, extraOptions) => {
