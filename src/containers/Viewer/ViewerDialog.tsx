@@ -42,9 +42,19 @@ const ViewerDialog = () => {
   const dialogRef = useRef<HTMLDivElement>(null)
   const isOpen = Boolean((productId || taskId || folderId) && projectName)
 
+  const openerRef = useRef<HTMLElement | null>(null)
+
   useEffect(() => {
     if (isOpen) {
+      openerRef.current = document.activeElement as HTMLElement | null
       dialogRef.current?.focus()
+      return
+    }
+    const opener = openerRef.current
+    openerRef.current = null
+    // only hand focus back when the dialog was still holding it
+    if (opener && document.activeElement === document.body && document.contains(opener)) {
+      opener.focus()
     }
   }, [isOpen])
 
