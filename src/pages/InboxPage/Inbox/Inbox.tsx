@@ -340,6 +340,11 @@ const Inbox = ({ filter }: InboxProps) => {
     }
   }
 
+  const resolveVersionJump = (versionId: string) => {
+    const group = groupedMessages.find((g) => g.entityId === versionId)
+    return group ? () => handleMessageSelect(group.activityId) : undefined
+  }
+
   // REFRESH INBOX
   const [refreshInbox, { isRefreshing }] = useInboxRefresh({
     isFetching: isFetchingInbox,
@@ -793,6 +798,7 @@ const Inbox = ({ filter }: InboxProps) => {
                     selected={selected}
                     projectsInfo={projectsInfo}
                     onClose={() => setSelected([])}
+                    resolveVersionJump={resolveVersionJump}
                   />
                 </SplitterPanel>
               </DetailsPanelSplitter>
