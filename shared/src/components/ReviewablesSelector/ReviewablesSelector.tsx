@@ -117,8 +117,9 @@ const ReviewablesSelector = forwardRef<ReviewablesSelectorHandle, ReviewablesSel
   const selectedIndex = reviewables.findIndex(({ fileId }) => selected.includes(fileId))
   const shortcutForIndex = (index: number) => {
     if (reviewables.length < 2 || selectedIndex === -1) return undefined
-    if (index === selectedIndex - 1) return 'W'
-    if (index === selectedIndex + 1) return 'S'
+    const count = reviewables.length
+    if (index === (selectedIndex - 1 + count) % count) return 'W'
+    if (index === (selectedIndex + 1) % count) return 'S'
     return undefined
   }
 
