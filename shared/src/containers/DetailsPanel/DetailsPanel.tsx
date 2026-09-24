@@ -501,6 +501,7 @@ DetailsPanelProps) => {
               <DetailsPanelSubtasks
                 projectName={firstProject}
                 taskId={firstEntityData.id}
+                taskName={firstEntityData.name}
                 folderId={firstEntityData.folder?.id}
                 subtasks={firstEntityData.task?.subtasks || []}
                 SubtasksManager={SubtasksManager}
