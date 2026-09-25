@@ -17,7 +17,7 @@ import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useMemo } from 'react'
 import { useProjectContext } from '@shared/context/ProjectContext'
-import { useOptionalSlicerContext } from '@shared/containers/Slicer/context/SlicerContext'
+import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierarchySelection'
 import {
   newEntityDefinitions,
   type NewEntityType,
@@ -102,9 +102,7 @@ const useCellContextMenu = ({
     () => [...contextContextMenuItems, ...(propsContextMenuItems || [])],
     [contextContextMenuItems, propsContextMenuItems],
   )
-  const slicer = useOptionalSlicerContext()
-  const slicerSelection =
-    slicer?.sliceType === 'hierarchy' ? slicer.rowSelection : slicer?.pinnedSlice?.rowSelection
+  const slicerSelection = useHierarchySelection()
   const hasSlicerFolder = Object.values(slicerSelection || {}).some(Boolean)
   const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
