@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, useContext } from 'react'
+import { useEffect, useState, useCallback, useRef, useContext, useMemo } from 'react'
 import type { Options } from 'react-use-websocket'
 import { toast } from 'react-toastify'
 import { PubSub } from '@shared/util'
@@ -90,32 +90,44 @@ export const SocketProvider = ({
     subscribe()
   }, [topics, projectName])
 
-  const updateTopicsDebounce = debounce((newTopics) => {
-    if (isEqual(topics, newTopics)) return
-    console.log('WS: Subscriptions changed')
-    setTopics(newTopics)
-  }, 200)
+  // latest topics, so the (stable) debounced handler never compares against stale state
+  const topicsRef = useRef(topics)
+  topicsRef.current = topics
 
-  PubSub.setOnSubscriptionsChange((newTopics: string[]) => updateTopicsDebounce(newTopics))
+  const updateTopicsDebounce = useMemo(
+    () =>
+      debounce((newTopics) => {
+        if (isEqual(topicsRef.current, newTopics)) return
+        console.log('WS: Subscriptions changed')
+        setTopics(newTopics)
+      }, 200),
+    [],
+  )
+
+  useEffect(() => {
+    PubSub.setOnSubscriptionsChange((newTopics: string[]) => updateTopicsDebounce(newTopics))
+    // children may have subscribed before this effect ran, so sync the current topics once
+    updateTopicsDebounce(PubSub.getSubscriptions(''))
+
+    return () => {
+      PubSub.setOnSubscriptionsChange(null)
+      updateTopicsDebounce.cancel()
+    }
+  }, [updateTopicsDebounce])
 
   const [overloaded, setOverloaded] = useState(false)
   const [toastShown, setToastShown] = useState(false)
 
   // when overloaded is true, activate toast
   useEffect(() => {
-    if (overloaded)
-      if (!toastShown) {
-        toast.warning(<RefreshToast />, {
-          autoClose: false,
-          closeButton: false,
-        })
-        setToastShown(true)
-      }
-
-    return () => {
-      setOverloaded(false)
+    if (overloaded && !toastShown) {
+      toast.warning(<RefreshToast />, {
+        autoClose: false,
+        closeButton: false,
+      })
+      setToastShown(true)
     }
-  }, [overloaded, setOverloaded])
+  }, [overloaded, toastShown])
 
   // onMessage is a function that is called when a message comes in from the websocket
   // it is a closure that keeps track of the number of calls and the last call time
