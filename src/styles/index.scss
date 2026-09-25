@@ -478,6 +478,21 @@ a {
     z-index: 1;
   }
 
+  // subtle three dots in the middle to hint the gap is resizable
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    translate: -50% -50%;
+    background: var(--md-sys-color-outline);
+    pointer-events: none;
+    transition: opacity 0.1s ease-out;
+  }
+
   .p-splitter-gutter-handle {
     width: 100%;
     height: 100%;
@@ -487,22 +502,61 @@ a {
     transition: opacity 0.1s ease-out;
   }
 
-  &:hover .p-splitter-gutter-handle {
-    opacity: 1;
+  &:hover {
     // short delay so the handle doesn't flash when the cursor just passes over
-    transition-delay: 0.2s;
+    &::before,
+    .p-splitter-gutter-handle {
+      transition-delay: 0.2s;
+    }
+    &::before {
+      opacity: 0;
+    }
+    .p-splitter-gutter-handle {
+      opacity: 1;
+    }
   }
 
-  &.p-splitter-gutter-resizing .p-splitter-gutter-handle {
-    opacity: 1;
-    transition-delay: 0s;
+  &.p-splitter-gutter-resizing {
+    &::before,
+    .p-splitter-gutter-handle {
+      transition-delay: 0s;
+    }
+    &::before {
+      opacity: 0;
+    }
+    .p-splitter-gutter-handle {
+      opacity: 1;
+    }
+  }
+
+  // collapsed gutters (gutterSize 0) show no dots and have no grab area
+  &[style*='width: 0px'],
+  &[style*='height: 0px'] {
+    &::before,
+    &::after {
+      display: none;
+    }
   }
 }
-.p-splitter-horizontal > .p-splitter-gutter::after {
-  inset: 0 -3px;
+.p-splitter-horizontal > .p-splitter-gutter {
+  &::before {
+    box-shadow:
+      0 -5px 0 var(--md-sys-color-outline),
+      0 5px 0 var(--md-sys-color-outline);
+  }
+  &::after {
+    inset: 0 -3px;
+  }
 }
-.p-splitter-vertical > .p-splitter-gutter::after {
-  inset: -3px 0;
+.p-splitter-vertical > .p-splitter-gutter {
+  &::before {
+    box-shadow:
+      -5px 0 0 var(--md-sys-color-outline),
+      5px 0 0 var(--md-sys-color-outline);
+  }
+  &::after {
+    inset: -3px 0;
+  }
 }
 
 // if the panel after the splitter gutter is hidden then hide the gutter too
