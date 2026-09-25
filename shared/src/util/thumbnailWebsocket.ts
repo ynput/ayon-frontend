@@ -1,3 +1,5 @@
+import PubSub from './pubsub'
+
 /**
  * The expected structure of a websocket message when a thumbnail is updated.
  */
@@ -13,11 +15,11 @@ export type ThumbnailUpdateMessage = {
 
 export type ThumbnailUpdater = (messages: ThumbnailUpdateMessage[]) => void
 
-// Singleton WebSocket instance
-let ws: WebSocket | null = null
+// Messages are received through the shared SocketProvider websocket and published via PubSub
+const THUMBNAIL_TOPIC = 'thumbnail.updated'
+let pubSubToken: string | undefined
 // Set of active updater objects with their filters
 const updaters = new Set<{ updater: ThumbnailUpdater; entityTypes?: string[] }>()
-let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
 
 // Queue for lazy batched updates
 let messageQueue: ThumbnailUpdateMessage[] = []
@@ -59,63 +61,18 @@ const queueMessage = (message: ThumbnailUpdateMessage) => {
   }, debounceDelay)
 }
 
-/**
- * Initializes the WebSocket connection and sets up event listeners.
- */
-const connectWS = () => {
-  if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
-    return
-  }
+const handleThumbnailMessage = (topic: string, message: ThumbnailUpdateMessage) => {
+  if (topic !== THUMBNAIL_TOPIC || !message?.summary) return
 
-  const proto = window.location.protocol.replace('http', 'ws')
-  const wsAddress = `${proto}//${window.location.host}/ws`
-
-  ws = new WebSocket(wsAddress)
-
-  ws.onopen = () => {
-    const accessToken = localStorage.getItem('accessToken')
-    if (ws?.readyState === WebSocket.OPEN) {
-      ws.send(
-        JSON.stringify({
-          topic: 'auth',
-          token: accessToken,
-          subscribe: ['thumbnail.updated'],
-        }),
-      )
-    }
-  }
-
-  ws.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data)
-
-      // Note: Ensure your server data structure matches this check.
-      // If the server wraps the message in a 'payload' property, adjust accordingly.
-      if (data.topic === 'thumbnail.updated') {
-        const message = data as ThumbnailUpdateMessage
-
-        // Bypass debounce if current client initiated the change
-        if (message.sender && message.sender === (window as any).senderId) {
-          updaters.forEach(({ updater, entityTypes }) => {
-            if (!entityTypes || entityTypes.includes(message.summary.entityType)) {
-              updater([message])
-            }
-          })
-        } else {
-          queueMessage(message)
-        }
+  // Bypass debounce if current client initiated the change
+  if (message.sender && message.sender === window.senderId) {
+    updaters.forEach(({ updater, entityTypes }) => {
+      if (!entityTypes || entityTypes.includes(message.summary.entityType)) {
+        updater([message])
       }
-    } catch (error) {
-      console.error('Failed to parse thumbnail update websocket message', error)
-    }
-  }
-
-  ws.onclose = () => {
-    ws = null
-    // Auto-reconnect after 5 seconds if there are still active subscribers
-    if (updaters.size > 0) {
-      reconnectTimeout = window.setTimeout(() => connectWS(), 5000)
-    }
+    })
+  } else {
+    queueMessage(message)
   }
 }
 
@@ -130,27 +87,22 @@ export const subscribeToThumbnailUpdates = (updater: ThumbnailUpdater, entityTyp
   const updaterObj = { updater, entityTypes }
   updaters.add(updaterObj)
 
-  if (updaters.size === 1) {
-    connectWS()
+  if (!pubSubToken) {
+    pubSubToken = PubSub.subscribe(THUMBNAIL_TOPIC, handleThumbnailMessage)
   }
 
   return () => {
     updaters.delete(updaterObj)
 
     if (updaters.size === 0) {
-      if (reconnectTimeout) {
-        window.clearTimeout(reconnectTimeout)
-        reconnectTimeout = undefined
-      }
       if (processTimeout) {
         window.clearTimeout(processTimeout)
         processTimeout = undefined
         messageQueue = []
       }
-      if (ws) {
-        ws.onclose = null // Prevent reconnect loop on intentional disconnect
-        ws.close()
-        ws = null
+      if (pubSubToken) {
+        PubSub.unsubscribe(pubSubToken)
+        pubSubToken = undefined
       }
     }
   }
