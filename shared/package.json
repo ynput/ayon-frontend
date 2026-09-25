@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "Shared React components for AYON frontend",
   "module": "dist/index.es.js",
   "exports": {
