@@ -76,6 +76,7 @@ type Params = {
   modules: ProjectTableModulesType
   skipLinks?: boolean
   showComments?: boolean // only fetch latestComments when the comments column is visible
+  attribNames?: string[] // only fetch the attributes of visible columns, all when undefined
   isLoadingViews?: boolean
   onCollapseAll?: () => void
   // entity ids currently rendered in the table's viewport (hierarchy mode only) - used to
@@ -106,6 +107,7 @@ export const useFetchOverviewData = ({
   modules,
   skipLinks,
   showComments = false,
+  attribNames,
   isLoadingViews = false,
   onCollapseAll,
   visibleEntityIds = [],
@@ -185,6 +187,7 @@ export const useFetchOverviewData = ({
     folderFilter: folderFilters.filterString,
     search: taskFilters.search,
     showComments,
+    attribNames,
   }
 
   // QUERY
@@ -435,6 +438,7 @@ export const useFetchOverviewData = ({
     sortBy: taskSortId ? taskSortId.replace('_', '.') : undefined,
     desc: !!singleSort?.desc,
     showComments,
+    attribNames,
     includeFolderChildren: !getTasksDirectlyUnderFolder,
   }
 
@@ -516,6 +520,7 @@ export const useFetchOverviewData = ({
     folderIds: tasksFolderIdsParams,
     groupCount: taskGroupsCount,
     showComments,
+    attribNames,
   }
 
   const {

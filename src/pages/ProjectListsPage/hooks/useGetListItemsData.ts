@@ -7,6 +7,7 @@ import {
   toListItemsStatsTargets,
   totalRowsFromStats,
   useGetEntityLinksQuery,
+  useGetEntityListAttributesDefinitionQuery,
   useGetListItemsColumnStatsQuery,
   useGetListItemsInfiniteInfiniteQuery,
   SubTaskNode,
@@ -25,7 +26,12 @@ import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/e
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { extractSearchFromFilters } from '../util/searchToQueryFilter'
 import { OnSyncDataCallback, usePowerpack, useProjectContext } from '@shared/context'
-import { useListsViewSettings, useProjectDataContext, useViewsContext } from '@shared/containers'
+import {
+  getVisibleAttribNames,
+  useListsViewSettings,
+  useProjectDataContext,
+  useViewsContext,
+} from '@shared/containers'
 import { getColumnSortKey } from '@shared/containers/ProjectTreeTable/buildTreeTableColumns'
 import { useAppDispatch } from '@state/store'
 
@@ -143,6 +149,50 @@ const useGetListItemsData = ({
     return parsedSortId
   }
 
+  // list attributes are needed to know which attribute values have to come from the list item
+  const {
+    data: listAttributes = [],
+    isLoading: isLoadingListAttributes,
+    isError: isListAttributesError,
+  } = useGetEntityListAttributesDefinitionQuery(
+    { projectName, listId: listId || '' },
+    { skip: !projectName || !listId },
+  )
+
+  // only fetch the attributes of visible columns
+  const { attribNames, withListAttrib } = useMemo(() => {
+    const visibility = {
+      columnVisibility: columns.columnVisibility,
+      defaultColumnVisibility,
+      sorting,
+    }
+    // list attribute values (also the ones overriding entity attributes) are only on the list
+    // item, together with all the entity attributes
+    const withListAttrib =
+      isListAttributesError ||
+      getVisibleAttribNames({ attribFields: listAttributes, ...visibility }).length > 0
+
+    return {
+      withListAttrib,
+      attribNames: withListAttrib
+        ? undefined
+        : getVisibleAttribNames({
+            attribFields: attribFields.filter(
+              (field) => !!statsEntity && field.scope?.includes(statsEntity),
+            ),
+            ...visibility,
+          }),
+    }
+  }, [
+    listAttributes,
+    isListAttributesError,
+    attribFields,
+    statsEntity,
+    columns.columnVisibility,
+    defaultColumnVisibility,
+    sorting,
+  ])
+
   const listItemsArgs = {
     projectName,
     listId: listId || '',
@@ -151,6 +201,8 @@ const useGetListItemsData = ({
     filter: queryFilterString || undefined,
     search,
     showComments,
+    attribNames,
+    withListAttrib,
   }
 
   const {
@@ -165,7 +217,7 @@ const useGetListItemsData = ({
     refetch: refetchListItems,
   } = useGetListItemsInfiniteInfiniteQuery(listItemsArgs, {
     initialPageParam: { cursor: '' },
-    skip: !projectName || !listId || isLoadingViews || skip,
+    skip: !projectName || !listId || isLoadingViews || isLoadingListAttributes || skip,
   })
 
   // Only show loading when query arguments change, not on background refetches

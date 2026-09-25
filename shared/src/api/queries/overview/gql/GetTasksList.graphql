@@ -12,6 +12,7 @@ query GetTasksList(
   $last: Int
   $sortBy: String
   $showComments: Boolean! = false
+  $attribNames: [String!]
   $includeFolderChildren: Boolean! = true
 ) {
   project(name: $projectName) {

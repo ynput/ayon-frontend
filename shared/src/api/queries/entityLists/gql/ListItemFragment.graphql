@@ -4,6 +4,7 @@ fragment ListItemFragment on BaseNode {
   updatedAt
   createdAt
   parents
+  attrib(names: $attribNames) @skip(if: $withListAttrib)
   ... on TaskNode {
     label
     status

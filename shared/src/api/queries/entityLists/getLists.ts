@@ -8,6 +8,7 @@ import type {
   GetListsQueryVariables,
 } from '@shared/api/generated'
 import { parseJSONField } from '../overview'
+import { getSetAttrib } from '../attributes/attribValues'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 import {
   createRealtimeBatcher,
@@ -87,7 +88,11 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
               return {
                 ...node,
                 ...edge,
-                attrib: parseJSONField(edge.allAttrib),
+                // allAttrib (entity + list attributes) is only fetched when list attributes are needed
+                attrib:
+                  edge.allAttrib !== undefined
+                    ? parseJSONField(edge.allAttrib)
+                    : getSetAttrib(node?.attrib),
               } as GetListItemsResult['items'][number]
             }),
           ),

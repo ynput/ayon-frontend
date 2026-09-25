@@ -8,6 +8,7 @@ import {
   SearchFoldersApiArg,
   GetTasksListQueryVariables,
 } from '@shared/api/generated'
+import { getSetAttrib } from '../attributes/attribValues'
 import PubSub from '@shared/util/pubsub'
 import {
   createRealtimeBatcher,
@@ -53,7 +54,7 @@ const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): Edi
     tasks.push({
       ...taskNode,
       folderId: taskNode.folderId || 'root',
-      attrib: parseJSONField(taskNode.allAttrib),
+      attrib: getSetAttrib(taskNode.attrib),
       data: parseJSONField(taskNode.data),
       entityId: taskNode.id,
       entityType: 'task',
@@ -105,6 +106,7 @@ export type GetTasksListArgs = {
   desc?: boolean
   sortBy?: string
   showComments?: boolean
+  attribNames?: string[] // attributes to fetch, all when undefined
   includeFolderChildren?: boolean
 }
 
@@ -122,6 +124,7 @@ export type GetGroupedTasksListArgs = {
   sortBy?: string
   groupCount?: number // optional override for all groups
   showComments?: boolean
+  attribNames?: string[] // attributes to fetch, all when undefined
 }
 
 // Define the page param type for infinite query
@@ -204,8 +207,9 @@ const getCacheKey = (
   folderFilter?: string,
   search?: string,
   showComments?: boolean,
+  attribNames?: string[],
 ) => {
-  return JSON.stringify({ projectName, filter, folderFilter, search, showComments })
+  return JSON.stringify({ projectName, filter, folderFilter, search, showComments, attribNames })
 }
 
 const markFoldersAsQueried = (cacheKey: string, folderIds: string[]) => {
@@ -235,15 +239,16 @@ const injectedApi = enhancedApi.injectEndpoints({
         folderFilter?: string
         search?: string
         showComments?: boolean
+        attribNames?: string[] // attributes to fetch, all when undefined
       }
     >({
       async queryFn(
-        { projectName, parentIds, filter, folderFilter, search, showComments },
+        { projectName, parentIds, filter, folderFilter, search, showComments, attribNames },
         { dispatch, getState, forced },
       ) {
         try {
           const state = getState()
-          const cacheArgs = { projectName, filter, folderFilter, search, showComments }
+          const cacheArgs = { projectName, filter, folderFilter, search, showComments, attribNames }
 
           // Select current flat cache state
           const currentCache = (injectedApi.endpoints as any).getOverviewTasksByFolders.select(
@@ -252,7 +257,14 @@ const injectedApi = enhancedApi.injectEndpoints({
           const cacheData: EditorTaskNode[] = currentCache?.data || []
 
           // 1. Generate a stable cache key matching RTK Query's serialization
-          const cacheKey = getCacheKey(projectName, filter, folderFilter, search, showComments)
+          const cacheKey = getCacheKey(
+            projectName,
+            filter,
+            folderFilter,
+            search,
+            showComments,
+            attribNames,
+          )
 
           // 2. Fetch our registry specific to THIS combination of search/filters
           const alreadyQueriedFolders = getQueriedFolders(cacheKey)
@@ -307,6 +319,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                     folderFilter,
                     search,
                     showComments: !!showComments,
+                    attribNames,
                     first: TASKS_PER_PAGE,
                     after: cursor,
                   },
@@ -352,13 +365,13 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
       async onCacheEntryAdded(
-        { projectName, parentIds, filter, folderFilter, search, showComments },
+        { projectName, parentIds, filter, folderFilter, search, showComments, attribNames },
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch, getCacheEntry },
       ) {
         let token: any
         const batchProcessMessages: RealtimeBatchProcessor<any> = async (messages, isActive) => {
           const queriedFolders = getQueriedFolders(
-            getCacheKey(projectName, filter, folderFilter, search, showComments),
+            getCacheKey(projectName, filter, folderFilter, search, showComments, attribNames),
           )
           const cachedTaskIds = new Set(
             (getCacheEntry().data as EditorTaskNode[] | undefined)?.map((task) => task.id) || [],
@@ -413,6 +426,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                   projectName,
                   taskIds: idsToFetch,
                   showComments: !!showComments,
+                  attribNames,
                 } as any,
                 { forceRefetch: true },
               ),
@@ -484,7 +498,14 @@ const injectedApi = enhancedApi.injectEndpoints({
         batcher.clear()
 
         // Evict tracking map memory entry completely when this RTK Query cache entry expires
-        const deadCacheKey = getCacheKey(projectName, filter, folderFilter, search, showComments)
+        const deadCacheKey = getCacheKey(
+          projectName,
+          filter,
+          folderFilter,
+          search,
+          showComments,
+          attribNames,
+        )
         delete queriedFoldersRegistry[deadCacheKey]
 
         if (token) PubSub.unsubscribe(token)
@@ -552,6 +573,7 @@ const injectedApi = enhancedApi.injectEndpoints({
             sortBy,
             desc,
             showComments,
+            attribNames,
             includeFolderChildren,
           } = queryArg
           const { cursor } = pageParam
@@ -565,6 +587,7 @@ const injectedApi = enhancedApi.injectEndpoints({
             folderIds,
             taskIds,
             showComments: !!showComments,
+            attribNames,
             includeFolderChildren: includeFolderChildren !== false, // default to true
           }
 
@@ -674,6 +697,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                   taskIds: idsToFetch,
                   folderIds: arg.folderIds,
                   showComments: !!arg.showComments,
+                  attribNames: arg.attribNames,
                 } as any,
                 { forceRefetch: true },
               ),
@@ -781,6 +805,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           sortBy,
           groupCount,
           showComments,
+          attribNames,
         },
         api,
       ) => {
@@ -833,6 +858,7 @@ const injectedApi = enhancedApi.injectEndpoints({
               folderIds,
               sortBy: sortBy,
               showComments: !!showComments,
+              attribNames,
               // @ts-expect-error - we know group does not exist on query variables but we need it for later
               group: group.value,
             }

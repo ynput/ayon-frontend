@@ -1,5 +1,6 @@
 import { gqlApi, usersApi } from '@shared/api/generated'
-import type { GetCurrentUserApiResponse } from '@shared/api/generated'
+import type { GetCurrentUserApiResponse, UserAttribModel } from '@shared/api/generated'
+import { getAttrib } from '../attributes/attribValues'
 import type {
   GetActiveUsersCountQuery,
   GetAllAssigneesQuery,
@@ -67,9 +68,7 @@ query Assignees($names: [String!]!){
   edges {
     node {
       name
-      attrib {
-        fullName
-      }
+      attrib(names: ["fullName"])
     }
   }
 }
@@ -80,9 +79,7 @@ query Assignees($projectName: String) {
   edges {
     node {
       name
-      attrib {
-        fullName
-      }
+      attrib(names: ["fullName"])
     }
   }
 }
@@ -203,7 +200,7 @@ const injectedApi = gqlApi.injectEndpoints({
 type AssigneeNode = GetAllProjectUsersAsAssigneeQuery['users']['edges'][0]['node']
 export type Assignee = {
   name: AssigneeNode['name']
-  fullName: AssigneeNode['attrib']['fullName']
+  fullName: UserAttribModel['fullName']
   updatedAt: AssigneeNode['updatedAt']
 }
 export type Assignees = Assignee[]
@@ -226,7 +223,7 @@ const gqlUsers = injectedApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       transformResponse: (res: GetAllProjectUsersAsAssigneeQuery) =>
         res.users.edges.map((e) => ({
           name: e.node.name,
-          fullName: e.node.attrib.fullName,
+          fullName: getAttrib<UserAttribModel>(e.node.attrib).fullName,
           updatedAt: e.node.updatedAt,
         })),
       providesTags: (res) =>
@@ -243,7 +240,7 @@ const gqlUsers = injectedApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       transformResponse: (res: GetAllAssigneesQuery) =>
         res.users.edges.map((e) => ({
           name: e.node.name,
-          fullName: e.node.attrib.fullName,
+          fullName: getAttrib<UserAttribModel>(e.node.attrib).fullName,
           updatedAt: e.node.updatedAt,
         })),
       providesTags: (res) =>

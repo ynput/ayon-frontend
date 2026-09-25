@@ -41,7 +41,7 @@ import {
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
 import { normalizeQueryError } from '@shared/api/base/queryError'
-import { parseJSONField } from '../overview'
+import { getSetAttrib } from '../attributes/attribValues'
 import {
   getSupportedEntityPatch,
   createRealtimeBatcher,
@@ -150,25 +150,25 @@ function updateFlatCache<T extends { id: string }>(
 
 // Query result types
 export type FolderAttribNode = VpFolderFragment & {
-  attrib: Record<string, any> // parsed from allAttrib JSON string
+  attrib: Record<string, any> // parsed attribute values
 }
 export type VersionNodeRAW = GetVersionsQuery['project']['versions']['edges'][0]['node']
 type VersionTaskNode = NonNullable<VersionNodeRAW['task']> & {
-  attrib: Record<string, any> // parsed from allAttrib JSON string
+  attrib: Record<string, any> // parsed attribute values
   ownAttrib: string[]
 }
 export type VersionNode = Omit<VersionNodeRAW, 'task'> & {
   task: VersionTaskNode | null
-  attrib: Record<string, any> // parsed from allAttrib JSON string
+  attrib: Record<string, any> // parsed attribute values
   product: VersionNodeRAW['product'] & {
-    attrib: Record<string, any> // parsed from allAttrib JSON string
+    attrib: Record<string, any> // parsed attribute values
     folder: FolderAttribNode // folder with parsed attribs
   }
   groups?: { value?: string; hasNextPage?: string }[] // grouping metadata
 }
 export type ProductNodeRAW = GetProductsQuery['project']['products']['edges'][0]['node']
 export type ProductNode = Omit<ProductNodeRAW, 'versions'> & {
-  attrib: Record<string, any> // parsed from allAttrib JSON string
+  attrib: Record<string, any> // parsed attribute values
   featuredVersion?: VersionNode | null // added separately
   folder: FolderAttribNode // folder with parsed attribs
   versions: {
@@ -178,6 +178,24 @@ export type ProductNode = Omit<ProductNodeRAW, 'versions'> & {
     heroVersionId?: string | null
   }[] // versions with isHero flag
 }
+
+// attributes to fetch per entity (only the visible columns), all attributes when not set
+export type VPAttribNames = Pick<
+  GetVersionsQueryVariables,
+  'versionAttribNames' | 'productAttribNames' | 'folderAttribNames' | 'taskAttribNames'
+>
+
+const pickAttribNames = ({
+  versionAttribNames,
+  productAttribNames,
+  folderAttribNames,
+  taskAttribNames,
+}: VPAttribNames): VPAttribNames => ({
+  versionAttribNames,
+  productAttribNames,
+  folderAttribNames,
+  taskAttribNames,
+})
 
 export type GetVersionsResult = {
   pageInfo?: PageInfo
@@ -225,7 +243,7 @@ export type GetGroupedVersionsListArgs = {
   featuredOnlyEntityType?: string
   latestPerFolder?: boolean
   hasReviewables?: boolean
-}
+} & VPAttribNames
 
 export type GetGroupedVersionsListResult = {
   versions: VersionNode[]
@@ -377,7 +395,7 @@ function createVersionUpdateBatcher(
     onBatchUpdate: (changes: {
       deleted?: { entityId: string; parentId?: string }[]
       patched?: { entityId: string; field: string; value: any; parentId?: string }[]
-      attribPatched?: { entityId: string; allAttrib: string; parsedAttrib: any }[]
+      attribPatched?: { entityId: string; attrib: Record<string, any> }[]
       fullUpdated?: VersionNode[]
       createdVersionIds?: Set<string>
     }) => void
@@ -446,7 +464,7 @@ function createVersionUpdateBatcher(
       }
     }
 
-    const attribPatched: { entityId: string; allAttrib: string; parsedAttrib: any }[] = []
+    const attribPatched: { entityId: string; attrib: Record<string, any> }[] = []
     if (attribsToFetch.size > 0 && attribsToFetch.size <= REALTIME_REST_CALL_LIMIT && dispatch) {
       try {
         await waitForRealtimeJitter()
@@ -454,7 +472,11 @@ function createVersionUpdateBatcher(
         const versionIds = Array.from(attribsToFetch)
         const result = await dispatch(
           enhancedVersionsPageApi.endpoints.GetVersionsAttribs.initiate(
-            { projectName, versionIds },
+            {
+              projectName,
+              versionIds,
+              versionAttribNames: handlers.getBaseFilters?.()?.versionAttribNames,
+            },
             { forceRefetch: true },
           ),
         )
@@ -464,11 +486,7 @@ function createVersionUpdateBatcher(
           for (const edge of result.data.project.versions.edges) {
             const node = edge.node
             if (node) {
-              attribPatched.push({
-                entityId: node.id,
-                allAttrib: node.allAttrib,
-                parsedAttrib: parseJSONField(node.allAttrib),
-              })
+              attribPatched.push({ entityId: node.id, attrib: getSetAttrib(node.attrib) })
             }
           }
         }
@@ -629,6 +647,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               latestPerFolder: arg.latestPerFolder,
               hasReviewables: arg.hasReviewables,
               sortBy: arg.sortBy,
+              ...pickAttribNames(arg),
             }),
             checkVersionInCache: (entityId) => {
               const cacheVersions = getCacheEntry().data
@@ -666,12 +685,9 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                   }
                   // Handle attrib patched
                   if (attribPatched) {
-                    for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
+                    for (const { entityId, attrib } of attribPatched) {
                       const version = page.versions.find((v) => v.id === entityId)
-                      if (version) {
-                        version.allAttrib = allAttrib
-                        version.attrib = parsedAttrib
-                      }
+                      if (version) version.attrib = attrib
                     }
                   }
                   // Handle full updates
@@ -848,6 +864,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             folderFilter: arg.folderFilter,
             productIds: arg.productIds,
             latestPerFolder: arg.latestPerFolder,
+            ...pickAttribNames(arg),
           }),
           checkVersionInCache: (entityId, parentId) => {
             if (!parentId || !arg.productIds.includes(parentId)) return false
@@ -878,12 +895,9 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               }
               // Handle attrib patches
               if (attribPatched) {
-                for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
+                for (const { entityId, attrib } of attribPatched) {
                   const version = draft.versions.find((v) => v.id === entityId)
-                  if (version) {
-                    version.allAttrib = allAttrib
-                    version.attrib = parsedAttrib
-                  }
+                  if (version) version.attrib = attrib
                 }
               }
               // Handle full updates
@@ -1036,6 +1050,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               taskFilter: arg.taskFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
               first: productIds.length,
+              ...pickAttribNames(arg),
             }
 
             const result = await dispatch(
@@ -1097,6 +1112,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               taskFilter: arg.taskFilter,
               folderFilter: arg.folderFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+              ...pickAttribNames(arg),
             }),
             checkVersionInCache: (entityId, parentId) => {
               let found = false
@@ -1137,10 +1153,9 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
                     // Handle attrib patches
                     if (attribPatched) {
-                      for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
+                      for (const { entityId, attrib } of attribPatched) {
                         if (featuredId === entityId && p.featuredVersion) {
-                          p.featuredVersion.allAttrib = allAttrib
-                          p.featuredVersion.attrib = parsedAttrib
+                          p.featuredVersion.attrib = attrib
                         }
                       }
                     }
@@ -1204,6 +1219,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           featuredOnlyEntityType,
           latestPerFolder,
           hasReviewables,
+          ...attribNames
         },
         api,
       ) => {
@@ -1227,6 +1243,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               featuredOnlyEntityType,
               latestPerFolder,
               hasReviewables,
+              ...pickAttribNames(attribNames),
               group: group.value,
             } as GetVersionsQueryVariables & { group: string }
 
@@ -1321,6 +1338,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             featuredOnlyEntityType: arg.featuredOnlyEntityType,
             latestPerFolder: arg.latestPerFolder,
             hasReviewables: arg.hasReviewables,
+            ...pickAttribNames(arg),
           }),
           checkVersionInCache: (entityId) => {
             let found = false
@@ -1350,12 +1368,9 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               }
               // Handle attrib patches
               if (attribPatched) {
-                for (const { entityId, allAttrib, parsedAttrib } of attribPatched) {
+                for (const { entityId, attrib } of attribPatched) {
                   const version = draft.versions.find((v) => v.id === entityId)
-                  if (version) {
-                    version.allAttrib = allAttrib
-                    version.attrib = parsedAttrib
-                  }
+                  if (version) version.attrib = attrib
                 }
               }
               // Handle full updates

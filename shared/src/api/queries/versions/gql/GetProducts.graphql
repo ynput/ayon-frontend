@@ -14,6 +14,10 @@ query GetProducts(
   $last: Int
   $sortBy: String
   $showComments: Boolean! = false
+  # attributes to fetch per entity, all attributes when not set
+  $versionAttribNames: [String!]
+  $productAttribNames: [String!]
+  $folderAttribNames: [String!]
 ) {
   project(name: $projectName) {
     products(
@@ -45,7 +49,7 @@ query GetProducts(
           type
           productType
           productBaseType
-          allAttrib
+          attrib(names: $productAttribNames)
           parents
           createdAt
           updatedAt

@@ -8,6 +8,7 @@ query GetTasksByParent(
   $folderFilter: String
   $search: String
   $showComments: Boolean! = false
+  $attribNames: [String!]
   $first: Int = 1000
   $after: String
 ) {

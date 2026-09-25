@@ -5,7 +5,9 @@ import type {
   GetActivitiesQueryVariables,
   GetActivityUsersQuery,
   GetEntitiesChecklistsQuery,
+  UserAttribModel,
 } from '@shared/api/generated'
+import { getAttrib, type TypedAttrib } from '../attributes/attribValues'
 import { provideSharedActivityTags, taskProvideTags } from './util/activitiesHelpers'
 import {
   ActivitiesResult,
@@ -20,7 +22,9 @@ import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxj
 import type { ChecklistCount } from './types'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 
-type ActivityUserNode = GetActivityUsersQuery['users']['edges'][0]['node']
+type ActivityUserNode = Omit<GetActivityUsersQuery['users']['edges'][0]['node'], 'attrib'> & {
+  attrib: TypedAttrib<UserAttribModel>
+}
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
@@ -59,7 +63,11 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
           : [{ type: 'activity', id: 'LIST' }],
     },
     GetActivityUsers: {
-      transformResponse: (res: GetActivityUsersQuery) => res.users.edges.map((edge) => edge.node),
+      transformResponse: (res: GetActivityUsersQuery): ActivityUserNode[] =>
+        res.users.edges.map((edge) => ({
+          ...edge.node,
+          attrib: getAttrib<UserAttribModel>(edge.node.attrib),
+        })),
       providesTags: (res) =>
         res?.length
           ? [{ type: 'user', id: 'LIST' }, ...res.map(({ name }) => ({ type: 'user', id: name }))]

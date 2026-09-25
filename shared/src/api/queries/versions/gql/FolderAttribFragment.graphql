@@ -10,5 +10,5 @@ fragment VPFolder on FolderNode {
   thumbnailHash
   active
   hasReviewables
-  allAttrib
+  attrib(names: $folderAttribNames)
 }

@@ -16,6 +16,9 @@ const useClearListItems = ({ projectName }: Props) => {
         projectName,
         listId,
         first: 1000,
+        // only the item ids are needed
+        attribNames: [],
+        withListAttrib: false,
       }).unwrap()
 
       const hasNextPage = result.pageInfo.hasNextPage

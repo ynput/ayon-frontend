@@ -9,7 +9,7 @@ import {
   VersionNode,
   VersionNodeRAW,
 } from './getVersionsProducts'
-import { parseJSONField } from '../overview'
+import { getSetAttrib } from '../attributes/attribValues'
 
 // TAGS
 const VERSION_TYPE = 'version' as const
@@ -104,12 +104,13 @@ export const flattenInfiniteProductsData = (data: ProductInfiniteResult): Produc
 }
 
 export const transformVersionNode = (node: VersionNodeRAW): VersionNode => {
-  const attrib = parseJSONField(node.allAttrib)
+  const attrib = getSetAttrib(node.attrib)
+  const taskAttrib = getSetAttrib(node.task?.attrib)
   const task = node.task
     ? {
         ...node.task,
-        attrib: parseJSONField(node.task.allAttrib),
-        ownAttrib: Object.keys(parseJSONField(node.task.allAttrib)),
+        attrib: taskAttrib,
+        ownAttrib: Object.keys(taskAttrib),
       }
     : node.task
 
@@ -117,10 +118,10 @@ export const transformVersionNode = (node: VersionNodeRAW): VersionNode => {
   const product = node.product
     ? {
         ...node.product,
-        attrib: parseJSONField(node.product.allAttrib),
+        attrib: getSetAttrib(node.product.attrib),
         folder: {
           ...node.product.folder,
-          attrib: parseJSONField(node.product.folder.allAttrib),
+          attrib: getSetAttrib(node.product.folder.attrib),
         },
       }
     : node.product
@@ -150,9 +151,9 @@ const transformProductVersionToExtendedVersion = (product: ProductNodeRAW): Vers
       id: product.id,
       name: product.name,
       productType: product.productType,
-      allAttrib: product.allAttrib,
+      attrib: product.attrib,
       folder: {
-        allAttrib: product.folder.allAttrib,
+        attrib: product.folder.attrib,
       },
     },
   } as VersionNodeRAW)
@@ -162,10 +163,10 @@ export const transformProductsResponse = (response: GetProductsQuery): GetProduc
   const pageInfo = response.project.products.pageInfo
   const products = response.project.products.edges.map((edge) => {
     const product = edge.node
-    const attrib = parseJSONField(product.allAttrib)
+    const attrib = getSetAttrib(product.attrib)
     const folder = {
       ...product.folder,
-      attrib: parseJSONField(product.folder.allAttrib),
+      attrib: getSetAttrib(product.folder.attrib),
     }
     // detect hero version (negative version indicates hero) and mark it when transforming
     const heroRaw = product.versions.find((v) => Math.sign(v.version) === -1)

@@ -199,7 +199,6 @@ export type EditorVersionNode = {
   createdAt?: string
   active: boolean
   assignees: Array<string>
-  allAttrib: string
   attrib?: Record<string, any>
   product?: {
     id: string
@@ -227,7 +226,6 @@ export type EditorProductNode = {
   createdAt?: string
   active: boolean
   assignees: Array<string>
-  allAttrib: string
   attrib?: Record<string, any>
   links: EntityLink[]
   hasVersions?: boolean
