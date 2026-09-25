@@ -19,7 +19,6 @@ export type ProductNodeExtended = ProductNode & {
   createdAt?: string
   active: boolean
   assignees: Array<string>
-  allAttrib: string
   attrib?: Record<string, any>
   links: EntityLink[]
 }
@@ -47,7 +46,6 @@ export function productNodeToExtended(product: ProductNode): ProductNodeExtended
     createdAt: product.createdAt || '',
     active: product.active || false,
     assignees: [], // not applicable
-    allAttrib: product.allAttrib,
     attrib: product.attrib || {},
     links: [], // not applicable right now
   }
@@ -75,7 +73,6 @@ export function versionNodeToEditorVersionNode(version: VersionNode): VersionNod
     createdAt: version.createdAt || '',
     active: version.active || false,
     assignees: [], // not applicable
-    allAttrib: version.allAttrib,
     attrib: version.attrib || {},
     product: version.product,
     productType: version.product.productType, // this is essential for grouping by product type

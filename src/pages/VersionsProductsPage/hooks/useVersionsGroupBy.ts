@@ -119,6 +119,10 @@ const useVersionsGroupBy = ({
     featuredOnlyEntityType: versionArguments.featuredOnlyEntityType,
     latestPerFolder: versionArguments.latestPerFolder,
     hasReviewables: versionArguments.hasReviewables,
+    versionAttribNames: versionArguments.versionAttribNames,
+    productAttribNames: versionArguments.productAttribNames,
+    folderAttribNames: versionArguments.folderAttribNames,
+    taskAttribNames: versionArguments.taskAttribNames,
   }
 
   const {

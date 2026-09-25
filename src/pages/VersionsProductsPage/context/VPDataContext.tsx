@@ -33,7 +33,10 @@ import {
   checkColumnVisibility,
   getColumnSortKey,
   createFilterFromSlicer,
+  getAttribNameFromFieldId,
+  getVisibleAttribNames,
   TableRow,
+  useColumnSettingsContext,
   useExpandedState,
   useProjectDataContext,
   useQueryFilters,
@@ -51,7 +54,7 @@ import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
 import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
-import type { FieldStats } from '@shared/api'
+import type { FieldStats, VPAttribNames } from '@shared/api'
 import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import {
   DEFAULT_FEATURED_ORDER,
@@ -168,7 +171,7 @@ export type QueryArguments = {
   latestPerFolder?: boolean
   hasReviewables?: boolean
   showComments?: boolean
-}
+} & VPAttribNames
 
 interface VersionsDataProviderProps {
   projectName: string
@@ -201,6 +204,33 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     () => checkColumnVisibility(columns.columnVisibility || {}, 'comments'),
     [columns.columnVisibility],
   )
+
+  // only fetch the attributes of visible columns, per entity:
+  // `attrib_*` columns show the row entity (the featured version on product rows),
+  // `<parent>_attrib_*` columns show a parent entity
+  const { columnVisibility, defaultColumnVisibility } = useColumnSettingsContext()
+  const attribNames = useMemo<VPAttribNames>(() => {
+    const getNames = (
+      scope: 'version' | 'product' | 'folder' | 'task',
+      columnIdPrefixes: string[],
+      include?: (string | undefined)[],
+    ) =>
+      getVisibleAttribNames({
+        attribFields: attribFields.filter((field) => field.scope?.includes(scope)),
+        columnVisibility,
+        defaultColumnVisibility,
+        columnIdPrefixes,
+        include,
+      })
+
+    return {
+      // versions are grouped by attribute on the client, so it's needed even when hidden
+      versionAttribNames: getNames('version', ['attrib_'], [getAttribNameFromFieldId(groupBy)]),
+      productAttribNames: getNames('product', ['attrib_', 'product_attrib_']),
+      folderAttribNames: getNames('folder', ['folder_attrib_']),
+      taskAttribNames: getNames('task', ['task_attrib_']),
+    }
+  }, [attribFields, columnVisibility, defaultColumnVisibility, groupBy])
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
@@ -457,6 +487,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       const args: any = {
         ...restQueryArgs,
         sortBy: modifiedSortBy,
+        versionAttribNames: attribNames.versionAttribNames,
+        productAttribNames: attribNames.productAttribNames,
+        folderAttribNames: attribNames.folderAttribNames,
       }
 
       if (entityType === 'version') {
@@ -486,6 +519,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
         args.featuredOnly = featuredVersionFilter
         args.featuredOnlyEntityType = featuredVersionFilter?.length ? 'product' : undefined
         args.latestPerFolder = latestPerFolder
+        // products have no task
+        args.taskAttribNames = attribNames.taskAttribNames
 
         if (hasReviewablesFilter !== undefined) {
           args.hasReviewables = hasReviewablesFilter
@@ -497,6 +532,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     [
       queryArgs,
       resolvedSortBy,
+      attribNames,
       featuredVersionOrder,
       featuredVersionFilter,
       latestPerFolder,
@@ -589,6 +625,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     latestPerFolder: versionArguments.latestPerFolder,
     hasReviewables: versionArguments.hasReviewables,
     showComments,
+    ...attribNames,
   }
 
   // QUERY: get child versions for expanded products

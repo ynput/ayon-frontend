@@ -5,7 +5,7 @@ fragment VersionBase on VersionNode {
   parents
   path
   active
-  allAttrib
+  attrib(names: $versionAttribNames)
   author
   createdAt
   status

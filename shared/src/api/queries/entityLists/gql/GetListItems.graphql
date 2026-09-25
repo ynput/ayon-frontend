@@ -9,6 +9,11 @@ query GetListItems(
   $filter: String
   $search: String
   $showComments: Boolean! = false
+  # entity attributes to fetch (node attrib), all attributes when not set
+  $attribNames: [String!]
+  # list attribute values only exist on the item (allAttrib), which has no names filter:
+  # when true, allAttrib is used instead of the node attrib
+  $withListAttrib: Boolean! = true
 ) {
   project(name: $projectName) {
     entityLists(ids: [$listId]) {
@@ -38,7 +43,7 @@ query GetListItems(
               id
               entityId
               entityType
-              allAttrib
+              allAttrib @include(if: $withListAttrib)
               ownItemAttrib: ownAttrib
               position
               node {

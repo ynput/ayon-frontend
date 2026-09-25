@@ -21,6 +21,8 @@ import {
   ProjectOverviewProviderProps,
   useColumnSettingsContext,
   checkColumnVisibility,
+  getVisibleAttribNames,
+  getAttribNameFromFieldId,
 } from '@shared/containers/ProjectTreeTable'
 import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable'
 
@@ -186,6 +188,29 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         ? { id: viewGroupBy, desc: viewGroupByDesc }
         : undefined,
     [viewGroupBy, isFlatFolderView, viewGroupByDesc],
+  )
+
+  // only fetch the task attributes of visible columns (and the ones tasks are grouped by)
+  const attribNames = useMemo(
+    () =>
+      getVisibleAttribNames({
+        attribFields: scopedAttribFields.filter((field) => field.scope?.includes('task')),
+        columnVisibility,
+        defaultColumnVisibility,
+        sorting,
+        include: [
+          getAttribNameFromFieldId(viewGroupByObj?.id),
+          getAttribNameFromFieldId(panelGroupBy?.id),
+        ],
+      }),
+    [
+      scopedAttribFields,
+      columnVisibility,
+      defaultColumnVisibility,
+      sorting,
+      viewGroupByObj?.id,
+      panelGroupBy?.id,
+    ],
   )
 
   // GET GROUPING — use viewGroupBy for the top-level dropdown grouping
@@ -367,6 +392,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     modules,
     skipLinks,
     showComments,
+    attribNames,
     isLoadingViews,
     onCollapseAll: () => setExpanded({}),
     visibleEntityIds,

@@ -18,6 +18,11 @@ query GetVersions(
   $last: Int
   $sortBy: String
   $showComments: Boolean! = false
+  # attributes to fetch per entity, all attributes when not set
+  $versionAttribNames: [String!]
+  $productAttribNames: [String!]
+  $folderAttribNames: [String!]
+  $taskAttribNames: [String!]
 ) {
   project(name: $projectName) {
     versions(

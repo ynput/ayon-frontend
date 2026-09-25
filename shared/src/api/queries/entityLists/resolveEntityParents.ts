@@ -40,6 +40,7 @@ export const resolveEntityParents = async (
           projectName,
           taskIds: entityIds.taskIds,
           first: entityIds.taskIds.length,
+          attribNames: [], // only the parents are needed
         }),
       )
         .unwrap()
@@ -62,6 +63,11 @@ export const resolveEntityParents = async (
           projectName,
           versionIds: entityIds.versionIds,
           first: entityIds.versionIds.length,
+          // only the parents are needed
+          versionAttribNames: [],
+          productAttribNames: [],
+          folderAttribNames: [],
+          taskAttribNames: [],
         }),
       )
         .unwrap()
@@ -90,6 +96,10 @@ export const resolveEntityParents = async (
           projectName,
           productIds: entityIds.productIds,
           first: entityIds.productIds.length,
+          // only the parents are needed
+          versionAttribNames: [],
+          productAttribNames: [],
+          folderAttribNames: [],
         }),
       )
         .unwrap()

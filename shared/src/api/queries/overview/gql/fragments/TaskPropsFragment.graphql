@@ -12,7 +12,7 @@ fragment TaskPropsFragment on TaskNode {
   thumbnailHash
   active
   assignees
-  allAttrib
+  attrib(names: $attribNames)
   hasReviewables
   parents
   data

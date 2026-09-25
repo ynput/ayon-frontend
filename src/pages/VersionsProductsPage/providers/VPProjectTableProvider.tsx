@@ -84,7 +84,6 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       name: string
       label?: string | null
       folderType: string
-      allAttrib: string
       status: string
     }) => {
       if (folderMap.has(folder.id)) return

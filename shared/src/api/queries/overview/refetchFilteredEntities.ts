@@ -34,6 +34,10 @@ export const refetchTasksForCacheEntry = async ({
       queryParams.folderIds = cacheEntry.originalArgs.folderIds
     }
 
+    if (cacheEntry.originalArgs?.attribNames) {
+      queryParams.attribNames = cacheEntry.originalArgs.attribNames
+    }
+
     // Fetch entities with this cache's filter - server will only return matching tasks
     const result = await dispatch(
       getOverviewApi.endpoints.GetTasksList.initiate(queryParams as any, { forceRefetch: true })
@@ -114,6 +118,10 @@ export const refetchOverviewTasksForCacheEntry = async ({
 
     if (cacheEntry.originalArgs?.parentIds) {
       queryParams.parentIds = cacheEntry.originalArgs.parentIds
+    }
+
+    if (cacheEntry.originalArgs?.attribNames) {
+      queryParams.attribNames = cacheEntry.originalArgs.attribNames
     }
 
     // Fetch entities with this cache's filter - server will only return matching tasks
