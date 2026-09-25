@@ -466,24 +466,43 @@ a {
   align-items: flex-start;
 }
 
-.dashboard-tasks {
-  .p-splitter-gutter {
-    z-index: 500;
-    align-items: flex-start;
-    translate: 4px 0;
-    transform-origin: left;
+// splitter gutter handle: hidden by default, shows a full-length primary pill on hover/drag
+.p-splitter > .p-splitter-gutter {
+  position: relative;
 
-    .p-splitter-gutter-handle {
-      height: 100%;
-      background: transparent;
-      width: 2px;
-
-      &:hover,
-      &:active {
-        background: var(--md-sys-color-outline-variant);
-      }
-    }
+  // widen the grab area without changing the layout gap
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
   }
+
+  .p-splitter-gutter-handle {
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--md-sys-color-primary);
+    opacity: 0;
+    transition: opacity 0.1s ease-out;
+  }
+
+  &:hover .p-splitter-gutter-handle {
+    opacity: 1;
+    // short delay so the handle doesn't flash when the cursor just passes over
+    transition-delay: 0.2s;
+  }
+
+  &.p-splitter-gutter-resizing .p-splitter-gutter-handle {
+    opacity: 1;
+    transition-delay: 0s;
+  }
+}
+.p-splitter-horizontal > .p-splitter-gutter::after {
+  inset: 0 -3px;
+}
+.p-splitter-vertical > .p-splitter-gutter::after {
+  inset: -3px 0;
 }
 
 // if the panel after the splitter gutter is hidden then hide the gutter too
