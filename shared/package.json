@@ -1,84 +1,104 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.4.6",
+  "version": "0.4.3",
   "description": "Shared React components for AYON frontend",
+  "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/index.es.js"
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js"
     },
     "./components": {
-      "types": "./dist/types/components.d.ts",
-      "import": "./dist/components.es.js"
+      "types": "./dist/types/components/index.d.ts",
+      "import": "./dist/components.es.js",
+      "require": "./dist/components.cjs.js"
     },
     "./api": {
-      "types": "./dist/types/api.d.ts",
-      "import": "./dist/api.es.js"
+      "types": "./dist/types/api/index.d.ts",
+      "import": "./dist/api.es.js",
+      "require": "./dist/api.cjs.js"
     },
     "./hooks": {
-      "types": "./dist/types/hooks.d.ts",
-      "import": "./dist/hooks.es.js"
+      "types": "./dist/types/hooks/index.d.ts",
+      "import": "./dist/hooks.es.js",
+      "require": "./dist/hooks.cjs.js"
     },
     "./context": {
-      "types": "./dist/types/context.d.ts",
-      "import": "./dist/context.es.js"
+      "types": "./dist/types/context/index.d.ts",
+      "import": "./dist/context.es.js",
+      "require": "./dist/context.cjs.js"
     },
     "./shared": {
-      "types": "./dist/types/shared.d.ts",
-      "import": "./dist/shared.es.js"
+      "types": "./dist/types/shared/index.d.ts",
+      "import": "./dist/shared.es.js",
+      "require": "./dist/shared.cjs.js"
     },
     "./util": {
-      "types": "./dist/types/util.d.ts",
-      "import": "./dist/util.es.js"
+      "types": "./dist/types/util/index.d.ts",
+      "import": "./dist/util.es.js",
+      "require": "./dist/util.cjs.js"
     },
     "./Actions": {
-      "types": "./dist/types/Actions.d.ts",
-      "import": "./dist/Actions.es.js"
+      "types": "./dist/types/containers/Actions/index.d.ts",
+      "import": "./dist/Actions.es.js",
+      "require": "./dist/Actions.cjs.js"
     },
     "./ContextMenu": {
-      "types": "./dist/types/ContextMenu.d.ts",
-      "import": "./dist/ContextMenu.es.js"
+      "types": "./dist/types/containers/ContextMenu/index.d.ts",
+      "import": "./dist/ContextMenu.es.js",
+      "require": "./dist/ContextMenu.cjs.js"
     },
     "./DetailsPanel": {
-      "types": "./dist/types/DetailsPanel.d.ts",
-      "import": "./dist/DetailsPanel.es.js"
+      "types": "./dist/types/containers/DetailsPanel/index.d.ts",
+      "import": "./dist/DetailsPanel.es.js",
+      "require": "./dist/DetailsPanel.cjs.js"
     },
     "./Feed": {
-      "types": "./dist/types/Feed.d.ts",
-      "import": "./dist/Feed.es.js"
+      "types": "./dist/types/containers/Feed/index.d.ts",
+      "import": "./dist/Feed.es.js",
+      "require": "./dist/Feed.cjs.js"
     },
     "./ProjectTreeTable": {
-      "types": "./dist/types/ProjectTreeTable.d.ts",
-      "import": "./dist/ProjectTreeTable.es.js"
+      "types": "./dist/types/containers/ProjectTreeTable/index.d.ts",
+      "import": "./dist/ProjectTreeTable.es.js",
+      "require": "./dist/ProjectTreeTable.cjs.js"
     },
     "./RepresentationsList": {
-      "types": "./dist/types/RepresentationsList.d.ts",
-      "import": "./dist/RepresentationsList.es.js"
+      "types": "./dist/types/containers/RepresentationsList/index.d.ts",
+      "import": "./dist/RepresentationsList.es.js",
+      "require": "./dist/RepresentationsList.cjs.js"
     },
     "./Slicer": {
-      "types": "./dist/types/Slicer.d.ts",
-      "import": "./dist/Slicer.es.js"
+      "types": "./dist/types/containers/Slicer/index.d.ts",
+      "import": "./dist/Slicer.es.js",
+      "require": "./dist/Slicer.cjs.js"
     },
     "./Views": {
-      "types": "./dist/types/Views.d.ts",
-      "import": "./dist/Views.es.js"
+      "types": "./dist/types/containers/Views/index.d.ts",
+      "import": "./dist/Views.es.js",
+      "require": "./dist/Views.cjs.js"
     },
     "./SimpleTable": {
-      "types": "./dist/types/SimpleTable.d.ts",
-      "import": "./dist/SimpleTable.es.js"
+      "types": "./dist/types/containers/SimpleTable/index.d.ts",
+      "import": "./dist/SimpleTable.es.js",
+      "require": "./dist/SimpleTable.cjs.js"
     },
     "./EntityPickerDialog": {
-      "types": "./dist/types/EntityPickerDialog.d.ts",
-      "import": "./dist/EntityPickerDialog.es.js"
+      "types": "./dist/types/containers/EntityPickerDialog/index.d.ts",
+      "import": "./dist/EntityPickerDialog.es.js",
+      "require": "./dist/EntityPickerDialog.cjs.js"
     },
     "./ListTable": {
-      "types": "./dist/types/ListTable.d.ts",
-      "import": "./dist/ListTable.es.js"
+      "types": "./dist/types/containers/ListTable/index.d.ts",
+      "import": "./dist/ListTable.es.js",
+      "require": "./dist/ListTable.cjs.js"
     },
     "./NewEntity": {
-      "types": "./dist/types/NewEntity.d.ts",
-      "import": "./dist/NewEntity.es.js"
+      "types": "./dist/types/containers/NewEntity/index.d.ts",
+      "import": "./dist/NewEntity.es.js",
+      "require": "./dist/NewEntity.cjs.js"
     }
   },
   "files": [
@@ -88,7 +108,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "NODE_OPTIONS='--max_old_space_size=16384' vite build"
+    "build": "vite build"
   },
   "peerDependencies": {
     "@dnd-kit/core": "6.3.1",
@@ -106,13 +126,12 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "7.27.0",
-    "@microsoft/api-extractor": "^7.59.2",
     "@module-federation/enhanced": "2.3.2",
     "@module-federation/vite": "1.14.2",
     "@vitejs/plugin-react": "4.7.0",
     "typescript": "5.9.3",
-    "unplugin-dts": "^1.1.1",
     "vite": "7.3.5",
+    "vite-plugin-dts": "4.5.3",
     "vite-plugin-linter": "4.0.0"
   },
   "dependencies": {

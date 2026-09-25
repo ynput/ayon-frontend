@@ -1,18 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import dts from 'unplugin-dts/vite'
+import dts from 'vite-plugin-dts'
 import { resolve } from 'path'
 import { readFileSync } from 'fs'
 
 // Extract peerDependencies from package.json to automatically externalize them
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url)).toString())
-
-const vendorPackages = [
-  ...Object.keys(pkg.peerDependencies || {}),
-  ...Object.keys(pkg.devDependencies || {}),
-  ...Object.keys(pkg.dependencies || {}),
-]
 
 export default defineConfig({
   plugins: [
@@ -21,11 +15,9 @@ export default defineConfig({
       insertTypesEntry: true,
       include: ['src/**/*.ts', 'src/**/*.tsx'],
       exclude: ['**/*.test.*', '**/*.stories.*', 'node_modules/**'],
-      outDirs: 'dist/types',
+      outDir: 'dist/types',
       tsconfigPath: './tsconfig.json',
       entryRoot: 'src',
-      bundleTypes: true,
-      clearPureImport: false,
     }),
   ],
   resolve: {
@@ -57,22 +49,16 @@ export default defineConfig({
         NewEntity: resolve(__dirname, 'src/containers/NewEntity/index.ts'),
       },
       name: 'AyonFrontendShared',
-      formats: ['es'],
+      formats: ['es', 'cjs'],
     },
     rollupOptions: {
-      /// Functional match for robust externalization
-      external: (id) => {
-        // 1. Externalize anything coming from an absolute node_modules path
-        if (id.includes('node_modules')) return true
-
-        // 2. Keep local relative imports and project aliases inside the build
-        if (id.startsWith('.') || id.startsWith('/') || id.startsWith('@shared')) {
-          return false
-        }
-
-        // 3. Match any package or subpath in dependencies (e.g. "react", "react/jsx-runtime")
-        return vendorPackages.some((pkgName) => id === pkgName || id.startsWith(`${pkgName}/`))
-      },
+      // Automatically externalize all peerDependencies and dependencies
+      external: [
+        ...Object.keys(pkg.peerDependencies || {}),
+        ...Object.keys(pkg.dependencies || {}),
+        // subpath imports (e.g. @ynput/ayon-player/model) are not covered by the exact names above
+        /^@ynput\/ayon-player(\/.*)?$/,
+      ],
       output: {
         entryFileNames: (chunkInfo) => `${chunkInfo.name}.[format].js`,
         // Preserve directory structure for chunks
@@ -80,8 +66,7 @@ export default defineConfig({
           const name = chunkInfo.name.replace(/^_/, '')
           return `chunks/${name}.[format].js`
         },
-        // preserveModules: true,
-        // preserveModulesRoot: 'src',
+        preserveModules: true,
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
@@ -91,7 +76,7 @@ export default defineConfig({
         },
       },
     },
-    sourcemap: false,
+    sourcemap: true,
     emptyOutDir: true,
     minify: true,
     cssCodeSplit: true,
