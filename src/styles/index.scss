@@ -540,9 +540,7 @@ a {
 }
 .p-splitter-horizontal > .p-splitter-gutter {
   &::before {
-    box-shadow:
-      0 -5px 0 var(--md-sys-color-outline),
-      0 5px 0 var(--md-sys-color-outline);
+    box-shadow: 0 -5px 0 var(--md-sys-color-outline), 0 5px 0 var(--md-sys-color-outline);
   }
   &::after {
     inset: 0 -3px;
@@ -550,9 +548,7 @@ a {
 }
 .p-splitter-vertical > .p-splitter-gutter {
   &::before {
-    box-shadow:
-      -5px 0 0 var(--md-sys-color-outline),
-      5px 0 0 var(--md-sys-color-outline);
+    box-shadow: -5px 0 0 var(--md-sys-color-outline), 5px 0 0 var(--md-sys-color-outline);
   }
   &::after {
     inset: -3px 0;
