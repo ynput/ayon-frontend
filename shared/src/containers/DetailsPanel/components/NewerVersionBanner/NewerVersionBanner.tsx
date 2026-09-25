@@ -29,11 +29,17 @@ export const NewerVersionBanner: FC<NewerVersionBannerProps> = ({
   return (
     <InfoMessage
       variant="info"
+      compact
       style={{ margin: 'var(--padding-m) var(--padding-m) 0' }}
       message={`A newer version (${latestVersion.name}) exists.`}
       action={
         jump
-          ? { label: `Go to ${latestVersion.name}`, icon: 'arrow_forward', callback: jump }
+          ? {
+              label: `Go to ${latestVersion.name}`,
+              icon: 'arrow_right_alt',
+              iconPosition: 'right',
+              callback: jump,
+            }
           : undefined
       }
     />

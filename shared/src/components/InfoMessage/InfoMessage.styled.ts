@@ -19,6 +19,27 @@ export const MessageCard = styled.div`
     font-size: 24px;
   }
 
+  &.compact {
+    gap: var(--base-gap-large);
+    padding: var(--padding-s) var(--padding-s) var(--padding-s) var(--padding-m);
+
+    .content {
+      gap: var(--base-gap-large);
+    }
+
+    .icon {
+      font-size: 20px;
+    }
+
+    button {
+      &,
+      &.hasIcon {
+        padding: 2px 6px;
+      }
+      gap: 4px;
+    }
+  }
+
   /* default background */
   &.info {
     --message-background-color: var(--md-sys-color-secondary-container);
