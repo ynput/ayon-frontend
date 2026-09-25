@@ -493,7 +493,9 @@ const ProjectPageInner = () => {
               <EntityUpdatesProvider projectNames={[projectName]}>
                 <ProjectSlicerWithViews page={module} projectName={projectName}>
                   <NewEntityProvider>
-                    {module !== 'overview' && <ProjectNewEntityHost showButton={false} />}
+                    {module !== 'overview' && (
+                      <ProjectNewEntityHost showButton={false} enableShortcuts={false} />
+                    )}
                     {page.component}
                   </NewEntityProvider>
                 </ProjectSlicerWithViews>
