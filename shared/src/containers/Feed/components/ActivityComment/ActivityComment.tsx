@@ -15,7 +15,13 @@ import FilesGrid, { FilesGridProps } from '../FilesGrid/FilesGrid'
 import { getTextRefs } from './getTextRefs'
 import * as Styled from './ActivityComment.styled'
 import CommentWrapper from './CommentWrapper'
-import { normalizeLegacyMarkdown, renderYouTubeParagraph } from '@shared/components/MarkdownEditor'
+import { isFilePreviewable } from '../FileUploadPreview'
+import {
+  getProjectFileId,
+  normalizeLegacyMarkdown,
+  renderMediaParagraph,
+  renderYouTubeParagraph,
+} from '@shared/components/MarkdownEditor'
 import { aTag, blockquoteTag, codeTag, inputTag } from './ActivityMarkdownComponents'
 import { mapGraphQLReactions } from './mappers'
 import { Icon } from '@ynput/ayon-react-components'
@@ -192,6 +198,30 @@ const ActivityComment = ({
     [onGoToFrame],
   )
 
+  // files shown as image / video blocks in the text are not repeated as attachments
+  const inlineFileIds = useMemo(
+    () =>
+      new Set(
+        Array.from(String(body || '').matchAll(/\/api\/projects\/[^/]+\/files\/([\w-]+)/g)).map(
+          (match) => match[1],
+        ),
+      ),
+    [body],
+  )
+  const attachments = useMemo(
+    () => (files || []).filter((file: any) => !inlineFileIds.has(file.id)),
+    [files, inlineFileIds],
+  )
+
+  // clicking an image / video block opens the attachment preview (the index is among all the
+  // previewable files of the comment, like for attachments)
+  const openInlineFile = (src: string) => {
+    const id = getProjectFileId(src)
+    const previewable = (files || []).filter((f: any) => isFilePreviewable(f.mime, f.ext))
+    const index = previewable.findIndex((f: any) => f.id === id)
+    if (index !== -1) onFileExpand?.({ files: previewable, index, activityId })
+  }
+
   // comments written with the legacy editor use `&nbsp;` spacer paragraphs, show them like new ones
   const displayBody = useMemo(() => normalizeLegacyMarkdown(body || ''), [body])
 
@@ -310,7 +340,9 @@ const ActivityComment = ({
                     ),
                     // a video url on its own line is an embedded video
                     // @ts-ignore
-                    p: (props) => renderYouTubeParagraph(props) ?? <p>{props.children}</p>,
+                    p: (props) =>
+                      renderMediaParagraph(props, { onOpen: openInlineFile }) ??
+                      renderYouTubeParagraph(props) ?? <p>{props.children}</p>,
                     // @ts-ignore
                     status: (props) => {
                       return (
@@ -327,8 +359,8 @@ const ActivityComment = ({
               {/* file uploads */}
               {/* @ts-ignore */}
               <FilesGrid
-                files={files}
-                isCompact={files.length > 6}
+                files={attachments}
+                isCompact={attachments.length > 6}
                 activityId={activityId}
                 projectName={projectName}
                 isDownloadable

@@ -5,7 +5,7 @@ import { TreeView } from '@lexical/react/LexicalTreeView'
 import { Button, SaveButton } from '@ynput/ayon-react-components'
 import { MarkdownEditor, type MarkdownEditorHandle } from '@shared/components/MarkdownEditor'
 import CommentMarkdown from './CommentMarkdown'
-import { useMockMentions } from './useMockMentions'
+import { mockUploadMedia, useMockMentions } from './useMockMentions'
 import { SAMPLES } from './samples'
 import * as Styled from './EditorPlaygroundPage.styled'
 
@@ -98,6 +98,7 @@ const DocumentDemo = () => {
             onChange={setMarkdown}
             placeholder="Comment, or type / to add mentions, checklists, code and more..."
             mentions={mentions}
+            onUploadMedia={mockUploadMedia}
             toolbar={showToolbar}
             readOnly={readOnly}
             maxHeight={500}

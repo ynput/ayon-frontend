@@ -23,6 +23,7 @@ import { EMOJI_USED_COMMAND } from '../emoji/commands'
 import { getEmoji } from '../emoji/emojiData'
 import { $createMentionNode, $isMentionNode, MentionNode } from '../nodes/MentionNode'
 import { $createYouTubeNode, $isYouTubeNode, YouTubeNode } from '../nodes/YouTubeNode'
+import { $createMediaNode, $isMediaNode, MediaNode } from '../nodes/MediaNode'
 import { parseYouTubeUrl } from '../youtube/parseYouTubeUrl'
 import { MENTION_REF_TYPES } from '../types'
 
@@ -111,9 +112,31 @@ export const YOUTUBE: ElementTransformer = {
   type: 'element',
 }
 
+// An image on its own line is an image or video block, the title holds the mime type:
+// `![clip.mp4](/api/projects/p/files/id "video/mp4")`. Images inside text stay text.
+export const MEDIA: ElementTransformer = {
+  dependencies: [MediaNode],
+  export: (node) => {
+    if (!$isMediaNode(node)) return null
+    // not stored until the upload finishes
+    if (node.isUploading()) return ''
+    const alt = node.getAlt().replace(/[[\]]/g, '')
+    const mime = node.getMime()
+    return `![${alt}](${node.getSrc()}${mime ? ` "${mime.replace(/"/g, '')}"` : ''})`
+  },
+  regExp: /^\s*!\[([^\]]*)\]\(<?([^\s)>]+)>?(?:\s+"([^"]*)")?\)\s*$/,
+  replace: (parentNode, _children, match, isImport) => {
+    if (!isImport) return false
+    const [, alt, src, mime] = match
+    parentNode.replace($createMediaNode({ src, alt, mime: mime || null }))
+  },
+  type: 'element',
+}
+
 // Order matters: check lists before bullet lists, mentions before links, inline code first.
 export const MARKDOWN_TRANSFORMERS: Transformer[] = [
   YOUTUBE,
+  MEDIA,
   HEADING,
   QUOTE,
   CHECK_LIST,

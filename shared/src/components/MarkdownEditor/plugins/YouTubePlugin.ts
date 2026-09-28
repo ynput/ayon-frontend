@@ -2,60 +2,18 @@ import { useEffect } from 'react'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { mergeRegister } from '@lexical/utils'
 import {
-  $createParagraphNode,
-  $getRoot,
   $getSelection,
-  $isParagraphNode,
   $isRangeSelection,
-  $isRootNode,
   COMMAND_PRIORITY_NORMAL,
   KEY_ENTER_COMMAND,
   PASTE_COMMAND,
-  type ElementNode,
 } from 'lexical'
 import { $createYouTubeNode } from '../nodes/YouTubeNode'
 import { parseYouTubeUrl } from '../youtube/parseYouTubeUrl'
-
-// the top level paragraph with the caret
-const $getCaretParagraph = (): ElementNode | null => {
-  const selection = $getSelection()
-  if (!$isRangeSelection(selection) || !selection.isCollapsed()) return null
-  const block = selection.anchor.getNode().getTopLevelElement()
-  return $isParagraphNode(block) && $isRootNode(block.getParent()) ? block : null
-}
-
-// replace the paragraph with the video and continue writing below it
-const $embedVideo = (paragraph: ElementNode, url: string) => {
-  const video = $createYouTubeNode(url)
-  paragraph.replace(video)
-  const next = video.getNextSibling()
-  if ($isParagraphNode(next) && next.getChildrenSize() === 0) {
-    next.select()
-  } else {
-    const empty = $createParagraphNode()
-    video.insertAfter(empty)
-    empty.select()
-  }
-}
+import { $getCaretParagraph, $insertBlockAtCaret, $replaceWithBlock } from './blockInsert'
 
 // Insert a video at the caret: on an empty line it takes the line, otherwise it goes below the block
-export const $insertYouTubeVideo = (url: string) => {
-  const paragraph = $getCaretParagraph()
-  if (paragraph && paragraph.getTextContent().trim() === '') {
-    $embedVideo(paragraph, url)
-    return
-  }
-  const selection = $getSelection()
-  const block = $isRangeSelection(selection)
-    ? selection.anchor.getNode().getTopLevelElement()
-    : $getRoot().getLastChild()
-  const video = $createYouTubeNode(url)
-  if (block) block.insertAfter(video)
-  else $getRoot().append(video)
-  const empty = $createParagraphNode()
-  video.insertAfter(empty)
-  empty.select()
-}
+export const $insertYouTubeVideo = (url: string) => $insertBlockAtCaret($createYouTubeNode(url))
 
 /**
  * Embed YouTube videos: paste a video url on an empty line, or press enter after a line that is
@@ -76,7 +34,7 @@ const YouTubePlugin = () => {
             const paragraph = $getCaretParagraph()
             if (!paragraph || paragraph.getTextContent().trim() !== '') return false
             event.preventDefault()
-            $embedVideo(paragraph, text)
+            $replaceWithBlock(paragraph, $createYouTubeNode(text))
             return true
           },
           // before the rich text paste (and the markdown paste of mentions)
@@ -100,7 +58,7 @@ const YouTubePlugin = () => {
               selection.anchor.offset === anchor.getTextContentSize()
             if (!isAtEnd) return false
             event?.preventDefault()
-            $embedVideo(paragraph, text)
+            $replaceWithBlock(paragraph, $createYouTubeNode(text))
             return true
           },
           // before enter to send in chat inputs

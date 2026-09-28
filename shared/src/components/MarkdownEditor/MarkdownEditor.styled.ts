@@ -127,6 +127,41 @@ export const LinkPopover = styled.div`
   }
 `
 
+// "show inline" prompt after pasting media (portaled to the body)
+export const InlinePrompt = styled.button`
+  all: unset;
+  position: fixed;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 8px;
+  border-radius: var(--border-radius-m);
+  background-color: var(--md-sys-color-surface-container-high);
+  box-shadow: 0 3px 15px 0 rgba(0, 0, 0, 0.4);
+  color: var(--md-sys-color-on-surface);
+  font-size: 12px;
+  cursor: pointer;
+
+  .icon {
+    font-size: 18px;
+    color: var(--md-sys-color-primary);
+  }
+
+  kbd {
+    padding: 0 4px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--md-sys-color-outline);
+    background-color: var(--md-sys-color-surface-container-highest);
+  }
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high-hover);
+  }
+`
+
 // language of the code block, on its top right corner (portaled to the body)
 export const CodeLanguage = styled.div`
   position: fixed;

@@ -10,7 +10,7 @@ import {
   codeTag,
   inputTag,
 } from '@shared/containers/Feed/components/ActivityComment/ActivityMarkdownComponents'
-import { renderYouTubeParagraph } from '@shared/components/MarkdownEditor'
+import { renderMediaParagraph, renderYouTubeParagraph } from '@shared/components/MarkdownEditor'
 import { Body as CommentBody } from '@shared/containers/Feed/components/ActivityComment/ActivityComment.styled'
 import * as Styled from './EditorPlaygroundPage.styled'
 
@@ -52,7 +52,8 @@ const CommentMarkdown = ({
           // @ts-ignore
           blockquote: (props) => blockquoteTag(props),
           // @ts-ignore
-          p: (props) => renderYouTubeParagraph(props) ?? <p>{props.children}</p>,
+          p: (props) =>
+            renderMediaParagraph(props) ?? renderYouTubeParagraph(props) ?? <p>{props.children}</p>,
         }}
       >
         {markdown}

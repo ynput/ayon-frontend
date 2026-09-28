@@ -14,3 +14,12 @@ export const useMockMentions = (isFolder = false) =>
       }),
     [isFolder],
   )
+
+// stands in for uploading comment attachments: a local url after a short delay
+export const mockUploadMedia = (file: File) =>
+  new Promise<{ src: string; name: string; mime: string }>((resolve) =>
+    setTimeout(
+      () => resolve({ src: URL.createObjectURL(file), name: file.name, mime: file.type }),
+      800,
+    ),
+  )

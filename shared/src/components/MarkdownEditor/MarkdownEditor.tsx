@@ -21,6 +21,7 @@ import { CodeHighlightNode, CodeNode } from '@lexical/code'
 import { editorTheme } from './theme'
 import { MentionNode } from './nodes/MentionNode'
 import { YouTubeNode } from './nodes/YouTubeNode'
+import { MediaNode } from './nodes/MediaNode'
 import { MARKDOWN_TRANSFORMERS } from './markdown/transformers'
 import { $setMarkdown } from './markdown/convert'
 import MentionsPlugin from './plugins/MentionsPlugin'
@@ -38,6 +39,7 @@ import CodeLanguagePlugin from './plugins/CodeLanguagePlugin'
 import CodeHighlightPlugin from './plugins/CodeHighlightPlugin'
 import YouTubePlugin from './plugins/YouTubePlugin'
 import SlashCommandPlugin from './plugins/SlashCommandPlugin'
+import MediaPlugin, { type UploadMedia } from './plugins/MediaPlugin'
 import ClipboardPlugin from './plugins/ClipboardPlugin'
 import MarkdownValuePlugin from './plugins/MarkdownValuePlugin'
 import type {
@@ -75,6 +77,7 @@ const EDITOR_NODES = [
   CodeHighlightNode,
   MentionNode,
   YouTubeNode,
+  MediaNode,
 ]
 
 // readOnly can change after the composer is created
@@ -121,8 +124,11 @@ export interface MarkdownEditorProps extends MentionEventHandlers {
   // enter submits and shift+enter adds a line (default for the message variant)
   submitOnEnter?: boolean
   onEscape?: () => void
-  // files pasted or dropped into the editor
+  // files pasted or dropped into the editor (attachments)
   onFiles?: (files: File[]) => void
+  // store an image / video file and return its url, enables image and video blocks: pasted,
+  // dropped or picked media become blocks instead of attachments
+  onUploadMedia?: UploadMedia
   mentions?: MentionSource
   // DOM element the mention picker is rendered into
   mentionMenuParent?: HTMLElement
@@ -170,6 +176,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       submitOnEnter = VARIANTS[variant].submitOnEnter,
       onEscape,
       onFiles,
+      onUploadMedia,
       mentions,
       mentionMenuParent,
       mentionPlacement = VARIANTS[variant].mentionPlacement,
@@ -265,6 +272,9 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         {!readOnly && <CodeLanguagePlugin />}
         <CodeHighlightPlugin />
         {!readOnly && <YouTubePlugin />}
+        {onUploadMedia && !readOnly && (
+          <MediaPlugin onUploadMedia={onUploadMedia} onFiles={onFiles} />
+        )}
         <MarkdownShortcutPlugin transformers={MARKDOWN_TRANSFORMERS} />
         <ChecklistShortcutPlugin />
         <InlineCodePlugin />
@@ -285,6 +295,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
             menuParent={mentionMenuParent}
             mentionTriggers={mentions ? mentions.triggers ?? ['@', '@@', '@@@'] : []}
             onFiles={onFiles}
+            canInsertMedia={!!onUploadMedia}
           />
         )}
         {emoji && !readOnly && (

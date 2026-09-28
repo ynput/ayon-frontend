@@ -16,6 +16,7 @@ import type { MentionPlacement, MentionTrigger } from '../types'
 import { toggleBlockFormat } from './formatting'
 import { INSERT_MENTION_TRIGGER_COMMAND } from './MentionsPlugin'
 import { OPEN_VIDEO_PROMPT_COMMAND } from './LinkEditorPlugin'
+import { OPEN_MEDIA_PICKER_COMMAND } from './MediaPlugin'
 import { $isSelectionInCode } from './selectionHelpers'
 import SuggestionMenu from './SuggestionMenu'
 
@@ -50,6 +51,8 @@ interface SlashCommandPluginProps {
   mentionTriggers?: MentionTrigger[]
   // pick files to attach, the attach command is only shown when set
   onFiles?: (files: File[]) => void
+  // the editor can store images and videos (MediaPlugin)
+  canInsertMedia?: boolean
 }
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
@@ -64,6 +67,7 @@ const SlashCommandPlugin = ({
   menuParent,
   mentionTriggers = [],
   onFiles,
+  canInsertMedia,
 }: SlashCommandPluginProps) => {
   const [editor] = useLexicalComposerContext()
   const [query, setQuery] = useState<string | null>(null)
@@ -162,13 +166,24 @@ const SlashCommandPlugin = ({
       },
     ]
 
+    if (canInsertMedia) {
+      list.push({
+        id: 'media',
+        label: 'Image or video',
+        icon: 'image',
+        group: 'insert',
+        keywords: ['image', 'picture', 'photo', 'video', 'movie', 'media', 'screenshot'],
+        run: (e) => e.dispatchCommand(OPEN_MEDIA_PICKER_COMMAND, undefined),
+      })
+    }
+
     if (onFiles) {
       list.push({
         id: 'attachment',
         label: 'Attachment',
         icon: 'attach_file',
         group: 'insert',
-        keywords: ['attach', 'attachment', 'file', 'upload', 'image'],
+        keywords: ['attach', 'attachment', 'file', 'upload'],
         run: () => fileInputRef.current?.click(),
       })
     }
@@ -194,7 +209,7 @@ const SlashCommandPlugin = ({
       )
 
     return list
-  }, [mentionTriggers.join(), !!onFiles])
+  }, [mentionTriggers.join(), !!onFiles, canInsertMedia])
 
   const options = useMemo(() => {
     if (query === null) return []

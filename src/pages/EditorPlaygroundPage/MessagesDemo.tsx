@@ -3,7 +3,7 @@ import { Button } from '@ynput/ayon-react-components'
 import { MarkdownEditor, type MarkdownEditorHandle } from '@shared/components/MarkdownEditor'
 import UserImage from '@shared/components/UserImage'
 import CommentMarkdown from './CommentMarkdown'
-import { useMockMentions } from './useMockMentions'
+import { mockUploadMedia, useMockMentions } from './useMockMentions'
 import { SEED_MESSAGES } from './samples'
 import * as Styled from './EditorPlaygroundPage.styled'
 
@@ -75,6 +75,7 @@ const MessagesDemo = () => {
             onChange={setDraft}
             onSubmit={send}
             mentions={mentions}
+            onUploadMedia={mockUploadMedia}
             placeholder="Message #sh160-compositing"
             actions={
               <>

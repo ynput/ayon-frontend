@@ -14,6 +14,7 @@ import {
   createFeedMentionSource,
   type MarkdownEditorHandle,
   type MentionTrigger,
+  type UploadMedia,
 } from '@shared/components/MarkdownEditor'
 import FilesGrid from '../FilesGrid'
 
@@ -63,6 +64,12 @@ interface CommentInputProps {
   onClose?: () => void
 }
 
+const getProjectFileUrl = (projectName: string, id: string) =>
+  `/api/projects/${projectName}/files/${id}`
+
+// is the file shown as an image / video block in the markdown
+const isReferenced = (id: string, markdown: string) => !!id && markdown.includes(`/files/${id}`)
+
 const MENTION_BUTTONS: { trigger: MentionTrigger; icon: IconType; tooltip: string }[] = [
   { trigger: '@', icon: 'person', tooltip: 'Mention user' },
   { trigger: '@@', icon: 'layers', tooltip: 'Mention version' },
@@ -104,7 +111,16 @@ const CommentInput: FC<CommentInputProps> = ({
   // markdown of the comment
   const [editorValue, setEditorValue] = useState(initValue || '')
   // file uploads
-  const [files, setFiles] = useState(initFiles)
+  // attachments, plus the files of image / video blocks (`isInline`, shown in the text, not the grid)
+  const [files, setFiles] = useState(() =>
+    initFiles.map((file) =>
+      isReferenced(file.id, initValue || '') ? { ...file, isInline: true } : file,
+    ),
+  )
+  // image / video blocks being uploaded
+  const [inlineUploads, setInlineUploads] = useState(0)
+  // attachment uploads by file, for switching pasted media to inline
+  const attachmentUploads = useRef(new Map<File, ReturnType<typeof uploadFile>>())
   const [filesUploading, setFilesUploading] = useState<UploadingFile[]>([])
   const [isDropping, setIsDropping] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -254,7 +270,10 @@ const CommentInput: FC<CommentInputProps> = ({
   // files pasted or dropped into the editor, or picked with the attach button
   const uploadFiles = (newFiles: File[]) => {
     for (const file of newFiles) {
-      uploadFile(file, projectName, handleFileProgress).then(
+      const upload = uploadFile(file, projectName, handleFileProgress)
+      // a pasted image / video can be switched to an inline block, which reuses this upload
+      attachmentUploads.current.set(file, upload)
+      upload.then(
         (data) => handleFileUploaded(data),
         (error) => {
           removeFileUploading(file.name)
@@ -262,6 +281,37 @@ const CommentInput: FC<CommentInputProps> = ({
           console.warn(error)
         },
       )
+    }
+  }
+
+  // image / video blocks: stored like attachments and linked to the comment, but shown in the text
+  const uploadMedia: UploadMedia = async (file) => {
+    setInlineUploads((count) => count + 1)
+    try {
+      const attachmentUpload = attachmentUploads.current.get(file)
+      if (attachmentUpload) {
+        // pasted as an attachment and switched to inline: same file, now shown in the text
+        const { data } = await attachmentUpload
+        setFiles((prev) => prev.map((f) => (f.id === data.id ? { ...f, isInline: true } : f)))
+        return {
+          src: getProjectFileUrl(projectName, data.id),
+          name: parseFilename(file.name),
+          mime: file.type,
+        }
+      }
+      const { data } = await uploadFile(file, projectName, undefined)
+      const name = parseFilename(file.name)
+      setFiles((prev) => [
+        ...prev,
+        { id: data.id, name, mime: file.type, size: file.size, order: prev.length, isInline: true },
+      ])
+      return { src: getProjectFileUrl(projectName, data.id), name, mime: file.type }
+    } catch (error: any) {
+      // a failed attachment upload has already been reported
+      if (!attachmentUploads.current.has(file)) toast.error(error?.message || 'Upload failed')
+      throw error
+    } finally {
+      setInlineUploads((count) => count - 1)
     }
   }
 
@@ -291,7 +341,7 @@ const CommentInput: FC<CommentInputProps> = ({
     onError: (annotation) => removeFileUploading(annotation.name),
   })
 
-  const isUploading = filesUploading.length > 0
+  const isUploading = filesUploading.length > 0 || inlineUploads > 0
   const isSaving = isSubmitting || isUploading
 
   const handleSubmit = async () => {
@@ -317,7 +367,9 @@ const CommentInput: FC<CommentInputProps> = ({
       // remove img query params
       const markdown = parseImages(editorRef.current?.getMarkdown() ?? editorValue)
 
-      const uploadedFiles = [...files, ...annotationFiles]
+      // files of removed image / video blocks aren't part of the comment anymore
+      const keptFiles = files.filter((file) => !file.isInline || isReferenced(file.id, markdown))
+      const uploadedFiles = [...keptFiles, ...annotationFiles]
 
       const newData = {
         ...data,
@@ -351,7 +403,7 @@ const CommentInput: FC<CommentInputProps> = ({
 
   const allFiles = [
     ...annotations,
-    ...(files || []).filter((file: any) => !file.isAnnotationLayer),
+    ...(files || []).filter((file: any) => !file.isAnnotationLayer && !file.isInline),
     ...filesUploading,
   ].sort((a, b) => a.order - b.order)
   const compactGrid = allFiles.length > 3
@@ -514,6 +566,7 @@ const CommentInput: FC<CommentInputProps> = ({
                 onSubmit={handleSubmit}
                 onEscape={handleClose}
                 onFiles={uploadFiles}
+                onUploadMedia={uploadMedia}
                 toolbar={!isEditing}
                 floatingToolbar={isEditing}
                 toolbarStart={categorySelect}
