@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import type { LexicalEditor } from 'lexical'
@@ -16,9 +16,12 @@ interface SuggestionMenuProps<TOption extends MenuOption> {
   anchor: HTMLElement
   // inline: at the caret, top: across the top of the editor
   placement: MentionPlacement
-  title: ReactNode
+  // no title hides the title bar
+  title?: ReactNode
   // e.g. filter buttons on the right of the title
   titleActions?: ReactNode
+  // options of different groups are separated by a divider
+  getGroup?: (option: TOption) => string | undefined
   options: TOption[]
   selectedIndex: number | null
   onSelect: (option: TOption) => void
@@ -48,7 +51,23 @@ const SuggestionMenu = <TOption extends MenuOption>({
   optionClassName,
   emptyMessage,
   className,
+  getGroup,
 }: SuggestionMenuProps<TOption>) => {
+  const listRef = useRef<HTMLUListElement>(null)
+
+  // keep the option picked with the arrow keys in view
+  useLayoutEffect(() => {
+    const list = listRef.current
+    const selected = list?.querySelector<HTMLElement>('[aria-selected="true"]')
+    if (!list || !selected) return
+    const top = selected.offsetTop
+    const bottom = top + selected.offsetHeight
+    if (top < list.scrollTop) list.scrollTop = top - 4
+    else if (bottom > list.scrollTop + list.clientHeight) {
+      list.scrollTop = bottom - list.clientHeight + 4
+    }
+  }, [selectedIndex])
+
   const isTop = placement === 'top'
   // a parent can mark a wider area to span with `md-mention-anchor`
   const root = editor.getRootElement()
@@ -68,12 +87,17 @@ const SuggestionMenu = <TOption extends MenuOption>({
       // keep focus in the editor when clicking the menu
       onMouseDown={(e) => e.preventDefault()}
     >
-      <Styled.MentionMenuTitle>
-        <span>{title}</span>
-        {titleActions}
-      </Styled.MentionMenuTitle>
-      <ul role="listbox">
-        {options.map((option, i) => (
+      {(title || titleActions) && (
+        <Styled.MentionMenuTitle>
+          <span>{title}</span>
+          {titleActions}
+        </Styled.MentionMenuTitle>
+      )}
+      <ul ref={listRef} role="listbox" className={clsx({ untitled: !title && !titleActions })}>
+        {options.map((option, i) => [
+          i > 0 && getGroup && getGroup(option) !== getGroup(options[i - 1]) && (
+            <Styled.MentionMenuDivider key={`divider-${option.key}`} role="separator" />
+          ),
           <Styled.MentionMenuItem
             key={option.key}
             ref={(el) => option.setRefElement(el)}
@@ -87,8 +111,8 @@ const SuggestionMenu = <TOption extends MenuOption>({
             }}
           >
             {renderOption(option)}
-          </Styled.MentionMenuItem>
-        ))}
+          </Styled.MentionMenuItem>,
+        ])}
         {!options.length && emptyMessage && (
           <Styled.MentionMenuItem className="empty">{emptyMessage}</Styled.MentionMenuItem>
         )}

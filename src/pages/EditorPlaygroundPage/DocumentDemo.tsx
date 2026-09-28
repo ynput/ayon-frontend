@@ -96,7 +96,7 @@ const DocumentDemo = () => {
             variant="document"
             value={markdown}
             onChange={setMarkdown}
-            placeholder="Comment or mention with @user, @@version, @@@task..."
+            placeholder="Comment, or type / to add mentions, checklists, code and more..."
             mentions={mentions}
             toolbar={showToolbar}
             readOnly={readOnly}

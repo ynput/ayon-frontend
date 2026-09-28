@@ -3,6 +3,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { mergeRegister } from '@lexical/utils'
 import {
   $createParagraphNode,
+  $getRoot,
   $getSelection,
   $isParagraphNode,
   $isRangeSelection,
@@ -35,6 +36,25 @@ const $embedVideo = (paragraph: ElementNode, url: string) => {
     video.insertAfter(empty)
     empty.select()
   }
+}
+
+// Insert a video at the caret: on an empty line it takes the line, otherwise it goes below the block
+export const $insertYouTubeVideo = (url: string) => {
+  const paragraph = $getCaretParagraph()
+  if (paragraph && paragraph.getTextContent().trim() === '') {
+    $embedVideo(paragraph, url)
+    return
+  }
+  const selection = $getSelection()
+  const block = $isRangeSelection(selection)
+    ? selection.anchor.getNode().getTopLevelElement()
+    : $getRoot().getLastChild()
+  const video = $createYouTubeNode(url)
+  if (block) block.insertAfter(video)
+  else $getRoot().append(video)
+  const empty = $createParagraphNode()
+  video.insertAfter(empty)
+  empty.select()
 }
 
 /**

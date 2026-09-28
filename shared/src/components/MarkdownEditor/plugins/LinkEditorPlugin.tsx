@@ -27,10 +27,17 @@ import {
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { BLOCK_DIALOG_CLOSE_CLASS } from '@shared/components/LinksManager/CellEditingDialog'
 import * as Styled from '../MarkdownEditor.styled'
+import { parseYouTubeUrl } from '../youtube/parseYouTubeUrl'
+import { $insertYouTubeVideo } from './YouTubePlugin'
 
 // open the link editor for the link under the caret, or to link the selection
 export const OPEN_LINK_EDITOR_COMMAND: LexicalCommand<void> = createCommand(
   'OPEN_LINK_EDITOR_COMMAND',
+)
+
+// ask for a YouTube url and embed the video at the caret (slash menu)
+export const OPEN_VIDEO_PROMPT_COMMAND: LexicalCommand<void> = createCommand(
+  'OPEN_VIDEO_PROMPT_COMMAND',
 )
 
 // accept urls without a scheme, e.g. ynput.io
@@ -48,6 +55,8 @@ type LinkEditorState =
   | { mode: 'link'; key: NodeKey; url: string; rect: Rect }
   // linking the selection (or inserting a link at the caret)
   | { mode: 'create'; url: string; rect: Rect }
+  // embedding a YouTube video at the caret
+  | { mode: 'video'; url: string; rect: Rect }
 
 const POPOVER_WIDTH = 320
 
@@ -71,6 +80,8 @@ const LinkEditorPlugin = () => {
   const [editor] = useLexicalComposerContext()
   const [state, setState] = useState<LinkEditorState | null>(null)
   const [draftUrl, setDraftUrl] = useState('')
+  // the video url is not a YouTube link
+  const [isInvalid, setIsInvalid] = useState(false)
   const popoverRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const savedSelection = useRef<BaseSelection | null>(null)
@@ -115,43 +126,47 @@ const LinkEditorPlugin = () => {
       inputRef.current?.select()
     })
 
-  const open = useCallback(() => {
-    let opened = false
-    editor.getEditorState().read(() => {
-      const link = $getSelectedLink()
-      if (link) {
-        const element = editor.getElementByKey(link.getKey())
-        if (!element) return
-        const url = link.getURL()
-        setState({
-          mode: 'link',
-          key: link.getKey(),
-          url,
-          rect: toRect(element.getBoundingClientRect()),
-        })
-        setDraftUrl(url)
+  const open = useCallback(
+    (kind: 'link' | 'video' = 'link') => {
+      let opened = false
+      setIsInvalid(false)
+      editor.getEditorState().read(() => {
+        const link = kind === 'link' ? $getSelectedLink() : null
+        if (link) {
+          const element = editor.getElementByKey(link.getKey())
+          if (!element) return
+          const url = link.getURL()
+          setState({
+            mode: 'link',
+            key: link.getKey(),
+            url,
+            rect: toRect(element.getBoundingClientRect()),
+          })
+          setDraftUrl(url)
+          opened = true
+          return
+        }
+        const selection = $getSelection()
+        if (!$isRangeSelection(selection)) return
+        savedSelection.current = selection.clone()
+        const domSelection = window.getSelection()
+        const range = domSelection?.rangeCount ? domSelection.getRangeAt(0) : null
+        let rect = range?.getBoundingClientRect()
+        // a collapsed range can have no size, use the element the caret is in
+        if (!rect || (!rect.width && !rect.height)) {
+          const element = editor.getElementByKey(selection.anchor.key)
+          rect = element?.getBoundingClientRect()
+        }
+        if (!rect) return
+        setState({ mode: kind === 'video' ? 'video' : 'create', url: '', rect: toRect(rect) })
+        setDraftUrl('')
         opened = true
-        return
-      }
-      const selection = $getSelection()
-      if (!$isRangeSelection(selection)) return
-      savedSelection.current = selection.clone()
-      const domSelection = window.getSelection()
-      const range = domSelection?.rangeCount ? domSelection.getRangeAt(0) : null
-      let rect = range?.getBoundingClientRect()
-      // a collapsed range can have no size, use the element the caret is in
-      if (!rect || (!rect.width && !rect.height)) {
-        const element = editor.getElementByKey(selection.anchor.key)
-        rect = element?.getBoundingClientRect()
-      }
-      if (!rect) return
-      setState({ mode: 'create', url: '', rect: toRect(rect) })
-      setDraftUrl('')
-      opened = true
-    })
-    if (opened) focusInput()
-    return opened
-  }, [editor])
+      })
+      if (opened) focusInput()
+      return opened
+    },
+    [editor],
+  )
 
   useEffect(
     () =>
@@ -171,6 +186,14 @@ const LinkEditorPlugin = () => {
           OPEN_LINK_EDITOR_COMMAND,
           () => {
             open()
+            return true
+          },
+          COMMAND_PRIORITY_LOW,
+        ),
+        editor.registerCommand(
+          OPEN_VIDEO_PROMPT_COMMAND,
+          () => {
+            open('video')
             return true
           },
           COMMAND_PRIORITY_LOW,
@@ -259,6 +282,23 @@ const LinkEditorPlugin = () => {
       return
     }
 
+    if (current.mode === 'video') {
+      if (!draftUrl.trim()) {
+        close(true)
+        return
+      }
+      if (!parseYouTubeUrl(url)) {
+        setIsInvalid(true)
+        return
+      }
+      editor.update(() => {
+        if (savedSelection.current) $setSelection(savedSelection.current.clone())
+        $insertYouTubeVideo(url)
+      })
+      close(true)
+      return
+    }
+
     if (!url) {
       close(true)
       return
@@ -303,12 +343,17 @@ const LinkEditorPlugin = () => {
         if (e.target !== inputRef.current) e.preventDefault()
       }}
     >
-      <Icon icon="link" />
+      <Icon icon={state.mode === 'video' ? 'smart_display' : 'link'} />
       <input
         ref={inputRef}
         value={draftUrl}
-        placeholder="Paste or type a link"
-        onChange={(e) => setDraftUrl(e.target.value)}
+        placeholder={state.mode === 'video' ? 'Paste a YouTube link' : 'Paste or type a link'}
+        className={clsx({ invalid: isInvalid })}
+        title={isInvalid ? 'Not a YouTube video link' : undefined}
+        onChange={(e) => {
+          setDraftUrl(e.target.value)
+          setIsInvalid(false)
+        }}
         // editing usually replaces the whole url
         onFocus={(e) => e.target.select()}
         onKeyDown={(e) => {
@@ -336,12 +381,18 @@ const LinkEditorPlugin = () => {
         }}
         spellCheck={false}
       />
-      {(state.mode === 'create' || isChanged) && (
+      {(state.mode !== 'link' || isChanged) && (
         <Button
           icon="check"
           variant="text"
           onClick={apply}
-          data-tooltip={state.mode === 'create' ? 'Add link' : 'Update link'}
+          data-tooltip={
+            state.mode === 'video'
+              ? 'Embed video'
+              : state.mode === 'create'
+              ? 'Add link'
+              : 'Update link'
+          }
           type="button"
         />
       )}

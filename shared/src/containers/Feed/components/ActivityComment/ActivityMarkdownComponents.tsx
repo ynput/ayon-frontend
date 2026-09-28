@@ -1,3 +1,4 @@
+import React from 'react'
 import { isArray } from 'lodash'
 import ActivityCheckbox from '../ActivityCheckbox/ActivityCheckbox'
 import ActivityReference from '../ActivityReference/ActivityReference'
@@ -190,7 +191,9 @@ interface BlockquoteTagProps {
 
 export const blockquoteTag = ({ children }: BlockquoteTagProps): JSX.Element => {
   // get children string
-  const child = (children as any).find((item: any) => !!item?.props)?.props?.children
+  // children is a single node (or nothing) for a quote with one child, not always an array
+  const child = (React.Children.toArray(children) as any[]).find((item) => !!item?.props)?.props
+    ?.children
 
   if (!child) return <blockquote>{children}</blockquote>
 

@@ -37,6 +37,7 @@ import LinkEditorPlugin from './plugins/LinkEditorPlugin'
 import CodeLanguagePlugin from './plugins/CodeLanguagePlugin'
 import CodeHighlightPlugin from './plugins/CodeHighlightPlugin'
 import YouTubePlugin from './plugins/YouTubePlugin'
+import SlashCommandPlugin from './plugins/SlashCommandPlugin'
 import ClipboardPlugin from './plugins/ClipboardPlugin'
 import MarkdownValuePlugin from './plugins/MarkdownValuePlugin'
 import type {
@@ -129,6 +130,8 @@ export interface MarkdownEditorProps extends MentionEventHandlers {
   mentionPlacement?: MentionPlacement
   // type `:` and a shortcode to pick an emoji
   emoji?: boolean
+  // type `/` to insert blocks, videos, attachments and mentions
+  slashCommands?: boolean
   toolbar?: boolean | ToolbarLayout
   // formatting toolbar over the selected text
   floatingToolbar?: boolean | ToolbarLayout
@@ -171,6 +174,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       mentionMenuParent,
       mentionPlacement = VARIANTS[variant].mentionPlacement,
       emoji = true,
+      slashCommands = true,
       onMentionClick,
       onMentionHover,
       toolbar = VARIANTS[variant].toolbar,
@@ -275,6 +279,14 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         )}
         <ClipboardPlugin onFiles={onFiles} />
         <MarkdownValuePlugin value={value} onChange={onChange} handleRef={ref} />
+        {slashCommands && !readOnly && (
+          <SlashCommandPlugin
+            placement={mentionPlacement}
+            menuParent={mentionMenuParent}
+            mentionTriggers={mentions ? mentions.triggers ?? ['@', '@@', '@@@'] : []}
+            onFiles={onFiles}
+          />
+        )}
         {emoji && !readOnly && (
           <EmojiPlugin placement={mentionPlacement} menuParent={mentionMenuParent} />
         )}

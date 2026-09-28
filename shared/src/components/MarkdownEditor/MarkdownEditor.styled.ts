@@ -115,6 +115,10 @@ export const LinkPopover = styled.div`
     height: 32px;
     color: var(--md-sys-color-on-surface);
     text-overflow: ellipsis;
+
+    &.invalid {
+      color: var(--md-sys-color-error);
+    }
   }
 
   button {
@@ -472,9 +476,24 @@ export const MentionMenu = styled.div`
   }
 
   ul {
+    /* the offset parent of its options, for scrolling the highlighted one into view */
+    position: relative;
     margin: 0;
     padding: 0 4px;
+    max-height: 360px;
+    overflow-y: auto;
+
+    &.untitled {
+      padding-top: 4px;
+    }
   }
+`
+
+export const MentionMenuDivider = styled.li`
+  list-style: none;
+  height: 1px;
+  margin: 4px 4px;
+  background-color: var(--md-sys-color-outline-variant);
 `
 
 export const MentionMenuTitle = styled.div`
@@ -561,5 +580,9 @@ export const MentionMenuItem = styled.li`
   .suffix {
     color: var(--md-sys-color-outline);
     margin-left: auto;
+  }
+  .hint {
+    font-family: monospace;
+    font-size: 11px;
   }
 `

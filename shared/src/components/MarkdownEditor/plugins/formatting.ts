@@ -70,14 +70,20 @@ const LIST_COMMANDS = {
 
 /**
  * Turn the selected blocks into `format`, or back into paragraphs when they already are.
- * Used by the toolbar and keyboard shortcuts.
+ * Used by the toolbar and keyboard shortcuts. `set` only turns them into `format` (slash menu).
  */
-export const toggleBlockFormat = (editor: LexicalEditor, format: BlockFormat) => {
+export const toggleBlockFormat = (
+  editor: LexicalEditor,
+  format: BlockFormat,
+  mode: 'toggle' | 'set' = 'toggle',
+) => {
   const current = editor.getEditorState().read(() => {
     const selection = $getSelection()
     return $isRangeSelection(selection) ? $getBlockType(selection.anchor.getNode()) : null
   })
   if (current === null) return
+
+  if (mode === 'set' && current === format) return
 
   if (format === 'bullet' || format === 'number' || format === 'check') {
     if (current === format) editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined)

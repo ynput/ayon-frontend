@@ -364,7 +364,7 @@ const CommentInput: FC<CommentInputProps> = ({
 
     if (isGuest || !isOpen) return 'Leave a comment'
 
-    return 'Comment or mention with @user, @@version, @@@task...'
+    return 'Comment, or type / to add mentions, checklists, code and more...'
   }
 
   const handleReviewSubmit = async (status: VersionReviewFeedback) => {
