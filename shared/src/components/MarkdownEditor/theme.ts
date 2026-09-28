@@ -1,4 +1,5 @@
 import type { EditorThemeClasses } from 'lexical'
+import { CODE_HIGHLIGHT_THEME } from './code/prism'
 
 // Class names used by lexical when rendering nodes, styled in MarkdownEditor.styled.ts
 export const editorTheme: EditorThemeClasses = {
@@ -14,6 +15,8 @@ export const editorTheme: EditorThemeClasses = {
   quote: 'md-quote',
   link: 'md-link',
   code: 'md-code-block',
+  // prism token types -> `token <type>` classes, coloured by codeTokenStyles
+  codeHighlight: CODE_HIGHLIGHT_THEME,
   list: {
     ul: 'md-list md-list-ul',
     ol: 'md-list md-list-ol',

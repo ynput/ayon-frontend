@@ -89,7 +89,9 @@ export interface MentionEventHandlers {
 }
 
 export type ToolbarItem =
-  | 'heading'
+  | 'h1'
+  | 'h2'
+  | 'h3'
   | 'bold'
   | 'italic'
   | 'strikethrough'
@@ -104,7 +106,9 @@ export type ToolbarItem =
 export type ToolbarLayout = (ToolbarItem | '|')[]
 
 export const DEFAULT_TOOLBAR: ToolbarLayout = [
-  'heading',
+  'h1',
+  'h2',
+  'h3',
   'bold',
   'italic',
   'strikethrough',

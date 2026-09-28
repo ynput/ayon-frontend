@@ -771,6 +771,16 @@
     "@lexical/utils" "0.51.0"
     lexical "0.51.0"
 
+"@lexical/code-prism@0.51.0":
+  version "0.51.0"
+  resolved "https://registry.yarnpkg.com/@lexical/code-prism/-/code-prism-0.51.0.tgz#a45ad340209b84f5558fb7bdbfbfd3102021da25"
+  integrity sha512-iw2AkQefB7JP9E5TKHCBx2ew/u1uFGP9WNJRIYmErS2R0thhuPFrjDJ+cGkp9s1Wk8Zo0fi5BWJ2xbYXe/WjqQ==
+  dependencies:
+    "@lexical/code-core" "0.51.0"
+    "@lexical/extension" "0.51.0"
+    lexical "0.51.0"
+    prismjs "^1.30.0"
+
 "@lexical/code@0.51.0":
   version "0.51.0"
   resolved "https://registry.yarnpkg.com/@lexical/code/-/code-0.51.0.tgz#ee2798d96e313e34590df53256565e05481b8b69"
@@ -1730,6 +1740,11 @@
   resolved "https://registry.yarnpkg.com/@types/ms/-/ms-2.1.0.tgz#052aa67a48eccc4309d7f0191b7e41434b90bb78"
   integrity sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==
 
+"@types/prismjs@1.26.5":
+  version "1.26.5"
+  resolved "https://registry.yarnpkg.com/@types/prismjs/-/prismjs-1.26.5.tgz#72499abbb4c4ec9982446509d2f14fb8483869d6"
+  integrity sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==
+
 "@types/react-transition-group@^4.4.1":
   version "4.4.12"
   resolved "https://registry.yarnpkg.com/@types/react-transition-group/-/react-transition-group-4.4.12.tgz#b5d76568485b02a307238270bfe96cb51ee2a044"
@@ -2215,7 +2230,7 @@ electron-to-chromium@^1.5.420:
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.5.427.tgz#f8693d109cf116d4a6efa98bc620b9fc7f265f67"
   integrity sha512-n14zb3FdsChZ2BNobqNHAJMcP3ifFv4paox2LvCrfVAQcqGiSURgbJl+PfMpHVCNFkStnNc+RRVtPBTVW5PDgw==
 
-emojilib@^2.4.0:
+emojilib@2.4.0, emojilib@^2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/emojilib/-/emojilib-2.4.0.tgz#ac518a8bb0d5f76dda57289ccb2fdf9d39ae721e"
   integrity sha512-5U0rVMU5Y2n2+ykNLQqMoqklN9ICBT/KsvC1Gz6vqHbz2AXXGkG+Pm5rMWk/8Vjrr/mY9985Hi8DYzn1F09Nyw==
@@ -3778,6 +3793,11 @@ primereact@9.6.2:
   dependencies:
     "@types/react-transition-group" "^4.4.1"
     react-transition-group "^4.4.1"
+
+prismjs@1.30.0, prismjs@^1.30.0:
+  version "1.30.0"
+  resolved "https://registry.yarnpkg.com/prismjs/-/prismjs-1.30.0.tgz#d9709969d9d4e16403f6f348c63553b19f0975a9"
+  integrity sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==
 
 prop-types@^15.6.1, prop-types@^15.6.2, prop-types@^15.7.2:
   version "15.8.1"

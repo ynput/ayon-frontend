@@ -23,6 +23,7 @@ import { MentionNode } from './nodes/MentionNode'
 import { MARKDOWN_TRANSFORMERS } from './markdown/transformers'
 import { $setMarkdown } from './markdown/convert'
 import MentionsPlugin from './plugins/MentionsPlugin'
+import EmojiPlugin from './plugins/EmojiPlugin'
 import MentionEventsPlugin from './plugins/MentionEventsPlugin'
 import ToolbarPlugin from './plugins/ToolbarPlugin'
 import InlineCodePlugin from './plugins/InlineCodePlugin'
@@ -31,6 +32,9 @@ import ChecklistShortcutPlugin from './plugins/ChecklistShortcutPlugin'
 import KeyboardPlugin from './plugins/KeyboardPlugin'
 import EmptyParagraphPlugin from './plugins/EmptyParagraphPlugin'
 import LinkClickPlugin from './plugins/LinkClickPlugin'
+import LinkEditorPlugin from './plugins/LinkEditorPlugin'
+import CodeLanguagePlugin from './plugins/CodeLanguagePlugin'
+import CodeHighlightPlugin from './plugins/CodeHighlightPlugin'
 import ClipboardPlugin from './plugins/ClipboardPlugin'
 import MarkdownValuePlugin from './plugins/MarkdownValuePlugin'
 import type {
@@ -118,8 +122,10 @@ export interface MarkdownEditorProps extends MentionEventHandlers {
   mentions?: MentionSource
   // DOM element the mention picker is rendered into
   mentionMenuParent?: HTMLElement
-  // inline: at the caret, top: across the top of the editor
+  // inline: at the caret, top: across the top of the editor (also used for the emoji picker)
   mentionPlacement?: MentionPlacement
+  // type `:` and a shortcode to pick an emoji
+  emoji?: boolean
   toolbar?: boolean | ToolbarLayout
   // formatting toolbar over the selected text
   floatingToolbar?: boolean | ToolbarLayout
@@ -161,6 +167,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       mentions,
       mentionMenuParent,
       mentionPlacement = VARIANTS[variant].mentionPlacement,
+      emoji = true,
       onMentionClick,
       onMentionHover,
       toolbar = VARIANTS[variant].toolbar,
@@ -247,6 +254,9 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         <LinkPlugin validateUrl={validateUrl} />
         <AutoLinkPlugin matchers={LINK_MATCHERS} />
         <LinkClickPlugin />
+        {!readOnly && <LinkEditorPlugin />}
+        {!readOnly && <CodeLanguagePlugin />}
+        <CodeHighlightPlugin />
         <MarkdownShortcutPlugin transformers={MARKDOWN_TRANSFORMERS} />
         <ChecklistShortcutPlugin />
         <InlineCodePlugin />
@@ -261,6 +271,9 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         )}
         <ClipboardPlugin onFiles={onFiles} />
         <MarkdownValuePlugin value={value} onChange={onChange} handleRef={ref} />
+        {emoji && !readOnly && (
+          <EmojiPlugin placement={mentionPlacement} menuParent={mentionMenuParent} />
+        )}
         {mentions && (
           <MentionsPlugin
             source={mentions}

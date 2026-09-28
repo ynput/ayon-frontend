@@ -1446,6 +1446,16 @@
     "@lexical/utils" "0.51.0"
     lexical "0.51.0"
 
+"@lexical/code-prism@0.51.0":
+  version "0.51.0"
+  resolved "https://registry.yarnpkg.com/@lexical/code-prism/-/code-prism-0.51.0.tgz#a45ad340209b84f5558fb7bdbfbfd3102021da25"
+  integrity sha512-iw2AkQefB7JP9E5TKHCBx2ew/u1uFGP9WNJRIYmErS2R0thhuPFrjDJ+cGkp9s1Wk8Zo0fi5BWJ2xbYXe/WjqQ==
+  dependencies:
+    "@lexical/code-core" "0.51.0"
+    "@lexical/extension" "0.51.0"
+    lexical "0.51.0"
+    prismjs "^1.30.0"
+
 "@lexical/code@0.51.0":
   version "0.51.0"
   resolved "https://registry.yarnpkg.com/@lexical/code/-/code-0.51.0.tgz#ee2798d96e313e34590df53256565e05481b8b69"
@@ -2453,6 +2463,11 @@
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/@types/parse5/-/parse5-6.0.3.tgz#705bb349e789efa06f43f128cef51240753424cb"
   integrity sha512-SuT16Q1K51EAVPz1K29DJ/sXjhSQ0zjvsypYJ6tlwVsRV9jwW5Adq2ch8Dq8kDBCkYnELS7N7VNCSB5nC56t/g==
+
+"@types/prismjs@1.26.5":
+  version "1.26.5"
+  resolved "https://registry.yarnpkg.com/@types/prismjs/-/prismjs-1.26.5.tgz#72499abbb4c4ec9982446509d2f14fb8483869d6"
+  integrity sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==
 
 "@types/prismjs@^1.0.0":
   version "1.26.6"
@@ -3625,7 +3640,7 @@ emoji-regex@^8.0.0:
   resolved "https://registry.yarnpkg.com/emoji-regex/-/emoji-regex-8.0.0.tgz#e818fd69ce5ccfcb404594f842963bf53164cc37"
   integrity sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==
 
-emojilib@^2.4.0:
+emojilib@2.4.0, emojilib@^2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/emojilib/-/emojilib-2.4.0.tgz#ac518a8bb0d5f76dda57289ccb2fdf9d39ae721e"
   integrity sha512-5U0rVMU5Y2n2+ykNLQqMoqklN9ICBT/KsvC1Gz6vqHbz2AXXGkG+Pm5rMWk/8Vjrr/mY9985Hi8DYzn1F09Nyw==
@@ -6422,6 +6437,11 @@ primereact@9.6.2:
   dependencies:
     "@types/react-transition-group" "^4.4.1"
     react-transition-group "^4.4.1"
+
+prismjs@1.30.0, prismjs@^1.30.0:
+  version "1.30.0"
+  resolved "https://registry.yarnpkg.com/prismjs/-/prismjs-1.30.0.tgz#d9709969d9d4e16403f6f348c63553b19f0975a9"
+  integrity sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==
 
 prop-types@^15.6.1, prop-types@^15.6.2, prop-types@^15.7.2, prop-types@^15.8.1:
   version "15.8.1"

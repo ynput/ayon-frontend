@@ -26,7 +26,9 @@ import {
 
 export type BlockType =
   | 'paragraph'
+  | 'h1'
   | 'h2'
+  | 'h3'
   | 'heading'
   | 'quote'
   | 'code'
@@ -51,7 +53,10 @@ export const $getBlockType = (anchorNode: LexicalNode): BlockType => {
     const parentList = $getNearestNodeOfType(anchorNode, ListNode)
     return (parentList ?? element).getListType() as BlockType
   }
-  if ($isHeadingNode(element)) return element.getTag() === 'h2' ? 'h2' : 'heading'
+  if ($isHeadingNode(element)) {
+    const tag = element.getTag()
+    return tag === 'h1' || tag === 'h2' || tag === 'h3' ? tag : 'heading'
+  }
   if ($isQuoteNode(element)) return 'quote'
   if ($isCodeNode(element)) return 'code'
   return 'paragraph'
@@ -87,8 +92,9 @@ export const toggleBlockFormat = (editor: LexicalEditor, format: BlockFormat) =>
       $setBlocksType(selection, () => $createParagraphNode())
       return
     }
-    if (format === 'h2') $setBlocksType(selection, () => $createHeadingNode('h2'))
-    else if (format === 'quote') $setBlocksType(selection, () => $createQuoteNode())
+    if (format === 'h1' || format === 'h2' || format === 'h3') {
+      $setBlocksType(selection, () => $createHeadingNode(format))
+    } else if (format === 'quote') $setBlocksType(selection, () => $createQuoteNode())
     else if (selection.isCollapsed()) $setBlocksType(selection, () => $createCodeNode())
     else {
       // multiple lines become a single code block

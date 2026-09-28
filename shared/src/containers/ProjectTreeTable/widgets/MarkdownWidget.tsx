@@ -128,8 +128,8 @@ export const MarkdownWidget: FC<MarkdownWidgetProps> = ({
   const handleBlur = useCallback(
     (e: React.FocusEvent) => {
       const next = e.relatedTarget as HTMLElement | null
-      // still inside the editor, or in its formatting toolbar / link input
-      if (next && (containerRef.current?.contains(next) || next.closest('.md-floating-toolbar'))) {
+      // still inside the editor, or in one of its popovers (toolbar, link, code language)
+      if (next && (containerRef.current?.contains(next) || next.closest('.md-popover'))) {
         return
       }
       // If it's the expand button, close but stop editing but don't save

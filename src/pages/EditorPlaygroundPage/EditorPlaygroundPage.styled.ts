@@ -123,6 +123,9 @@ export const Preview = styled.div`
   &.spaced > div > p + p {
     margin-top: 20px !important;
   }
+  &.spaced blockquote p + p {
+    margin-top: 0 !important;
+  }
 
   &.message-markdown {
     background-color: unset;

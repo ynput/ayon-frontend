@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { codeTokenStyles } from './code/codeTheme'
 
 const CHECKED_ICON = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='20' viewBox='0 -960 960 960' width='20' fill='%2323E0A9'%3E%3Cpath d='m427.462-343.692 233.846-232.846L620-617.846 427.462-426.308l-87-86L299.154-471l128.308 127.308ZM480.134-104q-77.313 0-145.89-29.359-68.577-29.36-120.025-80.762-51.447-51.402-80.833-119.917Q104-402.554 104-479.866q0-78.569 29.418-146.871 29.419-68.303 80.922-119.917 51.503-51.614 119.916-80.48Q402.67-856 479.866-856q78.559 0 146.853 28.839 68.294 28.84 119.922 80.422 51.627 51.582 80.493 119.841Q856-558.639 856-480.05q0 77.589-28.839 145.826-28.84 68.237-80.408 119.786-51.569 51.548-119.81 80.993Q558.702-104 480.134-104Z'/%3E%3C/svg%3E")`
 const UNCHECKED_ICON = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='20' viewBox='0 -960 960 960' width='20' fill='%23C4C7C5'%3E%3Cpath d='M480.409-104q-77.588 0-146.165-29.359-68.577-29.360-120.025-80.762-51.447-51.402-80.833-119.876Q104-402.471 104-480.325q0-78.110 29.418-146.412 29.419-68.303 80.922-119.917 51.503-51.614 119.875-80.480Q402.587-856 480.325-856q78.100 0 146.394 28.839 68.294 28.840 119.922 80.422 51.627 51.582 80.493 120.065Q856-558.191 856-480.326q0 77.865-28.839 146.102-28.840 68.237-80.408 119.786-51.569 51.548-120.034 80.993Q558.253-104 480.409-104ZM480-162q132.513 0 225.256-92.744Q798-347.487 798-480t-92.744-225.256Q612.513-798 480-798t-225.256 92.744Q162-612.513 162-480t92.744 225.256Q347.487-162 480-162Zm0-318Z'/%3E%3C/svg%3E")`
@@ -31,8 +32,14 @@ export const Toolbar = styled.div`
 
   /* hide the less used buttons when there is no room (instead of wrapping) */
   container-type: inline-size;
+  @container (max-width: 520px) {
+    .md-toolbar-item-h1,
+    .md-toolbar-item-h3 {
+      display: none;
+    }
+  }
   @container (max-width: 480px) {
-    .md-toolbar-item-heading,
+    .md-toolbar-item-h2,
     .md-toolbar-item-strikethrough {
       display: none;
     }
@@ -84,17 +91,18 @@ export const ToolbarDivider = styled.span`
   background-color: var(--md-sys-color-outline-variant);
 `
 
-export const LinkEditor = styled.div`
-  position: absolute;
-  inset: 3px;
-  z-index: 10;
+// link url editor under a link (portaled to the body)
+export const LinkPopover = styled.div`
+  position: fixed;
+  z-index: 1100;
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
-  padding: 0 4px 0 8px;
+  max-width: calc(100vw - 16px);
+  padding: 2px 2px 2px 8px;
   border-radius: var(--border-radius-m);
   background-color: var(--md-sys-color-surface-container-high);
-  box-shadow: 0 3px 15px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 3px 15px 0 rgba(0, 0, 0, 0.4);
 
   .icon {
     color: var(--md-sys-color-outline);
@@ -104,7 +112,53 @@ export const LinkEditor = styled.div`
     all: unset;
     flex: 1;
     min-width: 0;
-    height: 100%;
+    height: 32px;
+    color: var(--md-sys-color-on-surface);
+    text-overflow: ellipsis;
+  }
+
+  button {
+    padding: 4px;
+    min-height: 0;
+  }
+`
+
+// language of the code block, on its top right corner (portaled to the body)
+export const CodeLanguage = styled.div`
+  position: fixed;
+  z-index: 1000;
+  transform: translateX(-100%);
+
+  /* the dropdown button is replaced by a small pill (valueTemplate) */
+  & > div > button {
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    & > .icon:last-child {
+      display: none;
+    }
+  }
+`
+
+export const CodeLanguageButton = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 22px;
+  padding: 0 4px 0 8px;
+  border-radius: var(--border-radius-m);
+  font-size: 11px;
+  color: var(--md-sys-color-outline);
+  background-color: var(--md-sys-color-surface-container-highest);
+  cursor: pointer;
+
+  .icon {
+    font-size: 16px;
+  }
+
+  &:hover {
     color: var(--md-sys-color-on-surface);
   }
 `
@@ -247,7 +301,18 @@ export const Content = styled.div`
     border-bottom-left-radius: 0;
   }
 
-  /* code block */
+  /* code block, read only editors show the language (editable ones have a control for it) */
+  .md-code-block {
+    position: relative;
+  }
+  .md-content[contenteditable='false'] .md-code-block[data-language]::after {
+    content: attr(data-language);
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-size: 11px;
+    color: var(--md-sys-color-outline);
+  }
   .md-code-block {
     display: block;
     font-family: monospace;
@@ -335,6 +400,11 @@ export const Content = styled.div`
     &::before {
       background-image: ${CHECKED_ICON};
     }
+  }
+
+  /* syntax highlighting (prism tokens) */
+  .md-code-block {
+    ${codeTokenStyles}
   }
 
   /* mentions */
@@ -461,6 +531,12 @@ export const MentionMenuItem = styled.li`
 
   .context {
     margin-right: -4px;
+  }
+  .emoji {
+    width: 20px;
+    font-size: 18px;
+    line-height: 20px;
+    text-align: center;
   }
   .label {
     font-weight: 500;

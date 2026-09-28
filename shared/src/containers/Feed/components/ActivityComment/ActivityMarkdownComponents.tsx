@@ -154,6 +154,7 @@ export const inputTag = (
 }
 
 import { BlockCode, InlineCode, QuoteLine } from './ActivityComment.styled'
+import { highlightCode } from '@shared/components/MarkdownEditor/code/prism'
 import { Link } from 'react-router-dom'
 // eslint-disable-next-line
 interface CodeTagProps {
@@ -168,6 +169,18 @@ export const codeTag = ({ node, className, children }: CodeTagProps): JSX.Elemen
     !!className?.startsWith('language-') ||
     (node?.position && node.position.start.line !== node.position.end.line)
   if (!isBlock) return <InlineCode>{children}</InlineCode>
+
+  // syntax highlighting with the same prism setup as the editor
+  const language = className?.replace(/^language-/, '')
+  const code = typeof children === 'string' ? children.replace(/\n$/, '') : null
+  const html = code !== null ? highlightCode(code, language) : null
+  if (html !== null) {
+    return (
+      <BlockCode>
+        <code className={className} dangerouslySetInnerHTML={{ __html: html }} />
+      </BlockCode>
+    )
+  }
   return <BlockCode>{children}</BlockCode>
 }
 

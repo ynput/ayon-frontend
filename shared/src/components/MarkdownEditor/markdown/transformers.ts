@@ -17,7 +17,9 @@ import {
   type TextMatchTransformer,
   type Transformer,
 } from '@lexical/markdown'
-import { $isLineBreakNode, LineBreakNode } from 'lexical'
+import { $createTextNode, $getEditor, $isLineBreakNode, LineBreakNode, TextNode } from 'lexical'
+import { EMOJI_USED_COMMAND } from '../emoji/commands'
+import { getEmoji } from '../emoji/emojiData'
 import { $createMentionNode, $isMentionNode, MentionNode } from '../nodes/MentionNode'
 import { MENTION_REF_TYPES } from '../types'
 
@@ -72,6 +74,27 @@ export const HARD_LINE_BREAK: TextMatchTransformer = {
   type: 'text-match',
 }
 
+// Typing the closing colon of a known shortcode (`:tada:`) inserts the emoji. Only while typing:
+// shortcodes in imported markdown are left as they are (the comment renderer shows them).
+export const EMOJI_SHORTCODE: TextMatchTransformer = {
+  dependencies: [TextNode],
+  export: () => null,
+  importRegExp: /(?!)/,
+  regExp: /:([a-z0-9_+-]+):$/i,
+  replace: (textNode, match) => {
+    // `:name:` in inline code is code
+    if (textNode.hasFormat('code')) return
+    const emoji = getEmoji(match[1])
+    if (!emoji) return
+    const emojiNode = $createTextNode(emoji.char).setFormat(textNode.getFormat())
+    textNode.replace(emojiNode)
+    $getEditor().dispatchCommand(EMOJI_USED_COMMAND, emoji.name)
+    return emojiNode
+  },
+  trigger: ':',
+  type: 'text-match',
+}
+
 // Order matters: check lists before bullet lists, mentions before links, inline code first.
 export const MARKDOWN_TRANSFORMERS: Transformer[] = [
   HEADING,
@@ -90,5 +113,6 @@ export const MARKDOWN_TRANSFORMERS: Transformer[] = [
   STRIKETHROUGH,
   MENTION,
   HARD_LINE_BREAK,
+  EMOJI_SHORTCODE,
   LINK,
 ]

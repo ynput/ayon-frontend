@@ -160,6 +160,7 @@ export default ({ mode }) => {
         'lexical',
         '@lexical/clipboard',
         '@lexical/code',
+        '@lexical/code-prism',
         '@lexical/history',
         '@lexical/link',
         '@lexical/list',
@@ -168,6 +169,8 @@ export default ({ mode }) => {
         '@lexical/rich-text',
         '@lexical/selection',
         '@lexical/utils',
+        // languages are registered on the one prism instance lexical highlights with
+        'prismjs',
       ],
     },
   })

@@ -304,9 +304,9 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
             value={isPreview ? normalizedValue : editingValue}
             onChange={isPreview ? undefined : updateEditingValue}
             readOnly={isPreview}
-            // formatting with shortcuts, a floating toolbar outside the dialog would close it
+            // formatting over the selection (editor popovers don't close the dialog)
             toolbar={false}
-            floatingToolbar={false}
+            floatingToolbar={!isPreview}
             bordered={false}
             autoFocus={!isPreview}
             minHeight={64}

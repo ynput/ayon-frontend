@@ -1,5 +1,4 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
@@ -30,6 +29,8 @@ import type {
   MentionTriggerConfig,
 } from '../types'
 import * as Styled from '../MarkdownEditor.styled'
+import SuggestionMenu from './SuggestionMenu'
+import { $isSelectionInCode } from './selectionHelpers'
 
 const ALL_TRIGGERS: MentionTrigger[] = ['@', '@@', '@@@']
 
@@ -62,9 +63,6 @@ class MentionMenuOption extends MenuOption {
   }
 }
 
-// estimated space the picker needs, used to decide if it opens above or below the caret
-const MENU_HEIGHT = 240
-
 interface MentionsPluginProps {
   source: MentionSource
   // DOM element the picker is rendered in, defaults to document.body
@@ -86,6 +84,8 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
 
   const triggerFn = useCallback(
     (text: string): MenuTextMatch | null => {
+      // no mentions while writing code
+      if ($isSelectionInCode()) return null
       const match = MENTION_REGEX.exec(text)
       if (!match) return null
       const typed = match[2] as MentionTrigger
@@ -206,25 +206,14 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
         // nothing matches the search, get out of the way
         if (!options.length && !error && (query || filter)) return null
 
-        const isTop = placement === 'top'
-        // a parent can mark a wider area to span with `md-mention-anchor`
-        const root = editor.getRootElement()
-        const editorElement = (root?.closest('.md-mention-anchor') ||
-          root?.closest('.md-editor')) as HTMLElement | null
-        const target = isTop && editorElement ? editorElement : anchor
-        const rect = anchor.getBoundingClientRect()
-        const openAbove =
-          !isTop && window.innerHeight - rect.bottom < MENU_HEIGHT && rect.top > MENU_HEIGHT
-
-        return createPortal(
-          <Styled.MentionMenu
-            className={clsx('mention-menu', { above: openAbove, top: isTop })}
-            // keep focus in the editor when clicking the menu
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <Styled.MentionMenuTitle>
-              <span>{config.title}</span>
-              {!!config.filters?.length && (
+        return (
+          <SuggestionMenu
+            editor={editor}
+            anchor={anchor}
+            placement={placement}
+            title={config.title}
+            titleActions={
+              !!config.filters?.length && (
                 <Styled.MentionFilters>
                   {config.filters.map((f) => (
                     <Styled.MentionFilterButton
@@ -239,47 +228,31 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
                     </Styled.MentionFilterButton>
                   ))}
                 </Styled.MentionFilters>
-              )}
-            </Styled.MentionMenuTitle>
-            <ul role="listbox">
-              {options.map((option, i) => {
-                const { item } = option
-                return (
-                  <Styled.MentionMenuItem
-                    key={option.key}
-                    ref={(el) => option.setRefElement(el)}
-                    role="option"
-                    aria-selected={selectedIndex === i}
-                    className={clsx({ selected: selectedIndex === i, square: !config.isCircle })}
-                    onMouseEnter={() => setHighlightedIndex(i)}
-                    onClick={() => {
-                      setHighlightedIndex(i)
-                      selectOptionAndCleanUp(option)
-                    }}
-                  >
-                    {source.renderOptionImage ? (
-                      source.renderOptionImage(item)
-                    ) : item.type === 'user' ? (
-                      <UserImage size={20} name={item.id} className="image" />
-                    ) : (
-                      item.icon && (
-                        <Icon icon={item.icon} className="image" style={{ color: item.color }} />
-                      )
-                    )}
-                    {item.context && <span className="context">{item.context} - </span>}
-                    <span className="label">{item.label}</span>
-                    {item.suffix && <span className="suffix">{item.suffix}</span>}
-                  </Styled.MentionMenuItem>
-                )
-              })}
-              {(error || !options.length) && (
-                <Styled.MentionMenuItem className="empty">
-                  {error || `No ${config.noun}s found`}
-                </Styled.MentionMenuItem>
-              )}
-            </ul>
-          </Styled.MentionMenu>,
-          target,
+              )
+            }
+            options={options}
+            selectedIndex={selectedIndex}
+            onSelect={selectOptionAndCleanUp}
+            onHighlight={setHighlightedIndex}
+            optionClassName={() => (config.isCircle ? undefined : 'square')}
+            emptyMessage={error || `No ${config.noun}s found`}
+            renderOption={({ item }) => (
+              <>
+                {source.renderOptionImage ? (
+                  source.renderOptionImage(item)
+                ) : item.type === 'user' ? (
+                  <UserImage size={20} name={item.id} className="image" />
+                ) : (
+                  item.icon && (
+                    <Icon icon={item.icon} className="image" style={{ color: item.color }} />
+                  )
+                )}
+                {item.context && <span className="context">{item.context} - </span>}
+                <span className="label">{item.label}</span>
+                {item.suffix && <span className="suffix">{item.suffix}</span>}
+              </>
+            )}
+          />
         )
       }}
     />

@@ -13,7 +13,9 @@ import { useDescriptionEditor } from './hooks'
 
 // descriptions have no check lists (those belong in comments)
 const DESCRIPTION_TOOLBAR: ToolbarLayout = [
-  'heading',
+  'h1',
+  'h2',
+  'h3',
   'bold',
   'italic',
   'strikethrough',

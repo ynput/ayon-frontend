@@ -1,26 +1,25 @@
-import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useCallback, useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
+import { $isLinkNode } from '@lexical/link'
 import { $findMatchingParent, mergeRegister } from '@lexical/utils'
 import {
   $getSelection,
   $isRangeSelection,
-  $setSelection,
   BLUR_COMMAND,
   COMMAND_PRIORITY_CRITICAL,
   COMMAND_PRIORITY_LOW,
   FORMAT_TEXT_COMMAND,
-  KEY_DOWN_COMMAND,
   SELECTION_CHANGE_COMMAND,
-  type BaseSelection,
   type TextFormatType,
 } from 'lexical'
-import { Button, Icon, type IconType } from '@ynput/ayon-react-components'
+import { Button, type IconType } from '@ynput/ayon-react-components'
+import { BLOCK_DIALOG_CLOSE_CLASS } from '@shared/components/LinksManager/CellEditingDialog'
 import { DEFAULT_TOOLBAR, type ToolbarItem, type ToolbarLayout } from '../types'
 import * as Styled from '../MarkdownEditor.styled'
 import { $getBlockType, toggleBlockFormat, type BlockType } from './formatting'
+import { OPEN_LINK_EDITOR_COMMAND } from './LinkEditorPlugin'
 
 interface ToolbarState {
   blockType: BlockType
@@ -38,7 +37,9 @@ const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigat
 const MOD = isMac ? '⌘' : 'Ctrl+'
 
 const ITEMS: Record<ToolbarItem, { icon: IconType; tooltip: string; shortcut?: string }> = {
-  heading: { icon: 'format_h1', tooltip: 'Heading' },
+  h1: { icon: 'format_h1', tooltip: 'Heading 1', shortcut: '#' },
+  h2: { icon: 'format_h2', tooltip: 'Heading 2', shortcut: '##' },
+  h3: { icon: 'format_h3', tooltip: 'Heading 3', shortcut: '###' },
   bold: { icon: 'format_bold', tooltip: 'Bold', shortcut: `${MOD}B` },
   italic: { icon: 'format_italic', tooltip: 'Italic', shortcut: `${MOD}I` },
   strikethrough: { icon: 'strikethrough_s', tooltip: 'Strikethrough' },
@@ -49,14 +50,6 @@ const ITEMS: Record<ToolbarItem, { icon: IconType; tooltip: string; shortcut?: s
   numberList: { icon: 'format_list_numbered', tooltip: 'Numbered list', shortcut: '1.' },
   bulletList: { icon: 'format_list_bulleted', tooltip: 'Bullet list', shortcut: '-' },
   checkList: { icon: 'check_circle', tooltip: 'Checklist', shortcut: '[]' },
-}
-
-// accept urls without a scheme, e.g. ynput.io
-const normalizeUrl = (url: string) => {
-  const trimmed = url.trim()
-  if (!trimmed) return ''
-  if (/^(https?:|mailto:|\/|#)/i.test(trimmed)) return trimmed
-  return `https://${trimmed}`
 }
 
 interface ToolbarPluginProps {
@@ -70,30 +63,20 @@ interface ToolbarPluginProps {
 const ToolbarPlugin = ({ layout = DEFAULT_TOOLBAR, start, end, floating }: ToolbarPluginProps) => {
   const [editor] = useLexicalComposerContext()
   const [state, setState] = useState<ToolbarState>(EMPTY_STATE)
-  // link editor
-  const [linkUrl, setLinkUrl] = useState<string | null>(null)
-  const savedSelection = useRef<BaseSelection | null>(null)
-  const linkInputRef = useRef<HTMLInputElement>(null)
   // floating toolbar
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
-  // the link input takes focus from the editor, keep the toolbar open meanwhile
-  const isLinkOpen = useRef(false)
 
-  const updatePosition = useCallback(
-    (allowCollapsed = false) => {
-      const root = editor.getRootElement()
-      const domSelection = window.getSelection()
-      const isCollapsed = !!domSelection?.isCollapsed && !allowCollapsed
-      if (!root || !domSelection || isCollapsed || !domSelection.rangeCount) {
-        setPosition(null)
-        return
-      }
-      if (!root.contains(domSelection.anchorNode)) return
-      const rect = domSelection.getRangeAt(0).getBoundingClientRect()
-      setPosition({ top: rect.top, left: rect.left + rect.width / 2 })
-    },
-    [editor],
-  )
+  const updatePosition = useCallback(() => {
+    const root = editor.getRootElement()
+    const domSelection = window.getSelection()
+    if (!root || !domSelection || domSelection.isCollapsed || !domSelection.rangeCount) {
+      setPosition(null)
+      return
+    }
+    if (!root.contains(domSelection.anchorNode)) return
+    const rect = domSelection.getRangeAt(0).getBoundingClientRect()
+    setPosition({ top: rect.top, left: rect.left + rect.width / 2 })
+  }, [editor])
 
   const $updateToolbar = useCallback(() => {
     const selection = $getSelection()
@@ -103,7 +86,6 @@ const ToolbarPlugin = ({ layout = DEFAULT_TOOLBAR, start, end, floating }: Toolb
     for (const format of ['bold', 'italic', 'strikethrough', 'code'] as TextFormatType[]) {
       formats[format] = selection.hasFormat(format)
     }
-    const node = anchorNode
     if (floating) {
       if (selection.isCollapsed() || $getBlockType(anchorNode) === 'code') setPosition(null)
       else requestAnimationFrame(() => updatePosition())
@@ -111,68 +93,9 @@ const ToolbarPlugin = ({ layout = DEFAULT_TOOLBAR, start, end, floating }: Toolb
     setState({
       blockType: $getBlockType(anchorNode),
       formats,
-      isLink: $isLinkNode(node.getParent()) || $isLinkNode(node),
+      isLink: !!$findMatchingParent(anchorNode, $isLinkNode),
     })
   }, [floating, updatePosition])
-
-  const $getSelectedLink = () => {
-    const selection = $getSelection()
-    if (!$isRangeSelection(selection)) return null
-    const node = selection.anchor.getNode()
-    return $findMatchingParent(node, $isLinkNode)
-  }
-
-  const openLinkEditor = useCallback(() => {
-    editor.getEditorState().read(() => {
-      const selection = $getSelection()
-      savedSelection.current = selection ? selection.clone() : null
-      const link = $getSelectedLink()
-      setLinkUrl(link ? link.getURL() : '')
-    })
-    // the floating toolbar hosts the link editor, show it at the caret
-    if (floating) updatePosition(true)
-  }, [editor, floating, updatePosition])
-
-  const closeLinkEditor = (refocus = true) => {
-    setLinkUrl(null)
-    isLinkOpen.current = false
-    // clicked away from the link editor, the floating toolbar goes with it
-    if (!refocus && floating) setPosition(null)
-    if (refocus) {
-      editor.update(() => {
-        if (savedSelection.current) $setSelection(savedSelection.current.clone())
-      })
-      editor.focus()
-    }
-  }
-
-  const applyLink = (remove = false) => {
-    const url = remove ? null : normalizeUrl(linkUrl || '')
-    editor.update(() => {
-      if (savedSelection.current) $setSelection(savedSelection.current.clone())
-      const selection = $getSelection()
-      if (!$isRangeSelection(selection)) return
-      // nothing selected and not in a link: insert the url itself as the link text
-      if (url && selection.isCollapsed() && !$getSelectedLink()) {
-        selection.insertText(url)
-        const inserted = $getSelection()
-        if ($isRangeSelection(inserted)) {
-          const focus = inserted.focus
-          inserted.anchor.set(focus.key, focus.offset - url.length, 'text')
-        }
-      }
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, url || null)
-      // collapse to the end so typing continues after the link
-      const after = $getSelection()
-      if ($isRangeSelection(after)) {
-        const focus = after.isBackward() ? after.anchor : after.focus
-        after.anchor.set(focus.key, focus.offset, focus.type)
-        after.focus.set(focus.key, focus.offset, focus.type)
-      }
-    })
-    setLinkUrl(null)
-    editor.focus()
-  }
 
   useEffect(
     () =>
@@ -191,43 +114,25 @@ const ToolbarPlugin = ({ layout = DEFAULT_TOOLBAR, start, end, floating }: Toolb
         editor.registerCommand(
           BLUR_COMMAND,
           () => {
-            if (!isLinkOpen.current) setPosition(null)
-            return false
-          },
-          COMMAND_PRIORITY_LOW,
-        ),
-        editor.registerCommand(
-          KEY_DOWN_COMMAND,
-          (e) => {
-            if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'k') {
-              e.preventDefault()
-              openLinkEditor()
-              return true
-            }
+            setPosition(null)
             return false
           },
           COMMAND_PRIORITY_LOW,
         ),
       ),
-    [editor, $updateToolbar, openLinkEditor],
+    [editor, $updateToolbar],
   )
 
   // keep the floating toolbar on the selection while scrolling
   useEffect(() => {
     if (!floating || !position) return
-    const update = () => updatePosition(linkUrl !== null)
-    window.addEventListener('scroll', update, true)
-    window.addEventListener('resize', update)
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
     return () => {
-      window.removeEventListener('scroll', update, true)
-      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
     }
-  }, [floating, !!position, updatePosition, linkUrl !== null])
-
-  useEffect(() => {
-    isLinkOpen.current = linkUrl !== null
-    if (linkUrl !== null) linkInputRef.current?.focus()
-  }, [linkUrl !== null])
+  }, [floating, !!position, updatePosition])
 
   const handleItem = (item: ToolbarItem) => {
     switch (item) {
@@ -237,8 +142,10 @@ const ToolbarPlugin = ({ layout = DEFAULT_TOOLBAR, start, end, floating }: Toolb
       case 'code':
         editor.dispatchCommand(FORMAT_TEXT_COMMAND, item)
         break
-      case 'heading':
-        toggleBlockFormat(editor, 'h2')
+      case 'h1':
+      case 'h2':
+      case 'h3':
+        toggleBlockFormat(editor, item)
         break
       case 'quote':
         toggleBlockFormat(editor, 'quote')
@@ -247,8 +154,9 @@ const ToolbarPlugin = ({ layout = DEFAULT_TOOLBAR, start, end, floating }: Toolb
         toggleBlockFormat(editor, 'code')
         break
       case 'link':
-        if (state.isLink) editor.dispatchCommand(TOGGLE_LINK_COMMAND, null)
-        else openLinkEditor()
+        // edit the link under the caret or link the selection
+        setPosition(null)
+        editor.dispatchCommand(OPEN_LINK_EDITOR_COMMAND, undefined)
         break
       case 'bulletList':
         toggleBlockFormat(editor, 'bullet')
@@ -269,8 +177,10 @@ const ToolbarPlugin = ({ layout = DEFAULT_TOOLBAR, start, end, floating }: Toolb
       case 'strikethrough':
       case 'code':
         return !!state.formats[item]
-      case 'heading':
-        return state.blockType === 'h2' || state.blockType === 'heading'
+      case 'h1':
+      case 'h2':
+      case 'h3':
+        return state.blockType === item
       case 'quote':
         return state.blockType === 'quote'
       case 'codeBlock':
@@ -318,61 +228,14 @@ const ToolbarPlugin = ({ layout = DEFAULT_TOOLBAR, start, end, floating }: Toolb
     </Styled.ToolbarItems>
   )
 
-  const linkEditor = (
-    <>
-      {linkUrl !== null && (
-        <Styled.LinkEditor className="md-link-editor">
-          <Icon icon="link" />
-          <input
-            ref={linkInputRef}
-            value={linkUrl}
-            placeholder="Paste or type a link"
-            onChange={(e) => setLinkUrl(e.target.value)}
-            onKeyDown={(e) => {
-              e.stopPropagation()
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                applyLink()
-              }
-              if (e.key === 'Escape') {
-                e.preventDefault()
-                closeLinkEditor()
-              }
-            }}
-            onBlur={() => closeLinkEditor(false)}
-          />
-          <Button
-            icon="check"
-            variant="text"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => applyLink()}
-            data-tooltip="Apply link"
-            type="button"
-          />
-          {state.isLink && (
-            <Button
-              icon="link_off"
-              variant="text"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => applyLink(true)}
-              data-tooltip="Remove link"
-              type="button"
-            />
-          )}
-        </Styled.LinkEditor>
-      )}
-    </>
-  )
-
   if (floating) {
     if (!position) return null
     return createPortal(
       <Styled.FloatingToolbar
-        className="md-toolbar md-floating-toolbar"
+        className={clsx('md-toolbar md-floating-toolbar md-popover', BLOCK_DIALOG_CLOSE_CLASS)}
         style={{ top: position.top, left: position.left }}
       >
         {items}
-        {linkEditor}
       </Styled.FloatingToolbar>,
       document.body,
     )
@@ -383,7 +246,6 @@ const ToolbarPlugin = ({ layout = DEFAULT_TOOLBAR, start, end, floating }: Toolb
       {start}
       {items}
       {end}
-      {linkEditor}
     </Styled.Toolbar>
   )
 }
