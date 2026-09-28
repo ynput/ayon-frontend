@@ -129,6 +129,15 @@ no language
 { "name": "sh010", "frameStart": 1001 }
 \`\`\``,
   },
+  {
+    id: 'video',
+    label: 'Video',
+    markdown: `Reference for the smoke timing:
+
+https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42
+
+A link with its own text stays a link: [the video](https://youtu.be/dQw4w9WgXcQ)`,
+  },
   { id: 'empty', label: 'Empty', markdown: '' },
 ]
 

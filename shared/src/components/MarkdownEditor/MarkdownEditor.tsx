@@ -20,6 +20,7 @@ import { CodeHighlightNode, CodeNode } from '@lexical/code'
 
 import { editorTheme } from './theme'
 import { MentionNode } from './nodes/MentionNode'
+import { YouTubeNode } from './nodes/YouTubeNode'
 import { MARKDOWN_TRANSFORMERS } from './markdown/transformers'
 import { $setMarkdown } from './markdown/convert'
 import MentionsPlugin from './plugins/MentionsPlugin'
@@ -35,6 +36,7 @@ import LinkClickPlugin from './plugins/LinkClickPlugin'
 import LinkEditorPlugin from './plugins/LinkEditorPlugin'
 import CodeLanguagePlugin from './plugins/CodeLanguagePlugin'
 import CodeHighlightPlugin from './plugins/CodeHighlightPlugin'
+import YouTubePlugin from './plugins/YouTubePlugin'
 import ClipboardPlugin from './plugins/ClipboardPlugin'
 import MarkdownValuePlugin from './plugins/MarkdownValuePlugin'
 import type {
@@ -71,6 +73,7 @@ const EDITOR_NODES = [
   CodeNode,
   CodeHighlightNode,
   MentionNode,
+  YouTubeNode,
 ]
 
 // readOnly can change after the composer is created
@@ -257,6 +260,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         {!readOnly && <LinkEditorPlugin />}
         {!readOnly && <CodeLanguagePlugin />}
         <CodeHighlightPlugin />
+        {!readOnly && <YouTubePlugin />}
         <MarkdownShortcutPlugin transformers={MARKDOWN_TRANSFORMERS} />
         <ChecklistShortcutPlugin />
         <InlineCodePlugin />

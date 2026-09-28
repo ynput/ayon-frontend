@@ -248,6 +248,10 @@ export const Content = styled.div`
     & > .md-paragraph + .md-paragraph {
       margin-top: 0;
     }
+    /* lexical's invisible caret helper next to a block (e.g. a video) at the start */
+    & > [data-lexical-decorator-boundary] + * {
+      margin-top: 0;
+    }
   }
 
   .md-heading {
@@ -405,6 +409,17 @@ export const Content = styled.div`
   /* syntax highlighting (prism tokens) */
   .md-code-block {
     ${codeTokenStyles}
+  }
+
+  /* embedded blocks (videos), selected by clicking their frame */
+  .md-embed {
+    display: flex;
+    padding: 2px;
+    border-radius: var(--border-radius-m);
+    user-select: none;
+  }
+  .md-embed-focus {
+    outline: 2px solid var(--md-sys-color-primary);
   }
 
   /* mentions */

@@ -14,6 +14,7 @@ import {
   QUOTE,
   STRIKETHROUGH,
   UNORDERED_LIST,
+  type ElementTransformer,
   type TextMatchTransformer,
   type Transformer,
 } from '@lexical/markdown'
@@ -21,6 +22,8 @@ import { $createTextNode, $getEditor, $isLineBreakNode, LineBreakNode, TextNode 
 import { EMOJI_USED_COMMAND } from '../emoji/commands'
 import { getEmoji } from '../emoji/emojiData'
 import { $createMentionNode, $isMentionNode, MentionNode } from '../nodes/MentionNode'
+import { $createYouTubeNode, $isYouTubeNode, YouTubeNode } from '../nodes/YouTubeNode'
+import { parseYouTubeUrl } from '../youtube/parseYouTubeUrl'
 import { MENTION_REF_TYPES } from '../types'
 
 // Only spaces are encoded so ids like `team:Sons of thunder` survive markdown link parsing.
@@ -95,8 +98,22 @@ export const EMOJI_SHORTCODE: TextMatchTransformer = {
   type: 'text-match',
 }
 
+// A line that is only a YouTube url is an embedded video. Only on import, a url typed or pasted
+// in the editor is turned into a video by YouTubePlugin.
+export const YOUTUBE: ElementTransformer = {
+  dependencies: [YouTubeNode],
+  export: (node) => ($isYouTubeNode(node) ? node.getUrl() : null),
+  regExp: /^\s*(https?:\/\/\S+)\s*$/,
+  replace: (parentNode, _children, match, isImport) => {
+    if (!isImport || !parseYouTubeUrl(match[1])) return false
+    parentNode.replace($createYouTubeNode(match[1]))
+  },
+  type: 'element',
+}
+
 // Order matters: check lists before bullet lists, mentions before links, inline code first.
 export const MARKDOWN_TRANSFORMERS: Transformer[] = [
+  YOUTUBE,
   HEADING,
   QUOTE,
   CHECK_LIST,

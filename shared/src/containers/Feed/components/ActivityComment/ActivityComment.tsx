@@ -15,7 +15,7 @@ import FilesGrid, { FilesGridProps } from '../FilesGrid/FilesGrid'
 import { getTextRefs } from './getTextRefs'
 import * as Styled from './ActivityComment.styled'
 import CommentWrapper from './CommentWrapper'
-import { normalizeLegacyMarkdown } from '@shared/components/MarkdownEditor'
+import { normalizeLegacyMarkdown, renderYouTubeParagraph } from '@shared/components/MarkdownEditor'
 import { aTag, blockquoteTag, codeTag, inputTag } from './ActivityMarkdownComponents'
 import { mapGraphQLReactions } from './mappers'
 import { Icon } from '@ynput/ayon-react-components'
@@ -308,6 +308,9 @@ const ActivityComment = ({
                         {props.children}
                       </Styled.Tip>
                     ),
+                    // a video url on its own line is an embedded video
+                    // @ts-ignore
+                    p: (props) => renderYouTubeParagraph(props) ?? <p>{props.children}</p>,
                     // @ts-ignore
                     status: (props) => {
                       return (

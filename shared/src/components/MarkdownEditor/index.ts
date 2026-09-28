@@ -7,3 +7,6 @@ export { $getMarkdown, $setMarkdown, normalizeLegacyMarkdown } from './markdown/
 export { INSERT_MENTION_TRIGGER_COMMAND } from './plugins/MentionsPlugin'
 export { createFeedMentionSource } from './mentions/createFeedMentionSource'
 export { toggleBlockFormat, type BlockFormat } from './plugins/formatting'
+export { YouTubeNode, $createYouTubeNode, $isYouTubeNode } from './nodes/YouTubeNode'
+export { YouTubeEmbed, renderYouTubeParagraph } from './youtube/YouTubeEmbed'
+export { parseYouTubeUrl } from './youtube/parseYouTubeUrl'

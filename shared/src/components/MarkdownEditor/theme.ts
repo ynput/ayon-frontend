@@ -13,6 +13,8 @@ export const editorTheme: EditorThemeClasses = {
     h6: 'md-heading md-h6',
   },
   quote: 'md-quote',
+  // blocks like embedded videos
+  embedBlock: { base: 'md-embed', focus: 'md-embed-focus' },
   link: 'md-link',
   code: 'md-code-block',
   // prism token types -> `token <type>` classes, coloured by codeTokenStyles
