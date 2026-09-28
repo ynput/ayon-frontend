@@ -1,14 +1,15 @@
-import { FC, useRef, useEffect, useCallback, useState, Suspense, type ChangeEvent } from 'react'
+import { FC, useRef, useEffect, useCallback, useState } from 'react'
 import styled from 'styled-components'
 
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import type { WidgetBaseProps } from './CellWidget'
-import ReactQuill from 'react-quill-ayon'
-import InputMarkdownConvert from '@shared/containers/Feed/components/CommentInput/InputMarkdownConvert'
-import { convertToMarkdown } from '@shared/containers/Feed/components/CommentInput/quillToMarkdown'
-import { mentionTypeOptions } from '@shared/components/DetailsPanelDetails/hooks/useMentionSystem'
 import { StyledEditor } from '@shared/components/DetailsPanelDetails/DescriptionSection.styles'
-import { QuillListStyles } from '@shared/components/QuillListStyles'
+import {
+  MarkdownEditor,
+  toggleBlockFormat,
+  type BlockFormat,
+  type MarkdownEditorHandle,
+} from '@shared/components/MarkdownEditor'
 import { toast } from 'react-toastify'
 
 const StyledDialog = styled.div`
@@ -56,9 +57,13 @@ const PlainPreview = styled.div`
   overflow: auto;
 `
 
-const StyledHiddenMarkdown = styled.div`
-  display: none;
-`
+// ctrl/cmd + key shortcuts for blocks in the rich text editor
+const BLOCK_SHORTCUTS: Record<string, BlockFormat> = {
+  d: 'code',
+  o: 'number',
+  l: 'bullet',
+  h: 'h2',
+}
 
 export interface TextContentWidgetProps extends WidgetBaseProps {
   value?: string | number | null
@@ -95,16 +100,15 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
   onPreviewMouseLeave,
 }) => {
   const hasDraftRef = useRef(draftValue != null)
-  const [editingValue, setEditingValue] = useState(draftValue ?? '')
-  const [descriptionHtml, setDescriptionHtml] = useState(draftValue ?? '')
-  const quillRef = useRef<any>(null)
-  const markdownRef = useRef<HTMLDivElement>(null)
+  const normalizedValue = typeof value === 'string' ? value : value == null ? '' : String(value)
+  // markdown (rich text) or plain text being edited, start with the value so the editor mounts with it
+  const [editingValue, setEditingValue] = useState(draftValue ?? normalizedValue)
+  const editorRef = useRef<MarkdownEditorHandle>(null)
   const isPreview = variant === 'preview'
   const isRichText = allowMarkdown
   const plainTextAreaRef = useRef<HTMLTextAreaElement>(null)
   const hasAutoFocusedRef = useRef(false)
   const dialogRef = useRef<HTMLDivElement>(null)
-  const normalizedValue = typeof value === 'string' ? value : value == null ? '' : String(value)
   const originalValueRef = useRef(normalizedValue)
   useEffect(() => {
     originalValueRef.current = normalizedValue
@@ -118,46 +122,20 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
     [onEditingDraftChange],
   )
 
-  // Parse markdown to HTML to initialize the editor content for edit and preview
+  // Initialize the edited value for edit and preview
   useEffect(() => {
     if (hasDraftRef.current) {
       hasDraftRef.current = false
       return
     }
     if (!isEditing && !isPreview) return
-    if (!isRichText) {
-      setEditingValue(normalizedValue)
-      return
-    }
-    if (!normalizedValue.trim()) {
-      setDescriptionHtml('')
-      setEditingValue('')
-      return
-    }
-    if (!markdownRef.current) return
-    const html = markdownRef.current.innerHTML
-    setDescriptionHtml(html)
-    setEditingValue(html)
-  }, [isEditing, isPreview, normalizedValue, isRichText])
+    setEditingValue(normalizedValue)
+  }, [isEditing, isPreview, normalizedValue])
 
-  // Autofocus editor when dialog opens
+  // Autofocus the plain text editor when the dialog opens (the rich text editor focuses itself)
   useEffect(() => {
-    if (isPreview || !isEditing) {
+    if (isPreview || !isEditing || isRichText) {
       hasAutoFocusedRef.current = false
-      return
-    }
-
-    if (isRichText) {
-      if (hasAutoFocusedRef.current) return
-      const quillInstance = quillRef.current?.getEditor()
-      if (!quillInstance) return
-
-      requestAnimationFrame(() => {
-        const len = quillInstance.getLength()
-        const index = Math.max(len - 1, 0)
-        quillInstance.focus()
-        quillInstance.setSelection(index, 0)
-      })
       return
     }
 
@@ -172,7 +150,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
       textarea.setSelectionRange(len, len)
       hasAutoFocusedRef.current = true
     })
-  }, [isEditing, isPreview, descriptionHtml, isRichText])
+  }, [isEditing, isPreview, isRichText])
 
   const convertPlainValue = useCallback(
     (input: string): { value: string | number | null; error?: string } => {
@@ -228,13 +206,9 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
         onChange?.(convertedValue as string, trigger)
         return
       }
-      if (!quillRef.current) return
+      const markdown = editorRef.current?.getMarkdown() ?? editingValue
 
-      const quill = quillRef.current.getEditor()
-      const html = quill.root.innerHTML
-      const [markdown] = convertToMarkdown(html)
-
-      // Guard against saving unchanged content (e.g. click-outside before Quill initializes)
+      // Guard against saving unchanged content (e.g. click-outside before the editor initializes)
       if (trigger !== 'Enter' && markdown.trim() === originalValueRef.current.trim()) {
         onCancelEdit?.()
         return
@@ -251,7 +225,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
   const onCancelEditRef = useRef(onCancelEdit)
   onCancelEditRef.current = onCancelEdit
 
-  // Capture-phase listener to intercept Enter/Escape before Quill processes them
+  // Capture-phase listener to intercept Enter/Escape before the editor processes them
   useEffect(() => {
     if (isPreview || !isRichText) return
     const el = dialogRef.current
@@ -277,41 +251,16 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
     return () => el.removeEventListener('keydown', handler, true)
   }, [isPreview, isRichText])
 
-  // Handle Ctrl+key formatting shortcuts (bubble phase is fine for these)
+  // Handle Ctrl+key block formatting shortcuts (bold, italic... are handled by the editor)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (isPreview || !isRichText) return
-      if (!quillRef.current) return
-
-      const quill = quillRef.current.getEditor()
-      // Handle Ctrl/Cmd + key combinations
-      if (e.ctrlKey || e.metaKey) {
-        const key = e.key.toLowerCase()
-        const format = quill.getFormat()
-        // b, i, u are handled natively by Quill's built-in keyboard bindings,
-        // so we only intercept the non-standard shortcuts here to avoid double-toggling.
-        const handledKeys = new Set(['d', 'o', 'l', 'h'])
-
-        if (!handledKeys.has(key)) return
-
-        e.preventDefault()
-
-        switch (key) {
-          case 'd':
-            quill.format('code-block', !quill.getFormat()['code-block'])
-            return
-          case 'o':
-            quill.format('list', format.list === 'ordered' ? false : 'ordered')
-            return
-          case 'l':
-            quill.format('list', format.list === 'bullet' ? false : 'bullet')
-            return
-          case 'h':
-            const isH2 = format.header === 2
-            quill.format('header', isH2 ? false : 2)
-            break
-        }
-      }
+      if (isPreview || !isRichText || e.shiftKey || e.altKey) return
+      if (!(e.ctrlKey || e.metaKey)) return
+      const format = BLOCK_SHORTCUTS[e.key.toLowerCase()]
+      const editor = editorRef.current?.getEditor()
+      if (!format || !editor) return
+      e.preventDefault()
+      toggleBlockFormat(editor, format)
     },
     [isPreview, isRichText],
   )
@@ -348,63 +297,49 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
           }
         }}
       >
-        <QuillListStyles>
-          {isRichText ? (
-            <ReactQuill
-              key={`text-editor-${variant}-${isEditing}`}
-              ref={quillRef}
-              theme="snow"
-              value={editingValue}
-              modules={{
-                toolbar: false,
-              }}
-              readOnly={isPreview}
-              onChange={updateEditingValue}
-              className="block-shortcuts"
-            />
-          ) : isPreview ? (
-            <PlainPreview>{normalizedValue}</PlainPreview>
-          ) : (
-            <PlainTextarea
-              ref={plainTextAreaRef}
-              value={editingValue}
-              onChange={(e) => updateEditingValue(e.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Escape') {
-                  event.preventDefault()
-                  onCancelEdit?.()
-                  return
-                }
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault()
-                  handleSave('Enter')
-                  return
-                }
-              }}
-              spellCheck={false}
-            />
-          )}
-        </QuillListStyles>
+        {isRichText ? (
+          <MarkdownEditor
+            key={`text-editor-${variant}-${isEditing}`}
+            ref={editorRef}
+            value={isPreview ? normalizedValue : editingValue}
+            onChange={isPreview ? undefined : updateEditingValue}
+            readOnly={isPreview}
+            // formatting with shortcuts, a floating toolbar outside the dialog would close it
+            toolbar={false}
+            floatingToolbar={false}
+            bordered={false}
+            autoFocus={!isPreview}
+            minHeight={64}
+            placeholder=""
+          />
+        ) : isPreview ? (
+          <PlainPreview>{normalizedValue}</PlainPreview>
+        ) : (
+          <PlainTextarea
+            ref={plainTextAreaRef}
+            value={editingValue}
+            onChange={(e) => updateEditingValue(e.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                event.preventDefault()
+                onCancelEdit?.()
+                return
+              }
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                handleSave('Enter')
+                return
+              }
+            }}
+            spellCheck={false}
+          />
+        )}
       </StyledEditor>
     </StyledDialog>
   )
 
   return (
     <>
-      {/* Always render the hidden markdown component so markdownRef is available */}
-      {isRichText && (
-        <StyledHiddenMarkdown
-          className="markdown-content"
-          data-cell-id={cellId}
-          ref={markdownRef}
-          style={{ display: 'none' }}
-        >
-          <Suspense fallback={null}>
-            <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={normalizedValue} />
-          </Suspense>
-        </StyledHiddenMarkdown>
-      )}
-
       {(isEditing || isPreview) && (
         <CellEditingDialog
           isEditing={Boolean(isEditing || isPreview)}

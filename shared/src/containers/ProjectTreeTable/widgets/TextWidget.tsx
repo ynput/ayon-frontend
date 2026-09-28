@@ -441,7 +441,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
           {renderContent()}
         </StyledBaseTextWidget>
 
-        {/* Description column editing (Quill editor in popup) */}
+        {/* Description column editing (markdown editor in popup) */}
         {isEditing && isMarkdown && cellId && (
           <TextContentWidget
             value={value}

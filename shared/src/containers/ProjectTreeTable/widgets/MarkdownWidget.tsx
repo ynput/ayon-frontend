@@ -1,24 +1,9 @@
 import { FC, useRef, useEffect, useState, useCallback, useMemo } from 'react'
-import ReactQuill from 'react-quill-ayon'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import { WidgetBaseProps } from './CellWidget'
-import { QuillListStyles } from '@shared/components/QuillListStyles'
-import {
-  StyledEditor,
-  StyledQuillContainer,
-  StyledHiddenMarkdown,
-  StyledMarkdown,
-} from '@shared/components/DetailsPanelDetails/DescriptionSection.styles'
+import { StyledEditor } from '@shared/components/DetailsPanelDetails/DescriptionSection.styles'
 import { DescriptionSection } from '@shared/components/DetailsPanelDetails/DescriptionSection'
-import InputMarkdownConvert from '@shared/containers/Feed/components/CommentInput/InputMarkdownConvert'
-import { convertToMarkdown } from '@shared/containers/Feed/components/CommentInput/quillToMarkdown'
-import { mentionTypeOptions } from '@shared/components/DetailsPanelDetails/hooks/useMentionSystem'
-import { useQuillFormats } from '@shared/components/DetailsPanelDetails/hooks/useQuillFormats'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import emoji from 'remark-emoji'
-import remarkDirective from 'remark-directive'
-import remarkDirectiveRehype from 'remark-directive-rehype'
+import { MarkdownEditor, type MarkdownEditorHandle } from '@shared/components/MarkdownEditor'
 import styled from 'styled-components'
 
 const ExpandButton = styled(Button)`
@@ -29,16 +14,6 @@ const ExpandButton = styled(Button)`
   width: 32px;
   height: 32px;
   padding: 2px;
-`
-
-const InnerMarkdown = styled.div`
-  width: 100%;
-  height: min-content;
-  padding: 6px 4px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
 `
 
 interface MarkdownEditorDialogProps {
@@ -92,15 +67,12 @@ export const MarkdownWidget: FC<MarkdownWidgetProps> = ({
   onExpand,
   showExpand,
 }) => {
-  const [editorValue, setEditorValue] = useState('')
-  const [descriptionHtml, setDescriptionHtml] = useState('')
+  // markdown being edited
+  const [editorValue, setEditorValue] = useState(initialValue || '')
   const [width, setWidth] = useState(0)
   const [isExpandOpen, setIsExpandOpen] = useState(false)
-  const markdownRef = useRef<HTMLDivElement>(null)
-  const editorRef = useRef<any>(null)
+  const editorRef = useRef<MarkdownEditorHandle>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-
-  const conditionalFormats = useQuillFormats()
 
   const isActuallyEditing = isEditing && !isReadOnly
 
@@ -115,15 +87,18 @@ export const MarkdownWidget: FC<MarkdownWidgetProps> = ({
     return () => resizeObserver.disconnect()
   }, [])
 
+  // start editing from the saved value
+  useEffect(() => {
+    if (isActuallyEditing) setEditorValue(initialValue || '')
+  }, [isActuallyEditing])
+
   const { height, lines } = useMemo(() => {
-    const valueToMeasure = isActuallyEditing ? convertToMarkdown(editorValue)[0] : initialValue
+    const valueToMeasure = isActuallyEditing ? editorValue : initialValue
     if (!valueToMeasure) return { height: 32, lines: 0 }
     if (!width) return { height: 32, lines: 0 } // fallback or initial state
 
-    const normalizedValue = valueToMeasure
-      .replaceAll('\n\n', '[[DN]]')
-      .replace(/\n(?!( *[-*+] )|( *\d+\. )|( {0,3}[#|>]))/g, '')
-      .replaceAll('[[DN]]', '\n')
+    // every markdown line is a line in the editor, blank lines between paragraphs included
+    const normalizedValue = valueToMeasure.replace(/\\\n/g, '\n')
 
     // Estimate lines based on text and width
     // Assuming ~7px average char width for standard UI font at this scale
@@ -139,97 +114,51 @@ export const MarkdownWidget: FC<MarkdownWidgetProps> = ({
     return { height: Math.min(112, calculatedHeight), lines }
   }, [initialValue, width, isActuallyEditing, editorValue])
 
-  // Convert markdown to HTML once on mount/value change
-  useEffect(() => {
-    if (!markdownRef.current) return
-    const html = markdownRef.current.innerHTML
-    setDescriptionHtml(html)
-    if (!isActuallyEditing) {
-      setEditorValue(html)
-    }
-  }, [initialValue])
-
-  // Sync editor value when entering edit mode
-  useEffect(() => {
-    if (isActuallyEditing) {
-      setEditorValue(descriptionHtml)
-    }
-  }, [isActuallyEditing, descriptionHtml])
-
-  // Autofocus when editing
-  useEffect(() => {
-    if (isActuallyEditing && editorRef.current) {
-      const quill = editorRef.current.getEditor()
-      quill.focus()
-      const len = quill.getLength()
-      quill.setSelection(len, 0)
-    }
-  }, [isActuallyEditing])
-
   const handleSave = useCallback(() => {
-    if (!editorRef.current) return
-    const quill = editorRef.current.getEditor()
-    const html = quill.root.innerHTML
-    const [markdown] = convertToMarkdown(html)
+    const markdown = (editorRef.current?.getMarkdown() ?? editorValue).trim()
 
     // Only save if content actually changed
-    const currentMarkdown = markdown.trim()
-    const previousMarkdown = (initialValue || '').trim()
-
-    if (currentMarkdown !== previousMarkdown) {
-      onChange(currentMarkdown)
+    if (markdown !== (initialValue || '').trim()) {
+      onChange(markdown)
     } else {
       onCancelEdit?.()
     }
-  }, [onChange, onCancelEdit, initialValue])
+  }, [onChange, onCancelEdit, initialValue, editorValue])
 
   const handleBlur = useCallback(
     (e: React.FocusEvent) => {
-      // Check if the blur event is caused by clicking inside the editor (e.g. toolbar)
-      if (editorRef.current) {
-        const editorElement = editorRef.current.getEditingArea()
-        // If the newly focused element is still within the editor, don't trigger save
-        if (editorElement.contains(e.relatedTarget as Node)) {
-          return
-        }
+      const next = e.relatedTarget as HTMLElement | null
+      // still inside the editor, or in its formatting toolbar / link input
+      if (next && (containerRef.current?.contains(next) || next.closest('.md-floating-toolbar'))) {
+        return
       }
       // If it's the expand button, close but stop editing but don't save
-      if (e.relatedTarget instanceof HTMLElement && e.relatedTarget.closest('.expand-button')) {
+      if (next?.closest('.expand-button')) {
         onCancelEdit?.()
         return
       }
       handleSave()
     },
-    [handleSave],
-  )
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation()
-        onCancelEdit?.()
-      } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        e.stopPropagation()
-        handleSave()
-      }
-    },
     [handleSave, onCancelEdit],
   )
 
-  const modules = {
-    toolbar: false,
-    magicUrl: true,
-  }
+  // keep escape and save from reaching the table
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' || (e.key === 'Enter' && (e.metaKey || e.ctrlKey))) {
+      e.stopPropagation()
+    }
+  }, [])
 
   if (!initialValue && !isActuallyEditing) return null
+
+  const isEditingInline = isActuallyEditing && !isExpandOpen
 
   return (
     <div ref={containerRef} style={{ width: '100%', height, position: 'relative', minWidth: 0 }}>
       {showExpand && lines >= 3 && (
         <ExpandButton
           icon="expand_content"
-          className="field-tools"
+          className="field-tools expand-button"
           variant="text"
           onClick={() => {
             setIsExpandOpen(true)
@@ -237,47 +166,34 @@ export const MarkdownWidget: FC<MarkdownWidgetProps> = ({
           }}
         />
       )}
-      {isActuallyEditing && !isExpandOpen ? (
-        <StyledEditor
-          style={{ height }}
-          className="block-shortcuts compact"
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-        >
-          <QuillListStyles style={{ height }}>
-            <StyledQuillContainer style={{ height }}>
-              <ReactQuill
-                ref={editorRef}
-                theme="snow"
-                value={editorValue}
-                onChange={setEditorValue}
-                modules={modules}
-                formats={conditionalFormats}
-              />
-            </StyledQuillContainer>
-          </QuillListStyles>
-        </StyledEditor>
-      ) : (
-        <StyledMarkdown className="read-only" style={{ height, overflow: 'auto' }}>
-          <InnerMarkdown className="markdown-content">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm, emoji, remarkDirective, remarkDirectiveRehype]}
-              urlTransform={(url) => url}
-            >
-              {initialValue || ''}
-            </ReactMarkdown>
-          </InnerMarkdown>
-        </StyledMarkdown>
-      )}
-
-      <StyledHiddenMarkdown ref={markdownRef}>
-        <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={initialValue || ''} />
-      </StyledHiddenMarkdown>
+      <StyledEditor
+        style={{ height, overflow: 'auto' }}
+        className="block-shortcuts compact"
+        onBlur={isEditingInline ? handleBlur : undefined}
+        onKeyDown={isEditingInline ? handleKeyDown : undefined}
+      >
+        {/* remount when editing starts so the caret lands at the end */}
+        <MarkdownEditor
+          key={isEditingInline ? 'edit' : 'view'}
+          ref={editorRef}
+          value={isEditingInline ? editorValue : initialValue || ''}
+          onChange={isEditingInline ? setEditorValue : undefined}
+          readOnly={!isEditingInline}
+          toolbar={false}
+          floatingToolbar={isEditingInline}
+          bordered={false}
+          autoFocus={isEditingInline}
+          minHeight={height}
+          onSubmit={isEditingInline ? handleSave : undefined}
+          onEscape={isEditingInline ? () => onCancelEdit?.() : undefined}
+          placeholder=""
+        />
+      </StyledEditor>
 
       <MarkdownEditorDialog
         isOpen={isExpandOpen}
         onClose={() => setIsExpandOpen(false)}
-        value={editorValue || initialValue}
+        value={isActuallyEditing ? editorValue : initialValue}
         onSave={(val) => {
           onChange(val)
           setIsExpandOpen(false)

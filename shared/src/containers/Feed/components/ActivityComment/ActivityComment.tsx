@@ -12,9 +12,10 @@ import { Reaction } from '../ReactionContainer/types'
 import useReferenceTooltip from '../../hooks/useReferenceTooltip'
 import FilesGrid, { FilesGridProps } from '../FilesGrid/FilesGrid'
 
-import { getTextRefs } from '../CommentInput/quillToMarkdown'
+import { getTextRefs } from './getTextRefs'
 import * as Styled from './ActivityComment.styled'
 import CommentWrapper from './CommentWrapper'
+import { normalizeLegacyMarkdown } from '@shared/components/MarkdownEditor'
 import { aTag, blockquoteTag, codeTag, inputTag } from './ActivityMarkdownComponents'
 import { mapGraphQLReactions } from './mappers'
 import { Icon } from '@ynput/ayon-react-components'
@@ -30,7 +31,6 @@ import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
 import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
 import ActivityCommentMenu from './ActivityCommentMenu'
-import { checkForEmptyLine } from '../CommentInput/InputMarkdownConvert'
 import { useCategoryData } from '../../hooks/useCategoryData'
 import { getActivityUserName } from '../../helpers/getActivityUserName'
 
@@ -192,6 +192,9 @@ const ActivityComment = ({
     [onGoToFrame],
   )
 
+  // comments written with the legacy editor use `&nbsp;` spacer paragraphs, show them like new ones
+  const displayBody = useMemo(() => normalizeLegacyMarkdown(body || ''), [body])
+
   return (
     <>
       <Styled.Comment
@@ -313,17 +316,9 @@ const ActivityComment = ({
                         </ActivityStatus>
                       )
                     },
-                    p: (props) => {
-                      // check for empty paragraphs
-                      const text = props.children
-                      if (typeof text === 'string' && checkForEmptyLine(text)) {
-                        return <p className="empty-line"></p>
-                      }
-                      return <p>{props.children}</p>
-                    },
                   }}
                 >
-                  {body}
+                  {displayBody}
                 </ReactMarkdown>
               </CommentWrapper>
               {/* file uploads */}

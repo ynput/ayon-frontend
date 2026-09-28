@@ -70,6 +70,10 @@ export const Body = styled.div`
   p {
     margin: 0;
   }
+  /* a blank line between paragraphs (lines of one paragraph are joined by hard breaks) */
+  p + p {
+    margin-top: 20px;
+  }
 
   & > *:not(.tools):not(h1) {
     margin-bottom: 0;
@@ -265,6 +269,17 @@ export const BlockCode = styled.pre`
   * {
     font-family: monospace !important;
   }
+`
+
+export const InlineCode = styled.code`
+  font-family: monospace;
+  font-size: 0.9em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-tertiary);
+  white-space: pre-wrap;
+  word-break: break-word;
 `
 
 export const Tools = styled.div`

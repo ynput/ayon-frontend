@@ -152,7 +152,23 @@ export default ({ mode }) => {
       ],
       // @ynput/ayon-player asks for a newer styled-components, which yarn installs nested —
       // two stylesheet managers on the same data-styled attribute break rehydration
-      dedupe: ['styled-components', 'react', 'react-dom'],
+      dedupe: [
+        'styled-components',
+        'react',
+        'react-dom',
+        // lexical relies on single instances (node classes, editor context)
+        'lexical',
+        '@lexical/clipboard',
+        '@lexical/code',
+        '@lexical/history',
+        '@lexical/link',
+        '@lexical/list',
+        '@lexical/markdown',
+        '@lexical/react',
+        '@lexical/rich-text',
+        '@lexical/selection',
+        '@lexical/utils',
+      ],
     },
   })
 }

@@ -21,7 +21,13 @@ const sanitizeURL = (url = '') => {
     const sections = url.split(':')
     const [type, id] = sections
     if (allowedRefTypes.includes(type) && id && sections.length === 2) {
-      const decodedId = (() => { try { return decodeURIComponent(id) } catch { return id } })()
+      const decodedId = (() => {
+        try {
+          return decodeURIComponent(id)
+        } catch {
+          return id
+        }
+      })()
       return { type, id: decodedId }
     }
   }
@@ -147,7 +153,7 @@ export const inputTag = (
   }
 }
 
-import { BlockCode, QuoteLine } from './ActivityComment.styled'
+import { BlockCode, InlineCode, QuoteLine } from './ActivityComment.styled'
 import { Link } from 'react-router-dom'
 // eslint-disable-next-line
 interface CodeTagProps {
@@ -157,6 +163,11 @@ interface CodeTagProps {
 }
 
 export const codeTag = ({ node, className, children }: CodeTagProps): JSX.Element => {
+  // fenced blocks span several lines (or have a language), everything else is inline `code`
+  const isBlock =
+    !!className?.startsWith('language-') ||
+    (node?.position && node.position.start.line !== node.position.end.line)
+  if (!isBlock) return <InlineCode>{children}</InlineCode>
   return <BlockCode>{children}</BlockCode>
 }
 
