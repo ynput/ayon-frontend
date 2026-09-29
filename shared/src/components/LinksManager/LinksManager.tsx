@@ -81,6 +81,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
 
   // add the picked entities as links, closing the picker only once they were created
   const handlePickerSubmit = async (ids: string[]) => {
+    if (isAddingPicked) return
     setIsAddingPicked(true)
     const success = await linksUpdater.add(
       ids.map((id) => ({ targetEntityId: id, linkId: getEntityId() })),
