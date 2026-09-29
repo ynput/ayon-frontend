@@ -21,11 +21,16 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
 
   const [formData, setFormData] = useState(null)
   const [isChanged, setIsChanged] = useState(false)
+  // when the last successful save was sent - AnatomyEditor resets the form
+  // from the first anatomy fetch started after this
+  const [savedAt, setSavedAt] = useState(null)
 
   const saveAnatomy = () => {
+    const saveStartedAt = Date.now()
     updateProjectAnatomy({ projectName, anatomy: formData })
       .unwrap()
       .then(() => {
+        setSavedAt(saveStartedAt)
         toast.info(`Anatomy saved`)
       })
       .catch((err) => {
@@ -94,6 +99,7 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
             formData={formData}
             setFormData={setFormData}
             setIsChanged={setIsChanged}
+            savedAt={savedAt}
           />
         ) : (
           <EmptyPlaceholder
