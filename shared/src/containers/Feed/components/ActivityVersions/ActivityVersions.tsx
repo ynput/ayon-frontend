@@ -7,6 +7,7 @@ import ActivityDate from '../ActivityDate'
 import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 import type { Status } from '@shared/api'
 import { FieldValue } from '../ActivityFieldChange/FieldValue'
+import { getFilmstripPosition } from '@shared/components/Filmstrip'
 
 interface Version {
   name: string
@@ -56,8 +57,14 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
 
   const [thumbnailError, setThumbnailError] = useState(false)
 
-  const handleClick = (versionId: string, productId: string) =>
-    onOpenViewer?.({ versionIds: [versionId], productId, projectName })
+  const handleClick = (e: React.MouseEvent, versionId: string, productId: string) =>
+    onOpenViewer?.({
+      versionIds: [versionId],
+      productId,
+      projectName,
+      // start at the hovered filmstrip frame
+      goToPosition: getFilmstripPosition(e),
+    })
 
   return (
     <Styled.Container>
@@ -75,7 +82,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
         const status = statuses.find((s) => s.name === version.status)
         return (
           (index < limit || showAll) && (
-            <Styled.Card onClick={() => handleClick(id, productId)} key={id}>
+            <Styled.Card onClick={(e) => handleClick(e, id, productId)} key={id}>
               <Styled.Content>
                 <div>
                   <Styled.Title>
@@ -99,6 +106,10 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
                   iconOnly={thumbnailError}
                   thumbnailHash={thumbnailHash}
                   icon={'play_circle'}
+                  // availability of reviewables is not known here, the server responds
+                  // with no content when there is no video
+                  filmstrip
+                  filmstripFit="cover"
                 />
               </Styled.Content>
               {comment && <Styled.Comment>{comment}</Styled.Comment>}

@@ -91,7 +91,11 @@ const ListItem = forwardRef(
           onChange={(v) => onUpdate('status', v)}
         />
 
-        <Styled.ItemThumbnail src={task.thumbnailUrl} icon={task.taskIcon} />
+        <Styled.ItemThumbnail
+          src={task.thumbnailUrl}
+          filmstripUrl={task.filmstripUrl}
+          icon={task.taskIcon}
+        />
 
         {/* FOLDER LABEL */}
         <Styled.Folder className="folder" style={{ minWidth: minWidths.folder }}>

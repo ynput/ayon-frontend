@@ -241,7 +241,7 @@ export interface ProjectTableProviderProps {
       productId?: string
       versionId?: string
     },
-    config?: { quickView?: boolean },
+    config?: { quickView?: boolean; goToPosition?: number },
   ) => void
   // views
   onResetView?: () => void

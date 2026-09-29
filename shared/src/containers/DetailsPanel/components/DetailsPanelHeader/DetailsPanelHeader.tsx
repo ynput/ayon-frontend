@@ -25,6 +25,7 @@ import buildEntityTypeIcons from '../../helpers/buildEntityTypeIcons'
 import type { ProjectInfo } from '../../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../../helpers/buildDetailsPanelTitles'
 import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
+import { getFilmstripPosition } from '@shared/components/Filmstrip'
 
 export type EntityTypeIcons = {
   folder: Record<string, string>
@@ -167,7 +168,7 @@ const DetailsPanelHeader = ({
     return updateEntity(field, value)
   }
 
-  const handleThumbnailClick = () => {
+  const handleThumbnailClick = (e?: React.MouseEvent) => {
     let versionIds,
       id = firstEntity.id,
       entityTypeKey = entityType + 'Id'
@@ -183,6 +184,8 @@ const DetailsPanelHeader = ({
         [entityTypeKey]: id,
         projectName,
         versionIds,
+        // start at the hovered filmstrip frame
+        goToPosition: getFilmstripPosition(e),
       })
     }
   }
@@ -226,6 +229,7 @@ const DetailsPanelHeader = ({
                 thumbnails={thumbnails}
                 onClick={isThumbnailClickable ? handleThumbnailClick : undefined}
                 hoverIcon={isPlayable ? 'play_circle' : undefined}
+                filmstrip={isPlayable}
               />
               {isPlayable && <PlayableIcon />}
             </div>

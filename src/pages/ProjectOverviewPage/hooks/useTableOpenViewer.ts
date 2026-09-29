@@ -15,6 +15,7 @@ const useTableOpenViewer = ({ projectName }: TableOpenViewerProps) => {
       const payload: Partial<ViewerState> = {
         projectName,
         quickView: config?.quickView ?? false,
+        goToPosition: config?.goToPosition ?? null,
       }
 
       if (targetIds.versionId) {
