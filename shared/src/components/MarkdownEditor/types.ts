@@ -105,16 +105,13 @@ export type ToolbarItem =
 
 export type ToolbarLayout = (ToolbarItem | '|')[]
 
+// headings and inline code are in the slash menu
 export const DEFAULT_TOOLBAR: ToolbarLayout = [
-  'h1',
-  'h2',
-  'h3',
   'bold',
   'italic',
   'strikethrough',
   'link',
   '|',
-  'code',
   'codeBlock',
   'quote',
   '|',
@@ -128,7 +125,6 @@ export const FLOATING_TOOLBAR: ToolbarLayout = [
   'bold',
   'italic',
   'strikethrough',
-  'code',
   'link',
   '|',
   'quote',

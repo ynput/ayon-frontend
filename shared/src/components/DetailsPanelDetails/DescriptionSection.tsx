@@ -9,19 +9,23 @@ import {
   StyledLoadingSkeleton,
   StyledButtonContainer,
 } from './DescriptionSection.styles'
-import { useDescriptionEditor } from './hooks'
+import {
+  useDescriptionEditor,
+  useDescriptionMentions,
+  type DescriptionMentionsContext,
+} from './hooks'
 
 // descriptions have no check lists (those belong in comments)
 const DESCRIPTION_TOOLBAR: ToolbarLayout = [
   'h1',
   'h2',
   'h3',
+  '|',
   'bold',
   'italic',
   'strikethrough',
   'link',
   '|',
-  'code',
   'codeBlock',
   'quote',
   '|',
@@ -31,13 +35,20 @@ const DESCRIPTION_TOOLBAR: ToolbarLayout = [
 
 interface DescriptionSectionProps {
   description: string
-  isLarge: boolean
+  isLarge?: boolean
   isMixed: boolean
   enableEditing: boolean
   initialEdit?: boolean
   onChange: (description: string) => void
   onCancel?: () => void
   isLoading: boolean
+  // enables mentions of users, sibling tasks and versions of this entity
+  mentionsContext?: DescriptionMentionsContext
+  onMentionClick?: (mention: { type: string; id: string; label: string }) => void
+  onMentionHover?: (
+    mention: { type: string; id: string; label: string },
+    target: HTMLElement,
+  ) => void
 }
 
 export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
@@ -49,6 +60,9 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
   onChange,
   onCancel,
   isLoading,
+  mentionsContext,
+  onMentionClick,
+  onMentionHover,
 }) => {
   const { isEditing, editorValue, setEditorValue, handleStartEditing, handleSave, handleCancel } =
     useDescriptionEditor({
@@ -57,6 +71,8 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
       isMixed,
       onChange,
     })
+
+  const mentions = useDescriptionMentions(mentionsContext, { skip: !isEditing })
 
   useEffect(() => {
     if (initialEdit && !isEditing) {
@@ -76,9 +92,9 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
   const handleContentClick = (e: React.MouseEvent) => {
     if (isEditing) return
 
-    // links open in a new tab instead
+    // links open in a new tab and mentions open the entity instead
     const target = e.target as HTMLElement
-    if (target.closest('a')) {
+    if (target.closest('a') || (onMentionClick && target.closest('.mention'))) {
       e.stopPropagation()
       return
     }
@@ -107,7 +123,14 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
             className="description-editor"
             value={isEditing ? editorValue : description || ''}
             onChange={isEditing ? setEditorValue : undefined}
-            placeholder="Add a description..."
+            placeholder={
+              isEditing
+                ? 'Describe it, or type / to add headings, lists, mentions, code and more...'
+                : 'Add a description...'
+            }
+            mentions={isEditing ? mentions : undefined}
+            onMentionClick={onMentionClick}
+            onMentionHover={onMentionHover}
             readOnly={!isEditing}
             toolbar={isEditing ? DESCRIPTION_TOOLBAR : false}
             bordered={false}

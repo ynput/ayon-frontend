@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import type { LexicalEditor } from 'lexical'
@@ -7,8 +7,9 @@ import type { MentionPlacement } from '../types'
 import { BLOCK_DIALOG_CLOSE_CLASS } from '@shared/components/LinksManager/CellEditingDialog'
 import * as Styled from '../MarkdownEditor.styled'
 
-// estimated space the menu needs, used to decide if it opens above or below the caret
-const MENU_HEIGHT = 240
+// gap between the menu and the caret line (see MentionMenu styles)
+const MENU_OFFSET = 4
+const MENU_OFFSET_ABOVE = 26
 
 interface SuggestionMenuProps<TOption extends MenuOption> {
   editor: LexicalEditor
@@ -54,6 +55,8 @@ const SuggestionMenu = <TOption extends MenuOption>({
   getGroup,
 }: SuggestionMenuProps<TOption>) => {
   const listRef = useRef<HTMLUListElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [openAbove, setOpenAbove] = useState(false)
 
   // keep the option picked with the arrow keys in view
   useLayoutEffect(() => {
@@ -74,12 +77,21 @@ const SuggestionMenu = <TOption extends MenuOption>({
   const editorElement = (root?.closest('.md-mention-anchor') ||
     root?.closest('.md-editor')) as HTMLElement | null
   const target = isTop && editorElement ? editorElement : anchor
-  const rect = anchor.getBoundingClientRect()
-  const openAbove =
-    !isTop && window.innerHeight - rect.bottom < MENU_HEIGHT && rect.top > MENU_HEIGHT
+
+  // inline: open below the caret, or above it when the menu doesn't fit below and does above
+  useLayoutEffect(() => {
+    const menu = menuRef.current
+    if (isTop || !menu) return
+    const rect = anchor.getBoundingClientRect()
+    const height = menu.offsetHeight
+    const spaceBelow = window.innerHeight - rect.top - MENU_OFFSET
+    const spaceAbove = rect.top - MENU_OFFSET_ABOVE
+    setOpenAbove(height > spaceBelow && spaceAbove > spaceBelow)
+  }, [isTop, anchor, options.length, title, emptyMessage])
 
   return createPortal(
     <Styled.MentionMenu
+      ref={menuRef}
       className={clsx('mention-menu md-popover', BLOCK_DIALOG_CLOSE_CLASS, className, {
         above: openAbove,
         top: isTop,

@@ -174,7 +174,7 @@ const CommentInput: FC<CommentInputProps> = ({
               taskTypes: projectInfo?.taskTypes,
               entityType,
             }),
-            // the picker opens above the input, keep it short
+            // keep the picker short
             limit: 5,
           },
     [isGuest, mentionSuggestionsData, productTypes, projectInfo?.taskTypes, entityType],
@@ -560,7 +560,8 @@ const CommentInput: FC<CommentInputProps> = ({
                 onChange={setEditorValue}
                 placeholder={getCommentPlaceholder(true)}
                 mentions={mentions}
-                mentionPlacement="top"
+                // an edited comment sits in the feed, open the menus at the caret (above if needed)
+                mentionPlacement={isEditing ? 'inline' : 'top'}
                 onMentionClick={handleMentionClick}
                 onMentionHover={handleMentionHover}
                 onSubmit={handleSubmit}

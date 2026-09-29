@@ -30,44 +30,7 @@ export const Toolbar = styled.div`
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   min-height: 40px;
 
-  /* hide the less used buttons when there is no room (instead of wrapping) */
-  container-type: inline-size;
-  @container (max-width: 520px) {
-    .md-toolbar-item-h1,
-    .md-toolbar-item-h3 {
-      display: none;
-    }
-  }
-  @container (max-width: 480px) {
-    .md-toolbar-item-h2,
-    .md-toolbar-item-strikethrough {
-      display: none;
-    }
-  }
-  @container (max-width: 400px) {
-    .md-toolbar-item-quote,
-    .md-toolbar-item-numberList,
-    .md-toolbar-divider {
-      display: none;
-    }
-  }
-  @container (max-width: 320px) {
-    .md-toolbar-item-codeBlock,
-    .md-toolbar-item-link {
-      display: none;
-    }
-  }
-`
-
-export const ToolbarItems = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  justify-content: flex-end;
-
+  /* also buttons passed in around the items (e.g. attach) */
   .md-toolbar-button {
     padding: 4px;
     min-height: 0;
@@ -82,6 +45,38 @@ export const ToolbarItems = styled.div`
       color: var(--md-sys-color-on-primary-container);
     }
   }
+
+  /* hide the less used buttons when there is no room (instead of wrapping), headings last */
+  container-type: inline-size;
+  @container (max-width: 440px) {
+    .md-toolbar-item-strikethrough,
+    .md-toolbar-item-quote {
+      display: none;
+    }
+  }
+  @container (max-width: 380px) {
+    .md-toolbar-item-numberList,
+    .md-toolbar-divider {
+      display: none;
+    }
+  }
+  @container (max-width: 320px) {
+    .md-toolbar-item-codeBlock,
+    .md-toolbar-item-link,
+    .md-toolbar-item-h3 {
+      display: none;
+    }
+  }
+`
+
+export const ToolbarItems = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  justify-content: flex-end;
 `
 
 export const ToolbarDivider = styled.span`
