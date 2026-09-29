@@ -59,26 +59,6 @@ const ProjectOverviewDetailsPanel = ({
   const selectedEntity = entityContext?.selectedEntity || null
   const clearSelectedEntity = entityContext?.clearSelectedEntity
 
-  // Tell global features (the links dialog) what is selected, even while the
-  // panel is closed. A focused cell counts as selecting its row.
-  const selectedCells = useOptionalSelectionCellsContext()?.selectedCells
-  const activeEntities: ActiveEntity[] = (() => {
-    const rowIds = selectedRows.length
-      ? selectedRows
-      : [...new Set([...(selectedCells || [])].map((c) => parseCellId(c)?.rowId))]
-    const fromRows = rowIds.flatMap((rowId) => {
-      const entity = rowId ? getEntityById(rowId) : undefined
-      return entity
-        ? [{ id: entity.entityId || entity.id, entityType: entity.entityType, projectName }]
-        : []
-    })
-    if (fromRows.length) return fromRows
-    return selectedEntity
-      ? [{ id: selectedEntity.entityId, entityType: selectedEntity.entityType, projectName }]
-      : []
-  })()
-  useRegisterActiveEntities(activeEntities)
-
   // Early return if no project info is available
   if (!projectInfo || !projectName) {
     return null
@@ -124,10 +104,41 @@ const ProjectOverviewDetailsPanel = ({
             onUriOpen={onUriOpen}
           />
           <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
+          <RegisterOverviewSelection projectName={projectName} />
         </>
       )}
     </EntityListsContextBoundary>
   )
+}
+
+/**
+ * Tells global features (the links dialog) what is selected in the table, even
+ * while the details panel is closed. A focused cell counts as selecting its
+ * row. Kept separate so cell focus changes only re-render this component.
+ */
+const RegisterOverviewSelection = ({ projectName }: { projectName: string }) => {
+  const { getEntityById } = useProjectTableContext()
+  const { selectedRows } = useSelectedRowsContext()
+  const selectedEntity = useDetailsPanelEntityContext()?.selectedEntity || null
+  const selectedCells = useOptionalSelectionCellsContext()?.selectedCells
+
+  const rowIds = selectedRows.length
+    ? selectedRows
+    : [...new Set([...(selectedCells || [])].map((c) => parseCellId(c)?.rowId))]
+  const fromRows: ActiveEntity[] = rowIds.flatMap((rowId) => {
+    const entity = rowId ? getEntityById(rowId) : undefined
+    return entity
+      ? [{ id: entity.entityId || entity.id, entityType: entity.entityType, projectName }]
+      : []
+  })
+  const active: ActiveEntity[] = fromRows.length
+    ? fromRows
+    : selectedEntity
+    ? [{ id: selectedEntity.entityId, entityType: selectedEntity.entityType, projectName }]
+    : []
+
+  useRegisterActiveEntities(active)
+  return null
 }
 
 /**

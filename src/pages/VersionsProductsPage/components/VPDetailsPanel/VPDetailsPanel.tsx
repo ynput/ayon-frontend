@@ -50,9 +50,12 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
         projectName,
       }))
 
-  // the selection is known even while the details panel is closed
+  // the selection is known even while the details panel is closed.
+  // selectedVersions outlives the selection, showVersionDetails does not.
   useRegisterActiveEntities(
-    entities.map((e) => ({ ...e, entityType: selectedEntity?.entityType || 'version' })),
+    selectedEntity || showVersionDetails
+      ? entities.map((e) => ({ ...e, entityType: selectedEntity?.entityType || 'version' }))
+      : [],
   )
 
   const projectsInfo = { [projectName]: projectInfo }

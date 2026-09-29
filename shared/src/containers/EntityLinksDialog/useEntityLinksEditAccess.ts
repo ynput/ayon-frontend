@@ -27,8 +27,13 @@ export const useEntityLinksEditAccess = (): EntityLinksEditAccess => {
   if (user?.data?.isGuest) return { canEdit: false, reason: 'guest' }
   if (devOverride()) return { canEdit: true }
 
+  const now = Date.now()
   const hasStudio = !!cloudInfo?.subscriptions?.some(
-    (s) => s.productType === 'ayon' && /studio/i.test(s.name),
+    (s) =>
+      s.productType === 'ayon' &&
+      /studio/i.test(s.name) &&
+      // an ended trial no longer counts
+      (!s.trialEnd || new Date(s.trialEnd).getTime() > now),
   )
   return hasStudio ? { canEdit: true } : { canEdit: false, reason: 'subscription' }
 }

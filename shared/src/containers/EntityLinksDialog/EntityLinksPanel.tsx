@@ -8,6 +8,7 @@ import {
 } from '@shared/api'
 import type { DetailsPanelEntityType } from '@shared/api'
 import { useProjectContext } from '@shared/context'
+import { useGlobalContext } from '@shared/context/GlobalContext'
 import { Thumbnail } from '@shared/components/Thumbnail'
 import { LinkManagerItem } from '@shared/components/LinksManager/LinkManagerItem'
 import AddNewLinks, { LinkSearchType } from '@shared/components/LinksManager/AddNewLinks'
@@ -92,6 +93,8 @@ const LinkGroupSection: FC<LinkGroupSectionProps> = ({
 }) => {
   const [searchType, setSearchType] = useState<LinkSearchType>(null)
   const [isAddingPicked, setIsAddingPicked] = useState(false)
+  const { user } = useGlobalContext()
+  const isManager = !!(user?.data?.isAdmin || user?.data?.isManager)
   const updater = useUpdateLinks({
     projectName,
     direction: group.direction,
@@ -141,7 +144,7 @@ const LinkGroupSection: FC<LinkGroupSectionProps> = ({
           link={g.representative}
           count={g.count}
           readOnly={!canEdit}
-          isManager={canEdit}
+          isManager={isManager}
           onEntityClick={(id, type) => onOpenEntity({ id, entityType: type })}
           onRemove={(e) => {
             e.stopPropagation()

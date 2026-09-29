@@ -74,6 +74,22 @@ export const EntityLinksDialog: FC = () => {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [isOpen, open, close])
 
+  // Escape closes only the dialog. The details panel closes itself on Escape
+  // from a window listener, so stop the event on document (React handlers,
+  // including a nested picker dialog, have already run by then).
+  useEffect(() => {
+    if (!isOpen) return
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      // a nested dialog (entity picker) handles its own Escape
+      if (document.querySelectorAll('.dialog').length > 1) return
+      close()
+    }
+    document.addEventListener('keydown', onEscape)
+    return () => document.removeEventListener('keydown', onEscape)
+  }, [isOpen, close])
+
   if (!isOpen) return null
 
   const current = trail[trail.length - 1]
