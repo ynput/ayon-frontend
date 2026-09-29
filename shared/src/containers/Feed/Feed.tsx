@@ -330,29 +330,6 @@ export const Feed = ({
           checklistCount={checklistCount}
         />
         <Styled.FeedContent ref={feedRef} className={clsx({ loading: isLoadingNew }, 'no-shimmer')}>
-          {!isLoadingNew &&
-            !hasActiveFilters &&
-            !searchText &&
-            createdFolder?.createdAt &&
-            isValid(new Date(createdFolder.createdAt)) && (
-              <CreationStyled.StatusChange>
-                <CreationStyled.Body style={{ alignItems: 'center' }}>
-                  <CreationStyled.Text>
-                    Folder created at {format(new Date(createdFolder.createdAt), 'PPpp')} by
-                  </CreationStyled.Text>
-                  {createdFolder.createdBy && (
-                    <UserImage
-                      name={createdFolder.createdBy}
-                      fullName={creator?.attrib?.fullName || undefined}
-                      size={20}
-                    />
-                  )}
-                  <CreationStyled.Text>
-                    {creator?.attrib?.fullName || createdFolder.createdBy || 'Unknown'}
-                  </CreationStyled.Text>
-                </CreationStyled.Body>
-              </CreationStyled.StatusChange>
-            )}
           {isLoadingNew
             ? loadingPlaceholders
             : filteredActivitiesData.map((activity) => (
@@ -400,6 +377,29 @@ export const Feed = ({
               </Styled.LoadMore>
             </InView>
           )}
+          {!isLoadingNew &&
+            !feedFilter.conditions?.length &&
+            !searchText &&
+            createdFolder?.createdAt &&
+            isValid(new Date(createdFolder.createdAt)) && (
+              <CreationStyled.StatusChange>
+                <CreationStyled.Body style={{ alignItems: 'center' }}>
+                  <CreationStyled.Text>
+                    Folder created at {format(new Date(createdFolder.createdAt), 'PPpp')} by
+                  </CreationStyled.Text>
+                  {createdFolder.createdBy && (
+                    <UserImage
+                      name={createdFolder.createdBy}
+                      fullName={creator?.attrib?.fullName || undefined}
+                      size={20}
+                    />
+                  )}
+                  <CreationStyled.Text>
+                    {creator?.attrib?.fullName || createdFolder.createdBy || 'Unknown'}
+                  </CreationStyled.Text>
+                </CreationStyled.Body>
+              </CreationStyled.StatusChange>
+            )}
         </Styled.FeedContent>
         {!hideCommentInput && (
           <CommentInput

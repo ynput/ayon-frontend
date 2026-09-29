@@ -1303,7 +1303,7 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      sortingFn: withLoadingStateSort(pathSort),
+      sortingFn: withLoadingStateSort(withNameTieBreaker(sortingFns.alphanumeric)),
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
