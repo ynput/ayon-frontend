@@ -58,9 +58,9 @@ export interface ProjectOverviewContextType {
   // Query Filters - separate filters for tasks and folders
   taskFilters: QueryFilterParams
   folderFilters: QueryFilterParams
-  // task stats args for slicer value counts — like the filters above but with the
-  // active slice's own filter excluded, so counts don't self-zero on selection
-  slicerCountsArgs: {
+  // per-panel task stats args for slicer value counts — like the filters above but
+  // with the panel's own filter excluded, so counts don't self-zero on selection
+  getSlicerCountsArgs: (sliceType: string) => {
     projectName: string
     filter?: string
     folderFilter?: string
