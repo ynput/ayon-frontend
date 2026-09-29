@@ -64,6 +64,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
   })
 
   const [searchType, setSearchType] = useState<LinkSearchType>(null)
+  const [isAddingPicked, setIsAddingPicked] = useState(false)
   // Optimistic counts for immediate UI feedback (creates are not optimistic in the cache)
   const [optimisticCounts, setOptimisticCounts] = useState<Record<string, number>>({})
 
@@ -76,6 +77,16 @@ export const LinksManager: FC<LinksManagerProps> = ({
       return optimistic
     }
     return group.count
+  }
+
+  // add the picked entities as links, closing the picker only once they were created
+  const handlePickerSubmit = async (ids: string[]) => {
+    setIsAddingPicked(true)
+    const success = await linksUpdater.add(
+      ids.map((id) => ({ targetEntityId: id, linkId: getEntityId() })),
+    )
+    setIsAddingPicked(false)
+    if (success) setSearchType(null)
   }
 
   const handleRemoveGroup = (e: React.MouseEvent<HTMLButtonElement>, group: GroupedLink) => {
@@ -165,9 +176,8 @@ export const LinksManager: FC<LinksManagerProps> = ({
           projectName={projectName}
           entityType={targetEntityType as PickerEntityType} // the type of entity to pick
           initialSelection={folderId ? { folder: { [folderId]: true } } : undefined} // preselect current folder
-          onSubmit={(s) =>
-            linksUpdater.add(s.map((id) => ({ targetEntityId: id, linkId: getEntityId() })))
-          }
+          onSubmit={handlePickerSubmit}
+          isLoading={isAddingPicked}
           isMultiSelect
         />
       )}
