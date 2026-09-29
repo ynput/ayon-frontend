@@ -10,6 +10,7 @@ import styled from 'styled-components'
 import { useEntityFormData, useEntityFields, useEntityEditing } from './hooks'
 import { useProjectContext } from '@shared/context/ProjectContext'
 import { useGlobalContext } from '@shared/context/GlobalContext'
+import { useGetUsersAssigneeQuery } from '@shared/api'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -63,6 +64,13 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
   })
 
   const entityType = formData?.entityType || 'task'
+  const authorNames = [formData?.createdBy, formData?.updatedBy].filter(
+    (name): name is string => typeof name === 'string' && !!name,
+  )
+  const { data: authors = [] } = useGetUsersAssigneeQuery(
+    { names: authorNames, projectName: formData?.projectName || '' },
+    { skip: !authorNames.length || !formData?.projectName },
+  )
   const { enableEditing, updateEntity } = useEntityEditing({
     entities,
     entityType,
@@ -122,6 +130,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
         form={formData || {}}
         mixedFields={mixedFields}
         isLoading={isLoading}
+        users={authors}
       />
     </StyledContainer>
   )

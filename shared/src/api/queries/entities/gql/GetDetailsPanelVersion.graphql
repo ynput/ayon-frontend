@@ -13,6 +13,8 @@ query GetDetailsPanelVersion($projectName: String!, $entityId: String!) {
       tags
       updatedAt
       createdAt
+      createdBy
+      updatedBy
       thumbnailHash
       thumbnailId
       hasReviewables

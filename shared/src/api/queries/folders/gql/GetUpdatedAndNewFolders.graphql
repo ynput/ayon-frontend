@@ -20,6 +20,8 @@ query GetUpdatedAndNewFolders($projectName: String!, $folderIds: [String!]!, $fi
           ownAttrib
           createdAt
           updatedAt
+          createdBy
+          updatedBy
         }
       }
     }
