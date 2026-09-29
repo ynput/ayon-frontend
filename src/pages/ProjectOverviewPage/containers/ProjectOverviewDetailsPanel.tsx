@@ -5,10 +5,14 @@ import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import type { DetailsPanelEntityData, ProjectModel } from '@shared/api'
 import {
+  parseCellId,
+  useOptionalSelectionCellsContext,
   useProjectTableContext,
   useSelectedRowsContext,
   useDetailsPanelEntityContext,
 } from '@shared/containers/ProjectTreeTable'
+import { useRegisterActiveEntities } from '@shared/util'
+import type { ActiveEntity } from '@shared/util'
 import { EntityMap } from '@shared/containers/ProjectTreeTable'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
@@ -54,6 +58,26 @@ const ProjectOverviewDetailsPanel = ({
   const entityContext = useDetailsPanelEntityContext()
   const selectedEntity = entityContext?.selectedEntity || null
   const clearSelectedEntity = entityContext?.clearSelectedEntity
+
+  // Tell global features (the links dialog) what is selected, even while the
+  // panel is closed. A focused cell counts as selecting its row.
+  const selectedCells = useOptionalSelectionCellsContext()?.selectedCells
+  const activeEntities: ActiveEntity[] = (() => {
+    const rowIds = selectedRows.length
+      ? selectedRows
+      : [...new Set([...(selectedCells || [])].map((c) => parseCellId(c)?.rowId))]
+    const fromRows = rowIds.flatMap((rowId) => {
+      const entity = rowId ? getEntityById(rowId) : undefined
+      return entity
+        ? [{ id: entity.entityId || entity.id, entityType: entity.entityType, projectName }]
+        : []
+    })
+    if (fromRows.length) return fromRows
+    return selectedEntity
+      ? [{ id: selectedEntity.entityId, entityType: selectedEntity.entityType, projectName }]
+      : []
+  })()
+  useRegisterActiveEntities(activeEntities)
 
   // Early return if no project info is available
   if (!projectInfo || !projectName) {

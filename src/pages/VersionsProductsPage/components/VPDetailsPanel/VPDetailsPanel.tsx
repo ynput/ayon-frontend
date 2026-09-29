@@ -21,6 +21,7 @@ import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsCo
 import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContext'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
+import { useRegisterActiveEntities } from '@shared/util'
 
 type VPDetailsPanelProps = {}
 
@@ -48,6 +49,11 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
         id: versionId,
         projectName,
       }))
+
+  // the selection is known even while the details panel is closed
+  useRegisterActiveEntities(
+    entities.map((e) => ({ ...e, entityType: selectedEntity?.entityType || 'version' })),
+  )
 
   const projectsInfo = { [projectName]: projectInfo }
 
