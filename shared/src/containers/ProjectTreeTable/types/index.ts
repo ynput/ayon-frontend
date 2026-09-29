@@ -10,6 +10,8 @@ import { OperationModel } from './operations'
 
 export interface ProjectTableAttribute extends Omit<AttributeModel, 'position'> {
   readOnly?: boolean
+  enumIsLoading?: boolean
+  enumError?: string
 }
 
 export type LoadingTasks = Record<string, number> // show number of loading tasks per folder or root
@@ -29,7 +31,13 @@ interface EnumOption extends EnumItem {
 }
 
 export type TreeTableSubType = 'folderType' | 'taskType' | 'productType'
-type BuiltInFieldOptionKey = TreeTableSubType | 'status' | 'folderStatus' | 'assignee' | 'tag'
+type BuiltInFieldOptionKey =
+  | TreeTableSubType
+  | 'status'
+  | 'folderStatus'
+  | 'taskStatus'
+  | 'assignee'
+  | 'tag'
 
 export type BuiltInFieldOptions = {
   [key in BuiltInFieldOptionKey]: EnumOption[]

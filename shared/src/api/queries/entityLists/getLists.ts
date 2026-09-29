@@ -1,10 +1,5 @@
 import { entityListsApi, gqlApi } from '@shared/api/generated'
-import {
-  FetchBaseQueryError,
-  DefinitionsFromApi,
-  OverrideResultType,
-  TagTypesFromApi,
-} from '@reduxjs/toolkit/query'
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import type {
   GetListItemsQuery,
   GetListItemsQueryVariables,
@@ -13,6 +8,7 @@ import type {
   GetListsQueryVariables,
 } from '@shared/api/generated'
 import { parseJSONField } from '../overview'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 import {
   createRealtimeBatcher,
   PubSub,
@@ -150,7 +146,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
 
           if (result.error) {
             // Preserve original error (e.g. 403) so the UI can react accordingly
-            return { error: result.error as FetchBaseQueryError }
+            return { error: normalizeQueryError(result.error) }
           }
 
           return {
@@ -166,7 +162,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           }
         } catch (e: any) {
           console.error('Error in getListsInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       providesTags: (result) => {
@@ -318,7 +314,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           )
 
           if (result.error) {
-            return { error: result.error as FetchBaseQueryError }
+            return { error: normalizeQueryError(result.error) }
           }
 
           return {
@@ -334,7 +330,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           }
         } catch (e: any) {
           console.error('Error in getListsInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       providesTags: (result, _e, { listId, projectName }) => [
@@ -472,7 +468,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           )
 
           if (result.error) {
-            return { error: result.error as FetchBaseQueryError }
+            return { error: normalizeQueryError(result.error) }
           }
 
           return {
@@ -488,7 +484,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           }
         } catch (e: any) {
           console.error('Error in getListsInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       providesTags: (result) => [

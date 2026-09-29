@@ -1,6 +1,6 @@
 import type { UploadAddonZipFileApiArg } from '@shared/api/generated'
 import getAddonsApi from './getAddons'
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 const updateAddonsApiEnhanced = getAddonsApi.enhanceEndpoints({
   endpoints: {
@@ -58,8 +58,7 @@ const updateAddonsApi = updateAddonsApiEnhanced.injectEndpoints({
           await Promise.all(promises)
           return { data: undefined }
         } catch (e: any) {
-          const error = { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError
-          return { error }
+          return { error: normalizeQueryError(e) }
         }
       },
     }),
@@ -93,11 +92,7 @@ const updateAddonsApi = updateAddonsApiEnhanced.injectEndpoints({
           return { data: eventIds }
         } catch (e: any) {
           return {
-            error: {
-              status: 'FETCH_ERROR',
-              data: undefined,
-              error: e.message,
-            },
+            error: normalizeQueryError(e),
           }
         }
       },

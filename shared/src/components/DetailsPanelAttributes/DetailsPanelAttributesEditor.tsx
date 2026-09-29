@@ -4,9 +4,8 @@ import { FC, useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import clsx from 'clsx'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, BorderedSection } from '@ynput/ayon-react-components'
 import RenderFieldWidget from './components/RenderFieldWidget'
-import { BorderedSection } from '../DetailsPanelDetails/BorderedSection'
 import { FieldLabel } from '../DetailsPanelDetails/FieldLabel'
 
 const FormRow = styled.div`
@@ -125,6 +124,7 @@ export interface DetailsPanelAttributesEditorProps {
   mixedFields?: string[] // when multiple entities are selected, this is a list of fields that are mixed
   onChange?: (key: string, value: any) => void
   entities?: any[] // entities data for scoped statuses
+  projectName?: string // enum resolver scope when there are no entities
   entityType?: string // entity type for scoped statuses
 }
 
@@ -137,6 +137,7 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   mixedFields,
   onChange,
   entities = [],
+  projectName,
   entityType = 'task',
 }) => {
   const [editingField, setEditingField] = useState<string | null>(null)
@@ -238,6 +239,7 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
                     // opens full markdown text editor dialog
                   }}
                   entities={entities}
+                  projectName={projectName}
                   entityType={entityType}
                 />
               </FieldValue>

@@ -1,5 +1,5 @@
 import { useColumnSettingsContext, useProjectTableContext } from '../context'
-import { getSortableColumnOptions } from '../buildTreeTableColumns'
+import { getSortableColumnOptions, isMultiSelectAttribute } from '../buildTreeTableColumns'
 import { SortCardType, SettingsSortingDropdown } from '@ynput/ayon-react-components'
 
 type SortColumn = { value: string; label: string }
@@ -11,7 +11,10 @@ export const useSortBySettings = (columns: SortColumn[] = []) => {
   const options = [
     ...getSortableColumnOptions(scopes, columns),
     ...attribFields
-      .filter((field) => field.scope?.some((s) => scopes.includes(s)))
+      .filter(
+        (field) =>
+          field.scope?.some((s) => scopes.includes(s)) && !isMultiSelectAttribute(field),
+      )
       .map((field) => ({
         id: `attrib_${field.name}`,
         label: field.data.title || field.name,

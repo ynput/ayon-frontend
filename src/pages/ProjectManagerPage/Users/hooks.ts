@@ -7,6 +7,7 @@ import {
   useGetProjectsAccessQuery,
 } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
+import { getRequestErrorString } from '@shared/util'
 
 const useProjectAccessGroupData = (selectedProject: string) => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>(
@@ -43,7 +44,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
       setProjectsAccess({ payload: multiUpdateData })
     } catch (error: $Any) {
       console.log(error)
-      return error.details
+      return getRequestErrorString(error)
     }
   }
 
@@ -86,7 +87,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
       setProjectsAccess({ payload: multiUpdateData })
     } catch (error: $Any) {
       console.log(error)
-      return error.details
+      return getRequestErrorString(error)
     }
   }
 

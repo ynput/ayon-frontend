@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import styled from 'styled-components'
@@ -64,21 +65,29 @@ const ProjectUserAccessProjectList = ({
   const tableData = useTableLoadingData(projects, isLoading, 10, 'name')
   const selected = tableData.filter((project: ProjectNode) => selection.includes(project.name))
 
+  // active first, then editable, then by display name.
+  // Sort keys are computed once per project and the result is memoized, instead of sorting in place on every render.
+  const sortedData = useMemo(() => {
+    const keyed = tableData.map((project: ProjectNode) => ({
+      project,
+      rank:
+        (project.active ? 10 : -10) +
+        (userPermissions.canEdit(UserPermissionsEntity.access, project.name) ? 1 : -1),
+      displayName: getProjectDisplayName(project),
+    }))
+
+    keyed.sort(
+      (a: { rank: number; displayName: string }, b: { rank: number; displayName: string }) =>
+        b.rank - a.rank || a.displayName.localeCompare(b.displayName),
+    )
+
+    return keyed.map(({ project }: { project: ProjectNode }) => project)
+  }, [tableData, userPermissions])
+
   return (
     <TablePanel data-testid={`projectPanel`} style={{ height: '100%' }}>
       <DataTable
-        value={tableData.sort((a: ProjectNode, b: ProjectNode) => {
-          const aActive = a.active ? 10 : -10
-          const bActive = b.active ? 10 : -10
-          const aPerm = userPermissions.canEdit(UserPermissionsEntity.access, a.name) ? 1 : -1
-          const bPerm = userPermissions.canEdit(UserPermissionsEntity.access, b.name) ? 1 : -1
-          const mainComparison = bActive - aActive + bPerm - aPerm
-          if (mainComparison !== 0) {
-            return mainComparison
-          }
-
-          return getProjectDisplayName(a).localeCompare(getProjectDisplayName(b))
-        })}
+        value={sortedData}
         selection={selected}
         multiple={true}
         scrollable={true}

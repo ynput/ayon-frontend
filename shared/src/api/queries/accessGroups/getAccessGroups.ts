@@ -1,4 +1,5 @@
 import { projectsApi, accessApi } from '@shared/api/generated'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 export type ProjectUserData = {
   [project: string]: {
@@ -44,7 +45,7 @@ const enhancedApi = accessApi.injectEndpoints({
           return { data: projectUsersData, meta: undefined, error: undefined }
         } catch (error: any) {
           console.error(error)
-          return { error, meta: undefined, data: undefined }
+          return { error: normalizeQueryError(error) }
         }
       },
       providesTags: (_res, _error, { projects }) =>
@@ -57,8 +58,6 @@ const enhancedApi = accessApi.injectEndpoints({
 enhancedApi.enhanceEndpoints({
   endpoints: {
     getStudioAccessGroups: {
-      // @ts-expect-error: {code: 403, details: "Only managers can access the studio level settings"}
-      transformErrorResponse: (err) => err?.detail || 'Error fetching access groups',
       providesTags: (result) =>
         result
           ? [

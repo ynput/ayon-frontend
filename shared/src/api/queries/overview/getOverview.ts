@@ -22,18 +22,9 @@ import {
 } from '@shared/util'
 import type { EditorTaskNode } from '@shared/containers/ProjectTreeTable/types/table'
 import type { FieldStats } from '../columnStats'
-import {
-  normalizeFieldStats,
-  mergeFieldStats,
-  hasNewTargetFields,
-  transformStatsError,
-} from '../columnStats'
-import {
-  DefinitionsFromApi,
-  FetchBaseQueryError,
-  OverrideResultType,
-  TagTypesFromApi,
-} from '@reduxjs/toolkit/query'
+import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 const CACHE_TIME = 10 // seconds
 
@@ -177,7 +168,6 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     GetFolderColumnStats: {
       transformResponse: (res: GetFolderColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.folders?.fieldStats ?? []),
-      transformErrorResponse: (error: any) => transformStatsError(error, 'folder'),
       serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
@@ -187,7 +177,6 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     GetTaskColumnStats: {
       transformResponse: (res: GetTaskColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.tasks?.fieldStats ?? []),
-      transformErrorResponse: (error: any) => transformStatsError(error, 'task'),
       serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
@@ -349,9 +338,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           }
         } catch (e: any) {
           console.error(e)
-          const errorMessage =
-            e.message || e.data?.message || JSON.stringify(e) || 'Unknown Fetch Error'
-          return { error: { status: 'FETCH_ERROR', error: errorMessage } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       // keep one cache per project
@@ -517,13 +504,14 @@ const injectedApi = enhancedApi.injectEndpoints({
             }),
           )
 
+          if (result.error) return { error: normalizeQueryError(result.error) }
+
           const data = result.data?.folderIds || []
 
           return { data }
         } catch (e: any) {
           console.error(e)
-          const error = { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError
-          return { error }
+          return { error: normalizeQueryError(e) }
         }
       },
       providesTags: (_r, _e, { projectName }) => [{ type: 'tasksFolder', id: projectName }],
@@ -615,9 +603,9 @@ const injectedApi = enhancedApi.injectEndpoints({
           return {
             data: result.data || fallback,
           }
-        } catch (e: any) {
-          console.error('Error in getTasksListInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+        } catch (error: any) {
+          console.error('ERROR [getOverview]:', error, error.data?.detail)
+          return { error: normalizeQueryError(error) }
         }
       },
       providesTags: (result, _e, { projectName }) =>
@@ -891,8 +879,8 @@ const injectedApi = enhancedApi.injectEndpoints({
             },
           }
         } catch (error: any) {
-          console.error('Error in getGroupedTasksList queryFn:', error)
-          return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
+          console.error('ERROR [getGroupedTasksList]:', error, error.data?.detail)
+          return { error: normalizeQueryError(error) }
         }
       },
       providesTags: (result, _e, { projectName }) =>

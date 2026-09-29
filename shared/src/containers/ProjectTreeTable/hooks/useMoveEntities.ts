@@ -9,6 +9,7 @@ import type {
   OnMoveComplete,
 } from '@shared/containers/MoveEntityDialog/types'
 import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
+import { getRequestErrorString } from '@shared/util'
 
 export type EntityType = 'folder' | 'task'
 
@@ -78,11 +79,8 @@ export const useMoveEntities = ({
         }
         onMoveComplete?.(targetFolderId)
       } catch (error: any) {
-        console.error('Failed to move entity:', error)
-
         // Extract and improve error message
-        let errorMessage =
-          error?.data?.detail || error?.error || error?.message || 'Failed to move entities'
+        let errorMessage = getRequestErrorString(error) || 'Failed to move entities'
 
         // Improve specific error messages for better UX
         if (errorMessage.includes('already exists')) {
@@ -146,11 +144,8 @@ export const useMoveEntities = ({
         throw new Error(errorDetails || 'Some move operations failed')
       }
     } catch (error: any) {
-      console.error('Failed to move entities to root:', error)
-
       // Extract and improve error message
-      let errorMessage =
-        error?.data?.detail || error?.error || error?.message || 'Failed to move entities to root'
+      let errorMessage = getRequestErrorString(error) || 'Failed to move entities to root'
 
       toast.error(errorMessage)
     } finally {

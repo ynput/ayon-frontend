@@ -43,7 +43,6 @@ const uploadVersions = versionsApi.enhanceEndpoints({
         { type: 'product', id: versionPostModel.productId },
         { type: 'entities', id: 'VERSION' }, // invalidate all version entity panels
       ],
-      transformErrorResponse: (error: any) => ({ message: error.data?.detail }),
     },
     deleteVersion: {
       invalidatesTags: (_r, _e, { versionId }) => [

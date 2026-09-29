@@ -143,6 +143,7 @@ const useTooltip = () => {
       const shortcutData = target?.dataset?.shortcut
       const delayData = target?.dataset?.tooltipDelay
       const tooltipPosition = target?.dataset?.tooltipPosition
+      const shortcutPosition = target?.dataset?.shortcutPosition
       // what to render as tooltip (pre, div, markdown, etc.)
       const asData = target?.dataset?.tooltipAs
       // check if data-tooltip attribute exists
@@ -191,6 +192,7 @@ const useTooltip = () => {
         as: asData || 'div',
         clickable: clickable,
         position: tooltipPosition,
+        shortcutPosition,
       }
 
       // check if tooltip is already set to same value
@@ -235,6 +237,10 @@ const useTooltip = () => {
           as={tooltip?.as === 'markdown' ? 'div' : tooltip?.as}
           $hasOverflow={hasOverflow}
         >
+          {tooltip?.shortcut && tooltip?.shortcutPosition === 'before' && (
+            <ShortcutTag>{tooltip?.shortcut}</ShortcutTag>
+          )}
+
           {tooltip?.as === 'markdown' ? (
             <ReactMarkdown rehypePlugins={[[rehypeExternalLinks, { target: '_blank' }]]}>
               {tooltip?.tooltip}
@@ -243,7 +249,9 @@ const useTooltip = () => {
             tooltip?.tooltip
           )}
 
-          {tooltip?.shortcut && <ShortcutTag>{tooltip?.shortcut}</ShortcutTag>}
+          {tooltip?.shortcut && tooltip?.shortcutPosition !== 'before' && (
+            <ShortcutTag>{tooltip?.shortcut}</ShortcutTag>
+          )}
         </Styled.TooltipInner>
       </Styled.TooltipWidget>
     ),

@@ -2,6 +2,7 @@ import React, { FC } from 'react'
 import { Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import clsx from 'clsx'
+import { getRequestErrorString } from '@shared/util'
 
 export const Placeholder = styled.div`
   position: absolute;
@@ -74,7 +75,7 @@ export const EmptyPlaceholder: FC<EmptyPlaceholderProps> = ({
         <Icon icon="error" className="placeholder-icon" />
         <h3>Something went wrong.</h3>
         <span className="error-message" {...pt?.error}>
-          ERROR: {JSON.stringify(error)}
+          ERROR: {getRequestErrorString(error) || 'Unknown error'}
         </span>
         {ynputError && (
           <span>This should not happen. Please send a screenshot to the Ynput team!</span>

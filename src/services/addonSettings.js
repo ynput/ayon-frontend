@@ -50,7 +50,6 @@ const addonSettings = api.injectEndpoints({
         { type: 'addonSettingsList', id: 'LIST' },
       ],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
 
     getAddonSettingsSchema: build.query({
@@ -66,7 +65,6 @@ const addonSettings = api.injectEndpoints({
       // eslint-disable-next-line no-unused-vars
       providesTags: (result, error, arg) => [{ type: 'addonSettingsSchema', ...arg }],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
 
     getAddonSettings: build.query({
@@ -83,7 +81,6 @@ const addonSettings = api.injectEndpoints({
       // eslint-disable-next-line no-unused-vars
       providesTags: (result, error, arg) => [{ type: 'addonSettings', ...arg, id: arg.addonName }],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
 
     getAddonSettingsOverrides: build.query({
@@ -100,7 +97,6 @@ const addonSettings = api.injectEndpoints({
       // eslint-disable-next-line no-unused-vars
       providesTags: (result, error, arg) => [{ type: 'addonSettingsOverrides', ...arg }],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
 
     getRawAddonSettingsOverrides: build.query({
@@ -148,8 +144,6 @@ const addonSettings = api.injectEndpoints({
           variant: arg.variant,
         },
       ],
-      transformErrorResponse: (error) =>
-        error.data.detail ? error.data : { detail: `Error ${error.status}` },
     }),
 
     setAddonSettings: build.mutation({
@@ -190,8 +184,6 @@ const addonSettings = api.injectEndpoints({
         },
       ],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) =>
-        error.data.detail ? error.data : { detail: `Error ${error.status}` },
     }), // setAddonSettings
 
     deleteAddonSettings: build.mutation({
@@ -230,7 +222,6 @@ const addonSettings = api.injectEndpoints({
         },
       ],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }), // setAddonSettings
 
     modifyAddonOverride: build.mutation({
@@ -270,7 +261,6 @@ const addonSettings = api.injectEndpoints({
         },
       ],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }), // setAddonSettings
   }), // endpoints
   overrideExisting: true,

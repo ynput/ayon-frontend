@@ -4,6 +4,7 @@ import { current } from '@reduxjs/toolkit'
 import { enhancedInboxGraphql, inboxInfiniteApi, type InboxInfiniteArgs } from './getInbox'
 import { projectInboxApi, type ProjectInboxInfiniteArgs } from './getProjectInbox'
 import type { InboxMessage, InboxPagesDraft } from './inboxTransform'
+import { getRequestErrorString } from '@shared/util'
 
 // add some extra types for the patching
 export interface Arg extends ManageInboxItemApiArg {
@@ -11,6 +12,9 @@ export interface Arg extends ManageInboxItemApiArg {
   important: boolean
   isActiveChange: boolean
   isRead: boolean
+  isAll?: boolean
+  // clears read rows only - mirrors itemFilter.read on the request
+  onlyRead?: boolean
 }
 
 // When reading a message, we need to update the unread count
@@ -50,7 +54,9 @@ const enhancedRest = inboxApi.enhanceEndpoints({
           important,
           isActiveChange,
           isRead,
-          manageInboxItemRequest: { ids = [], status, all, projectName },
+          onlyRead,
+          isAll,
+          manageInboxItemRequest: { ids = [], status, projectName },
         }: Arg,
         { dispatch, getState, queryFulfilled },
       ) {
@@ -79,9 +85,9 @@ const enhancedRest = inboxApi.enhanceEndpoints({
 
         const patches: { undo: () => void }[] = []
 
-        // `all` is one project on the backend, so the cross-project cache must keep the rest
-        const isLeaving = all
-          ? (m: InboxMessage) => m.projectName === projectName
+        // clearing all is one project on the backend, so the cross-project cache must keep the rest
+        const isLeaving = isAll
+          ? (m: InboxMessage) => m.projectName === projectName && (!onlyRead || m.read)
           : (m: InboxMessage) => ids.includes(m.referenceId)
 
         const removeLeaving =
@@ -198,8 +204,9 @@ const enhancedRest = inboxApi.enhanceEndpoints({
         if (isActiveChange && status === 'inactive') {
           // clearing marks the rows read, so only the unread ones move the badge
           if (clearedUnread.size) patchUnreadCount(dispatch, clearedUnread.size, important)
-          // `all` clears beyond what the cache held, so the exact figure must come from the server
-          if (all) tagsToInvalidate.push({ type: 'inbox', id: 'unreadCount' })
+          // clearing all goes beyond what the cache held, so the exact figure must come from the server
+          // clearing read rows only cannot move the badge, so it needs no refetch
+          if (isAll && !onlyRead) tagsToInvalidate.push({ type: 'inbox', id: 'unreadCount' })
         } else if (status === 'unread' && !isActiveChange) {
           // a message being marked as unread (in other or important)
           // so increase the unread count
@@ -212,14 +219,12 @@ const enhancedRest = inboxApi.enhanceEndpoints({
         try {
           await queryFulfilled
 
-          // invalidate tags AFTER the query is fulfilled and for ALL apis
+          // invalidate tags AFTER the query is fulfilled
           if (tagsToInvalidate.length) {
-            dispatch(inboxApi.util.invalidateTags(tagsToInvalidate))
             dispatch(inboxApi.util.invalidateTags(tagsToInvalidate))
           }
         } catch (error: any) {
-          const message = `Error: ${error?.error?.data?.detail}`
-          console.error(message, error)
+          const message = `Error: ${getRequestErrorString(error)}`
           toast.error(message)
           patches.forEach((patch) => patch.undo())
         }

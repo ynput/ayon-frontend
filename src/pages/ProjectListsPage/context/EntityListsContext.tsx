@@ -13,6 +13,7 @@ import { upperFirst } from 'lodash'
 import { useSearchParams } from 'react-router-dom'
 import { useGetProductionAddon } from '@shared/hooks'
 import { useAppDispatch } from '@state/store'
+import { getRequestErrorString } from '@shared/util'
 
 import {
   useBuildListMenuItems,
@@ -152,8 +153,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
             throw new Error(result.message || 'Error adding to session')
           }
         } catch (error: any) {
-          console.error('Error adding to session via action', error)
-          toast.error(error?.data?.detail || error?.message || 'Error adding to session')
+          toast.error(getRequestErrorString(error) || 'Error adding to session')
           return Promise.reject(error)
         }
       }
@@ -201,7 +201,6 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
 
         return Promise.resolve()
       } catch (error: any) {
-        console.error('Error adding to list', error)
         toast.error(error || 'Error adding to list')
         return Promise.reject(error)
       }
@@ -245,8 +244,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
   const closeCreateNewList = useCallback(() => setNewListData(null), [setNewListData])
 
   const [createNewListMutation, { error: newListError }] = useCreateEntityListMutation()
-  // @ts-expect-error - we just know the error is an object
-  const newListErrorMessage = newListError?.data?.detail as string
+  const newListErrorMessage = getRequestErrorString(newListError)
   // Update createNewList to use entities from newListData state
   const createNewList: EntityListsContextType['createNewList'] = useCallback(
     async (label) => {
@@ -352,8 +350,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           })
         }
       } catch (error: any) {
-        console.error('Error creating list', error)
-        toast.error(error?.data?.detail || error?.message || 'Error creating list')
+        toast.error(getRequestErrorString(error) || 'Error creating list')
         return Promise.reject(error)
       }
     },

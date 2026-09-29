@@ -19,7 +19,6 @@ const getAddonsApi = enhancedApi.injectEndpoints({
         method: 'GET',
       }),
       providesTags: ['projectAddons'],
-      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
       transformResponse: (response: any) => {
         let result = []
         for (const definition of response.addons) {
@@ -45,7 +44,6 @@ const getAddonsApi = enhancedApi.injectEndpoints({
         method: 'GET',
       }),
       providesTags: ['settingsAddons'],
-      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
       transformResponse: (response: any) => {
         let result = []
         for (const definition of response.addons) {
@@ -71,7 +69,6 @@ const getAddonsApi = enhancedApi.injectEndpoints({
         method: 'GET',
       }),
       providesTags: ['dashboardAddons'],
-      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
       transformResponse: (response: any) => {
         let result = []
         for (const definition of response.addons) {

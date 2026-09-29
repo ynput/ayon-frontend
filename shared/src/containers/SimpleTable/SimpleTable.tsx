@@ -125,6 +125,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   meta,
   rowHeight,
   imgRatio,
+  imgPosition,
   onScrollBottom,
   onRename,
   renamingId,
@@ -422,6 +423,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
             img: row.original.img,
             imgShape: row.original.imgShape,
             imgRatio: imgRatio,
+            imgPosition: imgPosition,
             isRowExpandable: row.getCanExpand(),
             enableNonFolderIndent,
             isRowExpanded: row.getIsExpanded(),
@@ -466,6 +468,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
       enableClickToDeselect,
       enableNonFolderIndent,
       imgRatio,
+      imgPosition,
       onRowOptionClick,
     ],
   )

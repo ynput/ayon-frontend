@@ -66,7 +66,7 @@ export const uploadFile = (file, projectName, onUploadProgress): Promise<Uploade
   })
 }
 
-export const handleFileDrop = (e, projectName, onProgress, onSuccess) => {
+export const handleFileDrop = (e, projectName, onProgress, onSuccess, onError?) => {
   e.preventDefault()
   e.stopPropagation()
 
@@ -78,7 +78,8 @@ export const handleFileDrop = (e, projectName, onProgress, onSuccess) => {
       uploadFile(file, projectName, onProgress).then(
         (data) => onSuccess(data),
         (error) => {
-          toast.error('Upload failed: ' + error.response.data.detail)
+          onError && onError(file)
+          toast.error(error.message)
           console.warn(error)
         },
       )

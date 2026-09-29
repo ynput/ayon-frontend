@@ -9,10 +9,10 @@ import {
   useGroupCounts,
   useSlicerContext,
 } from '@shared/containers'
-import { useAppSelector } from '@state/store'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { FC, useCallback, useMemo } from 'react'
 import { useVersionsDataContext } from '../context/VPDataContext'
-import { buildVersionRow } from '../util'
+import { buildVersionTableRow } from '../util'
 import { useVPViewsContext } from '../context/VPViewsContext'
 import { useProjectContext, useSubtasksModulesContext } from '@shared/context'
 
@@ -113,6 +113,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
     return folderMap
   }, [allVersionsMap, productsMap])
   const tasksMap = new Map()
+  const dispatch = useAppDispatch()
 
   // external player state
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
@@ -135,7 +136,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       groupCountsComplete={groupCountsComplete}
       groupByConfig={{ entityType: 'version' }}
       hierarchyOptions={hierarchyOptions}
-      groupRowFunc={buildVersionRow}
+      groupRowFunc={buildVersionTableRow}
       expanded={expanded}
       updateExpanded={updateExpanded}
       isInitialized={isInitialized}
@@ -154,6 +155,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       useNavigate={useNavigate}
       useLocation={useLocation}
       useSearchParams={useSearchParams}
+      dispatch={dispatch}
     >
       {children}
     </ProjectTableProvider>

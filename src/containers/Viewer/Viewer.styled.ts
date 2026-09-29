@@ -134,6 +134,10 @@ export const EmptyPlaceholderWrapper = styled.div`
 export const RightToolBar = styled.div`
   display: flex;
   flex-direction: column;
+  z-index: 1100;
+  &.hidden {
+    display: none;
+  }
 `
 export const RightContainer = styled.div`
   display: flex;

@@ -54,6 +54,7 @@ import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModu
 import type { SubtasksManagerProps } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
 import { RowId } from '../utils'
 import { ProjectTableContext } from './ProjectTableContextInstance'
+import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 
 export type ToggleExpandAll = (rowIds: RowId[], expand?: boolean) => void
 export type ToggleExpands = (rowIds: RowId[], expand?: boolean) => void
@@ -135,6 +136,9 @@ export interface ProjectTableContextType {
   useNavigate?: typeof useNavigate
   useLocation?: typeof useLocation
   useSearchParams?: typeof useSearchParams
+
+  // redux
+  dispatch?: ThunkDispatch<any, any, UnknownAction>
 }
 
 export const parseRowId = (rowId: string) => rowId?.split(ROW_ID_SEPARATOR)[0] || rowId
@@ -246,6 +250,8 @@ export interface ProjectTableProviderProps {
   useNavigate?: typeof useNavigate
   useLocation?: typeof useLocation
   useSearchParams?: typeof useSearchParams
+  // redux
+  dispatch?: ThunkDispatch<any, any, UnknownAction>
 }
 
 export const ProjectTableProvider = ({
@@ -298,6 +304,8 @@ export const ProjectTableProvider = ({
   useNavigate,
   useLocation,
   useSearchParams,
+  // redux
+  dispatch,
 }: ProjectTableProviderProps) => {
   const { attrib: projectAttrib } = useProjectContext()
   const {
@@ -510,6 +518,8 @@ export const ProjectTableProvider = ({
         useNavigate,
         useLocation,
         useSearchParams,
+        // redux
+        dispatch,
       }}
     >
       {children}

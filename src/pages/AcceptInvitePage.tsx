@@ -20,7 +20,14 @@ const AcceptInviteSkeleton = ({ logo }: { logo?: string }) => (
     <Styled.SubTitle className="loading">
       Please set a password to finish activating your account and log in.
     </Styled.SubTitle>
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 'var(--base-gap-large)' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        gap: 'var(--base-gap-large)',
+      }}
+    >
       <InputPassword className="loading" placeholder="Enter your new password" readOnly />
       <InputPassword className="loading" placeholder="Confirm your new password" readOnly />
       <Styled.Note className="loading">
@@ -84,7 +91,6 @@ const AcceptInviteForm = ({ token, logo, ssoLabel }: AcceptInviteFormProps) => {
       toast.success('Password set. Welcome to AYON.')
       window.history.replaceState({}, '', '/')
     } catch (err) {
-      console.error(err)
       const e = err as { detail?: string; data?: { detail?: string } }
       const detail = e?.detail || e?.data?.detail
       toast.error(detail || 'Unable to set password')
@@ -154,8 +160,8 @@ const AcceptInvitePage = () => {
     visibleSso.length === 1
       ? capitalize(visibleSso[0].title || `sign in with ${visibleSso[0].name}`)
       : visibleSso.length > 1
-        ? 'Use another sign-in method'
-        : undefined
+      ? 'Use another sign-in method'
+      : undefined
 
   return (
     <>
@@ -168,7 +174,11 @@ const AcceptInvitePage = () => {
             {isLoadingInfo ? (
               <AcceptInviteSkeleton logo="/AYON.svg" />
             ) : token ? (
-              <AcceptInviteForm token={token} logo={loginPageBrand || '/AYON.svg'} ssoLabel={ssoLabel} />
+              <AcceptInviteForm
+                token={token}
+                logo={loginPageBrand || '/AYON.svg'}
+                ssoLabel={ssoLabel}
+              />
             ) : (
               <>
                 <h1>Missing invite token</h1>

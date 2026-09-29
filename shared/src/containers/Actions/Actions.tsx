@@ -15,6 +15,7 @@ import type { ActionTriggersProps } from '@shared/hooks/useActionTriggers'
 import { useActionTriggers } from '@shared/hooks/useActionTriggers'
 import { ActionConfigDialog } from './ActionConfigDialog'
 import { InteractiveActionDialog, InteractiveForm } from './InteractiveActionDialog'
+import { getRequestErrorString } from '@shared/util'
 import type { BundleMode } from '@shared/util/getBundleMode'
 import { useGlobalContext } from '@shared/context/GlobalContext'
 
@@ -267,8 +268,7 @@ export const Actions = ({
     try {
       response = await executeAction({ actionContext, ...params }).unwrap()
     } catch (error: any) {
-      console.error('Error executing action', error)
-      toast.error(error?.data?.detail || 'Error executing action')
+      toast.error(getRequestErrorString(error) || 'Error executing action')
       return
     }
 

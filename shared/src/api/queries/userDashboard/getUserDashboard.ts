@@ -7,6 +7,7 @@ import {
   Anatomy,
 } from '@shared/api/generated'
 import { projectQueries } from '../project'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 import PubSub from '@shared/util/pubsub'
 import {
   createRealtimeBatcher,
@@ -427,7 +428,7 @@ const injectedDashboardRestApi = enhancedDashboardGraphqlApi.injectEndpoints({
           return { data: projectInfo, meta: undefined, error: undefined }
         } catch (error: any) {
           console.error(error)
-          return { error, meta: undefined, data: undefined }
+          return { error: normalizeQueryError(error) }
         }
       },
       providesTags: (_res, _error, { projects }) =>

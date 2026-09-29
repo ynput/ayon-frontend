@@ -1,6 +1,7 @@
 import { Icon } from '@ynput/ayon-react-components'
 import React from 'react'
 import styled from 'styled-components'
+import { getRequestErrorString } from '@shared/util'
 
 const NoneFound = styled.div`
   position: absolute;
@@ -92,7 +93,7 @@ const NoProducts = ({ label, error }) => {
       {error && (
         <Error>
           <Icon icon="error" />
-          Error: {JSON.stringify(error) || 'Unknown'}
+          Error: {getRequestErrorString(error) || 'Unknown'}
         </Error>
       )}
     </NoneFound>

@@ -8,6 +8,7 @@ import {
 } from '@shared/api'
 import { GROUP_BY_FOLDER_KEY } from '../constants'
 import { useEffect, useMemo } from 'react'
+import { getRequestErrorString } from '@shared/util'
 
 const MAX_PROJECT_PAGES = 10
 
@@ -89,6 +90,6 @@ export const useGetProjectsData = ({
     isFetchingNextPage,
     hasReachedPageLimit,
     isLoading,
-    error: String(error),
+    error: getRequestErrorString(error),
   }
 }

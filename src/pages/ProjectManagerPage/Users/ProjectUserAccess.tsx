@@ -39,12 +39,11 @@ import SplitterContainerTwoPanes from './SplitterTwoPanes'
 import { ProjectNode, UserNode } from '@shared/api'
 import LoadingPage from '@pages/LoadingPage'
 import { useQueryParam } from 'use-query-params'
-import { uuid } from 'short-uuid'
+import { v4 as uuid } from 'uuid'
 import ProjectUserAccessAccessGroupPanel from './ProjectUserAccessAccessGroupPanel'
 import EmptyPlaceholder, {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
-  Placeholder,
 } from '@shared/components/EmptyPlaceholder'
 import { useSessionStorage } from '@shared/hooks'
 
@@ -105,12 +104,14 @@ const ProjectUserAccess = () => {
   const { isLoading: permissionsLoading, permissions: userPermissions } =
     useUserProjectPermissions(isUser)
 
-  const projectFilters = (filters || []).filter((filter: Filter) => filter.label === 'Project')
-  const filteredProjects = getFilteredEntities<ProjectNode>(
-    // @ts-ignore Weird one, the response type seems to be mismatched?
-    Array.from(projects || []),
-    projectFilters,
-  )
+  const filteredProjects = useMemo(() => {
+    const projectFilters = (filters || []).filter((filter: Filter) => filter.label === 'Project')
+    return getFilteredEntities<ProjectNode>(
+      // @ts-ignore Weird one, the response type seems to be mismatched?
+      Array.from(projects || []),
+      projectFilters,
+    )
+  }, [projects, filters])
   const filteredSelectedProjects = getFilteredSelectedProjects(selectedProjects, filteredProjects)
 
   const userFilter = filters?.filter((el: Filter) => el.label === 'User')

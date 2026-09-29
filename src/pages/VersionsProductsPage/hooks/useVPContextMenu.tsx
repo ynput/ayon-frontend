@@ -12,11 +12,8 @@ import {
 import { useVersionsDataContext } from '../context/VPDataContext'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useVersionUploadContext } from '@shared/components'
-import {
-  useProjectContext,
-  useDeleteEntitiesContext,
-  type DeletableEntity,
-} from '@shared/context'
+import { versionNodeToEditorVersionNode } from '../util'
+import { useProjectContext, useDeleteEntitiesContext, type DeletableEntity } from '@shared/context'
 
 // prefer the cell selection; fall back to checkbox/row selection only when no body cells
 // are selected, then the clicked cell — so a stray row-selection isn't swept in alongside
@@ -129,7 +126,9 @@ export const useVPContextMenu = (callbacks?: {
       if (targetEntity?.entityType === 'product') {
         const product = targetEntity as any
         if (product.featuredVersion?.id) {
-          targetEntity = entitiesMap.get(product.featuredVersion.id)
+          targetEntity =
+            entitiesMap.get(product.featuredVersion.id) ||
+            versionNodeToEditorVersionNode(product.featuredVersion)
         } else {
           return undefined
         }

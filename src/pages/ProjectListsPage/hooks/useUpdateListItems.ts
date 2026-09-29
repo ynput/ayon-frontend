@@ -1,5 +1,4 @@
 import { useCallback } from 'react'
-import { useListItemsDataContext } from '../context/ListItemsDataContext'
 import { useListsAttributesContext } from '../context/ListsAttributesContext'
 import { ProjectTableQueriesProviderProps } from '@shared/containers'
 import { useUpdateEntityListItemMutation } from '@shared/api'
@@ -15,7 +14,6 @@ type Props = {
 const useUpdateListItems = ({ updateEntities }: Props) => {
   const { projectName } = useProjectContext()
   const { selectedList } = useListsContext()
-  const { listItemsMap } = useListItemsDataContext()
   const { entityAttribFields } = useListsAttributesContext()
   const [updateEntityListItem] = useUpdateEntityListItemMutation()
 
@@ -85,15 +83,12 @@ const useUpdateListItems = ({ updateEntities }: Props) => {
         }
       })
 
-      console.log(listItemOperations, entityOperations)
-
       try {
         if (!selectedList?.id) throw new Error('No list selected')
 
-        const updateEntitiesPromise = updateEntities({
-          operations,
-          patchOperations,
-        })
+        const updateEntitiesPromise = entityOperations.length
+          ? updateEntities({ operations: entityOperations, patchOperations })
+          : Promise.resolve()
 
         const updateListItemsPromise = listItemOperations.map((operation) =>
           updateEntityListItem({
@@ -111,7 +106,7 @@ const useUpdateListItems = ({ updateEntities }: Props) => {
         toast.error('Error updating list items')
       }
     },
-    [listItemsMap, entityAttribFields, updateEntities],
+    [entityAttribFields, projectName, selectedList?.id, updateEntities],
   )
 
   return {

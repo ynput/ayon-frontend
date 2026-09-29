@@ -117,7 +117,6 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
       }).unwrap()
       toast.success(`Bundle addon updated ${addon}: ${version}`)
     } catch (error) {
-      console.error(error)
       toast.error((error as any)?.data?.detail || 'Failed to update bundle addon')
     }
   }

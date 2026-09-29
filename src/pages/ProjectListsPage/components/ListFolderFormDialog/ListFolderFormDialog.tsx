@@ -110,7 +110,6 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
         )
       }
     } catch (error) {
-      console.error(`Failed to ${mode} folder:`, error)
       setError(`Failed to ${mode} folder`)
     } finally {
       handleClose()
@@ -207,9 +206,7 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
             { value: 'generic', label: 'Lists' },
             { value: 'review-session', label: 'Review Sessions' },
           ],
-          filter: isReview
-            ? ['review-session']
-            : ['generic'],
+          filter: isReview ? ['review-session'] : ['generic'],
         }}
       />
       {error && <span style={{ color: 'var(--color-hl-error)', fontSize: '14px' }}>{error}</span>}

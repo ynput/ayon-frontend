@@ -230,17 +230,24 @@ export const Cell = styled.div`
     width: auto;
     height: 24px;
     max-height: 24px;
+    flex: none;
     object-fit: cover;
     aspect-ratio: 1;
-    background-color: var(--md-sys-color-surface-container-lowest);
-    margin-right: 4px;
+
+    &.img-start {
+      margin-right: 4px;
+    }
+
+    &.img-end {
+      margin-left: 4px;
+    }
 
     &.circle {
       border-radius: 50%;
     }
 
     &.square {
-      border-radius: 4px;
+      border-radius: 2px;
     }
   }
 `

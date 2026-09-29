@@ -46,7 +46,6 @@ const BundleDeps = ({ bundle, onChange }) => {
       handleCloseForm()
       toast.success('Bundle Dependency Package updated')
     } catch (error) {
-      console.error(error)
       toast.error('ERROR: Bundle Dependency Package not updated')
     }
   }

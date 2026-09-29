@@ -22,7 +22,7 @@ import {
 import clsx from 'clsx'
 
 // Type imports
-import type { TableRow } from './types/table'
+import type { EntityType, ParentColumnDefinition, TableRow } from './types/table'
 
 // Component imports
 import buildTreeTableColumns, {
@@ -88,7 +88,6 @@ import {
   isFilterError,
   getFilterErrorMessage,
   getEntitiesLabelFromScopes,
-  extractQueryErrorMessage,
 } from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
 
@@ -113,9 +112,11 @@ import { useProjectContext } from '@shared/context/ProjectContext'
 import { usePowerpack } from '@shared/context/PowerpackContext'
 import { setDetailsPanelTabForScope } from '@shared/context/DetailsPanelContext'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
+import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { ColumnsConfig } from './types/columnConfig'
+import { getRequestErrorString } from '@shared/util'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'> & { id?: string },
@@ -162,6 +163,8 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   excludedSorting?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
   includeLinks?: boolean
+  includeParents?: EntityType[]
+  parentColumns?: ParentColumnDefinition[]
   isLoading?: boolean
   isExpandable?: boolean // if true, show the expand/collapse icons
   enableSorting?: boolean
@@ -201,6 +204,8 @@ export const ProjectTreeTable = ({
   excludedSorting,
   extraColumns,
   includeLinks,
+  includeParents,
+  parentColumns,
   isLoading: isLoadingProp,
   isExpandable,
   enableSorting = true,
@@ -286,6 +291,26 @@ export const ProjectTreeTable = ({
     scopes.includes('product')
 
   const { writableFields } = useProjectDataContext()
+
+  // Options are only resolved for attributes the table can show: a hidden column never fetches
+  const enumAttribRequest = useMemo(() => {
+    const groupAttrib = groupFieldId?.startsWith('attrib.')
+      ? groupFieldId.slice('attrib.'.length)
+      : undefined
+
+    return attribFields
+      .filter(
+        (field) =>
+          field.name === groupAttrib ||
+          checkColumnVisibility(columnVisibility, `attrib_${field.name}`, defaultColumnVisibility),
+      )
+      .map((field) => field.name)
+  }, [attribFields, columnVisibility, defaultColumnVisibility, groupFieldId])
+
+  const resolvedAttribFields = useAttributeEnums(attribFields, {
+    projectName,
+    request: enumAttribRequest,
+  })
 
   const isLoading = isLoadingProp || isLoadingData
 
@@ -391,8 +416,8 @@ export const ProjectTreeTable = ({
   )
 
   const columnAttribs = useMemo(
-    () => (isInitialized ? attribFields : loadingAttrib),
-    [attribFields, loadingAttrib, isInitialized],
+    () => (isInitialized ? resolvedAttribFields : loadingAttrib),
+    [resolvedAttribFields, loadingAttrib, isInitialized],
   )
 
   const getNameLabelHeader = () => {
@@ -405,6 +430,7 @@ export const ProjectTreeTable = ({
       attribs: columnAttribs,
       links: linkTypes,
       includeLinks,
+      includeParents,
       showHierarchy,
       isFlatFolderView,
       options,
@@ -413,6 +439,7 @@ export const ProjectTreeTable = ({
       excludedSorting,
       groupBy,
       nameLabel: getNameLabelHeader(),
+      parentColumns,
     })
 
     if (sortableRows && enableSorting) {
@@ -442,6 +469,8 @@ export const ProjectTreeTable = ({
     options,
     linkTypes,
     includeLinks,
+    includeParents,
+    parentColumns,
     extraColumns,
     excludedColumns,
     excludedSorting,
@@ -660,13 +689,13 @@ export const ProjectTreeTable = ({
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
 
   const attribByField = useMemo(() => {
-    return attribFields.reduce((acc: Record<string, EnumItem[]>, attrib) => {
+    return resolvedAttribFields.reduce((acc: Record<string, EnumItem[]>, attrib) => {
       if (attrib.data?.enum?.length) {
         acc[attrib.name] = attrib.data?.enum
       }
       return acc
     }, {})
-  }, [attribFields])
+  }, [resolvedAttribFields])
 
   const rowOrderIds = useMemo(() => tableData.map((row) => row.id), [tableData])
   // Get column IDs for drag-and-drop from context columnOrder (exclude non-draggable columns)
@@ -770,7 +799,7 @@ export const ProjectTreeTable = ({
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}
               showHierarchy={showHierarchy}
-              attribs={attribFields}
+              attribs={resolvedAttribFields}
               onOpenNew={onOpenNew}
               rowOrderIds={rowOrderIds}
               sortableRows={sortableRows}
@@ -799,7 +828,7 @@ export const ProjectTreeTable = ({
                 renderCellContent={(columnId) => (
                   <RemoteSummaryCellContent
                     columnId={columnId}
-                    attribs={attribFields}
+                    attribs={resolvedAttribFields}
                     fieldStats={fieldStats}
                     groupFieldStats={groupFieldStats}
                     calc={columnSummaries[columnId]}
@@ -1437,7 +1466,7 @@ const TableBody = ({
                   onClick={onResetView}
                 />
               )}
-              <FilterErrorActions errorMessage={extractQueryErrorMessage(error)} />
+              <FilterErrorActions errorMessage={getRequestErrorString(error)} />
             </EmptyPlaceholder>
           ) : (
             <EmptyPlaceholder message="No items found" error={error}>
@@ -1666,7 +1695,7 @@ const TD = ({
   const isPinned = cell.column.getIsPinned()
   const isLastLeftPinnedColumn = isPinned === 'left' && cell.column.getIsLastColumn('left')
   const isRowSelectionColumn = cell.column.id === ROW_SELECTION_COLUMN_ID
-  const isGroup = cell.row.original.entityType === 'group'
+  const isGroup = !!cell.row.original.group
   const isMultipleSelected = selectedCells.size > 1
 
   return (
@@ -1683,7 +1712,9 @@ const TD = ({
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
           expandable:
-            !!cell.row.originalSubRows && isEntityExpandable(cell.row.original.entityType),
+            !isGroup &&
+            !!cell.row.originalSubRows &&
+            isEntityExpandable(cell.row.original.primary.entityType),
           'multiple-selected': isMultipleSelected,
         },
         className,
@@ -1715,7 +1746,7 @@ const TD = ({
         if (e.detail === 2) {
           // comments cells are read-only but their double-click opens the details panel, so don't block them here
           const isReadOnly = isTargetReadOnly(e) && cell.column.id !== 'comments'
-          if (isReadOnly || isEntityRestricted(cell.row.original.entityType) || isGroup) {
+          if (isReadOnly || isEntityRestricted(cell.row.original.primary.entityType) || isGroup) {
             e.preventDefault()
             return
           }
@@ -1743,7 +1774,7 @@ const TD = ({
           // thumbnail: open viewer
           else if (cell.column.id === 'thumbnail') {
             if (onOpenPlayer) {
-              const entity = getEntityById(cell.row.original.entityId || cell.row.id)
+              const entity = getEntityById(cell.row.original.primary.id)
               if (entity) {
                 const targetIds = getEntityViewierIds(entity)
                 onOpenPlayer(targetIds, { quickView: true })
@@ -1763,7 +1794,7 @@ const TD = ({
         if (isGroup && cell.column.id !== 'name') return clearSelection()
 
         // check if this is a restricted entity - prevent editing
-        const isRestricted = isEntityRestricted(cell.row.original.entityType)
+        const isRestricted = isGroup || isEntityRestricted(cell.row.original.primary.entityType)
 
         // if clicking on an edit trigger, start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {
@@ -1790,6 +1821,7 @@ const TD = ({
             }, 0)
             return
           }
+          setEditingCellId(null)
         }
 
         proceedWithSelection()

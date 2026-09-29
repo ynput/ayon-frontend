@@ -47,7 +47,6 @@ const ReplaceListItemsDialog: FC = () => {
         toast.success(`Items replaced successfully`)
         setItemIdsToReplace(null)
       } catch (error) {
-        console.error('Error replacing items:', error)
         toast.error(`Error replacing items: ${error}`)
       } finally {
         setIsReplacing(false)
@@ -95,6 +94,7 @@ const ReplaceListItemsDialog: FC = () => {
       // @ts-ignore
       initialSelection={initialSelection}
       isLoading={isReplacing}
+      showReviewablesSwitch={entityType === 'version'}
       disabledIds={initialSelection[entityType] ? Object.keys(initialSelection[entityType]) : []}
     />
   )

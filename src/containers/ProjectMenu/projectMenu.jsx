@@ -109,7 +109,6 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
       return true
     } catch (error) {
-      console.error('Error updating user preferences', error)
       return false
     }
   }

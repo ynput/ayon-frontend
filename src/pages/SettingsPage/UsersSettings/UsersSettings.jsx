@@ -16,6 +16,7 @@ import {
 import UserDetail from './userDetail'
 import UserList from './UserList'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
+import { getRequestErrorString } from '@shared/util'
 import { useSelector } from 'react-redux'
 import UsersOverview from './UsersOverview'
 import { useEffect } from 'react'
@@ -140,8 +141,7 @@ const UsersSettings = () => {
         setSelectedUsers([])
         i += 1
       } catch (error) {
-        console.error('Error deleting user:', error)
-        toast.error(`Unable to delete user: ${error.detail}`)
+        toast.error(`Unable to delete user: ${getRequestErrorString(error)}`)
       }
     }
     setShowDeleteUser(false)

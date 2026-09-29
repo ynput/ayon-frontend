@@ -31,7 +31,10 @@ export default function useKeyboardNavigation() {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
-      if (!target?.closest('tbody td')) {
+      // the open player holds focus, so row nav keys no longer come from a cell
+      const isRowNavKey = e.key === 'ArrowUp' || e.key === 'ArrowDown'
+      const fromOpenPlayer = playerOpen && isRowNavKey && !!target?.closest('#viewer-dialog')
+      if (!fromOpenPlayer && !target?.closest('tbody td')) {
         return
       }
 

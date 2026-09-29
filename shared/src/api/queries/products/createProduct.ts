@@ -6,7 +6,6 @@ const enhancedProductsApi = productsApi.enhanceEndpoints({
       invalidatesTags: (_r, _e, { productPostModel }) => [
         { type: 'product', id: productPostModel.folderId },
       ],
-      transformErrorResponse: (error: any) => ({ message: error.data?.detail }),
     },
   },
 })

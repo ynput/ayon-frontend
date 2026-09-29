@@ -7,16 +7,21 @@ import { confirmDelete } from '@shared/util'
 import { useListsModuleContext } from '@pages/ProjectListsPage/context/ListsModulesContext'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
+import type { ParentColumnDefinition } from '@shared/containers'
 
 export interface ListsTableSettingsProps {
   onGoTo: (name: string) => void
   extraColumns: { value: string; label: string }[]
+  parentColumns: ParentColumnDefinition[]
+  columnIdAliases: Record<string, string>
   highlightedSetting: SettingHighlightedId
 }
 
 export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
   onGoTo,
   extraColumns,
+  parentColumns,
+  columnIdAliases,
   highlightedSetting,
 }) => {
   const { selectedList, isReview } = useListsContext()
@@ -40,6 +45,8 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
     <ProjectTableSettings
       extraColumns={extraColumns}
       hiddenColumns={hiddenColumns}
+      parentColumns={parentColumns}
+      columnIdAliases={columnIdAliases}
       extraMenuItems={[
         {
           id: 'list-attributes',

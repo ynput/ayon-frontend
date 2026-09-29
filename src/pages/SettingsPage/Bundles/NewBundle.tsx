@@ -250,7 +250,6 @@ const NewBundle: React.FC<NewBundleProps> = ({
       toast.success('Dev bundle updated')
       setDevChanges(false)
     } catch (error) {
-      console.error(error)
       toast.error('Unable to update bundle')
     }
   }

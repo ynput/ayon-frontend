@@ -67,10 +67,26 @@ export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 type WidgetAttributeData = {
   type: AttributeData['type'] | 'links' | 'name' | 'subtasks' | 'comments'
   widget?: AttributeData['widget']
+  enumResolver?: AttributeData['enumResolver']
 }
 
 export type CellValue = string | number | boolean
 export type CellValueData = Record<string, any>
+
+const hasCellValueChanged = (
+  nextValue: CellValue | CellValue[],
+  value: CellValue | CellValue[],
+) => {
+  if (Array.isArray(nextValue) || Array.isArray(value)) {
+    if (!Array.isArray(nextValue) || !Array.isArray(value)) return true
+    return (
+      nextValue.length !== value.length ||
+      nextValue.some((item) => !value.some((currentItem) => Object.is(item, currentItem)))
+    )
+  }
+
+  return !Object.is(nextValue, value)
+}
 
 interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   rowId: string
@@ -85,6 +101,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isFocused?: boolean
   isReadOnly?: boolean
   enableCustomValues?: boolean
+  isLoadingOptions?: boolean
   isLinksLoading?: boolean
   folderId?: string | null
   midnightExclusiveFields?: string[]
@@ -119,6 +136,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   isPlaceholder,
   isReadOnly,
   enableCustomValues,
+  isLoadingOptions,
   isLinksLoading,
   folderId,
   midnightExclusiveFields,
@@ -167,7 +185,7 @@ export const CellWidget: FC<EditorCellProps> = ({
       // This prevents the dialog from blinking between rows.
       moveToNextRow()
       onChange?.(newValue, key)
-    } else if (key === 'Click' && newValue != value) {
+    } else if (key === 'Click' && hasCellValueChanged(newValue, value)) {
       setEditingCellId(null)
       onChange?.(newValue, key)
     } else {
@@ -260,7 +278,7 @@ export const CellWidget: FC<EditorCellProps> = ({
         return <CommentsWidget value={valueData as EntityComment[] | undefined} {...sharedProps} />
       }
 
-      case !!options.length: {
+      case !!options.length || !!attributeData?.enumResolver: {
         const enumValue = Array.isArray(value) ? value : [value]
         if (isReadOnly) {
           const selectedOptions = options.filter((option) => enumValue.includes(option.value))
@@ -300,6 +318,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             type={type}
             onOpen={() => setEditingCellId(cellId)}
             enableCustomValues={enableCustomValues}
+            isLoadingOptions={isLoadingOptions}
             {...sharedProps}
             {...pt?.enum}
           />

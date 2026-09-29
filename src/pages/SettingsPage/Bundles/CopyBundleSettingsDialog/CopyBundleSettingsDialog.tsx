@@ -17,6 +17,7 @@ import { BundleModel } from '@shared/api'
 import { toast } from 'react-toastify'
 import * as Styled from './CopyBundleSettingsDialog.styled'
 import CopyBundleSettingsDropdown, { SourceBundle } from './CopyBundleSettingsDropdown'
+import { getRequestErrorString } from '@shared/util'
 
 type DialogBodyProps = {
   onCancel: () => void
@@ -185,8 +186,7 @@ const CopyBundleSettingsDialog = ({
       }).unwrap()
       toast.success(`Settings copied from ${sourceBundle} successfully`)
     } catch (error: any) {
-      console.error(error)
-      toast.error('Failed to copy settings: ' + error?.data?.detail)
+      toast.error('Failed to copy settings: ' + getRequestErrorString(error))
     } finally {
       onFinish()
     }

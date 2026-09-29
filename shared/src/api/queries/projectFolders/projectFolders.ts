@@ -18,13 +18,10 @@ type UpdatedDefinitions = Omit<Definitions, 'getProjectFolders'> & {
   getProjectFolders: OverrideResultType<Definitions['getProjectFolders'], GetProjectFoldersResult>
 }
 
-const transformErrorResponse = (error: any) => error.data?.detail || 'Unknown project folder error'
-
 const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     getProjectFolders: {
       transformResponse: (response: ProjectFoldersResponseModel) => response.folders || [],
-      transformErrorResponse,
       providesTags: (result) =>
         result
           ? [
@@ -58,7 +55,6 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
           patchResult.undo()
         }
       },
-      transformErrorResponse,
       invalidatesTags: [PROJECT_FOLDER_LIST_TAG],
     },
     deleteProjectFolder: {
@@ -84,7 +80,6 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
           patchResult.undo()
         }
       },
-      transformErrorResponse,
       invalidatesTags: (_r, _e, arg) => [
         PROJECT_FOLDER_LIST_TAG,
         { type: 'projectFolder', id: arg.folderId },
@@ -123,7 +118,6 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
           patchResult.undo()
         }
       },
-      transformErrorResponse,
       invalidatesTags: (_r, _e, arg) => [
         PROJECT_FOLDER_LIST_TAG,
         { type: 'projectFolder', id: arg.folderId },
@@ -174,7 +168,6 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
           patches.forEach((patch) => patch.undo())
         }
       },
-      transformErrorResponse,
       invalidatesTags: (_r, _e, { assignProjectRequest: { projectNames } }) => [
         { type: 'project', id: 'LIST' },
         ...projectNames.map((projectName) => ({ type: 'project' as const, id: projectName })),

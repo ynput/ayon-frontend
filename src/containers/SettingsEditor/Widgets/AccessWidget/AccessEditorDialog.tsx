@@ -30,7 +30,7 @@ const AccessList = styled.div`
 // Default share options that are always available
 export const DEFAULT_SHARE_OPTIONS: ShareOptionType[] = [
   {
-    label: 'Everyone (internal)',
+    label: 'Everyone',
     value: EVERYONE_GROUP_KEY,
     shareType: 'global',
     name: EVERYONE_GROUP_KEY,

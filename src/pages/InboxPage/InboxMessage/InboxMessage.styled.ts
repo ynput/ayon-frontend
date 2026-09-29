@@ -7,9 +7,13 @@ const showClearButton = css`
     .clear {
       display: flex;
     }
-    .user-image,
     .date {
       display: none;
+    }
+    &.multiSelected {
+      .user-image {
+        display: none;
+      }
     }
   }
 `
@@ -26,10 +30,11 @@ export const Message = styled.li`
   cursor: pointer;
   user-select: none;
 
-  background-color: var(--md-sys-color-surface-container-low);
+  --inbox-row-bg: var(--md-sys-color-surface-container-low);
+  background-color: var(--inbox-row-bg);
 
   &:hover:not(.disableHover):not(.placeholder) {
-    background-color: var(--md-sys-color-surface-container-low-hover);
+    --inbox-row-bg: var(--md-sys-color-surface-container-low-hover);
 
     ${showClearButton}
   }
@@ -45,6 +50,11 @@ export const Message = styled.li`
     border-top-color: var(--md-sys-color-outline-variant);
   }
 
+  /* the day divider already draws its own line */
+  .inbox-date-divider + & {
+    border-top-color: transparent;
+  }
+
   /* last child margin */
   &:last-child {
     margin-bottom: 32px;
@@ -53,13 +63,13 @@ export const Message = styled.li`
 
   &.isSelected:not(.placeholder) {
     border-radius: var(--border-radius-m);
-    background-color: var(--md-sys-color-primary-container);
+    --inbox-row-bg: var(--md-sys-color-primary-container);
     color: var(--md-sys-color-on-primary-container);
     &:hover {
-      background-color: var(--md-sys-color-primary-container-hover);
+      --inbox-row-bg: var(--md-sys-color-primary-container-hover);
     }
     &:active {
-      background-color: var(--md-sys-color-primary-container-active);
+      --inbox-row-bg: var(--md-sys-color-primary-container-active);
     }
 
     /* remove focus visible border if selected */
@@ -75,7 +85,10 @@ export const Message = styled.li`
     & + * {
       border-top-color: transparent;
     }
+  }
 
+  /* a multi-selection shows the button on hover only, one row keeps it pinned */
+  &.isSelected:not(.placeholder):not(.multiSelected) {
     ${showClearButton}
   }
 
@@ -180,11 +193,20 @@ export const Right = styled.div`
   justify-content: flex-end;
 `
 
-export const Date = styled.span`
-  min-width: 50px;
-  max-width: 50px;
-  white-space: nowrap;
+export const DateContainer = styled.div`
+  /* wide enough for a locale date plus time, right aligned so rows line up */
+  min-width: 128px;
+  max-width: 128px;
+  display: flex;
+  justify-content: flex-end;
   margin-right: var(--padding-m);
+`
+
+export const Date = styled.span`
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `
 
 export const ClearButton = styled(Button)`

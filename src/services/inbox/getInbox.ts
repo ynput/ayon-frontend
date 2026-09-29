@@ -2,13 +2,13 @@ import { createRealtimeBatcher, PubSub } from '@shared/util'
 import { gqlApi } from '@shared/api'
 import type { GetInboxHasUnreadQuery, GetInboxUnreadCountQuery } from '@shared/api'
 import { TagTypesFromApi } from '@reduxjs/toolkit/query'
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import {
   EMPTY_INBOX_PAGE,
   TransformedInboxMessages,
   transformInboxMessages,
 } from './inboxTransform'
 import { DefinitionsFromApi, OverrideResultType } from '@reduxjs/toolkit/query'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 const INBOX_PAGE_SIZE = 100
 
@@ -113,7 +113,7 @@ export const inboxInfiniteApi = gqlApi.injectEndpoints({
           )
 
           // passed through as-is: rewrapping loses the resolver's `detail`
-          if (result.error) return { error: result.error as FetchBaseQueryError }
+          if (result.error) return { error: normalizeQueryError(result.error) }
 
           const inbox = result.data?.inbox
           return {
@@ -123,9 +123,7 @@ export const inboxInfiniteApi = gqlApi.injectEndpoints({
           }
         } catch (e: any) {
           console.error('Error in getInboxInfinite queryFn:', e)
-          return {
-            error: { status: 'FETCH_ERROR', error: String(e?.message ?? e) } as FetchBaseQueryError,
-          }
+          return { error: normalizeQueryError(e) }
         }
       },
       keepUnusedDataFor: 30,

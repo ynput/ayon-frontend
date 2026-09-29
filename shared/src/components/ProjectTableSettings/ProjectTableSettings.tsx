@@ -14,7 +14,10 @@ import { useGroupBySettings } from '@shared/containers/ProjectTreeTable/hooks/us
 import { useSortBySettings } from '@shared/containers/ProjectTreeTable/hooks/useSortBySettings'
 import { useAddColumnsMenu } from './useAddColumnsMenu'
 import { useProjectTableColumnItems } from './useProjectTableColumnItems'
+import { normalizeColumnId } from '@shared/containers/ProjectTreeTable/utils/columnIds'
 import type { MenuItemType } from '../Menu'
+import type { ParentColumnDefinition } from '@shared/containers'
+import type { ColumnIdAliases } from '@shared/containers/ProjectTreeTable/utils/columnIds'
 
 const StyledCustomizeButton = styled(Button)`
   min-width: 120px;
@@ -47,7 +50,7 @@ export type OverviewSettingsChange = (setting: 'columns' | 'group-by', value: an
 
 export type ProjectTableSettingsProps = {
   settings?: SettingConfig[]
-  extraColumns?: { value: string; label: string }[]
+  extraColumns?: { value: string; label: string; icon?: string }[]
   hiddenColumns?: string[]
   hiddenSettings?: ('columns' | 'row-height' | 'group-by' | 'sort-by')[]
   highlighted?: SettingHighlightedId
@@ -57,6 +60,8 @@ export type ProjectTableSettingsProps = {
   scope?: string
   // page actions appended to the end of the add-column menu
   extraMenuItems?: MenuItemType[]
+  parentColumns?: ParentColumnDefinition[]
+  columnIdAliases?: ColumnIdAliases
 }
 
 export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
@@ -70,6 +75,8 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   order,
   scope,
   extraMenuItems,
+  parentColumns,
+  columnIdAliases,
 }) => {
   const { scopes } = useProjectTableContext()
   const {
@@ -99,7 +106,11 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     extraColumns,
     hiddenColumns,
     includeLinks,
+    parentColumns,
   })
+  const normalizedHighlighted = highlighted
+    ? normalizeColumnId(highlighted, columnIdAliases)
+    : highlighted
 
   const visibleCount = visibleColumns.filter((column) =>
     checkColumnVisibility(columnVisibility, column.value, defaultColumnVisibility),
@@ -138,7 +149,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
         <>
           <ColumnsSettingsWithContext
             columns={visibleColumns}
-            highlighted={highlighted}
+            highlighted={normalizedHighlighted}
             scopes={scopes}
             search={search}
             onSearchChange={setSearch}

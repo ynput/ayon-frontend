@@ -15,6 +15,7 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import { parseJSONField } from '../overview'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 type Definitions = DefinitionsFromApi<typeof projectsApi>
 type TagTypes = TagTypesFromApi<typeof projectsApi>
 // update the definitions to include the new types
@@ -25,12 +26,10 @@ type UpdatedDefinitions = Omit<Definitions, 'getProject'> & {
 const enhancedProject = projectsApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     getProject: {
-      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
       providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
     },
     listProjects: {
       transformResponse: (res: ListProjectsApiResponse) => res?.projects || [],
-      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
       providesTags: (_res, _error, { active }) => [
         { type: 'project' },
         { type: 'projects', id: (active ?? false).toString() },
@@ -124,7 +123,7 @@ export const getProjectsGraphql = enhancedGraphql.injectEndpoints({
           }
         } catch (e: any) {
           console.error('Error in getProjectsInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       providesTags: (result) => {

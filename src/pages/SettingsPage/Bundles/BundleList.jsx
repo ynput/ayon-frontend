@@ -67,7 +67,6 @@ const BundleList = ({
           // clear selection on successful delete
           onBundleSelect([])
         } catch (error) {
-          console.error(error)
           toast.error('Error deleting bundles')
         }
       },

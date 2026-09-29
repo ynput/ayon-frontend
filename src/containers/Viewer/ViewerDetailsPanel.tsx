@@ -12,9 +12,10 @@ type Props = {
   versionIds: string[]
   projectName: string | null
   noVersions?: boolean
+  hidden?: boolean
 }
 
-const ViewerDetailsPanel = ({ versionIds = [], projectName, noVersions }: Props) => {
+const ViewerDetailsPanel = ({ versionIds = [], projectName, noVersions, hidden }: Props) => {
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
     { projects: projectName ? [projectName] : [] },
     { skip: !projectName },
@@ -38,7 +39,7 @@ const ViewerDetailsPanel = ({ versionIds = [], projectName, noVersions }: Props)
       {(entityListsContext) => (
         <ViewerDetailsPanelWrapper
           className="viewer-details-panel"
-          style={{ display: noVersions ? 'none' : 'block' }}
+          style={{ display: noVersions || hidden ? 'none' : 'block' }}
         >
           {!!versionIds.length && (
             <DetailsPanel

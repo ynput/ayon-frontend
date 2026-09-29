@@ -3,6 +3,7 @@ import { api } from '@shared/api/generated/tasks'
 import { PatchOperation, patchOverviewTasks } from '../overview/updateOverview'
 import { patchDetailsPanel } from '../entities/patchDetailsPanel'
 import gqlApi from '../entityLists/getLists'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 /**
  * Patches list items caches that contain the specified task with updated subtasks
@@ -60,7 +61,7 @@ const tasksApi = api.injectEndpoints({
 
           return { data: undefined }
         } catch (error: any) {
-          return { error: error.data?.detail || 'Failed to update subtasks (unknown error)' }
+          return { error: normalizeQueryError(error) }
         }
       },
       async onQueryStarted({ taskId, subtasks }, { dispatch, queryFulfilled, getState }) {
@@ -87,7 +88,6 @@ const tasksApi = api.injectEndpoints({
         try {
           await queryFulfilled
         } catch (error) {
-          console.error('Error updating subtasks:', error)
           patches.forEach((patch) => patch.undo())
         }
       },

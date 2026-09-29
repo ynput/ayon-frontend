@@ -284,8 +284,8 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
         teams,
         ...config,
       }).unwrap()
-    } catch (error) {
-      console.error(error)
+    } catch {
+      return
     }
   }
 

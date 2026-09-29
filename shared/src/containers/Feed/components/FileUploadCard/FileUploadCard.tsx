@@ -137,7 +137,8 @@ const FileUploadCard = ({
     }
 
     const { frameStart } = firstEntity?.attrib
-    if (Number.isNaN(frameStart)) {
+    // using isNaN here because Number.isNaN(undefined) returns false
+    if (isNaN(frameStart)) {
       return someAnnotation?.range ?? [1, 1]
     }
 

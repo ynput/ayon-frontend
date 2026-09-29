@@ -1,9 +1,9 @@
 import { generateLoadingRows, TableRow } from '@shared/containers'
 import {
-  buildVersionRow,
-  buildProductRow,
-  buildEmptyRow,
-  buildErrorRow,
+  buildVersionTableRow,
+  buildProductTableRow,
+  buildEmptyTableRow,
+  buildErrorTableRow,
   VersionsMap,
   ProductsMap,
 } from '../util'
@@ -48,7 +48,7 @@ export const useBuildVersionsTableData = ({
         const productId = childVersion.product?.id
         if (!productId) continue
 
-        const childRow = buildVersionRow(childVersion)
+        const childRow = buildVersionTableRow(childVersion)
         const existing = childrenByProductId.get(productId)
         if (existing) {
           existing.push(childRow)
@@ -67,7 +67,7 @@ export const useBuildVersionsTableData = ({
         // Add error row if there was an error fetching child versions for this product
         if (productError) {
           const errorMessage = productError.error
-          subRows = [buildErrorRow(product.id, errorMessage)]
+          subRows = [buildErrorTableRow(product.id, errorMessage)]
         }
         // Add loading rows for products that are currently loading versions
         else if (loadingProductVersions[product.id]) {
@@ -77,10 +77,10 @@ export const useBuildVersionsTableData = ({
         }
         // Add empty row if product has no versions and has finished loading
         else if (subRows.length === 0 && loadingProductVersionsFinished.includes(product.id)) {
-          subRows = [buildEmptyRow(product.id)]
+          subRows = [buildEmptyTableRow(product.id)]
         }
 
-        result.push(buildProductRow(product, subRows, getProductType))
+        result.push(buildProductTableRow(product, subRows, getProductType))
       }
 
       // Add next page loading row if there are more pages
@@ -91,7 +91,9 @@ export const useBuildVersionsTableData = ({
       return result
     } else {
       // build flat data using only versionsMap
-      const result = Array.from(rootVersionsMap.values()).map((version) => buildVersionRow(version))
+      const result = Array.from(rootVersionsMap.values()).map((version) =>
+        buildVersionTableRow(version),
+      )
 
       // Add next page loading row if there are more pages
       if (isFetchingNextPage && hasNextPage) {

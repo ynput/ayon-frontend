@@ -11,7 +11,6 @@ import {
   useDeleteReactionToActivityMutation,
   useGetActivityUsersQuery,
   useGetEntityMentionsQuery,
-  useGetEntityTooltipQuery,
   useGetActivityCategoriesQuery,
   teamsApi,
   useGetEntitiesChecklistsQuery,
@@ -72,9 +71,6 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   // refTooltip state and functions
   refTooltip: RefTooltip | null
   setRefTooltip: (tooltip: RefTooltip | null) => void
-  // tooltip data
-  entityTooltipData: any
-  isFetchingTooltip: boolean
   // query functions
   createEntityActivity: (args: any) => Promise<any>
   updateActivity: (args: any) => Promise<any>
@@ -163,15 +159,6 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
     projectName: props.projectName,
     entityType: props.entityType,
   })
-  const skip =
-    !props.projectName ||
-    !refTooltip?.id ||
-    refTooltip.type === 'user' ||
-    refTooltip.type === 'team'
-  const { data: entityTooltipData, isFetching: isFetchingTooltip } = useGetEntityTooltipQuery(
-    { entityType: refTooltip?.type, entityId: refTooltip?.id, projectName: props.projectName },
-    { skip: skip },
-  )
 
   // get all versions that can be mentioned
   const { data: mentionSuggestionsData = {} } = useGetEntityMentionsQuery(
@@ -210,8 +197,6 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         users,
         isUpdatingActivity,
         userTeamNames,
-        entityTooltipData,
-        isFetchingTooltip,
         refTooltip,
         activityTypes,
         feedFilter,

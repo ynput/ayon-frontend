@@ -188,7 +188,6 @@ export const getProductApi = api.injectEndpoints({
         },
         validateStatus: (response, result) => response.status === 200 && !result?.errors?.length,
       }),
-      transformErrorResponse: (error) => error?.data?.errors?.[0]?.message,
       transformResponse: (response) => parseProductData(response.data),
       providesTags: (result, _e, { folderIds = [] }) =>
         result

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { onUploadFinished, onUploadProgress } from '@state/context'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 const queryUpload = async (arg, api, { endpoint, method = 'put', overwrite = false }) => {
   // isNameEndpoint is used to determine if the endpoint has the name of the file in the url
@@ -68,9 +69,7 @@ const queryUpload = async (arg, api, { endpoint, method = 'put', overwrite = fal
       results.push({
         eventId: null,
         file,
-        error:
-          { detail: error?.response?.data?.detail, status: error?.response?.status } ||
-          'Upload error',
+        error: normalizeQueryError(error),
       })
     }
   }

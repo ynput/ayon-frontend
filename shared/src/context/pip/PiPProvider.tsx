@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { uuid } from 'short-uuid'
+import { v4 as uuid } from 'uuid'
 
 export type PiPContextType = {
   isSupported: boolean

@@ -57,7 +57,7 @@ export interface VersionUploadContextType {
   form: FormData
   setForm: React.Dispatch<React.SetStateAction<FormData>>
   isSubmitting: boolean
-  error: string
+  error: unknown
   createdProductId: string | null
   createdVersionId: string | null
   onOpenVersionUpload: (params: {
@@ -108,7 +108,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview?: string }>>([])
   const [form, setForm] = useState<FormData>(defaultFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string>('')
+  const [error, setError] = useState<unknown>('')
   const [createdProductId, setCreatedProductId] = useState<string | null>(null)
   const [createdVersionId, setCreatedVersionId] = useState<string | null>(null)
   // Stores the latest version number passed from the caller (e.g. VP page)

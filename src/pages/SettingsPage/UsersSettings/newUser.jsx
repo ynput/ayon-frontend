@@ -10,6 +10,7 @@ import styled from 'styled-components'
 import useUserMutations from '@pages/SettingsPage/UsersSettings/useUserMutations'
 import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
+import { getRequestErrorString } from '@shared/util'
 
 const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
@@ -107,8 +108,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
         usernameRef.current?.focus()
       }
     } catch (error) {
-      console.error(error)
-      toast.error(`Unable to create user: ${error.detail}`)
+      toast.error(`Unable to create user: ${getRequestErrorString(error)}`)
     }
   }
 

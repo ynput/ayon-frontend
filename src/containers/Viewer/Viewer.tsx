@@ -23,6 +23,7 @@ import {
 import { useScopedDetailsPanel } from '@shared/context'
 import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
 import { useSessionStorage, useReviewablesKeyboardNavigation } from '@shared/hooks'
+import clsx from 'clsx'
 
 interface ViewerProps {
   onClose?: () => void
@@ -136,7 +137,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
         filtered = allVersionsAndReviewables.filter((v) => v.productId === firstProduct.productId)
       }
     }
-   return [...filtered].sort((a, b) => parseInt(a.version, 10) - parseInt(b.version, 10))
+    return [...filtered].sort((a, b) => parseInt(a.version, 10) - parseInt(b.version, 10))
   }, [allVersionsAndReviewables, selectedProductId])
   // if hasMultipleProducts and no selectedProductId, select the first product
   useEffect(() => {
@@ -427,26 +428,25 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             onUpload={handleUploadAction}
           />
         </Styled.FullScreenWrapper>
-        {!theater && (
-          <Styled.RightToolBar style={{ zIndex: 1100 }}>
-            <ReviewablesSelector
-              ref={reviewablesSelectorRef}
-              reviewables={playable}
-              selected={reviewableIds}
-              onChange={handleReviewableChange}
-              projectName={projectName}
-              onUpload={handleUploadAction(true)}
-            />
-            <div id="annotation-tools" style={{ position: 'relative' }}></div>
-          </Styled.RightToolBar>
-        )}
-        {!theater && (
-          <ViewerDetailsPanel
-            versionIds={versionIds}
+
+        <Styled.RightToolBar className={clsx({ hidden: theater })}>
+          <ReviewablesSelector
+            ref={reviewablesSelectorRef}
+            reviewables={playable}
+            selected={reviewableIds}
+            onChange={handleReviewableChange}
             projectName={projectName}
-            noVersions={noVersions}
+            onUpload={handleUploadAction(true)}
           />
-        )}
+          <div id="annotation-tools" style={{ position: 'relative' }}></div>
+        </Styled.RightToolBar>
+
+        <ViewerDetailsPanel
+          versionIds={versionIds}
+          projectName={projectName}
+          noVersions={noVersions}
+          hidden={theater}
+        />
       </Styled.Container>
     </ViewerProvider>
   )

@@ -301,7 +301,6 @@ const Bundles = () => {
             patch,
           }).unwrap()
         } catch (error) {
-          console.error(error)
           toast.error(`Error setting bundle ${name} as ${status}`)
         }
       }
@@ -314,7 +313,6 @@ const Bundles = () => {
           patch,
         }).unwrap()
       } catch (error) {
-        console.error(error)
         toast.error(`Error unsetting ${status} on bundle ${name}`)
       }
     }
@@ -341,7 +339,6 @@ const Bundles = () => {
             }),
           )
         } catch (error) {
-          console.error(error)
         }
       }
 
@@ -351,7 +348,6 @@ const Bundles = () => {
         patch,
       }).unwrap()
     } catch (error) {
-      console.error(error)
       toast.error(`Error setting bundle ${name} as ${copySettingsBundle.env}`)
       patchResult?.undo()
       throw error

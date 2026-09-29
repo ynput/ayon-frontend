@@ -385,6 +385,7 @@ const transformGroups = (groups: InboxMessage[][] = []): GroupedMessage[] => {
     // For grouped version.publish or reviewable messages, use the parent folder as the entity
     let finalEntityId = entityId
     let finalEntityType = entityType
+    let finalEntitySubType = origin?.subtype
     let finalPath = firstMessage.path
 
     // Check if this group contains version.publish or reviewable messages
@@ -398,6 +399,8 @@ const transformGroups = (groups: InboxMessage[][] = []): GroupedMessage[] => {
       if (parentFolder) {
         finalEntityId = parentFolder.id
         finalEntityType = parentFolder.type
+        // the subtype belonged to the version, it does not describe the folder
+        finalEntitySubType = undefined
         // Show only the parent folder in the path
         finalPath = [parentFolder.label || parentFolder.name]
 
@@ -469,7 +472,7 @@ const transformGroups = (groups: InboxMessage[][] = []): GroupedMessage[] => {
       projectName: projectName,
       entityId: finalEntityId,
       entityType: finalEntityType,
-      entitySubType: origin?.subtype,
+      entitySubType: finalEntitySubType,
       userName: author?.name,
       changes: getChangedValues(group),
       read: read,

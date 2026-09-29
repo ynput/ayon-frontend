@@ -1,4 +1,4 @@
-import { SimpleFormDialog } from '@shared/components/SimpleFormDialog/SimpleFormDialog'
+import { SimpleFormDialog } from '@shared/components/SimpleFormDialog'
 import type { SimpleFormField } from '@shared/api'
 
 export interface InteractiveForm {

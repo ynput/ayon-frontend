@@ -1,12 +1,11 @@
 import * as Styled from './InboxMessage.styled'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
-import { isValid } from 'date-fns'
-import { isToday } from 'date-fns'
-import { format } from 'date-fns'
-import UserImage from '@shared/components/UserImage'
+import { format, isToday, isValid } from 'date-fns'
 
 import InboxMessageStatus from './InboxMessageStatus/InboxMessageStatus'
+import InboxCategoryDots from './InboxCategoryDots'
+import UserImage from '@shared/components/UserImage'
 import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDate'
 import { useMemo, MouseEvent, HTMLAttributes } from 'react'
 import RemoveMarkdown from 'remove-markdown'
@@ -14,6 +13,7 @@ import Typography from '@/theme/typography.module.css'
 import { getEntityTypeIcon } from '@shared/util'
 import type { InboxMessage as InboxMessageType } from '@/services/inbox/inboxTransform'
 import type { InboxActivityType, InboxStatusChange, ProjectsInfo } from '../types'
+import type { ProjectsCategories } from '@shared/api'
 import { VersionReviewFeedback } from '@shared/containers/Feed/components/CommentInput/types'
 
 interface MessageForBody {
@@ -79,16 +79,54 @@ const activityTypeIconsMultiple: Record<string, string> = {
   'assignee.reassign': 'swap_horiz',
 }
 
+type ActivityTypeLabelResolver = (message: InboxMessageType) => string
+
+const activityTypeLabels: Record<string, string | ActivityTypeLabelResolver> = {
+  comment: 'Comment',
+  'version.publish': 'Version published',
+  'version.review': (message: InboxMessageType) => {
+    const data = message.activityData as unknown as { feedback: VersionReviewFeedback }
+    switch (data.feedback) {
+      case VersionReviewFeedback.APPROVE:
+        return 'Approved'
+      case VersionReviewFeedback.REQUEST_CHANGES:
+        return 'Changes requested'
+      default:
+        return 'Review'
+    }
+  },
+  'assignee.add': 'Assigned',
+  'assignee.remove': 'Unassigned',
+  'assignee.reassign': 'Reassigned',
+  reviewable: 'Reviewable uploaded',
+}
+
+const activityTypeLabelsMultiple: Record<string, string> = {
+  comment: 'Comments',
+  'version.publish': 'Versions published',
+  'version.review': 'Reviews',
+  'assignee.add': 'Assigned',
+  'assignee.remove': 'Unassigned',
+  'assignee.reassign': 'Reassigned',
+  reviewable: 'Versions published',
+}
+
 const getDateString = (date: string): string => {
   const dateObj = new Date(date)
   if (!isValid(dateObj)) return ''
 
-  const today = isToday(dateObj)
-  if (today) return getFuzzyDate(dateObj)
+  if (isToday(dateObj)) return getFuzzyDate(dateObj)
 
-  const dateFormat = 'MMM d'
+  return format(dateObj, 'MMM d, h:mm a')
+}
 
-  return format(dateObj, dateFormat)
+const getCategoryNames = (messages: InboxMessageType[] = []): string[] => {
+  const names: string[] = []
+  for (const message of messages) {
+    const data = message.activityData as unknown as { category?: string } | undefined
+    if (data?.category && !names.includes(data.category)) names.push(data.category)
+  }
+  return names
 }
 
 interface InboxMessageProps extends Omit<HTMLAttributes<HTMLLIElement>, 'onSelect'> {
@@ -99,6 +137,7 @@ interface InboxMessageProps extends Omit<HTMLAttributes<HTMLLIElement>, 'onSelec
   userName?: string
   type?: InboxActivityType | string
   entityType?: string | null
+  entitySubType?: string | null
   entityId?: string | null
   date?: string
   changes?: string[]
@@ -109,10 +148,12 @@ interface InboxMessageProps extends Omit<HTMLAttributes<HTMLLIElement>, 'onSelec
   unReadCount?: number
   projectName?: string
   isSelected?: boolean
+  isMultiSelected?: boolean
   disableHover?: boolean
   isPlaceholder?: boolean
-  onSelect?: (id: string, ids: string[], e: MouseEvent<HTMLLIElement>, rowIndex?:number) => void
+  onSelect?: (id: string, ids: string[], e: MouseEvent<HTMLLIElement>, rowIndex?: number) => void
   projectsInfo?: ProjectsInfo
+  projectsCategories?: ProjectsCategories
   isMultiple?: boolean
   customBody?: string
   rowIndex: number
@@ -126,6 +167,7 @@ const InboxMessage = ({
   userName,
   type,
   entityType,
+  entitySubType,
   entityId,
   date,
   changes,
@@ -136,10 +178,12 @@ const InboxMessage = ({
   unReadCount,
   projectName,
   isSelected,
+  isMultiSelected, // part of a selection of more than one row
   disableHover, // remove all hover effects
   isPlaceholder, // shimmer effects
   onSelect,
   projectsInfo = {},
+  projectsCategories,
   isMultiple, // are there multiple messages in this group
   customBody, // custom body for special message types (e.g. reassignment)
   rowIndex = 0,
@@ -161,6 +205,15 @@ const InboxMessage = ({
 
     return icon
   }, [type])
+
+  const typeTooltip = useMemo(() => {
+    if (!type || !messages || messages.length === 0) return undefined
+
+    if (isMultiple) return activityTypeLabelsMultiple[type]
+
+    const label = activityTypeLabels[type]
+    return typeof label === 'function' ? label(messages[0]) : label
+  }, [type, messages, isMultiple])
 
   const iconColor = useMemo(() => {
     if (type !== 'version.review' || !messages || messages.length === 0) {
@@ -196,6 +249,22 @@ const InboxMessage = ({
     [customBody, messages],
   )
 
+  const categories = useMemo(() => {
+    const names = getCategoryNames(messages)
+    if (!names.length || !projectName) return []
+    const known = projectsCategories?.[projectName] || []
+
+    return names
+      .map((name) => known.find((category) => category.name === name))
+      .filter((category) => !!category)
+  }, [messages, projectsCategories, projectName])
+
+  const entityTooltip = useMemo(() => {
+    if (!entityType) return undefined
+    const label = entityType.charAt(0).toUpperCase() + entityType.slice(1)
+    return entitySubType ? `${label}: ${entitySubType}` : label
+  }, [entityType, entitySubType])
+
   let statusChanges: InboxStatusChange[] = []
   const isStatusChange = type === 'status.change'
   if (isStatusChange && projectName) {
@@ -220,6 +289,7 @@ const InboxMessage = ({
       tabIndex={0}
       className={clsx('inbox-message', {
         isSelected,
+        multiSelected: isMultiSelected,
         isRead,
         disableHover,
         placeholder: isPlaceholder,
@@ -236,6 +306,7 @@ const InboxMessage = ({
           icon={getEntityTypeIcon(entityType || '')}
           className={clsx({ loading: isPlaceholder })}
           showBorder={false}
+          data-tooltip={isPlaceholder ? undefined : entityTooltip}
         />
         <span className={clsx('title', { loading: isPlaceholder })}>{path.join(' - ')}</span>
       </Styled.Left>
@@ -243,7 +314,15 @@ const InboxMessage = ({
         <Styled.Unread className={clsx(Typography.bodySmall, { hide: (unReadCount ?? 0) < 2 })}>
           {unReadCount}
         </Styled.Unread>
-        {!isStatusChange && <Icon icon={typeIcon} className="type" style={{ color: iconColor }} />}
+        {!isStatusChange && (
+          <Icon
+            icon={typeIcon}
+            className="type"
+            style={{ color: iconColor }}
+            data-tooltip={typeTooltip}
+          />
+        )}
+        {!isPlaceholder && <InboxCategoryDots categories={categories} />}
         {isStatusChange ? (
           <InboxMessageStatus statuses={statusChanges} />
         ) : (
@@ -251,20 +330,22 @@ const InboxMessage = ({
         )}
       </Styled.Middle>
       <Styled.Right className={clsx('right', { loading: isPlaceholder })}>
-        {onClear && (
-          <Styled.ClearButton
-            id={'clear-' + id}
-            icon={clearIcon}
-            className="clear"
-            variant="filled"
-            onClick={onClear}
-            shortcut={{ children: 'C' }}
-          >
-            {clearLabel}
-          </Styled.ClearButton>
-        )}
         <UserImage name={userName || ''} size={20} className={'n-shimmer'} />
-        <Styled.Date className="date">{getDateString(date || '')}</Styled.Date>
+        <Styled.DateContainer>
+          {onClear && (
+            <Styled.ClearButton
+              id={'clear-' + id}
+              icon={clearIcon}
+              className="clear"
+              variant="filled"
+              onClick={onClear}
+              shortcut={{ children: 'C' }}
+            >
+              {clearLabel}
+            </Styled.ClearButton>
+          )}
+          <Styled.Date className="date">{getDateString(date || '')}</Styled.Date>
+        </Styled.DateContainer>
       </Styled.Right>
     </Styled.Message>
   )

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { Filter, SearchFilterRef } from '@ynput/ayon-react-components'
 import { CUSTOM_RANGE_ID, CUSTOM_RANGE_ICON, detectRelativeDatePattern } from './filterDates'
 import { startOfDay, endOfDay, format, parse } from 'date-fns'
@@ -59,9 +59,6 @@ export const useDateRangeFilter = (): UseDateRangeFilterReturn => {
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
 
-  // Tracks the most recently activated datetime filter id
-  const activeDatetimeFilterRef = useRef<string | null>(null)
-
   const openCustomRangeForFilter = (filterId: string, localFilters: Filter[]) => {
     const filter = localFilters.find((f) => f.id === filterId)
     if (filter?.type === 'datetime' && filter.values?.length) {
@@ -90,11 +87,10 @@ export const useDateRangeFilter = (): UseDateRangeFilterReturn => {
     setCustomEndDate('')
   }
 
-  const findActiveDatetimeFilterId = (
+  const findFallbackDatetimeFilterId = (
     localFilters: Filter[],
     options: DateRangeOption[],
   ): string | null => {
-    if (activeDatetimeFilterRef.current) return activeDatetimeFilterRef.current
     const datetimeFilters = localFilters.filter((f) => f.type === 'datetime')
     const empty = datetimeFilters.find((f) => !f.values?.length)
     if (empty) return empty.id
@@ -104,15 +100,9 @@ export const useDateRangeFilter = (): UseDateRangeFilterReturn => {
 
   const wrapFilterChange = (
     newFilters: Filter[],
-    localFilters: Filter[],
+    _localFilters: Filter[],
     next: (cleaned: Filter[]) => void,
   ) => {
-    // Track newly added datetime filters
-    const newDatetime = newFilters.find(
-      (f) => f.type === 'datetime' && !localFilters.some((lf) => lf.id === f.id),
-    )
-    if (newDatetime) activeDatetimeFilterRef.current = newDatetime.id
-
     // Strip CUSTOM_RANGE_ID placeholder values that slip through, but keep empty
     // datetime filters so SearchFilter can maintain its intermediate state
     const cleaned = newFilters.map((f) => {
@@ -133,12 +123,8 @@ export const useDateRangeFilter = (): UseDateRangeFilterReturn => {
     const chipEl = target.closest('.search-filter-item')
     if (!chipEl) return
 
-    const labelEl = chipEl.querySelector('.label')
-    const chipLabel = labelEl?.textContent?.replace(/:$/, '').trim()
-    if (!chipLabel) return
-
     const datetimeFilter = localFilters.find(
-      (f) => f.type === 'datetime' && f.label === chipLabel && f.values?.length,
+      (f) => f.id === chipEl.id && f.type === 'datetime' && f.values?.length,
     )
     if (!datetimeFilter) return
 
@@ -168,7 +154,9 @@ export const useDateRangeFilter = (): UseDateRangeFilterReturn => {
     const listItem = (event.target as HTMLElement).closest('li')
     if (!listItem) return true
     if (listItem.querySelector(`span[icon="${CUSTOM_RANGE_ICON}"]`)) {
-      const filterId = findActiveDatetimeFilterId(localFilters, options)
+      // data-parent is the id of the filter whose values panel is open (add or edit)
+      const filterId =
+        listItem.getAttribute('data-parent') || findFallbackDatetimeFilterId(localFilters, options)
       if (filterId) openCustomRangeForFilter(filterId, localFilters)
       return false
     }

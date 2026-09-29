@@ -102,7 +102,6 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
       toast.success('Profile saved successfully')
       setIsOpen(false)
     } catch (error) {
-      console.error('Error updating profile:', error)
       toast.error('Failed to save profile information')
     }
   }

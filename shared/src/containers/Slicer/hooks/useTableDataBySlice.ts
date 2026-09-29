@@ -9,7 +9,7 @@ import { useSlicerContext } from '../context/SlicerContext'
 import type { OnSliceTypeChange } from '../context/SlicerContext'
 import useSlicerAttributesData from './useSlicerAttributesData'
 import { useEntityListsSlice } from './useEntityListsSlice'
-import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import { getAttributeIcon, getEntityTypeIcon, hasEnumOptions } from '@shared/util'
 import { useProjectContext } from '@shared/context/ProjectContext'
 import type { GroupCountsMap } from '@shared/api'
 import { UNGROUPED_VALUE } from '../../ProjectTreeTable/hooks/useBuildGroupByTableData'
@@ -155,8 +155,16 @@ const useTableDataBySlice = ({
     })
 
   const showAttributes = sliceFields.some((field) => field.value === 'attributes')
+  const slicedAttribName = sliceType?.startsWith('attrib.')
+    ? sliceType.slice('attrib.'.length)
+    : undefined
+  const enumRequest = useMemo(
+    () => (slicedAttribName ? [slicedAttribName] : []),
+    [slicedAttribName],
+  )
   const { attributes: slicerAttribs, isLoading: isLoadingAttribs } = useSlicerAttributesData({
     entityTypes,
+    request: enumRequest,
   })
 
   if (showAttributes && typeof formatAttribute === 'function') {
@@ -164,12 +172,15 @@ const useTableDataBySlice = ({
       sliceOptions.push({
         label: attr.data.title || attr.name,
         value: 'attrib.' + attr.name,
-        icon: getAttributeIcon(attr.name, attr.data.type, !!attr.data.enum?.length),
+        icon: getAttributeIcon(attr.name, attr.data.type, hasEnumOptions(attr.data)),
       }),
     )
   }
 
   const [isLoading, setIsLoading] = useState(false)
+
+  const selectedSliceAttrib = slicerAttribs.find((attr) => attr.name === slicedAttribName)
+  const isSelectedAttribLoading = !!selectedSliceAttrib?.enumIsLoading
 
   // project info
   const {
@@ -209,7 +220,8 @@ const useTableDataBySlice = ({
     isUsersLoading ||
     (isLoadingExtraSlices && sliceType !== 'hierarchy') ||
     (isLoadingLists && sliceType === 'entityList') ||
-    isLoadingAttribs
+    isLoadingAttribs ||
+    isSelectedAttribLoading
 
   const builtInSlices: Record<SliceType, SliceData> = {
     hierarchy: {
@@ -259,7 +271,7 @@ const useTableDataBySlice = ({
   for (const attrib of slicerAttribs) {
     builtInSlices['attrib.' + attrib.name] = {
       getData: () => getAttribute(attrib),
-      isLoading: isLoadingAttribs,
+      isLoading: isLoadingAttribs || !!attrib.enumIsLoading,
       isExpandable: false,
       isAttribute: true,
     }

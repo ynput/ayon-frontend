@@ -190,8 +190,8 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
       // when we do this, getInstallEventsQuery will create an initial query and then sub to the topic "addon.install_from_url"
       // as the events come in, the query will update and we can use the data to show progress
       setIdsInstalling(eventIds)
-    } catch (error) {
-      console.error(error)
+    } catch {
+      return
     }
   }
 
@@ -218,7 +218,6 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
       }
       await abortOnboarding().unwrap()
     } catch (error) {
-      console.error(error)
       toast.error('Please create your production bundle manually after restarting the server.')
     }
     onFinish(restart)

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCardProgress from '@components/AddonCard/AddonCardProgress'
+import { getRequestErrorString } from '@shared/util'
 
 const findLastEvent = (events = []) => {
   // sort by status, null, pending, in_progress, finished, failed
@@ -170,7 +171,7 @@ export const ProgressInstall = ({
                 error={
                   status === 'failed'
                     ? event?.description
-                    : (!alreadyInstalled && res?.error?.detail) || null
+                    : (!alreadyInstalled && getRequestErrorString(res?.error)) || null
                 }
                 style={{ cursor: 'default', order: file?.type === 'addon' ? 2 : 1 }}
                 ref={(el) => url && (refs.current[url] = el)}

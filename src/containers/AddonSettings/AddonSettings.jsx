@@ -280,7 +280,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         updatedKeys.push(key)
       } catch (e) {
         allOk = false
-        console.error(e)
         toast.error(
           <>
             <strong>Unable to save {variant} settings</strong>
@@ -437,7 +436,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         }).unwrap()
       } catch (e) {
         toast.error(`Unable to remove ${addon.variant} override of ${addon.name} ${addon.version} `)
-        console.error(e)
         return
       }
 
@@ -475,7 +473,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         }).unwrap()
       } catch (e) {
         toast.error(`Unable to remove overrides of ${addon.name} ${addon.version} `)
-        console.error(e)
         return
       }
       toast.success('Overrides removed')
@@ -513,7 +510,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         }).unwrap()
       } catch (e) {
         toast.error(`Unable to pin override of ${addon.name} ${addon.version} `)
-        console.error(e)
         return
       }
       toast.success('Override pinned')

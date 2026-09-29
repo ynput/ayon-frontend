@@ -160,6 +160,15 @@ export type { SourceModel } from './desktop'
 export * from './entityLists'
 export { api as entityListsApi } from './entityLists'
 
+// enums
+export { api as enumsApi } from './enums'
+export type {
+  EnumResolverInfo,
+  GetEnumApiArg,
+  GetEnumApiResponse,
+  ListEnumsApiResponse,
+} from './enums'
+
 // events
 export * from './events'
 export { api as eventsApi } from './events'

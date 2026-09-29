@@ -10,7 +10,6 @@ const siteSettings = api.injectEndpoints({
 
       providesTags: ['siteSettingsSchema'],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
 
     getSiteSettings: build.query({
@@ -20,7 +19,6 @@ const siteSettings = api.injectEndpoints({
       }),
       providesTags: ['siteSettings'],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
 
     setSiteSettings: build.mutation({

@@ -223,7 +223,6 @@ const patchEntityLinksCache = (
 const enhancedApi = linksApi.enhanceEndpoints({
   endpoints: {
     deleteEntityLink: {
-      transformErrorResponse: (error: any) => error.data?.detail || '',
       async onQueryStarted(
         // @ts-ignore - patch is purely used for patching the entities
         { linkId, projectName, patch },
@@ -277,7 +276,6 @@ const enhancedApi = linksApi.enhanceEndpoints({
       },
     },
     createEntityLink: {
-      transformErrorResponse: (error: any) => error.data?.detail || '',
       async onQueryStarted(
         // @ts-ignore - patch is purely used for patching the entities
         { projectName, createLinkRequestModel, patch },
@@ -298,7 +296,7 @@ const enhancedApi = linksApi.enhanceEndpoints({
         const linkTypeName = linkType?.split('|')[0] as string
 
         try {
-          if (sourceEntity.entityType && targetEntity) {
+          if (sourceEntity && sourceEntity.entityType && targetEntity) {
             // Get the source entity data based on its type
             const sourcePromise = getEntityDataByType(
               sourceEntityType,
@@ -367,8 +365,6 @@ const enhancedApi = linksApi.enhanceEndpoints({
             throw new Error('Source entity type not provided')
           }
         } catch (error) {
-          console.error(error)
-
           // Undo patches if the mutation fails
           for (const patch of patches) {
             patch.undo()

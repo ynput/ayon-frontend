@@ -18,8 +18,6 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
 
       close && onClose(accessGroupName)
     } catch (error) {
-      console.error(error)
-
       toast.error('Unable to create access group')
     }
   }

@@ -68,7 +68,6 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
       }).unwrap()
       toast.success('Project access group settings saved')
     } catch (err) {
-      console.error(err)
       toast.error('Unable to save access group')
     }
   }

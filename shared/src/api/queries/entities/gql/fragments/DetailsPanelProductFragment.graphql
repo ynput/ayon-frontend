@@ -3,6 +3,9 @@ fragment DetailsPanelProductFragment on ProductNode {
   name
   productType
   latestVersion {
+    id
     version
+    name
+    active
   }
 }

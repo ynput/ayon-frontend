@@ -9,7 +9,7 @@ import type {
 } from '@shared/api/generated'
 import getOverviewApi from './getOverview'
 import { patchDetailsPanelEntity } from '../entities'
-import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
+import { RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import type { EditorTaskNode } from '@shared/containers/ProjectTreeTable/types/table'
 import { getUpdatedEntityIds } from './filterRefetchUtils'
@@ -17,8 +17,9 @@ import {
   refetchTasksForCacheEntry,
   refetchOverviewTasksForCacheEntry,
 } from './refetchFilteredEntities'
-import { patchFolderStatusInVersions, patchVersions } from './patchVersions'
+import { patchParentEntitiesInVersions, patchVersions } from './patchVersions'
 import { patchProducts } from './patchProducts'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
 
@@ -448,7 +449,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
 
           // Check if the network request itself failed (offline, timeout, etc.)
           if (result.error) {
-            return { error: result.error as FetchBaseQueryError }
+            return { error: normalizeQueryError(result.error) }
           }
 
           const data = result.data
@@ -467,19 +468,23 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           }
 
           if (uniqueErrors.size > 0) {
-            const error = {
-              status: 'FETCH_ERROR',
-              error: Array.from(uniqueErrors).join(', '),
-              errorCodes: Array.from(uniqueErrorCodes),
-            } as FetchBaseQueryError
-            return { error }
+            const detail = Array.from(uniqueErrors).join(', ')
+            return {
+              error: normalizeQueryError({
+                status: 400,
+                data: {
+                  code: 400,
+                  detail,
+                  errorCodes: Array.from(uniqueErrorCodes),
+                },
+              }),
+            }
           } else {
             return { data }
           }
         } catch (e: any) {
           console.error(e)
-          const error = { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError
-          return { error }
+          return { error: normalizeQueryError(e) }
         }
       },
       async onQueryStarted(
@@ -546,8 +551,8 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           patchOverviewFolders(patchExtraFolders, { state, dispatch }, patches)
         }
 
-        patchFolderStatusInVersions(
-          [...operationsByType.folder, ...patchExtraFolders],
+        patchParentEntitiesInVersions(
+          [...operations, ...patchOperations],
           { state, dispatch },
           patches,
         )

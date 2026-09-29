@@ -1,18 +1,21 @@
 import { createContext, useCallback, useContext, useMemo, useState, ReactNode } from 'react'
 import { toast } from 'react-toastify'
+import { getRequestErrorString } from '@shared/util'
 import {
   useUpdateOverviewEntitiesMutation,
   useLazyGetFolderDeleteInfoQuery,
   type FolderDeleteInfo,
   type OperationModel,
 } from '@shared/api'
-import { DeleteEntitiesConfirmDialog } from '@shared/components/DeleteEntitiesConfirm/DeleteEntitiesConfirmDialog'
+import {
+  DeleteConfirmPayload,
+  DeleteEntitiesConfirmDialog,
+} from '@shared/components/DeleteEntitiesConfirm/DeleteEntitiesConfirmDialog'
 import {
   buildChildrenDetails,
   buildEntityLabel,
   buildExpectedCounts,
 } from '@shared/components/DeleteEntitiesConfirm/DeleteConfirmContent'
-import type { DeleteConfirmPayload } from '@shared/components/DeleteEntitiesConfirm/DeleteConfirmContent'
 
 export type DeletableEntityType =
   | 'folder'
@@ -163,8 +166,7 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
           await runOperationsDelete(topLevel, false)
           options?.onSuccess?.()
         } catch (error: any) {
-          const message = error?.error || 'Failed to delete entities'
-          console.error('Failed to delete entities:', error)
+          const message = getRequestErrorString(error) || 'Failed to delete entities'
           throw { message, ...error }
         }
       }
@@ -277,7 +279,6 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
           })
         }
       } catch (forceError: any) {
-        console.error('Failed to force delete entities:', forceError)
         failure = forceError
       }
 

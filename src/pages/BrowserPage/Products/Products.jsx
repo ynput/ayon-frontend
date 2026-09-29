@@ -173,7 +173,6 @@ const Products = () => {
       // return so that the focus can update
       return versions
     } catch (error) {
-      console.error('Error while loading versions:', error)
       toast.error('Error while loading versions')
       setLoadingProducts([])
       return []
@@ -235,8 +234,6 @@ const Products = () => {
       // invalidate 'detail' query (details panel)
       // dispatch(api.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
     } catch (error) {
-      console.error(error)
-
       toast.error(error?.message || 'Failed to update')
       // we also need to undo the patch
     }
