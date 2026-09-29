@@ -54,6 +54,7 @@ export type ActivityFileNode = {
   author?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
+  /** Media info extracted from the file */
   mediaInfo?: Maybe<Scalars['JSON']['output']>;
   mime?: Maybe<Scalars['String']['output']>;
   name?: Maybe<Scalars['String']['output']>;
@@ -261,6 +262,12 @@ export type EntityListsConnection = {
   pageInfo: PageInfo;
 };
 
+export enum EntityVisibility {
+  All = 'ALL',
+  Hidden = 'HIDDEN',
+  Visible = 'VISIBLE'
+}
+
 export type EventEdge = {
   __typename?: 'EventEdge';
   cursor?: Maybe<Scalars['String']['output']>;
@@ -412,8 +419,10 @@ export type FolderNodeProductsArgs = {
   folderFilter?: InputMaybe<Scalars['String']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
+  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   includeFolderChildren?: Scalars['Boolean']['input'];
+  includeInternalFolder?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   nameEx?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -427,6 +436,7 @@ export type FolderNodeProductsArgs = {
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
   versionFilter?: InputMaybe<Scalars['String']['input']>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -445,6 +455,7 @@ export type FolderNodeTasksArgs = {
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   includeFolderChildren?: Scalars['Boolean']['input'];
+  includeInternalFolder?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
@@ -453,6 +464,7 @@ export type FolderNodeTasksArgs = {
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   tagsAny?: InputMaybe<Array<Scalars['String']['input']>>;
   taskTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 export type FolderType = {
@@ -665,15 +677,18 @@ export type ProductNodeVersionsArgs = {
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasHero?: InputMaybe<Scalars['Boolean']['input']>;
   hasLinks?: InputMaybe<HasLinksFilter>;
+  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
   heroOnly?: Scalars['Boolean']['input'];
   heroOrLatestOnly?: Scalars['Boolean']['input'];
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   includeFolderChildren?: Scalars['Boolean']['input'];
+  includeInternalFolder?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
   latestPerFolder?: Scalars['Boolean']['input'];
   productFilter?: InputMaybe<Scalars['String']['input']>;
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  representationFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -682,6 +697,7 @@ export type ProductNodeVersionsArgs = {
   taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
   version?: InputMaybe<Scalars['Int']['input']>;
   versions?: InputMaybe<Array<Scalars['Int']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 export type ProductType = {
@@ -893,6 +909,7 @@ export type ProjectNodeFoldersArgs = {
   hasTasks?: InputMaybe<Scalars['Boolean']['input']>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   includeFolderChildren?: Scalars['Boolean']['input'];
+  includeInternalFolder?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -906,6 +923,7 @@ export type ProjectNodeFoldersArgs = {
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
   taskSearch?: InputMaybe<Scalars['String']['input']>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -947,6 +965,7 @@ export type ProjectNodeProductsArgs = {
   hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   includeFolderChildren?: Scalars['Boolean']['input'];
+  includeInternalFolder?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   nameEx?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -960,6 +979,7 @@ export type ProjectNodeProductsArgs = {
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
   versionFilter?: InputMaybe<Scalars['String']['input']>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -975,12 +995,14 @@ export type ProjectNodeRepresentationsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeInternalFolder?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   versionIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1009,6 +1031,7 @@ export type ProjectNodeTasksArgs = {
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   includeFolderChildren?: Scalars['Boolean']['input'];
+  includeInternalFolder?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
@@ -1017,6 +1040,7 @@ export type ProjectNodeTasksArgs = {
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   tagsAny?: InputMaybe<Array<Scalars['String']['input']>>;
   taskTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1044,11 +1068,13 @@ export type ProjectNodeVersionsArgs = {
   heroOrLatestOnly?: Scalars['Boolean']['input'];
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   includeFolderChildren?: Scalars['Boolean']['input'];
+  includeInternalFolder?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
   latestPerFolder?: Scalars['Boolean']['input'];
   productFilter?: InputMaybe<Scalars['String']['input']>;
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  representationFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1057,6 +1083,7 @@ export type ProjectNodeVersionsArgs = {
   taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
   version?: InputMaybe<Scalars['Int']['input']>;
   versions?: InputMaybe<Array<Scalars['Int']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1071,6 +1098,7 @@ export type ProjectNodeWorkfilesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeInternalFolder?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   pathEx?: InputMaybe<Scalars['String']['input']>;
   paths?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1079,6 +1107,7 @@ export type ProjectNodeWorkfilesArgs = {
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 export type ProjectsConnection = {
@@ -1164,6 +1193,7 @@ export type QueryProjectsArgs = {
   includeSkeleton?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1426,11 +1456,13 @@ export type TaskNodeVersionsArgs = {
   heroOrLatestOnly?: Scalars['Boolean']['input'];
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   includeFolderChildren?: Scalars['Boolean']['input'];
+  includeInternalFolder?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
   latestPerFolder?: Scalars['Boolean']['input'];
   productFilter?: InputMaybe<Scalars['String']['input']>;
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  representationFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1439,6 +1471,7 @@ export type TaskNodeVersionsArgs = {
   taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
   version?: InputMaybe<Scalars['Int']['input']>;
   versions?: InputMaybe<Array<Scalars['Int']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1448,6 +1481,7 @@ export type TaskNodeWorkfilesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeInternalFolder?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   pathEx?: InputMaybe<Scalars['String']['input']>;
   paths?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1456,6 +1490,7 @@ export type TaskNodeWorkfilesArgs = {
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 export type TaskType = {
@@ -1643,12 +1678,14 @@ export type VersionNodeRepresentationsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeInternalFolder?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   versionIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 export type VersionsConnection = {
@@ -4764,4 +4801,5 @@ const injectedRtkApi = api.injectEndpoints({
 });
 
 export { injectedRtkApi as api };
+
 

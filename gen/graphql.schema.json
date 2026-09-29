@@ -218,6 +218,18 @@
             "deprecationReason": null
           },
           {
+            "name": "mediaInfo",
+            "description": "Media info extracted from the file",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSON",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "mime",
             "description": null,
             "args": [],
@@ -2628,6 +2640,36 @@
         "possibleTypes": null
       },
       {
+        "kind": "ENUM",
+        "name": "EntityVisibility",
+        "description": null,
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "ALL",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "HIDDEN",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "VISIBLE",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
         "kind": "OBJECT",
         "name": "EventEdge",
         "description": null,
@@ -4023,6 +4065,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "hasReviewables",
+                "description": "Filter products that have at least one version with reviewables",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "ids",
                 "description": "List of ids to be returned",
                 "type": {
@@ -4045,6 +4099,22 @@
               {
                 "name": "includeFolderChildren",
                 "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -4259,6 +4329,22 @@
                   "ofType": null
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -4576,6 +4662,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -4708,6 +4810,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -7086,6 +7204,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -7156,6 +7290,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "representationFilter",
+                "description": "Filter versions by their representations using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -7286,6 +7432,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -8830,6 +8992,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -9022,6 +9200,22 @@
                   "ofType": null
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -9550,6 +9744,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "hasReviewables",
+                "description": "Filter products that have at least one version with reviewables",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "ids",
                 "description": "List of ids to be returned",
                 "type": {
@@ -9572,6 +9778,22 @@
               {
                 "name": "includeFolderChildren",
                 "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -9788,6 +10010,22 @@
                 "defaultValue": "null",
                 "isDeprecated": false,
                 "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
+                "isDeprecated": false,
+                "deprecationReason": null
               }
             ],
             "type": {
@@ -9944,6 +10182,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -10044,6 +10298,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -10423,6 +10693,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -10555,6 +10841,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -10933,6 +11235,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -11003,6 +11321,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "representationFilter",
+                "description": "Filter versions by their representations using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -11135,6 +11465,22 @@
                 "defaultValue": "null",
                 "isDeprecated": false,
                 "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
+                "isDeprecated": false,
+                "deprecationReason": null
               }
             ],
             "type": {
@@ -11247,6 +11593,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
                 "isDeprecated": false,
                 "deprecationReason": null
               },
@@ -11375,6 +11737,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -12088,6 +12466,22 @@
                   "ofType": null
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -14732,6 +15126,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -14802,6 +15212,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "representationFilter",
+                "description": "Filter versions by their representations using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -14934,6 +15356,22 @@
                 "defaultValue": "null",
                 "isDeprecated": false,
                 "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
+                "isDeprecated": false,
+                "deprecationReason": null
               }
             ],
             "type": {
@@ -15017,6 +15455,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
                 "isDeprecated": false,
                 "deprecationReason": null
               },
@@ -15145,6 +15599,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -16875,6 +17345,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -16975,6 +17461,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
