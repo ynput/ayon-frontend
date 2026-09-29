@@ -229,11 +229,14 @@ export const useFetchOverviewData = ({
   // create a list of folders that are current visible in the table
   // root folders are always visible
   // then a folder is visible if it's parent is expanded
+  // plus any folder rendered in the viewport (flat folder view shows nested folders as top-level rows)
   const visibleFolders = useMemo(() => {
     const visibleSet = new Set<string>()
+    const folderIds = new Set<string>()
 
     // Check each folder in the map
     folders.forEach((folder) => {
+      folderIds.add(folder.id as string)
       // Root folders are always visible
       if (!folder.parentId) {
         visibleSet.add(folder.id)
@@ -251,8 +254,13 @@ export const useFetchOverviewData = ({
       }
     })
 
+    for (const id of debouncedVisibleEntityIds) {
+      if (folderIds.has(id)) visibleSet.add(id)
+    }
+
     return visibleSet
   }, [
+    debouncedVisibleEntityIds,
     folders,
     foldersByTaskFilter,
     skipFoldersByTaskFilter,
