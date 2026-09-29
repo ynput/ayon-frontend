@@ -63,8 +63,10 @@ const useEntityHeader = (
     }
   }
   if (!restData) return undefined
+  // workfiles have no name, only a path
+  const fileName = restData.path?.split('/').pop()
   return {
-    name: restData.label || restData.name,
+    name: restData.label || restData.name || fileName,
     subType: restData.productType || restData.folderType || restData.taskType,
     status: restData.status,
     path: restData.path,
