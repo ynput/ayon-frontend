@@ -139,7 +139,9 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     [columns, defaultColumnVisibility],
   )
 
-  const skipLinks = displayStyle !== 'table' || !hasLinkColumn || !linksVisible
+  // non-review lists are always shown as a table, only review lists use the display style
+  const isTableView = !isReview || displayStyle === 'table'
+  const skipLinks = !isTableView || !hasLinkColumn || !linksVisible
 
   // comments are the heaviest field to resolve, so only fetch them when the column is shown
   const showComments = useMemo(
