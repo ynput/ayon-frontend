@@ -2,7 +2,6 @@ import { CSSProperties, FC, useEffect, useLayoutEffect, useRef, useState } from 
 import styled from 'styled-components'
 import clsx from 'clsx'
 import { FilmstripData, loadFilmstrip, peekFilmstrip } from './filmstripCache'
-import { getVegasOffset, isVegasMode, subscribeVegasTick } from './vegasMode'
 
 // Wait before loading, so sweeping the cursor over a grid does not load every card
 const HOVER_INTENT_DELAY = 120
@@ -70,8 +69,6 @@ export interface FilmstripProps {
  * Render it as the last child of a positioned thumbnail element. While the cursor is over
  * that element, the overlay shows the filmstrip frame matching the cursor position,
  * so moving the cursor left to right "plays" the video.
- *
- * In vegas mode (`?vegas` in the URL) filmstrips load right away and play on their own.
  */
 export const Filmstrip: FC<FilmstripProps> = ({
   src,
@@ -85,9 +82,6 @@ export const Filmstrip: FC<FilmstripProps> = ({
   const framesRef = useRef(0)
   const [hover, setHover] = useState<{ width: number; height: number } | null>(null)
   const [index, setIndex] = useState(0)
-  const [vegas] = useState(isVegasMode)
-  const [size, setSize] = useState<{ width: number; height: number } | null>(null)
-  const [autoIndex, setAutoIndex] = useState(0)
   const [data, setData] = useState<FilmstripData | null | undefined>(() =>
     src ? peekFilmstrip(src) : undefined,
   )
@@ -178,38 +172,7 @@ export const Filmstrip: FC<FilmstripProps> = ({
     }
   }, [isHovering, enabled, src, data])
 
-  // vegas mode: load right away, play when not hovered
-  useEffect(() => {
-    if (!vegas || !enabled || !src || data !== undefined) return
-    let cancelled = false
-    loadFilmstrip(src).then((result) => {
-      if (!cancelled) setData(result)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [vegas, enabled, src, data])
-
-  useLayoutEffect(() => {
-    const overlay = ref.current
-    if (!vegas || !overlay) return
-    const observer = new ResizeObserver(([entry]) =>
-      setSize({ width: entry.contentRect.width, height: entry.contentRect.height }),
-    )
-    observer.observe(overlay)
-    return () => observer.disconnect()
-  }, [vegas])
-
-  const playing = vegas && enabled && !hover && !!data
-  useEffect(() => {
-    if (!playing || !data || !src) return
-    const offset = getVegasOffset(src, data.frames)
-    return subscribeVegasTick((tick) => setAutoIndex((tick + offset) % data.frames))
-  }, [playing, data, src])
-
-  const box = hover || (vegas ? size : null)
-  const visible = enabled && !!box && !!box.width && !!box.height && !!data
-  const shownIndex = hover ? index : autoIndex
+  const visible = enabled && !!hover && !!data
 
   useLayoutEffect(() => {
     const host = ref.current?.parentElement
@@ -219,7 +182,7 @@ export const Filmstrip: FC<FilmstripProps> = ({
   }, [visible])
 
   // frame i shows the middle of the i-th segment of the video
-  const position = visible && hover && data ? (index + 0.5) / data.frames : null
+  const position = visible && data ? (index + 0.5) / data.frames : null
   useLayoutEffect(() => {
     const host = ref.current?.parentElement
     if (!host || position === null) return
@@ -228,8 +191,8 @@ export const Filmstrip: FC<FilmstripProps> = ({
   }, [position])
 
   let frameStyle: CSSProperties | undefined
-  if (visible && box && data) {
-    const { width, height } = box
+  if (visible && hover && data) {
+    const { width, height } = hover
     const scale =
       fit === 'cover'
         ? Math.max(width / data.frameWidth, height / data.frameHeight)
@@ -238,8 +201,8 @@ export const Filmstrip: FC<FilmstripProps> = ({
     const frameWidth = Math.round(data.frameWidth * scale)
     const frameHeight = Math.round(data.frameHeight * scale)
     const rows = Math.ceil(data.frames / data.columns)
-    const column = shownIndex % data.columns
-    const row = Math.floor(shownIndex / data.columns)
+    const column = index % data.columns
+    const row = Math.floor(index / data.columns)
     frameStyle = {
       left: Math.round((width - frameWidth) / 2),
       top: Math.round((height - frameHeight) / 2),
@@ -256,12 +219,10 @@ export const Filmstrip: FC<FilmstripProps> = ({
       {visible && data && (
         <>
           <Frame className="filmstrip-frame" style={frameStyle} />
-          {hover && (
-            <Progress
-              className="filmstrip-progress"
-              style={{ width: `${((index + 1) / data.frames) * 100}%` }}
-            />
-          )}
+          <Progress
+            className="filmstrip-progress"
+            style={{ width: `${((index + 1) / data.frames) * 100}%` }}
+          />
         </>
       )}
     </Overlay>
