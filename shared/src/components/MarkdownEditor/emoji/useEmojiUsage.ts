@@ -36,7 +36,9 @@ export const useEmojiUsage = () => {
         disableInvalidations: true,
       })
         .unwrap()
-        .catch((error) => console.warn('Failed to save emoji usage', error))
+        .catch(() => {
+          // already logged by the api client, the ranking is saved with the next emoji
+        })
     },
     [user?.name, setFrontendPreferences],
   )

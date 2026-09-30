@@ -1,10 +1,9 @@
 import { forwardRef, useEffect, useMemo, type CSSProperties, type ReactNode } from 'react'
 import clsx from 'clsx'
-import { LexicalComposer, type InitialConfigType } from '@lexical/react/LexicalComposer'
+import { defineExtension } from 'lexical'
+import { LexicalExtensionComposer } from '@lexical/react/LexicalExtensionComposer'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
 import { ContentEditable } from '@lexical/react/LexicalContentEditable'
-import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary'
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin'
 import { ListPlugin } from '@lexical/react/LexicalListPlugin'
 import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin'
@@ -13,7 +12,7 @@ import { AutoLinkPlugin, createLinkMatcherWithRegExp } from '@lexical/react/Lexi
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin'
 import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin'
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin'
-import { HeadingNode, QuoteNode } from '@lexical/rich-text'
+import { HeadingNode, QuoteNode, RichTextExtension } from '@lexical/rich-text'
 import { ListItemNode, ListNode } from '@lexical/list'
 import { AutoLinkNode, LinkNode } from '@lexical/link'
 import { CodeHighlightNode, CodeNode } from '@lexical/code'
@@ -53,7 +52,7 @@ import { FLOATING_TOOLBAR } from './types'
 import * as Styled from './MarkdownEditor.styled'
 
 const URL_REGEX =
-  /((https?:\/\/(www\.)?)|(www\.))[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/
+  /((https?:\/\/(www\.)?)|(www\.))[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/
 const EMAIL_REGEX =
   /(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/
 
@@ -203,24 +202,29 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
     },
     ref,
   ) => {
-    // the composer is only configured once, later values go through MarkdownValuePlugin
-    const initialConfig = useMemo<InitialConfigType>(
-      () => ({
-        namespace,
-        theme: editorTheme,
-        nodes: EDITOR_NODES,
-        editable: !readOnly,
-        editorState: () => $setMarkdown(value || ''),
-        onError: (error) => {
-          console.error('[MarkdownEditor]', error)
-        },
-      }),
+    // the editor is only configured once, later values go through MarkdownValuePlugin
+    const extension = useMemo(
+      () =>
+        defineExtension({
+          name: namespace,
+          namespace,
+          theme: editorTheme,
+          nodes: EDITOR_NODES,
+          editable: !readOnly,
+          $initialEditorState: () => $setMarkdown(value || ''),
+          // the react extension renders the decorator nodes (media, youtube)
+          dependencies: [RichTextExtension],
+          onError: (error) => {
+            console.error('[MarkdownEditor]', error)
+          },
+        }),
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [],
     )
 
     return (
-      <LexicalComposer initialConfig={initialConfig}>
+      // the content editable is rendered below, inside the editor layout
+      <LexicalExtensionComposer extension={extension} contentEditable={null}>
         <Styled.Container
           className={clsx('md-editor', 'block-shortcuts', `md-editor-${variant}`, className, {
             bordered,
@@ -238,20 +242,15 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
           <Styled.Body>
             <Styled.EditorScroller style={{ minHeight, maxHeight }}>
               <Styled.Content>
-                <RichTextPlugin
-                  contentEditable={
-                    <ContentEditable
-                      className={clsx('md-content', contentClassName)}
-                      style={{ minHeight }}
-                      aria-placeholder={placeholder}
-                      placeholder={
-                        <Styled.Placeholder className="md-placeholder">
-                          {placeholder}
-                        </Styled.Placeholder>
-                      }
-                    />
+                <ContentEditable
+                  className={clsx('md-content', contentClassName)}
+                  style={{ minHeight }}
+                  aria-placeholder={placeholder}
+                  placeholder={
+                    <Styled.Placeholder className="md-placeholder">
+                      {placeholder}
+                    </Styled.Placeholder>
                   }
-                  ErrorBoundary={LexicalErrorBoundary}
                 />
               </Styled.Content>
             </Styled.EditorScroller>
@@ -313,7 +312,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         )}
         {autoFocus && <AutoFocusPlugin defaultSelection="rootEnd" />}
         {children}
-      </LexicalComposer>
+      </LexicalExtensionComposer>
     )
   },
 )

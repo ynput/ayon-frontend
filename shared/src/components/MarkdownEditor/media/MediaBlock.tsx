@@ -20,8 +20,18 @@ const StyledMedia = styled.div`
     object-fit: contain;
   }
 
-  &.clickable img {
+  .md-media-open {
+    all: unset;
+    display: block;
     cursor: zoom-in;
+  }
+
+  .md-media-open,
+  .md-media-play {
+    &:focus-visible {
+      outline: 2px solid var(--md-sys-color-primary);
+      outline-offset: -2px;
+    }
   }
 
   .md-media-play {
@@ -63,8 +73,14 @@ const StyledMedia = styled.div`
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
 
-    .icon {
-      animation: md-media-spin 1s linear infinite;
+    /* css spinner, not an icon (the icon font may not have one) */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: md-media-spin 0.8s linear infinite;
     }
   }
 
@@ -103,12 +119,17 @@ export const MediaBlock = ({ src, alt, mime, uploading, onOpen, className }: Med
         </button>
       ) : kind === 'video' ? (
         <video src={src} poster={poster} controls preload="metadata" title={alt} />
+      ) : onOpen ? (
+        // opens the attachment preview
+        <button type="button" className="md-media-open" onClick={onOpen} title={alt}>
+          <img src={src} alt={alt || ''} loading="lazy" />
+        </button>
       ) : (
-        <img src={src} alt={alt || ''} title={alt} onClick={onOpen} loading="lazy" />
+        <img src={src} alt={alt || ''} title={alt} loading="lazy" />
       )}
       {uploading && (
         <span className="uploading">
-          <Icon icon="progress_activity" />
+          <span className="spinner" />
           Uploading...
         </span>
       )}

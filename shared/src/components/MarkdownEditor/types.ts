@@ -105,14 +105,13 @@ export type ToolbarItem =
 
 export type ToolbarLayout = (ToolbarItem | '|')[]
 
-// headings and inline code are in the slash menu
+// headings, code blocks and inline code are in the slash menu
 export const DEFAULT_TOOLBAR: ToolbarLayout = [
   'bold',
   'italic',
   'strikethrough',
   'link',
   '|',
-  'codeBlock',
   'quote',
   '|',
   'numberList',
@@ -128,7 +127,6 @@ export const FLOATING_TOOLBAR: ToolbarLayout = [
   'link',
   '|',
   'quote',
-  'codeBlock',
 ]
 
 export interface MarkdownEditorHandle {

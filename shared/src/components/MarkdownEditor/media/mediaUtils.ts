@@ -27,3 +27,26 @@ const PROJECT_FILE_REGEX = /\/api\/projects\/[^/]+\/files\/([\w-]+)/
 
 // the file id of a project file url (a comment attachment)
 export const getProjectFileId = (src?: string | null) => src?.match(PROJECT_FILE_REGEX)?.[1] ?? null
+
+// a standalone markdown image, how the editor stores image / video blocks (see MEDIA)
+const MEDIA_LINE_REGEX = /^\s*!\[[^\]]*\]\(<?([^\s)>]+)>?(?:\s+"[^"]*")?\)\s*$/
+const FENCE_REGEX = /^\s*(```|~~~)/
+
+/**
+ * Ids of the project files shown as image / video blocks in the markdown. Only standalone media
+ * images count, not file urls in prose, links or code blocks.
+ */
+export const getInlineMediaFileIds = (markdown?: string | null): Set<string> => {
+  const ids = new Set<string>()
+  let inCode = false
+  for (const line of String(markdown || '').split('\n')) {
+    if (FENCE_REGEX.test(line)) {
+      inCode = !inCode
+      continue
+    }
+    if (inCode) continue
+    const id = getProjectFileId(line.match(MEDIA_LINE_REGEX)?.[1])
+    if (id) ids.add(id)
+  }
+  return ids
+}

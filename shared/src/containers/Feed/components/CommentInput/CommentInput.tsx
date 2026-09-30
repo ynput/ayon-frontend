@@ -12,6 +12,7 @@ import { Button, Icon, SaveButton, type IconType } from '@ynput/ayon-react-compo
 import {
   MarkdownEditor,
   createFeedMentionSource,
+  getInlineMediaFileIds,
   type MarkdownEditorHandle,
   type MentionTrigger,
   type UploadMedia,
@@ -68,7 +69,9 @@ const getProjectFileUrl = (projectName: string, id: string) =>
   `/api/projects/${projectName}/files/${id}`
 
 // is the file shown as an image / video block in the markdown
-const isReferenced = (id: string, markdown: string) => !!id && markdown.includes(`/files/${id}`)
+// the file is shown as an image / video block in the markdown
+const isReferenced = (id: string, markdown: string) =>
+  !!id && getInlineMediaFileIds(markdown).has(id)
 
 const MENTION_BUTTONS: { trigger: MentionTrigger; icon: IconType; tooltip: string }[] = [
   { trigger: '@', icon: 'person', tooltip: 'Mention user' },

@@ -8,7 +8,7 @@ import {
   $isParagraphNode,
   $isRangeSelection,
   $isRootNode,
-  COMMAND_PRIORITY_EDITOR,
+  COMMAND_PRIORITY_BEFORE_EDITOR,
   COMMAND_PRIORITY_HIGH,
   COMMAND_PRIORITY_LOW,
   INSERT_PARAGRAPH_COMMAND,
@@ -83,7 +83,8 @@ const KeyboardPlugin = ({ onSubmit, onEscape, submitOnEnter }: KeyboardPluginPro
         },
         COMMAND_PRIORITY_LOW,
       ),
-      // lowest priority so the mention menu and link editor can handle escape first
+      // after the menus (low priority) so they close first, before the rich text extension,
+      // which blurs the editor on escape
       editor.registerCommand(
         KEY_ESCAPE_COMMAND,
         () => {
@@ -91,7 +92,7 @@ const KeyboardPlugin = ({ onSubmit, onEscape, submitOnEnter }: KeyboardPluginPro
           props.current.onEscape()
           return true
         },
-        COMMAND_PRIORITY_EDITOR,
+        COMMAND_PRIORITY_BEFORE_EDITOR,
       ),
     )
   }, [editor])

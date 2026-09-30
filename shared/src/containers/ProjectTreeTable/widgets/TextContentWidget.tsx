@@ -1,4 +1,4 @@
-import { FC, useRef, useEffect, useCallback, useState } from 'react'
+import { FC, useRef, useEffect, useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
@@ -11,6 +11,8 @@ import {
   type MarkdownEditorHandle,
 } from '@shared/components/MarkdownEditor'
 import { toast } from 'react-toastify'
+import { useProjectContext } from '@shared/context/ProjectContext'
+import { useDescriptionMentions } from '@shared/components/DetailsPanelDetails/hooks/useDescriptionMentions'
 
 const StyledDialog = styled.div`
   display: flex;
@@ -81,6 +83,8 @@ export interface TextContentWidgetProps extends WidgetBaseProps {
   onDismissWithoutSave?: () => void
   onPreviewMouseEnter?: () => void
   onPreviewMouseLeave?: () => void
+  // the entity of the row, to mention its users, sibling tasks and versions
+  mentionEntity?: { entityId: string; entityType: string }
 }
 
 export const TextContentWidget: FC<TextContentWidgetProps> = ({
@@ -98,6 +102,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
   onDismissWithoutSave,
   onPreviewMouseEnter,
   onPreviewMouseLeave,
+  mentionEntity,
 }) => {
   const hasDraftRef = useRef(draftValue != null)
   const normalizedValue = typeof value === 'string' ? value : value == null ? '' : String(value)
@@ -219,42 +224,28 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
     [convertPlainValue, editingValue, isRichText, onChange, onCancelEdit, onEditingDraftChange],
   )
 
-  // Refs for capture-phase keyboard handler (avoids stale closures)
-  const handleSaveRef = useRef(handleSave)
-  handleSaveRef.current = handleSave
-  const onCancelEditRef = useRef(onCancelEdit)
-  onCancelEditRef.current = onCancelEdit
-
-  // Capture-phase listener to intercept Enter/Escape before the editor processes them
-  useEffect(() => {
-    if (isPreview || !isRichText) return
-    const el = dialogRef.current
-    if (!el) return
-
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        e.stopPropagation()
-        onCancelEditRef.current?.()
-        return
-      }
-      // Enter (without Shift) saves; Shift+Enter falls through for newline
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault()
-        e.stopPropagation()
-        handleSaveRef.current('Enter')
-        return
-      }
-    }
-
-    el.addEventListener('keydown', handler, true)
-    return () => el.removeEventListener('keydown', handler, true)
-  }, [isPreview, isRichText])
+  // mention the users, sibling tasks and versions of the row entity
+  const { projectName, productTypes, taskTypes } = useProjectContext()
+  const mentionsContext = useMemo(
+    () =>
+      mentionEntity?.entityId && mentionEntity.entityType && projectName
+        ? { projectName, ...mentionEntity, productTypes, taskTypes }
+        : undefined,
+    [mentionEntity?.entityId, mentionEntity?.entityType, projectName, productTypes, taskTypes],
+  )
+  const mentions = useDescriptionMentions(mentionsContext, { skip: isPreview || !isRichText })
 
   // Handle Ctrl+key block formatting shortcuts (bold, italic... are handled by the editor)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (isPreview || !isRichText || e.shiftKey || e.altKey) return
+      if (isPreview || !isRichText) return
+      // enter / escape are handled by the editor (menus first, then save / cancel), keep them
+      // from reaching the table
+      if (e.key === 'Enter' || e.key === 'Escape') {
+        e.stopPropagation()
+        return
+      }
+      if (e.shiftKey || e.altKey) return
       if (!(e.ctrlKey || e.metaKey)) return
       const format = BLOCK_SHORTCUTS[e.key.toLowerCase()]
       const editor = editorRef.current?.getEditor()
@@ -311,6 +302,12 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
             autoFocus={!isPreview}
             minHeight={64}
             placeholder=""
+            mentions={isPreview ? undefined : mentions}
+            // enter saves (shift+enter, lists and code blocks add a line), escape cancels, after
+            // any open menu has handled the key
+            submitOnEnter
+            onSubmit={isPreview ? undefined : () => handleSave('Enter')}
+            onEscape={isPreview ? undefined : () => onCancelEdit?.()}
           />
         ) : isPreview ? (
           <PlainPreview>{normalizedValue}</PlainPreview>

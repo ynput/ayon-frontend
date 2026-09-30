@@ -21,7 +21,8 @@ interface FeedMentionSourceOptions {
  */
 export const createFeedMentionSource = ({
   suggestions = {},
-  project,
+  // version options read the product types
+  project = { productTypes: [] },
   taskTypes = [],
   entityType,
 }: FeedMentionSourceOptions): MentionSource => ({

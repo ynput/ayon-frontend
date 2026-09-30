@@ -18,6 +18,7 @@ import CommentWrapper from './CommentWrapper'
 import { isFilePreviewable } from '../FileUploadPreview'
 import {
   getProjectFileId,
+  getInlineMediaFileIds,
   normalizeLegacyMarkdown,
   renderMediaParagraph,
   renderYouTubeParagraph,
@@ -199,15 +200,7 @@ const ActivityComment = ({
   )
 
   // files shown as image / video blocks in the text are not repeated as attachments
-  const inlineFileIds = useMemo(
-    () =>
-      new Set(
-        Array.from(String(body || '').matchAll(/\/api\/projects\/[^/]+\/files\/([\w-]+)/g)).map(
-          (match) => match[1],
-        ),
-      ),
-    [body],
-  )
+  const inlineFileIds = useMemo(() => getInlineMediaFileIds(body), [body])
   const attachments = useMemo(
     () => (files || []).filter((file: any) => !inlineFileIds.has(file.id)),
     [files, inlineFileIds],
