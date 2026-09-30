@@ -1,11 +1,20 @@
 // Loads and caches hover-scrub filmstrips.
 //
 // A filmstrip is a single image with `frames` video frames laid out in a grid of `columns`
-// columns, left to right, top to bottom. The layout is only available in the response headers,
-// so the image is fetched (instead of used directly in an <img>) and kept as an object URL.
+// columns, left to right, top to bottom. The filmstrip endpoints return the layout and an URL
+// of the image (served by the server for local storages, a signed URL for S3 storages).
 
 export interface FilmstripData {
-  url: string // object URL of the decoded filmstrip image
+  url: string // URL of the filmstrip image, already decoded
+  frames: number
+  columns: number
+  frameWidth: number
+  frameHeight: number
+}
+
+interface FilmstripResponse {
+  fileId: string
+  url: string
   frames: number
   columns: number
   frameWidth: number
@@ -18,6 +27,8 @@ const MAX_ENTRIES = 64
 // Insertion order is used as LRU order. `null` means "no filmstrip available".
 const requests = new Map<string, Promise<FilmstripData | null>>()
 const results = new Map<string, FilmstripData | null>()
+// decoded images are kept referenced, so the browser does not drop them from memory
+const images = new Map<string, HTMLImageElement>()
 
 const getAuthHeaders = (): HeadersInit => {
   const accessToken = localStorage.getItem('accessToken')
@@ -30,24 +41,15 @@ const fetchFilmstrip = async (src: string): Promise<FilmstripData | null> => {
     // 204 = the entity has no video reviewable
     if (response.status !== 200) return null
 
-    const frames = Number(response.headers.get('X-Filmstrip-Frames'))
-    const frameWidth = Number(response.headers.get('X-Filmstrip-Frame-Width'))
-    const frameHeight = Number(response.headers.get('X-Filmstrip-Frame-Height'))
-    if (!frames || !frameWidth || !frameHeight) return null
-    // a single row when the server does not say otherwise
-    const columns = Number(response.headers.get('X-Filmstrip-Columns')) || frames
-
-    const url = URL.createObjectURL(await response.blob())
+    const { url, frames, columns, frameWidth, frameHeight }: FilmstripResponse =
+      await response.json()
+    if (!url || !frames || !columns || !frameWidth || !frameHeight) return null
 
     // decode ahead, so the first frame is shown without flashing
     const image = new Image()
     image.src = url
-    try {
-      await image.decode()
-    } catch {
-      URL.revokeObjectURL(url)
-      return null
-    }
+    await image.decode()
+    images.set(src, image)
 
     return { url, frames, columns, frameWidth, frameHeight }
   } catch {
@@ -59,9 +61,8 @@ const evict = () => {
   while (requests.size > MAX_ENTRIES) {
     const oldest = requests.keys().next().value as string
     requests.delete(oldest)
-    const data = results.get(oldest)
-    if (data) URL.revokeObjectURL(data.url)
     results.delete(oldest)
+    images.delete(oldest)
   }
 }
 
@@ -81,7 +82,7 @@ export const loadFilmstrip = (src: string): Promise<FilmstripData | null> => {
   const request = fetchFilmstrip(src).then((data) => {
     if (requests.get(src) !== request) {
       // evicted while loading
-      if (data) URL.revokeObjectURL(data.url)
+      images.delete(src)
       return null
     }
     results.set(src, data)
