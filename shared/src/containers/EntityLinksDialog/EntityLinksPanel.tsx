@@ -19,6 +19,7 @@ import type { PickerEntityType } from '@shared/containers/EntityPickerDialog/Ent
 import { getEntityColor, getEntityIcon } from '@shared/util/iconUtils'
 import { getEntityId, getRequestErrorString } from '@shared/util'
 import { EntityLinkGroup, groupEntityLinks } from './groupEntityLinks'
+import { EntityLinksGraph } from './EntityLinksGraph'
 import * as Styled from './EntityLinksDialog.styled'
 
 export type LinkedEntityRef = { id: string; entityType: string }
@@ -198,11 +199,15 @@ const LinkGroupSection: FC<LinkGroupSectionProps> = ({
   )
 }
 
+export type EntityLinksView = 'columns' | 'graph'
+
 export interface EntityLinksPanelProps {
   projectName: string
   entityType: string
   entityId: string
   canEdit: boolean
+  /** the graph view is read-only */
+  view?: EntityLinksView
   onOpenEntity: (entity: LinkedEntityRef) => void
   onOpenDetails?: () => void
 }
@@ -212,10 +217,13 @@ export const EntityLinksPanel: FC<EntityLinksPanelProps> = ({
   entityType,
   entityId,
   canEdit,
+  view = 'columns',
   onOpenEntity,
   onOpenDetails,
 }) => {
   const { linkTypes = [], anatomy } = useProjectContext()
+  const { user } = useGlobalContext()
+  const isManager = !!(user?.data?.isAdmin || user?.data?.isManager)
   const header = useEntityHeader(projectName, entityType, entityId)
   const {
     data: linksData = [],
@@ -305,6 +313,17 @@ export const EntityLinksPanel: FC<EntityLinksPanelProps> = ({
       </Styled.Header>
       {error ? (
         <Styled.Empty>Could not load links: {getRequestErrorString(error)}</Styled.Empty>
+      ) : view === 'graph' ? (
+        <EntityLinksGraph
+          groups={groups}
+          entityType={entityType}
+          name={header?.name || '…'}
+          icon={icon}
+          iconColor={color}
+          isManager={isManager}
+          isLoading={isLoading}
+          onOpenEntity={onOpenEntity}
+        />
       ) : (
         <Styled.Columns>
           {renderColumn('in')}

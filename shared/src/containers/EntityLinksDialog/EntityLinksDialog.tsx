@@ -7,7 +7,9 @@ import { ProjectContextProvider } from '@shared/context'
 import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 import { useGetProductionAddon } from '@shared/hooks/useGetProductionAddon'
 import { ActiveEntity, getActiveEntities, shouldBlockShortcuts } from '@shared/util'
-import { EntityLinksPanel, LinkedEntityRef } from './EntityLinksPanel'
+import { EntityLinksPanel, EntityLinksView, LinkedEntityRef } from './EntityLinksPanel'
+import { useLocalStorage } from '@shared/hooks/useLocalStorage'
+import * as SwitchStyled from '@shared/components/TableGridSwitch/TableGridSwitch.styled'
 import { useEntityLinksEditAccess } from './useEntityLinksEditAccess'
 import * as Styled from './EntityLinksDialog.styled'
 
@@ -38,6 +40,8 @@ export const EntityLinksDialog: FC = () => {
   const [trail, setTrail] = useState<ActiveEntity[]>([])
   const isOpen = trail.length > 0
 
+  // remembered between openings
+  const [view, setView] = useLocalStorage<EntityLinksView>('entityLinksDialog.view', 'columns')
   const access = useEntityLinksEditAccess()
   const { openSlideOut, useNavigate } = useDetailsPanelContext()
   const navigate = useNavigate()
@@ -119,6 +123,22 @@ export const EntityLinksDialog: FC = () => {
   const header = (
     <Styled.Breadcrumbs>
       <span style={{ fontSize: 16, color: 'var(--md-sys-color-on-surface)' }}>Links</span>
+      <SwitchStyled.ButtonsContainer style={{ marginLeft: 4 }}>
+        <SwitchStyled.InnerButton
+          icon="view_column_2"
+          variant="text"
+          selected={view !== 'graph'}
+          onClick={() => setView('columns')}
+          data-tooltip="Columns"
+        />
+        <SwitchStyled.InnerButton
+          icon="hub"
+          variant="text"
+          selected={view === 'graph'}
+          onClick={() => setView('graph')}
+          data-tooltip="Graph (view only)"
+        />
+      </SwitchStyled.ButtonsContainer>
       {selection.length > 1 && trail.length === 1 && (
         <>
           <Button
@@ -172,7 +192,8 @@ export const EntityLinksDialog: FC = () => {
           projectName={projectName}
           entityType={entityType}
           entityId={id}
-          canEdit={access.canEdit}
+          canEdit={access.canEdit && view !== 'graph'}
+          view={view}
           onOpenEntity={openEntity}
           onOpenDetails={canOpenDetails ? openDetails : undefined}
         />
