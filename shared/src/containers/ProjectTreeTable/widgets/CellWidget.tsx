@@ -151,7 +151,8 @@ export const CellWidget: FC<EditorCellProps> = ({
 
   const { projectName } = useProjectContext()
   const { isEditing, setEditingCellId, getEditingDraft, setEditingDraft } = useCellEditing()
-  const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionCellsContext()
+  const { isCellFocused, gridMap, selectCell, focusCell, selectedCells } =
+    useSelectionCellsContext()
   const cellId = getCellId(rowId, columnId)
   const isMidnightExclusive = midnightExclusiveFields?.includes(columnId) ?? false
 
@@ -180,7 +181,15 @@ export const CellWidget: FC<EditorCellProps> = ({
       setEditingCellId(null)
       return
     }
-    if (key === 'Enter') {
+    // several cells selected: the edit applies to all of them, so finish here instead of moving
+    // to the next row, which may be another selected cell still showing its old value
+    const isMultiCellEdit = selectedCells.size > 1 && selectedCells.has(cellId)
+    if (key === 'Enter' && isMultiCellEdit) {
+      setEditingCellId(null)
+      onChange?.(newValue, key)
+      const td = ref.current?.closest('td') as HTMLElement | null
+      if (td) td.focus()
+    } else if (key === 'Enter') {
       // Move to next row first (sets new editing cell), then save value.
       // This prevents the dialog from blinking between rows.
       moveToNextRow()
