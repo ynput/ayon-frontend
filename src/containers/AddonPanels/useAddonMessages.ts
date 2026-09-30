@@ -55,6 +55,7 @@ const toViewerPayload = (
 export const useAddonMessages = (
   addonRef: RefObject<HTMLIFrameElement | null>,
   projectName: string,
+  addonName: string,
 ) => {
   const dispatch = useAppDispatch()
   const [, setSearchParams] = useSearchParams()
@@ -119,7 +120,7 @@ export const useAddonMessages = (
   useEffect(() => {
     setSelection([])
     setDetailsOpen(false)
-  }, [projectName, addonRef])
+  }, [projectName, addonName])
 
   return { selection, isDetailsOpen, closeDetails }
 }

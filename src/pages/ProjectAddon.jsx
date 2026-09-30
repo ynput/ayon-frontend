@@ -183,7 +183,11 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, addonTitle, ...props }
   useAddonContextResend(pushContext)
 
   // The addon can open the details panel and the player (see useAddonMessages)
-  const { selection, isDetailsOpen, closeDetails } = useAddonMessages(addonRef, projectName)
+  const { selection, isDetailsOpen, closeDetails } = useAddonMessages(
+    addonRef,
+    projectName,
+    addonName,
+  )
   const showDetails = isDetailsOpen && !!getDetailsSelection(selection)
 
   // Sidebar and details panel are resizable, the sidebar keeps the width of
