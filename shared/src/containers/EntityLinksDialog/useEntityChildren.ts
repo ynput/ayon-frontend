@@ -3,8 +3,8 @@ import { useGetFolderListQuery, useGetProductVersionsQuery } from '@shared/api'
 import type { FolderListItem } from '@shared/api'
 import type { LinkMember } from './groupEntityLinks'
 
-// links are loaded in one request, keep it within the query's page size
-export const MAX_CHILDREN = 2000
+// all children go into one request
+export const MAX_CHILDREN = 5000
 
 export type EntityChildren = {
   /** the dialog knows how to list children of this entity type */
@@ -68,6 +68,7 @@ export const useEntityChildren = (
             entityType: 'folder',
             name: folder.name,
             subType: folder.folderType,
+            isLeaf: !byParent.has(folder.id),
           })
           queue.push(folder.id)
         }

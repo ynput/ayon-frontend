@@ -142,6 +142,15 @@ export const Via = styled.span`
   padding: 0 4px;
 `
 
+export const Notes = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 8px;
+  ${theme.bodySmall}
+  color: var(--md-sys-color-outline);
+`
+
 export const Group = styled.div`
   display: flex;
   flex-direction: column;

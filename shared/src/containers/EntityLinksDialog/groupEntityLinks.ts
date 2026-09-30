@@ -105,6 +105,8 @@ export type LinkMember = {
   entityType: string
   name: string
   subType?: string
+  /** false for folders that have child folders */
+  isLeaf?: boolean
 }
 
 export type AggregatedLink = {
@@ -136,21 +138,24 @@ const byName = (a: LinkMember, b: LinkMember) =>
  * Collect the links of an entity and its children with one row per linked
  * entity, listing the members that link to it. Links between two members
  * are a dependency inside the subtree rather than of it, so they are left
- * out and only counted.
+ * out and only counted. Members without any link in that direction are
+ * returned too.
  */
 export const aggregateLinks = (
   members: { member: LinkMember; links: EntityLink[] }[],
   direction: LinkDirection,
   linkTypes: LinkTypeModel[],
   anatomy: IconAnatomy,
-): { groups: AggregatedLinkGroup[]; internal: number } => {
+): { groups: AggregatedLinkGroup[]; internal: number; unlinked: LinkMember[] } => {
   const memberIds = new Set(members.map(({ member }) => member.id))
   const groups = new Map<string, AggregatedLinkGroup & { byEntity: Map<string, AggregatedLink> }>()
   let internal = 0
+  const linked = new Set<string>()
 
   for (const { member, links } of members) {
     for (const link of links) {
       if (link.direction !== direction) continue
+      linked.add(member.id)
       if (link.node && memberIds.has(link.node.id)) {
         internal++
         continue
@@ -174,12 +179,12 @@ export const aggregateLinks = (
         }
         groups.set(linkTypeName, group)
       }
-      const linked = toLinkEntity(link, anatomy)
+      const other = toLinkEntity(link, anatomy)
       // restricted links can't be told apart, each gets its own row
-      const key = linked.isRestricted ? `restricted_${link.id}` : linked.entityId
+      const key = other.isRestricted ? `restricted_${link.id}` : other.entityId
       let item = group.byEntity.get(key)
       if (!item) {
-        item = { key, link: linked, via: [] }
+        item = { key, link: other, via: [] }
         group.byEntity.set(key, item)
         group.items.push(item)
       }
@@ -205,5 +210,6 @@ export const aggregateLinks = (
           a.otherEntityType.localeCompare(b.otherEntityType),
       ),
     internal,
+    unlinked: members.map(({ member }) => member).filter((m) => !linked.has(m.id)),
   }
 }

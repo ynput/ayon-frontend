@@ -7,7 +7,12 @@ import { ProjectContextProvider } from '@shared/context'
 import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 import { useGetProductionAddon } from '@shared/hooks/useGetProductionAddon'
 import { ActiveEntity, getActiveEntities, shouldBlockShortcuts } from '@shared/util'
-import { EntityLinksPanel, EntityLinksView, LinkedEntityRef } from './EntityLinksPanel'
+import {
+  EntityLinksPanel,
+  EntityLinksView,
+  IncludeChildren,
+  LinkedEntityRef,
+} from './EntityLinksPanel'
 import { useLocalStorage } from '@shared/hooks/useLocalStorage'
 import * as SwitchStyled from '@shared/components/TableGridSwitch/TableGridSwitch.styled'
 import { useEntityLinksEditAccess } from './useEntityLinksEditAccess'
@@ -42,9 +47,9 @@ export const EntityLinksDialog: FC = () => {
 
   // remembered between openings
   const [view, setView] = useLocalStorage<EntityLinksView>('entityLinksDialog.view', 'columns')
-  const [includeChildren, setIncludeChildren] = useLocalStorage(
+  const [includeChildren, setIncludeChildren] = useLocalStorage<IncludeChildren>(
     'entityLinksDialog.includeChildren',
-    false,
+    { in: false, out: false },
   )
   const access = useEntityLinksEditAccess()
   const { openSlideOut, useNavigate } = useDetailsPanelContext()
@@ -206,7 +211,9 @@ export const EntityLinksDialog: FC = () => {
           canEdit={access.canEdit && view !== 'graph'}
           view={view}
           includeChildren={includeChildren}
-          onIncludeChildrenChange={setIncludeChildren}
+          onIncludeChildrenChange={(direction, include) =>
+            setIncludeChildren((current) => ({ ...current, [direction]: include }))
+          }
           onOpenEntity={openEntity}
           onOpenDetails={canOpenDetails ? openDetails : undefined}
         />
