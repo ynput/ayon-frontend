@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, lazy, Suspense, useMemo, useState } from 'react'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import {
   detailsPanelEntityTypes,
@@ -19,8 +19,10 @@ import type { PickerEntityType } from '@shared/containers/EntityPickerDialog/Ent
 import { getEntityColor, getEntityIcon } from '@shared/util/iconUtils'
 import { getEntityId, getRequestErrorString } from '@shared/util'
 import { EntityLinkGroup, groupEntityLinks } from './groupEntityLinks'
-import { EntityLinksGraph } from './EntityLinksGraph'
 import * as Styled from './EntityLinksDialog.styled'
+
+// React Flow is only loaded when someone switches to the graph view
+const EntityLinksGraph = lazy(() => import('./EntityLinksGraph'))
 
 export type LinkedEntityRef = { id: string; entityType: string }
 
@@ -314,16 +316,18 @@ export const EntityLinksPanel: FC<EntityLinksPanelProps> = ({
       {error ? (
         <Styled.Empty>Could not load links: {getRequestErrorString(error)}</Styled.Empty>
       ) : view === 'graph' ? (
-        <EntityLinksGraph
-          groups={groups}
-          entityType={entityType}
-          name={header?.name || '…'}
-          icon={icon}
-          iconColor={color}
-          isManager={isManager}
-          isLoading={isLoading}
-          onOpenEntity={onOpenEntity}
-        />
+        <Suspense fallback={<Styled.Empty>Loading graph…</Styled.Empty>}>
+          <EntityLinksGraph
+            groups={groups}
+            entityType={entityType}
+            name={header?.name || '…'}
+            icon={icon}
+            iconColor={color}
+            isManager={isManager}
+            isLoading={isLoading}
+            onOpenEntity={onOpenEntity}
+          />
+        </Suspense>
       ) : (
         <Styled.Columns>
           {renderColumn('in')}

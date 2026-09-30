@@ -1,20 +1,36 @@
-import { FC, useLayoutEffect, useMemo, useRef, useState } from 'react'
+// Read-only React Flow graph of one entity's links: inputs on the left, the
+// entity in the middle, outputs on the right. Loaded lazily by
+// EntityLinksPanel so @xyflow/react is only fetched when the graph is shown.
+
+import { FC, memo, useMemo, useState } from 'react'
 import styled from 'styled-components'
+import {
+  Background,
+  BackgroundVariant,
+  Controls,
+  Handle,
+  MarkerType,
+  Position,
+  ReactFlow,
+  type Edge,
+  type Node,
+  type NodeProps,
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 import { Icon, theme } from '@ynput/ayon-react-components'
 import { groupLinksByEntity } from '@shared/components/LinksManager/utils/groupLinks'
 import type { EntityLinkGroup } from './groupEntityLinks'
 import type { LinkedEntityRef } from './EntityLinksPanel'
 
-// Read-only graph of one entity's links: inputs on the left, the entity in
-// the middle, outputs on the right. Nodes are HTML over an SVG with the edges.
-
 const NODE_W = 240
 const NODE_H = 40
-const GAP = 8
+const GAP_Y = 8
+const GAP_X = 120
+const COLUMN_GAP = 40
+const MAX_ROWS = 8
 const CENTER_W = 200
 const CENTER_H = 56
-const PAD = 12
-const DEFAULT_COLOR = 'var(--md-sys-color-outline)'
+const DEFAULT_COLOR = '#8a9199'
 
 const Wrapper = styled.div`
   display: flex;
@@ -43,39 +59,40 @@ const Legend = styled.div`
   }
 `
 
-const Scroller = styled.div`
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
+const FlowBox = styled.div`
   border-radius: var(--border-radius-l);
+  overflow: hidden;
   background-color: var(--md-sys-color-surface-container-low);
-`
 
-const Canvas = styled.div`
-  position: relative;
-  min-width: 100%;
-
-  svg {
-    position: absolute;
-    inset: 0;
-    overflow: visible;
+  .react-flow {
+    --xy-background-color: transparent;
+    --xy-controls-button-background-color: var(--md-sys-color-surface-container);
+    --xy-controls-button-background-color-hover: var(--md-sys-color-surface-container-highest);
+    --xy-controls-button-color: var(--md-sys-color-on-surface);
+    --xy-controls-button-border-color: var(--md-sys-color-outline-variant);
+  }
+  .react-flow__node {
+    cursor: default;
+  }
+  .react-flow__handle {
+    opacity: 0;
     pointer-events: none;
   }
-  path {
-    fill: none;
+  .react-flow__edge-path {
     transition: opacity 0.1s, stroke-width 0.1s;
   }
 `
 
-const Node = styled.div`
-  position: absolute;
+const Card = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
+  height: 100%;
   padding: 0 8px;
   box-sizing: border-box;
   border-radius: var(--border-radius-m);
   background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
   border: 1px solid var(--md-sys-color-outline-variant);
   border-left-width: 3px;
   overflow: hidden;
@@ -119,8 +136,6 @@ const Node = styled.div`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    direction: rtl;
-    text-align: left;
   }
   .count {
     ${theme.labelSmall}
@@ -135,8 +150,7 @@ const Empty = styled.div`
   text-align: center;
 `
 
-type GraphNode = {
-  key: string
+type LinkNodeData = {
   direction: 'in' | 'out'
   entityId: string
   entityType: string
@@ -150,16 +164,75 @@ type GraphNode = {
   color: string
 }
 
-const buildNodes = (groups: EntityLinkGroup[], direction: 'in' | 'out'): GraphNode[] =>
-  groups
+type CenterNodeData = {
+  label: string
+  entityType: string
+  icon: string
+  iconColor?: string
+}
+
+type LinkNode = Node<LinkNodeData, 'link'>
+type CenterNode = Node<CenterNodeData, 'center'>
+
+const LinkNodeView = memo(({ data }: NodeProps<LinkNode>) => (
+  <Card
+    className={data.restricted ? 'restricted' : 'clickable'}
+    style={{ borderLeftColor: data.color }}
+    data-tooltip={
+      data.restricted
+        ? undefined
+        : `${data.linkType} ${data.direction === 'in' ? 'input' : 'output'}: ${[
+            ...data.parents,
+            data.label,
+          ].join('/')}`
+    }
+  >
+    {data.direction === 'out' && <Handle type="target" position={Position.Left} />}
+    <Icon icon={data.icon} className="icon" style={{ color: data.iconColor }} />
+    <span className="text">
+      <span className="label">{data.label}</span>
+      {!data.restricted && !!data.parents.length && (
+        <span className="path">{data.parents.join(' / ')}</span>
+      )}
+    </span>
+    {data.count > 1 && <span className="count">×{data.count}</span>}
+    {data.direction === 'in' && <Handle type="source" position={Position.Right} />}
+  </Card>
+))
+
+const CenterNodeView = memo(({ data }: NodeProps<CenterNode>) => (
+  <Card className="center">
+    <Handle type="target" position={Position.Left} />
+    <Icon icon={data.icon} className="icon" style={{ color: data.iconColor }} />
+    <span className="text">
+      <span className="label">{data.label}</span>
+      <span className="path">{data.entityType}</span>
+    </span>
+    <Handle type="source" position={Position.Right} />
+  </Card>
+))
+
+const nodeTypes = { link: LinkNodeView, center: CenterNodeView }
+
+const CENTER_ID = '__center__'
+
+const buildLinkNodes = (
+  groups: EntityLinkGroup[],
+  direction: 'in' | 'out',
+  isManager: boolean,
+): LinkNode[] => {
+  const list = groups
     .filter((g) => g.direction === direction && g.links.length)
     .flatMap((g) =>
       groupLinksByEntity(g.links).map((l) => ({
-        key: `${g.key}:${l.groupKey}`,
-        direction,
+        id: `${g.key}:${l.groupKey}`,
         entityId: l.entityId,
         entityType: l.representative.entityType,
-        label: l.representative.label,
+        label: l.representative.isRestricted
+          ? isManager
+            ? 'Unknown'
+            : 'Access restricted'
+          : l.representative.label,
         parents: l.representative.parents,
         icon: l.representative.icon,
         iconColor: l.representative.color,
@@ -170,7 +243,29 @@ const buildNodes = (groups: EntityLinkGroup[], direction: 'in' | 'out'): GraphNo
       })),
     )
 
-const markerId = (color: string) => `links-graph-arrow-${color.replace(/[^a-zA-Z0-9]/g, '')}`
+  // Long lists wrap into several columns moving away from the centre, each
+  // column stacked around y = 0 where the centre node sits.
+  const columns = Math.max(1, Math.ceil(list.length / MAX_ROWS))
+  const perColumn = Math.ceil(list.length / columns)
+  return list.map(({ id, ...data }, i) => {
+    const col = Math.floor(i / perColumn)
+    const row = i % perColumn
+    const inColumn = Math.min(perColumn, list.length - col * perColumn)
+    const total = inColumn * (NODE_H + GAP_Y) - GAP_Y
+    const offset = GAP_X + col * (NODE_W + COLUMN_GAP)
+    return {
+      id,
+      type: 'link' as const,
+      position: {
+        x: direction === 'in' ? -(offset + NODE_W) : CENTER_W + offset,
+        y: -total / 2 + row * (NODE_H + GAP_Y),
+      },
+      width: NODE_W,
+      height: NODE_H,
+      data: { ...data, direction },
+    }
+  })
+}
 
 interface EntityLinksGraphProps {
   groups: EntityLinkGroup[]
@@ -183,7 +278,7 @@ interface EntityLinksGraphProps {
   onOpenEntity: (entity: LinkedEntityRef) => void
 }
 
-export const EntityLinksGraph: FC<EntityLinksGraphProps> = ({
+const EntityLinksGraph: FC<EntityLinksGraphProps> = ({
   groups,
   entityType,
   name,
@@ -193,105 +288,67 @@ export const EntityLinksGraph: FC<EntityLinksGraphProps> = ({
   isLoading,
   onOpenEntity,
 }) => {
-  const scrollerRef = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(0)
   const [hovered, setHovered] = useState<string | null>(null)
 
-  const inNodes = useMemo(() => buildNodes(groups, 'in'), [groups])
-  const outNodes = useMemo(() => buildNodes(groups, 'out'), [groups])
-  const hasNodes = inNodes.length + outNodes.length > 0
+  const linkNodes = useMemo(
+    () => [...buildLinkNodes(groups, 'in', isManager), ...buildLinkNodes(groups, 'out', isManager)],
+    [groups, isManager],
+  )
 
-  // the scroller only exists once there is something to draw
-  useLayoutEffect(() => {
-    const el = scrollerRef.current
-    if (!el) return
-    const observer = new ResizeObserver(() => setWidth(el.clientWidth))
-    observer.observe(el)
-    setWidth(el.clientWidth)
-    return () => observer.disconnect()
-  }, [hasNodes])
+  const nodes = useMemo<(LinkNode | CenterNode)[]>(
+    () => [
+      ...linkNodes,
+      {
+        id: CENTER_ID,
+        type: 'center',
+        position: { x: 0, y: -CENTER_H / 2 },
+        width: CENTER_W,
+        height: CENTER_H,
+        data: { label: name, entityType, icon, iconColor },
+      },
+    ],
+    [linkNodes, name, entityType, icon, iconColor],
+  )
+
+  const edges = useMemo<Edge[]>(
+    () =>
+      linkNodes.map((n) => {
+        const dim = hovered && hovered !== n.id
+        return {
+          id: `e:${n.id}`,
+          source: n.data.direction === 'in' ? n.id : CENTER_ID,
+          target: n.data.direction === 'in' ? CENTER_ID : n.id,
+          markerEnd: { type: MarkerType.ArrowClosed, color: n.data.color, width: 16, height: 16 },
+          style: {
+            stroke: n.data.color,
+            strokeWidth: hovered === n.id ? 3 : 1.5,
+            opacity: dim ? 0.2 : 0.9,
+          },
+        }
+      }),
+    [linkNodes, hovered],
+  )
 
   const legend = useMemo(() => {
     const map = new Map<string, { color: string; count: number }>()
-    for (const n of [...inNodes, ...outNodes]) {
-      const entry = map.get(n.linkType) || { color: n.color, count: 0 }
-      entry.count += n.count
-      map.set(n.linkType, entry)
+    for (const n of linkNodes) {
+      const entry = map.get(n.data.linkType) || { color: n.data.color, count: 0 }
+      entry.count += n.data.count
+      map.set(n.data.linkType, entry)
     }
     return [...map.entries()]
-  }, [inNodes, outNodes])
+  }, [linkNodes])
 
   if (isLoading) return <Empty>Loading links…</Empty>
-  if (!hasNodes) return <Empty>No links</Empty>
+  if (!linkNodes.length) return <Empty>No links</Empty>
 
-  // columns shrink on narrow dialogs, the centre keeps its size
-  const colW = Math.max(140, Math.min(NODE_W, (width - CENTER_W - 4 * PAD) / 2 - 40))
-  const rows = Math.max(inNodes.length, outNodes.length, 1)
-  const height = Math.max(rows * (NODE_H + GAP) - GAP, CENTER_H) + 2 * PAD
-  const centerX = (width - CENTER_W) / 2
-  const centerY = (height - CENTER_H) / 2
-  const leftX = PAD
-  const rightX = width - PAD - colW
-
-  // stack each column around the middle so short columns do not hug the top
-  const columnTop = (count: number) => (height - (count * (NODE_H + GAP) - GAP)) / 2
-  const nodeY = (n: GraphNode, i: number) =>
-    columnTop(n.direction === 'in' ? inNodes.length : outNodes.length) + i * (NODE_H + GAP)
-
-  const edgePath = (n: GraphNode, i: number) => {
-    const y = nodeY(n, i) + NODE_H / 2
-    const cy = centerY + CENTER_H / 2
-    if (n.direction === 'in') {
-      const x1 = leftX + colW
-      const x2 = centerX
-      const dx = (x2 - x1) / 2
-      return `M ${x1} ${y} C ${x1 + dx} ${y}, ${x2 - dx} ${cy}, ${x2} ${cy}`
-    }
-    const x1 = centerX + CENTER_W
-    const x2 = rightX
-    const dx = (x2 - x1) / 2
-    return `M ${x1} ${cy} C ${x1 + dx} ${cy}, ${x2 - dx} ${y}, ${x2} ${y}`
-  }
-
-  const colors = [...new Set([...inNodes, ...outNodes].map((n) => n.color))]
-
-  const renderNode = (n: GraphNode, i: number) => {
-    const clickable = !n.restricted
-    const label = n.restricted ? (isManager ? 'Unknown' : 'Access restricted') : n.label
-    return (
-      <Node
-        key={n.key}
-        className={clickable ? 'clickable' : 'restricted'}
-        style={{
-          left: n.direction === 'in' ? leftX : rightX,
-          top: nodeY(n, i),
-          width: colW,
-          height: NODE_H,
-          borderLeftColor: n.color,
-        }}
-        onMouseEnter={() => setHovered(n.key)}
-        onMouseLeave={() => setHovered(null)}
-        onClick={() => clickable && onOpenEntity({ id: n.entityId, entityType: n.entityType })}
-        data-tooltip={
-          n.restricted
-            ? undefined
-            : `${n.linkType} ${n.direction === 'in' ? 'input' : 'output'}: ${[
-                ...n.parents,
-                n.label,
-              ].join('/')}`
-        }
-      >
-        <Icon icon={n.icon} className="icon" style={{ color: n.iconColor }} />
-        <span className="text">
-          <span className="label">{label}</span>
-          {!n.restricted && !!n.parents.length && (
-            <span className="path">{n.parents.join(' / ')}</span>
-          )}
-        </span>
-        {n.count > 1 && <span className="count">×{n.count}</span>}
-      </Node>
-    )
-  }
+  // tall enough for the longest column, never taller than the dialog
+  const longest = Math.max(
+    linkNodes.filter((n) => n.data.direction === 'in').length,
+    linkNodes.filter((n) => n.data.direction === 'out').length,
+  )
+  const rows = Math.min(longest, MAX_ROWS)
+  const height = `min(${Math.max(rows * (NODE_H + GAP_Y) + 80, 260)}px, calc(70vh - 190px))`
 
   return (
     <Wrapper>
@@ -304,58 +361,37 @@ export const EntityLinksGraph: FC<EntityLinksGraphProps> = ({
         ))}
         <span style={{ marginLeft: 'auto' }}>inputs → {entityType} → outputs</span>
       </Legend>
-      <Scroller ref={scrollerRef}>
-        {width > 0 && (
-          <Canvas style={{ height }}>
-            <svg width={width} height={height}>
-              <defs>
-                {colors.map((c) => (
-                  <marker
-                    key={c}
-                    id={markerId(c)}
-                    viewBox="0 0 10 10"
-                    refX="9"
-                    refY="5"
-                    markerWidth="6"
-                    markerHeight="6"
-                    orient="auto-start-reverse"
-                  >
-                    <path d="M 0 0 L 10 5 L 0 10 z" style={{ fill: c }} />
-                  </marker>
-                ))}
-              </defs>
-              {[inNodes, outNodes].flatMap((column) =>
-                column.map((n, i) => (
-                  <path
-                    key={n.key}
-                    d={edgePath(n, i)}
-                    markerEnd={`url(#${markerId(n.color)})`}
-                    style={{
-                      stroke: n.color,
-                      strokeWidth: hovered === n.key ? 3 : 1.5,
-                      opacity: hovered && hovered !== n.key ? 0.25 : 0.9,
-                    }}
-                  />
-                )),
-              )}
-            </svg>
-            {inNodes.map(renderNode)}
-            <Node
-              className="center"
-              style={{ left: centerX, top: centerY, width: CENTER_W, height: CENTER_H }}
-            >
-              <Icon icon={icon} className="icon" style={{ color: iconColor }} />
-              <span className="text">
-                <span className="label">{name}</span>
-                <span className="path" style={{ direction: 'ltr' }}>
-                  {entityType}
-                </span>
-              </span>
-            </Node>
-            {outNodes.map(renderNode)}
-          </Canvas>
-        )}
-      </Scroller>
+      <FlowBox style={{ height }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          colorMode="dark"
+          fitView
+          fitViewOptions={{ padding: 0.12, maxZoom: 1, minZoom: 0.3 }}
+          minZoom={0.2}
+          maxZoom={1.5}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable={false}
+          edgesFocusable={false}
+          panOnScroll
+          zoomOnDoubleClick={false}
+          proOptions={{ hideAttribution: true }}
+          onNodeMouseEnter={(_, n) => n.type === 'link' && setHovered(n.id)}
+          onNodeMouseLeave={() => setHovered(null)}
+          onNodeClick={(_, n) => {
+            if (n.type !== 'link') return
+            const data = n.data as LinkNodeData
+            if (!data.restricted) onOpenEntity({ id: data.entityId, entityType: data.entityType })
+          }}
+        >
+          <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="#ffffff1a" />
+          <Controls showInteractive={false} />
+        </ReactFlow>
+      </FlowBox>
     </Wrapper>
   )
 }
+
+export default EntityLinksGraph
