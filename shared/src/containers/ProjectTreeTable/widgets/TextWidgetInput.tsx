@@ -24,12 +24,13 @@ const StyledInput = styled.input`
   font-weight: inherit;
   color: inherit;
   box-sizing: border-box;
-  /* fill the whole cell with a dark background so the field being edited stands out
+  /* fill the whole cell with a dark background and the focus outline so the field being edited stands out
      from the rest of a (large) selection, like the multiline editor */
   position: absolute;
   inset: 0;
   padding: 0 8px 0 9px;
   background-color: var(--md-sys-color-surface-container-lowest);
+  box-shadow: inset 0 0 0 2px var(--md-sys-color-primary);
 `
 
 export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps>(
