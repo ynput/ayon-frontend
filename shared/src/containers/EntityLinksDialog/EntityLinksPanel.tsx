@@ -1,16 +1,19 @@
-import { FC, lazy, Suspense, useMemo, useState } from 'react'
-import { Button, Icon } from '@ynput/ayon-react-components'
+import { FC, Fragment, lazy, Suspense, useMemo, useState } from 'react'
+import { Button, Icon, InputSwitch } from '@ynput/ayon-react-components'
 import {
   detailsPanelEntityTypes,
   useGetEntitiesDetailsPanelQuery,
   useGetEntityLinksQuery,
   useGetEntityQuery,
+  useGetLinksOfEntitiesQuery,
 } from '@shared/api'
 import type { DetailsPanelEntityType } from '@shared/api'
 import { useProjectContext } from '@shared/context'
 import { useGlobalContext } from '@shared/context/GlobalContext'
 import { Thumbnail } from '@shared/components/Thumbnail'
 import { LinkManagerItem } from '@shared/components/LinksManager/LinkManagerItem'
+import { LinkItem } from '@shared/components/LinksManager/LinksManager.styled'
+import { EntityIcon } from '@shared/components/EntityIcon/EntityIcon'
 import AddNewLinks, { LinkSearchType } from '@shared/components/LinksManager/AddNewLinks'
 import useUpdateLinks from '@shared/components/LinksManager/hooks/useUpdateLinks'
 import { groupLinksByEntity } from '@shared/components/LinksManager/utils/groupLinks'
@@ -18,7 +21,15 @@ import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog/Entity
 import type { PickerEntityType } from '@shared/containers/EntityPickerDialog/EntityPickerDialog'
 import { getEntityColor, getEntityIcon } from '@shared/util/iconUtils'
 import { getEntityId, getRequestErrorString } from '@shared/util'
-import { EntityLinkGroup, groupEntityLinks } from './groupEntityLinks'
+import {
+  aggregateLinks,
+  AggregatedLink,
+  AggregatedLinkGroup,
+  EntityLinkGroup,
+  groupEntityLinks,
+  LinkMember,
+} from './groupEntityLinks'
+import { MAX_CHILDREN, useEntityChildren } from './useEntityChildren'
 import * as Styled from './EntityLinksDialog.styled'
 
 // React Flow is only loaded when someone switches to the graph view
@@ -201,6 +212,127 @@ const LinkGroupSection: FC<LinkGroupSectionProps> = ({
   )
 }
 
+const plural = (word: string, n: number) =>
+  n === 1
+    ? word
+    : /[^aeiou]y$/.test(word)
+    ? `${word.slice(0, -1)}ies`
+    : /(s|x|z|ch|sh)$/.test(word)
+    ? `${word}es`
+    : `${word}s`
+
+/** "shots" when all members share a type, the entity type otherwise */
+const membersNoun = (members: LinkMember[], n: number) => {
+  const subTypes = new Set(members.map((m) => m.subType))
+  const [subType] = subTypes
+  const word = subTypes.size === 1 && subType ? subType.toLowerCase() : members[0]?.entityType
+  return plural(word || 'child', n)
+}
+
+// "this", "010_0020", "010_0020, 010_0030" or "this + 12 shots"
+const viaLabel = (via: LinkMember[], selfId: string) => {
+  const self = via.some((m) => m.id === selfId)
+  const children = via.filter((m) => m.id !== selfId)
+  const parts = self ? ['this'] : []
+  if (children.length && children.length <= 2 && !self)
+    parts.push(children.map((m) => m.name).join(', '))
+  else if (children.length)
+    parts.push(`${children.length} ${membersNoun(children, children.length)}`)
+  return parts.join(' + ')
+}
+
+const MAX_TOOLTIP_NAMES = 20
+
+const viaTooltip = (item: AggregatedLink, selfId: string) => {
+  const names = item.via.map((m) => (m.id === selfId ? `${m.name} (this)` : m.name))
+  const shown = names.slice(0, MAX_TOOLTIP_NAMES).join(', ')
+  const more =
+    names.length > MAX_TOOLTIP_NAMES ? ` and ${names.length - MAX_TOOLTIP_NAMES} more` : ''
+  const path = item.link.isRestricted
+    ? ''
+    : `${[...item.link.parents, item.link.label].join('/')}: `
+  return `${path}linked to ${shown}${more}`
+}
+
+interface AggregatedGroupSectionProps {
+  group: AggregatedLinkGroup
+  selfId: string
+  isManager: boolean
+  onOpenEntity: (entity: LinkedEntityRef) => void
+}
+
+const AggregatedGroupSection: FC<AggregatedGroupSectionProps> = ({
+  group,
+  selfId,
+  isManager,
+  onOpenEntity,
+}) => {
+  const pair =
+    group.direction === 'in'
+      ? `${group.otherEntityType} → ${group.memberEntityType}`
+      : `${group.memberEntityType} → ${group.otherEntityType}`
+  return (
+    <Styled.Group>
+      <Styled.GroupHeader>
+        <span
+          className="dot"
+          style={{ backgroundColor: group.color || 'var(--md-sys-color-outline)' }}
+        />
+        <span>{group.linkType}</span>
+        <span className="pair">{pair}</span>
+        <span className="grow" />
+        <span className="pair">{group.items.length}</span>
+      </Styled.GroupHeader>
+      {group.items.map((item) => {
+        const { link } = item
+        const clickable =
+          !link.isRestricted &&
+          detailsPanelEntityTypes.includes(link.entityType as DetailsPanelEntityType)
+        return (
+          <LinkItem
+            key={item.key}
+            className={
+              link.isRestricted
+                ? isManager
+                  ? 'unknown'
+                  : 'restricted'
+                : clickable
+                ? 'clickable'
+                : undefined
+            }
+            onClick={() =>
+              clickable && onOpenEntity({ id: link.entityId, entityType: link.entityType })
+            }
+            data-tooltip={viaTooltip(item, selfId)}
+          >
+            <EntityIcon
+              entity={{ entityType: link.entityType }}
+              icon={link.icon}
+              color={link.color}
+            />
+            <span className="title">
+              {link.isRestricted ? (
+                <span className="label">{isManager ? 'Unknown' : 'Access Restricted'}</span>
+              ) : (
+                <>
+                  {link.parents.map((part, index) => (
+                    <Fragment key={index}>
+                      <span>{part}</span>
+                      <span>/</span>
+                    </Fragment>
+                  ))}
+                  <span className="label">{link.label}</span>
+                </>
+              )}
+            </span>
+            <Styled.Via>{viaLabel(item.via, selfId)}</Styled.Via>
+          </LinkItem>
+        )
+      })}
+    </Styled.Group>
+  )
+}
+
 export type EntityLinksView = 'columns' | 'graph'
 
 export interface EntityLinksPanelProps {
@@ -210,6 +342,9 @@ export interface EntityLinksPanelProps {
   canEdit: boolean
   /** the graph view is read-only */
   view?: EntityLinksView
+  /** columns view: incoming links of the entity and everything below it, read-only */
+  includeChildren?: boolean
+  onIncludeChildrenChange?: (includeChildren: boolean) => void
   onOpenEntity: (entity: LinkedEntityRef) => void
   onOpenDetails?: () => void
 }
@@ -220,6 +355,8 @@ export const EntityLinksPanel: FC<EntityLinksPanelProps> = ({
   entityId,
   canEdit,
   view = 'columns',
+  includeChildren = false,
+  onIncludeChildrenChange,
   onOpenEntity,
   onOpenDetails,
 }) => {
@@ -246,10 +383,116 @@ export const EntityLinksPanel: FC<EntityLinksPanelProps> = ({
     [links, entityType, linkTypes, anatomy],
   )
 
+  const children = useEntityChildren(projectName, entityType, entityId)
+  const hasChildren = children.children.length > 0
+  const showChildren = includeChildren && hasChildren && view === 'columns'
+  const childIds = useMemo(() => children.children.map((c) => c.id), [children.children])
+  const {
+    data: childLinksData = [],
+    isFetching: isFetchingChildLinks,
+    error: childLinksError,
+  } = useGetLinksOfEntitiesQuery(
+    { projectName, entityIds: childIds, entityType: children.childType || 'folder' },
+    { skip: !showChildren, refetchOnMountOrArgChange: true },
+  )
+
+  const aggregated = useMemo(() => {
+    if (!showChildren) return undefined
+    const linksById = new Map<string, typeof links>()
+    for (const e of [...linksData, ...childLinksData]) linksById.set(e.id, e.links)
+    const self: LinkMember = {
+      id: entityId,
+      entityType,
+      name: header?.name || entityType,
+      subType: header?.subType,
+    }
+    return aggregateLinks(
+      [self, ...children.children].map((member) => ({
+        member,
+        links: linksById.get(member.id) || [],
+      })),
+      'in',
+      linkTypes,
+      anatomy,
+    )
+  }, [
+    showChildren,
+    linksData,
+    childLinksData,
+    entityId,
+    entityType,
+    header,
+    children,
+    linkTypes,
+    anatomy,
+  ])
+
   const icon = getEntityIcon(entityType, header?.subType, anatomy)
   const color = getEntityColor(entityType, header?.subType, anatomy)
 
+  const childrenSwitch = hasChildren && onIncludeChildrenChange && (
+    <Styled.ChildrenSwitch
+      data-tooltip={`Also list the incoming links of all ${children.children.length}${
+        children.truncated ? '+' : ''
+      } ${membersNoun(children.children, children.children.length)} below this ${entityType}`}
+    >
+      Include children
+      <InputSwitch
+        checked={includeChildren}
+        compact
+        onChange={() => onIncludeChildrenChange(!includeChildren)}
+      />
+    </Styled.ChildrenSwitch>
+  )
+
+  const renderChildrenColumn = (agg: NonNullable<typeof aggregated>) => {
+    const total = agg.groups.reduce((n, g) => n + g.items.length, 0)
+    const loading = isLoading || isFetchingChildLinks || children.isLoading
+    const count = children.children.length
+    return (
+      <Styled.Column>
+        <Styled.ColumnHeader>
+          <Icon icon="login" />
+          Incoming
+          <span className="count">{total}</span>
+          <span className="hint">
+            inputs of this and {count}
+            {children.truncated ? '+' : ''} {membersNoun(children.children, count)}
+          </span>
+          {childrenSwitch}
+        </Styled.ColumnHeader>
+        {childLinksError ? (
+          <Styled.Empty>
+            Could not load links: {getRequestErrorString(childLinksError)}
+          </Styled.Empty>
+        ) : loading && !total ? (
+          <Styled.Empty>Loading links…</Styled.Empty>
+        ) : !total ? (
+          <Styled.Empty>No incoming links</Styled.Empty>
+        ) : (
+          agg.groups.map((group) => (
+            <AggregatedGroupSection
+              key={group.key}
+              group={group}
+              selfId={entityId}
+              isManager={isManager}
+              onOpenEntity={onOpenEntity}
+            />
+          ))
+        )}
+        {(!!agg.internal || children.truncated) && (
+          <Styled.Empty>
+            {!!agg.internal &&
+              `${agg.internal} ${plural('link', agg.internal)} between children not shown. `}
+            {children.truncated && `Only the first ${MAX_CHILDREN} children are included.`}
+          </Styled.Empty>
+        )}
+      </Styled.Column>
+    )
+  }
+
   const renderColumn = (direction: 'in' | 'out') => {
+    if (direction === 'in' && aggregated) return renderChildrenColumn(aggregated)
     // read-only users only see link types that have links
     const columnGroups = groups.filter(
       (g) => g.direction === direction && (g.links.length || (canEdit && g.inAnatomy)),
@@ -262,6 +505,7 @@ export const EntityLinksPanel: FC<EntityLinksPanelProps> = ({
           {direction === 'in' ? 'Incoming' : 'Outgoing'}
           <span className="count">{total}</span>
           <span className="hint">{direction === 'in' ? 'inputs of this' : 'uses this'}</span>
+          {direction === 'in' && childrenSwitch}
         </Styled.ColumnHeader>
         {isLoading && <Styled.Empty>Loading links…</Styled.Empty>}
         {!isLoading && !columnGroups.length && (

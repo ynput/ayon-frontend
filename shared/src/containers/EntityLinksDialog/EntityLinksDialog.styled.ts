@@ -1,12 +1,20 @@
 import styled from 'styled-components'
 import { theme } from '@ynput/ayon-react-components'
 
+// the dialog has a fixed size, so switching views or entities doesn't resize it
+export const dialogStyle = {
+  width: 'min(1400px, 94vw)',
+  maxWidth: '94vw',
+  height: 'min(1000px, 88vh)',
+  maxHeight: '88vh',
+}
+
 export const Body = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-large);
-  min-height: 360px;
-  max-height: 70vh;
+  flex: 1;
+  min-height: 0;
 `
 
 export const Header = styled.div`
@@ -112,6 +120,26 @@ export const ColumnHeader = styled.div`
     font-weight: normal;
     margin-left: auto;
   }
+`
+
+export const ChildrenSwitch = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  ${theme.bodySmall}
+  font-weight: normal;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  white-space: nowrap;
+  margin-left: 8px;
+`
+
+export const Via = styled.span`
+  ${theme.bodySmall}
+  color: var(--md-sys-color-outline);
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 0 4px;
 `
 
 export const Group = styled.div`

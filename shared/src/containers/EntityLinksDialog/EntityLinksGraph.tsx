@@ -27,7 +27,7 @@ const NODE_H = 40
 const GAP_Y = 8
 const GAP_X = 120
 const COLUMN_GAP = 40
-const MAX_ROWS = 8
+const MAX_ROWS = 12
 const CENTER_W = 200
 const CENTER_H = 56
 const DEFAULT_COLOR = '#8a9199'
@@ -60,6 +60,8 @@ const Legend = styled.div`
 `
 
 const FlowBox = styled.div`
+  flex: 1;
+  min-height: 240px;
   border-radius: var(--border-radius-l);
   overflow: hidden;
   background-color: var(--md-sys-color-surface-container-low);
@@ -342,14 +344,6 @@ const EntityLinksGraph: FC<EntityLinksGraphProps> = ({
   if (isLoading) return <Empty>Loading links…</Empty>
   if (!linkNodes.length) return <Empty>No links</Empty>
 
-  // tall enough for the longest column, never taller than the dialog
-  const longest = Math.max(
-    linkNodes.filter((n) => n.data.direction === 'in').length,
-    linkNodes.filter((n) => n.data.direction === 'out').length,
-  )
-  const rows = Math.min(longest, MAX_ROWS)
-  const height = `min(${Math.max(rows * (NODE_H + GAP_Y) + 80, 260)}px, calc(70vh - 190px))`
-
   return (
     <Wrapper>
       <Legend>
@@ -361,14 +355,14 @@ const EntityLinksGraph: FC<EntityLinksGraphProps> = ({
         ))}
         <span style={{ marginLeft: 'auto' }}>inputs → {entityType} → outputs</span>
       </Legend>
-      <FlowBox style={{ height }}>
+      <FlowBox>
         <ReactFlow
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}
           colorMode="dark"
           fitView
-          fitViewOptions={{ padding: 0.12, maxZoom: 1, minZoom: 0.3 }}
+          fitViewOptions={{ padding: 0.2, maxZoom: 1, minZoom: 0.3 }}
           minZoom={0.2}
           maxZoom={1.5}
           nodesDraggable={false}

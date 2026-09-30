@@ -42,6 +42,10 @@ export const EntityLinksDialog: FC = () => {
 
   // remembered between openings
   const [view, setView] = useLocalStorage<EntityLinksView>('entityLinksDialog.view', 'columns')
+  const [includeChildren, setIncludeChildren] = useLocalStorage(
+    'entityLinksDialog.includeChildren',
+    false,
+  )
   const access = useEntityLinksEditAccess()
   const { openSlideOut, useNavigate } = useDetailsPanelContext()
   const navigate = useNavigate()
@@ -185,7 +189,14 @@ export const EntityLinksDialog: FC = () => {
   )
 
   return (
-    <Dialog isOpen onClose={close} header={header} footer={footer} size="lg">
+    <Dialog
+      isOpen
+      onClose={close}
+      header={header}
+      footer={footer}
+      size="full"
+      style={Styled.dialogStyle}
+    >
       <ProjectContextProvider key={projectName} projectName={projectName}>
         <EntityLinksPanel
           key={`${entityType}:${id}`}
@@ -194,6 +205,8 @@ export const EntityLinksDialog: FC = () => {
           entityId={id}
           canEdit={access.canEdit && view !== 'graph'}
           view={view}
+          includeChildren={includeChildren}
+          onIncludeChildrenChange={setIncludeChildren}
           onOpenEntity={openEntity}
           onOpenDetails={canOpenDetails ? openDetails : undefined}
         />

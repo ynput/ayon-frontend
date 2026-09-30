@@ -94,6 +94,28 @@ const entityResultPaths = {
   workfile: 'workfiles',
 } as const
 
+// flatten one entity of a Get*Links result, links to entities the user can't see have no node
+const toEntityWithLinks = (node: any): EntityWithLinks => ({
+  id: node.id,
+  links:
+    node.links.edges?.map((linkEdge: EntityLinkQuery | null) => {
+      if (!linkEdge?.node) {
+        return { ...linkEdge, node: null, isRestricted: true } as EntityLink
+      }
+      return {
+        ...linkEdge,
+        node: {
+          id: linkEdge.node.id,
+          name: linkEdge.node.name,
+          label: formatEntityLabel(linkEdge.node),
+          parents: linkEdge.node.parents || [],
+          subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
+        },
+        isRestricted: false,
+      } as EntityLink
+    }) || [],
+})
+
 const injectedQueries = foldersApi.injectEndpoints({
   endpoints: (build) => ({
     getEntityLinks: build.query<GetEntityLinksResult, GetEntityLinksArgs>({
@@ -150,32 +172,7 @@ const injectedQueries = foldersApi.injectEndpoints({
                 )
               }
 
-              return {
-                id: node.id,
-                links:
-                  node.links.edges?.map((linkEdge: EntityLinkQuery | null) => {
-                    if (!linkEdge?.node) {
-                      // Restricted link - node is null
-                      return {
-                        ...linkEdge,
-                        node: null,
-                        isRestricted: true,
-                      } as EntityLink
-                    }
-                    // Normal link
-                    return {
-                      ...linkEdge,
-                      node: {
-                        id: linkEdge.node.id,
-                        name: linkEdge.node.name,
-                        label: formatEntityLabel(linkEdge.node),
-                        parents: linkEdge.node.parents || [],
-                        subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
-                      },
-                      isRestricted: false,
-                    } as EntityLink
-                  }) || [], // Flatten the edges structure
-              }
+              return toEntityWithLinks(node)
             }) || []
 
           // Return the new entities - the merge function will handle combining with existing cache
@@ -257,32 +254,9 @@ const injectedQueries = foldersApi.injectEndpoints({
               if (!isActive()) return
 
               const updatedEntities =
-                result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => {
-                  return {
-                    id: node.id,
-                    links:
-                      node.links.edges?.map((linkEdge: EntityLinkQuery | null) => {
-                        if (!linkEdge?.node) {
-                          return {
-                            ...linkEdge,
-                            node: null,
-                            isRestricted: true,
-                          } as EntityLink
-                        }
-                        return {
-                          ...linkEdge,
-                          node: {
-                            id: linkEdge.node.id,
-                            name: linkEdge.node.name,
-                            label: formatEntityLabel(linkEdge.node),
-                            parents: linkEdge.node.parents || [],
-                            subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
-                          },
-                          isRestricted: false,
-                        } as EntityLink
-                      }) || [],
-                  }
-                }) || []
+                result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) =>
+                  toEntityWithLinks(node),
+                ) || []
 
               updateCachedData((draft: EntityWithLinks[]) => {
                 for (const updatedEntity of updatedEntities) {
@@ -328,8 +302,36 @@ const injectedQueries = foldersApi.injectEndpoints({
         batcher.clear()
       },
     }),
+    /**
+     * The same data as getEntityLinks, cached per set of arguments instead of
+     * merged into one cache entry per entity type. getEntityLinks drops a
+     * request made while another one for the same entity type is in flight,
+     * so a second list of entities on screen at the same time uses this one.
+     * No realtime updates.
+     */
+    getLinksOfEntities: build.query<GetEntityLinksResult, GetEntityLinksArgs>({
+      queryFn: async ({ projectName, entityIds, entityType }, { dispatch }) => {
+        if (!entityIds.length) return { data: [] }
+        try {
+          const result = await dispatch(
+            (gqlLinksApi.endpoints as any)[entityEndpoints[entityType]].initiate(
+              { projectName, entityIds },
+              { forceRefetch: true },
+            ),
+          ).unwrap()
+          const edges = result.project?.[entityResultPaths[entityType]]?.edges || []
+          return { data: edges.map(({ node }: { node: any }) => toEntityWithLinks(node)) }
+        } catch (error: any) {
+          return { error: normalizeQueryError(error) }
+        }
+      },
+      providesTags: (_result, _error, arg) => [
+        ...arg.entityIds.map((id) => ({ type: 'link', id })),
+        { type: 'link', id: `${arg.projectName}-${arg.entityType}` },
+      ],
+    }),
   }),
 })
 
-export const { useGetEntityLinksQuery } = injectedQueries
+export const { useGetEntityLinksQuery, useGetLinksOfEntitiesQuery } = injectedQueries
 export { injectedQueries as entityLinksApi }
