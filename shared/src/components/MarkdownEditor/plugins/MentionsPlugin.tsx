@@ -221,6 +221,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
                       className={clsx({ active: filter === f.id })}
                       onClick={() => setFilter((prev) => (prev === f.id ? null : f.id))}
                       data-tooltip={f.tooltip}
+                      aria-label={f.tooltip}
                       data-tooltip-delay={0}
                       type="button"
                     >
