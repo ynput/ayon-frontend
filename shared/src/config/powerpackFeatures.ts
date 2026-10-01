@@ -98,7 +98,7 @@ export const powerpackFeatures: {
   entityLinks: {
     label: 'Entity Links',
     description:
-      'Press G on any entity to see and edit everything linked to it, including the links of everything below a folder.',
+      'Press G on any entity for a graph of everything linked to it, or L to see and edit its links in columns, including the links of everything below a folder.',
     bullet: 'See and edit links of any entity',
   },
 }

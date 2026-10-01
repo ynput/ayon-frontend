@@ -1,8 +1,9 @@
-// Press G anywhere with an entity selected to see everything linked to it.
-// The links dialog is part of the Power Pack and loaded from it as a remote
-// module ("links/EntityLinksDialog"); without the Power Pack, G shows what the
-// Power Pack offers. This slot owns the shortcut and the selection, the module
-// owns the dialog.
+// With an entity selected, G shows a graph of everything linked to it and L the
+// same links in columns, where they can be edited. The links dialog is part of
+// the Power Pack and loaded from it as a remote module
+// ("links/EntityLinksDialog"); without the Power Pack, G and L show what the
+// Power Pack offers. This slot owns the shortcuts, the selection and the view,
+// the module owns the dialog.
 
 import { FC, useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
@@ -17,7 +18,13 @@ import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { getActiveEntities, shouldBlockShortcuts } from '@shared/util'
 import type { ActiveEntity } from '@shared/util'
 
-export const ENTITY_LINKS_SHORTCUT = 'g'
+export type EntityLinksView = 'graph' | 'columns'
+
+/** Opens the dialog in that view; while open, the same key closes it and the other switches. */
+export const ENTITY_LINKS_SHORTCUTS: Record<string, EntityLinksView> = {
+  g: 'graph',
+  l: 'columns',
+}
 
 // the Power Pack version that has the links dialog
 const POWERPACK_MIN_VERSION = '1.6.7'
@@ -26,8 +33,11 @@ const NODEGRAPH_MIN_VERSION = '0.4.0'
 
 /** What the host passes to the links dialog module. */
 export interface EntityLinksDialogProps {
-  /** entities selected when G was pressed; the dialog starts with the first */
+  /** entities selected when G or L was pressed; the dialog starts with the first */
   entities: ActiveEntity[]
+  /** G opens the graph, L the columns; the dialog's own switch calls onViewChange */
+  view: EntityLinksView
+  onViewChange: (view: EntityLinksView) => void
   onClose: () => void
   /** open an entity in the details slide-out (details panel entity types only) */
   onOpenDetails: (entity: ActiveEntity) => void
@@ -37,7 +47,7 @@ export interface EntityLinksDialogProps {
   readOnly: boolean
 }
 
-// Without the Power Pack, G opens the Power Pack dialog on the links feature.
+// Without the Power Pack, G and L open the Power Pack dialog on the links feature.
 const EntityLinksDialogFallback: FC<EntityLinksDialogProps> = ({ onClose }) => {
   const { setPowerpackDialog } = usePowerpack()
   useEffect(() => {
@@ -59,7 +69,9 @@ const isTextTarget = (e: KeyboardEvent) => {
 
 /** Mounted once at app level, inside the details panel and Power Pack providers. */
 export const EntityLinksSlot: FC = () => {
-  const [entities, setEntities] = useState<ActiveEntity[] | null>(null)
+  const [dialog, setDialog] = useState<{ entities: ActiveEntity[]; view: EntityLinksView } | null>(
+    null,
+  )
   const [EntityLinksDialog, { isLoaded, isLoading, outdated }] = useLoadModule({
     addon: 'powerpack',
     remote: 'links',
@@ -77,23 +89,35 @@ export const EntityLinksSlot: FC = () => {
   const hasNodegraph = !!getProductionAddon('nodegraph', { minVersion: NODEGRAPH_MIN_VERSION })
   const { user } = useGlobalContext()
 
-  const isOpen = !!entities
-  const close = useCallback(() => setEntities(null), [])
+  const close = useCallback(() => setDialog(null), [])
+  const setView = useCallback(
+    (view: EntityLinksView) => setDialog((open) => (open ? { ...open, view } : open)),
+    [],
+  )
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== ENTITY_LINKS_SHORTCUT || e.repeat) return
+      const view = ENTITY_LINKS_SHORTCUTS[e.key]
+      if (!view || e.repeat) return
       if (e.ctrlKey || e.metaKey || e.altKey) return
       if (shouldBlockShortcuts(e) || isTextTarget(e)) return
       // until the module has loaded we would show the fallback by mistake
       if (isLoading) return
-      e.preventDefault()
-      if (isOpen) return close()
+      if (dialog) {
+        e.preventDefault()
+        if (dialog.view === view) close()
+        else setView(view)
+        return
+      }
       const active = getActiveEntities()
       if (!active.length) {
+        // outside projects the keys stay with the page (L uploads an installer in Bundles)
+        if (!window.location.pathname.startsWith('/projects/')) return
+        e.preventDefault()
         toast.info('Select an entity to see its links', { autoClose: 2000 })
         return
       }
+      e.preventDefault()
       // the Power Pack is there but too old for the links dialog
       if (outdated) {
         toast.info(`The links dialog needs Power Pack ${outdated.required} or newer`)
@@ -103,11 +127,11 @@ export const EntityLinksSlot: FC = () => {
         toast.error('The links dialog could not be loaded, see the browser console')
         return
       }
-      setEntities(active)
+      setDialog({ entities: active, view })
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [isOpen, isLoading, outdated, failedToLoad, close])
+  }, [dialog, isLoading, outdated, failedToLoad, close, setView])
 
   const openDetails = useCallback(
     (entity: ActiveEntity) => {
@@ -134,11 +158,13 @@ export const EntityLinksSlot: FC = () => {
     [navigate, close],
   )
 
-  if (!entities) return null
+  if (!dialog) return null
 
   return (
     <EntityLinksDialog
-      entities={entities}
+      entities={dialog.entities}
+      view={dialog.view}
+      onViewChange={setView}
       onClose={close}
       onOpenDetails={openDetails}
       onOpenInNodegraph={hasNodegraph ? openInNodegraph : undefined}
