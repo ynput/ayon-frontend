@@ -1529,8 +1529,7 @@ const buildTreeTableColumns = ({
               const cellValue = value?.map((v: any) => v.label)
               const entity = getScopedEntity(row.original, scope)
               if (!entity) return null
-              const isLinksLoading =
-                scope === 'primary' && !!table.options.meta?.loadingLinksEntityIds?.has(entity.id)
+              const isLinksLoading = !!table.options.meta?.loadingLinksEntityIds?.has(entity.id)
               const valueData: LinkWidgetData = {
                 links: value,
                 direction,
