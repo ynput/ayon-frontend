@@ -9,7 +9,7 @@
 //   window.parent.postMessage({ action: 'close_details' }, origin)
 //   window.parent.postMessage({ action: 'open_player', target }, origin)
 //     open the player, target is { versionId, productId, taskId, folderId }
-//     with the ids that apply
+//     with the ids that apply; a version needs its folderId or productId
 //
 // entities are [{ id, entityType }] in the current project.
 
@@ -37,14 +37,23 @@ const toViewerPayload = (
   projectName: string,
   target: AddonPlayerTarget,
 ): Partial<ViewerState> | null => {
-  // like the tables: a version opens with its product, otherwise the most specific id
+  // The viewer only opens for a folder, task or product. Like the tables, a
+  // version opens its folder with that version selected, or its product.
   if (target.versionId) {
-    return {
-      projectName,
-      quickView: true,
-      versionIds: [target.versionId],
-      selectedProductId: target.productId,
+    const versionIds = [target.versionId]
+    if (target.folderId) {
+      return {
+        projectName,
+        quickView: true,
+        folderId: target.folderId,
+        selectedProductId: target.productId,
+        versionIds,
+      }
     }
+    if (target.productId) {
+      return { projectName, quickView: true, productId: target.productId, versionIds }
+    }
+    return null
   }
   if (target.taskId) return { projectName, quickView: true, taskId: target.taskId }
   if (target.folderId) return { projectName, quickView: true, folderId: target.folderId }
