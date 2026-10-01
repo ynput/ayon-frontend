@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, ReactNode } from 'react'
 import { toast } from 'react-toastify'
 import { getRequestErrorString } from '@shared/util'
+import { getQueryErrorCodes } from '@shared/api/base/queryError'
 import {
   useUpdateOverviewEntitiesMutation,
   useLazyGetFolderDeleteInfoQuery,
@@ -227,7 +228,7 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
         },
         accept: runDelete,
         recover: async (error: any): Promise<RecoverResult> => {
-          if (!error?.errorCodes?.includes(FOLDER_WITH_CHILDREN_CODE)) return 'unhandled'
+          if (!getQueryErrorCodes(error).includes(FOLDER_WITH_CHILDREN_CODE)) return 'unhandled'
           const confirmed = await confirmForce({
             entityLabel,
             message: `Are you really sure you want to delete ${entityLabel} and all of its dependencies? This cannot be undone. (NOT RECOMMENDED)`,
