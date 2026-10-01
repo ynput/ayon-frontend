@@ -7142,6 +7142,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "representationFilter",
+                "description": "Filter versions by their representations using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "productIds",
                 "description": "List of parent products IDs",
                 "type": {
@@ -10989,6 +11001,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "representationFilter",
+                "description": "Filter versions by their representations using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "productIds",
                 "description": "List of parent products IDs",
                 "type": {
@@ -14778,6 +14802,18 @@
               {
                 "name": "productFilter",
                 "description": "Filter versions by their product using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "representationFilter",
+                "description": "Filter versions by their representations using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",

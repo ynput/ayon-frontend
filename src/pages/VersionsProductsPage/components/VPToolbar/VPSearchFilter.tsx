@@ -5,8 +5,10 @@ import { buildScopes } from '@shared/components'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
 
 // folderType/taskType are only whitelisted on the flat versions resolver — the
-// products resolver (hierarchy mode) and task filters reject them server-side
-const SCOPES = buildScopes(['version', 'product', 'task', 'folder'], {
+// products resolver (hierarchy mode) and task filters reject them server-side.
+// representation filters only exist on the versions resolver, so in hierarchy
+// mode they narrow the versions under each product, not the product rows
+const SCOPES = buildScopes(['version', 'product', 'task', 'folder', 'representation'], {
   version: ['folderType', 'taskType'],
   task: ['folderType'],
 })

@@ -34,7 +34,7 @@ import { useFetchAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOpti
 import { useGlobalContext } from '@shared/context/GlobalContext'
 import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContextInstance'
 
-type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version'
+type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version' | 'representation'
 type Scope = ScopeType | ScopeType[]
 
 export type ScopeWithFilterTypes = {
@@ -55,6 +55,7 @@ export type FilterFieldType =
   | 'hasReviewables'
   | 'productName'
   | 'name'
+  | 'extension' // representation: file extension, matched against the file path by the page
   | 'createdAt'
   | 'updatedAt'
 type AttributeType =
@@ -98,6 +99,7 @@ export type BuildFilterOptions = {
 
 const FILTER_OPTIONS_ORDER = new Set<FilterFieldType>([
   'name',
+  'extension',
   'status',
   'tags',
   'assignees',
@@ -499,6 +501,21 @@ export const useBuildFilterOptions = ({
       }
     }
 
+    // EXTENSION
+    // free text extension filter for representations; the page resolves it to a path match
+    if (scopeFilterTypes.includes('extension') && currentScope === 'representation') {
+      const extensionOption = getOptionRoot(
+        'extension',
+        config,
+        entityType,
+        groupedFilterTypes.has('extension'),
+      )
+
+      if (extensionOption) {
+        options.push(extensionOption)
+      }
+    }
+
     // HAS REVIEWABLES
     // add hasReviewables option
     if (scopeFilterTypes.includes('hasReviewables')) {
@@ -571,8 +588,12 @@ export const useBuildFilterOptions = ({
     // ATTRIBUTES
     // dynamically add attributes options
     if (scopeFilterTypes.includes('attributes')) {
-      const attributesByScope = attributes.filter((attribute) =>
-        attribute.scope?.includes(currentScope),
+      const attributesByScope = attributes.filter(
+        (attribute) =>
+          attribute.scope?.includes(currentScope) &&
+          // replaced by the dedicated extension option: publishing never sets this
+          // attribute on representations, so filtering on it matches nothing
+          !(scopeFilterTypes.includes('extension') && attribute.name === 'extension'),
       )
       // if attributesData is provided, filter out attributes that are not in the attributesData
       const attributesByValues = !isEmpty(data.attributes)
@@ -1007,6 +1028,22 @@ const getOptionRoot = (
         operatorChangeable: false,
       }
       break
+    case 'extension':
+      rootOption = {
+        id: getRootIdWithPrefix('extension'),
+        type: 'string',
+        label: 'File Extension',
+        icon: getAttributeIcon('extension', 'string'),
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: true,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: false,
+        operatorChangeable: false,
+      }
+      break
     case 'hasReviewables':
       rootOption = {
         id: getRootIdWithPrefix('hasReviewables'),
@@ -1323,6 +1360,7 @@ export const splitFiltersByScope = (
     task: { conditions: [], operator: combinedFilter?.operator || 'and' },
     user: { conditions: [], operator: combinedFilter?.operator || 'and' },
     version: { conditions: [], operator: combinedFilter?.operator || 'and' },
+    representation: { conditions: [], operator: combinedFilter?.operator || 'and' },
     unscoped: { conditions: [], operator: combinedFilter?.operator || 'and' },
   }
 
@@ -1358,6 +1396,7 @@ export const splitFiltersByScope = (
       task: [],
       user: [],
       version: [],
+      representation: [],
       unscoped: [],
     }
 
@@ -1451,6 +1490,7 @@ export const splitClientFiltersByScope = (
     task: [],
     user: [],
     version: [],
+    representation: [],
     unscoped: [],
   }
 
