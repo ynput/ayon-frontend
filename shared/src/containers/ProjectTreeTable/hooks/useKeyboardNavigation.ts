@@ -159,7 +159,16 @@ export default function useKeyboardNavigation() {
           } else {
             // For all other columns, start editing the cell (if not read-only)
             if (!isReadOnly) {
-              setEditingCellId(focusedCellId)
+              const checkbox = colId.startsWith('attrib_')
+                ? document
+                    .getElementById(focusedCellId)
+                    ?.querySelector<HTMLInputElement>('input[type="checkbox"]')
+                : null
+              if (checkbox && !checkbox.disabled) {
+                checkbox.click()
+              } else {
+                setEditingCellId(focusedCellId)
+              }
             }
           }
           break
