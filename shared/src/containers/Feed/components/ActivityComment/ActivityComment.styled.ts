@@ -259,20 +259,27 @@ export const Name = styled.span`
   color: var(--md-sys-color-outline);
 `
 
+// looks like a code block in the editor (MarkdownEditor .md-code-block)
 export const BlockCode = styled.pre`
-  padding: var(--padding-m);
-  border-radius: var(--padding-s);
-  background-color: var(--md-sys-color-surface-container-lowest);
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--border-radius-m);
+  background-color: var(--md-sys-color-surface-container-high);
   font-family: monospace;
-  font-size: var(--md-sys-typescale-body-small-font-size);
+  /* same size as inline code */
+  font-size: 0.9em;
+  line-height: 18px;
+  tab-size: 2;
 
   line-break: anywhere;
   word-break: break-word;
+  white-space: pre-wrap;
   overflow: hidden;
 
-  /* Ensure all child elements use monospace font */
+  /* Ensure all child elements use monospace font (and not the global span size) */
   * {
     font-family: monospace !important;
+    font-size: inherit;
   }
 
   /* syntax highlighting, same colours as the editor */

@@ -184,6 +184,8 @@ export const CodeLanguageButton = styled.span`
   padding: 0 4px 0 8px;
   border-radius: var(--border-radius-m);
   font-size: 11px;
+  /* labels with a space (Plain text) stay on one line */
+  white-space: nowrap;
   color: var(--md-sys-color-outline);
   background-color: var(--md-sys-color-surface-container-highest);
   cursor: pointer;
@@ -351,10 +353,11 @@ export const Content = styled.div`
     font-size: 11px;
     color: var(--md-sys-color-outline);
   }
+  /* same size as inline code, and as code blocks in comments (ActivityComment BlockCode) */
   .md-code-block {
     display: block;
     font-family: monospace;
-    font-size: var(--md-sys-typescale-body-small-font-size);
+    font-size: 0.9em;
     line-height: 18px;
     padding: 8px 10px;
     border-radius: var(--border-radius-m);
@@ -364,6 +367,7 @@ export const Content = styled.div`
     overflow-x: auto;
     * {
       font-family: monospace;
+      font-size: inherit;
     }
   }
 
