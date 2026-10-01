@@ -1,5 +1,11 @@
 import { ProductNode, VersionNode } from '@shared/api/queries'
-import { createMetaRowId, ProductEntityData, TableRow, VersionEntityData } from '@shared/containers'
+import {
+  createMetaRowId,
+  LinksTableData,
+  ProductEntityData,
+  TableRow,
+  VersionEntityData,
+} from '@shared/containers'
 import { ProjectContextValue } from '@shared/context'
 
 export const HERO_SYMBOL = '★'
@@ -58,6 +64,7 @@ export const buildProductTableRow = (
   product: ProductNode,
   subRows: TableRow[],
   getProductType: ProjectContextValue['getProductType'],
+  links: LinksTableData = {},
 ): TableRow => {
   const primary: ProductEntityData = {
     id: product.id,
@@ -74,7 +81,7 @@ export const buildProductTableRow = (
     productBaseType: product.productBaseType || '',
     icon: getProductType(product.productType).icon,
     versionsCount: product.versions.length,
-    links: {}, // TODO add links
+    links,
   }
 
   return {
@@ -90,7 +97,10 @@ export const buildProductTableRow = (
   }
 }
 
-export const buildVersionTableRow = (version: VersionNode): TableRow => ({
+export const buildVersionTableRow = (
+  version: VersionNode,
+  links: LinksTableData = {},
+): TableRow => ({
   id: version.id,
   primary: {
     id: version.id,
@@ -109,7 +119,7 @@ export const buildVersionTableRow = (version: VersionNode): TableRow => ({
     author: version.author || '',
     hasReviewables: version.hasReviewables,
     latestComments: version.latestComments || [],
-    links: {}, // TODO add links
+    links,
   },
   parents: {
     product: buildProductParentEntity(version.product),

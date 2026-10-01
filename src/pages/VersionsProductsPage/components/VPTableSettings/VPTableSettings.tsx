@@ -173,7 +173,6 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
       extraColumns={extraColumns}
       parentColumns={VP_PARENT_COLUMNS}
       settings={extraSettings}
-      includeLinks={false}
       scope="version"
       columnIdAliases={VP_COLUMN_ID_ALIASES}
       order={[

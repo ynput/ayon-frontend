@@ -1,4 +1,4 @@
-import { generateLoadingRows, TableRow } from '@shared/containers'
+import { generateLoadingRows, LinksTableData, TableRow } from '@shared/containers'
 import {
   buildVersionTableRow,
   buildProductTableRow,
@@ -21,7 +21,10 @@ type Props = {
   loadingProductVersions?: Record<string, number>
   loadingProductVersionsFinished?: string[]
   childVersionsErrors?: Array<{ productId: string; error: string }>
+  linksMap?: Map<string, LinksTableData>
 }
+
+const EMPTY_LINKS_MAP = new Map<string, LinksTableData>()
 
 export const useBuildVersionsTableData = ({
   rootVersionsMap,
@@ -33,6 +36,7 @@ export const useBuildVersionsTableData = ({
   loadingProductVersions = {},
   loadingProductVersionsFinished = [],
   childVersionsErrors = [],
+  linksMap = EMPTY_LINKS_MAP,
 }: Props): TableRow[] => {
   const { getProductType } = useProjectContext()
 
@@ -48,7 +52,7 @@ export const useBuildVersionsTableData = ({
         const productId = childVersion.product?.id
         if (!productId) continue
 
-        const childRow = buildVersionTableRow(childVersion)
+        const childRow = buildVersionTableRow(childVersion, linksMap.get(childVersion.id))
         const existing = childrenByProductId.get(productId)
         if (existing) {
           existing.push(childRow)
@@ -80,7 +84,9 @@ export const useBuildVersionsTableData = ({
           subRows = [buildEmptyTableRow(product.id)]
         }
 
-        result.push(buildProductTableRow(product, subRows, getProductType))
+        result.push(
+          buildProductTableRow(product, subRows, getProductType, linksMap.get(product.id)),
+        )
       }
 
       // Add next page loading row if there are more pages
@@ -92,7 +98,7 @@ export const useBuildVersionsTableData = ({
     } else {
       // build flat data using only versionsMap
       const result = Array.from(rootVersionsMap.values()).map((version) =>
-        buildVersionTableRow(version),
+        buildVersionTableRow(version, linksMap.get(version.id)),
       )
 
       // Add next page loading row if there are more pages
@@ -111,5 +117,6 @@ export const useBuildVersionsTableData = ({
     hasNextPage,
     loadingProductVersions,
     childVersionsErrors,
+    linksMap,
   ])
 }

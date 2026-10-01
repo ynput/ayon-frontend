@@ -1,5 +1,6 @@
 import {
   EntityGroup,
+  useGetEntityLinksQuery,
   useGetVersionsByProductsQuery,
   useGetVersionsInfiniteQuery,
 } from '@shared/api'
@@ -32,6 +33,8 @@ import { useBuildVersionsTableData } from '../hooks/useBuildVersionsTableData'
 import {
   checkColumnVisibility,
   getColumnSortKey,
+  LinksTableData,
+  linksToTableData,
   TableRow,
   useExpandedState,
   useProjectDataContext,
@@ -51,7 +54,7 @@ import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containe
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
-import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
+import { OnSyncDataCallback, useProjectContext, useProjectFoldersContext } from '@shared/context'
 import type { FieldStats } from '@shared/api'
 import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import {
@@ -140,6 +143,10 @@ interface VersionsDataContextValue {
   isLoading: boolean
   isFetchingNextPage: boolean
   loadingProductVersions: Record<string, number> // product IDs to their version counts that are loading
+  // links
+  linksMap: Map<string, LinksTableData>
+  loadingLinksEntityIds: Set<string>
+  setLinksVisible: (visible: boolean) => void
   onSyncData: OnSyncDataCallback
   // meta
   error: string | undefined
@@ -186,6 +193,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 }) => {
   const dispatch = useAppDispatch()
   const { attribFields } = useProjectDataContext()
+  const { anatomy } = useProjectContext()
   const { getFolderIdsWithoutChildren, getChildFolderIds } = useProjectFoldersContext()
   const {
     filters,
@@ -202,6 +210,13 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   // comments are the heaviest field to resolve, so only fetch them when the column is shown
   const showComments = useMemo(
     () => checkColumnVisibility(columns.columnVisibility || {}, 'comments'),
+    [columns.columnVisibility],
+  )
+
+  const [linksVisible, setLinksVisible] = useState(false)
+
+  const hasLinkColumn = useMemo(
+    () => checkColumnVisibility(columns.columnVisibility || {}, 'link_'),
     [columns.columnVisibility],
   )
 
@@ -688,6 +703,59 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     entitiesMap = groupedVersionsMap
   }
 
+  const skipLinks = isLoadingSlicerData || !hasLinkColumn || !linksVisible
+
+  // version rows on screen: grouped, children of expanded products, or the flat list
+  const linkVersionIds = useMemo(
+    () => Array.from((showProducts && !groupBy ? childVersionsMap : versionsMap).keys()),
+    [showProducts, groupBy, childVersionsMap, versionsMap],
+  )
+  const linkProductIds = useMemo(
+    () => (showProducts && !groupBy ? Array.from(productsMap.keys()) : []),
+    [showProducts, groupBy, productsMap],
+  )
+
+  const { data: versionsLinks = [], isFetching: isFetchingVersionsLinks } = useGetEntityLinksQuery(
+    { projectName, entityIds: linkVersionIds, entityType: 'version' },
+    { skip: skipLinks || !linkVersionIds.length },
+  )
+  const { data: productsLinks = [], isFetching: isFetchingProductsLinks } = useGetEntityLinksQuery(
+    { projectName, entityIds: linkProductIds, entityType: 'product' },
+    { skip: skipLinks || !linkProductIds.length },
+  )
+
+  const linksMap = useMemo(() => {
+    const map = new Map<string, LinksTableData>()
+    if (skipLinks) return map
+    for (const entity of versionsLinks) {
+      map.set(entity.id, linksToTableData(entity.links, 'version', anatomy))
+    }
+    for (const entity of productsLinks) {
+      map.set(entity.id, linksToTableData(entity.links, 'product', anatomy))
+    }
+    return map
+  }, [skipLinks, versionsLinks, productsLinks, anatomy])
+
+  // entity ids whose links are being fetched and not cached yet
+  const loadingLinksEntityIds = useMemo(() => {
+    const ids = new Set<string>()
+    if (skipLinks) return ids
+    if (isFetchingVersionsLinks) {
+      for (const id of linkVersionIds) if (!linksMap.has(id)) ids.add(id)
+    }
+    if (isFetchingProductsLinks) {
+      for (const id of linkProductIds) if (!linksMap.has(id)) ids.add(id)
+    }
+    return ids
+  }, [
+    skipLinks,
+    isFetchingVersionsLinks,
+    isFetchingProductsLinks,
+    linkVersionIds,
+    linkProductIds,
+    linksMap,
+  ])
+
   // Determine which products are currently loading versions
   const loadingProductVersions = useMemo(() => {
     return determineLoadingVP({
@@ -721,6 +789,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     loadingProductVersions,
     loadingProductVersionsFinished,
     childVersionsErrors,
+    linksMap,
   })
 
   const error = showProducts
@@ -843,6 +912,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     isFetchingNextPage,
     loadingProductVersions,
     onSyncData,
+    // links
+    linksMap,
+    loadingLinksEntityIds,
+    setLinksVisible,
     // meta
     error,
   }

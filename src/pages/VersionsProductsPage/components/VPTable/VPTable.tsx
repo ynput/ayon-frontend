@@ -28,6 +28,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     groupFieldStats,
     fieldStatsLoading,
     fieldStatsError,
+    setLinksVisible,
   } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
   const {
@@ -51,9 +52,12 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         excludedColumns={VP_EXCLUDED_COLUMNS}
         isExpandable={showProducts}
         isLoading={isLoading}
-        includeLinks={false}
         includeParents={['folder', 'product', 'task']}
         parentColumns={VP_PARENT_COLUMNS}
+        onColumnVisibleChangeSubscribed={['link_*']}
+        onColumnVisibleChange={(changes) =>
+          setLinksVisible(Object.values(changes).some((visible) => visible))
+        }
         showColumnSummaries
         fieldStats={fieldStats}
         groupFieldStats={groupFieldStats}
@@ -79,11 +83,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
           deleteProductItem,
         ]}
       />
-      <AddColumnButton
-        extraColumns={VP_EXTRA_COLUMNS}
-        parentColumns={VP_PARENT_COLUMNS}
-        includeLinks={false}
-      />
+      <AddColumnButton extraColumns={VP_EXTRA_COLUMNS} parentColumns={VP_PARENT_COLUMNS} />
     </TableWrapper>
   )
 }
