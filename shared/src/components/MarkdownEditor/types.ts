@@ -129,6 +129,18 @@ export const FLOATING_TOOLBAR: ToolbarLayout = [
   'quote',
 ]
 
+// A `/` command added by the editor's user, e.g. link the comment to the current frame
+export interface EditorCommand {
+  id: string
+  label: string
+  icon: string
+  // extra words to find it by
+  keywords?: string[]
+  // shown on the right, e.g. a shortcut or the current value
+  hint?: string
+  run: () => void
+}
+
 export interface MarkdownEditorHandle {
   // the lexical editor, e.g. to dispatch commands
   getEditor: () => LexicalEditor

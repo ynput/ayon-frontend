@@ -12,7 +12,7 @@ import {
   type TextNode,
 } from 'lexical'
 import { Icon, type IconType } from '@ynput/ayon-react-components'
-import type { MentionPlacement, MentionTrigger } from '../types'
+import type { EditorCommand, MentionPlacement, MentionTrigger } from '../types'
 import { toggleBlockFormat } from './formatting'
 import { INSERT_MENTION_TRIGGER_COMMAND } from './MentionsPlugin'
 import { OPEN_VIDEO_PROMPT_COMMAND } from './LinkEditorPlugin'
@@ -28,7 +28,7 @@ interface SlashCommand {
   label: string
   icon: IconType
   // options of a group are shown together, separated by a divider
-  group: 'headings' | 'lists' | 'blocks' | 'insert' | 'mentions'
+  group: 'custom' | 'headings' | 'lists' | 'blocks' | 'insert' | 'mentions'
   // extra words to find it by
   keywords: string[]
   // the markdown or key shortcut, shown on the right
@@ -53,6 +53,8 @@ interface SlashCommandPluginProps {
   onFiles?: (files: File[]) => void
   // the editor can store images and videos (MediaPlugin)
   canInsertMedia?: boolean
+  // commands of the editor's user, shown first
+  customCommands?: EditorCommand[]
 }
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
@@ -60,7 +62,8 @@ const MOD = isMac ? '⌘' : 'Ctrl+'
 
 /**
  * Type `/` to insert a block (headings, lists, code, quote...), a video, an attachment or a
- * mention. Typing after the `/` filters the commands.
+ * mention, or run a command of the editor's user (`customCommands`). Typing after the `/` filters
+ * the commands.
  */
 const SlashCommandPlugin = ({
   placement = 'inline',
@@ -68,6 +71,7 @@ const SlashCommandPlugin = ({
   mentionTriggers = [],
   onFiles,
   canInsertMedia,
+  customCommands = [],
 }: SlashCommandPluginProps) => {
   const [editor] = useLexicalComposerContext()
   const [query, setQuery] = useState<string | null>(null)
@@ -75,6 +79,13 @@ const SlashCommandPlugin = ({
 
   const commands = useMemo<SlashCommand[]>(() => {
     const list: SlashCommand[] = [
+      ...customCommands.map(({ icon, keywords = [], run, ...command }) => ({
+        ...command,
+        icon: icon as IconType,
+        group: 'custom' as const,
+        keywords,
+        run: () => run(),
+      })),
       {
         id: 'h1',
         label: 'Heading 1',
@@ -209,7 +220,7 @@ const SlashCommandPlugin = ({
       )
 
     return list
-  }, [mentionTriggers.join(), !!onFiles, canInsertMedia])
+  }, [mentionTriggers.join(), !!onFiles, canInsertMedia, customCommands])
 
   const options = useMemo(() => {
     if (query === null) return []

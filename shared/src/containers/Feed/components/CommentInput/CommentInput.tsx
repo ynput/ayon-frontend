@@ -13,6 +13,7 @@ import {
   MarkdownEditor,
   createFeedMentionSource,
   getInlineMediaFileIds,
+  type EditorCommand,
   type MarkdownEditorHandle,
   type MentionTrigger,
   type UploadMedia,
@@ -155,6 +156,30 @@ const CommentInput: FC<CommentInputProps> = ({
     if (frameLink) commentFrameLink.unlink()
     else commentFrameLink.link(frameLinkEntity.id)
   }
+
+  // the same in the `/` menu
+  const frameLinkCommands = useMemo<EditorCommand[] | undefined>(() => {
+    if (!showFrameLink || !commentFrameLink || !frameLinkEntity) return undefined
+    const keywords = ['frame', 'time', 'timecode', 'link', 'range']
+    return [
+      frameLink
+        ? {
+            id: 'frame-link',
+            label: 'Remove frame link',
+            icon: 'timer_off',
+            keywords: [...keywords, 'unlink', 'remove'],
+            hint: frameLinkLabel,
+            run: () => commentFrameLink.unlink(),
+          }
+        : {
+            id: 'frame-link',
+            label: 'Link to current frame',
+            icon: 'timer',
+            keywords,
+            run: () => commentFrameLink.link(frameLinkEntity.id),
+          },
+    ]
+  }, [showFrameLink, commentFrameLink, frameLinkEntity?.id, !!frameLink, frameLinkLabel])
 
   // CATEGORY STATE
   const [category, setCategory] = useState<null | string>(initCategory)
@@ -597,6 +622,7 @@ const CommentInput: FC<CommentInputProps> = ({
                 onEscape={handleClose}
                 onFiles={uploadFiles}
                 onUploadMedia={uploadMedia}
+                commands={frameLinkCommands}
                 toolbar={!isEditing}
                 floatingToolbar={isEditing}
                 toolbarStart={categorySelect}

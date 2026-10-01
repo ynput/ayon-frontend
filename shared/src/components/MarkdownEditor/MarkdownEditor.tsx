@@ -43,6 +43,7 @@ import MediaPlugin, { type UploadMedia } from './plugins/MediaPlugin'
 import ClipboardPlugin from './plugins/ClipboardPlugin'
 import MarkdownValuePlugin from './plugins/MarkdownValuePlugin'
 import type {
+  EditorCommand,
   MarkdownEditorHandle,
   MentionEventHandlers,
   MentionPlacement,
@@ -138,6 +139,8 @@ export interface MarkdownEditorProps extends MentionEventHandlers {
   emoji?: boolean
   // type `/` to insert blocks, videos, attachments and mentions
   slashCommands?: boolean
+  // extra `/` commands, shown first (memoize them, a new array rebuilds the menu)
+  commands?: EditorCommand[]
   toolbar?: boolean | ToolbarLayout
   // formatting toolbar over the selected text
   floatingToolbar?: boolean | ToolbarLayout
@@ -182,6 +185,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       mentionPlacement = VARIANTS[variant].mentionPlacement,
       emoji = true,
       slashCommands = true,
+      commands,
       onMentionClick,
       onMentionHover,
       toolbar = VARIANTS[variant].toolbar,
@@ -297,6 +301,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
             mentionTriggers={mentions ? mentions.triggers ?? ['@', '@@', '@@@'] : []}
             onFiles={onFiles}
             canInsertMedia={!!onUploadMedia}
+            customCommands={commands}
           />
         )}
         {emoji && !readOnly && (
