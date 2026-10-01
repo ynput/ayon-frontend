@@ -21,7 +21,7 @@ let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
 
 // Queue for lazy batched updates
 let messageQueue: ThumbnailUpdateMessage[] = []
-let processTimeout: ReturnType<typeof setTimeout> | undefined
+let processTimeout: number | undefined
 
 const processQueue = () => {
   if (messageQueue.length === 0) return
@@ -44,19 +44,17 @@ const processQueue = () => {
 const queueMessage = (message: ThumbnailUpdateMessage) => {
   messageQueue.push(message)
 
-  // Clear previous timeout to implement true debouncing
-  if (processTimeout) {
-    window.clearTimeout(processTimeout)
-  }
+  // A batch is already scheduled, it will pick up this message too.
+  // Do not reschedule it, otherwise a steady stream of updates would postpone it forever.
+  if (processTimeout) return
 
-  // Jitter/debounce window: Delays processing until 3-4s of silence occurs
-  // (Adjust the logic here if you preferred a fixed throttling interval instead)
-  const debounceDelay = 3000 + Math.random() * 1000
+  // Jitter/throttle window: processes the batch 3-4s after its first message
+  const throttleDelay = 3000 + Math.random() * 1000
 
   processTimeout = window.setTimeout(() => {
     processTimeout = undefined
     processQueue()
-  }, debounceDelay)
+  }, throttleDelay)
 }
 
 /**
