@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 
 import VideoOverlay from './VideoOverlay'
@@ -75,6 +75,10 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     AnnotationsCanvas,
     isLoaded: isLoadedAnnotations,
     useAnnotations,
+    selectedVersionId,
+    commentFrameLink,
+    registerFrameLinkPlayer,
+    feedFrameLinks,
   } = useViewer()
 
   const videoRef = useRef(null)
@@ -128,6 +132,25 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   useGoToFrame({ setCurrentTime, frameRate, duration, videoElement: videoRef.current })
 
   const { annotations } = useAnnotations()
+
+  // let comments link to the current frame, and jump to a comment's frame
+  const handleScrubRef = useRef(handleScrub)
+  handleScrubRef.current = handleScrub
+  useEffect(() => {
+    registerFrameLinkPlayer({
+      getFrame: () => Math.round((videoRef.current?.currentTime || 0) * frameRate),
+      seekToFrame: (frame) => handleScrubRef.current(frame),
+    })
+    return () => registerFrameLinkPlayer(null)
+  }, [registerFrameLinkPlayer, frameRate])
+
+  // 1-based frames of the comments linked to this version, and the one being written
+  const linkedFrames = useMemo(() => {
+    const links = feedFrameLinks.filter((link) => link.entityId === selectedVersionId)
+    const draft = commentFrameLink?.draft
+    if (draft?.entityId === selectedVersionId) links.push(draft)
+    return Array.from(new Set(links.map((link) => link.startFrame)))
+  }, [feedFrameLinks, commentFrameLink?.draft, selectedVersionId])
 
   const annotatedFrames = useMemo(() => {
     const frames = Object.values(annotations).flatMap(({ range }) => range)
@@ -273,6 +296,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
           bufferedRanges={bufferedRanges}
           isPlaying={isPlaying}
           highlighted={annotatedFrames}
+          linkedFrames={linkedFrames}
         />
       </div>
 

@@ -9,6 +9,7 @@ import { OperationModel } from '../types/operations'
 import { EntityData, PatchOperation } from '../types'
 import { HistoryEntityUpdate, UseHistoryReturn } from './useHistory'
 import { useProjectContext } from '@shared/context/ProjectContext'
+import { getQueryErrorCodes } from '@shared/api/base/queryError'
 
 const getErrorMessage = (
   errorCode: string | undefined,
@@ -268,7 +269,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         }
       } catch (error: any) {
         console.error('Error updating entities:', error)
-        const errorCodes = Array.isArray(error?.errorCodes) ? error.errorCodes : []
+        const errorCodes = getQueryErrorCodes(error)
         if (operations.length === 1 && errorCodes.length > 0) {
           errorCodes.forEach((errorCode: string) => {
             const op = operations[0]
@@ -520,7 +521,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         })
       } catch (error: any) {
         // Extract error code from operation result - check multiple paths
-        const errorCodes = Array.isArray(error?.errorCodes) ? error.errorCodes : []
+        const errorCodes = getQueryErrorCodes(error)
         if (operations.length === 1 && errorCodes.length > 0) {
           errorCodes.forEach((errorCode: string) => {
             const op = operations[0]

@@ -8,7 +8,7 @@
  * and dispatching breadcrumbs to the store.
  */
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
@@ -22,8 +22,9 @@ import { getValueByPath, setValueByPath, sameKeysStructure } from '@containers/A
 import { cloneDeep } from 'lodash'
 import { usePaste } from '@context/PasteContext'
 
-const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChanged }) => {
+const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChanged, savedAt }) => {
   const [originalData, setOriginalData] = useState(null)
+  const handledSaveRef = useRef(null)
   const { requestPaste } = usePaste()
   const { data: schema } = useGetAnatomySchemaQuery()
 
@@ -31,10 +32,13 @@ const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChange
     { preset },
     { skip: !preset },
   )
-  const { data: projectAnatomyData, isLoading: prjLoading } = useGetProjectAnatomyQuery(
-    { projectName },
-    { skip: !projectName },
-  )
+  const {
+    data: projectAnatomyData,
+    isLoading: prjLoading,
+    isFetching: prjFetching,
+    startedTimeStamp: prjStartedAt,
+    fulfilledTimeStamp: prjFulfilledAt,
+  } = useGetProjectAnatomyQuery({ projectName }, { skip: !projectName })
   const dispatch = useDispatch()
   const isLoading = presetLoading || prjLoading
 
@@ -49,6 +53,20 @@ const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChange
     setFormData(projectAnatomyData)
     setOriginalData(projectAnatomyData)
   }, [projectAnatomyData])
+
+  // After a save, the refetched anatomy may be deep-equal to the previously
+  // cached one (e.g. the server re-created removed default link types).
+  // RTK Query then keeps the same data reference, the effect above doesn't
+  // fire and the form keeps showing the unsaved local state. So reset once
+  // explicitly, when the first fetch started after the save completes.
+  useEffect(() => {
+    if (!savedAt || handledSaveRef.current === savedAt) return
+    if (!projectAnatomyData || prjFetching || !prjFulfilledAt) return
+    if (prjStartedAt < savedAt) return
+    handledSaveRef.current = savedAt
+    setFormData(projectAnatomyData)
+    setOriginalData(projectAnatomyData)
+  }, [savedAt, projectAnatomyData, prjFetching, prjStartedAt, prjFulfilledAt])
 
   useEffect(() => {
     if (!setIsChanged) return

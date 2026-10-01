@@ -111,8 +111,8 @@ function ShortcutsProvider(props) {
       if (e.repeat) return
       // check target isn't an input
       if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return
-      // check we are not in quill editor
-      if (e.target.closest('.ql-editor')) return
+      // check we are not in a rich text editor
+      if (e.target.isContentEditable) return
       // or has blocked shortcuts className
       if (e.target.classList.contains('block-shortcuts')) return
       // or any of its parents

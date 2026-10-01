@@ -1,53 +1,54 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect } from 'react'
 import { Button, BorderedSection } from '@ynput/ayon-react-components'
-import ReactQuill from 'react-quill-ayon'
 import clsx from 'clsx'
-import { QuillListStyles } from '../QuillListStyles'
+import { MarkdownEditor, type ToolbarLayout } from '@shared/components/MarkdownEditor'
 import {
   StyledContent,
   StyledEditor,
   StyledFooter,
   StyledLoadingSkeleton,
   StyledButtonContainer,
-  StyledQuillContainer,
-  StyledHiddenMarkdown,
 } from './DescriptionSection.styles'
-import InputMarkdownConvert from '@shared/containers/Feed/components/CommentInput/InputMarkdownConvert'
-import { mentionTypeOptions, useDescriptionEditor, useQuillFormats } from './hooks'
+import {
+  useDescriptionEditor,
+  useDescriptionMentions,
+  type DescriptionMentionsContext,
+} from './hooks'
 
-// Custom modules function for description editor (without checklist)
-const getDescriptionModules = ({
-  imageUploader,
-  disableImageUpload = false,
-}: {
-  imageUploader: any
-  disableImageUpload?: boolean
-}) => {
-  const toolbar = [
-    [{ header: 2 }, 'bold', 'italic', 'link', 'code-block'],
-    [{ list: 'ordered' }, { list: 'bullet' }], // Removed { list: 'check' }
-  ]
-
-  if (!disableImageUpload) {
-    toolbar.push(['image'])
-  }
-
-  return {
-    toolbar,
-    imageUploader,
-    magicUrl: true,
-  }
-}
+// descriptions have no check lists (those belong in comments)
+const DESCRIPTION_TOOLBAR: ToolbarLayout = [
+  'h1',
+  'h2',
+  'h3',
+  '|',
+  'bold',
+  'italic',
+  'strikethrough',
+  'link',
+  '|',
+  'codeBlock',
+  'quote',
+  '|',
+  'numberList',
+  'bulletList',
+]
 
 interface DescriptionSectionProps {
   description: string
-  isLarge: boolean
+  isLarge?: boolean
   isMixed: boolean
   enableEditing: boolean
   initialEdit?: boolean
   onChange: (description: string) => void
   onCancel?: () => void
   isLoading: boolean
+  // enables mentions of users, sibling tasks and versions of this entity
+  mentionsContext?: DescriptionMentionsContext
+  onMentionClick?: (mention: { type: string; id: string; label: string }) => void
+  onMentionHover?: (
+    mention: { type: string; id: string; label: string },
+    target: HTMLElement,
+  ) => void
 }
 
 export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
@@ -59,46 +60,25 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
   onChange,
   onCancel,
   isLoading,
+  mentionsContext,
+  onMentionClick,
+  onMentionHover,
 }) => {
-  const markdownRef = useRef<HTMLDivElement>(null)
-  const [descriptionHtml, setDescriptionHtml] = useState('')
+  const { isEditing, editorValue, setEditorValue, handleStartEditing, handleSave, handleCancel } =
+    useDescriptionEditor({
+      description,
+      enableEditing,
+      isMixed,
+      onChange,
+    })
 
-  useEffect(() => {
-    if (!description?.trim()) {
-      setDescriptionHtml('')
-      return
-    }
-
-    if (!markdownRef.current) return
-
-    const html = markdownRef.current.innerHTML
-    setDescriptionHtml(html)
-  }, [description])
-
-  // Use custom hooks to manage state and logic
-  const {
-    isEditing,
-    editorValue,
-    setEditorValue,
-    editorRef,
-    handleStartEditing,
-    handleSave,
-    handleCancel,
-    handleKeyDown,
-  } = useDescriptionEditor({
-    descriptionHtml,
-    enableEditing,
-    isMixed,
-    onChange,
-  })
+  const mentions = useDescriptionMentions(mentionsContext, { skip: !isEditing })
 
   useEffect(() => {
     if (initialEdit && !isEditing) {
       handleStartEditing()
     }
   }, [initialEdit])
-
-  const conditionalFormats = useQuillFormats()
 
   if (isLoading) {
     return (
@@ -110,33 +90,22 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
 
   // Handle clicks on links to prevent edit mode activation
   const handleContentClick = (e: React.MouseEvent) => {
-    // If we're in editing mode, don't prevent default behavior for links
-    if (isEditing) {
-      return
-    }
+    if (isEditing) return
 
-    // Check if the clicked element is a link or inside a link
+    // links open in a new tab and mentions open the entity instead
     const target = e.target as HTMLElement
-    const link = target.closest('a')
-
-    if (link) {
-      // If clicking on a link, prevent the edit mode from activating
+    if (target.closest('a') || (onMentionClick && target.closest('.mention'))) {
       e.stopPropagation()
       return
     }
 
-    // For other clicks when not editing, allow edit mode to activate
-    if (!isEditing) {
-      handleStartEditing()
-    }
+    handleStartEditing()
   }
 
   const handleCancelEdit = () => {
     handleCancel()
     onCancel?.()
   }
-
-  const quillValue = isEditing ? editorValue : descriptionHtml
 
   return (
     <BorderedSection
@@ -148,32 +117,28 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
     >
       <StyledContent className={clsx({ editing: isEditing })} onClick={handleContentClick}>
         <StyledEditor className="block-shortcuts">
-          <QuillListStyles style={isEditing ? { height: 'auto' } : undefined}>
-            <StyledQuillContainer style={isEditing ? { height: 'auto' } : undefined}>
-              <ReactQuill
-                key={`description-editor-${isEditing}`}
-                theme="snow"
-                ref={editorRef}
-                value={quillValue}
-                onChange={setEditorValue}
-                placeholder="Add a description..."
-                modules={
-                  isEditing
-                    ? getDescriptionModules({ imageUploader: null, disableImageUpload: true })
-                    : { toolbar: false }
-                }
-                formats={conditionalFormats}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    handleCancelEdit()
-                  } else {
-                    handleKeyDown(e)
-                  }
-                }}
-                readOnly={!isEditing}
-              />
-            </StyledQuillContainer>
-          </QuillListStyles>
+          {/* remount between viewing and editing: view shows the saved value, edit the draft */}
+          <MarkdownEditor
+            key={isEditing ? 'edit' : 'view'}
+            className="description-editor"
+            value={isEditing ? editorValue : description || ''}
+            onChange={isEditing ? setEditorValue : undefined}
+            placeholder={
+              isEditing
+                ? 'Describe it, or type / to add headings, lists, mentions, code and more...'
+                : 'Add a description...'
+            }
+            mentions={isEditing ? mentions : undefined}
+            onMentionClick={onMentionClick}
+            onMentionHover={onMentionHover}
+            readOnly={!isEditing}
+            toolbar={isEditing ? DESCRIPTION_TOOLBAR : false}
+            bordered={false}
+            autoFocus={isEditing}
+            minHeight={isEditing ? 60 : 20}
+            onSubmit={isEditing ? handleSave : undefined}
+            onEscape={isEditing ? handleCancelEdit : undefined}
+          />
         </StyledEditor>
         {isEditing && (
           <StyledFooter>
@@ -184,9 +149,6 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
           </StyledFooter>
         )}
       </StyledContent>
-      <StyledHiddenMarkdown ref={markdownRef}>
-        <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={description || ''} />
-      </StyledHiddenMarkdown>
     </BorderedSection>
   )
 }

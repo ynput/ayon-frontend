@@ -26,7 +26,7 @@ const StyledDropdown = styled(Dropdown)`
     /* remove all styles and just use a wrapper */
     background-color: unset !important;
 
-    /* override the default quill styles */
+    /* override the default button styles */
     padding: 0 !important;
     height: 32px !important;
     width: unset !important;

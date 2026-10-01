@@ -49,6 +49,40 @@ const DETAILS_PANEL_TABS: DetailsPanelTab[] = ['feed', 'subtasks', 'details', 'f
 const isDetailsPanelTab = (tab: unknown): tab is DetailsPanelTab =>
   typeof tab === 'string' && DETAILS_PANEL_TABS.includes(tab as DetailsPanelTab)
 
+// Frame links: a comment linked to a frame or frame range of a version.
+// Frames are 1-based and relative to the version's media, like annotation ranges.
+export type CommentFrameRange = { startFrame: number; endFrame: number }
+export type CommentFrameLink = CommentFrameRange & { entityId: string }
+export type FeedFrameLink = CommentFrameLink & { activityId: string }
+
+// Provided by a host with a player (e.g. the review addon) so comments can be
+// linked to frames. Without it, the comment editor shows no frame link button.
+export interface CommentFrameLinkApi {
+  // the link of the comment being written, if any
+  draft: CommentFrameLink | null
+  // links the comment being written to the player's current frame
+  link: (entityId: string) => void
+  unlink: () => void
+  // jumps to a comment's frame; a frame range also sets the in/out points
+  goTo: (link: CommentFrameLink) => void
+  // formats a frame for display, e.g. with the host's frame offset setting
+  formatFrame?: (frame: number) => string
+}
+
+// the frame link stored on a comment's data, if it has one
+export const getActivityFrameLink = (activity: {
+  activityData?: { startFrame?: unknown; endFrame?: unknown } | null
+  origin?: { id: string } | null
+  entityId?: string | null
+}): CommentFrameLink | null => {
+  const { startFrame, endFrame } = activity.activityData || {}
+  const entityId = activity.origin?.id ?? activity.entityId
+  if (!Number.isSafeInteger(startFrame) || !entityId) return null
+  const start = startFrame as number
+  const end = Number.isSafeInteger(endFrame) ? Math.max(start, endFrame as number) : start
+  return { entityId, startFrame: start, endFrame: end }
+}
+
 // these props get forwarded to the details panel value
 // it's mainly redux callbacks that cannot be used in shared library
 export interface DetailsPanelContextProps {
@@ -62,6 +96,7 @@ export interface DetailsPanelContextProps {
   // redux callback actions
   onOpenImage?: (args: any) => void
   onGoToFrame?: (frame: number) => void
+  commentFrameLink?: CommentFrameLinkApi
   onOpenViewer?: (args: any) => void
   onUpdateEntity?: (data: { operations: any[]; entityType: string }) => void
   // route hooks
@@ -118,6 +153,10 @@ export interface DetailsPanelContextType extends DetailsPanelContextProps {
   feedAnnotations: SavedAnnotationMetadata[]
   setFeedAnnotations: (annotations: SavedAnnotationMetadata[]) => void
 
+  // Frame links of the comments in the feed
+  feedFrameLinks: FeedFrameLink[]
+  setFeedFrameLinks: (links: FeedFrameLink[]) => void
+
   // powerpack
   onPowerFeature: (feature: PowerpackFeature) => void
 }
@@ -147,6 +186,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   // keep track of the currently open panel by scope
   const [panelOpenByScope, setPanelOpenByScope] = useState<OpenStateByScope>({})
   const [feedAnnotations, setFeedAnnotations] = useState<SavedAnnotationMetadata[]>([])
+  const [feedFrameLinks, setFeedFrameLinks] = useState<FeedFrameLink[]>([])
 
   //  get the current open state for a specific scope
   const getOpenForScope = useCallback(
@@ -332,6 +372,8 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     setEntities,
     feedAnnotations,
     setFeedAnnotations,
+    feedFrameLinks,
+    setFeedFrameLinks,
     bundleMode,
     isGuest,
     hasLicense,
