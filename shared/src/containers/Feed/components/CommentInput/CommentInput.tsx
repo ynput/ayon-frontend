@@ -199,7 +199,7 @@ const CommentInput: FC<CommentInputProps> = ({
 
   // the same in the `/` menu
   const frameLinkCommands = useMemo<EditorCommand[] | undefined>(() => {
-    if (!showFrameLink || !commentFrameLink || !frameLinkEntity) return undefined
+    if (!showFrameLink || (!isEditing && !commentFrameLink) || !frameLinkEntity) return undefined
     const keywords = ['frame', 'time', 'timecode', 'link', 'range']
     return [
       frameLink
@@ -209,17 +209,25 @@ const CommentInput: FC<CommentInputProps> = ({
             icon: 'timer_off',
             keywords: [...keywords, 'unlink', 'remove'],
             hint: frameLinkLabel,
-            run: () => commentFrameLink.unlink(),
+            run: () => {
+              setManualFrameLink(null)
+              if (!isEditing) commentFrameLink?.unlink()
+            },
           }
         : {
             id: 'frame-link',
-            label: 'Link to current frame',
+            label: isEditing ? 'Add frame link' : 'Link to current frame',
             icon: 'timer',
             keywords,
-            run: () => commentFrameLink.link(frameLinkEntity.id),
+            run: () => {
+              if (isEditing) {
+                setFrameInput('')
+                setFrameInputOpen(true)
+              } else commentFrameLink?.link(frameLinkEntity.id)
+            },
           },
     ]
-  }, [showFrameLink, commentFrameLink, frameLinkEntity?.id, !!frameLink, frameLinkLabel])
+  }, [showFrameLink, isEditing, commentFrameLink, frameLinkEntity?.id, !!frameLink, frameLinkLabel])
 
   // CATEGORY STATE
   const [category, setCategory] = useState<null | string>(initCategory)
@@ -479,7 +487,7 @@ const CommentInput: FC<CommentInputProps> = ({
           await onSubmit(markdown, uploadedFiles, newData)
           setUploadedAnnotations([])
           // the link now belongs to the submitted comment
-          if (frameLink) commentFrameLink?.unlink()
+          if (!isEditing && frameLink) commentFrameLink?.unlink()
           if (!isEditing) setManualFrameLink(null)
         } catch (error) {
           // error is handled in rtk query mutation
