@@ -34,7 +34,7 @@ import { MenuContainer } from '@shared/components/Menu/MenuContainer'
 import { useMenuContext } from '@shared/context/MenuContext'
 import type { Status } from '../../../ProjectTreeTable/types/project'
 import { SavedAnnotationMetadata } from '../../index'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext, getActivityFrameLink } from '@shared/context/DetailsPanelContext'
 import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
 import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
 import ActivityCommentMenu from './ActivityCommentMenu'
@@ -115,7 +115,7 @@ const ActivityComment = ({
   const menuId = `activity-comment-menu-${activityId}-${isSlideOut ? 'slideout' : 'normal'}`
   const isMenuOpen = menuOpen === menuId
 
-  const { onGoToFrame, setHighlightedActivities, user } = useDetailsPanelContext()
+  const { onGoToFrame, setHighlightedActivities, user, commentFrameLink } = useDetailsPanelContext()
   const canDelete = isOwner || user?.data?.isAdmin
 
   const handleEditComment = () => {
@@ -218,6 +218,17 @@ const ActivityComment = ({
   // comments written with the legacy editor use `&nbsp;` spacer paragraphs, show them like new ones
   const displayBody = useMemo(() => normalizeLegacyMarkdown(body || ''), [body])
 
+  // the frame (range) this comment is linked to, if any
+  const frameLink = useMemo(() => getActivityFrameLink(activity), [activity])
+  const formatFrame = commentFrameLink?.formatFrame ?? String
+  const onFrameLinkClick = () => {
+    if (!frameLink) return
+    // hosts without frame link support can still jump to the first frame
+    if (commentFrameLink) commentFrameLink.goTo(frameLink)
+    else onGoToFrame?.(frameLink.startFrame)
+    setHighlightedActivities([activityId])
+  }
+
   return (
     <>
       <Styled.Comment
@@ -294,6 +305,23 @@ const ActivityComment = ({
             />
           ) : (
             <>
+              {frameLink && (
+                <Styled.FrameLink
+                  onClick={onFrameLinkClick}
+                  disabled={!commentFrameLink && !onGoToFrame}
+                  data-tooltip={
+                    frameLink.endFrame > frameLink.startFrame
+                      ? 'Go to frames and set in/out points'
+                      : 'Go to frame'
+                  }
+                  data-testid="comment-frame-link-chip"
+                >
+                  <Icon icon="timer" />
+                  {frameLink.endFrame > frameLink.startFrame
+                    ? `${formatFrame(frameLink.startFrame)}-${formatFrame(frameLink.endFrame)}`
+                    : formatFrame(frameLink.startFrame)}
+                </Styled.FrameLink>
+              )}
               <CommentWrapper>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, emoji, remarkDirective, remarkDirectiveRehype]}

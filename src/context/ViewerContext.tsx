@@ -13,10 +13,14 @@ import {
   useCallback,
   ReactPortal,
   useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from 'react'
 import { createPortal } from 'react-dom'
 import { toast } from 'react-toastify'
 import { usePowerpack } from '@shared/context'
+import type { CommentFrameLink, CommentFrameLinkApi, FeedFrameLink } from '@shared/context'
 
 type DrawHistory = {
   clear: (page?: number) => void
@@ -24,6 +28,13 @@ type DrawHistory = {
 
 export type UseDrawHistory = () => DrawHistory
 export type UseAnnotations = () => AnnotationsContextType
+
+// the video player of the viewer, registered so comments can link to its frames
+// (frames are 0-based here, like the player's frame counter internally)
+export type FrameLinkPlayer = {
+  getFrame: () => number
+  seekToFrame: (frame: number) => void
+}
 
 const FallbackAnnotationsProvider = ({ children }: AnnotationsProviderProps) => {
   return <>{children}</>
@@ -49,6 +60,12 @@ interface ViewerContextType {
   selectedVersionId?: string
   useAnnotations: UseAnnotations
   useDrawHistory: UseDrawHistory
+  // links comments to a single frame of the selected version, while a video plays
+  commentFrameLink?: CommentFrameLinkApi
+  registerFrameLinkPlayer: (player: FrameLinkPlayer | null) => void
+  // frame links of the viewer's feed, kept apart from feeds outside the viewer
+  feedFrameLinks: FeedFrameLink[]
+  setFeedFrameLinks: (links: FeedFrameLink[]) => void
 }
 
 const defaultViewerContext = {
@@ -58,6 +75,47 @@ const defaultViewerContext = {
   AnnotationsCanvas: () => null,
   useAnnotations: useAnnotationsFallback,
   useDrawHistory: useDrawHistoryFallback,
+  registerFrameLinkPlayer: () => {},
+  feedFrameLinks: [],
+  setFeedFrameLinks: () => {},
+}
+
+// Frame links of the viewer: always a single frame (no in/out range, unlike the
+// review player). Frames of the links are 1-based, as the frame counter shows them.
+const useViewerFrameLink = (selectedVersionId?: string) => {
+  const playerRef = useRef<FrameLinkPlayer | null>(null)
+  const [hasPlayer, setHasPlayer] = useState(false)
+  const [draft, setDraft] = useState<CommentFrameLink | null>(null)
+  const [feedFrameLinks, setFeedFrameLinks] = useState<FeedFrameLink[]>([])
+
+  const registerFrameLinkPlayer = useCallback((player: FrameLinkPlayer | null) => {
+    playerRef.current = player
+    setHasPlayer(!!player)
+    // a draft can't be shown or moved without the player
+    if (!player) setDraft(null)
+  }, [])
+
+  const commentFrameLink = useMemo<CommentFrameLinkApi | undefined>(() => {
+    if (!hasPlayer || !selectedVersionId) return undefined
+    return {
+      draft,
+      link: (entityId) => {
+        const player = playerRef.current
+        if (!player || entityId !== selectedVersionId) return
+        const frame = player.getFrame() + 1
+        setDraft({ entityId, startFrame: frame, endFrame: frame })
+      },
+      unlink: () => setDraft(null),
+      // a frame range (e.g. from the review player) jumps to its first frame
+      goTo: (link) => {
+        if (link.entityId !== selectedVersionId) return
+        playerRef.current?.seekToFrame(Math.max(0, link.startFrame - 1))
+      },
+      formatFrame: String,
+    }
+  }, [hasPlayer, selectedVersionId, draft])
+
+  return { commentFrameLink, registerFrameLinkPlayer, feedFrameLinks, setFeedFrameLinks }
 }
 
 const ViewerContext = createContext<ViewerContextType>(defaultViewerContext)
@@ -129,6 +187,8 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     }
   }, [!!outdated])
 
+  const frameLink = useViewerFrameLink(selectedVersionId)
+
   const isLoaded =
     isLoadedProvider && isLoadedEditorProvider && isLoadedCanvas && isLoadedHook && isLoadedTools
 
@@ -147,6 +207,8 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
         AnnotationsCanvas,
         useAnnotations,
         useDrawHistory,
+        selectedVersionId,
+        ...frameLink,
       }}
     >
       <AnnotationsProvider versionId={selectedVersionId || ''}>{children}</AnnotationsProvider>

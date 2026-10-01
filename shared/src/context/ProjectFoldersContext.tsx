@@ -145,6 +145,17 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
     [getParentFolderIds],
   )
 
+  const childIdsByParent = useMemo(() => {
+    const index = new Map<string, string[]>()
+    for (const folder of folders) {
+      if (!folder.parentId) continue
+      const siblings = index.get(folder.parentId)
+      if (siblings) siblings.push(folder.id)
+      else index.set(folder.parentId, [folder.id])
+    }
+    return index
+  }, [folders])
+
   // function to get all child folder IDs recursively for a given folder IDs
   const getChildFolderIds = useMemo(
     () =>
@@ -154,17 +165,15 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
 
         while (queue.length > 0) {
           const currentId = queue.shift()!
-          for (const folder of folders) {
-            if (folder.parentId === currentId) {
-              childIds.push(folder.id)
-              queue.push(folder.id)
-            }
+          for (const childId of childIdsByParent.get(currentId) || []) {
+            childIds.push(childId)
+            queue.push(childId)
           }
         }
 
         return childIds
       },
-    [folders],
+    [childIdsByParent],
   )
 
   const onRefetch = () => refetch().unwrap()

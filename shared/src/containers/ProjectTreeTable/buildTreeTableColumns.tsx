@@ -48,6 +48,17 @@ export const isEntityExpandable = (entityType: string) => ['folder', 'product'].
 
 export const COLUMN_MIN_SIZE = 50
 
+// attributes whose edit is applied to every selected cell of the column
+const MULTI_CELL_EDIT_TYPES: AttributeData['type'][] = [
+  'string',
+  'integer',
+  'float',
+  'boolean',
+  'datetime',
+]
+const supportsMultiCellEdit = (data: AttributeData) =>
+  hasEnumOptions(data) || MULTI_CELL_EDIT_TYPES.includes(data.type)
+
 export const COLUMN_LABELS: Record<string, string> = {
   thumbnail: 'Thumbnail',
   status: 'Status',
@@ -1397,8 +1408,7 @@ const buildTreeTableColumns = ({
         sortingFn: withLoadingStateSort(
           withNameTieBreaker((a, b, c) => attribSort(a, b, c, attrib.data)),
         ),
-        enableSorting:
-          !isMultiSelectAttribute(attrib) && canSort(attrib.name) && canSort('attrib'),
+        enableSorting: !isMultiSelectAttribute(attrib) && canSort(attrib.name) && canSort('attrib'),
         enableResizing: true,
         enablePinning: true,
         enableHiding: true,
@@ -1464,7 +1474,7 @@ const buildTreeTableColumns = ({
                   },
                   {
                     selection:
-                      entity === row.original.primary && hasEnumOptions(attrib.data)
+                      entity === row.original.primary && supportsMultiCellEdit(attrib.data)
                         ? meta?.selection
                         : undefined,
                   },
@@ -1720,5 +1730,5 @@ export const getValueIdType = (
 
   // The returned id and type identify the entity that owns the value. Widgets
   // use them for updates, links, and deciding which entity-specific UI to show.
-  return { value, id: valueEntity.id, type: valueEntity.entityType }
+  return { value, id: row.id, type: valueEntity.entityType }
 }

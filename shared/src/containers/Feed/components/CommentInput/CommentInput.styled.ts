@@ -169,6 +169,12 @@ export const Footer = styled.footer`
   container-type: inline-size;
   container-name: comment-input-footer;
 
+  /* the frame link button can make the buttons too wide for a narrow panel:
+     move the submit buttons onto their own line instead of hiding them */
+  &:has(.frame-link) {
+    flex-wrap: wrap;
+  }
+
   /* remove save button icon */
   .comment {
     min-width: 75px;
@@ -184,11 +190,28 @@ export const Buttons = styled.div`
   display: flex;
   gap: var(--base-gap-small);
 
+  &:has(.frame-link) {
+    flex-wrap: wrap;
+  }
+
   button {
     &.text {
       &:hover {
         background-color: var(--button-color-secondary);
       }
+    }
+  }
+`
+
+export const FrameLinkButton = styled(Button)`
+  white-space: nowrap;
+
+  &.selected {
+    color: var(--md-sys-color-on-primary-container);
+    background-color: var(--md-sys-color-primary-container);
+
+    &:hover {
+      background-color: var(--md-sys-color-primary-container-hover);
     }
   }
 `

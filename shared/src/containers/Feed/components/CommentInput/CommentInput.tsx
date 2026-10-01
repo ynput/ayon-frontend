@@ -105,7 +105,8 @@ const CommentInput: FC<CommentInputProps> = ({
     isGuest,
   } = useFeedContext()
 
-  const { hasLicense, onPowerFeature, user, openSlideOut } = useDetailsPanelContext()
+  const { hasLicense, onPowerFeature, user, openSlideOut, commentFrameLink } =
+    useDetailsPanelContext()
   const isAdmin = user?.data?.isAdmin
 
   const project = useProjectContext()
@@ -133,6 +134,27 @@ const CommentInput: FC<CommentInputProps> = ({
     entityId: entities[0]?.id,
     filesUploading,
   })
+
+  // FRAME LINK: the host (e.g. a player) owns the draft link so it can show and move it
+  const frameLinkEntity =
+    entities.length === 1 && entities[0].entityType === 'version' ? entities[0] : undefined
+  const frameLink =
+    commentFrameLink?.draft && commentFrameLink.draft.entityId === frameLinkEntity?.id
+      ? commentFrameLink.draft
+      : null
+  const showFrameLink = !!commentFrameLink && !!frameLinkEntity && !isEditing
+  const formatFrame = commentFrameLink?.formatFrame ?? String
+  const frameLinkLabel = frameLink
+    ? frameLink.endFrame > frameLink.startFrame
+      ? `${formatFrame(frameLink.startFrame)}-${formatFrame(frameLink.endFrame)}`
+      : formatFrame(frameLink.startFrame)
+    : undefined
+
+  const handleFrameLinkButton = () => {
+    if (!commentFrameLink || !frameLinkEntity) return
+    if (frameLink) commentFrameLink.unlink()
+    else commentFrameLink.link(frameLinkEntity.id)
+  }
 
   // CATEGORY STATE
   const [category, setCategory] = useState<null | string>(initCategory)
@@ -378,6 +400,8 @@ const CommentInput: FC<CommentInputProps> = ({
         ...data,
         annotations: annotationMetadata, // could be undefined
         category: isGuest ? null : category, // guests cannot set category (it is done by default on backend)
+        // one frame link per comment, stored as metadata rather than in the text
+        ...(frameLink && { startFrame: frameLink.startFrame, endFrame: frameLink.endFrame }),
       }
 
       if ((markdown || uploadedFiles.length) && onSubmit) {
@@ -388,6 +412,8 @@ const CommentInput: FC<CommentInputProps> = ({
         try {
           await onSubmit(markdown, uploadedFiles, newData)
           setUploadedAnnotations([])
+          // the link now belongs to the submitted comment
+          if (frameLink) commentFrameLink?.unlink()
         } catch (error) {
           // error is handled in rtk query mutation
           setEditorValue(submittedValue)
@@ -591,19 +617,33 @@ const CommentInput: FC<CommentInputProps> = ({
           )}
 
           <Styled.Footer>
-            {!isGuest && (
+            {(!isGuest || showFrameLink) && (
               <Styled.Buttons>
-                {MENTION_BUTTONS.map(({ trigger, icon, tooltip }) => (
-                  <Button
-                    key={trigger}
-                    icon={icon}
+                {!isGuest &&
+                  MENTION_BUTTONS.map(({ trigger, icon, tooltip }) => (
+                    <Button
+                      key={trigger}
+                      icon={icon}
+                      variant="text"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => editorRef.current?.insertMentionTrigger(trigger)}
+                      data-tooltip={tooltip}
+                      data-shortcut={trigger}
+                    />
+                  ))}
+                {showFrameLink && (
+                  // link the comment to the current frame, or remove the link
+                  <Styled.FrameLinkButton
+                    className="frame-link"
+                    icon="timer"
                     variant="text"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => editorRef.current?.insertMentionTrigger(trigger)}
-                    data-tooltip={tooltip}
-                    data-shortcut={trigger}
+                    selected={!!frameLink}
+                    label={frameLinkLabel}
+                    onClick={handleFrameLinkButton}
+                    data-tooltip={frameLink ? 'Remove frame link' : 'Link to current frame'}
+                    data-testid="comment-frame-link"
                   />
-                ))}
+                )}
               </Styled.Buttons>
             )}
             <Styled.SubmitButtons>

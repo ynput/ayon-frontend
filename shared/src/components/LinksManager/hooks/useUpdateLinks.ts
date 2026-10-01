@@ -22,10 +22,11 @@ type RemoveLinks = (
   links: { id: string; target: { entityId: string; entityType: string } }[],
   addToHistory?: boolean,
 ) => Promise<void>
+// resolves true when all links were created
 type AddLinks = (
   links: { targetEntityId: string; linkId: string }[],
   addToHistory?: boolean,
-) => Promise<void>
+) => Promise<boolean>
 
 const useUpdateLinks = ({
   projectName,
@@ -48,7 +49,7 @@ const useUpdateLinks = ({
         const hasSelf = links.some((l) => l.targetEntityId === entityId)
         if (hasSelf) {
           toast.error("You can't link an entity to itself")
-          return
+          return false
         }
 
         const linksToAdd: LinkToAdd[] = links.map((link) => ({
@@ -77,8 +78,11 @@ const useUpdateLinks = ({
               ),
           ])
         }
+
+        return true
       } catch (error: any) {
         // Error handling is done in the utility function
+        return false
       }
     },
     [addLink, projectName, entityId, entityType, targetEntityType, linkType, direction, history],
