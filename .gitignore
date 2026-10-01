@@ -15,3 +15,4 @@ localSharedImportMap.js
 gen/openapi.json
 
 .idea
+.claude

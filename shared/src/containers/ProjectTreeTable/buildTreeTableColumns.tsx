@@ -325,6 +325,9 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
   }
 }
 
+export const isMultiSelectAttribute = (attribute: ProjectTableAttribute) =>
+  attribute.data.type === 'list_of_strings'
+
 export const getLinkLabel = (
   link: Pick<LinkTypeModel, 'linkType'>,
   direction: 'in' | 'out' | string,
@@ -1394,7 +1397,7 @@ const buildTreeTableColumns = ({
         sortingFn: withLoadingStateSort(
           withNameTieBreaker((a, b, c) => attribSort(a, b, c, attrib.data)),
         ),
-        enableSorting: canSort(attrib.name) && canSort('attrib'),
+        enableSorting: !isMultiSelectAttribute(attrib) && canSort(attrib.name) && canSort('attrib'),
         enableResizing: true,
         enablePinning: true,
         enableHiding: true,
@@ -1712,5 +1715,5 @@ export const getValueIdType = (
 
   // The returned id and type identify the entity that owns the value. Widgets
   // use them for updates, links, and deciding which entity-specific UI to show.
-  return { value, id: valueEntity.id, type: valueEntity.entityType }
+  return { value, id: row.id, type: valueEntity.entityType }
 }

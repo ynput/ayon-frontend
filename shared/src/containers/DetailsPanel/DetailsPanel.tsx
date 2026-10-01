@@ -24,6 +24,10 @@ import type { FeedFilter } from '@shared/context/DetailsPanelContext'
 
 import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './components/DetailsPanelFiles'
+import NewerVersionBanner, {
+  getNewerLatestVersion,
+  type ResolveVersionJump,
+} from './components/NewerVersionBanner'
 import {
   DetailsPanelMoreMenu,
   type DetailsPanelEntityListsContext,
@@ -75,6 +79,7 @@ export type DetailsPanelProps = {
    *  structural type in shared/ so the layering rule (shared cannot import src/pages)
    *  is preserved. */
   entityListsContext?: DetailsPanelEntityListsContext
+  resolveVersionJump?: ResolveVersionJump
   // optional tab state for independent tab management
 }
 
@@ -109,6 +114,7 @@ const DetailsPanelInner = ({
   entityListId,
   guestCategories = {},
   entityListsContext,
+  resolveVersionJump,
 }: // optional tab state for independent tab management
 DetailsPanelProps) => {
   const {
@@ -246,6 +252,11 @@ DetailsPanelProps) => {
   // Use the last entity for URI sync
   const lastEntityData = entityDetailsData[entityDetailsData.length - 1]
   const lastProject = activeProjectNames[activeProjectNames.length - 1]
+
+  const newerLatestVersion =
+    scope === 'inbox' && activeEntityType === 'version' && entityDetailsData.length === 1
+      ? getNewerLatestVersion(entityDetailsData[0])
+      : undefined
 
   // build the full entity path for the first entity
   const [entityPathSegments, entityPathVersions] = useGetEntityPath({
@@ -455,6 +466,13 @@ DetailsPanelProps) => {
             )}
           </Styled.RightTools>
         </Styled.Toolbar>
+
+        {newerLatestVersion && (
+          <NewerVersionBanner
+            latestVersion={newerLatestVersion}
+            resolveVersionJump={resolveVersionJump}
+          />
+        )}
 
         <DetailsPanelHeader
           entityType={activeEntityType}

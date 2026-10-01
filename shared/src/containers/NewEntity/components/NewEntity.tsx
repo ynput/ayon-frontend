@@ -32,7 +32,7 @@ import { type OperationResponseModel, type ProjectModel } from '@shared/api'
 import FolderSequence from './FolderSequence'
 import { EntityForm, NewEntityType, useNewEntityContext } from '../context/NewEntityContext'
 import useCreateEntityShortcuts from '../hooks/useCreateEntityShortcuts'
-import { useSlicerContext } from '@shared/containers/Slicer/context/SlicerContext'
+import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierarchySelection'
 import { NewEntityForm, InputLabel, InputsContainer } from './NewEntityForm'
 import { toast } from 'react-toastify'
 import { useProjectContext } from '@shared/context/ProjectContext'
@@ -134,7 +134,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
 
   const [createMore, setCreateMore] = useState(false)
   const { selectedCells } = useOptionalSelectionCellsContext() || {}
-  const { rowSelection, pinnedSlice, sliceType } = useSlicerContext()
+  const hierarchySelection = useHierarchySelection()
   const { getFolderById } = useProjectFoldersContext()
   const projectTableContext = useOptionalProjectTableContext()
   const getEntityById = projectTableContext?.getEntityById
@@ -183,22 +183,18 @@ export const NewEntity: React.FC<NewEntityProps> = ({
       if (folderIds.length) return folderIds
     }
 
-    const activeRowSelection =
-      sliceType === 'hierarchy' ? rowSelection : pinnedSlice?.rowSelection || null
-    return activeRowSelection
-      ? Object.keys(activeRowSelection).filter((id) => activeRowSelection[id])
+    return hierarchySelection
+      ? Object.keys(hierarchySelection).filter((id) => hierarchySelection[id])
       : []
-  }, [parentFolderIds, selectedCells, rowSelection, pinnedSlice, sliceType, getEntityById])
+  }, [parentFolderIds, selectedCells, hierarchySelection, getEntityById])
 
   // Slicer-only chain: in grouping modes folders skip table selection
   const slicerParentIds = useMemo(() => {
     if (parentFolderIds !== null) return parentFolderIds
-    const activeRowSelection =
-      sliceType === 'hierarchy' ? rowSelection : pinnedSlice?.rowSelection || null
-    return activeRowSelection
-      ? Object.keys(activeRowSelection).filter((id) => activeRowSelection[id])
+    return hierarchySelection
+      ? Object.keys(hierarchySelection).filter((id) => hierarchySelection[id])
       : []
-  }, [parentFolderIds, rowSelection, pinnedSlice, sliceType])
+  }, [parentFolderIds, hierarchySelection])
 
   const resolvedParentFolderIds =
     entityType === 'folder' && !showHierarchy ? slicerParentIds : fullChainParentIds

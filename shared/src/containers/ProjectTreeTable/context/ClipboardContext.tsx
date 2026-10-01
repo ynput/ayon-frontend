@@ -257,6 +257,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               // can't, so fall back to the built display row label/name the cell shows
               if (colId === 'name') {
                 cellValue =
+                  (displayRow?.primary.entityType === 'version'
+                    ? displayRow.primary.label || displayRow.primary.name
+                    : undefined) ||
                   getEntityPath(entity.entityId || entity.id, entitiesMap) ||
                   (displayRow as any)?.label ||
                   displayRow?.primary?.name ||
