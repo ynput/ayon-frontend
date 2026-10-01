@@ -27,3 +27,7 @@ export const useCellEditing = (): CellEditingContextType => {
   }
   return context
 }
+
+/** Like useCellEditing, but returns undefined outside of a CellEditingProvider. */
+export const useOptionalCellEditing = (): CellEditingContextType | undefined =>
+  useContext(CellEditingContext)

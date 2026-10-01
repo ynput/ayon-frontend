@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux'
 import { useGetWorkfileByIdQuery } from '@queries/getWorkfiles'
 import { useGetSiteRootsQuery } from '@queries/customRoots'
 import SiteDropdown from '@containers/SiteDropdown'
-import { getCurrentPlatform, replaceRoot } from '@shared/util'
+import { getCurrentPlatform, replaceRoot, useRegisterActiveEntities } from '@shared/util'
 
 const WorkfileDetail = ({ style }) => {
   const projectName = useSelector((state) => state.project.name)
@@ -15,6 +15,11 @@ const WorkfileDetail = ({ style }) => {
   const [selectedSite, setSelectedSite] = useState(null)
 
   const firstFocusedWorkfile = focusedWorkfiles[0]
+
+  // make the selection available to global features (the links dialog)
+  useRegisterActiveEntities(
+    focusedWorkfiles.map((id) => ({ id, entityType: 'workfile', projectName })),
+  )
 
   const { data = {}, isLoading } = useGetWorkfileByIdQuery(
     { projectName, id: firstFocusedWorkfile },
