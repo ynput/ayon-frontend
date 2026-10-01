@@ -248,13 +248,12 @@ export const CellWidget: FC<EditorCellProps> = ({
       case type === 'links': {
         const linksValue = valueData as LinkWidgetData | undefined
 
-        const isEditable =
-          !isReadOnly &&
-          isLinkEditable(
-            linksValue?.direction || 'out',
-            linksValue?.link.linkType || '',
-            linksValue?.entityType || '',
-          )
+        const isApplicable = isLinkEditable(
+          linksValue?.direction || 'out',
+          linksValue?.link.linkType || '',
+          linksValue?.entityType || '',
+        )
+        const isEditable = !isReadOnly && isApplicable
 
         // overwrite readonly state if the cell is currently being edited
         isReadOnly = !isEditable
@@ -263,10 +262,11 @@ export const CellWidget: FC<EditorCellProps> = ({
             value={linksValue}
             cellId={cellId}
             projectName={projectName}
-            disabled={!isEditable}
+            disabled={!isApplicable}
             folderId={folderId}
             isLoading={isLinksLoading}
             {...sharedProps}
+            isReadOnly={isReadOnly}
           />
         )
       }

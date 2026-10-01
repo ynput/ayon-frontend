@@ -83,6 +83,7 @@ export type ChipValue = {
 interface ChipsProps {
   values: ChipValue[]
   disabled?: boolean
+  readOnly?: boolean
   pt?: {
     chip?: Partial<HTMLAttributes<HTMLDivElement>>
   }
@@ -93,7 +94,7 @@ type ChipsLayout = {
   rows: number
 }
 
-export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
+export const Chips: FC<ChipsProps> = ({ values, disabled, readOnly, pt }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [{ visibleCount, rows }, setLayout] = useState<ChipsLayout>({
     visibleCount: 0,
@@ -171,6 +172,7 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
 
   // for no values return plus button
   if (!values.length) {
+    if (readOnly) return null
     return <AddIcon icon="add" className={pt?.chip?.className} />
   }
 

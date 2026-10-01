@@ -33,7 +33,10 @@ const getQueryErrorMessage = (error: unknown): string => {
 import { useBuildVersionsTableData } from '../hooks/useBuildVersionsTableData'
 import {
   checkColumnVisibility,
+  EntityScope,
   getColumnSortKey,
+  getLinkColumnId,
+  getScopedColumnId,
   LinksTableData,
   linksToTableData,
   TableRow,
@@ -218,7 +221,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 }) => {
   const dispatch = useAppDispatch()
   const { attribFields } = useProjectDataContext()
-  const { anatomy } = useProjectContext()
+  const { anatomy, linkTypes = [] } = useProjectContext()
   const { getFolderIdsWithoutChildren, getChildFolderIds } = useProjectFoldersContext()
   const {
     filters,
@@ -246,19 +249,28 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     [],
   )
 
+  // only fetch an entity's links when a visible link column uses a link type for that entity
   const showLinks = useMemo(() => {
-    const isShown = (prefix: string) =>
-      checkColumnVisibility(columns.columnVisibility || {}, prefix) &&
-      Object.entries(linkColumnsOnScreen).some(
-        ([columnId, visible]) => visible && columnId.startsWith(prefix),
-      )
+    const isShown = (scope: EntityScope, entityType: string) =>
+      linkTypes
+        .filter((link) => link.inputType === entityType || link.outputType === entityType)
+        .some((link) =>
+          (['in', 'out'] as const).some((direction) => {
+            const columnId = getScopedColumnId(scope, getLinkColumnId(link, direction))
+            return (
+              !!linkColumnsOnScreen[columnId] &&
+              checkColumnVisibility(columns.columnVisibility || {}, columnId)
+            )
+          }),
+        )
     return {
-      primary: isShown('link_'),
-      folder: isShown('folder_link_'),
-      task: isShown('task_link_'),
-      product: isShown('product_link_'),
+      version: isShown('primary', 'version'),
+      product: isShown('primary', 'product'),
+      folder: isShown('folder', 'folder'),
+      task: isShown('task', 'task'),
+      parentProduct: isShown('product', 'product'),
     }
-  }, [columns.columnVisibility, linkColumnsOnScreen])
+  }, [linkTypes, columns.columnVisibility, linkColumnsOnScreen])
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
@@ -756,13 +768,13 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     if (isLoadingSlicerData) return { versionIds, productIds, folderIds, taskIds }
 
     for (const version of rowVersionsMap.values()) {
-      if (showLinks.primary) versionIds.add(version.id)
-      if (showLinks.product) productIds.add(version.product.id)
+      if (showLinks.version) versionIds.add(version.id)
+      if (showLinks.parentProduct) productIds.add(version.product.id)
       if (showLinks.folder) folderIds.add(version.product.folder.id)
       if (showLinks.task && version.task) taskIds.add(version.task.id)
     }
     for (const product of rowProductsMap?.values() ?? []) {
-      if (showLinks.primary) productIds.add(product.id)
+      if (showLinks.product) productIds.add(product.id)
       if (showLinks.folder) folderIds.add(product.folder.id)
     }
     return { versionIds, productIds, folderIds, taskIds }
