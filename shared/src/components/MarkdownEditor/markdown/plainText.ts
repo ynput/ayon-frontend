@@ -12,6 +12,8 @@ export const markdownToPlainText = (markdown: string): string =>
     // autolinks and html (e.g. legacy <u>, &nbsp;)
     .replace(/<(https?:[^>]+)>/g, '$1')
     .replace(/<\/?[a-z][^>]*>/gi, '')
+    // remove any leftover angle brackets so partial tags cannot survive
+    .replace(/[<>]/g, '')
     .replace(/&nbsp;/g, ' ')
     // block markers: headings, quotes, lists, check lists
     .replace(/^\s*#{1,6}\s+/gm, '')
