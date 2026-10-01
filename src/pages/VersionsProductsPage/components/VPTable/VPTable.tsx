@@ -5,9 +5,14 @@ import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsCo
 import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
 import { AddColumnButton } from '@shared/components'
 import styled from 'styled-components'
-import { VP_EXTRA_COLUMNS, VP_PARENT_COLUMNS } from '../VPTableSettings/VPTableSettings'
+import {
+  VP_EXTRA_COLUMNS,
+  VP_PARENT_COLUMNS,
+  VP_PARENT_SCOPES,
+} from '../VPTableSettings/VPTableSettings'
 
 const VP_EXCLUDED_COLUMNS = ['assignees']
+const VP_LINK_COLUMNS = ['link_*', ...VP_PARENT_SCOPES.map((scope) => `${scope}_link_*`)]
 
 const TableWrapper = styled.div`
   position: relative;
@@ -28,7 +33,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     groupFieldStats,
     fieldStatsLoading,
     fieldStatsError,
-    setLinksVisible,
+    setLinkColumnsVisible,
   } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
   const {
@@ -52,12 +57,10 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         excludedColumns={VP_EXCLUDED_COLUMNS}
         isExpandable={showProducts}
         isLoading={isLoading}
-        includeParents={['folder', 'product', 'task']}
+        includeParents={VP_PARENT_SCOPES}
         parentColumns={VP_PARENT_COLUMNS}
-        onColumnVisibleChangeSubscribed={['link_*']}
-        onColumnVisibleChange={(changes) =>
-          setLinksVisible(Object.values(changes).some((visible) => visible))
-        }
+        onColumnVisibleChangeSubscribed={VP_LINK_COLUMNS}
+        onColumnVisibleChange={setLinkColumnsVisible}
         showColumnSummaries
         fieldStats={fieldStats}
         groupFieldStats={groupFieldStats}
@@ -83,7 +86,11 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
           deleteProductItem,
         ]}
       />
-      <AddColumnButton extraColumns={VP_EXTRA_COLUMNS} parentColumns={VP_PARENT_COLUMNS} />
+      <AddColumnButton
+        extraColumns={VP_EXTRA_COLUMNS}
+        parentColumns={VP_PARENT_COLUMNS}
+        parentLinkScopes={VP_PARENT_SCOPES}
+      />
     </TableWrapper>
   )
 }

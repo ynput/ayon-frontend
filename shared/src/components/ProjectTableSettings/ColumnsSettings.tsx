@@ -59,8 +59,10 @@ const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'
 const NO_SCOPES: string[] = []
 
 const getColumnSettingsPath = (column: AddColumnItem, scopes: string[]) => {
-  if (column.parentScope && column.attrib) {
-    return `${column.parentScope.charAt(0).toUpperCase()}${column.parentScope.slice(1)} attributes`
+  if (column.parentScope && (column.attrib || column.isLink)) {
+    return `${column.parentScope.charAt(0).toUpperCase()}${column.parentScope.slice(1)} ${
+      column.attrib ? 'attributes' : 'links'
+    }`
   }
   return getAddColumnSection(column, scopes)?.label
 }

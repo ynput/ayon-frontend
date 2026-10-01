@@ -13,7 +13,9 @@ export const HERO_SYMBOL = '★'
 const asString = (value: unknown): string | undefined =>
   typeof value === 'string' ? value : undefined
 
-const buildFolderParentEntity = (folder: ProductNode['folder']) => ({
+type LinksMap = Map<string, LinksTableData>
+
+const buildFolderParentEntity = (folder: ProductNode['folder'], linksMap?: LinksMap) => ({
   id: folder.id,
   entityType: 'folder' as const,
   name: folder.name,
@@ -26,9 +28,13 @@ const buildFolderParentEntity = (folder: ProductNode['folder']) => ({
   attrib: folder.attrib || {},
   ownAttrib: Object.keys(folder.attrib || {}),
   subType: folder.folderType || '',
+  links: linksMap?.get(folder.id),
 })
 
-const buildProductParentEntity = (product: VersionNode['product']): ProductEntityData => ({
+const buildProductParentEntity = (
+  product: VersionNode['product'],
+  linksMap?: LinksMap,
+): ProductEntityData => ({
   id: product.id,
   entityType: 'product',
   name: product.name,
@@ -37,6 +43,7 @@ const buildProductParentEntity = (product: VersionNode['product']): ProductEntit
   ownAttrib: Object.keys(product.attrib || {}),
   subType: product.productType || '',
   productBaseType: product.productBaseType || '',
+  links: linksMap?.get(product.id),
 })
 
 const buildFeaturedVersionParentEntity = (
@@ -64,7 +71,7 @@ export const buildProductTableRow = (
   product: ProductNode,
   subRows: TableRow[],
   getProductType: ProjectContextValue['getProductType'],
-  links: LinksTableData = {},
+  linksMap?: LinksMap,
 ): TableRow => {
   const primary: ProductEntityData = {
     id: product.id,
@@ -81,14 +88,14 @@ export const buildProductTableRow = (
     productBaseType: product.productBaseType || '',
     icon: getProductType(product.productType).icon,
     versionsCount: product.versions.length,
-    links,
+    links: linksMap?.get(product.id) ?? {},
   }
 
   return {
     id: product.id,
     primary,
     parents: {
-      folder: buildFolderParentEntity(product.folder),
+      folder: buildFolderParentEntity(product.folder, linksMap),
       ...(product.featuredVersion
         ? { version: buildFeaturedVersionParentEntity(product.featuredVersion) }
         : {}),
@@ -99,7 +106,7 @@ export const buildProductTableRow = (
 
 export const buildVersionTableRow = (
   version: VersionNode,
-  links: LinksTableData = {},
+  linksMap?: LinksMap,
 ): TableRow => ({
   id: version.id,
   primary: {
@@ -119,11 +126,11 @@ export const buildVersionTableRow = (
     author: version.author || '',
     hasReviewables: version.hasReviewables,
     latestComments: version.latestComments || [],
-    links,
+    links: linksMap?.get(version.id) ?? {},
   },
   parents: {
-    product: buildProductParentEntity(version.product),
-    folder: buildFolderParentEntity(version.product.folder),
+    product: buildProductParentEntity(version.product, linksMap),
+    folder: buildFolderParentEntity(version.product.folder, linksMap),
     ...(version.task
       ? {
           task: {
@@ -135,6 +142,7 @@ export const buildVersionTableRow = (
             status: version.task.status,
             attrib: version.task.attrib || {},
             ownAttrib: version.task.ownAttrib || Object.keys(version.task.attrib || {}),
+            links: linksMap?.get(version.task.id),
           },
         }
       : {}),

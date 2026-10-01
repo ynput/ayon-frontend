@@ -43,7 +43,12 @@ const getActiveAddColumnSections = (
     icon: 'text_fields',
     match: (item) => !!item.attrib && !item.parentScope,
   },
-  { id: 'links', label: 'Links', icon: 'link', match: (item) => !!item.isLink },
+  {
+    id: 'links',
+    label: 'Links',
+    icon: 'link',
+    match: (item) => !!item.isLink && !item.parentScope,
+  },
   ...Array.from(new Set(columns.map((column) => column.parentScope).filter(Boolean))).map(
     (parentScope) => ({
       id: `parent-${parentScope}`,
@@ -120,8 +125,9 @@ export const buildAddColumnsMenu = ({
     .map((section) => {
       const sectionColumns = sectioned.get(section.id) as AddColumnItem[]
       const attributeColumns = sectionColumns.filter((column) => !!column.attrib)
+      const linkColumns = sectionColumns.filter((column) => !!column.isLink)
       const fieldItems = sectionColumns
-        .filter((column) => !column.attrib)
+        .filter((column) => !column.attrib && !column.isLink)
         .toSorted((a, b) => a.label.localeCompare(b.label))
         .map(toMenuItem)
 
@@ -138,6 +144,7 @@ export const buildAddColumnsMenu = ({
       }
 
       const parentScope = section.id.replace('parent-', '')
+      const scopeLabel = `${parentScope.charAt(0).toUpperCase()}${parentScope.slice(1)}`
       return {
         id: section.id,
         label: section.label,
@@ -148,9 +155,21 @@ export const buildAddColumnsMenu = ({
             ? [
                 {
                   id: `${section.id}-attributes`,
-                  label: `${parentScope.charAt(0).toUpperCase()}${parentScope.slice(1)} attributes`,
+                  label: `${scopeLabel} attributes`,
                   icon: 'text_fields',
                   items: attributeColumns.map(toMenuItem),
+                },
+              ]
+            : []),
+          ...(linkColumns.length
+            ? [
+                {
+                  id: `${section.id}-links`,
+                  label: `${scopeLabel} links`,
+                  icon: 'link',
+                  items: linkColumns
+                    .toSorted((a, b) => a.label.localeCompare(b.label))
+                    .map(toMenuItem),
                 },
               ]
             : []),

@@ -16,7 +16,7 @@ import { useAddColumnsMenu } from './useAddColumnsMenu'
 import { useProjectTableColumnItems } from './useProjectTableColumnItems'
 import { normalizeColumnId } from '@shared/containers/ProjectTreeTable/utils/columnIds'
 import type { MenuItemType } from '../Menu'
-import type { ParentColumnDefinition } from '@shared/containers'
+import type { EntityType, ParentColumnDefinition } from '@shared/containers'
 import type { ColumnIdAliases } from '@shared/containers/ProjectTreeTable/utils/columnIds'
 
 const StyledCustomizeButton = styled(Button)`
@@ -61,6 +61,7 @@ export type ProjectTableSettingsProps = {
   // page actions appended to the end of the add-column menu
   extraMenuItems?: MenuItemType[]
   parentColumns?: ParentColumnDefinition[]
+  parentLinkScopes?: EntityType[]
   columnIdAliases?: ColumnIdAliases
 }
 
@@ -76,6 +77,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   scope,
   extraMenuItems,
   parentColumns,
+  parentLinkScopes,
   columnIdAliases,
 }) => {
   const { scopes } = useProjectTableContext()
@@ -107,6 +109,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     hiddenColumns,
     includeLinks,
     parentColumns,
+    parentLinkScopes,
   })
   const normalizedHighlighted = highlighted
     ? normalizeColumnId(highlighted, columnIdAliases)

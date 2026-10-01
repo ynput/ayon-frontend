@@ -70,7 +70,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
   )
 
   const groupRowFunc = useCallback(
-    (version: VersionNode) => buildVersionTableRow(version, linksMap.get(version.id)),
+    (version: VersionNode) => buildVersionTableRow(version, linksMap),
     [linksMap],
   )
 

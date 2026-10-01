@@ -13,17 +13,19 @@ import { useMemo } from 'react'
 import { AddColumnItem, DEFAULT_COLUMN_ICON } from './addColumnsMenu'
 import { getAttributeIcon } from '@shared/util/getAttributeIcon'
 import { hasEnumOptions } from '@shared/util'
-import type { ParentColumnDefinition } from '@shared/containers'
+import type { EntityType, ParentColumnDefinition } from '@shared/containers'
 
 interface UseProjectTableColumnItemsProps {
   extraColumns?: { value: string; label: string; icon?: string }[]
   hiddenColumns?: string[]
   includeLinks?: boolean
   parentColumns?: ParentColumnDefinition[]
+  parentLinkScopes?: EntityType[]
 }
 
 const NO_EXTRA_COLUMNS: { value: string; label: string }[] = []
 const NO_HIDDEN_COLUMNS: string[] = []
+const NO_PARENT_LINK_SCOPES: EntityType[] = []
 
 // the settings panel and the table's add button must offer exactly the same columns
 export const useProjectTableColumnItems = ({
@@ -31,6 +33,7 @@ export const useProjectTableColumnItems = ({
   hiddenColumns = NO_HIDDEN_COLUMNS,
   includeLinks = true,
   parentColumns = [],
+  parentLinkScopes = NO_PARENT_LINK_SCOPES,
 }: UseProjectTableColumnItemsProps) => {
   const { linkTypes } = useProjectContext()
   const { attribFields, scopes } = useProjectTableContext()
@@ -163,12 +166,27 @@ export const useProjectTableColumnItems = ({
             parentScope: scope,
           })),
       ),
+      ...(linkTypes && includeLinks
+        ? parentLinkScopes.flatMap((scope) =>
+            linkTypes
+              .filter((link) => [link.inputType, link.outputType].includes(scope))
+              .flatMap((link) =>
+                (['in', 'out'] as const).map((direction) => ({
+                  value: getScopedColumnId(scope, getLinkColumnId(link, direction)),
+                  label: getLinkLabel(link, direction),
+                  icon: 'link',
+                  isLink: true,
+                  parentScope: scope,
+                })),
+              ),
+          )
+        : []),
       ...extraColumns.map((column) => ({
         ...column,
         icon: column.icon ?? DEFAULT_COLUMN_ICON,
       })),
     ],
-    [scopes, attribFields, linkTypes, includeLinks, parentColumns, extraColumns],
+    [scopes, attribFields, linkTypes, includeLinks, parentColumns, parentLinkScopes, extraColumns],
   )
 
   const visibleColumns = useMemo(

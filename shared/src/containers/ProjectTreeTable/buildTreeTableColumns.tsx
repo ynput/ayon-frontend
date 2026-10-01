@@ -1487,13 +1487,15 @@ const buildTreeTableColumns = ({
       return attribColumn
     })
 
-  const createLinkColumns = (scope: EntityScope): ColumnDef<TableRow>[] =>
-    links
+  const createLinkColumns = (scope: EntityScope): ColumnDef<TableRow>[] => {
+    const linkScopes: string[] = scope === 'primary' ? scopes : [scope]
+    return links
       .filter((link) => {
         // Check if the link type is excluded
         if (!isIncluded(link.linkType) || !isIncluded('link')) return false
         // Check if inputType and outputType are in scopes
-        if (!scopes.includes(link.inputType) && !scopes.includes(link.outputType)) return false
+        if (!linkScopes.includes(link.inputType) && !linkScopes.includes(link.outputType))
+          return false
         return true
       })
       .flatMap((link) =>
@@ -1551,12 +1553,14 @@ const buildTreeTableColumns = ({
                   folderId={row.original.parents?.folder?.id}
                   attributeData={{ type: 'links' }}
                   isLinksLoading={isLinksLoading}
+                  isReadOnly={scope !== 'primary'}
                 />
               )
             },
           }
         }),
       )
+  }
 
   const linkColumns: ColumnDef<TableRow>[] = includeLinks ? createLinkColumns('primary') : []
   const parentColumnFields = new Set([

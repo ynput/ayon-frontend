@@ -52,7 +52,7 @@ export const useBuildVersionsTableData = ({
         const productId = childVersion.product?.id
         if (!productId) continue
 
-        const childRow = buildVersionTableRow(childVersion, linksMap.get(childVersion.id))
+        const childRow = buildVersionTableRow(childVersion, linksMap)
         const existing = childrenByProductId.get(productId)
         if (existing) {
           existing.push(childRow)
@@ -84,9 +84,7 @@ export const useBuildVersionsTableData = ({
           subRows = [buildEmptyTableRow(product.id)]
         }
 
-        result.push(
-          buildProductTableRow(product, subRows, getProductType, linksMap.get(product.id)),
-        )
+        result.push(buildProductTableRow(product, subRows, getProductType, linksMap))
       }
 
       // Add next page loading row if there are more pages
@@ -98,7 +96,7 @@ export const useBuildVersionsTableData = ({
     } else {
       // build flat data using only versionsMap
       const result = Array.from(rootVersionsMap.values()).map((version) =>
-        buildVersionTableRow(version, linksMap.get(version.id)),
+        buildVersionTableRow(version, linksMap),
       )
 
       // Add next page loading row if there are more pages

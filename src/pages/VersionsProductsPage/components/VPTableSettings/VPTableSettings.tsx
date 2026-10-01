@@ -5,7 +5,9 @@ import { SizeSlider } from '@shared/components'
 import { useVPViewsContext } from '../../context/VPViewsContext'
 import { FeaturedVersionOrder, FEATURED_VERSION_TYPES } from '@shared/components'
 import { ENTITY_COLUMN_IDS, getColumnLabel } from '@shared/containers'
-import type { ParentColumnDefinition } from '@shared/containers'
+import type { EntityType, ParentColumnDefinition } from '@shared/containers'
+
+export const VP_PARENT_SCOPES: EntityType[] = ['folder', 'product', 'task']
 
 export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
   {
@@ -172,6 +174,7 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
     <ProjectTableSettings
       extraColumns={extraColumns}
       parentColumns={VP_PARENT_COLUMNS}
+      parentLinkScopes={VP_PARENT_SCOPES}
       settings={extraSettings}
       scope="version"
       columnIdAliases={VP_COLUMN_ID_ALIASES}
