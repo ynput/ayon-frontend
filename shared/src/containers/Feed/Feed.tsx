@@ -16,7 +16,8 @@ import { isFilePreviewable } from './components/FileUploadPreview/FileUploadPrev
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { useFeedContext, FEED_NEW_COMMENT } from './context/FeedContext'
 import { Status } from '../ProjectTreeTable/types/project'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext, getActivityFrameLink } from '@shared/context/DetailsPanelContext'
+import type { FeedFrameLink } from '@shared/context/DetailsPanelContext'
 import { useGetMyProjectPermissionsQuery } from '@shared/api'
 import type { DetailsPanelEntityType } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
@@ -73,6 +74,7 @@ export const Feed = ({
     setHighlightedActivities,
     onOpenImage,
     setFeedAnnotations,
+    setFeedFrameLinks,
     user,
   } = useDetailsPanelContext()
 
@@ -126,6 +128,18 @@ export const Feed = ({
 
     setFeedAnnotations(annotations)
   }, [activitiesWithMergedAnnotations])
+
+  // collect the comments linked to frames, e.g. for markers on the host's timeline
+  useEffect(() => {
+    const frameLinks = activitiesData
+      .map((activity) => {
+        const link = getActivityFrameLink(activity)
+        return link && { ...link, activityId: activity.activityId }
+      })
+      .filter((link): link is FeedFrameLink => !!link)
+
+    setFeedFrameLinks(frameLinks)
+  }, [activitiesData])
 
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName

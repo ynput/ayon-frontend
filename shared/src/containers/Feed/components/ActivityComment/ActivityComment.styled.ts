@@ -321,3 +321,33 @@ export const Tip = styled.span`
     font-size: 24px;
   }
 `
+
+// the frame (range) a comment is linked to; clicking it jumps there
+export const FrameLink = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  align-self: flex-start;
+  padding: 2px 6px;
+  margin-bottom: 4px;
+  border: none;
+  border-radius: var(--border-radius-m);
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  ${theme.labelMedium}
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+
+  .icon {
+    font-size: 16px;
+    color: inherit;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--md-sys-color-primary-container-hover);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+`
