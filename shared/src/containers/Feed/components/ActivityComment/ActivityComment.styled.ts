@@ -1,4 +1,5 @@
 import { Button, theme } from '@ynput/ayon-react-components'
+import { codeTokenStyles } from '@shared/components/MarkdownEditor/code/codeTheme'
 import styled, { css } from 'styled-components'
 import { categoryColorCss, CommentProps } from '../CommentInput/CommentInput.styled'
 
@@ -69,6 +70,14 @@ export const Body = styled.div`
 
   p {
     margin: 0;
+  }
+  /* a blank line between paragraphs (lines of one paragraph are joined by hard breaks) */
+  p + p {
+    margin-top: 20px;
+  }
+  /* quote lines are rendered as paragraphs, they sit tight */
+  blockquote p + p {
+    margin-top: 0;
   }
 
   & > *:not(.tools):not(h1) {
@@ -265,6 +274,20 @@ export const BlockCode = styled.pre`
   * {
     font-family: monospace !important;
   }
+
+  /* syntax highlighting, same colours as the editor */
+  ${codeTokenStyles}
+`
+
+export const InlineCode = styled.code`
+  font-family: monospace;
+  font-size: 0.9em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-tertiary);
+  white-space: pre-wrap;
+  word-break: break-word;
 `
 
 export const Tools = styled.div`

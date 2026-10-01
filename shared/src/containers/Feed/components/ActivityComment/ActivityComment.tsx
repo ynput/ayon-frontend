@@ -12,9 +12,17 @@ import { Reaction } from '../ReactionContainer/types'
 import useReferenceTooltip from '../../hooks/useReferenceTooltip'
 import FilesGrid, { FilesGridProps } from '../FilesGrid/FilesGrid'
 
-import { getTextRefs } from '../CommentInput/quillToMarkdown'
+import { getTextRefs } from './getTextRefs'
 import * as Styled from './ActivityComment.styled'
 import CommentWrapper from './CommentWrapper'
+import { isFilePreviewable } from '../FileUploadPreview'
+import {
+  getProjectFileId,
+  getInlineMediaFileIds,
+  normalizeLegacyMarkdown,
+  renderMediaParagraph,
+  renderYouTubeParagraph,
+} from '@shared/components/MarkdownEditor'
 import { aTag, blockquoteTag, codeTag, inputTag } from './ActivityMarkdownComponents'
 import { mapGraphQLReactions } from './mappers'
 import { Icon } from '@ynput/ayon-react-components'
@@ -30,7 +38,6 @@ import { useDetailsPanelContext, getActivityFrameLink } from '@shared/context/De
 import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
 import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
 import ActivityCommentMenu from './ActivityCommentMenu'
-import { checkForEmptyLine } from '../CommentInput/InputMarkdownConvert'
 import { useCategoryData } from '../../hooks/useCategoryData'
 import { getActivityUserName } from '../../helpers/getActivityUserName'
 
@@ -108,8 +115,7 @@ const ActivityComment = ({
   const menuId = `activity-comment-menu-${activityId}-${isSlideOut ? 'slideout' : 'normal'}`
   const isMenuOpen = menuOpen === menuId
 
-  const { onGoToFrame, setHighlightedActivities, user, commentFrameLink } =
-    useDetailsPanelContext()
+  const { onGoToFrame, setHighlightedActivities, user, commentFrameLink } = useDetailsPanelContext()
   const canDelete = isOwner || user?.data?.isAdmin
 
   const handleEditComment = () => {
@@ -192,6 +198,25 @@ const ActivityComment = ({
     },
     [onGoToFrame],
   )
+
+  // files shown as image / video blocks in the text are not repeated as attachments
+  const inlineFileIds = useMemo(() => getInlineMediaFileIds(body), [body])
+  const attachments = useMemo(
+    () => (files || []).filter((file: any) => !inlineFileIds.has(file.id)),
+    [files, inlineFileIds],
+  )
+
+  // clicking an image / video block opens the attachment preview (the index is among all the
+  // previewable files of the comment, like for attachments)
+  const openInlineFile = (src: string) => {
+    const id = getProjectFileId(src)
+    const previewable = (files || []).filter((f: any) => isFilePreviewable(f.mime, f.ext))
+    const index = previewable.findIndex((f: any) => f.id === id)
+    if (index !== -1) onFileExpand?.({ files: previewable, index, activityId })
+  }
+
+  // comments written with the legacy editor use `&nbsp;` spacer paragraphs, show them like new ones
+  const displayBody = useMemo(() => normalizeLegacyMarkdown(body || ''), [body])
 
   // the frame (range) this comment is linked to, if any
   const frameLink = useMemo(() => getActivityFrameLink(activity), [activity])
@@ -334,6 +359,11 @@ const ActivityComment = ({
                         {props.children}
                       </Styled.Tip>
                     ),
+                    // a video url on its own line is an embedded video
+                    // @ts-ignore
+                    p: (props) =>
+                      renderMediaParagraph(props, { onOpen: openInlineFile }) ??
+                      renderYouTubeParagraph(props) ?? <p>{props.children}</p>,
                     // @ts-ignore
                     status: (props) => {
                       return (
@@ -342,24 +372,16 @@ const ActivityComment = ({
                         </ActivityStatus>
                       )
                     },
-                    p: (props) => {
-                      // check for empty paragraphs
-                      const text = props.children
-                      if (typeof text === 'string' && checkForEmptyLine(text)) {
-                        return <p className="empty-line"></p>
-                      }
-                      return <p>{props.children}</p>
-                    },
                   }}
                 >
-                  {body}
+                  {displayBody}
                 </ReactMarkdown>
               </CommentWrapper>
               {/* file uploads */}
               {/* @ts-ignore */}
               <FilesGrid
-                files={files}
-                isCompact={files.length > 6}
+                files={attachments}
+                isCompact={attachments.length > 6}
                 activityId={activityId}
                 projectName={projectName}
                 isDownloadable
