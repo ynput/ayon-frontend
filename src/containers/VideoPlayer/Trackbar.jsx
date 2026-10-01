@@ -154,17 +154,6 @@ const Trackbar = ({
       }
     }
 
-    // frames linked to comments (1-based), drawn at any trackbar width
-    for (const frame of linkedFrames || []) {
-      if (frame < 1 || frame > frameCount) continue
-      markLinkedFrame(ctx, {
-        color: linkedColor,
-        progressX: ((frame - 1) / frameCount) * width,
-        handleWidth,
-        height,
-      })
-    }
-
     //
     // Draw the handle
     //
@@ -177,6 +166,18 @@ const Trackbar = ({
     ctx.beginPath()
     ctx.fillRect(progressX - 1, 0, handleWidth, height)
     ctx.fill()
+
+    // frames linked to comments (1-based), drawn at any trackbar width,
+    // on top of the handle so they stay visible under the playhead
+    for (const frame of linkedFrames || []) {
+      if (frame < 1 || frame > frameCount) continue
+      markLinkedFrame(ctx, {
+        color: linkedColor,
+        progressX: ((frame - 1) / frameCount) * width,
+        handleWidth,
+        height,
+      })
+    }
 
     // draw blue dot if current frame is highlighted
     if (highlighted && highlighted.includes(currentFrame + 1)) {
