@@ -67,6 +67,12 @@ const highlightFrame = (ctx, { color, progressX, handleWidth, height }) => {
   ctx.fill()
 }
 
+// a bar along the bottom of a frame linked to a comment
+const markLinkedFrame = (ctx, { color, progressX, handleWidth, height }) => {
+  ctx.fillStyle = color
+  ctx.fillRect(progressX, height - 3, Math.max(handleWidth, 3), 3)
+}
+
 const Trackbar = ({
   frameCount,
   currentFrame,
@@ -77,6 +83,7 @@ const Trackbar = ({
   frameRate,
   isPlaying,
   highlighted,
+  linkedFrames,
 }) => {
   const canvasRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -87,6 +94,7 @@ const Trackbar = ({
     onPrimaryContainer = '#ebf5ff'
   const containerLow = '#1c2026'
   const containerLowest = '#16191d'
+  const linkedColor = '#3d9cff'
 
   // DRAW
 
@@ -144,6 +152,17 @@ const Trackbar = ({
           })
         }
       }
+    }
+
+    // frames linked to comments (1-based), drawn at any trackbar width
+    for (const frame of linkedFrames || []) {
+      if (frame < 1 || frame > frameCount) continue
+      markLinkedFrame(ctx, {
+        color: linkedColor,
+        progressX: ((frame - 1) / frameCount) * width,
+        handleWidth,
+        height,
+      })
     }
 
     //
@@ -206,7 +225,7 @@ const Trackbar = ({
     // ctx.moveTo(markInX, height - 1)
     // ctx.lineTo(markOutX, height - 1)
     // ctx.stroke()
-  }, [currentFrame, frameCount, markIn, markOut, isPlaying, highlighted, bufferedRanges, primaryColor, primaryContainer, onPrimaryContainer, containerLow, containerLowest])
+  }, [currentFrame, frameCount, markIn, markOut, isPlaying, highlighted, linkedFrames, bufferedRanges, primaryColor, primaryContainer, onPrimaryContainer, containerLow, containerLowest, linkedColor])
 
   // Events
 
