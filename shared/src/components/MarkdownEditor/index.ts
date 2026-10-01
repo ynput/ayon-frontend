@@ -21,3 +21,4 @@ export {
 } from './media/mediaUtils'
 export type { UploadMedia, UploadedMedia } from './plugins/MediaPlugin'
 export { getLinkLabel } from './links/getLinkLabel'
+export { parseActivityLink, ACTIVITY_LINK_LABEL } from './links/activityLinks'

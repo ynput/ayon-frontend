@@ -4,6 +4,8 @@
  * Returns null for urls without a known structure, which keep the url as their text.
  */
 
+import { ACTIVITY_LINK_LABEL, parseActivityLink } from './activityLinks'
+
 type LabelParser = (url: URL, parts: string[]) => string | null
 
 const decode = (value: string) => {
@@ -233,6 +235,8 @@ const PARSERS: [RegExp, LabelParser][] = [
 ]
 
 export const getLinkLabel = (href: string): string | null => {
+  // a link to a comment on this server, shown as a chip
+  if (parseActivityLink(href)) return ACTIVITY_LINK_LABEL
   let url: URL
   try {
     url = new URL(href.trim())

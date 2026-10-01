@@ -460,8 +460,9 @@ export const Content = styled.div`
     outline: 2px solid var(--md-sys-color-primary);
   }
 
-  /* mentions */
-  .mention {
+  /* mentions, and links to comments (ActivityLinkPlugin) */
+  .mention,
+  .md-activity-link {
     display: inline;
     padding: 1px 4px;
     border-radius: var(--border-radius-m);
@@ -477,6 +478,9 @@ export const Content = styled.div`
   .mention-user,
   .mention-team {
     cursor: default;
+  }
+  .md-activity-link {
+    text-decoration: none;
   }
 `
 

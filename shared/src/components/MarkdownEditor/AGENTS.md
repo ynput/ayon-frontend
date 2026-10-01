@@ -147,6 +147,13 @@ Pass `commands: EditorCommand[]` (`types.ts`: `id`, `label`, `icon`, `keywords`,
 - Return `null` when unsure, and the url stays as the text.
 - Only a paste of a single url, onto a collapsed selection outside code and links, gets a label.
 
+### Comment links (`links/activityLinks.ts`)
+
+- A link to a comment on this server (`/projects/{project}/...?activity={id}`, from "Copy link" or a duplicated comment's "Original comment") is stored as a **plain markdown link**, but shown as a chip like mentions.
+- The editor: `ActivityLinkPlugin` adds `md-activity-link` to those links, styled like `.mention`. A pasted comment url gets the label "Comment" (`getLinkLabel`).
+- The feed: `aTag` renders them with `ActivityReference` (chat icon). Clicking highlights the comment when it is in the feed, otherwise it opens the link in a new tab.
+- Links to other servers stay normal links. `parseActivityLink` is the one place that decides.
+
 ### Code blocks
 
 - `code/prism.ts` is the single Prism setup: the languages and `CODE_LANGUAGES` for the picker. The editor uses it for highlighting, and the feed's `codeTag` uses it through `highlightCode`. Add languages there, importing dependencies first.

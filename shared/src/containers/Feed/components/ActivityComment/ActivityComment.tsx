@@ -40,12 +40,15 @@ import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
 import ActivityCommentMenu from './ActivityCommentMenu'
 import { useCategoryData } from '../../hooks/useCategoryData'
 import { getActivityUserName } from '../../helpers/getActivityUserName'
+import { copyToClipboard } from '@shared/util'
 
 type Props = {
   activity: any
   onCheckChange?: Function
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
   onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
+  // copy the comment into the new comment input (more menu)
+  onDuplicate?: (activity: any) => void
   projectInfo: any
   editProps?: {
     disabled: boolean
@@ -67,6 +70,7 @@ const ActivityComment = ({
   onCheckChange,
   onDelete,
   onUpdate,
+  onDuplicate,
   projectInfo,
   editProps,
   projectName,
@@ -116,7 +120,10 @@ const ActivityComment = ({
   const isMenuOpen = menuOpen === menuId
 
   const { onGoToFrame, setHighlightedActivities, user, commentFrameLink } = useDetailsPanelContext()
-  const canDelete = isOwner || user?.data?.isAdmin
+  const isAdmin = !!user?.data?.isAdmin
+  const canDelete = isOwner || isAdmin
+  // admins can edit anyone's comment (the backend allows it)
+  const canEdit = isOwner || isAdmin
 
   const handleEditComment = () => {
     setEditingId(activityId)
@@ -133,6 +140,12 @@ const ActivityComment = ({
   }
 
   const isEditing = editingId === activityId
+
+  // a link to a comment in this feed highlights it, other comments open in a new tab
+  const handleActivityLinkClick = ({ activityId, url }: { activityId: string; url: string }) => {
+    if (document.getElementById(activityId)) setHighlightedActivities([activityId])
+    else window.open(url, '_blank', 'noreferrer')
+  }
 
   const isRef = referenceType !== 'origin' || showOrigin
 
@@ -260,7 +273,7 @@ const ActivityComment = ({
         <Styled.Body className={clsx('comment-body', { isEditing })}>
           {!readOnly && (
             <Styled.Tools className={'tools'}>
-              {isOwner && handleEditComment && (
+              {canEdit && (
                 <Styled.ToolButton icon="edit_square" onClick={handleEditComment} variant="text" />
               )}
               <Styled.ToolButton
@@ -342,6 +355,7 @@ const ActivityComment = ({
                         activityId,
                         categoryPrimary: categoryData?.color,
                         categorySecondary: blendedCategoryColor.secondary,
+                        onActivityLinkClick: handleActivityLinkClick,
                       }),
                     // checkbox inputs
                     // @ts-ignore
@@ -421,10 +435,14 @@ const ActivityComment = ({
       >
         <ActivityCommentMenu
           onDelete={canDelete && onDelete ? deleteConfirmation : undefined}
-          onEdit={isOwner && handleEditComment}
+          onEdit={canEdit ? handleEditComment : undefined}
+          // the markdown, which pastes back into an editor with its mentions and formatting
+          onCopyText={displayBody ? () => copyToClipboard(displayBody) : undefined}
+          onDuplicate={onDuplicate ? () => onDuplicate(activity) : undefined}
           activityId={activityId}
           onSelect={() => toggleMenuOpen(false)}
           projectName={projectName}
+          entity={origin ?? (entityId ? { id: entityId, type: entityType } : undefined)}
         />
       </MenuContainer>
     </>

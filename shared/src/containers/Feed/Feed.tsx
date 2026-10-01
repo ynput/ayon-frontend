@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { v4 as uuid } from 'uuid'
 import ActivityItem from './components/ActivityItem'
 import CommentInput from './components/CommentInput/CommentInput'
-import { VersionReviewFeedback } from './components/CommentInput/types'
+import { VersionReviewFeedback, type CommentDuplicate } from './components/CommentInput/types'
 import * as Styled from './Feed.styled'
 import useCommentMutations, { Activity } from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
@@ -306,6 +307,17 @@ export const Feed = ({
     onOpenImage?.({ files: previewableFiles, activityId, index, projectName })
   }
 
+  // a comment copied into the new comment input (comment menu > Duplicate)
+  const [commentDuplicate, setCommentDuplicate] = useState<CommentDuplicate | null>(null)
+  const canDuplicate = !hideCommentInput && !readOnly && !disabled
+  const handleDuplicate = useCallback(
+    (activity: CommentDuplicate['activity']) => {
+      setCommentDuplicate({ key: uuid(), activity })
+      setEditingId(FEED_NEW_COMMENT)
+    },
+    [setEditingId],
+  )
+
   const loadingPlaceholders = useMemo(() => getLoadingPlaceholders(10), [])
 
   const lastVersionReview = useLastVersionReview({
@@ -350,6 +362,7 @@ export const Feed = ({
                   onUpdate={async (value, files, _refs, data) =>
                     await updateComment(activity, value, files, data)
                   }
+                  onDuplicate={canDuplicate ? handleDuplicate : undefined}
                   projectInfo={projectInfo}
                   projectName={projectName}
                   entityType={entityType}
@@ -399,6 +412,8 @@ export const Feed = ({
             versionReview={versionReview}
             lastOwnVersionReview={lastVersionReview}
             onReview={submitReview}
+            duplicate={commentDuplicate}
+            onDuplicateHandled={() => setCommentDuplicate(null)}
           />
         )}
       </Styled.FeedContainer>

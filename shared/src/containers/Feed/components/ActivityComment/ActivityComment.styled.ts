@@ -68,6 +68,14 @@ export const Body = styled.div`
   position: relative;
   min-width: 0;
 
+  /* the text can always be selected and copied, even when the host turns selection off around
+     the feed (e.g. the review player's splitter). Doubled for specificity, mentions keep theirs. */
+  && .comment-text,
+  && .comment-text *:not(.reference, .reference *) {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
   p {
     margin: 0;
   }

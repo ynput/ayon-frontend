@@ -6,6 +6,7 @@ import clsx from 'clsx'
 import { toast } from 'react-toastify'
 import { $createListItemNode, $createListNode } from '@lexical/list'
 import { $getRoot } from 'lexical'
+import { v4 as uuid } from 'uuid'
 
 // Components
 import { Button, Icon, SaveButton, type IconType } from '@ynput/ayon-react-components'
@@ -13,6 +14,7 @@ import {
   MarkdownEditor,
   createFeedMentionSource,
   getInlineMediaFileIds,
+  normalizeLegacyMarkdown,
   type EditorCommand,
   type MarkdownEditorHandle,
   type MentionTrigger,
@@ -40,7 +42,9 @@ import { useProjectContext } from '@shared/context/ProjectContext'
 import { parseFilename } from '@shared/util/parseFilename'
 import type { DetailsPanelEntityType, FeedActivity } from '@shared/api'
 import { VersionReviewPill } from './VersionReviewPill'
-import { VersionReviewFeedback } from './types'
+import { VersionReviewFeedback, type CommentDuplicate } from './types'
+import { cloneProjectFile } from './cloneProjectFile'
+import { getActivityLink } from '../../helpers/getActivityLink'
 
 type UploadingFile = {
   name: string
@@ -58,6 +62,9 @@ interface CommentInputProps {
   lastOwnVersionReview?: FeedActivity
   onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
   onReview?: (feedback: VersionReviewFeedback) => void
+  // a comment to copy into this (new comment) input, with copies of its files
+  duplicate?: CommentDuplicate | null
+  onDuplicateHandled?: () => void
   isEditing?: boolean
   disabled?: boolean
   isLoading?: boolean
@@ -89,6 +96,8 @@ const CommentInput: FC<CommentInputProps> = ({
   lastOwnVersionReview,
   onSubmit,
   onReview,
+  duplicate,
+  onDuplicateHandled,
   isEditing,
   disabled,
   isLoading,
@@ -380,6 +389,106 @@ const CommentInput: FC<CommentInputProps> = ({
     e.stopPropagation()
     setIsDropping(true)
   }
+
+  // DUPLICATE: copy another comment in to adapt and post it, e.g. client feedback for an artist.
+  // The files are copied so the original comment is never changed, the text links back to it.
+  const handledDuplicate = useRef<string | null>(null)
+  const insertDuplicate = async ({ activity }: CommentDuplicate) => {
+    const body = normalizeLegacyMarkdown(activity.body || '')
+    const sourceFiles = activity.files || []
+    const inlineIds = getInlineMediaFileIds(body)
+    // annotations are drawn over the frames of the version, they only stay annotations there
+    const keepAnnotations =
+      entities.length === 1 && entities[0].id === (activity.origin?.id ?? activity.entityId)
+
+    const appendText = (markdown: string) => {
+      const link = `[Original comment](${getActivityLink(
+        projectName,
+        activity.activityId,
+        activity.origin ??
+          (activity.entityId && activity.entityType
+            ? { id: activity.entityId, type: activity.entityType }
+            : undefined),
+      )})`
+      const text = [markdown.trim(), link].filter(Boolean).join('\n\n')
+      setEditorValue((prev) => (prev.trim() ? `${prev.trim()}\n\n${text}` : text))
+      editorRef.current?.focus()
+    }
+
+    const cloneFile = async (source: (typeof sourceFiles)[number]) => {
+      const isInline = inlineIds.has(source.id)
+      try {
+        // inline files have no card, they show up in the text when they are ready
+        const upload = await cloneProjectFile(
+          projectName,
+          source.id,
+          source.name,
+          source.mime,
+          isInline ? undefined : handleFileProgress,
+        )
+        if (isInline) {
+          const { file, data } = upload
+          const name = parseFilename(file.name)
+          setFiles((prev) => [
+            ...prev,
+            { id: data.id, name, mime: file.type, size: file.size, order: prev.length, isInline },
+          ])
+        } else handleFileUploaded(upload)
+
+        const annotation = source.annotation as SavedAnnotationMetadata | undefined
+        if (annotation && keepAnnotations) {
+          const layer = await cloneProjectFile(
+            projectName,
+            annotation.transparent,
+            `annotation-${source.name}`,
+            'image/png',
+          )
+          handleFileUploaded(layer, true)
+          setUploadedAnnotations((prev) => [
+            ...prev,
+            { ...annotation, id: uuid(), composite: upload.data.id, transparent: layer.data.id },
+          ])
+        }
+        return [source.id, upload.data.id] as const
+      } catch (error) {
+        removeFileUploading(source.name)
+        toast.error(`Could not copy ${source.name}`)
+        console.warn(error)
+        return null
+      }
+    }
+
+    // posting waits for the copies
+    setInlineUploads((count) => count + 1)
+    try {
+      const inline = sourceFiles.filter((file) => inlineIds.has(file.id))
+      const attachments = sourceFiles.filter((file) => !inlineIds.has(file.id))
+      const attachmentCopies = Promise.all(attachments.map(cloneFile))
+      if (inline.length) {
+        // image / video blocks point to their copies, so the text waits for them
+        const copies = new Map(
+          (await Promise.all(inline.map(cloneFile))).filter(
+            (c): c is readonly [string, string] => !!c,
+          ),
+        )
+        appendText(
+          body.replace(/(\/api\/projects\/[^/]+\/files\/)([\w-]+)/g, (match, path, id) =>
+            copies.has(id) ? path + copies.get(id) : match,
+          ),
+        )
+      } else appendText(body)
+      await attachmentCopies
+    } finally {
+      setInlineUploads((count) => count - 1)
+    }
+  }
+
+  useEffect(() => {
+    if (!duplicate || handledDuplicate.current === duplicate.key) return
+    handledDuplicate.current = duplicate.key
+    onDuplicateHandled?.()
+    insertDuplicate(duplicate)
+  }, [duplicate?.key])
 
   const uploadAnnotations = useAnnotationsUpload({
     projectName,
