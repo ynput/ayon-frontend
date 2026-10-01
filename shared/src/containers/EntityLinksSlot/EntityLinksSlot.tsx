@@ -59,7 +59,7 @@ const isTextTarget = (e: KeyboardEvent) => {
 /** Mounted once at app level, inside the details panel and Power Pack providers. */
 export const EntityLinksSlot: FC = () => {
   const [entities, setEntities] = useState<ActiveEntity[] | null>(null)
-  const [EntityLinksDialog, { isLoading }] = useLoadModule({
+  const [EntityLinksDialog, { isLoading, outdated }] = useLoadModule({
     addon: 'powerpack',
     remote: 'links',
     module: 'EntityLinksDialog',
@@ -89,11 +89,16 @@ export const EntityLinksSlot: FC = () => {
         toast.info('Select an entity to see its links', { autoClose: 2000 })
         return
       }
+      // the Power Pack is there but too old for the links dialog
+      if (outdated) {
+        toast.info(`The links dialog needs Power Pack ${outdated.required} or newer`)
+        return
+      }
       setEntities(active)
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [isOpen, isLoading, close])
+  }, [isOpen, isLoading, outdated, close])
 
   const openDetails = useCallback(
     (entity: ActiveEntity) => {
