@@ -391,5 +391,6 @@
   }
 })
 
-// eslint-disable-next-line no-undef
-export default PubSub
+const typed = PubSub as any
+
+export default typed
