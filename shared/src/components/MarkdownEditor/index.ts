@@ -20,3 +20,4 @@ export {
   getInlineMediaFileIds,
 } from './media/mediaUtils'
 export type { UploadMedia, UploadedMedia } from './plugins/MediaPlugin'
+export { getLinkLabel } from './links/getLinkLabel'

@@ -38,6 +38,7 @@ import CodeLanguagePlugin from './plugins/CodeLanguagePlugin'
 import CodeHighlightPlugin from './plugins/CodeHighlightPlugin'
 import YouTubePlugin from './plugins/YouTubePlugin'
 import SlashCommandPlugin from './plugins/SlashCommandPlugin'
+import LinkPastePlugin from './plugins/LinkPastePlugin'
 import MediaPlugin, { type UploadMedia } from './plugins/MediaPlugin'
 import ClipboardPlugin from './plugins/ClipboardPlugin'
 import MarkdownValuePlugin from './plugins/MarkdownValuePlugin'
@@ -271,6 +272,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         {!readOnly && <CodeLanguagePlugin />}
         <CodeHighlightPlugin />
         {!readOnly && <YouTubePlugin />}
+        {!readOnly && <LinkPastePlugin />}
         {onUploadMedia && !readOnly && (
           <MediaPlugin onUploadMedia={onUploadMedia} onFiles={onFiles} />
         )}
