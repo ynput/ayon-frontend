@@ -9,6 +9,7 @@ import { toast } from 'react-toastify'
 import { detailsPanelEntityTypes } from '@shared/api'
 import type { DetailsPanelEntityType } from '@shared/api'
 import { usePowerpack } from '@shared/context/PowerpackContext'
+import { useRemoteModules } from '@shared/context/RemoteModulesContext'
 import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
 import { useGlobalContext } from '@shared/context/GlobalContext'
 import { useGetProductionAddon } from '@shared/hooks/useGetProductionAddon'
@@ -59,13 +60,17 @@ const isTextTarget = (e: KeyboardEvent) => {
 /** Mounted once at app level, inside the details panel and Power Pack providers. */
 export const EntityLinksSlot: FC = () => {
   const [entities, setEntities] = useState<ActiveEntity[] | null>(null)
-  const [EntityLinksDialog, { isLoading, outdated }] = useLoadModule({
+  const [EntityLinksDialog, { isLoaded, isLoading, outdated }] = useLoadModule({
     addon: 'powerpack',
     remote: 'links',
     module: 'EntityLinksDialog',
     fallback: EntityLinksDialogFallback,
     minVersion: POWERPACK_MIN_VERSION,
   })
+  // the Power Pack offers the dialog, so not having it means it failed to load
+  const { modules } = useRemoteModules()
+  const failedToLoad =
+    !isLoaded && !!modules.find((m) => m.addonName === 'powerpack')?.modules?.links
   const { openSlideOut, useNavigate } = useDetailsPanelContext()
   const navigate = useNavigate()
   const { getProductionAddon } = useGetProductionAddon()
@@ -94,11 +99,15 @@ export const EntityLinksSlot: FC = () => {
         toast.info(`The links dialog needs Power Pack ${outdated.required} or newer`)
         return
       }
+      if (failedToLoad) {
+        toast.error('The links dialog could not be loaded, see the browser console')
+        return
+      }
       setEntities(active)
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [isOpen, isLoading, outdated, close])
+  }, [isOpen, isLoading, outdated, failedToLoad, close])
 
   const openDetails = useCallback(
     (entity: ActiveEntity) => {
