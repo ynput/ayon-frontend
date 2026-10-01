@@ -151,7 +151,8 @@ export const CellWidget: FC<EditorCellProps> = ({
 
   const { projectName } = useProjectContext()
   const { isEditing, setEditingCellId, getEditingDraft, setEditingDraft } = useCellEditing()
-  const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionCellsContext()
+  const { isCellFocused, gridMap, selectCell, focusCell, selectedCells } =
+    useSelectionCellsContext()
   const cellId = getCellId(rowId, columnId)
   const isMidnightExclusive = midnightExclusiveFields?.includes(columnId) ?? false
 
@@ -180,7 +181,15 @@ export const CellWidget: FC<EditorCellProps> = ({
       setEditingCellId(null)
       return
     }
-    if (key === 'Enter') {
+    // several cells selected: the edit applies to all of them, so finish here instead of moving
+    // to the next row, which may be another selected cell still showing its old value
+    const isMultiCellEdit = selectedCells.size > 1 && selectedCells.has(cellId)
+    if (key === 'Enter' && (isMultiCellEdit || type === 'boolean')) {
+      setEditingCellId(null)
+      onChange?.(newValue, key)
+      const td = ref.current?.closest('td') as HTMLElement | null
+      if (td) td.focus()
+    } else if (key === 'Enter') {
       // Move to next row first (sets new editing cell), then save value.
       // This prevents the dialog from blinking between rows.
       moveToNextRow()
@@ -375,11 +384,37 @@ export const CellWidget: FC<EditorCellProps> = ({
         //console.log(`Unrecognized type "${type}" for cell ${cellId}.`)
         return null
     }
-  }, [cellId, value, type, isCurrentCellEditing, options, isCollapsed, isMidnightExclusive])
+  }, [
+    cellId,
+    value,
+    type,
+    isCurrentCellEditing,
+    options,
+    isCollapsed,
+    isMidnightExclusive,
+    handleOnChange,
+  ])
 
   return (
     <Cell
       {...props}
+      onKeyDown={(event) => {
+        props.onKeyDown?.(event)
+        if (
+          event.defaultPrevented ||
+          event.key !== 'Enter' ||
+          type !== 'boolean' ||
+          options.length ||
+          attributeData?.enumResolver ||
+          isReadOnly ||
+          isCollapsed
+        )
+          return
+
+        event.preventDefault()
+        event.stopPropagation()
+        handleOnChange(!value, 'Enter')
+      }}
       className={clsx(props.className, {
         inherited: isInherited && !isCurrentCellEditing,
         [READ_ONLY]: isReadOnly,
