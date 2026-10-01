@@ -216,6 +216,16 @@ export const FrameLinkButton = styled(Button)`
   }
 `
 
+export const FrameInput = styled.input`
+  width: 82px;
+  min-width: 60px;
+  padding: 4px 8px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--border-radius-m);
+  background: var(--background-color);
+  color: var(--md-sys-color-on-surface);
+`
+
 export const SubmitButtons = styled(Buttons)`
   margin-left: auto;
   flex-shrink: 1;

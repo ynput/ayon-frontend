@@ -136,9 +136,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   // let comments link to the current frame, and jump to a comment's frame
   const handleScrubRef = useRef(handleScrub)
   handleScrubRef.current = handleScrub
+  const currentFrameRef = useRef(currentFrame)
+  currentFrameRef.current = currentFrame
   useEffect(() => {
     registerFrameLinkPlayer({
-      getFrame: () => Math.round((videoRef.current?.currentTime || 0) * frameRate),
+      getFrame: () => currentFrameRef.current,
       seekToFrame: (frame) => handleScrubRef.current(frame),
     })
     return () => registerFrameLinkPlayer(null)

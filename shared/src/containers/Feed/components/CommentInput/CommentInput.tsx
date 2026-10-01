@@ -35,12 +35,13 @@ import useReferenceTooltip from '../../hooks/useReferenceTooltip'
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContext'
 import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext, type CommentFrameRange } from '@shared/context/DetailsPanelContext'
 import { useProjectContext } from '@shared/context/ProjectContext'
 import { parseFilename } from '@shared/util/parseFilename'
 import type { DetailsPanelEntityType, FeedActivity } from '@shared/api'
 import { VersionReviewPill } from './VersionReviewPill'
 import { VersionReviewFeedback } from './types'
+import { parseFrameRange } from './parseFrameRange'
 
 type UploadingFile = {
   name: string
@@ -139,22 +140,61 @@ const CommentInput: FC<CommentInputProps> = ({
   // FRAME LINK: the host (e.g. a player) owns the draft link so it can show and move it
   const frameLinkEntity =
     entities.length === 1 && entities[0].entityType === 'version' ? entities[0] : undefined
-  const frameLink =
+  const draftFrameLink =
     commentFrameLink?.draft && commentFrameLink.draft.entityId === frameLinkEntity?.id
       ? commentFrameLink.draft
       : null
-  const showFrameLink = !!commentFrameLink && !!frameLinkEntity && !isEditing
+  const [manualFrameLink, setManualFrameLink] = useState<CommentFrameRange | null>(() =>
+    isEditing && Number.isSafeInteger(data?.startFrame) && data.startFrame > 0
+      ? {
+          startFrame: data.startFrame,
+          endFrame:
+            Number.isSafeInteger(data.endFrame) && data.endFrame >= data.startFrame
+              ? data.endFrame
+              : data.startFrame,
+        }
+      : null,
+  )
+  const [frameInputOpen, setFrameInputOpen] = useState(false)
+  const frameLink = isEditing ? manualFrameLink : manualFrameLink ?? draftFrameLink
+  const showFrameLink = isEditing
+    ? !!frameLinkEntity || !!manualFrameLink
+    : !!commentFrameLink && !!frameLinkEntity
   const formatFrame = commentFrameLink?.formatFrame ?? String
   const frameLinkLabel = frameLink
     ? frameLink.endFrame > frameLink.startFrame
       ? `${formatFrame(frameLink.startFrame)}-${formatFrame(frameLink.endFrame)}`
       : formatFrame(frameLink.startFrame)
     : undefined
+  const [frameInput, setFrameInput] = useState(frameLinkLabel ?? '')
+  const cancelFrameInput = useRef(false)
+  useEffect(() => {
+    if (!frameInputOpen) setFrameInput(frameLinkLabel ?? '')
+  }, [frameLinkLabel, frameInputOpen])
+
+  const commitFrameInput = () => {
+    if (cancelFrameInput.current) {
+      cancelFrameInput.current = false
+      setFrameInput(frameLinkLabel ?? '')
+      setFrameInputOpen(false)
+      return
+    }
+    const range = parseFrameRange(frameInput)
+    if (range) setManualFrameLink(range)
+    else setFrameInput(frameLinkLabel ?? '')
+    setFrameInputOpen(false)
+  }
 
   const handleFrameLinkButton = () => {
-    if (!commentFrameLink || !frameLinkEntity) return
-    if (frameLink) commentFrameLink.unlink()
-    else commentFrameLink.link(frameLinkEntity.id)
+    if (frameLink) {
+      setManualFrameLink(null)
+      if (!isEditing) commentFrameLink?.unlink()
+    } else if (!isEditing && commentFrameLink && frameLinkEntity) {
+      commentFrameLink.link(frameLinkEntity.id)
+    } else {
+      setFrameInput('')
+      setFrameInputOpen(true)
+    }
   }
 
   // the same in the `/` menu
@@ -426,7 +466,8 @@ const CommentInput: FC<CommentInputProps> = ({
         annotations: annotationMetadata, // could be undefined
         category: isGuest ? null : category, // guests cannot set category (it is done by default on backend)
         // one frame link per comment, stored as metadata rather than in the text
-        ...(frameLink && { startFrame: frameLink.startFrame, endFrame: frameLink.endFrame }),
+        startFrame: frameLink?.startFrame ?? undefined,
+        endFrame: frameLink?.endFrame ?? undefined,
       }
 
       if ((markdown || uploadedFiles.length) && onSubmit) {
@@ -439,6 +480,7 @@ const CommentInput: FC<CommentInputProps> = ({
           setUploadedAnnotations([])
           // the link now belongs to the submitted comment
           if (frameLink) commentFrameLink?.unlink()
+          if (!isEditing) setManualFrameLink(null)
         } catch (error) {
           // error is handled in rtk query mutation
           setEditorValue(submittedValue)
@@ -658,17 +700,45 @@ const CommentInput: FC<CommentInputProps> = ({
                     />
                   ))}
                 {showFrameLink && (
-                  // link the comment to the current frame, or remove the link
-                  <Styled.FrameLinkButton
-                    className="frame-link"
-                    icon="timer"
-                    variant="text"
-                    selected={!!frameLink}
-                    label={frameLinkLabel}
-                    onClick={handleFrameLinkButton}
-                    data-tooltip={frameLink ? 'Remove frame link' : 'Link to current frame'}
-                    data-testid="comment-frame-link"
-                  />
+                  <>
+                    {frameLink || frameInputOpen ? (
+                      <Styled.FrameInput
+                        className="frame-link"
+                        aria-label="Linked frame or range"
+                        value={frameInput}
+                        placeholder="Frame or range"
+                        onFocus={() => setFrameInputOpen(true)}
+                        onChange={(e) => setFrameInput(e.target.value)}
+                        onBlur={commitFrameInput}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            e.currentTarget.blur()
+                          }
+                          if (e.key === 'Escape') {
+                            cancelFrameInput.current = true
+                            e.currentTarget.blur()
+                          }
+                        }}
+                        data-testid="comment-frame-link-input"
+                      />
+                    ) : null}
+                    <Styled.FrameLinkButton
+                      className="frame-link"
+                      icon={frameLink ? 'timer_off' : 'timer'}
+                      variant="text"
+                      selected={!!frameLink}
+                      onClick={handleFrameLinkButton}
+                      data-tooltip={
+                        frameLink
+                          ? 'Remove frame link'
+                          : isEditing
+                            ? 'Add frame link'
+                            : 'Link to current frame'
+                      }
+                      data-testid="comment-frame-link"
+                    />
+                  </>
                 )}
               </Styled.Buttons>
             )}
