@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useId, useMemo, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import emoji from 'remark-emoji'
 import remarkGfm from 'remark-gfm'
@@ -80,7 +80,6 @@ const ActivityComment = ({
   showOrigin,
   isHighlighted,
   readOnly,
-  isSlideOut,
   statuses = [],
 }: Props) => {
   const {
@@ -116,7 +115,10 @@ const ActivityComment = ({
   if (!authorName) authorName = author?.name || ''
   authorFullName = getActivityUserName({ name: authorName, label: authorFullName })
 
-  const menuId = `activity-comment-menu-${activityId}-${isSlideOut ? 'slideout' : 'normal'}`
+  // the same comment can be shown twice at once (e.g. in the viewer and the details panel behind
+  // it), each copy has its own menu
+  const instanceId = useId()
+  const menuId = `activity-comment-menu-${activityId}-${instanceId}`
   const isMenuOpen = menuOpen === menuId
 
   const { onGoToFrame, setHighlightedActivities, user, commentFrameLink } = useDetailsPanelContext()
