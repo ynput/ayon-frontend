@@ -76,6 +76,8 @@ type Params = {
   modules: ProjectTableModulesType
   skipFolderLinks?: boolean
   skipTaskLinks?: boolean
+  /** @deprecated use skipFolderLinks and skipTaskLinks */
+  skipLinks?: boolean
   showComments?: boolean // only fetch latestComments when the comments column is visible
   isLoadingViews?: boolean
   onCollapseAll?: () => void
@@ -105,8 +107,9 @@ export const useFetchOverviewData = ({
   isFlatFolderView = false,
   attribFields,
   modules,
-  skipFolderLinks = false,
-  skipTaskLinks = false,
+  skipFolderLinks: skipFolderLinksProp,
+  skipTaskLinks: skipTaskLinksProp,
+  skipLinks,
   showComments = false,
   isLoadingViews = false,
   onCollapseAll,
@@ -275,7 +278,7 @@ export const useFetchOverviewData = ({
     projectName,
     entityType: 'folder',
     entityIds: visibleFolders,
-    skip: isLoadingViews || skipFolderLinks,
+    skip: isLoadingViews || (skipFolderLinksProp ?? skipLinks ?? false),
   })
 
   // create a map of folders by id for efficient lookups
@@ -563,7 +566,7 @@ export const useFetchOverviewData = ({
     projectName,
     entityType: 'task',
     entityIds: visibleTasks,
-    skip: isLoadingViews || skipTaskLinks,
+    skip: isLoadingViews || (skipTaskLinksProp ?? skipLinks ?? false),
   })
 
   const loadingLinksEntityIds = useMemo(

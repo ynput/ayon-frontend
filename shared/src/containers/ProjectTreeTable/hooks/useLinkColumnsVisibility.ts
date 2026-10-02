@@ -4,10 +4,11 @@ import type { EntityScope } from '../types/table'
 import { getLinkColumnId } from '../buildTreeTableColumns'
 import { getScopedColumnId } from '../utils/cellUtils'
 
-// Tracks which link columns are on screen, fed by ProjectTreeTable's onColumnVisibleChange.
-export const useLinkColumnsVisibility = (
-  linkTypes: Pick<LinkTypeModel, 'name' | 'inputType' | 'outputType'>[] = [],
-) => {
+type LinkTypes = Pick<LinkTypeModel, 'name' | 'inputType' | 'outputType'>[]
+
+const NO_LINK_TYPES: LinkTypes = []
+
+export const useLinkColumnsVisibility = (linkTypes: LinkTypes = NO_LINK_TYPES) => {
   const [onScreen, setOnScreen] = useState<Record<string, boolean>>({})
 
   // the table reports only the columns whose on-screen state changed
@@ -16,7 +17,6 @@ export const useLinkColumnsVisibility = (
     [],
   )
 
-  // true when a link column of `scope` that applies to `entityType` is on screen
   const isLinkColumnShown = useCallback(
     (scope: EntityScope, entityType: string) => {
       const isOnScreen = (link: Pick<LinkTypeModel, 'name'>, direction: 'in' | 'out') =>

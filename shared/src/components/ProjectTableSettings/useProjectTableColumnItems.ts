@@ -1,5 +1,6 @@
 import {
   getLinkColumnId,
+  getScopeLinkDirections,
   getLinkLabel,
   getColumnLabel,
   getColumnIcon,
@@ -171,7 +172,7 @@ export const useProjectTableColumnItems = ({
             linkTypes
               .filter((link) => [link.inputType, link.outputType].includes(scope))
               .flatMap((link) =>
-                (['in', 'out'] as const).map((direction) => ({
+                getScopeLinkDirections(link, scope).map((direction) => ({
                   value: getScopedColumnId(scope, getLinkColumnId(link, direction)),
                   label: getLinkLabel(link, direction),
                   icon: 'link',

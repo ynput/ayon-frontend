@@ -347,6 +347,17 @@ export const getLinkLabel = (
 export const getLinkKey = (link: Pick<LinkTypeModel, 'name'>, direction: 'in' | 'out' | string) =>
   `${link.name.replaceAll('_', '').replaceAll('-', '').replaceAll('|', '_')}_${direction}`
 
+// parent columns only show the side of the link their entity is on
+export const getScopeLinkDirections = (
+  link: Pick<LinkTypeModel, 'inputType' | 'outputType'>,
+  scope: EntityScope,
+): ('in' | 'out')[] =>
+  scope === 'primary'
+    ? ['in', 'out']
+    : (['in', 'out'] as const).filter((direction) =>
+        direction === 'out' ? link.inputType === scope : link.outputType === scope,
+      )
+
 export const getLinkColumnId = (
   link: Pick<LinkTypeModel, 'name'>,
   direction: 'in' | 'out' | string,
@@ -1499,7 +1510,7 @@ const buildTreeTableColumns = ({
         return true
       })
       .flatMap((link) =>
-        (['in', 'out'] as const).map((direction) => {
+        getScopeLinkDirections(link, scope).map((direction) => {
           const linkColumnId = getLinkColumnId(link, direction)
           const columnId =
             scope === 'primary' ? linkColumnId : getScopedColumnId(scope, linkColumnId)

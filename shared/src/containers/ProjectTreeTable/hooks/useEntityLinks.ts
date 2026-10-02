@@ -39,7 +39,6 @@ export const useEntityLinks = ({
     [data],
   )
 
-  // requested but not cached yet
   const loadingIds = useMemo(
     () => (!shouldSkip && isFetching ? ids.filter((id) => !links.has(id)) : []),
     [shouldSkip, isFetching, ids, links],

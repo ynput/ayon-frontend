@@ -264,7 +264,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             projectName={projectName}
             disabled={!isApplicable}
             folderId={folderId}
-            isLoading={isLinksLoading}
+            isLoading={isLinksLoading && isApplicable}
             {...sharedProps}
             isReadOnly={isReadOnly}
           />
