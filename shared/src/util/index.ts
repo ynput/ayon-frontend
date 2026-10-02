@@ -33,9 +33,12 @@ export * from './realtimeUpdatesUtils'
 export * from './parseFilename'
 export * from './mentionTypeOptions'
 export * from './searchTerms'
+export * from './activeEntities'
 
 import isHTMLElement from './isHTMLElement'
 export { isHTMLElement }
 
 import PubSub from './pubsub'
 export { PubSub }
+export { getEntityIcon, getEntityColor } from './iconUtils'
+export type { IconAnatomy } from './iconUtils'
