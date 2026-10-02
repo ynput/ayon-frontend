@@ -36,7 +36,8 @@ import type { Status } from '../../../ProjectTreeTable/types/project'
 import { SavedAnnotationMetadata } from '../../index'
 import { useDetailsPanelContext, getActivityFrameLink } from '@shared/context/DetailsPanelContext'
 import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
-import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
+import CommentFlags from './CommentFlags'
+import { createCommentFlags } from './createCommentFlags'
 import ActivityCommentMenu from './ActivityCommentMenu'
 import { useCategoryData } from '../../hooks/useCategoryData'
 import { getActivityUserName } from '../../helpers/getActivityUserName'
@@ -290,22 +291,6 @@ const ActivityComment = ({
             </Styled.Tools>
           )}
 
-          {!isEditing && !isGuest && categoryData && (
-            <CategoryTag
-              value={categoryData.name}
-              color={categoryData.color}
-              style={{
-                top: -4,
-                left: -4,
-              }}
-              isCompact
-              data-tooltip={
-                categoryNotFound ? 'Category not found. It may have been deleted.' : undefined
-              }
-              data-tooltip-delay={0}
-            />
-          )}
-
           {isEditing ? (
             <CommentInput
               initValue={body}
@@ -313,6 +298,7 @@ const ActivityComment = ({
               initCategory={categoryData?.name}
               data={activity.activityData}
               activityId={activityId}
+              versionReview={false}
               isEditing
               onClose={handleEditCancel}
               onSubmit={handleSave}
@@ -321,23 +307,17 @@ const ActivityComment = ({
             />
           ) : (
             <>
-              {frameLink && (
-                <Styled.FrameLink
-                  onClick={onFrameLinkClick}
-                  disabled={!commentFrameLink && !onGoToFrame}
-                  data-tooltip={
-                    frameLink.endFrame > frameLink.startFrame
-                      ? 'Go to frames and set in/out points'
-                      : 'Go to frame'
-                  }
-                  data-testid="comment-frame-link-chip"
-                >
-                  <Icon icon="timer" />
-                  {frameLink.endFrame > frameLink.startFrame
-                    ? `${formatFrame(frameLink.startFrame)}-${formatFrame(frameLink.endFrame)}`
-                    : formatFrame(frameLink.startFrame)}
-                </Styled.FrameLink>
-              )}
+              <CommentFlags
+                flags={createCommentFlags({
+                  category: categoryData,
+                  categoryNotFound,
+                  frameLink,
+                  formatFrame,
+                  onFrameLinkClick,
+                  canNavigateToFrame: !!commentFrameLink || !!onGoToFrame,
+                  isGuest,
+                })}
+              />
               <CommentWrapper>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, emoji, remarkDirective, remarkDirectiveRehype]}

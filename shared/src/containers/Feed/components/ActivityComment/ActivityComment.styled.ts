@@ -360,29 +360,40 @@ export const Tip = styled.span`
   }
 `
 
-// the frame (range) a comment is linked to; clicking it jumps there
-export const FrameLink = styled.button`
+export const Flags = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+`
+
+export const Flag = styled.button`
   display: inline-flex;
   align-items: center;
   gap: var(--base-gap-small);
-  align-self: flex-start;
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 2px 6px;
-  margin-bottom: 4px;
   border: none;
   border-radius: var(--border-radius-m);
-  background-color: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
+  background-color: var(--button-color, var(--md-sys-color-primary));
+  color: var(--button-text-color, var(--md-sys-color-on-primary));
   ${theme.labelMedium}
   font-variant-numeric: tabular-nums;
-  cursor: pointer;
+
+  &:is(button) {
+    cursor: pointer;
+  }
 
   .icon {
     font-size: 16px;
     color: inherit;
   }
 
-  &:hover:not(:disabled) {
-    background-color: var(--md-sys-color-primary-container-hover);
+  &:is(button):hover:not(:disabled) {
+    filter: brightness(1.2);
   }
 
   &:disabled {

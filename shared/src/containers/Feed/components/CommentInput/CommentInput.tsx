@@ -37,7 +37,11 @@ import useReferenceTooltip from '../../hooks/useReferenceTooltip'
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContext'
 import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
-import { useDetailsPanelContext, type CommentFrameRange } from '@shared/context/DetailsPanelContext'
+import {
+  getActivityFrameLink,
+  useDetailsPanelContext,
+  type CommentFrameRange,
+} from '@shared/context/DetailsPanelContext'
 import { useProjectContext } from '@shared/context/ProjectContext'
 import { parseFilename } from '@shared/util/parseFilename'
 import type { DetailsPanelEntityType, FeedActivity } from '@shared/api'
@@ -482,6 +486,12 @@ const CommentInput: FC<CommentInputProps> = ({
   // The files are copied so the original comment is never changed, the text links back to it.
   const handledDuplicate = useRef<string | null>(null)
   const insertDuplicate = async ({ activity }: CommentDuplicate) => {
+    const frameLink = getActivityFrameLink(activity)
+    if (frameLink && frameLink.entityId === frameLinkEntity?.id) {
+      setManualFrameLink({ startFrame: frameLink.startFrame, endFrame: frameLink.endFrame })
+      commentFrameLink?.setDraft(frameLink)
+    }
+
     const body = normalizeLegacyMarkdown(activity.body || '')
     const sourceFiles = activity.files || []
     const inlineIds = getInlineMediaFileIds(body)
