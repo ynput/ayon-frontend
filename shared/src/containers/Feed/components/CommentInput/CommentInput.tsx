@@ -49,7 +49,6 @@ import { VersionReviewPill } from './VersionReviewPill'
 import { VersionReviewFeedback, type CommentDuplicate } from './types'
 import { parseFrameRange } from './parseFrameRange'
 import { cloneProjectFile } from './cloneProjectFile'
-import { getActivityLink } from '../../helpers/getActivityLink'
 
 type UploadingFile = {
   name: string
@@ -500,14 +499,7 @@ const CommentInput: FC<CommentInputProps> = ({
       entities.length === 1 && entities[0].id === (activity.origin?.id ?? activity.entityId)
 
     const appendText = (markdown: string) => {
-      const link = `[Original comment](${getActivityLink(
-        projectName,
-        activity.activityId,
-        activity.origin ??
-          (activity.entityId && activity.entityType
-            ? { id: activity.entityId, type: activity.entityType }
-            : undefined),
-      )})`
+      const link = `[Source](source:${activity.activityId})`
       const text = [markdown.trim(), link].filter(Boolean).join('\n\n')
       setEditorValue((prev) => (prev.trim() ? `${prev.trim()}\n\n${text}` : text))
       editorRef.current?.focus()

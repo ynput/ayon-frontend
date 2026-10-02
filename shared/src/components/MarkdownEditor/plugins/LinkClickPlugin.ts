@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import { parseActivityLink } from '../links/activityLinks'
 
 /**
  * Open links in a new tab: with a plain click when read only, with mod+click while editing
@@ -18,7 +19,9 @@ const LinkClickPlugin = () => {
       if (isEditable && !(e.metaKey || e.ctrlKey)) return
       e.preventDefault()
       e.stopPropagation()
-      window.open(link.href, '_blank', 'noopener,noreferrer')
+      const activityLink = parseActivityLink(link.getAttribute('href'))
+      if (activityLink?.isSource) return
+      window.open(activityLink?.url ?? link.href, '_blank', 'noopener,noreferrer')
     }
 
     let currentRoot: HTMLElement | null = null

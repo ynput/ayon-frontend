@@ -3,6 +3,8 @@ import { isArray } from 'lodash'
 import ActivityCheckbox from '../ActivityCheckbox/ActivityCheckbox'
 import ActivityReference from '../ActivityReference/ActivityReference'
 import { ACTIVITY_LINK_LABEL, parseActivityLink } from '@shared/components/MarkdownEditor'
+import SourceCommentReference from './SourceCommentReference'
+import { getActivityLink } from '../../helpers/getActivityLink'
 
 export const allowedRefTypes = [
   'user',
@@ -43,6 +45,7 @@ interface ATagProps {
 
 interface ATagOptions {
   entityId?: string
+  entityType?: string
   projectName?: string
   userName?: string
   userTeamNames?: string[]
@@ -75,6 +78,7 @@ export const aTag = (
   { children, href }: ATagProps,
   {
     entityId,
+    entityType,
     userName,
     userTeamNames,
     projectName,
@@ -89,10 +93,31 @@ export const aTag = (
   // a link to a comment is a chip like mentions
   const activityLink = parseActivityLink(href)
   if (activityLink) {
+    if (activityLink.isSource) {
+      if (!projectName || !entityId || !entityType) return null
+      const url = getActivityLink(projectName, activityLink.activityId, {
+        id: entityId,
+        type: entityType,
+      })
+      return (
+        <SourceCommentReference
+          projectName={projectName}
+          activityId={activityLink.activityId}
+          entityId={entityId}
+          onClick={() =>
+            onActivityLinkClick
+              ? onActivityLinkClick({ activityId: activityLink.activityId, projectName, url })
+              : window.open(url, '_blank', 'noreferrer')
+          }
+          categoryPrimary={categoryPrimary}
+          categorySecondary={categorySecondary}
+        />
+      )
+    }
     const text = getText(children).trim()
     // a pasted url has itself as its label
     const label = !text || /^https?:\/\//.test(text) ? ACTIVITY_LINK_LABEL : text
-    const link = { ...activityLink, url: href }
+    const link = activityLink
     return (
       <ActivityReference
         type="activity"

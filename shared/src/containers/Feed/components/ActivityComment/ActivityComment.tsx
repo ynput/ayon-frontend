@@ -328,7 +328,8 @@ const ActivityComment = ({
                     a: (props) =>
                       // @ts-ignore
                       aTag(props, {
-                        entityId,
+                        entityId: origin?.id ?? entityId,
+                        entityType: origin?.type ?? entityType,
                         userName,
                         userTeamNames,
                         projectName,
