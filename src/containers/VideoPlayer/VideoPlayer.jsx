@@ -92,8 +92,16 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   const { showOverlay, setShowOverlay, loop, setLoop, muted, setMuted } = usePlayerPreferences()
 
   // 2. Playback (needs refs)
-  const { currentTime, setCurrentTime, duration, setDuration, isPlaying, setIsPlaying, currentFrame, frameCount } =
-    useVideoPlayback(videoRef, frameRate, isTransitioning)
+  const {
+    currentTime,
+    setCurrentTime,
+    duration,
+    setDuration,
+    isPlaying,
+    setIsPlaying,
+    currentFrame,
+    frameCount,
+  } = useVideoPlayback(videoRef, frameRate, isTransitioning)
 
   // 3. Seeking (needs playback setters)
   const {
@@ -148,11 +156,17 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
 
   // 1-based frames of the comments linked to this version, and the one being written
   const linkedFrames = useMemo(() => {
-    const links = feedFrameLinks.filter((link) => link.entityId === selectedVersionId)
+    const editPreview = commentFrameLink?.editPreview
+    const links = feedFrameLinks.filter(
+      (link) => link.entityId === selectedVersionId && link.activityId !== editPreview?.activityId,
+    )
+    if (editPreview?.link?.entityId === selectedVersionId) {
+      links.push({ ...editPreview.link, activityId: editPreview.activityId })
+    }
     const draft = commentFrameLink?.draft
     if (draft?.entityId === selectedVersionId) links.push(draft)
     return Array.from(new Set(links.map((link) => link.startFrame)))
-  }, [feedFrameLinks, commentFrameLink?.draft, selectedVersionId])
+  }, [feedFrameLinks, commentFrameLink?.draft, commentFrameLink?.editPreview, selectedVersionId])
 
   const annotatedFrames = useMemo(() => {
     const frames = Object.values(annotations).flatMap(({ range }) => range)

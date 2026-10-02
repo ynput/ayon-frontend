@@ -54,12 +54,20 @@ const isDetailsPanelTab = (tab: unknown): tab is DetailsPanelTab =>
 export type CommentFrameRange = { startFrame: number; endFrame: number }
 export type CommentFrameLink = CommentFrameRange & { entityId: string }
 export type FeedFrameLink = CommentFrameLink & { activityId: string }
+export type FeedFrameLinkPreview = {
+  activityId: string
+  link: CommentFrameLink | null
+}
 
 // Provided by a host with a player (e.g. the review addon) so comments can be
 // linked to frames. Without it, the comment editor shows no frame link button.
 export interface CommentFrameLinkApi {
   // the link of the comment being written, if any
   draft: CommentFrameLink | null
+  setDraft: (link: CommentFrameLink | null) => void
+  // temporary replacement for the frame link of a comment being edited
+  editPreview: FeedFrameLinkPreview | null
+  setEditPreview: (preview: FeedFrameLinkPreview | null) => void
   // links the comment being written to the player's current frame
   link: (entityId: string) => void
   unlink: () => void

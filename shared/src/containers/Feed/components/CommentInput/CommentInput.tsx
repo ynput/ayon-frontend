@@ -55,6 +55,7 @@ interface CommentInputProps {
   initFiles?: any[]
   initCategory?: string | null
   data?: any
+  activityId?: string
   versionReview: boolean
   lastOwnVersionReview?: FeedActivity
   onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
@@ -86,6 +87,7 @@ const CommentInput: FC<CommentInputProps> = ({
   initFiles = [],
   initCategory = null,
   data = {},
+  activityId,
   versionReview,
   lastOwnVersionReview,
   onSubmit,
@@ -168,26 +170,62 @@ const CommentInput: FC<CommentInputProps> = ({
     : undefined
   const [frameInput, setFrameInput] = useState(frameLinkLabel ?? '')
   const cancelFrameInput = useRef(false)
+  const initialFrameInputLink = useRef<CommentFrameRange | null>(null)
+
+  const setFrameLinkPreview = (range: CommentFrameRange | null) => {
+    if (!frameLinkEntity) return
+    const link = range ? { ...range, entityId: frameLinkEntity.id } : null
+    if (!isEditing) {
+      commentFrameLink?.setDraft(link)
+      return
+    }
+    if (!activityId) return
+    commentFrameLink?.setEditPreview({
+      activityId,
+      link,
+    })
+  }
+
+  const handleFrameInputChange = (value: string) => {
+    setFrameInput(value)
+    const range = parseFrameRange(value)
+    if (range) setFrameLinkPreview(range)
+  }
+
   useEffect(() => {
     if (!frameInputOpen) setFrameInput(frameLinkLabel ?? '')
   }, [frameLinkLabel, frameInputOpen])
+
+  useEffect(
+    () => () => {
+      if (isEditing) commentFrameLink?.setEditPreview(null)
+    },
+    [isEditing, commentFrameLink?.setEditPreview],
+  )
 
   const commitFrameInput = () => {
     if (cancelFrameInput.current) {
       cancelFrameInput.current = false
       setFrameInput(frameLinkLabel ?? '')
+      setFrameLinkPreview(initialFrameInputLink.current)
       setFrameInputOpen(false)
       return
     }
     const range = parseFrameRange(frameInput)
-    if (range) setManualFrameLink(range)
-    else setFrameInput(frameLinkLabel ?? '')
+    if (range) {
+      setManualFrameLink(range)
+      setFrameLinkPreview(range)
+    } else {
+      setFrameInput(frameLinkLabel ?? '')
+      setFrameLinkPreview(initialFrameInputLink.current)
+    }
     setFrameInputOpen(false)
   }
 
   const handleFrameLinkButton = () => {
     if (frameLink) {
       setManualFrameLink(null)
+      if (isEditing) setFrameLinkPreview(null)
       if (!isEditing) commentFrameLink?.unlink()
     } else if (!isEditing && commentFrameLink && frameLinkEntity) {
       commentFrameLink.link(frameLinkEntity.id)
@@ -299,6 +337,8 @@ const CommentInput: FC<CommentInputProps> = ({
   }
 
   const handleClose = () => {
+    if (isEditing) commentFrameLink?.setEditPreview(null)
+
     // keep a draft of a new comment, drop edits
     if (!hasText || isEditing) {
       setEditorValue('')
@@ -485,6 +525,7 @@ const CommentInput: FC<CommentInputProps> = ({
         setFiles([])
         try {
           await onSubmit(markdown, uploadedFiles, newData)
+          if (isEditing) commentFrameLink?.setEditPreview(null)
           setUploadedAnnotations([])
           // the link now belongs to the submitted comment
           if (!isEditing && frameLink) commentFrameLink?.unlink()
@@ -734,8 +775,11 @@ const CommentInput: FC<CommentInputProps> = ({
                           aria-label="Linked frame or range"
                           value={frameInput}
                           placeholder="Frame"
-                          onFocus={(e) => e.currentTarget.select()}
-                          onChange={(e) => setFrameInput(e.target.value)}
+                          onFocus={(e) => {
+                            initialFrameInputLink.current = frameLink
+                            e.currentTarget.select()
+                          }}
+                          onChange={(e) => handleFrameInputChange(e.target.value)}
                           onBlur={commitFrameInput}
                           style={{ width: frameValueWidth }}
                           onKeyDown={(e) => {

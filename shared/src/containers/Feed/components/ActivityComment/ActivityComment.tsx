@@ -297,6 +297,7 @@ const ActivityComment = ({
               initFiles={files}
               initCategory={categoryData?.name}
               data={activity.activityData}
+              activityId={activityId}
               isEditing
               onClose={handleEditCancel}
               onSubmit={handleSave}
