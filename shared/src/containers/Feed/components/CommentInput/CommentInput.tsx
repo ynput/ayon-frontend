@@ -597,6 +597,8 @@ const CommentInput: FC<CommentInputProps> = ({
 
   // don't take focus from an annotation that opened the input
   const autoFocus = !(annotations.length > 0 && files.length === 0)
+  const frameValueText = frameInputOpen ? frameInput || 'Frame or range' : frameLinkLabel || ''
+  const frameValueWidth = `calc(${Math.max(frameValueText.length, 1) + 2}ch + 16px)`
 
   return (
     <>
@@ -708,45 +710,60 @@ const CommentInput: FC<CommentInputProps> = ({
                     />
                   ))}
                 {showFrameLink && (
-                  <>
-                    {frameLink || frameInputOpen ? (
-                      <Styled.FrameInput
-                        className="frame-link"
-                        aria-label="Linked frame or range"
-                        value={frameInput}
-                        placeholder="Frame or range"
-                        onFocus={() => setFrameInputOpen(true)}
-                        onChange={(e) => setFrameInput(e.target.value)}
-                        onBlur={commitFrameInput}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault()
-                            e.currentTarget.blur()
-                          }
-                          if (e.key === 'Escape') {
-                            cancelFrameInput.current = true
-                            e.currentTarget.blur()
-                          }
-                        }}
-                        data-testid="comment-frame-link-input"
-                      />
-                    ) : null}
+                  <Styled.FrameLinkControl
+                    className={clsx('frame-link', { selected: !!frameLink || frameInputOpen })}
+                  >
                     <Styled.FrameLinkButton
-                      className="frame-link"
-                      icon={frameLink ? 'timer_off' : 'timer'}
+                      icon={'timer'}
                       variant="text"
-                      selected={!!frameLink}
                       onClick={handleFrameLinkButton}
+                      aria-label={frameLink ? 'Remove frame link' : 'Add frame link'}
                       data-tooltip={
                         frameLink
                           ? 'Remove frame link'
                           : isEditing
-                            ? 'Add frame link'
-                            : 'Link to current frame'
+                          ? 'Add frame link'
+                          : 'Link to current frame'
                       }
                       data-testid="comment-frame-link"
                     />
-                  </>
+                    {(frameLink || frameInputOpen) &&
+                      (frameInputOpen ? (
+                        <Styled.FrameInput
+                          autoFocus
+                          aria-label="Linked frame or range"
+                          value={frameInput}
+                          placeholder="Frame"
+                          onFocus={(e) => e.currentTarget.select()}
+                          onChange={(e) => setFrameInput(e.target.value)}
+                          onBlur={commitFrameInput}
+                          style={{ width: frameValueWidth }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              e.currentTarget.blur()
+                            }
+                            if (e.key === 'Escape') {
+                              cancelFrameInput.current = true
+                              e.currentTarget.blur()
+                            }
+                          }}
+                          data-testid="comment-frame-link-input"
+                        />
+                      ) : (
+                        <Styled.FrameLabel
+                          variant="text"
+                          style={{ visibility: frameInputOpen ? 'hidden' : undefined }}
+                          tabIndex={frameInputOpen ? -1 : 0}
+                          aria-hidden={frameInputOpen}
+                          aria-label={`Edit linked frame ${frameLinkLabel ?? ''}`}
+                          onClick={() => setFrameInputOpen(true)}
+                          data-tooltip="Edit linked frame or range"
+                        >
+                          {frameLinkLabel || 'Frame or range'}
+                        </Styled.FrameLabel>
+                      ))}
+                  </Styled.FrameLinkControl>
                 )}
               </Styled.Buttons>
             )}
