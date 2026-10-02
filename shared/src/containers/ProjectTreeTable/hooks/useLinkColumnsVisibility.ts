@@ -16,16 +16,18 @@ export const useLinkColumnsVisibility = (
     [],
   )
 
-  // true when a link column of `scope` using a link type of `entityType` is on screen
+  // true when a link column of `scope` that applies to `entityType` is on screen
   const isLinkColumnShown = useCallback(
-    (scope: EntityScope, entityType: string) =>
-      linkTypes
-        .filter((link) => link.inputType === entityType || link.outputType === entityType)
-        .some((link) =>
-          (['in', 'out'] as const).some(
-            (direction) => onScreen[getScopedColumnId(scope, getLinkColumnId(link, direction))],
-          ),
-        ),
+    (scope: EntityScope, entityType: string) => {
+      const isOnScreen = (link: Pick<LinkTypeModel, 'name'>, direction: 'in' | 'out') =>
+        !!onScreen[getScopedColumnId(scope, getLinkColumnId(link, direction))]
+      // `out` columns belong to the input entity, `in` columns to the output entity
+      return linkTypes.some(
+        (link) =>
+          (link.inputType === entityType && isOnScreen(link, 'out')) ||
+          (link.outputType === entityType && isOnScreen(link, 'in')),
+      )
+    },
     [linkTypes, onScreen],
   )
 
