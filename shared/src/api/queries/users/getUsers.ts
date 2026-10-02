@@ -93,7 +93,7 @@ query Assignees($projectName: String) {
 
 export type AssigneeOption = {
   name: string
-  fullName?: string | null
+  fullName?: string
   avatarUrl: string
   hidden?: boolean
 }
@@ -225,7 +225,7 @@ const injectedApi = gqlApi.injectEndpoints({
               ? [
                   {
                     name: u.node.name,
-                    fullName: u.node.attrib?.fullName,
+                    fullName: u.node.attrib?.fullName ?? undefined,
                     avatarUrl: `/api/users/${u.node.name}/avatar`,
                   },
                 ]
