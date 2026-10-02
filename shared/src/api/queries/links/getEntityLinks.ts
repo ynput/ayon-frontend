@@ -311,9 +311,11 @@ const injectedQueries = foldersApi.injectEndpoints({
             const outputId = message?.summary?.outputId
             if (!inputId && !outputId) return
 
-            // other entity types and off-screen entities belong to other caches
-            const cachedEntities = getCacheEntry().data
-            const isCached = (id: string) => !!cachedEntities?.some((entity) => entity.id === id)
+            // only ids this cache holds or is fetching, others belong to other caches
+            const { data: cachedEntities, originalArgs } = getCacheEntry()
+            const isCached = (id: string) =>
+              !!originalArgs?.entityIds.includes(id) ||
+              !!cachedEntities?.some((entity) => entity.id === id)
 
             if (inputId && isCached(inputId)) batcher.add({ entityId: inputId })
             if (outputId && isCached(outputId)) batcher.add({ entityId: outputId })
