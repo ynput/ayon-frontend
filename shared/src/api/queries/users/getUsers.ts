@@ -6,7 +6,10 @@ import type {
   GetAllProjectUsersAsAssigneeQuery,
 } from '@shared/api/generated'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import type { EnumItem } from '@shared/api/generated'
 import { parseJSONField } from '../overview'
+import { normalizeQueryError } from '@shared/api/base/queryError'
+import { enumOptionsQueries, USERS_ENUM_TAGS } from '../enums'
 
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {
@@ -88,6 +91,25 @@ query Assignees($projectName: String) {
 }
 }`
 
+export type AssigneeOption = {
+  name: string
+  fullName?: string | null
+  avatarUrl: string
+  hidden?: boolean
+}
+
+type AssigneesArgs = { names?: string[]; projectName?: string }
+
+const enumItemToAssignee = (item: EnumItem): AssigneeOption => {
+  const name = String(item.value)
+  return {
+    name,
+    fullName: item.label,
+    avatarUrl: `/api/users/${name}/avatar`,
+    hidden: item.hidden,
+  }
+}
+
 interface GetCurrentUserResult extends GetCurrentUserApiResponse {
   uiExposureLevel: number
 }
@@ -167,34 +189,55 @@ const injectedApi = gqlApi.injectEndpoints({
           ? [...res.map((e: any) => ({ type: 'user', id: e.name })), { type: 'user', id: 'LIST' }]
           : ['user', { type: 'user', id: 'LIST' }],
     }),
-    getUsersAssignee: build.query({
-      query: ({ names, projectName }) => ({
-        url: '/graphql',
-        method: 'POST',
-        body: {
-          query: names ? ASSIGNEES_BY_NAME_QUERY : ASSIGNEES_QUERY,
-          variables: { names, projectName },
-        },
-      }),
-      transformResponse: (res: any) =>
-        res?.data?.users.edges.flatMap((u: any) => {
-          if (!u.node) return []
+    getUsersAssignee: build.query<AssigneeOption[], AssigneesArgs>({
+      async queryFn({ names, projectName }, api, _extraOptions, baseQuery) {
+        // the resolver applies the server's user visibility rules, but needs a project for non-managers
+        if (!names && projectName) {
+          const result = await api
+            .dispatch(
+              enumOptionsQueries.endpoints.getEnumOptions.initiate(
+                {
+                  enumName: 'users',
+                  params: { project_name: projectName, mode: 'users', hide_inactive: true },
+                },
+                { subscribe: false, forceRefetch: api.forced },
+              ),
+            )
+            .unwrap()
+          if (result.error) return { error: normalizeQueryError(result.error) }
+          return { data: result.items.map(enumItemToAssignee) }
+        }
 
-          const n = u.node
+        const result = await baseQuery({
+          url: '/graphql',
+          method: 'POST',
+          body: {
+            query: names ? ASSIGNEES_BY_NAME_QUERY : ASSIGNEES_QUERY,
+            variables: { names, projectName },
+          },
+        })
+        if (result.error) return { error: normalizeQueryError(result.error) }
 
-          return {
-            name: n.name,
-            fullName: n.attrib?.fullName,
-            avatarUrl: `/api/users/${n.name}/avatar`,
-          }
-        }),
-      providesTags: (res) =>
-        res
-          ? [
-              ...res.map((user: any) => ({ type: 'user', id: user.name })),
-              { type: 'user', id: 'LIST' },
-            ]
-          : [{ type: 'user', id: 'LIST' }],
+        const edges = (result.data as any)?.data?.users.edges ?? []
+        return {
+          data: edges.flatMap((u: any) =>
+            u.node
+              ? [
+                  {
+                    name: u.node.name,
+                    fullName: u.node.attrib?.fullName,
+                    avatarUrl: `/api/users/${u.node.name}/avatar`,
+                  },
+                ]
+              : [],
+          ),
+        }
+      },
+      providesTags: (res) => [
+        ...(res || []).map((user) => ({ type: 'user' as const, id: user.name })),
+        { type: 'user', id: 'LIST' },
+        ...USERS_ENUM_TAGS,
+      ],
     }),
   }),
   overrideExisting: true,

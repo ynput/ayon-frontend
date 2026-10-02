@@ -26,7 +26,8 @@ import type {
   TaskTypeRow,
   TaskTypeStatusBar,
 } from '../../helpers/formatTaskProgressForTable'
-import type { Assignees, Status, TaskType, EnumItem } from '@shared/api'
+import type { AssigneeOption, Status, TaskType, EnumItem } from '@shared/api'
+import { getSelectableAssignees } from '@shared/util'
 
 // Hooks
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
@@ -64,7 +65,7 @@ interface TasksProgressTableProps
   folderStatuses: Status[]
   taskTypes: TaskType[]
   priorities: EnumItem[]
-  users: Assignees
+  users: AssigneeOption[]
   allExpanded: boolean
   expandedRows: string[]
   collapsedRows: string[]
@@ -447,11 +448,10 @@ export const TasksProgressTable = ({
             return (
               <Cells className="cells">
                 {taskCellData.tasks.map((task) => {
-                  // add avatarUrl to each user
-                  const assigneeOptions = users.map((user) => ({
-                    ...user,
-                    avatarUrl: `/api/users/${user.name}/avatar`,
-                  }))
+                  const assigneeOptions = getSelectableAssignees(
+                    users,
+                    selectedTasks.length > 1 ? selectedAssignees : task.assignees,
+                  )
 
                   const handleCellClick = (e: MouseEvent<HTMLDivElement>) => {
                     // check if the click is editable item

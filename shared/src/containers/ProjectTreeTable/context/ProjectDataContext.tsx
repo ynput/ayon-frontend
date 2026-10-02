@@ -7,6 +7,7 @@ import { ProjectDataContext } from './ProjectDataContextInstance'
 type User = {
   name: string
   fullName: string
+  hidden?: boolean
 }
 
 export interface ProjectDataContextProps {

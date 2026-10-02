@@ -11,7 +11,7 @@ import type { DetailsPanelProps } from '../../DetailsPanel'
 import { useGetAttributeConfigQuery } from '@shared/api'
 import type { Status } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
-import { getPriorityOptions } from '@shared/util'
+import { getPriorityOptions, getSelectableAssignees } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
 import { useEntityUpdate } from '@shared/hooks/useEntityUpdate'
 import type { DetailsPanelTab } from '@shared/context/DetailsPanelContext'
@@ -191,7 +191,7 @@ const DetailsPanelHeader = ({
     (entityType === 'task' || entityType === 'version') &&
     (entityUsers.length > 0 || entityType === 'task')
 
-  const usersOptions = users.map((u) => u)
+  const usersOptions = [...getSelectableAssignees(users, entityUsers)]
   if (hasUser) {
     // check if all users are in options, otherwise add them
     const allUsers = users.map((u) => u.name)
