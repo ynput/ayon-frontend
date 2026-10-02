@@ -53,7 +53,7 @@ export type DetailsPanelProps = {
   disabledStatuses?: string[]
   projectUsers?: User[]
   disabledProjectUsers?: string[]
-  activeProjectUsers?: string[]
+  activeProjectUsers?: User[]
   projectsInfo?: Record<string, ProjectModelWithProducts>
   projectNames?: string[]
   isSlideOut?: boolean

@@ -145,7 +145,8 @@ export const parseRowId = (rowId: string) => rowId?.split(ROW_ID_SEPARATOR)[0] |
 
 export type TableUser = {
   name: string
-  fullName?: string
+  fullName?: string | null
+  hidden?: boolean
 }
 
 export interface ProjectTableProviderProps {
