@@ -181,8 +181,8 @@ export const SocketProvider = ({
 
       if (['import.data'].includes(topic)) {
         if (sender !== window.senderId) return // ignore import.data messages from other users
-      } else if (sender === window.senderId) {
-        return // for other events, ignore my own messages
+      } else if (sender === window.senderId && topic !== 'thumbnail.updated') {
+        return // for other events, ignore my own messages (own thumbnail updates are applied immediately)
       }
 
       const now = Date.now()
