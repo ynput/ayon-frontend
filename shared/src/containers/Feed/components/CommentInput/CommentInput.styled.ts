@@ -203,17 +203,19 @@ export const Buttons = styled.div`
   }
 `
 
-// one pill: the icon (link / unlink) at the start, then the frame, which is clicked to edit it
 export const FrameLinkControl = styled.div`
   display: inline-flex;
   align-items: center;
-  height: 32px;
   border-radius: var(--border-radius-m);
+  padding-right: var(--padding-s);
 
   &.selected {
     color: var(--md-sys-color-on-primary-container);
     background-color: var(--md-sys-color-primary-container);
-    padding-right: 4px;
+
+    &:hover {
+      background-color: var(--md-sys-color-primary-container-hover);
+    }
   }
 `
 
@@ -221,46 +223,26 @@ export const FrameLinkButton = styled(Button)`
   color: inherit;
   background: transparent;
 
-  .selected > & {
-    &:hover {
-      background-color: var(--md-sys-color-primary-container-hover) !important;
-    }
+  &:hover {
+    background-color: var(--md-sys-color-primary-container-hover) !important;
   }
 `
 
-// the frame reads as text in the pill and edits in place
-export const FrameLabel = styled.button`
-  height: 24px;
-  padding: 0 6px;
-  border: 1px solid transparent;
-  border-radius: var(--border-radius-m);
-  background: transparent;
-  color: inherit;
-  font: inherit;
+export const FrameLabel = styled(Button)`
+  width: 100%;
+  padding: 4px 6px;
   white-space: nowrap;
-  cursor: text;
+  color: inherit;
+  background: transparent;
 
-  &:hover,
-  &:focus-visible {
-    border-color: var(--md-sys-color-outline);
-    outline: none;
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-low) !important;
   }
 `
 
 export const FrameInput = styled(InputText)`
-  height: 24px;
-  min-height: 24px;
   min-width: 0;
-  padding: 0 6px;
-  border: 1px solid var(--md-sys-color-primary);
-  border-radius: var(--border-radius-m);
-  background-color: var(--md-sys-color-surface-container-lowest);
-  color: var(--md-sys-color-on-surface);
-  font: inherit;
-
-  &:focus {
-    outline: none;
-  }
+  padding: 4px 8px;
 `
 
 export const SubmitButtons = styled(Buttons)`
