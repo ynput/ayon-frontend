@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useId, useMemo, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import emoji from 'remark-emoji'
 import remarkGfm from 'remark-gfm'
@@ -12,9 +12,17 @@ import { Reaction } from '../ReactionContainer/types'
 import useReferenceTooltip from '../../hooks/useReferenceTooltip'
 import FilesGrid, { FilesGridProps } from '../FilesGrid/FilesGrid'
 
-import { getTextRefs } from '../CommentInput/quillToMarkdown'
+import { getTextRefs } from './getTextRefs'
 import * as Styled from './ActivityComment.styled'
 import CommentWrapper from './CommentWrapper'
+import { isFilePreviewable } from '../FileUploadPreview'
+import {
+  getProjectFileId,
+  getInlineMediaFileIds,
+  normalizeLegacyMarkdown,
+  renderMediaParagraph,
+  renderYouTubeParagraph,
+} from '@shared/components/MarkdownEditor'
 import { aTag, blockquoteTag, codeTag, inputTag } from './ActivityMarkdownComponents'
 import { mapGraphQLReactions } from './mappers'
 import { Icon } from '@ynput/ayon-react-components'
@@ -26,19 +34,21 @@ import { MenuContainer } from '@shared/components/Menu/MenuContainer'
 import { useMenuContext } from '@shared/context/MenuContext'
 import type { Status } from '../../../ProjectTreeTable/types/project'
 import { SavedAnnotationMetadata } from '../../index'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext, getActivityFrameLink } from '@shared/context/DetailsPanelContext'
 import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
 import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
 import ActivityCommentMenu from './ActivityCommentMenu'
-import { checkForEmptyLine } from '../CommentInput/InputMarkdownConvert'
 import { useCategoryData } from '../../hooks/useCategoryData'
 import { getActivityUserName } from '../../helpers/getActivityUserName'
+import { copyToClipboard } from '@shared/util'
 
 type Props = {
   activity: any
   onCheckChange?: Function
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
   onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
+  // copy the comment into the new comment input (more menu)
+  onDuplicate?: (activity: any) => void
   projectInfo: any
   editProps?: {
     disabled: boolean
@@ -60,6 +70,7 @@ const ActivityComment = ({
   onCheckChange,
   onDelete,
   onUpdate,
+  onDuplicate,
   projectInfo,
   editProps,
   projectName,
@@ -69,7 +80,6 @@ const ActivityComment = ({
   showOrigin,
   isHighlighted,
   readOnly,
-  isSlideOut,
   statuses = [],
 }: Props) => {
   const {
@@ -105,11 +115,17 @@ const ActivityComment = ({
   if (!authorName) authorName = author?.name || ''
   authorFullName = getActivityUserName({ name: authorName, label: authorFullName })
 
-  const menuId = `activity-comment-menu-${activityId}-${isSlideOut ? 'slideout' : 'normal'}`
+  // the same comment can be shown twice at once (e.g. in the viewer and the details panel behind
+  // it), each copy has its own menu
+  const instanceId = useId()
+  const menuId = `activity-comment-menu-${activityId}-${instanceId}`
   const isMenuOpen = menuOpen === menuId
 
-  const { onGoToFrame, setHighlightedActivities, user } = useDetailsPanelContext()
-  const canDelete = isOwner || user?.data?.isAdmin
+  const { onGoToFrame, setHighlightedActivities, user, commentFrameLink } = useDetailsPanelContext()
+  const isAdmin = !!user?.data?.isAdmin
+  const canDelete = isOwner || isAdmin
+  // admins can edit anyone's comment (the backend allows it)
+  const canEdit = isOwner || isAdmin
 
   const handleEditComment = () => {
     setEditingId(activityId)
@@ -126,6 +142,12 @@ const ActivityComment = ({
   }
 
   const isEditing = editingId === activityId
+
+  // a link to a comment in this feed highlights it, other comments open in a new tab
+  const handleActivityLinkClick = ({ activityId, url }: { activityId: string; url: string }) => {
+    if (document.getElementById(activityId)) setHighlightedActivities([activityId])
+    else window.open(url, '_blank', 'noreferrer')
+  }
 
   const isRef = referenceType !== 'origin' || showOrigin
 
@@ -192,6 +214,36 @@ const ActivityComment = ({
     [onGoToFrame],
   )
 
+  // files shown as image / video blocks in the text are not repeated as attachments
+  const inlineFileIds = useMemo(() => getInlineMediaFileIds(body), [body])
+  const attachments = useMemo(
+    () => (files || []).filter((file: any) => !inlineFileIds.has(file.id)),
+    [files, inlineFileIds],
+  )
+
+  // clicking an image / video block opens the attachment preview (the index is among all the
+  // previewable files of the comment, like for attachments)
+  const openInlineFile = (src: string) => {
+    const id = getProjectFileId(src)
+    const previewable = (files || []).filter((f: any) => isFilePreviewable(f.mime, f.ext))
+    const index = previewable.findIndex((f: any) => f.id === id)
+    if (index !== -1) onFileExpand?.({ files: previewable, index, activityId })
+  }
+
+  // comments written with the legacy editor use `&nbsp;` spacer paragraphs, show them like new ones
+  const displayBody = useMemo(() => normalizeLegacyMarkdown(body || ''), [body])
+
+  // the frame (range) this comment is linked to, if any
+  const frameLink = useMemo(() => getActivityFrameLink(activity), [activity])
+  const formatFrame = commentFrameLink?.formatFrame ?? String
+  const onFrameLinkClick = () => {
+    if (!frameLink) return
+    // hosts without frame link support can still jump to the first frame
+    if (commentFrameLink) commentFrameLink.goTo(frameLink)
+    else onGoToFrame?.(frameLink.startFrame)
+    setHighlightedActivities([activityId])
+  }
+
   return (
     <>
       <Styled.Comment
@@ -223,7 +275,7 @@ const ActivityComment = ({
         <Styled.Body className={clsx('comment-body', { isEditing })}>
           {!readOnly && (
             <Styled.Tools className={'tools'}>
-              {isOwner && handleEditComment && (
+              {canEdit && (
                 <Styled.ToolButton icon="edit_square" onClick={handleEditComment} variant="text" />
               )}
               <Styled.ToolButton
@@ -268,6 +320,23 @@ const ActivityComment = ({
             />
           ) : (
             <>
+              {frameLink && (
+                <Styled.FrameLink
+                  onClick={onFrameLinkClick}
+                  disabled={!commentFrameLink && !onGoToFrame}
+                  data-tooltip={
+                    frameLink.endFrame > frameLink.startFrame
+                      ? 'Go to frames and set in/out points'
+                      : 'Go to frame'
+                  }
+                  data-testid="comment-frame-link-chip"
+                >
+                  <Icon icon="timer" />
+                  {frameLink.endFrame > frameLink.startFrame
+                    ? `${formatFrame(frameLink.startFrame)}-${formatFrame(frameLink.endFrame)}`
+                    : formatFrame(frameLink.startFrame)}
+                </Styled.FrameLink>
+              )}
               <CommentWrapper>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, emoji, remarkDirective, remarkDirectiveRehype]}
@@ -288,6 +357,7 @@ const ActivityComment = ({
                         activityId,
                         categoryPrimary: categoryData?.color,
                         categorySecondary: blendedCategoryColor.secondary,
+                        onActivityLinkClick: handleActivityLinkClick,
                       }),
                     // checkbox inputs
                     // @ts-ignore
@@ -305,6 +375,11 @@ const ActivityComment = ({
                         {props.children}
                       </Styled.Tip>
                     ),
+                    // a video url on its own line is an embedded video
+                    // @ts-ignore
+                    p: (props) =>
+                      renderMediaParagraph(props, { onOpen: openInlineFile }) ??
+                      renderYouTubeParagraph(props) ?? <p>{props.children}</p>,
                     // @ts-ignore
                     status: (props) => {
                       return (
@@ -313,24 +388,16 @@ const ActivityComment = ({
                         </ActivityStatus>
                       )
                     },
-                    p: (props) => {
-                      // check for empty paragraphs
-                      const text = props.children
-                      if (typeof text === 'string' && checkForEmptyLine(text)) {
-                        return <p className="empty-line"></p>
-                      }
-                      return <p>{props.children}</p>
-                    },
                   }}
                 >
-                  {body}
+                  {displayBody}
                 </ReactMarkdown>
               </CommentWrapper>
               {/* file uploads */}
               {/* @ts-ignore */}
               <FilesGrid
-                files={files}
-                isCompact={files.length > 6}
+                files={attachments}
+                isCompact={attachments.length > 6}
                 activityId={activityId}
                 projectName={projectName}
                 isDownloadable
@@ -370,10 +437,14 @@ const ActivityComment = ({
       >
         <ActivityCommentMenu
           onDelete={canDelete && onDelete ? deleteConfirmation : undefined}
-          onEdit={isOwner && handleEditComment}
+          onEdit={canEdit ? handleEditComment : undefined}
+          // the markdown, which pastes back into an editor with its mentions and formatting
+          onCopyText={displayBody ? () => copyToClipboard(displayBody) : undefined}
+          onDuplicate={onDuplicate ? () => onDuplicate(activity) : undefined}
           activityId={activityId}
           onSelect={() => toggleMenuOpen(false)}
           projectName={projectName}
+          entity={origin ?? (entityId ? { id: entityId, type: entityType } : undefined)}
         />
       </MenuContainer>
     </>

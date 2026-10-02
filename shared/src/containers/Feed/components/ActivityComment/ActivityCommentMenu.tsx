@@ -1,56 +1,67 @@
 import { Menu } from '@shared/components/Menu/Menu'
 import { copyToClipboard } from '@shared/util'
+import { getActivityLink } from '../../helpers/getActivityLink'
 
 interface ActivityCommentMenuProps {
   onDelete?: () => void
   onEdit?: () => void
+  onCopyText?: () => void
+  onDuplicate?: () => void
   onSelect?: () => void
   activityId: string
   projectName: string
+  // the entity the comment was posted on, the link opens its feed
+  entity?: { id: string; type: string }
 }
 
 const ActivityCommentMenu = ({
   onDelete,
   onEdit,
+  onCopyText,
+  onDuplicate,
   onSelect,
   activityId,
   projectName,
+  entity,
 }: ActivityCommentMenuProps) => {
   const items = []
 
-  const handleCopyActivityLink = () => {
-    const searchParams = new URLSearchParams(window.location.search)
-    // get type
-    const type = searchParams.get('type')
-    const tab = type === 'version' ? 'products' : 'overview'
-    const pathname = `/projects/${projectName}/${tab}`
-    const newSearchParams = new URLSearchParams(searchParams.toString())
-    newSearchParams.set('activity', activityId)
-    const url = new URL(window.location.origin + pathname)
-    url.search = newSearchParams.toString()
+  const withSelect = (action: () => void) => () => {
+    onSelect?.()
+    action()
+  }
 
-    copyToClipboard(url.toString())
+  if (onCopyText) {
+    items.push({
+      id: 'copy-text',
+      label: 'Copy text',
+      icon: 'content_copy',
+      onClick: withSelect(onCopyText),
+    })
   }
 
   items.push({
     id: 'copy-link',
     label: 'Copy link',
     icon: 'link',
-    onClick: () => {
-      onSelect?.()
-      handleCopyActivityLink()
-    },
+    onClick: withSelect(() => copyToClipboard(getActivityLink(projectName, activityId, entity))),
   })
+
+  if (onDuplicate) {
+    items.push({
+      id: 'duplicate',
+      label: 'Duplicate to new comment',
+      icon: 'library_add',
+      onClick: withSelect(onDuplicate),
+    })
+  }
 
   if (onEdit) {
     items.push({
       id: 'edit',
       label: 'Edit',
       icon: 'edit_square',
-      onClick: () => {
-        onSelect?.()
-        onEdit()
-      },
+      onClick: withSelect(onEdit),
     })
   }
 
@@ -59,10 +70,7 @@ const ActivityCommentMenu = ({
       id: 'delete',
       label: 'Delete',
       icon: 'delete',
-      onClick: () => {
-        onSelect?.()
-        onDelete()
-      },
+      onClick: withSelect(onDelete),
       danger: true,
     })
   }

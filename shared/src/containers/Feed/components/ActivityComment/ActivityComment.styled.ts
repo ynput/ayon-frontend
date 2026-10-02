@@ -1,4 +1,5 @@
 import { Button, theme } from '@ynput/ayon-react-components'
+import { codeTokenStyles } from '@shared/components/MarkdownEditor/code/codeTheme'
 import styled, { css } from 'styled-components'
 import { categoryColorCss, CommentProps } from '../CommentInput/CommentInput.styled'
 
@@ -67,8 +68,24 @@ export const Body = styled.div`
   position: relative;
   min-width: 0;
 
+  /* the text can always be selected and copied, even when the host turns selection off around
+     the feed (e.g. the review player's splitter). Doubled for specificity, mentions keep theirs. */
+  && .comment-text,
+  && .comment-text *:not(.reference, .reference *) {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
   p {
     margin: 0;
+  }
+  /* a blank line between paragraphs (lines of one paragraph are joined by hard breaks) */
+  p + p {
+    margin-top: 20px;
+  }
+  /* quote lines are rendered as paragraphs, they sit tight */
+  blockquote p + p {
+    margin-top: 0;
   }
 
   & > *:not(.tools):not(h1) {
@@ -250,21 +267,42 @@ export const Name = styled.span`
   color: var(--md-sys-color-outline);
 `
 
+// looks like a code block in the editor (MarkdownEditor .md-code-block)
 export const BlockCode = styled.pre`
-  padding: var(--padding-m);
-  border-radius: var(--padding-s);
-  background-color: var(--md-sys-color-surface-container-lowest);
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--border-radius-m);
+  background-color: var(--md-sys-color-surface-container-high);
   font-family: monospace;
-  font-size: var(--md-sys-typescale-body-small-font-size);
+  /* same size as inline code */
+  font-size: 0.9em;
+  line-height: 18px;
+  tab-size: 2;
 
   line-break: anywhere;
   word-break: break-word;
+  white-space: pre-wrap;
   overflow: hidden;
 
-  /* Ensure all child elements use monospace font */
+  /* Ensure all child elements use monospace font (and not the global span size) */
   * {
     font-family: monospace !important;
+    font-size: inherit;
   }
+
+  /* syntax highlighting, same colours as the editor */
+  ${codeTokenStyles}
+`
+
+export const InlineCode = styled.code`
+  font-family: monospace;
+  font-size: 0.9em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-tertiary);
+  white-space: pre-wrap;
+  word-break: break-word;
 `
 
 export const Tools = styled.div`
@@ -319,5 +357,35 @@ export const Tip = styled.span`
 
   .icon {
     font-size: 24px;
+  }
+`
+
+// the frame (range) a comment is linked to; clicking it jumps there
+export const FrameLink = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  align-self: flex-start;
+  padding: 2px 6px;
+  margin-bottom: 4px;
+  border: none;
+  border-radius: var(--border-radius-m);
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  ${theme.labelMedium}
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+
+  .icon {
+    font-size: 16px;
+    color: inherit;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--md-sys-color-primary-container-hover);
+  }
+
+  &:disabled {
+    cursor: default;
   }
 `
