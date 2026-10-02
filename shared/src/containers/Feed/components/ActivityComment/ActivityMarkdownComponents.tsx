@@ -2,6 +2,7 @@ import React from 'react'
 import { isArray } from 'lodash'
 import ActivityCheckbox from '../ActivityCheckbox/ActivityCheckbox'
 import ActivityReference from '../ActivityReference/ActivityReference'
+import { ACTIVITY_LINK_LABEL, parseActivityLink } from '@shared/components/MarkdownEditor'
 
 export const allowedRefTypes = [
   'user',
@@ -61,7 +62,14 @@ interface ATagOptions {
   }) => void
   categoryPrimary?: string
   categorySecondary?: string
+  // a link to a comment was clicked, defaults to opening the link
+  onActivityLinkClick?: (link: { activityId: string; projectName: string; url: string }) => void
 }
+
+const getText = (children: React.ReactNode): string =>
+  React.Children.toArray(children)
+    .map((child) => (typeof child === 'string' || typeof child === 'number' ? String(child) : ''))
+    .join('')
 
 export const aTag = (
   { children, href }: ATagProps,
@@ -75,8 +83,35 @@ export const aTag = (
     onReferenceTooltip,
     categoryPrimary,
     categorySecondary,
+    onActivityLinkClick,
   }: ATagOptions,
 ): React.ReactNode => {
+  // a link to a comment is a chip like mentions
+  const activityLink = parseActivityLink(href)
+  if (activityLink) {
+    const text = getText(children).trim()
+    // a pasted url has itself as its label
+    const label = !text || /^https?:\/\//.test(text) ? ACTIVITY_LINK_LABEL : text
+    const link = { ...activityLink, url: href }
+    return (
+      <ActivityReference
+        type="activity"
+        id={`activity-${activityLink.activityId}`}
+        icon="chat"
+        onClick={() =>
+          onActivityLinkClick
+            ? onActivityLinkClick(link)
+            : window.open(href, '_blank', 'noreferrer')
+        }
+        categoryPrimary={categoryPrimary}
+        categorySecondary={categorySecondary}
+        data-tooltip="Go to comment"
+      >
+        {label}
+      </ActivityReference>
+    )
+  }
+
   const { url, type, id } = sanitizeURL(href)
 
   // link is broken in some way
