@@ -2,12 +2,26 @@
 const ACTIVITY_ID_REGEX = /^[0-9a-f]{32}$/
 
 /**
+ * The link a duplicated comment keeps to the comment it was copied from:
+ * `source:{activityId}?type={entityType}&id={entityId}`. The entity is the one the source comment
+ * belongs to, which can differ from the entity the copy is posted on.
+ */
+export const getSourceLink = (activityId: string, entity?: { id: string; type: string }) =>
+  `source:${activityId}` +
+  (entity ? `?${new URLSearchParams({ type: entity.type, id: entity.id })}` : '')
+
+/**
  * A link to a comment (any activity) on this server: `/projects/{project}/...?activity={id}`, as
- * made by a comment's "Copy link". Source links prefix the URL with `source:`.
+ * made by a comment's "Copy link", or a source link (`getSourceLink`).
  * Links to other servers stay links.
  */
 export type ParsedActivityLink =
-  | { activityId: string; isSource: true }
+  | {
+      activityId: string
+      // the source comment's entity, missing on links without it (resolve with the containing comment's)
+      entity: { id: string; type: string } | null
+      isSource: true
+    }
   | {
       projectName: string
       activityId: string
@@ -18,8 +32,17 @@ export type ParsedActivityLink =
 
 export const parseActivityLink = (href?: string | null): ParsedActivityLink | null => {
   if (!href) return null
-  const sourceMatch = href.match(/^source:([0-9a-f]{32})$/)
-  if (sourceMatch) return { activityId: sourceMatch[1], isSource: true }
+  const sourceMatch = href.match(/^source:([0-9a-f]{32})(?:\?(.*))?$/)
+  if (sourceMatch) {
+    const params = new URLSearchParams(sourceMatch[2] ?? '')
+    const id = params.get('id')
+    const type = params.get('type')
+    return {
+      activityId: sourceMatch[1],
+      entity: id && type && ACTIVITY_ID_REGEX.test(id) ? { id, type } : null,
+      isSource: true,
+    }
+  }
   if (href.startsWith('source:') || typeof window === 'undefined') return null
 
   let url: URL

@@ -14,6 +14,7 @@ import {
   MarkdownEditor,
   createFeedMentionSource,
   getInlineMediaFileIds,
+  getSourceLink,
   normalizeLegacyMarkdown,
   type EditorCommand,
   type MarkdownEditorHandle,
@@ -158,7 +159,10 @@ const CommentInput: FC<CommentInputProps> = ({
     commentFrameLink?.draft && commentFrameLink.draft.entityId === frameLinkEntity?.id
       ? commentFrameLink.draft
       : null
-  const [manualFrameLink, setManualFrameLink] = useState<CommentFrameRange | null>(() =>
+  // a typed (or duplicated) link, for the version it was entered on
+  const [manualFrameLink, setManualFrameLinkState] = useState<
+    (CommentFrameRange & { entityId?: string }) | null
+  >(() =>
     isEditing && Number.isSafeInteger(data?.startFrame) && data.startFrame > 0
       ? {
           startFrame: data.startFrame,
@@ -169,10 +173,15 @@ const CommentInput: FC<CommentInputProps> = ({
         }
       : null,
   )
+  const setManualFrameLink = (range: CommentFrameRange | null) =>
+    setManualFrameLinkState(range && { ...range, entityId: frameLinkEntity?.id })
+  // a saved comment keeps its link, a new comment drops it when the version changes
+  const currentManualFrameLink =
+    isEditing || manualFrameLink?.entityId === frameLinkEntity?.id ? manualFrameLink : null
   const [frameInputOpen, setFrameInputOpen] = useState(false)
-  const frameLink = isEditing ? manualFrameLink : manualFrameLink ?? draftFrameLink
+  const frameLink = isEditing ? currentManualFrameLink : currentManualFrameLink ?? draftFrameLink
   const showFrameLink = isEditing
-    ? !!frameLinkEntity || !!manualFrameLink
+    ? !!frameLinkEntity || !!currentManualFrameLink
     : !!commentFrameLink && !!frameLinkEntity
   const formatFrame = commentFrameLink?.formatFrame ?? String
   const frameLinkLabel = frameLink
@@ -234,18 +243,22 @@ const CommentInput: FC<CommentInputProps> = ({
     setFrameInputOpen(false)
   }
 
-  const handleFrameLinkButton = () => {
-    if (frameLink) {
-      setManualFrameLink(null)
-      if (isEditing) setFrameLinkPreview(null)
-      if (!isEditing) commentFrameLink?.unlink()
-    } else if (!isEditing && commentFrameLink && frameLinkEntity) {
+  const removeFrameLink = () => {
+    setManualFrameLink(null)
+    if (isEditing) setFrameLinkPreview(null)
+    else commentFrameLink?.unlink()
+  }
+
+  const addFrameLink = () => {
+    if (!isEditing && commentFrameLink && frameLinkEntity) {
       commentFrameLink.link(frameLinkEntity.id)
     } else {
       setFrameInput('')
       setFrameInputOpen(true)
     }
   }
+
+  const handleFrameLinkButton = () => (frameLink ? removeFrameLink() : addFrameLink())
 
   // the same in the `/` menu
   const frameLinkCommands = useMemo<EditorCommand[] | undefined>(() => {
@@ -259,22 +272,14 @@ const CommentInput: FC<CommentInputProps> = ({
             icon: 'timer_off',
             keywords: [...keywords, 'unlink', 'remove'],
             hint: frameLinkLabel,
-            run: () => {
-              setManualFrameLink(null)
-              if (!isEditing) commentFrameLink?.unlink()
-            },
+            run: removeFrameLink,
           }
         : {
             id: 'frame-link',
             label: isEditing ? 'Add frame link' : 'Link to current frame',
             icon: 'timer',
             keywords,
-            run: () => {
-              if (isEditing) {
-                setFrameInput('')
-                setFrameInputOpen(true)
-              } else commentFrameLink?.link(frameLinkEntity.id)
-            },
+            run: addFrameLink,
           },
     ]
   }, [showFrameLink, isEditing, commentFrameLink, frameLinkEntity?.id, !!frameLink, frameLinkLabel])
@@ -499,7 +504,12 @@ const CommentInput: FC<CommentInputProps> = ({
       entities.length === 1 && entities[0].id === (activity.origin?.id ?? activity.entityId)
 
     const appendText = (markdown: string) => {
-      const link = `[Source](source:${activity.activityId})`
+      const sourceEntity =
+        activity.origin ??
+        (activity.entityId && activity.entityType
+          ? { id: activity.entityId, type: activity.entityType }
+          : undefined)
+      const link = `[Source](${getSourceLink(activity.activityId, sourceEntity)})`
       const text = [markdown.trim(), link].filter(Boolean).join('\n\n')
       setEditorValue((prev) => (prev.trim() ? `${prev.trim()}\n\n${text}` : text))
       editorRef.current?.focus()
@@ -749,8 +759,8 @@ const CommentInput: FC<CommentInputProps> = ({
 
   // don't take focus from an annotation that opened the input
   const autoFocus = !(annotations.length > 0 && files.length === 0)
-  const frameValueText = frameInputOpen ? frameInput || 'Frame or range' : frameLinkLabel || ''
-  const frameValueWidth = `calc(${Math.max(frameValueText.length, 1) + 2}ch + 16px)`
+  // the input grows with its value, like the label it replaces
+  const frameValueWidth = `calc(${Math.max(frameInput.length, 5)}ch + 16px)`
 
   return (
     <>
@@ -866,7 +876,7 @@ const CommentInput: FC<CommentInputProps> = ({
                     className={clsx('frame-link', { selected: !!frameLink || frameInputOpen })}
                   >
                     <Styled.FrameLinkButton
-                      icon={'timer'}
+                      icon="timer"
                       variant="text"
                       onClick={handleFrameLinkButton}
                       aria-label={frameLink ? 'Remove frame link' : 'Add frame link'}
@@ -879,45 +889,44 @@ const CommentInput: FC<CommentInputProps> = ({
                       }
                       data-testid="comment-frame-link"
                     />
-                    {(frameLink || frameInputOpen) &&
-                      (frameInputOpen ? (
-                        <Styled.FrameInput
-                          autoFocus
-                          aria-label="Linked frame or range"
-                          value={frameInput}
-                          placeholder="Frame"
-                          onFocus={(e) => {
-                            initialFrameInputLink.current = frameLink
-                            e.currentTarget.select()
-                          }}
-                          onChange={(e) => handleFrameInputChange(e.target.value)}
-                          onBlur={commitFrameInput}
-                          style={{ width: frameValueWidth }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault()
-                              e.currentTarget.blur()
-                            }
-                            if (e.key === 'Escape') {
-                              cancelFrameInput.current = true
-                              e.currentTarget.blur()
-                            }
-                          }}
-                          data-testid="comment-frame-link-input"
-                        />
-                      ) : (
+                    {frameInputOpen ? (
+                      <Styled.FrameInput
+                        autoFocus
+                        aria-label="Linked frame or range"
+                        value={frameInput}
+                        placeholder="Frame"
+                        onFocus={(e) => {
+                          initialFrameInputLink.current = frameLink
+                          e.currentTarget.select()
+                        }}
+                        onChange={(e) => handleFrameInputChange(e.target.value)}
+                        onBlur={commitFrameInput}
+                        style={{ width: frameValueWidth }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            e.currentTarget.blur()
+                          }
+                          if (e.key === 'Escape') {
+                            cancelFrameInput.current = true
+                            e.currentTarget.blur()
+                          }
+                        }}
+                        data-testid="comment-frame-link-input"
+                      />
+                    ) : (
+                      frameLink && (
                         <Styled.FrameLabel
-                          variant="text"
-                          style={{ visibility: frameInputOpen ? 'hidden' : undefined }}
-                          tabIndex={frameInputOpen ? -1 : 0}
-                          aria-hidden={frameInputOpen}
+                          type="button"
                           aria-label={`Edit linked frame ${frameLinkLabel ?? ''}`}
                           onClick={() => setFrameInputOpen(true)}
                           data-tooltip="Edit linked frame or range"
+                          data-testid="comment-frame-link-label"
                         >
-                          {frameLinkLabel || 'Frame or range'}
+                          {frameLinkLabel}
                         </Styled.FrameLabel>
-                      ))}
+                      )
+                    )}
                   </Styled.FrameLinkControl>
                 )}
               </Styled.Buttons>

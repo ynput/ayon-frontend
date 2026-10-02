@@ -94,16 +94,16 @@ export const aTag = (
   const activityLink = parseActivityLink(href)
   if (activityLink) {
     if (activityLink.isSource) {
-      if (!projectName || !entityId || !entityType) return null
-      const url = getActivityLink(projectName, activityLink.activityId, {
-        id: entityId,
-        type: entityType,
-      })
+      // the source comment can be on another entity than the comment linking to it
+      const entity =
+        activityLink.entity ?? (entityId && entityType ? { id: entityId, type: entityType } : null)
+      if (!projectName || !entity) return null
+      const url = getActivityLink(projectName, activityLink.activityId, entity)
       return (
         <SourceCommentReference
           projectName={projectName}
           activityId={activityLink.activityId}
-          entityId={entityId}
+          entityId={entity.id}
           onClick={() =>
             onActivityLinkClick
               ? onActivityLinkClick({ activityId: activityLink.activityId, projectName, url })

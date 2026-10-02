@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import { $isLinkNode } from '@lexical/link'
+import { $getNearestNodeFromDOMNode } from 'lexical'
 import { parseActivityLink } from '../links/activityLinks'
 
 /**
@@ -19,7 +21,12 @@ const LinkClickPlugin = () => {
       if (isEditable && !(e.metaKey || e.ctrlKey)) return
       e.preventDefault()
       e.stopPropagation()
-      const activityLink = parseActivityLink(link.getAttribute('href'))
+      // Lexical renders links with other protocols (e.g. `source:`) as `about:blank`, use the node's url
+      const url = editor.read(() => {
+        const node = $getNearestNodeFromDOMNode(link)
+        return $isLinkNode(node) ? node.getURL() : null
+      })
+      const activityLink = parseActivityLink(url ?? link.getAttribute('href'))
       if (activityLink?.isSource) return
       window.open(activityLink?.url ?? link.href, '_blank', 'noopener,noreferrer')
     }
