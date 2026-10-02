@@ -15,6 +15,7 @@ import { useVersionsDataContext } from '../context/VPDataContext'
 import { buildVersionTableRow } from '../util'
 import { useVPViewsContext } from '../context/VPViewsContext'
 import { useProjectContext, useSubtasksModulesContext } from '@shared/context'
+import { VersionNode } from '@shared/api/queries'
 
 interface VPProjectTableProviderProps {
   projectName: string
@@ -37,6 +38,8 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
     updateExpanded,
     error,
     columnStatsArgs,
+    linksMap,
+    loadingLinksEntityIds,
   } = useVersionsDataContext()
 
   const { resetWorkingView, isLoadingViews } = useViewsContext()
@@ -64,6 +67,11 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
   const hierarchyOptions = useMemo(
     () => [{ value: 'hierarchy', label: 'Product', icon: 'inventory_2' }],
     [],
+  )
+
+  const groupRowFunc = useCallback(
+    (version: VersionNode) => buildVersionTableRow(version, linksMap),
+    [linksMap],
   )
 
   const SCOPES = useMemo(
@@ -136,7 +144,8 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       groupCountsComplete={groupCountsComplete}
       groupByConfig={{ entityType: 'version' }}
       hierarchyOptions={hierarchyOptions}
-      groupRowFunc={buildVersionTableRow}
+      groupRowFunc={groupRowFunc}
+      loadingLinksEntityIds={loadingLinksEntityIds}
       expanded={expanded}
       updateExpanded={updateExpanded}
       isInitialized={isInitialized}

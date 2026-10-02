@@ -27,7 +27,12 @@ import {
 import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable'
 
 // Views hooks
-import { useOverviewViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers'
+import {
+  useLinkColumnsVisibility,
+  useOverviewViewSettings,
+  useViewsContext,
+  useViewUpdateHelper,
+} from '@shared/containers'
 
 // Local context and hooks
 import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containers/Slicer'
@@ -115,20 +120,14 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     onUpdateGroupBy: _updateGroupByAtomic,
     filters: queryFilters,
     onUpdateFilters: setQueryFilters,
-    columns,
   } = useOverviewViewSettings({ viewSettings, updateViewSettings })
 
-  const [linksVisible, setLinksVisible] = useState(false)
+  const { onLinkColumnsVisibleChange, isLinkColumnShown } = useLinkColumnsVisibility(
+    projectInfo.linkTypes,
+  )
 
   // entity ids currently rendered in the table's viewport, reported by ProjectTreeTable
   const [visibleEntityIds, setVisibleEntityIds] = useState<string[]>([])
-
-  const hasLinkColumn = useMemo(
-    () => checkColumnVisibility(columns.columnVisibility, 'link_', defaultColumnVisibility),
-    [columns, defaultColumnVisibility],
-  )
-
-  const skipLinks = !hasLinkColumn || !linksVisible
 
   // comments are the heaviest field to resolve, so only fetch them when the column is shown
   const showComments = useMemo(
@@ -382,7 +381,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     isFlatFolderView,
     attribFields,
     modules,
-    skipLinks,
+    skipFolderLinks: !isLinkColumnShown('primary', 'folder'),
+    skipTaskLinks: !isLinkColumnShown('primary', 'task'),
     showComments,
     isLoadingViews: isLoadingViews || isLicensePending || isResolvingListIds,
     onCollapseAll: () => setExpanded({}),
@@ -466,7 +466,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         toggleExpanded,
         updateExpanded,
         setExpanded,
-        setLinksVisible,
+        onLinkColumnsVisibleChange,
         loadingLinksEntityIds,
         visibleEntityIds,
         setVisibleEntityIds,

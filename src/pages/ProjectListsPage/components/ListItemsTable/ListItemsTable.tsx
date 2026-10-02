@@ -49,7 +49,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
     fetchNextPage,
     resetFilters,
     listItemsFilters,
-    setLinksVisible,
+    onLinkColumnsVisibleChange,
     fieldStats,
     fieldStatsLoading,
     fieldStatsError,
@@ -119,14 +119,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         enableSorting={!isReview}
         dndActiveId={dndActiveId} // Pass prop
         onColumnVisibleChangeSubscribed={['link_*']}
-        onColumnVisibleChange={(changes) => {
-          if (Object.values(changes).some((v) => v)) {
-            // If any link_ column is visible, we set linksVisible to true
-            setLinksVisible(true)
-          } else {
-            setLinksVisible(false)
-          }
-        }}
+        onColumnVisibleChange={onLinkColumnsVisibleChange}
         // hidden while the backend doesn't support list item stats yet —
         // renders automatically once the query stops erroring
         showColumnSummaries={!fieldStatsError}

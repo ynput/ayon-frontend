@@ -347,6 +347,17 @@ export const getLinkLabel = (
 export const getLinkKey = (link: Pick<LinkTypeModel, 'name'>, direction: 'in' | 'out' | string) =>
   `${link.name.replaceAll('_', '').replaceAll('-', '').replaceAll('|', '_')}_${direction}`
 
+// parent columns only show the side of the link their entity is on
+export const getScopeLinkDirections = (
+  link: Pick<LinkTypeModel, 'inputType' | 'outputType'>,
+  scope: EntityScope,
+): ('in' | 'out')[] =>
+  scope === 'primary'
+    ? ['in', 'out']
+    : (['in', 'out'] as const).filter((direction) =>
+        direction === 'out' ? link.inputType === scope : link.outputType === scope,
+      )
+
 export const getLinkColumnId = (
   link: Pick<LinkTypeModel, 'name'>,
   direction: 'in' | 'out' | string,
@@ -1487,17 +1498,19 @@ const buildTreeTableColumns = ({
       return attribColumn
     })
 
-  const createLinkColumns = (scope: EntityScope): ColumnDef<TableRow>[] =>
-    links
+  const createLinkColumns = (scope: EntityScope): ColumnDef<TableRow>[] => {
+    const linkScopes: string[] = scope === 'primary' ? scopes : [scope]
+    return links
       .filter((link) => {
         // Check if the link type is excluded
         if (!isIncluded(link.linkType) || !isIncluded('link')) return false
         // Check if inputType and outputType are in scopes
-        if (!scopes.includes(link.inputType) && !scopes.includes(link.outputType)) return false
+        if (!linkScopes.includes(link.inputType) && !linkScopes.includes(link.outputType))
+          return false
         return true
       })
       .flatMap((link) =>
-        (['in', 'out'] as const).map((direction) => {
+        getScopeLinkDirections(link, scope).map((direction) => {
           const linkColumnId = getLinkColumnId(link, direction)
           const columnId =
             scope === 'primary' ? linkColumnId : getScopedColumnId(scope, linkColumnId)
@@ -1527,8 +1540,7 @@ const buildTreeTableColumns = ({
               const cellValue = value?.map((v: any) => v.label)
               const entity = getScopedEntity(row.original, scope)
               if (!entity) return null
-              const isLinksLoading =
-                scope === 'primary' && !!table.options.meta?.loadingLinksEntityIds?.has(entity.id)
+              const isLinksLoading = !!table.options.meta?.loadingLinksEntityIds?.has(entity.id)
               const valueData: LinkWidgetData = {
                 links: value,
                 direction,
@@ -1551,12 +1563,14 @@ const buildTreeTableColumns = ({
                   folderId={row.original.parents?.folder?.id}
                   attributeData={{ type: 'links' }}
                   isLinksLoading={isLinksLoading}
+                  isReadOnly={scope !== 'primary'}
                 />
               )
             },
           }
         }),
       )
+  }
 
   const linkColumns: ColumnDef<TableRow>[] = includeLinks ? createLinkColumns('primary') : []
   const parentColumnFields = new Set([

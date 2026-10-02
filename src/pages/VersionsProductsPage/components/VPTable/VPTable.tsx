@@ -5,9 +5,14 @@ import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsCo
 import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
 import { AddColumnButton } from '@shared/components'
 import styled from 'styled-components'
-import { VP_EXTRA_COLUMNS, VP_PARENT_COLUMNS } from '../VPTableSettings/VPTableSettings'
+import {
+  VP_EXTRA_COLUMNS,
+  VP_PARENT_COLUMNS,
+  VP_PARENT_SCOPES,
+} from '../VPTableSettings/VPTableSettings'
 
 const VP_EXCLUDED_COLUMNS = ['assignees']
+const VP_LINK_COLUMNS = ['link_*', ...VP_PARENT_SCOPES.map((scope) => `${scope}_link_*`)]
 
 const TableWrapper = styled.div`
   position: relative;
@@ -28,6 +33,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     groupFieldStats,
     fieldStatsLoading,
     fieldStatsError,
+    onLinkColumnsVisibleChange,
   } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
   const {
@@ -51,9 +57,10 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         excludedColumns={VP_EXCLUDED_COLUMNS}
         isExpandable={showProducts}
         isLoading={isLoading}
-        includeLinks={false}
-        includeParents={['folder', 'product', 'task']}
+        includeParents={VP_PARENT_SCOPES}
         parentColumns={VP_PARENT_COLUMNS}
+        onColumnVisibleChangeSubscribed={VP_LINK_COLUMNS}
+        onColumnVisibleChange={onLinkColumnsVisibleChange}
         showColumnSummaries
         fieldStats={fieldStats}
         groupFieldStats={groupFieldStats}
@@ -82,7 +89,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
       <AddColumnButton
         extraColumns={VP_EXTRA_COLUMNS}
         parentColumns={VP_PARENT_COLUMNS}
-        includeLinks={false}
+        parentLinkScopes={VP_PARENT_SCOPES}
       />
     </TableWrapper>
   )

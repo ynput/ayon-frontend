@@ -237,7 +237,7 @@ const injectedQueries = foldersApi.injectEndpoints({
       // Subscribe to link.created and link.deleted WebSocket events
       async onCacheEntryAdded(
         { projectName, entityType },
-        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch, getCacheEntry },
       ) {
         let token: any
         const batcher = createRealtimeBatcher(
@@ -311,8 +311,14 @@ const injectedQueries = foldersApi.injectEndpoints({
             const outputId = message?.summary?.outputId
             if (!inputId && !outputId) return
 
-            if (inputId) batcher.add({ entityId: inputId })
-            if (outputId) batcher.add({ entityId: outputId })
+            // only ids this cache holds or is fetching, others belong to other caches
+            const { data: cachedEntities, originalArgs } = getCacheEntry()
+            const isCached = (id: string) =>
+              !!originalArgs?.entityIds.includes(id) ||
+              !!cachedEntities?.some((entity) => entity.id === id)
+
+            if (inputId && isCached(inputId)) batcher.add({ entityId: inputId })
+            if (outputId && isCached(outputId)) batcher.add({ entityId: outputId })
           }
 
           // Subscribe to link events
