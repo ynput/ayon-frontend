@@ -117,6 +117,7 @@ import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { ColumnsConfig } from './types/columnConfig'
 import { getRequestErrorString } from '@shared/util'
+import { getFilmstripPosition } from '@shared/components/Filmstrip'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'> & { id?: string },
@@ -1777,7 +1778,8 @@ const TD = ({
               const entity = getEntityById(cell.row.original.primary.id)
               if (entity) {
                 const targetIds = getEntityViewierIds(entity)
-                onOpenPlayer(targetIds, { quickView: true })
+                // start at the hovered filmstrip frame
+                onOpenPlayer(targetIds, { quickView: true, goToPosition: getFilmstripPosition(e) })
               }
             }
           }
