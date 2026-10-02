@@ -25,6 +25,7 @@ export type VersionStatsArgs = {
   productFilter?: string
   taskFilter?: string
   folderFilter?: string
+  representationFilter?: string
   folderIds?: string[]
   versionIds?: string[]
   productIds?: string[]

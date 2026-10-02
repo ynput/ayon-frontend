@@ -22,6 +22,7 @@ type Params = {
   versionFilter?: string
   taskFilter?: string
   folderFilter?: string
+  representationFilter?: string
   folderIds?: string[]
   versionIds?: string[]
   productIds?: string[]
@@ -35,6 +36,7 @@ export const useVPColumnStats = ({
   versionFilter,
   taskFilter,
   folderFilter,
+  representationFilter,
   folderIds,
   versionIds,
   productIds,
@@ -106,8 +108,10 @@ export const useVPColumnStats = ({
     productIds,
   }
   const productStatsArgs = { ...columnStatsBaseArgs, targets: productTargets }
+  // representations only narrow versions — the products resolver has no such filter
   const versionStatsArgs = {
     ...columnStatsBaseArgs,
+    representationFilter,
     featuredOnly,
     featuredOnlyEntityType,
     latestPerFolder,
