@@ -149,9 +149,11 @@ Pass `commands: EditorCommand[]` (`types.ts`: `id`, `label`, `icon`, `keywords`,
 
 ### Comment links (`links/activityLinks.ts`)
 
-- A link to a comment on this server (`/projects/{project}/...?activity={id}`, from "Copy link" or a duplicated comment's "Original comment") is stored as a **plain markdown link**, but shown as a chip like mentions.
+- A link to a comment on this server (`/projects/{project}/...?activity={id}`, from "Copy link") is stored as a **plain markdown link**, but shown as a chip like mentions. Duplicated comments write `[Source](source:<activity-id>?type=<entity-type>&id=<entity-id>)` (`getSourceLink`), with the entity the source comment belongs to: a copy can be posted on another entity. Older `source:<activity-id>` links fall back to the containing comment's entity.
 - The editor: `ActivityLinkPlugin` adds `md-activity-link` to those links, styled like `.mention`. A pasted comment url gets the label "Comment" (`getLinkLabel`).
 - The feed: `aTag` renders them with `ActivityReference` (chat icon). Clicking highlights the comment when it is in the feed, otherwise it opens the link in a new tab.
+- Source links render with the `chat_paste_go` icon and the label "Source". `SourceCommentReference` uses `GetActivitiesById` with the source entity and activity ID; it renders nothing until the backend returns the source activity.
+- Lexical renders links with protocols it doesn't allow (like `source:`) with `href="about:blank"`; `LinkClickPlugin` reads the url from the link node, never from the DOM.
 - Links to other servers stay normal links. `parseActivityLink` is the one place that decides.
 
 ### Code blocks

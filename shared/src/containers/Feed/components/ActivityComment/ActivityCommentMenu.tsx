@@ -31,6 +31,15 @@ const ActivityCommentMenu = ({
     action()
   }
 
+  if (onEdit) {
+    items.push({
+      id: 'edit',
+      label: 'Edit',
+      icon: 'edit_square',
+      onClick: withSelect(onEdit),
+    })
+  }
+
   if (onCopyText) {
     items.push({
       id: 'copy-text',
@@ -40,30 +49,21 @@ const ActivityCommentMenu = ({
     })
   }
 
+  if (onDuplicate) {
+    items.push({
+      id: 'duplicate',
+      label: 'Duplicate',
+      icon: 'library_add',
+      onClick: withSelect(onDuplicate),
+    })
+  }
+
   items.push({
     id: 'copy-link',
     label: 'Copy link',
     icon: 'link',
     onClick: withSelect(() => copyToClipboard(getActivityLink(projectName, activityId, entity))),
   })
-
-  if (onDuplicate) {
-    items.push({
-      id: 'duplicate',
-      label: 'Duplicate to new comment',
-      icon: 'library_add',
-      onClick: withSelect(onDuplicate),
-    })
-  }
-
-  if (onEdit) {
-    items.push({
-      id: 'edit',
-      label: 'Edit',
-      icon: 'edit_square',
-      onClick: withSelect(onEdit),
-    })
-  }
 
   if (onDelete) {
     items.push({

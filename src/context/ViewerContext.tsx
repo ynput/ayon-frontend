@@ -20,7 +20,12 @@ import {
 import { createPortal } from 'react-dom'
 import { toast } from 'react-toastify'
 import { usePowerpack } from '@shared/context'
-import type { CommentFrameLink, CommentFrameLinkApi, FeedFrameLink } from '@shared/context'
+import type {
+  CommentFrameLink,
+  CommentFrameLinkApi,
+  FeedFrameLink,
+  FeedFrameLinkPreview,
+} from '@shared/context'
 
 type DrawHistory = {
   clear: (page?: number) => void
@@ -86,19 +91,26 @@ const useViewerFrameLink = (selectedVersionId?: string) => {
   const playerRef = useRef<FrameLinkPlayer | null>(null)
   const [hasPlayer, setHasPlayer] = useState(false)
   const [draft, setDraft] = useState<CommentFrameLink | null>(null)
+  const [editPreview, setEditPreview] = useState<FeedFrameLinkPreview | null>(null)
   const [feedFrameLinks, setFeedFrameLinks] = useState<FeedFrameLink[]>([])
 
   const registerFrameLinkPlayer = useCallback((player: FrameLinkPlayer | null) => {
     playerRef.current = player
     setHasPlayer(!!player)
     // a draft can't be shown or moved without the player
-    if (!player) setDraft(null)
+    if (!player) {
+      setDraft(null)
+      setEditPreview(null)
+    }
   }, [])
 
   const commentFrameLink = useMemo<CommentFrameLinkApi | undefined>(() => {
     if (!hasPlayer || !selectedVersionId) return undefined
     return {
       draft,
+      setDraft,
+      editPreview,
+      setEditPreview,
       link: (entityId) => {
         const player = playerRef.current
         if (!player || entityId !== selectedVersionId) return
@@ -113,7 +125,7 @@ const useViewerFrameLink = (selectedVersionId?: string) => {
       },
       formatFrame: String,
     }
-  }, [hasPlayer, selectedVersionId, draft])
+  }, [hasPlayer, selectedVersionId, draft, editPreview])
 
   return { commentFrameLink, registerFrameLinkPlayer, feedFrameLinks, setFeedFrameLinks }
 }

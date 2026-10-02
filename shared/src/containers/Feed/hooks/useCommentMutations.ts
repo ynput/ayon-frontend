@@ -199,6 +199,7 @@ const useCommentMutations = ({
       ...activity,
       ...updatedActivity,
       files,
+      activityData: data,
     }
 
     // we only need these args to update the cache of the original query
