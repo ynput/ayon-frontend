@@ -1,6 +1,5 @@
 import {
   EntityGroup,
-  useGetEntityLinksQuery,
   useGetVersionsByProductsQuery,
   useGetVersionsInfiniteQuery,
 } from '@shared/api'
@@ -25,7 +24,6 @@ import {
   extractFilters,
 } from '../util'
 import { getRequestErrorString } from '@shared/util'
-import type { IconAnatomy } from '@shared/util/iconUtils'
 
 const getQueryErrorMessage = (error: unknown): string => {
   return getRequestErrorString(error)
@@ -33,12 +31,11 @@ const getQueryErrorMessage = (error: unknown): string => {
 import { useBuildVersionsTableData } from '../hooks/useBuildVersionsTableData'
 import {
   checkColumnVisibility,
-  EntityScope,
   getColumnSortKey,
-  getLinkColumnId,
-  getScopedColumnId,
   LinksTableData,
   linksToTableData,
+  useEntityLinks,
+  useLinkColumnsVisibility,
   TableRow,
   useExpandedState,
   useProjectDataContext,
@@ -150,7 +147,7 @@ interface VersionsDataContextValue {
   // links
   linksMap: Map<string, LinksTableData>
   loadingLinksEntityIds: Set<string>
-  setLinkColumnsVisible: (changes: Record<string, boolean>) => void
+  onLinkColumnsVisibleChange: (changes: Record<string, boolean>) => void
   onSyncData: OnSyncDataCallback
   // meta
   error: string | undefined
@@ -190,30 +187,6 @@ interface VersionsDataProviderProps {
   modules: any
 }
 
-const useEntityLinksMap = (
-  projectName: string,
-  entityType: 'version' | 'product' | 'folder' | 'task',
-  ids: Set<string>,
-  anatomy: IconAnatomy,
-) => {
-  const entityIds = useMemo(() => Array.from(ids), [ids])
-  const { data = [], isFetching } = useGetEntityLinksQuery(
-    { projectName, entityIds, entityType },
-    { skip: !entityIds.length },
-  )
-
-  return useMemo(() => {
-    const links = new Map<string, LinksTableData>()
-    if (!entityIds.length) return { links, loadingIds: [] }
-    for (const entity of data) {
-      links.set(entity.id, linksToTableData(entity.links, entityType, anatomy))
-    }
-    // not cached yet
-    const loadingIds = isFetching ? entityIds.filter((id) => !links.has(id)) : []
-    return { links, loadingIds }
-  }, [entityIds, data, isFetching, entityType, anatomy])
-}
-
 export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   projectName,
   children,
@@ -241,36 +214,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     [columns.columnVisibility],
   )
 
-  // link columns currently on screen, keyed by column id
-  const [linkColumnsOnScreen, setLinkColumnsOnScreen] = useState<Record<string, boolean>>({})
-  const setLinkColumnsVisible = useCallback(
-    (changes: Record<string, boolean>) =>
-      setLinkColumnsOnScreen((prev) => ({ ...prev, ...changes })),
-    [],
+  const { onLinkColumnsVisibleChange, isLinkColumnShown } = useLinkColumnsVisibility(linkTypes)
+  const showLinks = useMemo(
+    () => ({
+      version: isLinkColumnShown('primary', 'version'),
+      product: isLinkColumnShown('primary', 'product'),
+      folder: isLinkColumnShown('folder', 'folder'),
+      task: isLinkColumnShown('task', 'task'),
+      parentProduct: isLinkColumnShown('product', 'product'),
+    }),
+    [isLinkColumnShown],
   )
-
-  // only fetch an entity's links when a visible link column uses a link type for that entity
-  const showLinks = useMemo(() => {
-    const isShown = (scope: EntityScope, entityType: string) =>
-      linkTypes
-        .filter((link) => link.inputType === entityType || link.outputType === entityType)
-        .some((link) =>
-          (['in', 'out'] as const).some((direction) => {
-            const columnId = getScopedColumnId(scope, getLinkColumnId(link, direction))
-            return (
-              !!linkColumnsOnScreen[columnId] &&
-              checkColumnVisibility(columns.columnVisibility || {}, columnId)
-            )
-          }),
-        )
-    return {
-      version: isShown('primary', 'version'),
-      product: isShown('primary', 'product'),
-      folder: isShown('folder', 'folder'),
-      task: isShown('task', 'task'),
-      parentProduct: isShown('product', 'product'),
-    }
-  }, [linkTypes, columns.columnVisibility, linkColumnsOnScreen])
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
@@ -780,20 +734,56 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     return { versionIds, productIds, folderIds, taskIds }
   }, [isLoadingSlicerData, rowVersionsMap, rowProductsMap, showLinks])
 
-  const versionsLinks = useEntityLinksMap(projectName, 'version', linkEntityIds.versionIds, anatomy)
-  const productsLinks = useEntityLinksMap(projectName, 'product', linkEntityIds.productIds, anatomy)
-  const foldersLinks = useEntityLinksMap(projectName, 'folder', linkEntityIds.folderIds, anatomy)
-  const tasksLinks = useEntityLinksMap(projectName, 'task', linkEntityIds.taskIds, anatomy)
+  const versionsLinks = useEntityLinks({
+    projectName,
+    entityType: 'version',
+    entityIds: linkEntityIds.versionIds,
+  })
+  const productsLinks = useEntityLinks({
+    projectName,
+    entityType: 'product',
+    entityIds: linkEntityIds.productIds,
+  })
+  const foldersLinks = useEntityLinks({
+    projectName,
+    entityType: 'folder',
+    entityIds: linkEntityIds.folderIds,
+  })
+  const tasksLinks = useEntityLinks({
+    projectName,
+    entityType: 'task',
+    entityIds: linkEntityIds.taskIds,
+  })
 
-  const { linksMap, loadingLinksEntityIds } = useMemo(() => {
+  const linksMap = useMemo(() => {
     const linksMap = new Map<string, LinksTableData>()
-    const loadingLinksEntityIds = new Set<string>()
-    for (const { links, loadingIds } of [versionsLinks, productsLinks, foldersLinks, tasksLinks]) {
-      links.forEach((value, id) => linksMap.set(id, value))
-      loadingIds.forEach((id) => loadingLinksEntityIds.add(id))
+    const results = [
+      ['version', versionsLinks.links],
+      ['product', productsLinks.links],
+      ['folder', foldersLinks.links],
+      ['task', tasksLinks.links],
+    ] as const
+    for (const [entityType, links] of results) {
+      links.forEach((value, id) => linksMap.set(id, linksToTableData(value, entityType, anatomy)))
     }
-    return { linksMap, loadingLinksEntityIds }
-  }, [versionsLinks, productsLinks, foldersLinks, tasksLinks])
+    return linksMap
+  }, [versionsLinks.links, productsLinks.links, foldersLinks.links, tasksLinks.links, anatomy])
+
+  const loadingLinksEntityIds = useMemo(
+    () =>
+      new Set([
+        ...versionsLinks.loadingIds,
+        ...productsLinks.loadingIds,
+        ...foldersLinks.loadingIds,
+        ...tasksLinks.loadingIds,
+      ]),
+    [
+      versionsLinks.loadingIds,
+      productsLinks.loadingIds,
+      foldersLinks.loadingIds,
+      tasksLinks.loadingIds,
+    ],
+  )
 
   // Determine which products are currently loading versions
   const loadingProductVersions = useMemo(() => {
@@ -954,7 +944,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     // links
     linksMap,
     loadingLinksEntityIds,
-    setLinkColumnsVisible,
+    onLinkColumnsVisibleChange,
     // meta
     error,
   }

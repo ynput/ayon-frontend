@@ -33,7 +33,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     groupFieldStats,
     fieldStatsLoading,
     fieldStatsError,
-    setLinkColumnsVisible,
+    onLinkColumnsVisibleChange,
   } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
   const {
@@ -60,7 +60,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         includeParents={VP_PARENT_SCOPES}
         parentColumns={VP_PARENT_COLUMNS}
         onColumnVisibleChangeSubscribed={VP_LINK_COLUMNS}
-        onColumnVisibleChange={setLinkColumnsVisible}
+        onColumnVisibleChange={onLinkColumnsVisibleChange}
         showColumnSummaries
         fieldStats={fieldStats}
         groupFieldStats={groupFieldStats}

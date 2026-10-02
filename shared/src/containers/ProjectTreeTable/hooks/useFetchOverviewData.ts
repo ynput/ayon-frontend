@@ -25,7 +25,7 @@ import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
 import { getGroupQueries } from '../utils/getGroupQueries'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
-import { useGetEntityLinksQuery } from '@shared/api'
+import { useEntityLinks } from './useEntityLinks'
 import type { OnSyncDataCallback } from '@shared/context/EntityUpdatesContext'
 import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
 import { debounce } from 'lodash'
@@ -74,7 +74,8 @@ type Params = {
   isFlatFolderView?: boolean
   attribFields: ProjectTableAttribute[]
   modules: ProjectTableModulesType
-  skipLinks?: boolean
+  skipFolderLinks?: boolean
+  skipTaskLinks?: boolean
   showComments?: boolean // only fetch latestComments when the comments column is visible
   isLoadingViews?: boolean
   onCollapseAll?: () => void
@@ -104,7 +105,8 @@ export const useFetchOverviewData = ({
   isFlatFolderView = false,
   attribFields,
   modules,
-  skipLinks,
+  skipFolderLinks = false,
+  skipTaskLinks = false,
   showComments = false,
   isLoadingViews = false,
   onCollapseAll,
@@ -269,18 +271,12 @@ export const useFetchOverviewData = ({
     excludeSelectedFolders,
   ])
 
-  const foldersLinksArgs = {
+  const foldersLinks = useEntityLinks({
     projectName,
-    entityIds: Array.from(visibleFolders),
-    entityType: 'folder' as const,
-  }
-
-  // get all links for visible folders
-  const {
-    data: foldersLinks = [],
-    isUninitialized: isUninitializedFoldersLinks,
-    isFetching: isFetchingFoldersLinks,
-  } = useGetEntityLinksQuery(foldersLinksArgs, { skip: isLoadingViews || skipLinks })
+    entityType: 'folder',
+    entityIds: visibleFolders,
+    skip: isLoadingViews || skipFolderLinks,
+  })
 
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {
@@ -292,7 +288,7 @@ export const useFetchOverviewData = ({
         ...folder,
         entityId: folder.id,
         entityType: 'folder',
-        links: foldersLinks?.find((link) => link.id === folder.id)?.links || [],
+        links: foldersLinks.links.get(folder.id) || [],
       }
       return folderWithExtraData
     }
@@ -380,7 +376,7 @@ export const useFetchOverviewData = ({
     isUninitialized,
     selectedFolders,
     excludeSelectedFolders,
-    foldersLinks,
+    foldersLinks.links,
     isFlatFolderView,
   ])
 
@@ -563,49 +559,17 @@ export const useFetchOverviewData = ({
     return new Set(resolvedTasks.map((task) => task.id))
   }, [resolvedTasks])
 
-  const tasksLinksArgs = {
+  const tasksLinks = useEntityLinks({
     projectName,
-    entityIds: Array.from(visibleTasks),
-    entityType: 'task' as const,
-  }
-
-  // Get all links for visible tasks
-  const {
-    data: tasksLinks = [],
-    isUninitialized: isUninitializedTasksLinks,
-    isFetching: isFetchingTasksLinks,
-  } = useGetEntityLinksQuery(tasksLinksArgs, {
-    skip: isLoadingViews || visibleTasks.size === 0 || skipLinks,
+    entityType: 'task',
+    entityIds: visibleTasks,
+    skip: isLoadingViews || skipTaskLinks,
   })
 
-  // Compute entity IDs whose links are currently loading (in query but not yet in the cache result)
-  const loadingLinksEntityIds = useMemo(() => {
-    const ids = new Set<string>()
-
-    if (isFetchingFoldersLinks && !skipLinks) {
-      const cachedIds = new Set(foldersLinks.map((l) => l.id))
-      for (const id of visibleFolders) {
-        if (!cachedIds.has(id)) ids.add(id)
-      }
-    }
-
-    if (isFetchingTasksLinks && !skipLinks) {
-      const cachedIds = new Set(tasksLinks.map((l) => l.id))
-      for (const id of visibleTasks) {
-        if (!cachedIds.has(id)) ids.add(id)
-      }
-    }
-
-    return ids
-  }, [
-    isFetchingFoldersLinks,
-    isFetchingTasksLinks,
-    foldersLinks,
-    tasksLinks,
-    visibleFolders,
-    visibleTasks,
-    skipLinks,
-  ])
+  const loadingLinksEntityIds = useMemo(
+    () => new Set([...foldersLinks.loadingIds, ...tasksLinks.loadingIds]),
+    [foldersLinks.loadingIds, tasksLinks.loadingIds],
+  )
 
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
@@ -628,7 +592,7 @@ export const useFetchOverviewData = ({
       ...task,
       entityId: task.id,
       entityType: 'task' as const,
-      links: tasksLinks?.find((link) => link.id === task.id)?.links || [],
+      links: tasksLinks.links.get(task.id) || [],
     })
 
     for (const task of resolvedTasks) {
@@ -661,7 +625,7 @@ export const useFetchOverviewData = ({
     }
 
     return { tasksMap, tasksByFolderMap }
-  }, [resolvedTasks, tasksLinks])
+  }, [resolvedTasks, tasksLinks.links])
 
   // When entity list provides specific task IDs, filter folders to only those containing tasks
   const filteredFoldersMap: FolderNodeMap = useMemo(() => {
@@ -733,11 +697,11 @@ export const useFetchOverviewData = ({
     if ((isFullSync || hasTaskUpdates) && !taskStatsUninitialized && taskStatsArgs) {
       queriesToRefresh.push({ endpointName: 'GetTaskColumnStats', args: taskStatsArgs })
     }
-    if ((isFullSync || hasFolderUpdates) && !isUninitializedFoldersLinks) {
-      queriesToRefresh.push({ endpointName: 'getEntityLinks', args: foldersLinksArgs })
+    if ((isFullSync || hasFolderUpdates) && !foldersLinks.isUninitialized) {
+      queriesToRefresh.push({ endpointName: 'getEntityLinks', args: foldersLinks.args })
     }
-    if ((isFullSync || hasTaskUpdates) && !isUninitializedTasksLinks) {
-      queriesToRefresh.push({ endpointName: 'getEntityLinks', args: tasksLinksArgs })
+    if ((isFullSync || hasTaskUpdates) && !tasksLinks.isUninitialized) {
+      queriesToRefresh.push({ endpointName: 'getEntityLinks', args: tasksLinks.args })
     }
 
     // refresh the active queries
