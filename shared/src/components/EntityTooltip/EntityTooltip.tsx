@@ -1,11 +1,9 @@
 import * as Styled from './EntityTooltip.styled'
 import { useGetEntityTooltipQuery } from '@shared/api'
 import { Status } from '@shared/containers/ProjectTreeTable/types/project'
-import { useOptionalProjectContext } from '@shared/context/ProjectContext'
+import { useOptionalProjectContext } from '@shared/context/ProjectContextInstance'
 import { getEntityThumbnailUrl, getEntityTypeIcon } from '@shared/util'
-
-// entity types the tooltip query returns data for
-export const ENTITY_TOOLTIP_TYPES = ['folder', 'task', 'version', 'workfile']
+import { ENTITY_TOOLTIP_TYPES } from './EntityTooltipHelpers'
 
 export interface EntityTooltipProjectInfo {
   taskTypes?: { name: string; icon?: string }[]

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, useContext, useMemo } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import type { Options } from 'react-use-websocket'
 import { toast } from 'react-toastify'
 import { PubSub } from '@shared/util'
@@ -228,12 +228,4 @@ export const SocketProvider = ({
       {children}
     </SocketContext.Provider>
   )
-}
-
-export const useSocketContext = () => {
-  const context = useContext(SocketContext)
-  if (context === undefined) {
-    throw new Error('useSocketContext must be used within a SocketProvider')
-  }
-  return context
 }

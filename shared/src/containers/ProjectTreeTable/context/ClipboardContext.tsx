@@ -1,10 +1,10 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 
 // Contexts
 import { ROW_SELECTION_COLUMN_ID } from '../constants'
 import { useSelectionCellsContext } from './SelectionCellsContext'
 import { useCellEditing } from './CellEditingContext'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context/ProjectContextInstance'
 
 // Utils
 import {
@@ -34,10 +34,9 @@ import {
 } from './clipboard'
 import { validateClipboardData } from './clipboard/clipboardValidation'
 import { ClipboardContextType, ClipboardProviderProps } from './clipboard/clipboardTypes'
-import { useProjectTableContext } from './ProjectTableContext'
+import { useProjectTableContext } from './ProjectTableContextInstance'
 import { validateEntityId, getEntityId } from '@shared/util'
-
-const ClipboardContext = createContext<ClipboardContextType | undefined>(undefined)
+import { ClipboardContext } from './ClipboardContextInstance'
 
 const DISPLAY_PREFERRED_COLS = new Set([
   'version',
@@ -1099,12 +1098,4 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   )
 
   return <ClipboardContext.Provider value={value}>{children}</ClipboardContext.Provider>
-}
-
-export const useClipboard = (): ClipboardContextType => {
-  const context = useContext(ClipboardContext)
-  if (context === undefined) {
-    throw new Error('useClipboard must be used within a ClipboardProvider')
-  }
-  return context
 }

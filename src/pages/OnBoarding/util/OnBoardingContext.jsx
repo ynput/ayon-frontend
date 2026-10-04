@@ -1,7 +1,7 @@
 // holds stageIndex state and provides functions to update it
 // gets addonsList
 // get server info
-import React, { createContext, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
 import {
@@ -18,6 +18,7 @@ import { useLocalStorage } from '@shared/hooks'
 import { useLazyListBundlesQuery } from '@shared/api'
 import { useCreateBundleMutation } from '@shared/api'
 import { createBundleFromRelease, guessPlatform } from '@containers/ReleaseInstallerDialog/helpers'
+import { OnBoardingContext } from './OnBoardingContextInstance'
 
 const userFormFields = [
   {
@@ -49,8 +50,6 @@ const userFormFields = [
     type: 'text',
   },
 ]
-
-export const OnBoardingContext = createContext()
 
 export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   const [isConnecting, setIsConnecting] = useLocalStorage('ynput-connecting', false)

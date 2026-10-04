@@ -1,9 +1,10 @@
 import { useLoadModule } from '@shared/hooks'
-import React, { createContext, useContext, ReactNode, FC } from 'react'
+import React, { ReactNode, FC } from 'react'
 import { ListsAttributesContextValue } from './ListsAttributesContext'
 import { ConfirmDeleteOptions } from '@shared/util'
 import { TableSettingsFallback } from '@shared/components'
 import { GuestAccessFallback, ListAccessFallback } from '../components/ListAccessForm'
+import { ListsModuleContext } from './ListsModulesContextInstance'
 
 interface ListsAttributeSettingsFallbackProps {
   listAttributes: ListsAttributesContextValue['listAttributes']
@@ -30,7 +31,7 @@ const ListsAttributeSettingsFallback: FC<ListsAttributeSettingsFallbackProps> = 
   />
 )
 
-interface ListsModuleContextType {
+export interface ListsModuleContextType {
   ListsAttributesSettings: typeof ListsAttributeSettingsFallback
   ListAccess: typeof ListAccessFallback
   GuestAccess: typeof GuestAccessFallback
@@ -44,8 +45,6 @@ interface ListsModuleContextType {
     guestAccess: boolean
   }
 }
-
-const ListsModuleContext = createContext<ListsModuleContextType | undefined>(undefined)
 
 interface ListsModuleProviderProps {
   children: ReactNode
@@ -93,12 +92,4 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
   }
 
   return <ListsModuleContext.Provider value={value}>{children}</ListsModuleContext.Provider>
-}
-
-export const useListsModuleContext = (): ListsModuleContextType => {
-  const context = useContext(ListsModuleContext)
-  if (context === undefined) {
-    throw new Error('useListsModuleContext must be used within a ListsModuleProvider')
-  }
-  return context
 }

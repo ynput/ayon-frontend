@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import type { Addon as SharedAddon } from './types'
 import * as Styled from '@pages/SettingsPage/Bundles/BundleForm.styled.ts'
-import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/AddonSearchContext.tsx'
+import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/AddonSearchContextInstance'
 
 type VersionsMap = Record<string, { projectCanOverrideAddonVersion?: boolean }>
 

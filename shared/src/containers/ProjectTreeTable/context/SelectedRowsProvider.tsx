@@ -2,7 +2,7 @@ import { ReactNode, useCallback, useMemo, useRef, useEffect } from 'react'
 import { useSelectionCellsContext } from './SelectionCellsContext'
 import { CellId, getCellId, parseCellId, RowId } from '../utils/cellUtils'
 import { SelectedRowsContext } from './SelectedRowsContext'
-import { useDetailsPanelEntityContext } from './DetailsPanelEntityContext'
+import { useDetailsPanelEntityContext } from './DetailsPanelEntityContextInstance'
 import { ROW_SELECTION_COLUMN_ID } from '../constants'
 
 interface SelectedRowsProviderProps {

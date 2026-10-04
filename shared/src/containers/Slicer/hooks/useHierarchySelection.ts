@@ -1,6 +1,6 @@
 import type { RowSelectionState } from '@tanstack/react-table'
-import { usePowerpack } from '@shared/context/PowerpackContext'
-import { useOptionalSlicerContext } from '../context/SlicerContext'
+import { usePowerpack } from '@shared/context/PowerpackContextInstance'
+import { useOptionalSlicerContext } from '../context/SlicerContextInstance'
 
 // the hierarchy panel can sit anywhere in the stack, or nowhere at all; pages that have
 // not migrated to panels still keep their folder scope behind the pin

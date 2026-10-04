@@ -1,11 +1,7 @@
 import { FC, ReactNode } from 'react'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
-import {
-  EntityListsContextType,
-  EntityListsProvider,
-  useEntityListsContext,
-  useOptionalEntityListsContext,
-} from './EntityListsContext'
+import { EntityListsContextType, EntityListsProvider } from './EntityListsContext'
+import { useEntityListsContext, useOptionalEntityListsContext } from './EntityListsContextInstance'
 
 interface EntityListsContextBoundaryProps {
   projectName?: string

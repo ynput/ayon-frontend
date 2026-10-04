@@ -27,14 +27,17 @@ import { aTag, blockquoteTag, codeTag, inputTag } from './ActivityMarkdownCompon
 import { mapGraphQLReactions } from './mappers'
 import { Icon } from '@ynput/ayon-react-components'
 import ActivityStatus from '../ActivityStatus/ActivityStatus'
-import { useFeedContext } from '../../context/FeedContext'
+import { useFeedContext } from '../../context/FeedContextInstance'
 import { confirmDelete } from '../../../../util'
 import ActivityHeader, { ActivityHeaderProps } from '../ActivityHeader/ActivityHeader'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
-import { useMenuContext } from '@shared/context/MenuContext'
+import { useMenuContext } from '@shared/context/MenuContextInstance'
 import type { Status } from '../../../ProjectTreeTable/types/project'
 import { SavedAnnotationMetadata } from '../../index'
-import { useDetailsPanelContext, getActivityFrameLink } from '@shared/context/DetailsPanelContext'
+import {
+  useDetailsPanelContext,
+  getActivityFrameLink,
+} from '@shared/context/DetailsPanelContextInstance'
 import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
 import CommentFlags from './CommentFlags'
 import { createCommentFlags } from './createCommentFlags'

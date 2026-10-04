@@ -2,11 +2,10 @@ import { KeyboardEvent, useMemo, useState } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import {
   DELETE_CONFIRM_THRESHOLD,
-  DELETE_TYPE_ORDER,
   DeleteConfirmContent,
-  sumExpectedCounts,
   type ExpectedDeleteCounts,
 } from './DeleteConfirmContent'
+import { DELETE_TYPE_ORDER, sumExpectedCounts } from './DeleteConfirmContentHelpers'
 import type { DeletableEntityType } from '@shared/context/DeleteEntitiesContext'
 import * as Styled from './DeleteEntitiesConfirmDialog.styled'
 

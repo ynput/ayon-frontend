@@ -1,12 +1,11 @@
-import React, { createContext, useContext, useRef } from 'react'
+import React, { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import RemoveMarkdown from 'remove-markdown'
 import usePubSub from '@hooks/usePubSub'
 import { Icon } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
-
-const NotificationsContext = createContext()
+import { NotificationsContext } from './NotificationsContextInstance'
 
 function NotificationsProvider(props) {
   const navigate = useNavigate()
@@ -133,8 +132,4 @@ function NotificationsProvider(props) {
   )
 }
 
-function useNotifications() {
-  return useContext(NotificationsContext)
-}
-
-export { NotificationsProvider, useNotifications }
+export { NotificationsProvider }

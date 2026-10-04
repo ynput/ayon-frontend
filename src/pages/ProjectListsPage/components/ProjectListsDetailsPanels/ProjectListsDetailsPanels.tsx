@@ -1,5 +1,7 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
+import {
+  useListItemsDataContext,
+} from '@pages/ProjectListsPage/context/ListItemsDataContextInstance'
 import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 import {
   getCellId,

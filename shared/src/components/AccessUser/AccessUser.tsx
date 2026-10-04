@@ -3,13 +3,6 @@ import * as Styled from './AccessUser.styled'
 import { ShareOptionIcon } from '../ShareOptionIcon'
 import clsx from 'clsx'
 
-export const ACCESS_LEVEL_LABELS = {
-  0: 'No access',
-  10: 'Viewer',
-  20: 'Editor',
-  30: 'Admin',
-}
-
 export type AccessLevel = 0 | 10 | 20 | 30
 
 export interface AccessUser {

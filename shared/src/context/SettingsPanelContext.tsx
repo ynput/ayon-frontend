@@ -1,8 +1,9 @@
-import { createContext, useState, useContext, FC, ReactNode, Dispatch } from 'react'
+import { useState, FC, ReactNode, Dispatch } from 'react'
+import { SettingsPanelContext } from './SettingsPanelContextInstance'
 
 export type SettingField = 'columns' | string
 export type SettingHighlightedId = string | null
-interface SettingsPanelContextType {
+export interface SettingsPanelContextType {
   isPanelOpen: boolean
   selectedSetting: SettingField | null
   highlightedSetting: SettingHighlightedId
@@ -13,8 +14,6 @@ interface SettingsPanelContextType {
   selectSetting: (setting: SettingField | null, highlighted?: SettingHighlightedId) => void
   backToMainMenu: () => void
 }
-
-const SettingsPanelContext = createContext<SettingsPanelContextType | undefined>(undefined)
 
 interface SettingsPanelProviderProps {
   children: ReactNode
@@ -79,12 +78,4 @@ export const SettingsPanelProvider: FC<SettingsPanelProviderProps> = ({ children
       {children}
     </SettingsPanelContext.Provider>
   )
-}
-
-export const useSettingsPanel = (): SettingsPanelContextType => {
-  const context = useContext(SettingsPanelContext)
-  if (context === undefined) {
-    throw new Error('useSettingsPanel must be used within a SettingsPanelProvider')
-  }
-  return context
 }

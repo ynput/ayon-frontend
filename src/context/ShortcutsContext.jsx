@@ -1,19 +1,10 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  useRef,
-} from 'react'
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { useMenuContext } from '@shared/context/MenuContext'
+import { useMenuContext } from '@shared/context/MenuContextInstance'
 import { useLogoutMutation } from '@queries/auth/logout'
 import { useSearchParams } from 'react-router-dom'
-
-const ShortcutsContext = createContext()
+import { ShortcutsContext } from './ShortcutsContextInstance'
 
 function ShortcutsProvider(props) {
   const navigate = useNavigate()
@@ -224,8 +215,4 @@ function ShortcutsProvider(props) {
   )
 }
 
-function useShortcutsContext() {
-  return useContext(ShortcutsContext)
-}
-
-export { ShortcutsProvider, useShortcutsContext }
+export { ShortcutsProvider }

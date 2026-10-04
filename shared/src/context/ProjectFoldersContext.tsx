@@ -1,4 +1,4 @@
-import { useContext, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useGetFolderListQuery } from '@shared/api'
 
 import type { FolderListItem, FolderListModel } from '@shared/api'
@@ -210,12 +210,4 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
   )
 
   return <ProjectFoldersContext.Provider value={value}>{children}</ProjectFoldersContext.Provider>
-}
-
-export const useProjectFoldersContext = () => {
-  const context = useContext(ProjectFoldersContext)
-  if (context === undefined) {
-    throw new Error('useProjectFoldersContext must be used within a ProjectFoldersContextProvider')
-  }
-  return context
 }

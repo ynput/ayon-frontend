@@ -1,9 +1,8 @@
 import { useRef } from 'react'
-import { Button } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
-import { useMenuContext } from '@shared/context/MenuContext'
+import { useMenuContext } from '@shared/context/MenuContextInstance'
 import { Menu, MenuContainer } from './Menu'
 import type { MenuItemType } from './Menu'
+import { ColumnMenuButton } from './ColumnHeaderMenuUI.styled'
 
 export type ColumnMenuItemType = {
   id: string
@@ -14,30 +13,6 @@ export type ColumnMenuItemType = {
   type?: 'divider'
   selected?: boolean
 }
-
-export const ColumnMenuButton = styled(Button)<{ $isOpen: boolean }>`
-  background-color: unset !important;
-  z-index: 110;
-  position: relative;
-  padding: 2px;
-  width: 24px;
-  height: 24px;
-
-  &.hasIcon {
-    padding: 2px;
-  }
-
-  &:hover,
-  &.active {
-    background-color: var(--md-sys-color-surface-container-hover) !important;
-  }
-
-  ${({ $isOpen }) =>
-    $isOpen &&
-    `
-    background-color: var(--md-sys-color-surface-container-hover) !important;
-  `}
-`
 
 interface ColumnHeaderMenuUIProps {
   menuItems: ColumnMenuItemType[]

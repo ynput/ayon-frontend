@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback } from 'react'
+import { useCallback } from 'react'
 import { useGetProjectQuery, useGetProjectAnatomyQuery } from '@shared/api'
 import { getEntityTypeIcon } from '@shared/util'
 
@@ -12,6 +12,7 @@ import type {
   ProductTypesList,
 } from '@shared/api'
 import { useGetProductTypesQuery } from '@shared/api/queries/products/getProduct'
+import { ProjectContext } from './ProjectContextInstance'
 
 export type ProjectModelWithProducts = ProjectModel & {
   // Extend project with product types
@@ -80,8 +81,6 @@ export interface ProjectContextValue extends ProjectModelWithProducts {
   getTaskType: (name: string) => TaskType | undefined
   getProductTypeOptions: () => { value: string; label: string; icon?: string; color?: string }[]
 }
-
-const ProjectContext = createContext<ProjectContextValue | undefined>(undefined)
 
 //
 // ProjectProvider
@@ -210,15 +209,3 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
     </ProjectContext.Provider>
   )
 }
-
-export const useProjectContext = () => {
-  const context = useContext(ProjectContext)
-  if (context === undefined) {
-    throw new Error('useProjectContext must be used within a ProjectContextProvider')
-  }
-  return context
-}
-
-// non-throwing variant: returns undefined when no ProjectContextProvider is mounted
-// (e.g. the cross-project UserDashboard) so callers can supply their own provider
-export const useOptionalProjectContext = () => useContext(ProjectContext)

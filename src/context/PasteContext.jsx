@@ -1,8 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { Button, InputTextarea, Dialog } from '@ynput/ayon-react-components'
-
-
-const PasteContext = createContext()
+import { PasteContext, usePaste } from './PasteContextInstance'
 
 const PasteProvider = ({ children }) => {
   const [isModalOpen, setModalOpen] = useState(false)
@@ -108,6 +106,4 @@ const PasteModal = () => {
   )
 }
 
-const usePaste = () => useContext(PasteContext)
-
-export { usePaste, PasteProvider, PasteModal }
+export { PasteProvider, PasteModal }

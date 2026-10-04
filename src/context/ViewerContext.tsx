@@ -6,8 +6,6 @@ import {
   AnnotationsContextType,
 } from '@containers/Viewer'
 import {
-  createContext,
-  useContext,
   ReactNode,
   ElementType,
   useCallback,
@@ -26,8 +24,14 @@ import type {
   FeedFrameLink,
   FeedFrameLinkPreview,
 } from '@shared/context'
+import {
+  FallbackAnnotationsEditorProvider,
+  useAnnotationsFallback,
+  useDrawHistoryFallback,
+  ViewerContext,
+} from './ViewerContextInstance'
 
-type DrawHistory = {
+export type DrawHistory = {
   clear: (page?: number) => void
 }
 
@@ -45,19 +49,7 @@ const FallbackAnnotationsProvider = ({ children }: AnnotationsProviderProps) => 
   return <>{children}</>
 }
 
-const FallbackAnnotationsEditorProvider = ({ children }: AnnotationsEditorProviderProps) => {
-  return <>{children}</>
-}
-
-const useAnnotationsFallback = (): AnnotationsContextType => ({
-  annotations: {},
-  removeAnnotation: () => {},
-  exportAnnotationComposite: async () => null,
-})
-
-const useDrawHistoryFallback = (): DrawHistory => ({ clear: () => {} })
-
-interface ViewerContextType {
+export interface ViewerContextType {
   isLoaded: boolean
   createToolbar: () => ReactPortal | null
   AnnotationsEditorProvider: ({ children }: AnnotationsEditorProviderProps) => JSX.Element
@@ -71,18 +63,6 @@ interface ViewerContextType {
   // frame links of the viewer's feed, kept apart from feeds outside the viewer
   feedFrameLinks: FeedFrameLink[]
   setFeedFrameLinks: (links: FeedFrameLink[]) => void
-}
-
-const defaultViewerContext = {
-  isLoaded: false,
-  createToolbar: () => null,
-  AnnotationsEditorProvider: FallbackAnnotationsEditorProvider,
-  AnnotationsCanvas: () => null,
-  useAnnotations: useAnnotationsFallback,
-  useDrawHistory: useDrawHistoryFallback,
-  registerFrameLinkPlayer: () => {},
-  feedFrameLinks: [],
-  setFeedFrameLinks: () => {},
 }
 
 // Frame links of the viewer: always a single frame (no in/out range, unlike the
@@ -129,8 +109,6 @@ const useViewerFrameLink = (selectedVersionId?: string) => {
 
   return { commentFrameLink, registerFrameLinkPlayer, feedFrameLinks, setFeedFrameLinks }
 }
-
-const ViewerContext = createContext<ViewerContextType>(defaultViewerContext)
 
 type ViewerProviderProps = {
   children: ReactNode
@@ -227,6 +205,3 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     </ViewerContext.Provider>
   )
 }
-
-// This hook may be called outside of a ViewerContext.Provider
-export const useViewer = () => useContext(ViewerContext)

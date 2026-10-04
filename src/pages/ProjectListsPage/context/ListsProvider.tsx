@@ -9,7 +9,7 @@ import {
 import type { EntityListPatchModel, EntityListPostModel, EntityListSummary } from '@shared/api'
 import useDeleteList from '../hooks/useDeleteList'
 import useUpdateList from '../hooks/useUpdateList'
-import { useListsDataContext } from './ListsDataContext'
+import { useListsDataContext } from './ListsDataContextInstance'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
 import ListsContext, {
   ListDetailsOpenState,

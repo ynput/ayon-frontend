@@ -1,6 +1,6 @@
-import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
+import React, { ReactNode, useEffect, useState } from 'react'
 import { useGetFeedbackVerificationQuery } from '@shared/api'
-import { useGlobalContext } from '@shared/context/GlobalContext'
+import { useGlobalContext } from '@shared/context/GlobalContextInstance'
 import { FeedbackContext } from './FeedbackContextInstance'
 
 export type FeedbackContextType = {
@@ -411,14 +411,3 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     </FeedbackContext.Provider>
   )
 }
-
-export const useFeedback = (): FeedbackContextType => {
-  const context = useContext(FeedbackContext)
-  if (!context) {
-    throw new Error('useFeedback must be used within a FeedbackProvider')
-  }
-  return context
-}
-
-// Non-throwing variant for shared components that may render outside a FeedbackProvider.
-export const useFeedbackSafe = (): FeedbackContextType | undefined => useContext(FeedbackContext)

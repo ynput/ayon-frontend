@@ -1,6 +1,4 @@
 import {
-  createContext,
-  useContext,
   ReactNode,
   useState,
   useEffect,
@@ -17,6 +15,7 @@ import type { EntityListAttributeDefinition } from '@shared/api'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { useProjectContext } from '@shared/context'
+import { ListsAttributesContext } from './ListsAttributesContextInstance'
 
 export interface ListsAttributesContextValue {
   listAttributes: EntityListAttributeDefinition[]
@@ -26,8 +25,6 @@ export interface ListsAttributesContextValue {
   isLoadingNewList: boolean
   updateAttributes: (attribute: EntityListAttributeDefinition[]) => Promise<void>
 }
-
-const ListsAttributesContext = createContext<ListsAttributesContextValue | undefined>(undefined)
 
 const HIGH_LEVEL_ATTRIBS = [
   'name',
@@ -128,13 +125,3 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
     </ListsAttributesContext.Provider>
   )
 }
-
-export const useListsAttributesContext = () => {
-  const context = useContext(ListsAttributesContext)
-  if (context === undefined) {
-    throw new Error('useListsAttributesContext must be used within a ListsAttributesProvider')
-  }
-  return context
-}
-
-export default ListsAttributesContext

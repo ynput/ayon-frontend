@@ -27,18 +27,7 @@ import { ColumnAction, ErrorHandlingMode, TargetColumn, TargetValue, ValueAction
 import clsx from "clsx"
 import { ImportableColumn } from "@shared/api/generated/dataImport"
 import { formatDataType } from "../utils"
-
-export enum MappingState {
-  UNRESOLVED = "unresolved",
-  RESOLVED = "resolved",
-  AUTO_RESOLVED = "autoresolved",
-  ERROR = "error",
-}
-
-export const resolvedStates = new Set([
-  MappingState.AUTO_RESOLVED,
-  MappingState.RESOLVED,
-])
+import { MappingState } from "./MapperRowHelpers"
 
 type Props = {
   state: MappingState

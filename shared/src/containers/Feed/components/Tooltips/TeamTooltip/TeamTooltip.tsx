@@ -1,6 +1,6 @@
 import { Icon } from '@ynput/ayon-react-components'
 import { teamsApi } from '@shared/api'
-import { useFeedContext } from '../../../context/FeedContext'
+import { useFeedContext } from '../../../context/FeedContextInstance'
 import UserTooltipItem from '../UserTooltipItem'
 import * as Styled from './TeamTooltip.styled'
 

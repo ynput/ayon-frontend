@@ -7,15 +7,14 @@ import {
   convertTanstackStatesToColumnConfig,
 } from '@shared/util'
 import {
-  createContext,
   FC,
   ReactNode,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
 } from 'react'
+import { VPViewsContext } from './VPViewsContextInstance'
 
 export type VPViewsContextValue = {
   // Filter management
@@ -68,16 +67,6 @@ export type VPViewsContextValue = {
   sortDesc: boolean
   onUpdateSortDesc: (sortDesc: boolean) => void
   onUpdateSorting: (sortBy: string | undefined, sortDesc: boolean) => void
-}
-
-const VPViewsContext = createContext<VPViewsContextValue | null>(null)
-
-export const useVPViewsContext = () => {
-  const context = useContext(VPViewsContext)
-  if (!context) {
-    throw new Error('useVPViewsContext must be used within VersionsDataProvider')
-  }
-  return context
 }
 
 interface VersionsViewsProviderProps {

@@ -55,6 +55,7 @@ export * from './Menu'
 export * from './EntityIcon'
 export * from './ReviewablesSelector'
 export * from './ColumnHeaderMenuUI'
+export * from './ColumnHeaderMenuUI.styled'
 
 // re-export prime-react ConfirmDialog
 export * from 'primereact/confirmdialog'

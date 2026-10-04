@@ -2,7 +2,7 @@ import { FC } from 'react'
 import SearchFilterWrapper from '@pages/ProjectOverviewPage/containers/SearchFilterWrapper'
 import { useProjectContext } from '@shared/context'
 import { buildScopes } from '@shared/components'
-import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
+import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContextInstance'
 
 // folderType/taskType are only whitelisted on the flat versions resolver — the
 // products resolver (hierarchy mode) and task filters reject them server-side

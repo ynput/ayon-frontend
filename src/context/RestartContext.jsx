@@ -1,12 +1,11 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { useState } from 'react'
 import { useGetRestartQuery, useRestartServerMutation } from '@queries/restartServer'
 import RestartBanner from '@components/RestartBanner/RestartBanner'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServerRestartingPage from '@components/ServerRestartingPage'
 import { useSelector } from 'react-redux'
 import { useLocalStorage } from '@shared/hooks'
-
-const RestartContext = createContext()
+import { RestartContext } from './RestartContextInstance'
 
 function RestartProvider(props) {
   const isAdmin = useSelector((state) => state.user.data.isAdmin)
@@ -75,6 +74,4 @@ function RestartProvider(props) {
   )
 }
 
-const useRestart = () => useContext(RestartContext)
-
-export { RestartProvider, useRestart }
+export { RestartProvider }

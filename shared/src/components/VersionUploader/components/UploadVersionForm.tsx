@@ -11,8 +11,8 @@ import {
   InputText,
 } from '@ynput/ayon-react-components'
 import { ReviewableUpload } from '../../ReviewablesList/ReviewablesUpload'
-import { useVersionUploadContext } from '../context/VersionUploadContext'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useVersionUploadContext } from '../context/VersionUploadContextInstance'
+import { useProjectContext } from '@shared/context/ProjectContextInstance'
 import { useGetTaskQuery } from '@shared/api'
 import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog/EntityPickerDialog'
 import { Skeleton } from 'primereact/skeleton'

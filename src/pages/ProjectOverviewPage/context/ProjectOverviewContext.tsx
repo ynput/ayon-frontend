@@ -1,5 +1,5 @@
 // React imports
-import { useCallback, useContext, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 // Third-party libraries
 import { ExpandedState } from '@tanstack/react-table'
@@ -478,12 +478,4 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
       {children}
     </ProjectOverviewContext.Provider>
   )
-}
-
-export const useProjectOverviewContext = () => {
-  const context = useContext(ProjectOverviewContext)
-  if (!context) {
-    throw new Error('useProjectOverviewContext must be used within a ProjectOverviewProvider')
-  }
-  return context
 }

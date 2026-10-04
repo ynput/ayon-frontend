@@ -1,8 +1,9 @@
-import { createContext, useContext, ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { registerRemotes } from '@module-federation/enhanced/runtime'
 import { useListFrontendModulesQuery } from '@shared/api'
 import type { FrontendModuleListItem } from '@shared/api'
-import { useGlobalContext } from './GlobalContext'
+import { useGlobalContext } from './GlobalContextInstance'
+import { RemoteModulesContext } from './RemoteModulesContextInstance'
 
 type Module = {
   remote: string
@@ -11,17 +12,11 @@ type Module = {
   modules: string[]
 }
 
-type RemoteModulesContextType = {
+export type RemoteModulesContextType = {
   isLoading: boolean
   modules: FrontendModuleListItem[]
   remotesInitialized: boolean
 }
-
-const RemoteModulesContext = createContext<RemoteModulesContextType>({
-  isLoading: true,
-  modules: [],
-  remotesInitialized: false,
-})
 
 type Props = {
   children: ReactNode
@@ -94,14 +89,4 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
       {children}
     </RemoteModulesContext.Provider>
   )
-}
-
-export const useRemoteModules = () => {
-  const context = useContext(RemoteModulesContext)
-
-  if (context === undefined) {
-    throw new Error('useRemoteModules must be used within a RemoteModulesProvider')
-  }
-
-  return context
 }

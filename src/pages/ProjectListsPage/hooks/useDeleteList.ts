@@ -1,6 +1,6 @@
 import { confirmDelete } from '@shared/util'
 import { toast } from 'react-toastify'
-import { useListsDataContext } from '../context/ListsDataContext'
+import { useListsDataContext } from '../context/ListsDataContextInstance'
 import { useCallback } from 'react'
 
 interface UseDeleteListProps {

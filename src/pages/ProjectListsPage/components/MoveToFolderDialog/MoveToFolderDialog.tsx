@@ -1,10 +1,8 @@
 import { FC, useCallback } from 'react'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import {
-  ListsDataProvider,
-  useListsDataContext,
-} from '@pages/ProjectListsPage/context/ListsDataContext'
+import { ListsDataProvider } from '@pages/ProjectListsPage/context/ListsDataContext'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContextInstance'
 import { ListsProvider } from '@pages/ProjectListsPage/context/ListsProvider'
 import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
 import ListsTable from '../ListsTable/ListsTable'

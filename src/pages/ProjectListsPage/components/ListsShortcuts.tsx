@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect } from 'react'
 import { useListsContext } from '../context'
-import { useListsDataContext } from '../context/ListsDataContext'
+import { useListsDataContext } from '../context/ListsDataContextInstance'
 import { useAppSelector } from '@state/store'
 import { shouldBlockShortcuts } from '@shared/util'
 import { parseListFolderRowId } from '../util'

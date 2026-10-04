@@ -2,9 +2,9 @@ import { useCallback, useEffect } from 'react'
 import { useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { useCellEditing } from '../context/CellEditingContext' // keep for editingCellId/setEditingCellId
 import { parseCellId, getCellId } from '../utils/cellUtils'
-import { useProjectTableContext } from '../context/ProjectTableContext'
-import { useProjectDataContext } from '../context/ProjectDataContext'
-import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
+import { useProjectTableContext } from '../context/ProjectTableContextInstance'
+import { useProjectDataContext } from '../context/ProjectDataContextInstance'
+import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContextInstance'
 import { getEntityViewierIds } from '../utils'
 import { isEntityRestricted, READ_ONLY } from '../utils/restrictedEntity'
 

@@ -5,10 +5,11 @@
 // Components can update the URI when changing context, like opening the details panel or navigating to a settings page
 // Components state should not be directly synced to the URI, they should only read the URI on mount to set initial state
 
-import { createContext, useContext, useEffect, ReactNode, FC, useCallback, useState } from 'react'
+import { useEffect, ReactNode, FC, useCallback, useState } from 'react'
 import { buildEntityUri, parseUri } from '../util'
 import { useResolveUrisMutation } from '@shared/api'
 import type { ResolvedUriModel } from '@shared/api'
+import { URIContext } from './UriContextInstance'
 
 export const URL_PARAM_ID = 'uri'
 
@@ -43,7 +44,7 @@ export type SettingsUri = {
   project: string | undefined
 }
 
-interface URIContextValue {
+export interface URIContextValue {
   uri: string
   uriType: 'settings' | 'entity' | undefined
   entity?: EntityUri
@@ -56,8 +57,6 @@ interface URIContextValue {
 interface URIProviderProps {
   children: ReactNode
 }
-
-const URIContext = createContext<URIContextValue | undefined>(undefined)
 
 const URIProvider: FC<URIProviderProps> = ({ children }) => {
   const pathname = location.pathname
@@ -116,12 +115,4 @@ const URIProvider: FC<URIProviderProps> = ({ children }) => {
   return <URIContext.Provider value={contextValue}>{children}</URIContext.Provider>
 }
 
-const useURIContext = (): URIContextValue => {
-  const context = useContext(URIContext)
-  if (context === undefined) {
-    throw new Error('useURIContext must be used within a URIProvider')
-  }
-  return context
-}
-
-export { URIProvider, useURIContext }
+export { URIProvider }

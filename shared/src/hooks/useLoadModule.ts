@@ -1,4 +1,4 @@
-import { useRemoteModules } from '@shared/context/RemoteModulesContext'
+import { useRemoteModules } from '@shared/context/RemoteModulesContextInstance'
 import { loadRemote } from '@module-federation/enhanced/runtime'
 import { useEffect, useRef, useState } from 'react'
 import semver from 'semver'

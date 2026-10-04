@@ -7,8 +7,8 @@ import useUpdateTableData, {
   InheritFromParentEntity,
   UpdateTableEntities,
 } from '../hooks/useUpdateTableData'
-import { useProjectTableContext } from './ProjectTableContext'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectTableContext } from './ProjectTableContextInstance'
+import { useProjectContext } from '@shared/context/ProjectContextInstance'
 import { useUpdateSubtasksMutation } from '@shared/api'
 import validateUpdateEntities from '../utils/validateUpdateEntities'
 import { toast } from 'react-toastify'

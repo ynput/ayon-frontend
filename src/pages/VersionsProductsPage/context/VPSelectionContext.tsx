@@ -1,23 +1,22 @@
 import { parseRowId, useSelectedRowsContext } from '@shared/containers'
 import {
-  createContext,
   FC,
   ReactNode,
-  useContext,
   useState,
   useCallback,
   useMemo,
   useEffect,
 } from 'react'
-import { useVersionsDataContext } from './VPDataContext'
-import { useVPViewsContext } from './VPViewsContext'
+import { VersionsSelectionContext } from './VPSelectionContextInstance'
+import { useVersionsDataContext } from './VPDataContextInstance'
+import { useVPViewsContext } from './VPViewsContextInstance'
 
 export interface VersionsSelection {
   versionIds: string[]
   productIds: string[]
 }
 
-interface VersionsSelectionContextValue {
+export interface VersionsSelectionContextValue {
   selectedVersions: string[]
   selectedProducts: string[]
   setSelectedVersions: (versionIds: string[]) => void
@@ -26,16 +25,6 @@ interface VersionsSelectionContextValue {
   clearSelection: () => void
   isVersionSelected: (versionId: string) => boolean
   toggleVersionSelection: (versionId: string) => void
-}
-
-const VersionsSelectionContext = createContext<VersionsSelectionContextValue | null>(null)
-
-export const useVersionsSelectionContext = () => {
-  const context = useContext(VersionsSelectionContext)
-  if (!context) {
-    throw new Error('useVersionsSelectionContext must be used within VersionsSelectionProvider')
-  }
-  return context
 }
 
 interface VersionsSelectionProviderProps {

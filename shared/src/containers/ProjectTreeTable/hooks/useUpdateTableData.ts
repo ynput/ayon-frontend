@@ -1,14 +1,14 @@
 import { CellId } from '../utils/cellUtils'
 import { CellValue } from '../widgets/CellWidget'
 import { toast } from 'react-toastify'
-import { useProjectTableQueriesContext } from '../context/ProjectTableQueriesContext'
+import { useProjectTableQueriesContext } from '../context/ProjectTableQueriesContextInstance'
 import { useCallback } from 'react'
 import { InheritedDependent } from './useFolderRelationships'
-import { useProjectTableContext } from '../context/ProjectTableContext'
+import { useProjectTableContext } from '../context/ProjectTableContextInstance'
 import { OperationModel } from '../types/operations'
 import { EntityData, PatchOperation } from '../types'
 import { HistoryEntityUpdate, UseHistoryReturn } from './useHistory'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context/ProjectContextInstance'
 import { getQueryErrorCodes } from '@shared/api/base/queryError'
 
 const getErrorMessage = (

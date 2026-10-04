@@ -9,7 +9,7 @@ import {
   useProjectTableContext,
   getEntityViewierIds,
 } from '@shared/containers'
-import { useVersionsDataContext } from '../context/VPDataContext'
+import { useVersionsDataContext } from '../context/VPDataContextInstance'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useVersionUploadContext } from '@shared/components'
 import { versionNodeToEditorVersionNode } from '../util'

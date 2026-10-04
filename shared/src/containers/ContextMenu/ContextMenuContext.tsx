@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useRef, useState, ReactNode, RefObject } from 'react'
+import React, { useRef, useState, ReactNode, RefObject } from 'react'
+import { ContextMenuContext } from './ContextMenuContextInstance'
 
 interface ContextMenuItem {
   // Define the structure of your menu items
@@ -8,7 +9,7 @@ interface ContextMenuItem {
   [key: string]: any
 }
 
-interface ContextMenuContextType {
+export interface ContextMenuContextType {
   openContext: (event: React.MouseEvent, model: ContextMenuItem[]) => void
   closeContext: () => void
   ref: RefObject<any>
@@ -20,8 +21,6 @@ interface ContextMenuContextType {
 interface ContextMenuProviderProps {
   children: ReactNode
 }
-
-const ContextMenuContext = createContext<ContextMenuContextType | undefined>(undefined)
 
 function ContextMenuProvider({ children }: ContextMenuProviderProps) {
   const [isContextOpen, setIsContextOpen] = useState<boolean>(false)
@@ -50,12 +49,4 @@ function ContextMenuProvider({ children }: ContextMenuProviderProps) {
   )
 }
 
-function useContextMenu(): ContextMenuContextType {
-  const context = useContext(ContextMenuContext)
-  if (context === undefined) {
-    throw new Error('useContextMenu must be used within a ContextMenuProvider')
-  }
-  return context
-}
-
-export { ContextMenuProvider, useContextMenu }
+export { ContextMenuProvider }

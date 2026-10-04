@@ -3,7 +3,7 @@ import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { FC } from 'react'
-import { useMenuContext } from '@shared/context/MenuContext'
+import { useMenuContext } from '@shared/context/MenuContextInstance'
 import styled from 'styled-components'
 
 export const MENU_ID = 'projects-list-menu'

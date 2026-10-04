@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useMemo } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { EntityList, EntityListFolderModel, useGetEntityListFoldersQuery } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
@@ -6,10 +6,11 @@ import { useQueryArgumentChangeLoading, useUserProjectConfig, useLocalStorage } 
 import useGetListsData from '../hooks/useGetListsData'
 import { buildListsTableData } from '../util'
 import { usePowerpack, useProjectContext } from '@shared/context'
+import { ListsDataContext } from './ListsDataContextInstance'
 
 export type ListsMap = Map<string, EntityList>
 
-interface ListsDataContextValue {
+export interface ListsDataContextValue {
   listsData: EntityList[]
   listsTableData: SimpleTableRow[]
   listsMap: ListsMap
@@ -28,8 +29,6 @@ interface ListsDataContextValue {
   setShowArchived: (show: boolean) => void
   refetch: () => void
 }
-
-const ListsDataContext = createContext<ListsDataContextValue | undefined>(undefined)
 
 interface ListsDataProviderProps {
   children: ReactNode
@@ -188,13 +187,3 @@ export const ListsDataProvider = ({
     </ListsDataContext.Provider>
   )
 }
-
-export const useListsDataContext = () => {
-  const context = useContext(ListsDataContext)
-  if (context === undefined) {
-    throw new Error('useListsDataContext must be used within a ListsDataProvider')
-  }
-  return context
-}
-
-export default ListsDataContext

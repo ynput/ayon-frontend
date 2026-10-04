@@ -9,9 +9,13 @@ import {
 } from '@shared/containers/ProjectTreeTable/constants'
 import {
   COLUMN_HEADER_SELECTOR,
-  ColumnDropLine,
-  getColumnDropLinePosition,
 } from '@shared/containers/ProjectTreeTable/components/ColumnDropIndicator'
+import {
+  ColumnDropLine,
+} from '@shared/containers/ProjectTreeTable/components/ColumnDropIndicator.styled'
+import {
+  getColumnDropLinePosition,
+} from '@shared/containers/ProjectTreeTable/components/ColumnDropIndicatorHelpers'
 import { TABLE_CONTAINER_ATTR } from '@shared/containers/ProjectTreeTable/hooks/useColumnDragRestriction'
 import { useMenuContext } from '@shared/context'
 import { MENU_PORTAL_CONTENT_ID } from '../Menu/MenuContainer'

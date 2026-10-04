@@ -1,4 +1,7 @@
 export * from './context/NewEntityContext'
+export * from './context/NewEntityContextInstance'
 export * from './components/NewEntity'
+export * from './components/NewEntityHelpers'
 export * from './components/NewEntityForm'
+export * from './components/NewEntityForm.styled'
 export * from './util/entityDefinitions'

@@ -1,5 +1,6 @@
-import { createContext, useContext, ReactNode, useCallback, useMemo, useState } from 'react'
-import { ListEntityType, listEntityTypes } from '../components/NewListDialog/NewListDialog'
+import { ReactNode, useCallback, useMemo, useState } from 'react'
+import type { ListEntityType } from '../components/NewListDialog/NewListDialog'
+import { listEntityTypes } from '../components/NewListDialog/NewListDialogHelpers'
 import { toast } from 'react-toastify'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import {
@@ -21,6 +22,7 @@ import {
   ListEntityInput,
 } from '../hooks/useBuildListMenuItems'
 import AddToListDialog from '../components/AddToListDialog'
+import { EntityListsContext } from './EntityListsContextInstance'
 
 const MIN_REVIEW_VERSION = '0.0.3'
 const MIN_REVIEW_ACTIONS_VERSION = '0.5.0'
@@ -72,8 +74,6 @@ export interface EntityListsContextType {
     filter?: (item: ListSubMenuItem) => boolean,
   ) => any[]
 }
-
-const EntityListsContext = createContext<EntityListsContextType | undefined>(undefined)
 
 interface EntityListsProviderProps extends EntityListsContextProps {
   children: ReactNode
@@ -421,15 +421,3 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
     </EntityListsContext.Provider>
   )
 }
-
-export const useEntityListsContext = () => {
-  const context = useContext(EntityListsContext)
-  if (context === undefined) {
-    throw new Error('useEntityListsContext must be used within an EntityListsProvider')
-  }
-  return context
-}
-
-export const useOptionalEntityListsContext = () => useContext(EntityListsContext)
-
-export default EntityListsContext

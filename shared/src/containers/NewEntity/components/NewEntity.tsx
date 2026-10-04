@@ -25,18 +25,20 @@ import type {
   MatchingFolder,
 } from '@shared/containers/ProjectTreeTable/types/table'
 import { ROW_SELECTION_COLUMN_ID } from '@shared/containers/ProjectTreeTable/constants'
-import { useOptionalProjectTableContext } from '@shared/containers/ProjectTreeTable/context/ProjectTableContext'
+import { useOptionalProjectTableContext } from '@shared/containers/ProjectTreeTable/context/ProjectTableContextInstance'
 import { useOptionalSelectionCellsContext } from '@shared/containers/ProjectTreeTable/context/SelectionCellsContext'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
-import { type OperationResponseModel, type ProjectModel } from '@shared/api'
+import { type OperationResponseModel } from '@shared/api'
 import FolderSequence from './FolderSequence'
-import { EntityForm, NewEntityType, useNewEntityContext } from '../context/NewEntityContext'
+import { EntityForm, NewEntityType } from '../context/NewEntityContext'
+import { useNewEntityContext } from '../context/NewEntityContextInstance'
 import useCreateEntityShortcuts from '../hooks/useCreateEntityShortcuts'
 import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierarchySelection'
-import { NewEntityForm, InputLabel, InputsContainer } from './NewEntityForm'
+import { NewEntityForm } from './NewEntityForm'
+import { InputLabel, InputsContainer } from './NewEntityForm.styled'
 import { toast } from 'react-toastify'
-import { useProjectContext } from '@shared/context/ProjectContext'
-import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
+import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContextInstance'
 import { newEntityDefinitions } from '../util/entityDefinitions'
 
 const StyledDialog = styled(Dialog)`
@@ -604,21 +606,4 @@ export const NewEntity: React.FC<NewEntityProps> = ({
       )}
     </>
   )
-}
-
-// Helper function to generate label based on entity type and selected subtype
-export const generateLabel = (
-  type: NewEntityType | null,
-  subType: string,
-  projectInfo: ProjectModel | undefined,
-): string => {
-  if (!type || !subType) return ''
-
-  const typeOption = (type === 'folder' ? projectInfo?.folderTypes : projectInfo?.taskTypes)?.find(
-    (option) => option.name === subType,
-  )
-
-  if (!typeOption) return ''
-
-  return typeOption.name
 }

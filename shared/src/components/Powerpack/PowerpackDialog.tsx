@@ -6,7 +6,7 @@ import {
   powerpackFeatureOrder,
   powerpackFeatures,
   usePowerpack,
-} from '@shared/context/PowerpackContext'
+} from '@shared/context/PowerpackContextInstance'
 import type { PowerpackDialogType } from '@shared/context/PowerpackContext'
 import { CTAButton } from './CTAButton'
 

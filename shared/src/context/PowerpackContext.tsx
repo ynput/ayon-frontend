@@ -1,20 +1,10 @@
 import { useLoadModule } from '@shared/hooks/useLoadModule'
-import {
-  createContext,
-  useContext,
-  ReactNode,
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-} from 'react'
+import { ReactNode, useState, useEffect, useMemo, useCallback } from 'react'
 import { addonConfigs, type AddonConfig } from '../config'
 
 // Re-export from separate feature files for backwards compatibility
 export type { PowerpackFeature } from '../config'
-export { powerpackFeatureOrder, powerpackFeatures } from '../config'
 export type { AddonConfig, AddonFeatureKey } from '../config'
-export { addonConfigs } from '../config'
 
 import type { PowerpackFeature } from '../config'
 import { powerpackFeatures } from '../config'
@@ -148,12 +138,4 @@ export const PowerpackProvider = ({
   )
 
   return <PowerpackContext.Provider value={value}>{children}</PowerpackContext.Provider>
-}
-
-export const usePowerpack = () => {
-  const context = useContext(PowerpackContext)
-  if (context === undefined) {
-    throw new Error('usePowerpack must be used within a PowerpackProvider')
-  }
-  return context
 }

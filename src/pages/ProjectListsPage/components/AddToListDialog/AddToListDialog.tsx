@@ -1,16 +1,15 @@
 import { FC, useCallback, useState } from 'react'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import {
-  ListsDataProvider,
-  useListsDataContext,
-} from '@pages/ProjectListsPage/context/ListsDataContext'
+import { ListsDataProvider } from '@pages/ProjectListsPage/context/ListsDataContext'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContextInstance'
 import { ListsProvider } from '@pages/ProjectListsPage/context/ListsProvider'
 import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
 import { ProjectContextProvider, useOptionalProjectContext } from '@shared/context'
 import ListsTable from '../ListsTable/ListsTable'
 import type { ListEntityInput } from '../../hooks/useBuildListMenuItems'
-import { listEntityTypes, type ListEntityType } from '../NewListDialog/NewListDialog'
+import { type ListEntityType } from '../NewListDialog/NewListDialog'
+import { listEntityTypes } from '../NewListDialog/NewListDialogHelpers'
 import { ACCESS_LEVEL } from '../../util/listAccessControl'
 import type { EntityList } from '@shared/api'
 

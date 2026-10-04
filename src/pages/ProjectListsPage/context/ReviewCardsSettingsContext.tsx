@@ -2,15 +2,14 @@ import { ReviewsSettings } from '@shared/api'
 import { useViewsContext } from '@shared/containers'
 import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHelper'
 import {
-    createContext,
     FC,
     ReactNode,
     useCallback,
-    useContext,
     useEffect,
     useMemo,
     useState,
 } from 'react'
+import { ReviewCardsContext } from './ReviewCardsSettingsContextInstance'
 
 export type ReviewCardsSettingsContextValue = {
   gridHeight: number
@@ -19,16 +18,6 @@ export type ReviewCardsSettingsContextValue = {
   displayStyle: ReviewsSettings['displayStyle']
   onUpdateDisplayStyle: (displayStyle: ReviewsSettings['displayStyle']) => void
   onUpdateDisplayStyleWithPersistence: (displayStyle: ReviewsSettings['displayStyle']) => void
-}
-
-const ReviewCardsContext = createContext<ReviewCardsSettingsContextValue | null>(null)
-
-export const useReviewCardsSettingsContext = () => {
-  const context = useContext(ReviewCardsContext)
-  if (!context) {
-    throw new Error('useReviewCardsSettingsContext must be used within ReviewCardsSettingsProvider')
-  }
-  return context
 }
 
 interface ReviewCardsSettingsProviderProps {

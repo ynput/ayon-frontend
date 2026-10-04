@@ -9,7 +9,7 @@ import type { Tag, DetailsPanelEntityType, DetailsPanelEntityData } from '@share
 import { DetailsPanelDetails } from '@shared/components/DetailsPanelDetails/DetailsPanelDetails'
 import { EntityPath } from '@shared/components/EntityPath/EntityPath'
 import { Watchers } from '@shared/components/Watchers/Watchers'
-import { usePiPWindow } from '@shared/context/pip/PiPProvider'
+import { usePiPWindow } from '@shared/context/pip/PiPContextInstance'
 import { extractEntityHierarchyFromParents } from '@shared/util'
 import { ProjectContextProvider } from '@shared/context/ProjectContext'
 import { ThumbnailUploadProvider } from '@shared/context/ThumbnailUploaderContext'
@@ -17,17 +17,15 @@ import {
   useDetailsPanelContext,
   useScopedDetailsPanel,
   setDetailsPanelTabForScope,
-} from '@shared/context/DetailsPanelContext'
-import { useURIContext } from '@shared/context/UriContext'
+} from '@shared/context/DetailsPanelContextInstance'
+import { useURIContext } from '@shared/context/UriContextInstance'
 import type { ProjectModelWithProducts } from '@shared/context/ProjectContext'
 import type { FeedFilter } from '@shared/context/DetailsPanelContext'
 
 import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './components/DetailsPanelFiles'
-import NewerVersionBanner, {
-  getNewerLatestVersion,
-  type ResolveVersionJump,
-} from './components/NewerVersionBanner'
+import NewerVersionBanner, { type ResolveVersionJump } from './components/NewerVersionBanner'
+import { getNewerLatestVersion } from './components/NewerVersionBanner/NewerVersionBannerHelpers'
 import {
   DetailsPanelMoreMenu,
   type DetailsPanelEntityListsContext,
@@ -39,8 +37,7 @@ import FeedContextWrapper from './containers/FeedContextWrapper'
 import mergeProjectInfo from './helpers/mergeProjectInfo'
 import buildEntityTypeIcons from './helpers/buildEntityTypeIcons'
 import DetailsPanelSubtasks from './containers/DetailsPanelSubtasks'
-
-export const entitiesWithoutFeed = ['product', 'representation']
+import { entitiesWithoutFeed } from './DetailsPanelHelpers'
 
 type User = { avatarUrl: string; name: string; fullName?: string }
 

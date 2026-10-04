@@ -1,6 +1,6 @@
 import { uploadFile } from '../helpers'
 import { toast } from 'react-toastify'
-import { useFeedContext } from '../../../context/FeedContext'
+import { useFeedContext } from '../../../context/FeedContextInstance'
 import { SavedAnnotationMetadata } from '../../../index'
 
 type Props = {

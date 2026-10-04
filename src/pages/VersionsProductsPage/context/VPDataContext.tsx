@@ -6,16 +6,15 @@ import {
 import { useGetProductsInfiniteQuery } from '@shared/api/queries'
 import { flattenInfiniteVersionsData, flattenInfiniteProductsData } from '@shared/api'
 import {
-  createContext,
   FC,
   ReactNode,
-  useContext,
   useMemo,
   useState,
   useEffect,
   useRef,
   useCallback,
 } from 'react'
+import { VersionsDataContext } from './VPDataContextInstance'
 import {
   buildVPMaps,
   VersionNodeExtended,
@@ -48,7 +47,7 @@ import {
   splitFiltersByScope,
 } from '@shared/components/SearchFilter/useBuildFilterOptions'
 import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containers/Slicer'
-import { useVPViewsContext } from './VPViewsContext'
+import { useVPViewsContext } from './VPViewsContextInstance'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
 import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
@@ -57,7 +56,7 @@ import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/
 import {
   DEFAULT_FEATURED_ORDER,
   FEATURED_VERSION_TYPES,
-} from '../../../../shared/src/components/FeaturedVersionOrder/FeaturedVersionOrder'
+} from '../../../../shared/src/components/FeaturedVersionOrder/FeaturedVersionOrderHelpers'
 import useVersionsGroupBy from '../hooks/useVersionsGroupBy'
 import { useVPColumnStats } from '../hooks/useVPColumnStats'
 import { useAppDispatch } from '@state/store'
@@ -84,7 +83,7 @@ const EXCLUDED_SORT_FIELDS: Record<'version' | 'product', string[]> = {
 export type VersionMap = Map<string, VersionNodeExtended>
 export type ProductMap = Map<string, ProductNodeExtended>
 
-interface VersionsDataContextValue {
+export interface VersionsDataContextValue {
   //   EXPANDED
   expanded: ExpandedState
   setExpanded: (expanded: ExpandedState) => void
@@ -143,16 +142,6 @@ interface VersionsDataContextValue {
   onSyncData: OnSyncDataCallback
   // meta
   error: string | undefined
-}
-
-const VersionsDataContext = createContext<VersionsDataContextValue | null>(null)
-
-export const useVersionsDataContext = () => {
-  const context = useContext(VersionsDataContext)
-  if (!context) {
-    throw new Error('useVersionsDataContext must be used within VersionsDataProvider')
-  }
-  return context
 }
 
 export type QueryArguments = {

@@ -1,5 +1,5 @@
 import React, { useEffect, ReactNode } from 'react'
-import { useMenuContext } from '@shared/context/MenuContext'
+import { useMenuContext } from '@shared/context/MenuContextInstance'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import * as Styled from './Menu.styled'

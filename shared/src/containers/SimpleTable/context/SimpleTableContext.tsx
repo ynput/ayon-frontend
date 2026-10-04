@@ -1,7 +1,8 @@
 import { ExpandedState, RowPinningState, RowSelectionState, Table } from '@tanstack/react-table'
-import { createContext, useContext, ReactNode } from 'react'
+import { ReactNode } from 'react'
+import { SimpleTableContext } from './SimpleTableContextInstance'
 
-interface SimpleTableContextValue {
+export interface SimpleTableContextValue {
   // forwarded from props
   expanded?: ExpandedState
   setExpanded?: React.Dispatch<React.SetStateAction<ExpandedState>>
@@ -13,8 +14,6 @@ interface SimpleTableContextValue {
   onRowPinningChange?: (rowPinning: RowPinningState) => void
   data?: any
 }
-
-const SimpleTableContext = createContext<SimpleTableContextValue | undefined>(undefined)
 
 interface SimpleTableProviderProps {
   children: ReactNode
@@ -32,13 +31,3 @@ interface SimpleTableProviderProps {
 export const SimpleTableProvider = ({ children, ...props }: SimpleTableProviderProps) => {
   return <SimpleTableContext.Provider value={{ ...props }}>{children}</SimpleTableContext.Provider>
 }
-
-export const useSimpleTableContext = () => {
-  const context = useContext(SimpleTableContext)
-  if (context === undefined) {
-    throw new Error('useSimpleTableContext must be used within a SimpleTableProvider')
-  }
-  return context
-}
-
-export default SimpleTableContext

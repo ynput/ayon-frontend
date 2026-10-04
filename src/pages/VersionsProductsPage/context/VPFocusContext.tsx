@@ -1,20 +1,11 @@
-import { createContext, FC, ReactNode, useContext, useRef, useCallback } from 'react'
+import { FC, ReactNode, useRef, useCallback } from 'react'
+import { VPFocusContext } from './VPFocusContextInstance'
 
-interface VPFocusContextValue {
+export interface VPFocusContextValue {
   versionsTableRef: React.RefObject<HTMLDivElement>
   gridContainerRef: React.RefObject<HTMLDivElement>
   focusVersionsTable: () => void
   focusGrid: () => void
-}
-
-const VPFocusContext = createContext<VPFocusContextValue | null>(null)
-
-export const useVPFocusContext = () => {
-  const context = useContext(VPFocusContext)
-  if (!context) {
-    throw new Error('useVPFocusContext must be used within VPFocusProvider')
-  }
-  return context
 }
 
 interface VPFocusProviderProps {

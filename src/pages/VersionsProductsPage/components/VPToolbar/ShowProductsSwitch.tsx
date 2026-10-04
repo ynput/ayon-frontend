@@ -1,4 +1,4 @@
-import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
+import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContextInstance'
 import { SwitchButton, SwitchButtonProps } from '@ynput/ayon-react-components'
 import { forwardRef } from 'react'
 

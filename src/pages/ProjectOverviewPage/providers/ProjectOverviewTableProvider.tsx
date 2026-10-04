@@ -10,7 +10,7 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { usePowerpack, useSubtasksModulesContext } from '@shared/context'
 import { useSlicerContext } from '@shared/containers'
-import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
+import { useProjectOverviewContext } from '../context/ProjectOverviewContextInstance'
 import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
 import useTableQueriesHelper from '../hooks/useTableQueriesHelper'
 import ProjectOverviewPage from '../ProjectOverviewPage'

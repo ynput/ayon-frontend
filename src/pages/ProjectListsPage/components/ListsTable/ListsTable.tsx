@@ -1,6 +1,6 @@
 import { FC, useState, useMemo, useCallback, useId } from 'react'
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContextInstance'
 import SimpleTable, {
   Container,
   SimpleTableCellTemplate,

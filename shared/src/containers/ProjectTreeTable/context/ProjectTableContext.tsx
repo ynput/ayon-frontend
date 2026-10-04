@@ -19,7 +19,7 @@
  * The context also provides utility functions for entity relationships, expansion state
  * management, filtering,  and folder inheritance operations.
  */
-import { ReactNode, useCallback, useContext, useMemo } from 'react'
+import { ReactNode, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import useBuildProjectDataTable from '../hooks/useBuildProjectDataTable'
@@ -42,18 +42,16 @@ import type { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
 import type { EntityGroup } from '@shared/api'
 import type { GroupCountsMap } from '@shared/api'
-import useBuildGroupByTableData, {
-  GroupByEntityType,
-  ROW_ID_SEPARATOR,
-} from '../hooks/useBuildGroupByTableData'
+import useBuildGroupByTableData, { GroupByEntityType } from '../hooks/useBuildGroupByTableData'
 import type { PowerpackContextType } from '@shared/context/PowerpackContext'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context/ProjectContextInstance'
 import type { OnSyncDataCallback } from '@shared/context/EntityUpdatesContext'
 import { TableGroupBy, useColumnSettingsContext } from './ColumnSettingsContext'
 import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
 import type { SubtasksManagerProps } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
 import { RowId } from '../utils'
 import { ProjectTableContext } from './ProjectTableContextInstance'
+import { parseRowId } from './ProjectTableContextHelpers'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 
 export type ToggleExpandAll = (rowIds: RowId[], expand?: boolean) => void
@@ -140,8 +138,6 @@ export interface ProjectTableContextType {
   // redux
   dispatch?: ThunkDispatch<any, any, UnknownAction>
 }
-
-export const parseRowId = (rowId: string) => rowId?.split(ROW_ID_SEPARATOR)[0] || rowId
 
 export type TableUser = {
   name: string
@@ -527,13 +523,3 @@ export const ProjectTableProvider = ({
     </ProjectTableContext.Provider>
   )
 }
-
-export const useProjectTableContext = () => {
-  const context = useContext(ProjectTableContext)
-  if (!context) {
-    throw new Error('useProjectTableContext must be used within a ProjectTableProvider')
-  }
-  return context
-}
-
-export const useOptionalProjectTableContext = () => useContext(ProjectTableContext)

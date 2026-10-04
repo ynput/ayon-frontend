@@ -9,16 +9,16 @@ import {
   type GetSlicerCountsSource,
 } from '@shared/containers/Slicer'
 import { useProjectContext, useSettingsPanel } from '@shared/context'
-import { useVersionsDataContext } from './context/VPDataContext'
+import { useVersionsDataContext } from './context/VPDataContextInstance'
 import VPToolbar from './components/VPToolbar/VPToolbar'
 // TABLES
 import VPTable from './components/VPTable/VPTable'
 import VPGrid from './components/VPGrid/VPGrid'
 import VersionsListTable from './components/VersionsListTable/VersionsListTable'
 
-import { useVPViewsContext } from './context/VPViewsContext'
+import { useVPViewsContext } from './context/VPViewsContextInstance'
 import VPDetailsPanel from './components/VPDetailsPanel/VPDetailsPanel'
-import { useVersionsSelectionContext } from './context/VPSelectionContext'
+import { useVersionsSelectionContext } from './context/VPSelectionContextInstance'
 import { VPTableSettings } from './components/VPTableSettings/VPTableSettings'
 import { DetailsDialog } from '@shared/components'
 import { useVPContextMenu } from './hooks/useVPContextMenu'

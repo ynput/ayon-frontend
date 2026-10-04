@@ -3,7 +3,7 @@ import { FC } from 'react'
 import { Link } from 'react-router-dom'
 import { PowerpackButton, PowerpackButtonProps } from '../Powerpack'
 import type { PowerpackFeature } from '@shared/context/PowerpackContext'
-import { usePowerpack } from '@shared/context/PowerpackContext'
+import { usePowerpack } from '@shared/context/PowerpackContextInstance'
 import { RequiredAddonVersion } from '../Powerpack/RequiredAddonVersion'
 
 export interface TableSettingsFallbackProps {

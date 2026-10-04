@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useMemo, useCallback, useState } from 'react'
+import { ReactNode, useMemo, useCallback, useState } from 'react'
 import {
   checkColumnVisibility,
   ProjectDataContextProps,
@@ -14,7 +14,7 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import useDeleteListItems, { UseDeleteListItemsReturn } from '../hooks/useDeleteListItems'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
-import { useEntityListsContext } from './EntityListsContext'
+import { useEntityListsContext } from './EntityListsContextInstance'
 import useReorderListItem, { UseReorderListItemReturn } from '../hooks/useReorderListItem'
 import useBuildListItemsTableData from '../hooks/useBuildListItemsTableData'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
@@ -22,14 +22,10 @@ import { ListsViewSettings, useListsViewSettings, useViewsContext } from '@share
 import { SortingState, VisibilityState } from '@tanstack/react-table'
 import { useProjectContext, OnSyncDataCallback } from '@shared/context'
 import type { FieldStats } from '@shared/api'
-import { useReviewCardsSettingsContext } from './ReviewCardsSettingsContext'
-import {
-  DEFAULT_COLUMNS_FOLDER,
-  DEFAULT_COLUMNS_PRODUCT,
-  DEFAULT_COLUMNS_TASK,
-  DEFAULT_COLUMNS_VERSION,
-} from '@pages/ProjectsPage/constants'
+import { useReviewCardsSettingsContext } from './ReviewCardsSettingsContextInstance'
 import useReplaceListItem from '../hooks/useReplaceListItem'
+import { ListItemsDataContext } from './ListItemsDataContextInstance'
+import { DEFAULT_COLUMN_VISIBILITY, DEFAULT_COLUMNS_BY_TYPE } from './ListItemsDataContextHelpers'
 
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
 
@@ -83,8 +79,6 @@ export interface ListItemsDataContextValue {
   mainCountLabels: { primary: string }
 }
 
-const ListItemsDataContext = createContext<ListItemsDataContextValue | undefined>(undefined)
-
 interface ListItemsDataProviderProps {
   children: ReactNode
 }
@@ -95,18 +89,6 @@ const reviewSortKeys = new Map([
   ['path', 'name'],
   ['versionAuthor', 'author'],
 ])
-
-const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
-  'link_*': false,
-  tags: true,
-}
-
-export const DEFAULT_COLUMNS_BY_TYPE: Record<string, VisibilityState> = {
-  folder: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_FOLDER },
-  task: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_TASK },
-  version: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_VERSION },
-  product: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_PRODUCT },
-}
 
 // fetch all items and provide methods to update the items
 export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) => {
@@ -342,13 +324,3 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     </ListItemsDataContext.Provider>
   )
 }
-
-export const useListItemsDataContext = () => {
-  const context = useContext(ListItemsDataContext)
-  if (context === undefined) {
-    throw new Error('useListItemsDataContext must be used within a ListItemsDataProvider')
-  }
-  return context
-}
-
-export default ListItemsDataContext

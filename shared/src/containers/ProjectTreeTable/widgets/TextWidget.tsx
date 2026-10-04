@@ -13,49 +13,11 @@ import { parseHtmlToPlainTextWithLinks } from '@shared/util'
 import { TextContentWidget } from './TextContentWidget'
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { CellId } from '../utils/cellUtils'
-import { wrapMode } from './wrapMode'
 import { MENTION_REF_TYPES } from '@shared/components/MarkdownEditor'
 import ActivityReference from '@shared/containers/Feed/components/ActivityReference/ActivityReference'
+import { StyledBaseTextWidget } from './TextWidget.styled'
 
 // ── Styled components ──────────────────────────────────────────────
-
-export const StyledBaseTextWidget = styled.span`
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  user-select: none;
-
-  display: flex;
-  gap: 4px;
-
-  &.markdown {
-    white-space: normal;
-    word-break: break-word;
-    display: block;
-    overflow: hidden;
-    width: 100%;
-    max-height: 100%;
-  }
-
-  &.regular {
-    display: block;
-  }
-
-  ${wrapMode`
-    &:not(.markdown) {
-      white-space: normal;
-      word-break: break-word;
-      display: block;
-      overflow: hidden;
-      width: 100%;
-      max-height: 100%;
-
-      > .icon {
-        margin-right: 4px;
-      }
-    }
-  `}
-`
 
 const StyledLink = styled.a`
   color: var(--md-sys-color-primary, #0066cc);

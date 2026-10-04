@@ -1,13 +1,17 @@
-import React, { ReactNode, useCallback, useContext, useEffect, useState } from 'react'
+import React, { ReactNode, useCallback, useEffect, useState } from 'react'
 import type { QueryFilter, UserModel, DetailsPanelEntityType } from '@shared/api'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { SavedAnnotationMetadata } from '@shared/containers/Feed'
-import { PowerpackFeature, usePowerpack } from './PowerpackContext'
-import { useURIContext } from './UriContext'
+import { PowerpackFeature } from './PowerpackContext'
+import { usePowerpack } from './PowerpackContextInstance'
+import { useURIContext } from './UriContextInstance'
 import { useSessionStorage } from '@shared/hooks/useSessionStorage'
-import { readLocalStorage, writeLocalStorage } from '@shared/hooks/useLocalStorage'
 import type { SubtasksManagerProps } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
-import { DetailsPanelContext } from './DetailsPanelContextInstance'
+import {
+  DetailsPanelContext,
+  isDetailsPanelTab,
+  TABS_BY_SCOPE_KEY,
+} from './DetailsPanelContextInstance'
 import { BundleMode, getBundleModeFromUser } from '@shared/util'
 
 // High-level tabs for the details panel
@@ -44,11 +48,6 @@ export interface TabStateByScope {
   [scope: string]: DetailsPanelTab
 }
 
-const DETAILS_PANEL_TABS: DetailsPanelTab[] = ['feed', 'subtasks', 'details', 'files']
-
-const isDetailsPanelTab = (tab: unknown): tab is DetailsPanelTab =>
-  typeof tab === 'string' && DETAILS_PANEL_TABS.includes(tab as DetailsPanelTab)
-
 // Frame links: a comment linked to a frame or frame range of a version.
 // Frames are 1-based and relative to the version's media, like annotation ranges.
 export type CommentFrameRange = { startFrame: number; endFrame: number }
@@ -75,20 +74,6 @@ export interface CommentFrameLinkApi {
   goTo: (link: CommentFrameLink) => void
   // formats a frame for display, e.g. with the host's frame offset setting
   formatFrame?: (frame: number) => string
-}
-
-// the frame link stored on a comment's data, if it has one
-export const getActivityFrameLink = (activity: {
-  activityData?: { startFrame?: unknown; endFrame?: unknown } | null
-  origin?: { id: string } | null
-  entityId?: string | null
-}): CommentFrameLink | null => {
-  const { startFrame, endFrame } = activity.activityData || {}
-  const entityId = activity.origin?.id ?? activity.entityId
-  if (!Number.isSafeInteger(startFrame) || !entityId) return null
-  const start = startFrame as number
-  const end = Number.isSafeInteger(endFrame) ? Math.max(start, endFrame as number) : start
-  return { entityId, startFrame: start, endFrame: end }
 }
 
 // these props get forwarded to the details panel value
@@ -390,48 +375,4 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   }
 
   return <DetailsPanelContext.Provider value={value}>{children}</DetailsPanelContext.Provider>
-}
-
-// Custom hook to use the details context
-export const useDetailsPanelContext = (): DetailsPanelContextType => {
-  const context = useContext(DetailsPanelContext)
-  if (context === undefined) {
-    throw new Error('useDetailsPanel must be used within a DetailsPanelProvider')
-  }
-  return context
-}
-
-const TABS_BY_SCOPE_KEY = 'details/tabs-by-scope'
-
-export const setDetailsPanelTabForScope = (scope: string, tab: DetailsPanelTab) => {
-  const current = readLocalStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
-  writeLocalStorage(TABS_BY_SCOPE_KEY, { ...current, [scope]: tab })
-}
-
-// Add a specialized hook for using a panel in a specific scope
-export const useScopedDetailsPanel = (scope: string) => {
-  const { getOpenForScope, setPanelOpen, getTabForScope } = useDetailsPanelContext()
-
-  const [tabsByScope, setTabsByScope] = useSessionStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
-
-  // derived from localStorage state, which useSessionStorage keeps in sync across hook instances
-  const storedTab = tabsByScope[scope]
-  const currentTab = isDetailsPanelTab(storedTab) ? storedTab : getTabForScope(scope)
-
-  const updateTab = useCallback(
-    (newTab: DetailsPanelTab) => {
-      setTabsByScope((prev) => ({ ...prev, [scope]: newTab }))
-    },
-    [scope, setTabsByScope],
-  )
-
-  const isFeed = currentTab === 'feed'
-
-  return {
-    isOpen: getOpenForScope(scope),
-    setOpen: (isOpen: boolean) => setPanelOpen(scope, isOpen),
-    currentTab,
-    setTab: updateTab,
-    isFeed,
-  }
 }

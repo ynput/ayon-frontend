@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { useState, useCallback, ReactNode } from 'react'
+import { DetailsPanelEntityContext } from './DetailsPanelEntityContextInstance'
 
 export interface DetailsPanelEntity {
   entityId: string
@@ -10,10 +11,6 @@ export interface DetailsPanelEntityContextType {
   setSelectedEntity: (entity: DetailsPanelEntity | null) => void
   clearSelectedEntity: () => void
 }
-
-export const DetailsPanelEntityContext = createContext<DetailsPanelEntityContextType | undefined>(
-  undefined,
-)
 
 export interface DetailsPanelEntityProviderProps {
   children: ReactNode
@@ -41,12 +38,4 @@ export const DetailsPanelEntityProvider = ({ children }: DetailsPanelEntityProvi
       {children}
     </DetailsPanelEntityContext.Provider>
   )
-}
-
-export const useDetailsPanelEntityContext = () => {
-  const context = useContext(DetailsPanelEntityContext)
-  if (!context) {
-    throw new Error('useDetailsPanelEntityContext must be used within a DetailsPanelEntityProvider')
-  }
-  return context
 }

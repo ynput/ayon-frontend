@@ -1,13 +1,6 @@
-import { createContext, ReactNode, RefObject, useState } from 'react'
+import { ReactNode, RefObject, useState } from 'react'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu/useCreateContextMenu'
-
-export const ThumbnailUploadContext = createContext<{
-  resetFileUploadState?: Function
-  triggerThumbnailUpload?: () => void
-  triggerVersionUpload?: () => void
-  canUploadVersion?: boolean
-  onContextMenu?: (event: MouseEvent) => void
-}>({})
+import { ThumbnailUploadContext } from './ThumbnailUploaderContextInstance'
 
 export type ThumbnailUploadProviderProps = {
   thumbnailInputRef: RefObject<HTMLInputElement>
@@ -79,12 +72,4 @@ export const ThumbnailUploadProvider = ({
       {children}
     </ThumbnailUploadContext.Provider>
   )
-}
-
-export const useThumbnailUploadContext = () => {
-  const context = ThumbnailUploadContext
-  if (!context) {
-    throw new Error('useThumbnailUploadContext must be used within a ThumbnailUploadProvider')
-  }
-  return context
 }

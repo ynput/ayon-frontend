@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { useFeedContext } from "../context/FeedContext"
+import { useFeedContext } from "../context/FeedContextInstance"
 
 const FALLBACK_COLOR = '#c5c5c5'
 

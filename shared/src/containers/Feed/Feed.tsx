@@ -13,11 +13,15 @@ import { getLoadingPlaceholders } from './feedHelpers'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
-import { isFilePreviewable } from './components/FileUploadPreview/FileUploadPreview'
+import { isFilePreviewable } from './components/FileUploadPreview/FileUploadPreviewHelpers'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
-import { useFeedContext, FEED_NEW_COMMENT } from './context/FeedContext'
+import { FEED_NEW_COMMENT } from './context/FeedContext'
+import { useFeedContext } from './context/FeedContextInstance'
 import { Status } from '../ProjectTreeTable/types/project'
-import { useDetailsPanelContext, getActivityFrameLink } from '@shared/context/DetailsPanelContext'
+import {
+  useDetailsPanelContext,
+  getActivityFrameLink,
+} from '@shared/context/DetailsPanelContextInstance'
 import type { FeedFrameLink } from '@shared/context/DetailsPanelContext'
 import { useGetMyProjectPermissionsQuery } from '@shared/api'
 import type { DetailsPanelEntityType } from '@shared/api'

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import useGetFeedActivitiesData from '../hooks/useGetFeedActivitiesData'
 import { buildBackendFilter } from '../helpers/buildBackendFilter'
 
@@ -18,8 +18,9 @@ import {
 import type { ActivityCategory, ChecklistCount, SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
 import type { FeedFilter } from '@shared/context/DetailsPanelContext'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContextInstance'
 import { getFilterActivityTypes } from '@shared/api'
+import { FeedContext } from './FeedContextInstance'
 
 export const FEED_NEW_COMMENT = '__new__' as const
 
@@ -57,7 +58,7 @@ export type FeedContextProps = {
   setFeedFilter?: (filter: FeedFilter) => void
 }
 
-interface FeedContextType extends Omit<FeedContextProps, 'children'> {
+export interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   // local UI state
   editingId: EditingState
   setEditingId: (id: EditingState) => void
@@ -95,8 +96,6 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   searchText: string
   setSearchText: (text: string) => void
 }
-
-const FeedContext = createContext<FeedContextType | undefined>(undefined)
 
 export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
   const { isGuest } = useDetailsPanelContext()
@@ -219,12 +218,4 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
       {children}
     </FeedContext.Provider>
   )
-}
-
-export const useFeedContext = () => {
-  const context = useContext(FeedContext)
-  if (!context) {
-    throw new Error('useFeedContext must be used within a FeedProvider')
-  }
-  return context
 }

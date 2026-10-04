@@ -1,4 +1,4 @@
-import { usePowerpack } from '@shared/context/PowerpackContext'
+import { usePowerpack } from '@shared/context/PowerpackContextInstance'
 import { UseExtraSlices } from '../context/SlicerContext'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import SlicerDropdownFallback from '../components/SlicerDropdownFallback'

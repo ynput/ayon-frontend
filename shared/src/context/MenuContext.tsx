@@ -1,14 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
-import { NavigateFunction, useNavigate } from 'react-router'
-
-interface MenuContextType {
-  menuOpen: string | false
-  setMenuOpen: (menuId: string | false) => void
-  toggleMenuOpen: (menuId: string | false) => void
-  navigate: NavigateFunction
-}
-
-export const MenuContext = createContext<MenuContextType | undefined>(undefined)
+import React, { useState, ReactNode } from 'react'
+import { useNavigate } from 'react-router'
+import { MenuContext, type MenuContextType } from './MenuContextInstance'
 
 interface MenuProviderProps {
   children: ReactNode
@@ -47,12 +39,4 @@ export const MenuProvider: React.FC<MenuProviderProps> = ({ children, useNavigat
   }
 
   return <MenuContext.Provider value={value}>{children}</MenuContext.Provider>
-}
-
-export const useMenuContext = (): MenuContextType => {
-  const context = useContext(MenuContext)
-  if (context === undefined) {
-    throw new Error('useMenuContext must be used within a MenuProvider')
-  }
-  return context
 }

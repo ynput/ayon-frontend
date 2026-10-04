@@ -1,16 +1,13 @@
-import { createContext, ReactNode, useContext } from 'react'
+import { ReactNode } from 'react'
 import { OperationModel, OperationsRequestModel } from '../types/operations'
 import { PatchOperation } from '../types'
 import { OperationWithRowId } from '../hooks/useUpdateTableData'
+import { ProjectTableQueriesContext } from './ProjectTableQueriesContextInstance'
 
 export interface ProjectTableQueriesContextProps {
   updateEntities: ProjectTableQueriesProviderProps['updateEntities']
   getFoldersTasks: ProjectTableQueriesProviderProps['getFoldersTasks']
 }
-
-const ProjectTableQueriesContext = createContext<ProjectTableQueriesContextProps | undefined>(
-  undefined,
-)
 
 export interface ProjectTableQueriesProviderProps {
   children: ReactNode
@@ -47,14 +44,4 @@ export const ProjectTableQueriesProvider = ({
       {children}
     </ProjectTableQueriesContext.Provider>
   )
-}
-
-export const useProjectTableQueriesContext = () => {
-  const context = useContext(ProjectTableQueriesContext)
-  if (!context) {
-    throw new Error(
-      'useProjectTableQueriesContext must be used within a ProjectTableQueriesProvider',
-    )
-  }
-  return context
 }

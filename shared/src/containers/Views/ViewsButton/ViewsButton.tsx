@@ -1,6 +1,7 @@
 import { FC, KeyboardEvent, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { SelectedViewState, useViewsContext } from '../context/ViewsContext'
+import { SelectedViewState } from '../context/ViewsContext'
+import { useViewsContext } from '../context/ViewsContextInstance'
 import { getViewsPortalContainer } from '../utils/portalUtils'
 import * as Styled from '../Views.styled'
 import clsx from 'clsx'

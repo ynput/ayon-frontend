@@ -1,4 +1,4 @@
-import { useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
+import { FC, ReactNode, useState, useMemo, useCallback } from 'react'
 import { type ViewType, WORKING_VIEW_ID, BASE_VIEW_ID } from '../types'
 import {
   GetDefaultViewApiResponse,
@@ -14,14 +14,16 @@ import {
 } from '@shared/api'
 import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
-import { useGlobalContext } from '@shared/context/GlobalContext'
-import { usePowerpack } from '@shared/context/PowerpackContext'
+import { useGlobalContext } from '@shared/context/GlobalContextInstance'
+import { usePowerpack } from '@shared/context/PowerpackContextInstance'
 import { useSelectedView } from '../hooks/useSelectedView'
 import { type UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
 import { useBaseViewMutations } from '../hooks/useBaseViewMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
 import { useViewSettingsChanged } from '../hooks/useViewSettingsChanged'
 import { useLocalStorage } from '@shared/hooks/useLocalStorage'
+import { isViewStudioScope } from '../utils/isViewStudioScope'
+import { ViewsContext } from './ViewsContextInstance'
 
 export type ViewData = GetDefaultViewApiResponse
 export type ViewSettings = GetDefaultViewApiResponse['settings']
@@ -363,15 +365,3 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   return <ViewsContext.Provider value={value}>{children}</ViewsContext.Provider>
 }
-
-export const useViewsContext = (): ViewsContextValue => {
-  const context = useContext(ViewsContext)
-  if (!context) {
-    throw new Error('useViewsContext must be used within a ViewsProvider')
-  }
-  return context
-}
-
-import { isViewStudioScope } from '../utils/isViewStudioScope'
-import { ViewsContext } from './ViewsContextInstance'
-export { isViewStudioScope }

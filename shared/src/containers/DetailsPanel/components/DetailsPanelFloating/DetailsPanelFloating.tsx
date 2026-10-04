@@ -13,7 +13,7 @@ import getAllProjectStatuses from '../../helpers/getAllProjectsStatuses'
 import FeedWrapper from '../../containers/FeedWrapper'
 import mergeProjectInfo from '../../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../../helpers/buildDetailsPanelTitles'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContextInstance'
 
 export interface DetailsPanelFloatingProps {}
 

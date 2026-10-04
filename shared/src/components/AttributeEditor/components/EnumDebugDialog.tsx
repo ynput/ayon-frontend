@@ -9,7 +9,7 @@ import { SimpleForm } from '@shared/components/SimpleForm'
 import type { SimpleFormValueDict } from '@shared/components/SimpleForm'
 import { useGetAllAssigneesQuery, useGetEnumOptionsQuery } from '@shared/api'
 import type { EnumItem, EnumResolverInfo, EnumResolverParams } from '@shared/api'
-import { useGlobalContext } from '@shared/context/GlobalContext'
+import { useGlobalContext } from '@shared/context/GlobalContextInstance'
 import {
   getEnumErrorText,
   getEnumItemIcon,
@@ -17,7 +17,8 @@ import {
   isEnumContextParam,
 } from '@shared/util/attributeEnum'
 import type { EnumContextParam } from '@shared/util/attributeEnum'
-import { EnumItemIcon, EnumItemRow } from './EnumItemRow'
+import { EnumItemIcon } from './EnumItemRow'
+import { EnumItemRow } from './EnumItemRow.styled'
 
 const SKELETON_ROWS = 8
 const DROPDOWN_SEARCH_THRESHOLD = 10

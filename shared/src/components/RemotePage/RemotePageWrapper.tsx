@@ -1,7 +1,7 @@
 // this is used to render a remote page and provide it with all the props it needs
 // NOTE: it must be wrapped with ViewsProvider someone (probably already by WithViews hoc)
 import type { GenericViewModel } from '@shared/api'
-import { useViewsContext } from '@shared/containers/Views/context/ViewsContext'
+import { useViewsContext } from '@shared/containers/Views/context/ViewsContextInstance'
 import {
   updateViewSettings,
   useViewUpdateHelper,

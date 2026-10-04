@@ -1,6 +1,4 @@
 import React, {
-  createContext,
-  useContext,
   ReactNode,
   useMemo,
   useCallback,
@@ -9,16 +7,15 @@ import React, {
 import { useSessionStorage } from '@shared/hooks'
 import type { Addon } from './types'
 import { matchSorter } from 'match-sorter'
+import { AddonSearchContext } from './AddonSearchContextInstance'
 
-type AddonSearchContextType = {
+export type AddonSearchContextType = {
   search: string
   onSearchChange: (e: ChangeEvent<HTMLInputElement>) => void
   filteredAddons: Addon[]
   addons: Addon[]
   resetSearch: () => void
 }
-
-const AddonSearchContext = createContext<AddonSearchContextType | undefined>(undefined)
 
 interface AddonSearchProviderProps {
   addons: Addon[]
@@ -60,12 +57,4 @@ export const AddonSearchProvider: React.FC<AddonSearchProviderProps> = ({ addons
   )
 
   return <AddonSearchContext.Provider value={value}>{children}</AddonSearchContext.Provider>
-}
-
-export const useAddonSearchContext = () => {
-  const context = useContext(AddonSearchContext)
-  if (context === undefined) {
-    throw new Error('useAddonSearchContext must be used within an AddonSearchProvider')
-  }
-  return context
 }

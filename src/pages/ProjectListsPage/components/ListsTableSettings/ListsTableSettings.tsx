@@ -1,10 +1,12 @@
-import { useListsAttributesContext } from '@pages/ProjectListsPage/context/ListsAttributesContext'
+import {
+  useListsAttributesContext,
+} from '@pages/ProjectListsPage/context/ListsAttributesContextInstance'
 import { FC } from 'react'
 import { toast } from 'react-toastify'
 import { ProjectTableSettings } from '@shared/components'
 import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
 import { confirmDelete } from '@shared/util'
-import { useListsModuleContext } from '@pages/ProjectListsPage/context/ListsModulesContext'
+import { useListsModuleContext } from '@pages/ProjectListsPage/context/ListsModulesContextInstance'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import type { ParentColumnDefinition } from '@shared/containers'

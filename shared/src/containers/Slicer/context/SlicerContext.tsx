@@ -1,5 +1,4 @@
 import {
-  useContext,
   ReactNode,
   ForwardRefExoticComponent,
   RefAttributes,
@@ -22,40 +21,7 @@ import { SlicerContext } from './SlicerContextInstance'
 import { useSlicerRemotes } from '../hooks/useSlicerRemotes'
 import { useSlicerRowSelection } from '../hooks/useSlicerRowSelection'
 import type { OnAddToList, OnOpenViewer } from '../hooks/useHierarchyContextMenuItems'
-import { usePowerpack } from '@shared/context/PowerpackContext'
-
-export const SLICER_PAGES_CONFIG: SlicerConfig = {
-  progress: {
-    fields: [
-      { value: 'hierarchy' },
-      { value: 'assignees' },
-      { value: 'status' },
-      { value: 'taskType' },
-    ],
-  },
-  overview: {
-    fields: [
-      { value: 'hierarchy' },
-      { value: 'assignees' },
-      { value: 'status' },
-      { value: 'type' },
-      { value: 'taskType' },
-      { value: 'attributes' },
-      { value: 'entityList' },
-    ],
-  },
-  versions: {
-    fields: [
-      { value: 'hierarchy' },
-      { value: 'assignees', label: 'Task assignee' },
-      { value: 'status', label: 'Version status' },
-      { value: 'author', label: 'Version author' },
-      { value: 'productType' },
-      { value: 'taskType' },
-      { value: 'entityList' },
-    ],
-  },
-}
+import { usePowerpack } from '@shared/context/PowerpackContextInstance'
 
 export type OnSliceTypeChange = (sliceType: SliceType, pinCurrent?: boolean) => void
 
@@ -478,15 +444,3 @@ export const SlicerProvider = ({
 
   return <SlicerContext.Provider value={value}>{children}</SlicerContext.Provider>
 }
-
-export const useSlicerContext = () => {
-  const context = useContext(SlicerContext)
-  if (context === undefined) {
-    throw new Error('useSlicerContext must be used within a SlicerProvider')
-  }
-  return context
-}
-
-export const useOptionalSlicerContext = () => useContext(SlicerContext)
-
-export default SlicerContext

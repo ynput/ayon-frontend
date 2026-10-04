@@ -1,7 +1,7 @@
-import { ReactNode, useContext, useMemo } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { useGetUsersAssigneeQuery, useGetMyProjectPermissionsQuery } from '@shared/api'
 import useAttributeFields, { ProjectTableAttribute } from '../hooks/useAttributesList'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context/ProjectContextInstance'
 import { ProjectDataContext } from './ProjectDataContextInstance'
 
 type User = {
@@ -97,12 +97,4 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
   )
 
   return <ProjectDataContext.Provider value={value}>{children}</ProjectDataContext.Provider>
-}
-
-export const useProjectDataContext = () => {
-  const context = useContext(ProjectDataContext)
-  if (!context) {
-    throw new Error('useProjectDataContext must be used within a ProjectDataProvider')
-  }
-  return context
 }

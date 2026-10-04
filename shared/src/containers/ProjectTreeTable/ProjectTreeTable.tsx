@@ -48,7 +48,7 @@ import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettingsContext } from './context/ColumnSettingsContext'
 import { TableColumnDropIndicator } from './components/ColumnDropIndicator'
-import { useMenuContext } from '../../context/MenuContext'
+import { useMenuContext } from '../../context/MenuContextInstance'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
 
 // Hook imports
@@ -61,7 +61,7 @@ import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import useDynamicRowHeight from './hooks/useDynamicRowHeight'
 
-import { useProjectDataContext } from './context/ProjectDataContext'
+import { useProjectDataContext } from './context/ProjectDataContextInstance'
 
 // Utility function imports
 import { isGroupId } from './hooks/useBuildGroupByTableData'
@@ -78,7 +78,9 @@ import {
   SummaryCellContentProps,
 } from './types'
 import type { EnumItem } from '@shared/api'
-import { ToggleExpandAll, useProjectTableContext, parseRowId } from './context/ProjectTableContext'
+import { ToggleExpandAll } from './context/ProjectTableContext'
+import { useProjectTableContext } from './context/ProjectTableContextInstance'
+import { parseRowId } from './context/ProjectTableContextHelpers'
 import {
   checkColumnVisibility,
   ensureAtLeastOneVisibleColumn,
@@ -108,9 +110,9 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { useProjectContext } from '@shared/context/ProjectContext'
-import { usePowerpack } from '@shared/context/PowerpackContext'
-import { setDetailsPanelTabForScope } from '@shared/context/DetailsPanelContext'
+import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { usePowerpack } from '@shared/context/PowerpackContextInstance'
+import { setDetailsPanelTabForScope } from '@shared/context/DetailsPanelContextInstance'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'

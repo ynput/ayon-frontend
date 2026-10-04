@@ -13,12 +13,14 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
-import { useVersionsSelectionContext } from '@pages/VersionsProductsPage/context/VPSelectionContext'
+import {
+  useVersionsSelectionContext,
+} from '@pages/VersionsProductsPage/context/VPSelectionContextInstance'
 import { useCallback } from 'react'
 import { useProjectContext } from '@shared/context'
 import useGoToEntity from '@hooks/useGoToEntity'
-import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
-import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContext'
+import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContextInstance'
+import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContextInstance'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 

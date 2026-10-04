@@ -1,6 +1,6 @@
 import { useLoadModule } from './useLoadModule'
 import { GroupSettingsFallback } from '../containers/ProjectTreeTable/components/GroupSettingsFallback'
-import { usePowerpack } from '@shared/context/PowerpackContext'
+import { usePowerpack } from '@shared/context/PowerpackContextInstance'
 
 export type ProjectTableModulesType = {
   GroupSettings: typeof GroupSettingsFallback

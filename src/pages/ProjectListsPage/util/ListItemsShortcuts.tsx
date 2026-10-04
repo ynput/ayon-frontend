@@ -1,6 +1,6 @@
 import { useCellEditing, useSelectionCellsContext } from '@shared/containers/ProjectTreeTable'
 import { FC, useEffect } from 'react'
-import { useListItemsDataContext } from '../context/ListItemsDataContext'
+import { useListItemsDataContext } from '../context/ListItemsDataContextInstance'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { DeleteListItem } from '../hooks/useDeleteListItems'
 import { isEntityRestricted } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'

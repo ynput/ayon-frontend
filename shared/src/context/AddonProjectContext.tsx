@@ -2,10 +2,11 @@
 
 import { useGetProjectQuery } from '@shared/api/queries/project/getProject'
 import type { ProjectModel, UserModel } from '@shared/api/generated'
-import { createContext, FC, useContext } from 'react'
+import { FC } from 'react'
 import type { toast } from 'react-toastify'
-import { useGlobalContext } from './GlobalContext'
+import { useGlobalContext } from './GlobalContextInstance'
 import type { RemotePageProps } from '@shared/components/RemotePage/RemotePageWrapper'
+import { AddonProjectContext } from './AddonProjectContextInstance'
 
 type ToastFunc = typeof toast
 
@@ -32,8 +33,6 @@ export interface AddonProjectContextType extends RemoteAddonProjectProps {
   user: UserModel | undefined
   toast: ToastFunc
 }
-
-const AddonProjectContext = createContext<AddonProjectContextType | undefined>(undefined)
 
 export const AddonProjectProvider = ({
   children,
@@ -63,12 +62,4 @@ export const AddonProjectProvider = ({
       {children}
     </AddonProjectContext.Provider>
   )
-}
-
-export const useAddonProjectContext = () => {
-  const context = useContext(AddonProjectContext)
-  if (!context) {
-    throw new Error('useAddonProjectContext must be used within a AddonProjectContext')
-  }
-  return context
 }

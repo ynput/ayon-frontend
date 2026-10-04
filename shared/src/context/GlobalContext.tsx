@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useMemo } from 'react'
+import { ReactNode, useMemo } from 'react'
 import {
   useGetSiteInfoQuery,
   GetSiteInfoResult,
@@ -10,13 +10,14 @@ import {
   ListProjectsItemModel,
   useListProjectsQuery,
 } from '@shared/api'
+import { GlobalContext } from './GlobalContextInstance'
 
 type GlobalProjects = {
   all: ListProjectsItemModel[]
   active: ListProjectsItemModel[]
 }
 
-type GlobalContextType = {
+export type GlobalContextType = {
   siteInfo: GetSiteInfoResult | undefined
   attributes: AttributeModel[]
   user: GetCurrentUserApiResponse | undefined
@@ -35,8 +36,6 @@ type GlobalContextType = {
     projects: any
   }
 }
-
-const GlobalContext = createContext<GlobalContextType | undefined>(undefined)
 
 type Props = {
   children: ReactNode
@@ -92,14 +91,4 @@ export const GlobalProvider = ({ children, skip = false }: Props) => {
       {children}
     </GlobalContext.Provider>
   )
-}
-
-export const useGlobalContext = () => {
-  const context = useContext(GlobalContext)
-
-  // if (context === undefined) {
-  //   throw new Error('useGlobalContext must be used within a GlobalProvider')
-  // }
-
-  return context || ({} as GlobalContextType)
 }

@@ -1,4 +1,5 @@
 export * from './ContextMenuContext'
+export * from './ContextMenuContextInstance'
 export * from './ContextMenuItem'
 export * from './GlobalContextMenu'
 export * from './useCreateContextMenu'

@@ -1,5 +1,6 @@
-import { createContext, FC, useContext } from 'react'
+import { FC } from 'react'
 import type { RouterTypes } from '@shared/components/RemotePage/RemotePageWrapper'
+import { AddonContext } from './AddonContextInstance'
 
 export type RemoteAddonComponent = FC<RemoteAddonProps>
 export type RemoteAddon = {
@@ -25,16 +26,6 @@ export interface AddonContextProps extends RemoteAddonProps {
 // types returned by context
 export interface AddonContextType extends RemoteAddonProps {}
 
-const AddonContext = createContext<AddonContextType | undefined>(undefined)
-
 export const AddonProvider = ({ children, ...props }: AddonContextProps) => {
   return <AddonContext.Provider value={{ ...props }}>{children}</AddonContext.Provider>
-}
-
-export const useAddonContext = () => {
-  const context = useContext(AddonContext)
-  if (!context) {
-    throw new Error('useAddonContext must be used within a AddonContext')
-  }
-  return context
 }

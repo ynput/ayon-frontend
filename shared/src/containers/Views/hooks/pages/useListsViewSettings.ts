@@ -8,7 +8,7 @@
  * Must be used within a ViewsProvider context.
  */
 
-import { useViewsContext } from '../../context/ViewsContext'
+import { useViewsContext } from '../../context/ViewsContextInstance'
 import type { OverviewSettings } from '@shared/api'
 import type { ColumnsConfig } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
 import {

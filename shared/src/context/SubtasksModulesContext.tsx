@@ -1,7 +1,7 @@
-import { FC, ReactNode, useContext, useEffect } from 'react'
+import { FC, ReactNode, useEffect } from 'react'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import type { SubtasksManagerProps } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
-import { usePowerpack } from './PowerpackContext'
+import { usePowerpack } from './PowerpackContextInstance'
 import { SubtasksModulesContext } from './SubtasksModulesContextInstance'
 
 const SubtasksManagerFallback: FC<SubtasksManagerProps> = (props) => {
@@ -37,12 +37,4 @@ export const SubtasksModulesProvider: FC<{ children: ReactNode }> = ({ children 
       {children}
     </SubtasksModulesContext.Provider>
   )
-}
-
-export const useSubtasksModulesContext = (): SubtasksModulesContextType => {
-  const context = useContext(SubtasksModulesContext)
-  if (!context) {
-    throw new Error('useSubtasksModulesContext must be used within a SubtasksModulesProvider')
-  }
-  return context
 }

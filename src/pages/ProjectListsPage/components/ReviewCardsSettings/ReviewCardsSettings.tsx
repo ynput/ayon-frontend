@@ -1,4 +1,6 @@
-import { useReviewCardsSettingsContext } from '@pages/ProjectListsPage/context/ReviewCardsSettingsContext'
+import {
+  useReviewCardsSettingsContext,
+} from '@pages/ProjectListsPage/context/ReviewCardsSettingsContextInstance'
 import { SizeSlider } from '@shared/components'
 import { SettingsPanel } from '@shared/components/SettingsPanel'
 

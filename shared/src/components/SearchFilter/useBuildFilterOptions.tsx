@@ -31,7 +31,7 @@ import type { SliceFilter } from '@shared/containers/Slicer/types'
 import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
 import { useContext } from 'react'
 import { useFetchAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
-import { useGlobalContext } from '@shared/context/GlobalContext'
+import { useGlobalContext } from '@shared/context/GlobalContextInstance'
 import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContextInstance'
 
 type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version'

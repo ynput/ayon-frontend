@@ -1,8 +1,8 @@
-import React, { createContext, useState, ReactNode, useContext } from 'react'
+import React, { useState, ReactNode } from 'react'
 import { getEntityId, getRequestErrorString } from '@shared/util'
 import { toast } from 'react-toastify'
 import { getSequence } from '../util/getSequence'
-import { generateLabel } from '../components/NewEntity'
+import { generateLabel } from '../components/NewEntityHelpers'
 import { useUpdateOverviewEntitiesMutation } from '@shared/api'
 import type {
   PatchOperation,
@@ -14,12 +14,12 @@ import type {
   EditorTaskNode,
   MatchingFolder,
 } from '@shared/containers/ProjectTreeTable/types/table'
-import { useProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContext'
+import { useProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContextInstance'
 import { parseAndFormatName } from '@shared/util'
-import { useSlicerContext } from '@shared/containers/Slicer/context/SlicerContext'
+import { useSlicerContext } from '@shared/containers/Slicer/context/SlicerContextInstance'
 import { isEmpty } from 'lodash'
-import { useProjectContext } from '@shared/context/ProjectContext'
-import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
+import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContextInstance'
 import { NewEntityContext } from './NewEntityContextInstance'
 import { NewEntityType } from '../util/entityDefinitions'
 
@@ -480,12 +480,4 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
       {children}
     </NewEntityContext.Provider>
   )
-}
-
-export const useNewEntityContext = () => {
-  const context = useContext(NewEntityContext)
-  if (!context) {
-    throw new Error('useNewEntityContext must be used within a NewEntityProvider')
-  }
-  return context
 }

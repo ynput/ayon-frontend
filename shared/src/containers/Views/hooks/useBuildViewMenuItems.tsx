@@ -12,10 +12,9 @@ import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
-import { usePowerpack } from '@shared/context/PowerpackContext'
+import { usePowerpack } from '@shared/context/PowerpackContextInstance'
 import type { CollapsedViewState } from '../context/ViewsContext'
-import { WORKING_VIEW_ID, NEW_VIEW_ID, BASE_VIEW_ID } from '../types'
-export { WORKING_VIEW_ID, NEW_VIEW_ID, BASE_VIEW_ID }
+import { WORKING_VIEW_ID } from '../types'
 export type ViewListItemModelExtended = ViewListItemModel & {
   isOwner: boolean
   highlighted?: 'save' | 'edit'

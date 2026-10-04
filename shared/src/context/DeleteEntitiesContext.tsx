@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, ReactNode } from 'react'
+import { useCallback, useMemo, useState, ReactNode } from 'react'
 import { toast } from 'react-toastify'
 import { getRequestErrorString } from '@shared/util'
 import { getQueryErrorCodes } from '@shared/api/base/queryError'
@@ -16,7 +16,8 @@ import {
   buildChildrenDetails,
   buildEntityLabel,
   buildExpectedCounts,
-} from '@shared/components/DeleteEntitiesConfirm/DeleteConfirmContent'
+} from '@shared/components/DeleteEntitiesConfirm/DeleteConfirmContentHelpers'
+import { DeleteEntitiesContext } from './DeleteEntitiesContextInstance'
 
 export type DeletableEntityType =
   | 'folder'
@@ -25,18 +26,6 @@ export type DeletableEntityType =
   | 'version'
   | 'representation'
   | 'workfile'
-
-const DELETABLE_ENTITY_TYPES = new Set<string>([
-  'folder',
-  'task',
-  'product',
-  'version',
-  'representation',
-  'workfile',
-])
-
-export const isDeletableEntityType = (type?: string): type is DeletableEntityType =>
-  !!type && DELETABLE_ENTITY_TYPES.has(type)
 
 export interface DeletableEntity {
   id: string
@@ -56,12 +45,10 @@ export interface DeleteEntitiesOptions {
   onSuccess?: () => void
 }
 
-interface DeleteEntitiesContextValue {
+export interface DeleteEntitiesContextValue {
   // resolves when the confirmation dialog opens, not when deletion finishes — use onSuccess
   deleteEntities: (entities: DeletableEntity[], options?: DeleteEntitiesOptions) => Promise<void>
 }
-
-const DeleteEntitiesContext = createContext<DeleteEntitiesContextValue | null>(null)
 
 // operations run sequentially on the server — delete children before their parents
 const DELETE_OP_ORDER: DeletableEntityType[] = [
@@ -324,15 +311,3 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
     </DeleteEntitiesContext.Provider>
   )
 }
-
-export const useDeleteEntitiesContext = (): DeleteEntitiesContextValue => {
-  const ctx = useContext(DeleteEntitiesContext)
-  if (!ctx) {
-    throw new Error('useDeleteEntitiesContext must be used within a DeleteEntitiesProvider')
-  }
-  return ctx
-}
-
-// non-throwing variant for optional consumers (e.g. menus that may render outside the provider)
-export const useDeleteEntitiesContextOptional = (): DeleteEntitiesContextValue | null =>
-  useContext(DeleteEntitiesContext)

@@ -1,5 +1,5 @@
 import { newEntityDefinitions } from '@shared/containers/NewEntity/util/entityDefinitions'
-import { useNewEntityContext } from '@shared/containers/NewEntity/context/NewEntityContext'
+import { useNewEntityContext } from '@shared/containers/NewEntity/context/NewEntityContextInstance'
 import type {
   SimpleTableRow,
   SimpleTableRowContextMenuBuilder,
@@ -8,12 +8,14 @@ import type { ContextMenuItemType } from '@shared/containers/ContextMenu/useCrea
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import { useCallback, useMemo, useState } from 'react'
 import { useUpdateOverviewEntitiesMutation } from '@shared/api'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
-import { useProjectContext } from '@shared/context/ProjectContext'
-import { useDeleteEntitiesContext } from '@shared/context/DeleteEntitiesContext'
+import { useDetailsPanelContext } from '@shared/context/DetailsPanelContextInstance'
+import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { useDeleteEntitiesContext } from '@shared/context/DeleteEntitiesContextInstance'
 import type { DeletableEntity } from '@shared/context/DeleteEntitiesContext'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
-import { useOptionalVersionUploadContext } from '@shared/components/VersionUploader/context/VersionUploadContext'
+import {
+  useOptionalVersionUploadContext,
+} from '@shared/components/VersionUploader/context/VersionUploadContextInstance'
 import { SliceMap } from '../types'
 
 const toggleChildren = (row: any, expanded: boolean) => {

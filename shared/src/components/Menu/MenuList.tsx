@@ -4,7 +4,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './Menu.styled'
 import { MENU_TOP_BOUND } from './Menu.styled'
 import type { PowerpackFeature } from '@shared/context/PowerpackContext'
-import { usePowerpack } from '@shared/context/PowerpackContext'
+import { usePowerpack } from '@shared/context/PowerpackContextInstance'
 import type { MenuItemType } from './Menu'
 
 interface MenuListProps {

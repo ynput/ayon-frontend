@@ -1,6 +1,6 @@
 import { Header } from '@tanstack/react-table'
 import type { TableRow } from '../types/table'
-import { useMenuContext } from '@shared/context/MenuContext'
+import { useMenuContext } from '@shared/context/MenuContextInstance'
 import { useColumnSettingsContext } from '../context'
 import { useColumnGroupBy } from '../hooks'
 import { ColumnHeaderMenuUI, type ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'

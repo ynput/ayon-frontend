@@ -1,6 +1,7 @@
 export * from './types'
 export * from './Views'
 export * from './context/ViewsContext'
+export * from './context/ViewsContextInstance'
 export * from './ViewsButton/ViewsButton'
 export * from './ViewsMenuContainer/ViewsMenuContainer'
 export * from './utils/portalUtils'

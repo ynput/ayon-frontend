@@ -10,11 +10,10 @@ import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { ListsDataProvider } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
-import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
-import {
-  ListsAttributesProvider,
-  useListsAttributesContext,
-} from './context/ListsAttributesContext'
+import { ListItemsDataProvider } from './context/ListItemsDataContext'
+import { useListItemsDataContext } from './context/ListItemsDataContextInstance'
+import { ListsAttributesProvider } from './context/ListsAttributesContext'
+import { useListsAttributesContext } from './context/ListsAttributesContextInstance'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton, SyncButton } from '@shared/components'
@@ -55,10 +54,8 @@ import { toast } from 'react-toastify'
 import api from '@shared/api/index.ts'
 import useReviewSessionCardsModules from './hooks/useReviewSessionCardsModules.tsx'
 import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSettings.tsx'
-import {
-  ReviewCardsSettingsProvider,
-  useReviewCardsSettingsContext,
-} from './context/ReviewCardsSettingsContext.tsx'
+import { ReviewCardsSettingsProvider } from './context/ReviewCardsSettingsContext.tsx'
+import { useReviewCardsSettingsContext } from './context/ReviewCardsSettingsContextInstance'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
