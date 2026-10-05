@@ -32,10 +32,13 @@ import { toast } from 'react-toastify'
 import TrialBanner from '@components/TrialBanner/TrialBanner'
 
 // context
-import { ShortcutsProvider } from '@context/ShortcutsContext'
-import { RestartProvider } from '@context/RestartContext'
-import { PasteProvider, PasteModal } from '@context/PasteContext'
-import { NotificationsProvider } from '@context/NotificationsContext'
+import {
+  NotificationsProvider,
+  PasteModal,
+  PasteProvider,
+  RestartProvider,
+  ShortcutsProvider,
+} from '@context'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
 import {
   RemoteModulesProvider,

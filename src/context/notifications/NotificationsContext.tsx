@@ -1,17 +1,24 @@
-import React, { useRef } from 'react'
+import { useRef } from 'react'
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import RemoveMarkdown from 'remove-markdown'
 import usePubSub from '@hooks/usePubSub'
 import { Icon } from '@ynput/ayon-react-components'
-import { useSelector } from 'react-redux'
+import { useAppSelector } from '@state/store'
 import { NotificationsContext } from './NotificationsContextInstance'
+import type { SendNotificationOptions } from './NotificationsContextInstance'
 
-function NotificationsProvider(props) {
+type InboxNotificationMessage = {
+  summary?: { isImportant?: boolean }
+  description: string
+}
+
+function NotificationsProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const {
     data: { frontendPreferences: { notifications = false, notificationSound = false } = {} } = {},
-  } = useSelector((state) => state.user) || {}
+  } = useAppSelector((state) => state.user) || {}
 
   const getNotificationPermission = async () => {
     if (!('Notification' in window)) {
@@ -34,7 +41,9 @@ function NotificationsProvider(props) {
         }
       } catch (error) {
         console.error(error)
-        toast.error('Unable to get notification permission: ' + error.details)
+        toast.error(
+          'Unable to get notification permission: ' + (error as { details?: string }).details,
+        )
         return false
       }
     } else {
@@ -45,7 +54,7 @@ function NotificationsProvider(props) {
     }
   }
 
-  const sendNotification = async ({ title, body, options = {}, link }) => {
+  const sendNotification = async ({ title, body, options = {}, link }: SendNotificationOptions) => {
     if (!('Notification' in window)) return
     if (Notification.permission === 'granted') {
       const icon = '/favicon-32x32.png'
@@ -70,13 +79,13 @@ function NotificationsProvider(props) {
     }
   }
 
-  const soundRef = useRef(null)
-  const toastId = useRef(null)
+  const soundRef = useRef<HTMLAudioElement | null>(null)
+  const toastId = useRef<ReturnType<typeof toast.info> | null>(null)
 
   //   subscribe to inbox.message topic
   usePubSub(
     'inbox.message',
-    (topic, message) => {
+    (_topic: string, message: InboxNotificationMessage) => {
       // only show notifications for important messages
       if (!message.summary?.isImportant) return
 
@@ -102,7 +111,7 @@ function NotificationsProvider(props) {
           icon: <Icon icon={'mark_email_unread'} />,
         }
 
-        if (!toast.isActive(toastId.current)) {
+        if (toastId.current === null || !toast.isActive(toastId.current)) {
           toastId.current = toast.info(body, toastConfig)
         } else {
           // update the toast message instead
@@ -127,7 +136,7 @@ function NotificationsProvider(props) {
   return (
     <NotificationsContext.Provider value={{ sendNotification }}>
       {notificationSound && <audio src="/ayon-notification.mp3" ref={soundRef} />}
-      {props.children}
+      {children}
     </NotificationsContext.Provider>
   )
 }

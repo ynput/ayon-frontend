@@ -39,7 +39,7 @@ import { confirmDialog } from 'primereact/confirmdialog'
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
 import arrayEquals from '@helpers/arrayEquals'
 import { cloneDeep } from 'lodash'
-import { usePaste } from '@context/PasteContextInstance'
+import { usePaste } from '@context'
 import styled from 'styled-components'
 
 import SettingsListHeader from './SettingsListHeader'
@@ -50,9 +50,7 @@ import LoadingPage from '@pages/LoadingPage'
 import PerProjectBundleConfig, {
   FROZEN_BUNDLE_ICON,
 } from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
-import {
-  projectBundleFromName,
-} from '../../components/PerProjectBundleConfig/PerProjectBundleConfigHelpers'
+import { projectBundleFromName } from '../../components/PerProjectBundleConfig/PerProjectBundleConfigHelpers'
 import { useSessionStorage } from '@shared/hooks'
 import { InfoMessage } from '@shared/components'
 

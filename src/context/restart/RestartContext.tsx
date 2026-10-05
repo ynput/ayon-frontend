@@ -1,19 +1,21 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { useGetRestartQuery, useRestartServerMutation } from '@queries/restartServer'
 import RestartBanner from '@components/RestartBanner/RestartBanner'
 import { confirmDialog } from 'primereact/confirmdialog'
 import ServerRestartingPage from '@components/ServerRestartingPage'
-import { useSelector } from 'react-redux'
+import { useAppSelector } from '@state/store'
 import { useLocalStorage } from '@shared/hooks'
 import { RestartContext } from './RestartContextInstance'
+import type { RestartRequiredOptions } from './RestartContextInstance'
 
-function RestartProvider(props) {
-  const isAdmin = useSelector((state) => state.user.data.isAdmin)
+function RestartProvider({ children }: { children: ReactNode }) {
+  const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const [restartServer] = useRestartServerMutation()
 
   const { data: restartData = {} } = useGetRestartQuery({ skip: !isAdmin })
 
-  const [snooze, setSnooze] = useLocalStorage('restart-snooze', null)
+  const [snooze, setSnooze] = useLocalStorage<string | null>('restart-snooze', null)
   // sets a local storage item to snooze the banner for the day
   const handleSnooze = () => {
     const tonight = new Date()
@@ -22,7 +24,7 @@ function RestartProvider(props) {
   }
 
   // a function that runs when the server restarts
-  const [callback, setCallback] = useState(null)
+  const [callback, setCallback] = useState<(() => void) | undefined>(undefined)
   // ask if the user wants to restart the server after saving
   const confirmRestart = () =>
     confirmDialog({
@@ -42,7 +44,7 @@ function RestartProvider(props) {
     })
 
   // tell the server that a restart is required
-  const restartRequired = async ({ callback } = {}) => {
+  const restartRequired = async ({ callback }: RestartRequiredOptions = {}) => {
     console.log('setting callback', callback)
     setCallback(() => callback)
   }
@@ -61,7 +63,7 @@ function RestartProvider(props) {
         isSnoozing,
       }}
     >
-      {props.children}
+      {children}
       {isRestartRequired && isAdmin && !isSnoozing && (
         <RestartBanner
           message={restartData?.reason}

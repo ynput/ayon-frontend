@@ -1,5 +1,5 @@
 import { useEffect, useId } from 'react'
-import { useShortcutsContext } from '@context/ShortcutsContextInstance'
+import { useShortcutsContext } from '@context'
 
 const useShortcuts = (shortcuts, deps = []) => {
   const { addShortcuts, removeShortcuts } = useShortcutsContext()

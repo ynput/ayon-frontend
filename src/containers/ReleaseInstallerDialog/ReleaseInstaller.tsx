@@ -25,7 +25,7 @@ import {
 } from './helpers'
 import { useInstallRelease, useReleaseForm, useReleaseInfo } from './hooks'
 import { ReleaseFormType, switchDialog } from '@state/releaseInstaller'
-import { useRestart } from '@context/RestartContextInstance'
+import { useRestart } from '@context'
 import { useCreateBundleMutation } from '@shared/api'
 import { useNavigate } from 'react-router-dom'
 import { useListAddonsQuery } from '@shared/api'

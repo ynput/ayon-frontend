@@ -3,7 +3,7 @@ import YnputConnector from '@components/YnputCloud/YnputConnector'
 import { useRestartOnBoardingMutation } from '@queries/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
 import ayonClient from '@/ayon'
-import { useRestart } from '@context/RestartContextInstance'
+import { useRestart } from '@context'
 import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
 

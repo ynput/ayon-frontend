@@ -19,7 +19,7 @@ import Type from '@/theme/typography.module.css'
 import { getRequestErrorString } from '@shared/util'
 import { updateUserAttribs, updateUserPreferences } from '@state/user'
 import { useDispatch } from 'react-redux'
-import { useNotifications } from '@context/NotificationsContextInstance'
+import { useNotifications } from '@context'
 import clsx from 'clsx'
 import { AvatarName } from './ProfilePage.styled'
 

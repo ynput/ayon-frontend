@@ -1,15 +1,15 @@
-import React, { useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
+import type { ReactNode } from 'react'
 import { Button, InputTextarea, Dialog } from '@ynput/ayon-react-components'
 import { PasteContext, usePaste } from './PasteContextInstance'
 
-const PasteProvider = ({ children }) => {
+const PasteProvider = ({ children }: { children: ReactNode }) => {
   const [isModalOpen, setModalOpen] = useState(false)
-  const [resolvePaste, setResolvePaste] = useState(null)
+  const [resolvePaste, setResolvePaste] = useState<((value: string | null) => void) | null>(null)
 
-  const requestPaste = useCallback(() => {
+  const requestPaste = useCallback((): Promise<string | null> => {
     // Immediately return a promise
-    // eslint-disable-next-line no-unused-vars
-    return new Promise((resolve, reject) => {
+    return new Promise<string | null>((resolve) => {
       if (navigator.clipboard && navigator.clipboard.readText) {
         navigator.clipboard
           .readText()
@@ -30,7 +30,7 @@ const PasteProvider = ({ children }) => {
   }, [])
 
   const closeModal = useCallback(
-    (pastedData) => {
+    (pastedData: string | null) => {
       console.log('pastedData', pastedData)
       if (resolvePaste) resolvePaste(pastedData)
       setModalOpen(false)
@@ -49,7 +49,7 @@ const PasteModal = () => {
   const { closeModal, isModalOpen } = usePaste()
   const [pastedData, setPastedData] = useState('')
 
-  const submit = (value) => {
+  const submit = (value: string | null) => {
     closeModal(value)
     setPastedData('')
   }

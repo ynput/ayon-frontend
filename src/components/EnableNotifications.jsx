@@ -1,5 +1,5 @@
 import { Button } from '@ynput/ayon-react-components'
-import { useNotifications } from '@context/NotificationsContextInstance'
+import { useNotifications } from '@context'
 import { useSetFrontendPreferencesMutation } from '@shared/api'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'

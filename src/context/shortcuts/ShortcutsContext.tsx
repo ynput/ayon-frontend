@@ -1,15 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAppDispatch, useAppSelector } from '@state/store'
+import { useAppSelector } from '@state/store'
 import { useMenuContext } from '@shared/context/menu'
 import { useLogoutMutation } from '@queries/auth/logout'
 import { useSearchParams } from 'react-router-dom'
 import { ShortcutsContext } from './ShortcutsContextInstance'
+import type { Shortcut } from './ShortcutsContextInstance'
 
-function ShortcutsProvider(props) {
+function ShortcutsProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const dispatch = useAppDispatch()
   const { toggleMenuOpen } = useMenuContext()
 
   // review open
@@ -19,11 +20,11 @@ function ShortcutsProvider(props) {
   const [logout] = useLogoutMutation()
 
   // keep track of the last key pressed
-  const [lastPressed, setLastPressed] = useState(null)
+  const [lastPressed, setLastPressed] = useState<string | null>(null)
   // disable shortcuts
-  const [disabled, setDisabled] = useState([])
+  const [disabled, setDisabled] = useState<string[]>([])
   // allow shortcuts
-  const [allowed, setAllowed] = useState([])
+  const [allowed, setAllowed] = useState<string[]>([])
 
   // last key pressed should be reset after 200ms
   useEffect(() => {
@@ -75,7 +76,7 @@ function ShortcutsProvider(props) {
 
   // Separate global shortcuts from component shortcuts
   const globalShortcuts = useMemo(() => defaultShortcuts, [defaultShortcuts, navigation, navBar])
-  const [componentShortcuts, setComponentShortcuts] = useState(new Map())
+  const [componentShortcuts, setComponentShortcuts] = useState<Map<string, Shortcut[]>>(new Map())
 
   // Compute active shortcuts by combining global and component shortcuts
   const activeShortcuts = useMemo(() => {
@@ -87,27 +88,22 @@ function ShortcutsProvider(props) {
   }, [globalShortcuts, componentShortcuts])
 
   // keep track of what's being hovered
-  const [hovered, setHovered] = useState(null)
-  // start off with global shortcuts but others can be set per page
-  const shortcutsRef = useRef(activeShortcuts)
-
-  // Update ref whenever shortcuts change
-  useEffect(() => {
-    shortcutsRef.current = activeShortcuts
-  }, [activeShortcuts])
+  const [hovered, setHovered] = useState<MouseEvent | null>(null)
 
   const handleKeyPress = useCallback(
-    (e) => {
+    (e: KeyboardEvent) => {
+      const target = e.target
+      if (!(target instanceof HTMLElement)) return
       // held key would otherwise trigger double-key combos like m+m
       if (e.repeat) return
       // check target isn't an input
-      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return
+      if (['INPUT', 'TEXTAREA'].includes(target.tagName)) return
       // check we are not in a rich text editor
-      if (e.target.isContentEditable) return
+      if (target.isContentEditable) return
       // or has blocked shortcuts className
-      if (e.target.classList.contains('block-shortcuts')) return
+      if (target.classList.contains('block-shortcuts')) return
       // or any of its parents
-      if (e.target.closest('.block-shortcuts')) return
+      if (target.closest('.block-shortcuts')) return
       // if review is open, don't allow shortcuts
       if (reviewOpen) return
 
@@ -148,7 +144,8 @@ function ShortcutsProvider(props) {
       // check if the shortcut has a closest selector
       if (shortcut.closest) {
         // if it does, check if the target matches the selector
-        if (!hovered?.target || !hovered?.target?.closest(shortcut.closest)) return
+        const hoveredTarget = hovered?.target
+        if (!(hoveredTarget instanceof Element) || !hoveredTarget.closest(shortcut.closest)) return
       }
 
       // and run the action
@@ -168,7 +165,7 @@ function ShortcutsProvider(props) {
 
   // create function that can be used in components to add shortcuts, when the component mounts
   // and removes them when it unmounts
-  const addShortcuts = useCallback((id, newShortcuts) => {
+  const addShortcuts = useCallback((id: string, newShortcuts: Shortcut[]) => {
     setComponentShortcuts((current) => {
       const updated = new Map(current)
       updated.set(id, newShortcuts)
@@ -176,7 +173,7 @@ function ShortcutsProvider(props) {
     })
   }, [])
 
-  const removeShortcuts = useCallback((id) => {
+  const removeShortcuts = useCallback((id: string) => {
     setComponentShortcuts((current) => {
       const updated = new Map(current)
       updated.delete(id)
@@ -210,7 +207,7 @@ function ShortcutsProvider(props) {
         setAllowed,
       }}
     >
-      {props.children}
+      {children}
     </ShortcutsContext.Provider>
   )
 }
