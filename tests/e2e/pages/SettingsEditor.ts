@@ -63,12 +63,23 @@ export class SettingsEditor {
   }
 
   /**
-   * Toggle options of a multi-select field by their values, then close it.
+   * Select exactly these options of a multi-select field, whatever was selected before, then close it.
    * The selection is applied on every click; Escape only closes the dropdown.
+   * FLAG: options have no aria-selected, a selected one has `.option-child.selected`.
    */
-  async toggleOptions(schemaId: string, ...values: string[]) {
+  async setOptions(schemaId: string, ...values: string[]) {
     await this.dropdownButton(schemaId).click()
-    for (const value of values) await this.page.locator(`.options [data-value="${value}"]`).click()
+    const options = this.page.locator('.options li.option')
+    await expect(options.first()).toBeVisible()
+    for (const value of await options.evaluateAll((els) => els.map((el) => el.dataset.value!))) {
+      const option = this.page.locator(`.options li.option[data-value="${value}"]`)
+      const selected = option.locator('.option-child.selected')
+      const wanted = values.includes(value)
+      if ((await selected.count()) > 0 !== wanted) {
+        await option.click()
+        await expect(selected).toHaveCount(wanted ? 1 : 0)
+      }
+    }
     await this.page.keyboard.press('Escape')
     await expect(this.page.locator('.options')).toBeHidden()
   }

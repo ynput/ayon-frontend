@@ -67,7 +67,7 @@ test.describe('project anatomy: statuses', () => {
     await manager.anatomy.select(`${item}_state`, WAITING.state)
     await manager.anatomy.pickIcon(`${item}_icon`, WAITING.icon)
     await manager.anatomy.setColor(`${item}_color`, WAITING.color)
-    await manager.anatomy.toggleOptions(`${item}_scope`, ...WAITING.scope)
+    await manager.anatomy.setOptions(`${item}_scope`, ...WAITING.scope)
     await manager.saveAnatomy()
 
     await expect
@@ -101,7 +101,7 @@ test.describe('project anatomy: statuses', () => {
 
     await manager.anatomy.addItem('root_statuses')
     await manager.anatomy.fillText(`root_statuses_${index}_name`, WAITING.name)
-    await manager.anatomy.toggleOptions(`root_statuses_${index}_scope`, 'task')
+    await manager.anatomy.setOptions(`root_statuses_${index}_scope`, 'task')
     await manager.saveAnatomy()
     await page.goForward()
 
