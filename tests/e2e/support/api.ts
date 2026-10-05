@@ -254,6 +254,22 @@ export class AyonApi {
     return this.get(`/api/projects/${project}/versions/${id}`)
   }
 
+  /**
+   * A representation (published files) of a version, listed in the "Version files" tab of the
+   * details panel. File paths may use root templates like `{root[work]}/...`; nothing is stored.
+   */
+  async createRepresentation(
+    project: string,
+    data: { versionId: string; name: string; files: string[] },
+  ) {
+    const { id } = await this.post(`/api/projects/${project}/representations`, {
+      versionId: data.versionId,
+      name: data.name,
+      files: data.files.map((path, i) => ({ id: `${i}`.padStart(32, '0'), path, size: 0 })),
+    })
+    return id as string
+  }
+
   /** A workfile of a task; `path` may use root templates like `{root[work]}/...` */
   async createWorkfile(project: string, data: { taskId: string; path: string }) {
     const { id } = await this.post(`/api/projects/${project}/workfiles`, data)
