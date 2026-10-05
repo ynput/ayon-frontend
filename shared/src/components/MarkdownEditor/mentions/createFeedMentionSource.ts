@@ -1,5 +1,5 @@
 import type { SuggestResponse } from '@shared/api/generated'
-import type { ProjectContextValue } from '@shared/context/project'
+import type { ProjectContextValue } from '@shared/context'
 import type { TaskType } from '@shared/containers/ProjectTreeTable/types/project'
 import getMentionOptions from '@shared/containers/Feed/mentionHelpers/getMentionOptions'
 import getMentionUsers from '@shared/containers/Feed/mentionHelpers/getMentionUsers'

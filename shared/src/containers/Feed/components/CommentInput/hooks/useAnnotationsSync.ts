@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { FEED_NEW_COMMENT } from '../../../context/FeedContext'
 import { useFeedContext } from '../../../context/FeedContextInstance'
-import { useDetailsPanelContext } from '@shared/context/details-panel/DetailsPanelContextInstance'
+import { useDetailsPanelContext } from '@shared/context'
 import { parseFilename } from '@shared/util/parseFilename'
 
 type UploadingFile = { name: string }

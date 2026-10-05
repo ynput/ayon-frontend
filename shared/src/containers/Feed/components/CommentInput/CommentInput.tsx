@@ -38,9 +38,12 @@ import useReferenceTooltip from '../../hooks/useReferenceTooltip'
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContextInstance'
 import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
-import { type CommentFrameRange } from '@shared/context/details-panel'
-import { getActivityFrameLink, useDetailsPanelContext } from '@shared/context/details-panel'
-import { useProjectContext } from '@shared/context/project'
+import {
+  getActivityFrameLink,
+  useDetailsPanelContext,
+  useProjectContext,
+  type CommentFrameRange,
+} from '@shared/context'
 import { parseFilename } from '@shared/util/parseFilename'
 import type { DetailsPanelEntityType, FeedActivity } from '@shared/api'
 import { VersionReviewPill } from './VersionReviewPill'

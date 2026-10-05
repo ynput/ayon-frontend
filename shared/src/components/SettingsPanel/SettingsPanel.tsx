@@ -1,7 +1,7 @@
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { FC, Fragment, ReactNode } from 'react'
 import styled from 'styled-components'
-import { useSettingsPanel, type SettingField } from '@shared/context/settings-panel'
+import { useSettingsPanel, type SettingField } from '@shared/context'
 import { SettingOption } from './SettingsPanel.styled'
 
 // Side panel styled components

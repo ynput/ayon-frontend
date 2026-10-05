@@ -39,7 +39,7 @@ import {
   RestartProvider,
   ShortcutsProvider,
 } from '@context'
-import { PiPProvider } from '@shared/context/pip/PiPProvider'
+import { PiPProvider } from '@shared/context'
 import {
   RemoteModulesProvider,
   DetailsPanelProvider,

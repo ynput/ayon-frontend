@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react'
 import { useSetFrontendPreferencesMutation } from '@shared/api'
-import { useGlobalContext } from '@shared/context/global/GlobalContextInstance'
+import { useGlobalContext } from '@shared/context'
 import type { EmojiUsage } from './emojiData'
 
 export const EMOJI_USAGE_PREFERENCE = 'emojiUsage'

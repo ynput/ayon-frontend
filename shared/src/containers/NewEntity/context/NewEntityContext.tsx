@@ -18,8 +18,7 @@ import { useProjectDataContext } from '@shared/containers/ProjectTreeTable/conte
 import { parseAndFormatName } from '@shared/util'
 import { useSlicerContext } from '@shared/containers/Slicer/context/SlicerContextInstance'
 import { isEmpty } from 'lodash'
-import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
-import { useProjectFoldersContext } from '@shared/context/project-folders/ProjectFoldersContextInstance'
+import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 import { NewEntityContext } from './NewEntityContextInstance'
 import { NewEntityType } from '../util/entityDefinitions'
 

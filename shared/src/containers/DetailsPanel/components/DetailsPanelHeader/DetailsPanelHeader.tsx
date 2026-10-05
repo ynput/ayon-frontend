@@ -14,7 +14,7 @@ import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions, getSelectableAssignees } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
 import { useEntityUpdate } from '@shared/hooks/useEntityUpdate'
-import { useDetailsPanelContext, type DetailsPanelTab } from '@shared/context/details-panel'
+import { useDetailsPanelContext, type DetailsPanelTab } from '@shared/context'
 
 import DetailsPanelTabs from '../DetailsPanelTabs/DetailsPanelTabs'
 import LinkedTaskRow from './LinkedTaskRow'

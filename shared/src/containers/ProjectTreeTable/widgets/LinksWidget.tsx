@@ -9,7 +9,7 @@ import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityConte
 import { useSelectedRowsContext } from '../context/SelectedRowsContext'
 import { Container, CountBadge } from '@shared/components/LinksManager/LinksManager.styled'
 import { isEntityRestricted } from '../utils/restrictedEntity'
-import { useGlobalContext } from '@shared/context/global'
+import { useGlobalContext } from '@shared/context'
 import { groupLinksByEntity } from '@shared/components/LinksManager/utils/groupLinks'
 import { sortEntityLinksByPath } from './LinksWidgetHelpers'
 

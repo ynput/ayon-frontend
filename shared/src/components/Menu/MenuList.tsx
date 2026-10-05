@@ -3,7 +3,7 @@ import MenuItem from './MenuItem'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './Menu.styled'
 import { MENU_TOP_BOUND } from './Menu.styled'
-import { usePowerpack, type PowerpackFeature } from '@shared/context/powerpack'
+import { usePowerpack, type PowerpackFeature } from '@shared/context'
 import type { MenuItemType } from './Menu'
 
 interface MenuListProps {

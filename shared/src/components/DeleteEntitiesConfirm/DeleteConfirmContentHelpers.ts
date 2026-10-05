@@ -1,6 +1,6 @@
 import { pluralize } from '@shared/util'
 import type { FolderDeleteInfo } from '@shared/api'
-import type { DeletableEntity, DeletableEntityType } from '@shared/context/delete-entities'
+import type { DeletableEntity, DeletableEntityType } from '@shared/context'
 import type { ExpectedDeleteCounts } from './DeleteConfirmContent'
 
 export const DELETE_TYPE_ORDER: DeletableEntityType[] = [

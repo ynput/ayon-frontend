@@ -9,7 +9,7 @@ import { SimpleForm } from '@shared/components/SimpleForm'
 import type { SimpleFormValueDict } from '@shared/components/SimpleForm'
 import { useGetAllAssigneesQuery, useGetEnumOptionsQuery } from '@shared/api'
 import type { EnumItem, EnumResolverInfo, EnumResolverParams } from '@shared/api'
-import { useGlobalContext } from '@shared/context/global'
+import { useGlobalContext } from '@shared/context'
 import {
   getEnumErrorText,
   getEnumItemIcon,

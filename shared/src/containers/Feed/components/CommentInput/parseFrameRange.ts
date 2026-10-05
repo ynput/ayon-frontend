@@ -1,4 +1,4 @@
-import type { CommentFrameRange } from '@shared/context/details-panel'
+import type { CommentFrameRange } from '@shared/context'
 
 export const parseFrameRange = (value: string): CommentFrameRange | null => {
   const match = /^(\d+)(?:\s*-\s*(\d+))?$/.exec(value.trim())

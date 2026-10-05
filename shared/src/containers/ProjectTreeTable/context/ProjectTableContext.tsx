@@ -43,9 +43,11 @@ import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
 import type { EntityGroup } from '@shared/api'
 import type { GroupCountsMap } from '@shared/api'
 import useBuildGroupByTableData, { GroupByEntityType } from '../hooks/useBuildGroupByTableData'
-import type { PowerpackContextType } from '@shared/context/powerpack'
-import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
-import type { OnSyncDataCallback } from '@shared/context/entity-updates'
+import {
+  useProjectContext,
+  type PowerpackContextType,
+  type OnSyncDataCallback,
+} from '@shared/context'
 import { TableGroupBy, useColumnSettingsContext } from './ColumnSettingsContext'
 import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
 import type { SubtasksManagerProps } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'

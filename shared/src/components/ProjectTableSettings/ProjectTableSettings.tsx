@@ -4,7 +4,7 @@ import { useProjectTableContext } from '@shared/containers/ProjectTreeTable/cont
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC, useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { useSettingsPanel, type SettingHighlightedId } from '@shared/context/settings-panel'
+import { useSettingsPanel, type SettingHighlightedId } from '@shared/context'
 import { SettingsPanel } from '@shared/components/SettingsPanel/SettingsPanel'
 import type { SettingConfig } from '@shared/components/SettingsPanel/SettingsPanel'
 import { ColumnsSettingsWithContext } from './ColumnsSettings'

@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import type { DeletableEntityType } from '@shared/context/delete-entities'
+import type { DeletableEntityType } from '@shared/context'
 
 export type ExpectedDeleteCounts = Partial<Record<DeletableEntityType, number>>
 

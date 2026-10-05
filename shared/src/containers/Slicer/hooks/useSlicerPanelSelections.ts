@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { AttributeModel } from '@shared/api'
-import { usePowerpack } from '@shared/context/powerpack/PowerpackContextInstance'
+import { usePowerpack } from '@shared/context'
 import { useSlicerContext } from '../context/SlicerContextInstance'
 import { createFiltersFromSlicer } from '../util/createFilterFromSlicer'
 import type { SliceFilter } from '../types'

@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import type { TaskType, FolderType } from '../types/project'
-import type { ProjectModelWithProducts } from '@shared/context/project'
+import type { ProjectModelWithProducts } from '@shared/context'
 import type { ProductType } from '@shared/api'
 
 type Props = {

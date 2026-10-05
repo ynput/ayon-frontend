@@ -10,7 +10,7 @@ import type { OnSliceTypeChange } from '../context/SlicerContext'
 import useSlicerAttributesData from './useSlicerAttributesData'
 import { useEntityListsSlice } from './useEntityListsSlice'
 import { getAttributeIcon, getEntityTypeIcon, hasEnumOptions } from '@shared/util'
-import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
+import { useProjectContext } from '@shared/context'
 import type { GroupCountsMap } from '@shared/api'
 import { UNGROUPED_VALUE } from '../../ProjectTreeTable/hooks/useBuildGroupByTableData'
 

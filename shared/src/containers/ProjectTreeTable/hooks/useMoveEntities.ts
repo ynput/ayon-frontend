@@ -8,7 +8,7 @@ import type {
   MultiEntityMoveData,
   OnMoveComplete,
 } from '@shared/containers/MoveEntityDialog/types'
-import { useProjectFoldersContext } from '@shared/context/project-folders/ProjectFoldersContextInstance'
+import { useProjectFoldersContext } from '@shared/context'
 import { getRequestErrorString } from '@shared/util'
 
 export type EntityType = 'folder' | 'task'

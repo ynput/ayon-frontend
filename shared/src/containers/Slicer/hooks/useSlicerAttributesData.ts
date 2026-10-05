@@ -1,10 +1,9 @@
 import { useContext } from 'react'
-import { useGlobalContext } from '@shared/context/global/GlobalContextInstance'
+import { useGlobalContext, useProjectContext } from '@shared/context'
 import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContextInstance'
 import { hasEnumOptions, getSelectableEnumItems } from '@shared/util'
 import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import type { AttributeEnumsRequest } from '@shared/hooks/useAttributeEnums'
-import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
 
 interface UseSlicerAttributesDataParams {
   entityTypes: string[]

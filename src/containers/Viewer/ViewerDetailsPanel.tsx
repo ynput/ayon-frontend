@@ -9,7 +9,7 @@ import { ViewerDetailsPanelWrapper } from './Viewer.styled'
 import { useViewer } from '@context'
 import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 import { useDetailsPanelContext } from '@shared/context'
-import { DetailsPanelContext } from '@shared/context/details-panel'
+import { DetailsPanelContext } from '@shared/context'
 
 type Props = {
   versionIds: string[]

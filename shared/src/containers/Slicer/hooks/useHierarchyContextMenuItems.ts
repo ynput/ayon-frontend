@@ -8,10 +8,12 @@ import type { ContextMenuItemType } from '@shared/containers/ContextMenu/useCrea
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import { useCallback, useMemo, useState } from 'react'
 import { useUpdateOverviewEntitiesMutation } from '@shared/api'
-import { useDetailsPanelContext } from '@shared/context/details-panel/DetailsPanelContextInstance'
-import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
-import { useDeleteEntitiesContext } from '@shared/context/delete-entities/DeleteEntitiesContextInstance'
-import type { DeletableEntity } from '@shared/context/delete-entities'
+import {
+  useDetailsPanelContext,
+  useProjectContext,
+  useDeleteEntitiesContext,
+  type DeletableEntity,
+} from '@shared/context'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
 import { useOptionalVersionUploadContext } from '@shared/components/VersionUploader/context/VersionUploadContextInstance'
 import { SliceMap } from '../types'

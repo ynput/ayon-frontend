@@ -12,7 +12,7 @@ import {
 } from '@ynput/ayon-react-components'
 import { ReviewableUpload } from '../../ReviewablesList/ReviewablesUpload'
 import { useVersionUploadContext } from '../context/VersionUploadContextInstance'
-import { useProjectContext } from '@shared/context/project'
+import { useProjectContext } from '@shared/context'
 import { useGetTaskQuery } from '@shared/api'
 import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog/EntityPickerDialog'
 import { Skeleton } from 'primereact/skeleton'

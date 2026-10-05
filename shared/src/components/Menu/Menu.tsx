@@ -4,9 +4,7 @@ import { MenuList } from './MenuList'
 import { MENU_PORTAL_CONTENT_ID } from './MenuContainer'
 import { copyToClipboard } from '@shared/util'
 import { Button } from '@ynput/ayon-react-components'
-import type { PowerpackFeature } from '@shared/context/powerpack'
-import { useMenuContext } from '@shared/context/menu'
-import { usePowerpack } from '@shared/context/powerpack'
+import { useMenuContext, usePowerpack, type PowerpackFeature } from '@shared/context'
 
 export interface MenuItemType {
   id: string

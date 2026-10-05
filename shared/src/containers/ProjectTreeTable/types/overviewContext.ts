@@ -1,6 +1,6 @@
 import type { EntityGroup } from '@shared/api'
 import type { FieldStats } from '@shared/api'
-import type { OnSyncDataCallback } from '@shared/context/entity-updates'
+import type { OnSyncDataCallback } from '@shared/context'
 import type { FolderNodeMap, TaskNodeMap, TasksByFolderMap } from './table'
 import type { LoadingTasks, SoftErrorAction } from './index'
 import type { ProjectDataContextProps } from '../context/ProjectDataContext'

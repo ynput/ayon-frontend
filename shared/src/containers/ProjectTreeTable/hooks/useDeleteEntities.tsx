@@ -1,8 +1,11 @@
 import { useCallback } from 'react'
 import { useProjectTableContext } from '../context/ProjectTableContextInstance'
-import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
-import { useDeleteEntitiesContext } from '@shared/context/delete-entities/DeleteEntitiesContextInstance'
-import type { DeletableEntity, DeletableEntityType } from '@shared/context/delete-entities'
+import {
+  useProjectContext,
+  useDeleteEntitiesContext,
+  type DeletableEntity,
+  type DeletableEntityType,
+} from '@shared/context'
 import { toast } from 'react-toastify'
 import { EntityMap } from '../types'
 

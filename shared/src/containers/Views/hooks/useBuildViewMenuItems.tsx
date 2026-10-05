@@ -12,7 +12,7 @@ import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
-import { usePowerpack } from '@shared/context/powerpack/PowerpackContextInstance'
+import { usePowerpack } from '@shared/context'
 import type { CollapsedViewState } from '../context/ViewsContext'
 import { WORKING_VIEW_ID } from '../types'
 export type ViewListItemModelExtended = ViewListItemModel & {

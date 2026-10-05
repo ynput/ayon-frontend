@@ -6,10 +6,11 @@ import {
   OnSyncDataCallback,
   RTEntityUpdate,
   TopicUpdateType,
-} from '@shared/context/entity-updates'
-import { useAutoSyncSettings, useSyncUpdates } from '@shared/context/entity-updates'
+  useAutoSyncSettings,
+  useSyncUpdates,
+  useMenuContext,
+} from '@shared/context'
 import { Menu, MenuContainer } from '../Menu'
-import { useMenuContext } from '@shared/context/menu'
 import clsx from 'clsx'
 import { shouldBlockShortcuts } from '@shared/util'
 

@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import { isFilePreviewable } from '../FileUploadPreview'
 import type { SavedAnnotationMetadata } from '../../index'
 import { useFeedContext } from '../../context/FeedContextInstance'
-import { useDetailsPanelContext } from '@shared/context/details-panel'
+import { useDetailsPanelContext } from '@shared/context'
 import { AnnotationPreview } from '../CommentInput/hooks/useAnnotationsSync'
 
 export interface FileUploadCardProps extends React.HTMLAttributes<HTMLDivElement> {

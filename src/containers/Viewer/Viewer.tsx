@@ -21,7 +21,7 @@ import {
   type ReviewablesSelectorHandle,
 } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
-import { ProjectContextProvider, useProjectContext } from '@shared/context/project'
+import { ProjectContextProvider, useProjectContext } from '@shared/context'
 import { useSessionStorage, useReviewablesKeyboardNavigation } from '@shared/hooks'
 import clsx from 'clsx'
 

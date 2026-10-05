@@ -3,7 +3,7 @@ import { useViewsContext } from '../context/ViewsContextInstance'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import ViewFormDialogFallback from './ViewFormDialogFallback'
 import { Dialog } from '@ynput/ayon-react-components'
-import { usePowerpack } from '@shared/context/powerpack'
+import { usePowerpack } from '@shared/context'
 
 export const VIEWS_DIALOG_CLASS = 'views-dialog' as const
 

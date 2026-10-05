@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
-import type { DeletableEntity } from '@shared/context/delete-entities'
+import type { DeletableEntity } from '@shared/context'
 import { pluralize } from '@shared/util'
 import type { DetailsPanelEntityListsContext, SelectedEntityRef, ListEntityRef } from '../types'
 

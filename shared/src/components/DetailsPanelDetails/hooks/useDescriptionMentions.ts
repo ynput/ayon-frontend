@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useGetEntityMentionsQuery } from '@shared/api'
 import type { SuggestRequest } from '@shared/api'
 import { createFeedMentionSource, type MentionSource } from '@shared/components/MarkdownEditor'
-import type { ProjectContextValue } from '@shared/context/project'
+import type { ProjectContextValue } from '@shared/context'
 import type { TaskType } from '@shared/containers/ProjectTreeTable/types/project'
 
 export interface DescriptionMentionsContext {

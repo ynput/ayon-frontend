@@ -9,7 +9,7 @@ import {
 import type { DetailsPanelEntityContextType } from '@shared/containers/ProjectTreeTable/context/DetailsPanelEntityContext'
 import type { UpdateViewSettingsFn } from '@shared/containers/Views/utils/viewUpdateHelper'
 import type { ViewsContextValue } from '@shared/containers/Views/context/ViewsContext'
-import type { DetailsPanelContextType } from '@shared/context/details-panel'
+import type { DetailsPanelContextType } from '@shared/context'
 import { FC } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'

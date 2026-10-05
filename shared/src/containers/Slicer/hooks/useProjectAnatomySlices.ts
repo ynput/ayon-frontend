@@ -1,5 +1,5 @@
 import type { UseExtraSlices } from '../context/SlicerContext'
-import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
+import { useProjectContext } from '@shared/context'
 import type { AttributeModel } from '@shared/api'
 import { isEnumIconImage } from '@shared/util/attributeEnum'
 

@@ -6,7 +6,7 @@ import {
   type ExpectedDeleteCounts,
 } from './DeleteConfirmContent'
 import { DELETE_TYPE_ORDER, sumExpectedCounts } from './DeleteConfirmContentHelpers'
-import type { DeletableEntityType } from '@shared/context/delete-entities'
+import type { DeletableEntityType } from '@shared/context'
 import * as Styled from './DeleteEntitiesConfirmDialog.styled'
 
 export type DeleteConfirmPayload = {

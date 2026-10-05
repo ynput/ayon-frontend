@@ -1,6 +1,6 @@
 import { useContext, useEffect } from 'react'
 import type { NewEntityOpenConfig, NewEntityType } from '../context/NewEntityContext'
-import { MenuContext } from '@shared/context/menu/MenuContextInstance'
+import { MenuContext } from '@shared/context'
 import { CellEditingContext } from '@shared/containers/ProjectTreeTable/context/CellEditingContext'
 
 interface EntityOption {

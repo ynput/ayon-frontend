@@ -9,18 +9,18 @@ import type { Tag, DetailsPanelEntityType, DetailsPanelEntityData } from '@share
 import { DetailsPanelDetails } from '@shared/components/DetailsPanelDetails/DetailsPanelDetails'
 import { EntityPath } from '@shared/components/EntityPath/EntityPath'
 import { Watchers } from '@shared/components/Watchers/Watchers'
-import { usePiPWindow } from '@shared/context/pip/PiPContextInstance'
 import { extractEntityHierarchyFromParents } from '@shared/util'
-import { ProjectContextProvider } from '@shared/context/project'
-import { ThumbnailUploadProvider } from '@shared/context/thumbnail-uploader'
 import {
+  usePiPWindow,
+  ProjectContextProvider,
+  ThumbnailUploadProvider,
   useDetailsPanelContext,
   useScopedDetailsPanel,
   setDetailsPanelTabForScope,
-} from '@shared/context/details-panel'
-import { useURIContext } from '@shared/context/uri'
-import type { ProjectModelWithProducts } from '@shared/context/project'
-import type { FeedFilter } from '@shared/context/details-panel'
+  useURIContext,
+  type ProjectModelWithProducts,
+  type FeedFilter,
+} from '@shared/context'
 
 import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './components/DetailsPanelFiles'

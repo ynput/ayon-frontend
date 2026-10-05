@@ -17,8 +17,7 @@ import {
 } from '@shared/api'
 import type { ActivityCategory, ChecklistCount, SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
-import type { FeedFilter } from '@shared/context/details-panel'
-import { useDetailsPanelContext } from '@shared/context/details-panel/DetailsPanelContextInstance'
+import { useDetailsPanelContext, type FeedFilter } from '@shared/context'
 import { getFilterActivityTypes } from '@shared/api'
 import { FeedContext } from './FeedContextInstance'
 
