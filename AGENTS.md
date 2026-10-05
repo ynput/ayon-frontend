@@ -11,6 +11,16 @@ Some parts of the codebase have their own `AGENTS.md` next to the code. It expla
 | --- | --- |
 | Markdown editor (Lexical): comments, descriptions, text cells | [shared/src/components/MarkdownEditor/AGENTS.md](shared/src/components/MarkdownEditor/AGENTS.md) |
 
+## Hot reload
+- A `.tsx`/`.jsx` file that defines components must export only components (types are fine). Put everything else in a sibling module:
+  - contexts: `createContext` and hooks go in `<Name>ContextInstance.ts`, which barrels also export
+  - exported styled-components go in `<Name>.styled.ts`
+  - helpers, constants, enums and Lexical commands go in `<Name>Helpers.ts`
+- Keep `*ContextInstance.ts` modules free of runtime imports that lead back to their provider (e.g. through a barrel like `../context` or `../utils`). When a file changes, Vite re-creates every module that imports it, even indirectly, so a context module inside such an import cycle gets a second `createContext()` and consumers throw "must be used within a Provider". Put helpers that need those imports in `<Name>Helpers.ts`.
+- If you break the first rule, React Fast Refresh can't swap the file. Vite then re-runs every importer, and through the barrels that reaches `app.tsx`, whose module-level `lazy()` routes remount the whole app.
+- Keep `src/index.tsx` free of components; the root tree lives in `src/AppRoot.tsx`. An entry file that defines a component gets re-run on hot updates and mounts a second React root.
+- To check: `hmr invalidate … Could not Fast Refresh` in the dev-server log names the file that breaks the rule.
+
 ## Errors
 - Do not use `transformErrorResponse`; use `getRequestErrorString`, and keep all RTK Query errors, including GraphQL errors, in the standard `{ status, data: { code, detail, ... } }` model.
 - Preserve the standard RTK error envelope and backend fields; do not replace it with a string or a custom endpoint shape.

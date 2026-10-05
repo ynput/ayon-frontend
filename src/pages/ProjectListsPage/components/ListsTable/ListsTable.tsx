@@ -1,6 +1,6 @@
 import { FC, useState, useMemo, useCallback, useId } from 'react'
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
 import SimpleTable, {
   Container,
   SimpleTableCellTemplate,
@@ -50,9 +50,7 @@ const ListsTable: FC<ListsTableProps> = ({
   } = useListsContext()
   const { listsTableData, isLoadingAll, isError, fetchNextPage } = useListsDataContext()
   // folder picker opens with search ready — the destination list is often long
-  const [clientSearch, setClientSearch] = useState<null | string>(
-    picker && foldersOnly ? '' : null,
-  )
+  const [clientSearch, setClientSearch] = useState<null | string>(picker && foldersOnly ? '' : null)
   // unique menu id in picker mode so the dialog's header menu doesn't collide with the sidepanel's
   const pickerMenuId = useId()
 
@@ -120,9 +118,7 @@ const ListsTable: FC<ListsTableProps> = ({
             title={foldersOnly ? 'Folders' : isReview ? 'Review sessions' : undefined}
             buttonLabels={{
               delete: {
-                tooltip: isReview
-                  ? `Delete selected review sessions`
-                  : 'Delete selected lists',
+                tooltip: isReview ? `Delete selected review sessions` : 'Delete selected lists',
               },
               add: {
                 tooltip: isReview ? `Create new review sessions` : 'Create new list',

@@ -4,7 +4,7 @@ import { classNames } from 'primereact/utils'
 import { PathSegment } from './EntityPath'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu/useCreateContextMenu'
 import { copyToClipboard } from '@shared/util'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext } from '@shared/context'
 
 interface SegmentProviderProps extends React.HTMLAttributes<HTMLDivElement> {
   segment?: PathSegment

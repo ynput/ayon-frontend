@@ -5,14 +5,16 @@ export { MentionNode, $createMentionNode, $isMentionNode } from './nodes/Mention
 export { MARKDOWN_TRANSFORMERS, MENTION } from './markdown/transformers'
 export { $getMarkdown, $setMarkdown, normalizeLegacyMarkdown } from './markdown/convert'
 export { markdownToPlainText } from './markdown/plainText'
-export { INSERT_MENTION_TRIGGER_COMMAND } from './plugins/MentionsPlugin'
+export { INSERT_MENTION_TRIGGER_COMMAND } from './plugins/MentionsPluginHelpers'
 export { createFeedMentionSource } from './mentions/createFeedMentionSource'
 export { toggleBlockFormat, type BlockFormat } from './plugins/formatting'
 export { YouTubeNode, $createYouTubeNode, $isYouTubeNode } from './nodes/YouTubeNode'
-export { YouTubeEmbed, renderYouTubeParagraph } from './youtube/YouTubeEmbed'
+export { YouTubeEmbed } from './youtube/YouTubeEmbed'
+export { renderYouTubeParagraph } from './youtube/YouTubeEmbedHelpers'
 export { parseYouTubeUrl } from './youtube/parseYouTubeUrl'
 export { MediaNode, $createMediaNode, $isMediaNode } from './nodes/MediaNode'
-export { MediaBlock, renderMediaParagraph } from './media/MediaBlock'
+export { MediaBlock } from './media/MediaBlock'
+export { renderMediaParagraph } from './media/MediaBlockHelpers'
 export {
   getProjectFileId,
   getMediaKind,

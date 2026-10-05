@@ -9,7 +9,7 @@ import { useNewEntityContext } from '@shared/containers/NewEntity'
 import { useProjectContext } from '@shared/context'
 import { mergeFieldStats, totalRowsFromStats } from '@shared/api'
 import type { FieldStats } from '@shared/api'
-import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
+import { useProjectOverviewContext } from '../context/project-overview'
 import { AddColumnButton } from '@shared/components'
 import styled from 'styled-components'
 

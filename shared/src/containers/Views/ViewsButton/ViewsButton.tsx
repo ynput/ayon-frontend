@@ -1,6 +1,6 @@
 import { FC, KeyboardEvent, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { SelectedViewState, useViewsContext } from '../context/ViewsContext'
+import { SelectedViewState, useViewsContext } from '../context'
 import { getViewsPortalContainer } from '../utils/portalUtils'
 import * as Styled from '../Views.styled'
 import clsx from 'clsx'
@@ -11,9 +11,19 @@ type Props = {
   fullButtonProps?: (selectedView: SelectedViewState) => Partial<ButtonProps>
 }
 
-export const ViewsButton: FC<Props> = ({ fullButton = false, fullButtonProps = () => ({}) }: Props) => {
-  const { viewType, viewAlias, isMenuOpen, setIsMenuOpen, selectedView, isViewWorking, editingViewId } =
-    useViewsContext()
+export const ViewsButton: FC<Props> = ({
+  fullButton = false,
+  fullButtonProps = () => ({}),
+}: Props) => {
+  const {
+    viewType,
+    viewAlias,
+    isMenuOpen,
+    setIsMenuOpen,
+    selectedView,
+    isViewWorking,
+    editingViewId,
+  } = useViewsContext()
 
   const buttonRef = useRef<HTMLButtonElement>(null)
 
@@ -29,12 +39,14 @@ export const ViewsButton: FC<Props> = ({ fullButton = false, fullButtonProps = (
   }
 
   const buttonProps = {
-    icon: "view_quilt",
+    icon: 'view_quilt',
     onClick: handleButtonClick,
     className: clsx({ active: !!editingViewId, open: isMenuOpen }),
     tabIndex: 0,
-    "data-tooltip": isViewWorking ? `Working ${viewAlias.toLowerCase()}` : `${viewAlias}: ` + selectedView?.label || 'None',
-    "data-tooltip-delay": 0,
+    'data-tooltip': isViewWorking
+      ? `Working ${viewAlias.toLowerCase()}`
+      : `${viewAlias}: ` + selectedView?.label || 'None',
+    'data-tooltip-delay': 0,
     onKeyDown: (e: KeyboardEvent<HTMLButtonElement>) => {
       if (e.key === 'Enter' || e.key === ' ') {
         handleButtonClick(e)
@@ -42,14 +54,11 @@ export const ViewsButton: FC<Props> = ({ fullButton = false, fullButtonProps = (
     },
   }
 
-  const button = fullButton
-    ? <Button {...({ ...buttonProps, ...fullButtonProps(selectedView) })} />
-    : (
-      <Styled.ViewsButton
-        ref={buttonRef}
-        {...buttonProps}
-      />
-    )
+  const button = fullButton ? (
+    <Button {...{ ...buttonProps, ...fullButtonProps(selectedView) }} />
+  ) : (
+    <Styled.ViewsButton ref={buttonRef} {...buttonProps} />
+  )
 
   // Try to find the portal container for this viewType
   const portalContainer = getViewsPortalContainer(viewType)

@@ -1,5 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { v4 as uuid } from 'uuid'
+import { PiPContext } from './PiPContextInstance'
 
 export type PiPContextType = {
   isSupported: boolean
@@ -8,8 +9,6 @@ export type PiPContextType = {
   requestPipWindow: (width: number, height: number) => Promise<void>
   closePipWindow: () => void
 }
-
-const PiPContext = createContext<PiPContextType | undefined>(undefined)
 
 export type PiPProviderProps = {
   children: React.ReactNode
@@ -119,14 +118,4 @@ export function PiPProvider({ children }: PiPProviderProps) {
   }, [closePipWindow, isSupported, pipWindow, requestPipWindow])
 
   return <PiPContext.Provider value={value}>{children}</PiPContext.Provider>
-}
-
-export function usePiPWindow(): PiPContextType {
-  const context = useContext(PiPContext)
-
-  if (context === undefined) {
-    throw new Error('usePiPWindow must be used within a PiPContext')
-  }
-
-  return context
 }

@@ -1,7 +1,7 @@
 import React, { memo } from 'react'
 import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
-import { useSelectedRowsContext } from '../context/SelectedRowsContext'
+import { useSelectedRowsContext } from '../context/selected-rows'
 
 const SelectionHeaderCell = styled.div`
   position: absolute;
