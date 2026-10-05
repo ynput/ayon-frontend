@@ -174,6 +174,13 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
             const taskId = message.summary?.entityId
             if (!taskId) return
 
+            // A new task carries no values, so fetch it to see if it is assigned to the selected users.
+            if (topic === 'entity.task.created') {
+              const taskKey = `${project}:${taskId}`
+              if (!cachedTaskKeys.has(taskKey)) taskUpdatesToFetch.set(taskKey, { taskId, project })
+              return
+            }
+
             // Only patch the task for the fields supported by the Kanban view.
             const field = topic.split('.')[2]?.replace('_changed', '')
             const patch = getSupportedEntityPatch(
