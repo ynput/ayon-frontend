@@ -1,4 +1,5 @@
 import { test } from '@playwright/test'
+import { randomBytes } from 'crypto'
 
 /**
  * Every entity the tests create is prefixed so leftovers are easy to spot and sweep.
@@ -24,7 +25,7 @@ export const uniqueName = (label: string) => {
     // called outside of a test (e.g. global teardown)
   }
   counter += 1
-  const random = Math.random().toString(36).slice(2, 6)
+  const random = randomBytes(2).toString('hex')
   return `${E2E_PREFIX}_${RUN_ID}_${label}_${worker}${counter}${random}`
 }
 
