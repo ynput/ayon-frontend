@@ -14,7 +14,6 @@ interface ViewerProps {
   selectedReviewable: ReviewableResponse | undefined
   selectedVersionId?: string
   versionIds: string[]
-  versionReviewableIds: string[]
   isFetchingReviewables: boolean
   noVersions: boolean
   quickView: boolean
@@ -27,7 +26,6 @@ const ViewerComponent = ({
   reviewables,
   selectedReviewable,
   versionIds,
-  versionReviewableIds,
   noVersions,
   isFetchingReviewables,
   quickView,
@@ -39,6 +37,10 @@ const ViewerComponent = ({
 
   const availability = selectedReviewable?.availability
   const isPlayable = availability !== 'conversionRequired'
+  // when no reviewable is selected, the Viewer selects the first of these by itself
+  const hasPlayableReviewable = reviewables.some((r) =>
+    ['ready', 'conversionRecommended'].includes(r.availability || ''),
+  )
 
   const handlePlayReviewable = () => {
     // Reset auto play. Auto play should only be enabled on first video load
@@ -69,7 +71,8 @@ const ViewerComponent = ({
     )
   }
 
-  if (!isFetchingReviewables && versionReviewableIds?.length === 0) {
+  // nothing to show: no reviewables, the selected one cannot be played, or none of them can
+  if (!isFetchingReviewables && (selectedReviewable || !hasPlayableReviewable)) {
     let message = 'No preview available'
     let canUploadReviewable = false
 
@@ -78,7 +81,7 @@ const ViewerComponent = ({
     } else if (!reviewables.length) {
       message = 'This version has no online reviewables.'
       canUploadReviewable = true
-    } else if (availability === 'conversionRequired') {
+    } else if (!isPlayable || !hasPlayableReviewable) {
       message = 'File not supported and needs conversion'
     }
     const placeholderStyles = {

@@ -421,7 +421,6 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             reviewables={reviewables}
             selectedReviewable={selectedReviewable}
             versionIds={versionIds}
-            versionReviewableIds={versionReviewableIds}
             isFetchingReviewables={isFetchingReviewables}
             noVersions={noVersions}
             quickView={quickView}
