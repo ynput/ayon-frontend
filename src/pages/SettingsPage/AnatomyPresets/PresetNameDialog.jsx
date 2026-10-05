@@ -14,10 +14,13 @@ const PresetNameDialog = ({
   const inputRef = useRef(null)
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
+    if (!isOpen) return
+    // the dialog stays mounted between uses, so every opening starts from its own initial value
+    setValue(initialValue)
+    if (inputRef.current) {
       setTimeout(() => inputRef.current.focus(), 100)
     }
-  }, [isOpen])
+  }, [isOpen, initialValue])
 
   const handleSave = () => {
     if (value.trim()) {
