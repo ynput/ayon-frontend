@@ -8,8 +8,9 @@ const HOVER_INTENT_DELAY = 120
 
 // Set on the host element while a frame is shown, so the host can hide its static image
 export const FILMSTRIP_ACTIVE_ATTRIBUTE = 'data-filmstrip-active'
-// Relative position (0-1) in the video of the frame shown
+// Relative position (0-1) in the video of the frame shown, and the video (reviewable) file
 export const FILMSTRIP_POSITION_ATTRIBUTE = 'data-filmstrip-position'
+export const FILMSTRIP_FILE_ATTRIBUTE = 'data-filmstrip-file-id'
 
 // Clicking a thumbnail often re-renders it (selection), which replaces the element under
 // a stationary cursor and the browser takes ~200ms to report the hover again. The last
@@ -18,17 +19,26 @@ export const FILMSTRIP_POSITION_ATTRIBUTE = 'data-filmstrip-position'
 let lastHover: { src: string; position: number } | null = null
 const RESTORE_CHECK_DELAY = 400
 
+export interface FilmstripTarget {
+  position: number // relative position (0-1) in the video
+  fileId: string // the reviewable the filmstrip was made from
+}
+
 /**
- * Relative position (0-1) in the video of the filmstrip frame shown under the cursor,
- * for opening the viewer at the frame the user was looking at.
+ * The filmstrip frame shown under the cursor, for opening the viewer at the same reviewable
+ * and frame the user was looking at.
  * Returns undefined when the event did not come from a scrubbed thumbnail.
  */
-export const getFilmstripPosition = (event?: { target: EventTarget | null }) => {
+export const getFilmstripTarget = (event?: {
+  target: EventTarget | null
+}): FilmstripTarget | undefined => {
   const target = event?.target
   if (!(target instanceof Element)) return undefined
   const host = target.closest(`[${FILMSTRIP_POSITION_ATTRIBUTE}]`)
-  const value = Number(host?.getAttribute(FILMSTRIP_POSITION_ATTRIBUTE))
-  return host && Number.isFinite(value) ? value : undefined
+  const position = Number(host?.getAttribute(FILMSTRIP_POSITION_ATTRIBUTE))
+  const fileId = host?.getAttribute(FILMSTRIP_FILE_ATTRIBUTE)
+  if (!host || !Number.isFinite(position) || !fileId) return undefined
+  return { position, fileId }
 }
 
 const Overlay = styled.div`
@@ -156,10 +166,17 @@ export const Filmstrip: FC<FilmstripProps> = ({
     }
   }, [enabled, src])
 
-  // load the filmstrip once the cursor rests on the thumbnail
+  // On every hover, use the cached filmstrip if it is still valid, otherwise (not loaded yet,
+  // expired or evicted) load it once the cursor rests on the thumbnail. The previous frames
+  // stay visible until the new answer arrives.
   const isHovering = !!hover
   useEffect(() => {
-    if (!isHovering || !enabled || !src || data !== undefined) return
+    if (!isHovering || !enabled || !src) return
+    const cached = peekFilmstrip(src)
+    if (cached !== undefined) {
+      setData(cached)
+      return
+    }
     let cancelled = false
     const timeout = window.setTimeout(() => {
       loadFilmstrip(src).then((result) => {
@@ -170,7 +187,7 @@ export const Filmstrip: FC<FilmstripProps> = ({
       cancelled = true
       window.clearTimeout(timeout)
     }
-  }, [isHovering, enabled, src, data])
+  }, [isHovering, enabled, src])
 
   const visible = enabled && !!hover && !!data
 
@@ -183,12 +200,17 @@ export const Filmstrip: FC<FilmstripProps> = ({
 
   // frame i shows the middle of the i-th segment of the video
   const position = visible && data ? (index + 0.5) / data.frames : null
+  const fileId = visible && data ? data.fileId : null
   useLayoutEffect(() => {
     const host = ref.current?.parentElement
-    if (!host || position === null) return
+    if (!host || position === null || !fileId) return
     host.setAttribute(FILMSTRIP_POSITION_ATTRIBUTE, position.toFixed(4))
-    return () => host.removeAttribute(FILMSTRIP_POSITION_ATTRIBUTE)
-  }, [position])
+    host.setAttribute(FILMSTRIP_FILE_ATTRIBUTE, fileId)
+    return () => {
+      host.removeAttribute(FILMSTRIP_POSITION_ATTRIBUTE)
+      host.removeAttribute(FILMSTRIP_FILE_ATTRIBUTE)
+    }
+  }, [position, fileId])
 
   let frameStyle: CSSProperties | undefined
   if (visible && hover && data) {
@@ -219,10 +241,8 @@ export const Filmstrip: FC<FilmstripProps> = ({
       {visible && data && (
         <>
           <Frame className="filmstrip-frame" style={frameStyle} />
-          <Progress
-            className="filmstrip-progress"
-            style={{ width: `${((index + 1) / data.frames) * 100}%` }}
-          />
+          {/* the shown frame, i.e. where the viewer opens */}
+          <Progress className="filmstrip-progress" style={{ width: `${(position ?? 0) * 100}%` }} />
         </>
       )}
     </Overlay>

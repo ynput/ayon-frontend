@@ -24,7 +24,7 @@ import buildEntityTypeIcons from '../../helpers/buildEntityTypeIcons'
 import type { ProjectInfo } from '../../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../../helpers/buildDetailsPanelTitles'
 import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
-import { getFilmstripPosition } from '@shared/components/Filmstrip'
+import { getFilmstripTarget } from '@shared/components/Filmstrip'
 
 export type EntityTypeIcons = {
   folder: Record<string, string>
@@ -179,12 +179,14 @@ const DetailsPanelHeader = ({
     }
 
     if (id) {
+      // open the scrubbed reviewable at the hovered filmstrip frame
+      const filmstrip = getFilmstripTarget(e)
       onOpenViewer({
         [entityTypeKey]: id,
         projectName,
         versionIds,
-        // start at the hovered filmstrip frame
-        goToPosition: getFilmstripPosition(e),
+        reviewableIds: filmstrip && [filmstrip.fileId],
+        goToPosition: filmstrip?.position,
       })
     }
   }

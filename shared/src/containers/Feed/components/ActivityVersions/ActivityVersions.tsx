@@ -7,7 +7,7 @@ import ActivityDate from '../ActivityDate'
 import { useDetailsPanelContext } from '@shared/context'
 import type { Status } from '@shared/api'
 import { FieldValue } from '../ActivityFieldChange/FieldValue'
-import { getFilmstripPosition } from '@shared/components/Filmstrip'
+import { getFilmstripTarget } from '@shared/components/Filmstrip'
 
 interface Version {
   name: string
@@ -57,14 +57,17 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
 
   const [thumbnailError, setThumbnailError] = useState(false)
 
-  const handleClick = (e: React.MouseEvent, versionId: string, productId: string) =>
+  const handleClick = (e: React.MouseEvent, versionId: string, productId: string) => {
+    // open the scrubbed reviewable at the hovered filmstrip frame
+    const filmstrip = getFilmstripTarget(e)
     onOpenViewer?.({
       versionIds: [versionId],
       productId,
       projectName,
-      // start at the hovered filmstrip frame
-      goToPosition: getFilmstripPosition(e),
+      reviewableIds: filmstrip && [filmstrip.fileId],
+      goToPosition: filmstrip?.position,
     })
+  }
 
   return (
     <Styled.Container>
