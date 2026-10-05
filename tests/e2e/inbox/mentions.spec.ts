@@ -1,19 +1,6 @@
-import { Browser } from '@playwright/test'
 import { expect, test } from '../fixtures'
-import { LoginPage } from '../pages/LoginPage'
 import { OverviewPage } from '../pages/OverviewPage'
-
-/** A separate, signed in browser session for another user */
-const signInAs = async (browser: Browser, name: string, password: string) => {
-  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
-  const page = await context.newPage()
-  await page.route(/featurebase\.app/, (route) => route.abort())
-  const login = new LoginPage(page)
-  await login.goto()
-  await login.login(name, password)
-  await expect(login.userMenuButton).toBeVisible()
-  return { context, page }
-}
+import { signInAs } from '../support/session'
 
 test.describe('mentions and inbox', () => {
   test('mention a user in a comment', async ({ page, api, projectName, createUser }) => {

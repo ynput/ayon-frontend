@@ -1,4 +1,5 @@
 import { expect, test } from '../fixtures'
+import { AccessGroupsPage } from '../pages/AccessGroupsPage'
 import { uniqueName } from '../support/names'
 import { confirmDialog, dialog, menuItem } from '../support/ui'
 
@@ -37,5 +38,25 @@ test.describe('access groups', () => {
     } finally {
       await api.deleteAccessGroup(name)
     }
+  })
+
+  test('restrict folder creation for an access group', async ({ page, api, accessGroup }) => {
+    const groups = new AccessGroupsPage(page)
+    await groups.goto()
+    await groups.select(accessGroup)
+
+    await groups.setRestriction('Restrict folder creation', true)
+    await groups.save()
+
+    await expect.poll(async () => (await api.getAccessGroup(accessGroup)).create.enabled).toBe(true)
+    // only that restriction changed
+    const permissions = await api.getAccessGroup(accessGroup)
+    expect(permissions.read.enabled).toBe(false)
+    expect(permissions.update.enabled).toBe(false)
+
+    // the saved state is shown after a reload
+    await groups.goto()
+    await groups.select(accessGroup)
+    await expect(groups.restrictionCheckbox('Restrict folder creation')).toBeChecked()
   })
 })

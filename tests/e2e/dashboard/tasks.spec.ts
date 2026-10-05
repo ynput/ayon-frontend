@@ -82,3 +82,94 @@ test.describe('dashboard tasks', () => {
     await new DetailsPanel(page).expectOpenFor('open_me')
   })
 })
+
+test.describe('dashboard tasks list and filter', () => {
+  test('change a task status from the list view', async ({ page, api, projectName }) => {
+    const me = adminCredentials().name
+    const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const task = await api.createTask(projectName, {
+      folderId: folder.id,
+      name: 'comp',
+      taskType: 'Compositing',
+      assignees: [me],
+    })
+    const other = await api.createTask(projectName, {
+      folderId: folder.id,
+      name: 'anim',
+      taskType: 'Animation',
+      assignees: [me],
+    })
+
+    const dashboard = new DashboardTasksPage(page)
+    await dashboard.goto()
+    await dashboard.selectProject(projectName)
+    await dashboard.showList()
+    await expect(dashboard.listRow(task.id)).toContainText('comp')
+    await expect(dashboard.listRow(other.id)).toContainText('anim')
+
+    await dashboard.setStatusInList(task.id, 'In progress')
+
+    await expect(dashboard.listRowStatus(task.id)).toHaveAttribute('id', 'In progress')
+    await expect
+      .poll(async () => (await api.getTask(projectName, task.id)).status)
+      .toBe('In progress')
+    // only the selected task changes
+    expect((await api.getTask(projectName, other.id)).status).toBe('Not ready')
+  })
+
+  test('filter the board by task name', async ({ page, api, projectName }) => {
+    const me = adminCredentials().name
+    const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const comp = await api.createTask(projectName, {
+      folderId: folder.id,
+      name: 'comp',
+      taskType: 'Compositing',
+      assignees: [me],
+    })
+    const anim = await api.createTask(projectName, {
+      folderId: folder.id,
+      name: 'anim',
+      taskType: 'Animation',
+      assignees: [me],
+    })
+
+    const dashboard = new DashboardTasksPage(page)
+    await dashboard.goto()
+    await dashboard.selectProject(projectName)
+    await expect(dashboard.card(comp.id)).toBeVisible()
+    await expect(dashboard.card(anim.id)).toBeVisible()
+
+    await dashboard.filter('anim')
+
+    await expect(dashboard.card(anim.id)).toBeVisible()
+    await expect(dashboard.card(comp.id)).toBeHidden()
+    await expect(dashboard.columnHeadingOf(anim.id)).toHaveText(/^Not ready - 1$/)
+  })
+
+  test('changing the status in the details panel moves the card', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const me = adminCredentials().name
+    const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const task = await api.createTask(projectName, {
+      folderId: folder.id,
+      name: 'comp',
+      taskType: 'Compositing',
+      assignees: [me],
+    })
+
+    const dashboard = new DashboardTasksPage(page)
+    await dashboard.goto()
+    await dashboard.selectProject(projectName)
+    await dashboard.card(task.id).getByText('comp', { exact: true }).click()
+    const panel = new DetailsPanel(page)
+    await panel.expectOpenFor('comp')
+
+    await panel.setStatus('Approved')
+
+    await expect(dashboard.columnHeadingOf(task.id)).toHaveText(/^Approved - 1$/)
+    await expect.poll(async () => (await api.getTask(projectName, task.id)).status).toBe('Approved')
+  })
+})

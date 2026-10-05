@@ -47,6 +47,34 @@ test.describe('project overview', () => {
       .toEqual([['comp', 'Compositing']])
   })
 
+  test('create a numbered sequence of folders', async ({ page, api, projectName }) => {
+    const parent = await api.createFolder(projectName, { name: 'sq020', folderType: 'Sequence' })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+
+    await overview.selectRow('sq020')
+    await overview.createFolderSequence({ type: 'Shot', first: 'sh010', count: 3 })
+
+    await overview.expand('sq020')
+    for (const name of ['sh010', 'sh020', 'sh030']) {
+      await expect(overview.row(name)).toBeVisible()
+    }
+    await expect
+      .poll(async () =>
+        (
+          await api.listFolders(projectName)
+        )
+          .filter((f) => f.parentId === parent.id)
+          .map((f) => [f.name, f.folderType])
+          .sort(),
+      )
+      .toEqual([
+        ['sh010', 'Shot'],
+        ['sh020', 'Shot'],
+        ['sh030', 'Shot'],
+      ])
+  })
+
   test('rename a folder', async ({ page, api, projectName }) => {
     const folder = await api.createFolder(projectName, { name: 'old_name' })
     const overview = new OverviewPage(page)

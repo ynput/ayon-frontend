@@ -87,3 +87,43 @@ test.describe('activity feed', () => {
       .toBe('Pending review')
   })
 })
+
+test.describe('activity feed checklists and filters', () => {
+  test('tick a checklist item in a comment', async ({ page, api, projectName }) => {
+    const { task } = await setup(api, projectName)
+    await api.createComment(
+      projectName,
+      'task',
+      task.id,
+      'Notes:\n\n* [ ] fix hands\n* [ ] fix feet',
+    )
+    const panel = await openTask(page, projectName)
+    await expect(panel.checklistsFilter).toHaveText(/0\/2/)
+
+    // the second item, so the right one of two identical "[ ]" in the markdown has to change
+    await panel.toggleChecklistItem('Notes:', 'fix feet')
+
+    await expect(panel.checklistItem('Notes:', 'fix feet')).toBeChecked()
+    await expect(panel.checklistItem('Notes:', 'fix hands')).not.toBeChecked()
+    await expect(panel.checklistsFilter).toHaveText(/1\/2/)
+    await expect
+      .poll(commentBodies(api, projectName, task.id))
+      .toEqual(['Notes:\n\n* [ ] fix hands\n* [x] fix feet'])
+  })
+
+  test('show only comments in the feed', async ({ page, api, projectName }) => {
+    const { task } = await setup(api, projectName)
+    await api.createComment(projectName, 'task', task.id, 'Lighting is too dark')
+    // a status change shows up in the feed as an activity of its own
+    await api.updateTask(projectName, task.id, { status: 'In progress' })
+    const panel = await openTask(page, projectName)
+    const statusChange = panel.activity(/Not ready.*In progress/)
+    await expect(statusChange).toBeVisible()
+
+    await panel.commentsFilter.click()
+
+    // the feed reloads with the filter; the comment showing again means the filtered list is in
+    await expect(panel.comment('Lighting is too dark')).toBeVisible()
+    await expect(statusChange).toBeHidden()
+  })
+})

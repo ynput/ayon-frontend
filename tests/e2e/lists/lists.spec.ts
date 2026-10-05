@@ -54,3 +54,68 @@ test.describe('lists', () => {
       .toEqual(['Keep list'])
   })
 })
+
+test.describe('list contents', () => {
+  test('rename a list', async ({ page, api, projectName }) => {
+    const listId = await api.createEntityList(projectName, { label: 'Dailies' })
+    const lists = new ListsPage(page)
+    await lists.goto(projectName)
+
+    await lists.renameList('Dailies', 'Dailies Monday')
+
+    await expect(lists.listRow('Dailies Monday')).toBeVisible()
+    await expect
+      .poll(async () => (await api.listEntityLists(projectName)).map((l) => [l.id, l.label]))
+      .toEqual([[listId, 'Dailies Monday']])
+  })
+
+  test('remove an item from a list', async ({ page, api, projectName }) => {
+    const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const comp = await api.createTask(projectName, {
+      folderId: folder.id,
+      name: 'comp',
+      taskType: 'Compositing',
+    })
+    const anim = await api.createTask(projectName, {
+      folderId: folder.id,
+      name: 'anim',
+      taskType: 'Animation',
+    })
+    const listId = await api.createEntityList(projectName, { label: 'Client review' })
+    await api.addEntityListItem(projectName, listId, comp.id)
+    await api.addEntityListItem(projectName, listId, anim.id)
+
+    const lists = new ListsPage(page)
+    await lists.goto(projectName)
+    await lists.openList('Client review')
+    await expect(lists.itemNameCell('comp')).toBeVisible()
+
+    await lists.removeItem('comp')
+
+    await expect(lists.itemNameCell('comp')).toBeHidden()
+    await expect(lists.itemNameCell('anim')).toBeVisible()
+    await expect
+      .poll(async () => (await api.listEntityLists(projectName))[0].entityIds)
+      .toEqual([anim.id])
+  })
+
+  // FLAG (app bug): "Items count" in the list details is always 0. ListDetailsPanel fetches the
+  // list with `metadataOnly: true` (no items), and ListMetaData counts `list.items.length`.
+  test.fixme(
+    'list details show how many items the list has',
+    async ({ page, api, projectName }) => {
+      const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+      const task = await api.createTask(projectName, { folderId: folder.id, name: 'comp' })
+      const listId = await api.createEntityList(projectName, { label: 'Picks' })
+      await api.addEntityListItem(projectName, listId, task.id)
+
+      const lists = new ListsPage(page)
+      await lists.goto(projectName)
+      await expect(lists.listRow('Picks')).toContainText('1')
+
+      await lists.openDetails('Picks')
+
+      await expect(lists.detail('Items count')).toHaveText('1')
+    },
+  )
+})

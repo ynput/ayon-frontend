@@ -19,9 +19,50 @@ export class DashboardTasksPage {
     await this.projects.select(name)
   }
 
+  /** Narrow the tasks down by name, folder, type, status, path or assignee */
+  async filter(text: string) {
+    await this.page.getByPlaceholder('Filter tasks...').fill(text)
+  }
+
   /** A kanban card; its element id is the task id */
   card(taskId: string): Locator {
     return this.page.locator(`[id="${taskId}"]`)
+  }
+
+  // ---------------------------------------------------------------------------
+  // list view
+  // ---------------------------------------------------------------------------
+
+  async showList() {
+    await this.page.getByRole('button', { name: 'format_list_bulleted List', exact: true }).click()
+    await expect(this.page.locator('.tasks-list')).toBeVisible()
+  }
+
+  /**
+   * A row of the list view; like a card, its element id is the task id.
+   * FLAG: rows are plain `li`s of unlabeled widgets, so their parts are found by class.
+   */
+  listRow(taskId: string): Locator {
+    return this.page.locator(`.tasks-list li[id="${taskId}"]`)
+  }
+
+  /**
+   * The status of a list row.
+   * FLAG: the list shows the status as a bare icon with no accessible name or tooltip,
+   * the status name is only in the `id` of the status field.
+   */
+  listRowStatus(taskId: string): Locator {
+    return this.listRow(taskId).locator('.status-field').first()
+  }
+
+  async setStatusInList(taskId: string, status: string) {
+    const row = this.listRow(taskId)
+    // fields of a row edit every selected row, so select just this one first
+    // (on the task label: the middle of the row can be one of its dropdowns)
+    await row.locator('.task-label').click()
+    await expect(row).toHaveClass(/selected/)
+    await this.listRowStatus(taskId).click()
+    await this.page.locator(`.options [data-value="${status}"]`).click()
   }
 
   /** The heading ("In progress - 2") of the column a card is in */

@@ -34,4 +34,44 @@ export class TasksProgressPage {
     await this.page.locator(`[data-value="${to}"]`).first().click()
     await expect(cell).toContainText(to)
   }
+
+  /** Select several task cells; Ctrl/Cmd-click adds a cell to the selection */
+  async selectCells(...cells: [folderLabel: string, taskLabel: string][]) {
+    for (const [i, [folderLabel, taskLabel]] of cells.entries()) {
+      const cell = this.taskCell(folderLabel, taskLabel)
+      await cell.click({ modifiers: i === 0 ? [] : ['ControlOrMeta'] })
+      await expect(cell).toHaveClass(/selected/)
+    }
+  }
+
+  /** Pick a status in one of the selected cells; it applies to every selected task */
+  async setStatusOfSelected(folderLabel: string, taskLabel: string, to: string) {
+    const cell = this.taskCell(folderLabel, taskLabel)
+    await expect(cell).toHaveClass(/selected/)
+    await cell.locator('.tag.status.editable').click()
+    await this.page.locator(`.options [data-value="${to}"]`).first().click()
+  }
+
+  /**
+   * The avatar of an assignee on a task card.
+   * FLAG: avatars have no accessible name, they are found by their image url.
+   */
+  assigneeAvatar(folderLabel: string, taskLabel: string, userName: string): Locator {
+    return this.taskCell(folderLabel, taskLabel).locator(
+      `.tag.users img[src*="/users/${userName}/avatar"]`,
+    )
+  }
+
+  /** Add an assignee through the user picker of a task cell */
+  async addAssignee(folderLabel: string, taskLabel: string, userName: string) {
+    const cell = this.taskCell(folderLabel, taskLabel)
+    await cell.click()
+    await expect(cell).toHaveClass(/selected/)
+    // FLAG: the picker trigger is an unnamed tag on the card (assignee avatars or a placeholder)
+    await cell.locator('.tag.users').click()
+    await this.page.locator(`.options [data-value="${userName}"]`).click()
+    // the picker stays open for more picks
+    await this.page.keyboard.press('Escape')
+    await expect(this.page.locator(`.options [data-value="${userName}"]`)).toBeHidden()
+  }
 }

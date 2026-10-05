@@ -1,13 +1,17 @@
 import { expect, Page } from '@playwright/test'
 import { confirmDialog, dialog, menuItem, toast } from '../support/ui'
 import { ProjectsList } from './ProjectsList'
+import { SettingsEditor } from './SettingsEditor'
 
 /** /manageProjects — project list on the left, anatomy/settings/permissions tabs on the right */
 export class ProjectsManagerPage {
   readonly projects: ProjectsList
+  /** the anatomy form on the "anatomy" tab */
+  readonly anatomy: SettingsEditor
 
   constructor(readonly page: Page) {
     this.projects = new ProjectsList(page)
+    this.anatomy = new SettingsEditor(page)
   }
 
   async goto(tab = 'anatomy', project?: string) {
@@ -52,5 +56,56 @@ export class ProjectsManagerPage {
     await expect(confirm).toContainText(name)
     await confirm.getByRole('button', { name: 'Delete' }).click()
     await expect(toast(this.page, `Project: ${name} deleted`)).toBeVisible()
+  }
+
+  /** Archived projects are re-activated from their context menu (needs "Show archived") */
+  async activateProject(name: string) {
+    await this.projects.openContextMenu(name)
+    await menuItem(this.page, 'Activate').click()
+  }
+
+  /** "Rename project" edits the label inline; the project name stays the same */
+  async renameProject(name: string, label: string) {
+    await this.projects.openContextMenu(name)
+    await menuItem(this.page, 'Rename project').click()
+    const input = this.page.getByPlaceholder('Project label')
+    await expect(input).toBeFocused()
+    await input.fill(label)
+    await input.press('Enter')
+    await expect(input).toBeHidden()
+  }
+
+  /** "Save changes" on the anatomy tab */
+  async saveAnatomy() {
+    await this.page.getByRole('button', { name: 'Save changes' }).click()
+    await expect(toast(this.page, 'Anatomy saved')).toBeVisible()
+  }
+
+  // "Project access" tab
+
+  /** The "All users" table of the project access tab */
+  get accessUsersTable() {
+    return this.page
+      .getByRole('table')
+      .filter({ has: this.page.getByRole('columnheader', { name: 'Project access groups' }) })
+  }
+
+  accessUserRow(user: string) {
+    return this.accessUsersTable.getByRole('row').filter({ hasText: user })
+  }
+
+  /** "Add access" from a user's context menu, then pick one access group */
+  async addProjectAccess(user: string, accessGroup: string) {
+    await this.accessUserRow(user).click({ button: 'right' })
+    await menuItem(this.page, 'Add access').click()
+    const addAccess = dialog(this.page, `Add access for ${user}`)
+    await expect(addAccess).toBeVisible()
+    const group = addAccess.getByTestId(`access-group-${accessGroup}`)
+    await group.click()
+    // FLAG: the access group items are plain divs; being picked is only the `selected` class
+    await expect(group).toHaveClass(/\bselected\b/)
+    await addAccess.getByRole('button', { name: 'Save' }).click()
+    await expect(toast(this.page, 'Access added')).toBeVisible()
+    await expect(addAccess).toBeHidden()
   }
 }

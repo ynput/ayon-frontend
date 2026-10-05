@@ -58,3 +58,44 @@ test.describe('task progress', () => {
     await expect.poll(async () => (await api.getTask(projectName, comp.id)).status).toBe('Approved')
   })
 })
+
+test.describe('task progress editing', () => {
+  test('change the status of several tasks at once', async ({ page, api, projectName }) => {
+    const { comp, anim } = await seed(api, projectName)
+    const progress = new TasksProgressPage(page)
+    await progress.goto(projectName)
+    await progress.selectFolder('sq010')
+
+    await progress.selectCells(['sh010', 'comp'], ['sh020', 'anim'])
+    await progress.setStatusOfSelected('sh010', 'comp', 'On hold')
+
+    await expect(progress.taskCell('sh010', 'comp')).toContainText('On hold')
+    await expect(progress.taskCell('sh020', 'anim')).toContainText('On hold')
+    await expect
+      .poll(async () => [
+        (await api.getTask(projectName, comp.id)).status,
+        (await api.getTask(projectName, anim.id)).status,
+      ])
+      .toEqual(['On hold', 'On hold'])
+  })
+
+  test('assign a user to a task', async ({ page, api, projectName, createUser, accessGroup }) => {
+    const { comp } = await seed(api, projectName)
+    // only licensed users with access to the project are offered as assignees
+    const artist = await createUser({
+      fullName: 'Progress Artist',
+      licensed: true,
+      accessGroups: { [projectName]: [accessGroup] },
+    })
+    const progress = new TasksProgressPage(page)
+    await progress.goto(projectName)
+    await progress.selectFolder('sq010')
+
+    await progress.addAssignee('sh010', 'comp', artist.name)
+
+    await expect
+      .poll(async () => (await api.getTask(projectName, comp.id)).assignees)
+      .toEqual([artist.name])
+    await expect(progress.assigneeAvatar('sh010', 'comp', artist.name)).toBeVisible()
+  })
+})

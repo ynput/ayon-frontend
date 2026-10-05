@@ -1,5 +1,6 @@
 import { expect, test } from '../fixtures'
 import { DetailsPanel } from '../pages/DetailsPanel'
+import { ProductsPage } from '../pages/ProductsPage'
 
 test.describe('products', () => {
   test('published versions are listed with their product', async ({ page, api, projectName }) => {
@@ -40,5 +41,27 @@ test.describe('products', () => {
     await renderRow.getByText('renderMain').dblclick()
 
     await new DetailsPanel(page).expectOpenFor('renderMain')
+  })
+})
+
+test.describe('versions', () => {
+  test('change a version status from the table', async ({ page, api, projectName }) => {
+    const shot = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const render = await api.createProduct(projectName, { folderId: shot.id, name: 'renderMain' })
+    const v1 = await api.createVersion(projectName, { productId: render.id, version: 1 })
+    const v2 = await api.createVersion(projectName, { productId: render.id, version: 2 })
+
+    const products = new ProductsPage(page)
+    await products.goto(projectName)
+    await expect(products.row('renderMain - v002')).toBeVisible()
+
+    await products.setEnumCell('renderMain - v002', 'status', 'Approved')
+
+    await expect(products.cell('renderMain - v002', 'status')).toContainText('Approved')
+    await expect
+      .poll(async () => (await api.getVersion(projectName, v2.id)).status)
+      .toBe('Approved')
+    // the other version keeps its status
+    expect((await api.getVersion(projectName, v1.id)).status).not.toBe('Approved')
   })
 })
