@@ -11,7 +11,9 @@ import App from './app'
 // wrap socket provider so we can pass the correct props
 const SocketProviderWrapper = (props: { children: React.ReactNode }) => {
   const dispatch = useAppDispatch()
-  const projectName = useAppSelector((state) => state.project.name) as unknown as string
+  // the server only sends this project's events, so only set it on the project's own pages,
+  // not when another page (like the dashboard) has loaded a project
+  const projectName = useAppSelector((state) => state.project.openProject) ?? undefined
   const userName = useAppSelector((state) => state.user.name)
   return (
     <SocketProvider userName={userName} projectName={projectName} dispatch={dispatch}>
