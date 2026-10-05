@@ -135,6 +135,28 @@ export class AyonApi {
     return res.projects
   }
 
+  /**
+   * The anatomy of a project as the project anatomy editor shows it (snake_case sections:
+   * `statuses`, `task_types`, `folder_types`, `tags`, `link_types`, `attributes`, `templates`, ...).
+   * `getProject` returns the same data in camelCase.
+   */
+  async getProjectAnatomy(project: string): Promise<Record<string, any>> {
+    return this.get(`/api/projects/${project}/anatomy`)
+  }
+
+  /**
+   * Changes the anatomy of a project (only ever one the test created), the way "Save changes" on
+   * the project anatomy page does, e.g. to add a status:
+   * `updateProjectAnatomy(project, (a) => ({ ...a, statuses: [...a.statuses, { name: 'Waiting' }] }))`
+   */
+  async updateProjectAnatomy(
+    project: string,
+    update: (anatomy: Record<string, any>) => Record<string, any>,
+  ) {
+    const anatomy = await this.getProjectAnatomy(project)
+    await this.post(`/api/projects/${project}/anatomy`, update(anatomy))
+  }
+
   // ---------------------------------------------------------------------------
   // folders, tasks, products, versions
   // ---------------------------------------------------------------------------
@@ -311,6 +333,101 @@ export class AyonApi {
       { project, entityIds: [entityId], types: activityTypes },
     )
     return data.project.activities.edges.map((e: any) => e.node)
+  }
+
+  // ---------------------------------------------------------------------------
+  // activity feed in depth: attachments, references, watchers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Uploads a local file to the project the way the comment box does (a comment attachment) and
+   * returns its id. It belongs to no comment until one is created or updated with it.
+   */
+  async uploadProjectFile(project: string, filePath: string, contentType?: string) {
+    const url = `/api/projects/${project}/files`
+    const ext = path.extname(filePath).toLowerCase()
+    const type = MIME_TYPES[ext] ?? (ext === '.txt' ? 'text/plain' : 'application/octet-stream')
+    const res = await this.request.post(url, {
+      data: await readFile(filePath),
+      headers: { 'Content-Type': contentType ?? type, 'X-File-Name': path.basename(filePath) },
+    })
+    const { id } = await this.check('POST', url, res)
+    return id as string
+  }
+
+  /** A comment with attachments (file ids from `uploadProjectFile`) */
+  async createCommentWithFiles(
+    project: string,
+    entityType: 'folder' | 'task' | 'version',
+    entityId: string,
+    body: string,
+    files: string[],
+  ) {
+    const { id } = await this.post(
+      `/api/projects/${project}/${entityType}s/${entityId}/activities`,
+      { activityType: 'comment', body, files },
+    )
+    return id as string
+  }
+
+  /**
+   * Activities in the feed of an entity, newest first: its own (`referenceType` "origin") and those
+   * of other entities that mention it ("mention") or are related to it ("relation", e.g. comments on
+   * the tasks of a folder). This is what the details panel feed shows.
+   */
+  async listFeedActivities(
+    project: string,
+    entityId: string,
+    options: { activityTypes?: string[]; referenceTypes?: string[] } = {},
+  ): Promise<
+    {
+      activityId: string
+      activityType: string
+      referenceType: string
+      body: string
+      origin: { id: string; type: string; name: string } | null
+      files: { id: string; name: string; mime: string; size: string }[]
+    }[]
+  > {
+    const data = await this.graphql(
+      `query Feed($project: String!, $ids: [String!]!, $types: [String!], $refs: [String!]) {
+        project(name: $project) {
+          activities(entityIds: $ids, activityTypes: $types, referenceTypes: $refs, last: 100) {
+            edges { node {
+              activityId activityType referenceType body
+              origin { id type name }
+              files { id name mime size }
+            } }
+          }
+        }
+      }`,
+      {
+        project,
+        ids: [entityId],
+        types: options.activityTypes ?? null,
+        refs: options.referenceTypes ?? ['origin', 'mention', 'relation'],
+      },
+    )
+    return data.project.activities.edges.map((e: any) => e.node)
+  }
+
+  /** User names watching an entity (notified of everything that happens to it) */
+  async getWatchers(
+    project: string,
+    entityType: 'folder' | 'task' | 'version',
+    entityId: string,
+  ): Promise<string[]> {
+    const res = await this.get(`/api/projects/${project}/${entityType}s/${entityId}/watchers`)
+    return res.watchers
+  }
+
+  async setWatchers(
+    project: string,
+    entityType: 'folder' | 'task' | 'version',
+    entityId: string,
+    watchers: string[],
+  ) {
+    await this.post(`/api/projects/${project}/${entityType}s/${entityId}/watchers`, { watchers })
   }
 
   // ---------------------------------------------------------------------------
