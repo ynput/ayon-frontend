@@ -52,6 +52,7 @@ test.describe('anatomy presets', () => {
 
   // FLAG (app bug): PresetNameDialog keeps its input in `useState(initialValue)` but stays mounted,
   // so the rename dialog never shows the current name (it is empty, or shows the last typed name).
+  // fixed in ynput/ayon-frontend#2397, switch back to test() once it is merged
   test.fixme('the rename dialog starts with the current preset name', async ({ page, api }) => {
     const name = uniqueName('preset')
     await api.createAnatomyPreset(name)

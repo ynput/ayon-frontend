@@ -46,6 +46,7 @@ test.describe('overview table view', () => {
   // "Entity type". ColumnSettingsProvider.onChangeWithColumns persists the raw `columnOrder` of the
   // config (empty for the default view) instead of the displayed order that includes `defaultOrder`,
   // and convertTanstackStatesToColumnConfig then falls back to the column definition order.
+  // fixed in ynput/ayon-frontend#2399, switch back to test() once it is merged
   test.fixme(
     'hiding a column keeps the order of the others',
     async ({ page, api, projectName }) => {

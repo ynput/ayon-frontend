@@ -90,9 +90,11 @@ test.describe('projects manager', () => {
     await expect(fps).toHaveValue('48')
   })
 
-  // FLAG (app bug): SettingsEditor's SelectWidget turns a null multiselect (anatomy attributes
-  // "applications" and "tools") into [] and reports it through onChange when it mounts, so just
-  // expanding "Attributes" makes AnatomyEditor see a change and enables "Save changes".
+  // FLAG (app bug): SettingsEditor's SelectWidget and CheckboxWidget show a null value as their
+  // default ([] for the "applications" and "tools" multiselects, false for boolean attributes added
+  // by addons) and report it through onChange when they mount, so just expanding "Attributes" makes
+  // AnatomyEditor see a change and enables "Save changes".
+  // fixed in ynput/ayon-frontend#2398, switch back to test() once it is merged
   test.fixme(
     'viewing the project anatomy does not mark it as changed',
     async ({ page, projectName }) => {

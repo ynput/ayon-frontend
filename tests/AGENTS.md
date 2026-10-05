@@ -90,6 +90,12 @@ Fixed in the same change:
 - The lists panel hid the primary "Create list" button at its default width but kept the secondary "Create folder" button.
 - Form labels were not linked to their inputs in the new project dialog (`LabelWithNameField`) and in the new folder/task dialog (`NewEntityForm`).
 
+Fixed in separate PRs. The covering tests are `test.fixme` until these are merged:
+- ynput/ayon-frontend#2396: "Items count" in the list details was always 0 (`lists.spec.ts`).
+- ynput/ayon-frontend#2397: the anatomy preset rename dialog did not show the current name (`anatomyPresets.spec.ts`).
+- ynput/ayon-frontend#2398: just viewing project anatomy marked it as changed (`projectsManager.spec.ts`).
+- ynput/ayon-frontend#2399: the first column change in a project reordered the other columns (`tableView.spec.ts`).
+
 Still open (worked around in the tests, marked with `FLAG` in the code):
 - `@ynput/ayon-react-components`: `Dialog` has no `role="dialog"` or accessible name, `FormRow` labels are not associated with their inputs, and icon ligature text is not `aria-hidden`.
 - New list dialog: `<label for="entityType">` points at an element that does not exist.

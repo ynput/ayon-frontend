@@ -101,6 +101,7 @@ test.describe('list contents', () => {
 
   // FLAG (app bug): "Items count" in the list details is always 0. ListDetailsPanel fetches the
   // list with `metadataOnly: true` (no items), and ListMetaData counts `list.items.length`.
+  // fixed in ynput/ayon-frontend#2396, switch back to test() once it is merged
   test.fixme(
     'list details show how many items the list has',
     async ({ page, api, projectName }) => {
