@@ -74,7 +74,10 @@ export default function useReviewSessionCardsModules({ skip }: Args) {
     ReviewSessionCardsProvider,
     ReviewSessionCardsControlsLeft,
     ReviewSessionCardsControlsRight,
-    useReviewSessionCards,
+    // the addon's hook reads the context of its provider, so it may only be used under the loaded provider
+    useReviewSessionCards: reviewSessionCardsProviderLoaded
+      ? useReviewSessionCards
+      : fallbackUseReviewSessionCards,
     allModulesLoaded,
     outdated,
   }
