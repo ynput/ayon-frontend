@@ -352,7 +352,7 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
       async onCacheEntryAdded(
-        { projectName, parentIds, filter, folderFilter, search, showComments },
+        { projectName, filter, folderFilter, search, showComments },
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch, getCacheEntry },
       ) {
         let token: any
@@ -364,6 +364,8 @@ const injectedApi = enhancedApi.injectEndpoints({
             (getCacheEntry().data as EditorTaskNode[] | undefined)?.map((task) => task.id) || [],
           )
           const batchIds = new Set<string>()
+          // new tasks in loaded folders, fetched with the current filters
+          const createdIds = new Set<string>()
           const patches: {
             taskId: string
             field: SupportedTaskField
@@ -375,7 +377,14 @@ const injectedApi = enhancedApi.injectEndpoints({
             .filter((message) => queriedFolders.has(message.summary?.parentId))
             .forEach((message) => {
               const taskId = message.summary?.entityId
-              if (!taskId || !cachedTaskIds.has(taskId)) return
+              if (!taskId) return
+
+              if (message.topic === 'entity.task.created') {
+                if (!cachedTaskIds.has(taskId)) createdIds.add(taskId)
+                return
+              }
+
+              if (!cachedTaskIds.has(taskId)) return
 
               const field = message.topic?.split('.')[2]?.replace('_changed', '')
               const patch = getSupportedEntityPatch(
@@ -403,27 +412,39 @@ const injectedApi = enhancedApi.injectEndpoints({
           }
 
           const idsToFetch = Array.from(batchIds)
-          if (!idsToFetch.length || idsToFetch.length > REALTIME_REST_CALL_LIMIT) return
+          const createdIdsToFetch = Array.from(createdIds)
+          const fetchCount = idsToFetch.length + createdIdsToFetch.length
+          if (!fetchCount || fetchCount > REALTIME_REST_CALL_LIMIT) return
 
-          try {
-            await waitForRealtimeJitter()
+          const fetchTasks = async (taskIds: string[], filters?: Partial<GetTasksListArgs>) => {
+            if (!taskIds.length) return []
             const res = await dispatch(
               enhancedApi.endpoints.GetTasksList.initiate(
                 {
                   projectName,
-                  taskIds: idsToFetch,
+                  taskIds,
                   showComments: !!showComments,
+                  ...filters,
                 } as any,
                 { forceRefetch: true },
               ),
             ).unwrap()
-            const returned = res.tasks || []
+            return res.tasks || []
+          }
+
+          try {
+            await waitForRealtimeJitter()
+            const [returned, created] = await Promise.all([
+              fetchTasks(idsToFetch),
+              // a new task only shows if it matches the filters of this view
+              fetchTasks(createdIdsToFetch, { filter, folderFilter, search }),
+            ])
             if (!isActive()) return
             const returnedMap = new Map(returned.map((t: EditorTaskNode) => [t.id, t]))
 
             updateCachedData((draft: EditorTaskNode[]) => {
               // update or add
-              for (const task of returned) {
+              for (const task of [...returned, ...created]) {
                 const idx = draft.findIndex((t) => t.id === task.id)
                 if (idx > -1) draft[idx] = task
                 else draft.push(task)
