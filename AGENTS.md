@@ -10,6 +10,7 @@ Some parts of the codebase have their own `AGENTS.md` next to the code. It expla
 | Area | Guide |
 | --- | --- |
 | Markdown editor (Lexical): comments, descriptions, text cells | [shared/src/components/MarkdownEditor/AGENTS.md](shared/src/components/MarkdownEditor/AGENTS.md) |
+| Playwright tests: unit and e2e, fixtures, page objects | [tests/AGENTS.md](tests/AGENTS.md) |
 
 ## Errors
 - Do not use `transformErrorResponse`; use `getRequestErrorString`, and keep all RTK Query errors, including GraphQL errors, in the standard `{ status, data: { code, detail, ... } }` model.

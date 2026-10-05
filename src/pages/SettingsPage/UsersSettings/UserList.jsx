@@ -81,7 +81,7 @@ const UserList = ({
   setShowInviteUser,
   isLoading,
   onSelectUsers,
-  isSelfSelected,
+  selfName,
   managerDisabled,
 }) => {
   // GET LICENSE USER POOLS
@@ -109,8 +109,10 @@ const UserList = ({
   }
 
   // IDEA: Can these go into the details panel as well?
+  // built from the right-clicked selection, the `selection` state is not updated yet at this point
   const ctxMenuItems = (newSelectedUsers) => {
     const ctxSelection = userList.filter((u) => newSelectedUsers.includes(u.name))
+    const ctxSelfSelected = newSelectedUsers.includes(selfName)
     const ctxHasInvitable = ctxSelection.some((u) => !!u.attrib?.email)
     const inviteLabel =
       ctxSelection.length === 1 && getInvitationState(ctxSelection[0]) === 'pending'
@@ -120,13 +122,13 @@ const UserList = ({
     return [
       {
         label: 'Set username',
-        disabled: selection.length !== 1,
+        disabled: ctxSelection.length !== 1,
         command: () => setShowRenameUser(true),
         icon: 'edit',
       },
       {
         label: 'Set password',
-        disabled: selection.length !== 1,
+        disabled: ctxSelection.length !== 1,
         command: () => setShowSetPassword(true),
         icon: 'key',
       },
@@ -138,7 +140,7 @@ const UserList = ({
       },
       {
         label: 'Delete selected',
-        disabled: !selection.length || isSelfSelected,
+        disabled: !ctxSelection.length || ctxSelfSelected,
         command: () => setShowDeleteUser(newSelectedUsers),
         icon: 'delete',
         danger: true,

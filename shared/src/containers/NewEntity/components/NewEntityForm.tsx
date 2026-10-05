@@ -1,5 +1,5 @@
 import { InputText } from '@ynput/ayon-react-components'
-import React, { KeyboardEvent, useState, useRef } from 'react'
+import React, { KeyboardEvent, useId, useState, useRef } from 'react'
 import styled from 'styled-components'
 import type { EntityForm } from '../context/NewEntityContext'
 import { theme } from '@ynput/ayon-react-components'
@@ -95,6 +95,7 @@ export const NewEntityForm: React.FC<NewEntityFormProps> = ({
   labelRef,
   nameInfo = '',
 }) => {
+  const fieldId = useId()
   const [nameInputFocused, setNameInputFocused] = useState(false)
   const [originalName, setOriginalName] = useState<string | undefined>(undefined)
   const nameInputRef = useRef<HTMLInputElement>(null)
@@ -169,8 +170,9 @@ export const NewEntityForm: React.FC<NewEntityFormProps> = ({
 
   return (
     <InputsContainer style={{ flex: 1 }}>
-      <InputLabel>Label</InputLabel>
+      <InputLabel htmlFor={`${fieldId}-label`}>Label</InputLabel>
       <InputText
+        id={`${fieldId}-label`}
         value={entityForm.label}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(e.target.value, 'label')}
         ref={labelRef}
@@ -179,7 +181,7 @@ export const NewEntityForm: React.FC<NewEntityFormProps> = ({
         style={{ flex: 1, width: '100%' }}
       />
       <NameRow onKeyDown={handleNameKeydown}>
-        <InputLabel>Name</InputLabel>
+        <InputLabel htmlFor={`${fieldId}-name`}>Name</InputLabel>
         {nameInfo && <Icon icon="info" data-tooltip={nameInfo} data-tooltip-delay={0} />}
         {!nameInputFocused ? (
           <NameDisplay onClick={handleNameDisplayClick} tabIndex={0}>
@@ -187,6 +189,7 @@ export const NewEntityForm: React.FC<NewEntityFormProps> = ({
           </NameDisplay>
         ) : (
           <NameInput
+            id={`${fieldId}-name`}
             ref={nameInputRef}
             value={entityForm.name}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>

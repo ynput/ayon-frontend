@@ -105,7 +105,12 @@ const StyledCreateItem = styled.span`
 
 export interface NewEntityProps {
   disabled?: boolean
-  onNewEntities?: (ops: OperationResponseModel[], stayOpen: boolean) => void
+  /** `parentFolderIds` are the folders the new entities were created in */
+  onNewEntities?: (
+    ops: OperationResponseModel[],
+    stayOpen: boolean,
+    parentFolderIds: string[],
+  ) => void
   showButton?: boolean
   showDialog?: boolean
   enableShortcuts?: boolean
@@ -353,10 +358,8 @@ export const NewEntity: React.FC<NewEntityProps> = ({
     try {
       const resOperations = await onCreateNew(selectedFolderIds)
 
-      console.log(resOperations)
-
       // callback function
-      onNewEntities?.(resOperations, stayOpen)
+      onNewEntities?.(resOperations, stayOpen, selectedFolderIds)
 
       if (stayOpen) {
         // focus and select the label input

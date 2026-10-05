@@ -32,15 +32,15 @@ const HeaderTop = styled(Header)`
   container-type: inline-size;
 
   /* when this container gets smaller than */
-  /* 188px remove add-list button  */
+  /* 188px remove folder button (the panel's default width, keep the primary add-list action) */
   @container (max-width: 188px) {
-    .add-list {
+    .add-folder {
       display: none;
     }
   }
-  /* 155px remove folder button */
+  /* 155px remove add-list button */
   @container (max-width: 155px) {
-    .add-folder {
+    .add-list {
       display: none;
     }
   }
