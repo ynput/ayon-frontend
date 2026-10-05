@@ -96,13 +96,13 @@ test.describe('project overview', () => {
 })
 
 test.describe('project overview editing', () => {
-  test('assign a user to a task', async ({ page, api, projectName, createUser }) => {
+  test('assign a user to a task', async ({ page, api, projectName, createUser, accessGroup }) => {
     const fullName = `Assignee${Math.random().toString(36).slice(2, 7)}`
     // only licensed users with access to the project are offered as assignees
     const artist = await createUser({
       fullName,
       licensed: true,
-      accessGroups: { [projectName]: ['artist'] },
+      accessGroups: { [projectName]: [accessGroup] },
     })
     const folder = await api.createFolder(projectName, { name: 'sh040', folderType: 'Shot' })
     const task = await api.createTask(projectName, {

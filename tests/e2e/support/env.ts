@@ -8,7 +8,7 @@ const required = (...keys: string[]) => {
     if (value) return value
   }
   throw new Error(
-    `Missing env variable ${keys[0]}. Add it to .env.test.local (see tests/README.md).`,
+    `Missing env variable ${keys[0]}. Add it to .env.test.local (see tests/AGENTS.md).`,
   )
 }
 

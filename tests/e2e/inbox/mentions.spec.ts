@@ -42,9 +42,15 @@ test.describe('mentions and inbox', () => {
     api,
     projectName,
     createUser,
+    accessGroup,
     browser,
   }) => {
-    const artist = await createUser({ fullName: 'Inbox Artist', isManager: true })
+    // Not a manager: a manager's inbox reads every project, and fails while another worker is
+    // creating or dropping one. With access to this project only, the inbox reads just this one.
+    const artist = await createUser({
+      fullName: 'Inbox Artist',
+      accessGroups: { [projectName]: [accessGroup] },
+    })
     const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
     const task = await api.createTask(projectName, {
       folderId: folder.id,

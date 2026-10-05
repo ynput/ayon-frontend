@@ -1,6 +1,7 @@
 import { test as base, expect } from '@playwright/test'
 import { AyonApi } from './support/api'
 import { adminCredentials } from './support/env'
+import { uniqueName } from './support/names'
 
 type WorkerFixtures = {
   /** Admin REST client, shared by all tests in a worker */
@@ -15,6 +16,11 @@ type TestFixtures = {
   projectName: string
   /** Users created through `createUser` are deleted after the test */
   createUser: AyonApi['createUser']
+  /**
+   * A studio access group without restrictions, deleted after the test.
+   * Servers can rename or remove the default groups (e.g. `artist`), so tests never rely on them.
+   */
+  accessGroup: string
 }
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
@@ -47,6 +53,13 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
       return user
     })
     for (const name of created) await api.deleteUser(name)
+  },
+
+  accessGroup: async ({ api }, use) => {
+    const name = uniqueName('ag')
+    await api.createAccessGroup(name)
+    await use(name)
+    await api.deleteAccessGroup(name)
   },
 
   page: async ({ page }, use) => {

@@ -35,7 +35,7 @@ If a test server is already listening on 3100 it is reused locally. **It will no
 
 **Isolation.** Every test gets its own project from the `projectName` fixture (`fixtures.ts`).
 - The project is created through the API before the test and deleted after it, so tests never see each other's data.
-- Users from the `createUser` fixture are deleted after the test.
+- Users from the `createUser` fixture and the group from the `accessGroup` fixture are deleted after the test.
 - Every name comes from `uniqueName()` (`support/names.ts`). The format is `e2e_<runId>_<label>_<worker><n><random>`, which makes names unique across tests, workers and parallel runs by different people.
 - `global.teardown.ts` deletes anything left over from the current run's prefix, for example after a crashed worker.
 
@@ -60,6 +60,8 @@ If a test server is already listening on 3100 it is reused locally. **It will no
 - **Two menus.** Project pages have a second `more_horiz` button in the top nav that opens the "Project Context" debug dialog. Scope generic buttons to the panel you mean.
 - **Per-user views.** Views (columns, grouping, filters) are stored on the server per user and project. Fresh projects use the default view, e.g. the products page lists one row per version.
 - **Assignees.** Only licensed users are offered as assignees. Use `createUser({ licensed: true })`.
+- **Access groups.** Do not use the default groups (`artist`, `supervisor`, ...). Studios rename or remove them, and the server silently drops unknown groups from a user, leaving them without project access. Use the `accessGroup` fixture: `createUser({ accessGroups: { [projectName]: [accessGroup] } })`.
+- **Cross-project queries.** A manager's or admin's inbox reads every project. It fails while another worker is creating or dropping a project. Give inbox users access to the test project only, not `isManager`.
 - **Edit only after selecting.** Task progress cells only become editable once selected (`.tag.status.editable`). On the dashboard, clicking a card selects it and clicking its title opens the details panel.
 - **New entity dialog.** The dialog opens its type dropdown by itself about 180 ms after it appears. `OverviewPage.fillCreateDialog` waits for that rather than racing it with a click.
 
@@ -79,6 +81,7 @@ Still open (worked around in the tests, marked with `FLAG` in the code):
 - New list dialog: `<label for="entityType">` points at an element that does not exist.
 - Users, team and access group forms: labels are not associated with their inputs.
 - Backend: concurrent project create/delete stalls the server and can deadlock `DELETE /api/projects/{name}`.
+- Backend: `get_user_inbox` loops over every project for managers and admins. If one project's schema is missing (being created or deleted), the whole inbox fails with `relation "project_<name>.activity_feed" does not exist`.
 - Backend (planner addon 2.3.1-dev): `handle_user_created` re-syncs every user and fails with a unique violation when two users are created at the same time.
 
 Tests retry once locally (twice on CI) to ride out these backend hiccups. A test that passes on retry is reported as **flaky**. Look into it rather than ignoring it.
