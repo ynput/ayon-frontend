@@ -383,6 +383,19 @@ export class AyonApi {
     })
   }
 
+  /**
+   * Replaces the settings of the working view of a page in a project, e.g. to start a test with a
+   * filter applied: `{ filter: { operator: 'and', conditions: [{ key: 'task_status', value: ['Approved'], operator: 'in' }] } }`.
+   * The view belongs to the user this client is logged in as and is dropped with the project.
+   */
+  async setWorkingViewSettings(viewType: string, project: string, settings: Record<string, any>) {
+    await this.post(`/api/views/${viewType}?project_name=${project}`, {
+      label: 'Working',
+      working: true,
+      settings,
+    })
+  }
+
   // ---------------------------------------------------------------------------
   // inbox (of the user this client is logged in as)
   // ---------------------------------------------------------------------------

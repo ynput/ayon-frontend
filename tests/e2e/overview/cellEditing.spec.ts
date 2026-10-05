@@ -117,3 +117,45 @@ test.describe('overview cell editing', () => {
       .toEqual([tasks[0].id])
   })
 })
+
+test.describe('overview tag and date cells', () => {
+  test('add a tag to a task', async ({ page, api, projectName }) => {
+    // the tags offered are the project's tags
+    await api.patch(`/api/projects/${projectName}`, {
+      tags: [
+        { name: 'hero', color: '#ff2450' },
+        { name: 'rush', color: '#5be1c6' },
+      ],
+    })
+    const { tasks } = await createShot(api, projectName, ['anim'])
+    await api.setWorkingViewColumns('overview', projectName, ['name', 'tags'])
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.expand('sh010')
+
+    await overview.setEnumCell('anim', 'tags', 'hero')
+    // tags are a multi select, the dropdown stays open until it is closed
+    await page.keyboard.press('Escape')
+    await expect(page.locator('.options')).toBeHidden()
+
+    await expect(overview.cell('anim', 'tags')).toContainText('hero')
+    await expect
+      .poll(async () => (await api.getTask(projectName, tasks[0].id)).tags)
+      .toEqual(['hero'])
+  })
+
+  test('set a date attribute', async ({ page, api, projectName }) => {
+    const { tasks } = await createShot(api, projectName, ['anim'])
+    await api.setWorkingViewColumns('overview', projectName, ['name', 'attrib_startDate'])
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.expand('sh010')
+
+    await overview.setDateCell('anim', 'attrib_startDate', '2026-11-15')
+
+    await expect(overview.cell('anim', 'attrib_startDate')).toHaveText('15-11-2026')
+    await expect
+      .poll(async () => (await api.getTask(projectName, tasks[0].id)).attrib.startDate)
+      .toBe('2026-11-15T00:00:00+00:00')
+  })
+})
