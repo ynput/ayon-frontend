@@ -57,4 +57,33 @@ test.describe('secrets', () => {
       await api.deleteSecret(name)
     }
   })
+
+  // FLAG (app bug): Secrets.jsx rendered `{data?.length && ...}`, a literal "0" under "Stored secrets"
+  // when the server had no secrets left.
+  // fixed in ynput/ayon-frontend#2400, switch back to test() once it is merged
+  test.fixme('deleting the last secret leaves an empty list', async ({ page, api }) => {
+    const name = uniqueName('secret')
+    await api.setSecret(name, 'last-value')
+    try {
+      // other secrets are not the test's to delete, so the page only gets to see this one
+      await page.route('**/api/secrets', async (route) => {
+        if (route.request().method() !== 'GET') return route.continue()
+        const response = await route.fetch()
+        const stored: { name: string }[] = await response.json()
+        await route.fulfill({ response, json: stored.filter((s) => s.name === name) })
+      })
+      const secrets = new SecretsPage(page)
+      await secrets.goto()
+      await expect(secrets.secretRow(name)).toBeVisible()
+
+      await secrets.deleteSecret(name)
+
+      // the row goes away in the same render that would show the "0"
+      await expect(secrets.secretRow(name)).toBeHidden()
+      await expect(secrets.list).toHaveText(/Stored secrets$/)
+      await expect.poll(() => api.getSecretValue(name)).toBeUndefined()
+    } finally {
+      await api.deleteSecret(name)
+    }
+  })
 })

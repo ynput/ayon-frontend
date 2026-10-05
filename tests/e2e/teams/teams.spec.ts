@@ -102,6 +102,33 @@ test.describe('project teams', () => {
       .toEqual([user.name])
   })
 
+  // FLAG (app bug): with two or more users selected, right-clicking another user selected only that
+  // user, but UserListTeams built the menu from the previous selection, so "Add to <team>" added the
+  // previously selected users instead.
+  // fixed in ynput/ayon-frontend#2402, switch back to test() once it is merged
+  test.fixme(
+    'add a user that is not selected to a team from its context menu',
+    async ({ page, api, projectName, createUser, accessGroup }) => {
+      const access = { accessGroups: { [projectName]: [accessGroup] } }
+      const first = await createUser(access)
+      const second = await createUser(access)
+      const other = await createUser(access)
+      await api.createTeam(projectName, 'fx_team')
+      const teams = new TeamsPage(page)
+      await teams.goto(projectName)
+      await teams.selectTeam('fx_team')
+      await teams.selectUser(first.name)
+      await teams.addUserToSelection(second.name)
+
+      await teams.addUserToSelectedTeam(other.name, 'fx_team')
+
+      await expect(teams.userRow(other.name)).toContainText('fx_team')
+      await expect
+        .poll(async () => (await api.getTeamMembers(projectName, 'fx_team'))?.map((m) => m.name))
+        .toEqual([other.name])
+    },
+  )
+
   test('make a team member the team leader', async ({
     page,
     api,

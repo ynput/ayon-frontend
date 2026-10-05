@@ -36,6 +36,12 @@ export class TeamsPage {
     await expect(this.userRow(name)).toHaveClass(/\bp-highlight\b/)
   }
 
+  /** Ctrl/Cmd click, keeps the users that are already selected */
+  async addUserToSelection(name: string) {
+    await this.userRow(name).click({ modifiers: ['ControlOrMeta'] })
+    await expect(this.userRow(name)).toHaveClass(/\bp-highlight\b/)
+  }
+
   /** "Add to <team>" from a user's context menu, `team` must be the selected team */
   async addUserToSelectedTeam(user: string, team: string) {
     await this.userRow(user).click({ button: 'right' })
