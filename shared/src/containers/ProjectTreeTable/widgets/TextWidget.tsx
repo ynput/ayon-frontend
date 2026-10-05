@@ -1,5 +1,5 @@
 import { forwardRef, useState, useEffect, useRef, useCallback } from 'react'
-import Markdown from 'react-markdown'
+import Markdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { TextWidgetInput } from './TextWidgetInput'
@@ -13,47 +13,11 @@ import { parseHtmlToPlainTextWithLinks } from '@shared/util'
 import { TextContentWidget } from './TextContentWidget'
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { CellId } from '../utils/cellUtils'
-import { wrapMode } from './wrapMode'
+import { MENTION_REF_TYPES } from '@shared/components/MarkdownEditor'
+import ActivityReference from '@shared/containers/Feed/components/ActivityReference/ActivityReference'
+import { StyledBaseTextWidget } from './TextWidget.styled'
 
 // ── Styled components ──────────────────────────────────────────────
-
-export const StyledBaseTextWidget = styled.span`
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  user-select: none;
-
-  display: flex;
-  gap: 4px;
-
-  &.markdown {
-    white-space: normal;
-    word-break: break-word;
-    display: block;
-    overflow: hidden;
-    width: 100%;
-    max-height: 100%;
-  }
-
-  &.regular {
-    display: block;
-  }
-
-  ${wrapMode`
-    &:not(.markdown) {
-      white-space: normal;
-      word-break: break-word;
-      display: block;
-      overflow: hidden;
-      width: 100%;
-      max-height: 100%;
-
-      > .icon {
-        margin-right: 4px;
-      }
-    }
-  `}
-`
 
 const StyledLink = styled.a`
   color: var(--md-sys-color-primary, #0066cc);
@@ -144,6 +108,13 @@ const parseTextWithUrls = (text: string) => {
   })
 }
 
+// `[label](type:id)` mentions written by the markdown editor
+const parseMentionHref = (href?: string) => {
+  const match = href?.match(/^@?([a-z]+):(.+)$/)
+  if (!match || !(MENTION_REF_TYPES as readonly string[]).includes(match[1])) return null
+  return { type: match[1], id: decodeURIComponent(match[2]) }
+}
+
 // Function to check if content contains HTML tags
 const containsHtml = (text: string): boolean => {
   return /<[^>]*>/.test(text)
@@ -165,6 +136,8 @@ export interface TextWidgetProps
   onRequestEdit?: (id: CellId | null) => void
   getDraftValue?: () => string | null
   setDraftValue?: (value: string | null) => void
+  // the entity of the row, to mention its users, sibling tasks and versions in markdown
+  mentionEntity?: { entityId: string; entityType: string }
 }
 
 export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
@@ -184,6 +157,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       onRequestEdit,
       getDraftValue,
       setDraftValue,
+      mentionEntity,
       className,
       ...props
     },
@@ -327,18 +301,37 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
           <Markdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw]}
+            // keep mention urls (`user:id`), which the default transform drops as unsafe
+            urlTransform={(url) => (parseMentionHref(url) ? url : defaultUrlTransform(url))}
             components={{
               p: ({ children }) => <span>{children}</span>,
-              a: ({ href, children }) => (
-                <StyledLink
-                  href={href || '#'}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {children}
-                </StyledLink>
-              ),
+              a: ({ href, children }) => {
+                const mention = parseMentionHref(href)
+                if (mention) {
+                  const label = String(children ?? '').replace(/^@+/, '')
+                  return (
+                    <ActivityReference
+                      type={mention.type}
+                      id={mention.id.replaceAll('.', '-').replaceAll(' ', '-')}
+                      variant="surface"
+                      data-mention-value={`${mention.type}:${mention.id}`}
+                      data-mention-label={label}
+                    >
+                      {label}
+                    </ActivityReference>
+                  )
+                }
+                return (
+                  <StyledLink
+                    href={href || '#'}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {children}
+                  </StyledLink>
+                )
+              },
             }}
           >
             {textValue}
@@ -441,7 +434,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
           {renderContent()}
         </StyledBaseTextWidget>
 
-        {/* Description column editing (Quill editor in popup) */}
+        {/* Description column editing (markdown editor in popup) */}
         {isEditing && isMarkdown && cellId && (
           <TextContentWidget
             value={value}
@@ -455,6 +448,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             onDismissWithoutSave={onCancelEdit}
             draftValue={getCurrentDraft()}
             onEditingDraftChange={setCurrentDraft}
+            mentionEntity={mentionEntity}
           />
         )}
 

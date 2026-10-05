@@ -3,17 +3,12 @@ import {
   FormLayout,
   FormRow,
   InputPassword,
-  Divider,
   Dropdown,
   InputSwitch,
 } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
 import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import { hasEnumOptions, getSelectableEnumItems } from '@shared/util'
-
-export const DividerSmallStyled = styled(Divider)`
-  margin: 8px 0;
-`
+import { DividerSmallStyled } from './UserAttribForm.styled'
 
 const UserAttribForm = ({
   attributes: attributeFields,

@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 
 import { copyToClipboard } from '@shared/util'
-import { usePaste } from '@context/PasteContext'
+import { usePaste } from '@context'
 
 import { InputText } from 'primereact/inputtext'
 

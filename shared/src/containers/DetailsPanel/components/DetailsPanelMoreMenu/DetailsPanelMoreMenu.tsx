@@ -4,13 +4,13 @@ import { Button } from '@ynput/ayon-react-components'
 import { Menu } from '@shared/components/Menu/Menu'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
 import { DetailsDialog } from '@shared/components/DetailsDialog/DetailsDialog'
-import { useMenuContext } from '@shared/context/MenuContext'
-import { ThumbnailUploadContext } from '@shared/context/ThumbnailUploaderContext'
 import {
+  useMenuContext,
+  ThumbnailUploadContext,
   useDeleteEntitiesContextOptional,
   isDeletableEntityType,
-} from '@shared/context/DeleteEntitiesContext'
-import type { DeletableEntity } from '@shared/context/DeleteEntitiesContext'
+  type DeletableEntity,
+} from '@shared/context'
 
 import { useContextAccess } from './hooks/useContextAccess'
 import { useMenuOptions } from './hooks/useMenuOptions'

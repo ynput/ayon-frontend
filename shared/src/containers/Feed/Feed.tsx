@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { v4 as uuid } from 'uuid'
 import ActivityItem from './components/ActivityItem'
 import CommentInput from './components/CommentInput/CommentInput'
-import { VersionReviewFeedback } from './components/CommentInput/types'
+import { VersionReviewFeedback, type CommentDuplicate } from './components/CommentInput/types'
 import * as Styled from './Feed.styled'
 import useCommentMutations, { Activity } from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
@@ -12,11 +13,11 @@ import { getLoadingPlaceholders } from './feedHelpers'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
-import { isFilePreviewable } from './components/FileUploadPreview/FileUploadPreview'
+import { isFilePreviewable } from './components/FileUploadPreview/FileUploadPreviewHelpers'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
-import { useFeedContext, FEED_NEW_COMMENT } from './context/FeedContext'
+import { FEED_NEW_COMMENT, useFeedContext } from './context/feed'
 import { Status } from '../ProjectTreeTable/types/project'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext, getActivityFrameLink, type FeedFrameLink } from '@shared/context'
 import { useGetMyProjectPermissionsQuery } from '@shared/api'
 import type { DetailsPanelEntityType } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
@@ -73,6 +74,7 @@ export const Feed = ({
     setHighlightedActivities,
     onOpenImage,
     setFeedAnnotations,
+    setFeedFrameLinks,
     user,
   } = useDetailsPanelContext()
 
@@ -126,6 +128,18 @@ export const Feed = ({
 
     setFeedAnnotations(annotations)
   }, [activitiesWithMergedAnnotations])
+
+  // collect the comments linked to frames, e.g. for markers on the host's timeline
+  useEffect(() => {
+    const frameLinks = activitiesData
+      .map((activity) => {
+        const link = getActivityFrameLink(activity)
+        return link && { ...link, activityId: activity.activityId }
+      })
+      .filter((link): link is FeedFrameLink => !!link)
+
+    setFeedFrameLinks(frameLinks)
+  }, [activitiesData])
 
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
@@ -292,6 +306,17 @@ export const Feed = ({
     onOpenImage?.({ files: previewableFiles, activityId, index, projectName })
   }
 
+  // a comment copied into the new comment input (comment menu > Duplicate)
+  const [commentDuplicate, setCommentDuplicate] = useState<CommentDuplicate | null>(null)
+  const canDuplicate = !hideCommentInput && !readOnly && !disabled
+  const handleDuplicate = useCallback(
+    (activity: CommentDuplicate['activity']) => {
+      setCommentDuplicate({ key: uuid(), activity })
+      setEditingId(FEED_NEW_COMMENT)
+    },
+    [setEditingId],
+  )
+
   const loadingPlaceholders = useMemo(() => getLoadingPlaceholders(10), [])
 
   const lastVersionReview = useLastVersionReview({
@@ -336,6 +361,7 @@ export const Feed = ({
                   onUpdate={async (value, files, _refs, data) =>
                     await updateComment(activity, value, files, data)
                   }
+                  onDuplicate={canDuplicate ? handleDuplicate : undefined}
                   projectInfo={projectInfo}
                   projectName={projectName}
                   entityType={entityType}
@@ -385,6 +411,8 @@ export const Feed = ({
             versionReview={versionReview}
             lastOwnVersionReview={lastVersionReview}
             onReview={submitReview}
+            duplicate={commentDuplicate}
+            onDuplicateHandled={() => setCommentDuplicate(null)}
           />
         )}
       </Styled.FeedContainer>

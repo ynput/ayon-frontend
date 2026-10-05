@@ -1,5 +1,5 @@
 import { Button } from "@ynput/ayon-react-components";
-import { useImportDialogContext } from "./context/ImportDialogProvider";
+import { useImportDialogContext } from "./context/ImportDialogProviderInstance"
 import { ImportContext } from "./steps/common";
 
 type Props = {

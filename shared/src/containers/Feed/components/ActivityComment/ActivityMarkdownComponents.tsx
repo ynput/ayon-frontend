@@ -1,6 +1,10 @@
+import React from 'react'
 import { isArray } from 'lodash'
 import ActivityCheckbox from '../ActivityCheckbox/ActivityCheckbox'
 import ActivityReference from '../ActivityReference/ActivityReference'
+import { ACTIVITY_LINK_LABEL, parseActivityLink } from '@shared/components/MarkdownEditor'
+import SourceCommentReference from './SourceCommentReference'
+import { getActivityLink } from '../../helpers/getActivityLink'
 
 export const allowedRefTypes = [
   'user',
@@ -21,7 +25,13 @@ const sanitizeURL = (url = '') => {
     const sections = url.split(':')
     const [type, id] = sections
     if (allowedRefTypes.includes(type) && id && sections.length === 2) {
-      const decodedId = (() => { try { return decodeURIComponent(id) } catch { return id } })()
+      const decodedId = (() => {
+        try {
+          return decodeURIComponent(id)
+        } catch {
+          return id
+        }
+      })()
       return { type, id: decodedId }
     }
   }
@@ -35,6 +45,7 @@ interface ATagProps {
 
 interface ATagOptions {
   entityId?: string
+  entityType?: string
   projectName?: string
   userName?: string
   userTeamNames?: string[]
@@ -54,12 +65,20 @@ interface ATagOptions {
   }) => void
   categoryPrimary?: string
   categorySecondary?: string
+  // a link to a comment was clicked, defaults to opening the link
+  onActivityLinkClick?: (link: { activityId: string; projectName: string; url: string }) => void
 }
+
+const getText = (children: React.ReactNode): string =>
+  React.Children.toArray(children)
+    .map((child) => (typeof child === 'string' || typeof child === 'number' ? String(child) : ''))
+    .join('')
 
 export const aTag = (
   { children, href }: ATagProps,
   {
     entityId,
+    entityType,
     userName,
     userTeamNames,
     projectName,
@@ -68,8 +87,56 @@ export const aTag = (
     onReferenceTooltip,
     categoryPrimary,
     categorySecondary,
+    onActivityLinkClick,
   }: ATagOptions,
 ): React.ReactNode => {
+  // a link to a comment is a chip like mentions
+  const activityLink = parseActivityLink(href)
+  if (activityLink) {
+    if (activityLink.isSource) {
+      // the source comment can be on another entity than the comment linking to it
+      const entity =
+        activityLink.entity ?? (entityId && entityType ? { id: entityId, type: entityType } : null)
+      if (!projectName || !entity) return null
+      const url = getActivityLink(projectName, activityLink.activityId, entity)
+      return (
+        <SourceCommentReference
+          projectName={projectName}
+          activityId={activityLink.activityId}
+          entityId={entity.id}
+          onClick={() =>
+            onActivityLinkClick
+              ? onActivityLinkClick({ activityId: activityLink.activityId, projectName, url })
+              : window.open(url, '_blank', 'noreferrer')
+          }
+          categoryPrimary={categoryPrimary}
+          categorySecondary={categorySecondary}
+        />
+      )
+    }
+    const text = getText(children).trim()
+    // a pasted url has itself as its label
+    const label = !text || /^https?:\/\//.test(text) ? ACTIVITY_LINK_LABEL : text
+    const link = activityLink
+    return (
+      <ActivityReference
+        type="activity"
+        id={`activity-${activityLink.activityId}`}
+        icon="chat"
+        onClick={() =>
+          onActivityLinkClick
+            ? onActivityLinkClick(link)
+            : window.open(href, '_blank', 'noreferrer')
+        }
+        categoryPrimary={categoryPrimary}
+        categorySecondary={categorySecondary}
+        data-tooltip="Go to comment"
+      >
+        {label}
+      </ActivityReference>
+    )
+  }
+
   const { url, type, id } = sanitizeURL(href)
 
   // link is broken in some way
@@ -147,7 +214,8 @@ export const inputTag = (
   }
 }
 
-import { BlockCode, QuoteLine } from './ActivityComment.styled'
+import { BlockCode, InlineCode, QuoteLine } from './ActivityComment.styled'
+import { highlightCode } from '@shared/components/MarkdownEditor/code/prism'
 import { Link } from 'react-router-dom'
 // eslint-disable-next-line
 interface CodeTagProps {
@@ -157,6 +225,23 @@ interface CodeTagProps {
 }
 
 export const codeTag = ({ node, className, children }: CodeTagProps): JSX.Element => {
+  // fenced blocks span several lines (or have a language), everything else is inline `code`
+  const isBlock =
+    !!className?.startsWith('language-') ||
+    (node?.position && node.position.start.line !== node.position.end.line)
+  if (!isBlock) return <InlineCode>{children}</InlineCode>
+
+  // syntax highlighting with the same prism setup as the editor
+  const language = className?.replace(/^language-/, '')
+  const code = typeof children === 'string' ? children.replace(/\n$/, '') : null
+  const html = code !== null ? highlightCode(code, language) : null
+  if (html !== null) {
+    return (
+      <BlockCode>
+        <code className={className} dangerouslySetInnerHTML={{ __html: html }} />
+      </BlockCode>
+    )
+  }
   return <BlockCode>{children}</BlockCode>
 }
 
@@ -166,7 +251,9 @@ interface BlockquoteTagProps {
 
 export const blockquoteTag = ({ children }: BlockquoteTagProps): JSX.Element => {
   // get children string
-  const child = (children as any).find((item: any) => !!item?.props)?.props?.children
+  // children is a single node (or nothing) for a quote with one child, not always an array
+  const child = (React.Children.toArray(children) as any[]).find((item) => !!item?.props)?.props
+    ?.children
 
   if (!child) return <blockquote>{children}</blockquote>
 

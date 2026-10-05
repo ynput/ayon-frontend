@@ -1,39 +1,13 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { DefaultValueTemplate, Dropdown, DropdownProps } from '@ynput/ayon-react-components'
+import { Dropdown, DropdownProps } from '@ynput/ayon-react-components'
 
 import { useListBundlesQuery } from '@shared/api'
 import styled from 'styled-components'
 import { BundleModel } from '@shared/api'
 import { $Any } from '@types'
 import clsx from 'clsx'
-
-export const BundleDropdownItemStyled = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 8px;
-  padding-right: 12px;
-  gap: var(--base-gap-small);
-
-  &.active {
-    background-color: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-
-    &:hover {
-      background-color: var(--md-sys-color-primary-container-hover);
-    }
-  }
-`
-
-export const DefaultValueTemplateStyled = styled(DefaultValueTemplate)`
-  padding-left: 0;
-  & > div > span {
-    flex: 1;
-  }
-`
+import { BundleDropdownItemStyled, DefaultValueTemplateStyled } from './BundleDropdown.styled'
 
 const BadgesWrapper = styled.div`
   display: flex;

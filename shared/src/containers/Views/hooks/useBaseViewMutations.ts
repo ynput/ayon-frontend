@@ -10,7 +10,7 @@ import {
 import { toast } from 'react-toastify'
 import { getScopeTag } from '@shared/api/queries/views/getViews'
 import { BASE_VIEW_ID } from '../types'
-import type { ViewSettings } from '../context/ViewsContext'
+import type { ViewSettings } from '../context'
 
 type Props = {
   viewType?: string

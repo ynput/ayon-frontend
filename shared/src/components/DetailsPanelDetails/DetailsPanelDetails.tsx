@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   DetailsPanelAttributesEditor,
   DetailsPanelAttributesEditorProps,
@@ -8,8 +9,10 @@ import { DescriptionSection } from './DescriptionSection'
 import { DetailsSection } from './DetailsSection'
 import styled from 'styled-components'
 import { useEntityFormData, useEntityFields, useEntityEditing } from './hooks'
-import { useProjectContext } from '@shared/context/ProjectContext'
-import { useGlobalContext } from '@shared/context/GlobalContext'
+import { useDetailsPanelContext, useGlobalContext, useProjectContext } from '@shared/context'
+import type { DetailsPanelEntityType } from '@shared/api'
+import ActivityReferenceTooltip from '@shared/containers/Feed/components/ActivityReferenceTooltip/ActivityReferenceTooltip'
+import useReferenceTooltip from '@shared/containers/Feed/hooks/useReferenceTooltip'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -34,7 +37,15 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
   )
 
   const { attributes } = useGlobalContext()
-  const { folderTypes = [], taskTypes = [], statuses = [], tags = [] } = useProjectContext()
+  const {
+    folderTypes = [],
+    taskTypes = [],
+    statuses = [],
+    tags = [],
+    productTypes,
+  } = useProjectContext()
+  const { openSlideOut } = useDetailsPanelContext()
+  const [, setRefTooltip] = useReferenceTooltip()
 
   // Determine if any selected folder has published versions
   const folderEntities = (entities || []).filter((entity) => entity.entityType === 'folder')
@@ -90,6 +101,31 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     updateEntity(key, value)
   }
 
+  // mention the same users, tasks and versions as the comments of the (first) entity
+  const projectName = formData?.projectName || entities[0]?.projectName
+  const entityId = entities[0]?.id
+  const mentionsContext = useMemo(
+    () =>
+      projectName && entityId
+        ? { projectName, entityType, entityId, productTypes, taskTypes }
+        : undefined,
+    [projectName, entityType, entityId, productTypes, taskTypes],
+  )
+
+  const handleMentionClick = ({ type, id }: { type: string; id: string }) => {
+    if (type === 'user' || type === 'team' || !projectName) return
+    openSlideOut({ entityId: id, entityType: type as DetailsPanelEntityType, projectName })
+  }
+
+  // the same tooltip as mentions in the feed
+  const handleMentionHover = (
+    { type, id, label }: { type: string; id: string; label: string },
+    target: HTMLElement,
+  ) => {
+    const { x, y, width } = target.getBoundingClientRect()
+    setRefTooltip({ id, name: id, type, label, pos: { left: x + width / 2, top: y } })
+  }
+
   const handleDescriptionChange = (description: string) => {
     updateFormData('description', description)
     clearMixedField('description')
@@ -104,7 +140,11 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
         enableEditing={enableEditing}
         onChange={handleDescriptionChange}
         isLoading={isLoading}
+        mentionsContext={mentionsContext}
+        onMentionClick={handleMentionClick}
+        onMentionHover={handleMentionHover}
       />
+      <ActivityReferenceTooltip />
 
       <DetailsPanelAttributesEditor
         fields={editableFields}

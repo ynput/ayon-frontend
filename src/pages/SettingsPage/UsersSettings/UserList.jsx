@@ -12,7 +12,8 @@ import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useGetUserPoolsQuery } from '@shared/api'
 import { accessGroupsSortFunction, userPoolSortFunction } from './tableSorting'
-import InvitationStatus, { getInvitationState } from './InvitationStatus'
+import InvitationStatus from './InvitationStatus'
+import { getInvitationState } from './InvitationStatusHelpers'
 
 const INVITE_SORT_RANK = { none: 0, expired: 1, pending: 2, accepted: 3 }
 
