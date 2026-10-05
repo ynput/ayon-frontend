@@ -41,6 +41,7 @@ While writing tests, run only your specs: `npx playwright test --project=chromiu
 - Every name comes from `uniqueName()` (`support/names.ts`). The format is `e2e_<runId>_<label>_<worker><n><random>`, which makes names unique across tests, workers and parallel runs by different people.
 - `global.teardown.ts` deletes anything left over from the current run's prefix, for example after a crashed worker: projects, users, access groups, secrets and anatomy presets.
 - Studio-wide data (secrets, anatomy presets, access groups) is shared by every project. Always name it with `uniqueName()` and delete it in a `finally`. Never make a preset primary or change bundles, addons, studio settings or the attribute library.
+- When a test needs studio-wide state it may not create (no other secrets, no primary preset), it fetches the real response in `page.route` and filters it (`route.fetch()`, then `route.fulfill({ response, json })`), so only the page sees the difference. See `secrets.spec.ts` and `anatomyPresets.spec.ts`.
 
 **Other users.** The suite runs as an admin. Anything that changes the signed-in user (profile, password, sign out) or depends on whose data is shown (inbox, my tasks) signs in as a user the test creates:
 - `signInAs(browser, name, password)` (`support/session.ts`) opens a separate signed-in browser context. Close it in a `finally`.
@@ -95,6 +96,9 @@ Fixed in separate PRs. The covering tests are `test.fixme` until these are merge
 - ynput/ayon-frontend#2397: the anatomy preset rename dialog did not show the current name (`anatomyPresets.spec.ts`).
 - ynput/ayon-frontend#2398: just viewing project anatomy marked it as changed (`projectsManager.spec.ts`).
 - ynput/ayon-frontend#2399: the first column change in a project reordered the other columns (`tableView.spec.ts`).
+- ynput/ayon-frontend#2400: the secrets page showed a "0" when there were no stored secrets (`secrets.spec.ts`).
+- ynput/ayon-frontend#2401: "Set as primary" stayed enabled for the built-in anatomy preset while it was primary (`anatomyPresets.spec.ts`).
+- ynput/ayon-frontend#2402: right-clicking a user that was not selected in the teams users table acted on the previous selection (`teams.spec.ts`).
 
 Still open (worked around in the tests, marked with `FLAG` in the code):
 - `@ynput/ayon-react-components`: `Dialog` has no `role="dialog"` or accessible name, `FormRow` labels are not associated with their inputs, and icon ligature text is not `aria-hidden`.

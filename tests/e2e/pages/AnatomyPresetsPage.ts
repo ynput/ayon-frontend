@@ -27,6 +27,17 @@ export class AnatomyPresetsPage {
     return this.page.getByRole('row', { name: new RegExp(`^${escaped}( check)?$`) })
   }
 
+  /** FLAG: primereact DataTable rows do not set aria-selected, selection is only the `p-highlight` class */
+  async select(name: string) {
+    await this.row(name).click()
+    await expect(this.row(name)).toHaveClass(/\bp-highlight\b/)
+  }
+
+  /** "Set as primary" in the toolbar, for the selected preset. Never click it, see above. */
+  get setAsPrimaryButton() {
+    return this.page.getByRole('button', { name: 'Set as primary' })
+  }
+
   /** "Save as a new preset" with the anatomy currently shown in the editor */
   async saveAsNewPreset(name: string) {
     await this.page.getByRole('button', { name: 'Save as a new preset' }).click()

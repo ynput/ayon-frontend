@@ -14,6 +14,11 @@ export class SecretsPage {
     await expect(this.page.getByRole('heading', { name: 'Stored secrets' })).toBeVisible()
   }
 
+  /** The whole list: the "New secret" heading and row, then "Stored secrets" and their rows */
+  get list() {
+    return this.page.locator('div:has(> h2:text-is("Stored secrets"))')
+  }
+
   /** The "New secret" row */
   get newSecretRow() {
     return this.page.locator('div:has(> input[placeholder="Secret name"]:not([readonly]))')
