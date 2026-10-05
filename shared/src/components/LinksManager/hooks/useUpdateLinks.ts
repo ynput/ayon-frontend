@@ -1,5 +1,5 @@
 import { useCreateEntityLinkMutation, useDeleteEntityLinkMutation } from '@shared/api'
-import { useCellEditing } from '@shared/containers/ProjectTreeTable/context/CellEditingContext'
+import { useCellEditing } from '@shared/containers/ProjectTreeTable/context/cell-editing'
 import { useCallback } from 'react'
 import {
   addMultipleLinks,

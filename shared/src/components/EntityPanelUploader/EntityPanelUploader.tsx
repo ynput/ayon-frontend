@@ -14,7 +14,7 @@ import { toast } from 'react-toastify'
 import { useReviewablesUpload } from '../ReviewablesList'
 import { useDetailsPanelContext } from '@shared/context'
 import EntityPanelUploaderDialog from './EntityPanelUploaderDialog'
-import { useOptionalVersionUploadContext } from '../VersionUploader/context/VersionUploadContextInstance'
+import { useOptionalVersionUploadContext } from '../VersionUploader/context/version-upload'
 import {
   sanitizeProductName,
   createProductHelper,

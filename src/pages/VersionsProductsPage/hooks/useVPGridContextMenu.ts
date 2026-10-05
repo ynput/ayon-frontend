@@ -8,7 +8,7 @@ import {
   useSelectionCellsContext,
 } from '@shared/containers'
 import { VPContextMenuItems } from './useVPContextMenu'
-import { useVersionsDataContext } from '../context/VPDataContextInstance'
+import { useVersionsDataContext } from '../context/vp-data'
 
 const GRID_COLUMN_ID = 'name'
 

@@ -2,13 +2,9 @@ import { FC } from 'react'
 import { ProjectTableSettings, SettingConfig } from '@shared/components'
 import { SettingSwitch } from '@shared/components/ProjectTableSettings/ColumnsSettings'
 import { SizeSlider } from '@shared/components'
-import { useVPViewsContext } from '../../context/VPViewsContextInstance'
+import { useVPViewsContext } from '../../context/vp-views'
 import { FeaturedVersionOrder, FEATURED_VERSION_TYPES } from '@shared/components'
-import {
-  VP_COLUMN_ID_ALIASES,
-  VP_EXTRA_COLUMNS,
-  VP_PARENT_COLUMNS,
-} from './VPTableSettingsHelpers'
+import { VP_COLUMN_ID_ALIASES, VP_EXTRA_COLUMNS, VP_PARENT_COLUMNS } from './VPTableSettingsHelpers'
 
 export interface VPTableSettingsProps {}
 

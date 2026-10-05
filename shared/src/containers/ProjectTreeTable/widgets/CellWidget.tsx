@@ -13,12 +13,12 @@ import { SubtasksWidget, SubtasksWidgetData } from './SubtasksWidget'
 import { CommentsWidget } from './CommentsWidget'
 
 // Contexts
-import { useCellEditing } from '../context/CellEditingContext'
+import { useCellEditing } from '../context/cell-editing'
 
 // Utils
 import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
-import { useSelectionCellsContext } from '../context/SelectionCellsContext'
+import { useSelectionCellsContext } from '../context/selection-cells'
 import { useProjectContext } from '@shared/context'
 import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'

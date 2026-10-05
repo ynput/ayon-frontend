@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 import { useGlobalContext, useProjectContext } from '@shared/context'
-import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContextInstance'
+import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/project-data'
 import { hasEnumOptions, getSelectableEnumItems } from '@shared/util'
 import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import type { AttributeEnumsRequest } from '@shared/hooks/useAttributeEnums'

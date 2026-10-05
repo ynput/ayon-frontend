@@ -36,7 +36,7 @@ import useReferenceTooltip from '../../hooks/useReferenceTooltip'
 
 // State management
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
-import { useFeedContext } from '../../context/FeedContextInstance'
+import { useFeedContext } from '../../context/feed'
 import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
 import {
   getActivityFrameLink,

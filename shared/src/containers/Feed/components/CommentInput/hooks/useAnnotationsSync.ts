@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
-import { FEED_NEW_COMMENT } from '../../../context/FeedContext'
-import { useFeedContext } from '../../../context/FeedContextInstance'
+import { FEED_NEW_COMMENT, useFeedContext } from '../../../context/feed'
 import { useDetailsPanelContext } from '@shared/context'
 import { parseFilename } from '@shared/util/parseFilename'
 

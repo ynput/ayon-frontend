@@ -1,15 +1,13 @@
-import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContextInstance'
-import {
-  useVersionsSelectionContext,
-} from '@pages/VersionsProductsPage/context/VPSelectionContextInstance'
-import { useVPFocusContext } from '@pages/VersionsProductsPage/context/VPFocusContextInstance'
+import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/vp-data'
+import { useVersionsSelectionContext } from '@pages/VersionsProductsPage/context/vp-selection'
+import { useVPFocusContext } from '@pages/VersionsProductsPage/context/vp-focus'
 import { buildVersionsTableRows } from '@pages/VersionsProductsPage/util'
 import SimpleTable, { SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { RowSelectionState } from '@tanstack/react-table'
 import { FC, useMemo, useEffect } from 'react'
 import * as Styled from './VersionsListTable.styled'
 import { useProjectContext } from '@shared/context'
-import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContextInstance'
+import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
 import { guessImgRatio } from '@pages/VersionsProductsPage/util/guessImgRatio'
 
 interface VersionsListTableProps {}

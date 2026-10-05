@@ -1,5 +1,5 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContextInstance'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
 import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { SearchFilterRef, theme } from '@ynput/ayon-react-components'
 import { FC, useMemo, useRef } from 'react'

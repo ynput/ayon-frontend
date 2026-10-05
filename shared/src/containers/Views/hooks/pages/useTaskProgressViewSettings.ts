@@ -8,7 +8,7 @@
  * Must be used within a ViewsProvider context.
  */
 
-import { useViewsContext } from '../../context/ViewsContextInstance'
+import { useViewsContext } from '../../context'
 import { TaskProgressSettings, ColumnItemModel } from '@shared/api'
 import { useViewUpdateHelper } from '../../utils/viewUpdateHelper'
 import { useState, useEffect, useCallback } from 'react'

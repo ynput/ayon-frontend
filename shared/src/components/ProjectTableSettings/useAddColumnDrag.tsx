@@ -2,20 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
-import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
+import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable/context/column-settings'
 import {
   DRAG_HANDLE_COLUMN_ID,
   ROW_SELECTION_COLUMN_ID,
 } from '@shared/containers/ProjectTreeTable/constants'
-import {
-  COLUMN_HEADER_SELECTOR,
-} from '@shared/containers/ProjectTreeTable/components/ColumnDropIndicator'
-import {
-  ColumnDropLine,
-} from '@shared/containers/ProjectTreeTable/components/ColumnDropIndicator.styled'
-import {
-  getColumnDropLinePosition,
-} from '@shared/containers/ProjectTreeTable/components/ColumnDropIndicatorHelpers'
+import { COLUMN_HEADER_SELECTOR } from '@shared/containers/ProjectTreeTable/components/ColumnDropIndicator'
+import { ColumnDropLine } from '@shared/containers/ProjectTreeTable/components/ColumnDropIndicator.styled'
+import { getColumnDropLinePosition } from '@shared/containers/ProjectTreeTable/components/ColumnDropIndicatorHelpers'
 import { TABLE_CONTAINER_ATTR } from '@shared/containers/ProjectTreeTable/hooks/useColumnDragRestriction'
 import { useMenuContext } from '@shared/context'
 import { MENU_PORTAL_CONTENT_ID } from '../Menu/MenuContainer'
@@ -46,9 +40,9 @@ const findHeaderByX = (x: number, y: number): HTMLElement | undefined => {
   const container = document.querySelector(`[${TABLE_CONTAINER_ATTR}]`)
   const rect = container?.getBoundingClientRect()
   if (!rect || x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) return undefined
-  const headers = Array.from(
-    document.querySelectorAll<HTMLElement>(COLUMN_HEADER_SELECTOR),
-  ).filter((el) => !SPECIAL_COLUMNS.includes(el.dataset.columnId || ''))
+  const headers = Array.from(document.querySelectorAll<HTMLElement>(COLUMN_HEADER_SELECTOR)).filter(
+    (el) => !SPECIAL_COLUMNS.includes(el.dataset.columnId || ''),
+  )
   const hit = headers.find((el) => {
     const r = el.getBoundingClientRect()
     return x >= r.left && x < r.right
@@ -152,7 +146,8 @@ export const useAddColumnDrag = () => {
       (id) => id !== columnId && !SPECIAL_COLUMNS.includes(id),
     )
     const targetIndex = order.indexOf(target.columnId)
-    const insertAt = targetIndex === -1 ? order.length : targetIndex + (target.side === 'left' ? 0 : 1)
+    const insertAt =
+      targetIndex === -1 ? order.length : targetIndex + (target.side === 'left' ? 0 : 1)
     const newOrder = [...order.slice(0, insertAt), columnId, ...order.slice(insertAt)]
 
     // dropping into the pinned section pins the column too, dropping out of it unpins

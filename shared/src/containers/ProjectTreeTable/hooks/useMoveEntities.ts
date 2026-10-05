@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { useUpdateOverviewEntitiesMutation } from '@shared/api'
 import type { OperationModel, OperationResponseModel } from '@shared/api'
-import { useOptionalProjectTableContext } from '../context/ProjectTableContextInstance'
+import { useOptionalProjectTableContext } from '../context/project-table'
 import type {
   EntityMoveData,
   MultiEntityMoveData,

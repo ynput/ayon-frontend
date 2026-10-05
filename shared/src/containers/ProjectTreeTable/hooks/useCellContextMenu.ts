@@ -2,12 +2,12 @@ import { ContextMenuItemType, useCreateContextMenu } from '../../ContextMenu/use
 import useDeleteEntities from './useDeleteEntities'
 import { getPlatformShortcutKey, KeyMode } from '../../../util/platform'
 import { getCellId, parseCellId } from '../utils/cellUtils'
-import { useClipboard } from '../context/ClipboardContextInstance'
-import { useSelectionCellsContext } from '../context/SelectionCellsContext'
-import { useProjectTableContext } from '../context/ProjectTableContextInstance'
+import { useClipboard } from '../context/clipboard-context'
+import { useSelectionCellsContext } from '../context/selection-cells'
+import { useProjectTableContext } from '../context/project-table'
 import { ROW_SELECTION_COLUMN_ID } from '../constants'
-import { useProjectDataContext } from '../context/ProjectDataContextInstance'
-import { useCellEditing } from '../context/CellEditingContext'
+import { useProjectDataContext } from '../context/project-data'
+import { useCellEditing } from '../context/cell-editing'
 import { InheritFromParentEntity } from './useUpdateTableData'
 import { ProjectTableAttribute, TableRow } from '../types'
 import { UseHistoryReturn } from './useHistory'
@@ -22,7 +22,7 @@ import {
   newEntityDefinitions,
   type NewEntityType,
 } from '@shared/containers/NewEntity/util/entityDefinitions'
-import type { NewEntityOpenConfig } from '@shared/containers/NewEntity/context/NewEntityContext'
+import type { NewEntityOpenConfig } from '@shared/containers/NewEntity/context/new-entity'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 

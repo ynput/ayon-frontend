@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useListsAttributesContext } from '../context/ListsAttributesContextInstance'
+import { useListsAttributesContext } from '../context/lists-attributes'
 import { ProjectTableQueriesProviderProps } from '@shared/containers'
 import { useUpdateEntityListItemMutation } from '@shared/api'
 import { useListsContext } from '../context'

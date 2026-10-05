@@ -1,6 +1,4 @@
-import {
-  useOptionalVersionUploadContext,
-} from '@shared/components/VersionUploader/context/VersionUploadContextInstance'
+import { useOptionalVersionUploadContext } from '@shared/components/VersionUploader/context/version-upload'
 
 /**
  * Reads VersionUploadContext without throwing when the provider is absent.

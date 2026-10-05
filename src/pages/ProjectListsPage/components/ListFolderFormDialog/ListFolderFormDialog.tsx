@@ -2,7 +2,7 @@ import { FC, useState, useCallback, useEffect } from 'react'
 import { Dialog, Button, Spacer, SaveButton } from '@ynput/ayon-react-components'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { FolderForm, FolderFormData } from '@shared/components/FolderForm'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContextInstance'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 
 export interface ListFolderFormData extends FolderFormData {

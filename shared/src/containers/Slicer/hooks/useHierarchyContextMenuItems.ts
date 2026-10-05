@@ -1,5 +1,5 @@
 import { newEntityDefinitions } from '@shared/containers/NewEntity/util/entityDefinitions'
-import { useNewEntityContext } from '@shared/containers/NewEntity/context/NewEntityContextInstance'
+import { useNewEntityContext } from '@shared/containers/NewEntity/context/new-entity'
 import type {
   SimpleTableRow,
   SimpleTableRowContextMenuBuilder,
@@ -15,7 +15,7 @@ import {
   type DeletableEntity,
 } from '@shared/context'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
-import { useOptionalVersionUploadContext } from '@shared/components/VersionUploader/context/VersionUploadContextInstance'
+import { useOptionalVersionUploadContext } from '@shared/components/VersionUploader/context/version-upload'
 import { SliceMap } from '../types'
 
 const toggleChildren = (row: any, expanded: boolean) => {

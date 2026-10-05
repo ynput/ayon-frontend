@@ -3,9 +3,7 @@ import { useAppSelector } from '@state/store'
 import { FC, useEffect } from 'react'
 import { useDetailsPanelContext } from '@shared/context'
 import { ViewerState } from '@state/viewer'
-import {
-  useUserDashboardContext,
-} from '@pages/UserDashboardPage/context/UserDashboardContextInstance'
+import { useUserDashboardContext } from '@pages/UserDashboardPage/context/user-dashboard'
 
 interface RelatedTasksModuleProps {
   isPanelOpen: boolean

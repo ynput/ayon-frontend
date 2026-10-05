@@ -27,7 +27,7 @@ import { aTag, blockquoteTag, codeTag, inputTag } from './ActivityMarkdownCompon
 import { mapGraphQLReactions } from './mappers'
 import { Icon } from '@ynput/ayon-react-components'
 import ActivityStatus from '../ActivityStatus/ActivityStatus'
-import { useFeedContext } from '../../context/FeedContextInstance'
+import { useFeedContext } from '../../context/feed'
 import { confirmDelete } from '../../../../util'
 import ActivityHeader, { ActivityHeaderProps } from '../ActivityHeader/ActivityHeader'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'

@@ -1,5 +1,5 @@
 import { EntityTooltip as SharedEntityTooltip } from '@shared/components/EntityTooltip'
-import { useFeedContext } from '@shared/containers/Feed/context/FeedContextInstance'
+import { useFeedContext } from '@shared/containers/Feed/context/feed'
 
 interface EntityTooltipProps {
   type?: string

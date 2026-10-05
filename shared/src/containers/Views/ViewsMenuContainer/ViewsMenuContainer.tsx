@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useViewsContext } from '../context/ViewsContextInstance'
+import { useViewsContext } from '../context'
 import { getViewsPortalContainer } from '../utils/portalUtils'
 import { ViewsMenu } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'

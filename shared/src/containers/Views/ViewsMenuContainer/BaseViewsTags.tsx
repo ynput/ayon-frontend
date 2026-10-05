@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import * as Styled from '@shared/containers/Views/Views.styled'
-import { useViewsContext } from '../context/ViewsContextInstance'
+import { useViewsContext } from '../context'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { usePowerpack } from '@shared/context'
 import { SectionHeader } from '@shared/containers/Views/ViewsMenu/SectionHeader'

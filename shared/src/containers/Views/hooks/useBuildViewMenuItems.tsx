@@ -13,7 +13,7 @@ import { toast } from 'react-toastify'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
 import { usePowerpack } from '@shared/context'
-import type { CollapsedViewState } from '../context/ViewsContext'
+import type { CollapsedViewState } from '../context'
 import { WORKING_VIEW_ID } from '../types'
 export type ViewListItemModelExtended = ViewListItemModel & {
   isOwner: boolean

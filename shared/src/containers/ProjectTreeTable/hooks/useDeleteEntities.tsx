@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useProjectTableContext } from '../context/ProjectTableContextInstance'
+import { useProjectTableContext } from '../context/project-table'
 import {
   useProjectContext,
   useDeleteEntitiesContext,

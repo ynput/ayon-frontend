@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import { useMemo, useState } from 'react'
 import { isFilePreviewable } from '../FileUploadPreview'
 import type { SavedAnnotationMetadata } from '../../index'
-import { useFeedContext } from '../../context/FeedContextInstance'
+import { useFeedContext } from '../../context/feed'
 import { useDetailsPanelContext } from '@shared/context'
 import { AnnotationPreview } from '../CommentInput/hooks/useAnnotationsSync'
 

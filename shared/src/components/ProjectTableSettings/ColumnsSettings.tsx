@@ -16,7 +16,7 @@ import {
   ColumnsConfig,
   TableGroupBy,
   useColumnSettingsContext,
-} from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
+} from '@shared/containers/ProjectTreeTable/context/column-settings'
 import ColumnItem from './ColumnItem'
 import SortableColumnItem from './SortableColumnItem'
 

@@ -1,7 +1,5 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import {
-  useListItemsDataContext,
-} from '@pages/ProjectListsPage/context/ListItemsDataContextInstance'
+import { useListItemsDataContext } from '@pages/ProjectListsPage/context/list-items-data'
 import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 import {
   getCellId,
@@ -24,11 +22,7 @@ type Props = {
   dispatch: any // if we need to provide explicit dispatch context (for review)
 }
 
-export default function ProjectListsDetailsPanels({
-  isReview,
-  displayStyle,
-  dispatch,
-}: Props) {
+export default function ProjectListsDetailsPanels({ isReview, displayStyle, dispatch }: Props) {
   const { projectName, ...projectInfo } = useProjectContext()
   const { getEntityById } = useProjectTableContext()
   const { selectedList, listDetailsOpen } = useListsContext()

@@ -1,7 +1,7 @@
 import { InputText } from '@ynput/ayon-react-components'
 import React, { KeyboardEvent, useState, useRef } from 'react'
 import styled from 'styled-components'
-import type { EntityForm } from '../context/NewEntityContext'
+import type { EntityForm } from '../context/new-entity'
 import { theme } from '@ynput/ayon-react-components'
 import { Icon } from '@ynput/ayon-react-components'
 import { InputLabel, InputsContainer, NameRow } from './NewEntityForm.styled'

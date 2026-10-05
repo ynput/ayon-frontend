@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContextInstance'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
 import { MoveToFolderDialog } from './MoveToFolderDialog'
 
 interface MoveToFolderDialogContainerProps {}

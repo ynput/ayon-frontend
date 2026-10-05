@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import { useViewsContext } from '../context/ViewsContextInstance'
+import { useViewsContext } from '../context'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import ViewFormDialogFallback from './ViewFormDialogFallback'
 import { Dialog } from '@ynput/ayon-react-components'

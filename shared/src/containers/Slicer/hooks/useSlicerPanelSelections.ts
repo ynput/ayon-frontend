@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import type { AttributeModel } from '@shared/api'
 import { usePowerpack } from '@shared/context'
-import { useSlicerContext } from '../context/SlicerContextInstance'
+import { useSlicerContext } from '../context/slicer'
 import { createFiltersFromSlicer } from '../util/createFilterFromSlicer'
 import type { SliceFilter } from '../types'
 import type { SliceRowSelection } from '@shared/containers/ProjectTreeTable/hooks/useSelectedFolders'

@@ -8,9 +8,9 @@
  * Must be used within a ViewsProvider context.
  */
 
-import { useViewsContext } from '../../context/ViewsContextInstance'
+import { useViewsContext } from '../../context'
 import type { OverviewSettings } from '@shared/api'
-import type { ColumnsConfig } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
+import type { ColumnsConfig } from '@shared/containers/ProjectTreeTable/context/column-settings'
 import {
   convertColumnConfigToTanstackStates,
   convertTanstackStatesToColumnConfig,

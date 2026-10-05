@@ -7,7 +7,7 @@ import { FC, useState } from 'react'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 import { Container } from '@shared/components/LinksManager/LinksManager.styled'
 import type { SubTaskNode } from '@shared/api'
-import { useProjectTableContext } from '../context/ProjectTableContextInstance'
+import { useProjectTableContext } from '../context/project-table'
 
 export type SubtasksWidgetData = {
   taskId: string

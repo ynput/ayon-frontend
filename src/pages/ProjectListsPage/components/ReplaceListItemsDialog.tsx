@@ -2,7 +2,7 @@ import { FC, useMemo, useState, useCallback } from 'react'
 import { EntityPickerDialog, PickerEntityType } from '@shared/containers'
 import { useProjectContext } from '@shared/context'
 import { useListsContext } from '../context'
-import { useListItemsDataContext } from '../context/ListItemsDataContextInstance'
+import { useListItemsDataContext } from '../context/list-items-data'
 import { useUpdateEntityListItemsMutation } from '@shared/api'
 import { toast } from 'react-toastify'
 

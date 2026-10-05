@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { ColumnSettingsProvider, ColumnDndProvider } from '@shared/containers'
-import { useVPViewsContext } from '../context/VPViewsContextInstance'
+import { useVPViewsContext } from '../context/vp-views'
 import { DEFAULT_COLUMNS_VERSION } from '@pages/ProjectsPage/constants'
 import { VP_COLUMN_ID_ALIASES } from '../components/VPTableSettings/VPTableSettingsHelpers'
 

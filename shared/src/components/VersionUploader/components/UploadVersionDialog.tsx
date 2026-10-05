@@ -1,6 +1,6 @@
 import { Dialog, Button, Spacer, SaveButton } from '@ynput/ayon-react-components'
 import { FC } from 'react'
-import { useVersionUploadContext } from '../context/VersionUploadContextInstance'
+import { useVersionUploadContext } from '../context/version-upload'
 import { UploadVersionForm } from './UploadVersionForm'
 import styled from 'styled-components'
 import { getRequestErrorString } from '@shared/util'

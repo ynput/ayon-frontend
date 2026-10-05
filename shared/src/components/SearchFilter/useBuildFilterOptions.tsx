@@ -32,7 +32,7 @@ import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
 import { useContext } from 'react'
 import { useFetchAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
 import { useGlobalContext } from '@shared/context'
-import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContextInstance'
+import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/project-data'
 
 type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version'
 type Scope = ScopeType | ScopeType[]

@@ -1,6 +1,6 @@
 import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils/checkColumnVisibility'
-import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
-import { useProjectTableContext } from '@shared/containers/ProjectTreeTable/context/ProjectTableContextInstance'
+import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable/context/column-settings'
+import { useProjectTableContext } from '@shared/containers/ProjectTreeTable/context/project-table'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC, useEffect, useState } from 'react'
 import styled from 'styled-components'

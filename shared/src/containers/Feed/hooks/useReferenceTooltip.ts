@@ -1,5 +1,4 @@
-import { RefTooltip } from '../context/FeedContext'
-import { useFeedContext } from '../context/FeedContextInstance'
+import { RefTooltip, useFeedContext } from '../context/feed'
 
 const useReferenceTooltip = (): [RefTooltip | null, (t: RefTooltip | null) => void] => {
   const { refTooltip, setRefTooltip } = useFeedContext()

@@ -42,11 +42,11 @@ import { FilterErrorActions } from '@shared/components/FilterErrorActions/Filter
 import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
-import { useCellEditing } from './context/CellEditingContext'
-import { useSelectionCellsContext } from './context/SelectionCellsContext'
-import { ClipboardProvider } from './context/ClipboardContext'
-import { useSelectedRowsContext } from './context/SelectedRowsContext'
-import { useColumnSettingsContext } from './context/ColumnSettingsContext'
+import { useCellEditing } from './context/cell-editing'
+import { useSelectionCellsContext } from './context/selection-cells'
+import { ClipboardProvider } from './context/clipboard-context'
+import { useSelectedRowsContext } from './context/selected-rows'
+import { useColumnSettingsContext } from './context/column-settings'
 import { TableColumnDropIndicator } from './components/ColumnDropIndicator'
 import {
   useMenuContext,
@@ -66,7 +66,7 @@ import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import useDynamicRowHeight from './hooks/useDynamicRowHeight'
 
-import { useProjectDataContext } from './context/ProjectDataContextInstance'
+import { useProjectDataContext } from './context/project-data'
 
 // Utility function imports
 import { isGroupId } from './hooks/useBuildGroupByTableData'
@@ -83,9 +83,7 @@ import {
   SummaryCellContentProps,
 } from './types'
 import type { EnumItem } from '@shared/api'
-import { ToggleExpandAll } from './context/ProjectTableContext'
-import { useProjectTableContext } from './context/ProjectTableContextInstance'
-import { parseRowId } from './context/ProjectTableContextHelpers'
+import { ToggleExpandAll, useProjectTableContext, parseRowId } from './context/project-table'
 import {
   checkColumnVisibility,
   ensureAtLeastOneVisibleColumn,
@@ -105,7 +103,7 @@ import {
   type UniqueIdentifier,
   // Removed: DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, DragEndEvent, DragStartEvent, Active, Over, useSensor, useSensors
 } from '@dnd-kit/core'
-import type { NewEntityOpenConfig } from '@shared/containers/NewEntity/context/NewEntityContext'
+import type { NewEntityOpenConfig } from '@shared/containers/NewEntity/context/new-entity'
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import {
   SortableContext,

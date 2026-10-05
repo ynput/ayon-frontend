@@ -27,7 +27,7 @@ import {
   useGetGroupedFields,
   useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
-import { useProjectOverviewContext } from './context/ProjectOverviewContextInstance'
+import { useProjectOverviewContext } from './context/project-overview'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
 import { useGlobalContext, useProjectFoldersContext, useSettingsPanel } from '@shared/context'
 import OverviewActions from './components/OverviewActions'

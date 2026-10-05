@@ -1,5 +1,5 @@
 import type { ProjectModel } from '@shared/api'
-import type { NewEntityType } from '../context/NewEntityContext'
+import type { NewEntityType } from '../context/new-entity'
 
 // Helper function to generate label based on entity type and selected subtype
 export const generateLabel = (
