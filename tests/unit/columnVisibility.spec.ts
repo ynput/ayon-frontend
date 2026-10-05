@@ -45,6 +45,9 @@ test('a wildcard default applies to every column it matches', () => {
 // Columns added after the view was last saved (a new attribute or link type) are then listed as
 // visible in the column settings and skipped by "show column" deep links, while the table itself
 // (which calls checkColumnVisibility({}, id)) hides them. checkColumnVisibility.ts:32-39
+// Not fixed yet: ProjectOverviewContext and ListItemsDataContext call it with the plain prefix
+// 'link_' to ask whether any link column is visible, so limiting the prefix match to ids ending
+// in `*` must also change those callers to 'link_*'.
 test.fixme('a plain column id does not inherit the visibility of a longer id it prefixes', () => {
   expect(checkColumnVisibility({ attrib_frameStart: true }, 'attrib_frame')).toBe(false)
   expect(checkColumnVisibility({ productType: true }, 'product')).toBe(false)
