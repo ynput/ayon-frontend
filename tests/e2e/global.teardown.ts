@@ -27,6 +27,12 @@ export default async function globalTeardown(config: FullConfig) {
     for (const group of await api.listAccessGroupNames()) {
       if (group.startsWith(prefix)) await api.deleteAccessGroup(group)
     }
+    for (const secret of await api.listSecretNames()) {
+      if (secret.startsWith(prefix)) await api.deleteSecret(secret)
+    }
+    for (const preset of await api.listAnatomyPresets()) {
+      if (preset.name.startsWith(prefix)) await api.deleteAnatomyPreset(preset.name)
+    }
   } finally {
     await api.dispose()
   }

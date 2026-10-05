@@ -502,6 +502,11 @@ export class AyonApi {
     return secret.value
   }
 
+  async listSecretNames(): Promise<string[]> {
+    const secrets: { name: string }[] = await this.get('/api/secrets')
+    return secrets.map((s) => s.name)
+  }
+
   async deleteSecret(name: string) {
     const res = await this.request.delete(`/api/secrets/${name}`)
     if (!res.ok() && res.status() !== 404) {

@@ -31,13 +31,20 @@ Playwright starts its own frontend on port 3100. By default it builds the app (`
 
 If a test server is already listening on 3100 it is reused locally. **It will not be rebuilt**, so stop it after changing app code.
 
+While writing tests, run only your specs: `npx playwright test --project=chromium --no-deps --workers=1 --retries=0 tests/e2e/<area>`. `--no-deps` skips the login setup once `playwright/.auth/admin.json` exists. When several runs share one checkout, give each its own `--output=<dir>`, or they delete each other's `test-results/`.
+
 ## How the e2e tests are built
 
 **Isolation.** Every test gets its own project from the `projectName` fixture (`fixtures.ts`).
 - The project is created through the API before the test and deleted after it, so tests never see each other's data.
 - Users from the `createUser` fixture and the group from the `accessGroup` fixture are deleted after the test.
 - Every name comes from `uniqueName()` (`support/names.ts`). The format is `e2e_<runId>_<label>_<worker><n><random>`, which makes names unique across tests, workers and parallel runs by different people.
-- `global.teardown.ts` deletes anything left over from the current run's prefix, for example after a crashed worker.
+- `global.teardown.ts` deletes anything left over from the current run's prefix, for example after a crashed worker: projects, users, access groups, secrets and anatomy presets.
+- Studio-wide data (secrets, anatomy presets, access groups) is shared by every project. Always name it with `uniqueName()` and delete it in a `finally`. Never make a preset primary or change bundles, addons, studio settings or the attribute library.
+
+**Other users.** The suite runs as an admin. Anything that changes the signed-in user (profile, password, sign out) or depends on whose data is shown (inbox, my tasks) signs in as a user the test creates:
+- `signInAs(browser, name, password)` (`support/session.ts`) opens a separate signed-in browser context. Close it in a `finally`.
+- `apiAs(testInfo, name, password)` is a REST client for that user. `AyonApi.login` inside a test always acts as the admin, because the request context inherits the admin's `accessToken` cookie and the server prefers the cookie over the `Authorization` header.
 
 **Setup through the API, behaviour through the UI.**
 - `support/api.ts` creates the data a test needs: projects, folders, tasks, products, versions, comments, lists, teams, users and access groups.
@@ -64,6 +71,13 @@ If a test server is already listening on 3100 it is reused locally. **It will no
 - **Cross-project queries.** A manager's or admin's inbox reads every project. It fails while another worker is creating or dropping a project. Give inbox users access to the test project only, not `isManager`.
 - **Edit only after selecting.** Task progress cells only become editable once selected (`.tag.status.editable`). On the dashboard, clicking a card selects it and clicking its title opens the details panel.
 - **New entity dialog.** The dialog opens its type dropdown by itself about 180 ms after it appears. `OverviewPage.fillCreateDialog` waits for that rather than racing it with a click.
+- **Failed logins ban the IP.** More than 10 wrong-password logins from one IP ban it for 10 minutes. Locally that is also the admin's IP, so the whole suite would fail. Keep wrong-password tests to a minimum. ("User is not active" does not count.)
+- **Overview columns.** The default view hides most attributes. Show one for setup with `api.setWorkingViewColumns(...)`. A header's accessible name changes on hover, so use `OverviewPage.columnHeader(id)`. Enter in a text cell saves and starts editing the next row (`editTextCell` presses Escape afterwards).
+- **Escape in the overview details panel** also reaches the table, which clears the selection and closes the panel. Close dropdowns there by clicking outside.
+- **Settings editor** (anatomy, access groups, addon settings): expand a section with its chevron (`.panel-toggler`), not the header. Field labels are not linked to inputs, so use `[data-schema-id="root_..."]`. Number fields commit on blur.
+- **Switches and selection.** `InputSwitch` hides its checkbox, so click `switchBody(scope)` (`support/ui.ts`). primereact table rows have no `aria-selected`; selection is the `p-highlight` class.
+- **Transient states.** Saved views and feed filters briefly show the old (or a correct-looking) state. Before asserting that something is absent, wait for a stable signal: the API has saved it, a reload, or other content showing.
+- **Not tested on purpose.** "Set username" renames the user in every project schema in one transaction, the same concurrency hazard as project create/delete.
 
 ## Known issues found while writing the suite
 
