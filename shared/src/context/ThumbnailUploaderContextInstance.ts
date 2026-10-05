@@ -1,4 +1,4 @@
-import { createContext } from 'react'
+import { createContext, useContext } from 'react'
 
 export const ThumbnailUploadContext = createContext<{
   resetFileUploadState?: Function
@@ -9,7 +9,7 @@ export const ThumbnailUploadContext = createContext<{
 }>({})
 
 export const useThumbnailUploadContext = () => {
-  const context = ThumbnailUploadContext
+  const context = useContext(ThumbnailUploadContext)
   if (!context) {
     throw new Error('useThumbnailUploadContext must be used within a ThumbnailUploadProvider')
   }
