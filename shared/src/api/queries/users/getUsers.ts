@@ -9,7 +9,7 @@ import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxj
 import type { EnumItem } from '@shared/api/generated'
 import { parseJSONField } from '../overview'
 import { normalizeQueryError } from '@shared/api/base/queryError'
-import { enumOptionsQueries, USERS_ENUM_TAGS } from '../enums'
+import { USERS_ENUM_TAGS } from '../enums'
 
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {
@@ -190,22 +190,17 @@ const injectedApi = gqlApi.injectEndpoints({
           : ['user', { type: 'user', id: 'LIST' }],
     }),
     getUsersAssignee: build.query<AssigneeOption[], AssigneesArgs>({
-      async queryFn({ names, projectName }, api, _extraOptions, baseQuery) {
+      async queryFn({ names, projectName }, _api, _extraOptions, baseQuery) {
         // the resolver applies the server's user visibility rules, but needs a project for non-managers
         if (!names && projectName) {
-          const result = await api
-            .dispatch(
-              enumOptionsQueries.endpoints.getEnumOptions.initiate(
-                {
-                  enumName: 'users',
-                  params: { project_name: projectName, mode: 'users', hide_inactive: true },
-                },
-                { subscribe: false, forceRefetch: api.forced },
-              ),
-            )
-            .unwrap()
+          // the resolver directly, not through getEnumOptions: in a store whose api lacks that endpoint
+          // (e.g. the review addon's own store) the nested query never runs and unwrap() gives undefined
+          const result = await baseQuery({
+            url: '/api/enum/users',
+            params: { project_name: projectName, mode: 'users', hide_inactive: true },
+          })
           if (result.error) return { error: normalizeQueryError(result.error) }
-          return { data: result.items.map(enumItemToAssignee) }
+          return { data: ((result.data as EnumItem[]) ?? []).map(enumItemToAssignee) }
         }
 
         const result = await baseQuery({
