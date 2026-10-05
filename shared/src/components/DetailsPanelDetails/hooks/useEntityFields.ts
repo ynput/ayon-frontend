@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
-import { upperFirst } from 'lodash'
+import { snakeCase, upperFirst } from 'lodash'
 import { AttributeField } from '../../DetailsPanelAttributes/DetailsPanelAttributesEditor'
 import type { EntityForm } from '../types'
 import { readOnlyFields, attributeFields } from '../types'
+import type { AttribAccess } from './useEntityEditing'
 
 interface UseEntityFieldsProps {
   attributes: any[]
@@ -12,6 +13,7 @@ interface UseEntityFieldsProps {
   tags: any[]
   entityType?: string
   folderHasVersions?: boolean
+  attribAccess?: AttribAccess
 }
 
 export const useEntityFields = ({
@@ -22,8 +24,11 @@ export const useEntityFields = ({
   tags,
   entityType,
   folderHasVersions,
+  attribAccess,
 }: UseEntityFieldsProps) => {
   const fields: AttributeField[] = useMemo(() => {
+    const { readableAttributes, writableAttributes, writableFields } = attribAccess || {}
+
     const customFieldsData: AttributeField[] = [
       {
         name: 'name',
@@ -123,13 +128,27 @@ export const useEntityFields = ({
         ]
       : customFieldsWithFolderLocks)
 
+    // Mark fields readonly the user may not change (the server lists them in snake_case)
+    const customFieldsWithPermissions: AttributeField[] = writableFields
+      ? customFieldsWithReadonly.map((field) =>
+          writableFields.includes(field.name) || writableFields.includes(snakeCase(field.name))
+            ? field
+            : { ...field, readonly: true },
+        )
+      : customFieldsWithReadonly
+
+    // Hide attributes the user may not read and mark readonly the ones they may not change
     const apiAttributesData: AttributeField[] = entityType
       ? attributes
           .filter((attr) => attr.scope?.includes(entityType) && attr.name !== 'description')
+          .filter((attr) => !readableAttributes || readableAttributes.includes(attr.name))
           .map((attr) => ({
             name: 'attrib.' + attr.name,
             data: attr.data,
             ...(entityType === 'version' && attr.builtin ? { readonly: true } : {}),
+            ...(writableAttributes && !writableAttributes.includes(attr.name)
+              ? { readonly: true }
+              : {}),
           }))
       : []
 
@@ -142,7 +161,11 @@ export const useEntityFields = ({
       },
     }))
 
-    const allFieldsData = [...customFieldsWithReadonly, ...apiAttributesData, ...readOnlyFieldsData]
+    const allFieldsData = [
+      ...customFieldsWithPermissions,
+      ...apiAttributesData,
+      ...readOnlyFieldsData,
+    ]
     const sortToTop = ['path', 'name']
     const sortedFieldsData = [...allFieldsData].sort((a, b) => {
       const aIndex = sortToTop.indexOf(a.name)
@@ -154,7 +177,16 @@ export const useEntityFields = ({
     })
 
     return sortedFieldsData
-  }, [attributes, folderTypes, taskTypes, statuses, tags, entityType, folderHasVersions])
+  }, [
+    attributes,
+    folderTypes,
+    taskTypes,
+    statuses,
+    tags,
+    entityType,
+    folderHasVersions,
+    attribAccess,
+  ])
 
   const editableFields = fields.filter((field) =>
     attributeFields.includes(field.name as keyof EntityForm) || field.name.startsWith('attrib.'),

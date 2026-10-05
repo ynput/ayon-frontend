@@ -1,4 +1,6 @@
+import { useMemo } from 'react'
 import { useEntityUpdate } from '@shared/hooks/useEntityUpdate'
+import { useGetMyPermissionsQuery } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
 
 interface UseEntityEditingProps {
@@ -6,8 +8,45 @@ interface UseEntityEditingProps {
   entityType: string
 }
 
+// What the user may read and change (attrib_read / attrib_write), undefined means no restriction
+export type AttribAccess = {
+  readableAttributes?: string[]
+  writableAttributes?: string[]
+  writableFields?: string[]
+}
+
+// the items allowed by every list that restricts something
+const allowedByAll = (lists: (string[] | undefined)[]) =>
+  lists.reduce<string[] | undefined>(
+    (allowed, list) =>
+      !list ? allowed : !allowed ? list : allowed.filter((i) => list.includes(i)),
+    undefined,
+  )
+
 export const useEntityEditing = ({ entities, entityType }: UseEntityEditingProps) => {
   const enableEditing = true
+
+  // what the user may read and change in every project of the entities
+  const { data: permissions } = useGetMyPermissionsQuery()
+  const attribAccess = useMemo((): AttribAccess => {
+    // managers and admins have no project permissions, they are not restricted
+    if (!permissions?.projects) return {}
+    const projects = [...new Set(entities.map((entity) => entity.projectName))].map(
+      (projectName) => permissions.projects?.[projectName] || {},
+    )
+    const reads = projects.map((project) => project.attrib_read)
+    const writes = projects.map((project) => project.attrib_write)
+
+    return {
+      readableAttributes: allowedByAll(
+        reads.map((r) => (r?.enabled ? r.attributes ?? [] : undefined)),
+      ),
+      writableAttributes: allowedByAll(
+        writes.map((w) => (w?.enabled ? w.attributes ?? [] : undefined)),
+      ),
+      writableFields: allowedByAll(writes.map((w) => (w?.enabled ? w.fields ?? [] : undefined))),
+    }
+  }, [permissions, entities])
 
   const { updateEntity } = useEntityUpdate({
     entities: entities.map((entity) => ({
@@ -21,6 +60,7 @@ export const useEntityEditing = ({ entities, entityType }: UseEntityEditingProps
 
   return {
     enableEditing,
+    attribAccess,
     updateEntity,
   }
 }
