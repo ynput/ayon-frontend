@@ -1,13 +1,13 @@
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { ReactNode, useState, useEffect, useMemo, useCallback } from 'react'
-import { addonConfigs, type AddonConfig } from '../config'
+import { addonConfigs, type AddonConfig } from '../../config'
 
 // Re-export from separate feature files for backwards compatibility
-export type { PowerpackFeature } from '../config'
-export type { AddonConfig, AddonFeatureKey } from '../config'
+export type { PowerpackFeature } from '../../config'
+export type { AddonConfig, AddonFeatureKey } from '../../config'
 
-import type { PowerpackFeature } from '../config'
-import { powerpackFeatures } from '../config'
+import type { PowerpackFeature } from '../../config'
+import { powerpackFeatures } from '../../config'
 import { PowerpackContext } from './PowerpackContextInstance'
 
 export type PowerpackDialogType = {

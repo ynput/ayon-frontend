@@ -12,11 +12,9 @@ import Dropzone, { DropzoneType } from './Dropzone'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useReviewablesUpload } from '../ReviewablesList'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContextInstance'
+import { useDetailsPanelContext } from '@shared/context/details-panel'
 import EntityPanelUploaderDialog from './EntityPanelUploaderDialog'
-import {
-  useOptionalVersionUploadContext,
-} from '../VersionUploader/context/VersionUploadContextInstance'
+import { useOptionalVersionUploadContext } from '../VersionUploader/context/VersionUploadContextInstance'
 import {
   sanitizeProductName,
   createProductHelper,

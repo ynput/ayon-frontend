@@ -4,7 +4,7 @@ import {
   SearchEntityLink,
   useGetSearchedEntitiesLinksInfiniteQuery,
 } from '@shared/api'
-import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
 import { useHierarchyTable } from '@shared/hooks/useHierarchyTable'
 import { useMemo } from 'react'
 import { PickerEntityType, PickerSearch } from '../EntityPickerDialog'

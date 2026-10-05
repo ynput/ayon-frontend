@@ -1,13 +1,10 @@
 import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils/checkColumnVisibility'
 import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
-import {
-  useProjectTableContext,
-} from '@shared/containers/ProjectTreeTable/context/ProjectTableContextInstance'
+import { useProjectTableContext } from '@shared/containers/ProjectTreeTable/context/ProjectTableContextInstance'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC, useEffect, useState } from 'react'
 import styled from 'styled-components'
-import type { SettingHighlightedId } from '@shared/context/SettingsPanelContext'
-import { useSettingsPanel } from '@shared/context/SettingsPanelContextInstance'
+import { useSettingsPanel, type SettingHighlightedId } from '@shared/context/settings-panel'
 import { SettingsPanel } from '@shared/components/SettingsPanel/SettingsPanel'
 import type { SettingConfig } from '@shared/components/SettingsPanel/SettingsPanel'
 import { ColumnsSettingsWithContext } from './ColumnsSettings'

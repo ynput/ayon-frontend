@@ -2,7 +2,7 @@ import React, { useContext } from 'react'
 import styled, { css } from 'styled-components'
 import { Thumbnail } from './Thumbnail'
 import clsx from 'clsx'
-import { ThumbnailUploadContext } from '@shared/context/ThumbnailUploaderContextInstance'
+import { ThumbnailUploadContext } from '@shared/context/thumbnail-uploader'
 import type { ThumbnailProps } from './Thumbnail'
 
 type StackedStyledProps = {

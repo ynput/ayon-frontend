@@ -4,7 +4,7 @@ import { useGetProjectQuery } from '@shared/api/queries/project/getProject'
 import type { ProjectModel, UserModel } from '@shared/api/generated'
 import { FC } from 'react'
 import type { toast } from 'react-toastify'
-import { useGlobalContext } from './GlobalContextInstance'
+import { useGlobalContext } from '../global/GlobalContextInstance'
 import type { RemotePageProps } from '@shared/components/RemotePage/RemotePageWrapper'
 import { AddonProjectContext } from './AddonProjectContextInstance'
 

@@ -31,7 +31,7 @@ import type { SliceFilter } from '@shared/containers/Slicer/types'
 import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
 import { useContext } from 'react'
 import { useFetchAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
-import { useGlobalContext } from '@shared/context/GlobalContextInstance'
+import { useGlobalContext } from '@shared/context/global/GlobalContextInstance'
 import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/ProjectDataContextInstance'
 
 type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version'
@@ -1142,22 +1142,24 @@ const getAttributeOptions = (
   // add the enum values first
   if (enums) {
     const usedValues = (values || []).flatMap((value) => (Array.isArray(value) ? value : [value]))
-    getSelectableEnumItems(enums, usedValues as (string | number | boolean)[]).forEach((enumItem) => {
-      const icon = enumItem.icon as string | undefined
-      const isImage = isEnumIconImage(icon)
-      enumOptions.push({
-        id: enumItem.value.toString(),
-        type: type,
-        label: enumItem.label,
-        values: [],
-        icon: isImage ? null : icon,
-        img: isImage ? icon : undefined,
-        color: enumItem.color,
-        pt: {
-          style: { color: 'inherit' },
-        },
-      })
-    })
+    getSelectableEnumItems(enums, usedValues as (string | number | boolean)[]).forEach(
+      (enumItem) => {
+        const icon = enumItem.icon as string | undefined
+        const isImage = isEnumIconImage(icon)
+        enumOptions.push({
+          id: enumItem.value.toString(),
+          type: type,
+          label: enumItem.label,
+          values: [],
+          icon: isImage ? null : icon,
+          img: isImage ? icon : undefined,
+          color: enumItem.color,
+          pt: {
+            style: { color: 'inherit' },
+          },
+        })
+      },
+    )
   }
 
   values?.forEach((value) => {

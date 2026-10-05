@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import type { DeletableEntityType } from '@shared/context/DeleteEntitiesContext'
+import type { DeletableEntityType } from '@shared/context/delete-entities'
 
 export type ExpectedDeleteCounts = Partial<Record<DeletableEntityType, number>>
 
@@ -39,7 +39,9 @@ export const DeleteConfirmContent = ({
   message,
 }: DeleteConfirmContentProps) => (
   <Wrapper>
-    <p>{message || `Are you sure you want to delete ${entityLabel}? This action cannot be undone.`}</p>
+    <p>
+      {message || `Are you sure you want to delete ${entityLabel}? This action cannot be undone.`}
+    </p>
     {childrenDetails.length > 0 && (
       <DetailsContainer>
         <BoldLabel>The following will also be affected:</BoldLabel>

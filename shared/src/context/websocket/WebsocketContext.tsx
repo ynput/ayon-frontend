@@ -134,16 +134,13 @@ export const SocketProvider = ({
   // Using useRef to persist the closure state across renders
   const messageStatsRef = useRef({ callCount: 0, lastCall: Date.now() })
 
-
   const debouncedResetCall = debounce(() => {
-    // all replicas should start about the same time, 
+    // all replicas should start about the same time,
     // so we can reset the API state after a short delay
     console.log('Resetting API state due to server restart')
     setServerRestartingVisible(false)
     dispatch(api.util.resetApiState())
   }, 1000)
-
-
 
   const onMessage = useCallback(
     (message: any) => {
@@ -166,7 +163,10 @@ export const SocketProvider = ({
 
       const { topic, sender, summary, status } = data || {}
 
-      if (isServerRestarting.current && (topic === 'heartbeat' || (topic === 'server.started' && status === 'finished'))) {
+      if (
+        isServerRestarting.current &&
+        (topic === 'heartbeat' || (topic === 'server.started' && status === 'finished'))
+      ) {
         console.log('Server replica booted')
         debouncedResetCall()
         return
@@ -175,7 +175,7 @@ export const SocketProvider = ({
       if (topic === 'heartbeat') return
 
       if (topic === 'server.restart_requested') {
-        console.log("Server restart requested")
+        console.log('Server restart requested')
         setServerRestartingVisible(true)
       }
 

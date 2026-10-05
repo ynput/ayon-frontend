@@ -5,15 +5,15 @@ import { StackedThumbnails } from '@shared/components/Thumbnail/StackedThumbnail
 import { upperFirst } from 'lodash'
 import { AssigneeField, getTextColor, Icon } from '@ynput/ayon-react-components'
 import { PiPWrapper } from '@shared/context/pip'
-import { ProjectContextProvider } from '@shared/context/ProjectContext'
-import type { FeedFilter } from '@shared/context/DetailsPanelContext'
+import { ProjectContextProvider } from '@shared/context/project'
+import type { FeedFilter } from '@shared/context/details-panel'
 import { useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import getAllProjectStatuses from '../../helpers/getAllProjectsStatuses'
 import FeedWrapper from '../../containers/FeedWrapper'
 import mergeProjectInfo from '../../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../../helpers/buildDetailsPanelTitles'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContextInstance'
+import { useDetailsPanelContext } from '@shared/context/details-panel'
 
 export interface DetailsPanelFloatingProps {}
 

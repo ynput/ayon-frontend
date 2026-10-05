@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo } from 'react'
 import { ROW_SELECTION_COLUMN_ID } from '../constants'
 import { useSelectionCellsContext } from './SelectionCellsContext'
 import { useCellEditing } from './CellEditingContext'
-import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
 
 // Utils
 import {

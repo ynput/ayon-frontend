@@ -11,16 +11,16 @@ import { EntityPath } from '@shared/components/EntityPath/EntityPath'
 import { Watchers } from '@shared/components/Watchers/Watchers'
 import { usePiPWindow } from '@shared/context/pip/PiPContextInstance'
 import { extractEntityHierarchyFromParents } from '@shared/util'
-import { ProjectContextProvider } from '@shared/context/ProjectContext'
-import { ThumbnailUploadProvider } from '@shared/context/ThumbnailUploaderContext'
+import { ProjectContextProvider } from '@shared/context/project'
+import { ThumbnailUploadProvider } from '@shared/context/thumbnail-uploader'
 import {
   useDetailsPanelContext,
   useScopedDetailsPanel,
   setDetailsPanelTabForScope,
-} from '@shared/context/DetailsPanelContextInstance'
-import { useURIContext } from '@shared/context/UriContextInstance'
-import type { ProjectModelWithProducts } from '@shared/context/ProjectContext'
-import type { FeedFilter } from '@shared/context/DetailsPanelContext'
+} from '@shared/context/details-panel'
+import { useURIContext } from '@shared/context/uri'
+import type { ProjectModelWithProducts } from '@shared/context/project'
+import type { FeedFilter } from '@shared/context/details-panel'
 
 import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './components/DetailsPanelFiles'

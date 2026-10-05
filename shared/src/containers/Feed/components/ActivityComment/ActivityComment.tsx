@@ -31,13 +31,10 @@ import { useFeedContext } from '../../context/FeedContextInstance'
 import { confirmDelete } from '../../../../util'
 import ActivityHeader, { ActivityHeaderProps } from '../ActivityHeader/ActivityHeader'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
-import { useMenuContext } from '@shared/context/MenuContextInstance'
+import { useMenuContext } from '@shared/context/menu'
 import type { Status } from '../../../ProjectTreeTable/types/project'
 import { SavedAnnotationMetadata } from '../../index'
-import {
-  useDetailsPanelContext,
-  getActivityFrameLink,
-} from '@shared/context/DetailsPanelContextInstance'
+import { useDetailsPanelContext, getActivityFrameLink } from '@shared/context/details-panel'
 import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
 import CommentFlags from './CommentFlags'
 import { createCommentFlags } from './createCommentFlags'

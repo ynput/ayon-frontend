@@ -1,7 +1,7 @@
 import * as Styled from './EntityTooltip.styled'
 import { useGetEntityTooltipQuery } from '@shared/api'
 import { Status } from '@shared/containers/ProjectTreeTable/types/project'
-import { useOptionalProjectContext } from '@shared/context/ProjectContextInstance'
+import { useOptionalProjectContext } from '@shared/context/project'
 import { getEntityThumbnailUrl, getEntityTypeIcon } from '@shared/util'
 import { ENTITY_TOOLTIP_TYPES } from './EntityTooltipHelpers'
 

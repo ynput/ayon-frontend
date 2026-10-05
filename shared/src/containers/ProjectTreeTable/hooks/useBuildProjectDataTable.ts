@@ -13,7 +13,7 @@ import { LoadingTasks } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { TableGroupBy } from '../context'
 import { buildFolderTableRow, buildTaskTableRow, linksToTableData } from '../utils'
-import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
 
 type Params = {
   foldersMap: FolderNodeMap

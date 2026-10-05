@@ -1,4 +1,4 @@
-import { usePowerpack } from '@shared/context/PowerpackContextInstance'
+import { usePowerpack } from '@shared/context/powerpack'
 import type { SliceType } from '../types'
 import { Dropdown, DropdownProps, DropdownRef } from '@ynput/ayon-react-components'
 import { forwardRef } from 'react'

@@ -18,11 +18,8 @@ import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { FEED_NEW_COMMENT } from './context/FeedContext'
 import { useFeedContext } from './context/FeedContextInstance'
 import { Status } from '../ProjectTreeTable/types/project'
-import {
-  useDetailsPanelContext,
-  getActivityFrameLink,
-} from '@shared/context/DetailsPanelContextInstance'
-import type { FeedFrameLink } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext, getActivityFrameLink } from '@shared/context/details-panel'
+import type { FeedFrameLink } from '@shared/context/details-panel'
 import { useGetMyProjectPermissionsQuery } from '@shared/api'
 import type { DetailsPanelEntityType } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'

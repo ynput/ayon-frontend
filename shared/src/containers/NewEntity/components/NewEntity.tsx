@@ -37,8 +37,8 @@ import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierar
 import { NewEntityForm } from './NewEntityForm'
 import { InputLabel, InputsContainer } from './NewEntityForm.styled'
 import { toast } from 'react-toastify'
-import { useProjectContext } from '@shared/context/ProjectContextInstance'
-import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContextInstance'
+import { useProjectContext } from '@shared/context/project'
+import { useProjectFoldersContext } from '@shared/context/project-folders'
 import { newEntityDefinitions } from '../util/entityDefinitions'
 
 const StyledDialog = styled(Dialog)`

@@ -8,7 +8,7 @@ import { useProjectTableContext } from '../context/ProjectTableContextInstance'
 import { OperationModel } from '../types/operations'
 import { EntityData, PatchOperation } from '../types'
 import { HistoryEntityUpdate, UseHistoryReturn } from './useHistory'
-import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
 import { getQueryErrorCodes } from '@shared/api/base/queryError'
 
 const getErrorMessage = (

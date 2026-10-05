@@ -4,7 +4,7 @@ import { FC } from 'react'
 import { CategoryTag } from './CategoryTag'
 import styled from 'styled-components'
 import { CategoryDropdownItem } from './CategoryDropdownItem'
-import type { PowerpackFeature } from '@shared/context/PowerpackContext'
+import type { PowerpackFeature } from '@shared/context/powerpack'
 import { toast } from 'react-toastify'
 
 const CATEGORY_PP_MIN_VERSION = '1.3.0'

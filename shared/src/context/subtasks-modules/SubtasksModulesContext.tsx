@@ -1,7 +1,7 @@
 import { FC, ReactNode, useEffect } from 'react'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import type { SubtasksManagerProps } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
-import { usePowerpack } from './PowerpackContextInstance'
+import { usePowerpack } from '../powerpack/PowerpackContextInstance'
 import { SubtasksModulesContext } from './SubtasksModulesContextInstance'
 
 const SubtasksManagerFallback: FC<SubtasksManagerProps> = (props) => {

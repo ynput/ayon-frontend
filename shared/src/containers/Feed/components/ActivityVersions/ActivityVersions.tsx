@@ -4,7 +4,7 @@ import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import * as Styled from './ActivityVersions.styled'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContextInstance'
+import { useDetailsPanelContext } from '@shared/context/details-panel'
 import type { Status } from '@shared/api'
 import { FieldValue } from '../ActivityFieldChange/FieldValue'
 

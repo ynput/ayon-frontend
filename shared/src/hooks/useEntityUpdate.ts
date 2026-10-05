@@ -1,7 +1,7 @@
 import { toast } from 'react-toastify'
 import { useUpdateEntitiesMutation } from '@shared/api'
 import { useContext } from 'react'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContextInstance'
+import { useDetailsPanelContext } from '@shared/context/details-panel/DetailsPanelContextInstance'
 
 interface Entity {
   id: string

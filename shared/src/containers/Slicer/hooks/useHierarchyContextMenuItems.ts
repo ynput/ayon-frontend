@@ -8,14 +8,12 @@ import type { ContextMenuItemType } from '@shared/containers/ContextMenu/useCrea
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import { useCallback, useMemo, useState } from 'react'
 import { useUpdateOverviewEntitiesMutation } from '@shared/api'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContextInstance'
-import { useProjectContext } from '@shared/context/ProjectContextInstance'
-import { useDeleteEntitiesContext } from '@shared/context/DeleteEntitiesContextInstance'
-import type { DeletableEntity } from '@shared/context/DeleteEntitiesContext'
+import { useDetailsPanelContext } from '@shared/context/details-panel/DetailsPanelContextInstance'
+import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
+import { useDeleteEntitiesContext } from '@shared/context/delete-entities/DeleteEntitiesContextInstance'
+import type { DeletableEntity } from '@shared/context/delete-entities'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
-import {
-  useOptionalVersionUploadContext,
-} from '@shared/components/VersionUploader/context/VersionUploadContextInstance'
+import { useOptionalVersionUploadContext } from '@shared/components/VersionUploader/context/VersionUploadContextInstance'
 import { SliceMap } from '../types'
 
 const toggleChildren = (row: any, expanded: boolean) => {

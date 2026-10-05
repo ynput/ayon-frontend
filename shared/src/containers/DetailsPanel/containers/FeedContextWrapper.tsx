@@ -3,7 +3,7 @@ import { FC, useState, ReactNode } from 'react'
 import { FeedProvider } from '@shared/containers/Feed/context/FeedContext'
 import type { EditingState, FeedContextProps } from '@shared/containers/Feed/context/FeedContext'
 import type { Status } from '@shared/api'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContextInstance'
+import { useDetailsPanelContext } from '@shared/context/details-panel'
 
 interface FeedContextWrapperProps {
   children: ReactNode

@@ -2,12 +2,8 @@ import * as Styled from './PowerpackDialog.styled'
 import { FC, useState } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
 import { FreeTrialLink } from './FreeTrialLink'
-import {
-  powerpackFeatureOrder,
-  powerpackFeatures,
-  usePowerpack,
-} from '@shared/context/PowerpackContextInstance'
-import type { PowerpackDialogType } from '@shared/context/PowerpackContext'
+import { powerpackFeatureOrder, powerpackFeatures, usePowerpack } from '@shared/context/powerpack'
+import type { PowerpackDialogType } from '@shared/context/powerpack'
 import { CTAButton } from './CTAButton'
 
 export interface PowerpackDialogProps {

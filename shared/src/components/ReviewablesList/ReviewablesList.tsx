@@ -36,7 +36,7 @@ import { useCreateContextMenu } from '@shared/containers/ContextMenu/useCreateCo
 import { confirmDelete } from '@shared/util'
 import EditReviewableDialog from './EditReviewableDialog'
 import ReviewableUpload from './ReviewablesUpload'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContextInstance'
+import { useDetailsPanelContext } from '@shared/context/details-panel'
 import { useGetMyProjectPermissionsQuery } from '@shared/api'
 
 interface ReviewablesListProps {

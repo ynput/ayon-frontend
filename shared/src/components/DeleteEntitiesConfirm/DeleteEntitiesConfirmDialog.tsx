@@ -6,7 +6,7 @@ import {
   type ExpectedDeleteCounts,
 } from './DeleteConfirmContent'
 import { DELETE_TYPE_ORDER, sumExpectedCounts } from './DeleteConfirmContentHelpers'
-import type { DeletableEntityType } from '@shared/context/DeleteEntitiesContext'
+import type { DeletableEntityType } from '@shared/context/delete-entities'
 import * as Styled from './DeleteEntitiesConfirmDialog.styled'
 
 export type DeleteConfirmPayload = {
@@ -63,8 +63,8 @@ export const DeleteEntitiesConfirmDialog = ({
   const isConfirmed = requiresCounts
     ? countTypes.every((type) => matchesCount(countValues[type], expectedCounts[type] as number))
     : requiresName
-      ? nameValue.trim() === expectedName
-      : true
+    ? nameValue.trim() === expectedName
+    : true
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' && isConfirmed) {

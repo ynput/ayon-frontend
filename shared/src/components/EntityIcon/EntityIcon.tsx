@@ -1,5 +1,5 @@
 import { Icon, IconProps } from '@ynput/ayon-react-components'
-import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { useProjectContext } from '@shared/context/project'
 import { getEntityColor, getEntityIcon } from '@shared/util/iconUtils'
 
 interface Props extends Partial<IconProps> {

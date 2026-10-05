@@ -2,7 +2,7 @@
 // Each tab manages its own sub-filters
 import { FC } from 'react'
 import { Button, Spacer } from '@ynput/ayon-react-components'
-import type { DetailsPanelTab } from '@shared/context/DetailsPanelContext'
+import type { DetailsPanelTab } from '@shared/context/details-panel'
 import type { DetailsPanelEntityType } from '@shared/api'
 import * as Styled from './DetailsPanelTabs.styled'
 

@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react'
 import { registerRemotes } from '@module-federation/enhanced/runtime'
 import { useListFrontendModulesQuery } from '@shared/api'
 import type { FrontendModuleListItem } from '@shared/api'
-import { useGlobalContext } from './GlobalContextInstance'
+import { useGlobalContext } from '../global/GlobalContextInstance'
 import { RemoteModulesContext } from './RemoteModulesContextInstance'
 
 type Module = {

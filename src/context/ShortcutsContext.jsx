@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { useMenuContext } from '@shared/context/MenuContextInstance'
+import { useMenuContext } from '@shared/context/menu'
 import { useLogoutMutation } from '@queries/auth/logout'
 import { useSearchParams } from 'react-router-dom'
 import { ShortcutsContext } from './ShortcutsContextInstance'

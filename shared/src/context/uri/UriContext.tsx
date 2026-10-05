@@ -6,7 +6,7 @@
 // Components state should not be directly synced to the URI, they should only read the URI on mount to set initial state
 
 import { useEffect, ReactNode, FC, useCallback, useState } from 'react'
-import { buildEntityUri, parseUri } from '../util'
+import { buildEntityUri, parseUri } from '../../util'
 import { useResolveUrisMutation } from '@shared/api'
 import type { ResolvedUriModel } from '@shared/api'
 import { URIContext } from './UriContextInstance'

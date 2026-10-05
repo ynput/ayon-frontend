@@ -52,7 +52,7 @@ import {
   SettingsPanelItemTemplate,
   SettingsPanelItemTemplateProps,
 } from '../SettingsPanel/SettingsPanelItemTemplate'
-import type { SettingHighlightedId } from '@shared/context/SettingsPanelContext'
+import type { SettingHighlightedId } from '@shared/context/settings-panel'
 import { InputSwitch } from '@ynput/ayon-react-components'
 
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'

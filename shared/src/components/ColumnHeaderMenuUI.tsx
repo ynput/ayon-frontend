@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useMenuContext } from '@shared/context/MenuContextInstance'
+import { useMenuContext } from '@shared/context/menu'
 import { Menu, MenuContainer } from './Menu'
 import type { MenuItemType } from './Menu'
 import { ColumnMenuButton } from './ColumnHeaderMenuUI.styled'

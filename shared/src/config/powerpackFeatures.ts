@@ -1,4 +1,4 @@
-import type { PowerpackDialogType } from '@shared/context/PowerpackContext'
+import type { PowerpackDialogType } from '@shared/context/powerpack'
 
 export type PowerpackFeature =
   | 'slicer'

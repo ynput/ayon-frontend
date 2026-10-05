@@ -11,7 +11,7 @@ import { getEntityId } from '@shared/util'
 import type { PasteMethod } from '../context/clipboard/clipboardTypes'
 import { useCellEditing } from '../context/CellEditingContext'
 import { toast } from 'react-toastify'
-import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
 
 /**
  * Represents a link update operation for table links

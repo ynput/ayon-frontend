@@ -16,7 +16,7 @@ import { ColumnDef } from '@tanstack/react-table'
 import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useMemo } from 'react'
-import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { useProjectContext } from '@shared/context/project/ProjectContextInstance'
 import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierarchySelection'
 import {
   newEntityDefinitions,

@@ -6,7 +6,7 @@ import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import ListsFiltersBar from './ListsFiltersBar'
 import { Menu, MenuContainer, MenuItemType, TableSearch } from '@shared/components'
-import { useMenuContext } from '@shared/context/MenuContextInstance'
+import { useMenuContext } from '@shared/context/menu'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
 import { usePowerpack } from '@shared/context'
@@ -236,9 +236,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     { id: 'divider' },
     {
       id: 'new-list',
-      label: isReview
-        ? 'Create review session'
-        : 'Create list',
+      label: isReview ? 'Create review session' : 'Create list',
       icon: 'add',
       shortcut: 'N',
       onClick: async () => {

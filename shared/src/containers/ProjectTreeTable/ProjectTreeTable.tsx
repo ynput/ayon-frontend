@@ -48,7 +48,7 @@ import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettingsContext } from './context/ColumnSettingsContext'
 import { TableColumnDropIndicator } from './components/ColumnDropIndicator'
-import { useMenuContext } from '../../context/MenuContextInstance'
+import { useMenuContext } from '@shared/context/menu'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
 
 // Hook imports
@@ -110,9 +110,9 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { useProjectContext } from '@shared/context/ProjectContextInstance'
-import { usePowerpack } from '@shared/context/PowerpackContextInstance'
-import { setDetailsPanelTabForScope } from '@shared/context/DetailsPanelContextInstance'
+import { useProjectContext } from '@shared/context/project'
+import { usePowerpack } from '@shared/context/powerpack'
+import { setDetailsPanelTabForScope } from '@shared/context/details-panel'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'

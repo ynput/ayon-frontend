@@ -2,7 +2,7 @@ import React, { RefObject } from 'react'
 import { Icon, ShortcutTag } from '@ynput/ayon-react-components'
 import './ContextMenu.scss'
 import clsx from 'clsx'
-import type { PowerpackFeature } from '@shared/context/PowerpackContext'
+import type { PowerpackFeature } from '@shared/context/powerpack'
 
 export interface CommandEvent {
   originalEvent: React.MouseEvent

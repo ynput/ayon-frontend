@@ -11,7 +11,7 @@ import {
   type MarkdownEditorHandle,
 } from '@shared/components/MarkdownEditor'
 import { toast } from 'react-toastify'
-import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { useProjectContext } from '@shared/context/project'
 import { useDescriptionMentions } from '@shared/components/DetailsPanelDetails/hooks/useDescriptionMentions'
 
 const StyledDialog = styled.div`

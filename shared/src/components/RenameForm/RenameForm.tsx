@@ -8,7 +8,7 @@ import { TableMeta } from '@tanstack/react-table'
 import { checkName, checkLabel, parseAndFormatName } from '@shared/util'
 import { toast } from 'react-toastify'
 import type { EntityNaming } from '@shared/api'
-import { useProjectContext } from '@shared/context/ProjectContextInstance'
+import { useProjectContext } from '@shared/context/project'
 
 const EditingContainer = styled.div`
   background: var(--md-sys-color-surface-container-lowest);

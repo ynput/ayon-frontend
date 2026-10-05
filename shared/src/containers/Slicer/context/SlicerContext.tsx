@@ -21,7 +21,7 @@ import { SlicerContext } from './SlicerContextInstance'
 import { useSlicerRemotes } from '../hooks/useSlicerRemotes'
 import { useSlicerRowSelection } from '../hooks/useSlicerRowSelection'
 import type { OnAddToList, OnOpenViewer } from '../hooks/useHierarchyContextMenuItems'
-import { usePowerpack } from '@shared/context/PowerpackContextInstance'
+import { usePowerpack } from '@shared/context/powerpack/PowerpackContextInstance'
 
 export type OnSliceTypeChange = (sliceType: SliceType, pinCurrent?: boolean) => void
 

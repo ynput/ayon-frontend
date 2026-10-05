@@ -1,4 +1,4 @@
-import type { CommentFrameLink } from '@shared/context/DetailsPanelContext'
+import type { CommentFrameLink } from '@shared/context/details-panel'
 import type { CommentFlag } from './CommentFlags'
 
 type CreateCommentFlagsOptions = {
