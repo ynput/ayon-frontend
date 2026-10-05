@@ -22,9 +22,13 @@ const enhancedApi = dataImportApi.enhanceEndpoints({
 
         switch (importType) {
           case "hierarchy":
+            // the folder list (overview table and hierarchy sidebar) is not updated over the
+            // websocket, because the import's events carry our own sender id
             return [
               { type: "overviewTask", id: projectName },
               { type: 'project', id: projectName },
+              { type: 'folder', id: 'LIST' },
+              'hierarchy',
             ]
           case "user":
             return [{ type: "user", id: "LIST" }]
