@@ -1,5 +1,7 @@
 import { APIRequestContext, APIResponse, request } from '@playwright/test'
 import { randomBytes } from 'crypto'
+import { readFile } from 'fs/promises'
+import path from 'path'
 import { uniqueName } from './names'
 
 /**
@@ -11,6 +13,26 @@ export type Folder = { id: string; name: string; folderType: string; parentId?: 
 export type Task = { id: string; name: string; taskType: string; folderId: string }
 export type Product = { id: string; name: string; productType: string; folderId: string }
 export type Version = { id: string; version: number; productId: string; taskId?: string | null }
+/** A media file of a version, as the viewer gets it */
+export type Reviewable = {
+  fileId: string
+  activityId: string
+  filename: string
+  label: string | null
+  mimetype: string
+  /** `ready` plays as is, `conversionRequired` needs a transcoder first */
+  availability: 'unknown' | 'ready' | 'conversionRequired' | 'conversionRecommended'
+  mediaInfo?: { width?: number; height?: number; duration?: number; codec?: string }
+}
+
+const MIME_TYPES: Record<string, string> = {
+  '.mp4': 'video/mp4',
+  '.mov': 'video/quicktime',
+  '.webm': 'video/webm',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+}
 
 export class ApiError extends Error {
   constructor(method: string, url: string, public status: number, body: string) {
@@ -219,6 +241,39 @@ export class AyonApi {
   async workfileExists(project: string, id: string) {
     const res = await this.request.get(`/api/projects/${project}/workfiles/${id}`)
     return res.ok()
+  }
+
+  // ---------------------------------------------------------------------------
+  // reviewables (media files of a version, shown in the viewer)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Uploads a local file (e.g. from `tests/e2e/media`) as a reviewable of a version.
+   * The server probes it with ffprobe and rejects files it cannot read. The file is stored with
+   * the project; deleting the project moves it to `<project>.<timestamp>.trash` in the server's
+   * project storage.
+   */
+  async uploadReviewable(
+    project: string,
+    versionId: string,
+    filePath: string,
+    options: { label?: string; contentType?: string } = {},
+  ): Promise<Reviewable> {
+    const url = `/api/projects/${project}/versions/${versionId}/reviewables`
+    const contentType =
+      options.contentType ?? MIME_TYPES[path.extname(filePath).toLowerCase()] ?? 'video/mp4'
+    const res = await this.request.post(url, {
+      data: await readFile(filePath),
+      headers: { 'Content-Type': contentType, 'X-File-Name': path.basename(filePath) },
+      params: options.label ? { label: options.label } : undefined,
+    })
+    return this.check('POST', url, res)
+  }
+
+  /** Reviewables of a version, in the order the viewer lists them, with their availability */
+  async listReviewables(project: string, versionId: string): Promise<Reviewable[]> {
+    const res = await this.get(`/api/projects/${project}/versions/${versionId}/reviewables`)
+    return res.reviewables
   }
 
   // ---------------------------------------------------------------------------

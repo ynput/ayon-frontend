@@ -1,4 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test'
+import { menuItem } from '../support/ui'
 
 /**
  * /projects/:project/products — versions and products in one table.
@@ -31,5 +32,19 @@ export class ProductsPage {
   async setEnumCell(name: string, columnId: string, value: string) {
     await this.cell(name, columnId).dblclick()
     await this.page.locator(`.options [data-value="${value}"]`).first().click()
+  }
+
+  /**
+   * Right click a version row and pick "Open in viewer". The item is only offered on the
+   * "Version / Product" cell (`name` column) of a single row.
+   */
+  async openInViewer(name: string) {
+    await this.cell(name, 'name').click({ button: 'right' })
+    await menuItem(this.page, 'Open in viewer').click()
+  }
+
+  /** Double click a row's name to open its details panel */
+  async openDetails(name: string) {
+    await this.cell(name, 'name').dblclick()
   }
 }
