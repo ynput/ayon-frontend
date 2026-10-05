@@ -1,15 +1,7 @@
-import { format, isThisYear, isToday, isValid, isYesterday } from 'date-fns'
+import { format, isThisYear, isToday, isYesterday } from 'date-fns'
 import clsx from 'clsx'
 import * as Styled from './InboxDateDivider.styled'
 import Typography from '@/theme/typography.module.css'
-
-export const getDayKey = (date?: string): string | null => {
-  if (!date) return null
-  const dateObj = new Date(date)
-  if (!isValid(dateObj)) return null
-
-  return dateObj.toDateString()
-}
 
 const getDayLabel = (date: string): string => {
   const dateObj = new Date(date)

@@ -2,6 +2,7 @@ import { Icon, InputText } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { KeyboardEvent, useEffect, useId, useRef, useState } from 'react'
 import styled from 'styled-components'
+import { ErrorText } from './LabelWithNameField.styled'
 
 export interface LabelWithNameFieldProps {
   labelValue: string
@@ -321,9 +322,4 @@ const NameInput = styled(InputText)`
       outline: 1px solid var(--md-sys-color-primary);
     }
   }
-`
-
-export const ErrorText = styled.div`
-  font-size: 12px;
-  color: var(--md-sys-color-error);
 `

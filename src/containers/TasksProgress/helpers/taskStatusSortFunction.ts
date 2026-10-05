@@ -1,6 +1,6 @@
 import type { Status } from '@shared/api'
 import { TaskTypeRow } from './formatTaskProgressForTable'
-import { stateOrder } from '../components/TaskStatusBar/TaskStatusBar'
+import { stateOrder } from '../components/TaskStatusBar/TaskStatusBarHelpers'
 import { ProgressTableSortFunction } from '../hooks/useFolderSort'
 
 export const taskStatusSortFunction =

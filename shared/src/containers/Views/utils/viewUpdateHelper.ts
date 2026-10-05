@@ -20,7 +20,7 @@ import { generateWorkingView } from './generateWorkingView'
 import { toast } from 'react-toastify'
 import { SetStateAction, useCallback, useRef, useState } from 'react'
 import { useStore } from 'react-redux'
-import { useViewsContext, ViewsContextValue } from '../context/ViewsContext'
+import { ViewsContextValue, useViewsContext } from '../context'
 
 interface UpdateOptions {
   successMessage?: string

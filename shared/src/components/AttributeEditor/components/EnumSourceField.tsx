@@ -17,7 +17,8 @@ import {
   getSelectableEnumItems,
 } from '@shared/util/attributeEnum'
 import type { EnumContextParam } from '@shared/util/attributeEnum'
-import { EnumItemIcon, EnumItemRow } from './EnumItemRow'
+import { EnumItemIcon } from './EnumItemRow'
+import { EnumItemRow } from './EnumItemRow.styled'
 import { EnumDebugDialog } from './EnumDebugDialog'
 
 const CUSTOM_ENUM_SOURCE = '__custom__'

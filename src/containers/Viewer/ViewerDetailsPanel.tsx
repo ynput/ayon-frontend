@@ -6,10 +6,10 @@ import { useGetUsersAssigneeQuery } from '@shared/api'
 import { DetailsPanelSlideOut } from '@shared/containers'
 import { useGetProjectsInfoQuery } from '@shared/api'
 import { ViewerDetailsPanelWrapper } from './Viewer.styled'
-import { useViewer } from '@context/ViewerContext'
+import { useViewer } from '@context'
 import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 import { useDetailsPanelContext } from '@shared/context'
-import { DetailsPanelContext } from '@shared/context/DetailsPanelContextInstance'
+import { DetailsPanelContext } from '@shared/context'
 
 type Props = {
   versionIds: string[]

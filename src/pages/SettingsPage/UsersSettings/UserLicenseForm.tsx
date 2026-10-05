@@ -2,7 +2,8 @@ import { useGetUserPoolsQuery, UserPoolModel } from '@shared/api'
 import { Button, Dropdown, FormLayout, FormRow, InputSwitch } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
-import InvitationStatus, { getInvitationState } from './InvitationStatus'
+import InvitationStatus from './InvitationStatus'
+import { getInvitationState } from './InvitationStatusHelpers'
 
 const FormRowStyled = styled(FormRow)`
   .label {

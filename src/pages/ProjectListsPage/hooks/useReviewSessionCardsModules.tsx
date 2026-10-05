@@ -1,35 +1,13 @@
-import { RemoteAddonProjectProps, usePowerpack } from '@shared/context'
+import { usePowerpack } from '@shared/context'
 import { useLoadModule } from '@shared/hooks'
-import { createContext, PropsWithChildren, useContext } from 'react'
+import { createContext, useContext } from 'react'
+import {
+  FallbackReviewCardsControlsRight,
+  FallbackReviewCardsProvider,
+} from './ReviewSessionCardsFallbacks'
 
 export type Clip = { listItemId: string }
 export type UpdateType = 'reorder' | 'add' | 'delete' | 'replace' | 'update'
-
-function FallbackReviewCardsProvider({
-  children,
-}: RemoteAddonProjectProps &
-  PropsWithChildren & {
-    onSelectionChange: (versionIds: string[]) => void
-    onOpenDetails: (versionId: string) => void
-    onItemsChanged?: (clips: Clip[], promise?: Promise<unknown>, updateType?: UpdateType) => void
-    onOpenInViewer?: (state: {
-      versionId: string
-      productId: string
-      folderId: string
-      taskId?: string
-    }) => void
-    headerContentStart?: JSX.Element
-    headerContentEnd?: JSX.Element
-    api?: any
-    gridSize?: number
-    playlistView?: boolean
-  }) {
-  return <>{children}</>
-}
-
-function FallbackReviewCardsControlsRight({}: { groupingDisabled?: boolean }) {
-  return <></>
-}
 
 type UseReviewSessionCardsReturn = {
   clearHighlighted?: () => void

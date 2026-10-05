@@ -6,12 +6,12 @@ import {
   LinkToAdd,
   LinkToRemove,
 } from '@shared/components/LinksManager/utils/linkUpdates'
-import { useProjectTableContext } from '../context/ProjectTableContext'
+import { useProjectTableContext } from '../context/project-table'
 import { getEntityId } from '@shared/util'
 import type { PasteMethod } from '../context/clipboard/clipboardTypes'
-import { useCellEditing } from '../context/CellEditingContext'
+import { useCellEditing } from '../context/cell-editing'
 import { toast } from 'react-toastify'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 
 /**
  * Represents a link update operation for table links

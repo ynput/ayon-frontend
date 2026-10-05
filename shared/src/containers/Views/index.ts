@@ -1,6 +1,6 @@
 export * from './types'
 export * from './Views'
-export * from './context/ViewsContext'
+export * from './context'
 export * from './ViewsButton/ViewsButton'
 export * from './ViewsMenuContainer/ViewsMenuContainer'
 export * from './utils/portalUtils'
@@ -24,4 +24,3 @@ export { Views } from './Views'
 
 // Re-export constants
 export { WORKING_VIEW_ID, NEW_VIEW_ID } from './ViewsMenuContainer/ViewsMenuContainer'
-

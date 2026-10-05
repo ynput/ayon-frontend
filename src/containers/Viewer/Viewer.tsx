@@ -10,7 +10,7 @@ import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '
 import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import * as Styled from './Viewer.styled'
-import { ViewerProvider } from '@context/ViewerContext'
+import { ViewerProvider } from '@context'
 
 // shared
 import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
@@ -21,7 +21,7 @@ import {
   type ReviewablesSelectorHandle,
 } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
-import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
+import { ProjectContextProvider, useProjectContext } from '@shared/context'
 import { useSessionStorage, useReviewablesKeyboardNavigation } from '@shared/hooks'
 import clsx from 'clsx'
 

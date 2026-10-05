@@ -1,5 +1,4 @@
-import type { PowerpackFeature } from '@shared/context/PowerpackContext'
-import { usePowerpack } from '@shared/context/PowerpackContext'
+import { usePowerpack, type PowerpackFeature } from '@shared/context'
 import { Button, ButtonProps, Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, MouseEvent } from 'react'

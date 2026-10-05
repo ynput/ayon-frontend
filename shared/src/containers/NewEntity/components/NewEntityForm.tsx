@@ -1,14 +1,11 @@
 import { InputText } from '@ynput/ayon-react-components'
 import React, { KeyboardEvent, useId, useState, useRef } from 'react'
 import styled from 'styled-components'
-import type { EntityForm } from '../context/NewEntityContext'
+import type { EntityForm } from '../context/new-entity'
 import { theme } from '@ynput/ayon-react-components'
 import { Icon } from '@ynput/ayon-react-components'
+import { InputLabel, InputsContainer, NameRow } from './NewEntityForm.styled'
 
-export const InputLabel = styled.label`
-  font-size: ${theme.labelMedium};
-  color: var(--md-sys-color-outline);
-`
 const NameDisplay = styled.span`
   position: relative;
   padding: 2px 6px;
@@ -50,32 +47,6 @@ const NameInput = styled(InputText)`
       outline: 1px solid var(--md-sys-color-primary);
     }
   }
-`
-
-export const InputsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--base-gap-small);
-
-  label {
-    white-space: nowrap;
-  }
-
-  [icon='info'] {
-    cursor: help;
-    font-size: 16px;
-    color: var(--md-sys-color-outline);
-  }
-`
-
-export const NameRow = styled.div`
-  display: flex;
-  align-items: center;
-  margin-top: 6px;
-  gap: var(--base-gap-small);
-  width: 100%;
-  word-break: break-all;
 `
 
 type NewEntityFormProps = {

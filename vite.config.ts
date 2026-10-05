@@ -1,8 +1,11 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'url'
+import path from 'path'
 import { federation } from '@module-federation/vite'
 import { dependencies } from './package.json'
+
+const CLAUDE_DIR = fileURLToPath(new URL('./.claude', import.meta.url))
 
 export default ({ mode }) => {
   Object.assign(process?.env, loadEnv(mode, process?.cwd(), ''))
@@ -17,6 +20,13 @@ export default ({ mode }) => {
   // https://vitejs.dev/config/
   return defineConfig({
     server: {
+      watch: {
+        // worktrees live under .claude/worktrees: any tsconfig.json added or changed there
+        // makes vite invalidate every module and fully reload the page.
+        // Anchored to this project's own .claude folder (not a '**/.claude/**' glob), because
+        // a worktree's own path contains .claude and would then ignore every file.
+        ignored: (file: string) => file === CLAUDE_DIR || file.startsWith(CLAUDE_DIR + path.sep),
+      },
       proxy: {
         '/api': {
           target: SERVER_URL,
@@ -84,6 +94,11 @@ export default ({ mode }) => {
       }),
       react(),
     ],
+    optimizeDeps: {
+      // federation's shared-module wrappers make vite misdetect these as ESM during the scan,
+      // which forces an extra full reload once the real optimization finishes
+      needsInterop: ['react', 'react-dom', '@ynput/ayon-react-components'],
+    },
     build: {
       target: 'chrome89',
       // Disable module preload to prevent hardcoded URLs

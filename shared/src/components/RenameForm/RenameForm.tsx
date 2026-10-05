@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import styled from 'styled-components'
 import type { TableRow } from '@shared/containers/ProjectTreeTable/types/table'
-import { useCellEditing } from '@shared/containers/ProjectTreeTable/context/CellEditingContext'
+import { useCellEditing } from '@shared/containers/ProjectTreeTable/context/cell-editing'
 import type { EntityUpdate } from '@shared/containers/ProjectTreeTable/hooks/useUpdateTableData'
 import { theme } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
@@ -9,7 +9,7 @@ import { TableMeta } from '@tanstack/react-table'
 import { checkName, checkLabel, parseAndFormatName } from '@shared/util'
 import { toast } from 'react-toastify'
 import type { EntityNaming } from '@shared/api'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 
 const EditingContainer = styled.div`
   background: var(--md-sys-color-surface-container-lowest);

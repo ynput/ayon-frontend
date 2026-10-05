@@ -1,0 +1,92 @@
+import { ReactNode, useEffect, useState } from 'react'
+import { registerRemotes } from '@module-federation/enhanced/runtime'
+import { useListFrontendModulesQuery } from '@shared/api'
+import type { FrontendModuleListItem } from '@shared/api'
+import { useGlobalContext } from '../global/GlobalContextInstance'
+import { RemoteModulesContext } from './RemoteModulesContextInstance'
+
+type Module = {
+  remote: string
+  addon: string
+  version: string
+  modules: string[]
+}
+
+export type RemoteModulesContextType = {
+  isLoading: boolean
+  modules: FrontendModuleListItem[]
+  remotesInitialized: boolean
+}
+
+type Props = {
+  children: ReactNode
+  skip?: boolean
+}
+
+export const RemoteModulesProvider = ({ children, skip }: Props) => {
+  // only load if logged in
+  const { data: addonRemoteModules = [], isLoading } = useListFrontendModulesQuery(undefined, {
+    skip,
+  })
+
+  const {
+    siteInfo,
+    isLoading: { siteInfo: isLoadingInfo },
+  } = useGlobalContext()
+
+  const [remotesInitialized, setRemotesInitialized] = useState(false)
+
+  useEffect(() => {
+    // waiting for loading or it has already been initialized
+    if (isLoading || isLoadingInfo || remotesInitialized) return
+
+    // no remotes found, nothing to do
+    if (!addonRemoteModules.length) {
+      setRemotesInitialized(true)
+      return
+    }
+
+    // create a flat map of modules to load
+    const allRemotes: Module[] = []
+
+    addonRemoteModules.forEach((addon) => {
+      const { addonName, addonVersion, modules = {} } = addon
+
+      Object.entries(modules).forEach(([remote, modules]) => {
+        allRemotes.push({
+          remote,
+          addon: addonName,
+          version: addonVersion,
+          modules,
+        })
+      })
+    })
+
+    registerRemotes(
+      allRemotes.map((r) => ({
+        name: r.remote,
+        alias: r.remote,
+        entry: `/addons/${r.addon || r.remote}/${r.version}/frontend/modules/${
+          r.remote
+        }/remoteEntry.js?server=${siteInfo?.releaseInfo?.version || siteInfo?.releaseInfo}-${
+          siteInfo?.releaseInfo?.buildDate
+        }-${new Date().getTime()}`,
+        type: 'module',
+      })),
+    )
+
+    setRemotesInitialized(true)
+  }, [addonRemoteModules, isLoading, isLoadingInfo, remotesInitialized])
+
+  return (
+    <RemoteModulesContext.Provider
+      value={{
+        isLoading,
+        modules: addonRemoteModules,
+        remotesInitialized,
+      }}
+    >
+      {children}
+    </RemoteModulesContext.Provider>
+  )
+}

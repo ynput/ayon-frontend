@@ -1,16 +1,13 @@
 import { FC, useCallback, useState } from 'react'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import {
-  ListsDataProvider,
-  useListsDataContext,
-} from '@pages/ProjectListsPage/context/ListsDataContext'
-import { ListsProvider } from '@pages/ProjectListsPage/context/ListsProvider'
-import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
+import { ListsDataProvider, useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
+import { ListsProvider, useListsContext } from '@pages/ProjectListsPage/context/lists'
 import { ProjectContextProvider, useOptionalProjectContext } from '@shared/context'
 import ListsTable from '../ListsTable/ListsTable'
 import type { ListEntityInput } from '../../hooks/useBuildListMenuItems'
-import { listEntityTypes, type ListEntityType } from '../NewListDialog/NewListDialog'
+import { type ListEntityType } from '../NewListDialog/NewListDialog'
+import { listEntityTypes } from '../NewListDialog/NewListDialogHelpers'
 import { ACCESS_LEVEL } from '../../util/listAccessControl'
 import type { EntityList } from '@shared/api'
 
@@ -110,7 +107,11 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
   const canCreateList = listEntityTypes.includes(entityType as ListEntityType)
   const handleCreateList = () => {
     onClose()
-    openCreateNewList(entityType as ListEntityType, entities, isReview ? 'review-session' : undefined)
+    openCreateNewList(
+      entityType as ListEntityType,
+      entities,
+      isReview ? 'review-session' : undefined,
+    )
   }
 
   const count = selectedLists.length
