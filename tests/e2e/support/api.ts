@@ -1,4 +1,5 @@
 import { APIRequestContext, APIResponse, request } from '@playwright/test'
+import { randomBytes } from 'crypto'
 import { uniqueName } from './names'
 
 /**
@@ -341,7 +342,7 @@ export class AyonApi {
     } = {},
   ) {
     const name = options.name ?? uniqueName('user')
-    const password = options.password ?? `pw_${Math.random().toString(36).slice(2)}A1!`
+    const password = options.password ?? `pw_${randomBytes(12).toString('hex')}A1!`
     const userPool = options.licensed ? await this.getValidUserPool() : undefined
     await this.put(`/api/users/${name}`, {
       attrib: { fullName: options.fullName ?? name, email: options.email ?? `${name}@e2e.test` },
