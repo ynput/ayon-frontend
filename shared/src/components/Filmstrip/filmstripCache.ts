@@ -1,8 +1,8 @@
 // Loads and caches hover-scrub filmstrips.
 //
 // A filmstrip is a single image with `frames` video frames laid out in a grid of `columns`
-// columns, left to right, top to bottom. The filmstrip endpoints return the layout and an URL
-// of the image (served by the server for local storages, a signed URL for S3 storages).
+// columns, left to right, top to bottom. The filmstrip endpoints return the layout and the URL
+// of the image, which only changes when the filmstrip is re-created, so the browser caches it.
 
 export interface FilmstripData {
   fileId: string // the video file (reviewable) the frames were taken from
@@ -35,7 +35,7 @@ interface CacheEntry {
 const MAX_ENTRIES = 64
 
 // Used when the response does not say how long it may be cached. Entity filmstrips can change
-// (a new reviewable) without the URL changing, and signed S3 URLs expire after an hour.
+// (a new reviewable) without the entity filmstrip URL changing.
 const DEFAULT_MAX_AGE = 300
 
 // Insertion order is used as LRU order
