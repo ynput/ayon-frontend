@@ -49,6 +49,8 @@ query GetProducts(
           parents
           createdAt
           updatedAt
+          createdBy
+          updatedBy
           featuredVersion(order: $featuredVersionOrder) {
             ...VersionBase
           }

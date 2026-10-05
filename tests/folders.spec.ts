@@ -1,4 +1,4 @@
-import { test as base } from '@playwright/test'
+import { expect, test as base } from '@playwright/test'
 import ProjectPage, { getProjectName } from './fixtures/projectPage'
 import FolderPage, { getFolderName } from './fixtures/folderPage'
 
@@ -19,6 +19,13 @@ test('create/delete folder', async ({ projectPage, folderPage, browserName }) =>
   const folderName = getFolderName('foo_project_folder_folder')(browserName)
   await projectPage.createProject(projectName)
   await folderPage.createFolder(projectName, folderName)
+  await folderPage.page.getByRole('cell', { name: folderName }).click()
+  await expect(folderPage.page.getByText('Folder created at', { exact: false })).toBeVisible()
+  await folderPage.page.getByRole('button', { name: 'Details' }).click()
+  await expect(folderPage.page.getByText('Created at', { exact: true })).toBeVisible()
+  await expect(folderPage.page.getByText('Created by', { exact: true })).toBeVisible()
+  await expect(folderPage.page.getByText('Updated at', { exact: true })).toBeVisible()
+  await expect(folderPage.page.getByText('Updated by', { exact: true })).toBeVisible()
   await folderPage.deleteFolder(projectName, folderName)
   await projectPage.deleteProject(projectName)
 })

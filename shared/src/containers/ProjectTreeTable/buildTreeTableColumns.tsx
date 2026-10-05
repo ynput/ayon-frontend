@@ -77,7 +77,9 @@ export const COLUMN_LABELS: Record<string, string> = {
   folderType: 'Folder type',
   tags: 'Tags',
   createdAt: 'Created at',
+  createdBy: 'Created by',
   updatedAt: 'Updated at',
+  updatedBy: 'Updated by',
   subtasks: 'Subtasks',
   comments: 'Latest comments',
 }
@@ -103,7 +105,9 @@ export const COLUMN_ICONS: Record<string, string> = {
   task_entity: getEntityTypeIcon('task'),
   version_entity: getEntityTypeIcon('version'),
   createdAt: getAttributeIcon('createdAt', 'datetime'),
+  createdBy: 'person',
   updatedAt: getAttributeIcon('updatedAt', 'datetime'),
+  updatedBy: 'person',
   subtasks: 'checklist',
   comments: getAttributeIcon('comment'),
 }
@@ -199,7 +203,9 @@ export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
   },
   tags: { sortKey: 'tags', enabled: true, label: COLUMN_LABELS.tags },
   createdAt: { sortKey: 'createdAt', enabled: true, label: COLUMN_LABELS.createdAt },
+  createdBy: { sortKey: 'createdBy', enabled: true, label: COLUMN_LABELS.createdBy },
   updatedAt: { sortKey: 'updatedAt', enabled: true, label: COLUMN_LABELS.updatedAt },
+  updatedBy: { sortKey: 'updatedBy', enabled: true, label: COLUMN_LABELS.updatedBy },
   subtasks: { enabled: false, label: COLUMN_LABELS.subtasks },
   comments: { enabled: false, label: COLUMN_LABELS.comments },
 }
@@ -363,7 +369,9 @@ export type DefaultColumns =
   | 'assignees'
   | 'tags'
   | 'createdAt'
+  | 'createdBy'
   | 'updatedAt'
+  | 'updatedBy'
   | 'comments'
 
 export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
@@ -1295,6 +1303,49 @@ const buildTreeTableColumns = ({
     })
   }
 
+  for (const field of ['createdBy', 'updatedBy'] as const) {
+    if (!isIncluded(field)) continue
+    staticColumns.push({
+      id: field,
+      accessorFn: (row) => getScopedValue(row, 'primary', field),
+      header: getColumnLabel(field),
+      minSize: COLUMN_MIN_SIZE,
+      enableSorting: canSort(field),
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(withNameTieBreaker(sortingFns.alphanumeric)),
+      cell: ({ row, column, table }) => {
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+        const assignees = table.options.meta?.options?.assignee || []
+        const options =
+          value && !assignees.some((option) => option.value === value)
+            ? [
+                ...assignees,
+                {
+                  value,
+                  label: value,
+                  icon: `/api/users/${encodeURIComponent(value)}/avatar`,
+                },
+              ]
+            : assignees
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx(field, { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={value ? [value] : []}
+            attributeData={{ type: 'list_of_strings' }}
+            options={options}
+            isCollapsed={!!row.original.childOnlyMatch}
+            isReadOnly
+          />
+        )
+      },
+    })
+  }
+
   if (isIncluded('subtasks') && scopes.includes('task')) {
     staticColumns.push({
       id: 'subtasks',
@@ -1566,7 +1617,9 @@ const buildTreeTableColumns = ({
     'version',
     'tags',
     'createdAt',
+    'createdBy',
     'updatedAt',
+    'updatedBy',
   ])
   const configuredParentFields = new Set(
     parentColumnDefinitions.map((definition) => `${definition.scope}:${definition.field}`),

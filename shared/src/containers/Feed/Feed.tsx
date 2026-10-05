@@ -25,6 +25,9 @@ import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import type { SavedAnnotationMetadata } from './index'
 import FeedSearchFilter from './components/FeedSearchFilter'
 import { useLastVersionReview } from './hooks/useLastVersionReview'
+import { format, isValid } from 'date-fns'
+import { UserImage } from '@shared/components/UserImage/UserImage'
+import * as CreationStyled from './components/ActivityAssigneeChange/ActivityAssigneeChange.styled'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -93,6 +96,8 @@ export const Feed = ({
   )
 
   const supportsReviewSession = entityType === 'version' || entityType === 'folder'
+  const createdFolder = entityType === 'folder' && entities.length === 1 ? entities[0] : null
+  const creator = users.find((user) => user.name === createdFolder?.createdBy)
 
   // check activities permission for commenting
   const { data: projectPermissions, isLoading: isLoadingPermissions } =
@@ -399,6 +404,29 @@ export const Feed = ({
               </Styled.LoadMore>
             </InView>
           )}
+          {!isLoadingNew &&
+            !feedFilter.conditions?.length &&
+            !searchText &&
+            createdFolder?.createdAt &&
+            isValid(new Date(createdFolder.createdAt)) && (
+              <CreationStyled.StatusChange>
+                <CreationStyled.Body style={{ alignItems: 'center' }}>
+                  <CreationStyled.Text>
+                    Folder created at {format(new Date(createdFolder.createdAt), 'PPpp')} by
+                  </CreationStyled.Text>
+                  {createdFolder.createdBy && (
+                    <UserImage
+                      name={createdFolder.createdBy}
+                      fullName={creator?.attrib?.fullName || undefined}
+                      size={20}
+                    />
+                  )}
+                  <CreationStyled.Text>
+                    {creator?.attrib?.fullName || createdFolder.createdBy || 'Unknown'}
+                  </CreationStyled.Text>
+                </CreationStyled.Body>
+              </CreationStyled.StatusChange>
+            )}
         </Styled.FeedContent>
         {!hideCommentInput && (
           <CommentInput

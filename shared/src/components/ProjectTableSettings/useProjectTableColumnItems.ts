@@ -96,9 +96,19 @@ export const useProjectTableColumnItems = ({
         icon: getColumnIcon('createdAt'),
       },
       {
+        value: 'createdBy',
+        label: getColumnLabel('createdBy'),
+        icon: getColumnIcon('createdBy'),
+      },
+      {
         value: 'updatedAt',
         label: getColumnLabel('updatedAt'),
         icon: getColumnIcon('updatedAt'),
+      },
+      {
+        value: 'updatedBy',
+        label: getColumnLabel('updatedBy'),
+        icon: getColumnIcon('updatedBy'),
       },
       {
         value: 'subtasks',
