@@ -546,7 +546,12 @@ const CommentInput: FC<CommentInputProps> = ({
           handleFileUploaded(layer, true)
           setUploadedAnnotations((prev) => [
             ...prev,
-            { ...annotation, id: uuid(), composite: upload.data.id, transparent: layer.data.id },
+            {
+              ...annotation,
+              id: `${annotation.id}-${uuid()}`,
+              composite: upload.data.id,
+              transparent: layer.data.id,
+            },
           ])
         }
         return [source.id, upload.data.id] as const
