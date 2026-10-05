@@ -2,11 +2,12 @@ import { expect, test } from '../fixtures'
 import { uniqueName } from '../support/names'
 import { UsersSettingsPage } from '../pages/UsersSettingsPage'
 import { LoginPage } from '../pages/LoginPage'
+import { randomBytes } from 'crypto'
 
 test.describe('users settings', () => {
   test('create a user who can then log in', async ({ page, api, browser }) => {
     const name = uniqueName('newuser')
-    const password = `Pw-${Math.random().toString(36).slice(2)}`
+    const password = `Pw-${randomBytes(12).toString('base64url')}`
     try {
       const users = new UsersSettingsPage(page)
       await users.goto()
