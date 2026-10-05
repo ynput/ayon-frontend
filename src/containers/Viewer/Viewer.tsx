@@ -342,7 +342,11 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
   const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
 
   // Lifted here so A/D/R/E/H keep working in theatre (VersionSelectorTool unmounts).
-  const projectStatuses = useAppSelector((state) => state.project.statuses) || {}
+  // Statuses by name, from the project context: redux `state.project` is not filled on every page.
+  const projectStatuses = useMemo(
+    () => Object.fromEntries((project.statuses || []).map((status) => [status.name, status])),
+    [project.statuses],
+  )
   const versionSelectorRef = useRef<HTMLDivElement>(null)
   useReviewShortcuts({
     versions: versionsAndReviewables,
@@ -378,6 +382,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
                 ref={versionSelectorRef}
                 versions={versionsAndReviewables}
                 selected={versionIds[0]}
+                statuses={projectStatuses}
                 onChange={handleVersionChange}
               />
               {hasMultipleProducts && (
