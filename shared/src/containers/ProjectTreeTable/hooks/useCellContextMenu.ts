@@ -15,6 +15,7 @@ import { GROUP_BY_ID } from './useBuildGroupByTableData'
 import { ColumnDef } from '@tanstack/react-table'
 import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
+import { CSV_DELIMITERS } from '../utils/csvExport'
 import { useMemo } from 'react'
 import { useProjectContext } from '@shared/context'
 import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierarchySelection'
@@ -298,7 +299,10 @@ const useCellContextMenu = ({
   const exportItem: ContextMenuItemConstructor = (e, cell) => ({
     label: 'Export selection',
     icon: 'download',
-    command: () => exportCSV(Array.from(selectedCells), projectName),
+    items: CSV_DELIMITERS.map(({ value, label }) => ({
+      label,
+      command: () => exportCSV(Array.from(selectedCells), projectName, value),
+    })),
     hidden: cell.isGroup,
   })
 

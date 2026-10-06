@@ -37,6 +37,7 @@ import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operation
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
+import ExportTableButton from './components/ExportTableButton'
 import { getBundleModeFromUser } from '@shared/util'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import type { OnAddToList } from '@shared/containers/Slicer'
@@ -267,6 +268,7 @@ const ProjectOverviewPage: FC = () => {
                 multiSelect={false}
               />
               <ImportDialogButton importContext="hierarchy" projectName={projectName} />
+              <ExportTableButton />
               <Actions
                 entities={[]}
                 entityType={undefined}

@@ -18,6 +18,8 @@ import {
 import { TableRow } from '../../types/table'
 import { EntityUpdate } from '../../hooks/useUpdateTableData'
 import usePasteLinks, { LinkUpdate } from '../../hooks/usePasteLinks'
+import { useExportHierarchyCSV } from '../../hooks/useExportHierarchyCSV'
+import { downloadTextFile, getCsvFileName } from '../../utils/csvExport'
 import { useUpdateSubtasksMutation } from '@shared/api'
 
 // Import from the new modular files
@@ -77,10 +79,19 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   }, [tableData])
   const { projectName } = useProjectContext()
   const [updateSubtasks] = useUpdateSubtasksMutation()
+  const exportHierarchyCSV = useExportHierarchyCSV()
 
   const getSelectionData = useCallback(
-    async (selected: string[], config?: { headers?: boolean; fullRow?: boolean }) => {
-      const { headers, fullRow } = config || {}
+    async (
+      selected: string[],
+      config?: { headers?: boolean; fullRow?: boolean; delimiter?: string },
+    ) => {
+      const { headers, fullRow, delimiter = '\t' } = config || {}
+      // Wrap values containing the delimiter, a newline or a quote so spreadsheets keep them in one cell
+      const quote = (value: string) =>
+        value.includes(delimiter) || /[\n\r"]/.test(value)
+          ? `"${value.replace(/"/g, '""')}"`
+          : value
       try {
         // Get visible columns in display order, excluding row selection
         const visibleColumnIds = visibleColumns
@@ -155,11 +166,10 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
           for (const colId of colIds) {
             // Use colId as the column name since we don't have direct access to column names
-            const columnName = colId
-            headerValues.push(`${columnName.replace(/"/g, '""')}`)
+            headerValues.push(quote(colId))
           }
 
-          clipboardText += headerValues.join('\t') + '\n'
+          clipboardText += headerValues.join(delimiter) + '\n'
         }
 
         for (const rowId of sortedRows) {
@@ -283,18 +293,14 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               }
             }
 
-            // Wrap multi-line / tab / quote values in quotes so spreadsheets keep them in one
-            // cell. Subtasks embed tabs+newlines as real grid structure for paste round-trips —
+            // Copied subtasks embed tabs+newlines as real grid structure for paste round-trips —
             // leave them raw so they stay multi-row/column.
-            const escaped = cellValue.replace(/"/g, '""')
-            const needsQuoting =
-              colId !== 'subtasks' &&
-              (cellValue.includes('\n') || cellValue.includes('\t') || cellValue.includes('"'))
-            rowValues.push(needsQuoting ? `"${escaped}"` : escaped)
+            const rawSubtasks = colId === 'subtasks' && delimiter === '\t'
+            rowValues.push(rawSubtasks ? cellValue.replace(/"/g, '""') : quote(cellValue))
           }
 
           // Add row to clipboard text
-          clipboardText += rowValues.join('\t') + '\n'
+          clipboardText += rowValues.join(delimiter) + '\n'
         }
 
         return clipboardText
@@ -350,31 +356,62 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   )
 
   const exportCSV: ClipboardContextType['exportCSV'] = useCallback(
-    async (selected, projectName, fullRow) => {
+    async (selected, projectName, delimiter) => {
       selected = selected || Array.from(selectedCells)
       if (!selected.length) return
 
-      try {
-        // Get clipboard text with headers included for CSV export
-        const clipboardText = await getSelectionData(selected, { headers: true, fullRow })
-        if (!clipboardText) return
+      const rowIds = new Set<string>()
+      const colIds = new Set<string>()
+      let fullRow = false
+      for (const cellId of selected) {
+        const { rowId, colId } = parseCellId(cellId) || {}
+        if (!rowId || !colId) continue
+        rowIds.add(rowId)
+        if (colId === ROW_SELECTION_COLUMN_ID) fullRow = true
+        else colIds.add(colId)
+      }
+      if (fullRow) visibleColumns.forEach((col) => colIds.add(col.id))
+      colIds.delete(ROW_SELECTION_COLUMN_ID)
 
-        // create a csv file and download it
-        const blob = new Blob([clipboardText], { type: 'text/csv' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        const selectedCount = selected.length
-        a.download = `${projectName}-export-${selectedCount}_cells-${new Date()
-          .toISOString()
-          .slice(0, 10)}.csv`
-        a.click()
-        URL.revokeObjectURL(url)
+      // group header rows have no entity
+      const entities = Array.from(rowIds).flatMap((rowId) => getEntityById(rowId) || [])
+      if (
+        projectName &&
+        entities.length &&
+        entities.every((e) => e.entityType === 'folder' || e.entityType === 'task')
+      ) {
+        const idsOf = (type: string) =>
+          entities.filter((e) => e.entityType === type).map((e) => e.entityId || e.id)
+        const taskIds = idsOf('task')
+        await exportHierarchyCSV({
+          projectName,
+          columnIds: Array.from(colIds).sort(
+            (a, b) =>
+              (gridMap.colIdToIndex.get(a) ?? Infinity) - (gridMap.colIdToIndex.get(b) ?? Infinity),
+          ),
+          folderIds: idsOf('folder'),
+          tasks: taskIds.length ? { ids: taskIds } : undefined,
+          delimiter,
+          scope: 'selection',
+        })
+        return
+      }
+
+      // other entity types (products, versions) are exported as shown in the table
+      try {
+        const text = await getSelectionData(selected, { headers: true, fullRow, delimiter })
+        if (!text) return
+        const fileName = getCsvFileName(projectName, 'selection', delimiter)
+        downloadTextFile(
+          text,
+          fileName,
+          delimiter === '\t' ? 'text/tab-separated-values' : 'text/csv',
+        )
       } catch (error) {
-        console.error('Failed to copy to clipboard:', error)
+        console.error('Failed to export selection:', error)
       }
     },
-    [selectedCells, entitiesMap, gridMap, getSelectionData],
+    [selectedCells, gridMap, getSelectionData, getEntityById, visibleColumns, exportHierarchyCSV],
   )
 
   const getClipboardString = async (): Promise<string | void> => {

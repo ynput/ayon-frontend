@@ -22,6 +22,16 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    exportHierarchyView: build.mutation<ExportHierarchyViewApiResponse, ExportHierarchyViewApiArg>({
+      query: (queryArg) => ({
+        url: `/api/csv/export/hierarchy/view`,
+        method: 'POST',
+        body: queryArg.exportViewRequest,
+        params: {
+          project_name: queryArg.projectName,
+        },
+      }),
+    }),
     uploadFile: build.mutation<UploadFileApiResponse, UploadFileApiArg>({
       query: (queryArg) => ({
         url: `/api/csv/import/upload`,
@@ -60,6 +70,11 @@ export type PostApiCsvExportByEntityTypeApiArg = {
   entityType: 'user' | 'folder' | 'task' | 'hierarchy' | 'entity_list_item'
   projectName?: string
   bodyExportApiCsvExportEntityTypePost: BodyExportApiCsvExportEntityTypePost
+}
+export type ExportHierarchyViewApiResponse = /** status 200 Successful Response */ any
+export type ExportHierarchyViewApiArg = {
+  projectName: string
+  exportViewRequest: ExportViewRequest
 }
 export type UploadFileApiResponse = /** status 200 Successful Response */ ImportUpload
 export type UploadFileApiArg = {
@@ -138,6 +153,30 @@ export type HttpValidationError = {
 export type BodyExportApiCsvExportEntityTypePost = {
   field_names?: string[]
   entity_ids?: any[]
+}
+export type ExportTasksQuery = {
+  /** Only tasks with these ids */
+  ids?: string[]
+  /** Only tasks in these folders */
+  folderIds?: string[]
+  /** Include tasks in subfolders of folder_ids */
+  includeFolderChildren?: boolean
+  /** Task QueryFilter (JSON) */
+  filter?: string
+  /** QueryFilter (JSON) the task's folder has to match */
+  folderFilter?: string
+  /** Fuzzy text search */
+  search?: string
+}
+export type ExportViewRequest = {
+  /** Field keys to export after entity_type and path, in order. See /csv/export/hierarchy/fields */
+  columns?: string[]
+  /** Folders to export as rows */
+  folderIds?: string[]
+  /** Tasks to export as rows */
+  tasks?: ExportTasksQuery
+  /** Column delimiter */
+  delimiter?: ',' | ';' | '\t'
 }
 export type ImportUpload = {
   id: string
