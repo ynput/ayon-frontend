@@ -37,7 +37,6 @@ const ViewerComponent = ({
 
   const availability = selectedReviewable?.availability
   const isPlayable = availability !== 'conversionRequired'
-  // when no reviewable is selected, the Viewer selects the first of these by itself
   const hasPlayableReviewable = reviewables.some((r) =>
     ['ready', 'conversionRecommended'].includes(r.availability || ''),
   )
@@ -71,7 +70,6 @@ const ViewerComponent = ({
     )
   }
 
-  // nothing to show: no reviewables, the selected one cannot be played, or none of them can
   if (!isFetchingReviewables && (selectedReviewable || !hasPlayableReviewable)) {
     let message = 'No preview available'
     let canUploadReviewable = false
