@@ -30,7 +30,7 @@ export const getReadOnlyLists = (
   const readOnlyFields: string[] = []
   let folderTypeReadOnly = false
   let taskTypeReadOnly = false
-  if (writableFields?.length) {
+  if (writableFields) {
     const writableSet = new Set(writableFields)
     const isWritable = (variants: string[]) => variants.some((v) => writableSet.has(v))
 
