@@ -118,17 +118,11 @@ const Secrets = () => {
           <h2>New secret</h2>
           <SecretItem name="" value="" stored={false} />
           <h2>Stored secrets</h2>
-          {data?.length &&
-            data
-              .filter((secret) => secret.name !== 'ynput_cloud_key')
-              .map((secret) => (
-                <SecretItem
-                  key={secret.name}
-                  name={secret.name}
-                  value={secret.value}
-                  stored={true}
-                />
-              ))}
+          {data
+            ?.filter((secret) => secret.name !== 'ynput_cloud_key')
+            .map((secret) => (
+              <SecretItem key={secret.name} name={secret.name} value={secret.value} stored={true} />
+            ))}
         </SecretList>
       </ScrollPanel>
     </Section>
