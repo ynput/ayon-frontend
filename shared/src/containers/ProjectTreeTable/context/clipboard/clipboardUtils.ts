@@ -33,6 +33,14 @@ export const getEntityPath = (entityId: string, entitiesMap: EntitiesMap): strin
   // If no parent, return just the name
   if (!parentId) return name
 
+  // Filters and slicer selections drop ancestor folders from the map, so the walk
+  // below would stop short - use the entity's own list of parent folder names instead
+  // @ts-ignore
+  const parents = entity.parents
+  if (!entitiesMap.has(parentId) && Array.isArray(parents) && parents.length) {
+    return [...parents, name].join(' / ')
+  }
+
   // If has parent, get parent path (parents are always folders)
   const parentPath = getEntityPath(parentId, entitiesMap)
 
