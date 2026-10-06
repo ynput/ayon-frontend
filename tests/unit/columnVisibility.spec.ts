@@ -23,7 +23,6 @@ test('a column without saved state uses its default, and is hidden without one',
   expect(checkColumnVisibility({}, 'status', { status: true })).toBe(true)
   expect(checkColumnVisibility({}, 'status', { status: false })).toBe(false)
   expect(checkColumnVisibility({}, 'status')).toBe(false)
-  // null comes back from older saved views and counts as "no state"
   const saved = { status: null } as unknown as Record<string, boolean>
   expect(checkColumnVisibility(saved, 'status', { status: true })).toBe(true)
 })
@@ -40,14 +39,8 @@ test('a wildcard default applies to every column it matches', () => {
   expect(checkColumnVisibility({}, 'status', defaults)).toBe(false)
 })
 
-// FLAG: the prefix match meant for `name_*` style ids also runs for plain ids, so a column with
-// no saved state takes the visibility of any saved column whose id starts with its own id.
-// Columns added after the view was last saved (a new attribute or link type) are then listed as
-// visible in the column settings and skipped by "show column" deep links, while the table itself
-// (which calls checkColumnVisibility({}, id)) hides them. checkColumnVisibility.ts:32-39
-// Not fixed yet: ProjectOverviewContext and ListItemsDataContext call it with the plain prefix
-// 'link_' to ask whether any link column is visible, so limiting the prefix match to ids ending
-// in `*` must also change those callers to 'link_*'.
+// FLAG: a plain column id takes the visibility of a saved id it prefixes. checkColumnVisibility.ts:32-39
+// Not fixed yet: ProjectOverviewContext and ListItemsDataContext pass 'link_', change them to 'link_*'
 test.fixme('a plain column id does not inherit the visibility of a longer id it prefixes', () => {
   expect(checkColumnVisibility({ attrib_frameStart: true }, 'attrib_frame')).toBe(false)
   expect(checkColumnVisibility({ productType: true }, 'product')).toBe(false)
@@ -56,7 +49,6 @@ test.fixme('a plain column id does not inherit the visibility of a longer id it 
 test.describe('at least one visible column', () => {
   test('falls back to showing the name column when nothing else is visible', () => {
     const ids = [ROW_SELECTION_COLUMN_ID, 'name', 'status']
-    // the always visible columns do not count
     const visibility = { [ROW_SELECTION_COLUMN_ID]: true, name: false, status: false }
     expect(ensureAtLeastOneVisibleColumn(visibility, ids)).toEqual({ ...visibility, name: true })
   })

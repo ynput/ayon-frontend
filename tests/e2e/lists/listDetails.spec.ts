@@ -12,14 +12,12 @@ test.describe('list details', () => {
     await lists.goto(projectName)
     await lists.openDetails('Old picks')
 
-    // not uncheck(): the field's click handler calls preventDefault, so the box only flips once
-    // React re-renders, which uncheck() reports as "did not change its state"
+    // not uncheck(): the click handler calls preventDefault, so the box only flips after a re-render
     const active = lists.listField('Active').getByRole('checkbox')
     await active.click()
     await expect(active).not.toBeChecked()
 
     await expect.poll(async () => (await api.getEntityList(projectName, listId)).active).toBe(false)
-    // archived lists are hidden from the lists panel unless "Show archived" is on
     await expect(lists.listRow('Old picks')).toBeHidden()
     await expect(lists.listRow('Current picks')).toBeVisible()
     await lists.headerMenu('Show archived')
@@ -68,7 +66,6 @@ test.describe('review from a list', () => {
     await page.getByRole('button', { name: 'subscriptions Create review', exact: true }).click()
 
     await expect(toast(page, 'Review session created')).toBeVisible()
-    // the new session opens on the reviews page
     await expect(page).toHaveURL(new RegExp(`/projects/${projectName}/reviews`))
     await expect(lists.listRow('Dailies (review)')).toBeVisible({ timeout: 30_000 })
     const sessions = (await api.listEntityLists(projectName)).filter((l) => l.id !== listId)

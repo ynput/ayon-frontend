@@ -3,9 +3,6 @@ import { OverviewPage } from '../pages/OverviewPage'
 import { ProjectsManagerPage } from '../pages/ProjectsManagerPage'
 import { TasksProgressPage } from '../pages/TasksProgressPage'
 
-// Every test changes the anatomy of its own project only (the `projectName` fixture).
-
-/** Opens the project anatomy with one section expanded */
 const openSection = async (manager: ProjectsManagerPage, projectName: string, title: string) => {
   await manager.goto('anatomy', projectName)
   await manager.anatomy.expand(title)
@@ -38,7 +35,6 @@ test.describe('project anatomy: folder and task types', () => {
     await overview.createTask({ label: 'groom', type: 'Grooming' })
 
     await overview.expand('sh010')
-    // the type column shows the new type with its icon
     await expect(overview.cell('groom', 'subType')).toContainText('Grooming')
     await expect(overview.cell('groom', 'subType').getByText('content_cut')).toBeVisible()
     await expect
@@ -107,7 +103,6 @@ test.describe('project anatomy: folder and task types', () => {
     )
     expect(taskTypes.indexOf('Keyframing')).toBe(index)
     expect(taskTypes).not.toContain('Animation')
-    // task progress has a column per task type
     const progress = new TasksProgressPage(page)
     await progress.goto(projectName)
     await progress.selectFolder('sh010')

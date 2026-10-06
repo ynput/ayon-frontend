@@ -3,7 +3,6 @@ import { AyonApi } from '../support/api'
 import { toast } from '../support/ui'
 import { confirmDeleteCounts, OverviewPage } from '../pages/OverviewPage'
 
-/** A shot with tasks, each `[name, status]` */
 const createShot = async (api: AyonApi, projectName: string, tasks: [string, string][]) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const created = []
@@ -15,7 +14,6 @@ const createShot = async (api: AyonApi, projectName: string, tasks: [string, str
   return { folder, tasks: created }
 }
 
-/** Root folders with an FPS each, `[name, fps]`, and the FPS column shown right after "Status" */
 const createShotsWithFps = async (api: AyonApi, projectName: string, shots: [string, number][]) => {
   const folders = []
   for (const [name, fps] of shots) {
@@ -27,7 +25,6 @@ const createShotsWithFps = async (api: AyonApi, projectName: string, shots: [str
   return folders
 }
 
-/** `label`'s cell in `columnId` is the one and only selected cell */
 const expectOnlySelected = async (overview: OverviewPage, label: string, columnId: string) => {
   await expect(overview.table.locator('td.selected')).toHaveCount(1)
   await expect(overview.cell(label, columnId)).toHaveClass(/selected/)
@@ -114,7 +111,6 @@ test.describe('overview copy and paste', () => {
       ['fx', 'Not ready'],
     ])
     await api.updateTask(projectName, tasks[0].id, { attrib: { priority: 'urgent' } })
-    // status and priority next to each other
     await api.setWorkingViewColumns('overview', projectName, ['name', 'status', 'attrib_priority'])
     const overview = new OverviewPage(page)
     await overview.goto(projectName)
@@ -126,7 +122,6 @@ test.describe('overview copy and paste', () => {
     await expect
       .poll(() => page.evaluate(() => navigator.clipboard.readText()))
       .toBe('Approved\turgent\n')
-    // one copied row fills every selected row
     await overview.clickCell('comp', 'status')
     await overview.clickCell('fx', 'attrib_priority', { shift: true })
     await page.keyboard.press('ControlOrMeta+v')
@@ -196,16 +191,12 @@ test.describe('overview keyboard', () => {
     await expectOnlySelected(overview, 'sh030', 'attrib_fps')
     await page.keyboard.press('ArrowUp')
     await expectOnlySelected(overview, 'sh020', 'attrib_fps')
-    // Shift extends the selection
     await page.keyboard.press('Shift+ArrowUp')
     await expect(overview.table.locator('td.selected')).toHaveCount(2)
     await expect(overview.cell('sh010', 'attrib_fps')).toHaveClass(/selected/)
   })
 
-  // FLAG (app bug): left/right arrows and Tab also step onto hidden columns. The keyboard grid is
-  // registered from `table.getAllLeafColumns()` (ProjectTreeTable.tsx, registerGrid effect), which
-  // includes hidden columns, so in the default view ArrowRight from "Status" selects an invisible
-  // cell and from "Folder" it takes five presses to reach "Priority".
+  // FLAG (app bug): left/right arrows and Tab also step onto hidden columns
   // fixed in ynput/ayon-frontend#2415, switch back to test() once it is merged
   test.fixme(
     'arrow keys and Tab move to the next shown column',
@@ -226,7 +217,6 @@ test.describe('overview keyboard', () => {
       await page.keyboard.press('Shift+Tab')
       await expectOnlySelected(overview, 'sh010', 'status')
 
-      // across the columns the default view hides (tags, dates, comments, ...)
       await overview.clickCell('sh010', 'folder_entity')
       await page.keyboard.press('ArrowRight')
       await expectOnlySelected(overview, 'sh010', next('folder_entity'))
@@ -247,7 +237,6 @@ test.describe('overview keyboard', () => {
     await expect(input).toBeFocused()
     await input.fill('30')
     await input.press('Enter')
-    // Enter saves and starts editing the next row, Escape leaves that editor unchanged
     await expect(overview.cell('sh020', 'attrib_fps').locator('input')).toBeFocused()
     await page.keyboard.press('Escape')
 
@@ -272,7 +261,6 @@ test.describe('overview keyboard', () => {
 
     await expect(input).toBeHidden()
     await expect(overview.cell('sh010', 'attrib_fps')).toHaveText('24')
-    // a later edit is saved, the cancelled one is not
     await overview.editTextCell('sh020', 'attrib_fps', '50')
     await expect.poll(async () => (await api.getFolder(projectName, second.id)).attrib.fps).toBe(50)
     expect((await api.getFolder(projectName, first.id)).attrib.fps).toBe(24)
@@ -302,7 +290,6 @@ test.describe('overview sorting', () => {
       .poll(workingView(api, projectName))
       .toEqual({ sortBy: 'attrib_fps', sortDesc: false })
 
-    // a second click sorts descending
     await overview.toggleSort('attrib_fps')
 
     await expect(overview.nameCells()).toHaveText([/sh_a$/, /sh_c$/, /sh_b$/])

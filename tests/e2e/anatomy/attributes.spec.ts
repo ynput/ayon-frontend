@@ -7,18 +7,13 @@ import { OverviewPage } from '../pages/OverviewPage'
 import { ProductsPage } from '../pages/ProductsPage'
 import { ProjectsManagerPage } from '../pages/ProjectsManagerPage'
 
-// Every test changes the anatomy of its own project only (the `projectName` fixture).
-
-/** Folder sh010 with the task anim */
 const seedShot = async (api: AyonApi, projectName: string) => {
-  // the value the tests change it to is not the default
   expect((await api.getProject(projectName)).attrib.resolutionWidth).not.toBe(4096)
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const task = await api.createTask(projectName, { folderId: folder.id, name: 'anim' })
   return { folder, task }
 }
 
-/** Change the "Resolution width" project attribute in the project anatomy and save */
 const setResolutionWidth = async (
   manager: ProjectsManagerPage,
   projectName: string,
@@ -32,7 +27,6 @@ const setResolutionWidth = async (
   await manager.saveAnatomy()
 }
 
-/** The overview with sh010 expanded and only the name and resolution width columns */
 const openOverviewWithWidth = async (page: Page, api: AyonApi, projectName: string) => {
   await api.setWorkingViewColumns('overview', projectName, ['name', 'attrib_resolutionWidth'])
   const overview = new OverviewPage(page)
@@ -58,7 +52,6 @@ test.describe('project anatomy: attributes and roots', () => {
         return { width: attrib.resolutionWidth, own: ownAttrib.includes('resolutionWidth') }
       })
       .toEqual({ width: 4096, own: false })
-    // the overview shows the inherited value, greyed out
     const overview = await openOverviewWithWidth(page, api, projectName)
     await expect(overview.cell('anim', 'attrib_resolutionWidth')).toHaveText('4096')
     await expect(
@@ -66,11 +59,7 @@ test.describe('project anatomy: attributes and roots', () => {
     ).toBeVisible()
   })
 
-  // FLAG (backend bug): saving project attributes rebuilds the inherited attributes in the database
-  // (`ProjectEntity.save` -> `rebuild_inherited_attributes`) but not the cached folder list (Redis
-  // "project-folders", 1 h TTL) that `GET /api/projects/{project}/folders?attrib=true` serves, so
-  // the overview shows the old value on folder rows until a folder or task of the project changes.
-  // `GET /api/projects/{project}/folders/{id}` and the task rows are right.
+  // FLAG (backend bug): saving project attributes leaves the cached folder list (attrib=true) stale
   // fixed in ynput/ayon-backend#1169, switch back to test() once it is merged
   test.fixme(
     'folders inherit a project attribute changed in the anatomy',
@@ -83,7 +72,6 @@ test.describe('project anatomy: attributes and roots', () => {
       await expect
         .poll(async () => (await api.getFolder(projectName, folder.id)).attrib.resolutionWidth)
         .toBe(4096)
-      // the folder list the overview loads its folders from
       const list = await api.get(`/api/projects/${projectName}/folders`, { attrib: true })
       expect(list.folders[0].attrib.resolutionWidth).toBe(4096)
       const overview = await openOverviewWithWidth(page, api, projectName)
@@ -113,7 +101,6 @@ test.describe('project anatomy: attributes and roots', () => {
     await overview.goto(projectName)
     await overview.createFolder({ label: 'sq010', type: 'Sequence' })
 
-    // inherited, so shown greyed out
     await expect(overview.cell('sq010', 'attrib_frameStart')).toHaveText('86400')
     await expect(overview.cell('sq010', 'attrib_frameStart').locator('.inherited')).toBeVisible()
     await expect
@@ -150,8 +137,6 @@ test.describe('project anatomy: attributes and roots', () => {
     await expect
       .poll(async () => (await api.getProjectAnatomy(projectName)).roots[0])
       .toEqual({ ...root, linux: '/mnt/e2e/projects' })
-    // "Copy Linux path" of a representation in the version's files resolves the root
-    // (headless Chromium keeps its own clipboard per browser)
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
     const products = new ProductsPage(page)
     await products.goto(projectName)

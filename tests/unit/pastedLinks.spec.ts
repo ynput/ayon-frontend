@@ -105,7 +105,6 @@ test.describe('links to comments on this server', () => {
       entityId: null,
       url: `${origin}/projects/my%20proj/browser?activity=${activityId}`,
     })
-    // a broken escape is kept as it is
     expect(parseActivityLink(`/projects/bad%E0%A4%A/x?activity=${activityId}`)).toMatchObject({
       projectName: 'bad%E0%A4%A',
     })

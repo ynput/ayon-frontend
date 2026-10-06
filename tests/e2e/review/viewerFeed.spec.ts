@@ -6,7 +6,6 @@ import { ViewerPage } from '../pages/ViewerPage'
 import { AyonApi } from '../support/api'
 import { seedReviewVersions } from './seed'
 
-/** Comments of a version with the frame (range) they are linked to */
 const versionComments = async (api: AyonApi, projectName: string, versionId: string) => {
   const data = await api.graphql(
     `query Comments($project: String!, $ids: [String!]!) {
@@ -41,7 +40,6 @@ test.describe('viewer feed', () => {
       .poll(() => versionComments(api, projectName, v1.id))
       .toEqual([{ body: 'Bars are too saturated', startFrame: undefined, endFrame: undefined }])
 
-    // the comment is on the version itself, so its details panel outside the viewer shows it too
     await viewer.close()
     await products.openDetails('renderMain - v001')
     const panel = new DetailsPanel(page)
@@ -72,7 +70,6 @@ test.describe('viewer feed', () => {
       .poll(() => versionComments(api, projectName, v1.id))
       .toEqual([{ body: 'Square jumps here', startFrame: 120, endFrame: 120 }])
 
-    // move away, then follow the link back to the frame
     await viewer.control('skip_previous').click()
     await viewer.expectFrame(1)
 
@@ -99,15 +96,11 @@ test.describe('viewer feed', () => {
     await expect
       .poll(async () => (await api.getVersion(projectName, v1.id)).status)
       .toBe('Approved')
-    // the table under the viewer shows the new status too
     await viewer.close()
     await expect(products.cell('renderMain - v001', 'status')).toContainText('Approved')
   })
 
-  // FLAG (app bug): "Approved - <version>" is always "Approved - None" (and its E shortcut does
-  // nothing) after opening a project page directly. VersionSelectorTool and Viewer read the
-  // statuses from redux `state.project.statuses`, which only `services/project/enhancedProject.ts`
-  // fills, and that module is only imported by the lazily loaded events and project manager pages.
+  // FLAG (app bug): "Approved - <version>" is always "Approved - None" when a project page is opened directly
   // fixed in ynput/ayon-frontend#2407, switch back to test() once it is merged
   test.fixme('jump to the approved version in the viewer', async ({ page, api, projectName }) => {
     const {

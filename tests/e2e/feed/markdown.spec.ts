@@ -3,7 +3,6 @@ import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
 
-/** A shot with one task */
 const setup = async (api: AyonApi, projectName: string) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const task = await api.createTask(projectName, {
@@ -30,7 +29,6 @@ test.describe('markdown in comments', () => {
     const panel = await openTask(page, projectName)
     await panel.openCommentBox()
 
-    // markdown shortcuts: "- " starts a list, `...` is inline code, urls become links
     await panel.commentEditor.pressSequentially('Before delivery:')
     await panel.commentEditor.press('Enter')
     await panel.commentEditor.pressSequentially('- Bump `exposure` by one stop')
@@ -63,7 +61,6 @@ test.describe('markdown in comments', () => {
     const id = await panel.comment('Before delivery:').getAttribute('id')
     const comment = panel.root.locator(`.comment[id="${id}"]`)
 
-    // add a word at the end, the rest stays as it is
     await comment.hover()
     await comment.getByRole('button', { name: 'edit_square' }).click()
     const editor = comment.locator('[contenteditable="true"]')

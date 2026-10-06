@@ -13,13 +13,6 @@ import {
   visible,
 } from './smokeFixtures'
 
-/**
- * Pages that addons add to the dashboard, to projects and to the studio settings open without
- * crashing, logging errors or failing API calls. Read-only.
- * They are optional: the pages are discovered from the navigation of the app, and a page whose addon
- * is not installed is skipped, so a stock server without these addons is not affected.
- */
-
 const CORE_PAGES = [
   /^\/dashboard\/(tasks|projects|planner)$/,
   /^\/projects\/[^/]+\/(overview|tasks|browser|products|lists|reviews|scheduler|reports|workfiles)$/,
@@ -28,14 +21,9 @@ const CORE_PAGES = [
 
 let navLinks: Promise<Set<string>> | undefined
 
-/**
- * hrefs of the page tabs of the dashboard, of the seeded project and of the studio settings,
- * read once per worker with the first test's page
- */
 const discoverNavLinks = (page: Page, d: SmokeData) =>
   (navLinks ??= (async () => {
     const links = new Set<string>()
-    // each page renders its tabs once its addons and remote modules have loaded
     const pages: [string, RegExp][] = [
       ['/dashboard/tasks', /^Tasks/],
       [`/projects/${d.projectName}/overview`, /^Overview/],
@@ -56,22 +44,19 @@ const projectPage = (module: string) => (d: SmokeData) => `/projects/${d.project
 
 type SkipContext = { page: Page; data: SmokeData }
 
-/** Skips unless the navigation links to `path` */
 const ifListed =
   (path: (d: SmokeData) => string) =>
   async ({ page, data }: SkipContext) =>
     !(await discoverNavLinks(page, data)).has(path(data)) &&
     `${path(data)} is not in the navigation (addon not installed)`
 
-/** The planner addon replaces the core "Planner" splash on the dashboard with "Plan" */
 const hasPlanner = async ({ page, data }: SkipContext) =>
   (await discoverNavLinks(page, data)).has('/dashboard/bookings')
 
-/** The (only) iframe of a legacy addon page; FLAG: the iframe has no title or accessible name */
+// FLAG: the iframe of a legacy addon page has no title or accessible name
 const addonFrame = (page: Page) => page.locator('main iframe').contentFrame()
 
 const ROUTES: SmokeRoute[] = [
-  // planner addon
   {
     name: 'dashboard: plan (planner)',
     path: () => '/dashboard/bookings',
@@ -84,18 +69,14 @@ const ROUTES: SmokeRoute[] = [
     skip: ifListed(() => '/dashboard/resources'),
     ready: (page) => visible(button(page, 'Create new resource')),
   },
+  // FLAG (planner 2.3.0 bug): /events and /tracks fail with 500 until the project's planner tables exist
   {
     name: 'project: schedule (planner)',
     path: projectPage('scheduler'),
     skip: async (context) => !(await hasPlanner(context)) && 'the planner addon is not installed',
     ready: (page) => visible(button(page, /^Today/), column(page, 'Folder / Task')),
-    // FLAG (planner addon 2.3.0 bug): in a new project the schedule page asks for
-    // `/api/addons/planner/2.3.0/events` and `/tracks` before the project's planner tables exist,
-    // both fail with 500 `relation "planner_events" / "planner_tracks" does not exist`
-    // (server/planner/api_planner_events.py:88, server/shared/api/tracks.py:37).
     fixme: 'planner 2.3.0: schedule of a new project fails with 500 (planner tables missing)',
   },
-  // without the planner addon the core app shows splash screens in its place
   {
     name: 'dashboard: planner splash (without the planner addon)',
     path: () => '/dashboard/planner',
@@ -108,23 +89,16 @@ const ROUTES: SmokeRoute[] = [
     skip: async (context) => (await hasPlanner(context)) && 'the planner addon is installed',
     ready: (page) => visible(heading(page, /Scheduler$/)),
   },
-  // review addon
+  // FLAG (review 0.7.5 bug): an empty review session crashes the app (useSelection expects a clip)
   {
     name: 'project: review session (review)',
-    // what "Open review" on the review page opens; a route the review addon adds
     path: (d) => `/projects/${d.projectName}/reviews/${d.reviewSession.id}`,
     skip: async ({ api }) =>
       !(await productionAddons(api)).includes('review') && 'the review addon is not installed',
-    // the page crashes today, so this signal is a best guess: the player shows the session
+    // a best guess, the page crashes before it shows anything today
     ready: (page, d) => visible(page.getByText(d.reviewSession.label).first()),
-    // FLAG (review addon 0.7.5 bug): opening a review session without clips replaces the whole app
-    // with "Something went wrong" (TypeError: Cannot read properties of undefined (reading 'context')).
-    // The addon's useSelection reads `clips[current].context.productId` without checking that there
-    // is a clip. A new session from "add" on the review page is empty, so this is the first thing
-    // a user sees.
     fixme: 'review 0.7.5: opening an empty review session crashes the app',
   },
-  // other addons
   {
     name: 'project: storyboards',
     path: projectPage('storyboards'),
@@ -162,8 +136,6 @@ test.describe('smoke: addon pages', () => {
       await test.step(href, async () => {
         const health = watchPageHealth(page)
         await page.goto(href)
-        // nothing is known about these pages, so "ready" is: its tab is the current one and the
-        // page's requests have finished (expectHealthy waits for them)
         // FLAG: NavLink marks the current tab only with aria-current, which getByRole cannot match
         await visible(page.locator(`a[href="${href}"][aria-current="page"]`))
         await health.expectHealthy({ soft: true })

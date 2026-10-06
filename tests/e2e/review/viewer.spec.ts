@@ -25,7 +25,6 @@ test.describe('viewer', () => {
     await viewer.expectVideo(v1.reviewables[0].fileId, MEDIA.navyVideo)
     await expect(viewer.totalFrames).toHaveValue(String(MEDIA.navyVideo.frames))
 
-    // opened from a table, the video starts playing by itself
     await expect(viewer.control('pause')).toBeVisible()
     await viewer.pause()
 
@@ -84,7 +83,6 @@ test.describe('viewer', () => {
     await viewer.expectVideo(v2.reviewables[0].fileId, MEDIA.greenVideo)
     await expect(viewer.nextVersionButton).toBeDisabled()
 
-    // "A" is the shortcut of the previous version button
     await page.keyboard.press('a')
 
     await viewer.expectVersion('v001')
@@ -124,7 +122,6 @@ test.describe('viewer', () => {
     await viewer.expectVideo(video.fileId, MEDIA.navyVideo)
     await expect(viewer.image('still')).toHaveCount(0)
 
-    // W and S step through the reviewables (and wrap around)
     await page.keyboard.press('s')
 
     await expect(viewer.reviewableCard(still.fileId)).toHaveClass(/selected/)
@@ -144,14 +141,11 @@ test.describe('viewer', () => {
     // see ViewerPage.pause: let it play a few frames before pausing
     await expect.poll(async () => (await viewer.videoState()).currentTime).toBeGreaterThan(0.2)
 
-    // K (or Space) toggles playback
     await page.keyboard.press('k')
     await expect(viewer.control('play_arrow')).toBeVisible()
     await expect.poll(async () => (await viewer.videoState()).paused).toBe(true)
     await viewer.goToFrame(100)
 
-    // the arrow keys step one frame, L five frames; each step starts from the frame the player
-    // shows, so wait for it before the next key
     await page.keyboard.press('ArrowRight')
     await viewer.expectFrame(101)
     await page.keyboard.press('ArrowLeft')
@@ -166,10 +160,7 @@ test.describe('viewer', () => {
     await expect.poll(async () => (await viewer.videoState()).paused).toBe(false)
   })
 
-  // FLAG (app bug): Shift+A / Shift+D ("Go to Start" / "Go to End", advertised in the button
-  // tooltips) also switch to the previous / next version. useReviewShortcuts lowercases the key
-  // and ignores Shift, and both handlers listen on window, so the player's stopPropagation does
-  // not stop the version shortcut.
+  // FLAG (app bug): Shift+A / Shift+D (go to start / end) also switch version; useReviewShortcuts ignores Shift
   // fixed in ynput/ayon-frontend#2406, switch back to test() once it is merged
   test.fixme(
     'go to start and end with Shift+A / Shift+D keeps the version',

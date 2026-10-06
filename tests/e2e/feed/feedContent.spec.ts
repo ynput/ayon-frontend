@@ -5,12 +5,6 @@ import { AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
 import { ViewerPage } from '../pages/ViewerPage'
 
-/**
- * What a feed is made of: an entity's own activities plus those of related entities (comments on
- * the tasks of a folder, versions published from a task), filtered and loaded page by page.
- */
-
-/** Shot sh010 with task "lighting"; optionally version v001 of renderMain published from it */
 const setup = async (api: AyonApi, projectName: string, { publish = false } = {}) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const task = await api.createTask(projectName, {
@@ -20,7 +14,6 @@ const setup = async (api: AyonApi, projectName: string, { publish = false } = {}
   })
   if (!publish) return { folder, task }
   const product = await api.createProduct(projectName, { folderId: folder.id, name: 'renderMain' })
-  // creating a version is publishing it: the server adds a "version.publish" activity
   const version = await api.createVersion(projectName, {
     productId: product.id,
     version: 1,
@@ -49,11 +42,10 @@ test.describe('feed content', () => {
     const panel = await openDetails(page, projectName, 'sh010')
 
     await expect(panel.comment('Shot is approved for comp')).toBeVisible()
-    // a task comment says where it was made: "<author> commented on <lighting>"
     await expect(panel.comment('Lighting needs another pass')).toContainText(/commented\s*on/)
     await expect(panel.reference('Lighting needs another pass', 'lighting')).toBeVisible()
     await expect(panel.activity(/published a version/)).toContainText(/renderMain.*v001/)
-    // (the publish activity comes from a server event, so its place in the order varies)
+    // sorted: the publish activity comes from a server event, so its place in the order varies
     const feed = async () =>
       (
         await api.listFeedActivities(projectName, folder.id, {
@@ -121,7 +113,6 @@ test.describe('feed content', () => {
 
     await panel.addFeedFilter('Versions')
 
-    // a versions-only feed has no comment box
     await expect(panel.root.getByText('Leave a comment')).toBeHidden()
     await expect(published).toBeVisible()
     await expect(panel.comment('Lighting needs another pass')).toBeHidden()
@@ -147,13 +138,11 @@ test.describe('feed content', () => {
     await expect(panel.comment('Note 06')).toBeAttached()
     await expect(panel.comment('Note 05')).toHaveCount(0)
 
-    // the newest are at the bottom, scroll up to the oldest loaded one
     await panel.comment('Note 06').scrollIntoViewIfNeeded()
 
     await expect(panel.comment('Note 01')).toBeAttached()
     await panel.comment('Note 01').scrollIntoViewIfNeeded()
     await expect(panel.comment('Note 01')).toBeVisible()
-    // every comment once, the pages do not overlap
     // FLAG: `li.comment`, the comment box's submit button has the class `comment` too
     await expect(panel.root.locator('.feed li.comment')).toHaveCount(35)
     expect(await api.listActivities(projectName, 'task', task.id)).toHaveLength(35)

@@ -14,19 +14,11 @@ import {
   visible,
 } from './smokeFixtures'
 
-/**
- * Every core project page opens without crashing, logging errors or failing API calls, for a project
- * with a folder, a task, a product, a version and a list. Read-only.
- * Pages that addons add to a project are in addonPages.spec.ts.
- */
-
-/** /projects/<project>/<module><query> of the seeded project */
 const project =
   (module: string, query: (d: SmokeData) => string = () => '') =>
   (d: SmokeData) =>
     `/projects/${d.projectName}/${module}${query(d)}`
 
-/** URL params that open the details panel of an entity (DetailsPanelContext) */
 const details = (type: string, id: (d: SmokeData) => string) => (d: SmokeData) =>
   `?project=${d.projectName}&type=${type}&id=${id(d)}`
 
@@ -39,20 +31,15 @@ test.describe('smoke: project pages', () => {
         await visible(new OverviewPage(page).row(d.folder.name))
       },
     },
+    // FLAG (app bug, intermittent): TasksProgressPage can query project "null" before redux has the name
     {
       name: 'task progress',
       path: project('tasks'),
-      // FLAG (app bug, intermittent): TasksProgressPage takes the project name from redux
-      // (`state.project.name`), which ProjectPage only sets in an effect once the project addons
-      // have loaded. When the page renders first, its queries run with `null`:
-      // GET /api/projects/null, /api/projects/null/anatomy and GetKanbanProjectUsers with
-      // projects [null] (src/pages/TasksProgressPage/TasksProgressPage.tsx:16). About 1 load in 10.
       fixme:
         'task progress queries project "null" before ProjectPage sets the project name (fixed in ynput/ayon-frontend#2418)',
       ready: (page, d) =>
         visible(
           page.getByRole('button', { name: 'Expand all rows' }),
-          // the hierarchy on the left lists the folder; the table waits for a folder to be picked
           page.getByRole('table').first().getByText(d.folder.name, { exact: true }),
           heading(page, 'Select a folder to begin.'),
         ),
@@ -71,18 +58,12 @@ test.describe('smoke: project pages', () => {
         await visible(new ListsPage(page).listRow(d.list.label))
       },
     },
+    // FLAG (app bug, intermittent, review addon): the review cards hook can load before its provider
     {
       name: 'review',
       path: project('reviews'),
-      // FLAG (app bug, intermittent, with the review addon): ProjectListsDetailsPanels calls the
-      // review addon's `useReviewSessionCards` hook as soon as its own copy of that module has loaded
-      // (ProjectListsDetailsPanels.tsx:84-86), while the page may still wrap it in the fallback
-      // provider because `ReviewCardsProvider` loads separately (ProjectListsPage.tsx:324). The hook
-      // then throws "useReviewSessionCardsContext must be used within a ReviewSessionCardsProvider"
-      // and the error boundary replaces the app.
       fixme:
         'review page crashes when the review cards hook loads before its provider (fixed in ynput/ayon-frontend#2419)',
-      // the review sessions with the review addon, its splash screen without it
       ready: (page) =>
         visible(
           heading(page, 'Start by selecting a review session.').or(
@@ -93,15 +74,12 @@ test.describe('smoke: project pages', () => {
     {
       name: 'reports',
       path: project('reports'),
-      // the charts with the reports addon, its splash screen without it
       ready: (page) => visible(button(page, 'Add chart').or(heading(page, /Reports & Insights$/))),
     },
+    // FLAG (app bug, intermittent): the same race as "task progress", in WorkfileDetail
     {
       name: 'workfiles',
       path: project('workfiles'),
-      // FLAG (app bug, intermittent): the same race as "task progress": WorkfileDetail reads the
-      // project from redux and asks for GET /api/projects/null/siteRoots before ProjectPage has set
-      // it (src/pages/WorkfilesPage/WorkfileDetail.jsx:13,25).
       fixme:
         'workfiles queries project "null" before ProjectPage sets the project name (fixed in ynput/ayon-frontend#2418)',
       ready: async (page, d) => {
@@ -111,11 +89,10 @@ test.describe('smoke: project pages', () => {
         )
       },
     },
+    // FLAG: there is no default page; ProjectPage redirects to the overview after a 5 s timeout
     {
       name: 'the project URL without a page opens the overview',
       path: (d) => `/projects/${d.projectName}`,
-      // FLAG: there is no default page; ProjectPage renders nothing and only redirects to the
-      // overview after a 5 s timeout (the "no valid page component" fallback)
       ready: async (page, d) => {
         await expect(page).toHaveURL(new RegExp(`/projects/${d.projectName}/overview`), {
           timeout: 30_000,
@@ -150,9 +127,9 @@ test.describe('smoke: deep links', () => {
         await new DetailsPanel(page).expectOpenFor(d.task.name)
       },
     },
+    // FLAG (app bug, intermittent): see "task progress" above
     {
       name: 'task progress with the details of a task',
-      // FLAG (app bug, intermittent): see "task progress" above
       fixme:
         'task progress queries project "null" before ProjectPage sets the project name (fixed in ynput/ayon-frontend#2418)',
       path: project(
@@ -190,6 +167,7 @@ test.describe('smoke: deep links', () => {
         await visible(new ListsPage(page).itemNameCell(d.task.name))
       },
     },
+    // FLAG (app bug, review addon 0.7.5): getUsersAssignee throws in the addon's own redux store
     {
       name: 'review with a session selected',
       path: project('reviews', (d) => `?review=${d.reviewSession.id}`),
@@ -201,11 +179,6 @@ test.describe('smoke: deep links', () => {
           page.getByRole('link', { name: /Open review$/ }),
         )
       },
-      // FLAG (app bug, with the review addon 0.7.5): the selected session renders review addon
-      // modules in the addon's own redux store. There the nested `getEnumOptions.initiate()` of
-      // `getUsersAssignee` fails and its `.unwrap()` resolves to undefined, so the query throws
-      // "TypeError: Cannot read properties of undefined (reading 'error')" and the session has no
-      // assignee options (shared/src/api/queries/users/getUsers.ts, getUsersAssignee).
       fixme:
         'getUsersAssignee throws inside the review addon store (fixed in ynput/ayon-frontend#2419 and #2420)',
     },

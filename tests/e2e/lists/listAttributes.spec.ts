@@ -2,10 +2,6 @@ import { expect, test } from '../fixtures'
 import { hasPowerpack, ListsPage } from '../pages/ListsPage'
 import { toast } from '../support/ui'
 
-/**
- * List attributes are extra fields that only exist on the items of one list (e.g. a client note
- * per shot in a delivery list), not on the entities themselves. They are a powerpack feature.
- */
 test.describe('list attributes', () => {
   test.beforeEach(async ({ api }) => {
     test.skip(!(await hasPowerpack(api)), 'list attributes need the powerpack addon')
@@ -58,7 +54,6 @@ test.describe('list attributes', () => {
         [comp.id, 'More grain'],
         [anim.id, undefined],
       ])
-    // the value belongs to the list item, the task itself has no such attribute
     expect((await api.getTask(projectName, comp.id)).attrib.clientNote).toBeUndefined()
   })
 })

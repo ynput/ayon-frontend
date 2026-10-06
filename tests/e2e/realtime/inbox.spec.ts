@@ -3,12 +3,6 @@ import { signInAs } from '../support/session'
 import { InboxPage } from '../pages/InboxPage'
 import { LIVE_UPDATE, LiveUpdates } from './live'
 
-/**
- * An artist has their inbox open while someone else (the admin, through the REST API) mentions
- * them or changes their task: the new message must show without a reload.
- * The artist is not a manager and only has access to the test project, so the inbox only reads
- * this project (see "Cross-project queries" in tests/AGENTS.md).
- */
 test.describe('inbox live updates', () => {
   test('a mention appears in my open Important inbox', async ({
     api,
@@ -60,7 +54,6 @@ test.describe('inbox live updates', () => {
     accessGroup,
     browser,
   }) => {
-    // assignees must hold a license seat
     const artist = await createUser({
       licensed: true,
       accessGroups: { [projectName]: [accessGroup] },

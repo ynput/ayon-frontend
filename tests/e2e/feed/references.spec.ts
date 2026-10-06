@@ -4,11 +4,6 @@ import { AyonApi } from '../support/api'
 import { DetailsPanel } from '../pages/DetailsPanel'
 import { OverviewPage } from '../pages/OverviewPage'
 
-/**
- * Shot sh010 with the tasks "lighting" and "comp", and version v001 of renderMain published from
- * lighting. The mention picker offers the tasks of the same folder (`@@@`) and the versions of the
- * task (`@@`).
- */
 const setup = async (api: AyonApi, projectName: string) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const lighting = await api.createTask(projectName, {
@@ -37,7 +32,6 @@ const openTask = async (page: Page, projectName: string, name: string) => {
   return overview.openDetails(name)
 }
 
-/** How an entity's feed lists the comments that reference it ("mention") */
 const mentionsOf = (api: AyonApi, projectName: string, entityId: string) => async () =>
   (await api.listFeedActivities(projectName, entityId, { activityTypes: ['comment'] })).map(
     (a) => ({ body: a.body, referenceType: a.referenceType, origin: a.origin?.name }),
@@ -60,7 +54,6 @@ test.describe('references in comments', () => {
         (await api.listActivities(projectName, 'task', lighting.id)).map((a) => a.body.trim()),
       )
       .toEqual([body])
-    // the mentioned task lists the comment in its feed
     await expect.poll(mentionsOf(api, projectName, comp.id)).toEqual([
       {
         body: expect.stringContaining(`(task:${comp.id})`),
@@ -97,7 +90,6 @@ test.describe('references in comments', () => {
 
     await panel.reference('Match', 'comp').click()
 
-    // the task opens in a panel that slides out over this one, with the comment in its feed
     const slideOut = DetailsPanel.slideOut(page)
     await slideOut.expectOpenFor('comp')
     await expect(slideOut.comment('Match')).toBeVisible()
@@ -115,7 +107,6 @@ test.describe('references in comments', () => {
 
     const panel = await openTask(page, projectName, 'comp')
 
-    // "<author> mentioned task on <lighting>"
     const comment = panel.comment('Match')
     await expect(comment).toContainText('mentioned task on')
     await expect(panel.reference('Match', 'lighting')).toBeVisible()
@@ -123,7 +114,6 @@ test.describe('references in comments', () => {
       .poll(mentionsOf(api, projectName, comp.id))
       .toEqual([{ body: expect.any(String), referenceType: 'mention', origin: 'lighting' }])
 
-    // the origin opens the task the comment was made on
     await panel.reference('Match', 'lighting').click()
     const slideOut = DetailsPanel.slideOut(page)
     await slideOut.expectOpenFor('lighting')
@@ -157,11 +147,7 @@ test.describe('references in comments', () => {
       .toEqual([{ body: `${body} first`, referenceType: 'mention', origin: 'lighting' }])
   })
 
-  // FLAG (backend bug, ayon-backend): editing a comment never removes a mention. update_activity
-  // (ayon_server/activities/update_activity.py:126-131) collects the mention references missing from
-  // the new body in `refs_to_delete` and deletes them (:189), but leaves them in `references`, which
-  // it then inserts again (:221). The mentioned task keeps the comment in its feed, and a user whose
-  // mention was removed keeps it in their inbox. Reproduces through the API alone (PATCH the body).
+  // FLAG (backend bug): editing a comment never removes a mention, update_activity re-inserts it
   // fixed in ynput/ayon-backend#1168, switch back to test() once it is merged
   test.fixme(
     'removing a reference while editing takes the comment out of that feed',

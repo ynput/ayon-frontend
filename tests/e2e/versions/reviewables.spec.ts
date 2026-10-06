@@ -23,7 +23,6 @@ test.describe('version reviewables', () => {
 
     await viewer.uploadInput.setInputFiles(MEDIA.navyVideo.path)
 
-    // the upload is probed on the server; the new file is playable straight away
     await expect
       .poll(async () =>
         (await api.listReviewables(projectName, v1.id)).map((r) => [r.filename, r.availability]),
@@ -91,10 +90,7 @@ test.describe('version reviewables', () => {
       .toEqual([video.fileId])
   })
 
-  // FLAG (app bug): a version whose only reviewable cannot be played (conversionRequired) shows an
-  // empty viewer. ViewerComponent only shows a placeholder when the version has no reviewables at
-  // all and otherwise returns null; its "File not supported and needs conversion" message is
-  // unreachable.
+  // FLAG (app bug): a version whose only reviewable needs conversion shows an empty viewer, no message
   // fixed in ynput/ayon-frontend#2408, switch back to test() once it is merged
   test.fixme(
     'the viewer explains when a version has no playable reviewable',

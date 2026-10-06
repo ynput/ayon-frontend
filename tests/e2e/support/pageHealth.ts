@@ -9,63 +9,38 @@ import {
   test,
 } from '@playwright/test'
 
-/**
- * Watches a page for signs that it is broken while a test has it open:
- * - uncaught exceptions (`pageerror`) and `console.error` messages,
- * - failed API calls: `/api`, `/graphql` and addon (`/addons`) responses with status >= 400,
- *   and GraphQL responses that carry `errors`,
- * - the app's error screens (error boundary, error page, error placeholders, error toasts).
- *
- * Usage:
- * ```ts
- * const health = watchPageHealth(page)
- * await page.goto('/settings/bundles')
- * await expect(page.getByRole('table')).toBeVisible()
- * await health.expectHealthy()
- * ```
- * Anything expected goes into `KNOWN_NOISE` (or the `allow` option of one check) with a FLAG comment.
- */
-
 export type NoiseKind = 'pageerror' | 'console' | 'response' | 'graphql'
 
 export type Noise = {
   kind: NoiseKind
-  /** matched against the problem text, e.g. `GET 404 /api/...` or the console message */
   pattern: RegExp
-  /** why this is not a bug of the page under test */
   reason: string
 }
 
-/** Noise that is expected on any page. Keep it tiny and specific (exact URLs and messages). */
 export const KNOWN_NOISE: Noise[] = [
   {
     kind: 'console',
     pattern: /^Failed to load resource: net::ERR_FAILED https:\/\/do\.featurebase\.app\//,
-    // FLAG: test setup, not the app. The `page` fixture aborts featurebase (changelog and survey
-    // popups) and the browser logs the aborted script.
+    // FLAG: test setup, not the app: the `page` fixture aborts featurebase and the browser logs it
     reason: 'the page fixture blocks featurebase',
   },
   {
     kind: 'response',
     pattern: /^GET 404 \/api\/views\/[\w-]+\/(working|base|default)(\?project_name=\w+)?$/,
-    // FLAG: the views API answers 404 while the user has no working, base or default view of a page
-    // (ayon-backend api/views/views.py), which is the normal state of every fresh page and project.
+    // FLAG: the views API answers 404 until the user has a working, base or default view of a page
     reason: 'no saved view yet',
   },
   {
     kind: 'console',
     pattern: /^ERROR \[get(Working|Base|Default)View\] \{status: 404\b/,
-    // FLAG: ...and the RTK base query logs every failed request with console.error, including these
-    // expected 404s (shared/src/api/base/client.ts, baseQueryWithRedirect).
+    // FLAG: ...and the RTK base query logs every failed request with console.error, these 404s too
     reason: 'no saved view yet, logged by the base query',
   },
   {
     kind: 'response',
     pattern:
       /^GET 404 \/addons\/archival_tool\/[^/]+\/frontend\/modules\/archival_tool\/remoteEntry\.js\?/,
-    // FLAG (server, not the app): the archival_tool addon on the ayon-dev server declares a frontend
-    // module but ships no `frontend/modules` build. The app loads remotes at start-up and only logs
-    // the failure, so it shows on every page.
+    // FLAG (server, not the app): the dev server's archival_tool addon declares a frontend it lacks
     reason: 'broken archival_tool addon package on the dev server',
   },
   {
@@ -78,9 +53,7 @@ export const KNOWN_NOISE: Noise[] = [
   {
     kind: 'graphql',
     pattern: /^GraphQL GetInboxHasUnread: relation "project_\w+\.activity_feed" does not exist$/,
-    // FLAG (backend bug, see "Still open" in tests/AGENTS.md): the header asks whether the admin has
-    // unread messages, and the backend reads the inbox of every project for that. It fails while
-    // another test (or another run) creates or drops a project.
+    // FLAG (backend bug, see tests/AGENTS.md): the admin inbox query fails while projects are created/dropped
     reason: 'admin inbox query races with project create/drop',
   },
   {
@@ -93,22 +66,14 @@ export const KNOWN_NOISE: Noise[] = [
 
 type Problem = { kind: NoiseKind; text: string }
 
-/** what the frontend proxies to the backend (vite.config.ts) */
 const BACKEND_PATH = /^\/(api|graphql|graphiql|docs|addons)(\/|$)/
-/**
- * Data requests a page waits for before it is "settled".
- * - Not the static addon files under /addons: module scripts the browser reuses from its cache
- *   never report `requestfinished`.
- * - Not /api/connect: the server forwards these to Ynput Cloud (e.g. the feedback verification of a
- *   new user), which can take longer than any page. They are still checked once they answer.
- */
+// not /addons (cached module scripts never finish) or /api/connect (forwarded to Ynput Cloud, slow)
 const DATA_PATH = /^\/(api(?!\/connect(\/|$))|graphql)(\/|$)/
 
 export class PageHealth {
   private readonly problems: Problem[] = []
   private readonly inflight = new Set<Request>()
   private readonly reads: Promise<void>[] = []
-  /** origin of the frontend under test; backend calls go through its proxy */
   private readonly origin: string
   private readonly stopListening: () => void
 
@@ -124,8 +89,7 @@ export class PageHealth {
       const text = message.text()
       const { url } = message.location()
       const failedResource = text.startsWith('Failed to load resource') && !!url
-      // the browser logs every failed request; backend ones are reported (with method) by
-      // onResponse, so only keep the others (images, scripts, ...)
+      // backend failures are reported (with method) by onResponse
       if (failedResource && this.isBackend(url)) return
       this.add('console', failedResource ? `${text} ${url}` : text)
     }
@@ -185,7 +149,6 @@ export class PageHealth {
     }
   }
 
-  /** Stops collecting, e.g. before watching the next page of the same tab */
   stop() {
     this.stopListening()
   }
@@ -210,15 +173,6 @@ export class PageHealth {
     this.problems.push({ kind, text })
   }
 
-  /**
-   * The app's error screens:
-   * - `ErrorFallback` (the error boundary around the app): "Something went wrong, please send a report to Ynput."
-   *   or "AYON has been updated. Please reload for changes."
-   * - `EmptyPlaceholder` with an error: "Something went wrong." (and e.g. ProjectRoots' "Something went wrong while ...")
-   * - `ErrorPage`: "ERROR 404", "ERROR" + "Server connection failed"
-   * - `ProjectPage`: "Project Not Found, Redirecting..." and "Module Not Found"
-   * - error toasts
-   */
   errorScreens(): Locator {
     const page = this.page
     return (
@@ -232,9 +186,7 @@ export class PageHealth {
     )
   }
 
-  /** Waits until no backend request of the page is in flight */
   async settle() {
-    // the pending URLs, as the poll's value, so a timeout says which requests hang
     await expect
       .poll(() => [...this.inflight].map((r) => `${r.method()} ${this.path(r.url())}`), {
         message: 'backend requests still in flight',
@@ -244,17 +196,10 @@ export class PageHealth {
     await Promise.all(this.reads)
   }
 
-  /** Problems collected so far, one line each */
   list(): string[] {
     return this.problems.map((p) => `[${p.kind}] ${p.text}`)
   }
 
-  /**
-   * Fails with a readable list if the page showed an error screen or logged problems.
-   * Call it once the page shows its "ready" signal; it first waits for the page's requests.
-   * - `soft`: keep the test going (one test, several pages)
-   * - `settle: false`: check right away, e.g. to explain why a page never got ready
-   */
   async expectHealthy({ soft = false, settle = true } = {}) {
     if (settle) await this.settle()
     const screens = await this.errorScreens().allInnerTexts()
@@ -268,6 +213,5 @@ export class PageHealth {
   }
 }
 
-/** Starts collecting problems of `page`; call before `page.goto` */
 export const watchPageHealth = (page: Page, options: { allow?: Noise[] } = {}) =>
   new PageHealth(page, options.allow)

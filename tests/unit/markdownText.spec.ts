@@ -7,7 +7,6 @@ import {
   isMediaFile,
 } from '../../shared/src/components/MarkdownEditor/media/mediaUtils'
 
-// markdown as the editor stores it: Lexical escapes `* _ ` ~ \` in text and `( ) \` in link urls
 test.describe('markdownToPlainText', () => {
   const expectPlain = (cases: [string, string][]) => {
     for (const [markdown, plain] of cases) {
@@ -76,9 +75,7 @@ test.describe('markdownToPlainText', () => {
     }
   })
 
-  // FLAG: the emphasis rules run before escapes are removed, and treat the backslash in front of an
-  // escaped `*` / `_` as the character before the opening marker. Text typed as `*not bold*` is
-  // stored as `\*not bold\*` and summarized as `\not bold\`. plainText.ts:26-27
+  // FLAG: emphasis rules run before unescaping, so `\*not bold\*` becomes `\not bold\`. plainText.ts:26-27
   // fixed in ynput/ayon-frontend#2410, switch back to test() once it is merged
   test.fixme('escaped emphasis markers stay as literal characters', () => {
     expectPlain([
@@ -87,8 +84,7 @@ test.describe('markdownToPlainText', () => {
     ])
   })
 
-  // FLAG: a link url with parentheses (Lexical writes them escaped, e.g. wikipedia links) ends at the
-  // first `)`, so the end of the url is left in the summary. plainText.ts:11
+  // FLAG: a link url with (escaped) parentheses ends at the first `)`. plainText.ts:11
   // fixed in ynput/ayon-frontend#2410, switch back to test() once it is merged
   test.fixme('a link whose url contains parentheses becomes its label', () => {
     expectPlain([['[Foo](https://en.wikipedia.org/wiki/Foo_\\(bar\\)) text', 'Foo text']])

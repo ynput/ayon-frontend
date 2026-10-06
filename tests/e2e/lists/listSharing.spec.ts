@@ -5,7 +5,6 @@ import { AyonApi } from '../support/api'
 import { apiAs, signInAs } from '../support/session'
 import { dialog, menuItem } from '../support/ui'
 
-/** A task list "Client picks" with the tasks comp and anim of shot sh010 */
 const seedList = async (api: AyonApi, projectName: string) => {
   const shot = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const comp = await api.createTask(projectName, { folderId: shot.id, name: 'comp' })
@@ -16,11 +15,6 @@ const seedList = async (api: AyonApi, projectName: string) => {
   return { listId, comp, anim }
 }
 
-/**
- * Lists are open to everyone in the project until they are shared. Sharing (the Share tab of the
- * list details) is a powerpack feature: viewers can only look, editors can add and remove items,
- * admins can also rename, delete and share the list.
- */
 test.describe('list sharing', () => {
   test.beforeEach(async ({ api }) => {
     test.skip(!(await hasPowerpack(api)), 'list sharing needs the powerpack addon')
@@ -109,12 +103,10 @@ test.describe('list sharing', () => {
       await expect(lists.itemNameCell('comp')).toHaveClass(/selected/)
 
       await expect(lists.removeItemsButton).toBeDisabled()
-      // viewers cannot reorder either: the drag handles are gone
       await expect(lists.itemsTable.getByTitle('Drag to reorder')).toHaveCount(0)
     } finally {
       await context.close()
     }
-    // the server refuses it as well
     const userApi = await apiAs(testInfo, user.name, user.password)
     try {
       const { items } = await api.getEntityList(projectName, listId)
@@ -197,13 +189,7 @@ test.describe('list sharing', () => {
       .toEqual([anim.id])
   })
 
-  // FLAG (backend bug): a list shared with an access group (or a team) as "Editor" shows its members
-  // as editors (accessLevel 20, so the UI offers "Remove from list"), but every change is refused
-  // with 403 "Cannot update entity list". `EntityList.ensure_access_level`
-  // (ayon_server/entity_lists/entity_list.py:81) calls `EntityAccessHelper.check` without
-  // `project=`, and the powerpack checker only looks at `group:`/`team:` grants when it has a
-  // project. The UI then shows "Error deleting list items: [object Object]".
-  // switch back to test() once the backend passes the project
+  // FLAG (backend bug): editors via a shared access group or team get 403 on every list change
   // fixed in ynput/ayon-backend#1172, switch back to test() once it is merged
   test.fixme(
     'members of an access group a list is shared with as editors can remove its items',

@@ -2,7 +2,6 @@ import path from 'path'
 import { expect, test } from '../fixtures'
 import { OverviewPage } from '../pages/OverviewPage'
 
-/** sq100 > sh110 > layout, with folder/task types and statuses */
 const HIERARCHY_CSV = path.join(__dirname, 'fixtures/hierarchy.csv')
 
 test.describe('overview CSV import', () => {
@@ -38,12 +37,7 @@ test.describe('overview CSV import', () => {
     await expect(overview.cell('layout', 'status')).toContainText('Approved')
   })
 
-  // FLAG (app bug): imported folders and tasks never show in the open overview, only after a
-  // reload. The import's `entity.folder.created` / `entity.task.created` events carry this
-  // client's sender id, so WebsocketContext ignores them as "my own messages", and the
-  // `importData` mutation (src/services/dataImport/index.ts) only invalidates `overviewTask` and
-  // `project` for hierarchy imports, not the folder list (`folder` LIST / `hierarchy`) that the
-  // table and the hierarchy sidebar are built from.
+  // FLAG (app bug): imported folders and tasks only show in the open overview after a reload
   // fixed in ynput/ayon-frontend#2416, switch back to test() once it is merged
   test.fixme(
     'imported folders show in the open overview without a reload',

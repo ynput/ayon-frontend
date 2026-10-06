@@ -6,13 +6,11 @@ import { UsersSettingsPage } from '../pages/UsersSettingsPage'
 import { apiAs, signInAs } from '../support/session'
 import { menuItem } from '../support/ui'
 
-/** Open the "apps" menu in the header (studio settings, projects settings, events, ...) */
 const openAppMenu = async (page: Page) => {
   await page.getByRole('button', { name: 'apps', exact: true }).click()
   await expect(menuItem(page, 'Projects Settings')).toBeVisible()
 }
 
-/** A tab of the secondary navigation bar (settings, projects manager, project pages) */
 const navTab = (page: Page, name: string) => page.getByRole('link', { name, exact: true })
 
 test.describe('permissions: studio and project access', () => {
@@ -23,7 +21,6 @@ test.describe('permissions: studio and project access', () => {
     browser,
   }, testInfo) => {
     const user = await restrictedUser()
-    // a project the user has no access group on
     const otherProject = await api.createProject()
     const { context, page } = await signInAs(browser, user.name, user.password)
     const userApi = await apiAs(testInfo, user.name, user.password)
@@ -33,11 +30,9 @@ test.describe('permissions: studio and project access', () => {
       const projects = new ProjectsList(page)
       await projects.search(projectName)
       await expect(projects.row(projectName)).toBeVisible()
-      // the list is loaded and filtered on the client, so the other project is not in it at all
       await projects.search(otherProject)
       await expect(projects.row(otherProject)).toHaveCount(0)
 
-      // opening it by URL does not show it, the app sends the user away
       await page.goto(`/projects/${otherProject}/overview`)
       await expect(page.getByText('Project Not Found, Redirecting...')).toBeVisible()
       await expect(page).not.toHaveURL(/\/projects\//)
@@ -53,12 +48,7 @@ test.describe('permissions: studio and project access', () => {
     }
   })
 
-  // FLAG (frontend): the redirect away from a project the user cannot open sometimes ends on a blank
-  // page at "/" instead of the dashboard (2 of 5 tries locally). `ProjectPageInner` calls
-  // `setTimeout(() => navigate('/'), 1500)` in its render body, so every render in the error state
-  // queues another redirect that is never cleared. When two of them fire before the `<Navigate>` of
-  // the "/" route has run again, it stays mounted and does not redirect
-  // (src/pages/ProjectPage/ProjectPage.tsx, `if (error)`).
+  // FLAG (frontend): ProjectPageInner queues a redirect on every error render; it can end on a blank "/"
   // fixed in ynput/ayon-frontend#2405, switch back to test() once it is merged
   test.fixme(
     'opening a project without access by URL lands on the dashboard',
@@ -89,14 +79,12 @@ test.describe('permissions: studio and project access', () => {
     const { context, page } = await signInAs(browser, user.name, user.password)
     const userApi = await apiAs(testInfo, user.name, user.password)
     try {
-      // the app menu only offers site and project settings
       await openAppMenu(page)
       await expect(menuItem(page, 'Site Settings')).toBeVisible()
       await expect(menuItem(page, 'Studio Settings')).toHaveCount(0)
       await expect(menuItem(page, 'Event Viewer')).toHaveCount(0)
       await expect(menuItem(page, 'Services')).toHaveCount(0)
 
-      // user management by URL ends up in the site settings, the only settings tab the user has
       await page.goto('/settings/users')
       await expect(page).toHaveURL(/\/settings\/site$/, { timeout: 30_000 })
       await expect(navTab(page, 'Site settings')).toBeVisible()
@@ -104,11 +92,9 @@ test.describe('permissions: studio and project access', () => {
       await expect(navTab(page, 'Studio settings')).toHaveCount(0)
       await expect(page.getByPlaceholder('Filter users...')).toHaveCount(0)
 
-      // manager-only pages redirect home
       await page.goto('/events')
       await expect(page).toHaveURL(/\/dashboard\/tasks$/, { timeout: 30_000 })
 
-      // the server refuses to list the studio's users as well
       await expect(userApi.graphql('{ users { edges { node { name } } } }')).rejects.toThrow(
         /list_all_users/,
       )
@@ -138,16 +124,13 @@ test.describe('permissions: studio and project access', () => {
       await expect(navTab(page, 'Teams')).toHaveCount(0)
       const projects = new ProjectsList(page)
       await expect(projects.row(projectName)).toBeVisible()
-      // no "new project" button above the list
       await expect(page.getByRole('button', { name: 'add', exact: true })).toHaveCount(0)
 
-      // the anatomy tab by URL explains why it shows nothing
       await page.goto(`/manageProjects/anatomy?project=${projectName}`)
       await expect(
         page.getByText("You don't have permission to view this project's anatomy"),
       ).toBeVisible({ timeout: 30_000 })
 
-      // and the server refuses to change it
       const anatomy = await api.get(`/api/projects/${projectName}/anatomy`)
       const res = await userApi.request.post(`/api/projects/${projectName}/anatomy`, {
         data: anatomy,

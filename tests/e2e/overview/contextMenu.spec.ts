@@ -2,7 +2,6 @@ import { expect, test } from '../fixtures'
 import { DetailsPanel } from '../pages/DetailsPanel'
 import { OverviewPage } from '../pages/OverviewPage'
 
-/** Right-click menu of the overview table rows (on the "Folder / Task" cell) */
 test.describe('overview context menu', () => {
   test('create a child folder from a folder row', async ({ page, api, projectName }) => {
     const parent = await api.createFolder(projectName, { name: 'sq010', folderType: 'Sequence' })
@@ -60,7 +59,6 @@ test.describe('overview context menu', () => {
     await overview.goto(projectName)
     await overview.expand('sh010')
 
-    // on a task row the new task goes into the task's folder
     await overview.rowMenu('anim', 'Create task')
     await overview.submitCreateDialog('task', { label: 'lighting', type: 'Lighting' })
 
@@ -79,7 +77,6 @@ test.describe('overview context menu', () => {
     await overview.rowMenu('sh010', 'Move')
     await overview.moveTo('sq020')
 
-    // the target folder is expanded to show the moved folder
     await expect(overview.nameCells()).toHaveText([/sq020$/, /sh010$/])
     await expect
       .poll(async () => (await api.getFolder(projectName, shot.id)).parentId)
@@ -104,7 +101,6 @@ test.describe('overview context menu', () => {
     await expect
       .poll(async () => (await api.getTask(projectName, task.id)).folderId)
       .toBe(target.id)
-    // the target folder is expanded to show the moved task
     await expect(overview.nameCells()).toHaveText([/sh010$/, /sh020$/, /comp$/])
   })
 

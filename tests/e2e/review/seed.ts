@@ -3,10 +3,6 @@ import { Media } from '../media'
 
 export type SeededVersion = Version & { name: string; reviewables: Reviewable[] }
 
-/**
- * Shot `sh010` with product `renderMain` and one version per entry of `versions`, each with that
- * media uploaded as reviewables (in order). The products page lists them as "renderMain - v001", ...
- */
 export const seedReviewVersions = async (
   api: AyonApi,
   projectName: string,

@@ -4,7 +4,6 @@ import { OverviewPage } from '../pages/OverviewPage'
 import { apiAs, signInAs } from '../support/session'
 import { dialog, menuItem, toast } from '../support/ui'
 
-/** Two shots: sh010 with comp and roto, sh020 with anim */
 const createShots = async (api: AyonApi, projectName: string, compAssignees: string[] = []) => {
   const sh010 = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const sh020 = await api.createFolder(projectName, { name: 'sh020', folderType: 'Shot' })
@@ -34,7 +33,6 @@ test.describe('permissions: folder access', () => {
     restrictedUser,
     browser,
   }, testInfo) => {
-    // assignees must hold a license seat
     const user = await restrictedUser({ read: onlyFolders(assigned()) }, { licensed: true })
     const { sh010, sh020 } = await createShots(api, projectName, [user.name])
     const { context, page } = await signInAs(browser, user.name, user.password)
@@ -43,11 +41,9 @@ test.describe('permissions: folder access', () => {
       const overview = new OverviewPage(page)
       await overview.goto(projectName)
       await expect(overview.row('sh010')).toBeVisible()
-      // all folders come in one response, so sh020 would be there by now
       await expect(overview.row('sh020')).toHaveCount(0)
       await overview.expand('sh010')
       await expect(overview.row('comp')).toBeVisible()
-      // tasks next to an assigned task are shown by default ("Show sibling tasks")
       await expect(overview.row('roto')).toBeVisible()
       await expect(overview.row('anim')).toHaveCount(0)
 
@@ -77,7 +73,6 @@ test.describe('permissions: folder access', () => {
       await overview.goto(projectName)
       await overview.expand('sh010')
       await expect(overview.row('comp')).toBeVisible()
-      // the tasks of a folder come in one response
       await expect(overview.row('roto')).toHaveCount(0)
 
       expect((await userApi.listTasks(projectName, sh010.id)).map((t) => t.name)).toEqual(['comp'])
@@ -87,11 +82,7 @@ test.describe('permissions: folder access', () => {
     }
   })
 
-  // FLAG (backend): "Show sibling tasks" off is only applied when tasks are listed through GraphQL
-  // (ayon-backend ayon_server/graphql/resolvers/tasks.py). `GET /api/projects/{project}/tasks/{id}`
-  // checks access with `ensure_entity_access`, which only matches the folder path, so a hidden
-  // sibling task is still readable (and its id is enough). Not reachable through the UI, which
-  // reads tasks through GraphQL.
+  // FLAG (backend): "Show sibling tasks" off only applies to GraphQL; GET tasks/{id} still returns them
   // fixed in ynput/ayon-backend#1166, switch back to test() once it is merged
   test.fixme(
     'a hidden sibling task cannot be read by its id either',
@@ -124,18 +115,15 @@ test.describe('permissions: folder access', () => {
       await overview.goto(projectName)
       const createDialog = overview.createDialog()
 
-      // a root folder: nothing selected
       await overview.openCreate('folder')
       await expect(dialog(page, 'Add New Root Folder')).toBeVisible()
       await createDialog.getByLabel('Label', { exact: true }).fill('rootf')
       await createDialog.getByRole('button', { name: 'Create folder' }).click()
       await expect(toast(page, 'You are not allowed to create folder rootf')).toBeVisible()
-      // the dialog stays open so the input is not lost
       await expect(createDialog).toBeVisible()
       await createDialog.getByRole('button', { name: 'close', exact: true }).click()
       await expect(createDialog).toBeHidden()
 
-      // a task in sh020
       await overview.selectRow('sh020')
       await overview.openCreate('task')
       await createDialog.getByLabel('Label', { exact: true }).fill('newtask')
@@ -144,7 +132,6 @@ test.describe('permissions: folder access', () => {
       await createDialog.getByRole('button', { name: 'close', exact: true }).click()
       await expect(createDialog).toBeHidden()
 
-      // a task in sh010 is allowed
       await overview.selectRow('sh010')
       await overview.createTask({ label: 'oktask' })
       await overview.expand('sh010')
@@ -183,7 +170,6 @@ test.describe('permissions: folder access', () => {
       await expect(toast(page, 'Failed to update task: anim')).toBeVisible()
       await expect(overview.cell('anim', 'status')).toContainText('Not ready')
 
-      // the same change in sh010 is allowed
       await overview.setEnumCell('comp', 'status', 'In progress')
       await expect(overview.cell('comp', 'status')).toContainText('In progress')
       await expect
@@ -221,7 +207,6 @@ test.describe('permissions: folder access', () => {
       await expect(toast(page, /Access denied for task/)).toBeVisible()
       await expect(overview.row('anim')).toBeVisible()
 
-      // deleting in sh010 is allowed
       await overview.deleteRow('roto')
       await expect(overview.row('roto')).toBeHidden()
       await expect

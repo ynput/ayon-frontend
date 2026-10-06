@@ -5,9 +5,6 @@ import { OverviewPage } from '../pages/OverviewPage'
 import { ProjectsManagerPage } from '../pages/ProjectsManagerPage'
 import { TasksProgressPage } from '../pages/TasksProgressPage'
 
-// Every test changes the anatomy of its own project only (the `projectName` fixture).
-
-/** A status that is not in the default anatomy */
 const WAITING = {
   name: 'Waiting for client',
   shortName: 'WFC',
@@ -16,19 +13,16 @@ const WAITING = {
   color: '#8a2be2',
   scope: ['folder', 'task'],
 }
-/** WAITING.color as the browser reports it */
 const WAITING_RGB = 'rgb(138, 43, 226)'
 
 const ALL_SCOPES = ['folder', 'product', 'version', 'representation', 'task', 'workfile']
 
-/** Append a status to the project anatomy */
 const addStatus = (api: AyonApi, projectName: string, status: Record<string, unknown>) =>
   api.updateProjectAnatomy(projectName, (anatomy) => ({
     ...anatomy,
     statuses: [...anatomy.statuses, status],
   }))
 
-/** Folder sh010 with the task anim */
 const seedShot = async (api: AyonApi, projectName: string, taskStatus?: string) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const task = await api.createTask(projectName, {
@@ -43,7 +37,6 @@ const seedShot = async (api: AyonApi, projectName: string, taskStatus?: string) 
 const statusNames = async (api: AyonApi, projectName: string): Promise<string[]> =>
   (await api.getProject(projectName)).statuses.map((s: { name: string }) => s.name)
 
-/** Opens the project anatomy with the "Statuses" section expanded */
 const openStatuses = async (manager: ProjectsManagerPage, projectName: string) => {
   await manager.goto('anatomy', projectName)
   await manager.anatomy.expand('Statuses')
@@ -73,7 +66,6 @@ test.describe('project anatomy: statuses', () => {
     await expect
       .poll(async () => (await api.getProject(projectName)).statuses[index])
       .toMatchObject(WAITING)
-    // the saved status is shown after a reload
     await openStatuses(manager, projectName)
     await expect(manager.anatomy.textbox(`${item}_name`)).toHaveValue(WAITING.name)
     await expect(manager.anatomy.dropdownButton(`${item}_icon`)).toContainText(WAITING.icon)
@@ -89,8 +81,7 @@ test.describe('project anatomy: statuses', () => {
     const index = (await statusNames(api, projectName)).length
     const manager = new ProjectsManagerPage(page)
     await openStatuses(manager, projectName)
-    // open the project and go back, all without reloading the app: the overview has loaded the
-    // project with its statuses
+    // load the overview with the project's statuses, then go back without reloading the app
     await manager.openProject(projectName)
     const overview = new OverviewPage(page)
     await expect(overview.table).toBeVisible({ timeout: 30_000 })
@@ -170,10 +161,8 @@ test.describe('project anatomy: statuses', () => {
     await overview.expand('sh010')
 
     await overview.cell('anim', 'status').dblclick()
-    // the task's statuses have loaded
     await expect(page.locator('.options [data-value="In progress"]')).toBeVisible()
     await expect(page.locator(`.options [data-value="${WAITING.name}"]`)).toHaveCount(0)
-    // close the dropdown without picking anything
     await overview.nameCell('anim').click()
     await expect(page.locator('.options')).toBeHidden()
 
@@ -185,11 +174,7 @@ test.describe('project anatomy: statuses', () => {
       .toBe(WAITING.name)
   })
 
-  // FLAG (app bug): a status added in the anatomy editor is saved with `scope: []` unless a scope is
-  // picked, and the app offers a status with an empty scope nowhere. The schema has no default for
-  // `Status.scope` (the backend's default_factory, every entity type, is not part of the JSON
-  // schema), so SelectWidget starts the empty multiselect at [] and reports it through onChange.
-  // The API alone (scope left out) stores every entity type.
+  // FLAG (app bug): a status added in the anatomy editor is saved with `scope: []`, usable nowhere
   // fixed in ynput/ayon-backend#1170, switch back to test() once it is merged
   test.fixme(
     'a status added without a scope can be used on tasks',
@@ -248,7 +233,6 @@ test.describe('project anatomy: statuses', () => {
     await expect(manager.anatomy.textbox(`root_statuses_${before.length - 1}_name`)).toBeHidden()
     await page.getByRole('button', { name: 'Save changes' }).click()
 
-    // the server refuses the whole anatomy and says why
     const error = toast(page, 'Failed to save anatomy')
     await expect(error).toBeVisible()
     await expect(error).toContainText("'On hold' is still referenced")
@@ -277,8 +261,7 @@ test.describe('project anatomy: statuses', () => {
     await overview.goto(projectName)
     await overview.expand('sh010')
     await overview.cell('anim', 'status').dblclick()
-    // the task's statuses in anatomy order (statuses not meant for tasks are left out); the
-    // dropdown may list the task's current status first, so it is left out of the comparison
+    // the dropdown may list the task's current status first, so it is left out of the comparison
     const taskStatuses = (await api.getProject(projectName)).statuses
       .filter((s: { scope: string[] }) => s.scope.includes('task'))
       .map((s: { name: string }) => s.name)

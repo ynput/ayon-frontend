@@ -5,7 +5,6 @@ import { ProductsPage } from '../pages/ProductsPage'
 import { AyonApi } from '../support/api'
 import { dialog, menuItem } from '../support/ui'
 
-/** Shot sh010 with the tasks comp, anim and light, in a task list "Client picks" in that order */
 const seedTaskList = async (api: AyonApi, projectName: string) => {
   const shot = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const tasks = []
@@ -22,7 +21,6 @@ const seedTaskList = async (api: AyonApi, projectName: string) => {
   return { listId, comp, anim, light }
 }
 
-/** Product renderMain of shot sh010 with versions v001 and v002 (no media) */
 const seedVersions = async (api: AyonApi, projectName: string) => {
   const shot = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const product = await api.createProduct(projectName, { folderId: shot.id, name: 'renderMain' })
@@ -69,13 +67,8 @@ test.describe('list items', () => {
       .toEqual([comp.id, anim.id, light.id].sort())
   })
 
-  // FLAG (app bug): undo puts a removed item back at the end of the list instead of its old place.
-  // The frontend does not remember positions: `addItemsBackToList` (useDeleteListItems.ts:53) merges
-  // `{ id, entityId }` only, which the server appends. Passing the old position is not enough on its
-  // own: `EntityList.add` (ayon-backend ayon_server/entity_lists/entity_list.py:287) stores
-  // `position or 99999999`, so position 0 also lands at the end.
-  // switch back to test() once both are fixed
-  // fixed in ynput/ayon-backend#1171 (backend part; the frontend still drops the position), switch back to test() once it is merged
+  // FLAG (app bug): undo puts a removed item back at the end of the list instead of its old place
+  // fixed in ynput/ayon-backend#1171 (backend only), switch back to test() once it is merged
   test.fixme('undo puts a removed item back in its place', async ({ page, api, projectName }) => {
     const { listId, comp, anim, light } = await seedTaskList(api, projectName)
     const lists = new ListsPage(page)
@@ -107,7 +100,6 @@ test.describe('list items', () => {
     await expect(lists.itemCell('comp', 'status')).toContainText('In progress')
     await expect(lists.itemCell('anim', 'status')).toContainText('In progress')
     await expect(lists.itemCell('light', 'status')).toContainText('Not ready')
-    // list items are the entities themselves: the tasks changed
     await expect
       .poll(async () =>
         Promise.all(

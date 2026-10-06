@@ -4,12 +4,6 @@ import { DashboardTasksPage } from '../pages/DashboardTasksPage'
 import { OverviewPage } from '../pages/OverviewPage'
 import { LIVE_UPDATE, LiveUpdates } from './live'
 
-/**
- * An artist has "My tasks" open while a producer (the admin, through the REST API) assigns and
- * updates tasks: the board must follow without a reload.
- * The artist is not a manager and only has access to the test project, so the board only shows
- * this project (see "Cross-project queries" in tests/AGENTS.md).
- */
 test.describe('dashboard live updates', () => {
   test('a task assigned to me elsewhere appears on my open board and follows its status', async ({
     api,
@@ -18,14 +12,12 @@ test.describe('dashboard live updates', () => {
     accessGroup,
     browser,
   }) => {
-    // several live updates in a row, each can take up to ~11 s (see LIVE_UPDATE)
     test.slow()
     const artist = await createUser({
       licensed: true,
       accessGroups: { [projectName]: [accessGroup] },
     })
     const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
-    // already on the board, shows that it has loaded
     const anim = await api.createTask(projectName, {
       folderId: folder.id,
       name: 'anim',
@@ -67,13 +59,7 @@ test.describe('dashboard live updates', () => {
     }
   })
 
-  // FLAG (app bug): after visiting a project, the board no longer gets live updates from any other
-  // project. The websocket `auth` message sends `project: state.project.name`
-  // (src/AppRoot.tsx, shared/src/context/websocket/WebsocketContext.tsx) and the server then only
-  // forwards that project's events (ayon_server/api/messaging.py). Every getProject query sets
-  // `state.project.name` (src/services/project/enhancedProject.ts) and nothing clears it on
-  // leaving the project, so the cross-project dashboard stays filtered to the last project (opening
-  // a task's details panel there does the same through its ProjectContextProvider).
+  // FLAG (app bug): state.project.name is never cleared, so the websocket stays filtered to that project
   // fixed in ynput/ayon-frontend#2414, switch back to test() once it is merged
   test.fixme(
     'my open board still updates after I come from another project',
@@ -122,10 +108,7 @@ test.describe('dashboard live updates', () => {
     },
   )
 
-  // FLAG (app bug): the board ignores `entity.task.created`. The GetKanban realtime handler
-  // (shared/src/api/queries/userDashboard/getUserDashboard.ts) only acts on events whose summary
-  // carries a new value (status, tags, assignees, type) and returns early for everything else, so a
-  // task created with me as assignee only shows after a reload.
+  // FLAG (app bug): the GetKanban realtime handler ignores `entity.task.created`; new tasks need a reload
   // fixed in ynput/ayon-frontend#2413, switch back to test() once it is merged
   test.fixme(
     'a task created for me elsewhere appears on my open board',

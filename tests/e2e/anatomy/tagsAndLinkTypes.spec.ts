@@ -2,8 +2,6 @@ import { expect, test } from '../fixtures'
 import { OverviewPage } from '../pages/OverviewPage'
 import { ProjectsManagerPage } from '../pages/ProjectsManagerPage'
 
-// Every test changes the anatomy of its own project only (the `projectName` fixture).
-
 test.describe('project anatomy: tags and link types', () => {
   test('a tag added in the anatomy is offered in the tag editor of a task', async ({
     page,
@@ -63,7 +61,6 @@ test.describe('project anatomy: tags and link types', () => {
       .toContain('depends|folder|task')
     const overview = new OverviewPage(page)
     await overview.goto(projectName)
-    // one column per direction, in the "Links" submenu of the column picker
     await overview.showColumn('Depends (in)', 'Links')
 
     await expect(overview.columnHeader('link_depends_folder_task_in')).toBeVisible()

@@ -7,13 +7,11 @@ import { AyonApi } from '../support/api'
 import { dialog, menuItem, toast } from '../support/ui'
 import { seedReviewVersions } from './seed'
 
-/** Review sessions need the review addon; without it the reviews page is a splash screen */
 const hasReviewAddon = async (api: AyonApi) => {
   const { addons } = await api.get('/api/addons')
   return addons.some((a: any) => a.name === 'review' && a.productionVersion)
 }
 
-/** Review session lists of a project with the ids of their entities */
 const reviewSessions = async (api: AyonApi, projectName: string) => {
   const data = await api.graphql(
     `query Sessions($project: String!) {
@@ -89,7 +87,6 @@ test.describe('review sessions', () => {
     const lists = new ListsPage(page)
     await expect(lists.listRow('Client review')).toBeVisible({ timeout: 30_000 })
     await lists.listRow('Client review').click()
-    // the review addon shows sessions as cards; the table view is the app's own list table
     // FLAG: the display style buttons are icon-only ("table_rows", "grid_view")
     await page.getByRole('button', { name: 'table_rows', exact: true }).click()
     await expect(lists.itemNameCell('v001')).toBeVisible()
@@ -101,7 +98,6 @@ test.describe('review sessions', () => {
     await viewer.expectVersion('v001')
     await viewer.expectVideo(v1.reviewables[0].fileId, MEDIA.navyVideo)
 
-    // with the viewer open, the arrow keys step through the rows of the list
     await page.keyboard.press('ArrowDown')
 
     await viewer.expectVersion('v002')

@@ -116,8 +116,6 @@ test.describe('saving a view', () => {
     expect(names(settings)).toEqual(['status', 'name', 'thumbnail', 'tags'])
   })
 
-  // ColumnSettingsProvider has to pass the order it displays; an empty order means "definition
-  // order", which is how the first column change reordered the table (ynput/ayon-frontend#2399)
   test('an empty column order saves the columns in the order of allColumnIds', () => {
     const settings = saveView(states({ columnVisibility: { status: true } }), [
       'thumbnail',
@@ -160,7 +158,6 @@ test.describe('saving a view', () => {
     expect(settings.columns).toEqual([
       { name: 'name', visible: true, pinned: true, width: 250 },
       { name: 'status', visible: false },
-      // no visibility state means hidden; right pinning is saved as the same boolean
       { name: 'tags', visible: false, pinned: true },
       {
         name: 'attrib_fps',
@@ -177,7 +174,6 @@ test.describe('saving a view', () => {
     expect(grouped.groupBy).toBe('status')
     expect(grouped.groupSortByDesc).toBe(true)
 
-    // the keys are present so that merging into the stored view removes the grouping
     const ungrouped = saveView(states({ groupBy: undefined }))
     expect(ungrouped).toHaveProperty('groupBy', undefined)
     expect(ungrouped).toHaveProperty('groupSortByDesc', undefined)

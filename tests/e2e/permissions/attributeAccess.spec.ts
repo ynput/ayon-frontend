@@ -4,7 +4,6 @@ import { AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
 import { apiAs, signInAs } from '../support/session'
 
-/** A shot with a comp task */
 const createShot = async (api: AyonApi, projectName: string, taskData = {}) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const task = await api.createTask(projectName, {
@@ -16,25 +15,17 @@ const createShot = async (api: AyonApi, projectName: string, taskData = {}) => {
   return { folder, task }
 }
 
-/** Show these overview columns to the user (views are stored per user) */
 const showColumns = async (userApi: AyonApi, projectName: string, columns: string[]) =>
   userApi.setWorkingViewColumns('overview', projectName, ['name', ...columns])
 
-/**
- * The lock icon of a read-only column header.
- * FLAG: the icon has no accessible name, its meaning is only in its tooltip.
- */
+// FLAG: the lock icon has no accessible name, its meaning is only in its tooltip
 const readOnlyLock = (header: Locator) =>
   header.locator('[data-tooltip="You only have permission to read this column."]')
 
-/**
- * The widget of an overview cell. Its class tells whether the cell can be edited.
- * FLAG: editability is only exposed as the `editable` / `readonly` class of the cell widget.
- */
+// FLAG: editability is only exposed as the `editable` / `readonly` class of the cell widget
 const cellWidget = (overview: OverviewPage, label: string, columnId: string) =>
   overview.cell(label, columnId).locator('.editable, .readonly')
 
-/** May write FPS and the status, nothing else */
 const FPS_AND_STATUS = { attrib_write: { enabled: true, attributes: ['fps'], fields: ['status'] } }
 
 test.describe('permissions: attribute access', () => {
@@ -62,12 +53,10 @@ test.describe('permissions: attribute access', () => {
       await expect(readOnlyLock(overview.columnHeader('status'))).toHaveCount(0)
       await expect(cellWidget(overview, 'comp', 'status')).toHaveClass(/\beditable\b/)
 
-      // the allowed attribute can be edited
       await overview.editTextCell('comp', 'attrib_fps', '48')
       await expect(overview.cell('comp', 'attrib_fps')).toHaveText('48')
       await expect.poll(async () => (await api.getTask(projectName, task.id)).attrib.fps).toBe(48)
 
-      // the lock matches the server, which refuses the other attribute
       await expect(
         userApi.updateTask(projectName, task.id, { attrib: { resolutionWidth: 1234 } }),
       ).rejects.toThrow(/failed with 403/)
@@ -78,11 +67,7 @@ test.describe('permissions: attribute access', () => {
     }
   })
 
-  // FLAG (frontend): the details panel ignores `attrib_write`. Every attribute and built-in field is
-  // editable there and the server answers 403 ("You are not allowed to modify resolutionWidth
-  // attribute ..."), while the overview locks the same columns. `useEntityFields` builds the fields
-  // without the project permissions and `useEntityEditing` hard-codes `enableEditing = true`
-  // (shared/src/components/DetailsPanelDetails/hooks/).
+  // FLAG (frontend): the details panel ignores `attrib_write`; every field is editable, saving gets a 403
   // fixed in ynput/ayon-frontend#2403, switch back to test() once it is merged
   test.fixme(
     'attributes the user may not write are read-only in the details panel',
@@ -109,13 +94,7 @@ test.describe('permissions: attribute access', () => {
     },
   )
 
-  // FLAG (frontend): with "Restrict attribute update" enabled and no field switch on, the server
-  // refuses every field change (status, name, type, assignees, ...), but the overview treats an
-  // empty field list as "no restriction" and offers them all; saving then fails with
-  // "Failed to update task". `getReadOnlyLists` checks `writableFields?.length` and
-  // `useAttributeFields` passes `attrib_write.fields` without looking at `attrib_write.enabled`
-  // (shared/src/containers/ProjectTreeTable/utils/getReadOnlyLists.ts,
-  // shared/src/containers/ProjectTreeTable/hooks/useAttributesList.ts).
+  // FLAG (frontend): the overview reads an empty attrib_write.fields as "no restriction", all look editable
   // fixed in ynput/ayon-frontend#2404, switch back to test() once it is merged
   test.fixme(
     'built-in fields are locked when the access group allows none of them',
@@ -136,7 +115,6 @@ test.describe('permissions: attribute access', () => {
         await expect(cellWidget(overview, 'comp', 'status')).toHaveClass(/\breadonly\b/)
         await expect(cellWidget(overview, 'comp', 'attrib_fps')).toHaveClass(/\beditable\b/)
 
-        // the server allows no field change
         await expect(
           userApi.updateTask(projectName, task.id, { status: 'In progress' }),
         ).rejects.toThrow(/failed with 403/)
@@ -148,12 +126,7 @@ test.describe('permissions: attribute access', () => {
     },
   )
 
-  // FLAG (backend): when a user has several access groups that restrict attribute updates, only the
-  // fields of the last group are kept: `AccessGroups.combine` merges `attrib_write.fields` from
-  // `result[perm_name].get("can_create", [])` instead of `"fields"`
-  // (ayon-backend ayon_server/access/access_groups.py). Here the user may change the status through
-  // the first group, yet the server reports only "tags" as writable, so the overview locks the
-  // status column and the server refuses the change.
+  // FLAG (backend): AccessGroups.combine merges attrib_write.fields from "can_create"; the last group wins
   // fixed in ynput/ayon-backend#1165, switch back to test() once it is merged
   test.fixme(
     'a user in two access groups may change the fields either group allows',
@@ -194,7 +167,6 @@ test.describe('permissions: attribute access', () => {
     const user = await restrictedUser({ attrib_read: { enabled: true, attributes: ['fps'] } })
     const { task } = await createShot(api, projectName, { attrib: { resolutionWidth: 4321 } })
     const userApi = await apiAs(testInfo, user.name, user.password)
-    // the user asks for the column, but may not read it
     await showColumns(userApi, projectName, ['attrib_fps', 'attrib_resolutionWidth'])
     const { context, page } = await signInAs(browser, user.name, user.password)
     try {
@@ -209,7 +181,6 @@ test.describe('permissions: attribute access', () => {
       await expect(panel.attribute('FPS')).toContainText('25')
       await expect(page.getByText('4321')).toHaveCount(0)
 
-      // the server does not send the value to the user
       expect((await userApi.getTask(projectName, task.id)).attrib.resolutionWidth).toBeUndefined()
       expect((await api.getTask(projectName, task.id)).attrib.resolutionWidth).toBe(4321)
     } finally {

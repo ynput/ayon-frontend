@@ -2,12 +2,6 @@ import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
 
-/**
- * Filters from "Search and filter" are saved in the user's working view of the project, so each test
- * starts unfiltered in its own project (see "Per-user views" in tests/AGENTS.md).
- */
-
-/** sh010 with tasks `[name, taskType, status]`, plus an empty folder "props" */
 const createShot = async (api: AyonApi, projectName: string, tasks: [string, string, string][]) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   for (const [name, taskType, status] of tasks) {
@@ -33,7 +27,6 @@ test.describe('overview filters', () => {
     await overview.addFilter('Task', 'Status', 'In progress')
 
     await expect(overview.filterChip('Task Status')).toContainText('In progress')
-    // folders without matching tasks are hidden
     await expect(overview.row('props')).toBeHidden()
     await overview.expand('sh010')
     await expect(overview.row('anim')).toBeVisible()
@@ -115,7 +108,6 @@ test.describe('overview filters', () => {
     await overview.expand('sh010')
     await expect(overview.nameCells()).toHaveText([/sh010$/, /anim$/])
 
-    // clicking it again shows everything
     await overview.toggleSidebarFolder('sq010')
 
     await expect(overview.row('props')).toBeVisible()

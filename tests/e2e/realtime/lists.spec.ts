@@ -2,10 +2,6 @@ import { expect, test } from '../fixtures'
 import { ListsPage } from '../pages/ListsPage'
 import { LIVE_UPDATE, LiveUpdates } from './live'
 
-/**
- * The lists page is open in the admin's browser while lists change through the REST API,
- * i.e. from another client: the page must follow without a reload.
- */
 test.describe('lists live updates', () => {
   test('an item added to the open list elsewhere appears in it', async ({
     page,

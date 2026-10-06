@@ -2,7 +2,6 @@ import { expect, test } from '../fixtures'
 import { hasPowerpack, ListsPage } from '../pages/ListsPage'
 import { confirmDialog } from '../support/ui'
 
-/** List folders group lists in the lists panel. They are a powerpack feature. */
 test.describe('list folders', () => {
   test.beforeEach(async ({ api }) => {
     test.skip(!(await hasPowerpack(api)), 'list folders need the powerpack addon')
@@ -34,7 +33,6 @@ test.describe('list folders', () => {
         ),
       )
       .toEqual([folder.id, folder.id])
-    // the new folder opens with the lists inside it; collapsing it hides them
     await lists.setFolderExpanded('Dailies', false)
     await expect(lists.listRow('Monday picks')).toBeHidden()
     await expect(lists.listRow('Tuesday picks')).toBeHidden()
@@ -106,7 +104,6 @@ test.describe('list folders', () => {
     await lists.rowMenu('Dailies', 'Create list')
     await lists.submitNewListDialog({ label: 'Monday picks' })
 
-    // the new list is selected, but a collapsed folder stays collapsed
     await expect(lists.listRow('Dailies')).toContainText('1')
     await lists.setFolderExpanded('Dailies', true)
     await expect(lists.listRow('Monday picks')).toBeVisible()
@@ -118,11 +115,7 @@ test.describe('list folders', () => {
       .toBe(folderId)
   })
 
-  // FLAG (app bug): searching the lists panel keeps folders collapsed, so a matching list inside a
-  // collapsed folder stays hidden and only its folder row is shown. ListsTable passes the search as
-  // `globalFilter` (ListsTable.tsx:155) but keeps the user's `expanded` state (ListsTable.tsx:114);
-  // the projects list flattens folders while searching instead (ProjectsList.tsx:97).
-  // switch back to test() once search shows matches inside folders
+  // FLAG (app bug): searching the lists panel keeps folders collapsed, hiding the matches inside
   test.fixme('search finds lists inside collapsed folders', async ({ page, api, projectName }) => {
     const folderId = await api.createEntityListFolder(projectName, { label: 'Dailies' })
     const listId = await api.createEntityList(projectName, { label: 'Monday picks' })
@@ -145,7 +138,6 @@ test.describe('list folders', () => {
     await lists.goto(projectName)
 
     await lists.rowMenu('Dailies', 'Rename folder')
-    // the folder row turns into an input
     const input = page.getByRole('row').getByRole('textbox')
     await expect(input).toBeFocused()
     await input.fill('Dailies archive')

@@ -43,7 +43,6 @@ test.describe('sanitizeQueryFilter', () => {
         },
       ],
     })
-    // the stored filter is not changed
     expect(JSON.stringify(stored)).toBe(before)
   })
 
