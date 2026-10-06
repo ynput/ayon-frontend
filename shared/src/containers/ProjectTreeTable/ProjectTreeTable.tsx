@@ -584,7 +584,6 @@ export const ProjectTreeTable = ({
   }, [rows.length])
 
   // Register grid structure with selection context when rows or columns change
-  // (only the shown columns, so arrow keys, Tab and range selection skip hidden ones)
   useEffect(() => {
     if (!rows.length) return
     const rowIds = rows.map((row) => row.id)
