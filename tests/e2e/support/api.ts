@@ -488,6 +488,71 @@ export class AyonApi {
     await this.post(`/api/projects/${project}/lists/${listId}/items`, { entityId })
   }
 
+  /**
+   * One list through REST, with its items in list order (by `position`).
+   * `access` maps `__everyone__`, `user:<name>`, `group:<name>` and `team:<name>` to an access
+   * level (0 none, 10 viewer, 20 editor, 30 admin); an empty `access` means everyone is an admin.
+   */
+  async getEntityList(
+    project: string,
+    listId: string,
+  ): Promise<{
+    id: string
+    label: string
+    entityType: string
+    entityListType: string
+    entityListFolderId: string | null
+    owner: string | null
+    active: boolean
+    access: Record<string, number>
+    attrib: Record<string, any>
+    items: { id: string; entityId: string; position: number; attrib: Record<string, any> }[]
+  }> {
+    return this.get(`/api/projects/${project}/lists/${listId}`)
+  }
+
+  /** Patch a list, e.g. `{ access: { __everyone__: 0, 'user:jane': 10 } }` or `{ active: false }` */
+  async updateEntityList(project: string, listId: string, data: Record<string, unknown>) {
+    await this.patch(`/api/projects/${project}/lists/${listId}`, data)
+  }
+
+  /** Custom attributes of one list (shown as extra columns of its items) */
+  async getEntityListAttributes(
+    project: string,
+    listId: string,
+  ): Promise<{ name: string; data: Record<string, any> }[]> {
+    return this.get(`/api/projects/${project}/lists/${listId}/attributes`)
+  }
+
+  /** Replace the custom attributes of one list, e.g. `[{ name: 'note', data: { type: 'string', title: 'Note' } }]` */
+  async setEntityListAttributes(
+    project: string,
+    listId: string,
+    attributes: { name: string; data: Record<string, any> }[],
+  ) {
+    await this.put(`/api/projects/${project}/lists/${listId}/attributes`, attributes)
+  }
+
+  /** List folders group lists on the lists page (a powerpack feature) */
+  async createEntityListFolder(
+    project: string,
+    data: { label: string; parentId?: string; scope?: string[] },
+  ): Promise<string> {
+    const { id } = await this.post(`/api/projects/${project}/entityListFolders`, {
+      label: data.label,
+      parentId: data.parentId,
+      data: { scope: data.scope ?? ['generic'] },
+    })
+    return id
+  }
+
+  async listEntityListFolders(
+    project: string,
+  ): Promise<{ id: string; label: string; parentId: string | null }[]> {
+    const { folders } = await this.get(`/api/projects/${project}/entityListFolders`)
+    return folders.map((f: any) => ({ id: f.id, label: f.label, parentId: f.parentId ?? null }))
+  }
+
   // ---------------------------------------------------------------------------
   // views (columns, grouping and filters of a page; per user and project)
   // ---------------------------------------------------------------------------
