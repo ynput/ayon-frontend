@@ -62,8 +62,6 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       })
       // Remove special columns from visibility and order before persisting
       specialIds.forEach((id) => delete resolvedVisibility[id])
-      // a view without a saved order shows `defaultOrderedColumns`; save that, not nothing,
-      // or the first change would reorder the columns to their definition order
       const order = next.columnOrder?.length ? next.columnOrder : defaultOrderedColumns
       const resolvedOrder = order.filter((id) => !specialIds.has(id))
       onChange(
@@ -134,7 +132,6 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       }
     }
   })
-  // the order as shown outside of grouping, before the special columns are added
   const defaultOrderedColumns = [...columnOrder]
 
   // if we are in grouping mode (except folder grouping), always pin the name column
