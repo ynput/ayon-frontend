@@ -1,0 +1,50 @@
+fragment ListMembershipFragment on EntityListNode {
+  id
+  label
+  entityListType
+}
+
+query GetFoldersListsMembership($projectName: String!, $entityIds: [String!]) {
+  project(name: $projectName) {
+    folders(ids: $entityIds, last: 5000) {
+      edges {
+        node {
+          id
+          entityLists(active: true) {
+            ...ListMembershipFragment
+          }
+        }
+      }
+    }
+  }
+}
+
+query GetTasksListsMembership($projectName: String!, $entityIds: [String!]) {
+  project(name: $projectName) {
+    tasks(ids: $entityIds, last: 5000) {
+      edges {
+        node {
+          id
+          entityLists(active: true) {
+            ...ListMembershipFragment
+          }
+        }
+      }
+    }
+  }
+}
+
+query GetVersionsListsMembership($projectName: String!, $entityIds: [String!]) {
+  project(name: $projectName) {
+    versions(ids: $entityIds, last: 5000) {
+      edges {
+        node {
+          id
+          entityLists(active: true) {
+            ...ListMembershipFragment
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import { ProjectTableAttribute } from '../types'
+import { LISTS_COLUMN_ID } from '../constants'
 
 // Known built-in fields. We keep both camelCase and snake_case variants since
 // permissions may use either form depending on the backend response.
@@ -92,6 +93,8 @@ export const getReadOnlyLists = (
       if (!readOnlyAttribs.includes(f)) readOnlyAttribs.push(f)
     }
   }
+
+  readOnlyAttribs.push(LISTS_COLUMN_ID)
 
   const readOnlyColumns = Array.from(readOnlyColumnsSet) // Convert the set of readOnly columns to an array
 

@@ -25,12 +25,14 @@ import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './context'
-import { ROW_SELECTION_COLUMN_ID } from './constants'
+import { LISTS_COLUMN_ID, ROW_SELECTION_COLUMN_ID } from './constants'
 import { NEXT_PAGE_ID, parseGroupId } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import type { AttributeData, LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { SubtasksWidgetData } from './widgets/SubtasksWidget'
+import { ListsWidgetData } from './widgets/ListsWidget'
+import { isListsMembershipEntityType } from './hooks/useListsMembership'
 import { Icon } from '@ynput/ayon-react-components'
 import {
   getAttributeIcon,
@@ -80,6 +82,7 @@ export const COLUMN_LABELS: Record<string, string> = {
   updatedAt: 'Updated at',
   subtasks: 'Subtasks',
   comments: 'Latest comments',
+  lists: 'Lists',
 }
 
 export const getColumnLabel = (columnId: string, scopes: string[] = []) => {
@@ -106,6 +109,7 @@ export const COLUMN_ICONS: Record<string, string> = {
   updatedAt: getAttributeIcon('updatedAt', 'datetime'),
   subtasks: 'checklist',
   comments: getAttributeIcon('comment'),
+  lists: 'list_alt',
 }
 
 export const getColumnIcon = (columnId: string) => {
@@ -202,6 +206,7 @@ export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
   updatedAt: { sortKey: 'updatedAt', enabled: true, label: COLUMN_LABELS.updatedAt },
   subtasks: { enabled: false, label: COLUMN_LABELS.subtasks },
   comments: { enabled: false, label: COLUMN_LABELS.comments },
+  lists: { enabled: false, label: COLUMN_LABELS.lists },
 }
 
 type SortColumnLabel = { value: string; label: string }
@@ -365,6 +370,7 @@ export type DefaultColumns =
   | 'createdAt'
   | 'updatedAt'
   | 'comments'
+  | typeof LISTS_COLUMN_ID
 
 export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
 
@@ -1379,6 +1385,41 @@ const buildTreeTableColumns = ({
             valueData={value || []}
             attributeData={{ type: 'comments' }}
             isCollapsed={!!row.original.childOnlyMatch}
+            isReadOnly
+          />
+        )
+      },
+    })
+  }
+
+  if (isIncluded(LISTS_COLUMN_ID) && scopes.some(isListsMembershipEntityType)) {
+    staticColumns.push({
+      id: LISTS_COLUMN_ID,
+      header: getColumnLabel(LISTS_COLUMN_ID),
+      minSize: COLUMN_MIN_SIZE,
+      enableSorting: false,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      cell: ({ row, column }) => {
+        const { group, metaType, isLoading, primary } = row.original
+        if (group || metaType) return null
+        if (!isLoading && !isListsMembershipEntityType(primary.entityType))
+          return <div className="readonly"></div>
+
+        const listsData: ListsWidgetData | undefined =
+          !isLoading && isListsMembershipEntityType(primary.entityType)
+            ? { entityId: primary.id, entityType: primary.entityType }
+            : undefined
+
+        return (
+          <CellWidget
+            rowId={row.id}
+            className={clsx('lists', { loading: isLoading })}
+            columnId={column.id}
+            value={''}
+            valueData={listsData}
+            attributeData={{ type: 'lists' }}
             isReadOnly
           />
         )

@@ -54,7 +54,7 @@ import {
   usePowerpack,
   setDetailsPanelTabForScope,
 } from '@shared/context'
-import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
+import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID, LISTS_COLUMN_ID } from './constants'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -65,6 +65,7 @@ import useCellContextMenu, {
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import useDynamicRowHeight from './hooks/useDynamicRowHeight'
+import { useFetchListsMembership } from './hooks/useListsMembership'
 
 import { useProjectDataContext } from './context/project-data'
 
@@ -1383,6 +1384,21 @@ const TableBody = ({
 
     onVisibleRowsChange(uniqueIds)
   }, [virtualRows, rows, onVisibleRowsChange])
+
+  const { projectName } = useProjectContext()
+  const isListsColumnShown = table
+    .getVisibleLeafColumns()
+    .some((column) => column.id === LISTS_COLUMN_ID)
+  useFetchListsMembership({
+    projectName,
+    enabled: isListsColumnShown,
+    entities: isListsColumnShown
+      ? virtualRows.flatMap((virtualRow) => {
+          const row = rows[virtualRow.index]?.original
+          return row && !row.group && !row.metaType && !row.isLoading ? [row.primary] : []
+        })
+      : [],
+  })
 
   // Memoize the measureElement callback
   const measureRowElement = useCallback(

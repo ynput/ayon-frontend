@@ -1,4 +1,5 @@
 export * from './getLists'
+export * from './getListsMembership'
 export * from './updateLists'
 export * from './getListsAttributes'
 export * from './listItemsColumnStats'
