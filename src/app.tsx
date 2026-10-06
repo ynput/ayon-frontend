@@ -60,6 +60,7 @@ import { login } from '@state/user'
 
 // queries
 import { useLazyGetSiteInfoQuery, useGetYnputCloudInfoQuery } from '@shared/api'
+import { usersApi } from '@shared/api/generated'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
@@ -147,6 +148,9 @@ const App = () => {
         }
 
         if (response.user) {
+          // /api/info already returns the current user: seed it so /api/users/me isn't
+          // requested again before the routes can render
+          dispatch(usersApi.util.upsertQueryData('getCurrentUser', undefined, response.user))
           dispatch(
             login({
               user: response.user,
