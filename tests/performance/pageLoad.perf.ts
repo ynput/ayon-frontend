@@ -38,9 +38,13 @@ const initScript = () => {
   requestAnimationFrame(tick)
 }
 
+// loading shimmers that mean the page is still loading; thumbnails are excluded, they are images
+// from the server that load after the content (and depend on the server, not the app)
+const SHIMMER = '.loading:not(.no-shimmer):not(.thumbnail)'
+
 const waitForReady = async (page: Page, route: PerfRoute) => {
   const handle = await page.waitForFunction(
-    ({ selectors, settle }) => {
+    ({ selectors, settle, SHIMMER }) => {
       const w = window as any
       const visible = (el: Element) =>
         (el as any).checkVisibility
@@ -50,7 +54,7 @@ const waitForReady = async (page: Page, route: PerfRoute) => {
       const ok =
         !document.querySelector('[data-loading-page]') &&
         selectors.every((s: string) => [...document.querySelectorAll(s)].some(visible)) &&
-        ![...document.querySelectorAll('.loading:not(.no-shimmer)')].some(visible)
+        ![...document.querySelectorAll(SHIMMER)].some(visible)
 
       const now = performance.now()
       if (!ok) {
@@ -60,7 +64,7 @@ const waitForReady = async (page: Page, route: PerfRoute) => {
       if (w.__readySince == null) w.__readySince = now
       return now - w.__readySince >= settle ? w.__readySince : false
     },
-    { selectors: route.ready, settle: SETTLE_MS },
+    { selectors: route.ready, settle: SETTLE_MS, SHIMMER },
     { polling: 'raf', timeout: READY_TIMEOUT },
   )
   return (await handle.jsonValue()) as number
@@ -74,7 +78,8 @@ const collect = async (page: Page, ready: number): Promise<Sample> =>
     const before = resources.filter((r) => r.responseEnd <= ready)
     // same origin only: third party URLs can carry tokens
     const isApi = (r: PerformanceResourceTiming) =>
-      r.name.startsWith(location.origin) && /^\/(api|graphql)(\/|$|\?)/.test(new URL(r.name).pathname)
+      r.name.startsWith(location.origin) &&
+      /^\/(api|graphql)(\/|$|\?)/.test(new URL(r.name).pathname)
     const isJs = (r: PerformanceResourceTiming) => /\.m?js(\?|$)/.test(r.name)
     const fcp = performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? null
     return {
@@ -170,6 +175,9 @@ for (const route of ROUTES.filter((r) => !ONLY || ONLY.includes(r.name))) {
     console.log(formatRow(route.name, summarize(result.cold), summarize(result.warm)))
 
     const errors = [...result.cold, ...result.warm].filter((s) => s.error)
-    expect(errors.map((s) => s.error), 'page loads that never became ready').toEqual([])
+    expect(
+      errors.map((s) => s.error),
+      'page loads that never became ready',
+    ).toEqual([])
   })
 }

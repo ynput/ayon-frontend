@@ -1,7 +1,8 @@
 // Routes measured by pageLoad.perf.ts.
 // `ready` lists selectors that must all be visible before the page counts as loaded; pick ones
 // that only render once the page shows real data, not a skeleton. On top of that the full page
-// loader must be gone and no `.loading` shimmer may be visible, held for PERF_SETTLE_MS.
+// loader must be gone and no `.loading` shimmer (other than image thumbnails) may be visible,
+// held for PERF_SETTLE_MS.
 
 export interface PerfRoute {
   name: string
