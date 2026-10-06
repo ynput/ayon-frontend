@@ -76,7 +76,6 @@ const useReviewShortcuts = ({
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Shift+A / Shift+D belong to the player (go to start / end)
       if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return
       if (isHTMLElement(e.target)) {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
