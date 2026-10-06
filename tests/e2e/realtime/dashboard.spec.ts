@@ -108,43 +108,58 @@ test.describe('dashboard live updates', () => {
     },
   )
 
-  // FLAG (app bug): the GetKanban realtime handler ignores `entity.task.created`; new tasks need a reload
-  // fixed in ynput/ayon-frontend#2413, switch back to test() once it is merged
-  test.fixme(
-    'a task created for me elsewhere appears on my open board',
-    async ({ api, projectName, createUser, accessGroup, browser }) => {
-      const artist = await createUser({
-        licensed: true,
-        accessGroups: { [projectName]: [accessGroup] },
-      })
-      const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
-      const anim = await api.createTask(projectName, {
+  test('a task created for me is not streamed onto my open board, and shows after a reload', async ({
+    api,
+    projectName,
+    createUser,
+    accessGroup,
+    browser,
+  }) => {
+    const artist = await createUser({
+      licensed: true,
+      accessGroups: { [projectName]: [accessGroup] },
+    })
+    const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const anim = await api.createTask(projectName, {
+      folderId: folder.id,
+      name: 'anim',
+      taskType: 'Animation',
+      assignees: [artist.name],
+    })
+    const lgt = await api.createTask(projectName, {
+      folderId: folder.id,
+      name: 'lgt',
+      taskType: 'Lighting',
+    })
+
+    const { context, page } = await signInAs(browser, artist.name, artist.password)
+    try {
+      const live = new LiveUpdates(page)
+      const dashboard = new DashboardTasksPage(page)
+      await dashboard.goto()
+      await dashboard.selectProject(projectName)
+      await expect(dashboard.card(anim.id)).toBeVisible()
+      await expect(dashboard.card(lgt.id)).toBeHidden()
+      await live.expectSubscribed('entity.task.created', projectName)
+
+      const comp = await api.createTask(projectName, {
         folderId: folder.id,
-        name: 'anim',
-        taskType: 'Animation',
+        name: 'comp',
+        taskType: 'Compositing',
         assignees: [artist.name],
       })
+      // a later assignment is fetched together with, or after, a streamed creation
+      await api.updateTask(projectName, lgt.id, { assignees: [artist.name] })
 
-      const { context, page } = await signInAs(browser, artist.name, artist.password)
-      try {
-        const live = new LiveUpdates(page)
-        const dashboard = new DashboardTasksPage(page)
-        await dashboard.goto()
-        await dashboard.selectProject(projectName)
-        await expect(dashboard.card(anim.id)).toBeVisible()
-        await live.expectSubscribed('entity.task.created', projectName)
+      await expect(dashboard.card(lgt.id)).toContainText('lgt', LIVE_UPDATE)
+      await expect(dashboard.card(comp.id)).toBeHidden()
 
-        const comp = await api.createTask(projectName, {
-          folderId: folder.id,
-          name: 'comp',
-          taskType: 'Compositing',
-          assignees: [artist.name],
-        })
+      await dashboard.goto()
 
-        await expect(dashboard.card(comp.id)).toContainText('comp', LIVE_UPDATE)
-      } finally {
-        await context.close()
-      }
-    },
-  )
+      await expect(dashboard.card(comp.id)).toContainText('comp')
+      await expect(dashboard.card(anim.id)).toBeVisible()
+    } finally {
+      await context.close()
+    }
+  })
 })

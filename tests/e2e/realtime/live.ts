@@ -1,4 +1,4 @@
-import { expect, Page, WebSocket } from '@playwright/test'
+import { expect, Locator, Page, WebSocket } from '@playwright/test'
 import { AyonApi } from '../support/api'
 
 // production builds debounce realtime events for up to 10 s (REALTIME_UPDATE_DEBOUNCE) plus 1 s jitter
@@ -60,11 +60,29 @@ export const graphqlResponse = (page: Page, operationName: string) =>
     }
   })
 
+// the toolbar's sync button; the hierarchy slicer shows a second one while new folders are pending
+export const syncButton = (table: Locator) =>
+  table.locator(
+    'xpath=ancestor::*[.//button[@data-shortcut="Shift+R"]][1]//button[@data-shortcut="Shift+R"]',
+  )
+
+export const expectSyncHighlighted = async (button: Locator, updates: RegExp) => {
+  await expect(button).toHaveClass(/has-updates/, LIVE_UPDATE)
+  await expect(button).toHaveAttribute('data-tooltip', updates)
+}
+
 export const deleteFolder = (api: AyonApi, project: string, id: string) =>
   api.delete(`/api/projects/${project}/folders/${id}`)
 
 export const deleteTask = (api: AyonApi, project: string, id: string) =>
   api.delete(`/api/projects/${project}/tasks/${id}`)
+
+export const updateVersion = (
+  api: AyonApi,
+  project: string,
+  id: string,
+  data: Record<string, unknown>,
+) => api.patch(`/api/projects/${project}/versions/${id}`, data)
 
 export const editComment = (api: AyonApi, project: string, activityId: string, body: string) =>
   api.patch(`/api/projects/${project}/activities/${activityId}`, { body })
