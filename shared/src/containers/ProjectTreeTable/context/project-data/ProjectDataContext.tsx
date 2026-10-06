@@ -50,14 +50,12 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
   // Calculate individual permissions
   const canWriteNamePermission = useMemo((): boolean => {
     if (!attrib_write) return false
-    // Without the restriction every field can be written, with it only the listed fields (name/label)
     if (!attrib_write.enabled) return true
     return !!attrib_write.fields?.includes('name')
   }, [attrib_write])
 
   const canWriteLabelPermission = useMemo((): boolean => {
     if (!attrib_write) return false
-    // Without the restriction every field can be written, with it only the listed fields (name/label)
     if (!attrib_write.enabled) return true
     return !!attrib_write.fields?.includes('label')
   }, [attrib_write])

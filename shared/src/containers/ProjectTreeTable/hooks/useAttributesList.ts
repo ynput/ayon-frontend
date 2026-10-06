@@ -24,7 +24,6 @@ const useAttributeFields = ({ projectPermissions }: UseAttributeFieldsParams) =>
     attributes: attribWriteAttributes,
     fields: attribWriteFields,
   } = attrib_write || {}
-  // undefined when field updates are not restricted, an empty list allows none of them
   const writableFields = attribWriteEnabled ? attribWriteFields ?? [] : undefined
 
   //   filter out scopes and filter out attributes that do not have read access
