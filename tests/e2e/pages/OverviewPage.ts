@@ -102,12 +102,7 @@ export class OverviewPage {
     await option.click()
   }
 
-  /**
-   * Create numbered folders in one go with "Folder sequence", e.g. sh010, sh020, sh030 from
-   * `first: 'sh010'` and `count: 3`. Selected folders become the parent.
-   * FLAG: the sequence form's labels ("First Name", "Count", ...) are not associated with their
-   * inputs, so the inputs are found by id.
-   */
+  // FLAG: the folder sequence form's labels are not associated with their inputs, so inputs are found by id
   async createFolderSequence({
     type,
     first,
@@ -121,7 +116,6 @@ export class OverviewPage {
     const createDialog = this.createDialog()
     await expect(createDialog).toBeVisible()
     await this.pickCreateDialogType(type)
-    // the second name (the increment) follows from the first name and the folder type
     await createDialog.locator('input#base').fill(first)
     await createDialog.locator('input#length').fill(String(count))
     await createDialog.getByRole('button', { name: 'Create folder' }).click()
@@ -157,10 +151,6 @@ export class OverviewPage {
     await confirmDeleteEntities(this.page, label)
   }
 
-  /**
-   * Click a cell to select it. With `shift` the selection extends from the last clicked cell,
-   * like in a spreadsheet.
-   */
   async clickCell(label: string, columnId: string, { shift = false } = {}) {
     // click the left edge: the chevron on the right of enum cells opens their dropdown straight away
     await this.cell(label, columnId).click({
@@ -170,24 +160,18 @@ export class OverviewPage {
     await expect(this.cell(label, columnId)).toHaveClass(/selected/)
   }
 
-  /**
-   * Enter edits the focused cell. Picking a value in an enum cell applies it to every selected cell
-   * of that column.
-   */
   async pickForSelectedCells(value: string) {
     await this.page.keyboard.press('Enter')
     await this.page.locator(`.options [data-value="${value}"]`).first().click()
   }
 
-  /** Type a new value into a text or number cell */
   async editTextCell(label: string, columnId: string, value: string) {
     const cell = this.cell(label, columnId)
     await cell.dblclick()
     const input = cell.locator('input')
     await expect(input).toBeFocused()
     await input.fill(value)
-    // Enter saves and, spreadsheet style, starts editing the same column in the next row;
-    // Escape leaves that editor without changing anything
+    // Enter saves and starts editing the same column in the next row; Escape leaves that editor unchanged
     await input.press('Enter')
     await expect(input).toBeHidden()
     await this.page.keyboard.press('Escape')
@@ -221,20 +205,11 @@ export class OverviewPage {
     await this.page.getByRole('button', { name: 'redo', exact: true }).click()
   }
 
-  // ---------------------------------------------------------------------------
-  // view: columns and grouping (stored per user and project, see tests/AGENTS.md)
-  // ---------------------------------------------------------------------------
-
-  /**
-   * A column header by column id (the same ids as `cell()`, e.g. `status`, `attrib_fps`).
-   * FLAG: the header's accessible name changes on hover, when its "more_horiz" and "sort" icon
-   * buttons appear, so headers are found by their `data-column-id`.
-   */
+  // FLAG: header names change on hover (their icon buttons appear), so headers are found by data-column-id
   columnHeader(columnId: string) {
     return this.table.locator(`th[data-column-id="${columnId}"]`)
   }
 
-  /** Ids of the shown columns from left to right */
   async columnIds() {
     const ids = await this.table
       .locator('th[data-column-id]')
@@ -242,19 +217,13 @@ export class OverviewPage {
     return ids.filter((id) => id !== '__row_selection__')
   }
 
-  /** Open the "..." menu of a column header and pick an item, e.g. "Hide column" */
   async columnMenu(columnId: string, item: string) {
     const header = this.columnHeader(columnId)
-    // the menu button only shows while the header is hovered
     await header.hover()
     await header.getByRole('button', { name: 'more_horiz', exact: true }).click()
     await menuItem(this.page, item).click()
   }
 
-  /**
-   * Show a hidden column from the "+" (add column) menu at the end of the header.
-   * Attribute columns are in the "Attributes" submenu, pass it as `submenu`.
-   */
   async showColumn(label: string, submenu?: string) {
     await this.page.getByRole('button', { name: 'add', exact: true }).click()
     if (submenu) await menuItem(this.page, submenu).hover()
@@ -265,13 +234,11 @@ export class OverviewPage {
     await expect(menuItem(this.page, label)).toBeHidden()
   }
 
-  /** Group the rows by a field from the "Group by" dropdown in the toolbar */
   async groupBy(label: string) {
     await this.page.getByRole('button', { name: /^Group by/ }).click()
     await this.page.locator('.options').getByText(label, { exact: true }).click()
   }
 
-  /** The header row of a group (group by mode), e.g. a status */
   groupRow(label: string) {
     return this.table
       .getByRole('row')

@@ -16,10 +16,6 @@ type TestFixtures = {
   projectName: string
   /** Users created through `createUser` are deleted after the test */
   createUser: AyonApi['createUser']
-  /**
-   * A studio access group without restrictions, deleted after the test.
-   * Servers can rename or remove the default groups (e.g. `artist`), so tests never rely on them.
-   */
   accessGroup: string
 }
 

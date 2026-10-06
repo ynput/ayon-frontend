@@ -3,10 +3,6 @@ import { AyonApi } from '../support/api'
 import { InboxPage } from '../pages/InboxPage'
 import { apiAs, signInAs } from '../support/session'
 
-/**
- * A regular user with access to the test project only, so their inbox reads just that project
- * (a manager's inbox reads every project and fails while other workers create or drop one).
- */
 const createArtist = async (
   createUser: AyonApi['createUser'],
   projectName: string,
@@ -27,7 +23,6 @@ test.describe('inbox', () => {
     accessGroup,
     browser,
   }, testInfo) => {
-    // assignees must hold a license seat
     const artist = await createArtist(createUser, projectName, accessGroup, { licensed: true })
     const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
     const task = await api.createTask(projectName, {
@@ -36,7 +31,6 @@ test.describe('inbox', () => {
       taskType: 'Compositing',
       assignees: [artist.name],
     })
-    // someone else (the admin) moves the artist's task along
     await api.updateTask(projectName, task.id, { status: 'In progress' })
 
     const { context, page } = await signInAs(browser, artist.name, artist.password)
@@ -155,7 +149,6 @@ test.describe('inbox', () => {
         )
         .toEqual([comp.id, anim.id].sort())
 
-      // cleared messages move to the Cleared tab
       await inbox.goto('cleared')
       await expect(inbox.messages).toHaveCount(2, { timeout: 30_000 })
     } finally {

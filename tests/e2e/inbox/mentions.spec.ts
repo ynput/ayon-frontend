@@ -32,8 +32,6 @@ test.describe('mentions and inbox', () => {
     accessGroup,
     browser,
   }) => {
-    // Not a manager: a manager's inbox reads every project, and fails while another worker is
-    // creating or dropping one. With access to this project only, the inbox reads just this one.
     const artist = await createUser({
       fullName: 'Inbox Artist',
       accessGroups: { [projectName]: [accessGroup] },

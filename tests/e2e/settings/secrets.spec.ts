@@ -2,7 +2,6 @@ import { expect, test } from '../fixtures'
 import { uniqueName } from '../support/names'
 import { SecretsPage } from '../pages/SecretsPage'
 
-// Secrets are studio wide: every test uses its own uniquely named secret and removes it in `finally`.
 test.describe('secrets', () => {
   test('add a secret', async ({ page, api }) => {
     const name = uniqueName('secret')
@@ -32,7 +31,6 @@ test.describe('secrets', () => {
       await secrets.updateSecret(name, 'new-value')
 
       await expect.poll(() => api.getSecretValue(name)).toBe('new-value')
-      // the stored value is shown after a reload
       await secrets.goto()
       await expect(secrets.secretRow(name).getByPlaceholder('Secret value')).toHaveValue(
         'new-value',
@@ -58,8 +56,7 @@ test.describe('secrets', () => {
     }
   })
 
-  // FLAG (app bug): Secrets.jsx rendered `{data?.length && ...}`, a literal "0" under "Stored secrets"
-  // when the server had no secrets left.
+  // FLAG (app bug): Secrets.jsx rendered `{data?.length && ...}`, a literal "0" when no secrets were left
   // fixed in ynput/ayon-frontend#2400, switch back to test() once it is merged
   test.fixme('deleting the last secret leaves an empty list', async ({ page, api }) => {
     const name = uniqueName('secret')

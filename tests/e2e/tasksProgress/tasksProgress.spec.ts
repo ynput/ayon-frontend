@@ -81,7 +81,6 @@ test.describe('task progress editing', () => {
 
   test('assign a user to a task', async ({ page, api, projectName, createUser, accessGroup }) => {
     const { comp } = await seed(api, projectName)
-    // only licensed users with access to the project are offered as assignees
     const artist = await createUser({
       fullName: 'Progress Artist',
       licensed: true,

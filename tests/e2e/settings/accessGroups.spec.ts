@@ -49,12 +49,10 @@ test.describe('access groups', () => {
     await groups.save()
 
     await expect.poll(async () => (await api.getAccessGroup(accessGroup)).create.enabled).toBe(true)
-    // only that restriction changed
     const permissions = await api.getAccessGroup(accessGroup)
     expect(permissions.read.enabled).toBe(false)
     expect(permissions.update.enabled).toBe(false)
 
-    // the saved state is shown after a reload
     await groups.goto()
     await groups.select(accessGroup)
     await expect(groups.restrictionCheckbox('Restrict folder creation')).toBeChecked()

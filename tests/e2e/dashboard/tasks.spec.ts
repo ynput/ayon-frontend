@@ -113,7 +113,6 @@ test.describe('dashboard tasks list and filter', () => {
     await expect
       .poll(async () => (await api.getTask(projectName, task.id)).status)
       .toBe('In progress')
-    // only the selected task changes
     expect((await api.getTask(projectName, other.id)).status).toBe('Not ready')
   })
 

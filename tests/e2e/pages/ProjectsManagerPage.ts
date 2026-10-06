@@ -6,7 +6,6 @@ import { SettingsEditor } from './SettingsEditor'
 /** /manageProjects — project list on the left, anatomy/settings/permissions tabs on the right */
 export class ProjectsManagerPage {
   readonly projects: ProjectsList
-  /** the anatomy form on the "anatomy" tab */
   readonly anatomy: SettingsEditor
 
   constructor(readonly page: Page) {
@@ -65,13 +64,11 @@ export class ProjectsManagerPage {
     await expect(toast(this.page, `Project: ${name} deleted`)).toBeVisible()
   }
 
-  /** Archived projects are re-activated from their context menu (needs "Show archived") */
   async activateProject(name: string) {
     await this.projects.openContextMenu(name)
     await menuItem(this.page, 'Activate').click()
   }
 
-  /** "Rename project" edits the label inline; the project name stays the same */
   async renameProject(name: string, label: string) {
     await this.projects.openContextMenu(name)
     await menuItem(this.page, 'Rename project').click()
@@ -82,15 +79,11 @@ export class ProjectsManagerPage {
     await expect(input).toBeHidden()
   }
 
-  /** "Save changes" on the anatomy tab */
   async saveAnatomy() {
     await this.page.getByRole('button', { name: 'Save changes' }).click()
     await expect(toast(this.page, 'Anatomy saved')).toBeVisible()
   }
 
-  // "Project access" tab
-
-  /** The "All users" table of the project access tab */
   get accessUsersTable() {
     return this.page
       .getByRole('table')
@@ -101,7 +94,6 @@ export class ProjectsManagerPage {
     return this.accessUsersTable.getByRole('row').filter({ hasText: user })
   }
 
-  /** "Add access" from a user's context menu, then pick one access group */
   async addProjectAccess(user: string, accessGroup: string) {
     await this.accessUserRow(user).click({ button: 'right' })
     await menuItem(this.page, 'Add access').click()

@@ -61,7 +61,6 @@ test.describe('versions', () => {
     await expect
       .poll(async () => (await api.getVersion(projectName, v2.id)).status)
       .toBe('Approved')
-    // the other version keeps its status
     expect((await api.getVersion(projectName, v1.id)).status).not.toBe('Approved')
   })
 })

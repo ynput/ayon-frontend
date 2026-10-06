@@ -29,17 +29,9 @@ export const menuItem = (page: Page, label: string) =>
     .or(page.getByRole('listitem', { name: label, exact: true }))
     .first()
 
-/**
- * A `FormRow` from @ynput/ayon-react-components (label on the left, field on the right), by its label.
- * FLAG: FormRow labels are not associated with their fields, so `getByLabel` does not work.
- */
+// FLAG: FormRow labels are not associated with their fields, so `getByLabel` does not work
 export const formRow = (scope: Page | Locator, label: string) =>
   scope.locator(`div:has(> div.label:text-is(${JSON.stringify(label)})):has(> div.field)`)
 
-/**
- * The clickable body of an `InputSwitch` (@ynput/ayon-react-components) inside `scope`.
- * Assert its state with `scope.getByRole('checkbox')`.
- * FLAG: InputSwitch hides its checkbox (0x0, opacity 0) and gives it no accessible name, so
- * `getByRole('checkbox').check()` never sees it as visible.
- */
+// FLAG: InputSwitch hides its unnamed checkbox (0x0, opacity 0), so `.check()` never sees it as visible
 export const switchBody = (scope: Locator) => scope.locator('label.switch-body')
