@@ -290,6 +290,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
     ReviewSessionCardsProvider,
     ReviewSessionCardsControlsLeft,
     ReviewSessionCardsControlsRight,
+    useReviewSessionCards,
     outdated: reviewSessionCardsOutdated,
     allModulesLoaded: reviewModulesLoaded,
   } = useReviewSessionCardsModules({ skip: !isReview })
@@ -496,9 +497,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         className="details"
                       >
                         <ProjectListsDetailsPanels
-                          isReview={!!isReview}
                           displayStyle={pageDisplayStyle}
                           dispatch={dispatch}
+                          useReviewSessionCards={useReviewSessionCards}
                         />
                       </SplitterPanel>
                     </DetailsPanelSplitter>

@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useEffect, useState } from 'react'
+import React, { ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import type { QueryFilter, UserModel, DetailsPanelEntityType } from '@shared/api'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { SavedAnnotationMetadata } from '@shared/containers/Feed'
@@ -374,5 +374,19 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     ...forwardedProps,
   }
 
-  return <DetailsPanelContext.Provider value={value}>{children}</DetailsPanelContext.Provider>
+  // The provider can wrap a frequently re-rendering tree (e.g. the review player),
+  // so only hand consumers a new value when one of its fields actually changed.
+  const valueRef = useRef(value)
+  const previous = valueRef.current
+  const keys = Object.keys(value) as (keyof typeof value)[]
+  if (
+    keys.length !== Object.keys(previous).length ||
+    keys.some((key) => previous[key] !== value[key])
+  ) {
+    valueRef.current = value
+  }
+
+  return (
+    <DetailsPanelContext.Provider value={valueRef.current}>{children}</DetailsPanelContext.Provider>
+  )
 }
