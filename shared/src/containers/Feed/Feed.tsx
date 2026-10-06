@@ -35,6 +35,8 @@ export type FeedProps = {
   entityListId?: string | undefined
   isSlideOut?: boolean
   versionReview?: boolean
+  // keep drafts of new comments in local storage
+  saveCommentDrafts?: boolean
 }
 
 export const Feed = ({
@@ -44,6 +46,7 @@ export const Feed = ({
   entityListId,
   isSlideOut,
   versionReview = false,
+  saveCommentDrafts = true,
 }: FeedProps) => {
   const {
     projectName,
@@ -413,6 +416,7 @@ export const Feed = ({
             onReview={submitReview}
             duplicate={commentDuplicate}
             onDuplicateHandled={() => setCommentDuplicate(null)}
+            saveDraft={saveCommentDrafts}
           />
         )}
       </Styled.FeedContainer>
