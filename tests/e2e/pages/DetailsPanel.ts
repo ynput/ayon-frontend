@@ -41,18 +41,13 @@ export class DetailsPanel {
     await expect(this.statusSelect).toContainText(status)
   }
 
-  /**
-   * The priority dropdown on the right of the header.
-   * FLAG: it has no label or class of its own (only its icon and value), so it is found as the header
-   * dropdown that is neither the status nor the assignee select.
-   */
+  // FLAG: the priority dropdown has no label or class, so it is the header dropdown that is not status/assignee
   get priorityDropdown() {
     return this.root.locator(
       '.details-panel-header > .dropdown:not(.status-select):not(.assignee-select)',
     )
   }
 
-  /** Pick a priority by its value (e.g. `high`) and wait for its label to show */
   async setPriority(value: string, label: string) {
     await this.priorityDropdown.click()
     await this.page.locator(`.options [data-value="${value}"]`).first().click()
@@ -63,41 +58,26 @@ export class DetailsPanel {
     return this.root.locator('.assignee-select').first()
   }
 
-  /** Toggle users (by user name) in the assignee dropdown, then close it */
   async toggleAssignees(...userNames: string[]) {
     await this.assigneeSelect.click()
     for (const name of userNames) {
       await this.page.locator(`.options [data-value="${name}"]`).first().click()
     }
-    // click outside to close: Escape also reaches the overview table, which clears its selection
-    // and with it closes the panel
+    // click outside to close: Escape also reaches the overview table, which clears the selection and the panel
     await this.root.getByRole('heading', { level: 2 }).click()
     await expect(this.page.locator('.options')).toBeHidden()
   }
 
-  // ---------------------------------------------------------------------------
-  // tabs
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Switch between the panel tabs.
-   * FLAG: the feed and subtasks tabs are icon-only buttons (accessible names "forum" and "checklist").
-   */
+  // FLAG: the feed and subtasks tabs are icon-only buttons (accessible names "forum" and "checklist")
   async openTab(tab: 'feed' | 'subtasks' | 'details') {
     const name = { feed: 'forum', subtasks: 'checklist', details: 'Details' }[tab]
     await this.root.getByRole('navigation').getByRole('button', { name, exact: true }).click()
   }
 
-  // ---------------------------------------------------------------------------
-  // details tab
-  // ---------------------------------------------------------------------------
-
-  /** the read-only view of the description in the details tab (a Lexical editor) */
   get description() {
     return this.root.locator('.description-editor').first()
   }
 
-  /** Click the description, replace its text and save */
   async editDescription(text: string) {
     await this.description.click()
     const save = this.root.getByRole('button', { name: 'Save', exact: true })
@@ -110,10 +90,7 @@ export class DetailsPanel {
     await expect(save).toBeHidden()
   }
 
-  /**
-   * One row of the attributes section, by its label (e.g. "FPS").
-   * FLAG: the label is a plain div that is not associated with the value, so the row is found by CSS.
-   */
+  // FLAG: the attribute label is a plain div not associated with its value, so the row is found by CSS
   attribute(label: string) {
     return this.root
       .locator('.field-row')
@@ -121,7 +98,6 @@ export class DetailsPanel {
       .locator('.field-value')
   }
 
-  /** Edit a text or number attribute: click its value, type the new one and press Enter */
   async setAttribute(label: string, value: string) {
     const field = this.attribute(label)
     await field.click()
@@ -202,12 +178,10 @@ export class DetailsPanel {
       .last()
   }
 
-  /** One entry of the feed (a comment, a status change, ...) containing `text` */
   activity(text: string | RegExp) {
     return this.root.locator('.feed').getByRole('listitem').filter({ hasText: text })
   }
 
-  /** The checkbox of a checklist item (`* [ ] item` in markdown) inside a comment */
   checklistItem(commentText: string, item: string) {
     return this.comment(commentText)
       .getByRole('listitem')
@@ -215,11 +189,7 @@ export class DetailsPanel {
       .getByRole('checkbox')
   }
 
-  /**
-   * Tick or untick a checklist item.
-   * FLAG: the native checkbox is 0x0 and invisible and its `<label>` has no size either; only the
-   * absolutely positioned icon inside the label can be clicked.
-   */
+  // FLAG: the native checkbox and its `<label>` have no size, only the icon inside the label can be clicked
   async toggleChecklistItem(commentText: string, item: string) {
     await this.comment(commentText)
       .getByRole('listitem')
@@ -228,11 +198,7 @@ export class DetailsPanel {
       .click()
   }
 
-  /**
-   * Quick filters next to the feed search.
-   * FLAG: they are icon-only buttons, so their names are the icon ligatures ("chat", "check_circle");
-   * the checklists one also shows the ticked/total count, e.g. "check_circle 1/2".
-   */
+  // FLAG: the feed filters are icon-only buttons named by their ligature ("chat", "check_circle 1/2")
   get commentsFilter() {
     return this.root.locator('.feed').getByRole('button', { name: 'chat', exact: true })
   }

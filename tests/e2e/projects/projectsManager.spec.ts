@@ -53,7 +53,7 @@ test.describe('projects manager', () => {
     await manager.activateProject(projectName)
 
     await expect.poll(async () => (await api.getProject(projectName)).active).toBe(true)
-    // active projects are listed without "Show archived"
+    // toggle "Show archived" off again: active projects are listed without it
     await manager.showArchived()
     await manager.projects.search(projectName)
     await expect(manager.projectRow(projectName)).toBeVisible()
@@ -67,7 +67,6 @@ test.describe('projects manager', () => {
     await manager.renameProject(projectName, label)
 
     await expect.poll(async () => (await api.getProject(projectName)).label).toBe(label)
-    // the list shows the label, the project name is unchanged
     await expect(manager.projectRow(label)).toBeVisible()
     expect(await api.projectExists(projectName)).toBe(true)
   })
@@ -84,16 +83,12 @@ test.describe('projects manager', () => {
     await manager.saveAnatomy()
 
     await expect.poll(async () => (await api.getProject(projectName)).attrib.fps).toBe(48)
-    // the saved value is shown after a reload
     await manager.goto('anatomy', projectName)
     await manager.anatomy.expand('Attributes')
     await expect(fps).toHaveValue('48')
   })
 
-  // FLAG (app bug): SettingsEditor's SelectWidget and CheckboxWidget show a null value as their
-  // default ([] for the "applications" and "tools" multiselects, false for boolean attributes added
-  // by addons) and report it through onChange when they mount, so just expanding "Attributes" makes
-  // AnatomyEditor see a change and enables "Save changes".
+  // FLAG (app bug): Select/Checkbox widgets report their null defaults on mount, which enables "Save changes"
   // fixed in ynput/ayon-frontend#2398, switch back to test() once it is merged
   test.fixme(
     'viewing the project anatomy does not mark it as changed',
@@ -125,7 +120,6 @@ test.describe('projects manager', () => {
 
     await manager.addProjectAccess(user.name, accessGroup)
 
-    // the "Project access groups" column
     await expect(manager.accessUserRow(user.name)).toContainText(accessGroup)
     await expect
       .poll(async () => (await api.getUser(user.name)).data.accessGroups?.[projectName])

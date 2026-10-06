@@ -32,7 +32,6 @@ export class ListsPage {
     await expect(newList).toBeHidden()
   }
 
-  /** Rename through the list's context menu; the row turns into an input */
   async renameList(label: string, newLabel: string) {
     await this.listRow(label).click({ button: 'right' })
     await menuItem(this.page, 'Rename list').click()
@@ -44,13 +43,11 @@ export class ListsPage {
     await expect(input).toBeHidden()
   }
 
-  /** Select a list to show its items in the table on the right */
   async openList(label: string) {
     await this.listRow(label).click()
     await expect(this.itemsTable).toBeVisible()
   }
 
-  /** The items of the selected list (the lists themselves are in another table) */
   get itemsTable() {
     return this.page
       .getByRole('table')
@@ -70,13 +67,11 @@ export class ListsPage {
     await expect(toast(this.page, 'Deleted 1 item from list')).toBeVisible()
   }
 
-  /** The list details panel, opened by double clicking a list */
   async openDetails(label: string) {
     await this.listRow(label).dblclick()
     await expect(this.page.getByRole('heading', { name: label, level: 2 })).toBeVisible()
   }
 
-  /** A value in the details panel by its label, e.g. "Items count" */
   detail(name: string) {
     return this.page.getByText(name, { exact: true }).locator('xpath=following-sibling::*[1]')
   }

@@ -36,7 +36,6 @@ test.describe('project teams', () => {
       .toEqual(['keep_team'])
   })
 
-  // regression: the context menu deleted the previously selected teams instead of the right-clicked one
   test('delete a team that is not selected from its context menu', async ({
     page,
     api,
@@ -57,8 +56,6 @@ test.describe('project teams', () => {
       .toEqual(['keep_team'])
   })
 
-  // regression: the context menu selected a string instead of an array, so the duplicate dialog
-  // used the previously selected team (or nothing)
   test('duplicate a team that is not selected from its context menu', async ({
     page,
     api,
@@ -81,7 +78,6 @@ test.describe('project teams', () => {
     await expect
       .poll(() => api.getTeamMembers(projectName, 'anim_team_copy'))
       .toEqual([{ name: member.name, leader: true, roles: ['lead'] }])
-    // the other teams are untouched
     expect(await api.getTeamMembers(projectName, 'other_team')).toEqual([])
     expect(await api.getTeamMembers(projectName, 'anim_team')).toHaveLength(1)
   })
@@ -95,16 +91,13 @@ test.describe('project teams', () => {
 
     await teams.addUserToSelectedTeam(user.name, 'fx_team')
 
-    // the "Teams" column of the user
     await expect(teams.userRow(user.name)).toContainText('fx_team')
     await expect
       .poll(async () => (await api.getTeamMembers(projectName, 'fx_team'))?.map((m) => m.name))
       .toEqual([user.name])
   })
 
-  // FLAG (app bug): with two or more users selected, right-clicking another user selected only that
-  // user, but UserListTeams built the menu from the previous selection, so "Add to <team>" added the
-  // previously selected users instead.
+  // FLAG (app bug): UserListTeams built the menu from the previous selection, so it added those users instead
   // fixed in ynput/ayon-frontend#2402, switch back to test() once it is merged
   test.fixme(
     'add a user that is not selected to a team from its context menu',
@@ -145,7 +138,6 @@ test.describe('project teams', () => {
 
     await teams.setLeader(true)
 
-    // team settings summary
     await expect(page.getByText('0 Members - 1 Leaders')).toBeVisible()
     await expect
       .poll(async () => (await api.getTeamMembers(projectName, 'comp_team'))?.[0]?.leader)

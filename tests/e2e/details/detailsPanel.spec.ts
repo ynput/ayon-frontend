@@ -3,7 +3,6 @@ import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
 
-/** A shot with one task */
 const setup = async (api: AyonApi, projectName: string) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const task = await api.createTask(projectName, {
@@ -14,7 +13,6 @@ const setup = async (api: AyonApi, projectName: string) => {
   return { folder, task }
 }
 
-/** Open the task in the overview details panel */
 const openTask = async (page: Page, projectName: string) => {
   const overview = new OverviewPage(page)
   await overview.goto(projectName)
@@ -38,7 +36,6 @@ test.describe('details panel', () => {
 
   test('assign a user', async ({ page, api, projectName, createUser, accessGroup }) => {
     const fullName = `Panel${Math.random().toString(36).slice(2, 7)}`
-    // only licensed users with access to the project are offered as assignees
     const artist = await createUser({
       fullName,
       licensed: true,

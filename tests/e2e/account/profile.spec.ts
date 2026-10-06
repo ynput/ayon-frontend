@@ -3,7 +3,6 @@ import { expect, test } from '../fixtures'
 import { AccountPage } from '../pages/AccountPage'
 import { apiAs, signInAs } from '../support/session'
 
-// Every test signs in as a user it creates: the suite's admin account must never change.
 test.describe('account profile', () => {
   test('change my full name', async ({ api, createUser, browser }) => {
     const user = await createUser({ fullName: 'Profile Before' })
@@ -15,7 +14,6 @@ test.describe('account profile', () => {
 
       await account.setFullName('Profile After')
 
-      // the name under the avatar follows the saved value
       await expect(page.locator('main').getByText('Profile After', { exact: true })).toBeVisible()
       await expect(account.saveButton).toBeDisabled()
       await expect
@@ -43,10 +41,8 @@ test.describe('account profile', () => {
       await session.context.close()
     }
 
-    // the login form accepts the new password ...
     const again = await signInAs(browser, user.name, newPassword)
     await again.context.close()
-    // ... and the old one no longer works
     await expect(apiAs(testInfo, user.name, user.password)).rejects.toThrow(
       /Invalid login\/password/,
     )

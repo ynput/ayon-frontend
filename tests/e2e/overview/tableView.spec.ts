@@ -2,11 +2,6 @@ import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
 
-/**
- * Columns and grouping are saved in the user's working view of the project. Every test has its own
- * project, so these changes never leak into other tests (see "Per-user views" in tests/AGENTS.md).
- */
-
 const workingView = (api: AyonApi, projectName: string) => () =>
   api.getWorkingViewSettings('overview', projectName)
 
@@ -41,11 +36,7 @@ test.describe('overview table view', () => {
     await expect.poll(columnVisibility(api, projectName, 'attrib_priority')).toBe(false)
   })
 
-  // FLAG (app bug): the first column change in a project (show, hide, resize, ...) saves the columns in
-  // a different order than the default view shows them, so "Type" (subType) jumps behind "Status" and
-  // "Entity type". ColumnSettingsProvider.onChangeWithColumns persists the raw `columnOrder` of the
-  // config (empty for the default view) instead of the displayed order that includes `defaultOrder`,
-  // and convertTanstackStatesToColumnConfig then falls back to the column definition order.
+  // FLAG (app bug): the first column change saves the columns in definition order, not the displayed order
   // fixed in ynput/ayon-frontend#2399, switch back to test() once it is merged
   test.fixme(
     'hiding a column keeps the order of the others',
@@ -81,7 +72,6 @@ test.describe('overview table view', () => {
 
     await overview.groupBy('Status')
 
-    // groups start collapsed and show how many tasks they hold
     await expect(overview.groupRow('In progress')).toContainText('2 (67%)')
     await expect(overview.groupRow('Not ready')).toContainText('1 (33%)')
     await expect.poll(async () => (await workingView(api, projectName)())?.groupBy).toBe('status')

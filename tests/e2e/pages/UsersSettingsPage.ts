@@ -18,22 +18,17 @@ export class UsersSettingsPage {
     return this.page.getByRole('row').filter({ hasText: name })
   }
 
-  /**
-   * Assert whether a user row is selected.
-   * FLAG: primereact DataTable rows do not set aria-selected, selection is only the `p-highlight` class
-   */
+  // FLAG: primereact DataTable rows do not set aria-selected, selection is only the `p-highlight` class
   async expectSelected(name: string, selected = true) {
     if (selected) await expect(this.row(name)).toHaveClass(/\bp-highlight\b/)
     else await expect(this.row(name)).not.toHaveClass(/\bp-highlight\b/)
   }
 
-  /** Select a single user (opens the details panel) */
   async select(name: string) {
     await this.row(name).click()
     await this.expectSelected(name)
   }
 
-  /** Add a user to the current selection */
   async addToSelection(name: string) {
     await this.row(name).click({ modifiers: ['ControlOrMeta'] })
     await this.expectSelected(name)
@@ -67,7 +62,6 @@ export class UsersSettingsPage {
     await expect(toast(this.page, 'Deleted 1 user(s)')).toBeVisible()
   }
 
-  /** Deletes all selected users through the context menu of one of them */
   async deleteSelectedUsers(rightClicked: string, count: number) {
     await this.openContextMenu(rightClicked)
     await menuItem(this.page, 'Delete selected').click()
@@ -78,11 +72,9 @@ export class UsersSettingsPage {
     await expect(toast(this.page, `Deleted ${count} user(s)`)).toBeVisible()
   }
 
-  /** "Set password" from the context menu of `name` */
   async setPasswordFromMenu(name: string, password: string) {
     await this.openContextMenu(name)
     await menuItem(this.page, 'Set password').click()
-    // the header names the user the password is set for
     const setPassword = dialog(this.page, `Set password for: ${name}`)
     await expect(setPassword).toBeVisible()
     // FLAG: the form labels are not associated with their inputs, so the password fields are found by type
@@ -93,22 +85,17 @@ export class UsersSettingsPage {
     await expect(setPassword).toBeHidden()
   }
 
-  // details panel of the selected user(s)
-
   get activeRow() {
     return formRow(this.page, 'User active')
   }
 
-  /** Flip "User active" in the details panel to `active` (saved with `save()`) */
   async setActive(active: boolean) {
     const checkbox = this.activeRow.getByRole('checkbox')
-    // also waits for the form of the selected user to load
     await expect(checkbox).toBeChecked({ checked: !active })
     await switchBody(this.activeRow).click()
     await expect(checkbox).toBeChecked({ checked: active })
   }
 
-  /** "User", "Manager" or "Admin" in the details panel (saved with `save()`) */
   async setAccessLevel(level: 'User' | 'Manager' | 'Admin') {
     const button = formRow(this.page, 'Access level').getByRole('button', { name: level })
     await button.click()

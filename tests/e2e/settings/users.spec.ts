@@ -62,8 +62,6 @@ test.describe('users settings', () => {
     expect(await api.userExists(keep.name)).toBe(true)
   })
 
-  // regression: the context menu was built from the previous selection, so with two other users
-  // selected "Set password" was disabled when right-clicking a user that was not selected
   test('set a password from the context menu of a user that is not selected', async ({
     page,
     browser,
@@ -80,15 +78,12 @@ test.describe('users settings', () => {
 
     await users.setPasswordFromMenu(target.name, newPassword)
 
-    // right-clicking replaced the selection with the right-clicked user
     await users.expectSelected(target.name)
     await users.expectSelected(selectedA.name, false)
     await users.expectSelected(selectedB.name, false)
 
-    // the right-clicked user logs in with the new password
     const { context } = await signInAs(browser, target.name, newPassword)
     await context.close()
-    // the previously selected users keep their own passwords
     for (const user of [selectedA, selectedB]) {
       const userApi = await apiAs(test.info(), user.name, user.password)
       try {
@@ -136,7 +131,6 @@ test.describe('users settings', () => {
 
     await expect.poll(async () => (await api.getUser(user.name)).data.isManager).toBe(true)
     expect((await api.getUser(user.name)).data.isAdmin).toBeFalsy()
-    // the "Access level" column
     await expect(users.row(user.name)).toContainText('Manager')
   })
 })

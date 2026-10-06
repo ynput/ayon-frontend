@@ -2,7 +2,6 @@ import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
 
-/** A shot with the given tasks */
 const createShot = async (api: AyonApi, projectName: string, tasks: string[]) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
   const created = []
@@ -39,7 +38,6 @@ test.describe('overview cell editing', () => {
     await overview.goto(projectName)
     await overview.expand('sh010')
 
-    // select the status cells of the first three tasks (in name order) and change them together
     await overview.clickCell('anim', 'status')
     await overview.clickCell('light', 'status', { shift: true })
     await expect(overview.cell('comp', 'status')).toHaveClass(/selected/)
@@ -80,7 +78,6 @@ test.describe('overview cell editing', () => {
 
   test('tasks inherit an attribute edited on their folder', async ({ page, api, projectName }) => {
     const { folder, tasks } = await createShot(api, projectName, ['anim'])
-    // show the FPS column (the default view hides most attributes)
     await api.setWorkingViewColumns('overview', projectName, ['name', 'attrib_fps'])
     const overview = new OverviewPage(page)
     await overview.goto(projectName)
@@ -90,7 +87,6 @@ test.describe('overview cell editing', () => {
     await overview.editTextCell('sh010', 'attrib_fps', '48')
 
     await expect(overview.cell('sh010', 'attrib_fps')).toHaveText('48')
-    // inherited values are shown, but greyed out
     await expect(overview.cell('anim', 'attrib_fps')).toHaveText('48')
     await expect(overview.cell('anim', 'attrib_fps').locator('.inherited')).toBeVisible()
     await expect.poll(async () => (await api.getFolder(projectName, folder.id)).attrib.fps).toBe(48)

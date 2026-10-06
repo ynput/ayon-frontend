@@ -210,7 +210,6 @@ export class AyonApi {
     return this.get(`/api/projects/${project}/versions/${id}`)
   }
 
-  /** A workfile of a task; `path` may use root templates like `{root[work]}/...` */
   async createWorkfile(project: string, data: { taskId: string; path: string }) {
     const { id } = await this.post(`/api/projects/${project}/workfiles`, data)
     return id as string
@@ -300,14 +299,6 @@ export class AyonApi {
     await this.post(`/api/projects/${project}/lists/${listId}/items`, { entityId })
   }
 
-  // ---------------------------------------------------------------------------
-  // views (columns, grouping and filters of a page; per user and project)
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Settings of the working view (what the page currently shows) of the user this client is
-   * logged in as, or null while the user has not changed anything in that project.
-   */
   async getWorkingViewSettings(viewType: string, project: string): Promise<any | null> {
     const url = `/api/views/${viewType}/working`
     const res = await this.request.get(url, { params: { project_name: project } })
@@ -316,10 +307,6 @@ export class AyonApi {
     return view.settings
   }
 
-  /**
-   * Makes the working view of a page in a project show only these columns, in this order.
-   * The view belongs to the user this client is logged in as and is dropped with the project.
-   */
   async setWorkingViewColumns(viewType: string, project: string, columns: string[]) {
     await this.post(`/api/views/${viewType}?project_name=${project}`, {
       label: 'Working',
@@ -328,15 +315,7 @@ export class AyonApi {
     })
   }
 
-  // ---------------------------------------------------------------------------
-  // inbox (of the user this client is logged in as)
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Inbox messages, newest first. `important` splits the "Important" and "Other" tabs,
-   * `active: false` lists cleared messages. Leave a filter out to not filter on it.
-   * FLAG (backend): a manager's or admin's inbox reads every project, use a regular user.
-   */
+  // FLAG (backend): a manager's or admin's inbox reads every project, use a regular user
   async listInboxMessages(filter: { important?: boolean; active?: boolean } = {}): Promise<
     {
       activityId: string
@@ -388,7 +367,6 @@ export class AyonApi {
     return this.get(`/api/projects/${project}/teams`)
   }
 
-  /** Members of one team with their roles and leader flag, or undefined if the team does not exist */
   async getTeamMembers(
     project: string,
     team: string,
@@ -418,7 +396,6 @@ export class AyonApi {
     }
   }
 
-  /** Studio level permissions of an access group, e.g. `{ create: { enabled, access_list }, ... }` */
   async getAccessGroup(name: string): Promise<Record<string, any>> {
     return this.get(`/api/accessGroups/${name}/_`)
   }
@@ -486,15 +463,10 @@ export class AyonApi {
     return data.users.edges.map((e: any) => e.node.name)
   }
 
-  // ---------------------------------------------------------------------------
-  // secrets (studio wide, always use uniqueName and delete them again)
-  // ---------------------------------------------------------------------------
-
   async setSecret(name: string, value: string) {
     await this.put(`/api/secrets/${name}`, { name, value })
   }
 
-  /** The stored value, or undefined if there is no such secret */
   async getSecretValue(name: string): Promise<string | undefined> {
     const res = await this.request.get(`/api/secrets/${name}`)
     if (res.status() === 404) return undefined
@@ -514,11 +486,6 @@ export class AyonApi {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // anatomy presets (studio wide, always use uniqueName and never make them primary)
-  // ---------------------------------------------------------------------------
-
-  /** Stores the built-in default anatomy as a preset */
   async createAnatomyPreset(name: string) {
     const anatomy = await this.get('/api/anatomy/presets/__builtin__')
     await this.put(`/api/anatomy/presets/${name}`, anatomy)

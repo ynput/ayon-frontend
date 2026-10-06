@@ -100,7 +100,6 @@ test.describe('activity feed checklists and filters', () => {
     const panel = await openTask(page, projectName)
     await expect(panel.checklistsFilter).toHaveText(/0\/2/)
 
-    // the second item, so the right one of two identical "[ ]" in the markdown has to change
     await panel.toggleChecklistItem('Notes:', 'fix feet')
 
     await expect(panel.checklistItem('Notes:', 'fix feet')).toBeChecked()
@@ -114,7 +113,6 @@ test.describe('activity feed checklists and filters', () => {
   test('show only comments in the feed', async ({ page, api, projectName }) => {
     const { task } = await setup(api, projectName)
     await api.createComment(projectName, 'task', task.id, 'Lighting is too dark')
-    // a status change shows up in the feed as an activity of its own
     await api.updateTask(projectName, task.id, { status: 'In progress' })
     const panel = await openTask(page, projectName)
     const statusChange = panel.activity(/Not ready.*In progress/)
