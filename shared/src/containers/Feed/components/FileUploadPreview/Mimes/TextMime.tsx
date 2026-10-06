@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getFileURL } from '../fileUtils'
-import CodeEditor from '@uiw/react-textarea-code-editor'
+import { CodeEditor } from '@shared/components/CodeEditor'
 import styled from 'styled-components'
 // markdown
 import Markdown from 'react-markdown'
