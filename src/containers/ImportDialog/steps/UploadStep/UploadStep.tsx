@@ -7,13 +7,24 @@ import styled from "styled-components";
 import { useUploadFileMutation } from "@queries/dataImport";
 import Stats from "../Stats";
 import { HiddenFileInput, ImportModeDescription, ImportModeSelector } from "./UploadStep.styled";
-import { describeImportMode, hasImportModes, ImportMode, importModeOptions } from "../importMode";
+import {
+  describeImportMode,
+  duplicateStrategyOptions,
+  hasDuplicateStrategy,
+  hasImportModes,
+  ImportMode,
+  importModeOptions,
+  templateForImport,
+} from "../importMode";
+import { DuplicateItemStrategy } from "@shared/api/generated/dataImport";
 
 type Props = StepProps<ImportData> & {
   importSchema: ImportSchema
   uploaded: ImportData | null
   importMode: ImportMode
   onImportModeChange: (importMode: ImportMode) => void
+  duplicateStrategy: DuplicateItemStrategy
+  onDuplicateStrategyChange: (duplicateStrategy: DuplicateItemStrategy) => void
 }
 
 const acceptedTypes = ["text/csv"]
@@ -45,6 +56,8 @@ export default function UploadStep({
   uploaded,
   importMode,
   onImportModeChange,
+  duplicateStrategy,
+  onDuplicateStrategyChange,
   onBack,
   onNext,
 }: Props) {
@@ -122,6 +135,24 @@ export default function UploadStep({
         )
       }
       {
+        hasDuplicateStrategy(importContext, importMode) && (
+          <ImportModeSelector>
+            {duplicateStrategyOptions.map(({ value, label, icon }) => (
+              <Button
+                key={value}
+                icon={icon}
+                label={label}
+                selected={duplicateStrategy === value}
+                onClick={() => onDuplicateStrategyChange(value)}
+              />
+            ))}
+            <ImportModeDescription>
+              when a Name matches several folders or tasks and there is no Path to tell them apart.
+            </ImportModeDescription>
+          </ImportModeSelector>
+        )
+      }
+      {
         !data && (
           <FileUploadWrapper>
             <FileUpload
@@ -140,8 +171,8 @@ export default function UploadStep({
             />
             <FileUploadButtons>
               <a
-                href={`/templates/ayon_import_${importContext}_template.csv`}
-                download={`ayon_import_${importContext}_template.csv`}
+                href={`/templates/${templateForImport(importContext, importMode)}`}
+                download={templateForImport(importContext, importMode)}
               >
                 <Button
                   icon="download"

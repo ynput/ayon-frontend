@@ -6,6 +6,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/csv/export/${queryArg.entityType}/fields`,
         params: {
           project_name: queryArg.projectName,
+          folder_id: queryArg.folderId,
         },
       }),
     }),
@@ -41,6 +42,7 @@ const injectedRtkApi = api.injectEndpoints({
           file_id: queryArg.fileId,
           existing_strategy: queryArg.existingStrategy,
           missing_strategy: queryArg.missingStrategy,
+          duplicate_strategy: queryArg.duplicateStrategy,
           project_name: queryArg.projectName,
           folder_id: queryArg.folderId,
           preview: queryArg.preview,
@@ -55,6 +57,7 @@ export type ExportFieldsApiResponse = /** status 200 Successful Response */ Impo
 export type ExportFieldsApiArg = {
   entityType: 'user' | 'folder' | 'task' | 'hierarchy' | 'entity_list_item'
   projectName?: string
+  folderId?: string
 }
 export type PostApiCsvExportByEntityTypeApiResponse = /** status 200 Successful Response */ any
 export type PostApiCsvExportByEntityTypeApiArg = {
@@ -73,6 +76,7 @@ export type ImportDataApiArg = {
   fileId: string
   existingStrategy?: ExistingItemStrategy
   missingStrategy?: MissingItemStrategy
+  duplicateStrategy?: DuplicateItemStrategy
   projectName?: string
   folderId?: string
   preview?: boolean
@@ -158,11 +162,13 @@ export type ImportStatus = {
   failed?: number
   failedItems?: object
   skippedItems?: object
+  comments?: number
   preview?: boolean
   phase?: 'validating' | 'importing'
 }
 export type ExistingItemStrategy = 'skip' | 'update' | 'fail'
 export type MissingItemStrategy = 'create' | 'skip'
+export type DuplicateItemStrategy = 'skip' | 'all'
 export type ColumnValueMapping = {
   /** The source value from csv */
   source?: string

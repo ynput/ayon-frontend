@@ -1,4 +1,4 @@
-import { MissingItemStrategy } from '@shared/api/generated/dataImport'
+import { DuplicateItemStrategy, MissingItemStrategy } from '@shared/api/generated/dataImport'
 import {
   ColumnAction,
   ColumnMappings,
@@ -23,32 +23,54 @@ export const missingStrategyForImportMode: Record<ImportMode, MissingItemStrateg
   [ImportMode.UPDATE_ONLY]: 'skip',
 }
 
-// Targets that identify an existing entity in update-only mode, any one of them is enough.
-// List items can only be added, so they have no update-only mode.
+export const duplicateStrategyOptions: {
+  value: DuplicateItemStrategy
+  label: string
+  icon: 'block' | 'done_all'
+}[] = [
+  { value: 'skip', label: 'Skip the row', icon: 'block' },
+  { value: 'all', label: 'Update all of them', icon: 'done_all' },
+]
+
+// Only folders and tasks are matched by name, which can repeat across the hierarchy
+export const hasDuplicateStrategy = (importContext: ImportContext, importMode: ImportMode) =>
+  importContext === 'hierarchy' && importMode === ImportMode.UPDATE_ONLY
+
+// Targets that identify an existing entity, any one of them is enough.
 const matchTargetsForImportContext: Partial<Record<ImportContext, string[]>> = {
   hierarchy: ['path', 'name'],
   user: ['name'],
+  entity_list_item: ['folder_path', 'entity_id'],
 }
+
+const ENTITY_LIST_ID = 'entity_list_id'
 
 export const hasImportModes = (importContext: ImportContext) =>
   Boolean(matchTargetsForImportContext[importContext])
 
-const matchHintForImportContext: Partial<Record<ImportContext, string>> = {
-  hierarchy: 'by Path, or by Name when there is no path',
-  user: 'by name',
-}
-
 export const describeImportMode = (importContext: ImportContext, importMode: ImportMode) => {
+  const updateOnly = importMode === ImportMode.UPDATE_ONLY
+  if (importContext === 'entity_list_item') {
+    return updateOnly
+      ? 'Rows update the attributes of items already in the list, matched by entity path or ID. ' +
+          'Entities that are not in the list are skipped.'
+      : 'Rows add entities to the list and update the attributes of items already in it.'
+  }
+
   const items = itemsLabelForImportContext[importContext]
-  if (importMode === ImportMode.UPDATE_ONLY) {
-    return (
-      `Rows update existing ${items}, matched ${matchHintForImportContext[importContext]}. ` +
-      'Rows that match nothing are skipped.'
-    )
+  if (updateOnly) {
+    const matchHint =
+      importContext === 'hierarchy' ? 'by Path, or by Name when there is no path' : 'by name'
+    return `Rows update existing ${items}, matched ${matchHint}. Rows that match nothing are skipped.`
   }
 
   return `Rows update existing ${items} and create the ones that don't exist yet.`
 }
+
+export const templateForImport = (importContext: ImportContext, importMode: ImportMode) =>
+  importContext === 'hierarchy' && importMode === ImportMode.UPDATE_ONLY
+    ? 'ayon_import_hierarchy_update_template.csv'
+    : `ayon_import_${importContext}_template.csv`
 
 const getMappedTargets = (mappings: ColumnMappings = {}) =>
   new Set(
@@ -58,13 +80,20 @@ const getMappedTargets = (mappings: ColumnMappings = {}) =>
   )
 
 // Each group lists targets of which at least one has to be mapped.
+// The parent is the folder or list the dialog was opened for.
 export const getRequiredTargetGroups = (
   importContext: ImportContext,
   importMode: ImportMode,
   importSchema: ImportSchema,
   mappings?: ColumnMappings,
+  parentId?: string,
 ): string[][] => {
   const matchTargets = matchTargetsForImportContext[importContext]
+
+  if (importContext === 'entity_list_item' && matchTargets) {
+    return parentId ? [matchTargets] : [matchTargets, [ENTITY_LIST_ID]]
+  }
+
   if (importMode === ImportMode.CREATE_AND_UPDATE || !matchTargets) {
     return importSchema.filter(({ required }) => required).map(({ key }) => [key])
   }
@@ -85,9 +114,14 @@ export const getUnmappedRequiredTargetGroups = (
   importMode: ImportMode,
   importSchema: ImportSchema,
   mappings?: ColumnMappings,
+  parentId?: string,
 ) => {
   const mappedTargets = getMappedTargets(mappings)
-  return getRequiredTargetGroups(importContext, importMode, importSchema, mappings).filter(
-    (group) => !group.some((target) => mappedTargets.has(target)),
-  )
+  return getRequiredTargetGroups(
+    importContext,
+    importMode,
+    importSchema,
+    mappings,
+    parentId,
+  ).filter((group) => !group.some((target) => mappedTargets.has(target)))
 }

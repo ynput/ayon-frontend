@@ -9,7 +9,8 @@ import {
   ValueAction,
   ColumnMappings,
   ValueMappableColumnMappings,
-  ValueMappableColumnMapping, ExtendedEnumItem
+  ValueMappableColumnMapping, ExtendedEnumItem,
+  COMMENT_CATEGORY,
 } from "../common"
 import {
   Mappers,
@@ -66,13 +67,19 @@ const createActionOption = {
   icon: "add",
 }
 
-const getActionOptions = (isEnum: boolean, valueType: ImportableColumn["valueType"]) => {
+const getActionOptions = (
+  isEnum: boolean,
+  valueType: ImportableColumn["valueType"],
+  canCreate: boolean,
+) => {
   if (valueType === "boolean") {
     return [mapActionOption, skipActionOption]
   }
 
   if (isEnum) {
-    return [mapActionOption, createActionOption, skipActionOption]
+    return canCreate
+      ? [mapActionOption, createActionOption, skipActionOption]
+      : [mapActionOption, skipActionOption]
   }
 
   return [createActionOption, skipActionOption]
@@ -222,7 +229,10 @@ export default function ReviewValuesStep({
       Object.fromEntries(
         uniqueValues[column]
           .map((value) => {
-            if (value === undefined && !columnSettings[targetColumn].enumItems) {
+            if (
+              value === undefined &&
+              (!columnSettings[targetColumn].enumItems || targetColumn === COMMENT_CATEGORY)
+            ) {
               return [`${value}`, { action: ValueAction.SKIP }]
             }
 
@@ -403,7 +413,11 @@ export default function ReviewValuesStep({
                     source={source}
                     comment={upperFirst(entityType)}
                     action={currentMappings?.[uniqueDataValue]?.action}
-                    actions={getActionOptions(!!activeTargetIsEnum, columnSettings[activeTarget].valueType)}
+                    actions={getActionOptions(
+                      !!activeTargetIsEnum,
+                      columnSettings[activeTarget].valueType,
+                      columnSettings[activeTarget].createNewItems !== false,
+                    )}
                     target={currentMappings?.[uniqueDataValue]?.targetValue}
                     targetOptions={targetValueOptions
                       .filter((option) => !option.entityType || option.entityType === entityType)

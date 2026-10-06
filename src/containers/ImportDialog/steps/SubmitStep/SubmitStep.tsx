@@ -1,5 +1,5 @@
 import {
-  formatFailedItems,
+  getImportStatsItems,
   ImportContext,
   ImportDataMessage,
   ImportDataProcessSummary,
@@ -74,29 +74,7 @@ export default function SubmitStep({ data, importContext, importMode, onNext  }:
                   ? `Updated existing ${itemsLabelForImportContext[importContext]}`
                   : `Imported ${itemsLabelForImportContext[importContext]}`}
                 size={getFileSizeString(data.fileSize)}
-                items={[
-                  {
-                    text: `Created: ${importResult.created}`,
-                    icon: "add",
-                  },
-                  {
-                    text: `Updated: ${importResult.updated}`,
-                    icon: "difference",
-                  },
-                  {
-                    text: `Skipped: ${importResult.skipped}`,
-                    icon: "do_not_disturb",
-                    tooltip: importResult.skippedItems
-                      && formatFailedItems(importResult.skippedItems)
-                  },
-                  {
-                    text: `Errors: ${importResult.failed}`,
-                    icon: "error",
-                    danger: !!importResult.failed,
-                    tooltip: importResult.failedItems
-                      && formatFailedItems(importResult.failedItems as Record<string, string>)
-                  },
-                ]}
+                items={getImportStatsItems(importResult, true)}
               />
               <Button
                 variant="filled"

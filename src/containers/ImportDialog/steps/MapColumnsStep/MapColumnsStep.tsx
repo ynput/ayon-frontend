@@ -47,6 +47,7 @@ type Props = StepProps<ColumnMappings> & {
   mappings?: ColumnMappings
   importMode: ImportMode
   importSchema: ImportSchema
+  folderId?: string
 }
 
 const actionOptions = [
@@ -83,6 +84,7 @@ export default function MapColumnsStep({
   importContext,
   importMode,
   importSchema,
+  folderId,
   onBack,
   onNext,
 }: Props) {
@@ -109,14 +111,22 @@ export default function MapColumnsStep({
   }, [mappings])
 
   const requiredTargets = useMemo(
-    () => new Set(getRequiredTargetGroups(importContext, importMode, importSchema, mappings).flat()),
-    [importContext, importMode, importSchema, mappings],
+    () => new Set(
+      getRequiredTargetGroups(importContext, importMode, importSchema, mappings, folderId).flat(),
+    ),
+    [importContext, importMode, importSchema, mappings, folderId],
   )
 
   // groups of targets of which none is mapped yet, any one target of a group is enough
   const unmappedRequiredTargets = useMemo(
-    () => getUnmappedRequiredTargetGroups(importContext, importMode, importSchema, mappings),
-    [importContext, importMode, importSchema, mappings],
+    () => getUnmappedRequiredTargetGroups(
+      importContext,
+      importMode,
+      importSchema,
+      mappings,
+      folderId,
+    ),
+    [importContext, importMode, importSchema, mappings, folderId],
   )
 
   const targetOptions = useMemo(

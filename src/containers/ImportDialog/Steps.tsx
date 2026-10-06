@@ -6,7 +6,11 @@ import { ColumnMappings, ImportContext, ImportStep, ValueMappings } from './step
 import ReviewValuesStep from './steps/ReviewValuesStep/ReviewValuesStep'
 import PreviewStep from './steps/PreviewStep/PreviewStep'
 import { useViewsContext } from '@shared/containers'
-import { ColumnMapping, ImportStatus } from '@shared/api/generated/dataImport'
+import {
+  ColumnMapping,
+  DuplicateItemStrategy,
+  ImportStatus,
+} from '@shared/api/generated/dataImport'
 import { toast } from 'react-toastify'
 import { useExportFieldsQuery, useImportDataMutation } from '../../services/dataImport'
 import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from './ImportDialog.styled'
@@ -60,6 +64,7 @@ export default function ImportSteps({
   const [importData] = useImportDataMutation()
 
   const [importMode, setImportMode] = useState(ImportMode.CREATE_AND_UPDATE)
+  const [duplicateStrategy, setDuplicateStrategy] = useState<DuplicateItemStrategy>('skip')
   const [columnMappings, setColumnMappings] = useState<ColumnMappings | undefined>(undefined)
   const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
   const [previewStatus, setPreviewStatus] = useState<ImportStatus | null>(null)
@@ -70,10 +75,15 @@ export default function ImportSteps({
     data: rawImportSchema,
     isLoading: importSchemaLoading,
     isError: importSchemaError,
-  } = useExportFieldsQuery({
-    projectName,
-    entityType: importContext,
-  })
+  } = useExportFieldsQuery(
+    {
+      projectName,
+      entityType: importContext,
+      folderId,
+    },
+    // statuses, list attributes and comment categories can change in settings meanwhile
+    { refetchOnMountOrArgChange: true },
+  )
 
   const importSchema = useMemo(() => {
     if (importContext !== 'hierarchy') {
@@ -103,9 +113,10 @@ export default function ImportSteps({
         projectName,
         existingStrategy: 'update',
         missingStrategy: missingStrategyForImportMode[importMode],
+        duplicateStrategy,
       })
     },
-    [data, folderId, projectName, importContext, importMode],
+    [data, folderId, projectName, importContext, importMode, duplicateStrategy],
   )
 
   const fetchPreview = useCallback(() => {
@@ -147,9 +158,14 @@ export default function ImportSteps({
   const mappingsValid = useMemo(
     () =>
       Boolean(importSchema && columnMappings) &&
-      getUnmappedRequiredTargetGroups(importContext, importMode, importSchema!, columnMappings)
-        .length === 0,
-    [importContext, importMode, importSchema, columnMappings],
+      getUnmappedRequiredTargetGroups(
+        importContext,
+        importMode,
+        importSchema!,
+        columnMappings,
+        folderId,
+      ).length === 0,
+    [importContext, importMode, importSchema, columnMappings, folderId],
   )
 
   const unlocked: Record<ImportStep, boolean> = useMemo(
@@ -239,6 +255,11 @@ export default function ImportSteps({
             setImportMode(mode)
             setPreviewStatus(null)
           }}
+          duplicateStrategy={duplicateStrategy}
+          onDuplicateStrategyChange={(strategy) => {
+            setDuplicateStrategy(strategy)
+            setPreviewStatus(null)
+          }}
           onBack={onClose}
           onNext={(d) => {
             // coming back to change the mode keeps the file and its mappings
@@ -259,6 +280,7 @@ export default function ImportSteps({
           importContext={importContext}
           importMode={importMode}
           importSchema={importSchema}
+          folderId={folderId}
           onBack={() => setStep(ImportStep.UPLOAD)}
           onNext={(mappings) => {
             setColumnMappings(mappings)

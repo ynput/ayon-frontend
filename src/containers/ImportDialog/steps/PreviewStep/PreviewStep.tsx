@@ -1,4 +1,4 @@
-import { formatFailedItems, ImportContext, ImportDataMessage, ImportDataProcessSummary, ImportDataStartSummary, itemsLabelForImportContext, StepProps } from "../common";
+import { getImportStatsItems, ImportContext, ImportDataMessage, ImportDataStartSummary, itemsLabelForImportContext, StepProps } from "../common";
 import { Button, getFileSizeString } from "@ynput/ayon-react-components";
 import { ProgressBar, StepContainer, StepNavButtons } from "../common.styled";
 import { ImportData } from "../../utils";
@@ -23,14 +23,7 @@ export default function PreviewStep({ data, previewStatus, importContext, import
     (_: any, message: ImportDataMessage) => {
       if ((message.summary as ImportDataStartSummary).total) return
 
-      const processedCount = Object.values(message.summary as ImportDataProcessSummary)
-        .reduce((a, i) => {
-          if (typeof a !== "number") return 0
-          if (typeof i !== "number") return a
-          return a + i
-        }, 0) as number
-
-      setPreviewProgress(Math.round(processedCount / data.rows.length * 100))
+      setPreviewProgress(message.progress ?? 0)
     },
     null,
     { disableDebounce: true },
@@ -47,29 +40,7 @@ export default function PreviewStep({ data, previewStatus, importContext, import
                 ? `Updating existing ${itemsLabelForImportContext[importContext]}`
                 : `Importing ${itemsLabelForImportContext[importContext]}`}
               size={getFileSizeString(data.fileSize)}
-              items={[
-                {
-                  text: `Creating: ${previewStatus.created}`,
-                  icon: "add",
-                },
-                {
-                  text: `Updating: ${previewStatus.updated}`,
-                  icon: "difference",
-                },
-                {
-                  text: `Skipping: ${previewStatus.skipped}`,
-                  icon: "do_not_disturb",
-                  tooltip: previewStatus.skippedItems
-                    && formatFailedItems(previewStatus.skippedItems as Record<string, string>)
-                },
-                {
-                  text: `Errors: ${previewStatus.failed}`,
-                  icon: "error",
-                  danger: !!previewStatus.failed,
-                  tooltip: previewStatus.failedItems
-                    && formatFailedItems(previewStatus.failedItems as Record<string, string>)
-                },
-              ]}
+              items={getImportStatsItems(previewStatus, false)}
             />
           )
         }
