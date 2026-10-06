@@ -62,7 +62,8 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       })
       // Remove special columns from visibility and order before persisting
       specialIds.forEach((id) => delete resolvedVisibility[id])
-      const resolvedOrder = (next.columnOrder ?? []).filter((id) => !specialIds.has(id))
+      const order = next.columnOrder?.length ? next.columnOrder : defaultOrderedColumns
+      const resolvedOrder = order.filter((id) => !specialIds.has(id))
       onChange(
         { ...next, columnVisibility: resolvedVisibility, columnOrder: resolvedOrder },
         allKnownIds,
@@ -131,6 +132,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       }
     }
   })
+  const defaultOrderedColumns = [...columnOrder]
 
   // if we are in grouping mode (except folder grouping), always pin the name column
   // and ensure it is first in column order
