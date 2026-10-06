@@ -49,6 +49,7 @@ export const useEntityEditing = ({ entities, entityType }: UseEntityEditingProps
       id: entity.id,
       projectName: entity.projectName || '',
       folderId: entity.folder?.id,
+      productId: entity.product?.id,
       users: entity.task?.assignees || [],
     })),
     entityType,
