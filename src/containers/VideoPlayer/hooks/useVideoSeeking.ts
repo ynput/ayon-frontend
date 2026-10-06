@@ -72,8 +72,7 @@ const useVideoSeeking = (
 
   const handlePause = () => {
     // Don't overwrite initialPosition during a transition — it holds the
-    // user's position from the previous video, needed for seekPreferredInitialPosition.
-    // Still show the video as paused (e.g. paused right after it loaded).
+    // user's position from the previous video, needed for seekPreferredInitialPosition
     if (isTransitioning.current) {
       setTimeout(() => {
         if (videoRef.current?.paused) setIsPlaying(false)
