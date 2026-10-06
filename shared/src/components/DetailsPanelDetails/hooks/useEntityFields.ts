@@ -128,7 +128,6 @@ export const useEntityFields = ({
         ]
       : customFieldsWithFolderLocks)
 
-    // Mark fields readonly the user may not change (the server lists them in snake_case)
     const customFieldsWithPermissions: AttributeField[] = writableFields
       ? customFieldsWithReadonly.map((field) =>
           writableFields.includes(field.name) || writableFields.includes(snakeCase(field.name))
@@ -137,7 +136,6 @@ export const useEntityFields = ({
         )
       : customFieldsWithReadonly
 
-    // Hide attributes the user may not read and mark readonly the ones they may not change
     const apiAttributesData: AttributeField[] = entityType
       ? attributes
           .filter((attr) => attr.scope?.includes(entityType) && attr.name !== 'description')

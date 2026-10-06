@@ -80,7 +80,6 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     attribAccess,
   })
 
-  // the description is an attribute too
   const { writableAttributes } = attribAccess
   const enableDescriptionEditing =
     enableEditing && (!writableAttributes || writableAttributes.includes('description'))
