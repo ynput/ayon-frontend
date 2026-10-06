@@ -204,6 +204,7 @@ test.describe('list sharing', () => {
   // `project=`, and the powerpack checker only looks at `group:`/`team:` grants when it has a
   // project. The UI then shows "Error deleting list items: [object Object]".
   // switch back to test() once the backend passes the project
+  // fixed in ynput/ayon-backend#1172, switch back to test() once it is merged
   test.fixme(
     'members of an access group a list is shared with as editors can remove its items',
     async ({ browser, api, projectName, createUser, accessGroup }) => {

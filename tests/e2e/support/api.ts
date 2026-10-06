@@ -1,4 +1,4 @@
-import { APIRequestContext, APIResponse, request } from '@playwright/test'
+import { expect, APIRequestContext, APIResponse, request } from '@playwright/test'
 import { randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
 import path from 'path'
@@ -106,6 +106,10 @@ export class AyonApi {
     const name = options.name ?? uniqueName('project')
     const code = options.code ?? `e2e${Math.random().toString(36).slice(2, 9)}`
     await this.post('/api/projects', { name, code, library: !!options.library })
+    // FLAG (backend race, fixed in ynput/ayon-backend#1173): while other tests create and delete
+    // projects, the server's cached project list can miss a just-created project ("Project ... not
+    // found" on every request to it). Wait until the project resolves before a test uses it.
+    await expect.poll(() => this.projectExists(name), { timeout: 30_000 }).toBe(true)
     return name
   }
 

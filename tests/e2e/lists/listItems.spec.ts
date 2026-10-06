@@ -75,6 +75,7 @@ test.describe('list items', () => {
   // own: `EntityList.add` (ayon-backend ayon_server/entity_lists/entity_list.py:287) stores
   // `position or 99999999`, so position 0 also lands at the end.
   // switch back to test() once both are fixed
+  // fixed in ynput/ayon-backend#1171 (backend part; the frontend still drops the position), switch back to test() once it is merged
   test.fixme('undo puts a removed item back in its place', async ({ page, api, projectName }) => {
     const { listId, comp, anim, light } = await seedTaskList(api, projectName)
     const lists = new ListsPage(page)
