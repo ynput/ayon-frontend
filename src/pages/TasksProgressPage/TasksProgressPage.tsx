@@ -14,7 +14,6 @@ import { useTaskProgressSlicerCountsSource } from '@containers/TasksProgress/hoo
 const TasksProgressPage: FC = () => {
   //   GET PROJECT INFO FOR STATUS
   const { ...projectInfo } = useProjectContext()
-  // the project of the route: ProjectPage only sets the redux project in an effect, after this page renders
   const { projectName } = projectInfo
   // Get attributes so we can use priority
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })

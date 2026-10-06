@@ -11,7 +11,6 @@ import { getCurrentPlatform, replaceRoot } from '@shared/util'
 import { useProjectContext } from '@shared/context'
 
 const WorkfileDetail = ({ style }) => {
-  // the project of the route: ProjectPage only sets the redux project in an effect, after this page renders
   const { projectName } = useProjectContext()
   const focusedWorkfiles = useSelector((state) => state.context.focused.workfiles)
   const [selectedSite, setSelectedSite] = useState(null)
