@@ -15,7 +15,6 @@ const PresetNameDialog = ({
 
   useEffect(() => {
     if (!isOpen) return
-    // the dialog stays mounted between uses, so every opening starts from its own initial value
     setValue(initialValue)
     if (inputRef.current) {
       setTimeout(() => inputRef.current.focus(), 100)
