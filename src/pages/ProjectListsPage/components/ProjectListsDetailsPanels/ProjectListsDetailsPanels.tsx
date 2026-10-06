@@ -19,7 +19,6 @@ import { ReviewsSettings } from '@shared/api'
 type Props = {
   displayStyle: ReviewsSettings['displayStyle']
   dispatch: any // if we need to provide explicit dispatch context (for review)
-  // from the modules of the page, which renders the provider this hook needs
   useReviewSessionCards: ReturnType<typeof useReviewSessionCardsModules>['useReviewSessionCards']
 }
 
