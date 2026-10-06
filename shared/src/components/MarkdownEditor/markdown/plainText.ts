@@ -7,7 +7,7 @@ export const markdownToPlainText = (markdown: string): string =>
     .replace(/\r\n?/g, '\n')
     // code fences (the code itself stays)
     .replace(/^\s*(```|~~~).*$/gm, '')
-    // images, mentions `[label](type:id)` and links, keep the text (urls may hold escaped parens)
+    // images, mentions `[label](type:id)` and links, keep the text
     .replace(/!?\[([^\]]*)\]\((?:\\.|[^)\\])*\)/g, '$1')
     // autolinks and html (e.g. legacy <u>, &nbsp;)
     .replace(/<(https?:[^>]+)>/g, '$1')
@@ -19,7 +19,7 @@ export const markdownToPlainText = (markdown: string): string =>
     .replace(/^\s*#{1,6}\s+/gm, '')
     .replace(/^\s*>\s?/gm, '')
     .replace(/^\s*(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?/gm, '')
-    // inline formatting (a marker after a backslash is escaped, it is not formatting)
+    // inline formatting
     .replace(/`([^`]*)`/g, '$1')
     .replace(/(\*\*|__)(.+?)\1/g, '$2')
     .replace(/~~(.+?)~~/g, '$1')
