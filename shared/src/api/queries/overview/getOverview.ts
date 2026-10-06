@@ -364,7 +364,6 @@ const injectedApi = enhancedApi.injectEndpoints({
             (getCacheEntry().data as EditorTaskNode[] | undefined)?.map((task) => task.id) || [],
           )
           const batchIds = new Set<string>()
-          // new tasks in loaded folders, fetched with the current filters
           const createdIds = new Set<string>()
           const patches: {
             taskId: string
@@ -436,7 +435,6 @@ const injectedApi = enhancedApi.injectEndpoints({
             await waitForRealtimeJitter()
             const [returned, created] = await Promise.all([
               fetchTasks(idsToFetch),
-              // a new task only shows if it matches the filters of this view
               fetchTasks(createdIdsToFetch, { filter, folderFilter, search }),
             ])
             if (!isActive()) return
