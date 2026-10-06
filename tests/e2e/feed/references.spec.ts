@@ -162,6 +162,7 @@ test.describe('references in comments', () => {
   // the new body in `refs_to_delete` and deletes them (:189), but leaves them in `references`, which
   // it then inserts again (:221). The mentioned task keeps the comment in its feed, and a user whose
   // mention was removed keeps it in their inbox. Reproduces through the API alone (PATCH the body).
+  // fixed in ynput/ayon-backend#1168, switch back to test() once it is merged
   test.fixme(
     'removing a reference while editing takes the comment out of that feed',
     async ({ page, api, projectName }) => {

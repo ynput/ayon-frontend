@@ -80,6 +80,18 @@ While writing tests, run only your specs: `npx playwright test --project=chromiu
 - **Transient states.** Saved views and feed filters briefly show the old (or a correct-looking) state. Before asserting that something is absent, wait for a stable signal: the API has saved it, a reload, or other content showing.
 - **Not tested on purpose.** "Set username" renames the user in every project schema in one transaction, the same concurrency hazard as project create/delete.
 
+### Areas added in round 2
+
+- **Restricted users** (`permissions/restrictedUser.ts`): `restrictedUser(permissions)` creates a user with fresh access groups on the test project and waits until the server applies them. Access groups are cached per server process and updated from an event, so a brand new group is not enforced right away; poll `/api/users/{name}/permissions/{project}` as the fixture does. Views belong to the user who saves them: call `setWorkingViewColumns` on an `apiAs(...)` client for that user. Manager-only pages redirect a regular user from an effect, after rendering, so give `toHaveURL` about 30 s.
+- **Live updates** (`realtime/live.ts`): the production build batches websocket-driven refetches for up to 10 s (a dev build 0.5 s), so allow about 30 s per live assertion and mark tests that wait several times with `test.slow()`. The app subscribes to a topic only after the query that listens to it has loaded, so check the starting state, then `LiveUpdates.expectSubscribed(topic, project)`, then make the change. Events from the page's own `X-Sender` are ignored; the `api` fixture sends none, so its changes count as another client's. Patch one field per call until ynput/ayon-backend#1167 is merged.
+- **Viewer and media** (`pages/ViewerPage.ts`, `tests/e2e/media/`): only h264 mp4 with keyframes only comes out `ready` after upload (the committed clips are made that way, see `media/index.ts`). A video opened from a table autoplays muted for 10 s and closes open dropdowns when playback starts, so wait for the pause control before using the viewer's details panel. Frames are 1-based; the video time is `(frame - 1) / fps`. Assert the video's actual time (`expectFrame`), not the frame field, and wait for each frame step before the next key.
+- **Page health** (`support/pageHealth.ts`, `smoke/`): `watchPageHealth(page)` collects page errors, `console.error`, failed `/api` and `/graphql` calls and the app's error screens; `KNOWN_NOISE` is the allowlist, keep it tiny and justified. Smoke tests share one read-only, worker-scoped project (`smokeFixtures.ts`) instead of creating one per test. `/api/connect/*` goes to Ynput Cloud and can take over 30 s: never wait for it.
+- **Overview power features:** the "Search and filter" placeholder disappears once a chip exists, so click `.search-filter` for the textbox; its options are plain `li` items. Copy and paste need `context.grantPermissions(['clipboard-read', 'clipboard-write'])`, and copying is async: poll `navigator.clipboard.readText()` before pasting. Date cells open the native picker: fill the `input[type=date]` and click another cell (`setDateCell`). Root folders are not sorted by name, so don't assert row order unless the test sorts. Deleting several entities asks for counts (`confirmDeleteCounts`).
+- **Activity feed:** `.comment` also matches the comment box's submit button, so count comments with `.feed li.comment`. Commenting makes the author a watcher, so watch tests must not seed admin comments first. The watcher picker lists licensed users only. `version.publish` activities come from a server event and their order varies; GraphQL `activities(last: N)` is newest first.
+- **Settings editor lists** (anatomy statuses, types, ...) are addressed by index (`root_statuses_<i>_name`); get it from the API (anatomy order), new items go last. Text fields and color pickers commit on blur (`fillText`, `setColor`), and `setOptions` selects exactly the given options of a multi-select. Names must not exist in the default anatomy already (e.g. "Matchmove"), or the save fails. Removing a status or type that is in use is refused (409) and nothing is saved.
+- **Unit tests** (`tests/unit/`) are transpiled to CommonJS: use static imports only. They can import pure modules (single files under `shared/src/util/`, not its index; `ProjectTreeTable/utils/*`; MarkdownEditor `markdown/plainText`, `links/*`, `media/mediaUtils`). They cannot import anything that loads `@ynput/ayon-react-components` at runtime or reaches `@shared/api` (its client reads `window.location` on import). `yarn test-typecheck` does not cover `tests/unit`. Run them without the app build: `TEST_SERVER_URL=http://localhost:3100 npx playwright test --project=unit`.
+
+
 ## Known issues found while writing the suite
 
 Fixed in the same change:
@@ -100,12 +112,23 @@ Fixed in separate PRs. The covering tests are `test.fixme` until these are merge
 - ynput/ayon-frontend#2401: "Set as primary" stayed enabled for the built-in anatomy preset while it was primary (`anatomyPresets.spec.ts`).
 - ynput/ayon-frontend#2402: right-clicking a user that was not selected in the teams users table acted on the previous selection (`teams.spec.ts`).
 
+Found in round 2, also fixed in separate PRs (the tests are `test.fixme` with a note naming the PR):
+- Permissions: the details panel ignored attribute read/write permissions (ynput/ayon-frontend#2403); the overview treated "no field may be written" as unrestricted (#2404); opening a project without access could end on a blank page (#2405); custom read-only attributes lost their lock on product and version lists (#2411).
+- Viewer: Shift+A/Shift+D also switched the version (#2406); "Approved" was always "None" (#2407); a version with nothing playable showed a blank viewer (#2408); pausing right after a video loaded kept the play button on "pause" (#2409).
+- Overview and lists: arrow keys and Tab landed on hidden columns (#2415); CSV imports showed only after a reload (#2416); tasks created elsewhere did not appear in open folders (#2412).
+- Live updates: tasks created for me did not appear on my open dashboard (#2413); after visiting a project the websocket stayed limited to that project (#2414).
+- Text: plain-text summaries mangled escaped markers and link urls with parentheses (#2410).
+- Pages: unknown URLs showed an empty page instead of the 404 page (#2417); task progress and workfiles sometimes requested project "null" (#2418); the reviews page could crash while the review addon cards loaded (#2419); the users assignee query failed inside addon stores (#2420).
+- Backend (ynput/ayon-backend): deleting or renaming a project broke other users' inbox and kanban and could deadlock the delete (#1164); access groups lost all but one group's writable fields (#1165); hidden sibling tasks were readable through REST (#1166); one update changing several fields sent the last value in every event (#1167); edited-out mentions stayed (#1168); the cached folder list kept old inherited attributes after a project save (#1169); statuses added in the anatomy editor got an empty scope (#1170).
+
 Still open (worked around in the tests, marked with `FLAG` in the code):
 - `@ynput/ayon-react-components`: `Dialog` has no `role="dialog"` or accessible name, `FormRow` labels are not associated with their inputs, and icon ligature text is not `aria-hidden`.
 - New list dialog: `<label for="entityType">` points at an element that does not exist.
 - Users, team and access group forms: labels are not associated with their inputs.
-- Backend: concurrent project create/delete stalls the server and can deadlock `DELETE /api/projects/{name}`.
-- Backend: `get_user_inbox` loops over every project for managers and admins. If one project's schema is missing (being created or deleted), the whole inbox fails with `relation "project_<name>.activity_feed" does not exist`.
+- Backend: project deletes racing cross-project reads (inbox, kanban) fail or deadlock until ynput/ayon-backend#1164 is merged; keep the default of 2 workers until then.
+- `checkColumnVisibility` prefix-matches plain column ids (`tests/unit/columnVisibility.spec.ts`); a fix must also change the callers that pass `'link_'`.
+- Review addon 0.7.5: opening an empty review session crashes the app; planner addon 2.3.0: the schedule of a new project gets 500s. Both are addon bugs (separate repos).
+- Backend: uploaded files of deleted projects are only moved to `.trash` folders, which are never purged.
 - Backend (planner addon 2.3.1-dev): `handle_user_created` re-syncs every user and fails with a unique violation when two users are created at the same time.
 
 Tests retry once locally (twice on CI) to ride out these backend hiccups. A test that passes on retry is reported as **flaky**. Look into it rather than ignoring it.

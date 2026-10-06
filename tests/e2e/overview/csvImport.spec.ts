@@ -44,6 +44,7 @@ test.describe('overview CSV import', () => {
   // `importData` mutation (src/services/dataImport/index.ts) only invalidates `overviewTask` and
   // `project` for hierarchy imports, not the folder list (`folder` LIST / `hierarchy`) that the
   // table and the hierarchy sidebar are built from.
+  // fixed in ynput/ayon-frontend#2416, switch back to test() once it is merged
   test.fixme(
     'imported folders show in the open overview without a reload',
     async ({ page, projectName }) => {

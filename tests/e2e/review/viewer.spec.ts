@@ -170,6 +170,7 @@ test.describe('viewer', () => {
   // tooltips) also switch to the previous / next version. useReviewShortcuts lowercases the key
   // and ignores Shift, and both handlers listen on window, so the player's stopPropagation does
   // not stop the version shortcut.
+  // fixed in ynput/ayon-frontend#2406, switch back to test() once it is merged
   test.fixme(
     'go to start and end with Shift+A / Shift+D keeps the version',
     async ({ page, api, projectName }) => {

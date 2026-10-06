@@ -74,6 +74,7 @@ test.describe('dashboard live updates', () => {
   // `state.project.name` (src/services/project/enhancedProject.ts) and nothing clears it on
   // leaving the project, so the cross-project dashboard stays filtered to the last project (opening
   // a task's details panel there does the same through its ProjectContextProvider).
+  // fixed in ynput/ayon-frontend#2414, switch back to test() once it is merged
   test.fixme(
     'my open board still updates after I come from another project',
     async ({ api, projectName, createUser, accessGroup, browser }) => {
@@ -125,6 +126,7 @@ test.describe('dashboard live updates', () => {
   // (shared/src/api/queries/userDashboard/getUserDashboard.ts) only acts on events whose summary
   // carries a new value (status, tags, assignees, type) and returns early for everything else, so a
   // task created with me as assignee only shows after a reload.
+  // fixed in ynput/ayon-frontend#2413, switch back to test() once it is merged
   test.fixme(
     'a task created for me elsewhere appears on my open board',
     async ({ api, projectName, createUser, accessGroup, browser }) => {

@@ -59,6 +59,7 @@ test.describe('permissions: studio and project access', () => {
   // queues another redirect that is never cleared. When two of them fire before the `<Navigate>` of
   // the "/" route has run again, it stays mounted and does not redirect
   // (src/pages/ProjectPage/ProjectPage.tsx, `if (error)`).
+  // fixed in ynput/ayon-frontend#2405, switch back to test() once it is merged
   test.fixme(
     'opening a project without access by URL lands on the dashboard',
     async ({ api, restrictedUser, browser }) => {

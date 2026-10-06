@@ -95,6 +95,7 @@ test.describe('version reviewables', () => {
   // empty viewer. ViewerComponent only shows a placeholder when the version has no reviewables at
   // all and otherwise returns null; its "File not supported and needs conversion" message is
   // unreachable.
+  // fixed in ynput/ayon-frontend#2408, switch back to test() once it is merged
   test.fixme(
     'the viewer explains when a version has no playable reviewable',
     async ({ page, api, projectName }) => {

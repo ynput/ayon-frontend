@@ -92,6 +92,7 @@ test.describe('permissions: folder access', () => {
   // checks access with `ensure_entity_access`, which only matches the folder path, so a hidden
   // sibling task is still readable (and its id is enough). Not reachable through the UI, which
   // reads tasks through GraphQL.
+  // fixed in ynput/ayon-backend#1166, switch back to test() once it is merged
   test.fixme(
     'a hidden sibling task cannot be read by its id either',
     async ({ api, projectName, restrictedUser }, testInfo) => {

@@ -89,6 +89,7 @@ test("'attrib' in the extra columns locks every built-in attribute", () => {
 // getColumnConfigFromType) the list of read-only attributes is replaced by the built-in ones, so a
 // custom attribute the access group may not write loses its header lock and clipboard paste
 // into it is allowed (the server then rejects the update). getReadOnlyLists.ts:48-55.
+// fixed in ynput/ayon-frontend#2411, switch back to test() once it is merged
 test.fixme("a custom attribute the user may not write stays read-only with 'attrib' locked", () => {
   const lists = getReadOnlyLists(
     [attrib('fps'), attrib('custom', { builtin: false, readOnly: true })],

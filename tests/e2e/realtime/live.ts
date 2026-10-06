@@ -65,6 +65,20 @@ export class LiveUpdates {
   }
 }
 
+/**
+ * Resolves with the response to the page's next GraphQL query named `operationName`
+ * (e.g. `GetTasksByParent`). Call it before the action that triggers the query.
+ */
+export const graphqlResponse = (page: Page, operationName: string) =>
+  page.waitForResponse((response) => {
+    if (new URL(response.url()).pathname !== '/graphql') return false
+    try {
+      return response.request().postDataJSON()?.operationName === operationName
+    } catch {
+      return false
+    }
+  })
+
 // -----------------------------------------------------------------------------
 // changes made "elsewhere", through the REST API
 // -----------------------------------------------------------------------------

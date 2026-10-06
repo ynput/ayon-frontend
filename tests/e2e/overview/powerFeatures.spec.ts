@@ -206,6 +206,7 @@ test.describe('overview keyboard', () => {
   // registered from `table.getAllLeafColumns()` (ProjectTreeTable.tsx, registerGrid effect), which
   // includes hidden columns, so in the default view ArrowRight from "Status" selects an invisible
   // cell and from "Folder" it takes five presses to reach "Priority".
+  // fixed in ynput/ayon-frontend#2415, switch back to test() once it is merged
   test.fixme(
     'arrow keys and Tab move to the next shown column',
     async ({ page, api, projectName }) => {

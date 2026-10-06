@@ -108,6 +108,7 @@ test.describe('viewer feed', () => {
   // nothing) after opening a project page directly. VersionSelectorTool and Viewer read the
   // statuses from redux `state.project.statuses`, which only `services/project/enhancedProject.ts`
   // fills, and that module is only imported by the lazily loaded events and project manager pages.
+  // fixed in ynput/ayon-frontend#2407, switch back to test() once it is merged
   test.fixme('jump to the approved version in the viewer', async ({ page, api, projectName }) => {
     const {
       versions: [v1],

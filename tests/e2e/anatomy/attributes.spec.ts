@@ -71,6 +71,7 @@ test.describe('project anatomy: attributes and roots', () => {
   // "project-folders", 1 h TTL) that `GET /api/projects/{project}/folders?attrib=true` serves, so
   // the overview shows the old value on folder rows until a folder or task of the project changes.
   // `GET /api/projects/{project}/folders/{id}` and the task rows are right.
+  // fixed in ynput/ayon-backend#1169, switch back to test() once it is merged
   test.fixme(
     'folders inherit a project attribute changed in the anatomy',
     async ({ page, api, projectName }) => {

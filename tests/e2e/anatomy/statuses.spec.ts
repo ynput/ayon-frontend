@@ -190,6 +190,7 @@ test.describe('project anatomy: statuses', () => {
   // `Status.scope` (the backend's default_factory, every entity type, is not part of the JSON
   // schema), so SelectWidget starts the empty multiselect at [] and reports it through onChange.
   // The API alone (scope left out) stores every entity type.
+  // fixed in ynput/ayon-backend#1170, switch back to test() once it is merged
   test.fixme(
     'a status added without a scope can be used on tasks',
     async ({ page, api, projectName }) => {

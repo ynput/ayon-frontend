@@ -83,6 +83,7 @@ test.describe('permissions: attribute access', () => {
   // attribute ..."), while the overview locks the same columns. `useEntityFields` builds the fields
   // without the project permissions and `useEntityEditing` hard-codes `enableEditing = true`
   // (shared/src/components/DetailsPanelDetails/hooks/).
+  // fixed in ynput/ayon-frontend#2403, switch back to test() once it is merged
   test.fixme(
     'attributes the user may not write are read-only in the details panel',
     async ({ api, projectName, restrictedUser, browser }) => {
@@ -115,6 +116,7 @@ test.describe('permissions: attribute access', () => {
   // `useAttributeFields` passes `attrib_write.fields` without looking at `attrib_write.enabled`
   // (shared/src/containers/ProjectTreeTable/utils/getReadOnlyLists.ts,
   // shared/src/containers/ProjectTreeTable/hooks/useAttributesList.ts).
+  // fixed in ynput/ayon-frontend#2404, switch back to test() once it is merged
   test.fixme(
     'built-in fields are locked when the access group allows none of them',
     async ({ api, projectName, restrictedUser, browser }, testInfo) => {
@@ -152,6 +154,7 @@ test.describe('permissions: attribute access', () => {
   // (ayon-backend ayon_server/access/access_groups.py). Here the user may change the status through
   // the first group, yet the server reports only "tags" as writable, so the overview locks the
   // status column and the server refuses the change.
+  // fixed in ynput/ayon-backend#1165, switch back to test() once it is merged
   test.fixme(
     'a user in two access groups may change the fields either group allows',
     async ({ api, projectName, restrictedUser, browser }, testInfo) => {

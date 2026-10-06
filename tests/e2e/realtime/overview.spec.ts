@@ -1,7 +1,7 @@
 import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
-import { deleteFolder, deleteTask, LIVE_UPDATE, LiveUpdates } from './live'
+import { deleteFolder, deleteTask, graphqlResponse, LIVE_UPDATE, LiveUpdates } from './live'
 
 /**
  * The overview is open in the admin's browser while the same project changes through the REST API,
@@ -18,15 +18,19 @@ const seed = async (api: AyonApi, projectName: string) => {
   return { folder, task }
 }
 
-/** Open the overview with sh010 expanded, once it listens to `topic` */
+/** Open the overview with sh010 expanded and its tasks loaded, once it listens to `topic` */
 const openOverview = async (
   overview: OverviewPage,
   live: LiveUpdates,
   projectName: string,
   topic: string,
 ) => {
+  // The comp row can already show from the project-wide task list before the open folder's own
+  // task query has run. A change made before that query would be in its result, not a live update.
+  const folderTasksLoaded = graphqlResponse(overview.page, 'GetTasksByParent')
   await overview.goto(projectName)
   await overview.expand('sh010')
+  await folderTasksLoaded
   await expect(overview.cell('comp', 'status')).toContainText('Not ready')
   await live.expectSubscribed(topic, projectName)
 }
@@ -106,6 +110,7 @@ test.describe('overview live updates', () => {
   // (shared/src/api/queries/overview/getOverview.ts) only handle tasks already in their cache
   // (`if (!taskId || !cachedTaskIds.has(taskId)) return`), so a new task only shows after a
   // reload. Task progress handles the same event (src/services/tasksProgress/getTasksProgress.ts).
+  // fixed in ynput/ayon-frontend#2412, switch back to test() once it is merged
   test.fixme(
     'a task created elsewhere appears in its open folder',
     async ({ page, api, projectName }) => {
@@ -125,6 +130,7 @@ test.describe('overview live updates', () => {
   // `summary` dict between the events and sets `summary["value"]` per event, so the
   // `status_changed` event says the status is the assignee list and the open overview shows the
   // user name as the status until a reload.
+  // fixed in ynput/ayon-backend#1167, switch back to test() once it is merged
   test.fixme(
     'a status and assignee change made in one update shows the new status',
     async ({ page, api, projectName, createUser }) => {

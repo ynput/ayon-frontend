@@ -47,7 +47,8 @@ test.describe('smoke: project pages', () => {
       // have loaded. When the page renders first, its queries run with `null`:
       // GET /api/projects/null, /api/projects/null/anatomy and GetKanbanProjectUsers with
       // projects [null] (src/pages/TasksProgressPage/TasksProgressPage.tsx:16). About 1 load in 10.
-      fixme: 'task progress queries project "null" before ProjectPage sets the project name',
+      fixme:
+        'task progress queries project "null" before ProjectPage sets the project name (fixed in ynput/ayon-frontend#2418)',
       ready: (page, d) =>
         visible(
           page.getByRole('button', { name: 'Expand all rows' }),
@@ -79,7 +80,8 @@ test.describe('smoke: project pages', () => {
       // provider because `ReviewCardsProvider` loads separately (ProjectListsPage.tsx:324). The hook
       // then throws "useReviewSessionCardsContext must be used within a ReviewSessionCardsProvider"
       // and the error boundary replaces the app.
-      fixme: 'review page crashes when the review cards hook loads before its provider',
+      fixme:
+        'review page crashes when the review cards hook loads before its provider (fixed in ynput/ayon-frontend#2419)',
       // the review sessions with the review addon, its splash screen without it
       ready: (page) =>
         visible(
@@ -100,7 +102,8 @@ test.describe('smoke: project pages', () => {
       // FLAG (app bug, intermittent): the same race as "task progress": WorkfileDetail reads the
       // project from redux and asks for GET /api/projects/null/siteRoots before ProjectPage has set
       // it (src/pages/WorkfilesPage/WorkfileDetail.jsx:13,25).
-      fixme: 'workfiles queries project "null" before ProjectPage sets the project name',
+      fixme:
+        'workfiles queries project "null" before ProjectPage sets the project name (fixed in ynput/ayon-frontend#2418)',
       ready: async (page, d) => {
         await visible(
           page.getByPlaceholder('Filter folders...'),
@@ -150,7 +153,8 @@ test.describe('smoke: deep links', () => {
     {
       name: 'task progress with the details of a task',
       // FLAG (app bug, intermittent): see "task progress" above
-      fixme: 'task progress queries project "null" before ProjectPage sets the project name',
+      fixme:
+        'task progress queries project "null" before ProjectPage sets the project name (fixed in ynput/ayon-frontend#2418)',
       path: project(
         'tasks',
         details('task', (d) => d.task.id),
@@ -202,7 +206,8 @@ test.describe('smoke: deep links', () => {
       // `getUsersAssignee` fails and its `.unwrap()` resolves to undefined, so the query throws
       // "TypeError: Cannot read properties of undefined (reading 'error')" and the session has no
       // assignee options (shared/src/api/queries/users/getUsers.ts, getUsersAssignee).
-      fixme: 'getUsersAssignee throws inside the review addon store (reading "error" of undefined)',
+      fixme:
+        'getUsersAssignee throws inside the review addon store (fixed in ynput/ayon-frontend#2419 and #2420)',
     },
   ])
 })
