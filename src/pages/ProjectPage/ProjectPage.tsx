@@ -514,7 +514,6 @@ const ProjectPage = () => {
   const { projectName } = useParams()
   const dispatch = useAppDispatch()
 
-  // limits the websocket to this project's events while the page is open
   useEffect(() => {
     dispatch(setOpenProject(projectName))
     return () => {

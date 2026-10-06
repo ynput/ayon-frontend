@@ -4,7 +4,6 @@ const projectSlice = createSlice({
   name: 'project',
   initialState: {
     name: null,
-    // the project whose page is open, null on other pages (dashboard, inbox, ...)
     openProject: null,
     folders: {},
     foldersOrder: [],
