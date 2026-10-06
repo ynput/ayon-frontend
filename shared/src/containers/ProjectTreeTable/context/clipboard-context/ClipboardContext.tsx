@@ -18,8 +18,11 @@ import {
 import { TableRow } from '../../types/table'
 import { EntityUpdate } from '../../hooks/useUpdateTableData'
 import usePasteLinks, { LinkUpdate } from '../../hooks/usePasteLinks'
-import { useExportHierarchyCSV } from '../../hooks/useExportHierarchyCSV'
-import { downloadTextFile, getCsvFileName } from '../../utils/csvExport'
+import {
+  DEFAULT_TABLE_EXPORT_SETTINGS,
+  downloadUrl,
+  getExportFileName,
+} from '../../../TableExport/tableExportSettings'
 import { useUpdateSubtasksMutation } from '@shared/api'
 
 // Import from the new modular files
@@ -79,7 +82,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   }, [tableData])
   const { projectName } = useProjectContext()
   const [updateSubtasks] = useUpdateSubtasksMutation()
-  const exportHierarchyCSV = useExportHierarchyCSV()
 
   const getSelectionData = useCallback(
     async (
@@ -355,63 +357,25 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     [selectedCells, entitiesMap, gridMap],
   )
 
+  // tables without an export dialog (TableExportProvider) export the cells as shown
   const exportCSV: ClipboardContextType['exportCSV'] = useCallback(
     async (selected, projectName, delimiter) => {
       selected = selected || Array.from(selectedCells)
       if (!selected.length) return
+      const fullRow = selected.some((id) => parseCellId(id)?.colId === ROW_SELECTION_COLUMN_ID)
 
-      const rowIds = new Set<string>()
-      const colIds = new Set<string>()
-      let fullRow = false
-      for (const cellId of selected) {
-        const { rowId, colId } = parseCellId(cellId) || {}
-        if (!rowId || !colId) continue
-        rowIds.add(rowId)
-        if (colId === ROW_SELECTION_COLUMN_ID) fullRow = true
-        else colIds.add(colId)
-      }
-      if (fullRow) visibleColumns.forEach((col) => colIds.add(col.id))
-      colIds.delete(ROW_SELECTION_COLUMN_ID)
-
-      // group header rows have no entity
-      const entities = Array.from(rowIds).flatMap((rowId) => getEntityById(rowId) || [])
-      if (
-        projectName &&
-        entities.length &&
-        entities.every((e) => e.entityType === 'folder' || e.entityType === 'task')
-      ) {
-        const idsOf = (type: string) =>
-          entities.filter((e) => e.entityType === type).map((e) => e.entityId || e.id)
-        const taskIds = idsOf('task')
-        await exportHierarchyCSV({
-          projectName,
-          columnIds: Array.from(colIds).sort(
-            (a, b) =>
-              (gridMap.colIdToIndex.get(a) ?? Infinity) - (gridMap.colIdToIndex.get(b) ?? Infinity),
-          ),
-          folderIds: idsOf('folder'),
-          tasks: taskIds.length ? { ids: taskIds } : undefined,
-          delimiter,
-          scope: 'selection',
-        })
-        return
-      }
-
-      // other entity types (products, versions) are exported as shown in the table
       try {
         const text = await getSelectionData(selected, { headers: true, fullRow, delimiter })
         if (!text) return
-        const fileName = getCsvFileName(projectName, 'selection', delimiter)
-        downloadTextFile(
-          text,
-          fileName,
-          delimiter === '\t' ? 'text/tab-separated-values' : 'text/csv',
-        )
+        const type = delimiter === '\t' ? 'text/tab-separated-values' : 'text/csv'
+        const url = URL.createObjectURL(new Blob([text], { type }))
+        const settings = { ...DEFAULT_TABLE_EXPORT_SETTINGS, format: 'csv' as const, delimiter }
+        downloadUrl(url, getExportFileName(projectName, 'selection', settings))
       } catch (error) {
         console.error('Failed to export selection:', error)
       }
     },
-    [selectedCells, gridMap, getSelectionData, getEntityById, visibleColumns, exportHierarchyCSV],
+    [selectedCells, getSelectionData],
   )
 
   const getClipboardString = async (): Promise<string | void> => {

@@ -22,11 +22,11 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    exportHierarchyView: build.mutation<ExportHierarchyViewApiResponse, ExportHierarchyViewApiArg>({
+    exportTable: build.mutation<ExportTableApiResponse, ExportTableApiArg>({
       query: (queryArg) => ({
-        url: `/api/csv/export/hierarchy/view`,
+        url: `/api/csv/table/export`,
         method: 'POST',
-        body: queryArg.exportViewRequest,
+        body: queryArg.exportTableRequest,
         params: {
           project_name: queryArg.projectName,
         },
@@ -71,10 +71,10 @@ export type PostApiCsvExportByEntityTypeApiArg = {
   projectName?: string
   bodyExportApiCsvExportEntityTypePost: BodyExportApiCsvExportEntityTypePost
 }
-export type ExportHierarchyViewApiResponse = /** status 200 Successful Response */ any
-export type ExportHierarchyViewApiArg = {
+export type ExportTableApiResponse = /** status 200 Successful Response */ any
+export type ExportTableApiArg = {
   projectName: string
-  exportViewRequest: ExportViewRequest
+  exportTableRequest: ExportTableRequest
 }
 export type UploadFileApiResponse = /** status 200 Successful Response */ ImportUpload
 export type UploadFileApiArg = {
@@ -168,15 +168,89 @@ export type ExportTasksQuery = {
   /** Fuzzy text search */
   search?: string
 }
-export type ExportViewRequest = {
-  /** Field keys to export after entity_type and path, in order. See /csv/export/hierarchy/fields */
+export type ExportProductsQuery = {
+  /** Only products with these ids */
+  ids?: string[]
+  /** Only products in these folders */
+  folderIds?: string[]
+  /** Include products in subfolders of folder_ids */
+  includeFolderChildren?: boolean
+  /** Product QueryFilter (JSON) */
+  filter?: string
+  /** Folder QueryFilter (JSON) */
+  folderFilter?: string
+  /** Version QueryFilter (JSON) */
+  versionFilter?: string
+  /** Task QueryFilter (JSON) */
+  taskFilter?: string
+  /** Row order, as the GraphQL sortBy argument */
+  sortBy?: string[]
+  /** Which version fills the version and author columns */
+  featuredVersionOrder?: string[]
+}
+export type ExportVersionsQuery = {
+  /** Only versions with these ids */
+  ids?: string[]
+  /** Only versions of these products. Without ids, versions exported with products are those of the products */
+  productIds?: string[]
+  /** Only versions in these folders */
+  folderIds?: string[]
+  /** Include versions in subfolders of folder_ids */
+  includeFolderChildren?: boolean
+  /** Version QueryFilter (JSON) */
+  filter?: string
+  /** Folder QueryFilter (JSON) */
+  folderFilter?: string
+  /** Product QueryFilter (JSON) */
+  productFilter?: string
+  /** Task QueryFilter (JSON) */
+  taskFilter?: string
+  /** One version per product: 'hero', 'latestDone', 'latest' */
+  featuredOnly?: string[]
+  /** Latest version per folder */
+  latestPerFolder?: boolean
+  /** Only versions with (or without) reviewables */
+  hasReviewables?: boolean
+  /** Row order, as the GraphQL sortBy argument */
+  sortBy?: string[]
+}
+export type ExportListQuery = {
+  /** Entity list id */
+  id: string
+  /** Only these list items */
+  itemIds?: string[]
+  /** List item QueryFilter (JSON) */
+  filter?: string
+  /** Fuzzy text search */
+  search?: string
+  /** Row order, as the GraphQL sortBy argument */
+  sortBy?: string[]
+}
+export type ExportTableRequest = {
+  /** Column keys in order: entity fields (`status`, `attrib.priority`...), `entity_type`, `path`, `folder`, `task`, `product`, `version`, `author`, `created_at` and `updated_at` */
   columns?: string[]
+  /** Column names to use instead of the field labels */
+  columnLabels?: {
+    [key: string]: string
+  }
   /** Folders to export as rows */
   folderIds?: string[]
   /** Tasks to export as rows */
   tasks?: ExportTasksQuery
-  /** Column delimiter */
+  /** Products to export as rows */
+  products?: ExportProductsQuery
+  /** Versions to export as rows */
+  versions?: ExportVersionsQuery
+  /** List items to export as rows */
+  entityList?: ExportListQuery
+  /** File format */
+  format?: 'csv' | 'xlsx'
+  /** CSV delimiter */
   delimiter?: ',' | ';' | '\t'
+  /** Column names: labels or field names (keys) */
+  header?: 'label' | 'key'
+  /** Raw values, or labels: enum labels, full names of users, readable dates and names replaced by labels */
+  values?: 'value' | 'label'
 }
 export type ImportUpload = {
   id: string

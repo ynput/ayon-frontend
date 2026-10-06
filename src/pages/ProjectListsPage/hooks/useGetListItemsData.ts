@@ -62,6 +62,7 @@ export interface UseGetListItemsDataReturn {
   fieldStatsLoading: boolean
   fieldStatsError: boolean
   mainCountLabels: { primary: string }
+  queryArgs: { filter?: string; search?: string; sortBy?: string; desc?: boolean }
 }
 
 const useGetListItemsData = ({
@@ -375,6 +376,13 @@ const useGetListItemsData = ({
     fieldStatsLoading,
     fieldStatsError,
     mainCountLabels: { primary: statsEntity ? `${statsEntity}s` : 'items' },
+    // the items query's filter, search and sorting, for exports
+    queryArgs: {
+      filter: listItemsArgs.filter,
+      search: listItemsArgs.search,
+      sortBy: listItemsArgs.sortBy,
+      desc: listItemsArgs.desc,
+    },
   }
 }
 

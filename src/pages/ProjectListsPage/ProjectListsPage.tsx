@@ -59,6 +59,8 @@ import { useReviewCardsSettingsContext } from './context/review-cards-settings'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
+import { TableExportButton, TableExportProvider } from '@shared/containers/TableExport'
+import ListExportDialog from './components/ListExportDialog'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
 import usePatchListsCaches from './hooks/usePatchListsCaches'
@@ -100,11 +102,13 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
       <ListsModuleProvider>
         <ListsDataProvider entityListTypes={entityListTypes} isReview={isReview}>
           <ListsProvider isReview={isReview}>
-            <ListItemsDataProvider>
-              <ListsAttributesProvider>
-                <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
-              </ListsAttributesProvider>
-            </ListItemsDataProvider>
+            <TableExportProvider>
+              <ListItemsDataProvider>
+                <ListsAttributesProvider>
+                  <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
+                </ListsAttributesProvider>
+              </ListItemsDataProvider>
+            </TableExportProvider>
           </ListsProvider>
         </ListsDataProvider>
       </ListsModuleProvider>
@@ -429,6 +433,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       projectName={projectName}
                       folderId={selectedList?.id}
                     />
+                    <TableExportButton />
+                    <ListExportDialog />
                     <Actions
                       entities={[
                         {
