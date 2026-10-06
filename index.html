@@ -15,6 +15,24 @@
     <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#00d7a0">
     <meta name="msapplication-TileColor" content="#00aba9">
     <!-- FALLBACK FAVICON -->
+    <script>
+      // start the first API request while the app bundle loads (see src/helpers/earlySiteInfo.ts)
+      ;(function () {
+        try {
+          var token = localStorage.getItem('accessToken')
+          if (!token) return
+          window.__siteInfoRequest = fetch('/api/info?full=true', {
+            headers: { Authorization: 'Bearer ' + token },
+          })
+            .then(function (res) {
+              return res.ok ? res.json() : null
+            })
+            .catch(function () {
+              return null
+            })
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
