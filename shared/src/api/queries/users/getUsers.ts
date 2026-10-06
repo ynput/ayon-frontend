@@ -193,8 +193,7 @@ const injectedApi = gqlApi.injectEndpoints({
       async queryFn({ names, projectName }, _api, _extraOptions, baseQuery) {
         // the resolver applies the server's user visibility rules, but needs a project for non-managers
         if (!names && projectName) {
-          // the resolver directly, not through getEnumOptions: in a store whose api lacks that endpoint
-          // (e.g. the review addon's own store) the nested query never runs and unwrap() gives undefined
+          // not getEnumOptions: an addon's own store lacks that endpoint, so unwrap() gives undefined
           const result = await baseQuery({
             url: '/api/enum/users',
             params: { project_name: projectName, mode: 'users', hide_inactive: true },
