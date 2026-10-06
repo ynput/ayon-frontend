@@ -587,7 +587,7 @@ export const ProjectTreeTable = ({
   useEffect(() => {
     if (!rows.length) return
     const rowIds = rows.map((row) => row.id)
-    const colIds = table.getAllLeafColumns().map((col) => col.id)
+    const colIds = table.getVisibleLeafColumns().map((col) => col.id)
     const colIdsSortedByPinning = [...colIds].sort((a, b) => {
       if (ROW_SELECTION_COLUMN_ID === b) return 1
       const colA = columnPinning.left?.includes(a) ? 0 : 1
@@ -596,7 +596,7 @@ export const ProjectTreeTable = ({
     })
 
     registerGrid(rowIds, colIdsSortedByPinning)
-  }, [rows, table.getAllLeafColumns(), columnPinning, ROW_SELECTION_COLUMN_ID, registerGrid])
+  }, [rows, table.getVisibleLeafColumns(), columnPinning, ROW_SELECTION_COLUMN_ID, registerGrid])
 
   const visibleColumns = table.getVisibleLeafColumns()
 
