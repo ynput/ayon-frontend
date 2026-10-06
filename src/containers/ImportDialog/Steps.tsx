@@ -14,6 +14,11 @@ import Loading from './steps/Loading'
 import { EmptyPlaceholder } from '@shared/components'
 import { withHierarchySchema } from './steps/hierarchy'
 import SubmitStep from './steps/SubmitStep/SubmitStep'
+import {
+  getUnmappedRequiredTargetGroups,
+  ImportMode,
+  missingStrategyForImportMode,
+} from './steps/importMode'
 
 type Props = {
   importContext: ImportContext
@@ -54,6 +59,7 @@ export default function ImportSteps({
 }: Props) {
   const [importData] = useImportDataMutation()
 
+  const [importMode, setImportMode] = useState(ImportMode.CREATE_AND_UPDATE)
   const [columnMappings, setColumnMappings] = useState<ColumnMappings | undefined>(undefined)
   const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
   const [previewStatus, setPreviewStatus] = useState<ImportStatus | null>(null)
@@ -96,9 +102,10 @@ export default function ImportSteps({
         preview,
         projectName,
         existingStrategy: 'update',
+        missingStrategy: missingStrategyForImportMode[importMode],
       })
     },
-    [data, folderId, projectName, importContext],
+    [data, folderId, projectName, importContext, importMode],
   )
 
   const fetchPreview = useCallback(() => {
@@ -136,25 +143,43 @@ export default function ImportSteps({
       })
   }, [requestImport, columnMappings, valueMappings])
 
+  // the mode can change after the columns were mapped, so the mapping may no longer be enough
+  const mappingsValid = useMemo(
+    () =>
+      Boolean(importSchema && columnMappings) &&
+      getUnmappedRequiredTargetGroups(importContext, importMode, importSchema!, columnMappings)
+        .length === 0,
+    [importContext, importMode, importSchema, columnMappings],
+  )
+
   const unlocked: Record<ImportStep, boolean> = useMemo(
     () => ({
       [ImportStep.UPLOAD]: !submitted && Boolean(importSchema),
       [ImportStep.MAP_COLUMNS]: !submitted && Boolean(importSchema && data),
-      [ImportStep.REVIEW_VALUES]: !submitted && Boolean(importSchema && data && columnMappings),
+      [ImportStep.REVIEW_VALUES]: !submitted && Boolean(importSchema && data && mappingsValid),
       [ImportStep.PREVIEW]:
         !submitted &&
-        Boolean(importSchema && data && columnMappings && valueMappings && previewStatus),
+        Boolean(importSchema && data && mappingsValid && valueMappings && previewStatus),
       [ImportStep.SUBMIT]: Boolean(
         importSchema && data && columnMappings && valueMappings && previewStatus && submitted,
       ),
     }),
-    [importSchema, data, columnMappings, valueMappings, previewStatus, submitted, success],
+    [
+      importSchema,
+      data,
+      columnMappings,
+      mappingsValid,
+      valueMappings,
+      previewStatus,
+      submitted,
+      success,
+    ],
   )
 
   const completed: Record<ImportStep, boolean> = useMemo(
     () => ({
       [ImportStep.UPLOAD]: Boolean(importSchema && data),
-      [ImportStep.MAP_COLUMNS]: Boolean(importSchema && data && columnMappings),
+      [ImportStep.MAP_COLUMNS]: Boolean(importSchema && data && mappingsValid),
       [ImportStep.REVIEW_VALUES]: Boolean(
         importSchema && data && columnMappings && valueMappings && previewStatus,
       ),
@@ -163,7 +188,16 @@ export default function ImportSteps({
       ),
       [ImportStep.SUBMIT]: success,
     }),
-    [importSchema, data, columnMappings, valueMappings, previewStatus, submitted, success],
+    [
+      importSchema,
+      data,
+      columnMappings,
+      mappingsValid,
+      valueMappings,
+      previewStatus,
+      submitted,
+      success,
+    ],
   )
 
   return (
@@ -199,11 +233,20 @@ export default function ImportSteps({
         <UploadStep
           importContext={importContext}
           importSchema={importSchema}
+          uploaded={data}
+          importMode={importMode}
+          onImportModeChange={(mode) => {
+            setImportMode(mode)
+            setPreviewStatus(null)
+          }}
           onBack={onClose}
           onNext={(d) => {
-            setData(d)
-            setColumnMappings(undefined)
-            setValueMappings(null)
+            // coming back to change the mode keeps the file and its mappings
+            if (d.fileId !== data?.fileId) {
+              setData(d)
+              setColumnMappings(undefined)
+              setValueMappings(null)
+            }
             setPreviewStatus(null)
             setStep(ImportStep.MAP_COLUMNS)
           }}
@@ -214,6 +257,7 @@ export default function ImportSteps({
           data={data}
           mappings={columnMappings}
           importContext={importContext}
+          importMode={importMode}
           importSchema={importSchema}
           onBack={() => setStep(ImportStep.UPLOAD)}
           onNext={(mappings) => {
@@ -241,6 +285,7 @@ export default function ImportSteps({
           data={data}
           previewStatus={previewStatus}
           importContext={importContext}
+          importMode={importMode}
           onBack={() => setStep(ImportStep.REVIEW_VALUES)}
           onNext={onConfirmImport}
         />
@@ -254,6 +299,7 @@ export default function ImportSteps({
           <SubmitStep
             data={data}
             importContext={importContext}
+            importMode={importMode}
             onBack={() => {}}
             onNext={onClose}
           />

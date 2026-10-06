@@ -15,10 +15,12 @@ import { useState } from "react";
 import { EmptyPlaceholder } from "@shared/components";
 import styled from "styled-components";
 import Stats from "../Stats";
+import { ImportMode } from "../importMode";
 
 type Props = StepProps<void> & {
   data: ImportData
   importContext: ImportContext
+  importMode: ImportMode
 }
 
 const SuccessState = styled(EmptyPlaceholder)`
@@ -32,7 +34,7 @@ const SuccessState = styled(EmptyPlaceholder)`
   }
 `
 
-export default function SubmitStep({ data, importContext, onNext  }: Props) {
+export default function SubmitStep({ data, importContext, importMode, onNext  }: Props) {
   const [importProgress, setImportProgress] = useState(0)
   const [importDescription, setImportDescription] = useState<string | null>(null)
   const [importResult, setImportResult] = useState<ImportDataProcessSummary | null>(null)
@@ -68,7 +70,9 @@ export default function SubmitStep({ data, importContext, onNext  }: Props) {
             >
               <Stats
                 heading={data.fileName}
-                subtitle={`Imported ${itemsLabelForImportContext[importContext]}`}
+                subtitle={importMode === ImportMode.UPDATE_ONLY
+                  ? `Updated existing ${itemsLabelForImportContext[importContext]}`
+                  : `Imported ${itemsLabelForImportContext[importContext]}`}
                 size={getFileSizeString(data.fileSize)}
                 items={[
                   {
@@ -82,6 +86,8 @@ export default function SubmitStep({ data, importContext, onNext  }: Props) {
                   {
                     text: `Skipped: ${importResult.skipped}`,
                     icon: "do_not_disturb",
+                    tooltip: importResult.skippedItems
+                      && formatFailedItems(importResult.skippedItems)
                   },
                   {
                     text: `Errors: ${importResult.failed}`,

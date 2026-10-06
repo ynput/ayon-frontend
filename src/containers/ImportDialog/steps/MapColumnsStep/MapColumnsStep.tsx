@@ -40,10 +40,12 @@ import { inferErrorHandling, inferMapping } from "./inferMapping"
 import { mappingUpdater } from "./mappingUpdater"
 import { getMapperState } from "./getMapperState"
 import { targetOptionCompareFn } from "./sorting"
+import { getRequiredTargetGroups, getUnmappedRequiredTargetGroups, ImportMode } from "../importMode"
 
 type Props = StepProps<ColumnMappings> & {
   data: ImportData
   mappings?: ColumnMappings
+  importMode: ImportMode
   importSchema: ImportSchema
 }
 
@@ -75,7 +77,15 @@ const errorHandlingOptions = [
   },
 ]
 
-export default function MapColumnsStep({ data, mappings: defaultMappings, importSchema, onBack, onNext }: Props) {
+export default function MapColumnsStep({
+  data,
+  mappings: defaultMappings,
+  importContext,
+  importMode,
+  importSchema,
+  onBack,
+  onNext,
+}: Props) {
   const [mappings, setMappings] = useState<ColumnMappings | undefined>(defaultMappings)
   const [previewColumn, setPreviewColumn] = useState<string | null>(null)
   const [previewUnique, setPreviewUnique] = useState(true)
@@ -98,30 +108,31 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
       }, {})
   }, [mappings])
 
+  const requiredTargets = useMemo(
+    () => new Set(getRequiredTargetGroups(importContext, importMode, importSchema, mappings).flat()),
+    [importContext, importMode, importSchema, mappings],
+  )
+
+  // groups of targets of which none is mapped yet, any one target of a group is enough
   const unmappedRequiredTargets = useMemo(
-    () => {
-      return importSchema
-        .filter(({ key, required }) => {
-          if (!required) return false
-          return !Object
-            .values(mappings ?? {})
-            .some(({ targetColumn, action }) => (
-              action === ColumnAction.MAP &&
-              targetColumn === key
-            ))
-        })
-    },
-    [mappings, importSchema, columnForTarget]
+    () => getUnmappedRequiredTargetGroups(importContext, importMode, importSchema, mappings),
+    [importContext, importMode, importSchema, mappings],
   )
 
   const targetOptions = useMemo(
     () => importSchema
-      .map(({ key, label, required, valueType, enumItems }) => {
+      .map(({ key, label, valueType, enumItems }) => {
         const column = columnForTarget[key]
+        const requiredGroup = unmappedRequiredTargets.find((group) => group.includes(key))
+        const alternatives = requiredGroup
+          ?.filter((target) => target !== key)
+          .map((target) => columnSettings[target]?.label ?? target)
         if (!column) return {
           value: key,
-          label: required ? `${label} (required)` : label,
-          icon: required ? "warning" : undefined,
+          label: requiredGroup
+            ? `${label} (required${alternatives?.length ? `, or ${alternatives.join(" or ")}` : ""})`
+            : label,
+          icon: requiredGroup ? "warning" : undefined,
           color: "var(--md-sys-color-warning)",
           type: valueType,
           isEnum: Boolean(enumItems),
@@ -139,8 +150,8 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
           isEnum: Boolean(enumItems),
         }
       })
-      .sort(targetOptionCompareFn(columnForTarget, columnSettings)),
-    [columnForTarget, columnSettings, mappings],
+      .sort(targetOptionCompareFn(columnForTarget, requiredTargets)),
+    [columnForTarget, columnSettings, mappings, requiredTargets, unmappedRequiredTargets],
   )
 
   const unresolvedColumns = useMemo(
@@ -342,7 +353,9 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
                 <strong>{unmappedRequiredTargets.length}</strong> required target{
                   unmappedRequiredTargets.length === 1 ? "" : "s"
                 } must be mapped: <strong>{
-                  unmappedRequiredTargets.map(({ label }) => label).join(", ")
+                  unmappedRequiredTargets
+                    .map((group) => group.map((target) => columnSettings[target]?.label ?? target).join(" or "))
+                    .join(", ")
                 }</strong>
               </StepNavStatsRequired>
             )

@@ -6,14 +6,16 @@ import { ImportStatus } from "@shared/api/generated/dataImport";
 import Stats from "../Stats";
 import usePubSub from "@hooks/usePubSub";
 import { useState } from "react";
+import { ImportMode } from "../importMode";
 
 type Props = StepProps<void> & {
   data: ImportData
   previewStatus: ImportStatus | null
   importContext: ImportContext
+  importMode: ImportMode
 }
 
-export default function PreviewStep({ data, previewStatus, importContext, onBack, onNext }: Props) {
+export default function PreviewStep({ data, previewStatus, importContext, importMode, onBack, onNext }: Props) {
   const [previewProgress, setPreviewProgress] = useState(0)
 
   usePubSub(
@@ -41,7 +43,9 @@ export default function PreviewStep({ data, previewStatus, importContext, onBack
           previewStatus && (
             <Stats
               heading={data.fileName}
-              subtitle={`Importing ${itemsLabelForImportContext[importContext]}`}
+              subtitle={importMode === ImportMode.UPDATE_ONLY
+                ? `Updating existing ${itemsLabelForImportContext[importContext]}`
+                : `Importing ${itemsLabelForImportContext[importContext]}`}
               size={getFileSizeString(data.fileSize)}
               items={[
                 {
@@ -55,6 +59,8 @@ export default function PreviewStep({ data, previewStatus, importContext, onBack
                 {
                   text: `Skipping: ${previewStatus.skipped}`,
                   icon: "do_not_disturb",
+                  tooltip: previewStatus.skippedItems
+                    && formatFailedItems(previewStatus.skippedItems as Record<string, string>)
                 },
                 {
                   text: `Errors: ${previewStatus.failed}`,

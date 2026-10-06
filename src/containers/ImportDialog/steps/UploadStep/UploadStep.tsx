@@ -6,10 +6,14 @@ import { ImportData, parseCSV } from "../../utils";
 import styled from "styled-components";
 import { useUploadFileMutation } from "@queries/dataImport";
 import Stats from "../Stats";
-import { HiddenFileInput } from "./UploadStep.styled";
+import { HiddenFileInput, ImportModeDescription, ImportModeSelector } from "./UploadStep.styled";
+import { describeImportMode, hasImportModes, ImportMode, importModeOptions } from "../importMode";
 
 type Props = StepProps<ImportData> & {
   importSchema: ImportSchema
+  uploaded: ImportData | null
+  importMode: ImportMode
+  onImportModeChange: (importMode: ImportMode) => void
 }
 
 const acceptedTypes = ["text/csv"]
@@ -36,8 +40,15 @@ const FileUploadHint = styled.p`
   text-align: center;
 `
 
-export default function UploadStep({ importContext, onBack, onNext }: Props) {
-  const [data, setData] = useState<ImportData | null>(null)
+export default function UploadStep({
+  importContext,
+  uploaded,
+  importMode,
+  onImportModeChange,
+  onBack,
+  onNext,
+}: Props) {
+  const [data, setData] = useState<ImportData | null>(uploaded)
   const [error, setError] = useState<Error | null>(null)
 
   const [uploadFile] = useUploadFileMutation()
@@ -92,6 +103,24 @@ export default function UploadStep({ importContext, onBack, onNext }: Props) {
 
   return (
     <>
+      {
+        hasImportModes(importContext) && (
+          <ImportModeSelector>
+            {importModeOptions.map(({ value, label, icon }) => (
+              <Button
+                key={value}
+                icon={icon}
+                label={label}
+                selected={importMode === value}
+                onClick={() => onImportModeChange(value)}
+              />
+            ))}
+            <ImportModeDescription>
+              {describeImportMode(importContext, importMode)}
+            </ImportModeDescription>
+          </ImportModeSelector>
+        )
+      }
       {
         !data && (
           <FileUploadWrapper>

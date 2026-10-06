@@ -40,6 +40,7 @@ const injectedRtkApi = api.injectEndpoints({
         params: {
           file_id: queryArg.fileId,
           existing_strategy: queryArg.existingStrategy,
+          missing_strategy: queryArg.missingStrategy,
           project_name: queryArg.projectName,
           folder_id: queryArg.folderId,
           preview: queryArg.preview,
@@ -70,7 +71,8 @@ export type ImportDataApiResponse = /** status 200 Successful Response */ Import
 export type ImportDataApiArg = {
   importType: 'user' | 'folder' | 'task' | 'hierarchy' | 'entity_list_item'
   fileId: string
-  existingStrategy?: 'skip' | 'update' | 'fail'
+  existingStrategy?: ExistingItemStrategy
+  missingStrategy?: MissingItemStrategy
   projectName?: string
   folderId?: string
   preview?: boolean
@@ -94,10 +96,15 @@ export type EnumItem = {
   /** Icon name (material symbol) or IconModel object */
   icon?: string | IconModel
   color?: string
+  shortName?: string
   /** Enum item is visible, but not selectable */
   disabled?: boolean
   /** Message to show when the option is disabled */
   disabledMessage?: string
+  /** Enum item is not visible in the dropdown */
+  hidden?: boolean
+  /** Extra badge labels to display next to the item */
+  badges?: string[]
 }
 export type ImportableColumn = {
   /** The key of the column, such as `name`, `attrib.priority`, etc. */
@@ -126,6 +133,8 @@ export type ImportableColumn = {
   enumName?: string
   /** A list of possible error handling modes for this column. Every column can have different available modes: For example: `name` column cannot use `default`, because default name cannot be generated. */
   errorHandlingModes: ('skip' | 'abort' | 'default')[]
+  /** Marker that new items can be created for frontend to decide if Create button should be offered. Entity_type cannot be created for example. */
+  createNewItems?: boolean
 }
 export type ValidationError = {
   loc: (string | number)[]
@@ -148,8 +157,12 @@ export type ImportStatus = {
   skipped?: number
   failed?: number
   failedItems?: object
+  skippedItems?: object
   preview?: boolean
+  phase?: 'validating' | 'importing'
 }
+export type ExistingItemStrategy = 'skip' | 'update' | 'fail'
+export type MissingItemStrategy = 'create' | 'skip'
 export type ColumnValueMapping = {
   /** The source value from csv */
   source?: string
