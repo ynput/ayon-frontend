@@ -342,7 +342,6 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
   const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
 
   // Lifted here so A/D/R/E/H keep working in theatre (VersionSelectorTool unmounts).
-  // Statuses by name, from the project context: redux `state.project` is not filled on every page.
   const projectStatuses = useMemo(
     () => Object.fromEntries((project.statuses || []).map((status) => [status.name, status])),
     [project.statuses],
