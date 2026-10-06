@@ -231,7 +231,6 @@ const SelectWidget = (props: $Any) => {
   useEffect(() => {
     if (value === null) return
     const same = isSortableMultiselect ? isEqual : equiv
-    // a missing value is shown as its default, that alone is not an edit
     if (isMissing && same(value, getDefaultValue())) return
     const isChanged = !same(value, props.value)
     if (!isChanged) {
