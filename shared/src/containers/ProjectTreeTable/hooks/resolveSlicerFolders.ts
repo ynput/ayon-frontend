@@ -12,8 +12,8 @@ export interface SelectedFoldersResult {
   listPanelSelected: boolean
 }
 
-// nonexistent id keeps the folder restriction alive when the hierarchy and list
-// selections are disjoint, so the empty intersection yields no rows instead of all rows
+// nonexistent id keeps the folder restriction alive when the selected lists are empty or
+// disjoint from the hierarchy selection, so no folders yields no rows instead of all rows
 export const NO_MATCH_FOLDER_ID = '0'.repeat(32)
 
 // narrowing a non-empty id list down to nothing has to stay a restriction: handing back an
@@ -72,9 +72,10 @@ export const resolveSlicerFolders = (
     ]
   }
 
+  // every list entity resolves to a folder, so no folders means the selected lists are
+  // empty (or disjoint from the hierarchy) and nothing should match
   return {
-    selectedFolders:
-      folderScope && !intersectedFolderIds.length ? [NO_MATCH_FOLDER_ID] : intersectedFolderIds,
+    selectedFolders: intersectedFolderIds.length ? intersectedFolderIds : [NO_MATCH_FOLDER_ID],
     folderScope,
     listPanelSelected: true,
   }
