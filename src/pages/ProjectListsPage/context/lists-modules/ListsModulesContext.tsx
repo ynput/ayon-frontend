@@ -1,5 +1,6 @@
 import { useLoadModule } from '@shared/hooks'
-import React, { ReactNode, FC } from 'react'
+import { afterStartup } from '@shared/util'
+import React, { ReactNode, FC, useCallback, useEffect, useState } from 'react'
 import type { ListsAttributesContextValue } from '../lists-attributes/ListsAttributesContext'
 import { ConfirmDeleteOptions } from '@shared/util'
 import { TableSettingsFallback } from '@shared/components'
@@ -44,6 +45,8 @@ export interface ListsModuleContextType {
     access: boolean
     guestAccess: boolean
   }
+  // load the modules now (they are otherwise loaded once the page has loaded)
+  requestModules: () => void
 }
 
 interface ListsModuleProviderProps {
@@ -51,12 +54,23 @@ interface ListsModuleProviderProps {
 }
 
 export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ children }) => {
+  // the modules are only used in the access and settings panels, and the review module is large,
+  // so they load once the page has loaded, or as soon as a panel that uses them mounts
+  const [shouldLoad, setShouldLoad] = useState(false)
+  const requestModules = useCallback(() => setShouldLoad(true), [])
+  useEffect(() => {
+    if (shouldLoad) return
+    return afterStartup(requestModules)
+  }, [shouldLoad, requestModules])
+  const skip = !shouldLoad
+
   const [ListsAttributesSettings, { outdated: attributeSettingsOutdated }] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'ListsAttributesSettings',
     fallback: ListsAttributeSettingsFallback,
     minVersion: '1.0.5',
+    skip,
   })
 
   const [ListAccess, { outdated: accessOutdated, isLoading: isLoadingAccess }] = useLoadModule({
@@ -65,6 +79,7 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
     module: 'ListAccess',
     fallback: ListAccessFallback,
     minVersion: '1.2.4',
+    skip,
   })
 
   const [GuestAccess, { outdated: guestAccessOutdated, isLoading: isLoadingGuestAccess }] =
@@ -74,6 +89,7 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
       module: 'GuestAccess',
       fallback: GuestAccessFallback,
       minVersion: '0.0.8',
+      skip,
     })
 
   const value = {
@@ -86,9 +102,10 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
       guestAccess: guestAccessOutdated?.required,
     },
     isLoading: {
-      access: isLoadingAccess,
-      guestAccess: isLoadingGuestAccess,
+      access: skip || isLoadingAccess,
+      guestAccess: skip || isLoadingGuestAccess,
     },
+    requestModules,
   }
 
   return <ListsModuleContext.Provider value={value}>{children}</ListsModuleContext.Provider>

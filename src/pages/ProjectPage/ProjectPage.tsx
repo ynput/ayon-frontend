@@ -19,7 +19,7 @@ import { getProjectDisplayName } from '@shared/util'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@shared/containers/Slicer'
-import { useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
+import { usePrefetchViews, useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 import { Navigate } from 'react-router-dom'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
@@ -56,6 +56,18 @@ import { OnAddToList, OnOpenViewer } from '@shared/containers/Slicer'
 import { ProjectNewEntityHost } from './ProjectNewEntityHost'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
+
+// modules rendered by this repo, they don't need to wait for addon remote modules to load
+const BUILT_IN_MODULES = [
+  'overview',
+  'tasks',
+  'browser',
+  'products',
+  'lists',
+  'reviews',
+  'workfiles',
+  'reports',
+]
 
 // Addon modules that are always shown in the nav.
 // When the addon remote page is available it is used; otherwise the Splash is shown.
@@ -180,7 +192,13 @@ const ProjectPageInner = () => {
    */
   const { siteInfo } = useGlobalContext()
   const { uiExposureLevel = 0, frontendFlags = [] } = siteInfo || {}
-  const { projectName, label: projectLabel, isLoading, error } = useProjectContext()
+  const {
+    projectName,
+    name: loadedProjectName,
+    label: projectLabel,
+    isLoading,
+    error,
+  } = useProjectContext()
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const navigate = useNavigate()
@@ -225,10 +243,11 @@ const ProjectPageInner = () => {
   // permanent addon pages that show a fallback when not loaded
   // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddon]])
 
+  // remote modules don't depend on the project, so load them alongside it
   const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
     // fallbacks: permanentAddons,
     moduleKey: 'Project',
-    skip: !projectName || !addonsData || addonsLoading || isLoading,
+    skip: !projectName,
   }) as {
     remotePages: RemoteAddonProject[]
     isLoading: boolean
@@ -338,6 +357,9 @@ const ProjectPageInner = () => {
     return links.find((link) => link.module === module) || null
   }, [links, module])
 
+  // the page's views load with the project instead of after it (the page waits for both)
+  usePrefetchViews({ viewType: activeLink?.viewType, projectName })
+
   const title = useTitle(
     module,
     links,
@@ -439,7 +461,16 @@ const ProjectPageInner = () => {
   }
 
   // loading
-  const loadingAll = isLoading || !projectName || addonsLoading || isLoadingModules
+  // only wait for what the current page needs: built in pages don't need the addon remote
+  // modules, and only addon pages need the project addons list.
+  // A refetch of the same project (isLoading includes isFetching) keeps the page mounted.
+  const isBuiltInModule = !addonName && BUILT_IN_MODULES.includes(module)
+  const isLoadingProject = isLoading && loadedProjectName !== projectName
+  const loadingAll =
+    !projectName ||
+    isLoadingProject ||
+    (!!addonName && addonsLoading) ||
+    (!isBuiltInModule && isLoadingModules)
 
   // if we aren't loading anymore and there hasn't been a valid page component for a while, redirect to overview
   useEffect(() => {

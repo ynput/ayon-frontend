@@ -84,6 +84,8 @@ export const useLoadModule = <T>({
       setIsLoading(false)
       return
     }
+    // loading can start after a skip, which left isLoading false
+    setIsLoading(true)
     loadRemote<{ default: T }>(`${remote}/${module}`, {
       from: 'runtime',
     })

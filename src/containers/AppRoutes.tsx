@@ -1,4 +1,4 @@
-import { FC, lazy } from 'react'
+import { FC, lazy, useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
@@ -21,19 +21,40 @@ import { useLoadRemotePages } from '../remote/useLoadRemotePages'
 
 import LoadingPage from '@pages/LoadingPage'
 import { RemoteAddon, useGlobalContext } from '@shared/context'
+import { afterStartup } from '@shared/util'
 import { toast } from 'react-toastify'
 
 interface AppRoutesProps {}
+
+// catch-all route: an unknown path may be an addon route, so load those straight away
+const UnknownRoute = ({ isLoading, onMount }: { isLoading: boolean; onMount: () => void }) => {
+  useEffect(() => {
+    onMount()
+  }, [onMount])
+
+  return isLoading ? <LoadingPage /> : <ErrorPage code="404" />
+}
 
 const AppRoutes: FC<AppRoutesProps> = () => {
   const { user } = useGlobalContext()
   const { uiExposureLevel: level = 0 } = user || {}
   // dynamically import routes
+  // these are added as they load, the built in routes don't wait for them
+  const [loadRemoteRoutes, setLoadRemoteRoutes] = useState(false)
+  const requestRemoteRoutes = useCallback(() => setLoadRemoteRoutes(true), [])
   const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
     moduleKey: 'Route',
+    skip: !loadRemoteRoutes,
   }) as { remotePages: RemoteAddon[]; isLoading: boolean }
 
-  if (isLoadingModules || !user) {
+  // addon routes are rarely the page being opened, so they are loaded a little after start up
+  // to keep their (large) bundles from competing with the page that is loading
+  useEffect(() => {
+    if (loadRemoteRoutes) return
+    return afterStartup(requestRemoteRoutes)
+  }, [loadRemoteRoutes, requestRemoteRoutes])
+
+  if (!user) {
     return <LoadingPage />
   }
 
@@ -160,7 +181,15 @@ const AppRoutes: FC<AppRoutesProps> = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<ErrorPage code="404" />} />
+      <Route
+        path="*"
+        element={
+          <UnknownRoute
+            isLoading={!loadRemoteRoutes || isLoadingModules}
+            onMount={requestRemoteRoutes}
+          />
+        }
+      />
     </Routes>
   )
 }
