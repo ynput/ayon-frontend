@@ -11,6 +11,7 @@ interface Props<T> {
   debug?: boolean
   minVersion?: string // minimum version required for this module
   skip?: boolean // skip loading if module is provided externally
+  defer?: boolean // don't load yet (reported as loading), e.g. until the module is needed
 }
 
 export const useLoadModule = <T>({
@@ -20,6 +21,7 @@ export const useLoadModule = <T>({
   fallback,
   minVersion,
   skip = false,
+  defer = false,
 }: Props<T>): [
   T,
   { isLoaded: boolean; isLoading: boolean; outdated?: { current: string; required: string } },
@@ -39,7 +41,7 @@ export const useLoadModule = <T>({
     }
 
     // wait for remotes to be initialized
-    if (!remotesInitialized || !addon || !remote || !module) return
+    if (defer || !remotesInitialized || !addon || !remote || !module) return
 
     // check if remote and module exist
     const initializedRemote = modules.find((m) => m.addonName === addon)
@@ -84,8 +86,6 @@ export const useLoadModule = <T>({
       setIsLoading(false)
       return
     }
-    // loading can start after a skip, which left isLoading false
-    setIsLoading(true)
     loadRemote<{ default: T }>(`${remote}/${module}`, {
       from: 'runtime',
     })
@@ -98,7 +98,7 @@ export const useLoadModule = <T>({
         setIsLoading(false)
         console.error('error loading remote', remote, module, e)
       })
-  }, [isLoaded, remotesInitialized, modules, addon, remote, module, minVersion, skip])
+  }, [isLoaded, remotesInitialized, modules, addon, remote, module, minVersion, skip, defer])
 
   return [
     loadedRemote.current,

@@ -62,7 +62,7 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
     if (shouldLoad) return
     return afterStartup(requestModules)
   }, [shouldLoad, requestModules])
-  const skip = !shouldLoad
+  const defer = !shouldLoad
 
   const [ListsAttributesSettings, { outdated: attributeSettingsOutdated }] = useLoadModule({
     addon: 'powerpack',
@@ -70,7 +70,7 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
     module: 'ListsAttributesSettings',
     fallback: ListsAttributeSettingsFallback,
     minVersion: '1.0.5',
-    skip,
+    defer,
   })
 
   const [ListAccess, { outdated: accessOutdated, isLoading: isLoadingAccess }] = useLoadModule({
@@ -79,7 +79,7 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
     module: 'ListAccess',
     fallback: ListAccessFallback,
     minVersion: '1.2.4',
-    skip,
+    defer,
   })
 
   const [GuestAccess, { outdated: guestAccessOutdated, isLoading: isLoadingGuestAccess }] =
@@ -89,7 +89,7 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
       module: 'GuestAccess',
       fallback: GuestAccessFallback,
       minVersion: '0.0.8',
-      skip,
+      defer,
     })
 
   const value = {
@@ -102,8 +102,8 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
       guestAccess: guestAccessOutdated?.required,
     },
     isLoading: {
-      access: skip || isLoadingAccess,
-      guestAccess: skip || isLoadingGuestAccess,
+      access: isLoadingAccess,
+      guestAccess: isLoadingGuestAccess,
     },
     requestModules,
   }
