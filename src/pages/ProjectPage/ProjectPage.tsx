@@ -453,7 +453,6 @@ const ProjectPageInner = () => {
     return () => clearTimeout(timeoutId)
   }, [loadingAll, page.component, navigate, projectName])
 
-  // the project does not exist or the user has no access to it, redirect to the dashboard once
   useEffect(() => {
     if (loadingAll || !error) return
     const timeoutId = setTimeout(() => {
