@@ -1,6 +1,7 @@
 export const ROW_SELECTION_COLUMN_ID = '__row_selection__'
 export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 export const LISTS_COLUMN_ID = 'lists'
+export const REVIEW_SESSIONS_COLUMN_ID = 'reviewSessions'
 
 // queried against the cell container's content box, not the row height
 export const WRAP_MIN_CELL_HEIGHT = 50

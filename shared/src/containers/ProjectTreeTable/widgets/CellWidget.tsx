@@ -291,7 +291,12 @@ export const CellWidget: FC<EditorCellProps> = ({
 
       case type === 'lists': {
         return (
-          <ListsWidget value={valueData as ListsWidgetData | undefined} projectName={projectName} />
+          <ListsWidget
+            value={valueData as ListsWidgetData | undefined}
+            projectName={projectName}
+            cellId={cellId}
+            {...sharedProps}
+          />
         )
       }
 

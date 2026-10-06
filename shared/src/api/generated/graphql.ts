@@ -3556,7 +3556,7 @@ export const GetFoldersListsMembershipDocument = new TypedDocumentString(`
       edges {
         node {
           id
-          entityLists(active: true) {
+          entityLists(active: true, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
@@ -3576,7 +3576,7 @@ export const GetTasksListsMembershipDocument = new TypedDocumentString(`
       edges {
         node {
           id
-          entityLists(active: true) {
+          entityLists(active: true, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
@@ -3596,7 +3596,7 @@ export const GetVersionsListsMembershipDocument = new TypedDocumentString(`
       edges {
         node {
           id
-          entityLists(active: true) {
+          entityLists(active: true, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }

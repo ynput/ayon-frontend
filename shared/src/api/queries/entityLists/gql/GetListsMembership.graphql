@@ -10,7 +10,7 @@ query GetFoldersListsMembership($projectName: String!, $entityIds: [String!]) {
       edges {
         node {
           id
-          entityLists(active: true) {
+          entityLists(active: true, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
@@ -25,7 +25,7 @@ query GetTasksListsMembership($projectName: String!, $entityIds: [String!]) {
       edges {
         node {
           id
-          entityLists(active: true) {
+          entityLists(active: true, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
@@ -40,7 +40,7 @@ query GetVersionsListsMembership($projectName: String!, $entityIds: [String!]) {
       edges {
         node {
           id
-          entityLists(active: true) {
+          entityLists(active: true, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }

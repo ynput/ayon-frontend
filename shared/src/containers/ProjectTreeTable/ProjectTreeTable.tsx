@@ -54,7 +54,7 @@ import {
   usePowerpack,
   setDetailsPanelTabForScope,
 } from '@shared/context'
-import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID, LISTS_COLUMN_ID } from './constants'
+import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -66,6 +66,7 @@ import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import useDynamicRowHeight from './hooks/useDynamicRowHeight'
 import { useFetchListsMembership } from './hooks/useListsMembership'
+import { LIST_COLUMN_IDS } from './utils/listColumns'
 
 import { useProjectDataContext } from './context/project-data'
 
@@ -1388,7 +1389,7 @@ const TableBody = ({
   const { projectName } = useProjectContext()
   const isListsColumnShown = table
     .getVisibleLeafColumns()
-    .some((column) => column.id === LISTS_COLUMN_ID)
+    .some((column) => LIST_COLUMN_IDS.includes(column.id))
   useFetchListsMembership({
     projectName,
     enabled: isListsColumnShown,

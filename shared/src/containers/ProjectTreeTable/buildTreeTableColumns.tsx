@@ -25,14 +25,14 @@ import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './context'
-import { LISTS_COLUMN_ID, ROW_SELECTION_COLUMN_ID } from './constants'
+import { LISTS_COLUMN_ID, REVIEW_SESSIONS_COLUMN_ID, ROW_SELECTION_COLUMN_ID } from './constants'
 import { NEXT_PAGE_ID, parseGroupId } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import type { AttributeData, LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { SubtasksWidgetData } from './widgets/SubtasksWidget'
 import { ListsWidgetData } from './widgets/ListsWidget'
-import { isListsMembershipEntityType } from './hooks/useListsMembership'
+import { LIST_COLUMN_IDS, LIST_COLUMNS, isListColumnEntityType } from './utils/listColumns'
 import { Icon } from '@ynput/ayon-react-components'
 import {
   getAttributeIcon,
@@ -82,7 +82,8 @@ export const COLUMN_LABELS: Record<string, string> = {
   updatedAt: 'Updated at',
   subtasks: 'Subtasks',
   comments: 'Latest comments',
-  lists: 'Lists',
+  [LISTS_COLUMN_ID]: LIST_COLUMNS[LISTS_COLUMN_ID].label,
+  [REVIEW_SESSIONS_COLUMN_ID]: LIST_COLUMNS[REVIEW_SESSIONS_COLUMN_ID].label,
 }
 
 export const getColumnLabel = (columnId: string, scopes: string[] = []) => {
@@ -109,7 +110,8 @@ export const COLUMN_ICONS: Record<string, string> = {
   updatedAt: getAttributeIcon('updatedAt', 'datetime'),
   subtasks: 'checklist',
   comments: getAttributeIcon('comment'),
-  lists: 'list_alt',
+  [LISTS_COLUMN_ID]: LIST_COLUMNS[LISTS_COLUMN_ID].icon,
+  [REVIEW_SESSIONS_COLUMN_ID]: LIST_COLUMNS[REVIEW_SESSIONS_COLUMN_ID].icon,
 }
 
 export const getColumnIcon = (columnId: string) => {
@@ -206,7 +208,8 @@ export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
   updatedAt: { sortKey: 'updatedAt', enabled: true, label: COLUMN_LABELS.updatedAt },
   subtasks: { enabled: false, label: COLUMN_LABELS.subtasks },
   comments: { enabled: false, label: COLUMN_LABELS.comments },
-  lists: { enabled: false, label: COLUMN_LABELS.lists },
+  [LISTS_COLUMN_ID]: { enabled: false, label: COLUMN_LABELS[LISTS_COLUMN_ID] },
+  [REVIEW_SESSIONS_COLUMN_ID]: { enabled: false, label: COLUMN_LABELS[REVIEW_SESSIONS_COLUMN_ID] },
 }
 
 type SortColumnLabel = { value: string; label: string }
@@ -371,6 +374,7 @@ export type DefaultColumns =
   | 'updatedAt'
   | 'comments'
   | typeof LISTS_COLUMN_ID
+  | typeof REVIEW_SESSIONS_COLUMN_ID
 
 export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
 
@@ -1392,10 +1396,16 @@ const buildTreeTableColumns = ({
     })
   }
 
-  if (isIncluded(LISTS_COLUMN_ID) && scopes.some(isListsMembershipEntityType)) {
+  for (const listColumnId of LIST_COLUMN_IDS) {
+    if (
+      !isIncluded(listColumnId) ||
+      !scopes.some((scope) => isListColumnEntityType(listColumnId, scope))
+    )
+      continue
+
     staticColumns.push({
-      id: LISTS_COLUMN_ID,
-      header: getColumnLabel(LISTS_COLUMN_ID),
+      id: listColumnId,
+      header: getColumnLabel(listColumnId),
       minSize: COLUMN_MIN_SIZE,
       enableSorting: false,
       enableResizing: true,
@@ -1404,12 +1414,12 @@ const buildTreeTableColumns = ({
       cell: ({ row, column }) => {
         const { group, metaType, isLoading, primary } = row.original
         if (group || metaType) return null
-        if (!isLoading && !isListsMembershipEntityType(primary.entityType))
+        if (!isLoading && !isListColumnEntityType(column.id, primary.entityType))
           return <div className="readonly"></div>
 
         const listsData: ListsWidgetData | undefined =
-          !isLoading && isListsMembershipEntityType(primary.entityType)
-            ? { entityId: primary.id, entityType: primary.entityType }
+          !isLoading && isListColumnEntityType(column.id, primary.entityType)
+            ? { entityId: primary.id, entityType: primary.entityType, columnId: column.id }
             : undefined
 
         return (
