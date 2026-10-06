@@ -160,7 +160,7 @@ const AppRoutes: FC<AppRoutesProps> = () => {
           </ProtectedRoute>
         }
       />
-      <Route element={<ErrorPage code="404" />} />
+      <Route path="*" element={<ErrorPage code="404" />} />
     </Routes>
   )
 }
