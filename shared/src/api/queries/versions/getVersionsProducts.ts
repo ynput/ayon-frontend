@@ -242,70 +242,9 @@ export type GetProductsResult = {
   products: ProductNode[]
 }
 
-function updateVersionList(
-  versions: VersionNode[],
-  updatedNode: VersionNode,
-  replaceVersionInSameFolder: boolean,
-  sortBy: keyof VersionNode,
-  desc: boolean,
-  insertIfMissing = true,
-): boolean {
-  if (replaceVersionInSameFolder) {
-    // A new version can have a different ID from the cached version. Since
-    // latestPerFolder allows only one visible version per folder, replace by
-    // folder instead of patching by version ID. Existing versions still use
-    // the normal ID-based patching path.
-    const folderId = updatedNode.product?.folder?.id
-    let removed = false
-
-    for (let i = versions.length - 1; i >= 0; i--) {
-      const version = versions[i]
-      if (version.id === updatedNode.id || (folderId && version.product?.folder?.id === folderId)) {
-        versions.splice(i, 1)
-        removed = true
-      }
-    }
-    if (!insertIfMissing) return removed
-  } else {
-    // Without latestPerFolder, an update only affects the version with the
-    // matching ID; an unseen version can be inserted as a new list item.
-    const index = versions.findIndex((version) => version.id === updatedNode.id)
-    if (index !== -1) {
-      versions[index] = updatedNode
-      return true
-    }
-    if (!insertIfMissing) return false
-  }
-
-  const insertIndex = findSortedInsertIndex(versions, updatedNode, sortBy, desc)
-  versions.splice(insertIndex, 0, updatedNode)
-  return true
-}
-
-function updateVersionPages(
-  pages: { versions: VersionNode[] }[],
-  updatedNode: VersionNode,
-  replaceVersionInSameFolder: boolean,
-  sortBy: keyof VersionNode,
-  desc: boolean,
-): void {
-  if (!replaceVersionInSameFolder) {
-    for (const page of pages) {
-      if (updateVersionList(page.versions, updatedNode, false, sortBy, desc, false)) {
-        return
-      }
-    }
-  } else {
-    // With latestPerFolder, inspect every loaded page so the previous
-    // version for this folder is removed wherever pagination placed it.
-    for (const page of pages) {
-      updateVersionList(page.versions, updatedNode, true, sortBy, desc, false)
-    }
-  }
-
-  if (pages.length > 0) {
-    updateVersionList(pages[0].versions, updatedNode, replaceVersionInSameFolder, sortBy, desc)
-  }
+function replaceVersion(versions: VersionNode[], updatedNode: VersionNode) {
+  const index = versions.findIndex((version) => version.id === updatedNode.id)
+  if (index !== -1) versions[index] = updatedNode
 }
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
@@ -381,7 +320,6 @@ function createVersionUpdateBatcher(
       patched?: { entityId: string; field: string; value: any; parentId?: string }[]
       attribPatched?: { entityId: string; allAttrib: string; parsedAttrib: any }[]
       fullUpdated?: VersionNode[]
-      createdVersionIds?: Set<string>
     }) => void
     getBaseFilters?: () => any
   },
@@ -394,18 +332,15 @@ function createVersionUpdateBatcher(
     const patched: { entityId: string; field: string; value: any; parentId?: string }[] = []
     const attribsToFetch = new Set<string>()
     const fullFetchIds = new Set<string>()
-    const createdVersionIds = new Set<string>()
 
     for (const { topic, message: msg } of updates) {
       const entityId = msg.summary?.entityId
       const parentId = msg.summary?.parentId
       if (!entityId) continue
 
+      // new versions are not streamed in, they show after a sync (#2160)
       if (topic === 'entity.version.deleted') {
         deleted.push({ entityId, parentId })
-      } else if (topic === 'entity.version.created') {
-        fullFetchIds.add(entityId)
-        createdVersionIds.add(entityId)
       } else if (topic.startsWith('entity.version.') && topic.endsWith('_changed')) {
         const versionFound = handlers.checkVersionInCache(entityId, parentId)
         if (!versionFound) continue
@@ -441,7 +376,7 @@ function createVersionUpdateBatcher(
 
         if (!isActive()) return
         if (result.data?.versions) {
-          handlers.onBatchUpdate({ fullUpdated: result.data.versions, createdVersionIds })
+          handlers.onBatchUpdate({ fullUpdated: result.data.versions })
         }
       } catch (e) {
         console.error('Failed to fetch full version data batch', e)
@@ -589,7 +524,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         },
         providesTags: provideTagsForVersionsInfinite,
         // Subscribes to version entity changes and updates cache accordingly
-        // Handles: create, update, delete operations
+        // Handles: update, delete operations
         onCacheEntryAdded: async (
           arg,
           { getCacheEntry, updateCachedData, cacheEntryRemoved, dispatch },
@@ -640,13 +575,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               }
               return false
             },
-            onBatchUpdate: ({
-              deleted,
-              patched,
-              attribPatched,
-              fullUpdated,
-              createdVersionIds,
-            }) => {
+            onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
               updateCachedData((draft) => {
                 for (const page of draft?.pages || []) {
                   // Handle deletes
@@ -679,14 +608,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                   // Handle full updates
                   if (fullUpdated) {
                     for (const updatedNode of fullUpdated) {
-                      updateVersionPages(
-                        draft.pages,
-                        updatedNode,
-                        arg.latestPerFolder === true &&
-                          createdVersionIds?.has(updatedNode.id) === true,
-                        (arg.sortBy || 'createdAt') as keyof VersionNode,
-                        arg.desc || false,
-                      )
+                      replaceVersion(page.versions, updatedNode)
                     }
                   }
                 }
@@ -859,7 +781,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             })
             return found
           },
-          onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated, createdVersionIds }) => {
+          onBatchUpdate: ({ deleted, patched, attribPatched, fullUpdated }) => {
             updateCachedData((draft) => {
               // Handle deletes
               if (deleted) {
@@ -891,13 +813,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               // Handle full updates
               if (fullUpdated) {
                 for (const updatedNode of fullUpdated) {
-                  updateVersionList(
-                    draft.versions,
-                    updatedNode,
-                    arg.latestPerFolder === true && createdVersionIds?.has(updatedNode.id) === true,
-                    (arg.sortBy || 'createdAt') as keyof VersionNode,
-                    arg.desc || false,
-                  )
+                  replaceVersion(draft.versions, updatedNode)
                 }
               }
             })
@@ -997,8 +913,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         },
         providesTags: provideTagsForProductsInfinite,
         // Subscribes to product entity changes and updates cache accordingly
-        // Handles: create, update, delete operations
-        // Often triggered together with version changes (new product + version)
+        // Handles: update, delete operations
 
         onCacheEntryAdded: async (
           arg,
@@ -1072,16 +987,10 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                   page.products.map((product) => product.id),
                 ) || [],
               )
-              const productIds = messages
-                .map(({ topic, message }) => ({
-                  topic,
-                  id: message.summary?.entityId,
-                }))
-                .filter(
-                  ({ topic, id }) =>
-                    id && (cachedProductIds.has(id) || topic === 'entity.product.created'),
-                )
-                .map(({ id }) => id as string)
+              // new products are not streamed in, they show after a sync (#2160)
+              const productIds: string[] = messages
+                .map(({ message }) => message.summary?.entityId)
+                .filter((id) => id && cachedProductIds.has(id))
 
               if (productIds.length) {
                 await refetchProducts([...new Set(productIds)], isActive)
@@ -1292,7 +1201,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
       },
       providesTags: provideTagsForVersionsResult,
       // Subscribes to version entity changes and updates cache accordingly
-      // Handles: create, update, delete operations for grouped versions view
+      // Handles: update, delete operations for grouped versions view
       onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
         let unsubscribeThumbnails: (() => void) | undefined
 

@@ -11,6 +11,8 @@ import { useViewsState } from '@shared/containers/Views/utils/viewUpdateHelper'
 
 // removes the option to disable auto sync
 export const FORCE_AUTO_SYNC = true
+// created entities are never streamed in (#2160), they always wait for the sync button
+const FORCED_AUTO_SYNC_SETTINGS: RTUpdateConfig = { ...toggleSyncAll(true), created: false }
 
 export type TopicUpdateType =
   | 'created'
@@ -59,6 +61,11 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
   >('autoSync')
   const [updates, setUpdates] = useState<RTEntityUpdate[]>([])
 
+  const effectiveAutoSyncSettings = useMemo<RTUpdateConfig>(
+    () => (FORCE_AUTO_SYNC ? FORCED_AUTO_SYNC_SETTINGS : { ...autoSyncSettings, created: false }),
+    [autoSyncSettings],
+  )
+
   useEffect(() => {
     let eventKey = 0
     const batcher = createRealtimeBatcher(
@@ -90,7 +97,7 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
       const updateType = getUpdateType(message.topic)
       // check the type of update and whether auto syncing is enabled for that type
       // NOTE: when auto syncing is enabled we DO NOT push to updates because it is streamed in automatically
-      if (!updateType || autoSyncSettings[updateType] || FORCE_AUTO_SYNC) return
+      if (!updateType || effectiveAutoSyncSettings[updateType]) return
 
       batcher.add({
         key: ++eventKey,
@@ -105,7 +112,7 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
       PubSub.unsubscribe(token)
       batcher.clear()
     }
-  }, [autoSyncSettings, projectNames])
+  }, [effectiveAutoSyncSettings, projectNames])
 
   const value = useMemo<EntityUpdatesContextValue>(
     () => ({
@@ -122,10 +129,10 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
         )
       },
       getLatestId: () => nextId.current,
-      autoSyncSettings: FORCE_AUTO_SYNC ? toggleSyncAll(true) : autoSyncSettings, // force auto sync on always if the flag is set
+      autoSyncSettings: effectiveAutoSyncSettings,
       setAutoSyncSettings,
     }),
-    [autoSyncSettings, projectNames, setAutoSyncSettings, updates],
+    [effectiveAutoSyncSettings, projectNames, setAutoSyncSettings, updates],
   )
 
   return <EntityUpdatesContext.Provider value={value}>{children}</EntityUpdatesContext.Provider>
