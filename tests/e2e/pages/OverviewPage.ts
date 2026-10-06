@@ -178,11 +178,7 @@ export class OverviewPage {
     await expect(this.table.locator('td.editing')).toHaveCount(0)
   }
 
-  /**
-   * Set a date cell (e.g. `attrib_startDate`) to `yyyy-MM-dd`.
-   * FLAG: editing opens the browser's native date picker (`showPicker()`), which takes Enter while it
-   * is open, so the value is committed by clicking another cell (the input saves on blur).
-   */
+  // FLAG: the native date picker takes Enter while open, so the date is committed by clicking another cell
   async setDateCell(label: string, columnId: string, date: string) {
     const cell = this.cell(label, columnId)
     await cell.dblclick()
@@ -192,10 +188,6 @@ export class OverviewPage {
     await this.nameCell(label).click()
     await expect(input).toBeHidden()
   }
-
-  // ---------------------------------------------------------------------------
-  // history
-  // ---------------------------------------------------------------------------
 
   async undo() {
     await this.page.getByRole('button', { name: 'undo', exact: true }).click()
@@ -246,36 +238,22 @@ export class OverviewPage {
       .and(this.table.locator('tr.group-row'))
   }
 
-  /**
-   * Toggle the sort of a column with the sort button in its header: ascending, then descending,
-   * then back to the default order.
-   * FLAG: the button is an icon-only `sort` button that only shows while the header is hovered.
-   */
+  // FLAG: the sort button is icon-only and only shows while the header is hovered
   async toggleSort(columnId: string) {
     const header = this.columnHeader(columnId)
     await header.hover()
     await header.getByRole('button', { name: 'sort', exact: true }).click()
   }
 
-  /** Name cells of all shown rows from top to bottom, e.g. to check the order with `toHaveText([...])` */
   nameCells() {
     return this.table.locator('tbody td.name')
   }
 
-  // ---------------------------------------------------------------------------
-  // context menu, move dialog and bulk actions
-  // ---------------------------------------------------------------------------
-
-  /** Right-click a row's name cell and pick an item of its context menu, e.g. "Create folder" */
   async rowMenu(label: string, item: string) {
     await this.nameCell(label).click({ button: 'right' })
     await menuItem(this.page, item).click()
   }
 
-  /**
-   * Fill and submit an "Add New ..." dialog that is already open, e.g. after `rowMenu(..., 'Create task')`.
-   * `createFolder` and `createTask` open the dialog from the toolbar instead.
-   */
   async submitCreateDialog(
     kind: 'folder' | 'task',
     { label, type }: { label: string; type?: string },
@@ -287,12 +265,10 @@ export class OverviewPage {
     await expect(this.createDialog()).toBeHidden()
   }
 
-  /** The folder picker that "Move" in the context menu opens */
   moveDialog() {
     return dialog(this.page, /^Select Folder/)
   }
 
-  /** Pick a (root level) target folder in the open "Move" dialog and confirm */
   async moveTo(folderLabel: string) {
     const picker = this.moveDialog()
     await expect(picker).toBeVisible()
@@ -301,34 +277,20 @@ export class OverviewPage {
     await expect(picker).toBeHidden()
   }
 
-  /**
-   * Add `label` to the cell selection: ctrl/cmd + click its name cell. Selected name cells select
-   * their rows for row actions such as "Delete selected".
-   */
   async addRowToSelection(label: string) {
     await this.nameCell(label).click({ modifiers: ['ControlOrMeta'] })
     await expect(this.nameCell(label)).toHaveClass(/selected/)
   }
 
-  /** The trash can in the toolbar deletes the selected rows (after a confirmation) */
   async deleteSelected() {
     await this.page.getByRole('button', { name: 'delete', exact: true }).click()
   }
 
-  // ---------------------------------------------------------------------------
-  // search and filter
-  // ---------------------------------------------------------------------------
-
-  /** The "Search and filter" bar in the toolbar; filters are saved in the working view */
   searchFilter() {
     return this.page.locator('.search-filter')
   }
 
-  /**
-   * Add a filter from the "Search and filter" dropdown, e.g. `addFilter('Task', 'Status', 'In progress')`.
-   * Picking a value applies the filter and closes the dropdown.
-   * FLAG: the dropdown is a plain list without menu roles, so items are found by their label.
-   */
+  // FLAG: the "Search and filter" dropdown is a plain list without menu roles, so items are found by label
   async addFilter(scope: 'Task' | 'Folder', field: string, value: string) {
     // the "Search and filter" placeholder is gone once a filter is applied
     await this.searchFilter().getByRole('textbox').click()
@@ -341,10 +303,7 @@ export class OverviewPage {
     }
   }
 
-  /**
-   * The chip of an applied filter, e.g. `filterChip('Task Status')`.
-   * FLAG: chips have no role or accessible name, so they are found by their CSS class.
-   */
+  // FLAG: filter chips have no role or accessible name, so they are found by their CSS class
   filterChip(label: string) {
     return this.searchFilter()
       .locator('.search-filter-item')
@@ -356,34 +315,19 @@ export class OverviewPage {
     await expect(this.filterChip(label)).toBeHidden()
   }
 
-  // ---------------------------------------------------------------------------
-  // hierarchy sidebar (slicer)
-  // ---------------------------------------------------------------------------
-
-  /** The folder tree left of the table; selecting folders there limits the table to them */
   sidebar() {
     return this.page.getByRole('table').first()
   }
 
-  /** Click a folder in the hierarchy sidebar; clicking it again deselects it */
   async toggleSidebarFolder(label: string) {
     await this.sidebar().getByText(label, { exact: true }).click()
   }
-
-  // ---------------------------------------------------------------------------
-  // CSV import
-  // ---------------------------------------------------------------------------
 
   importDialog() {
     return dialog(this.page, /^Import folders and tasks/)
   }
 
-  /**
-   * Import folders and tasks from a CSV file with the "Import CSV" wizard, keeping the mapping it
-   * suggests: upload, map columns, review values, preview, import. Resolves once the import has
-   * finished and the dialog is closed.
-   * FLAG: the file input is hidden behind the "Choose .csv file" button, so it is set directly.
-   */
+  // FLAG: the CSV file input is hidden behind the "Choose .csv file" button, so it is set directly
   async importCsv(filePath: string, { created }: { created: number }) {
     await this.page.getByRole('button', { name: 'Import CSV' }).click()
     const wizard = this.importDialog()
@@ -391,12 +335,10 @@ export class OverviewPage {
     await wizard.locator('input[type="file"]').setInputFiles(filePath)
     await expect(wizard.getByText(/\d+ rows found/)).toBeVisible()
     await wizard.getByRole('button', { name: 'Next', exact: true }).click()
-    // "Continue" stays disabled until every column (then every value) is mapped
     await expect(wizard.getByRole('columnheader', { name: 'File column' })).toBeVisible()
     await wizard.getByRole('button', { name: 'Continue', exact: true }).click()
     await expect(wizard.getByRole('columnheader', { name: 'Mapped Value' })).toBeVisible()
     await wizard.getByRole('button', { name: 'Continue', exact: true }).click()
-    // the preview is a dry run on the server
     await expect(wizard.getByText(`Creating: ${created}`)).toBeVisible()
     await wizard.getByRole('button', { name: 'Import data', exact: true }).click()
     await expect(wizard.getByText('Import finished')).toBeVisible({ timeout: 30_000 })
@@ -416,10 +358,6 @@ export const confirmDeleteEntities = async (page: Page, label: string) => {
   await expect(toast(page, /deleted/)).toBeVisible()
 }
 
-/**
- * The "Delete forever" dialog for more than one entity: instead of a name it asks how many of each
- * type will be deleted, children included, e.g. `{ folder: 1, task: 2 }`.
- */
 export const confirmDeleteCounts = async (
   page: Page,
   header: string | RegExp,

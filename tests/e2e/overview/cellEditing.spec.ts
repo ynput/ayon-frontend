@@ -116,7 +116,6 @@ test.describe('overview cell editing', () => {
 
 test.describe('overview tag and date cells', () => {
   test('add a tag to a task', async ({ page, api, projectName }) => {
-    // the tags offered are the project's tags
     await api.patch(`/api/projects/${projectName}`, {
       tags: [
         { name: 'hero', color: '#ff2450' },
@@ -130,7 +129,6 @@ test.describe('overview tag and date cells', () => {
     await overview.expand('sh010')
 
     await overview.setEnumCell('anim', 'tags', 'hero')
-    // tags are a multi select, the dropdown stays open until it is closed
     await page.keyboard.press('Escape')
     await expect(page.locator('.options')).toBeHidden()
 

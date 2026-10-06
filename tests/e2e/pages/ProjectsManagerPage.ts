@@ -36,7 +36,6 @@ export class ProjectsManagerPage {
     await expect(createDialog).toBeHidden()
   }
 
-  /** "Open" from a project's context menu goes to the project, without reloading the app */
   async openProject(name: string) {
     await this.projects.openContextMenu(name)
     await menuItem(this.page, 'Open').click()

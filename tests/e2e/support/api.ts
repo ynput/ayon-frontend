@@ -13,14 +13,12 @@ export type Folder = { id: string; name: string; folderType: string; parentId?: 
 export type Task = { id: string; name: string; taskType: string; folderId: string }
 export type Product = { id: string; name: string; productType: string; folderId: string }
 export type Version = { id: string; version: number; productId: string; taskId?: string | null }
-/** A media file of a version, as the viewer gets it */
 export type Reviewable = {
   fileId: string
   activityId: string
   filename: string
   label: string | null
   mimetype: string
-  /** `ready` plays as is, `conversionRequired` needs a transcoder first */
   availability: 'unknown' | 'ready' | 'conversionRequired' | 'conversionRecommended'
   mediaInfo?: { width?: number; height?: number; duration?: number; codec?: string }
 }
@@ -106,9 +104,7 @@ export class AyonApi {
     const name = options.name ?? uniqueName('project')
     const code = options.code ?? `e2e${Math.random().toString(36).slice(2, 9)}`
     await this.post('/api/projects', { name, code, library: !!options.library })
-    // FLAG (backend race, fixed in ynput/ayon-backend#1173): while other tests create and delete
-    // projects, the server's cached project list can miss a just-created project ("Project ... not
-    // found" on every request to it). Wait until the project resolves before a test uses it.
+    // FLAG (backend race, fixed in ynput/ayon-backend#1173): the cached project list can miss a new project
     await expect.poll(() => this.projectExists(name), { timeout: 30_000 }).toBe(true)
     return name
   }
@@ -139,20 +135,10 @@ export class AyonApi {
     return res.projects
   }
 
-  /**
-   * The anatomy of a project as the project anatomy editor shows it (snake_case sections:
-   * `statuses`, `task_types`, `folder_types`, `tags`, `link_types`, `attributes`, `templates`, ...).
-   * `getProject` returns the same data in camelCase.
-   */
   async getProjectAnatomy(project: string): Promise<Record<string, any>> {
     return this.get(`/api/projects/${project}/anatomy`)
   }
 
-  /**
-   * Changes the anatomy of a project (only ever one the test created), the way "Save changes" on
-   * the project anatomy page does, e.g. to add a status:
-   * `updateProjectAnatomy(project, (a) => ({ ...a, statuses: [...a.statuses, { name: 'Waiting' }] }))`
-   */
   async updateProjectAnatomy(
     project: string,
     update: (anatomy: Record<string, any>) => Record<string, any>,
@@ -258,10 +244,6 @@ export class AyonApi {
     return this.get(`/api/projects/${project}/versions/${id}`)
   }
 
-  /**
-   * A representation (published files) of a version, listed in the "Version files" tab of the
-   * details panel. File paths may use root templates like `{root[work]}/...`; nothing is stored.
-   */
   async createRepresentation(
     project: string,
     data: { versionId: string; name: string; files: string[] },
@@ -274,7 +256,6 @@ export class AyonApi {
     return id as string
   }
 
-  /** A workfile of a task; `path` may use root templates like `{root[work]}/...` */
   async createWorkfile(project: string, data: { taskId: string; path: string }) {
     const { id } = await this.post(`/api/projects/${project}/workfiles`, data)
     return id as string
@@ -285,16 +266,6 @@ export class AyonApi {
     return res.ok()
   }
 
-  // ---------------------------------------------------------------------------
-  // reviewables (media files of a version, shown in the viewer)
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Uploads a local file (e.g. from `tests/e2e/media`) as a reviewable of a version.
-   * The server probes it with ffprobe and rejects files it cannot read. The file is stored with
-   * the project; deleting the project moves it to `<project>.<timestamp>.trash` in the server's
-   * project storage.
-   */
   async uploadReviewable(
     project: string,
     versionId: string,
@@ -312,7 +283,6 @@ export class AyonApi {
     return this.check('POST', url, res)
   }
 
-  /** Reviewables of a version, in the order the viewer lists them, with their availability */
   async listReviewables(project: string, versionId: string): Promise<Reviewable[]> {
     const res = await this.get(`/api/projects/${project}/versions/${versionId}/reviewables`)
     return res.reviewables
@@ -355,14 +325,6 @@ export class AyonApi {
     return data.project.activities.edges.map((e: any) => e.node)
   }
 
-  // ---------------------------------------------------------------------------
-  // activity feed in depth: attachments, references, watchers
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Uploads a local file to the project the way the comment box does (a comment attachment) and
-   * returns its id. It belongs to no comment until one is created or updated with it.
-   */
   async uploadProjectFile(project: string, filePath: string, contentType?: string) {
     const url = `/api/projects/${project}/files`
     const ext = path.extname(filePath).toLowerCase()
@@ -375,7 +337,6 @@ export class AyonApi {
     return id as string
   }
 
-  /** A comment with attachments (file ids from `uploadProjectFile`) */
   async createCommentWithFiles(
     project: string,
     entityType: 'folder' | 'task' | 'version',
@@ -390,11 +351,6 @@ export class AyonApi {
     return id as string
   }
 
-  /**
-   * Activities in the feed of an entity, newest first: its own (`referenceType` "origin") and those
-   * of other entities that mention it ("mention") or are related to it ("relation", e.g. comments on
-   * the tasks of a folder). This is what the details panel feed shows.
-   */
   async listFeedActivities(
     project: string,
     entityId: string,
@@ -431,7 +387,6 @@ export class AyonApi {
     return data.project.activities.edges.map((e: any) => e.node)
   }
 
-  /** User names watching an entity (notified of everything that happens to it) */
   async getWatchers(
     project: string,
     entityType: 'folder' | 'task' | 'version',
@@ -492,11 +447,6 @@ export class AyonApi {
     await this.post(`/api/projects/${project}/lists/${listId}/items`, { entityId })
   }
 
-  /**
-   * One list through REST, with its items in list order (by `position`).
-   * `access` maps `__everyone__`, `user:<name>`, `group:<name>` and `team:<name>` to an access
-   * level (0 none, 10 viewer, 20 editor, 30 admin); an empty `access` means everyone is an admin.
-   */
   async getEntityList(
     project: string,
     listId: string,
@@ -515,12 +465,10 @@ export class AyonApi {
     return this.get(`/api/projects/${project}/lists/${listId}`)
   }
 
-  /** Patch a list, e.g. `{ access: { __everyone__: 0, 'user:jane': 10 } }` or `{ active: false }` */
   async updateEntityList(project: string, listId: string, data: Record<string, unknown>) {
     await this.patch(`/api/projects/${project}/lists/${listId}`, data)
   }
 
-  /** Custom attributes of one list (shown as extra columns of its items) */
   async getEntityListAttributes(
     project: string,
     listId: string,
@@ -528,7 +476,6 @@ export class AyonApi {
     return this.get(`/api/projects/${project}/lists/${listId}/attributes`)
   }
 
-  /** Replace the custom attributes of one list, e.g. `[{ name: 'note', data: { type: 'string', title: 'Note' } }]` */
   async setEntityListAttributes(
     project: string,
     listId: string,
@@ -537,7 +484,6 @@ export class AyonApi {
     await this.put(`/api/projects/${project}/lists/${listId}/attributes`, attributes)
   }
 
-  /** List folders group lists on the lists page (a powerpack feature) */
   async createEntityListFolder(
     project: string,
     data: { label: string; parentId?: string; scope?: string[] },
@@ -557,14 +503,6 @@ export class AyonApi {
     return folders.map((f: any) => ({ id: f.id, label: f.label, parentId: f.parentId ?? null }))
   }
 
-  // ---------------------------------------------------------------------------
-  // views (columns, grouping and filters of a page; per user and project)
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Settings of the working view (what the page currently shows) of the user this client is
-   * logged in as, or null while the user has not changed anything in that project.
-   */
   async getWorkingViewSettings(viewType: string, project: string): Promise<any | null> {
     const url = `/api/views/${viewType}/working`
     const res = await this.request.get(url, { params: { project_name: project } })
@@ -581,11 +519,6 @@ export class AyonApi {
     })
   }
 
-  /**
-   * Replaces the settings of the working view of a page in a project, e.g. to start a test with a
-   * filter applied: `{ filter: { operator: 'and', conditions: [{ key: 'task_status', value: ['Approved'], operator: 'in' }] } }`.
-   * The view belongs to the user this client is logged in as and is dropped with the project.
-   */
   async setWorkingViewSettings(viewType: string, project: string, settings: Record<string, any>) {
     await this.post(`/api/views/${viewType}?project_name=${project}`, {
       label: 'Working',
@@ -594,15 +527,7 @@ export class AyonApi {
     })
   }
 
-  // ---------------------------------------------------------------------------
-  // inbox (of the user this client is logged in as)
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Inbox messages, newest first. `important` splits the "Important" and "Other" tabs,
-   * `active: false` lists cleared messages. Leave a filter out to not filter on it.
-   * FLAG (backend): a manager's or admin's inbox reads every project, use a regular user.
-   */
+  // FLAG (backend): a manager's or admin's inbox reads every project, use a regular user
   async listInboxMessages(filter: { important?: boolean; active?: boolean } = {}): Promise<
     {
       activityId: string
