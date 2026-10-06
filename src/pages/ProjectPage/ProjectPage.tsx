@@ -369,7 +369,7 @@ const ProjectPageInner = () => {
   const tab = !!addonName ? addonsData?.find((item) => item.name === addonName)?.name : module
   const isAddon = !!addonName // Check if we're on an addon page
   useEffect(() => {
-    trackCurrentTab(tab, isAddon)
+    trackCurrentTab(tab ?? '', isAddon)
   }, [tab, isAddon, trackCurrentTab])
 
   const getPageByModuleAndAddonData = (module: string, addonName?: string) => {

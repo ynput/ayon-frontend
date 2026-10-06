@@ -59,7 +59,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     projects: { active: projects },
   } = useGlobalContext()
 
-  const { data: folders = [] } = useGetProjectFoldersQuery({ active: true })
+  const { data: folders = [] } = useGetProjectFoldersQuery()
   const projectTree = useMemo(
     () => buildProjectsTableData(projects, folders, true, powerLicense),
     [projects, folders, powerLicense],
