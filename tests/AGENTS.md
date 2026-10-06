@@ -57,6 +57,8 @@ While writing tests, run only your specs: `npx playwright test --project=chromiu
 - Generic locators are in `support/ui.ts`: `toast`, `dialog`, `confirmDialog` and `menuItem`.
 - Reuse these instead of writing selectors in specs. When a flow is needed in a second spec, move it into a page object.
 
+**Comments.** Only `FLAG` markers (one line: what is wrong in the app and the workaround), the note naming the fix PR above a `test.fixme`, and one-line notes on deliberately unusual steps. Explain everything else in the commit message or the PR description.
+
 **Popups.** The `page` fixture marks one-off prompts as already dismissed, using the same storage keys the prompts set themselves. This covers "Complete your profile", the restart banner and the release installer prompt. It also blocks featurebase.
 
 ## Gotchas
