@@ -62,3 +62,15 @@ export const SelectedCount = styled.span`
     opacity: 0;
   }
 `
+
+export const DateOrderBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  padding: var(--padding-s) var(--padding-m);
+`
+
+export const DateOrderHint = styled.span`
+  margin-left: var(--padding-s);
+  color: var(--md-sys-color-outline);
+`

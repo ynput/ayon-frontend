@@ -26,7 +26,10 @@ import {
   Container,
   ValueMappersContainer,
   SelectedCount,
+  DateOrderBar,
+  DateOrderHint,
 } from "./ReviewValuesStep.styled"
+import { DateOrder, DateOrderDetection, detectDateOrder, formatDateOrderExample } from "./dates"
 import { useEffect, useMemo, useState } from "react"
 import MapperRow from "../MapperRow"
 import usePreset from "../../hooks/usePreset"
@@ -133,6 +136,36 @@ export default function ReviewValuesStep({
     ),
     [columnSettings, mappingsToReview, uniqueValuesForColumn, mappings],
   )
+
+  // day/month order of each date column, read from its values unless the user picked one
+  const [dateOrderOverrides, setDateOrderOverrides] = useState<Record<string, DateOrder>>({})
+  const dateOrderDetections = useMemo(
+    () => Object.fromEntries(
+      Object.entries(mappingsToReview)
+        .filter(([, { targetColumn }]) => columnSettings[targetColumn]?.valueType === "datetime")
+        .map(([column]) => [column, detectDateOrder(uniqueValuesForColumn[column] ?? [])]),
+    ) as Record<string, DateOrderDetection>,
+    [mappingsToReview, columnSettings, uniqueValuesForColumn],
+  )
+  const getDateOrder = (column: string): DateOrder | undefined =>
+    dateOrderOverrides[column] ?? dateOrderDetections[column]?.order
+
+  const changeDateOrder = (column: string, order: DateOrder) => {
+    setDateOrderOverrides((old) => ({ ...old, [column]: order }))
+    const settings = columnSettings[mappingsToReview[column].targetColumn]
+    setMappings((old) => {
+      // values the user set by hand stay as they are
+      const columnValueMappings = { ...(old?.[column] ?? {}) }
+      for (const value of uniqueValuesForColumn[column] ?? []) {
+        if (value === undefined || columnValueMappings[`${value}`]?.userResolved) continue
+        const inferred = inferMapping(`${value}`, settings, undefined, order)
+        if (inferred) columnValueMappings[`${value}`] = inferred
+      }
+      const updated = { ...(old ?? {}), [column]: columnValueMappings }
+      preset.updateValues(updated)
+      return updated
+    })
+  }
 
   const resolvedColumns = useMemo(
     () => getResolvedColumns(
@@ -243,7 +276,7 @@ export default function ReviewValuesStep({
 
             return [
               `${value}`,
-              inferMapping(`${source}`, columnSettings[targetColumn], entityType),
+              inferMapping(`${source}`, columnSettings[targetColumn], entityType, getDateOrder(column)),
             ]
           })
           .filter(([, mapping]) => !!mapping)
@@ -376,6 +409,31 @@ export default function ReviewValuesStep({
           unresolvedValues={unresolvedValues}
         />
         <ValueMappersContainer>
+          {
+            activeColumn && dateOrderDetections[activeColumn]?.hasDayMonthValues && (
+              <DateOrderBar>
+                Day and month order
+                {
+                  (["dmy", "mdy"] as DateOrder[]).map((order) => (
+                    <Button
+                      key={order}
+                      label={order === "dmy" ? "Day first" : "Month first"}
+                      selected={getDateOrder(activeColumn) === order}
+                      onClick={() => changeDateOrder(activeColumn, order)}
+                    />
+                  ))
+                }
+                <DateOrderHint>
+                  {formatDateOrderExample(getDateOrder(activeColumn) ?? "dmy")}.{" "}
+                  {
+                    dateOrderDetections[activeColumn].ambiguous && !dateOrderOverrides[activeColumn]
+                      ? "The values could be read both ways, so this follows your locale."
+                      : ""
+                  }
+                </DateOrderHint>
+              </DateOrderBar>
+            )
+          }
           <Mappers>
             <colgroup>
               <col style={{ width: "40%" }} />
