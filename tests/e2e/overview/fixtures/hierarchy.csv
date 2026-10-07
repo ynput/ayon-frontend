@@ -1,0 +1,4 @@
+path,entity_type,folder_type,task_type,status
+sq100,folder,Sequence,,Not ready
+sq100 / sh110,folder,Shot,,In progress
+sq100 / sh110 / layout,task,,Layout,Approved

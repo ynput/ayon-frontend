@@ -11,7 +11,7 @@ import App from './app'
 // wrap socket provider so we can pass the correct props
 const SocketProviderWrapper = (props: { children: React.ReactNode }) => {
   const dispatch = useAppDispatch()
-  const projectName = useAppSelector((state) => state.project.name) as unknown as string
+  const projectName = useAppSelector((state) => state.project.openProject) ?? undefined
   const userName = useAppSelector((state) => state.user.name)
   return (
     <SocketProvider userName={userName} projectName={projectName} dispatch={dispatch}>

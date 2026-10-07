@@ -63,6 +63,12 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
 
   const folderHasVersions = Boolean(versionActivitiesData?.pages?.[0]?.activities?.length)
 
+  const entityType = formData?.entityType || 'task'
+  const { enableEditing, attribAccess, updateEntity } = useEntityEditing({
+    entities,
+    entityType,
+  })
+
   const { editableFields, readOnlyFieldsData } = useEntityFields({
     attributes,
     folderTypes,
@@ -71,13 +77,12 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     tags,
     entityType: formData?.entityType,
     folderHasVersions,
+    attribAccess,
   })
 
-  const entityType = formData?.entityType || 'task'
-  const { enableEditing, updateEntity } = useEntityEditing({
-    entities,
-    entityType,
-  })
+  const { writableAttributes } = attribAccess
+  const enableDescriptionEditing =
+    enableEditing && (!writableAttributes || writableAttributes.includes('description'))
 
   const handleChange: DetailsPanelAttributesEditorProps['onChange'] = (key, value) => {
     if (key === 'tags') {
@@ -137,7 +142,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
       <DescriptionSection
         description={formData?.description || ''}
         isMixed={mixedFields.includes('description')}
-        enableEditing={enableEditing}
+        enableEditing={enableDescriptionEditing}
         onChange={handleDescriptionChange}
         isLoading={isLoading}
         mentionsContext={mentionsContext}
