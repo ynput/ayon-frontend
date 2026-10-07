@@ -34,7 +34,6 @@ import {
   missingStrategyForImportMode,
   NewListEntityType,
   RowsEntityType,
-  schemaForListValues,
   schemaForRowsEntityType,
 } from './steps/importMode'
 
@@ -80,7 +79,6 @@ export default function ImportSteps({
   const [importMode, setImportMode] = useState(ImportMode.CREATE_AND_UPDATE)
   const [duplicateStrategy, setDuplicateStrategy] = useState<DuplicateItemStrategy>('skip')
   const [rowsEntityType, setRowsEntityType] = useState<RowsEntityType>('column')
-  const [updateListedEntities, setUpdateListedEntities] = useState(true)
   // without a list to import into, the import creates one
   const creatingList = importContext === 'entity_list_item' && !folderId
   const [newList, setNewList] = useState<{ label: string; entityType: NewListEntityType }>({
@@ -114,8 +112,7 @@ export default function ImportSteps({
 
   const importSchema = useMemo(() => {
     if (importContext === 'entity_list_item') {
-      const listSchema = rawImportSchema?.filter(({ key }) => key !== ENTITY_LIST_ID)
-      return listSchema && schemaForListValues(listSchema, updateListedEntities)
+      return rawImportSchema?.filter(({ key }) => key !== ENTITY_LIST_ID)
     }
     if (importContext !== 'hierarchy') {
       return rawImportSchema
@@ -123,7 +120,7 @@ export default function ImportSteps({
 
     const hierarchySchema = withHierarchySchema(rawImportSchema)
     return hierarchySchema && schemaForRowsEntityType(hierarchySchema, rowsEntityType)
-  }, [rawImportSchema, importContext, rowsEntityType, updateListedEntities])
+  }, [rawImportSchema, importContext, rowsEntityType])
 
   const { setSelectedView, workingView } = useViewsContext()
 
@@ -150,8 +147,6 @@ export default function ImportSteps({
           importContext === 'hierarchy' && rowsEntityType !== 'column' ? rowsEntityType : undefined,
         newListLabel: creatingList ? newList.label.trim() : undefined,
         newListEntityType: creatingList ? newList.entityType : undefined,
-        updateListedEntities:
-          importContext === 'entity_list_item' ? updateListedEntities : undefined,
       })
     },
     [
@@ -164,7 +159,6 @@ export default function ImportSteps({
       rowsEntityType,
       creatingList,
       newList,
-      updateListedEntities,
     ],
   )
 
@@ -327,11 +321,6 @@ export default function ImportSteps({
             newList={creatingList ? newList : undefined}
             onNewListChange={(list) => {
               setNewList(list)
-              setPreviewStatus(null)
-            }}
-            updateListedEntities={updateListedEntities}
-            onUpdateListedEntitiesChange={(value) => {
-              setUpdateListedEntities(value)
               setPreviewStatus(null)
             }}
             rowsEntityType={rowsEntityType}
