@@ -65,7 +65,7 @@ const TeamList = ({
 
   const onContextMenuSelectionChange = (event) => {
     if (!selection.includes(event.value.name)) {
-      onSelect(event.value.name)
+      onSelect([event.value.name])
     }
   }
 
@@ -84,30 +84,33 @@ const TeamList = ({
   const [globalContextMenuShow] = useCreateContextMenu(globalContextItems)
 
   // TABLE CONTEXT MENU
-  const tableContextItems = useMemo(
-    () => [
-      {
-        label: 'Create Team',
-        icon: 'group_add',
-        command: onNewTeam,
-      },
-      {
-        label: 'Duplicate Team',
-        icon: 'content_copy',
-        command: onDuplicate,
-        disabled: selection.length > 1,
-      },
-      {
-        label: `Delete Team${selection.length > 1 ? 's' : ''}`,
-        icon: 'delete',
-        command: onDelete,
-        danger: true,
-      },
-    ],
-    [teams, selection],
-  )
-  // create the ref and model
-  const [tableContextMenuShow] = useCreateContextMenu(tableContextItems)
+  // built from the right-clicked row, the `selection` prop is not updated yet when the menu opens
+  const buildTableContextItems = (ctxSelection) => [
+    {
+      label: 'Create Team',
+      icon: 'group_add',
+      command: onNewTeam,
+    },
+    {
+      label: 'Duplicate Team',
+      icon: 'content_copy',
+      command: onDuplicate,
+      disabled: ctxSelection.length > 1,
+    },
+    {
+      label: `Delete Team${ctxSelection.length > 1 ? 's' : ''}`,
+      icon: 'delete',
+      command: () => onDelete(ctxSelection),
+      danger: true,
+    },
+  ]
+  const [tableContextMenuShow] = useCreateContextMenu()
+
+  const onTableContextMenu = (e) => {
+    const name = e.data?.name
+    const ctxSelection = name && !selection.includes(name) ? [name] : selection
+    tableContextMenuShow(e.originalEvent, buildTableContextItems(ctxSelection))
+  }
 
   const tableData = useTableLoadingData(teamList, isLoading, 10, 'name')
 
@@ -126,7 +129,7 @@ const TeamList = ({
             selection={selectionObj}
             onSelectionChange={onSelect && onSelectionChange}
             onRowClick={onRowClick}
-            onContextMenu={(e) => tableContextMenuShow(e.originalEvent)}
+            onContextMenu={onTableContextMenu}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
             className={clsx({ loading: isLoading })}
             rowClassName={(rowData) => clsx({ loading: rowData.isLoading })}
