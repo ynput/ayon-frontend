@@ -2117,6 +2117,7 @@ export type GetProductsColumnStatsQueryVariables = Exact<{
   folderIds?: Array<string> | string | null | undefined;
   productIds?: Array<string> | string | null | undefined;
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
+  hasReviewables?: boolean | null | undefined;
 }>;
 
 
@@ -2189,6 +2190,7 @@ export type GetVersionsColumnStatsQueryVariables = Exact<{
   featuredOnly?: Array<string> | string | null | undefined;
   featuredOnlyEntityType?: string | null | undefined;
   latestPerFolder?: boolean | null | undefined;
+  hasReviewables?: boolean | null | undefined;
 }>;
 
 
@@ -4024,7 +4026,7 @@ fragment VersionBase on VersionNode {
   }
 }`);
 export const GetProductsColumnStatsDocument = new TypedDocumentString(`
-    query GetProductsColumnStats($projectName: String!, $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $folderIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
+    query GetProductsColumnStats($projectName: String!, $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $folderIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!], $hasReviewables: Boolean) {
   project(name: $projectName) {
     products(
       calculateSpecificStatistics: $targets
@@ -4034,6 +4036,7 @@ export const GetProductsColumnStatsDocument = new TypedDocumentString(`
       taskFilter: $taskFilter
       folderFilter: $folderFilter
       folderIds: $folderIds
+      hasReviewables: $hasReviewables
       includeFolderChildren: true
     ) {
       fieldStats {
@@ -4271,7 +4274,7 @@ fragment VersionExtended on VersionNode {
   }
 }`);
 export const GetVersionsColumnStatsDocument = new TypedDocumentString(`
-    query GetVersionsColumnStats($projectName: String!, $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $folderIds: [String!], $versionIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!], $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean) {
+    query GetVersionsColumnStats($projectName: String!, $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $folderIds: [String!], $versionIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!], $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean, $hasReviewables: Boolean) {
   project(name: $projectName) {
     versions(
       calculateSpecificStatistics: $targets
@@ -4286,6 +4289,7 @@ export const GetVersionsColumnStatsDocument = new TypedDocumentString(`
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType
       latestPerFolder: $latestPerFolder
+      hasReviewables: $hasReviewables
     ) {
       fieldStats {
         ...ColumnStatsFragment

@@ -3,7 +3,11 @@ import { useCallback, useMemo, useState } from 'react'
 
 // Third-party libraries
 import { ExpandedState } from '@tanstack/react-table'
-import { OverviewSettings } from '@shared/api'
+import {
+  OverviewSettings,
+  refreshActiveAndPurgeOthers,
+  refreshOtherActiveQueries,
+} from '@shared/api'
 
 // Shared components and hooks
 import { useSessionStorage, useGetEntityGroups } from '@shared/hooks'
@@ -33,6 +37,7 @@ import { useOverviewViewSettings, useViewsContext, useViewUpdateHelper } from '@
 import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containers/Slicer'
 import { useProjectOverviewStats } from '../../hooks/useProjectOverviewStats'
 import { useProjectContext, useProjectFoldersContext } from '@shared/context'
+import type { OnSyncDataCallback } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 import { ProjectOverviewContext } from './ProjectOverviewContextInstance'
 import { useAppDispatch } from '@state/store'
@@ -47,13 +52,14 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { projectName, ...projectInfo } = useProjectContext()
   const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
 
-  const { getChildFolderIds } = useProjectFoldersContext()
+  const { getChildFolderIds, folders: projectFolders } = useProjectFoldersContext()
 
   const {
     sorting,
     groupBy: panelGroupBy,
     defaultColumnVisibility,
     columnVisibility,
+    groupByConfig,
   } = useColumnSettingsContext()
 
   const { sliceSelections, sliceFilters, isLicensePending } = useSlicerPanelSelections(attribFields)
@@ -238,10 +244,11 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     sliceFilters: slicerTaskFilters,
     config: { searchKey: 'name' },
   })
+  // folder names stay filter conditions: the folder search of the table (REST folder search) and
+  // the task queries (folderFilter) have no folder text search, so a search would be dropped there
   const combinedFolderFilter = useQueryFilters({
     queryFilters: folderFilter,
     sliceFilters: slicerFolderFilters,
-    config: { searchKey: 'name' },
   })
 
   // Use the shared hook to handle filter logic (for backward compatibility)
@@ -301,7 +308,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
       const countsFolderFilter = buildQueryFilters({
         queryFilters: folderFilter,
         sliceFilters: otherFolderFilters,
-        config: { searchKey: 'name' },
       })
       return {
         projectName,
@@ -323,35 +329,15 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     ],
   )
 
-  const {
-    folderStats,
-    taskStats,
-    folderStatsLoading,
-    taskStatsLoading,
-    folderStatsError,
-    taskStatsError,
-    folderStatsArgs,
-    taskStatsArgs,
-    isUninitializedFolderStats,
-    isUninitializedTaskStats,
-  } = useProjectOverviewStats({
-    folderFilter: combinedFolderFilter.filterString,
-    taskFilter: combinedTaskFilter.filterString,
-    folderSearch: combinedFolderFilter.search,
-    taskSearch: combinedTaskFilter.search,
-    selectedFolders,
-    selectedTaskIds,
-    showHierarchy,
-  })
-
   // DATA FETCHING
   const {
     foldersMap,
     tasksMap,
     tasksByFolderMap,
     fetchNextPage,
-    onSyncData,
+    onSyncData: onSyncTableData,
     isLoadingAll,
+    isFetchingFolders,
     isLoadingMore,
     loadingTasks,
     loadingLinksEntityIds,
@@ -387,12 +373,77 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     isLoadingViews: isLoadingViews || isLicensePending || isResolvingListIds,
     onCollapseAll: () => setExpanded({}),
     visibleEntityIds,
-    folderStatsArgs,
-    taskStatsArgs,
-    folderStatsUninitialized: isUninitializedFolderStats,
-    taskStatsUninitialized: isUninitializedTaskStats,
     dispatch,
   })
+
+  // The folders of the table data (hierarchy and flat folders view), for the folder summary.
+  // null when the table holds every folder, undefined when it shows no folder rows (task list,
+  // grouping), where the summary counts the folders of the filtered tasks instead.
+  const tableFolderIds = useMemo(() => {
+    if (!showHierarchy && !isFlatFolderView) return undefined
+    let ids = [...foldersMap.keys()]
+    // same rule as the flat folders rows (useBuildProjectDataTable)
+    if (isFlatFolderView && groupByConfig?.showEmpty === false) {
+      ids = ids.filter((id) => foldersMap.get(id)?.hasTasks ?? tasksByFolderMap.has(id))
+    }
+    return ids.length === projectFolders.length ? null : ids
+  }, [
+    showHierarchy,
+    isFlatFolderView,
+    foldersMap,
+    tasksByFolderMap,
+    groupByConfig?.showEmpty,
+    projectFolders.length,
+  ])
+
+  const {
+    folderStats,
+    taskStats,
+    folderStatsLoading,
+    taskStatsLoading,
+    folderStatsError,
+    taskStatsError,
+    folderStatsArgs,
+    taskStatsArgs,
+    isUninitializedFolderStats,
+    isUninitializedTaskStats,
+  } = useProjectOverviewStats({
+    folderFilter: combinedFolderFilter.filterString,
+    taskFilter: combinedTaskFilter.filterString,
+    folderSearch: combinedFolderFilter.search,
+    taskSearch: combinedTaskFilter.search,
+    selectedFolders,
+    selectedTaskIds,
+    showHierarchy,
+    tableFolderIds,
+    isLoadingTableFolders: isFetchingFolders,
+  })
+
+  const onSyncData: OnSyncDataCallback = async (updates = []) => {
+    const isFullSync = updates.length === 0
+    const hasFolderUpdates = updates.some((update) => update.topic.startsWith('entity.folder.'))
+    const hasTaskUpdates = updates.some((update) => update.topic.startsWith('entity.task.'))
+
+    const statsQueries: { endpointName: string; args: unknown }[] = []
+    if ((isFullSync || hasFolderUpdates) && !isUninitializedFolderStats) {
+      statsQueries.push({ endpointName: 'GetFolderColumnStats', args: folderStatsArgs })
+    }
+    if ((isFullSync || hasTaskUpdates) && !isUninitializedTaskStats) {
+      statsQueries.push({ endpointName: 'GetTaskColumnStats', args: taskStatsArgs })
+    }
+
+    await Promise.all([
+      onSyncTableData(updates),
+      ...statsQueries.map(({ endpointName, args }) =>
+        dispatch(
+          refreshActiveAndPurgeOthers(endpointName, args, { refreshOtherActiveQueries: false }),
+        ).unwrap(),
+      ),
+    ])
+    statsQueries.forEach(({ endpointName, args }) =>
+      dispatch(refreshOtherActiveQueries(endpointName, args)),
+    )
+  }
 
   // combine foldersMap and tasksMap into a single map
   const entitiesMap = useEntitiesMap({ foldersMap, tasksMap })

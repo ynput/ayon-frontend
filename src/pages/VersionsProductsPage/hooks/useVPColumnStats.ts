@@ -28,6 +28,8 @@ type Params = {
   featuredOnly?: string[]
   featuredOnlyEntityType?: string
   latestPerFolder?: boolean
+  hasReviewables?: boolean
+  showProducts?: boolean
 }
 
 export const useVPColumnStats = ({
@@ -41,6 +43,8 @@ export const useVPColumnStats = ({
   featuredOnly,
   featuredOnlyEntityType,
   latestPerFolder,
+  hasReviewables,
+  showProducts,
 }: Params) => {
   const { projectName } = useProjectContext()
   const { attribFields } = useProjectDataContext()
@@ -105,12 +109,19 @@ export const useVPColumnStats = ({
     versionIds,
     productIds,
   }
-  const productStatsArgs = { ...columnStatsBaseArgs, targets: productTargets }
+  // the versions list counts the products of its versions; the products view lists products
+  // regardless of the reviewables filter, which only applies to their versions
+  const productStatsArgs = {
+    ...columnStatsBaseArgs,
+    hasReviewables: showProducts ? undefined : hasReviewables,
+    targets: productTargets,
+  }
   const versionStatsArgs = {
     ...columnStatsBaseArgs,
     featuredOnly,
     featuredOnlyEntityType,
     latestPerFolder,
+    hasReviewables,
     targets: versionTargets,
   }
   const skip = !projectName || isLoadingViews || !powerLicense || noSummaries
