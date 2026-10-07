@@ -61,8 +61,8 @@ export const newListEntityTypeOptions: {
 
 export const describeNewList = (entityType: NewListEntityType) =>
   entityType === 'version'
-    ? 'A new list is created with the versions the rows find by ID.'
-    : `A new list is created with the ${entityType}s the rows find by path, name or ID.`
+    ? 'A new list gets the versions the rows find by ID, and their values are updated.'
+    : `A new list gets the ${entityType}s the rows find by path, name or ID, and their values are updated.`
 
 // Whether hierarchy rows say their own entity type, or the whole sheet is one type
 export type RowsEntityType = 'column' | 'folder' | 'task'
@@ -118,9 +118,9 @@ export const describeImportMode = (importContext: ImportContext, importMode: Imp
   const updateOnly = importMode === ImportMode.UPDATE_ONLY
   if (importContext === 'entity_list_item') {
     return updateOnly
-      ? 'Rows update the attributes of items already in the list, matched by entity path, name or ID. ' +
-          'Entities that are not in the list are skipped.'
-      : 'Rows add entities to the list and update the attributes of items already in it.'
+      ? 'Rows update the entities already in the list and their list attributes, matched by ' +
+          'entity path, name or ID. Entities that are not in the list are skipped.'
+      : 'Rows add entities to the list and update their values and list attributes.'
   }
 
   const items = itemsLabelForImportContext[importContext]

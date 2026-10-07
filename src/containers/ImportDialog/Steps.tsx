@@ -103,6 +103,8 @@ export default function ImportSteps({
       projectName,
       entityType: importContext,
       folderId,
+      // a new list offers the values of the entity type it will hold
+      listEntityType: creatingList ? newList.entityType : undefined,
     },
     // statuses, list attributes and comment categories can change in settings meanwhile
     { refetchOnMountOrArgChange: true },

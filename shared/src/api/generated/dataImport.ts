@@ -7,6 +7,7 @@ const injectedRtkApi = api.injectEndpoints({
         params: {
           project_name: queryArg.projectName,
           folder_id: queryArg.folderId,
+          list_entity_type: queryArg.listEntityType,
         },
       }),
     }),
@@ -61,6 +62,7 @@ export type ExportFieldsApiArg = {
   entityType: 'user' | 'folder' | 'task' | 'hierarchy' | 'entity_list_item'
   projectName?: string
   folderId?: string
+  listEntityType?: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
 }
 export type PostApiCsvExportByEntityTypeApiResponse = /** status 200 Successful Response */ any
 export type PostApiCsvExportByEntityTypeApiArg = {
