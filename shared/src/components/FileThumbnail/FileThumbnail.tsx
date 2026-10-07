@@ -2,6 +2,7 @@ import { getMimeTypeIcon, Icon } from '@ynput/ayon-react-components'
 import { FC, HTMLAttributes, ImgHTMLAttributes, useEffect, useState, useRef } from 'react'
 import styled, { keyframes } from 'styled-components'
 import clsx from 'clsx'
+import { Filmstrip } from '../Filmstrip'
 
 const spin = keyframes`
   from {
@@ -21,6 +22,11 @@ const Wrapper = styled.div`
   overflow: hidden;
 
   background-color: var(--md-sys-color-surface-container-low);
+
+  /* the hover-scrub filmstrip replaces the static image */
+  &[data-filmstrip-active] > img {
+    visibility: hidden;
+  }
 `
 
 const LoadingIcon = styled(Icon)`
@@ -46,10 +52,17 @@ export interface FileThumbnailProps
   extends Omit<HTMLAttributes<HTMLDivElement>, 'onError' | 'onLoad'> {
   src: string
   mimetype?: string
+  /** hover-scrub filmstrip url (see getFileFilmstripUrl) */
+  filmstripSrc?: string | null
   imgProps?: Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'onError' | 'onLoad'>
 }
 
-export const FileThumbnail: FC<FileThumbnailProps> = ({ mimetype = '', src, ...props }) => {
+export const FileThumbnail: FC<FileThumbnailProps> = ({
+  mimetype = '',
+  src,
+  filmstripSrc,
+  ...props
+}) => {
   const [error, setError] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const imageRef = useRef<HTMLImageElement | null>(null)
@@ -173,6 +186,7 @@ export const FileThumbnail: FC<FileThumbnailProps> = ({ mimetype = '', src, ...p
         }}
         className={clsx({ hidden: !loaded || error })}
       />
+      {filmstripSrc && <Filmstrip src={filmstripSrc} fit="cover" />}
     </Wrapper>
   )
 }

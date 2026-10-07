@@ -2,6 +2,7 @@ import { forwardRef, HTMLProps, MouseEvent } from 'react'
 import type { ReviewableModel } from '@shared/api'
 import * as Styled from './ReviewableCard.styled'
 import clsx from 'clsx'
+import { getFileFilmstripUrl } from '@shared/util'
 
 export interface ReviewableCardProps
   extends Pick<
@@ -70,6 +71,11 @@ export const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
         <Styled.StyledFileThumbnail
           src={`/api/projects/${projectName}/files/${fileId}/thumbnail`}
           mimetype={mimetype}
+          filmstripSrc={
+            !isDragging && mimetype?.startsWith('video/')
+              ? getFileFilmstripUrl(projectName, fileId)
+              : null
+          }
         />
         <Styled.Content>
           <Styled.Title>

@@ -2,6 +2,7 @@ import { EntityCard } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import { InView } from 'react-intersection-observer'
 import { ProjectModel } from '@shared/api'
+import { useEntityCardFilmstrip } from '@shared/components'
 
 interface VPGridCardProps {
   entity: {
@@ -15,6 +16,7 @@ interface VPGridCardProps {
     author?: string | null
     isPlayable: boolean
     thumbnailUrl: string | undefined
+    filmstripUrl?: string | null
     versions?: string[]
   }
   index: number
@@ -41,6 +43,7 @@ export const VPGridCard: FC<VPGridCardProps> = ({
   rowSelectionColumnId,
 }) => {
   const status = projectInfo?.statuses?.find((s) => s.name === entity.status)
+  const { thumbnailProps, filmstrip } = useEntityCardFilmstrip(entity.filmstripUrl)
 
   return (
     <InView key={entity.id} rootMargin="300px 0px 300px 0px" root={root}>
@@ -76,7 +79,9 @@ export const VPGridCard: FC<VPGridCardProps> = ({
               onVersionsClick={(e) => handleCardClick(e, entity.id, index, rowSelectionColumnId)}
               onDoubleClick={(e) => handleDoubleClick(e, entity.id)}
               onContextMenu={(e) => handleContextMenu(e, entity.id)}
+              pt={{ thumbnail: thumbnailProps }}
             />
+            {filmstrip}
           </div>
         ) : (
           <div

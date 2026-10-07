@@ -24,6 +24,7 @@ import buildEntityTypeIcons from '../../helpers/buildEntityTypeIcons'
 import type { ProjectInfo } from '../../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../../helpers/buildDetailsPanelTitles'
 import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
+import { getFilmstripTarget } from '@shared/components/Filmstrip'
 
 export type EntityTypeIcons = {
   folder: Record<string, string>
@@ -167,7 +168,7 @@ const DetailsPanelHeader = ({
     return updateEntity(field, value)
   }
 
-  const handleThumbnailClick = () => {
+  const handleThumbnailClick = (e?: React.MouseEvent) => {
     let versionIds,
       id = firstEntity.id,
       entityTypeKey = entityType + 'Id'
@@ -179,10 +180,14 @@ const DetailsPanelHeader = ({
     }
 
     if (id) {
+      // open the scrubbed reviewable at the hovered filmstrip frame
+      const filmstrip = getFilmstripTarget(e)
       onOpenViewer({
         [entityTypeKey]: id,
         projectName,
         versionIds,
+        reviewableIds: filmstrip && [filmstrip.fileId],
+        goToPosition: filmstrip?.position,
       })
     }
   }
@@ -226,6 +231,7 @@ const DetailsPanelHeader = ({
                 thumbnails={thumbnails}
                 onClick={isThumbnailClickable ? handleThumbnailClick : undefined}
                 hoverIcon={isPlayable ? 'play_circle' : undefined}
+                filmstrip={isPlayable}
               />
               {isPlayable && <PlayableIcon />}
             </div>

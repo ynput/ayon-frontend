@@ -119,6 +119,7 @@ import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { ColumnsConfig } from './types/columnConfig'
 import { getRequestErrorString } from '@shared/util'
+import { getFilmstripTarget } from '@shared/components/Filmstrip'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'> & { id?: string },
@@ -1779,7 +1780,13 @@ const TD = ({
               const entity = getEntityById(cell.row.original.primary.id)
               if (entity) {
                 const targetIds = getEntityViewierIds(entity)
-                onOpenPlayer(targetIds, { quickView: true })
+                // open the scrubbed reviewable at the hovered filmstrip frame
+                const filmstrip = getFilmstripTarget(e)
+                onOpenPlayer(targetIds, {
+                  quickView: true,
+                  goToPosition: filmstrip?.position,
+                  reviewableId: filmstrip?.fileId,
+                })
               }
             }
           }
