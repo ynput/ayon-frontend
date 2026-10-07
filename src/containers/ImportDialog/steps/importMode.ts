@@ -45,6 +45,29 @@ export const describeDuplicateStrategy = (importContext: ImportContext) =>
     ? 'When a Name matches several entities and there is no Path or ID to tell them apart.'
     : 'When a Name matches several folders or tasks and there is no Path to tell them apart.'
 
+// Without the powerpack, a list import sets values on the listed entities; per-list values
+// (on the list items) are a power feature. List items can hold only attributes, so the other
+// entity fields are offered only when the entities are updated.
+const LISTED_ENTITY_FIELDS = [
+  'label',
+  'status',
+  'tags',
+  'assignees',
+  'active',
+  'folder_type',
+  'task_type',
+  'product_type',
+]
+
+export const schemaForListValues = (importSchema: ImportSchema, updateListedEntities: boolean) =>
+  updateListedEntities
+    ? importSchema
+    : importSchema.filter(({ key }) => !LISTED_ENTITY_FIELDS.includes(key))
+
+export const LIST_VALUES_ON_ENTITIES =
+  'Values are saved to the entities themselves, everywhere. Keeping separate values in ' +
+  'each list is a power feature.'
+
 // The entity type of a list created by the import
 export type NewListEntityType = 'folder' | 'task' | 'product' | 'version'
 
@@ -114,13 +137,18 @@ export const ENTITY_LIST_ID = 'entity_list_id'
 export const hasImportModes = (importContext: ImportContext) =>
   Boolean(matchTargetsForImportContext[importContext])
 
-export const describeImportMode = (importContext: ImportContext, importMode: ImportMode) => {
+export const describeImportMode = (
+  importContext: ImportContext,
+  importMode: ImportMode,
+  listValuesOnEntities = false,
+) => {
   const updateOnly = importMode === ImportMode.UPDATE_ONLY
   if (importContext === 'entity_list_item') {
+    const target = listValuesOnEntities ? 'the entities' : 'the list items'
     return updateOnly
-      ? 'Rows set attribute values on the items already in the list, matched by entity ' +
+      ? `Rows set values on ${target} already in the list, matched by entity ` +
           'path, name or ID. Entities that are not in the list are skipped.'
-      : 'Rows add entities to the list and set attribute values on the list items.'
+      : `Rows add entities to the list and set values on ${target}.`
   }
 
   const items = itemsLabelForImportContext[importContext]

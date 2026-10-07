@@ -13,6 +13,7 @@ export type PowerpackFeature =
   | 'commentCategories'
   | 'projectFolders'
   | 'columnSummaries'
+  | 'listValues'
 
 export const powerpackFeatureOrder: PowerpackFeature[] = [
   'annotations',
@@ -27,6 +28,7 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'listAttributes',
   'commentCategories',
   'columnSummaries',
+  'listValues',
 ]
 
 export const powerpackFeatures: {
@@ -92,5 +94,11 @@ export const powerpackFeatures: {
     label: 'Column Summaries',
     description: 'Aggregate each column totals, averages, distributions in a summary footer.',
     bullet: 'Per-column summary footer',
+  },
+  listValues: {
+    label: 'List Values',
+    description:
+      'Keep separate attribute values in each list and compare them with the entities or another list.',
+    bullet: 'Per-list values and compare view',
   },
 }

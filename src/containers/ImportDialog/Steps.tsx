@@ -19,6 +19,7 @@ import {
 } from '@shared/api/generated/dataImport'
 import { toast } from 'react-toastify'
 import { getRequestErrorString } from '@shared/util'
+import { usePowerpack } from '@shared/context'
 import { useExportFieldsQuery, useImportDataMutation } from '../../services/dataImport'
 import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from './ImportDialog.styled'
 import Loading from './steps/Loading'
@@ -34,6 +35,7 @@ import {
   missingStrategyForImportMode,
   NewListEntityType,
   RowsEntityType,
+  schemaForListValues,
   schemaForRowsEntityType,
 } from './steps/importMode'
 
@@ -75,6 +77,9 @@ export default function ImportSteps({
   onClose,
 }: Props) {
   const [importData] = useImportDataMutation()
+  // without the powerpack, list imports set the values on the listed entities
+  const { powerLicense } = usePowerpack()
+  const updateListedEntities = importContext === 'entity_list_item' && !powerLicense
 
   const [importMode, setImportMode] = useState(ImportMode.CREATE_AND_UPDATE)
   const [duplicateStrategy, setDuplicateStrategy] = useState<DuplicateItemStrategy>('skip')
@@ -112,7 +117,8 @@ export default function ImportSteps({
 
   const importSchema = useMemo(() => {
     if (importContext === 'entity_list_item') {
-      return rawImportSchema?.filter(({ key }) => key !== ENTITY_LIST_ID)
+      const listSchema = rawImportSchema?.filter(({ key }) => key !== ENTITY_LIST_ID)
+      return listSchema && schemaForListValues(listSchema, updateListedEntities)
     }
     if (importContext !== 'hierarchy') {
       return rawImportSchema
@@ -120,7 +126,7 @@ export default function ImportSteps({
 
     const hierarchySchema = withHierarchySchema(rawImportSchema)
     return hierarchySchema && schemaForRowsEntityType(hierarchySchema, rowsEntityType)
-  }, [rawImportSchema, importContext, rowsEntityType])
+  }, [rawImportSchema, importContext, rowsEntityType, updateListedEntities])
 
   const { setSelectedView, workingView } = useViewsContext()
 
@@ -147,9 +153,12 @@ export default function ImportSteps({
           importContext === 'hierarchy' && rowsEntityType !== 'column' ? rowsEntityType : undefined,
         newListLabel: creatingList ? newList.label.trim() : undefined,
         newListEntityType: creatingList ? newList.entityType : undefined,
+        updateListedEntities:
+          importContext === 'entity_list_item' ? updateListedEntities : undefined,
       })
     },
     [
+      updateListedEntities,
       data,
       folderId,
       projectName,
@@ -319,6 +328,7 @@ export default function ImportSteps({
             importMode={importMode}
             onImportModeChange={changeImportMode}
             newList={creatingList ? newList : undefined}
+            listValuesOnEntities={updateListedEntities}
             onNewListChange={(list) => {
               setNewList(list)
               setPreviewStatus(null)

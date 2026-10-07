@@ -6,9 +6,11 @@ import {
 } from '../../src/containers/ImportDialog/steps/ReviewValuesStep/dates'
 import { inferMapping } from '../../src/containers/ImportDialog/steps/MapColumnsStep/inferMapping'
 import {
+  describeImportMode,
   getRequiredTargetGroups,
   getUnmappedRequiredTargetGroups,
   ImportMode,
+  schemaForListValues,
   schemaForRowsEntityType,
 } from '../../src/containers/ImportDialog/steps/importMode'
 import { ColumnAction, ImportSchema } from '../../src/containers/ImportDialog/steps/common'
@@ -152,5 +154,34 @@ test.describe('csv import required targets', () => {
     expect(
       getRequiredTargetGroups('entity_list_item', ImportMode.CREATE_AND_UPDATE, [], {}),
     ).toEqual([['folder_path', 'name', 'entity_id']])
+  })
+})
+
+test.describe('csv import into a list', () => {
+  const listSchema: ImportSchema = [
+    column('name', 'Entity name'),
+    column('status', 'Status'),
+    column('tags', 'Tags'),
+    column('attrib.priority', 'Priority'),
+    column('attrib.cutOrder', 'Cut order'),
+  ]
+
+  test('list values (powerpack) offer only attributes, entity updates offer everything', () => {
+    const keys = (schema: ImportSchema) => schema.map(({ key }) => key)
+    expect(keys(schemaForListValues(listSchema, false))).toEqual([
+      'name',
+      'attrib.priority',
+      'attrib.cutOrder',
+    ])
+    expect(keys(schemaForListValues(listSchema, true))).toEqual(keys(listSchema))
+  })
+
+  test('the mode description says where the values go', () => {
+    expect(describeImportMode('entity_list_item', ImportMode.UPDATE_ONLY, true)).toContain(
+      'on the entities',
+    )
+    expect(describeImportMode('entity_list_item', ImportMode.CREATE_AND_UPDATE)).toContain(
+      'on the list items',
+    )
   })
 })

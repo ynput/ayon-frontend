@@ -1,4 +1,5 @@
 import { Button } from '@ynput/ayon-react-components'
+import { PowerpackButton } from '@shared/components'
 import { DuplicateItemStrategy } from '@shared/api/generated/dataImport'
 import { ImportContext } from '../common'
 import {
@@ -10,6 +11,7 @@ import {
   hasDuplicateStrategy,
   ImportMode,
   importModeOptions,
+  LIST_VALUES_ON_ENTITIES,
   NewListEntityType,
   newListEntityTypeOptions,
   RowsEntityType,
@@ -31,6 +33,8 @@ type Props = {
   onImportModeChange: (importMode: ImportMode) => void
   // set when the import creates a new list, which can only get new items
   newList?: NewList
+  // list imports set the values on the entities (no powerpack)
+  listValuesOnEntities: boolean
   onNewListChange: (newList: NewList) => void
   rowsEntityType: RowsEntityType
   onRowsEntityTypeChange: (rowsEntityType: RowsEntityType) => void
@@ -43,6 +47,7 @@ export default function ImportOptions({
   importMode,
   onImportModeChange,
   newList,
+  listValuesOnEntities,
   onNewListChange,
   rowsEntityType,
   onRowsEntityTypeChange,
@@ -89,7 +94,19 @@ export default function ImportOptions({
               />
             ))}
           </OptionButtons>
-          <OptionDescription>{describeImportMode(importContext, importMode)}</OptionDescription>
+          <OptionDescription>
+            {describeImportMode(importContext, importMode, listValuesOnEntities)}
+          </OptionDescription>
+        </>
+      )}
+
+      {importContext === 'entity_list_item' && listValuesOnEntities && (
+        <>
+          <OptionLabel>Values</OptionLabel>
+          <OptionButtons>
+            <PowerpackButton feature="listValues" icon="list" label="List values" bolt />
+          </OptionButtons>
+          <OptionDescription>{LIST_VALUES_ON_ENTITIES}</OptionDescription>
         </>
       )}
 
