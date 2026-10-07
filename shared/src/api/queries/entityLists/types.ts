@@ -79,8 +79,17 @@ type ItemNodeData = {
 
 export type QueryEntityListItemNode = QueryEntityListItemEdge['node'] & ItemNodeData
 
+// attrib: entity values with the list item's values over them
+// listAttrib: values set on the list item, entityAttrib: the entity's values
+type ListItemValues = {
+  attrib: Record<string, unknown>
+  listAttrib: Record<string, unknown>
+  entityAttrib: Record<string, unknown>
+}
+
 export type EntityListItem = NonNullable<QueryEntityListItemNode> &
-  Omit<QueryEntityListItemEdge, 'node'> & { attrib: Record<string, unknown> }
+  Omit<QueryEntityListItemEdge, 'node'> &
+  ListItemValues
 // Define the result type for items query
 export type GetListItemsResult = {
   pageInfo: {
@@ -89,8 +98,7 @@ export type GetListItemsResult = {
     hasPreviousPage?: boolean | null
     endCursor?: string | null
   }
-  items: (QueryEntityListItemNode &
-    Omit<QueryEntityListItemEdge, 'node'> & { attrib: Record<string, unknown> })[]
+  items: (QueryEntityListItemNode & Omit<QueryEntityListItemEdge, 'node'> & ListItemValues)[]
 }
 
 export type ListItemsPageParam = {
