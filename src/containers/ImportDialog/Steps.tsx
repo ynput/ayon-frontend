@@ -27,10 +27,12 @@ import { withHierarchySchema } from './steps/hierarchy'
 import SubmitStep from './steps/SubmitStep/SubmitStep'
 import ImportOptions from './steps/ImportOptions/ImportOptions'
 import {
+  ENTITY_LIST_ID,
   getUnmappedRequiredTargetGroups,
   hasImportModes,
   ImportMode,
   missingStrategyForImportMode,
+  NewListEntityType,
   RowsEntityType,
   schemaForRowsEntityType,
 } from './steps/importMode'
@@ -77,6 +79,12 @@ export default function ImportSteps({
   const [importMode, setImportMode] = useState(ImportMode.CREATE_AND_UPDATE)
   const [duplicateStrategy, setDuplicateStrategy] = useState<DuplicateItemStrategy>('skip')
   const [rowsEntityType, setRowsEntityType] = useState<RowsEntityType>('column')
+  // without a list to import into, the import creates one
+  const creatingList = importContext === 'entity_list_item' && !folderId
+  const [newList, setNewList] = useState<{ label: string; entityType: NewListEntityType }>({
+    label: '',
+    entityType: 'folder',
+  })
   const [columnMappings, setColumnMappings] = useState<ColumnMappings | undefined>(undefined)
   const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
   const [previewStatus, setPreviewStatus] = useState<ImportStatus | null>(null)
@@ -101,6 +109,9 @@ export default function ImportSteps({
   )
 
   const importSchema = useMemo(() => {
+    if (importContext === 'entity_list_item') {
+      return rawImportSchema?.filter(({ key }) => key !== ENTITY_LIST_ID)
+    }
     if (importContext !== 'hierarchy') {
       return rawImportSchema
     }
@@ -132,10 +143,34 @@ export default function ImportSteps({
         duplicateStrategy,
         entityType:
           importContext === 'hierarchy' && rowsEntityType !== 'column' ? rowsEntityType : undefined,
+        newListLabel: creatingList ? newList.label.trim() : undefined,
+        newListEntityType: creatingList ? newList.entityType : undefined,
       })
     },
-    [data, folderId, projectName, importContext, importMode, duplicateStrategy, rowsEntityType],
+    [
+      data,
+      folderId,
+      projectName,
+      importContext,
+      importMode,
+      duplicateStrategy,
+      rowsEntityType,
+      creatingList,
+      newList,
+    ],
   )
+
+  // a new list is named after the file unless the user named it
+  useEffect(() => {
+    if (!creatingList || !data || newList.label) return
+    const fileLabel = data.fileName.replace(/\.[^.]+$/, '')
+    setNewList((old) => ({
+      ...old,
+      label: fileLabel === 'Pasted from clipboard' ? 'Imported list' : fileLabel,
+    }))
+  }, [creatingList, data])
+
+  const optionsProblem = creatingList && !newList.label.trim() ? 'Name the new list.' : null
 
   const changeImportMode = useCallback((mode: ImportMode) => {
     setImportMode(mode)
@@ -193,15 +228,11 @@ export default function ImportSteps({
     )
     return (
       targetsOffered &&
-      getUnmappedRequiredTargetGroups(
-        importContext,
-        importMode,
-        importSchema,
-        columnMappings,
-        folderId,
-      ).length === 0
+      !optionsProblem &&
+      getUnmappedRequiredTargetGroups(importContext, importMode, importSchema, columnMappings)
+        .length === 0
     )
-  }, [importContext, importMode, importSchema, columnMappings, folderId])
+  }, [importContext, importMode, importSchema, columnMappings, optionsProblem])
 
   const unlocked: Record<ImportStep, boolean> = useMemo(
     () => ({
@@ -285,6 +316,11 @@ export default function ImportSteps({
             importContext={importContext}
             importMode={importMode}
             onImportModeChange={changeImportMode}
+            newList={creatingList ? newList : undefined}
+            onNewListChange={(list) => {
+              setNewList(list)
+              setPreviewStatus(null)
+            }}
             rowsEntityType={rowsEntityType}
             onRowsEntityTypeChange={(entityType) => {
               setRowsEntityType(entityType)
@@ -325,7 +361,7 @@ export default function ImportSteps({
           importContext={importContext}
           importMode={importMode}
           importSchema={importSchema}
-          folderId={folderId}
+          optionsProblem={optionsProblem}
           onImportModeChange={changeImportMode}
           onBack={() => setStep(ImportStep.UPLOAD)}
           onNext={(mappings) => {
@@ -371,6 +407,7 @@ export default function ImportSteps({
             error={requestError}
             importContext={importContext}
             importMode={importMode}
+            projectName={projectName}
             onBack={() => {}}
             onNext={onClose}
           />

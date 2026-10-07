@@ -23,18 +23,46 @@ export const missingStrategyForImportMode: Record<ImportMode, MissingItemStrateg
   [ImportMode.UPDATE_ONLY]: 'skip',
 }
 
-export const duplicateStrategyOptions: {
-  value: DuplicateItemStrategy
-  label: string
-  icon: 'block' | 'done_all'
-}[] = [
+export const getDuplicateStrategyOptions = (
+  importContext: ImportContext,
+): { value: DuplicateItemStrategy; label: string; icon: 'block' | 'done_all' }[] => [
   { value: 'skip', label: 'Skip the row', icon: 'block' },
-  { value: 'all', label: 'Update all of them', icon: 'done_all' },
+  {
+    value: 'all',
+    label: importContext === 'entity_list_item' ? 'Use all of them' : 'Update all of them',
+    icon: 'done_all',
+  },
 ]
 
-// Only folders and tasks are matched by name, which can repeat across the hierarchy
+// Names can repeat across the hierarchy. Folders and tasks match by name only when updating,
+// list items always can.
 export const hasDuplicateStrategy = (importContext: ImportContext, importMode: ImportMode) =>
-  importContext === 'hierarchy' && importMode === ImportMode.UPDATE_ONLY
+  importContext === 'entity_list_item' ||
+  (importContext === 'hierarchy' && importMode === ImportMode.UPDATE_ONLY)
+
+export const describeDuplicateStrategy = (importContext: ImportContext) =>
+  importContext === 'entity_list_item'
+    ? 'When a Name matches several entities and there is no Path or ID to tell them apart.'
+    : 'When a Name matches several folders or tasks and there is no Path to tell them apart.'
+
+// The entity type of a list created by the import
+export type NewListEntityType = 'folder' | 'task' | 'product' | 'version'
+
+export const newListEntityTypeOptions: {
+  value: NewListEntityType
+  label: string
+  icon: 'folder' | 'check_circle' | 'inventory_2' | 'layers'
+}[] = [
+  { value: 'folder', label: 'Folders', icon: 'folder' },
+  { value: 'task', label: 'Tasks', icon: 'check_circle' },
+  { value: 'product', label: 'Products', icon: 'inventory_2' },
+  { value: 'version', label: 'Versions', icon: 'layers' },
+]
+
+export const describeNewList = (entityType: NewListEntityType) =>
+  entityType === 'version'
+    ? 'A new list is created with the versions the rows find by ID.'
+    : `A new list is created with the ${entityType}s the rows find by path, name or ID.`
 
 // Whether hierarchy rows say their own entity type, or the whole sheet is one type
 export type RowsEntityType = 'column' | 'folder' | 'task'
@@ -42,11 +70,11 @@ export type RowsEntityType = 'column' | 'folder' | 'task'
 export const rowsEntityTypeOptions: {
   value: RowsEntityType
   label: string
-  icon: 'view_column' | 'folder' | 'task_alt'
+  icon: 'view_column' | 'folder' | 'check_circle'
 }[] = [
   { value: 'column', label: 'From a column', icon: 'view_column' },
   { value: 'folder', label: 'All folders', icon: 'folder' },
-  { value: 'task', label: 'All tasks', icon: 'task_alt' },
+  { value: 'task', label: 'All tasks', icon: 'check_circle' },
 ]
 
 export const describeRowsEntityType = (rowsEntityType: RowsEntityType, importMode: ImportMode) => {
@@ -77,10 +105,11 @@ export const schemaForRowsEntityType = (
 const matchTargetsForImportContext: Partial<Record<ImportContext, string[]>> = {
   hierarchy: ['path', 'name'],
   user: ['name'],
-  entity_list_item: ['folder_path', 'entity_id'],
+  entity_list_item: ['folder_path', 'name', 'entity_id'],
 }
 
-const ENTITY_LIST_ID = 'entity_list_id'
+// The dialog imports into the list it was opened for, or into a new one
+export const ENTITY_LIST_ID = 'entity_list_id'
 
 export const hasImportModes = (importContext: ImportContext) =>
   Boolean(matchTargetsForImportContext[importContext])
@@ -89,7 +118,7 @@ export const describeImportMode = (importContext: ImportContext, importMode: Imp
   const updateOnly = importMode === ImportMode.UPDATE_ONLY
   if (importContext === 'entity_list_item') {
     return updateOnly
-      ? 'Rows update the attributes of items already in the list, matched by entity path or ID. ' +
+      ? 'Rows update the attributes of items already in the list, matched by entity path, name or ID. ' +
           'Entities that are not in the list are skipped.'
       : 'Rows add entities to the list and update the attributes of items already in it.'
   }
@@ -117,18 +146,16 @@ const getMappedTargets = (mappings: ColumnMappings = {}) =>
   )
 
 // Each group lists targets of which at least one has to be mapped.
-// The parent is the folder or list the dialog was opened for.
 export const getRequiredTargetGroups = (
   importContext: ImportContext,
   importMode: ImportMode,
   importSchema: ImportSchema,
   mappings?: ColumnMappings,
-  parentId?: string,
 ): string[][] => {
   const matchTargets = matchTargetsForImportContext[importContext]
 
   if (importContext === 'entity_list_item' && matchTargets) {
-    return parentId ? [matchTargets] : [matchTargets, [ENTITY_LIST_ID]]
+    return [matchTargets]
   }
 
   if (importMode === ImportMode.CREATE_AND_UPDATE || !matchTargets) {
@@ -151,14 +178,9 @@ export const getUnmappedRequiredTargetGroups = (
   importMode: ImportMode,
   importSchema: ImportSchema,
   mappings?: ColumnMappings,
-  parentId?: string,
 ) => {
   const mappedTargets = getMappedTargets(mappings)
-  return getRequiredTargetGroups(
-    importContext,
-    importMode,
-    importSchema,
-    mappings,
-    parentId,
-  ).filter((group) => !group.some((target) => mappedTargets.has(target)))
+  return getRequiredTargetGroups(importContext, importMode, importSchema, mappings).filter(
+    (group) => !group.some((target) => mappedTargets.has(target)),
+  )
 }

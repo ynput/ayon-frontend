@@ -145,12 +145,12 @@ test.describe('csv import required targets', () => {
     ).toEqual([['path', 'name'], ['entity_type']])
   })
 
-  test('list items need an entity, and a list when the dialog was not opened for one', () => {
-    expect(
-      getRequiredTargetGroups('entity_list_item', ImportMode.UPDATE_ONLY, [], {}, 'list'),
-    ).toEqual([['folder_path', 'entity_id']])
+  test('list items need an entity by path, name or id, never a list id column', () => {
+    expect(getRequiredTargetGroups('entity_list_item', ImportMode.UPDATE_ONLY, [], {})).toEqual([
+      ['folder_path', 'name', 'entity_id'],
+    ])
     expect(
       getRequiredTargetGroups('entity_list_item', ImportMode.CREATE_AND_UPDATE, [], {}),
-    ).toEqual([['folder_path', 'entity_id'], ['entity_list_id']])
+    ).toEqual([['folder_path', 'name', 'entity_id']])
   })
 })

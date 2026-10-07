@@ -1,3 +1,4 @@
+import { InputText } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const Options = styled.div`
@@ -19,4 +20,8 @@ export const OptionButtons = styled.div`
 
 export const OptionDescription = styled.span`
   color: var(--md-sys-color-outline);
+`
+
+export const NewListLabel = styled(InputText)`
+  width: 100%;
 `

@@ -2,21 +2,36 @@ import { Button } from '@ynput/ayon-react-components'
 import { DuplicateItemStrategy } from '@shared/api/generated/dataImport'
 import { ImportContext } from '../common'
 import {
+  describeDuplicateStrategy,
   describeImportMode,
+  describeNewList,
   describeRowsEntityType,
-  duplicateStrategyOptions,
+  getDuplicateStrategyOptions,
   hasDuplicateStrategy,
   ImportMode,
   importModeOptions,
+  NewListEntityType,
+  newListEntityTypeOptions,
   RowsEntityType,
   rowsEntityTypeOptions,
 } from '../importMode'
-import { OptionButtons, OptionDescription, OptionLabel, Options } from './ImportOptions.styled'
+import {
+  NewListLabel,
+  OptionButtons,
+  OptionDescription,
+  OptionLabel,
+  Options,
+} from './ImportOptions.styled'
+
+type NewList = { label: string; entityType: NewListEntityType }
 
 type Props = {
   importContext: ImportContext
   importMode: ImportMode
   onImportModeChange: (importMode: ImportMode) => void
+  // set when the import creates a new list, which can only get new items
+  newList?: NewList
+  onNewListChange: (newList: NewList) => void
   rowsEntityType: RowsEntityType
   onRowsEntityTypeChange: (rowsEntityType: RowsEntityType) => void
   duplicateStrategy: DuplicateItemStrategy
@@ -27,6 +42,8 @@ export default function ImportOptions({
   importContext,
   importMode,
   onImportModeChange,
+  newList,
+  onNewListChange,
   rowsEntityType,
   onRowsEntityTypeChange,
   duplicateStrategy,
@@ -34,19 +51,47 @@ export default function ImportOptions({
 }: Props) {
   return (
     <Options>
-      <OptionLabel>Import</OptionLabel>
-      <OptionButtons>
-        {importModeOptions.map(({ value, label, icon }) => (
-          <Button
-            key={value}
-            icon={icon}
-            label={label}
-            selected={importMode === value}
-            onClick={() => onImportModeChange(value)}
+      {newList ? (
+        <>
+          <OptionLabel>New list</OptionLabel>
+          <NewListLabel
+            value={newList.label}
+            placeholder="List name"
+            onChange={(event) => onNewListChange({ ...newList, label: event.target.value })}
           />
-        ))}
-      </OptionButtons>
-      <OptionDescription>{describeImportMode(importContext, importMode)}</OptionDescription>
+          <OptionDescription>{describeNewList(newList.entityType)}</OptionDescription>
+
+          <OptionLabel>List of</OptionLabel>
+          <OptionButtons>
+            {newListEntityTypeOptions.map(({ value, label, icon }) => (
+              <Button
+                key={value}
+                icon={icon}
+                label={label}
+                selected={newList.entityType === value}
+                onClick={() => onNewListChange({ ...newList, entityType: value })}
+              />
+            ))}
+          </OptionButtons>
+          <span />
+        </>
+      ) : (
+        <>
+          <OptionLabel>Import</OptionLabel>
+          <OptionButtons>
+            {importModeOptions.map(({ value, label, icon }) => (
+              <Button
+                key={value}
+                icon={icon}
+                label={label}
+                selected={importMode === value}
+                onClick={() => onImportModeChange(value)}
+              />
+            ))}
+          </OptionButtons>
+          <OptionDescription>{describeImportMode(importContext, importMode)}</OptionDescription>
+        </>
+      )}
 
       {importContext === 'hierarchy' && (
         <>
@@ -72,7 +117,7 @@ export default function ImportOptions({
         <>
           <OptionLabel>Same name</OptionLabel>
           <OptionButtons>
-            {duplicateStrategyOptions.map(({ value, label, icon }) => (
+            {getDuplicateStrategyOptions(importContext).map(({ value, label, icon }) => (
               <Button
                 key={value}
                 icon={icon}
@@ -82,9 +127,7 @@ export default function ImportOptions({
               />
             ))}
           </OptionButtons>
-          <OptionDescription>
-            When a Name matches several folders or tasks and there is no Path to tell them apart.
-          </OptionDescription>
+          <OptionDescription>{describeDuplicateStrategy(importContext)}</OptionDescription>
         </>
       )}
     </Options>

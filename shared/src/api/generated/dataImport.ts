@@ -44,6 +44,8 @@ const injectedRtkApi = api.injectEndpoints({
           missing_strategy: queryArg.missingStrategy,
           duplicate_strategy: queryArg.duplicateStrategy,
           entity_type: queryArg.entityType,
+          new_list_label: queryArg.newListLabel,
+          new_list_entity_type: queryArg.newListEntityType,
           project_name: queryArg.projectName,
           folder_id: queryArg.folderId,
           preview: queryArg.preview,
@@ -79,6 +81,8 @@ export type ImportDataApiArg = {
   missingStrategy?: MissingItemStrategy
   duplicateStrategy?: DuplicateItemStrategy
   entityType?: 'folder' | 'task'
+  newListLabel?: string
+  newListEntityType?: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   projectName?: string
   folderId?: string
   preview?: boolean
@@ -165,6 +169,7 @@ export type ImportStatus = {
   failedItems?: object
   skippedItems?: object
   comments?: number
+  entityListId?: string
   preview?: boolean
   phase?: 'validating' | 'importing'
 }

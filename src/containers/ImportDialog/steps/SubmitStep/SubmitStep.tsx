@@ -17,6 +17,7 @@ import styled from "styled-components";
 import Stats from "../Stats";
 import { ImportMode } from "../importMode";
 import { ImportStatus } from "@shared/api/generated/dataImport";
+import { useNavigate } from "react-router-dom";
 
 type Props = StepProps<void> & {
   data: ImportData
@@ -25,6 +26,7 @@ type Props = StepProps<void> & {
   error?: unknown
   importContext: ImportContext
   importMode: ImportMode
+  projectName?: string
 }
 
 const SuccessState = styled(EmptyPlaceholder)`
@@ -44,7 +46,8 @@ const ErrorState = styled(EmptyPlaceholder)`
   margin: auto;
 `
 
-export default function SubmitStep({ data, result, error, importContext, importMode, onNext  }: Props) {
+export default function SubmitStep({ data, result, error, importContext, importMode, projectName, onNext  }: Props) {
+  const navigate = useNavigate()
   const [importProgress, setImportProgress] = useState(0)
   const [importDescription, setImportDescription] = useState<string | null>(null)
   const [eventResult, setEventResult] = useState<ImportDataProcessSummary | null>(null)
@@ -89,8 +92,21 @@ export default function SubmitStep({ data, result, error, importContext, importM
                 size={getFileSizeString(data.fileSize)}
                 items={getImportStatsItems(importResult, true)}
               />
+              {
+                result?.entityListId && projectName && (
+                  <Button
+                    variant="filled"
+                    icon="playlist_add"
+                    label="Open the new list"
+                    onClick={() => {
+                      navigate(`/projects/${projectName}/lists?list=${result.entityListId}`)
+                      onNext()
+                    }}
+                  />
+                )
+              }
               <Button
-                variant="filled"
+                variant={result?.entityListId ? "surface" : "filled"}
                 label="Close"
                 onClick={() => {
                   onNext()

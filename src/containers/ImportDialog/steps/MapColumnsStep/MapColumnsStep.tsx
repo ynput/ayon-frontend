@@ -53,7 +53,8 @@ type Props = StepProps<ColumnMappings> & {
   mappings?: ColumnMappings
   importMode: ImportMode
   importSchema: ImportSchema
-  folderId?: string
+  // an import option that still needs a value, e.g. the name of a new list
+  optionsProblem?: string | null
   onImportModeChange: (importMode: ImportMode) => void
 }
 
@@ -91,7 +92,7 @@ export default function MapColumnsStep({
   importContext,
   importMode,
   importSchema,
-  folderId,
+  optionsProblem,
   onImportModeChange,
   onBack,
   onNext,
@@ -125,9 +126,9 @@ export default function MapColumnsStep({
 
   const requiredTargets = useMemo(
     () => new Set(
-      getRequiredTargetGroups(importContext, importMode, importSchema, mappings, folderId).flat(),
+      getRequiredTargetGroups(importContext, importMode, importSchema, mappings).flat(),
     ),
-    [importContext, importMode, importSchema, mappings, folderId],
+    [importContext, importMode, importSchema, mappings],
   )
 
   // groups of targets of which none is mapped yet, any one target of a group is enough
@@ -137,9 +138,8 @@ export default function MapColumnsStep({
       importMode,
       importSchema,
       mappings,
-      folderId,
     ),
-    [importContext, importMode, importSchema, mappings, folderId],
+    [importContext, importMode, importSchema, mappings],
   )
 
   // targets only needed to create entities: Update only would be satisfied by the mapping
@@ -152,9 +152,8 @@ export default function MapColumnsStep({
         ImportMode.UPDATE_ONLY,
         importSchema,
         mappings,
-        folderId,
       ).length === 0,
-    [importMode, importContext, unmappedRequiredTargets, importSchema, mappings, folderId],
+    [importMode, importContext, unmappedRequiredTargets, importSchema, mappings],
   )
 
   const targetOptions = useMemo(
@@ -441,6 +440,14 @@ export default function MapColumnsStep({
               </StepNavStatsRequired>
             )
           }
+          {
+            optionsProblem && (
+              <StepNavStatsRequired>
+                <Icon icon="warning" />
+                {optionsProblem}
+              </StepNavStatsRequired>
+            )
+          }
         </StepNavStats>
         <Button
           variant="nav"
@@ -450,7 +457,7 @@ export default function MapColumnsStep({
         <Button
           variant="filled"
           label="Continue"
-          disabled={unresolvedColumns.size > 0 || unmappedRequiredTargets.length > 0}
+          disabled={unresolvedColumns.size > 0 || unmappedRequiredTargets.length > 0 || !!optionsProblem}
           data-tooltip={
             unresolvedColumns.size > 0
               ? `Please resolve the following columns: ${Array.from(unresolvedColumns).join(', ')}`
