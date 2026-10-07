@@ -76,8 +76,10 @@ export type ValueMappings = Record<string, Record<string, ValueMapping>>
 
 // Can be applied to two strings to compare them with some tolerance
 // e.g. case-insensitive and ignoring certain characters.
+// The project table names attribute columns attrib_name when copying or exporting.
 export const normaliseForComparison = (name: string) => name
-  .replace(/[_\.\*\s]|^attrib\.|^data\./g, '')
+  .replace(/^(attrib|data)[._]/i, '')
+  .replace(/[_.*\s]/g, '')
   .toLowerCase();
 
 export const itemsLabelForImportContext: Record<ImportContext, string> = {

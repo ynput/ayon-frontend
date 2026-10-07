@@ -185,14 +185,43 @@ export default function MapColumnsStep({
   )
 
   useEffect(() => {
-    if (!columnSettings || Boolean(mappings)) return
+    if (!columnSettings) return
 
-    // infer mappings based on the schema
-    setMappings(Object.fromEntries(
-      data.columns
-        .map((column) => [column, inferMapping(column, importSchema)])
-        .filter(([, mapping]) => !!mapping)
-    ))
+    if (!mappings) {
+      // infer mappings based on the schema
+      setMappings(Object.fromEntries(
+        data.columns
+          .map((column) => [column, inferMapping(column, importSchema)])
+          .filter(([, mapping]) => !!mapping)
+      ))
+      return
+    }
+
+    // The import options changed the offered targets: infer again the columns the user
+    // didn't map by hand which have no target or one that is no longer offered.
+    setMappings((old) => {
+      if (!old) return old
+      const usedTargets = new Set(
+        Object.values(old)
+          .filter(({ action, targetColumn }) => (
+            action === ColumnAction.MAP && targetColumn && columnSettings[targetColumn]
+          ))
+          .map(({ targetColumn }) => targetColumn),
+      )
+      const updated = { ...old }
+      let changed = false
+      for (const column of data.columns) {
+        const mapping = old[column]
+        if (mapping?.userResolved || mapping?.action === ColumnAction.SKIP) continue
+        if (mapping?.targetColumn && columnSettings[mapping.targetColumn]) continue
+        const inferred = inferMapping(column, importSchema)
+        if (!inferred?.targetColumn || usedTargets.has(inferred.targetColumn)) continue
+        updated[column] = inferred
+        usedTargets.add(inferred.targetColumn)
+        changed = true
+      }
+      return changed ? updated : old
+    })
   }, [importSchema])
 
   // apply the current preset if it changes
