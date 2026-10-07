@@ -4,12 +4,14 @@ import { ImportContext } from '../common'
 import {
   describeDuplicateStrategy,
   describeImportMode,
+  describeListValues,
   describeNewList,
   describeRowsEntityType,
   getDuplicateStrategyOptions,
   hasDuplicateStrategy,
   ImportMode,
   importModeOptions,
+  listValuesOptions,
   NewListEntityType,
   newListEntityTypeOptions,
   RowsEntityType,
@@ -32,6 +34,8 @@ type Props = {
   // set when the import creates a new list, which can only get new items
   newList?: NewList
   onNewListChange: (newList: NewList) => void
+  updateListedEntities: boolean
+  onUpdateListedEntitiesChange: (updateListedEntities: boolean) => void
   rowsEntityType: RowsEntityType
   onRowsEntityTypeChange: (rowsEntityType: RowsEntityType) => void
   duplicateStrategy: DuplicateItemStrategy
@@ -44,6 +48,8 @@ export default function ImportOptions({
   onImportModeChange,
   newList,
   onNewListChange,
+  updateListedEntities,
+  onUpdateListedEntitiesChange,
   rowsEntityType,
   onRowsEntityTypeChange,
   duplicateStrategy,
@@ -90,6 +96,24 @@ export default function ImportOptions({
             ))}
           </OptionButtons>
           <OptionDescription>{describeImportMode(importContext, importMode)}</OptionDescription>
+        </>
+      )}
+
+      {importContext === 'entity_list_item' && (
+        <>
+          <OptionLabel>Values</OptionLabel>
+          <OptionButtons>
+            {listValuesOptions.map(({ value, label, icon }) => (
+              <Button
+                key={label}
+                icon={icon}
+                label={label}
+                selected={updateListedEntities === value}
+                onClick={() => onUpdateListedEntitiesChange(value)}
+              />
+            ))}
+          </OptionButtons>
+          <OptionDescription>{describeListValues(updateListedEntities)}</OptionDescription>
         </>
       )}
 
