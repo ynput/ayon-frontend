@@ -15,6 +15,7 @@ import FilesGrid, { FilesGridProps } from '../FilesGrid/FilesGrid'
 import { getTextRefs } from './getTextRefs'
 import * as Styled from './ActivityComment.styled'
 import CommentWrapper from './CommentWrapper'
+import remarkLiteralDirectives from './remarkLiteralDirectives'
 import { isFilePreviewable } from '../FileUploadPreview'
 import {
   getProjectFileId,
@@ -319,7 +320,13 @@ const ActivityComment = ({
               />
               <CommentWrapper>
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm, emoji, remarkDirective, remarkDirectiveRehype]}
+                  remarkPlugins={[
+                    remarkGfm,
+                    emoji,
+                    remarkDirective,
+                    remarkLiteralDirectives,
+                    remarkDirectiveRehype,
+                  ]}
                   urlTransform={(url) => url}
                   components={{
                     // a links
