@@ -81,7 +81,7 @@ const useCommentDraft = ({ draftKey, draft, paused, restore }: Props) => {
 
   // restore the draft of these entities, or start empty when switching to entities without one
   useEffect(() => {
-    if (!draftKey) return
+    if (!draftKey || paused) return
     const previousKey = shownKey.current
     shownKey.current = draftKey
     if (previousKey === draftKey) return
@@ -102,7 +102,7 @@ const useCommentDraft = ({ draftKey, draft, paused, restore }: Props) => {
       restore({ text: '', files: [], uploadedAnnotations: [], category: draft.category })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftKey])
+  }, [draftKey, paused])
 
   useEffect(() => {
     if (restoring.current) {
