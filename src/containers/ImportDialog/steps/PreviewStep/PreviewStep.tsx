@@ -7,15 +7,17 @@ import Stats from "../Stats";
 import usePubSub from "@hooks/usePubSub";
 import { useState } from "react";
 import { ImportMode } from "../importMode";
+import { EmptyPlaceholder } from "@shared/components";
 
 type Props = StepProps<void> & {
   data: ImportData
   previewStatus: ImportStatus | null
+  error?: unknown
   importContext: ImportContext
   importMode: ImportMode
 }
 
-export default function PreviewStep({ data, previewStatus, importContext, importMode, onBack, onNext }: Props) {
+export default function PreviewStep({ data, previewStatus, error, importContext, importMode, onBack, onNext }: Props) {
   const [previewProgress, setPreviewProgress] = useState(0)
 
   usePubSub(
@@ -45,7 +47,12 @@ export default function PreviewStep({ data, previewStatus, importContext, import
           )
         }
         {
-          !previewStatus && (
+          !previewStatus && !!error && (
+            <EmptyPlaceholder message="The import could not be validated" error={error} />
+          )
+        }
+        {
+          !previewStatus && !error && (
             <ProgressBar
               type="validating"
               name={data.fileName}
@@ -63,6 +70,7 @@ export default function PreviewStep({ data, previewStatus, importContext, import
         <Button
           variant="filled"
           label="Import data"
+          disabled={!previewStatus}
           onClick={() => {
             onNext()
           }}

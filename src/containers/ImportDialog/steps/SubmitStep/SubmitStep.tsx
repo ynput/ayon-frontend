@@ -16,9 +16,13 @@ import { EmptyPlaceholder } from "@shared/components";
 import styled from "styled-components";
 import Stats from "../Stats";
 import { ImportMode } from "../importMode";
+import { ImportStatus } from "@shared/api/generated/dataImport";
 
 type Props = StepProps<void> & {
   data: ImportData
+  // the import response, set once the request is done
+  result?: ImportStatus | null
+  error?: unknown
   importContext: ImportContext
   importMode: ImportMode
 }
@@ -34,10 +38,16 @@ const SuccessState = styled(EmptyPlaceholder)`
   }
 `
 
-export default function SubmitStep({ data, importContext, importMode, onNext  }: Props) {
+const ErrorState = styled(EmptyPlaceholder)`
+  position: static;
+  transform: none;
+  margin: auto;
+`
+
+export default function SubmitStep({ data, result, error, importContext, importMode, onNext  }: Props) {
   const [importProgress, setImportProgress] = useState(0)
   const [importDescription, setImportDescription] = useState<string | null>(null)
-  const [importResult, setImportResult] = useState<ImportDataProcessSummary | null>(null)
+  const [eventResult, setEventResult] = useState<ImportDataProcessSummary | null>(null)
   type PhaseType = 'upload' | 'processing' | 'unsupported' | 'queued' | 'waiting' | 'importing' | 'validating';
   const [importPhase, setImportPhase] = useState<PhaseType>("validating")
 
@@ -50,13 +60,16 @@ export default function SubmitStep({ data, importContext, importMode, onNext  }:
       setImportPhase(((message.summary as ImportDataProcessSummary)?.phase as PhaseType) ?? 'validating')
 
       if(message.status === "finished" || message.status === "failed") {
-        setImportResult(message.summary as ImportDataProcessSummary)
+        setEventResult(message.summary as ImportDataProcessSummary)
       }
 
     },
     null,
     { disableDebounce: true },
   )
+
+  // the events may not arrive (e.g. websocket not connected), the response always does
+  const importResult = result ?? eventResult
 
   return (
     <>
@@ -87,7 +100,14 @@ export default function SubmitStep({ data, importContext, importMode, onNext  }:
           )
         }
         {
-          !importResult && (
+          !importResult && !!error && (
+            <ErrorState message="Import failed" error={error}>
+              <Button variant="filled" label="Close" onClick={() => onNext()} />
+            </ErrorState>
+          )
+        }
+        {
+          !importResult && !error && (
             <>
             <ProgressBar
               type={importPhase}

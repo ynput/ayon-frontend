@@ -18,6 +18,7 @@ import {
   ImportStatus,
 } from '@shared/api/generated/dataImport'
 import { toast } from 'react-toastify'
+import { getRequestErrorString } from '@shared/util'
 import { useExportFieldsQuery, useImportDataMutation } from '../../services/dataImport'
 import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from './ImportDialog.styled'
 import Loading from './steps/Loading'
@@ -79,6 +80,9 @@ export default function ImportSteps({
   const [columnMappings, setColumnMappings] = useState<ColumnMappings | undefined>(undefined)
   const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
   const [previewStatus, setPreviewStatus] = useState<ImportStatus | null>(null)
+  // the response is the result, the import.data events only show progress
+  const [importResult, setImportResult] = useState<ImportStatus | null>(null)
+  const [requestError, setRequestError] = useState<unknown>(null)
   const [submitted, setSubmitted] = useState(false)
   const [success, setSuccess] = useState(false)
 
@@ -136,17 +140,16 @@ export default function ImportSteps({
   const fetchPreview = useCallback(() => {
     if (!columnMappings || !valueMappings) return
 
-    requestImport(getFullMapping(columnMappings, valueMappings), true)
-      .then((result) => {
-        if (!result || result.error) {
-          throw new Error(JSON.stringify(result?.error))
-        }
-
-        setPreviewStatus(result.data)
-      })
-      .catch((err) => {
-        toast.error(`Error getting import preview`)
-      })
+    setRequestError(null)
+    requestImport(getFullMapping(columnMappings, valueMappings), true).then((result) => {
+      if (!result) return
+      if (result.error) {
+        setRequestError(result.error)
+        toast.error(`Error getting import preview: ${getRequestErrorString(result.error)}`)
+        return
+      }
+      setPreviewStatus(result.data)
+    })
   }, [requestImport, columnMappings, valueMappings])
 
   const onValuesReviewed = useCallback(() => {
@@ -159,13 +162,18 @@ export default function ImportSteps({
 
     setSubmitted(true)
     setStep(ImportStep.SUBMIT)
-    requestImport(getFullMapping(columnMappings, valueMappings), false)
-      .then(() => {
-        setSuccess(true)
-      })
-      .catch((err) => {
-        toast.error(`Error importing data`)
-      })
+    setImportResult(null)
+    setRequestError(null)
+    requestImport(getFullMapping(columnMappings, valueMappings), false).then((result) => {
+      if (!result) return
+      if (result.error) {
+        setRequestError(result.error)
+        toast.error(`Error importing data: ${getRequestErrorString(result.error)}`)
+        return
+      }
+      setImportResult(result.data)
+      setSuccess(true)
+    })
   }, [requestImport, columnMappings, valueMappings])
 
   // the mode can change after the columns were mapped, so the mapping may no longer be enough
@@ -341,6 +349,7 @@ export default function ImportSteps({
         <PreviewStep
           data={data}
           previewStatus={previewStatus}
+          error={requestError}
           importContext={importContext}
           importMode={importMode}
           onBack={() => setStep(ImportStep.REVIEW_VALUES)}
@@ -355,6 +364,8 @@ export default function ImportSteps({
         step === ImportStep.SUBMIT && (
           <SubmitStep
             data={data}
+            result={importResult}
+            error={requestError}
             importContext={importContext}
             importMode={importMode}
             onBack={() => {}}
