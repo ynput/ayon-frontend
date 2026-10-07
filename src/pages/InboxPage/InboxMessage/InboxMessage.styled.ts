@@ -105,7 +105,7 @@ export const Message = styled.li`
 
     .icon.type {
       color: var(--md-sys-color-outline);
-      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      font-variation-settings: 'FILL' 0;
     }
 
     /* fade status icons */
@@ -174,7 +174,7 @@ export const Middle = styled.div`
   .icon.type {
     font-size: 18px;
 
-    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-variation-settings: 'FILL' 1;
   }
 `
 

@@ -20,7 +20,7 @@ export const Body = styled.div`
   gap: var(--base-gap-small);
   padding: 0px 4px;
   .icon {
-    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
+    font-variation-settings: 'FILL' 1;
     font-size: 16px;
   }
   [icon='trending_flat'] {

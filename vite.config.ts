@@ -4,7 +4,6 @@ import { fileURLToPath, URL } from 'url'
 import path from 'path'
 import { federation } from '@module-federation/vite'
 import { dependencies } from './package.json'
-import { extractInlineFonts } from './vite-plugins/extractInlineFonts'
 import { lodashEs } from './vite-plugins/lodashEs'
 
 const CLAUDE_DIR = fileURLToPath(new URL('./.claude', import.meta.url))
@@ -75,7 +74,6 @@ export default ({ mode }) => {
       },
     },
     plugins: [
-      extractInlineFonts(/@ynput\/ayon-react-components\/dist\/style\.css$/),
       lodashEs(['src', 'shared/src']),
       federation({
         name: 'host',

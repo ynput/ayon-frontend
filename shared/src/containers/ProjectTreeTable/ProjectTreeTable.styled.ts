@@ -217,7 +217,7 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
     display: flex !important;
   }
   .pin-button {
-    font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 10;
+    font-variation-settings: 'FILL' 1;
   }
 
   .header-menu {

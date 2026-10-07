@@ -127,7 +127,7 @@ export const Cell = styled.div`
       }
       .pin.active {
         opacity: 0.7;
-        font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+        font-variation-settings: 'FILL' 1;
       }
     }
   }
@@ -166,7 +166,7 @@ export const Cell = styled.div`
       &.active {
         display: flex;
         opacity: 0.7;
-        font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+        font-variation-settings: 'FILL' 1;
       }
     }
   }
@@ -223,7 +223,7 @@ export const Cell = styled.div`
 
   /* filled icon */
   .icon.filled {
-    font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+    font-variation-settings: 'FILL' 1;
   }
 
   .image {

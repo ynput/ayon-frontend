@@ -16,7 +16,7 @@ const PlayableIconStyled = styled.span`
   transition: opacity 200ms;
 
   .icon {
-    font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 200, 'opsz' 24;
+    font-variation-settings: 'FILL' 1;
     font-size: var(--icon-size);
     z-index: 20;
     position: relative;
