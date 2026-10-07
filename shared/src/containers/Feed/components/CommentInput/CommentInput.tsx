@@ -650,6 +650,7 @@ const CommentInput: FC<CommentInputProps> = ({
       let newAnnotations = uploadedAnnotations
       let postedAnnotationIds: string[] = []
       if (annotations.length) {
+        setSubmittingAnnotationIds(annotations.map((annotation) => annotation.id))
         const { files, metadata } = await uploadAnnotations(annotations)
         annotationFiles = files
         newAnnotations = [...newAnnotations, ...metadata]
