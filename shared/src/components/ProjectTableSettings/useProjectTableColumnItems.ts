@@ -7,6 +7,8 @@ import {
   ENTITY_COLUMN_IDS,
   getScopedColumnId,
   useProjectTableContext,
+  LIST_COLUMN_IDS,
+  isListColumnEntityType,
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectContext } from '@shared/context'
 import { useMemo } from 'react'
@@ -112,6 +114,12 @@ export const useProjectTableColumnItems = ({
         icon: getColumnIcon('comments'),
         hidden: !scopes.some((scope) => ['task', 'version', 'product', 'folder'].includes(scope)),
       },
+      ...LIST_COLUMN_IDS.map((columnId) => ({
+        value: columnId,
+        label: getColumnLabel(columnId),
+        icon: getColumnIcon(columnId),
+        hidden: !scopes.some((scope) => isListColumnEntityType(columnId, scope)),
+      })),
       ...attribFields
         .filter((field) => field.scope?.some((scope) => scopes.includes(scope)))
         .map((field) => ({

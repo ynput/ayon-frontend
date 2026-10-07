@@ -65,6 +65,8 @@ import useCellContextMenu, {
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import useDynamicRowHeight from './hooks/useDynamicRowHeight'
+import { useFetchListsMembership } from './hooks/useListsMembership'
+import { LIST_COLUMN_IDS } from './utils/listColumns'
 
 import { useProjectDataContext } from './context/project-data'
 
@@ -1383,6 +1385,21 @@ const TableBody = ({
 
     onVisibleRowsChange(uniqueIds)
   }, [virtualRows, rows, onVisibleRowsChange])
+
+  const { projectName } = useProjectContext()
+  const isListsColumnShown = table
+    .getVisibleLeafColumns()
+    .some((column) => LIST_COLUMN_IDS.includes(column.id))
+  useFetchListsMembership({
+    projectName,
+    enabled: isListsColumnShown,
+    entities: isListsColumnShown
+      ? virtualRows.flatMap((virtualRow) => {
+          const row = rows[virtualRow.index]?.original
+          return row && !row.group && !row.metaType && !row.isLoading ? [row.primary] : []
+        })
+      : [],
+  })
 
   // Memoize the measureElement callback
   const measureRowElement = useCallback(

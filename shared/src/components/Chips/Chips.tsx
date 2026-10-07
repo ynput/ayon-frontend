@@ -78,6 +78,7 @@ export type ChipValue = {
   icon?: string
   prefix?: React.ReactNode
   suffix?: React.ReactNode
+  onClick?: React.MouseEventHandler<HTMLDivElement>
 }
 
 interface ChipsProps {
@@ -184,6 +185,9 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
           {...pt?.chip}
           key={chip.label + index}
           data-tooltip={chip.tooltip}
+          onClick={chip.onClick ?? pt?.chip?.onClick}
+          // table cells re-render on mousedown, which would swallow the click
+          onMouseDown={chip.onClick ? (e) => e.stopPropagation() : pt?.chip?.onMouseDown}
           className={clsx(
             'chip',
             { last: index === visibleValues.length - 1 && hiddenCount > 0 },
