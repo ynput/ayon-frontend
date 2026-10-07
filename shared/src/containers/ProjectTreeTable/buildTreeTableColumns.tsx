@@ -42,6 +42,7 @@ import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { isEntityRestricted, READ_ONLY } from './utils/restrictedEntity'
 import { getColumnDisplayConfig } from './types/columnConfig'
 import { ENTITY_COLUMN_IDS, normalizeColumnId } from './utils/columnIds'
+import { getFolderColumnEntity, getFolderColumnValue } from './utils/folderColumn'
 import { upperFirst } from 'lodash'
 
 export const isEntityExpandable = (entityType: string) => ['folder', 'product'].includes(entityType)
@@ -979,8 +980,7 @@ const buildTreeTableColumns = ({
   if (isIncluded(ENTITY_COLUMN_IDS.folder)) {
     staticColumns.push({
       id: ENTITY_COLUMN_IDS.folder,
-      accessorFn: (row) =>
-        row.group ? undefined : row.parents?.folder?.label || row.parents?.folder?.name,
+      accessorFn: (row) => getFolderColumnValue(row, isFlatFolderView),
       header: getColumnLabel(ENTITY_COLUMN_IDS.folder),
       minSize: COLUMN_MIN_SIZE,
       sortDescFirst: COLUMN_SORT_CONFIG.folder_entity.sortDescFirst,
@@ -990,8 +990,8 @@ const buildTreeTableColumns = ({
       enablePinning: true,
       enableHiding: true,
       cell: ({ row, column, table }) => {
-        const folder = row.original.parents?.folder
-        if (!folder || row.original.group || row.original.metaType) return null
+        const folder = getFolderColumnEntity(row.original, isFlatFolderView)
+        if (!folder) return null
 
         return (
           <EntityWidget

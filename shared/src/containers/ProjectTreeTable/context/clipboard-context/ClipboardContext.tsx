@@ -13,6 +13,7 @@ import {
   getLinkEntityIdsByColumnId,
   parseCellId,
 } from '../../utils/cellUtils'
+import { getFolderColumnValue } from '../../utils/folderColumn'
 
 // Types
 import { TableRow } from '../../types/table'
@@ -62,7 +63,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities, history } = useCellEditing()
   const { pasteTableLinks } = usePasteLinks()
-  const { getEntityById, attribFields, tableData } = useProjectTableContext()
+  const { getEntityById, attribFields, tableData, isFlatFolderView } = useProjectTableContext()
 
   const displayRowsById = useMemo(() => {
     const map = new Map<string, TableRow>()
@@ -216,7 +217,14 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               // folder is an object on some entities (product/task) or nested under
               // product (version) - copy the display name the cell shows,
               // falling back to the last parent (parent folder name on tasks/folders)
-              if (colId === 'folder_entity' && typeof foundValue !== 'string') {
+              if (
+                colId === 'folder_entity' &&
+                isFlatFolderView &&
+                displayRow?.primary.entityType === 'folder'
+              ) {
+                // folder rows of the flat folder view show themselves
+                foundValue = getFolderColumnValue(displayRow, isFlatFolderView) || ''
+              } else if (colId === 'folder_entity' && typeof foundValue !== 'string') {
                 const folder = foundValue || (entity as any).product?.folder
                 const parents = 'parents' in entity ? entity.parents : undefined
                 foundValue = folder?.label || folder?.name || parents?.[parents.length - 1] || ''
@@ -310,6 +318,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       getEntityById,
       visibleColumns,
       displayRowsById,
+      isFlatFolderView,
     ],
   )
 
