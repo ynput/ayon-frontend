@@ -95,7 +95,6 @@ const enhancedApi = foldersApi.enhanceEndpoints({
           }
 
           const deletedIds: string[] = []
-          const createdIds: string[] = []
           const unsupportedFields = new Map<string, Set<string>>()
           const summaryPatches: {
             folderId: string
@@ -114,14 +113,9 @@ const enhancedApi = foldersApi.enhanceEndpoints({
               return
             }
 
-            // create: add to cache - will fetch the full folder data later
-            if (message.topic === 'entity.folder.created') {
-              createdIds.push(folderId)
-              return
-            }
-
             // for updates, check if the folder is in the cache
             // no point updating a folder that does not exist for the user
+            // new folders are not streamed in either, they show after a sync (#2160)
             if (!cachedFolderIds.has(folderId)) return
 
             // check if the updated field data is in the summary  (status, tags etc)
@@ -161,9 +155,9 @@ const enhancedApi = foldersApi.enhanceEndpoints({
             })
           }
 
-          // Fetch created and unsupported folders in one request.
+          // Fetch the folders with unsupported field changes in one request.
           // This is to avoid overwhelming the API with too many requests at once, and to prevent potential performance issues in the frontend.
-          const foldersToFetch = [...new Set([...createdIds, ...unsupportedFields.keys()])]
+          const foldersToFetch = [...unsupportedFields.keys()]
           if (foldersToFetch.length > MAX_FOLDER_UPDATE_REST_CALLS) return
 
           if (foldersToFetch.length) {
@@ -179,30 +173,20 @@ const enhancedApi = foldersApi.enhanceEndpoints({
               .catch(() => [])
 
             if (!isActive()) return
-            const createdFolderIds = new Set(createdIds)
             updateCachedData((draft: any) => {
               if (!draft || !Array.isArray(draft.folders)) return
               const fetchedById = new Map(
                 fetchedFolders.filter(Boolean).map((folder: any) => [folder.id, folder] as const),
               )
 
-              draft.folders.forEach((folder: any, index: number) => {
+              draft.folders.forEach((folder: any) => {
                 const fetchedFolder = fetchedById.get(folder.id)
                 if (!fetchedFolder) return
 
-                if (createdFolderIds.has(folder.id)) {
-                  draft.folders[index] = { ...folder, ...fetchedFolder }
-                } else {
-                  const fields = unsupportedFields.get(folder.id) || new Set<string>()
-                  fields.forEach((field) => {
-                    folder[field] = fetchedFolder[field]
-                  })
-                }
-                fetchedById.delete(folder.id)
-              })
-
-              fetchedById.forEach((folder, folderId) => {
-                if (createdFolderIds.has(folderId)) draft.folders.push(folder)
+                const fields = unsupportedFields.get(folder.id) || new Set<string>()
+                fields.forEach((field) => {
+                  folder[field] = fetchedFolder[field]
+                })
               })
             })
           }

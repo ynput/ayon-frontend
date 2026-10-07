@@ -39,7 +39,7 @@ import { useSlicerContext } from '@shared/containers/Slicer'
 import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
-import { useProjectFoldersContext } from '@shared/context'
+import { useProjectFoldersContext, type OnSyncDataCallback } from '@shared/context'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -130,7 +130,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   // when the slice type is not hierarchy we need to get the root folders
   const rootFolderIds = useRootFolders()
-  const { getFolderIdsWithoutChildren } = useProjectFoldersContext()
+  const { getFolderIdsWithoutChildren, refetch: refetchFolders } = useProjectFoldersContext()
 
   const folderIdsToFetch = useMemo(() => {
     const selectedFolderIds = resolveSelectedFolders(
@@ -172,9 +172,13 @@ const TasksProgress: FC<TasksProgressProps> = ({
     skip: !folderIdsToFetch.length || !projectName,
   })
 
-  const handleSync = async () => {
+  const handleSync: OnSyncDataCallback = async (updates = []) => {
     if (!folderIdsToFetch.length || !projectName) return
-    await dispatch(refreshActiveAndPurgeOthers('GetTasksProgress', tasksProgressArgs)).unwrap()
+    const hasFolderUpdates = updates.some((update) => update.topic.startsWith('entity.folder.'))
+    await Promise.all([
+      dispatch(refreshActiveAndPurgeOthers('GetTasksProgress', tasksProgressArgs)).unwrap(),
+      hasFolderUpdates && refetchFolders(),
+    ])
   }
   //
   //

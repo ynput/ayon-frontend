@@ -109,13 +109,8 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
               return
             }
 
-            const isCreated = topic === 'entity.task.created'
-            if (!isCreated && !cachedTaskIds.has(taskId)) return
-
-            if (isCreated) {
-              taskIdsToFetch.add(taskId)
-              return
-            }
+            // new tasks are not streamed in, they show after a sync (#2160)
+            if (!cachedTaskIds.has(taskId)) return
 
             const field = topic.split('.')[2]?.replace('_changed', '')
             const patch = getSupportedEntityPatch(
