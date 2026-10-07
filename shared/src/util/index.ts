@@ -39,3 +39,4 @@ export { isHTMLElement }
 
 import PubSub from './pubsub'
 export { PubSub }
+export * from './afterStartup'

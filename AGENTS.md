@@ -10,6 +10,16 @@ Some parts of the codebase have their own `AGENTS.md` next to the code. It expla
 | Area | Guide |
 | --- | --- |
 | Markdown editor (Lexical): comments, descriptions, text cells | [shared/src/components/MarkdownEditor/AGENTS.md](shared/src/components/MarkdownEditor/AGENTS.md) |
+| Page load benchmarks | [tests/performance/AGENTS.md](tests/performance/AGENTS.md) |
+
+## Load performance
+Every page load waits on `/api/info`, then the route's own queries. Keep anything else off that path, and check changes with the page load benchmarks (`yarn perf:build`, see the guide).
+- Don't gate built in pages on addon remote modules (`useLoadRemotePages`, `useLoadModule`): addon bundles are large. Render with the fallback, or only wait when the current page is the addon's.
+- Work nobody waits for on load (prompts, banners, third party widgets, rarely used addon modules) starts after `afterStartup` / `useAfterStartup` (`@shared/util`, `@shared/hooks`).
+- `useLoadModule`: `skip` means the module is provided elsewhere (reported as not loading), `defer` means don't load it yet (reported as loading).
+- Browsers run 6 requests per host at once over HTTP/1.1. Don't add start up requests that duplicate a cached query under another cache key (e.g. different args for the same endpoint).
+- Load heavy libraries that are only used in some places (code editors, markdown/HTML parsers, dialogs) with `lazy()` / `import()`, so they stay out of the main bundle.
+- `index.html` starts `/api/info?full=true` before the bundle loads (`src/helpers/earlySiteInfo.ts`). Keep its request in sync with the `getSiteInfo` call in `src/app.tsx`.
 
 ## Hot reload
 - A `.tsx`/`.jsx` file that defines components must export only components (types are fine). Put everything else in a sibling module:

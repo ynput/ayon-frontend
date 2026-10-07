@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { lazy, Suspense, useMemo, useState } from 'react'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useNavigate, useParams } from 'react-router-dom'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
@@ -7,8 +7,6 @@ import { useDispatch } from 'react-redux'
 import { onProjectSelected } from '@state/dashboard'
 import { useGetProjectsInfoQuery } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
-import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
-import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
 import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from './DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
@@ -53,6 +51,15 @@ type PageLink = NavLinkItem & {
   showProjectList?: boolean
   isMultiSelect?: boolean
 }
+
+// these pull in the settings editor (new project dialog), only load them when they are shown
+const NewProjectDialog = lazy(() => import('../ProjectManagerPage/NewProjectDialog'))
+const UserDashboardNoProjects = lazy(
+  () => import('./UserDashboardNoProjects/UserDashboardNoProjects'),
+)
+
+// pages rendered by this repo, they don't need to wait for addon remote modules to load
+const BUILT_IN_MODULES = ['tasks', 'projects']
 
 const StyledSplitter = styled(Splitter)`
   height: 100%;
@@ -242,9 +249,17 @@ const UserDashboardPage: React.FC = () => {
   const title = useTitle(addonName || module || '', pages, 'AYON', '')
 
   // Early returns after all hooks
-  if (isLoadingProjects || isLoadingRemotePages) return <LoadingPage />
+  // the built in pages render while the projects load (the projects list shows its own loading
+  // state), so their data, e.g. the tasks of the selected projects, starts loading straight away
+  const isBuiltInPage = !addonName && (!module || BUILT_IN_MODULES.includes(module))
+  if (!isBuiltInPage && (isLoadingProjects || isLoadingRemotePages)) return <LoadingPage />
 
-  if (!projects.length) return <UserDashboardNoProjects />
+  if (!isLoadingProjects && !projects.length)
+    return (
+      <Suspense fallback={<LoadingPage />}>
+        <UserDashboardNoProjects />
+      </Suspense>
+    )
 
   if (isGuest) {
     return <GuestUserPageLocked />
@@ -288,13 +303,15 @@ const UserDashboardPage: React.FC = () => {
           </WithViews>
         </main>
         {showNewProject && (
-          <NewProjectDialog
-            onHide={(name?: string) => {
-              setShowNewProject(false)
-              if (name) navigate(`/manageProjects/anatomy?project=${name}`)
-            }}
-            redirect={module !== 'projects'}
-          />
+          <Suspense fallback={null}>
+            <NewProjectDialog
+              onHide={(name?: string) => {
+                setShowNewProject(false)
+                if (name) navigate(`/manageProjects/anatomy?project=${name}`)
+              }}
+              redirect={module !== 'projects'}
+            />
+          </Suspense>
         )}
       </UserDashboardProvider>
     </>

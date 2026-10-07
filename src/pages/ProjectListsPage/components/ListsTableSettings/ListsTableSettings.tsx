@@ -1,5 +1,5 @@
 import { useListsAttributesContext } from '@pages/ProjectListsPage/context/lists-attributes'
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { ProjectTableSettings } from '@shared/components'
 import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
@@ -27,7 +27,10 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
   const { selectedList, isReview } = useListsContext()
   const { listAttributes, entityAttribFields, updateAttributes, isUpdating, isLoadingNewList } =
     useListsAttributesContext()
-  const { ListsAttributesSettings, requiredVersion } = useListsModuleContext()
+  const { ListsAttributesSettings, requiredVersion, requestModules } = useListsModuleContext()
+  useEffect(() => {
+    requestModules()
+  }, [requestModules])
   const { selectSetting } = useSettingsPanel()
 
   // mirror the table's excluded columns so the panel doesn't offer dead toggles

@@ -60,6 +60,9 @@ import { login } from '@state/user'
 
 // queries
 import { useLazyGetSiteInfoQuery, useGetYnputCloudInfoQuery } from '@shared/api'
+import { usersApi } from '@shared/api/generated'
+import { systemQueries } from '@shared/api'
+import { takeEarlySiteInfo } from '@helpers/earlySiteInfo'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
@@ -135,8 +138,13 @@ const App = () => {
   useEffect(() => {
     setLoading(true)
 
-    getInfo({ full: true })
-      .unwrap()
+    // use the request index.html started when there is one
+    takeEarlySiteInfo()
+      .then(async (early) => {
+        if (!early) return getInfo({ full: true }).unwrap()
+        await dispatch(systemQueries.util.upsertQueryData('getSiteInfo', { full: true }, early))
+        return early
+      })
       .then((response) => {
         setNoAdminUser(!!response?.noAdminUser)
 
@@ -147,6 +155,9 @@ const App = () => {
         }
 
         if (response.user) {
+          // /api/info already returns the current user: seed it so /api/users/me isn't
+          // requested again before the routes can render
+          dispatch(usersApi.util.upsertQueryData('getCurrentUser', undefined, response.user))
           dispatch(
             login({
               user: response.user,
