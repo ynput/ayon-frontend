@@ -34,7 +34,7 @@ const userSlice = createSlice({
     login: (state, action) => {
       if (action.payload.accessToken) {
         localStorage.setItem('accessToken', action.payload.accessToken)
-        axios.defaults.headers.common['Authorization'] = `Bearer ${action.payloadaccessToken}`
+        axios.defaults.headers.common['Authorization'] = `Bearer ${action.payload.accessToken}`
         document.cookie = `accessToken=${action.payload.accessToken}; path=/; max-age=86400`
       }
 
@@ -55,6 +55,7 @@ const userSlice = createSlice({
 
     logout: (state) => {
       localStorage.removeItem('accessToken')
+      document.cookie = 'accessToken=; path=/; max-age=0'
       state = {}
       return state
     },

@@ -2,7 +2,7 @@ node_modules/
 build/
 dist/
 yarn-error.log
-.env.local
+.env*.local
 .env
 /test-results/
 /playwright-report/
@@ -16,3 +16,4 @@ gen/openapi.json
 
 .idea
 .claude
+dist-e2e/
