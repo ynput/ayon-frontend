@@ -93,6 +93,7 @@ const SortRow: FC<SortRowProps> = ({ item, desc, onToggleDirection, onRemove }) 
     <SortItem
       ref={setNodeRef}
       item={item}
+      data-sort-id={item.value}
       className={isDragging ? 'dragging' : undefined}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       startContent={
@@ -163,9 +164,9 @@ export const SortSettings: FC<SortSettingsProps> = ({
   const add = (id: string) => onChange([...sorting, { id, desc: false }])
 
   return (
-    <Container>
+    <Container className="sort-settings">
       {sorting.length > 0 && (
-        <Section>
+        <Section className="sorted">
           <SectionTitle>Sorted by</SectionTitle>
           <DndContext
             sensors={sensors}
@@ -192,7 +193,7 @@ export const SortSettings: FC<SortSettingsProps> = ({
         </Section>
       )}
 
-      <Section>
+      <Section className="available">
         <SectionTitle>{sorting.length > 0 ? 'Then sort by' : 'Sort by'}</SectionTitle>
         {canAdd ? (
           <List>
@@ -200,6 +201,7 @@ export const SortSettings: FC<SortSettingsProps> = ({
               <AddItem
                 key={option.value}
                 item={option}
+                data-sort-id={option.value}
                 onClick={() => add(option.value)}
                 actions={[{ icon: 'add' }]}
               />
