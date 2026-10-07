@@ -27,6 +27,7 @@ Settings (env vars):
 | `PERF_RUNS` | 5 | recorded loads per route (plus one unrecorded warm up load) |
 | `PERF_ROUTES` | all | comma separated route names from `routes.ts` |
 | `PERF_LATENCY` | 0 | extra ms per request (Chrome network emulation), to mimic a remote server |
+| `PERF_MBPS` | 0 | download bandwidth limit in Mbit/s (0 = unlimited). Localhost has no real bandwidth limit, so file size changes (fonts, CSS, JS) only show with this set |
 | `PERF_CPU` | 1 | CPU slowdown factor |
 | `PERF_PROJECT` / `PERF_LISTS_PROJECT` | `demo_Big_Feature` / `demo_Commercial` | projects the project routes use |
 | `PERF_LABEL` | `run` | name of the result file |

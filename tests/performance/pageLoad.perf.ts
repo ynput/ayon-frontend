@@ -13,6 +13,8 @@ import { PARTIAL_DIR, OUT_DIR, RouteResult, Sample, summarize, formatRow } from 
 const RUNS = Number(process.env.PERF_RUNS || 5)
 // added latency for every request, to mimic a remote server (ms)
 const LATENCY = Number(process.env.PERF_LATENCY || 0)
+// download bandwidth limit in Mbit/s (0 = unlimited), to see the cost of large files
+const MBPS = Number(process.env.PERF_MBPS || 0)
 // CPU slowdown factor (1 = no throttling)
 const CPU = Number(process.env.PERF_CPU || 1)
 const SETTLE_MS = Number(process.env.PERF_SETTLE_MS || 300)
@@ -113,14 +115,15 @@ const newContext = async (browser: Browser, use: Record<string, any>) =>
   })
 
 const throttle = async (context: BrowserContext, page: Page) => {
-  if (!LATENCY && CPU === 1) return
+  if (!LATENCY && !MBPS && CPU === 1) return
   const cdp = await context.newCDPSession(page)
-  if (LATENCY) {
+  if (LATENCY || MBPS) {
     await cdp.send('Network.enable')
     await cdp.send('Network.emulateNetworkConditions', {
       offline: false,
       latency: LATENCY,
-      downloadThroughput: -1,
+      // bytes per second
+      downloadThroughput: MBPS ? (MBPS * 1_000_000) / 8 : -1,
       uploadThroughput: -1,
     })
   }

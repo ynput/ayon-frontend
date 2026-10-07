@@ -26,6 +26,7 @@ export default async function globalTeardown() {
     settings: {
       runs: Number(process.env.PERF_RUNS || 5),
       latency: Number(process.env.PERF_LATENCY || 0),
+      mbps: Number(process.env.PERF_MBPS || 0),
       cpu: Number(process.env.PERF_CPU || 1),
       mode: process.env.PERF_BASE_URL ? 'external' : process.env.PERF_MODE || 'preview',
     },
