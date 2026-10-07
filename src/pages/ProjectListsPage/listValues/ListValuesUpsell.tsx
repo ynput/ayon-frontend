@@ -10,5 +10,6 @@ export const ListValuesUpsell: FC<ListValuesControlsProps> = () => (
     label="Compare"
     bolt
     variant="surface"
+    rounded={false}
   />
 )
