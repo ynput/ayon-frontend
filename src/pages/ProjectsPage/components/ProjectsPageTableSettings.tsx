@@ -10,18 +10,19 @@ import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import { ColumnsSettings } from '@shared/components/ProjectTableSettings/ColumnsSettings'
 import { SettingsPanelItem } from '@shared/components/SettingsPanel'
+import { SortSettings } from '@shared/components/SettingsPanel/SortSettings'
 import { SettingsSortingDropdown, SortCardType } from '@ynput/ayon-react-components'
 import type { ProjectGroupOption, ProjectTableRow } from '../hooks'
 
-const SORT_OPTIONS = [
-  { id: 'label', label: 'Label' },
-  { id: 'name', label: 'Name' },
-  { id: 'code', label: 'Code' },
-  { id: 'active', label: 'Active' },
-  { id: 'library', label: 'Library' },
-  { id: 'pipeline', label: 'State' },
-  { id: 'createdAt', label: 'Created at' },
-  { id: 'updatedAt', label: 'Updated at' },
+const SORT_OPTIONS: SettingsPanelItem[] = [
+  { value: 'label', label: 'Label' },
+  { value: 'name', label: 'Name' },
+  { value: 'code', label: 'Code' },
+  { value: 'active', label: 'Active' },
+  { value: 'library', label: 'Library' },
+  { value: 'pipeline', label: 'State' },
+  { value: 'createdAt', label: 'Created at' },
+  { value: 'updatedAt', label: 'Updated at' },
 ]
 
 interface ProjectsPageTableSettingsProps {
@@ -70,21 +71,24 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
     checkColumnVisibility(columnVisibility, col.value, defaultColumnVisibility),
   ).length
 
-  const sortValue = useMemo<SortCardType[]>(
-    () =>
-      sorting
-        .map((s) => {
-          const option = SORT_OPTIONS.find((o) => o.id === s.id)
-          if (!option) return null
-          return { ...option, sortOrder: !s.desc }
-        })
-        .filter(Boolean) as SortCardType[],
-    [sorting],
+  // any column can be sorted from its header, so label the ones that aren't sort options
+  const sortOptions = useMemo<SettingsPanelItem[]>(
+    () => [
+      ...SORT_OPTIONS,
+      ...sorting
+        .filter((s) => !SORT_OPTIONS.some((option) => option.value === s.id))
+        .map((s) => ({
+          value: s.id,
+          label: settingsColumns.find((col) => col.value === s.id)?.label ?? s.id,
+        })),
+    ],
+    [sorting, settingsColumns],
   )
 
-  const handleSortChange = (v: SortCardType[]) => {
-    onSortingChange(v.map((item) => ({ id: item.id, desc: !item.sortOrder })))
-  }
+  const sortPreview = sorting.length
+    ? (sortOptions.find((option) => option.value === sorting[0].id)?.label ?? sorting[0].id) +
+      (sorting.length > 1 ? ` +${sorting.length - 1}` : '')
+    : 'None'
 
   const groupValue = useMemo<SortCardType[]>(
     () =>
@@ -130,15 +134,11 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
     },
     {
       id: 'sort-by',
+      title: 'Sort',
+      icon: 'sort',
+      preview: sortPreview,
       component: (
-        <SettingsSortingDropdown
-          title="Sort by"
-          icon="sort"
-          value={sortValue}
-          options={SORT_OPTIONS}
-          onChange={handleSortChange}
-          multiSelect={false}
-        />
+        <SortSettings sorting={sorting} options={sortOptions} onChange={onSortingChange} />
       ),
     },
     {

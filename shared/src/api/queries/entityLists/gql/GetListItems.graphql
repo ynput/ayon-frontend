@@ -5,7 +5,7 @@ query GetListItems(
   $after: String
   $before: String
   $last: Int
-  $sortBy: String
+  $sortBy: [String!]
   $filter: String
   $search: String
   $showComments: Boolean! = false

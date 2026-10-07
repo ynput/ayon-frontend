@@ -249,7 +249,7 @@ export type OverviewSettings = {
   groupBy?: string
   groupSortByDesc?: boolean
   showEmptyGroups?: boolean
-  sortBy?: string
+  sortBy?: string | string[]
   sortDesc?: boolean
   filter?: QueryFilter
   folderFilter?: QueryFilter
@@ -283,7 +283,7 @@ export type TaskProgressViewPostModel = {
 }
 export type ListsSettings = {
   rowHeight?: number
-  sortBy?: string
+  sortBy?: string | string[]
   sortDesc?: boolean
   filter?: QueryFilter
   columns?: ColumnItemModel[]
@@ -300,7 +300,7 @@ export type ListsViewPostModel = {
 }
 export type ReviewsSettings = {
   rowHeight?: number
-  sortBy?: string
+  sortBy?: string | string[]
   sortDesc?: boolean
   filter?: QueryFilter
   columns?: ColumnItemModel[]
@@ -328,7 +328,7 @@ export type VersionsSettings = {
   groupSortByDesc?: boolean
   showEmptyGroups?: boolean
   latestPerFolder?: boolean
-  sortBy?: string
+  sortBy?: string | string[]
   sortDesc?: boolean
   filter?: QueryFilter
   columns?: ColumnItemModel[]

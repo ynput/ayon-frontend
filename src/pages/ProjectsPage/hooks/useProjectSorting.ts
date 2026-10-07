@@ -1,6 +1,6 @@
 import { useViewsContext } from '@shared/containers'
 import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHelper'
-import { convertColumnConfigToTanstackStates } from '@shared/util'
+import { convertColumnConfigToTanstackStates, serializeViewSorting } from '@shared/util'
 import type { OverviewSettings } from '@shared/api/generated/views'
 import { SortingState } from '@tanstack/react-table'
 import { useCallback, useMemo, useState } from 'react'
@@ -21,10 +21,12 @@ export const useProjectSorting = () => {
 
   const handleSortingChange = useCallback(
     async (newSorting: SortingState) => {
-      const firstSort = newSorting[0]
-      const sortBy = firstSort?.id
-      const sortDesc = firstSort?.desc ?? false
-      await updateViewSettings({ sortBy, sortDesc }, setLocalSorting, newSorting, {})
+      await updateViewSettings(
+        { sortBy: serializeViewSorting(newSorting), sortDesc: undefined },
+        setLocalSorting,
+        newSorting,
+        {},
+      )
     },
     [updateViewSettings],
   )

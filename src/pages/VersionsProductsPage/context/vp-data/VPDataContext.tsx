@@ -14,7 +14,7 @@ import {
   determineLoadingVP,
   extractFilters,
 } from '../../util'
-import { getRequestErrorString } from '@shared/util'
+import { buildSortArgs, getRequestErrorString } from '@shared/util'
 
 const getQueryErrorMessage = (error: unknown): string => {
   return getRequestErrorString(error)
@@ -145,7 +145,7 @@ export type QueryArguments = {
   productFilter?: string
   taskFilter?: string
   folderFilter?: string
-  sortBy?: string
+  sortBy?: string | string[]
   desc: boolean
   featuredOnly?: string[]
   featuredOnlyEntityType?: string
@@ -171,8 +171,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const {
     filters,
     showProducts,
-    sortBy,
-    sortDesc,
+    sorting,
     featuredVersionOrder,
     latestPerFolder,
     groupBy,
@@ -424,10 +423,21 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     ],
   )
 
-  const resolvedSortBy = useMemo(
-    () => sortBy && (SORT_BY_FIELD_MAP[sortBy] || getColumnSortKey(sortBy, true, 'product')),
-    [sortBy],
-  )
+  // products can't be sorted by every key, so each entity type gets its own sort arguments
+  const sortArgs = useMemo(() => {
+    const resolve = (entityType: 'version' | 'product') =>
+      buildSortArgs(
+        sorting.map((sort) => {
+          const key = SORT_BY_FIELD_MAP[sort.id] || getColumnSortKey(sort.id, true, 'product')
+          const isExcluded = EXCLUDED_SORT_FIELDS[entityType].some((field) => key?.includes(field))
+          return {
+            key: isExcluded ? undefined : key?.replace('attrib_', 'attrib.'),
+            desc: sort.desc,
+          }
+        }),
+      )
+    return { version: resolve('version'), product: resolve('product') }
+  }, [sorting])
   const queryArgs = useMemo(
     () => ({
       projectName,
@@ -438,8 +448,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       folderIds: slicerFolderIds,
       versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
       productIds: scopedProductIds.length ? scopedProductIds : undefined,
-      sortBy: resolvedSortBy,
-      desc: sortDesc,
+      sortBy: sortArgs.version.sortBy,
+      desc: sortArgs.version.desc,
       showComments,
     }),
     [
@@ -451,8 +461,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       slicerFolderIds,
       scopedVersionIds,
       scopedProductIds,
-      resolvedSortBy,
-      sortDesc,
+      sortArgs,
       showComments,
     ],
   )
@@ -481,18 +490,6 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   const resolveEntityArguments = useCallback(
     (entityType: 'version' | 'product'): QueryArguments => {
-      // remove sortBy based on excluded
-      const excludedFields = EXCLUDED_SORT_FIELDS[entityType]
-      let modifiedSortBy =
-        resolvedSortBy && excludedFields.some((field) => resolvedSortBy.includes(field))
-          ? undefined
-          : resolvedSortBy
-
-      if (modifiedSortBy?.startsWith('attrib_')) {
-        // replace _ with .
-        modifiedSortBy = modifiedSortBy.replace('attrib_', 'attrib.')
-      }
-
       const modifiedFeaturedVersionOrder = featuredVersionOrder?.length
         ? featuredVersionOrder
         : DEFAULT_FEATURED_ORDER
@@ -500,7 +497,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       const { versionIds, productIds, ...restQueryArgs } = queryArgs
       const args: any = {
         ...restQueryArgs,
-        sortBy: modifiedSortBy,
+        ...sortArgs[entityType],
       }
 
       if (entityType === 'version') {
@@ -540,7 +537,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     },
     [
       queryArgs,
-      resolvedSortBy,
+      sortArgs,
       featuredVersionOrder,
       featuredVersionFilter,
       latestPerFolder,
@@ -571,7 +568,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     skip: !showProducts || isLoadingSlicerData,
     initialPageParam: {
       cursor: '',
-      desc: sortDesc,
+      desc: sortArgs.product.desc,
     },
   })
 
@@ -588,7 +585,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     skip: showProducts || isLoadingSlicerData,
     initialPageParam: {
       cursor: '',
-      desc: sortDesc,
+      desc: sortArgs.version.desc,
     },
   })
 
