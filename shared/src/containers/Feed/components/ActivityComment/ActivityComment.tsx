@@ -3,8 +3,6 @@ import { useCallback, useId, useMemo, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import emoji from 'remark-emoji'
 import remarkGfm from 'remark-gfm'
-import remarkDirective from 'remark-directive'
-import remarkDirectiveRehype from 'remark-directive-rehype'
 
 import CommentInput from '../CommentInput/CommentInput'
 import Reactions from '../ReactionContainer/Reactions'
@@ -319,7 +317,7 @@ const ActivityComment = ({
               />
               <CommentWrapper>
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm, emoji, remarkDirective, remarkDirectiveRehype]}
+                  remarkPlugins={[remarkGfm, emoji]}
                   urlTransform={(url) => url}
                   components={{
                     // a links
