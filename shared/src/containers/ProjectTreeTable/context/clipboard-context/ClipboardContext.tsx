@@ -63,7 +63,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities, history } = useCellEditing()
   const { pasteTableLinks } = usePasteLinks()
-  const { getEntityById, attribFields, tableData, isFlatFolderView } = useProjectTableContext()
+  const { getEntityById, attribFields, tableData } = useProjectTableContext()
 
   const displayRowsById = useMemo(() => {
     const map = new Map<string, TableRow>()
@@ -219,11 +219,11 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               // falling back to the last parent (parent folder name on tasks/folders)
               if (
                 colId === 'folder_entity' &&
-                isFlatFolderView &&
+                !displayRow?.parents?.folder &&
                 displayRow?.primary.entityType === 'folder'
               ) {
-                // folder rows of the flat folder view show themselves
-                foundValue = getFolderColumnValue(displayRow, isFlatFolderView) || ''
+                // folder rows without a parent on the row show themselves
+                foundValue = getFolderColumnValue(displayRow) || ''
               } else if (colId === 'folder_entity' && typeof foundValue !== 'string') {
                 const folder = foundValue || (entity as any).product?.folder
                 const parents = 'parents' in entity ? entity.parents : undefined
@@ -318,7 +318,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       getEntityById,
       visibleColumns,
       displayRowsById,
-      isFlatFolderView,
     ],
   )
 

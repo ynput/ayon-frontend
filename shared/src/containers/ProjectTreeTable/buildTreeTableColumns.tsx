@@ -980,7 +980,7 @@ const buildTreeTableColumns = ({
   if (isIncluded(ENTITY_COLUMN_IDS.folder)) {
     staticColumns.push({
       id: ENTITY_COLUMN_IDS.folder,
-      accessorFn: (row) => getFolderColumnValue(row, isFlatFolderView),
+      accessorFn: (row) => getFolderColumnValue(row),
       header: getColumnLabel(ENTITY_COLUMN_IDS.folder),
       minSize: COLUMN_MIN_SIZE,
       sortDescFirst: COLUMN_SORT_CONFIG.folder_entity.sortDescFirst,
@@ -990,7 +990,7 @@ const buildTreeTableColumns = ({
       enablePinning: true,
       enableHiding: true,
       cell: ({ row, column, table }) => {
-        const folder = getFolderColumnEntity(row.original, isFlatFolderView)
+        const folder = getFolderColumnEntity(row.original)
         if (!folder) return null
 
         return (
