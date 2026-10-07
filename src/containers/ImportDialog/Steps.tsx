@@ -2,7 +2,13 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } f
 import UploadStep from './steps/UploadStep/UploadStep'
 import { getFullMapping, ImportData } from './utils'
 import MapColumnsStep from './steps/MapColumnsStep/MapColumnsStep'
-import { ColumnMappings, ImportContext, ImportStep, ValueMappings } from './steps/common'
+import {
+  ColumnAction,
+  ColumnMappings,
+  ImportContext,
+  ImportStep,
+  ValueMappings,
+} from './steps/common'
 import ReviewValuesStep from './steps/ReviewValuesStep/ReviewValuesStep'
 import PreviewStep from './steps/PreviewStep/PreviewStep'
 import { useViewsContext } from '@shared/containers'
@@ -18,10 +24,14 @@ import Loading from './steps/Loading'
 import { EmptyPlaceholder } from '@shared/components'
 import { withHierarchySchema } from './steps/hierarchy'
 import SubmitStep from './steps/SubmitStep/SubmitStep'
+import ImportOptions from './steps/ImportOptions/ImportOptions'
 import {
   getUnmappedRequiredTargetGroups,
+  hasImportModes,
   ImportMode,
   missingStrategyForImportMode,
+  RowsEntityType,
+  schemaForRowsEntityType,
 } from './steps/importMode'
 
 type Props = {
@@ -65,6 +75,7 @@ export default function ImportSteps({
 
   const [importMode, setImportMode] = useState(ImportMode.CREATE_AND_UPDATE)
   const [duplicateStrategy, setDuplicateStrategy] = useState<DuplicateItemStrategy>('skip')
+  const [rowsEntityType, setRowsEntityType] = useState<RowsEntityType>('column')
   const [columnMappings, setColumnMappings] = useState<ColumnMappings | undefined>(undefined)
   const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
   const [previewStatus, setPreviewStatus] = useState<ImportStatus | null>(null)
@@ -90,8 +101,9 @@ export default function ImportSteps({
       return rawImportSchema
     }
 
-    return withHierarchySchema(rawImportSchema)
-  }, [rawImportSchema])
+    const hierarchySchema = withHierarchySchema(rawImportSchema)
+    return hierarchySchema && schemaForRowsEntityType(hierarchySchema, rowsEntityType)
+  }, [rawImportSchema, importContext, rowsEntityType])
 
   const { setSelectedView, workingView } = useViewsContext()
 
@@ -114,9 +126,11 @@ export default function ImportSteps({
         existingStrategy: 'update',
         missingStrategy: missingStrategyForImportMode[importMode],
         duplicateStrategy,
+        entityType:
+          importContext === 'hierarchy' && rowsEntityType !== 'column' ? rowsEntityType : undefined,
       })
     },
-    [data, folderId, projectName, importContext, importMode, duplicateStrategy],
+    [data, folderId, projectName, importContext, importMode, duplicateStrategy, rowsEntityType],
   )
 
   const fetchPreview = useCallback(() => {
@@ -155,18 +169,26 @@ export default function ImportSteps({
   }, [requestImport, columnMappings, valueMappings])
 
   // the mode can change after the columns were mapped, so the mapping may no longer be enough
-  const mappingsValid = useMemo(
-    () =>
-      Boolean(importSchema && columnMappings) &&
+  // the options can change after the columns were mapped, so the mapping may no longer fit:
+  // a required target may be missing or a target may no longer be offered
+  const mappingsValid = useMemo(() => {
+    if (!importSchema || !columnMappings) return false
+    const targets = new Set(importSchema.map(({ key }) => key))
+    const targetsOffered = Object.values(columnMappings).every(
+      ({ action, targetColumn }) =>
+        action !== ColumnAction.MAP || !targetColumn || targets.has(targetColumn),
+    )
+    return (
+      targetsOffered &&
       getUnmappedRequiredTargetGroups(
         importContext,
         importMode,
-        importSchema!,
+        importSchema,
         columnMappings,
         folderId,
-      ).length === 0,
-    [importContext, importMode, importSchema, columnMappings, folderId],
-  )
+      ).length === 0
+    )
+  }, [importContext, importMode, importSchema, columnMappings, folderId])
 
   const unlocked: Record<ImportStep, boolean> = useMemo(
     () => ({
@@ -243,6 +265,28 @@ export default function ImportSteps({
           </Breadcrumb>
         ))}
       </Breadcrumbs>
+      {importSchema &&
+        hasImportModes(importContext) &&
+        (step === ImportStep.UPLOAD || step === ImportStep.MAP_COLUMNS) && (
+          <ImportOptions
+            importContext={importContext}
+            importMode={importMode}
+            onImportModeChange={(mode) => {
+              setImportMode(mode)
+              setPreviewStatus(null)
+            }}
+            rowsEntityType={rowsEntityType}
+            onRowsEntityTypeChange={(entityType) => {
+              setRowsEntityType(entityType)
+              setPreviewStatus(null)
+            }}
+            duplicateStrategy={duplicateStrategy}
+            onDuplicateStrategyChange={(strategy) => {
+              setDuplicateStrategy(strategy)
+              setPreviewStatus(null)
+            }}
+          />
+        )}
       {!importSchema && importSchemaLoading && <Loading />}
       {!importSchema && !importSchemaLoading && <EmptyPlaceholder error={importSchemaError} />}
       {step === ImportStep.UPLOAD && importSchema && (
@@ -251,15 +295,6 @@ export default function ImportSteps({
           importSchema={importSchema}
           uploaded={data}
           importMode={importMode}
-          onImportModeChange={(mode) => {
-            setImportMode(mode)
-            setPreviewStatus(null)
-          }}
-          duplicateStrategy={duplicateStrategy}
-          onDuplicateStrategyChange={(strategy) => {
-            setDuplicateStrategy(strategy)
-            setPreviewStatus(null)
-          }}
           onBack={onClose}
           onNext={(d) => {
             // coming back to change the mode keeps the file and its mappings

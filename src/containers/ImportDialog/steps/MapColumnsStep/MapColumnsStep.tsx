@@ -97,6 +97,11 @@ export default function MapColumnsStep({
     [importSchema]
   )
 
+  const targetExists = useCallback(
+    (target: string) => Boolean(columnSettings[target]),
+    [columnSettings],
+  )
+
   const preset = usePreset()
   const multiSelect = useMultiSelect({ items: data.columns })
 
@@ -148,7 +153,7 @@ export default function MapColumnsStep({
           isEnum: Boolean(enumItems),
         }
 
-        const state = getMapperState(column, mappings)
+        const state = getMapperState(column, mappings, targetExists)
         return {
           value: key,
           icon: "check",
@@ -170,13 +175,13 @@ export default function MapColumnsStep({
       if (!mappings) return columnsSet
 
       const resolvedColumnsSet = new Set(data.columns
-        .map((c) => [c, getMapperState(c, mappings)])
+        .map((c) => [c, getMapperState(c, mappings, targetExists)])
         .filter(([, state]) => state !== MappingState.UNRESOLVED)
         .map(([c]) => c),
       )
       return columnsSet.difference(resolvedColumnsSet)
     },
-    [data.columns, mappings],
+    [data.columns, mappings, targetExists],
   )
 
   useEffect(() => {
@@ -279,7 +284,7 @@ export default function MapColumnsStep({
               data.columns.map((column, index) => (
                 <MapperRow
                   key={column}
-                  state={getMapperState(column, mappings)}
+                  state={getMapperState(column, mappings, targetExists)}
                   source={column}
                   action={mappings?.[column]?.action}
                   actions={actionOptions}

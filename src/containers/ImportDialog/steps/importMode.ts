@@ -6,7 +6,7 @@ import {
   ImportSchema,
   itemsLabelForImportContext,
 } from './common'
-import { ENTITY_TYPE, FOLDER_TASK_TYPE_COMBINED_COLUMN } from './hierarchy'
+import { ENTITY_TYPE, FOLDER_TASK_TYPE_COMBINED_COLUMN, FOLDER_TYPE, TASK_TYPE } from './hierarchy'
 
 export enum ImportMode {
   CREATE_AND_UPDATE = 'createAndUpdate',
@@ -35,6 +35,43 @@ export const duplicateStrategyOptions: {
 // Only folders and tasks are matched by name, which can repeat across the hierarchy
 export const hasDuplicateStrategy = (importContext: ImportContext, importMode: ImportMode) =>
   importContext === 'hierarchy' && importMode === ImportMode.UPDATE_ONLY
+
+// Whether hierarchy rows say their own entity type, or the whole sheet is one type
+export type RowsEntityType = 'column' | 'folder' | 'task'
+
+export const rowsEntityTypeOptions: {
+  value: RowsEntityType
+  label: string
+  icon: 'view_column' | 'folder' | 'task_alt'
+}[] = [
+  { value: 'column', label: 'From a column', icon: 'view_column' },
+  { value: 'folder', label: 'All folders', icon: 'folder' },
+  { value: 'task', label: 'All tasks', icon: 'task_alt' },
+]
+
+export const describeRowsEntityType = (rowsEntityType: RowsEntityType, importMode: ImportMode) => {
+  if (rowsEntityType === 'folder') return 'Every row is a folder.'
+  if (rowsEntityType === 'task') return 'Every row is a task.'
+  return importMode === ImportMode.UPDATE_ONLY
+    ? 'An Entity type column says if a row is a folder or a task. ' +
+        'Without it, rows take the type of what they match.'
+    : 'An Entity type column says if a row is a folder or a task.'
+}
+
+// Targets that don't apply when the whole sheet is one entity type
+const hiddenTargetsForRowsEntityType: Record<RowsEntityType, string[]> = {
+  column: [],
+  folder: [ENTITY_TYPE, FOLDER_TASK_TYPE_COMBINED_COLUMN, TASK_TYPE],
+  task: [ENTITY_TYPE, FOLDER_TASK_TYPE_COMBINED_COLUMN, FOLDER_TYPE],
+}
+
+export const schemaForRowsEntityType = (
+  importSchema: ImportSchema,
+  rowsEntityType: RowsEntityType,
+) => {
+  const hidden = hiddenTargetsForRowsEntityType[rowsEntityType]
+  return importSchema.filter(({ key }) => !hidden.includes(key))
+}
 
 // Targets that identify an existing entity, any one of them is enough.
 const matchTargetsForImportContext: Partial<Record<ImportContext, string[]>> = {

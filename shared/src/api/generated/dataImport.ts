@@ -43,6 +43,7 @@ const injectedRtkApi = api.injectEndpoints({
           existing_strategy: queryArg.existingStrategy,
           missing_strategy: queryArg.missingStrategy,
           duplicate_strategy: queryArg.duplicateStrategy,
+          entity_type: queryArg.entityType,
           project_name: queryArg.projectName,
           folder_id: queryArg.folderId,
           preview: queryArg.preview,
@@ -77,6 +78,7 @@ export type ImportDataApiArg = {
   existingStrategy?: ExistingItemStrategy
   missingStrategy?: MissingItemStrategy
   duplicateStrategy?: DuplicateItemStrategy
+  entityType?: 'folder' | 'task'
   projectName?: string
   folderId?: string
   preview?: boolean
