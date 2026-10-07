@@ -1,4 +1,12 @@
-import { FC, useMemo, useRef, MouseEvent as ReactMouseEvent, useCallback, useEffect } from 'react'
+import {
+  FC,
+  useMemo,
+  useRef,
+  MouseEvent as ReactMouseEvent,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 import * as Styled from './SimpleTable.styled'
 import {
   useReactTable,
@@ -127,6 +135,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   imgRatio,
   imgPosition,
   onScrollBottom,
+  scrollToRowId,
   onRename,
   renamingId,
   renameInitialValue,
@@ -135,6 +144,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   onRowDoubleClick,
   onRowOptionClick,
   rowContextMenuBuilders = [],
+  selectOnContextMenu = true,
   children,
   pt,
   fitContent,
@@ -156,7 +166,12 @@ const SimpleTable: FC<SimpleTableProps> = ({
   const rowIdPrefixRef = useRef(rowIdPrefix)
   rowIdPrefixRef.current = rowIdPrefix
   const toDomId = (id: string) => (rowIdPrefixRef.current ? `${rowIdPrefixRef.current}-${id}` : id)
-  const [showRowContextMenu] = useCreateContextMenu()
+  const [showRowContextMenu, , isContextMenuOpen] = useCreateContextMenu()
+  // the row a context menu was opened on without selecting it
+  const [contextRowId, setContextRowId] = useState<string | null>(null)
+  useEffect(() => {
+    if (!isContextMenuOpen) setContextRowId(null)
+  }, [isContextMenuOpen])
 
   // Refs for values used inside the columns memo.
   // Assigning synchronously (not via useEffect) means the cell function always reads
@@ -557,7 +572,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
       const nextSelectedRows = selectedIds.includes(rowId) ? selectedIds : [rowId]
 
-      if (!selectedIds.includes(rowId)) {
+      if (!selectedIds.includes(rowId) && selectOnContextMenu) {
         // convert array to RowSelectionState object
         const nextSelection: RowSelectionState = { [rowId]: true }
         onRowSelectionChange?.(nextSelection)
@@ -579,10 +594,18 @@ const SimpleTable: FC<SimpleTableProps> = ({
       )
 
       if (menuItems.length > 0) {
+        if (!selectedIds.includes(rowId) && !selectOnContextMenu) setContextRowId(rowId)
         showRowContextMenu(e as any, menuItems)
       }
     },
-    [rowContextMenuBuilders, rows, rowSelection, onRowSelectionChange, showRowContextMenu],
+    [
+      rowContextMenuBuilders,
+      rows,
+      rowSelection,
+      onRowSelectionChange,
+      showRowContextMenu,
+      selectOnContextMenu,
+    ],
   )
 
   //The virtualizer needs to know the scrollable container element
@@ -600,6 +623,27 @@ const SimpleTable: FC<SimpleTableProps> = ({
       : undefined,
     overscan: 5,
   })
+
+  // scroll to a row once and focus it, so the arrow keys move on from there
+  const scrolledToRowIdRef = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    if (!scrollToRowId || scrolledToRowIdRef.current === scrollToRowId) return
+    const index = rows.findIndex((row) => row.id === scrollToRowId)
+    if (index < 0) return
+    scrolledToRowIdRef.current = scrollToRowId
+    lastSelectedIdRef.current = scrollToRowId
+    rowVirtualizer.scrollToIndex(index, { align: 'center' })
+    // wait for the virtualizer to render the row
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const rowElement = tableContainerRef.current?.querySelector(
+          `#${CSS.escape(toDomId(scrollToRowId))}`,
+        )
+        const cell = rowElement?.querySelector('[tabindex="0"]') as HTMLElement | null
+        cell?.focus({ preventScroll: true })
+      }),
+    )
+  }, [scrollToRowId, rows, rowVirtualizer])
 
   // Memoize the ref callback to prevent infinite re-renders
   const measureElementRef = useCallback(
@@ -662,6 +706,9 @@ const SimpleTable: FC<SimpleTableProps> = ({
                   id={toDomId(row.id)}
                   onContextMenu={(e) => handleRowContextMenu(row.id, virtualRow.index, e)}
                   {...pt?.row}
+                  className={clsx(pt?.row?.className, {
+                    'context-target': row.id === contextRowId,
+                  })}
                   style={{
                     transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
                     ...pt?.row?.style, // custom styles to be passed

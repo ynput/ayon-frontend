@@ -593,3 +593,22 @@ export const SoftErrorBanner = styled.div`
     padding: var(--padding-s);
   }
 `
+
+// thicker edge binding a column to its neighbour, e.g. a compare view pair. Centred on the
+// column boundary, so an end edge and the next group's start edge overlap into one line.
+export const GroupEdge = styled.span`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: color-mix(in srgb, var(--md-sys-color-outline) 45%, transparent);
+  pointer-events: none;
+  z-index: 3;
+
+  &.start {
+    left: -2px;
+  }
+  &.end {
+    right: -1px;
+  }
+`

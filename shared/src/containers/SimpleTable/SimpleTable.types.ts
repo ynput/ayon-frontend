@@ -87,6 +87,7 @@ export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   imgRatio?: number
   imgPosition?: 'start' | 'end'
   onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
+  scrollToRowId?: string // scrolled into view and focused once, when the row first shows
   onRename?: (id: string, row: Row<SimpleTableRow>) => void
   renamingId?: string | null
   renameInitialValue?: string
@@ -97,6 +98,8 @@ export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   fitContent?: boolean
   rowIdPrefix?: string // namespaces rendered row DOM ids (multiple tables can share row ids)
   rowContextMenuBuilders?: SimpleTableRowContextMenuBuilder[]
+  // false: right-click doesn't select the row; the menu acts on it, outlined while the menu is open
+  selectOnContextMenu?: boolean
   children?: (
     props: SimpleTableCellTemplateProps,
     row: Row<SimpleTableRow>,
