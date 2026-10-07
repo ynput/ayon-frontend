@@ -55,8 +55,8 @@ export const useTableExport = () =>
           ...content,
           format: settings.format,
           delimiter: settings.delimiter,
-          header: settings.header,
-          values: settings.values,
+          header: settings.content === 'raw' ? 'key' : 'label',
+          values: settings.content === 'raw' ? 'value' : 'label',
         })
         downloadUrl(url, getExportFileName(projectName, scope, settings))
         toast.dismiss(toastId)

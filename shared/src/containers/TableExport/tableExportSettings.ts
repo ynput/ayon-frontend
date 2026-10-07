@@ -5,8 +5,9 @@ export type CsvDelimiter = ',' | ';' | '\t'
 export type TableExportSettings = {
   format: TableExportFormat
   delimiter: CsvDelimiter
-  header: 'label' | 'key' // column names: labels as in the table, or field names
-  values: 'label' | 'value' // enum labels, full names, readable dates; or raw values
+  // readable: column names as in the table and values as shown (enum labels, full names,
+  // dates); raw: field names and stored values
+  content: 'readable' | 'raw'
   includeImportColumns: boolean // entity type and path, needed to import the file back
   selectionColumns: 'selected' | 'visible'
 }
@@ -16,8 +17,7 @@ export const TABLE_EXPORT_SETTINGS_KEY = 'table-export-settings'
 export const DEFAULT_TABLE_EXPORT_SETTINGS: TableExportSettings = {
   format: 'xlsx',
   delimiter: ',',
-  header: 'label',
-  values: 'label',
+  content: 'readable',
   includeImportColumns: false,
   selectionColumns: 'selected',
 }
@@ -25,8 +25,7 @@ export const DEFAULT_TABLE_EXPORT_SETTINGS: TableExportSettings = {
 // what Import CSV needs to read a hierarchy export back
 export const IMPORTABLE_SETTINGS: Partial<TableExportSettings> = {
   format: 'csv',
-  header: 'key',
-  values: 'value',
+  content: 'raw',
   includeImportColumns: true,
 }
 
