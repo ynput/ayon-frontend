@@ -6,7 +6,8 @@ import {
   ColumnAction, ColumnMappings,
   ErrorHandlingMode,
   ImportSchema, StepProps,
-  TargetColumn
+  TargetColumn,
+  itemsLabelForImportContext,
 } from "../common"
 import {
   MappersTableErrorHandlingCol,
@@ -40,7 +41,12 @@ import { inferErrorHandling, inferMapping } from "./inferMapping"
 import { mappingUpdater } from "./mappingUpdater"
 import { getMapperState } from "./getMapperState"
 import { targetOptionCompareFn } from "./sorting"
-import { getRequiredTargetGroups, getUnmappedRequiredTargetGroups, ImportMode } from "../importMode"
+import {
+  getRequiredTargetGroups,
+  getUnmappedRequiredTargetGroups,
+  hasImportModes,
+  ImportMode,
+} from "../importMode"
 
 type Props = StepProps<ColumnMappings> & {
   data: ImportData
@@ -48,6 +54,7 @@ type Props = StepProps<ColumnMappings> & {
   importMode: ImportMode
   importSchema: ImportSchema
   folderId?: string
+  onImportModeChange: (importMode: ImportMode) => void
 }
 
 const actionOptions = [
@@ -85,6 +92,7 @@ export default function MapColumnsStep({
   importMode,
   importSchema,
   folderId,
+  onImportModeChange,
   onBack,
   onNext,
 }: Props) {
@@ -132,6 +140,21 @@ export default function MapColumnsStep({
       folderId,
     ),
     [importContext, importMode, importSchema, mappings, folderId],
+  )
+
+  // targets only needed to create entities: Update only would be satisfied by the mapping
+  const requiredOnlyToCreate = useMemo(
+    () => importMode === ImportMode.CREATE_AND_UPDATE
+      && hasImportModes(importContext)
+      && unmappedRequiredTargets.length > 0
+      && getUnmappedRequiredTargetGroups(
+        importContext,
+        ImportMode.UPDATE_ONLY,
+        importSchema,
+        mappings,
+        folderId,
+      ).length === 0,
+    [importMode, importContext, unmappedRequiredTargets, importSchema, mappings, folderId],
   )
 
   const targetOptions = useMemo(
@@ -401,6 +424,20 @@ export default function MapColumnsStep({
                     .map((group) => group.map((target) => columnSettings[target]?.label ?? target).join(" or "))
                     .join(", ")
                 }</strong>
+                {
+                  requiredOnlyToCreate && (
+                    <>
+                      <span>to create new {itemsLabelForImportContext[importContext]}.</span>
+                      <Button
+                        variant="text"
+                        icon="edit"
+                        label="Switch to Update only"
+                        data-tooltip="Only update existing ones, matched without these columns"
+                        onClick={() => onImportModeChange(ImportMode.UPDATE_ONLY)}
+                      />
+                    </>
+                  )
+                }
               </StepNavStatsRequired>
             )
           }

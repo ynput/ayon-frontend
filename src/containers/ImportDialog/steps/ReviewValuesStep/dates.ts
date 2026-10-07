@@ -1,14 +1,25 @@
 // Dates in a sheet come in many formats. They are converted to ISO in the review step,
 // so the user sees how each one was read before importing.
+// AYON keeps dates as UTC midnight (the date picker saves Date.UTC and shows the UTC day),
+// so a plain date stays YYYY-MM-DD and the server stores it as UTC midnight. A time without
+// an offset is the user's local time and gets their offset, except midnight, which is a date.
 
 export type DateOrder = 'dmy' | 'mdy'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/
+const ISO_PARTS =
+  /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/
 const YEAR_FIRST = /^(\d{4})[./-](\d{1,2})[./-](\d{1,2})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/
 const YEAR_LAST =
   /^(\d{1,2})[./-](\d{1,2})[./-](\d{4}|\d{2})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/
 
 const pad = (n: number) => String(n).padStart(2, '0')
+
+const localOffset = (date: Date) => {
+  const minutes = -date.getTimezoneOffset()
+  const sign = minutes < 0 ? '-' : '+'
+  return `${sign}${pad(Math.floor(Math.abs(minutes) / 60))}:${pad(Math.abs(minutes) % 60)}`
+}
 
 const fullYear = (year: string) => {
   const n = Number(year)
@@ -31,8 +42,11 @@ const toIso = (
   }
   const iso = `${year}-${pad(month)}-${pad(day)}`
   if (hours === undefined) return iso
-  if (Number(hours) > 23 || Number(minutes) > 59 || Number(seconds ?? 0) > 59) return null
-  return `${iso}T${pad(Number(hours))}:${minutes}:${pad(Number(seconds ?? 0))}`
+  const [h, m, s] = [Number(hours), Number(minutes), Number(seconds ?? 0)]
+  if (h > 23 || m > 59 || s > 59) return null
+  if (h === 0 && m === 0 && s === 0) return iso
+  const offset = localOffset(new Date(year, month - 1, day, h, m, s))
+  return `${iso}T${pad(h)}:${pad(m)}:${pad(s)}${offset}`
 }
 
 export const isIsoDate = (value: string) => ISO_DATE.test(value) && !Number.isNaN(Date.parse(value))
@@ -40,7 +54,12 @@ export const isIsoDate = (value: string) => ISO_DATE.test(value) && !Number.isNa
 // Returns the date as ISO, or null when it can't be read
 export const parseDate = (raw: string, order: DateOrder): string | null => {
   const value = raw.trim()
-  if (isIsoDate(value)) return value
+  const iso = value.match(ISO_PARTS)
+  if (iso) {
+    const [, year, month, day, hours, minutes, seconds, offset] = iso
+    if (offset) return isIsoDate(value) ? value : null
+    return toIso(Number(year), Number(month), Number(day), hours, minutes, seconds)
+  }
 
   const yearFirst = value.match(YEAR_FIRST)
   if (yearFirst) {

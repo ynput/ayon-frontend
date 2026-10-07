@@ -137,6 +137,11 @@ export default function ImportSteps({
     [data, folderId, projectName, importContext, importMode, duplicateStrategy, rowsEntityType],
   )
 
+  const changeImportMode = useCallback((mode: ImportMode) => {
+    setImportMode(mode)
+    setPreviewStatus(null)
+  }, [])
+
   const fetchPreview = useCallback(() => {
     if (!columnMappings || !valueMappings) return
 
@@ -279,10 +284,7 @@ export default function ImportSteps({
           <ImportOptions
             importContext={importContext}
             importMode={importMode}
-            onImportModeChange={(mode) => {
-              setImportMode(mode)
-              setPreviewStatus(null)
-            }}
+            onImportModeChange={changeImportMode}
             rowsEntityType={rowsEntityType}
             onRowsEntityTypeChange={(entityType) => {
               setRowsEntityType(entityType)
@@ -324,6 +326,7 @@ export default function ImportSteps({
           importMode={importMode}
           importSchema={importSchema}
           folderId={folderId}
+          onImportModeChange={changeImportMode}
           onBack={() => setStep(ImportStep.UPLOAD)}
           onNext={(mappings) => {
             setColumnMappings(mappings)
