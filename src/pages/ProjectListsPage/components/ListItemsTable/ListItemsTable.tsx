@@ -8,6 +8,7 @@ import {
   EntityType,
   ParentColumnDefinition,
   ProjectTreeTable,
+  type ProjectTreeTableProps,
   isFilterError,
   getFilterErrorMessage,
 } from '@shared/containers/ProjectTreeTable'
@@ -28,6 +29,7 @@ interface ListItemsTableProps {
   isReview?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
   viewOnly?: boolean
+  columnsConfig?: ProjectTreeTableProps['columnsConfig']
 }
 
 const ListItemsTable: FC<ListItemsTableProps> = ({
@@ -39,6 +41,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   isReview,
   dndActiveId, // Destructure new prop
   viewOnly,
+  columnsConfig,
 }) => {
   const { projectName } = useProjectContext()
   const { togglePanel } = useSettingsPanel()
@@ -133,6 +136,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         fieldStats={fieldStats}
         fieldStatsLoading={fieldStatsLoading}
         mainCountLabels={mainCountLabels}
+        columnsConfig={columnsConfig}
       />
       <ListItemsShortcuts />
       <AddColumnButton

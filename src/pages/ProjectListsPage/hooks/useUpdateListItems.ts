@@ -1,87 +1,81 @@
 import { useCallback } from 'react'
 import { useListsAttributesContext } from '../context/lists-attributes'
 import { ProjectTableQueriesProviderProps } from '@shared/containers'
-import { useUpdateEntityListItemMutation } from '@shared/api'
+import { useUpdateEntityListItemsMutation } from '@shared/api'
 import { useListsContext } from '../context'
 import type { OperationWithRowId } from '@shared/containers/ProjectTreeTable'
 import { toast } from 'react-toastify'
 import { useProjectContext } from '@shared/context'
+import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
+import { getRequestErrorString } from '@shared/util'
+import { useListValuesContext } from '../context/list-values'
+import type { ListItemsMap } from '../context/list-items-data/ListItemsDataContext'
 
 type Props = {
   updateEntities: ProjectTableQueriesProviderProps['updateEntities']
+  listItemsMap: ListItemsMap
 }
 
-const useUpdateListItems = ({ updateEntities }: Props) => {
+// Splits table edits between the listed entities and the list items, see listValues/AGENTS.md
+const useUpdateListItems = ({ updateEntities, listItemsMap }: Props) => {
   const { projectName } = useProjectContext()
   const { selectedList } = useListsContext()
-  const { entityAttribFields } = useListsAttributesContext()
-  const [updateEntityListItem] = useUpdateEntityListItemMutation()
+  const { entityAttribFields, listAttributes } = useListsAttributesContext()
+  const { module, rules } = useListValuesContext()
+  const { attribFields } = useProjectDataContext()
+  const [updateEntityListItems] = useUpdateEntityListItemsMutation()
 
-  // intercept the updateEntities function so that we can update custom attributes differently
   const updateListItems = useCallback<ProjectTableQueriesProviderProps['updateEntities']>(
     // @ts-expect-error - we know we are not returning operations response
     async ({ operations, patchOperations }) => {
-      // split between updating entity directly and updating attributes on list items
-      const entityOperations: OperationWithRowId[] = [],
-        listItemOperations: OperationWithRowId[] = []
+      const listAttributeNames = listAttributes.map((attribute) => attribute.name)
+      const attributeNames = new Set(attribFields.map((attribute) => attribute.name))
+      const entityOperations: OperationWithRowId[] = []
+      const listItemValues = new Map<string, Record<string, unknown>>()
 
-      operations.forEach((operation) => {
-        // get list item by rowId
-        const { data } = operation
-
-        type UpdateOperation = { [key: string]: any }
-        const entityUpdate: UpdateOperation = {},
-          listItemUpdate: UpdateOperation = {}
+      for (const operation of operations) {
+        const { data = {}, meta, rowId } = operation
+        // rows only in the compared list are read-only (paste and multi-cell edits reach here too)
+        if (!listItemsMap.has(rowId)) continue
+        // compare view columns with the entities' values always write to the entities
+        const toEntity = meta?.listValueTarget === 'entity'
+        const entityUpdate: Record<string, any> = {}
+        const entityAttrib: Record<string, unknown> = {}
+        const listValues: Record<string, unknown> = {}
 
         for (const key in data) {
           if (key === 'attrib' || key === 'ownAttrib') continue
-          // check if the field is an entity attributes or custom attribute
-          const isCustom = !entityAttribFields.includes(key)
-          if (isCustom) {
-            listItemUpdate[key] = data[key]
-          } else {
-            entityUpdate[key] = data[key]
-          }
+          // attributes only come in `attrib`: a top-level attribute name is a paste into a
+          // compare view column, which isn't stored
+          if (attributeNames.has(key)) continue
+          if (entityAttribFields.includes(key)) entityUpdate[key] = data[key]
+          else if (listAttributeNames.includes(key)) listValues[key] = data[key]
         }
 
-        if (data?.attrib) {
-          for (const key in data.attrib) {
-            // check if the field is an entity attributes or custom attribute
-            const isCustom = !entityAttribFields.includes(key)
-            if (isCustom) {
-              listItemUpdate[key] = data.attrib[key]
-            } else {
-              entityUpdate['attrib'] = entityUpdate['attrib'] || {}
-              entityUpdate['attrib'][key] = data.attrib[key]
-            }
-          }
+        for (const [key, value] of Object.entries(data.attrib || {})) {
+          if (listAttributeNames.includes(key)) listValues[key] = value
+          else if (toEntity || module.getEditTarget(key, rules) === 'entity')
+            entityAttrib[key] = value
+          else listValues[key] = value
         }
 
-        if (data?.ownAttrib) {
-          for (const key of data.ownAttrib) {
-            // check if the field is an entity attributes or custom attribute
-            const isCustom = !entityAttribFields.includes(key)
-            if (isCustom) {
-            } else {
-              entityUpdate['ownAttrib'] = [...(entityUpdate['ownAttrib'] || []), key]
-            }
-          }
+        if (Object.keys(entityAttrib).length) {
+          const entityOwnAttrib = listItemsMap.get(rowId)?.ownAttrib || []
+          entityUpdate.attrib = entityAttrib
+          entityUpdate.ownAttrib = [
+            ...new Set([
+              ...entityOwnAttrib,
+              ...Object.keys(entityAttrib).filter((key) => entityAttrib[key] !== null),
+            ]),
+          ]
         }
-
-        // add entity and list item updates to the respective arrays
-        if (Object.keys(entityUpdate).length > 0) {
-          entityOperations.push({
-            ...operation,
-            data: entityUpdate,
-          })
+        if (Object.keys(entityUpdate).length) {
+          entityOperations.push({ ...operation, data: entityUpdate })
         }
-        if (Object.keys(listItemUpdate).length > 0) {
-          listItemOperations.push({
-            ...operation,
-            data: listItemUpdate,
-          })
+        if (Object.keys(listValues).length) {
+          listItemValues.set(rowId, { ...listItemValues.get(rowId), ...listValues })
         }
-      })
+      }
 
       try {
         if (!selectedList?.id) throw new Error('No list selected')
@@ -90,23 +84,34 @@ const useUpdateListItems = ({ updateEntities }: Props) => {
           ? updateEntities({ operations: entityOperations, patchOperations })
           : Promise.resolve()
 
-        const updateListItemsPromise = listItemOperations.map((operation) =>
-          updateEntityListItem({
-            projectName,
-            listId: selectedList.id,
-            listItemId: operation.rowId,
-            entityListItemPatchModel: {
-              attrib: operation.data,
-            },
-          }).unwrap(),
-        )
+        const updateListItemsPromise = listItemValues.size
+          ? updateEntityListItems({
+              projectName,
+              listId: selectedList.id,
+              entityListMultiPatchModel: {
+                mode: 'merge',
+                items: [...listItemValues].map(([id, attrib]) => ({ id, attrib })),
+              },
+            }).unwrap()
+          : Promise.resolve()
 
-        return await Promise.all([updateEntitiesPromise, ...updateListItemsPromise])
+        return await Promise.all([updateEntitiesPromise, updateListItemsPromise])
       } catch (error) {
-        toast.error('Error updating list items')
+        toast.error(getRequestErrorString(error) || 'Error updating list items')
       }
     },
-    [entityAttribFields, projectName, selectedList?.id, updateEntities],
+    [
+      attribFields,
+      entityAttribFields,
+      listAttributes,
+      listItemsMap,
+      module,
+      rules,
+      projectName,
+      selectedList?.id,
+      updateEntities,
+      updateEntityListItems,
+    ],
   )
 
   return {
