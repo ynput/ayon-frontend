@@ -22,7 +22,6 @@ import { useUpdateSubtasksMutation } from '@shared/api'
 
 // Import from the new modular files
 import {
-  getEntityPath,
   parseClipboardText,
   clipboardError,
   processFieldValue,
@@ -252,14 +251,15 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               // convert to string if foundValue is not undefined or null use empty string otherwise
               cellValue = foundValue !== undefined && foundValue !== null ? String(foundValue) : ''
 
-              // Hierarchical tables resolve a full path; flat lists (raw nodes keyed by row id)
-              // can't, so fall back to the built display row label/name the cell shows
+              // Always copy just the entity name, never the full path. Flat lists (raw nodes
+              // keyed by row id) aren't in entitiesMap, so fall back to the built display row
+              // label/name the cell shows
               if (colId === 'name') {
                 cellValue =
                   (displayRow?.primary.entityType === 'version'
                     ? displayRow.primary.label || displayRow.primary.name
                     : undefined) ||
-                  getEntityPath(entity.entityId || entity.id, entitiesMap) ||
+                  entitiesMap.get(entity.entityId || entity.id)?.name ||
                   (displayRow as any)?.label ||
                   displayRow?.primary?.name ||
                   (entity as any).label ||
