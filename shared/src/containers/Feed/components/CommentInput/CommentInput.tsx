@@ -379,9 +379,18 @@ const CommentInput: FC<CommentInputProps> = ({
     setRefTooltip({ id, name: id, type, label, pos: { left: x + width / 2, top: y } })
   }
 
+  // Only focus the editor when the user opened it. It also opens on its own (a new
+  // annotation, a restored draft), and taking focus then would swallow the keys meant
+  // for the player, e.g. a shortcut typed into the comment instead.
+  const [openedByUser, setOpenedByUser] = useState(false)
+  useEffect(() => {
+    if (!isOpen) setOpenedByUser(false)
+  }, [isOpen])
+
   const handleOpenClick = () => {
     if (isOpen || disabled) return
 
+    setOpenedByUser(true)
     onOpen && onOpen()
   }
 
@@ -623,6 +632,7 @@ const CommentInput: FC<CommentInputProps> = ({
   useEffect(() => {
     if (!duplicate || handledDuplicate.current === duplicate.key) return
     handledDuplicate.current = duplicate.key
+    setOpenedByUser(true)
     onDuplicateHandled?.()
     insertDuplicate(duplicate)
   }, [duplicate?.key])
@@ -803,8 +813,7 @@ const CommentInput: FC<CommentInputProps> = ({
     </>
   )
 
-  // don't take focus from an annotation that opened the input
-  const autoFocus = !(annotations.length > 0 && files.length === 0)
+  const autoFocus = isEditing || openedByUser
   const frameValueText = frameInputOpen ? frameInput || 'Frame or range' : frameLinkLabel || ''
   const frameValueWidth = `calc(${Math.max(frameValueText.length, 1) + 2}ch + 16px)`
 
