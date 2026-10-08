@@ -20,8 +20,9 @@ attribute the user may read, also rows the table has not loaded, and follow the 
 1. Wrap the page in `TableExportProvider` above the provider that builds its context menu items.
 2. Add the built-in `'export'` item to the context menu. Inside a `TableExportProvider` it opens the dialog; without one it
    falls back to the client-side CSV of the selected cells (`ClipboardContext.exportCSV`).
-3. Render `TableExportButton` in the toolbar and a page component with `TableExportDialogHost`, whose `getRows` builds the
-   rows from the page's query arguments (table) or the selected row ids (selection).
+3. Render `TableExportButton` in the toolbar (with `onImport` it becomes one Import / Export menu button) and a page
+   component with `TableExportDialogHost`, whose `getRows` builds the rows from the page's query arguments (table) or
+   the selected row ids (selection).
 
 ## Gotchas
 - Visible columns come from the column settings, not `gridMap`: grid and card views don't register their columns.

@@ -36,7 +36,7 @@ import { DetailsPanelEntityData } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
-import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
 import OverviewExportDialog from './components/OverviewExportDialog'
 import { TableExportButton } from '@shared/containers/TableExport'
 import { getBundleModeFromUser } from '@shared/util'
@@ -77,6 +77,7 @@ const GroupByDropdown = styled(SortingDropdown)<{
 
 const ProjectOverviewPage: FC = () => {
   const { user } = useGlobalContext()
+  const { openForContext: openImportDialog } = useImportDialogContext()
   const bundleMode = getBundleModeFromUser(user)
 
   const [searchParams, setSearchParams] = useSearchParams()
@@ -269,8 +270,7 @@ const ProjectOverviewPage: FC = () => {
                 onChange={handleViewGroupByChange}
                 multiSelect={false}
               />
-              <ImportDialogButton importContext="hierarchy" projectName={projectName} />
-              <TableExportButton />
+              <TableExportButton onImport={() => openImportDialog('hierarchy', projectName)} />
               <Actions
                 entities={[]}
                 entityType={undefined}

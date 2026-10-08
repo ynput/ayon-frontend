@@ -58,7 +58,7 @@ import { ReviewCardsSettingsProvider } from './context/review-cards-settings'
 import { useReviewCardsSettingsContext } from './context/review-cards-settings'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
-import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
 import { TableExportButton, TableExportProvider } from '@shared/containers/TableExport'
 import ListExportDialog from './components/ListExportDialog'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
@@ -267,6 +267,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName } = useProjectContext()
+  const { openForContext: openImportDialog } = useImportDialogContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList } = useListsContext()
   const {
@@ -428,12 +429,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         />
                       </>
                     )}
-                    <ImportDialogButton
-                      importContext="entity_list_item"
-                      projectName={projectName}
-                      folderId={selectedList?.id}
+                    <TableExportButton
+                      onImport={() =>
+                        openImportDialog('entity_list_item', projectName, selectedList?.id)
+                      }
                     />
-                    <TableExportButton />
                     <ListExportDialog />
                     <Actions
                       entities={[
