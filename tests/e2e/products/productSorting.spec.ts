@@ -40,3 +40,43 @@ test.describe('versions multi-key sorting', () => {
     })
   }
 })
+
+test.describe('products multi-key sorting', () => {
+  test('the product list is sorted by product type and folder', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    for (const [folderName, name, productType] of [
+      ['sh_a', 'modelA', 'model'],
+      ['sh_b', 'renderB', 'render'],
+      ['sh_b', 'modelB', 'model'],
+      ['sh_a', 'renderA', 'render'],
+    ]) {
+      const folders = await api.listFolders(projectName)
+      const folder =
+        folders.find((f) => f.name === folderName) ??
+        (await api.createFolder(projectName, { name: folderName, folderType: 'Shot' }))
+      const product = await api.createProduct(projectName, {
+        folderId: folder.id,
+        name,
+        productType,
+      })
+      await api.createVersion(projectName, { productId: product.id, version: 1 })
+    }
+    await api.setWorkingViewSettings('versions', projectName, {
+      showProducts: true,
+      sortBy: ['-subType', 'folder_entity'],
+    })
+    const products = new ProductsPage(page)
+
+    await products.goto(projectName)
+
+    await expect(products.table.locator('tbody td.name')).toHaveText([
+      /renderA/,
+      /renderB/,
+      /modelA/,
+      /modelB/,
+    ])
+  })
+})

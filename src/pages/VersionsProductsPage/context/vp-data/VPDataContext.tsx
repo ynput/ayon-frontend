@@ -66,10 +66,10 @@ const SORT_BY_FIELD_MAP: Record<string, string> = {
   product: 'productName',
 }
 
-// Define which sort fields are excluded for each entity type
+// Sort keys (as sent to the API) that an entity type can't be sorted by
 const EXCLUDED_SORT_FIELDS: Record<'version' | 'product', string[]> = {
   version: [],
-  product: ['author', 'product', 'name'],
+  product: ['author', 'productName'],
 }
 
 export type VersionMap = Map<string, VersionNodeExtended>
@@ -429,7 +429,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       buildSortArgs(
         sorting.map((sort) => {
           const key = SORT_BY_FIELD_MAP[sort.id] || getColumnSortKey(sort.id, true, 'product')
-          const isExcluded = EXCLUDED_SORT_FIELDS[entityType].some((field) => key?.includes(field))
+          const isExcluded = !!key && EXCLUDED_SORT_FIELDS[entityType].includes(key)
           return {
             key: isExcluded ? undefined : key?.replace('attrib_', 'attrib.'),
             desc: sort.desc,
