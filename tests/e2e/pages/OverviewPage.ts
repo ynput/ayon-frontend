@@ -239,10 +239,69 @@ export class OverviewPage {
   }
 
   // FLAG: the sort button is icon-only and only shows while the header is hovered
-  async toggleSort(columnId: string) {
+  async toggleSort(columnId: string, { shift = false } = {}) {
     const header = this.columnHeader(columnId)
     await header.hover()
-    await header.getByRole('button', { name: 'sort', exact: true }).click()
+    await header
+      .getByRole('button', { name: 'sort', exact: true })
+      .click({ modifiers: shift ? ['Shift'] : [] })
+  }
+
+  /** position of a column in a multi-key sort, shown next to its sort button */
+  sortIndex(columnId: string) {
+    return this.columnHeader(columnId).locator('.sort-index')
+  }
+
+  async openSortSettings() {
+    await this.page.getByRole('button', { name: 'settings Customize', exact: true }).click()
+    await this.page.locator('.setting-option').filter({ hasText: 'Sort' }).click()
+    await expect(this.page.locator('.sort-settings')).toBeVisible()
+  }
+
+  /** the active sort keys of the sort settings, in order */
+  sortKeys() {
+    return this.page.locator('.sort-settings .sorted [data-sort-id]')
+  }
+
+  sortKey(columnId: string) {
+    return this.page.locator(`.sort-settings .sorted [data-sort-id="${columnId}"]`)
+  }
+
+  async sortKeyIds() {
+    return this.sortKeys().evaluateAll((rows) =>
+      rows.map((row) => row.getAttribute('data-sort-id')),
+    )
+  }
+
+  async addSortKey(columnId: string) {
+    await this.page.locator(`.sort-settings .available [data-sort-id="${columnId}"]`).click()
+    await expect(this.sortKey(columnId)).toBeVisible()
+  }
+
+  async flipSortKey(columnId: string) {
+    await this.sortKey(columnId)
+      .getByRole('button', { name: /^arrow_(up|down)ward$/ })
+      .click()
+  }
+
+  async removeSortKey(columnId: string) {
+    await this.sortKey(columnId).getByRole('button', { name: 'close', exact: true }).click()
+    await expect(this.sortKey(columnId)).toBeHidden()
+  }
+
+  // dnd-kit only starts a drag after the pointer moved 5px, so nudge it before heading to the target
+  async dragSortKey(columnId: string, ontoColumnId: string) {
+    const from = await this.sortKey(columnId).locator('.drag-handle').boundingBox()
+    const to = await this.sortKey(ontoColumnId).boundingBox()
+    if (!from || !to) throw new Error('sort keys are not visible')
+    const x = from.x + from.width / 2
+    const y = from.y + from.height / 2
+    const direction = to.y < from.y ? -1 : 1
+    await this.page.mouse.move(x, y)
+    await this.page.mouse.down()
+    await this.page.mouse.move(x, y + 10 * direction, { steps: 5 })
+    await this.page.mouse.move(x, to.y + to.height / 2, { steps: 10 })
+    await this.page.mouse.up()
   }
 
   nameCells() {

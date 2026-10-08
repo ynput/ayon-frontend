@@ -11,6 +11,11 @@ import {
   DRAG_HANDLE_COLUMN_ID,
   ROW_SELECTION_COLUMN_ID,
 } from '../../shared/src/containers/ProjectTreeTable/constants'
+import {
+  MAX_SORT_KEYS,
+  buildSortArgs,
+  getPrimarySortKey,
+} from '../../shared/src/util/sortingHelpers'
 
 type Settings = Parameters<typeof loadView>[0]
 type States = Parameters<typeof saveView>[0]
@@ -96,12 +101,32 @@ test.describe('loading a saved view', () => {
     }
   })
 
-  test('sorting loads from sortBy, ascending unless sortDesc is set', () => {
+  test('a view saved with a single sortBy and sortDesc still loads its sorting', () => {
     expect(loadView({ sortBy: 'name' }).sorting).toEqual([{ id: 'name', desc: false }])
     expect(loadView({ sortBy: 'name', sortDesc: true }).sorting).toEqual([
       { id: 'name', desc: true },
     ])
     expect(loadView({ sortDesc: true }).sorting).toEqual([])
+  })
+
+  test('sorting loads every sortBy key in order, "-" marks a descending key', () => {
+    expect(loadView({ sortBy: ['-status', 'name'] }).sorting).toEqual([
+      { id: 'status', desc: true },
+      { id: 'name', desc: false },
+    ])
+    // sortDesc belongs to the old format and is ignored next to a list
+    expect(loadView({ sortBy: ['name'], sortDesc: true }).sorting).toEqual([
+      { id: 'name', desc: false },
+    ])
+    expect(loadView({ sortBy: [] }).sorting).toEqual([])
+  })
+
+  test('repeated and empty sortBy keys are dropped and the list is capped', () => {
+    expect(loadView({ sortBy: ['name', '-name', '-', ''] }).sorting).toEqual([
+      { id: 'name', desc: false },
+    ])
+    const many = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+    expect(loadView({ sortBy: many }).sorting).toHaveLength(MAX_SORT_KEYS)
   })
 })
 
@@ -179,7 +204,7 @@ test.describe('saving a view', () => {
     expect(ungrouped).toHaveProperty('groupSortByDesc', undefined)
   })
 
-  test('only the first sort is saved, an empty sort clears it and a missing one is left alone', () => {
+  test('every sort is saved in order, an empty sort clears it and a missing one is left alone', () => {
     const sorted = saveView(
       states({
         sorting: [
@@ -188,7 +213,8 @@ test.describe('saving a view', () => {
         ],
       }),
     )
-    expect(sorted).toMatchObject({ sortBy: 'name', sortDesc: true })
+    expect(sorted.sortBy).toEqual(['-name', 'status'])
+    expect(sorted).toHaveProperty('sortDesc', undefined)
 
     const cleared = saveView(states({ sorting: [] }))
     expect(cleared).toHaveProperty('sortBy', undefined)
@@ -214,7 +240,10 @@ test('a view survives a save and load round trip', () => {
     columnPinning: { left: ['name'], right: [] },
     columnSizing: { name: 320, attrib_fps: 80 },
     columnSummaries: { attrib_fps: 'max' },
-    sorting: [{ id: 'status', desc: true }],
+    sorting: [
+      { id: 'status', desc: true },
+      { id: 'attrib_fps', desc: false },
+    ],
     groupBy: { id: 'assignees', desc: false },
     groupByConfig: { showEmpty: false },
     rowHeight: 50,
@@ -284,5 +313,50 @@ test.describe('legacy column ids', () => {
 
   test('a missing config normalizes to an empty one', () => {
     expect(normalizeColumnsConfig(undefined)).toEqual({})
+  })
+})
+
+test.describe('sort arguments of the entity queries', () => {
+  test('a single key is sent as a plain string with its direction', () => {
+    expect(buildSortArgs([{ key: 'status', desc: false }])).toEqual({
+      sortBy: 'status',
+      desc: false,
+    })
+    expect(buildSortArgs([{ key: 'status', desc: true }])).toEqual({ sortBy: 'status', desc: true })
+    expect(buildSortArgs([])).toEqual({ sortBy: undefined, desc: false })
+  })
+
+  test('desc follows the first key and the other keys are marked relative to it', () => {
+    // descending pages backwards, which reverses every key on the backend
+    expect(
+      buildSortArgs([
+        { key: 'status', desc: true },
+        { key: 'name', desc: false },
+        { key: 'createdAt', desc: true },
+      ]),
+    ).toEqual({ sortBy: ['status', '-name', 'createdAt'], desc: true })
+
+    expect(
+      buildSortArgs([
+        { key: 'status', desc: false },
+        { key: 'name', desc: true },
+      ]),
+    ).toEqual({ sortBy: ['status', '-name'], desc: false })
+  })
+
+  test('keys without an API sort key and repeated keys are skipped', () => {
+    expect(
+      buildSortArgs([
+        { key: undefined, desc: true },
+        { key: 'name', desc: false },
+        { key: 'name', desc: true },
+      ]),
+    ).toEqual({ sortBy: 'name', desc: false })
+  })
+
+  test('the primary key is read without its direction prefix', () => {
+    expect(getPrimarySortKey(['-status', 'name'])).toBe('status')
+    expect(getPrimarySortKey('createdAt')).toBe('createdAt')
+    expect(getPrimarySortKey(undefined)).toBeUndefined()
   })
 })

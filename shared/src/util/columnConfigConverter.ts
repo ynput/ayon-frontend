@@ -20,6 +20,7 @@ import {
   ROW_SELECTION_COLUMN_ID,
   DRAG_HANDLE_COLUMN_ID,
 } from '@shared/containers/ProjectTreeTable/constants'
+import { parseViewSorting, serializeViewSorting } from './sortingHelpers'
 
 // These columns are always injected by ColumnSettingsProvider and must never be
 // persisted or loaded from saved view settings.
@@ -96,7 +97,7 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
   })
 
   // Handle sorting
-  const sorting: SortingState = sortBy ? [{ id: sortBy, desc: sortDesc || false }] : []
+  const sorting: SortingState = parseViewSorting(sortBy, sortDesc)
 
   // Handle grouping
   let groupBy: TableGroupBy | undefined
@@ -309,16 +310,10 @@ export function convertTanstackStatesToColumnConfig(
 
   // Add sorting information if present
   if (sorting) {
-    if (sorting.length > 0) {
-      // find the column that is being sorted
-      const firstSort = sorting[0]
-      result.sortBy = firstSort.id
-      result.sortDesc = firstSort.desc
-    } else {
-      // remove sorting
-      result.sortBy = undefined
-      result.sortDesc = undefined
-    }
+    // all sort keys and their directions are held by sortBy, undefined removes the sorting
+    result.sortBy = serializeViewSorting(sorting)
+    // sortDesc belongs to the old single-key format
+    result.sortDesc = undefined
   }
 
   // Add row height if present
