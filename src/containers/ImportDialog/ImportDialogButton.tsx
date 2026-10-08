@@ -6,16 +6,17 @@ type Props = {
   importContext: ImportContext
   projectName?: string
   folderId?: string
+  folderLabel?: string
 }
 
-export default function ImportDialogButton({ importContext, projectName, folderId }: Props) {
+export default function ImportDialogButton({ importContext, projectName, folderId, folderLabel }: Props) {
   const { openForContext } = useImportDialogContext()
 
   return (
     <Button
       icon="upload_file"
       label="Import CSV"
-      onClick={() => openForContext(importContext, projectName, folderId)}
+      onClick={() => openForContext(importContext, projectName, folderId, folderLabel)}
     />
   )
 }
