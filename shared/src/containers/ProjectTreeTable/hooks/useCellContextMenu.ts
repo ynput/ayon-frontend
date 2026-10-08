@@ -15,6 +15,8 @@ import { GROUP_BY_ID } from './useBuildGroupByTableData'
 import { ColumnDef } from '@tanstack/react-table'
 import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
+import { CSV_DELIMITERS } from '../../TableExport/tableExportSettings'
+import { useTableExportContext } from '../../TableExport/TableExportContextInstance'
 import { useMemo } from 'react'
 import { useProjectContext } from '@shared/context'
 import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierarchySelection'
@@ -295,12 +297,24 @@ const useCellContextMenu = ({
     }
   }
 
-  const exportItem: ContextMenuItemConstructor = (e, cell) => ({
-    label: 'Export selection',
-    icon: 'download',
-    command: () => exportCSV(Array.from(selectedCells), projectName),
-    hidden: cell.isGroup,
-  })
+  const tableExport = useTableExportContext()
+  const exportItem: ContextMenuItemConstructor = (e, cell) =>
+    tableExport
+      ? {
+          label: 'Export...',
+          icon: 'download',
+          command: () => tableExport.openExportDialog('selection'),
+          hidden: cell.isGroup,
+        }
+      : {
+          label: 'Export selection',
+          icon: 'download',
+          items: CSV_DELIMITERS.map(({ value, label }) => ({
+            label: `${label} separated (${value === '\t' ? '.tsv' : '.csv'})`,
+            command: () => exportCSV(Array.from(selectedCells), projectName, value),
+          })),
+          hidden: cell.isGroup,
+        }
 
   // null lets the dialog run its own fallback chain
   const getSelectedParentFolderIds = (

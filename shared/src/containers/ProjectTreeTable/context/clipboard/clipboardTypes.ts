@@ -3,6 +3,7 @@ import { Column } from '@tanstack/react-table'
 import { EntitiesMap, TableRow } from '../../types/table'
 import { BuiltInFieldOptions } from '../../types'
 import type { EnumItem } from '@shared/api'
+import type { CsvDelimiter } from '../../../TableExport/tableExportSettings'
 
 // Constants for field mappings
 export const builtInFieldMappings = {
@@ -18,7 +19,7 @@ export type PasteMethod = 'replace' | 'merge'
 export interface ClipboardContextType {
   copyToClipboard: (selected?: string[], fullRow?: boolean) => Promise<void>
   pasteFromClipboard: (selected: string[], config?: { method?: PasteMethod }) => Promise<void>
-  exportCSV: (selected: string[], projectName: string, fullRow?: boolean) => void
+  exportCSV: (selected: string[], projectName: string, delimiter: CsvDelimiter) => Promise<void>
 }
 
 export interface ClipboardProviderProps {

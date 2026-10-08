@@ -58,7 +58,9 @@ import { ReviewCardsSettingsProvider } from './context/review-cards-settings'
 import { useReviewCardsSettingsContext } from './context/review-cards-settings'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
-import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
+import { TableExportButton, TableExportProvider } from '@shared/containers/TableExport'
+import ListExportDialog from './components/ListExportDialog'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
 import usePatchListsCaches from './hooks/usePatchListsCaches'
@@ -100,11 +102,13 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
       <ListsModuleProvider>
         <ListsDataProvider entityListTypes={entityListTypes} isReview={isReview}>
           <ListsProvider isReview={isReview}>
-            <ListItemsDataProvider>
-              <ListsAttributesProvider>
-                <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
-              </ListsAttributesProvider>
-            </ListItemsDataProvider>
+            <TableExportProvider>
+              <ListItemsDataProvider>
+                <ListsAttributesProvider>
+                  <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
+                </ListsAttributesProvider>
+              </ListItemsDataProvider>
+            </TableExportProvider>
           </ListsProvider>
         </ListsDataProvider>
       </ListsModuleProvider>
@@ -263,6 +267,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName } = useProjectContext()
+  const { openForContext: openImportDialog } = useImportDialogContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList } = useListsContext()
   const {
@@ -424,11 +429,12 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         />
                       </>
                     )}
-                    <ImportDialogButton
-                      importContext="entity_list_item"
-                      projectName={projectName}
-                      folderId={selectedList?.id}
+                    <TableExportButton
+                      onImport={() =>
+                        openImportDialog('entity_list_item', projectName, selectedList?.id)
+                      }
                     />
+                    <ListExportDialog />
                     <Actions
                       entities={[
                         {

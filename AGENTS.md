@@ -10,6 +10,7 @@ Some parts of the codebase have their own `AGENTS.md` next to the code. It expla
 | Area | Guide |
 | --- | --- |
 | Markdown editor (Lexical): comments, descriptions, text cells | [shared/src/components/MarkdownEditor/AGENTS.md](shared/src/components/MarkdownEditor/AGENTS.md) |
+| Table export dialog: CSV/XLSX export of project tables | [shared/src/containers/TableExport/AGENTS.md](shared/src/containers/TableExport/AGENTS.md) |
 | Playwright tests: unit and e2e, fixtures, page objects | [tests/AGENTS.md](tests/AGENTS.md) |
 
 ## Hot reload
