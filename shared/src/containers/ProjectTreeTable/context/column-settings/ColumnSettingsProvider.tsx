@@ -24,6 +24,9 @@ interface ColumnSettingsProviderProps {
   columnIdAliases?: ColumnIdAliases
 }
 
+const MIN_ROW_HEIGHT = 24
+const MAX_ROW_HEIGHT = 200
+
 export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   children,
   config,
@@ -37,6 +40,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const columnOrderTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const prevRowHeightRef = React.useRef<number | undefined>(undefined)
   const lockedAspectRatioRef = React.useRef<number | null>(null)
+  // when true (shift held), thumbnail resizing leaves the row height alone
+  const thumbnailResizeDetachedRef = React.useRef(false)
+  // thumbnail width / row height, locked at the start of a thumbnail drag
+  const thumbnailResizeRatioRef = React.useRef<number | null>(null)
   // Internal state for immediate updates (similar to column sizing)
   const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
   const [internalRowHeight, setInternalRowHeight] = useState<number | null>(null)
@@ -191,8 +198,9 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   // use internalColumnSizing if it exists, otherwise use the external column sizing
   const columnSizing = internalColumnSizing || columnsSizingExternal
 
-  const setColumnSizing = (sizing: ColumnSizingState) => {
+  const setColumnSizing = (sizing: ColumnSizingState, newRowHeight?: number) => {
     setInternalColumnSizing(sizing)
+    if (newRowHeight !== undefined) setInternalRowHeight(newRowHeight)
 
     // if there is a timeout already set, clear it
     if (resizingTimeoutRef.current) {
@@ -205,9 +213,11 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       onChangeWithColumns({
         ...columnsConfig,
         columnSizing: sizing,
+        ...(newRowHeight !== undefined ? { rowHeight: newRowHeight } : {}),
       })
       // reset the internal column sizing to not be used anymore
       setInternalColumnSizing(null)
+      thumbnailResizeRatioRef.current = null
     }, 500)
   }
 
@@ -442,7 +452,31 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const columnSizingOnChange: OnChangeFn<ColumnSizingState> = (updater) => {
     const newSizing = functionalUpdate(updater, columnSizing)
     if (isEqual(newSizing, columnSizing)) return
+
+    // resizing the thumbnail column also resizes the row height (unless detached with shift)
+    const thumbnailWidth = newSizing.thumbnail
+    if (
+      thumbnailWidth !== undefined &&
+      thumbnailWidth !== columnSizing.thumbnail &&
+      !thumbnailResizeDetachedRef.current
+    ) {
+      if (thumbnailResizeRatioRef.current === null) {
+        thumbnailResizeRatioRef.current = (columnSizing.thumbnail || 63) / rowHeight
+      }
+      const newRowHeight = Math.min(
+        MAX_ROW_HEIGHT,
+        Math.max(MIN_ROW_HEIGHT, Math.round(thumbnailWidth / thumbnailResizeRatioRef.current)),
+      )
+      setColumnSizing(newSizing, newRowHeight)
+      return
+    }
     setColumnSizing(newSizing)
+  }
+
+  const setThumbnailResizeDetached = (detached: boolean) => {
+    thumbnailResizeDetachedRef.current = detached
+    // start each drag with a fresh ratio
+    thumbnailResizeRatioRef.current = null
   }
 
   const sortingOnChange: OnChangeFn<SortingState> = (updater) => {
@@ -477,6 +511,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         columnSizing,
         setColumnSizing,
         columnSizingOnChange,
+        setThumbnailResizeDetached,
         // column summary calc
         columnSummaries: columnSummariesInit,
         updateColumnSummary,
