@@ -16,6 +16,7 @@ type Props = {
   compareValues?: Map<string, Record<string, ListValueComparison>>
   compareLabel?: string // 'Entity' or the compared list's name
   withEntities: boolean // comparing with the entities, not another list
+  entityReadOnly?: boolean // the entities' attributes can't be changed from this list
   columnVisibility: VisibilityState
   defaultColumnVisibility?: VisibilityState
 }
@@ -26,6 +27,7 @@ const useCompareColumns = ({
   compareValues,
   compareLabel,
   withEntities,
+  entityReadOnly,
   columnVisibility,
   defaultColumnVisibility,
 }: Props) => {
@@ -72,7 +74,7 @@ const useCompareColumns = ({
               )
             }
 
-            const isReadOnly = !withEntities || !!attrib.readOnly
+            const isReadOnly = !withEntities || !!entityReadOnly || !!attrib.readOnly
             return (
               <CellWidget
                 rowId={row.id}
@@ -117,6 +119,7 @@ const useCompareColumns = ({
     compareValues,
     compareLabel,
     withEntities,
+    entityReadOnly,
     columnVisibility,
     defaultColumnVisibility,
   ])

@@ -59,6 +59,7 @@ import { ReviewCardsSettingsProvider } from './context/review-cards-settings'
 import { useReviewCardsSettingsContext } from './context/review-cards-settings'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
+import { isEntityAttribReadOnly } from './util/getColumnConfigFromType'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
@@ -191,6 +192,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
         ? 'Entity'
         : compareView.comparedList?.label,
     withEntities: compareView.compareWith === COMPARE_WITH_ENTITIES,
+    entityReadOnly: isEntityAttribReadOnly(selectedList?.entityType),
     columnVisibility: columns.columnVisibility || {},
     defaultColumnVisibility,
   })

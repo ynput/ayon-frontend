@@ -61,11 +61,14 @@ const useUpdateListItems = ({ updateEntities, listItemsMap }: Props) => {
 
         if (Object.keys(entityAttrib).length) {
           const entityOwnAttrib = listItemsMap.get(rowId)?.ownAttrib || []
+          const cleared = new Set(
+            Object.keys(entityAttrib).filter((key) => entityAttrib[key] === null),
+          )
           entityUpdate.attrib = entityAttrib
           entityUpdate.ownAttrib = [
             ...new Set([
-              ...entityOwnAttrib,
-              ...Object.keys(entityAttrib).filter((key) => entityAttrib[key] !== null),
+              ...entityOwnAttrib.filter((key) => !cleared.has(key)),
+              ...Object.keys(entityAttrib).filter((key) => !cleared.has(key)),
             ]),
           ]
         }

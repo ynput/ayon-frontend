@@ -9,12 +9,14 @@ import { confirmDelete, getRequestErrorString } from '@shared/util'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import { useListValuesContext } from '../context/list-values'
 import { toListValuesItem } from '../listValues/listItemValueSources'
+import { isEntityAttribReadOnly } from '../util/getColumnConfigFromType'
 import type { ListValueActionsHost, ListValuesItem } from '../listValues/types'
 import type { ListItemsMap } from '../context/list-items-data/ListItemsDataContext'
 
 type Props = {
   projectName: string
   listId?: string
+  entityType?: string // the list's
   listItemsMap: ListItemsMap
   canEditList: boolean
 }
@@ -26,7 +28,13 @@ const readableError = (error: unknown) =>
 
 // The Lists page's side of the ListValues module's cell and column actions: requests, toasts
 // and the confirm dialog. Which actions there are and what they do is the module's.
-const useListValueActions = ({ projectName, listId, listItemsMap, canEditList }: Props) => {
+const useListValueActions = ({
+  projectName,
+  listId,
+  entityType,
+  listItemsMap,
+  canEditList,
+}: Props) => {
   const { module, rules } = useListValuesContext()
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
   const [getListItems] = useLazyGetListItemsQuery()
@@ -37,6 +45,7 @@ const useListValueActions = ({ projectName, listId, listItemsMap, canEditList }:
     return {
       listId,
       context: rules,
+      canEditEntities: !isEntityAttribReadOnly(entityType),
       getItem: (rowId) => {
         const item = listItemsMap.get(rowId)
         return item && toListValuesItem(item)
@@ -101,6 +110,7 @@ const useListValueActions = ({ projectName, listId, listItemsMap, canEditList }:
     }
   }, [
     listId,
+    entityType,
     canEditList,
     rules,
     listItemsMap,

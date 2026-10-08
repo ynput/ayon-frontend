@@ -372,6 +372,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     useListValueActions({
       projectName,
       listId: selectedListId,
+      entityType: listEntityType,
       listItemsMap,
       canEditList: (selectedList?.accessLevel || 0) >= 20,
     })

@@ -99,6 +99,7 @@ export type ListValueMenuItem = {
 export type ListValueActionsHost = {
   listId: string
   context: ListValuesContext
+  canEditEntities?: boolean // false: nothing is applied to the entities (product and version lists)
   getItem: (rowId: string) => ListValuesItem | undefined // a loaded item
   loadAllItems: () => Promise<ListValuesItem[]> // every item, also the ones not loaded yet
   patchListItems: (items: { id: string; attrib: Record<string, unknown> }[]) => Promise<void>
