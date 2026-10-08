@@ -4,50 +4,53 @@ import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
 // Third-party libraries
 import clsx from 'clsx'
 import { toast } from 'react-toastify'
-import ReactQuill, { Quill } from 'react-quill-ayon'
+import { $createListItemNode, $createListNode } from '@lexical/list'
+import { $getRoot } from 'lexical'
+import { v4 as uuid } from 'uuid'
 
 // Components
-import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
-import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
-import InputMarkdownConvert from './InputMarkdownConvert'
+import { Button, Icon, SaveButton, type IconType } from '@ynput/ayon-react-components'
+import {
+  MarkdownEditor,
+  createFeedMentionSource,
+  getInlineMediaFileIds,
+  getSourceLink,
+  normalizeLegacyMarkdown,
+  type EditorCommand,
+  type MarkdownEditorHandle,
+  type MentionTrigger,
+  type UploadMedia,
+} from '@shared/components/MarkdownEditor'
 import FilesGrid from '../FilesGrid'
 
 // Styled components
 import * as Styled from './CommentInput.styled'
-import { QuillListStyles } from '../../../../components/QuillListStyles'
 
 // Helpers and utilities
-import getMentionOptions from '../../mentionHelpers/getMentionOptions'
-import getMentionUsers from '../../mentionHelpers/getMentionUsers'
-import getMentionTasks from '../../mentionHelpers/getMentionTasks'
-import getMentionVersions from '../../mentionHelpers/getMentionVersions'
-import { convertToMarkdown } from './quillToMarkdown'
-import { handleFileDrop, parseImages, typeWithDelay } from './helpers'
-import { getModules, quillFormats } from './modules'
+import { handleFileDrop, parseImages, uploadFile } from './helpers'
 
 // Hooks
-import useInitialValue from './hooks/useInitialValue'
-import useSetCursorEnd from './hooks/useSetCursorEnd'
-import useMentionLink from './hooks/useMentionLink'
 import useAnnotationsSync from './hooks/useAnnotationsSync'
 import { useBlendedCategoryColor } from './hooks/useBlendedCategoryColor'
+import useReferenceTooltip from '../../hooks/useReferenceTooltip'
 
 // State management
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
-import { useFeedContext } from '../../context/FeedContext'
+import useCommentDraft, { getCommentDraftKey } from './hooks/useCommentDraft'
+import { useFeedContext } from '../../context/feed'
 import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import {
+  getActivityFrameLink,
+  useDetailsPanelContext,
+  useProjectContext,
+  type CommentFrameRange,
+} from '@shared/context'
 import { parseFilename } from '@shared/util/parseFilename'
-import type { FeedActivity } from '@shared/api'
+import type { DetailsPanelEntityType, FeedActivity } from '@shared/api'
 import { VersionReviewPill } from './VersionReviewPill'
-import { VersionReviewFeedback, mentionTypeOptions } from './types'
-
-var Delta = Quill.import('delta')
-
-const EMPTY_EDITOR_VALUE = '<p><br></p>'
-
-const mentionTypes = ['@', '@@', '@@@']
+import { VersionReviewFeedback, type CommentDuplicate } from './types'
+import { parseFrameRange } from './parseFrameRange'
+import { cloneProjectFile } from './cloneProjectFile'
 
 type UploadingFile = {
   name: string
@@ -61,372 +64,341 @@ interface CommentInputProps {
   initFiles?: any[]
   initCategory?: string | null
   data?: any
+  activityId?: string
   versionReview: boolean
   lastOwnVersionReview?: FeedActivity
   onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
   onReview?: (feedback: VersionReviewFeedback) => void
+  // a comment to copy into this (new comment) input, with copies of its files
+  duplicate?: CommentDuplicate | null
+  onDuplicateHandled?: () => void
   isEditing?: boolean
   disabled?: boolean
   isLoading?: boolean
   isOpen: boolean
   onOpen?: () => void
   onClose?: () => void
+  // keep a draft of a new comment in local storage, restored for the same entities
+  saveDraft?: boolean
 }
+
+const getProjectFileUrl = (projectName: string, id: string) =>
+  `/api/projects/${projectName}/files/${id}`
+
+// is the file shown as an image / video block in the markdown
+// the file is shown as an image / video block in the markdown
+const isReferenced = (id: string, markdown: string) =>
+  !!id && getInlineMediaFileIds(markdown).has(id)
+
+const MENTION_BUTTONS: { trigger: MentionTrigger; icon: IconType; tooltip: string }[] = [
+  { trigger: '@', icon: 'person', tooltip: 'Mention user' },
+  { trigger: '@@', icon: 'layers', tooltip: 'Mention version' },
+  { trigger: '@@@', icon: 'check_circle', tooltip: 'Mention task' },
+]
 
 const CommentInput: FC<CommentInputProps> = ({
   initValue,
   initFiles = [],
   initCategory = null,
   data = {},
+  activityId,
   versionReview,
   lastOwnVersionReview,
   onSubmit,
   onReview,
+  duplicate,
+  onDuplicateHandled,
   isEditing,
   disabled,
   isLoading,
   isOpen,
   onOpen,
   onClose,
+  saveDraft = true,
 }) => {
   const {
     projectName,
     entities,
     projectInfo,
-    scope,
     feedFilter,
     mentionSuggestionsData,
     categories,
     isGuest,
+    userName,
+    editingId,
   } = useFeedContext()
 
-  const { hasLicense, onPowerFeature, user } = useDetailsPanelContext()
+  const { hasLicense, onPowerFeature, user, openSlideOut, commentFrameLink } =
+    useDetailsPanelContext()
   const isAdmin = user?.data?.isAdmin
 
   const project = useProjectContext()
+  const [, setRefTooltip] = useReferenceTooltip()
 
-  const {
-    users: mentionUsers,
-    teams: mentionTeams,
-    versions: mentionVersions,
-    tasks: mentionTasks,
-  } = mentionSuggestionsData || {}
-
-  const [initHeight, setInitHeight] = useState(88)
-  const [editorValue, setEditorValue] = useState('')
+  // markdown of the comment
+  const [editorValue, setEditorValue] = useState(initValue || '')
   // file uploads
-  const [files, setFiles] = useState(initFiles)
+  // attachments, plus the files of image / video blocks (`isInline`, shown in the text, not the grid)
+  const [files, setFiles] = useState(() =>
+    initFiles.map((file) =>
+      isReferenced(file.id, initValue || '') ? { ...file, isInline: true } : file,
+    ),
+  )
+  // image / video blocks being uploaded
+  const [inlineUploads, setInlineUploads] = useState(0)
+  // attachment uploads by file, for switching pasted media to inline
+  const attachmentUploads = useRef(new Map<File, ReturnType<typeof uploadFile>>())
   const [filesUploading, setFilesUploading] = useState<UploadingFile[]>([])
   const [isDropping, setIsDropping] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadedAnnotations, setUploadedAnnotations] = useState<SavedAnnotationMetadata[]>([])
+  // annotations being posted with the comment, removed from the unsaved ones once it's saved
+  const [submittingAnnotationIds, setSubmittingAnnotationIds] = useState<string[]>([])
 
   const { annotations, removeAnnotation, goToAnnotation } = useAnnotationsSync({
     entityId: entities[0]?.id,
     filesUploading,
   })
 
-  // MENTION STATES
-  const [mention, setMention] = useState<null | any>(null)
-  const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0)
-  // Prefix filter for mentions (e.g. 'team:' or 'user:')
-  const [mentionPrefix, setMentionPrefix] = useState('')
+  // FRAME LINK: the host (e.g. a player) owns the draft link so it can show and move it
+  const frameLinkEntity =
+    entities.length === 1 && entities[0].entityType === 'version' ? entities[0] : undefined
+  const draftFrameLink =
+    commentFrameLink?.draft && commentFrameLink.draft.entityId === frameLinkEntity?.id
+      ? commentFrameLink.draft
+      : null
+  // a typed (or duplicated) link, for the version it was entered on
+  const [manualFrameLink, setManualFrameLinkState] = useState<
+    (CommentFrameRange & { entityId?: string }) | null
+  >(() =>
+    isEditing && Number.isSafeInteger(data?.startFrame) && data.startFrame > 0
+      ? {
+          startFrame: data.startFrame,
+          endFrame:
+            Number.isSafeInteger(data.endFrame) && data.endFrame >= data.startFrame
+              ? data.endFrame
+              : data.startFrame,
+        }
+      : null,
+  )
+  const setManualFrameLink = (range: CommentFrameRange | null) =>
+    setManualFrameLinkState(range && { ...range, entityId: frameLinkEntity?.id })
+  // a saved comment keeps its link, a new comment drops it when the version changes
+  const currentManualFrameLink =
+    isEditing || manualFrameLink?.entityId === frameLinkEntity?.id ? manualFrameLink : null
+  const [frameInputOpen, setFrameInputOpen] = useState(false)
+  const frameLink = isEditing ? currentManualFrameLink : currentManualFrameLink ?? draftFrameLink
+  const showFrameLink = isEditing
+    ? !!frameLinkEntity || !!currentManualFrameLink
+    : !!commentFrameLink && !!frameLinkEntity
+  const formatFrame = commentFrameLink?.formatFrame ?? String
+  const frameLinkLabel = frameLink
+    ? frameLink.endFrame > frameLink.startFrame
+      ? `${formatFrame(frameLink.startFrame)}-${formatFrame(frameLink.endFrame)}`
+      : formatFrame(frameLink.startFrame)
+    : undefined
+  const [frameInput, setFrameInput] = useState(frameLinkLabel ?? '')
+  const cancelFrameInput = useRef(false)
+  const initialFrameInputLink = useRef<CommentFrameRange | null>(null)
 
-  const clearMention = () => {
-    setMention(null)
-    setMentionSelectedIndex(0)
-    setMentionPrefix('')
+  const setFrameLinkPreview = (range: CommentFrameRange | null) => {
+    if (!frameLinkEntity) return
+    const link = range ? { ...range, entityId: frameLinkEntity.id } : null
+    if (!isEditing) {
+      commentFrameLink?.setDraft(link)
+      return
+    }
+    if (!activityId) return
+    commentFrameLink?.setEditPreview({
+      activityId,
+      link,
+    })
   }
+
+  const handleFrameInputChange = (value: string) => {
+    setFrameInput(value)
+    const range = parseFrameRange(value)
+    if (range) setFrameLinkPreview(range)
+  }
+
+  useEffect(() => {
+    if (!frameInputOpen) setFrameInput(frameLinkLabel ?? '')
+  }, [frameLinkLabel, frameInputOpen])
+
+  useEffect(
+    () => () => {
+      if (isEditing) commentFrameLink?.setEditPreview(null)
+    },
+    [isEditing, commentFrameLink?.setEditPreview],
+  )
+
+  const commitFrameInput = () => {
+    if (cancelFrameInput.current) {
+      cancelFrameInput.current = false
+      setFrameInput(frameLinkLabel ?? '')
+      setFrameLinkPreview(initialFrameInputLink.current)
+      setFrameInputOpen(false)
+      return
+    }
+    const range = parseFrameRange(frameInput)
+    if (range) {
+      setManualFrameLink(range)
+      setFrameLinkPreview(range)
+    } else {
+      setFrameInput(frameLinkLabel ?? '')
+      setFrameLinkPreview(initialFrameInputLink.current)
+    }
+    setFrameInputOpen(false)
+  }
+
+  const removeFrameLink = () => {
+    setManualFrameLink(null)
+    if (isEditing) setFrameLinkPreview(null)
+    else commentFrameLink?.unlink()
+  }
+
+  const addFrameLink = () => {
+    if (!isEditing && commentFrameLink && frameLinkEntity) {
+      commentFrameLink.link(frameLinkEntity.id)
+    } else {
+      setFrameInput('')
+      setFrameInputOpen(true)
+    }
+  }
+
+  const handleFrameLinkButton = () => (frameLink ? removeFrameLink() : addFrameLink())
+
+  // the same in the `/` menu
+  const frameLinkCommands = useMemo<EditorCommand[] | undefined>(() => {
+    if (!showFrameLink || (!isEditing && !commentFrameLink) || !frameLinkEntity) return undefined
+    const keywords = ['frame', 'time', 'timecode', 'link', 'range']
+    return [
+      frameLink
+        ? {
+            id: 'frame-link',
+            label: 'Remove frame link',
+            icon: 'timer_off',
+            keywords: [...keywords, 'unlink', 'remove'],
+            hint: frameLinkLabel,
+            run: removeFrameLink,
+          }
+        : {
+            id: 'frame-link',
+            label: isEditing ? 'Add frame link' : 'Link to current frame',
+            icon: 'timer',
+            keywords,
+            run: addFrameLink,
+          },
+    ]
+  }, [showFrameLink, isEditing, commentFrameLink, frameLinkEntity?.id, !!frameLink, frameLinkLabel])
+
   // CATEGORY STATE
   const [category, setCategory] = useState<null | string>(initCategory)
+
+  // DRAFT: only for new comments, edits of existing ones aren't kept
+  useCommentDraft({
+    draftKey:
+      saveDraft && !isEditing
+        ? getCommentDraftKey(
+            projectName,
+            userName,
+            entities.map((e) => e.id),
+          )
+        : null,
+    draft: { text: editorValue, files, uploadedAnnotations, category },
+    paused: isSubmitting,
+    restore: (draft) => {
+      setEditorValue(draft.text)
+      setFiles(draft.files)
+      setUploadedAnnotations(draft.uploadedAnnotations)
+      setCategory(draft.category)
+      // show a restored draft, unless another comment is being edited
+      const hasDraft =
+        !!draft.text.trim() || !!draft.files.length || !!draft.uploadedAnnotations.length
+      if (hasDraft && !isOpen && !editingId) onOpen?.()
+    },
+  })
   const categoryOptions = categories.filter((cat) => cat.accessLevel >= 20)
   const categoryData = categories.find((cat) => cat.name === category)
   // Compute blended background color for category
   const blendedCategoryColor = useBlendedCategoryColor(categoryData?.color)
+
   // REFS
-  const editorRef = useRef<any>(null)
-  const editorContainerRef = useRef<HTMLDivElement>(null)
+  const editorRef = useRef<MarkdownEditorHandle>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const markdownRef = useRef<HTMLDivElement>(null)
+  const hasText = !!editorValue.trim()
 
-  // if there is an initial value, set it so the editor is prefilled
-  useInitialValue({
-    markdownRef,
-    initValue,
-    setEditorValue,
-    setInitHeight,
-    isOpen: isOpen,
-    // @ts-expect-error - QueryFilter type is the same
-    filter: feedFilter,
-  })
-
-  // When editing, set selection to the end of the editor
-  useSetCursorEnd({ initHeight, editorRef, isEditing })
-  // create a new quill format for mentions and registers it
-  useMentionLink({ projectName, editorRef })
-
-  // focus on editor when opened
+  // the checklists filter starts a new comment with a checklist item
+  const isChecklistsFilter = !!feedFilter?.conditions?.some(
+    (c) => 'key' in c && c.key === 'checklists' && c.value === true,
+  )
   useEffect(() => {
-    if (isOpen) {
-      editorRef.current?.getEditor()?.enable()
-      // block autofocus if opened from an annotation
-      if (annotations.length > 0 && files.length === 0) {
-        return
-      }
+    if (!isOpen || isEditing || !isChecklistsFilter) return
+    const handle = editorRef.current
+    if (!handle || !handle.isEmpty()) return
+    handle.getEditor().update(() => {
+      const item = $createListItemNode(false)
+      $getRoot().clear().append($createListNode('check').append(item))
+      item.select()
+    })
+  }, [isOpen, isEditing, isChecklistsFilter])
 
-      editorRef.current?.focus()
-    }
-    // We don't set annotations or files as useEffect dependencies, because we don't want to focus
-    // the input if it's already open but annotations change (e.g. are removed).
-  }, [isOpen, editorRef])
-
-  mentionTypes.sort((a, b) => b.length - a.length)
-
-  // Combine prefix filter with typed search for options filtering
-  const mentionSearchWithPrefix = mentionPrefix + (mention?.search || '')
-
-  const mentionOptions = useMemo(
+  // MENTIONS
+  const entityType = entities[0]?.entityType
+  // keep the source stable, a new one resets the highlighted option of the picker
+  const productTypes = project?.productTypes
+  const mentions = useMemo(
     () =>
-      getMentionOptions(
-        mention?.type,
-        {
-          '@': () => getMentionUsers(mentionUsers, mentionTeams),
-          '@@': () => getMentionVersions(mentionVersions, project),
-          '@@@': () => getMentionTasks(mentionTasks, projectInfo.taskTypes),
-        },
-        mentionSearchWithPrefix || undefined,
-      ),
-    [
-      mentionTasks,
-      mentionVersions,
-      mentionUsers,
-      mentionTeams,
-      mention?.type,
-      mentionSearchWithPrefix,
-    ],
+      isGuest
+        ? undefined
+        : {
+            ...createFeedMentionSource({
+              suggestions: mentionSuggestionsData,
+              project: { productTypes },
+              taskTypes: projectInfo?.taskTypes,
+              entityType,
+            }),
+            // keep the picker short
+            limit: 5,
+          },
+    [isGuest, mentionSuggestionsData, productTypes, projectInfo?.taskTypes, entityType],
   )
 
-  // show first 5 and filter itself out
-  const shownMentionOptions = mentionOptions.slice(0, 5)
+  const handleMentionClick = ({ type, id }: { type: string; id: string }) => {
+    if (type === 'user' || type === 'team') return
+    openSlideOut({ entityId: id, entityType: type as DetailsPanelEntityType, projectName })
+  }
 
-  // triggered when a mention is selected
-  const [newSelection, setNewSelection] = useState<null | number>()
+  const handleMentionHover = (
+    { type, id, label }: { type: string; id: string; label: string },
+    target: HTMLElement,
+  ) => {
+    // get the center of the reference
+    const { x, y, width } = target.getBoundingClientRect()
+    setRefTooltip({ id, name: id, type, label, pos: { left: x + width / 2, top: y } })
+  }
 
+  // Only focus the editor when the user opened it. It also opens on its own (a new
+  // annotation, a restored draft), and taking focus then would swallow the keys meant
+  // for the player, e.g. a shortcut typed into the comment instead.
+  const [openedByUser, setOpenedByUser] = useState(false)
   useEffect(() => {
-    if (newSelection) {
-      setNewSelection(null)
-      // now we set selection to the end of the mention
-      const quill = editorRef.current.getEditor()
-      quill.setSelection(newSelection)
-    }
-  }, [newSelection])
-
-  const handleSelectMention = (selectedOption: any) => {
-    // get option text
-    const quill = editorRef.current.getEditor()
-
-    const typePrefix = mention.type // the type of mention: @, @@, @@@
-    const search = typePrefix + (mention.search || '') // the full search string: @Tim
-    const mentionLabel = typePrefix + selectedOption.label // the label of the mention: @Tim Bailey
-    // @ts-expect-error
-    const type = mentionTypeOptions[typePrefix] // the type of mention: user, version, task
-    // Use the option's own type (e.g. 'team') if available, otherwise fall back to the mention type config
-    const refType = selectedOption.type || type?.id
-    const href = `${refType}:${selectedOption.id}` // the href of the mention: user:user.123 or team:Thunder boys
-
-    // get selection delta
-    const selection = quill.getSelection(true)
-    const selectionIndex = selection?.index || 0
-    const startIndex = selectionIndex - search.length // the start index of the search
-
-    // first delete the search string
-    quill.deleteText(startIndex, search.length)
-
-    //  insert embed link
-    quill.insertText(startIndex, mentionLabel, 'mention', href)
-
-    const endIndex = startIndex + mentionLabel.length
-
-    // insert a space after the mention
-    quill.updateContents(new Delta().retain(endIndex).insert(' '))
-
-    // remove single \n after mention
-    quill.updateContents(new Delta().retain(endIndex + 1).delete(1))
-
-    // set selection to the end of the mention + 1
-    setNewSelection(endIndex + 1)
-
-    // reset mention state
-    clearMention()
-  }
-
-  const handleSelectChange = (option: any) => {
-    handleSelectMention(option)
-  }
-
-  const handleChange = (content: string, delta: any, _: any, editor: any) => {
-    let currentCharacter =
-      (delta.ops[0] && delta.ops[0].insert) || (delta.ops[1] && delta.ops[1].insert)
-
-    const tabOrEnter = currentCharacter === '\n' || currentCharacter === '\t'
-    // find the first option
-    const selectedOption = mentionOptions[mentionSelectedIndex]
-
-    if (mention && tabOrEnter && selectedOption && !isGuest) {
-      // get option text
-      const retain = (delta.ops[0] && delta.ops[0].retain) || 0
-      // prevent default
-
-      // @ts-ignore
-      handleSelectMention(selectedOption, retain)
-
-      return
-    }
-
-    setEditorValue(content)
-
-    const isDelete = delta.ops.length === 2 && !!delta.ops[1].delete
-
-    if (!currentCharacter && isDelete) {
-      currentCharacter = editor.getText(delta.ops[0].retain - 1, 1)
-    }
-
-    const isMention = mentionTypes.includes(currentCharacter)
-
-    if (isMention) {
-      const mentionIndex = delta.ops.findIndex((op: any) => 'insert' in op || 'delete' in op)
-      const mention = currentCharacter
-      let retain = mentionIndex === 0 ? 0 : delta.ops[mentionIndex - 1].retain
-      if (isDelete) retain = retain - 1
-
-      // for each mention denotation char, check if it is a mention
-      // sort by length of mention denotation char
-      let mentionMatch = null
-
-      // loop through each mention denotation char, with longest first. First one to match is the one we want
-      for (const chars of mentionTypes) {
-        let isMatch = true
-        // start with the last character
-        if (chars.endsWith(mention)) {
-          // loop through the chars backwards
-          for (let i = chars.length - 1; i >= 0; i--) {
-            // skip first character as that's already been checked
-            if (i === 0) continue
-            const char = chars[i - 1]
-            const indexInDelta = retain - (chars.length - i)
-            const valueCharAtIndex = editor.getText(indexInDelta, 1)
-            if (valueCharAtIndex !== char) {
-              isMatch = false
-              break
-            }
-          }
-        } else {
-          isMatch = false
-        }
-
-        if (isMatch) {
-          // console.log('match!!!', chars)
-          mentionMatch = chars
-          break
-        }
-      }
-
-      if (mentionMatch) {
-        setMention({
-          type: mentionMatch,
-          retain: retain,
-        })
-      } else {
-        clearMention()
-      }
-    } else {
-      // get full string between mention and new delta
-      // This is where SEARCH is handled
-      if (mention) {
-        const retain = delta.ops[0].retain
-        // if space is pressed, remove mention
-        if (currentCharacter === ' ' || !retain) {
-          clearMention()
-          return
-        }
-
-        let distanceMentionToRetain = retain - mention.retain
-        if (!isDelete) distanceMentionToRetain++
-        const mentionFull = editor.getText(mention.retain, distanceMentionToRetain)
-        const mentionSearch = mentionFull.replace(mention.type.slice(-1), '')
-        //  check for space in mentionFull
-        if (mentionFull.includes(' ')) {
-          clearMention()
-        } else {
-          setMention({
-            ...mention,
-            search: mentionSearch?.toLowerCase(),
-          })
-        }
-      } else if (isDelete) {
-        // backspace inside a mention deletes the whole mention
-        const quill = editorRef.current.getEditor()
-        const currentSelection = quill.getSelection(false)
-        const currentFormat = quill.getFormat(currentSelection?.index, currentSelection?.length)
-        if (currentFormat.mention) {
-          const [lineBlock] = quill.getLine(currentSelection.index - 1) || []
-          const ops = lineBlock?.cache?.delta?.ops || []
-          const lastMentionOp = ops.reverse().find((op: any) => op.attributes?.mention)
-          if (lastMentionOp) {
-            const mentionLength = lastMentionOp.insert.length
-            quill.deleteText(currentSelection.index - mentionLength, mentionLength)
-          }
-        }
-      }
-    }
-  }
-
-  const addTextToEditor = (type: string) => {
-    // get editor retain
-    const quill = editorRef.current.getEditor()
-
-    let retain = quill.getSelection(true)?.index || 0
-
-    // get character at retain
-    const currentCharacter = quill.getText(retain - 1, 1)
-
-    // if the current character is a character, increment retain
-    const addSpace = currentCharacter !== ' ' && currentCharacter
-    if (addSpace) {
-      quill.insertText(retain, ' ')
-      retain++
-    }
-
-    // This is hack AF, but it works
-    typeWithDelay(quill, retain, type)
-  }
-
-  const handleMentionButton = (type: string) => {
-    // first check if mention is already open
-    if (mention) {
-      const { type, retain, search = '' } = mention
-
-      const quill = editorRef.current.getEditor()
-      const length = type.length + search.length
-      const start = retain - type.length + 1
-      // delete the mention
-      quill.deleteText(start, length)
-    }
-
-    addTextToEditor(type)
-  }
+    if (!isOpen) setOpenedByUser(false)
+  }, [isOpen])
 
   const handleOpenClick = () => {
     if (isOpen || disabled) return
 
+    setOpenedByUser(true)
     onOpen && onOpen()
   }
 
   const handleClose = () => {
-    // get editor value
-    const editor = editorRef.current.getEditor()
-    const text = editor.getText()
-    if (text.length < 2 || isEditing) {
+    if (isEditing) commentFrameLink?.setEditPreview(null)
+
+    // keep a draft of a new comment, drop edits
+    if (!hasText || isEditing) {
       setEditorValue('')
     }
 
@@ -487,9 +459,62 @@ const CommentInput: FC<CommentInputProps> = ({
     }
   }
 
-  // when a file is not dropped onto the comment input
+  const removeFileUploading = (name: string) => {
+    setFilesUploading((prev) => prev.filter((file) => file.name !== parseFilename(name)))
+  }
+
+  // files pasted or dropped into the editor, or picked with the attach button
+  const uploadFiles = (newFiles: File[]) => {
+    for (const file of newFiles) {
+      const upload = uploadFile(file, projectName, handleFileProgress)
+      // a pasted image / video can be switched to an inline block, which reuses this upload
+      attachmentUploads.current.set(file, upload)
+      upload.then(
+        (data) => handleFileUploaded(data),
+        (error) => {
+          removeFileUploading(file.name)
+          toast.error(error.message)
+          console.warn(error)
+        },
+      )
+    }
+  }
+
+  // image / video blocks: stored like attachments and linked to the comment, but shown in the text
+  const uploadMedia: UploadMedia = async (file) => {
+    setInlineUploads((count) => count + 1)
+    try {
+      const attachmentUpload = attachmentUploads.current.get(file)
+      if (attachmentUpload) {
+        // pasted as an attachment and switched to inline: same file, now shown in the text
+        const { data } = await attachmentUpload
+        setFiles((prev) => prev.map((f) => (f.id === data.id ? { ...f, isInline: true } : f)))
+        return {
+          src: getProjectFileUrl(projectName, data.id),
+          name: parseFilename(file.name),
+          mime: file.type,
+        }
+      }
+      const { data } = await uploadFile(file, projectName, undefined)
+      const name = parseFilename(file.name)
+      setFiles((prev) => [
+        ...prev,
+        { id: data.id, name, mime: file.type, size: file.size, order: prev.length, isInline: true },
+      ])
+      return { src: getProjectFileUrl(projectName, data.id), name, mime: file.type }
+    } catch (error: any) {
+      // a failed attachment upload has already been reported
+      if (!attachmentUploads.current.has(file)) toast.error(error?.message || 'Upload failed')
+      throw error
+    } finally {
+      setInlineUploads((count) => count - 1)
+    }
+  }
+
+  // when a file is dropped onto the comment input (the editor handles its own drops)
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     setIsDropping(false)
+    if (e.defaultPrevented) return
     // upload file
     handleFileDrop(e, projectName, handleFileProgress, handleFileUploaded, (file: File) =>
       removeFileUploading(file.name),
@@ -502,9 +527,115 @@ const CommentInput: FC<CommentInputProps> = ({
     setIsDropping(true)
   }
 
-  const removeFileUploading = (name: string) => {
-    setFilesUploading((prev) => prev.filter((file) => file.name !== parseFilename(name)))
+  // DUPLICATE: copy another comment in to adapt and post it, e.g. client feedback for an artist.
+  // The files are copied so the original comment is never changed, the text links back to it.
+  const handledDuplicate = useRef<string | null>(null)
+  const insertDuplicate = async ({ activity }: CommentDuplicate) => {
+    const frameLink = getActivityFrameLink(activity)
+    if (frameLink && frameLink.entityId === frameLinkEntity?.id) {
+      setManualFrameLink({ startFrame: frameLink.startFrame, endFrame: frameLink.endFrame })
+      commentFrameLink?.setDraft(frameLink)
+    }
+
+    const body = normalizeLegacyMarkdown(activity.body || '')
+    const sourceFiles = activity.files || []
+    const inlineIds = getInlineMediaFileIds(body)
+    // annotations are drawn over the frames of the version, they only stay annotations there
+    const keepAnnotations =
+      entities.length === 1 && entities[0].id === (activity.origin?.id ?? activity.entityId)
+
+    const appendText = (markdown: string) => {
+      const sourceEntity =
+        activity.origin ??
+        (activity.entityId && activity.entityType
+          ? { id: activity.entityId, type: activity.entityType }
+          : undefined)
+      const link = `[Source](${getSourceLink(activity.activityId, sourceEntity)})`
+      const text = [markdown.trim(), link].filter(Boolean).join('\n\n')
+      setEditorValue((prev) => (prev.trim() ? `${prev.trim()}\n\n${text}` : text))
+      editorRef.current?.focus()
+    }
+
+    const cloneFile = async (source: (typeof sourceFiles)[number]) => {
+      const isInline = inlineIds.has(source.id)
+      try {
+        // inline files have no card, they show up in the text when they are ready
+        const upload = await cloneProjectFile(
+          projectName,
+          source.id,
+          source.name,
+          source.mime,
+          isInline ? undefined : handleFileProgress,
+        )
+        if (isInline) {
+          const { file, data } = upload
+          const name = parseFilename(file.name)
+          setFiles((prev) => [
+            ...prev,
+            { id: data.id, name, mime: file.type, size: file.size, order: prev.length, isInline },
+          ])
+        } else handleFileUploaded(upload)
+
+        const annotation = source.annotation as SavedAnnotationMetadata | undefined
+        if (annotation && keepAnnotations) {
+          const layer = await cloneProjectFile(
+            projectName,
+            annotation.transparent,
+            `annotation-${source.name}`,
+            'image/png',
+          )
+          handleFileUploaded(layer, true)
+          setUploadedAnnotations((prev) => [
+            ...prev,
+            {
+              ...annotation,
+              id: `${annotation.id}-${uuid()}`,
+              composite: upload.data.id,
+              transparent: layer.data.id,
+            },
+          ])
+        }
+        return [source.id, upload.data.id] as const
+      } catch (error) {
+        removeFileUploading(source.name)
+        toast.error(`Could not copy ${source.name}`)
+        console.warn(error)
+        return null
+      }
+    }
+
+    // posting waits for the copies
+    setInlineUploads((count) => count + 1)
+    try {
+      const inline = sourceFiles.filter((file) => inlineIds.has(file.id))
+      const attachments = sourceFiles.filter((file) => !inlineIds.has(file.id))
+      const attachmentCopies = Promise.all(attachments.map(cloneFile))
+      if (inline.length) {
+        // image / video blocks point to their copies, so the text waits for them
+        const copies = new Map(
+          (await Promise.all(inline.map(cloneFile))).filter(
+            (c): c is readonly [string, string] => !!c,
+          ),
+        )
+        appendText(
+          body.replace(/(\/api\/projects\/[^/]+\/files\/)([\w-]+)/g, (match, path, id) =>
+            copies.has(id) ? path + copies.get(id) : match,
+          ),
+        )
+      } else appendText(body)
+      await attachmentCopies
+    } finally {
+      setInlineUploads((count) => count - 1)
+    }
   }
+
+  useEffect(() => {
+    if (!duplicate || handledDuplicate.current === duplicate.key) return
+    handledDuplicate.current = duplicate.key
+    setOpenedByUser(true)
+    onDuplicateHandled?.()
+    insertDuplicate(duplicate)
+  }, [duplicate?.key])
 
   const uploadAnnotations = useAnnotationsUpload({
     projectName,
@@ -516,7 +647,7 @@ const CommentInput: FC<CommentInputProps> = ({
     onError: (annotation) => removeFileUploading(annotation.name),
   })
 
-  const isUploading = filesUploading.length > 0
+  const isUploading = filesUploading.length > 0 || inlineUploads > 0
   const isSaving = isSubmitting || isUploading
 
   const handleSubmit = async () => {
@@ -527,10 +658,15 @@ const CommentInput: FC<CommentInputProps> = ({
       // upload any annotations first
       let annotationFiles = []
       let newAnnotations = uploadedAnnotations
+      let postedAnnotationIds: string[] = []
       if (annotations.length) {
+        setSubmittingAnnotationIds(annotations.map((annotation) => annotation.id))
         const { files, metadata } = await uploadAnnotations(annotations)
         annotationFiles = files
         newAnnotations = [...newAnnotations, ...metadata]
+        postedAnnotationIds = metadata.map((annotation) => annotation.id)
+        // hidden while posting, they stay unsaved (and editable) if posting fails
+        setSubmittingAnnotationIds(postedAnnotationIds)
       }
 
       // get current files data and merge it with the new metadata
@@ -539,33 +675,42 @@ const CommentInput: FC<CommentInputProps> = ({
         ? [...annotationsData, ...newAnnotations]
         : undefined
 
-      // convert to markdown
-      const [markdown] = convertToMarkdown(editorValue)
-
       // remove img query params
-      const markdownParsed = parseImages(markdown)
+      const markdown = parseImages(editorRef.current?.getMarkdown() ?? editorValue)
 
-      const uploadedFiles = [...files, ...annotationFiles]
+      // files of removed image / video blocks aren't part of the comment anymore
+      const keptFiles = files.filter((file) => !file.isInline || isReferenced(file.id, markdown))
+      const uploadedFiles = [...keptFiles, ...annotationFiles]
 
       const newData = {
         ...data,
         annotations: annotationMetadata, // could be undefined
         category: isGuest ? null : category, // guests cannot set category (it is done by default on backend)
+        // one frame link per comment, stored as metadata rather than in the text
+        startFrame: frameLink?.startFrame ?? undefined,
+        endFrame: frameLink?.endFrame ?? undefined,
       }
 
-      if ((markdownParsed || uploadedFiles.length) && onSubmit) {
+      if ((markdown || uploadedFiles.length) && onSubmit) {
         const submittedValue = editorValue
         // clear before the optimistic comment renders, otherwise both show the same files
         setEditorValue('')
         setFiles([])
         try {
-          await onSubmit(markdownParsed, uploadedFiles, newData)
+          await onSubmit(markdown, uploadedFiles, newData)
+          // only now do the annotations belong to the comment
+          postedAnnotationIds.forEach((id) => removeAnnotation?.(id))
+          if (isEditing) commentFrameLink?.setEditPreview(null)
           setUploadedAnnotations([])
+          // the link now belongs to the submitted comment
+          if (!isEditing && frameLink) commentFrameLink?.unlink()
+          if (!isEditing) setManualFrameLink(null)
         } catch (error) {
           // error is handled in rtk query mutation
+          // the drawn annotations are still unsaved, so they're uploaded again on the next try
           setEditorValue(submittedValue)
-          setFiles(uploadedFiles)
-          setUploadedAnnotations(newAnnotations)
+          setFiles(keptFiles)
+          setUploadedAnnotations(uploadedAnnotations)
           return
         }
       }
@@ -573,80 +718,17 @@ const CommentInput: FC<CommentInputProps> = ({
       console.error(error)
       toast.error('Something went wrong')
     } finally {
+      setSubmittingAnnotationIds([])
       setIsSubmitting(false)
     }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
-    if (mention) {
-      // close mention on escape
-      if (e.key === 'Escape') {
-        clearMention()
-        return
-      }
-
-      // add top search of mention
-      if (mention && e.key === 'Tab') {
-        // we handle this in the onChange
-      }
-
-      const arrowDirection = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0
-
-      if (arrowDirection) {
-        // navigate through mentions
-        e.preventDefault()
-        let newIndex = mentionSelectedIndex + arrowDirection
-        if (newIndex < 0) newIndex = shownMentionOptions.length - 1
-        if (newIndex >= shownMentionOptions.length) newIndex = 0
-        setMentionSelectedIndex(newIndex)
-      }
-
-      if (e.key === 'Enter') {
-        // we handle this in the onChange
-      }
-    }
-
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      handleSubmit()
-    }
-
-    if (e.key === 'Escape') {
-      handleClose()
-    }
-  }
-
-  let quillMinHeight: number | undefined = isOpen ? initHeight + 41 : 44
-  if (isEditing) quillMinHeight = undefined
-
-  // QUILL CONFIG
-  const modules = useMemo(
-    () =>
-      getModules({
-        imageUploader: {
-          projectName,
-          onUpload: handleFileUploaded,
-          onUploadProgress: handleFileProgress,
-          onReject: (_error: any, file: File) => removeFileUploading(file.name),
-        },
-        mentionTypeOptions,
-      }),
-    [projectName, setFiles, setFilesUploading],
-  )
-
   const allFiles = [
-    ...annotations,
-    ...(files || []).filter((file: any) => !file.isAnnotationLayer),
+    ...annotations.filter((annotation) => !submittingAnnotationIds.includes(annotation.id)),
+    ...(files || []).filter((file: any) => !file.isAnnotationLayer && !file.isInline),
     ...filesUploading,
   ].sort((a, b) => a.order - b.order)
   const compactGrid = allFiles.length > 3
-
-  // disable version mentions for folders
-  let mentionsError = null
-  if (entities.length && entities[0].entityType === 'folder') {
-    if (mention?.type === '@@') {
-      mentionsError = 'Version mentions are disabled for folders'
-    }
-  }
 
   const getCommentPlaceholder = (isOpen?: boolean) => {
     if (disabled) {
@@ -656,16 +738,13 @@ const CommentInput: FC<CommentInputProps> = ({
 
     if (isGuest || !isOpen) return 'Leave a comment'
 
-    return 'Comment or mention with @user, @@version, @@@task...'
+    return 'Comment, or type / to add mentions, checklists, code and more...'
   }
 
   const handleReviewSubmit = async (status: VersionReviewFeedback) => {
     if (!onReview) return
     try {
-      const postComment =
-        (editorValue && editorValue !== EMPTY_EDITOR_VALUE) ||
-        files.length > 0 ||
-        annotations.length > 0
+      const postComment = hasText || files.length > 0 || annotations.length > 0
       // if the editor value is valid, also submit the comment first
       if (postComment) {
         await handleSubmit()
@@ -699,10 +778,50 @@ const CommentInput: FC<CommentInputProps> = ({
     </Styled.VersionReviewButtons>
   )
 
+  const categorySelect = !isGuest && (
+    <ActivityCategorySelect
+      value={category}
+      categories={categoryOptions}
+      onChange={(c) => setCategory(c)}
+      isCompact={isEditing}
+      hasPowerpack={hasLicense}
+      onPowerFeature={onPowerFeature}
+      isHidden={isCategoryHidden(categoryOptions, { isGuest, isAdmin })}
+    />
+  )
+
+  const attachButton = (
+    <>
+      <Button
+        icon="attach_file"
+        variant="text"
+        className="md-toolbar-button"
+        data-tooltip="Attach files"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => fileInputRef.current?.click()}
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        hidden
+        onChange={(e) => {
+          uploadFiles(Array.from(e.target.files || []))
+          e.target.value = ''
+        }}
+      />
+    </>
+  )
+
+  const autoFocus = isEditing || openedByUser
+  const frameValueText = frameInputOpen ? frameInput || 'Frame or range' : frameLinkLabel || ''
+  const frameValueWidth = `calc(${Math.max(frameValueText.length, 1) + 2}ch + 16px)`
+
   return (
     <>
       <Styled.AutoHeight
-        className={clsx('comment-container', { isOpen, isEditing })}
+        // the mention picker spans the whole input, above it
+        className={clsx('comment-container', 'md-mention-anchor', { isOpen, isEditing })}
         onDragOver={handleDragOver}
         onDragLeave={() => setIsDropping(false)}
         onDrop={handleDrop}
@@ -724,17 +843,11 @@ const CommentInput: FC<CommentInputProps> = ({
             isSubmitting,
             category: !!category && !isGuest,
           })}
-          onKeyDown={handleKeyDown}
           onClick={handleOpenClick}
           $categoryPrimary={categoryData?.color}
           $categoryTertiary={blendedCategoryColor.primary}
           $categorySecondary={blendedCategoryColor.secondary}
         >
-          <Styled.Markdown ref={markdownRef}>
-            {/* this is purely used to translate the markdown into html for Editor */}
-            <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={initValue} />
-          </Styled.Markdown>
-
           {/* file uploads */}
           {isOpen && (
             <FilesGrid
@@ -758,67 +871,117 @@ const CommentInput: FC<CommentInputProps> = ({
             />
           )}
           {isOpen && !disabled ? (
-            <QuillListStyles ref={editorContainerRef}>
-              {!isGuest && (
-                <ActivityCategorySelect
-                  value={category}
-                  categories={categoryOptions}
-                  onChange={(c) => setCategory(c)}
-                  isCompact={isEditing}
-                  hasPowerpack={hasLicense}
-                  onPowerFeature={onPowerFeature}
-                  isHidden={isCategoryHidden(categoryOptions, { isGuest, isAdmin })}
-                  style={{
-                    position: isEditing ? 'relative' : 'absolute',
-                    left: 4,
-                    top: isEditing ? 0 : 4,
-                  }}
-                />
+            <>
+              {/* editing has no toolbar (formatting is on the selection), the category goes on top */}
+              {isEditing && categorySelect && (
+                <Styled.EditingCategory>{categorySelect}</Styled.EditingCategory>
               )}
-
-              <ReactQuill
-                theme="snow"
-                style={{ minHeight: quillMinHeight, maxHeight: 300 }}
+              <MarkdownEditor
                 ref={editorRef}
+                className="comment-editor"
                 value={editorValue}
-                onChange={handleChange}
-                readOnly={!isOpen}
+                onChange={setEditorValue}
                 placeholder={getCommentPlaceholder(true)}
-                modules={modules}
-                formats={quillFormats}
+                mentions={mentions}
+                // an edited comment sits in the feed, open the menus at the caret (above if needed)
+                mentionPlacement={isEditing ? 'inline' : 'top'}
+                onMentionClick={handleMentionClick}
+                onMentionHover={handleMentionHover}
+                onSubmit={handleSubmit}
+                onEscape={handleClose}
+                onFiles={uploadFiles}
+                onUploadMedia={uploadMedia}
+                commands={frameLinkCommands}
+                toolbar={!isEditing}
+                floatingToolbar={isEditing}
+                toolbarStart={categorySelect}
+                toolbarEnd={
+                  <>
+                    <Styled.ToolbarDivider />
+                    {attachButton}
+                  </>
+                }
+                bordered={false}
+                autoFocus={autoFocus}
+                minHeight={isEditing ? 40 : 88}
+                maxHeight={259}
               />
-            </QuillListStyles>
+            </>
           ) : (
             <Styled.Placeholder>{getCommentPlaceholder()}</Styled.Placeholder>
           )}
 
           <Styled.Footer>
-            {!isGuest && (
+            {(!isGuest || showFrameLink) && (
               <Styled.Buttons>
-                {/* mention a user */}
-                <Button
-                  icon="person"
-                  variant="text"
-                  onClick={() => handleMentionButton('@')}
-                  data-tooltip={'Mention user'}
-                  data-shortcut={'@'}
-                />
-                {/* mention a version */}
-                <Button
-                  icon="layers"
-                  variant="text"
-                  onClick={() => handleMentionButton('@@')}
-                  data-tooltip={'Mention version'}
-                  data-shortcut={'@@'}
-                />
-                {/* mention a task */}
-                <Button
-                  icon="check_circle"
-                  variant="text"
-                  onClick={() => handleMentionButton('@@@')}
-                  data-tooltip={'Mention task'}
-                  data-shortcut={'@@@'}
-                />
+                {!isGuest &&
+                  MENTION_BUTTONS.map(({ trigger, icon, tooltip }) => (
+                    <Button
+                      key={trigger}
+                      icon={icon}
+                      variant="text"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => editorRef.current?.insertMentionTrigger(trigger)}
+                      data-tooltip={tooltip}
+                      data-shortcut={trigger}
+                    />
+                  ))}
+                {showFrameLink && (
+                  <Styled.FrameLinkControl
+                    className={clsx('frame-link', { selected: !!frameLink || frameInputOpen })}
+                  >
+                    <Styled.FrameLinkButton
+                      icon={'timer'}
+                      variant="text"
+                      onClick={handleFrameLinkButton}
+                      aria-label={frameLink ? 'Remove frame link' : 'Add frame link'}
+                      data-tooltip={
+                        frameLink
+                          ? 'Remove frame link'
+                          : isEditing
+                          ? 'Add frame link'
+                          : 'Link to current frame'
+                      }
+                      data-testid="comment-frame-link"
+                    />
+                    {(frameLink || frameInputOpen) &&
+                      (frameInputOpen ? (
+                        <Styled.FrameInput
+                          autoFocus
+                          aria-label="Linked frame or range"
+                          value={frameInput}
+                          placeholder="Frame"
+                          onFocus={(e) => {
+                            initialFrameInputLink.current = frameLink
+                            e.currentTarget.select()
+                          }}
+                          onChange={(e) => handleFrameInputChange(e.target.value)}
+                          onBlur={commitFrameInput}
+                          style={{ width: frameValueWidth }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              e.currentTarget.blur()
+                            }
+                            if (e.key === 'Escape') {
+                              cancelFrameInput.current = true
+                              e.currentTarget.blur()
+                            }
+                          }}
+                          data-testid="comment-frame-link-input"
+                        />
+                      ) : (
+                        <Styled.FrameLabel
+                          variant="text"
+                          aria-label={`Edit linked frame ${frameLinkLabel ?? ''}`}
+                          onClick={() => setFrameInputOpen(true)}
+                          data-tooltip="Edit linked frame or range"
+                        >
+                          {frameLinkLabel || 'Frame or range'}
+                        </Styled.FrameLabel>
+                      ))}
+                  </Styled.FrameLinkControl>
+                )}
               </Styled.Buttons>
             )}
             <Styled.SubmitButtons>
@@ -830,7 +993,7 @@ const CommentInput: FC<CommentInputProps> = ({
               <SaveButton
                 label={isEditing ? 'Save' : 'Comment'}
                 className="comment"
-                active={!!editorValue || !!files.length}
+                active={hasText || !!files.length}
                 onClick={handleSubmit}
                 disabled={isLoading || isSaving}
                 saving={isSaving}
@@ -842,25 +1005,6 @@ const CommentInput: FC<CommentInputProps> = ({
             <Icon icon="cloud_upload" />
           </Styled.Dropzone>
         </Styled.Comment>
-        <CommentMentionSelect
-          mention={mention}
-          options={shownMentionOptions}
-          onChange={handleSelectChange}
-          onPrefixFilter={(prefix) => {
-            setMentionPrefix(prefix)
-            setMentionSelectedIndex(0)
-          }}
-          activePrefix={mentionPrefix ? mentionPrefix.replace(':', '') : undefined}
-          types={mentionTypes}
-          // @ts-ignore
-          config={mentionTypeOptions[mention?.type]}
-          noneFound={!shownMentionOptions.length && (mention?.search || mentionPrefix)}
-          noneFoundAtAll={!shownMentionOptions.length && !mention?.search && !mentionPrefix}
-          selectedIndex={mentionSelectedIndex}
-          // @ts-ignore
-          error={mentionsError}
-          isGuest={isGuest}
-        />
 
         <Styled.VersionReviewButtonsSpacer />
         {versionReviewButtons}

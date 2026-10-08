@@ -1,4 +1,4 @@
-import { OnSliceTypeChange } from './context/SlicerContext'
+import { OnSliceTypeChange } from './context/slicer'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import { RowSelectionState } from '@tanstack/react-table'
 import { ExpandedState } from '@tanstack/react-table'

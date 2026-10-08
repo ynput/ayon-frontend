@@ -1,13 +1,14 @@
 import { FC, memo, ReactNode } from 'react'
 import styled from 'styled-components'
 import ReactMarkdown from 'react-markdown'
+import { normalizeLegacyMarkdown } from '@shared/components/MarkdownEditor'
 import remarkGfm from 'remark-gfm'
 import { Icon } from '@ynput/ayon-react-components'
 import { DoneCheckbox } from '@shared/components/DoneCheckbox/DoneCheckbox'
 import { UserImage } from '@shared/components/UserImage/UserImage'
 import type { EntityComment } from '@shared/api'
 import { allowedRefTypes } from '@shared/containers/Feed/components/ActivityComment/ActivityMarkdownComponents'
-import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDate'
+import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDateHelpers'
 import { getEntityTypeIcon } from '@shared/util'
 import { WidgetBaseProps } from './CellWidget'
 
@@ -124,9 +125,10 @@ const markdownComponents = {
   },
 }
 
-// Quill stores line breaks as literal <br>; react-markdown drops raw HTML, so
-// turn them into CommonMark hard breaks (rendered natively, no raw-HTML plugin).
-const normalizeBreaks = (body: string) => body.replace(/<br\s*\/?>/gi, '  \n')
+// Comments from the legacy editor use `&nbsp;` spacer paragraphs and literal <br>;
+// react-markdown drops raw HTML, so turn breaks into CommonMark hard breaks.
+const normalizeBreaks = (body: string) =>
+  normalizeLegacyMarkdown(body).replace(/<br\s*\/?>/gi, '  \n')
 
 const CommentBody = memo(({ body }: { body: string }) => (
   <div className="body">

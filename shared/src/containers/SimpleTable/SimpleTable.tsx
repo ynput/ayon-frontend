@@ -24,7 +24,7 @@ import useRowKeydown, { RowKeyboardEvent } from './hooks/useRowKeydown'
 
 import { compareItems } from '@tanstack/match-sorter-utils'
 import { parseSearchQuery, matchSearchQuery } from '@shared/util'
-import { useSimpleTableContext } from './context/SimpleTableContext'
+import { useSimpleTableContext } from './context/simple-table'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { EmptyPlaceholder } from '@shared/components/EmptyPlaceholder/EmptyPlaceholder'
 import { RowPinningState } from '@tanstack/react-table'

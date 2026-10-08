@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import type { TableRow } from '../types/table'
-import { useColumnSettingsContext } from '../context/ColumnSettingsContext'
+import { useColumnSettingsContext } from '../context/column-settings'
 
 const DEFAULT_ROW_HEIGHT = 24
 

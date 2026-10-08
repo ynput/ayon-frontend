@@ -169,6 +169,7 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
 
 export const {
   useGetEntityTooltipQuery,
+  useGetActivitiesByIdQuery,
   useLazyGetActivitiesByIdQuery,
   useGetEntitiesChecklistsQuery,
   useGetActivitiesQuery,

@@ -4,7 +4,7 @@ import * as Styled from './Menu.styled'
 import { isArray } from 'lodash'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
-import { usePowerpack } from '@shared/context/PowerpackContext'
+import { usePowerpack } from '@shared/context'
 import type { MenuItemType } from './Menu'
 
 export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLElement>, 'label'> {

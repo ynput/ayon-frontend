@@ -25,6 +25,8 @@ const enhancedApi = dataImportApi.enhanceEndpoints({
             return [
               { type: "overviewTask", id: projectName },
               { type: 'project', id: projectName },
+              { type: 'folder', id: 'LIST' },
+              'hierarchy',
             ]
           case "user":
             return [{ type: "user", id: "LIST" }]

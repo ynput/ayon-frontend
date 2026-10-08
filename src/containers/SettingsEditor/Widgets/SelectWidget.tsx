@@ -214,6 +214,9 @@ const SelectWidget = (props: $Any) => {
   const enumOptionsError = isEnumOptionsError ? getEnumErrorText(enumOptionsErrorMessage) : undefined
 
 
+  const getDefaultValue = () => props.schema['default'] || (props.multiple ? [] : '')
+  const isMissing = props.value === null || props.value === undefined
+
   useEffect(() => {
     // Sync the local state with the formData
     // For sortable multiselect, order matters - use isEqual instead of equiv
@@ -222,21 +225,14 @@ const SelectWidget = (props: $Any) => {
       return
     }
 
-    let defaultValue
-    if (props.multiple) {
-      defaultValue = props.schema['default'] || []
-    } else {
-      defaultValue = props.schema['default'] || ''
-    }
-
-    setValue(props.value !== null && props.value !== undefined ? props.value : defaultValue)
+    setValue(isMissing ? getDefaultValue() : props.value)
   }, [props.value])
 
   useEffect(() => {
     if (value === null) return
-    const isChanged = isSortableMultiselect
-      ? !isEqual(value, props.value)
-      : !equiv(value, props.value)
+    const same = isSortableMultiselect ? isEqual : equiv
+    if (isMissing && same(value, getDefaultValue())) return
+    const isChanged = !same(value, props.value)
     if (!isChanged) {
       return
     }
