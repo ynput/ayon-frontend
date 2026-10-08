@@ -13,6 +13,7 @@ type Props = StepProps<ImportData> & {
   importSchema: ImportSchema
   uploaded: ImportData | null
   importMode: ImportMode
+  onLoaded?: (data: ImportData) => void
 }
 
 const acceptedTypes = ["text/csv"]
@@ -43,11 +44,16 @@ export default function UploadStep({
   importContext,
   uploaded,
   importMode,
+  onLoaded,
   onBack,
   onNext,
 }: Props) {
   const [data, setData] = useState<ImportData | null>(uploaded)
   const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    if (data) onLoaded?.(data)
+  }, [data])
 
   const [uploadFile] = useUploadFileMutation()
 

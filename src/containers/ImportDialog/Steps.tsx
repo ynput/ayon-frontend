@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react'
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import UploadStep from './steps/UploadStep/UploadStep'
 import { getFullMapping, ImportData } from './utils'
 import MapColumnsStep from './steps/MapColumnsStep/MapColumnsStep'
@@ -172,14 +172,13 @@ export default function ImportSteps({
   )
 
   // a new list is named after the file unless the user named it
-  useEffect(() => {
-    if (!creatingList || !data || newList.label) return
-    const fileLabel = data.fileName.replace(/\.[^.]+$/, '')
-    setNewList((old) => ({
-      ...old,
-      label: fileLabel === 'Pasted from clipboard' ? 'Imported list' : fileLabel,
-    }))
-  }, [creatingList, data])
+  const fileListLabel = useRef('')
+  const nameListAfterFile = ({ fileName }: ImportData) => {
+    if (!creatingList || (newList.label && newList.label !== fileListLabel.current)) return
+    const stem = fileName.replace(/\.[^.]+$/, '')
+    fileListLabel.current = stem === 'Pasted from clipboard' ? 'Imported list' : stem
+    setNewList({ ...newList, label: fileListLabel.current })
+  }
 
   const optionsProblem = creatingList && !newList.label.trim() ? 'Name the new list.' : null
 
@@ -353,6 +352,7 @@ export default function ImportSteps({
           importSchema={importSchema}
           uploaded={data}
           importMode={importMode}
+          onLoaded={nameListAfterFile}
           onBack={onClose}
           onNext={(d) => {
             // coming back to change the mode keeps the file and its mappings
