@@ -43,6 +43,7 @@ const VERSION_FIELDS: Record<string, string> = {
   tags: 'tags',
   author: 'author',
   productType: 'product_type',
+  folderId: 'folder_id',
 }
 
 export const groupByToStatsTarget = (

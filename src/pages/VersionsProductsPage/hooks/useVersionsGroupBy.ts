@@ -25,6 +25,7 @@ type Props = {
   projectName: string
   versionFilters: QueryFilter
   taskFilters: QueryFilter
+  folderFilters: QueryFilter
   folderFilter?: string
   modules: ProjectTableModulesType
   versionArguments: QueryArguments
@@ -35,6 +36,7 @@ const useVersionsGroupBy = ({
   projectName,
   versionFilters,
   taskFilters,
+  folderFilters,
   folderFilter,
   modules,
   versionArguments,
@@ -57,7 +59,7 @@ const useVersionsGroupBy = ({
   )
 
   // GET GROUPING
-  const { groups } = useGetEntityGroups({
+  const { groups, isLoading: isLoadingGroups } = useGetEntityGroups({
     groupBy,
     projectName,
     entityType: 'version',
@@ -80,15 +82,28 @@ const useVersionsGroupBy = ({
       .map(([id]) => id.slice(GROUP_BY_ID.length))
   }, [expanded])
 
+  // taskType and folderId are not version columns, so their groups filter the related entity
+  const groupFilterSource = useMemo<{
+    filters: QueryFilter
+    filterKey: string
+    conditionKey?: string
+  }>(() => {
+    if (groupById === 'taskType') return { filters: taskFilters, filterKey: 'taskFilter' }
+    if (groupById === 'folderId')
+      return { filters: folderFilters, filterKey: 'folderFilter', conditionKey: 'id' }
+    return { filters: versionFilters, filterKey: 'versionFilter' }
+  }, [groupById, taskFilters, folderFilters, versionFilters])
+
   const groupFilters: GetGroupedVersionsListArgs['groups'] = useMemo(() => {
     if (!groupBy || !groups.length) return []
 
     const allGroupFilters = getGroupQueries({
       groups,
-      filters: groupById === 'taskType' ? taskFilters : versionFilters, // taskType is not natively supported for versions, so we use taskFilters here
+      filters: groupFilterSource.filters,
       groupBy,
       groupPageCounts,
       dataType: groupByDataType,
+      conditionKey: groupFilterSource.conditionKey,
     })
 
     // Only fetch versions for groups that are expanded
@@ -98,15 +113,13 @@ const useVersionsGroupBy = ({
     groups,
     groupPageCounts,
     groupByDataType,
-    versionFilters,
+    groupFilterSource,
     expandedGroupValues,
-    groupById,
-    taskFilters,
   ])
 
   const queryArgs = {
     groups: groupFilters, // special groups argument that also include version filters
-    groupFilterKey: groupById === 'taskType' ? 'taskFilter' : 'versionFilter',
+    groupFilterKey: groupFilterSource.filterKey,
     projectName: versionArguments.projectName,
     productFilter: versionArguments.productFilter,
     taskFilter: versionArguments.taskFilter,
@@ -146,6 +159,7 @@ const useVersionsGroupBy = ({
     groups: sortedGroups,
     versions,
     isLoading,
+    isLoadingGroups,
     refetch: refetchGroupedVersions,
     isUninitialized: isUninitializedGroupedVersions,
     queryArgs,

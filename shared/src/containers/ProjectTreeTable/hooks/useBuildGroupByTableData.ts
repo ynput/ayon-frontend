@@ -247,6 +247,12 @@ const useBuildGroupByTableData = ({
           groupValues = valueToStringArray(
             (entity as EditorTaskNode & { folder?: { folderType?: string } }).folder?.folderType,
           )
+        } else if (groupBy.id === 'folderId' && 'product' in entity) {
+          // versions reach their folder through the product
+          groupValues = valueToStringArray(
+            (entity as EditorTaskNode & { product?: { folder?: { id?: string } } }).product?.folder
+              ?.id,
+          )
         } else {
           groupValues = valueToStringArray(entity[groupBy.id as keyof EntityMap])
         }
