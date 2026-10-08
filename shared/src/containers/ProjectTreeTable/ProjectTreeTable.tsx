@@ -117,7 +117,7 @@ import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
-import { ColumnsConfig } from './types/columnConfig'
+import { ColumnsConfig, getColumnConfig } from './types/columnConfig'
 import { getRequestErrorString } from '@shared/util'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 
@@ -482,14 +482,35 @@ export const ProjectTreeTable = ({
     groupBy,
   ])
 
+  // Extra columns placed after another column follow it, also in a saved column order. They are
+  // always shown and not saved in the column settings (visibility, order).
+  const placedColumns = useMemo(
+    () => (extraColumns || []).filter((c) => c.after && c.column.id),
+    [extraColumns],
+  )
+  const placedColumnIds = useMemo(
+    () => new Set(placedColumns.map((c) => c.column.id as string)),
+    [placedColumns],
+  )
+  const resolvedColumnOrder = useMemo(() => {
+    if (!columnOrder.length || !placedColumns.length) return columnOrder
+    const order = columnOrder.filter((id) => !placedColumnIds.has(id))
+    for (const { column, after } of placedColumns) {
+      const index = order.indexOf(after as string)
+      if (index >= 0) order.splice(index + 1, 0, column.id as string)
+    }
+    return order
+  }, [columnOrder, placedColumns, placedColumnIds])
+
   // Keep ColumnSettingsProvider's allColumns ref up to date
   useEffect(() => {
-    const ids = columns.map((c) => c.id!).filter(Boolean)
+    const ids = columns.map((c) => c.id!).filter((id) => id && !placedColumnIds.has(id))
     setAllColumns(ids)
-  }, [columns, setAllColumns])
+  }, [columns, setAllColumns, placedColumnIds])
 
   const resolvedColumnVisibility = useMemo(() => {
     const merged = { ...columnVisibility }
+    placedColumnIds.forEach((id) => (merged[id] = true))
     columns.forEach((col) => {
       // @ts-ignore
       const explicitVisible = col.visible
@@ -502,7 +523,7 @@ export const ProjectTreeTable = ({
       }
     })
     return ensureAtLeastOneVisibleColumn(merged, columns.map((c) => c.id as string).filter(Boolean))
-  }, [columnVisibility, defaultColumnVisibility, columns])
+  }, [columnVisibility, defaultColumnVisibility, columns, placedColumnIds])
 
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
@@ -561,7 +582,7 @@ export const ProjectTreeTable = ({
       })(),
       columnSizing,
       columnVisibility: resolvedColumnVisibility,
-      columnOrder,
+      columnOrder: resolvedColumnOrder,
     },
     meta: {
       projectName,
@@ -608,7 +629,7 @@ export const ProjectTreeTable = ({
     tableContainerRef,
     columnPinning,
     columnSizing,
-    columnOrder,
+    columnOrder: resolvedColumnOrder,
   })
 
   // Track column visibility changes for subscribed columns
@@ -1138,6 +1159,12 @@ const TableHeadCell = ({
   isDraggable = true,
 }: TableHeadCellProps) => {
   const { column } = header
+  const columnConfig = getColumnConfig(
+    header.getContext().table.options.meta?.columnsConfig,
+    column.id,
+  )
+  const headerIcon = columnConfig?.headerIcon
+  const extraMenuItems = columnConfig?.menuItems
   const sorting = column.getIsSorted()
   const menuId = `column-header-menu-${column.id}`
   const { menuOpen } = useMenuContext()
@@ -1222,6 +1249,7 @@ const TableHeadCell = ({
           {...(isDraggable ? { ...attributes, ...listeners } : {})}
         >
           {flexRender(column.columnDef.header, header.getContext())}
+          {headerIcon && <Icon icon={headerIcon.icon} data-tooltip={headerIcon.tooltip} />}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
           )}
@@ -1229,13 +1257,14 @@ const TableHeadCell = ({
           <Styled.HeaderButtons className="actions" $isOpen={isOpen} {...preventDragFromActions}>
             {/* Column drag handle */}
 
-            {(canHide || canPin || canSort) && (
+            {(canHide || canPin || canSort || !!extraMenuItems?.length) && (
               <ColumnHeaderMenu
                 className="header-menu"
                 header={header}
                 canHide={canHide}
                 canPin={canPin}
                 canSort={canSort}
+                extraMenuItems={extraMenuItems}
                 isResizing={column.getIsResizing()}
                 menuId={menuId}
                 isOpen={isOpen}
@@ -1288,6 +1317,7 @@ const TableHeadCell = ({
           )}
         </Styled.TableCellContent>
       )}
+      {columnConfig?.groupEdge && <Styled.GroupEdge className={columnConfig.groupEdge} />}
     </Styled.HeaderCell>
   )
 }
@@ -1717,6 +1747,10 @@ const TD = ({
   const isRowSelectionColumn = cell.column.id === ROW_SELECTION_COLUMN_ID
   const isGroup = !!cell.row.original.group
   const isMultipleSelected = selectedCells.size > 1
+  const columnConfig = getColumnConfig(
+    cell.getContext().table.options.meta?.columnsConfig,
+    cell.column.id,
+  )
 
   return (
     <Styled.TD
@@ -1766,7 +1800,12 @@ const TD = ({
         if (e.detail === 2) {
           // comments cells are read-only but their double-click opens the details panel, so don't block them here
           const isReadOnly = isTargetReadOnly(e) && cell.column.id !== 'comments'
-          if (isReadOnly || isEntityRestricted(cell.row.original.primary.entityType) || isGroup) {
+          if (
+            isReadOnly ||
+            isEntityRestricted(cell.row.original.primary.entityType) ||
+            isGroup ||
+            cell.row.original.readOnly
+          ) {
             e.preventDefault()
             return
           }
@@ -1814,7 +1853,10 @@ const TD = ({
         if (isGroup && cell.column.id !== 'name') return clearSelection()
 
         // check if this is a restricted entity - prevent editing
-        const isRestricted = isGroup || isEntityRestricted(cell.row.original.primary.entityType)
+        const isRestricted =
+          isGroup ||
+          isEntityRestricted(cell.row.original.primary.entityType) ||
+          !!cell.row.original.readOnly
 
         // if clicking on an edit trigger, start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {
@@ -1891,6 +1933,7 @@ const TD = ({
       }}
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      {columnConfig?.groupEdge && <Styled.GroupEdge className={columnConfig.groupEdge} />}
     </Styled.TD>
   )
 }

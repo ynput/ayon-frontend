@@ -11,6 +11,7 @@ Some parts of the codebase have their own `AGENTS.md` next to the code. It expla
 | --- | --- |
 | Markdown editor (Lexical): comments, descriptions, text cells | [shared/src/components/MarkdownEditor/AGENTS.md](shared/src/components/MarkdownEditor/AGENTS.md) |
 | Playwright tests: unit and e2e, fixtures, page objects | [tests/AGENTS.md](tests/AGENTS.md) |
+| Lists page: list values vs entity values, powerpack module contract | [src/pages/ProjectListsPage/listValues/AGENTS.md](src/pages/ProjectListsPage/listValues/AGENTS.md) |
 
 ## Hot reload
 - A `.tsx`/`.jsx` file that defines components must export only components (types are fine). Put everything else in a sibling module:

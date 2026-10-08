@@ -8,6 +8,8 @@ import { useListsModuleContext } from '@pages/ProjectListsPage/context/lists-mod
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import type { ParentColumnDefinition } from '@shared/containers'
+import { useListValuesContext } from '@pages/ProjectListsPage/context/list-values'
+import { useListItemsDataContext } from '@pages/ProjectListsPage/context/list-items-data'
 
 export interface ListsTableSettingsProps {
   onGoTo: (name: string) => void
@@ -29,6 +31,8 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
     useListsAttributesContext()
   const { ListsAttributesSettings, requiredVersion } = useListsModuleContext()
   const { selectSetting } = useSettingsPanel()
+  const { module: listValues, isPowerFeature } = useListValuesContext()
+  const { listValuesSettings, setListValuesSettings } = useListItemsDataContext()
 
   // mirror the table's excluded columns so the panel doesn't offer dead toggles
   // (e.g. subType is excluded for version/product lists where productType is the real column)
@@ -59,6 +63,23 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
       hiddenSettings={['group-by']}
       hideSortBy={isReview}
       settings={[
+        // compare view (powerpack list values), stored with the view
+        ...(isPowerFeature
+          ? [
+              {
+                id: 'compare',
+                title: 'Compare',
+                icon: 'compare_arrows',
+                preview: listValues.getCompareSettingsPreview(listValuesSettings),
+                component: (
+                  <listValues.CompareSettings
+                    settings={listValuesSettings}
+                    onChange={setListValuesSettings}
+                  />
+                ),
+              },
+            ]
+          : []),
         {
           id: 'list_attributes',
           title: 'List attributes',

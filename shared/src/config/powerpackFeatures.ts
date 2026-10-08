@@ -14,6 +14,7 @@ export type PowerpackFeature =
   | 'projectFolders'
   | 'columnSummaries'
   | 'entityLinks'
+  | 'listValues'
 
 export const powerpackFeatureOrder: PowerpackFeature[] = [
   'annotations',
@@ -29,6 +30,7 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'commentCategories',
   'columnSummaries',
   'entityLinks',
+  'listValues',
 ]
 
 export const powerpackFeatures: {
@@ -100,5 +102,11 @@ export const powerpackFeatures: {
     description:
       'Press G on any entity for a graph of everything linked to it, or L to see and edit its links in columns, including the links of everything below a folder.',
     bullet: 'See and edit links of any entity',
+  },
+  listValues: {
+    label: 'List Values',
+    description:
+      'Keep separate attribute values in each list and compare them with the entities or another list.',
+    bullet: 'Per-list values and compare view',
   },
 }

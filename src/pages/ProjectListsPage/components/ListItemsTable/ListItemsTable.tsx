@@ -1,6 +1,7 @@
 import { useListItemsDataContext } from '@pages/ProjectListsPage/context/list-items-data'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
+import { useListValuesContext } from '@pages/ProjectListsPage/context/list-values'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
 import { EmptyPlaceholder, FilterErrorActions } from '@shared/components'
 import {
@@ -8,6 +9,7 @@ import {
   EntityType,
   ParentColumnDefinition,
   ProjectTreeTable,
+  type ProjectTreeTableProps,
   isFilterError,
   getFilterErrorMessage,
 } from '@shared/containers/ProjectTreeTable'
@@ -28,6 +30,7 @@ interface ListItemsTableProps {
   isReview?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
   viewOnly?: boolean
+  columnsConfig?: ProjectTreeTableProps['columnsConfig']
 }
 
 const ListItemsTable: FC<ListItemsTableProps> = ({
@@ -39,6 +42,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   isReview,
   dndActiveId, // Destructure new prop
   viewOnly,
+  columnsConfig,
 }) => {
   const { projectName } = useProjectContext()
   const { togglePanel } = useSettingsPanel()
@@ -57,10 +61,13 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
-  const [hiddenColumns, readOnly] = useMemo(
-    () => getColumnConfigFromType(selectedList?.entityType),
-    [selectedList],
-  )
+  // with list values, attribute edits go to the list item, so the entities' read-only
+  // attributes (product and version lists) don't apply
+  const { isPowerFeature } = useListValuesContext()
+  const [hiddenColumns, readOnly] = useMemo(() => {
+    const [hidden, readOnly] = getColumnConfigFromType(selectedList?.entityType)
+    return [hidden, isPowerFeature ? readOnly.filter((id) => id !== 'attrib') : readOnly]
+  }, [selectedList, isPowerFeature])
 
   const listAttributesMenuItems = useMemo(
     () => [
@@ -133,6 +140,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         fieldStats={fieldStats}
         fieldStatsLoading={fieldStatsLoading}
         mainCountLabels={mainCountLabels}
+        columnsConfig={columnsConfig}
       />
       <ListItemsShortcuts />
       <AddColumnButton

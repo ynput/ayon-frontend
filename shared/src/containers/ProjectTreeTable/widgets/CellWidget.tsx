@@ -25,6 +25,7 @@ import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidg
 import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { READ_ONLY } from '../utils'
 import type { AttributeData, EnumItem, EntityComment } from '@shared/api'
+import type { AttribCellMark } from '../types'
 import { CELL_PADDING_Y } from '../constants'
 
 const Cell = styled.div`
@@ -60,6 +61,21 @@ const Cell = styled.div`
   &.entity-widget {
     cursor: pointer;
   }
+
+  &.warning::before {
+    content: 'warning';
+    font-family: 'Material Symbols Outlined';
+    font-size: 16px;
+    margin-right: 4px;
+    color: var(--md-sys-color-warning);
+  }
+`
+
+// AttribCellMark.highlight: behind the cell, so a dimmed (inherited) cell gets the same tint
+const HighlightTint = styled.span`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 `
 
 // use this class to trigger the editing mode on a single click
@@ -107,6 +123,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   folderId?: string | null
   midnightExclusiveFields?: string[]
   tooltip?: string
+  mark?: AttribCellMark
   onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
   // options passthrough props
   pt?: {
@@ -142,6 +159,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   folderId,
   midnightExclusiveFields,
   tooltip,
+  mark,
   onChange,
   entityType,
   pt,
@@ -397,39 +415,48 @@ export const CellWidget: FC<EditorCellProps> = ({
   ])
 
   return (
-    <Cell
-      {...props}
-      onKeyDown={(event) => {
-        props.onKeyDown?.(event)
-        if (
-          event.defaultPrevented ||
-          event.key !== 'Enter' ||
-          type !== 'boolean' ||
-          options.length ||
-          attributeData?.enumResolver ||
-          isReadOnly ||
-          isCollapsed
-        )
-          return
+    <>
+      {mark?.highlight && (
+        <HighlightTint
+          style={{ backgroundColor: `color-mix(in srgb, ${mark.highlight} 25%, transparent)` }}
+        />
+      )}
+      <Cell
+        {...props}
+        onKeyDown={(event) => {
+          props.onKeyDown?.(event)
+          if (
+            event.defaultPrevented ||
+            event.key !== 'Enter' ||
+            type !== 'boolean' ||
+            options.length ||
+            attributeData?.enumResolver ||
+            isReadOnly ||
+            isCollapsed
+          )
+            return
 
-        event.preventDefault()
-        event.stopPropagation()
-        handleOnChange(!value, 'Enter')
-      }}
-      className={clsx(props.className, {
-        inherited: isInherited && !isCurrentCellEditing,
-        [READ_ONLY]: isReadOnly,
-        editable: !isReadOnly,
-      })}
-      ref={ref}
-      id={cellId}
-      data-tooltip={
-        tooltip ||
-        (isInherited && !isCurrentCellEditing && isCurrentCellFocused ? 'Inherited' : undefined)
-      }
-      data-tooltip-delay={200}
-    >
-      {widget}
-    </Cell>
+          event.preventDefault()
+          event.stopPropagation()
+          handleOnChange(!value, 'Enter')
+        }}
+        className={clsx(props.className, {
+          inherited: isInherited && !isCurrentCellEditing,
+          [READ_ONLY]: isReadOnly,
+          editable: !isReadOnly,
+          warning: mark?.warning,
+        })}
+        ref={ref}
+        id={cellId}
+        data-tooltip={
+          tooltip ||
+          (!isCurrentCellEditing && mark?.tooltip) ||
+          (isInherited && !isCurrentCellEditing && isCurrentCellFocused ? 'Inherited' : undefined)
+        }
+        data-tooltip-delay={200}
+      >
+        {widget}
+      </Cell>
+    </>
   )
 }

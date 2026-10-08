@@ -88,6 +88,8 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
                 ...node,
                 ...edge,
                 attrib: parseJSONField(edge.allAttrib),
+                listAttrib: parseJSONField(edge.itemAttrib),
+                entityAttrib: parseJSONField(node?.entityAllAttrib),
               } as GetListItemsResult['items'][number]
             }),
           ),
@@ -527,6 +529,7 @@ export const {
   useGetListItemsInfiniteInfiniteQuery,
   useGetListsItemsForReviewSessionInfiniteQuery,
   useLazyGetListsItemsForReviewSessionQuery,
+  useGetListItemsQuery,
   useLazyGetListItemsQuery,
 } = getListsGqlApiInjected
 

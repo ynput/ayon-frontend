@@ -32,6 +32,7 @@ import {
   SelectedRowsProvider,
   SelectionCellsProvider,
   TreeTableExtraColumn,
+  type ProjectTreeTableProps,
 } from '@shared/containers/ProjectTreeTable'
 import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
 import useExtraColumns from './hooks/useExtraColumns'
@@ -58,10 +59,23 @@ import { ReviewCardsSettingsProvider } from './context/review-cards-settings'
 import { useReviewCardsSettingsContext } from './context/review-cards-settings'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
+import { isEntityAttribReadOnly } from './util/getColumnConfigFromType'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
 import usePatchListsCaches from './hooks/usePatchListsCaches'
+import { ListValuesProvider, useListValuesContext } from './context/list-values'
+import { COMPARE_WITH_ENTITIES, type ListRef } from './listValues/types'
+import useCompareColumns from './hooks/useCompareColumns'
+import ListPicker from './components/ListPicker'
+import { useListsDataContext } from './context/lists-data'
+import type { ListRowContextMenuBuilder } from './hooks/useListContextMenu'
+import {
+  COMPARE_ENTITY_COLUMN_PREFIX,
+  COMPARE_LIST_COLUMN_PREFIX,
+  ENTITY_FIELD_COLUMNS,
+} from './listValues/columns'
+import { getEntityTypeIcon } from '@shared/util'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -100,11 +114,13 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
       <ListsModuleProvider>
         <ListsDataProvider entityListTypes={entityListTypes} isReview={isReview}>
           <ListsProvider isReview={isReview}>
-            <ListItemsDataProvider>
-              <ListsAttributesProvider>
-                <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
-              </ListsAttributesProvider>
-            </ListItemsDataProvider>
+            <ListsAttributesProvider>
+              <ListValuesProvider>
+                <ListItemsDataProvider>
+                  <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
+                </ListItemsDataProvider>
+              </ListValuesProvider>
+            </ListsAttributesProvider>
           </ListsProvider>
         </ListsDataProvider>
       </ListsModuleProvider>
@@ -156,6 +172,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   })
   const { updateListItems } = useUpdateListItems({
     updateEntities,
+    listItemsMap: props.listItemsMap,
   })
   const { reorderListItem } = useListItemsDataContext() // Get reorderListItem
 
@@ -163,6 +180,55 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     // @ts-expect-error - we do not support product right now
     entityType: selectedList?.entityType,
   })
+
+  // list values: column header actions, entity field icons and the compare view columns
+  const { isPowerFeature } = useListValuesContext()
+  const { compareView } = props
+  const { compareColumns, compareColumnIds } = useCompareColumns({
+    attribFields,
+    compareValues: compareView.values,
+    compareLabel:
+      compareView.compareWith === COMPARE_WITH_ENTITIES
+        ? 'Entity'
+        : compareView.comparedList?.label,
+    withEntities: compareView.compareWith === COMPARE_WITH_ENTITIES,
+    entityReadOnly: isEntityAttribReadOnly(selectedList?.entityType),
+    columnVisibility: columns.columnVisibility || {},
+    defaultColumnVisibility,
+  })
+  const extraColumns = useMemo(
+    () => [...listColumnConfig.extraColumns, ...compareColumns],
+    [listColumnConfig.extraColumns, compareColumns],
+  )
+  const { getListValueColumnMenuItems } = props
+  const columnsConfig = useMemo(() => {
+    const config: ProjectTreeTableProps['columnsConfig'] = {}
+    // with list values, these columns still show and change the entities' own values
+    if (isPowerFeature && selectedList) {
+      const { entityType } = selectedList
+      for (const id of ENTITY_FIELD_COLUMNS) {
+        config[id] = {
+          headerIcon: {
+            icon: getEntityTypeIcon(entityType),
+            tooltip: `The ${entityType}'s own value: changing it changes the ${entityType} everywhere, not only in this list`,
+          },
+        }
+      }
+    }
+    for (const { name } of attribFields) {
+      const menuItems = getListValueColumnMenuItems(name)
+      if (menuItems.length) config[`attrib_${name}`] = { menuItems }
+    }
+    // bind each compared attribute column and its compare column into one group
+    for (const id of compareColumnIds) {
+      const attrib = id.startsWith(COMPARE_ENTITY_COLUMN_PREFIX)
+        ? id.slice(COMPARE_ENTITY_COLUMN_PREFIX.length)
+        : id.slice(COMPARE_LIST_COLUMN_PREFIX.length)
+      config[`attrib_${attrib}`] = { ...config[`attrib_${attrib}`], groupEdge: 'start' }
+      config[id] = { groupEdge: 'end' }
+    }
+    return config
+  }, [attribFields, getListValueColumnMenuItems, compareColumnIds, isPowerFeature, selectedList])
 
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
@@ -215,7 +281,8 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                   <SelectedRowsProvider>
                     <CellEditingProvider>
                       <ProjectLists
-                        extraColumns={listColumnConfig.extraColumns}
+                        extraColumns={extraColumns}
+                        columnsConfig={columnsConfig}
                         extraColumnsSettings={listColumnConfig.extraColumnsSettings}
                         parentColumns={listColumnConfig.parentColumns}
                         includeParents={listColumnConfig.includeParents}
@@ -240,6 +307,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
 
 type ProjectListsProps = {
   extraColumns: TreeTableExtraColumn[]
+  columnsConfig?: ProjectTreeTableProps['columnsConfig']
   extraColumnsSettings: any[]
   parentColumns: ReturnType<typeof useExtraColumns>['parentColumns']
   includeParents: ReturnType<typeof useExtraColumns>['includeParents']
@@ -250,6 +318,7 @@ type ProjectListsProps = {
 
 const ProjectLists: FC<ProjectListsProps> = ({
   extraColumns,
+  columnsConfig,
   extraColumnsSettings,
   parentColumns,
   includeParents,
@@ -274,6 +343,31 @@ const ProjectLists: FC<ProjectListsProps> = ({
 
   const { selectedCells, setSelectedCells, setFocusedCellId, setAnchorCell, clearSelection } =
     useSelectionCellsContext()
+
+  // list values (powerpack): the compare controls and the lists sidebar's menu items
+  const { module: listValues } = useListValuesContext()
+  const { compareView } = useListItemsDataContext()
+  const { listsMap } = useListsDataContext()
+  const shownList = useMemo<ListRef | undefined>(
+    () =>
+      selectedList && {
+        id: selectedList.id,
+        label: selectedList.label,
+        entityType: selectedList.entityType,
+      },
+    [selectedList?.id, selectedList?.label, selectedList?.entityType],
+  )
+  const listMenuBuilders = useMemo<ListRowContextMenuBuilder[]>(
+    () => [
+      (_e, { rowId, selectedRows }) => {
+        const list = listsMap.get(rowId)
+        if (!list || selectedRows.length > 1) return undefined
+        const listRef = { id: list.id, label: list.label, entityType: list.entityType }
+        return listValues.getListMenuItems(listRef, shownList, compareView)
+      },
+    ],
+    [listsMap, listValues, shownList, compareView],
+  )
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
@@ -316,7 +410,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
       >
         <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
           <Section wrap>
-            <ListsTable isReview={isReview} />
+            <ListsTable isReview={isReview} rowContextMenuBuilders={listMenuBuilders} />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={88}>
@@ -407,6 +501,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
                           entityType={selectedList.entityType}
                           projectName={projectName}
                         />
+                        <listValues.Controls
+                          view={compareView}
+                          shownList={shownList}
+                          ListPicker={ListPicker}
+                        />
                       </>
                     )}
                     {
@@ -485,6 +584,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                             isReview={isReview && !reviewSessionCardsOutdated}
                             dndActiveId={dndActiveId} // Pass prop
                             viewOnly={(selectedList?.accessLevel || 0) < 20}
+                            columnsConfig={columnsConfig}
                           />
                         )}
                       </SplitterPanel>

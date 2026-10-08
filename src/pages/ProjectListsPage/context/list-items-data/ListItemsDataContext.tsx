@@ -13,7 +13,11 @@ import {
   TaskNodeMap,
 } from '@shared/containers/ProjectTreeTable'
 import useDeleteListItems, { UseDeleteListItemsReturn } from '../../hooks/useDeleteListItems'
-import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
+import type {
+  ContextMenuItemConstructor,
+  ContextMenuItemConstructors,
+} from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
+import { parseCellId } from '@shared/containers/ProjectTreeTable'
 import { useEntityListsContext } from '../entity-lists/EntityListsContextInstance'
 import useReorderListItem, { UseReorderListItemReturn } from '../../hooks/useReorderListItem'
 import useBuildListItemsTableData from '../../hooks/useBuildListItemsTableData'
@@ -26,8 +30,17 @@ import { useReviewCardsSettingsContext } from '../review-cards-settings/ReviewCa
 import useReplaceListItem from '../../hooks/useReplaceListItem'
 import { ListItemsDataContext } from './ListItemsDataContextInstance'
 import { DEFAULT_COLUMN_VISIBILITY, DEFAULT_COLUMNS_BY_TYPE } from './ListItemsDataContextHelpers'
+import { useListValuesContext } from '../list-values'
+import { useListsDataContext } from '../lists-data'
+import useListValueActions from '../../hooks/useListValueActions'
+import { useListItemsForListValues } from '../../hooks/useListItemsForListValues'
+import { getListItemValueSources, toListValuesItem } from '../../listValues/listItemValueSources'
+import type { CompareSettings, CompareView, ListRef } from '../../listValues/types'
+import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
+
+const NO_LIST_VALUES_SETTINGS: CompareSettings = {}
 
 export interface ListItemsDataContextValue {
   // Project Info
@@ -41,6 +54,12 @@ export interface ListItemsDataContextValue {
   listItemsData: EntityListItemWithLinks[]
   listItemsTableData: TableRow[]
   listItemsMap: ListItemsMap
+  // the powerpack ListValues module's compare view (empty without the powerpack)
+  compareView: CompareView<EntityListItemWithLinks>
+  listValuesSettings: CompareSettings
+  setListValuesSettings: (settings: CompareSettings) => void
+  // list value actions in an attribute column's header menu
+  getListValueColumnMenuItems: (attrib: string) => ColumnMenuItemType[]
   fetchNextPage: () => void
   isLoadingAll: boolean
   isLoadingMore: boolean
@@ -109,12 +128,19 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const [linksVisible, setLinksVisible] = useState(false)
 
   const { isLoadingViews } = useViewsContext()
+  const { module: listValues, rules: listValuesRules, readsEntityValue } = useListValuesContext()
+  const { listsMap } = useListsDataContext()
   const {
     filters: listItemsFilters,
     onUpdateFilters: setListItemsFilters,
     columns,
     onUpdateColumns,
+    listValues: storedListValuesSettings,
+    onUpdateListValues: setListValuesSettings,
   } = useListsViewSettings()
+  // stored with the view, shaped by the ListValues module
+  const listValuesSettings =
+    (storedListValuesSettings as CompareSettings | undefined) || NO_LIST_VALUES_SETTINGS
 
   const hasLinkColumn = useMemo(
     () => checkColumnVisibility(columns.columnVisibility, 'link_', defaultColumnVisibility),
@@ -171,6 +197,9 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     data: listItemsData,
     isLoading,
     isFetchingNextPage,
+    hasNextPage,
+    queryFilter,
+    search,
     isError,
     error,
     fetchNextPage,
@@ -190,6 +219,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     showComments,
     isLoadingViews,
     defaultColumnVisibility,
+    readsEntityValue,
   })
 
   // filter out attribFields by scope for the table columns
@@ -206,10 +236,84 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     return new Map(listItemsData.map((item) => [item.id, item]))
   }, [listItemsData])
 
-  // convert listItemsData into tableData
-  const listItemsTableData = useBuildListItemsTableData({
-    listItemsData,
+  // the ListValues module's compare view, see listValues/AGENTS.md
+  const shownList = useMemo<ListRef | undefined>(
+    () =>
+      selectedList && {
+        id: selectedList.id,
+        label: selectedList.label,
+        entityType: selectedList.entityType,
+      },
+    [selectedList?.id, selectedList?.label, selectedList?.entityType],
+  )
+  const getList = useCallback(
+    (id: string) => {
+      const list = listsMap.get(id)
+      return list && { id: list.id, label: list.label, entityType: list.entityType }
+    },
+    [listsMap],
+  )
+  const attributeNames = useMemo(() => scopedAttribFields.map((a) => a.name), [scopedAttribFields])
+  const compareQuery = useMemo(() => ({ filter: queryFilter, search }), [queryFilter, search])
+  const compareView = listValues.useCompareView<EntityListItemWithLinks>({
+    shownList,
+    items: listItemsData,
+    allItemsLoaded: !hasNextPage,
+    toItem: toListValuesItem,
+    attributes: attributeNames,
+    query: compareQuery,
+    context: listValuesRules,
+    getList,
+    settings: listValuesSettings,
+    useListItems: useListItemsForListValues,
   })
+
+  // what each row shows: list values or entity values, plus the compare view's marks
+  const getRowValues = useCallback(
+    (item: EntityListItemWithLinks) => {
+      const { attrib, ownAttrib, marks } = listValues.resolveValues(
+        getListItemValueSources(item),
+        listValuesRules,
+      )
+      const attribMarks = { ...marks }
+      for (const [name, mark] of Object.entries(compareView.marks.get(item.id) || {})) {
+        attribMarks[name] = { ...attribMarks[name], ...mark }
+      }
+      return { attrib, ownAttrib, attribMarks }
+    },
+    [listValues, listValuesRules, compareView.marks],
+  )
+
+  // convert listItemsData into tableData
+  const shownListTableData = useBuildListItemsTableData({
+    listItemsData,
+    getRowValues,
+  })
+
+  // items only in the compared list: read-only rows after the list's own
+  const getCompareOnlyRowValues = useCallback(
+    (item: EntityListItemWithLinks) => ({
+      attrib: {},
+      ownAttrib: [],
+      attribMarks: compareView.marks.get(item.id) || {},
+    }),
+    [compareView.marks],
+  )
+  const compareOnlyTableData = useBuildListItemsTableData({
+    listItemsData: compareView.compareOnlyItems,
+    getRowValues: getCompareOnlyRowValues,
+  })
+
+  const listItemsTableData = useMemo(
+    () =>
+      compareOnlyTableData.length
+        ? [
+            ...shownListTableData,
+            ...compareOnlyTableData.map((row) => ({ ...row, readOnly: true })),
+          ]
+        : shownListTableData,
+    [shownListTableData, compareOnlyTableData],
+  )
 
   const foldersMap = useMemo<FolderNodeMap>(
     () =>
@@ -262,7 +366,48 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   })
 
   // lists data
-  const { menuItems: menuItemsAddToList } = useEntityListsContext()
+  const { menuItems: menuItemsAddToList, addToList } = useEntityListsContext()
+
+  const { listValueMenuItem, getColumnMenuItems: getListValueColumnMenuItems } =
+    useListValueActions({
+      projectName,
+      listId: selectedListId,
+      entityType: listEntityType,
+      listItemsMap,
+      canEditList: (selectedList?.accessLevel || 0) >= 20,
+    })
+
+  // menu items that act on list items skip the rows only in the compared list
+  const forListItems =
+    (build: ContextMenuItemConstructor): ContextMenuItemConstructor =>
+    (e, cell, selectedCells, ...rest) => {
+      const cells = selectedCells.filter((c) =>
+        listItemsMap.has(parseCellId(c.cellId)?.rowId || ''),
+      )
+      return cells.length ? build(e, cell, cells, ...rest) : undefined
+    }
+
+  // rows only in the compared list can be added to the shown one
+  const addToShownListMenuItem: ContextMenuItemConstructor = (_e, _cell, selectedCells) => {
+    if (!selectedListId || !selectedList || (selectedList.accessLevel || 0) < 20) return undefined
+    const compareOnlyIds = new Set(compareView.compareOnlyItems.map((item) => item.id))
+    const entities = [
+      ...new Map(
+        selectedCells
+          .filter((c) => compareOnlyIds.has(parseCellId(c.cellId)?.rowId || ''))
+          .map((c) => [c.entityId, { entityId: c.entityId, entityType: c.entityType }]),
+      ).values(),
+    ]
+    if (!entities.length) return undefined
+    return {
+      label: 'Add to this list',
+      icon: 'playlist_add',
+      command: async () => {
+        await addToList(selectedListId, selectedList.entityType, entities)
+        compareView.refetchCompareOnly()
+      },
+    }
+  }
 
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [
@@ -271,8 +416,10 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     'open-viewer',
     // add context menu to add to lists but filter out own list
     menuItemsAddToList((item) => item.id !== selectedListId),
-    replaceItemContextMenu,
-    deleteListItemMenuItem,
+    addToShownListMenuItem,
+    forListItems(replaceItemContextMenu),
+    forListItems(listValueMenuItem),
+    forListItems(deleteListItemMenuItem),
   ]
 
   return (
@@ -286,6 +433,10 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         listItemsData,
         listItemsTableData,
         listItemsMap,
+        compareView,
+        listValuesSettings,
+        setListValuesSettings,
+        getListValueColumnMenuItems,
         isLoadingAll: isLoading || isLoadingData,
         isLoadingMore: isFetchingNextPage,
         isError,

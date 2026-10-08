@@ -29,6 +29,10 @@ export type ListsViewSettings = {
   // Column management
   columns: ColumnsConfig
   onUpdateColumns: (columns: ColumnsConfig, allColumnIds?: string[]) => void
+
+  // the powerpack ListValues module's settings (it defines their shape)
+  listValues?: Record<string, unknown>
+  onUpdateListValues: (settings: Record<string, unknown>) => void
 }
 
 export const useListsViewSettings = (): ListsViewSettings => {
@@ -38,6 +42,7 @@ export const useListsViewSettings = (): ListsViewSettings => {
   // Local state for immediate updates
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
+  const [localListValues, setLocalListValues] = useState<Record<string, unknown> | null>(null)
 
   // Get view update helper
   const { updateViewSettings } = useViewUpdateHelper()
@@ -64,9 +69,16 @@ export const useListsViewSettings = (): ListsViewSettings => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify((viewSettings as OverviewSettings)?.columns)])
 
+  const serverListValues = (viewSettings as any)?.listValues as Record<string, unknown> | undefined
+  useEffect(() => {
+    setLocalListValues(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(serverListValues)])
+
   // Use local state if available, otherwise use server state
   const filters = localFilters !== null ? localFilters : serverFilters
   const columns = localColumns || serverColumns
+  const listValues = localListValues ?? serverListValues
 
   // Filter update handler
   const onUpdateFilters = useCallback(
@@ -89,10 +101,21 @@ export const useListsViewSettings = (): ListsViewSettings => {
     [updateViewSettings],
   )
 
+  const onUpdateListValues = useCallback(
+    async (settings: Record<string, unknown>) => {
+      await updateViewSettings({ listValues: settings }, setLocalListValues, settings, {
+        errorMessage: 'Failed to update list values settings',
+      })
+    },
+    [updateViewSettings],
+  )
+
   return {
     filters,
     onUpdateFilters,
     columns,
     onUpdateColumns,
+    listValues,
+    onUpdateListValues,
   }
 }

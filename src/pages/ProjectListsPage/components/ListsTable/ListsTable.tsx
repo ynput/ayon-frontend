@@ -25,6 +25,7 @@ interface ListsTableProps {
   hiddenButtons?: ButtonType[]
   onRowSubmit?: (id: string) => void
   onCreateList?: () => void
+  scrollToRowId?: string
 }
 
 const ListsTable: FC<ListsTableProps> = ({
@@ -36,6 +37,7 @@ const ListsTable: FC<ListsTableProps> = ({
   hiddenButtons,
   onRowSubmit,
   onCreateList,
+  scrollToRowId,
 }) => {
   const {
     rowSelection,
@@ -157,9 +159,11 @@ const ListsTable: FC<ListsTableProps> = ({
             isLoading={isLoadingAll}
             error={isError ? 'Error loading lists' : undefined}
             onScrollBottom={fetchNextPage}
+            scrollToRowId={scrollToRowId}
             isMultiSelect={!singleSelect}
             enableClickToDeselect={false}
             rowContextMenuBuilders={rowContextMenuBuildersAll}
+            selectOnContextMenu={false}
             renamingId={picker ? undefined : renamingList}
             onRename={picker ? undefined : handleRename}
             onSubmitRename={picker ? undefined : handleSubmitRename}

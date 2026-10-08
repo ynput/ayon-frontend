@@ -31,7 +31,8 @@ export const FOLDER_ICON_ADD = 'create_new_folder'
 export const FOLDER_ICON_EDIT = 'folder_managed'
 export const FOLDER_ICON_REMOVE = 'folder_off'
 
-// enabled=false in picker mode: the table renders no row menu there
+// enabled=false in picker mode: the table renders no row menu there.
+// Right-click doesn't select the row (the active list stays), so the items act on context.selectedRows.
 const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], enabled = true) => {
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
@@ -49,6 +50,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
     onRemoveFoldersFromFolder,
     openMoveToFolder,
     selectAllLists,
+    setRowSelection,
   } = useListsContext()
   const { powerLicense } = usePowerpack()
 
@@ -74,6 +76,10 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
   const buildContextMenu = useCallback(
     (_e: React.MouseEvent<HTMLTableRowElement>, context: ListRowContextMenuContext) => {
       const { selectedRows } = context
+      const extraItems = extraBuilders.flatMap((builder) => {
+        const items = builder(_e, context)
+        return !items ? [] : Array.isArray(items) ? items : [items]
+      })
 
       const newSelectedLists = listsData.filter((list) =>
         selectedRows.some((selected) => list?.id === selected),
@@ -241,10 +247,14 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
           hidden: !selectedFolderIds.length, // hide if no folders selected per spec
           command: () => selectAllLists({ rowIds: selectedRows }),
         },
+        ...extraItems,
         {
           label: 'Details',
           icon: 'info',
-          command: () => setListDetailsOpen(true),
+          command: () => {
+            setRowSelection({ [firstSelectedRow]: true })
+            setListDetailsOpen(true)
+          },
           disabled: multipleSelected,
           hidden: !allSelectedRowsAreLists,
           shortcut: 'Double click',
@@ -301,13 +311,12 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
       clearListItems,
       isReview,
       powerLicense,
+      setRowSelection,
+      extraBuilders,
     ],
   )
 
-  return useMemo(
-    () => (enabled ? [buildContextMenu, ...extraBuilders] : []),
-    [enabled, buildContextMenu, extraBuilders],
-  )
+  return useMemo(() => (enabled ? [buildContextMenu] : []), [enabled, buildContextMenu])
 }
 
 export default useListContextMenu

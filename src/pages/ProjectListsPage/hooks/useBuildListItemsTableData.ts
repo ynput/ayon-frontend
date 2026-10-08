@@ -16,11 +16,15 @@ import {
   RESTRICTED_ENTITY_ICON,
 } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
+// the values a row shows, see listValues/AGENTS.md
+export type ListItemRowValues = Pick<EntityData, 'attrib' | 'ownAttrib' | 'attribMarks'>
+
 type Props = {
   listItemsData: EntityListItemWithLinks[]
+  getRowValues?: (item: EntityListItemWithLinks) => ListItemRowValues
 }
 
-const useBuildListItemsTableData = ({ listItemsData }: Props) => {
+const useBuildListItemsTableData = ({ listItemsData, getRowValues }: Props) => {
   const project = useProjectContext()
 
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
@@ -37,6 +41,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
 
       const primary = {
         ...buildPrimaryEntity(item, isRestricted),
+        ...(isRestricted ? undefined : getRowValues?.(item)),
         icon: isRestricted ? RESTRICTED_ENTITY_ICON : entityTypeData?.icon,
         color: isRestricted ? '' : entityTypeData?.color,
         folderId: extractFolderId(item, item.entityType),
@@ -66,7 +71,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
   }
   const tableData = useMemo(
     () => buildListItemsTableData(listItemsData),
-    [listItemsData, getEntityTypeData],
+    [listItemsData, getEntityTypeData, getRowValues],
   )
   return tableData
 }

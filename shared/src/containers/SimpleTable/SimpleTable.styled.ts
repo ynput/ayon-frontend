@@ -53,6 +53,12 @@ export const TableContainer = styled.div`
     /* transform: set on dynamically */
   }
 
+  /* right-clicked without being selected: outline while its context menu is open */
+  tr.context-target td > * {
+    outline: 1px solid var(--md-sys-color-primary);
+    outline-offset: -1px;
+  }
+
   td {
     padding: 1px 0px;
     width: 100%;
