@@ -34,6 +34,9 @@ export const SLICER_PAGES_CONFIG: SlicerConfig = {
       { value: 'entityList' },
     ],
   },
+  addon: {
+    fields: [{ value: 'hierarchy' }],
+  },
 }
 
 export const useSlicerContext = () => {
