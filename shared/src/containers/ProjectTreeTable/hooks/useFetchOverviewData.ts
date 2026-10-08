@@ -51,6 +51,7 @@ type useFetchOverviewDataData = {
   softError?: string // error for fetching tasks for expanded folders, if any
   softErrorAction?: SoftErrorAction
   isLoadingAll: boolean // the whole table is a loading state
+  isFetchingFolders: boolean // the folder set (foldersMap) is being (re)fetched for new filters
   isLoadingMore: boolean // loading more tasks
   loadingTasks: LoadingTasks // show number of loading tasks per folder or root
   loadingLinksEntityIds: Set<string> // entity IDs whose links are currently being fetched (not yet cached)
@@ -81,10 +82,6 @@ type Params = {
   // entity ids currently rendered in the table's viewport (hierarchy mode only) - used to
   // scope task fetching to folders actually on screen, rather than every expanded folder
   visibleEntityIds?: string[]
-  folderStatsArgs?: unknown
-  taskStatsArgs?: unknown
-  folderStatsUninitialized?: boolean
-  taskStatsUninitialized?: boolean
   dispatch: ThunkDispatch<any, any, UnknownAction>
 }
 
@@ -109,10 +106,6 @@ export const useFetchOverviewData = ({
   isLoadingViews = false,
   onCollapseAll,
   visibleEntityIds = [],
-  folderStatsArgs,
-  taskStatsArgs,
-  folderStatsUninitialized,
-  taskStatsUninitialized,
   dispatch,
 }: Params): useFetchOverviewDataData => {
   const { isLoading: isLoadingModules } = modules
@@ -188,15 +181,36 @@ export const useFetchOverviewData = ({
   }
 
   // QUERY
+  const skipExpandedFoldersTasks =
+    isLoadingViews || !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView)
   const {
     data: expandedFoldersTasks = [],
     isFetching: isFetchingExpandedFoldersTasks,
     error: expandedFoldersTasksError,
     isUninitialized: isUninitializedExpandedFoldersTasks,
+    originalArgs: expandedFoldersTasksFetchedArgs,
+    refetch: refetchExpandedFoldersTasks,
   } = useGetOverviewTasksByFoldersQuery(expandedFoldersTasksArgs, {
-    skip:
-      isLoadingViews || !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView),
+    skip: skipExpandedFoldersTasks,
   })
+
+  // All expanded folders share one cache entry, and RTK Query drops a request for an entry that
+  // is still loading. A folder expanded while another folder's tasks were loading would never get
+  // its tasks, so fetch the folders the last request did not cover once it settles.
+  useEffect(() => {
+    if (skipExpandedFoldersTasks || isFetchingExpandedFoldersTasks) return
+    if (isUninitializedExpandedFoldersTasks || expandedFoldersTasksError) return
+    const fetchedIds = new Set(expandedFoldersTasksFetchedArgs?.parentIds)
+    if (visibleFolderIdsToQuery.some((id) => !fetchedIds.has(id))) refetchExpandedFoldersTasks()
+  }, [
+    skipExpandedFoldersTasks,
+    isFetchingExpandedFoldersTasks,
+    isUninitializedExpandedFoldersTasks,
+    expandedFoldersTasksError,
+    expandedFoldersTasksFetchedArgs,
+    visibleFolderIdsToQuery,
+    refetchExpandedFoldersTasks,
+  ])
 
   const skipFoldersByTaskFilter =
     (!taskFilters.filterString &&
@@ -220,6 +234,7 @@ export const useFetchOverviewData = ({
     data: foldersByTaskFilter,
     isUninitialized,
     isLoading: isLoadingTasksFolders,
+    isFetching: isFetchingTasksFolders,
     isUninitialized: isUninitializedTasksFolders,
     error: searchFoldersError,
   } = useGetSearchFoldersQuery(searchFoldersArgs, {
@@ -731,12 +746,6 @@ export const useFetchOverviewData = ({
     if ((isFullSync || hasTaskUpdates) && !isUninitializedGroupedTasks) {
       queriesToRefresh.push({ endpointName: 'getGroupedTasksList', args: groupTasksArgs })
     }
-    if ((isFullSync || hasFolderUpdates) && !folderStatsUninitialized && folderStatsArgs) {
-      queriesToRefresh.push({ endpointName: 'GetFolderColumnStats', args: folderStatsArgs })
-    }
-    if ((isFullSync || hasTaskUpdates) && !taskStatsUninitialized && taskStatsArgs) {
-      queriesToRefresh.push({ endpointName: 'GetTaskColumnStats', args: taskStatsArgs })
-    }
     if ((isFullSync || hasFolderUpdates) && !isUninitializedFoldersLinks) {
       queriesToRefresh.push({ endpointName: 'getEntityLinks', args: foldersLinksArgs })
     }
@@ -788,6 +797,7 @@ export const useFetchOverviewData = ({
       isLoadingTasksList ||
       isLoadingTasksFolders ||
       isLoadingModules, // these all show a full loading state
+    isFetchingFolders: isLoadingFolders || (!skipFoldersByTaskFilter && isFetchingTasksFolders),
     isLoadingMore: isFetchingNextPageTasksList,
     loadingTasks: loadingTasksForParents,
     loadingLinksEntityIds,
