@@ -3,8 +3,8 @@ import { DataTable, DataTableBaseProps, DataTableColumnResizeEndEvent } from 'pr
 import { Column } from 'primereact/column'
 
 // Styling
-import styled from 'styled-components'
 import './TaskProgressTable.scss'
+import { Cells } from './TasksProgressTable.styled'
 
 // Components
 import { FolderBody } from '../FolderBody/FolderBody'
@@ -41,10 +41,6 @@ import { taskStatusSortFunction } from '@containers/TasksProgress/helpers/taskSt
 import clsx from 'clsx'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useScopedDetailsPanel } from '@shared/context'
-
-export const Cells = styled.div`
-  display: flex;
-`
 
 export type TaskFieldChange = (
   task: string,

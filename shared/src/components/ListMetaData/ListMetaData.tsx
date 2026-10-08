@@ -24,7 +24,7 @@ export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading }) => {
     Id: list?.id,
     'Entity type': list?.entityType,
     'List type': list?.entityListType,
-    'Items count': list?.items?.length,
+    'Items count': list?.data?.count ?? list?.items?.length,
     Owner: list?.owner,
     'Created at': list?.createdAt && format(new Date(list?.createdAt), 'PPpp'),
     'Created by': list?.createdBy,

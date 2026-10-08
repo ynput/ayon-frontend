@@ -7,7 +7,7 @@ import VideoPlayerControls from './VideoPlayerControls'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import clsx from 'clsx'
 import useGoToFrame from './hooks/useGoToFrame'
-import { useViewer } from '@context/ViewerContext'
+import { useViewer } from '@context'
 
 import usePlayerPreferences from './hooks/usePlayerPreferences'
 import useVideoPlayback from './hooks/useVideoPlayback'

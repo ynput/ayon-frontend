@@ -9,7 +9,7 @@ import type { ColumnItemModel, OverviewSettings } from '@shared/api/generated/vi
 import type {
   ColumnsConfig,
   TableGroupBy,
-} from '../containers/ProjectTreeTable/context/ColumnSettingsContext'
+} from '../containers/ProjectTreeTable/context/column-settings'
 import type { GroupByConfig } from '../containers/ProjectTreeTable/components/GroupSettingsFallback'
 import type {
   SummaryCalc,

@@ -9,15 +9,7 @@ import { FC, Dispatch, SetStateAction, useMemo } from 'react'
 import ProjectsListTableHeader from './ProjectsListTableHeader'
 import { ProjectsSimpleTable } from './ProjectsSimpleTable'
 import { useSessionStorage } from '@shared/hooks'
-import styled from 'styled-components'
-
-export const PinnedDivider = styled.hr`
-  margin: 0;
-  width: 100%;
-  border-style: solid;
-  border-width: 1px 0 0 0;
-  border-color: var(--md-sys-color-outline-variant);
-`
+import { PinnedDivider } from './ProjectsTable.styled'
 
 type ButtonType = 'delete' | 'add' | 'filter' | 'search' | 'select-all'
 

@@ -13,9 +13,8 @@ import type { Status } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions, getSelectableAssignees } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
-import { useEntityUpdate } from '@shared/hooks/useEntityUpdate'
-import type { DetailsPanelTab } from '@shared/context/DetailsPanelContext'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { useEntityEditing } from '@shared/components/DetailsPanelDetails/hooks/useEntityEditing'
+import { useDetailsPanelContext, type DetailsPanelTab } from '@shared/context'
 
 import DetailsPanelTabs from '../DetailsPanelTabs/DetailsPanelTabs'
 import LinkedTaskRow from './LinkedTaskRow'
@@ -151,18 +150,19 @@ const DetailsPanelHeader = ({
   const isPlayable = !isMultiple && !!firstEntity?.hasReviewables
   const isThumbnailClickable = thumbnails.length === 1
 
-  const { updateEntity } = useEntityUpdate({
-    entities: entities.map((e) => ({
-      id: e.id,
-      projectName: e.projectName,
-      users: e.task?.assignees || [],
-      folderId: e.folder?.id,
-      productId: e.product?.id,
-    })),
+  const { attribAccess, updateEntity } = useEntityEditing({
+    entities,
     entityType,
   })
+  const { writableFields } = attribAccess
+  const canEditStatus = !writableFields || writableFields.includes('status')
+  const canEditTags = !writableFields || writableFields.includes('tags')
+  const canEditAssignees =
+    entityType === 'task' && (!writableFields || writableFields.includes('assignees'))
 
   const handleUpdate = (field: string, value: any) => {
+    if (field !== 'attrib' && writableFields && !writableFields.includes(field)) return
+    if (field === 'assignees' && !canEditAssignees) return
     if (value === null || value === undefined) return console.error('value is null or undefined')
     return updateEntity(field, value)
   }
@@ -232,19 +232,40 @@ const DetailsPanelHeader = ({
             <Styled.Content className={clsx({ loading: isLoading })}>
               <Styled.Title>
                 <h2>{title}</h2>
-                <Styled.TagsSelect
-                  ref={tagsSelectRef}
-                  value={union(...tagsValues)}
-                  tags={tagsOptionsObject}
-                  options={[]}
-                  editable
-                  editor
-                  onChange={(value) => handleUpdate('tags', value)}
-                  align="right"
-                  styleDropdown={{ display: isLoading ? 'none' : 'unset' }}
-                  className="tags-select"
-                  itemClassName="details-tag"
-                />
+                {canEditTags ? (
+                  <Styled.TagsSelect
+                    ref={tagsSelectRef}
+                    value={union(...tagsValues)}
+                    tags={tagsOptionsObject}
+                    options={[]}
+                    editable
+                    editor
+                    onChange={(value) => handleUpdate('tags', value)}
+                    align="right"
+                    styleDropdown={{ display: isLoading ? 'none' : 'unset' }}
+                    className="tags-select"
+                    itemClassName="details-tag"
+                  />
+                ) : (
+                  <Styled.ReadOnlyTags className="tags-select">
+                    {union(...tagsValues).length
+                      ? union(...tagsValues).map((tag) => {
+                          const color = tagsOptionsObject[tag]?.color
+                          return (
+                            <span
+                              key={tag}
+                              style={{
+                                backgroundColor: color || undefined,
+                                color: color ? getTextColor(color) : undefined,
+                              }}
+                            >
+                              {tag}
+                            </span>
+                          )
+                        })
+                      : '-'}
+                  </Styled.ReadOnlyTags>
+                )}
               </Styled.Title>
               <div className="sub-title">
                 <span className="entity-type">{upperFirst(entityType)} - </span>
@@ -263,6 +284,7 @@ const DetailsPanelHeader = ({
             value={statusesValue}
             options={statuses || []}
             disabledValues={disabledStatuses}
+            disableOpen={!canEditStatus}
             invert
             style={{ maxWidth: 'unset' }}
             onChange={(value) => handleUpdate('status', value)}
@@ -279,8 +301,8 @@ const DetailsPanelHeader = ({
                 options={usersOptions}
                 disabledValues={disabledAssignees.map((u) => u.name)}
                 isMultiple={isMultiple && entityUsers.length > 1 && entityType === 'task'}
-                readOnly={entityType !== 'task'}
-                emptyMessage={entityType === 'task' ? 'Assign user' : ''}
+                readOnly={!canEditAssignees}
+                emptyMessage={canEditAssignees ? 'Assign user' : '-'}
                 align="right"
                 onChange={(value) => handleUpdate('assignees', value)}
                 className="assignee-select"

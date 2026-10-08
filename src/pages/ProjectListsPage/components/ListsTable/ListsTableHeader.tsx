@@ -1,12 +1,12 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
 import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { SearchFilterRef, theme } from '@ynput/ayon-react-components'
 import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import ListsFiltersBar from './ListsFiltersBar'
 import { Menu, MenuContainer, MenuItemType, TableSearch } from '@shared/components'
-import { useMenuContext } from '@shared/context/MenuContext'
+import { useMenuContext } from '@shared/context'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
 import { usePowerpack } from '@shared/context'
@@ -32,15 +32,15 @@ const HeaderTop = styled(Header)`
   container-type: inline-size;
 
   /* when this container gets smaller than */
-  /* 188px remove add-list button  */
+  /* 188px remove folder button (the panel's default width, keep the primary add-list action) */
   @container (max-width: 188px) {
-    .add-list {
+    .add-folder {
       display: none;
     }
   }
-  /* 155px remove folder button */
+  /* 155px remove add-list button */
   @container (max-width: 155px) {
-    .add-folder {
+    .add-list {
       display: none;
     }
   }
@@ -236,9 +236,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     { id: 'divider' },
     {
       id: 'new-list',
-      label: isReview
-        ? 'Create review session'
-        : 'Create list',
+      label: isReview ? 'Create review session' : 'Create list',
       icon: 'add',
       shortcut: 'N',
       onClick: async () => {

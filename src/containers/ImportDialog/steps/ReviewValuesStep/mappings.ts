@@ -13,7 +13,7 @@ import {
 import { preprocessRowsIfHierarchy } from "../hierarchy"
 import { getValuesForColumn } from "./values"
 import { getMapperState } from "./getMapperState"
-import { resolvedStates } from "../MapperRow"
+import { resolvedStates } from "../MapperRowHelpers"
 
 export const getMappingsToReview = (importSchema: ImportSchema, columnMappings: ColumnMappings) => {
   return Object.fromEntries(Object.entries(columnMappings)

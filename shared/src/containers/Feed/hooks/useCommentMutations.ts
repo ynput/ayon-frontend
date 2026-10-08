@@ -1,10 +1,10 @@
 import { getEntityId, getRequestErrorString } from '@shared/util'
 import { formatISO } from 'date-fns'
 import { toast } from 'react-toastify'
-import { useFeedContext } from '../context/FeedContext'
+import { useFeedContext } from '../context/feed'
 import type { SavedAnnotationMetadata } from '../index'
 import { VersionReviewFeedback } from '../components/CommentInput/types'
-import { getVerbForFeedbackBody } from '../components/ActivityVersionReview/ActivityVersionReview'
+import { getVerbForFeedbackBody } from '../components/ActivityVersionReview/ActivityVersionReviewHelpers'
 
 // Type definitions
 interface Entity {
