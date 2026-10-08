@@ -7,14 +7,27 @@
 
 import { FC, useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import { detailsPanelEntityTypes } from '@shared/api'
-import type { DetailsPanelEntityType } from '@shared/api'
 import {
+  detailsPanelEntityTypes,
+  useGetEntitiesDetailsPanelQuery,
+  useGetEntityQuery,
+  useGetFolderListQuery,
+  useGetLinksOfEntitiesQuery,
+  useGetProductVersionsQuery,
+} from '@shared/api'
+import type { DetailsPanelEntityType } from '@shared/api'
+import { AddNewLinks, useUpdateLinks } from '@shared/components/LinksManager'
+import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog'
+import {
+  ProjectContextProvider,
+  ProjectFoldersContextProvider,
   useDetailsPanelContext,
   useGlobalContext,
   usePowerpack,
+  useProjectContext,
   useRemoteModules,
 } from '@shared/context'
+import type { ProjectContextValue } from '@shared/context'
 import { useGetProductionAddon } from '@shared/hooks/useGetProductionAddon'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { getActiveEntities, shouldBlockShortcuts } from '@shared/util'
@@ -47,7 +60,55 @@ export interface EntityLinksDialogProps {
   onOpenInNodegraph?: (entity: ActiveEntity) => void
   /** guests can only look at links */
   readOnly: boolean
+  /** managers see "Unknown" for links to entities they cannot see, others "Access restricted" */
+  isManager: boolean
+  /** the entities' project, for the dialog and the shared components it renders */
+  project: ProjectContextValue
+  host: EntityLinksHost
 }
+
+/**
+ * Everything of the web UI that reads or writes data. The dialog has no store
+ * of its own: it shares the web UI's cache and live updates, and links changed
+ * there show up in the rest of the web UI right away.
+ */
+export interface EntityLinksHost {
+  useGetLinksOfEntitiesQuery: typeof useGetLinksOfEntitiesQuery
+  useGetEntitiesDetailsPanelQuery: typeof useGetEntitiesDetailsPanelQuery
+  useGetEntityQuery: typeof useGetEntityQuery
+  useGetFolderListQuery: typeof useGetFolderListQuery
+  useGetProductVersionsQuery: typeof useGetProductVersionsQuery
+  useUpdateLinks: typeof useUpdateLinks
+  AddNewLinks: typeof AddNewLinks
+  /** with the project's folders available to it */
+  EntityPickerDialog: typeof EntityPickerDialog
+}
+
+// the slot sits above the providers of the project pages
+const LinksEntityPicker: typeof EntityPickerDialog = (props) => (
+  <ProjectFoldersContextProvider projectName={props.projectName}>
+    <EntityPickerDialog {...props} />
+  </ProjectFoldersContextProvider>
+)
+
+const LINKS_HOST: EntityLinksHost = {
+  useGetLinksOfEntitiesQuery,
+  useGetEntitiesDetailsPanelQuery,
+  useGetEntityQuery,
+  useGetFolderListQuery,
+  useGetProductVersionsQuery,
+  useUpdateLinks,
+  AddNewLinks,
+  EntityPickerDialog: LinksEntityPicker,
+}
+
+type ProjectLinksDialogProps = Omit<EntityLinksDialogProps, 'project'> & {
+  Dialog: FC<EntityLinksDialogProps>
+}
+
+const ProjectLinksDialog: FC<ProjectLinksDialogProps> = ({ Dialog, ...props }) => (
+  <Dialog {...props} project={useProjectContext()} />
+)
 
 // Without the Power Pack, G and L open the Power Pack dialog on the links feature.
 const EntityLinksDialogFallback: FC<EntityLinksDialogProps> = ({ onClose }) => {
@@ -162,15 +223,21 @@ export const EntityLinksSlot: FC = () => {
 
   if (!dialog) return null
 
+  const { projectName } = dialog.entities[0]
   return (
-    <EntityLinksDialog
-      entities={dialog.entities}
-      view={dialog.view}
-      onViewChange={setView}
-      onClose={close}
-      onOpenDetails={openDetails}
-      onOpenInNodegraph={hasNodegraph ? openInNodegraph : undefined}
-      readOnly={!!user?.data?.isGuest}
-    />
+    <ProjectContextProvider key={projectName} projectName={projectName}>
+      <ProjectLinksDialog
+        Dialog={EntityLinksDialog}
+        entities={dialog.entities}
+        view={dialog.view}
+        onViewChange={setView}
+        onClose={close}
+        onOpenDetails={openDetails}
+        onOpenInNodegraph={hasNodegraph ? openInNodegraph : undefined}
+        readOnly={!!user?.data?.isGuest}
+        isManager={!!(user?.data?.isAdmin || user?.data?.isManager)}
+        host={LINKS_HOST}
+      />
+    </ProjectContextProvider>
   )
 }
