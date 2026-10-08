@@ -7,9 +7,13 @@ import styled from "styled-components";
 import { useUploadFileMutation } from "@queries/dataImport";
 import Stats from "../Stats";
 import { HiddenFileInput } from "./UploadStep.styled";
+import { ImportMode, templateForImport } from "../importMode";
 
 type Props = StepProps<ImportData> & {
   importSchema: ImportSchema
+  uploaded: ImportData | null
+  importMode: ImportMode
+  onLoaded?: (data: ImportData) => void
 }
 
 const acceptedTypes = ["text/csv"]
@@ -36,9 +40,20 @@ const FileUploadHint = styled.p`
   text-align: center;
 `
 
-export default function UploadStep({ importContext, onBack, onNext }: Props) {
-  const [data, setData] = useState<ImportData | null>(null)
+export default function UploadStep({
+  importContext,
+  uploaded,
+  importMode,
+  onLoaded,
+  onBack,
+  onNext,
+}: Props) {
+  const [data, setData] = useState<ImportData | null>(uploaded)
   const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    if (data) onLoaded?.(data)
+  }, [data])
 
   const [uploadFile] = useUploadFileMutation()
 
@@ -111,8 +126,8 @@ export default function UploadStep({ importContext, onBack, onNext }: Props) {
             />
             <FileUploadButtons>
               <a
-                href={`/templates/ayon_import_${importContext}_template.csv`}
-                download={`ayon_import_${importContext}_template.csv`}
+                href={`/templates/${templateForImport(importContext, importMode)}`}
+                download={templateForImport(importContext, importMode)}
               >
                 <Button
                   icon="download"

@@ -6,7 +6,8 @@ import {
   ColumnAction, ColumnMappings,
   ErrorHandlingMode,
   ImportSchema, StepProps,
-  TargetColumn
+  TargetColumn,
+  itemsLabelForImportContext,
 } from "../common"
 import {
   MappersTableErrorHandlingCol,
@@ -40,11 +41,21 @@ import { inferErrorHandling, inferMapping } from "./inferMapping"
 import { mappingUpdater } from "./mappingUpdater"
 import { getMapperState } from "./getMapperState"
 import { targetOptionCompareFn } from "./sorting"
+import {
+  getRequiredTargetGroups,
+  getUnmappedRequiredTargetGroups,
+  hasImportModes,
+  ImportMode,
+} from "../importMode"
 
 type Props = StepProps<ColumnMappings> & {
   data: ImportData
   mappings?: ColumnMappings
+  importMode: ImportMode
   importSchema: ImportSchema
+  // an import option that still needs a value, e.g. the name of a new list
+  optionsProblem?: string | null
+  onImportModeChange: (importMode: ImportMode) => void
 }
 
 const actionOptions = [
@@ -75,7 +86,17 @@ const errorHandlingOptions = [
   },
 ]
 
-export default function MapColumnsStep({ data, mappings: defaultMappings, importSchema, onBack, onNext }: Props) {
+export default function MapColumnsStep({
+  data,
+  mappings: defaultMappings,
+  importContext,
+  importMode,
+  importSchema,
+  optionsProblem,
+  onImportModeChange,
+  onBack,
+  onNext,
+}: Props) {
   const [mappings, setMappings] = useState<ColumnMappings | undefined>(defaultMappings)
   const [previewColumn, setPreviewColumn] = useState<string | null>(null)
   const [previewUnique, setPreviewUnique] = useState(true)
@@ -83,6 +104,11 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
   const columnSettings = useMemo(
     () => Object.fromEntries(importSchema.map((col) => [col.key, col])),
     [importSchema]
+  )
+
+  const targetExists = useCallback(
+    (target: string) => Boolean(columnSettings[target]),
+    [columnSettings],
   )
 
   const preset = usePreset()
@@ -98,36 +124,58 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
       }, {})
   }, [mappings])
 
+  const requiredTargets = useMemo(
+    () => new Set(
+      getRequiredTargetGroups(importContext, importMode, importSchema, mappings).flat(),
+    ),
+    [importContext, importMode, importSchema, mappings],
+  )
+
+  // groups of targets of which none is mapped yet, any one target of a group is enough
   const unmappedRequiredTargets = useMemo(
-    () => {
-      return importSchema
-        .filter(({ key, required }) => {
-          if (!required) return false
-          return !Object
-            .values(mappings ?? {})
-            .some(({ targetColumn, action }) => (
-              action === ColumnAction.MAP &&
-              targetColumn === key
-            ))
-        })
-    },
-    [mappings, importSchema, columnForTarget]
+    () => getUnmappedRequiredTargetGroups(
+      importContext,
+      importMode,
+      importSchema,
+      mappings,
+    ),
+    [importContext, importMode, importSchema, mappings],
+  )
+
+  // targets only needed to create entities: Update only would be satisfied by the mapping
+  const requiredOnlyToCreate = useMemo(
+    () => importMode === ImportMode.CREATE_AND_UPDATE
+      && hasImportModes(importContext)
+      && unmappedRequiredTargets.length > 0
+      && getUnmappedRequiredTargetGroups(
+        importContext,
+        ImportMode.UPDATE_ONLY,
+        importSchema,
+        mappings,
+      ).length === 0,
+    [importMode, importContext, unmappedRequiredTargets, importSchema, mappings],
   )
 
   const targetOptions = useMemo(
     () => importSchema
-      .map(({ key, label, required, valueType, enumItems }) => {
+      .map(({ key, label, valueType, enumItems }) => {
         const column = columnForTarget[key]
+        const requiredGroup = unmappedRequiredTargets.find((group) => group.includes(key))
+        const alternatives = requiredGroup
+          ?.filter((target) => target !== key)
+          .map((target) => columnSettings[target]?.label ?? target)
         if (!column) return {
           value: key,
-          label: required ? `${label} (required)` : label,
-          icon: required ? "warning" : undefined,
+          label: requiredGroup
+            ? `${label} (required${alternatives?.length ? `, or ${alternatives.join(" or ")}` : ""})`
+            : label,
+          icon: requiredGroup ? "warning" : undefined,
           color: "var(--md-sys-color-warning)",
           type: valueType,
           isEnum: Boolean(enumItems),
         }
 
-        const state = getMapperState(column, mappings)
+        const state = getMapperState(column, mappings, targetExists)
         return {
           value: key,
           icon: "check",
@@ -139,8 +187,8 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
           isEnum: Boolean(enumItems),
         }
       })
-      .sort(targetOptionCompareFn(columnForTarget, columnSettings)),
-    [columnForTarget, columnSettings, mappings],
+      .sort(targetOptionCompareFn(columnForTarget, requiredTargets)),
+    [columnForTarget, columnSettings, mappings, requiredTargets, unmappedRequiredTargets],
   )
 
   const unresolvedColumns = useMemo(
@@ -149,24 +197,53 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
       if (!mappings) return columnsSet
 
       const resolvedColumnsSet = new Set(data.columns
-        .map((c) => [c, getMapperState(c, mappings)])
+        .map((c) => [c, getMapperState(c, mappings, targetExists)])
         .filter(([, state]) => state !== MappingState.UNRESOLVED)
         .map(([c]) => c),
       )
       return columnsSet.difference(resolvedColumnsSet)
     },
-    [data.columns, mappings],
+    [data.columns, mappings, targetExists],
   )
 
   useEffect(() => {
-    if (!columnSettings || Boolean(mappings)) return
+    if (!columnSettings) return
 
-    // infer mappings based on the schema
-    setMappings(Object.fromEntries(
-      data.columns
-        .map((column) => [column, inferMapping(column, importSchema)])
-        .filter(([, mapping]) => !!mapping)
-    ))
+    if (!mappings) {
+      // infer mappings based on the schema
+      setMappings(Object.fromEntries(
+        data.columns
+          .map((column) => [column, inferMapping(column, importSchema)])
+          .filter(([, mapping]) => !!mapping)
+      ))
+      return
+    }
+
+    // The import options changed the offered targets: infer again the columns the user
+    // didn't map by hand which have no target or one that is no longer offered.
+    setMappings((old) => {
+      if (!old) return old
+      const usedTargets = new Set(
+        Object.values(old)
+          .filter(({ action, targetColumn }) => (
+            action === ColumnAction.MAP && targetColumn && columnSettings[targetColumn]
+          ))
+          .map(({ targetColumn }) => targetColumn),
+      )
+      const updated = { ...old }
+      let changed = false
+      for (const column of data.columns) {
+        const mapping = old[column]
+        if (mapping?.userResolved || mapping?.action === ColumnAction.SKIP) continue
+        if (mapping?.targetColumn && columnSettings[mapping.targetColumn]) continue
+        const inferred = inferMapping(column, importSchema)
+        if (!inferred?.targetColumn || usedTargets.has(inferred.targetColumn)) continue
+        updated[column] = inferred
+        usedTargets.add(inferred.targetColumn)
+        changed = true
+      }
+      return changed ? updated : old
+    })
   }, [importSchema])
 
   // apply the current preset if it changes
@@ -258,7 +335,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
               data.columns.map((column, index) => (
                 <MapperRow
                   key={column}
-                  state={getMapperState(column, mappings)}
+                  state={getMapperState(column, mappings, targetExists)}
                   source={column}
                   action={mappings?.[column]?.action}
                   actions={actionOptions}
@@ -342,8 +419,32 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
                 <strong>{unmappedRequiredTargets.length}</strong> required target{
                   unmappedRequiredTargets.length === 1 ? "" : "s"
                 } must be mapped: <strong>{
-                  unmappedRequiredTargets.map(({ label }) => label).join(", ")
+                  unmappedRequiredTargets
+                    .map((group) => group.map((target) => columnSettings[target]?.label ?? target).join(" or "))
+                    .join(", ")
                 }</strong>
+                {
+                  requiredOnlyToCreate && (
+                    <>
+                      <span>to create new {itemsLabelForImportContext[importContext]}.</span>
+                      <Button
+                        variant="text"
+                        icon="edit"
+                        label="Switch to Update only"
+                        data-tooltip="Only update existing ones, matched without these columns"
+                        onClick={() => onImportModeChange(ImportMode.UPDATE_ONLY)}
+                      />
+                    </>
+                  )
+                }
+              </StepNavStatsRequired>
+            )
+          }
+          {
+            optionsProblem && (
+              <StepNavStatsRequired>
+                <Icon icon="warning" />
+                {optionsProblem}
               </StepNavStatsRequired>
             )
           }
@@ -356,7 +457,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
         <Button
           variant="filled"
           label="Continue"
-          disabled={unresolvedColumns.size > 0 || unmappedRequiredTargets.length > 0}
+          disabled={unresolvedColumns.size > 0 || unmappedRequiredTargets.length > 0 || !!optionsProblem}
           data-tooltip={
             unresolvedColumns.size > 0
               ? `Please resolve the following columns: ${Array.from(unresolvedColumns).join(', ')}`

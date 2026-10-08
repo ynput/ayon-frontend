@@ -1,4 +1,5 @@
 import { EnumItem, ExportFieldsApiArg, ImportableColumn } from "@shared/api/generated/dataImport"
+import type { StatsItem } from "./Stats"
 
 export type ImportContext = ExportFieldsApiArg["entityType"]
 
@@ -11,6 +12,9 @@ export type ExtendedImportableColumn = ImportableColumn & {
 }
 
 export type ImportSchema = ExtendedImportableColumn[]
+
+// An empty comment category means no category, so it doesn't need to be reviewed
+export const COMMENT_CATEGORY = "comment_category"
 
 export enum ImportStep {
   UPLOAD,
@@ -72,8 +76,10 @@ export type ValueMappings = Record<string, Record<string, ValueMapping>>
 
 // Can be applied to two strings to compare them with some tolerance
 // e.g. case-insensitive and ignoring certain characters.
+// The project table names attribute columns attrib_name when copying or exporting.
 export const normaliseForComparison = (name: string) => name
-  .replace(/[_\.\*\s]|^attrib\.|^data\./g, '')
+  .replace(/^(attrib|data)[._]/i, '')
+  .replace(/[_.*\s]/g, '')
   .toLowerCase();
 
 export const itemsLabelForImportContext: Record<ImportContext, string> = {
@@ -103,6 +109,8 @@ export type ImportDataProcessSummary = {
   skipped: number
   failed: number
   failedItems?: Record<string, string>
+  skippedItems?: Record<string, string>
+  comments?: number
   phase: string
 }
 
@@ -116,3 +124,41 @@ export type ImportDataMessage = {
 export const formatFailedItems = (failedItems: Record<string, string>) => Object.entries(failedItems)
   .map(([key, reason]) => `- ${key || '(empty)'}: ${reason}`)
   .join('\n')
+
+type ImportCounts = {
+  created?: number
+  updated?: number
+  skipped?: number
+  failed?: number
+  comments?: number
+  failedItems?: object
+  skippedItems?: object
+}
+
+// Rows with errors are skipped too, `failed` only counts the ones that aborted the import,
+// so errors are counted from the listed problems.
+export const getImportStatsItems = (counts: ImportCounts, done: boolean): StatsItem[] => {
+  const failedItems = (counts.failedItems ?? {}) as Record<string, string>
+  const errors = Math.max(counts.failed ?? 0, Object.keys(failedItems).length)
+  const items: StatsItem[] = [
+    { text: `${done ? "Created" : "Creating"}: ${counts.created ?? 0}`, icon: "add" },
+    { text: `${done ? "Updated" : "Updating"}: ${counts.updated ?? 0}`, icon: "difference" },
+  ]
+  if (counts.comments) {
+    items.push({ text: `Comments: ${counts.comments}`, icon: "chat" })
+  }
+  items.push(
+    {
+      text: `${done ? "Skipped" : "Skipping"}: ${counts.skipped ?? 0}`,
+      icon: "do_not_disturb",
+      tooltip: counts.skippedItems && formatFailedItems(counts.skippedItems as Record<string, string>),
+    },
+    {
+      text: `Errors: ${errors}`,
+      icon: "error",
+      danger: errors > 0,
+      tooltip: errors ? formatFailedItems(failedItems) : undefined,
+    },
+  )
+  return items
+}
