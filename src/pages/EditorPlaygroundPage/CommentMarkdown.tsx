@@ -2,8 +2,6 @@ import clsx from 'clsx'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import emoji from 'remark-emoji'
-import remarkDirective from 'remark-directive'
-import remarkDirectiveRehype from 'remark-directive-rehype'
 import {
   aTag,
   blockquoteTag,
@@ -32,7 +30,7 @@ const CommentMarkdown = ({
   <Styled.Preview className={clsx(className, { spaced })}>
     <CommentBody>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, emoji, remarkDirective, remarkDirectiveRehype]}
+        remarkPlugins={[remarkGfm, emoji]}
         urlTransform={(url) => url}
         components={{
           // @ts-ignore

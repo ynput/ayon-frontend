@@ -168,7 +168,7 @@ Pass `commands: EditorCommand[]` (`types.ts`: `id`, `label`, `icon`, `keywords`,
 
 | Where | How |
 | --- | --- |
-| Feed comments | `ActivityComment.tsx`: `react-markdown` with `remark-gfm`, `remark-emoji` and `remark-directive`. Components come from `ActivityMarkdownComponents.tsx` (`aTag` renders mentions as references, plus `codeTag`, `inputTag` and `blockquoteTag`). `p` goes through `renderMediaParagraph` and `renderYouTubeParagraph`. |
+| Feed comments | `ActivityComment.tsx`: `react-markdown` with `remark-gfm` and `remark-emoji`. Components come from `ActivityMarkdownComponents.tsx` (`aTag` renders mentions as references, plus `codeTag`, `inputTag` and `blockquoteTag`). `p` goes through `renderMediaParagraph` and `renderYouTubeParagraph`. |
 | Table cells | `TextWidget.tsx`: `react-markdown`, with `aTag`-like mention rendering through `ActivityReference`. |
 | Feed field changes | `ActivityFieldChange.tsx` calls `markdownToPlainText` for `description` and markdown widgets. Mentions and links show their label, and nothing is linked. |
 
