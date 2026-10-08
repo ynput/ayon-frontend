@@ -13,6 +13,7 @@ import {
   getLinkEntityIdsByColumnId,
   parseCellId,
 } from '../../utils/cellUtils'
+import { getFolderColumnValue } from '../../utils/folderColumn'
 
 // Types
 import { TableRow } from '../../types/table'
@@ -216,7 +217,14 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               // folder is an object on some entities (product/task) or nested under
               // product (version) - copy the display name the cell shows,
               // falling back to the last parent (parent folder name on tasks/folders)
-              if (colId === 'folder_entity' && typeof foundValue !== 'string') {
+              if (
+                colId === 'folder_entity' &&
+                !displayRow?.parents?.folder &&
+                displayRow?.primary.entityType === 'folder'
+              ) {
+                // folder rows without a parent on the row show themselves
+                foundValue = getFolderColumnValue(displayRow) || ''
+              } else if (colId === 'folder_entity' && typeof foundValue !== 'string') {
                 const folder = foundValue || (entity as any).product?.folder
                 const parents = 'parents' in entity ? entity.parents : undefined
                 foundValue = folder?.label || folder?.name || parents?.[parents.length - 1] || ''
