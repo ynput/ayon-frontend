@@ -55,6 +55,9 @@ export const SLICER_PAGES_CONFIG: SlicerConfig = {
       { value: 'entityList' },
     ],
   },
+  addon: {
+    fields: [{ value: 'hierarchy' }],
+  },
 }
 
 export type OnSliceTypeChange = (sliceType: SliceType, pinCurrent?: boolean) => void

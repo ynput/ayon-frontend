@@ -10,6 +10,8 @@
 //   window.parent.postMessage({ action: 'open_player', target }, origin)
 //     open the player, target is { versionId, productId, taskId, folderId }
 //     with the ids that apply; a version needs its folderId or productId
+//   window.parent.postMessage({ action: 'sidebar', visible }, origin)
+//     show or hide the page's slicer, for views that have no use for it
 //
 // entities are [{ id, entityType }] in the current project.
 
@@ -70,6 +72,7 @@ export const useAddonMessages = (
   const [, setSearchParams] = useSearchParams()
   const [selection, setSelection] = useState<AddonEntity[]>([])
   const [isDetailsOpen, setDetailsOpen] = useState(false)
+  const [isSidebarVisible, setSidebarVisible] = useState(true)
   const isOpenRef = useRef(false)
   isOpenRef.current = isDetailsOpen
 
@@ -119,17 +122,21 @@ export const useAddonMessages = (
           if (payload) dispatch(openViewer(payload))
           break
         }
+        case 'sidebar':
+          setSidebarVisible(data.visible !== false)
+          break
       }
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
   }, [addonRef, projectName, dispatch, closeDetails])
 
-  // a different project or addon starts closed
+  // a different project or addon starts closed, with the sidebar
   useEffect(() => {
     setSelection([])
     setDetailsOpen(false)
+    setSidebarVisible(true)
   }, [projectName, addonName])
 
-  return { selection, isDetailsOpen, closeDetails }
+  return { selection, isDetailsOpen, closeDetails, isSidebarVisible }
 }

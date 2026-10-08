@@ -10,8 +10,19 @@ import useAddonContextResend from '@hooks/useAddonContextResend'
 import LoadingPage from './LoadingPage'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
-import { useSlicerSplitter } from '@shared/containers'
+import { SLICER_PAGES_CONFIG, Slicer, useSlicerContext, useSlicerSplitter } from '@shared/containers'
 import { AddonDetailsPanel, getDetailsSelection, useAddonMessages } from '@containers/AddonPanels'
+
+// the iframe has to stay mounted, so a hidden slicer is hidden, not removed
+const SlicerSplitter = styled(Splitter)`
+  &.slicer-hidden > .p-splitter-panel:first-child,
+  &.slicer-hidden > .p-splitter-gutter {
+    display: none;
+  }
+  &.slicer-hidden > .p-splitter-panel:last-child {
+    flex-basis: 100% !important;
+  }
+`
 
 const AddonWrapper = styled.iframe`
   flex-grow: 1;
@@ -131,7 +142,15 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, addonTitle, ...props }
   const context = useSelector((state) => state.context)
   const projectName = useSelector((state) => state.project.name)
   const userName = useSelector((state) => state.user.name)
-  const focusedFolders = context.focused.folders
+  const hasSlicer = sidebar === 'hierarchy'
+  const { getPanelSelection } = useSlicerContext()
+  const hierarchySelection = getPanelSelection('hierarchy')
+  const slicerFolders = useMemo(
+    () => Object.keys(hierarchySelection).filter((id) => hierarchySelection[id]),
+    [hierarchySelection],
+  )
+  // addons get the folders selected in the slicer as the focused folders
+  const focusedFolders = hasSlicer ? slicerFolders : context.focused.folders
   const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend`
 
   // Modals are used to display unified interface for
@@ -156,12 +175,14 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, addonTitle, ...props }
   // Context contains information on the current project, focused folders, logged in user etc.
 
   const pushContext = () => {
-    const addonWnd = addonRef.current.contentWindow
+    const addonWnd = addonRef.current?.contentWindow
+    if (!addonWnd) return
     addonWnd.postMessage({
       scope: 'project',
       accessToken: localStorage.getItem('accessToken'),
       context: {
         ...context,
+        focused: { ...context.focused, folders: focusedFolders },
         projectName, //deprecated i guess
       },
       userName,
@@ -177,13 +198,15 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, addonTitle, ...props }
       return
     }
     pushContext()
-  }, [focusedFolders])
+  }, [focusedFolders.join(',')])
 
   // Push context to addon whenever explicitly requested
-  useAddonContextResend(pushContext)
+  const pushContextRef = useRef(pushContext)
+  pushContextRef.current = pushContext
+  useAddonContextResend(() => pushContextRef.current())
 
-  // The addon can open the details panel and the player (see useAddonMessages)
-  const { selection, isDetailsOpen, closeDetails } = useAddonMessages(
+  // The addon can open the details panel and the player, and hide the slicer (see useAddonMessages)
+  const { selection, isDetailsOpen, closeDetails, isSidebarVisible } = useAddonMessages(
     addonRef,
     projectName,
     addonName,
@@ -207,7 +230,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, addonTitle, ...props }
 
   const onAddonLoad = () => {
     setLoading(false)
-    setTimeout(() => pushContext(), 20)
+    setTimeout(() => pushContextRef.current(), 20)
   }
 
   // Generate title for the project addon
@@ -251,17 +274,20 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, addonTitle, ...props }
       <DocumentTitle title={pageTitle} />
       {/* Each addon may have a sidebar component that is rendered on the left side of the screen.
           Sidebars are built-in and whether they are displayed or not is controlled by the addon */}
-      {sidebar === 'hierarchy' ? (
-        <Splitter
+      {hasSlicer ? (
+        <SlicerSplitter
           layout="horizontal"
           style={{ width: '100%', height: '100%' }}
           onResizeEnd={handleSlicerResizeEnd}
+          className={isSidebarVisible ? undefined : 'slicer-hidden'}
         >
           <SplitterPanel size={slicerSize[0]} style={{ overflow: 'hidden' }}>
-            <Hierarchy style={{ width: '100%', height: '100%' }} />
+            <Section wrap>
+              <Slicer sliceFields={SLICER_PAGES_CONFIG.addon.fields} entityTypes={['folder']} />
+            </Section>
           </SplitterPanel>
           <SplitterPanel size={slicerSize[1]}>{content}</SplitterPanel>
-        </Splitter>
+        </SlicerSplitter>
       ) : (
         content
       )}
