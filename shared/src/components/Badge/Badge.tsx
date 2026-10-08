@@ -2,15 +2,6 @@ import styled from 'styled-components'
 import { CSSProperties } from 'react'
 import { getTextColor } from '@ynput/ayon-react-components'
 
-export const BadgeWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--base-gap-small);
-  padding: 0 4px;
-  margin-left: 12px;
-`
-
 const BaseBadge = styled.span`
   overflow: hidden;
   white-space: nowrap;

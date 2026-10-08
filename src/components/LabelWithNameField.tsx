@@ -1,7 +1,8 @@
 import { Icon, InputText } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
-import { KeyboardEvent, useEffect, useRef, useState } from 'react'
+import { KeyboardEvent, useEffect, useId, useRef, useState } from 'react'
 import styled from 'styled-components'
+import { ErrorText } from './LabelWithNameField.styled'
 
 export interface LabelWithNameFieldProps {
   labelValue: string
@@ -51,6 +52,7 @@ export const LabelWithNameField = ({
   variant = 'stacked',
 }: LabelWithNameFieldProps) => {
   const generatedName = getGeneratedName(labelValue)
+  const fieldId = useId()
   const [isEditingName, setIsEditingName] = useState(false)
   const [draftName, setDraftName] = useState(nameValue)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
@@ -124,10 +126,11 @@ export const LabelWithNameField = ({
   return (
     <InputsContainer className={clsx({ inline: variant === 'inline' })}>
       <LabelRow className="label-row">
-        <Label>{labelLabel}</Label>
+        <Label htmlFor={`${fieldId}-label`}>{labelLabel}</Label>
       </LabelRow>
       <div className="field-group">
         <InputText
+          id={`${fieldId}-label`}
           value={labelValue}
           onChange={(e) => onLabelChange(e.target.value)}
           onBlur={() => onLabelCommit?.(labelValue)}
@@ -144,12 +147,13 @@ export const LabelWithNameField = ({
         {labelError && <ErrorText>{labelError}</ErrorText>}
 
         <NameRow>
-          <Label>{nameLabel}</Label>
+          <Label htmlFor={`${fieldId}-name`}>{nameLabel}</Label>
           {nameInfo ? (
             <InfoIcon icon="info" data-tooltip={nameInfo} data-tooltip-delay={0} />
           ) : null}
           {isEditingName ? (
             <NameInput
+              id={`${fieldId}-name`}
               ref={nameInputRef}
               value={draftName}
               onChange={(event) => {
@@ -318,9 +322,4 @@ const NameInput = styled(InputText)`
       outline: 1px solid var(--md-sys-color-primary);
     }
   }
-`
-
-export const ErrorText = styled.div`
-  font-size: 12px;
-  color: var(--md-sys-color-error);
 `

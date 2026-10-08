@@ -7,18 +7,19 @@ import { CollapsedWidget } from './CollapsedWidget'
 import { DateWidget, DateWidgetProps } from './DateWidget'
 import { EnumWidget, EnumWidgetProps } from './EnumWidget'
 import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
-import { isLinkEditable, LinksWidget, LinkWidgetData } from './LinksWidget'
+import { LinksWidget, LinkWidgetData } from './LinksWidget'
+import { isLinkEditable } from './LinksWidgetHelpers'
 import { SubtasksWidget, SubtasksWidgetData } from './SubtasksWidget'
 import { CommentsWidget } from './CommentsWidget'
 
 // Contexts
-import { useCellEditing } from '../context/CellEditingContext'
+import { useCellEditing } from '../context/cell-editing'
 
 // Utils
 import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
-import { useSelectionCellsContext } from '../context/SelectionCellsContext'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useSelectionCellsContext } from '../context/selection-cells'
+import { useProjectContext } from '@shared/context'
 import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
 import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'

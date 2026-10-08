@@ -9,10 +9,12 @@ import { FC, useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { detailsPanelEntityTypes } from '@shared/api'
 import type { DetailsPanelEntityType } from '@shared/api'
-import { usePowerpack } from '@shared/context/PowerpackContext'
-import { useRemoteModules } from '@shared/context/RemoteModulesContext'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
-import { useGlobalContext } from '@shared/context/GlobalContext'
+import {
+  useDetailsPanelContext,
+  useGlobalContext,
+  usePowerpack,
+  useRemoteModules,
+} from '@shared/context'
 import { useGetProductionAddon } from '@shared/hooks/useGetProductionAddon'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { getActiveEntities, shouldBlockShortcuts } from '@shared/util'

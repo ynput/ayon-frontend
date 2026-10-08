@@ -1,11 +1,11 @@
 import { ProjectTreeTable } from '@shared/containers'
 import { FC } from 'react'
-import { useVersionsDataContext } from '../../context/VPDataContext'
-import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
+import { useVersionsDataContext } from '../../context/vp-data'
+import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
 import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
 import { AddColumnButton } from '@shared/components'
 import styled from 'styled-components'
-import { VP_EXTRA_COLUMNS, VP_PARENT_COLUMNS } from '../VPTableSettings/VPTableSettings'
+import { VP_EXTRA_COLUMNS, VP_PARENT_COLUMNS } from '../VPTableSettings/VPTableSettingsHelpers'
 
 const VP_EXCLUDED_COLUMNS = ['assignees']
 

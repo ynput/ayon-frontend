@@ -62,6 +62,15 @@ export const getSelectableEnumItems = <T extends HideableEnumItem>(
   return items.filter((item) => !item.hidden || selected.has(String(item.value)))
 }
 
+// Same rule for user lists keyed by name (inactive or unlicensed users are hidden)
+export const getSelectableAssignees = <T extends { name: string; hidden?: boolean }>(
+  users: T[],
+  assigned: string[] = [],
+): T[] => {
+  if (!users.some((user) => user.hidden)) return users
+  return users.filter((user) => !user.hidden || assigned.includes(user.name))
+}
+
 // Params the app fills in from where the attribute is used, never from the saved resolver settings
 export const ENUM_CONTEXT_PARAMS = ['project_name', 'user'] as const
 

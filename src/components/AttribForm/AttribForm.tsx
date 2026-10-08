@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import * as Styled from './AttribForm.styled'
 import AttribFormType from './AttribFormType'
 
-type FieldType = 'string' | 'number' | 'boolean' | 'array' | string
+export type FieldType = 'string' | 'number' | 'boolean' | 'array' | string
 
 interface Field {
   type: FieldType
@@ -27,22 +27,6 @@ interface AttribFormProps {
   fields: Fields
   topLevelFields?: Fields
   isLoading: boolean
-}
-
-export const getDefaultFromType = (type: FieldType): any => {
-  switch (type) {
-    case 'string':
-      return ''
-    case 'number':
-      return 0
-    case 'boolean':
-      return false
-    case 'array':
-      return []
-
-    default:
-      return undefined
-  }
 }
 
 const AttribForm: React.FC<AttribFormProps> = ({

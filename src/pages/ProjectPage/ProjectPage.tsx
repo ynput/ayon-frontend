@@ -13,7 +13,7 @@ import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 
-import { selectProject } from '@state/project'
+import { selectProject, setOpenProject } from '@state/project'
 import { useGetProjectAddonsQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import { TabPanel, TabView } from 'primereact/tabview'
@@ -453,15 +453,21 @@ const ProjectPageInner = () => {
     return () => clearTimeout(timeoutId)
   }, [loadingAll, page.component, navigate, projectName])
 
+  useEffect(() => {
+    if (loadingAll || !error) return
+    const timeoutId = setTimeout(() => {
+      navigate('/dashboard/tasks', { replace: true })
+    }, 1500)
+
+    return () => clearTimeout(timeoutId)
+  }, [loadingAll, error, navigate])
+
   if (loadingAll) {
     return <LoadingPage />
   }
 
   // error
   if (error) {
-    setTimeout(() => {
-      navigate('/')
-    }, 1500)
     return <div className="page">Project Not Found, Redirecting...</div>
   }
 
@@ -512,6 +518,14 @@ const ProjectPageInner = () => {
 
 const ProjectPage = () => {
   const { projectName } = useParams()
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    dispatch(setOpenProject(projectName))
+    return () => {
+      dispatch(setOpenProject(null))
+    }
+  }, [projectName, dispatch])
 
   // umm... projectName is required
   if (!projectName) return <Navigate to="/" />

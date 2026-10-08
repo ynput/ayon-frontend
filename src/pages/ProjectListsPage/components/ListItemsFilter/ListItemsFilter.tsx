@@ -2,7 +2,7 @@ import { FC } from 'react'
 import SearchFilterWrapper from '@pages/ProjectOverviewPage/containers/SearchFilterWrapper'
 import { ListEntityType } from '../NewListDialog/NewListDialog'
 import { buildScopes, FilterFieldType } from '@shared/components'
-import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
+import { useListItemsDataContext } from '@pages/ProjectListsPage/context/list-items-data'
 import { useProjectContext } from '@shared/context'
 
 // list items endpoint whitelists entity/parent columns; versions have no name

@@ -1,5 +1,5 @@
 import React, { FC } from 'react'
-import { usePiPWindow } from './PiPProvider'
+import { usePiPWindow } from './PiPContextInstance'
 import PiPWindow from './PiPWindow'
 import { Dialog } from 'primereact/dialog'
 import { Button } from '@ynput/ayon-react-components'

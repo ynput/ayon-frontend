@@ -1444,7 +1444,11 @@ const buildTreeTableColumns = ({
               options={attrib.data.enum || []}
               isLoadingOptions={!!attrib.enumIsLoading}
               tooltip={attrib.enumError}
-              pt={{ enum: { error: toDropdownErrorText(attrib.enumError) } }}
+              pt={{
+                enum: { error: toDropdownErrorText(attrib.enumError) },
+                // markdown attributes can mention the users, tasks and versions of the entity
+                text: { mentionEntity: { entityId: id, entityType: type } },
+              }}
               midnightExclusiveFields={row.original.midnightExclusiveFields}
               isCollapsed={!!row.original.childOnlyMatch}
               isInherited={isInherited}

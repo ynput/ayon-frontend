@@ -15,6 +15,7 @@ const EventsPage = lazy(() => import('@pages/EventsPage'))
 const ServicesPage = lazy(() => import('@pages/ServicesPage'))
 const UserDashboardPage = lazy(() => import('@pages/UserDashboardPage'))
 const ErrorPage = lazy(() => import('@pages/ErrorPage'))
+const EditorPlaygroundPage = lazy(() => import('@pages/EditorPlaygroundPage'))
 
 import { useLoadRemotePages } from '../remote/useLoadRemotePages'
 
@@ -150,7 +151,16 @@ const AppRoutes: FC<AppRoutesProps> = () => {
           </ProtectedRoute>
         }
       />
-      <Route element={<ErrorPage code="404" />} />
+      {/* dev page for the lexical markdown editor */}
+      <Route
+        path="/dev/editor"
+        element={
+          <ProtectedRoute isAllowed={import.meta.env.DEV || level >= 700} redirectPath="/">
+            <EditorPlaygroundPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<ErrorPage code="404" />} />
     </Routes>
   )
 }

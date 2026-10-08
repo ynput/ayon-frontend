@@ -1,9 +1,12 @@
 import { FC, useState, ReactNode } from 'react'
 
-import { FeedProvider } from '@shared/containers/Feed/context/FeedContext'
-import type { EditingState, FeedContextProps } from '@shared/containers/Feed/context/FeedContext'
+import {
+  FeedProvider,
+  type EditingState,
+  type FeedContextProps,
+} from '@shared/containers/Feed/context/feed'
 import type { Status } from '@shared/api'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext } from '@shared/context'
 
 interface FeedContextWrapperProps {
   children: ReactNode

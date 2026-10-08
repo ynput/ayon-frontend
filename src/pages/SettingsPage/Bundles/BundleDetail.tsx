@@ -10,7 +10,7 @@ import useAddonSelection from './useAddonSelection'
 import { useUpdateBundleMutation, useListBundlesQuery } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import type { Addon } from './types'
-import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/AddonSearchContext.tsx'
+import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/context/addon-search'
 import { AddonSearchInput } from '@pages/SettingsPage/Bundles/AddonSearchInput.tsx'
 
 type Installer = { version: string; platforms?: string[] }
