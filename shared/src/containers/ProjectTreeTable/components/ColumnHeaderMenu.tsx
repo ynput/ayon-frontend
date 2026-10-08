@@ -3,6 +3,7 @@ import type { TableRow } from '../types/table'
 import { useMenuContext } from '@shared/context'
 import { useColumnSettingsContext } from '../context'
 import { useColumnGroupBy } from '../hooks'
+import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 import { ColumnHeaderMenuUI, type ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 
 interface ColumnHeaderMenuProps {
@@ -31,7 +32,7 @@ export const ColumnHeaderMenu = ({
   const { column } = header
   const columnId = String(column.id)
   const { toggleMenuOpen } = useMenuContext()
-  const { updateGroupBy, groupBy } = useColumnSettingsContext()
+  const { updateGroupBy, groupBy, sorting } = useColumnSettingsContext()
 
   const { canGroupThisColumn, groupLabel, groupBySelectedColumn, targetGroupById } =
     useColumnGroupBy(columnId)
@@ -49,6 +50,8 @@ export const ColumnHeaderMenu = ({
   const isPinned = column.getIsPinned()
   const isVisible = column.getIsVisible()
   const isSorted = column.getIsSorted()
+  // keep the other sort keys when this column is one of several
+  const isMultiSorted = !!isSorted && sorting.length > 1
 
   const menuItems: ColumnMenuItemType[] = []
 
@@ -85,7 +88,7 @@ export const ColumnHeaderMenu = ({
       className: 'sort-asc-icon',
       selected: isSorted === 'asc',
       onClick: () => {
-        column.toggleSorting(false)
+        column.toggleSorting(false, isMultiSorted)
         handleMenuToggle(false)
       },
     })
@@ -97,10 +100,23 @@ export const ColumnHeaderMenu = ({
       className: 'sort-desc-icon',
       selected: isSorted === 'desc',
       onClick: () => {
-        column.toggleSorting(true)
+        column.toggleSorting(true, isMultiSorted)
         handleMenuToggle(false)
       },
     })
+
+    // another column is sorted already, offer this one as the next sort key
+    if (!isSorted && sorting.length > 0 && sorting.length < MAX_SORT_KEYS) {
+      menuItems.push({
+        id: 'sort-add',
+        label: 'Add to sort',
+        icon: 'add',
+        onClick: () => {
+          column.toggleSorting(false, true)
+          handleMenuToggle(false)
+        },
+      })
+    }
   }
 
   if (canSort && canHide) {

@@ -13,6 +13,7 @@ import type {
 } from '@shared/api'
 import { useGroupedPagination } from '@shared/hooks/useGroupedPagination'
 import { getGroupByDataType } from '@shared/util'
+import { buildSortArgs } from '@shared/util/sortingHelpers'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
@@ -402,8 +403,12 @@ export const useFetchOverviewData = ({
   }, [sorting, tasksListCursor])
 
   // Create sort params for infinite query
-  const singleSort = { ...sorting[0] }
-  const taskSortId = getColumnSortKey(singleSort?.id, showHierarchy, 'task')
+  const { sortBy: tasksSortBy, desc: tasksSortDesc } = buildSortArgs(
+    sorting.map((sort) => ({
+      key: getColumnSortKey(sort.id, showHierarchy, 'task')?.replace('_', '.'),
+      desc: sort.desc,
+    })),
+  )
   const tasksFolderIdsParams = selectedFolders.length
     ? Array.from(
         new Set([...foldersMap.keys(), ...(excludeSelectedFolders ? selectedFolders : [])]),
@@ -439,8 +444,8 @@ export const useFetchOverviewData = ({
     search: taskFilters.search,
     folderIds: getTasksListFolderIds(),
     taskIds: taskIds?.length ? taskIds : undefined,
-    sortBy: taskSortId ? taskSortId.replace('_', '.') : undefined,
-    desc: !!singleSort?.desc,
+    sortBy: tasksSortBy,
+    desc: tasksSortDesc,
     showComments,
     includeFolderChildren: !getTasksDirectlyUnderFolder,
   }
@@ -463,7 +468,7 @@ export const useFetchOverviewData = ({
       (((showHierarchy && !getTasksDirectlyUnderFolder) || isFlatFolderView) && !taskIds?.length),
     initialPageParam: {
       cursor: '',
-      desc: !!singleSort?.desc,
+      desc: tasksSortDesc,
     },
   })
 
@@ -516,8 +521,8 @@ export const useFetchOverviewData = ({
   const groupTasksArgs: GetGroupedTasksListArgs = {
     projectName,
     groups: groupQueries,
-    sortBy: taskSortId ? taskSortId.replace('_', '.') : undefined,
-    desc: !!singleSort?.desc,
+    sortBy: tasksSortBy,
+    desc: tasksSortDesc,
     search: taskFilters.search,
     folderFilter: folderFilters.filterString,
     folderIds: tasksFolderIdsParams,

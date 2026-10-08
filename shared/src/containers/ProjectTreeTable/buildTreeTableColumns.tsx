@@ -255,10 +255,19 @@ const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
 
 const naturalSortCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
 
+// With several sort keys a tie has to fall through to the next key, so only the
+// last key breaks ties by name. A sorting function isn't given the table, it is
+// reached through a cell and only when there is a tie.
+const isLastSortKey = (row: Row<any>, columnId: string) => {
+  const sorting = row.getAllCells()[0]?.getContext().table.getState().sorting
+  return !sorting?.length || sorting[sorting.length - 1].id === columnId
+}
+
 const withNameTieBreaker = (sortFn: SortingFn<any>): SortingFn<any> => {
   return (rowA, rowB, ...args) => {
     const result = sortFn(rowA, rowB, ...args)
     if (result !== 0) return result
+    if (!isLastSortKey(rowA, args[0])) return 0
     const labelA = rowA.original.primary.label || rowA.original.primary.name || ''
     const labelB = rowB.original.primary.label || rowB.original.primary.name || ''
     return naturalSortCollator.compare(labelA, labelB)

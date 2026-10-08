@@ -119,6 +119,7 @@ import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { ColumnsConfig, getColumnConfig } from './types/columnConfig'
 import { getRequestErrorString } from '@shared/util'
+import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'> & { id?: string },
@@ -546,6 +547,7 @@ export const ProjectTreeTable = ({
     enableSorting,
     getSortedRowModel: getSortedRowModel(),
     sortDescFirst: false,
+    maxMultiSortColCount: MAX_SORT_KEYS,
     manualSorting: !clientSorting,
     onSortingChange: sortingOnChange,
     columnResizeMode: 'onChange',
@@ -1171,8 +1173,18 @@ const TableHeadCell = ({
 
   // toggle sort via the same direct updateSorting call the Customize panel uses;
   // routing through TanStack's onSortingChange did not apply under manualSorting.
-  const handleToggleSort = () => {
+  // a plain click sorts by this column only, shift+click keeps the other sort keys
+  const handleToggleSort = (event: React.MouseEvent) => {
     const current = sortingState?.find((s) => s.id === column.id)
+    if (event.shiftKey && sortingState?.length) {
+      const next = !current
+        ? [...sortingState, { id: column.id, desc: false }]
+        : !current.desc
+        ? sortingState.map((s) => (s.id === column.id ? { ...s, desc: true } : s))
+        : sortingState.filter((s) => s.id !== column.id)
+      if (next.length <= MAX_SORT_KEYS) updateSorting(next)
+      return
+    }
     const next = !current
       ? [{ id: column.id, desc: false }]
       : !current.desc
@@ -1180,6 +1192,9 @@ const TableHeadCell = ({
       : []
     updateSorting(next)
   }
+
+  // with several sort keys, show where this column comes in the order
+  const sortIndex = (sortingState?.length ?? 0) > 1 ? column.getSortIndex() : -1
 
   // Check if this column is pinned
   const isThisColumnPinned = columnPinning.left?.includes(column.id) || false
@@ -1267,6 +1282,9 @@ const TableHeadCell = ({
                 onClick={handleToggleSort}
                 selected={!!column.getIsSorted()}
               />
+            )}
+            {canSort && sortIndex > -1 && (
+              <Styled.SortIndex className="sort-index">{sortIndex + 1}</Styled.SortIndex>
             )}
 
             {/* COLUMN PINNING - only show on pinned columns (exclude selection column) */}
