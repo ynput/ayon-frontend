@@ -5,6 +5,7 @@ import { Section } from '@ynput/ayon-react-components'
 
 // Components
 import { useProjectTableContext, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
+import type { MainBreakdownFields } from '@shared/containers/ProjectTreeTable'
 import { useNewEntityContext } from '@shared/containers/NewEntity'
 import { useProjectContext } from '@shared/context'
 import { mergeFieldStats, totalRowsFromStats } from '@shared/api'
@@ -12,6 +13,8 @@ import type { FieldStats } from '@shared/api'
 import { useProjectOverviewContext } from '../context/project-overview'
 import { AddColumnButton } from '@shared/components'
 import styled from 'styled-components'
+
+const MAIN_BREAKDOWN_FIELDS: MainBreakdownFields = { primary: 'folderType', secondary: 'taskType' }
 
 const TableWrapper = styled.div`
   position: relative;
@@ -90,7 +93,7 @@ const ProjectOverviewTable = ({}: Props) => {
           groupFieldStats={folderStats}
           fieldStatsLoading={folderStatsLoading || taskStatsLoading}
           fieldStatsError={folderStatsError || taskStatsError}
-          mainBreakdownFields={{ primary: 'folderType', secondary: 'taskType' }}
+          mainBreakdownFields={MAIN_BREAKDOWN_FIELDS}
           onVisibleRowsChange={setVisibleEntityIds}
         />
         <AddColumnButton />

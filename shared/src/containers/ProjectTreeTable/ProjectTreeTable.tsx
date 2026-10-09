@@ -252,6 +252,8 @@ export const ProjectTreeTable = ({
     updateColumnSummaryScope,
     columnSummaryFormats,
     updateColumnSummaryFormat,
+    columnSummaryHidden,
+    updateColumnSummaryHidden,
   } = useColumnSettingsContext()
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
 
@@ -841,6 +843,8 @@ export const ProjectTreeTable = ({
                     onFormatChange={(format) => updateColumnSummaryFormat(columnId, format)}
                     scope={columnSummaryScopes[columnId]}
                     onScopeChange={(scope) => updateColumnSummaryScope(columnId, scope)}
+                    hiddenItems={columnSummaryHidden[columnId]}
+                    onHiddenItemsChange={(hidden) => updateColumnSummaryHidden(columnId, hidden)}
                     mainCountLabels={mainCountLabels}
                     fieldOptions={options}
                     parentScopeApplicable={parentScopeApplicable}
