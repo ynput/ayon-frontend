@@ -19,6 +19,15 @@ export class ListsPage {
     return this.page.getByRole('row').filter({ hasText: label }).first()
   }
 
+  listRows(text: string) {
+    return this.page.getByRole('row').filter({ hasText: text })
+  }
+
+  async sortLists(option: string) {
+    await this.headerMenu('Sort lists')
+    await menuItem(this.page, option).click()
+  }
+
   async createList({ label, entityType }: { label: string; entityType?: string }) {
     await this.addListButton.click()
     await this.submitNewListDialog({ label, entityType })

@@ -203,7 +203,6 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
                     allAttrib: '',
                     attrib: {},
                     createdAt: new Date().toISOString(),
-                    updatedAt: '',
                     active: true,
                     access: '',
                     accessLevel: 30,
@@ -214,7 +213,8 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
                     entityListType: summary.entity_list_type,
                     count: summary.count,
                     entityListFolderId: summary.entity_list_folder_id ?? null,
-                    updatedBy: message.createdAt, // estimate the event creation time is about the same as list updated at
+                    // the event's own timestamps have no timezone, so the client clock is the closer estimate
+                    updatedAt: new Date().toISOString(),
                     owner: list?.owner || '', // mainly to shut up typescript
                   }
                 }

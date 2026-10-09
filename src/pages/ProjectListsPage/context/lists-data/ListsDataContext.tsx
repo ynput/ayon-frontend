@@ -4,7 +4,7 @@ import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
 import { useQueryArgumentChangeLoading, useUserProjectConfig, useLocalStorage } from '@shared/hooks'
 import useGetListsData from '../../hooks/useGetListsData'
-import { buildListsTableData } from '../../util'
+import { buildListsTableData, ListsSort, resolveListsSort } from '../../util'
 import { usePowerpack, useProjectContext } from '@shared/context'
 import { ListsDataContext } from './ListsDataContextInstance'
 
@@ -24,6 +24,9 @@ export interface ListsDataContextValue {
   // filters
   listsFilters: Filter[]
   setListsFilters: (filters: Filter[]) => Promise<void>
+  // sorting
+  listsSort: ListsSort
+  setListsSort: (sort: ListsSort) => Promise<void>
   // show archived
   showArchived: boolean
   setShowArchived: (show: boolean) => void
@@ -92,6 +95,13 @@ export const ListsDataProvider = ({
     await updatePageConfig({ listsFilters: filters })
   }
 
+  // unlike the filters, the sort order is a display preference that also applies to reviews and pickers
+  const { by: sortBy, desc: sortDesc } = resolveListsSort(pageConfig?.listsSort)
+  const listsSort = useMemo(() => ({ by: sortBy, desc: sortDesc }), [sortBy, sortDesc])
+  const setListsSort = async (sort: ListsSort) => {
+    await updatePageConfig({ listsSort: sort })
+  }
+
   const [showArchived, setShowArchived] = useLocalStorage<boolean>('lists-show-archived', false)
 
   const {
@@ -142,6 +152,7 @@ export const ListsDataProvider = ({
         showArchived,
         listDisabled,
         getDisabledFolders ? (folder) => disabledFolderMessages.get(folder.id) : undefined,
+        listsSort,
       ),
     [
       listsData,
@@ -151,6 +162,7 @@ export const ListsDataProvider = ({
       listDisabled,
       getDisabledFolders,
       disabledFolderMessages,
+      listsSort,
     ],
   )
 
@@ -175,6 +187,9 @@ export const ListsDataProvider = ({
         // filters
         listsFilters,
         setListsFilters,
+        // sorting
+        listsSort,
+        setListsSort,
         // show archived
         showArchived,
         setShowArchived,

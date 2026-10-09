@@ -1,6 +1,7 @@
 import { expect, test } from '../fixtures'
 import { ListsPage } from '../pages/ListsPage'
 import { AyonApi } from '../support/api'
+import { adminCredentials } from '../support/env'
 
 const COLUMNS = ['name', 'attrib_fps', 'attrib_frameStart'].map((name) => ({ name, visible: true }))
 
@@ -41,4 +42,40 @@ test.describe('list items multi-key sorting', () => {
       await expect(lists.itemNameCells()).toHaveText(items(order))
     })
   }
+})
+
+test.describe('lists sorting', () => {
+  const labels = (order: string[]) => order.map((label) => new RegExp(`srt ${label}`))
+
+  test('lists are sorted by name or by date, and the choice is remembered', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    for (const label of ['banana', 'Cherry', 'apple']) {
+      await api.createEntityList(projectName, { label: `srt ${label}` })
+    }
+    const lists = new ListsPage(page)
+    await lists.goto(projectName)
+    const rows = lists.listRows('srt ')
+    const savedSort = async () =>
+      (await api.getUser(adminCredentials().name)).data?.frontendPreferences?.lists?.[projectName]
+        ?.listsSort
+
+    await expect(rows).toHaveText(labels(['apple', 'Cherry', 'banana']))
+
+    await lists.sortLists('Name')
+    await expect(rows).toHaveText(labels(['apple', 'banana', 'Cherry']))
+
+    await lists.sortLists('Descending')
+    await expect(rows).toHaveText(labels(['Cherry', 'banana', 'apple']))
+    await expect.poll(savedSort).toEqual({ by: 'label', desc: true })
+
+    await page.reload()
+    await expect(rows).toHaveText(labels(['Cherry', 'banana', 'apple']))
+
+    await lists.sortLists('Created')
+    await expect(rows).toHaveText(labels(['apple', 'Cherry', 'banana']))
+    await expect.poll(savedSort).toEqual({ by: 'createdAt', desc: true })
+  })
 })
