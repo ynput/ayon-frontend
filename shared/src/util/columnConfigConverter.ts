@@ -97,8 +97,8 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
       columnSummaryFormats[name] = summaryFormat
     }
 
-    // Column summary breakdown items hidden by the user
-    if (summaryHidden?.length) {
+    // untyped settings dict: a stray string would otherwise read as a list of characters
+    if (Array.isArray(summaryHidden) && summaryHidden.length) {
       columnSummaryHidden[name] = summaryHidden
     }
   })
@@ -223,7 +223,6 @@ function createColumnItem(
     column.summaryFormat = columnSummaryFormats[columnName]
   }
 
-  // Set hidden summary breakdown items if any are hidden
   if (columnSummaryHidden[columnName]?.length) {
     column.summaryHidden = columnSummaryHidden[columnName]
   }

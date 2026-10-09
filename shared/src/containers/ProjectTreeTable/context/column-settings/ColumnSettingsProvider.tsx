@@ -35,12 +35,19 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const rowHeightTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const columnOrderTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const summaryHiddenTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  // quick toggles build on the pending value, not on props that haven't re-rendered yet
+  const pendingSummaryHiddenRef = React.useRef<Record<string, string[]> | null>(null)
   const prevRowHeightRef = React.useRef<number | undefined>(undefined)
   const lockedAspectRatioRef = React.useRef<number | null>(null)
   // Internal state for immediate updates (similar to column sizing)
   const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
   const [internalRowHeight, setInternalRowHeight] = useState<number | null>(null)
   const [internalColumnOrder, setInternalColumnOrder] = useState<ColumnOrderState | null>(null)
+  const [internalSummaryHidden, setInternalSummaryHidden] = useState<Record<
+    string,
+    string[]
+  > | null>(null)
 
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
@@ -325,13 +332,24 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   }
 
   const updateColumnSummaryHidden = (columnId: string, hidden: string[]) => {
-    const columnSummaryHidden = { ...columnSummaryHiddenInit, [columnId]: hidden }
+    const columnSummaryHidden = {
+      ...(pendingSummaryHiddenRef.current ?? columnSummaryHiddenInit),
+      [columnId]: hidden,
+    }
     // an empty list drops the key so untouched columns persist nothing
     if (!hidden.length) delete columnSummaryHidden[columnId]
-    onChangeWithColumns({
-      ...columnsConfig,
-      columnSummaryHidden,
-    })
+    pendingSummaryHiddenRef.current = columnSummaryHidden
+    setInternalSummaryHidden(columnSummaryHidden)
+
+    if (summaryHiddenTimeoutRef.current) clearTimeout(summaryHiddenTimeoutRef.current)
+    summaryHiddenTimeoutRef.current = setTimeout(() => {
+      onChangeWithColumns({
+        ...columnsConfig,
+        columnSummaryHidden,
+      })
+      pendingSummaryHiddenRef.current = null
+      setInternalSummaryHidden(null)
+    }, 300)
   }
 
   const updateGroupBy = (groupBy: TableGroupBy | undefined) => {
@@ -497,8 +515,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         // column summary display format
         columnSummaryFormats: columnSummaryFormatsInit,
         updateColumnSummaryFormat,
-        // column summary hidden breakdown items
-        columnSummaryHidden: columnSummaryHiddenInit,
+        columnSummaryHidden: internalSummaryHidden ?? columnSummaryHiddenInit,
         updateColumnSummaryHidden,
         // sorting
         sorting,

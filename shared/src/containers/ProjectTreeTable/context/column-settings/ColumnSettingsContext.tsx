@@ -79,7 +79,6 @@ export interface ColumnSettingsContextType {
   columnSummaryFormats: Record<string, SummaryFormat>
   updateColumnSummaryFormat: (columnId: string, format: SummaryFormat) => void
 
-  // Column summary hidden breakdown items (footer)
   columnSummaryHidden: Record<string, string[]>
   updateColumnSummaryHidden: (columnId: string, hidden: string[]) => void
 
