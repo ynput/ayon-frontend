@@ -1,6 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test'
 import { dialog, menuItem, toast } from '../support/ui'
 import { DetailsPanel } from './DetailsPanel'
+import { SearchFilterBar } from './SearchFilterBar'
 
 /**
  * /projects/:project/overview — the folder/task tree table.
@@ -9,8 +10,10 @@ import { DetailsPanel } from './DetailsPanel'
 export class OverviewPage {
   /** the main tree table (the hierarchy slicer on the left is a separate table) */
   readonly table: Locator
+  readonly filters: SearchFilterBar
 
   constructor(readonly page: Page) {
+    this.filters = new SearchFilterBar(page)
     this.table = page
       .getByRole('table')
       .filter({ has: page.getByRole('columnheader', { name: 'Folder / Task' }) })
@@ -346,32 +349,19 @@ export class OverviewPage {
   }
 
   searchFilter() {
-    return this.page.locator('.search-filter')
+    return this.filters.root
   }
 
-  // FLAG: the "Search and filter" dropdown is a plain list without menu roles, so items are found by label
   async addFilter(scope: 'Task' | 'Folder', field: string, value: string) {
-    // the "Search and filter" placeholder is gone once a filter is applied
-    await this.searchFilter().getByRole('textbox').click()
-    for (const label of [scope, field, value]) {
-      await this.searchFilter()
-        .getByRole('listitem')
-        .filter({ has: this.page.getByText(label, { exact: true }) })
-        .first()
-        .click()
-    }
+    await this.filters.add(scope, field, value)
   }
 
-  // FLAG: filter chips have no role or accessible name, so they are found by their CSS class
   filterChip(label: string) {
-    return this.searchFilter()
-      .locator('.search-filter-item')
-      .filter({ hasText: `${label}:` })
+    return this.filters.chip(label)
   }
 
   async removeFilter(label: string) {
-    await this.filterChip(label).getByRole('button', { name: 'close', exact: true }).click()
-    await expect(this.filterChip(label)).toBeHidden()
+    await this.filters.remove(label)
   }
 
   sidebar() {
