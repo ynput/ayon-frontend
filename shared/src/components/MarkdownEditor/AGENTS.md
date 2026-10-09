@@ -157,6 +157,7 @@ Pass `commands: EditorCommand[]` (`types.ts`: `id`, `label`, `icon`, `keywords`,
 - Source links render with the `chat_paste_go` icon and the label "Source". `SourceCommentReference` uses `GetActivitiesById` with the source entity and activity ID; it renders nothing until the backend returns the source activity.
 - Lexical renders links with protocols it doesn't allow (like `source:`) with `href="about:blank"`; `LinkClickPlugin` reads the url from the link node, never from the DOM.
 - Links to other servers stay normal links. `parseActivityLink` is the one place that decides.
+- Any other link starting with `/` is a page on this server. The feed renders it with `RelativeLink`: a plain `<a>` that navigates with the `useNavigate` from the details panel context. Don't use react-router's `<Link>` in the feed: an addon bundles its own react-router with no router above it, so `<Link>` throws there and takes the whole page down.
 
 ### Code blocks
 

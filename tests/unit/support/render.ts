@@ -1,4 +1,4 @@
-import { createElement, FunctionComponent, ReactNode } from 'react'
+import { createElement, FunctionComponent, ReactElement, ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 // Playwright compiles the JSX of the files it loads to its own element objects (for component
@@ -19,6 +19,9 @@ const toReact = (node: any): ReactNode => {
   return createElement(type, { ...props, key: node.key }, ...childNodes)
 }
 
-/** Renders a component from the app to HTML, without a browser. */
-export const renderToHtml = (Component: Function, props: Record<string, unknown> = {}) =>
-  renderToStaticMarkup(createElement(adapt(Component), props))
+/** Renders a component from the app to HTML, without a browser. `wrap` adds providers around it. */
+export const renderToHtml = (
+  Component: Function,
+  props: Record<string, unknown> = {},
+  wrap: (element: ReactElement) => ReactElement = (element) => element,
+) => renderToStaticMarkup(wrap(createElement(adapt(Component), props)))
