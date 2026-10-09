@@ -4,6 +4,7 @@ import ActivityCheckbox from '../ActivityCheckbox/ActivityCheckbox'
 import ActivityReference from '../ActivityReference/ActivityReference'
 import { ACTIVITY_LINK_LABEL, parseActivityLink } from '@shared/components/MarkdownEditor'
 import SourceCommentReference from './SourceCommentReference'
+import RelativeLink from './RelativeLink'
 import { getActivityLink } from '../../helpers/getActivityLink'
 
 export const allowedRefTypes = [
@@ -148,7 +149,7 @@ export const aTag = (
   // if no reference type, return regular link with no href
   if (url || !type || !id) {
     if (type === 'relative' && url) {
-      return <Link to={url}>{children}</Link>
+      return <RelativeLink to={url}>{children}</RelativeLink>
     } else {
       return (
         <a href={url} target="_blank" rel="noreferrer">
@@ -216,7 +217,6 @@ export const inputTag = (
 
 import { BlockCode, InlineCode, QuoteLine } from './ActivityComment.styled'
 import { highlightCode } from '@shared/components/MarkdownEditor/code/prism'
-import { Link } from 'react-router-dom'
 // eslint-disable-next-line
 interface CodeTagProps {
   node: any
