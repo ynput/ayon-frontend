@@ -4251,6 +4251,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "representationFilter",
+                "description": "Filter products by their representations (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "versionFilter",
                 "description": "Filter products by their versions using QueryFilter",
                 "type": {
@@ -7142,6 +7154,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "representationFilter",
+                "description": "Filter versions by their representations using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "productIds",
                 "description": "List of parent products IDs",
                 "type": {
@@ -9778,6 +9802,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "representationFilter",
+                "description": "Filter products by their representations (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "versionFilter",
                 "description": "Filter products by their versions using QueryFilter",
                 "type": {
@@ -10979,6 +11015,18 @@
               {
                 "name": "productFilter",
                 "description": "Filter versions by their product using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "representationFilter",
+                "description": "Filter versions by their representations using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -14778,6 +14826,18 @@
               {
                 "name": "productFilter",
                 "description": "Filter versions by their product using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "representationFilter",
+                "description": "Filter versions by their representations using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",

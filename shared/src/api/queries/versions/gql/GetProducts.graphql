@@ -5,6 +5,7 @@ query GetProducts(
   $versionFilter: String
   $taskFilter: String
   $folderFilter: String
+  $representationFilter: String
   $featuredVersionOrder: [String!]
   $search: String
   $folderIds: [String!]
@@ -22,6 +23,7 @@ query GetProducts(
       versionFilter: $versionFilter
       taskFilter: $taskFilter
       folderFilter: $folderFilter
+      representationFilter: $representationFilter
       search: $search
       folderIds: $folderIds
       includeFolderChildren: true
