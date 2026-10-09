@@ -26,6 +26,8 @@ export type ColumnsConfig = {
   columnSummaryScopes?: Record<string, RowScope>
   // per-column summary display format (count/percentage toggles), keyed by column id
   columnSummaryFormats?: Record<string, SummaryFormat>
+  // per-column summary breakdown items hidden by the user, keyed by column id
+  columnSummaryHidden?: Record<string, string[]>
   sorting?: SortingState
   groupBy?: TableGroupBy
   groupByConfig?: {
@@ -76,6 +78,10 @@ export interface ColumnSettingsContextType {
   // Column summary display format (footer)
   columnSummaryFormats: Record<string, SummaryFormat>
   updateColumnSummaryFormat: (columnId: string, format: SummaryFormat) => void
+
+  // Column summary hidden breakdown items (footer)
+  columnSummaryHidden: Record<string, string[]>
+  updateColumnSummaryHidden: (columnId: string, hidden: string[]) => void
 
   // Sorting
   sorting: SortingState
