@@ -103,15 +103,14 @@ export const useVPColumnStats = ({
     versionFilter,
     taskFilter,
     folderFilter,
+    representationFilter,
     folderIds: folderIdsWithoutChildren,
     versionIds,
     productIds,
   }
   const productStatsArgs = { ...columnStatsBaseArgs, targets: productTargets }
-  // representations only narrow versions — the products resolver has no such filter
   const versionStatsArgs = {
     ...columnStatsBaseArgs,
-    representationFilter,
     featuredOnly,
     featuredOnlyEntityType,
     latestPerFolder,

@@ -421,6 +421,7 @@ export type FolderNodeProductsArgs = {
   pathEx?: InputMaybe<Scalars['String']['input']>;
   productBaseTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   productTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  representationFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -955,6 +956,7 @@ export type ProjectNodeProductsArgs = {
   pathEx?: InputMaybe<Scalars['String']['input']>;
   productBaseTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   productTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  representationFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -2097,6 +2099,7 @@ export type GetProductsQueryVariables = Exact<{
   versionFilter?: string | null | undefined;
   taskFilter?: string | null | undefined;
   folderFilter?: string | null | undefined;
+  representationFilter?: string | null | undefined;
   featuredVersionOrder?: Array<string> | string | null | undefined;
   search?: string | null | undefined;
   folderIds?: Array<string> | string | null | undefined;
@@ -2117,6 +2120,7 @@ export type GetProductsColumnStatsQueryVariables = Exact<{
   versionFilter?: string | null | undefined;
   taskFilter?: string | null | undefined;
   folderFilter?: string | null | undefined;
+  representationFilter?: string | null | undefined;
   folderIds?: Array<string> | string | null | undefined;
   productIds?: Array<string> | string | null | undefined;
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
@@ -3933,7 +3937,7 @@ export const GetLatestProductVersionDocument = new TypedDocumentString(`
 }
     `);
 export const GetProductsDocument = new TypedDocumentString(`
-    query GetProducts($projectName: String!, $productIds: [String!], $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $featuredVersionOrder: [String!], $search: String, $folderIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $sortBy: [String!], $showComments: Boolean! = false) {
+    query GetProducts($projectName: String!, $productIds: [String!], $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $representationFilter: String, $featuredVersionOrder: [String!], $search: String, $folderIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $sortBy: [String!], $showComments: Boolean! = false) {
   project(name: $projectName) {
     products(
       ids: $productIds
@@ -3941,6 +3945,7 @@ export const GetProductsDocument = new TypedDocumentString(`
       versionFilter: $versionFilter
       taskFilter: $taskFilter
       folderFilter: $folderFilter
+      representationFilter: $representationFilter
       search: $search
       folderIds: $folderIds
       includeFolderChildren: true
@@ -4030,7 +4035,7 @@ fragment VersionBase on VersionNode {
   }
 }`);
 export const GetProductsColumnStatsDocument = new TypedDocumentString(`
-    query GetProductsColumnStats($projectName: String!, $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $folderIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
+    query GetProductsColumnStats($projectName: String!, $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $representationFilter: String, $folderIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
   project(name: $projectName) {
     products(
       calculateSpecificStatistics: $targets
@@ -4039,6 +4044,7 @@ export const GetProductsColumnStatsDocument = new TypedDocumentString(`
       versionFilter: $versionFilter
       taskFilter: $taskFilter
       folderFilter: $folderFilter
+      representationFilter: $representationFilter
       folderIds: $folderIds
       includeFolderChildren: true
     ) {

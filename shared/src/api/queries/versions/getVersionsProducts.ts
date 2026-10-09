@@ -1040,6 +1040,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               productFilter: arg.productFilter,
               versionFilter: arg.versionFilter,
               taskFilter: arg.taskFilter,
+              representationFilter: arg.representationFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
               first: productIds.length,
             }
@@ -1102,6 +1103,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               productFilter: arg.productFilter,
               taskFilter: arg.taskFilter,
               folderFilter: arg.folderFilter,
+              representationFilter: arg.representationFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
             }),
             checkVersionInCache: (entityId, parentId) => {

@@ -332,8 +332,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     sliceFilters: slicerFolderFilters,
     config: { searchKey: 'name' },
   })
-  // no slicer panel is representation scoped, so this is the filter bar's conditions only.
-  // It only applies to version queries: the products resolver cannot filter by representation
+  // no slicer panel is representation scoped, so this is the filter bar's conditions only
   const resolvedRepresentationFilter = useMemo(
     () => resolveExtensionFilter(representationFilter),
     [representationFilter],
@@ -515,7 +514,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
         ? featuredVersionOrder
         : DEFAULT_FEATURED_ORDER
 
-      const { versionIds, productIds, representationFilter, ...restQueryArgs } = queryArgs
+      const { versionIds, productIds, ...restQueryArgs } = queryArgs
       const args: any = {
         ...restQueryArgs,
         ...sortArgs[entityType],
@@ -548,7 +547,6 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
         args.featuredOnly = featuredVersionFilter
         args.featuredOnlyEntityType = featuredVersionFilter?.length ? 'product' : undefined
         args.latestPerFolder = latestPerFolder
-        args.representationFilter = representationFilter
 
         if (hasReviewablesFilter !== undefined) {
           args.hasReviewables = hasReviewablesFilter
