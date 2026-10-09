@@ -32,11 +32,14 @@ import { toast } from 'react-toastify'
 import TrialBanner from '@components/TrialBanner/TrialBanner'
 
 // context
-import { ShortcutsProvider } from '@context/ShortcutsContext'
-import { RestartProvider } from '@context/RestartContext'
-import { PasteProvider, PasteModal } from '@context/PasteContext'
-import { NotificationsProvider } from '@context/NotificationsContext'
-import { PiPProvider } from '@shared/context/pip/PiPProvider'
+import {
+  NotificationsProvider,
+  PasteModal,
+  PasteProvider,
+  RestartProvider,
+  ShortcutsProvider,
+} from '@context'
+import { PiPProvider } from '@shared/context'
 import {
   RemoteModulesProvider,
   DetailsPanelProvider,
@@ -51,6 +54,7 @@ import { MenuProvider, URIProvider, DeleteEntitiesProvider } from '@shared/conte
 import Header from '@containers/header'
 import FileUploadPreviewContainer from '@containers/FileUploadPreviewContainer'
 import { ViewerDialog } from '@containers/Viewer'
+import { EntityLinksSlot } from '@shared/containers/EntityLinksSlot'
 
 // state
 import { login } from '@state/user'
@@ -243,6 +247,7 @@ const App = () => {
                                               <CompleteProfilePrompt />
                                               <AppRoutes />
                                               <DetailsPanelFloating />
+                                              <EntityLinksSlot />
                                               <PowerpackDialog />
                                               <AppRemoteLoader />
                                               <TrialBanner />

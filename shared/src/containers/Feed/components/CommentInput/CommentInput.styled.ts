@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { Button, getTextColor } from '@ynput/ayon-react-components'
+import { Button, getTextColor, InputText } from '@ynput/ayon-react-components'
 
 export const AutoHeight = styled.div`
   /* use grid tick for auto height transition */
@@ -203,8 +203,11 @@ export const Buttons = styled.div`
   }
 `
 
-export const FrameLinkButton = styled(Button)`
-  white-space: nowrap;
+export const FrameLinkControl = styled.div`
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--border-radius-m);
+  padding-right: var(--padding-s);
 
   &.selected {
     color: var(--md-sys-color-on-primary-container);
@@ -214,6 +217,32 @@ export const FrameLinkButton = styled(Button)`
       background-color: var(--md-sys-color-primary-container-hover);
     }
   }
+`
+
+export const FrameLinkButton = styled(Button)`
+  color: inherit;
+  background: transparent;
+
+  &:hover {
+    background-color: var(--md-sys-color-primary-container-hover) !important;
+  }
+`
+
+export const FrameLabel = styled(Button)`
+  width: 100%;
+  padding: 4px 6px;
+  white-space: nowrap;
+  color: inherit;
+  background: transparent;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-low) !important;
+  }
+`
+
+export const FrameInput = styled(InputText)`
+  min-width: 0;
+  padding: 4px 8px;
 `
 
 export const SubmitButtons = styled(Buttons)`

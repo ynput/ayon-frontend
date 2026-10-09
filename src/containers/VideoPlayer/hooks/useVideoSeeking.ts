@@ -73,7 +73,12 @@ const useVideoSeeking = (
   const handlePause = () => {
     // Don't overwrite initialPosition during a transition — it holds the
     // user's position from the previous video, needed for seekPreferredInitialPosition
-    if (isTransitioning.current) return
+    if (isTransitioning.current) {
+      setTimeout(() => {
+        if (videoRef.current?.paused) setIsPlaying(false)
+      }, 10)
+      return
+    }
     const rawTime = videoRef.current?.currentTime
     if (rawTime == null) return
     initialPosition.current = Math.round(rawTime * frameRate) / frameRate

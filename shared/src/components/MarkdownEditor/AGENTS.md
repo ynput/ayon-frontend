@@ -81,7 +81,7 @@ Every place that reads the markdown needs to know about it:
 | Plugin | Does |
 | --- | --- |
 | `KeyboardPlugin` | Mod+Enter submits. With `submitOnEnter`, Enter submits except in lists and code. Shift+Enter makes a new paragraph line. Escape calls `onEscape`. |
-| `MentionsPlugin` | `@` users and teams, `@@` versions, `@@@` tasks, from a `MentionSource`. `INSERT_MENTION_TRIGGER_COMMAND` is used by the mention buttons. |
+| `MentionsPlugin` | `@` users and teams, `@@` versions, `@@@` tasks, from a `MentionSource`. `INSERT_MENTION_TRIGGER_COMMAND` (in `MentionsPluginHelpers.ts`) is used by the mention buttons. |
 | `MentionEventsPlugin` | `onMentionClick` and `onMentionHover`, delegated from the root. |
 | `SlashCommandPlugin` | The `/` menu: headings, lists, blocks, insert (video, media, attachment), mentions, and custom `commands` (shown first). |
 | `EmojiPlugin` | The `:` picker. Usage is stored in frontend preferences (`emoji/useEmojiUsage.ts`). |
@@ -98,6 +98,8 @@ Every place that reads the markdown needs to know about it:
 | `BlockExitPlugin` | Down or Right at the end of a final code block or quote adds a paragraph after it. |
 | `ChecklistShortcutPlugin` | `- [ ] ` becomes a check list item, because the bullet shortcut fires first. |
 | `EmptyParagraphPlugin` | At most one empty line in a row (paragraph model). |
+
+Plugin files export only their component. Lexical commands (`createCommand`) and helpers live in a sibling `<Plugin>Helpers.ts`. A command re-created by a hot update would no longer match the listeners registered with the old one, and a non-component export stops the file from hot-reloading at all (see "Hot reload" in the root `AGENTS.md`). The same applies to `renderMediaParagraph` (`media/MediaBlockHelpers.tsx`) and `renderYouTubeParagraph` (`youtube/YouTubeEmbedHelpers.tsx`).
 
 ### Command priorities (read before touching keys or paste)
 
@@ -149,9 +151,11 @@ Pass `commands: EditorCommand[]` (`types.ts`: `id`, `label`, `icon`, `keywords`,
 
 ### Comment links (`links/activityLinks.ts`)
 
-- A link to a comment on this server (`/projects/{project}/...?activity={id}`, from "Copy link" or a duplicated comment's "Original comment") is stored as a **plain markdown link**, but shown as a chip like mentions.
+- A link to a comment on this server (`/projects/{project}/...?activity={id}`, from "Copy link") is stored as a **plain markdown link**, but shown as a chip like mentions. Duplicated comments write `[Source](source:<activity-id>?type=<entity-type>&id=<entity-id>)` (`getSourceLink`), with the entity the source comment belongs to: a copy can be posted on another entity. Older `source:<activity-id>` links fall back to the containing comment's entity.
 - The editor: `ActivityLinkPlugin` adds `md-activity-link` to those links, styled like `.mention`. A pasted comment url gets the label "Comment" (`getLinkLabel`).
 - The feed: `aTag` renders them with `ActivityReference` (chat icon). Clicking highlights the comment when it is in the feed, otherwise it opens the link in a new tab.
+- Source links render with the `chat_paste_go` icon and the label "Source". `SourceCommentReference` uses `GetActivitiesById` with the source entity and activity ID; it renders nothing until the backend returns the source activity.
+- Lexical renders links with protocols it doesn't allow (like `source:`) with `href="about:blank"`; `LinkClickPlugin` reads the url from the link node, never from the DOM.
 - Links to other servers stay normal links. `parseActivityLink` is the one place that decides.
 
 ### Code blocks

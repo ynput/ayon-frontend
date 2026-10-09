@@ -19,8 +19,9 @@ import Type from '@/theme/typography.module.css'
 import { getRequestErrorString } from '@shared/util'
 import { updateUserAttribs, updateUserPreferences } from '@state/user'
 import { useDispatch } from 'react-redux'
-import { useNotifications } from '@context/NotificationsContext'
+import { useNotifications } from '@context'
 import clsx from 'clsx'
+import { AvatarName } from './ProfilePage.styled'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -38,21 +39,6 @@ const FormsStyled = styled.section`
   .label {
     min-width: 170px;
   }
-`
-
-export const PanelButtonsStyled = styled(Panel)`
-  flex-direction: row;
-
-  & > * {
-    flex: 1;
-  }
-`
-export const AvatarName = styled.span`
-  display: flex;
-  align-content: center;
-  justify-content: center;
-  align-items: center;
-  padding: 16px 16px 8px 16px;
 `
 
 const ProfilePage = ({ user = {}, isLoading }) => {

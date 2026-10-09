@@ -14,6 +14,7 @@ import {
   MarkdownEditor,
   createFeedMentionSource,
   getInlineMediaFileIds,
+  getSourceLink,
   normalizeLegacyMarkdown,
   type EditorCommand,
   type MarkdownEditorHandle,
@@ -35,16 +36,21 @@ import useReferenceTooltip from '../../hooks/useReferenceTooltip'
 
 // State management
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
-import { useFeedContext } from '../../context/FeedContext'
+import useCommentDraft, { getCommentDraftKey } from './hooks/useCommentDraft'
+import { useFeedContext } from '../../context/feed'
 import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import {
+  getActivityFrameLink,
+  useDetailsPanelContext,
+  useProjectContext,
+  type CommentFrameRange,
+} from '@shared/context'
 import { parseFilename } from '@shared/util/parseFilename'
 import type { DetailsPanelEntityType, FeedActivity } from '@shared/api'
 import { VersionReviewPill } from './VersionReviewPill'
 import { VersionReviewFeedback, type CommentDuplicate } from './types'
+import { parseFrameRange } from './parseFrameRange'
 import { cloneProjectFile } from './cloneProjectFile'
-import { getActivityLink } from '../../helpers/getActivityLink'
 
 type UploadingFile = {
   name: string
@@ -58,6 +64,7 @@ interface CommentInputProps {
   initFiles?: any[]
   initCategory?: string | null
   data?: any
+  activityId?: string
   versionReview: boolean
   lastOwnVersionReview?: FeedActivity
   onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
@@ -71,6 +78,8 @@ interface CommentInputProps {
   isOpen: boolean
   onOpen?: () => void
   onClose?: () => void
+  // keep a draft of a new comment in local storage, restored for the same entities
+  saveDraft?: boolean
 }
 
 const getProjectFileUrl = (projectName: string, id: string) =>
@@ -92,6 +101,7 @@ const CommentInput: FC<CommentInputProps> = ({
   initFiles = [],
   initCategory = null,
   data = {},
+  activityId,
   versionReview,
   lastOwnVersionReview,
   onSubmit,
@@ -104,6 +114,7 @@ const CommentInput: FC<CommentInputProps> = ({
   isOpen,
   onOpen,
   onClose,
+  saveDraft = true,
 }) => {
   const {
     projectName,
@@ -113,6 +124,8 @@ const CommentInput: FC<CommentInputProps> = ({
     mentionSuggestionsData,
     categories,
     isGuest,
+    userName,
+    editingId,
   } = useFeedContext()
 
   const { hasLicense, onPowerFeature, user, openSlideOut, commentFrameLink } =
@@ -139,6 +152,8 @@ const CommentInput: FC<CommentInputProps> = ({
   const [isDropping, setIsDropping] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadedAnnotations, setUploadedAnnotations] = useState<SavedAnnotationMetadata[]>([])
+  // annotations being posted with the comment, removed from the unsaved ones once it's saved
+  const [submittingAnnotationIds, setSubmittingAnnotationIds] = useState<string[]>([])
 
   const { annotations, removeAnnotation, goToAnnotation } = useAnnotationsSync({
     entityId: entities[0]?.id,
@@ -148,27 +163,114 @@ const CommentInput: FC<CommentInputProps> = ({
   // FRAME LINK: the host (e.g. a player) owns the draft link so it can show and move it
   const frameLinkEntity =
     entities.length === 1 && entities[0].entityType === 'version' ? entities[0] : undefined
-  const frameLink =
+  const draftFrameLink =
     commentFrameLink?.draft && commentFrameLink.draft.entityId === frameLinkEntity?.id
       ? commentFrameLink.draft
       : null
-  const showFrameLink = !!commentFrameLink && !!frameLinkEntity && !isEditing
+  // a typed (or duplicated) link, for the version it was entered on
+  const [manualFrameLink, setManualFrameLinkState] = useState<
+    (CommentFrameRange & { entityId?: string }) | null
+  >(() =>
+    isEditing && Number.isSafeInteger(data?.startFrame) && data.startFrame > 0
+      ? {
+          startFrame: data.startFrame,
+          endFrame:
+            Number.isSafeInteger(data.endFrame) && data.endFrame >= data.startFrame
+              ? data.endFrame
+              : data.startFrame,
+        }
+      : null,
+  )
+  const setManualFrameLink = (range: CommentFrameRange | null) =>
+    setManualFrameLinkState(range && { ...range, entityId: frameLinkEntity?.id })
+  // a saved comment keeps its link, a new comment drops it when the version changes
+  const currentManualFrameLink =
+    isEditing || manualFrameLink?.entityId === frameLinkEntity?.id ? manualFrameLink : null
+  const [frameInputOpen, setFrameInputOpen] = useState(false)
+  const frameLink = isEditing ? currentManualFrameLink : currentManualFrameLink ?? draftFrameLink
+  const showFrameLink = isEditing
+    ? !!frameLinkEntity || !!currentManualFrameLink
+    : !!commentFrameLink && !!frameLinkEntity
   const formatFrame = commentFrameLink?.formatFrame ?? String
   const frameLinkLabel = frameLink
     ? frameLink.endFrame > frameLink.startFrame
       ? `${formatFrame(frameLink.startFrame)}-${formatFrame(frameLink.endFrame)}`
       : formatFrame(frameLink.startFrame)
     : undefined
+  const [frameInput, setFrameInput] = useState(frameLinkLabel ?? '')
+  const cancelFrameInput = useRef(false)
+  const initialFrameInputLink = useRef<CommentFrameRange | null>(null)
 
-  const handleFrameLinkButton = () => {
-    if (!commentFrameLink || !frameLinkEntity) return
-    if (frameLink) commentFrameLink.unlink()
-    else commentFrameLink.link(frameLinkEntity.id)
+  const setFrameLinkPreview = (range: CommentFrameRange | null) => {
+    if (!frameLinkEntity) return
+    const link = range ? { ...range, entityId: frameLinkEntity.id } : null
+    if (!isEditing) {
+      commentFrameLink?.setDraft(link)
+      return
+    }
+    if (!activityId) return
+    commentFrameLink?.setEditPreview({
+      activityId,
+      link,
+    })
   }
+
+  const handleFrameInputChange = (value: string) => {
+    setFrameInput(value)
+    const range = parseFrameRange(value)
+    if (range) setFrameLinkPreview(range)
+  }
+
+  useEffect(() => {
+    if (!frameInputOpen) setFrameInput(frameLinkLabel ?? '')
+  }, [frameLinkLabel, frameInputOpen])
+
+  useEffect(
+    () => () => {
+      if (isEditing) commentFrameLink?.setEditPreview(null)
+    },
+    [isEditing, commentFrameLink?.setEditPreview],
+  )
+
+  const commitFrameInput = () => {
+    if (cancelFrameInput.current) {
+      cancelFrameInput.current = false
+      setFrameInput(frameLinkLabel ?? '')
+      setFrameLinkPreview(initialFrameInputLink.current)
+      setFrameInputOpen(false)
+      return
+    }
+    const range = parseFrameRange(frameInput)
+    if (range) {
+      setManualFrameLink(range)
+      setFrameLinkPreview(range)
+    } else {
+      setFrameInput(frameLinkLabel ?? '')
+      setFrameLinkPreview(initialFrameInputLink.current)
+    }
+    setFrameInputOpen(false)
+  }
+
+  const removeFrameLink = () => {
+    setManualFrameLink(null)
+    if (isEditing) setFrameLinkPreview(null)
+    else commentFrameLink?.unlink()
+  }
+
+  const addFrameLink = () => {
+    if (!isEditing && commentFrameLink && frameLinkEntity) {
+      commentFrameLink.link(frameLinkEntity.id)
+    } else {
+      setFrameInput('')
+      setFrameInputOpen(true)
+    }
+  }
+
+  const handleFrameLinkButton = () => (frameLink ? removeFrameLink() : addFrameLink())
 
   // the same in the `/` menu
   const frameLinkCommands = useMemo<EditorCommand[] | undefined>(() => {
-    if (!showFrameLink || !commentFrameLink || !frameLinkEntity) return undefined
+    if (!showFrameLink || (!isEditing && !commentFrameLink) || !frameLinkEntity) return undefined
     const keywords = ['frame', 'time', 'timecode', 'link', 'range']
     return [
       frameLink
@@ -178,20 +280,44 @@ const CommentInput: FC<CommentInputProps> = ({
             icon: 'timer_off',
             keywords: [...keywords, 'unlink', 'remove'],
             hint: frameLinkLabel,
-            run: () => commentFrameLink.unlink(),
+            run: removeFrameLink,
           }
         : {
             id: 'frame-link',
-            label: 'Link to current frame',
+            label: isEditing ? 'Add frame link' : 'Link to current frame',
             icon: 'timer',
             keywords,
-            run: () => commentFrameLink.link(frameLinkEntity.id),
+            run: addFrameLink,
           },
     ]
-  }, [showFrameLink, commentFrameLink, frameLinkEntity?.id, !!frameLink, frameLinkLabel])
+  }, [showFrameLink, isEditing, commentFrameLink, frameLinkEntity?.id, !!frameLink, frameLinkLabel])
 
   // CATEGORY STATE
   const [category, setCategory] = useState<null | string>(initCategory)
+
+  // DRAFT: only for new comments, edits of existing ones aren't kept
+  useCommentDraft({
+    draftKey:
+      saveDraft && !isEditing
+        ? getCommentDraftKey(
+            projectName,
+            userName,
+            entities.map((e) => e.id),
+          )
+        : null,
+    draft: { text: editorValue, files, uploadedAnnotations, category },
+    paused: isSubmitting,
+    restore: (draft) => {
+      setEditorValue(draft.text)
+      setFiles(draft.files)
+      setUploadedAnnotations(draft.uploadedAnnotations)
+      setCategory(draft.category)
+      // show a restored draft, unless another comment is being edited
+      const hasDraft =
+        !!draft.text.trim() || !!draft.files.length || !!draft.uploadedAnnotations.length
+      if (hasDraft && !isOpen && !editingId) onOpen?.()
+    },
+  })
   const categoryOptions = categories.filter((cat) => cat.accessLevel >= 20)
   const categoryData = categories.find((cat) => cat.name === category)
   // Compute blended background color for category
@@ -253,13 +379,24 @@ const CommentInput: FC<CommentInputProps> = ({
     setRefTooltip({ id, name: id, type, label, pos: { left: x + width / 2, top: y } })
   }
 
+  // Only focus the editor when the user opened it. It also opens on its own (a new
+  // annotation, a restored draft), and taking focus then would swallow the keys meant
+  // for the player, e.g. a shortcut typed into the comment instead.
+  const [openedByUser, setOpenedByUser] = useState(false)
+  useEffect(() => {
+    if (!isOpen) setOpenedByUser(false)
+  }, [isOpen])
+
   const handleOpenClick = () => {
     if (isOpen || disabled) return
 
+    setOpenedByUser(true)
     onOpen && onOpen()
   }
 
   const handleClose = () => {
+    if (isEditing) commentFrameLink?.setEditPreview(null)
+
     // keep a draft of a new comment, drop edits
     if (!hasText || isEditing) {
       setEditorValue('')
@@ -394,6 +531,12 @@ const CommentInput: FC<CommentInputProps> = ({
   // The files are copied so the original comment is never changed, the text links back to it.
   const handledDuplicate = useRef<string | null>(null)
   const insertDuplicate = async ({ activity }: CommentDuplicate) => {
+    const frameLink = getActivityFrameLink(activity)
+    if (frameLink && frameLink.entityId === frameLinkEntity?.id) {
+      setManualFrameLink({ startFrame: frameLink.startFrame, endFrame: frameLink.endFrame })
+      commentFrameLink?.setDraft(frameLink)
+    }
+
     const body = normalizeLegacyMarkdown(activity.body || '')
     const sourceFiles = activity.files || []
     const inlineIds = getInlineMediaFileIds(body)
@@ -402,14 +545,12 @@ const CommentInput: FC<CommentInputProps> = ({
       entities.length === 1 && entities[0].id === (activity.origin?.id ?? activity.entityId)
 
     const appendText = (markdown: string) => {
-      const link = `[Original comment](${getActivityLink(
-        projectName,
-        activity.activityId,
+      const sourceEntity =
         activity.origin ??
-          (activity.entityId && activity.entityType
-            ? { id: activity.entityId, type: activity.entityType }
-            : undefined),
-      )})`
+        (activity.entityId && activity.entityType
+          ? { id: activity.entityId, type: activity.entityType }
+          : undefined)
+      const link = `[Source](${getSourceLink(activity.activityId, sourceEntity)})`
       const text = [markdown.trim(), link].filter(Boolean).join('\n\n')
       setEditorValue((prev) => (prev.trim() ? `${prev.trim()}\n\n${text}` : text))
       editorRef.current?.focus()
@@ -446,7 +587,12 @@ const CommentInput: FC<CommentInputProps> = ({
           handleFileUploaded(layer, true)
           setUploadedAnnotations((prev) => [
             ...prev,
-            { ...annotation, id: uuid(), composite: upload.data.id, transparent: layer.data.id },
+            {
+              ...annotation,
+              id: `${annotation.id}-${uuid()}`,
+              composite: upload.data.id,
+              transparent: layer.data.id,
+            },
           ])
         }
         return [source.id, upload.data.id] as const
@@ -486,6 +632,7 @@ const CommentInput: FC<CommentInputProps> = ({
   useEffect(() => {
     if (!duplicate || handledDuplicate.current === duplicate.key) return
     handledDuplicate.current = duplicate.key
+    setOpenedByUser(true)
     onDuplicateHandled?.()
     insertDuplicate(duplicate)
   }, [duplicate?.key])
@@ -511,10 +658,15 @@ const CommentInput: FC<CommentInputProps> = ({
       // upload any annotations first
       let annotationFiles = []
       let newAnnotations = uploadedAnnotations
+      let postedAnnotationIds: string[] = []
       if (annotations.length) {
+        setSubmittingAnnotationIds(annotations.map((annotation) => annotation.id))
         const { files, metadata } = await uploadAnnotations(annotations)
         annotationFiles = files
         newAnnotations = [...newAnnotations, ...metadata]
+        postedAnnotationIds = metadata.map((annotation) => annotation.id)
+        // hidden while posting, they stay unsaved (and editable) if posting fails
+        setSubmittingAnnotationIds(postedAnnotationIds)
       }
 
       // get current files data and merge it with the new metadata
@@ -535,7 +687,8 @@ const CommentInput: FC<CommentInputProps> = ({
         annotations: annotationMetadata, // could be undefined
         category: isGuest ? null : category, // guests cannot set category (it is done by default on backend)
         // one frame link per comment, stored as metadata rather than in the text
-        ...(frameLink && { startFrame: frameLink.startFrame, endFrame: frameLink.endFrame }),
+        startFrame: frameLink?.startFrame ?? undefined,
+        endFrame: frameLink?.endFrame ?? undefined,
       }
 
       if ((markdown || uploadedFiles.length) && onSubmit) {
@@ -545,14 +698,19 @@ const CommentInput: FC<CommentInputProps> = ({
         setFiles([])
         try {
           await onSubmit(markdown, uploadedFiles, newData)
+          // only now do the annotations belong to the comment
+          postedAnnotationIds.forEach((id) => removeAnnotation?.(id))
+          if (isEditing) commentFrameLink?.setEditPreview(null)
           setUploadedAnnotations([])
           // the link now belongs to the submitted comment
-          if (frameLink) commentFrameLink?.unlink()
+          if (!isEditing && frameLink) commentFrameLink?.unlink()
+          if (!isEditing) setManualFrameLink(null)
         } catch (error) {
           // error is handled in rtk query mutation
+          // the drawn annotations are still unsaved, so they're uploaded again on the next try
           setEditorValue(submittedValue)
-          setFiles(uploadedFiles)
-          setUploadedAnnotations(newAnnotations)
+          setFiles(keptFiles)
+          setUploadedAnnotations(uploadedAnnotations)
           return
         }
       }
@@ -560,12 +718,13 @@ const CommentInput: FC<CommentInputProps> = ({
       console.error(error)
       toast.error('Something went wrong')
     } finally {
+      setSubmittingAnnotationIds([])
       setIsSubmitting(false)
     }
   }
 
   const allFiles = [
-    ...annotations,
+    ...annotations.filter((annotation) => !submittingAnnotationIds.includes(annotation.id)),
     ...(files || []).filter((file: any) => !file.isAnnotationLayer && !file.isInline),
     ...filesUploading,
   ].sort((a, b) => a.order - b.order)
@@ -654,8 +813,9 @@ const CommentInput: FC<CommentInputProps> = ({
     </>
   )
 
-  // don't take focus from an annotation that opened the input
-  const autoFocus = !(annotations.length > 0 && files.length === 0)
+  const autoFocus = isEditing || openedByUser
+  const frameValueText = frameInputOpen ? frameInput || 'Frame or range' : frameLinkLabel || ''
+  const frameValueWidth = `calc(${Math.max(frameValueText.length, 1) + 2}ch + 16px)`
 
   return (
     <>
@@ -767,17 +927,60 @@ const CommentInput: FC<CommentInputProps> = ({
                     />
                   ))}
                 {showFrameLink && (
-                  // link the comment to the current frame, or remove the link
-                  <Styled.FrameLinkButton
-                    className="frame-link"
-                    icon="timer"
-                    variant="text"
-                    selected={!!frameLink}
-                    label={frameLinkLabel}
-                    onClick={handleFrameLinkButton}
-                    data-tooltip={frameLink ? 'Remove frame link' : 'Link to current frame'}
-                    data-testid="comment-frame-link"
-                  />
+                  <Styled.FrameLinkControl
+                    className={clsx('frame-link', { selected: !!frameLink || frameInputOpen })}
+                  >
+                    <Styled.FrameLinkButton
+                      icon={'timer'}
+                      variant="text"
+                      onClick={handleFrameLinkButton}
+                      aria-label={frameLink ? 'Remove frame link' : 'Add frame link'}
+                      data-tooltip={
+                        frameLink
+                          ? 'Remove frame link'
+                          : isEditing
+                          ? 'Add frame link'
+                          : 'Link to current frame'
+                      }
+                      data-testid="comment-frame-link"
+                    />
+                    {(frameLink || frameInputOpen) &&
+                      (frameInputOpen ? (
+                        <Styled.FrameInput
+                          autoFocus
+                          aria-label="Linked frame or range"
+                          value={frameInput}
+                          placeholder="Frame"
+                          onFocus={(e) => {
+                            initialFrameInputLink.current = frameLink
+                            e.currentTarget.select()
+                          }}
+                          onChange={(e) => handleFrameInputChange(e.target.value)}
+                          onBlur={commitFrameInput}
+                          style={{ width: frameValueWidth }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              e.currentTarget.blur()
+                            }
+                            if (e.key === 'Escape') {
+                              cancelFrameInput.current = true
+                              e.currentTarget.blur()
+                            }
+                          }}
+                          data-testid="comment-frame-link-input"
+                        />
+                      ) : (
+                        <Styled.FrameLabel
+                          variant="text"
+                          aria-label={`Edit linked frame ${frameLinkLabel ?? ''}`}
+                          onClick={() => setFrameInputOpen(true)}
+                          data-tooltip="Edit linked frame or range"
+                        >
+                          {frameLinkLabel || 'Frame or range'}
+                        </Styled.FrameLabel>
+                      ))}
+                  </Styled.FrameLinkControl>
                 )}
               </Styled.Buttons>
             )}

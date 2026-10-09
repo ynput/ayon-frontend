@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { useListsModuleContext } from '@pages/ProjectListsPage/context/ListsModulesContext'
+import { useListsModuleContext } from '@pages/ProjectListsPage/context/lists-modules'
 import {
   EntityListModel,
   useGetActivityCategoriesQuery,

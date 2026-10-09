@@ -8,13 +8,12 @@ import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { ListsDataProvider } from './context/ListsDataContext'
+import { ListsDataProvider } from './context/lists-data'
 import ListsTable from './components/ListsTable/ListsTable'
-import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
-import {
-  ListsAttributesProvider,
-  useListsAttributesContext,
-} from './context/ListsAttributesContext'
+import { ListItemsDataProvider } from './context/list-items-data'
+import { useListItemsDataContext } from './context/list-items-data'
+import { ListsAttributesProvider } from './context/lists-attributes'
+import { useListsAttributesContext } from './context/lists-attributes'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton, SyncButton } from '@shared/components'
@@ -40,7 +39,7 @@ import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
 import useUpdateListItems from './hooks/useUpdateListItems'
 import ReplaceListItemsDialog from './components/ReplaceListItemsDialog'
 import { Actions } from '@shared/containers/Actions/Actions'
-import { ListsModuleProvider } from './context/ListsModulesContext.tsx'
+import { ListsModuleProvider } from './context/lists-modules'
 import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
 import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store.ts'
@@ -55,10 +54,8 @@ import { toast } from 'react-toastify'
 import api from '@shared/api/index.ts'
 import useReviewSessionCardsModules from './hooks/useReviewSessionCardsModules.tsx'
 import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSettings.tsx'
-import {
-  ReviewCardsSettingsProvider,
-  useReviewCardsSettingsContext,
-} from './context/ReviewCardsSettingsContext.tsx'
+import { ReviewCardsSettingsProvider } from './context/review-cards-settings'
+import { useReviewCardsSettingsContext } from './context/review-cards-settings'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
@@ -293,6 +290,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
     ReviewSessionCardsProvider,
     ReviewSessionCardsControlsLeft,
     ReviewSessionCardsControlsRight,
+    useReviewSessionCards,
     outdated: reviewSessionCardsOutdated,
     allModulesLoaded: reviewModulesLoaded,
   } = useReviewSessionCardsModules({ skip: !isReview })
@@ -499,9 +497,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         className="details"
                       >
                         <ProjectListsDetailsPanels
-                          isReview={!!isReview}
                           displayStyle={pageDisplayStyle}
                           dispatch={dispatch}
+                          useReviewSessionCards={useReviewSessionCards}
                         />
                       </SplitterPanel>
                     </DetailsPanelSplitter>

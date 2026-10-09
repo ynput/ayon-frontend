@@ -2,7 +2,7 @@ import { useEffect, useImperativeHandle, useRef, type ForwardedRef } from 'react
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { $getRoot, CLEAR_HISTORY_COMMAND } from 'lexical'
 import { $getMarkdown, $isEditorEmpty, $setMarkdown } from '../markdown/convert'
-import { INSERT_MENTION_TRIGGER_COMMAND } from './MentionsPlugin'
+import { INSERT_MENTION_TRIGGER_COMMAND } from './MentionsPluginHelpers'
 import type { MarkdownEditorHandle } from '../types'
 
 interface MarkdownValuePluginProps {

@@ -13,12 +13,11 @@ import { getLoadingPlaceholders } from './feedHelpers'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
-import { isFilePreviewable } from './components/FileUploadPreview/FileUploadPreview'
+import { isFilePreviewable } from './components/FileUploadPreview/FileUploadPreviewHelpers'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
-import { useFeedContext, FEED_NEW_COMMENT } from './context/FeedContext'
+import { FEED_NEW_COMMENT, useFeedContext } from './context/feed'
 import { Status } from '../ProjectTreeTable/types/project'
-import { useDetailsPanelContext, getActivityFrameLink } from '@shared/context/DetailsPanelContext'
-import type { FeedFrameLink } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext, getActivityFrameLink, type FeedFrameLink } from '@shared/context'
 import { useGetMyProjectPermissionsQuery } from '@shared/api'
 import type { DetailsPanelEntityType } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
@@ -36,6 +35,8 @@ export type FeedProps = {
   entityListId?: string | undefined
   isSlideOut?: boolean
   versionReview?: boolean
+  // keep drafts of new comments in local storage
+  saveCommentDrafts?: boolean
 }
 
 export const Feed = ({
@@ -45,6 +46,7 @@ export const Feed = ({
   entityListId,
   isSlideOut,
   versionReview = false,
+  saveCommentDrafts = true,
 }: FeedProps) => {
   const {
     projectName,
@@ -414,6 +416,7 @@ export const Feed = ({
             onReview={submitReview}
             duplicate={commentDuplicate}
             onDuplicateHandled={() => setCommentDuplicate(null)}
+            saveDraft={saveCommentDrafts}
           />
         )}
       </Styled.FeedContainer>

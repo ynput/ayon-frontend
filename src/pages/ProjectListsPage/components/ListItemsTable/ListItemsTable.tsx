@@ -1,4 +1,4 @@
-import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
+import { useListItemsDataContext } from '@pages/ProjectListsPage/context/list-items-data'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'

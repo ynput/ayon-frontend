@@ -369,10 +369,10 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
   const toastId = useRef(null)
   // DELETE TEAM
-  const onDelete = async () => {
+  const onDelete = async (names = selectedTeams) => {
     confirmDelete({
-      label: `${selectedTeams.length} team(s)`,
-      accept: async () => await handleDeleteTeams(selectedTeams),
+      label: `${names.length} team(s)`,
+      accept: async () => await handleDeleteTeams(names),
       showToasts: false,
     })
   }

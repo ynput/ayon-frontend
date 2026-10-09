@@ -50,6 +50,7 @@ import {
   waitForRealtimeJitter,
 } from '@shared/util'
 import PubSub from '@shared/util/pubsub'
+import { getPrimarySortKey } from '@shared/util/sortingHelpers'
 import { subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import type { FieldStats } from '../columnStats'
 import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
@@ -223,7 +224,7 @@ export type GetGroupedVersionsListArgs = {
   versionIds?: string[]
   productIds?: string[]
   desc?: boolean
-  sortBy?: string
+  sortBy?: string | string[]
   featuredOnly?: string[]
   featuredOnlyEntityType?: string
   latestPerFolder?: boolean
@@ -686,7 +687,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                         updatedNode,
                         arg.latestPerFolder === true &&
                           createdVersionIds?.has(updatedNode.id) === true,
-                        (arg.sortBy || 'createdAt') as keyof VersionNode,
+                        (getPrimarySortKey(arg.sortBy) || 'createdAt') as keyof VersionNode,
                         arg.desc || false,
                       )
                     }
@@ -898,7 +899,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                     draft.versions,
                     updatedNode,
                     arg.latestPerFolder === true && createdVersionIds?.has(updatedNode.id) === true,
-                    (arg.sortBy || 'createdAt') as keyof VersionNode,
+                    (getPrimarySortKey(arg.sortBy) || 'createdAt') as keyof VersionNode,
                     arg.desc || false,
                   )
                 }
@@ -1061,7 +1062,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                   productId,
                   productsById.get(productId),
                   'products',
-                  (arg.sortBy || 'createdAt') as keyof ProductNode,
+                  (getPrimarySortKey(arg.sortBy) || 'createdAt') as keyof ProductNode,
                   arg.desc || false,
                 )
               })

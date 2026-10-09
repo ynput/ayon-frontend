@@ -20,7 +20,7 @@ import { setUri } from '@state/context'
 import SettingsEditor from '@containers/SettingsEditor'
 import { getValueByPath, setValueByPath, sameKeysStructure } from '@containers/AddonSettings/utils'
 import { cloneDeep } from 'lodash'
-import { usePaste } from '@context/PasteContext'
+import { usePaste } from '@context'
 
 const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChanged, savedAt }) => {
   const [originalData, setOriginalData] = useState(null)

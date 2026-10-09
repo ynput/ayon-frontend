@@ -1,23 +1,13 @@
 import { useMemo } from 'react'
 import SessionList from './SessionListPage'
-import { Panel } from '@ynput/ayon-react-components'
 import { Navigate, useParams } from 'react-router-dom'
 import { useGlobalContext } from '@shared/context'
-import styled from 'styled-components'
 import AppNavLinks from '@containers/header/AppNavLinks'
 // import SiteSettings from './SiteSettingsPage'
 import ProfilePage from './ProfilePage'
 import DownloadsPage from './DownloadsPage/DownloadsPage'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
-
-export const PanelButtonsStyled = styled(Panel)`
-  flex-direction: row;
-
-  & > * {
-    flex: 1;
-  }
-`
 
 const AccountPage = () => {
   const { module } = useParams()

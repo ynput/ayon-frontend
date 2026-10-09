@@ -10,7 +10,7 @@ import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '
 import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import * as Styled from './Viewer.styled'
-import { ViewerProvider } from '@context/ViewerContext'
+import { ViewerProvider } from '@context'
 
 // shared
 import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
@@ -21,7 +21,7 @@ import {
   type ReviewablesSelectorHandle,
 } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
-import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
+import { ProjectContextProvider, useProjectContext } from '@shared/context'
 import { useSessionStorage, useReviewablesKeyboardNavigation } from '@shared/hooks'
 import clsx from 'clsx'
 
@@ -342,7 +342,10 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
   const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
 
   // Lifted here so A/D/R/E/H keep working in theatre (VersionSelectorTool unmounts).
-  const projectStatuses = useAppSelector((state) => state.project.statuses) || {}
+  const projectStatuses = useMemo(
+    () => Object.fromEntries((project.statuses || []).map((status) => [status.name, status])),
+    [project.statuses],
+  )
   const versionSelectorRef = useRef<HTMLDivElement>(null)
   useReviewShortcuts({
     versions: versionsAndReviewables,
@@ -378,6 +381,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
                 ref={versionSelectorRef}
                 versions={versionsAndReviewables}
                 selected={versionIds[0]}
+                statuses={projectStatuses}
                 onChange={handleVersionChange}
               />
               {hasMultipleProducts && (
@@ -421,7 +425,6 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             reviewables={reviewables}
             selectedReviewable={selectedReviewable}
             versionIds={versionIds}
-            versionReviewableIds={versionReviewableIds}
             isFetchingReviewables={isFetchingReviewables}
             noVersions={noVersions}
             quickView={quickView}

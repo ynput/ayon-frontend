@@ -9,7 +9,7 @@ query GetVersionsByProductId(
   $featuredOnlyEntityType: String
   $latestPerFolder: Boolean
   $hasReviewables: Boolean
-  $sortBy: String
+  $sortBy: [String!]
   $first: Int
   $last: Int
   $after: String
