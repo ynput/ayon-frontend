@@ -303,25 +303,25 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       icon: 'sort',
       isPinned: false,
       items: [
-        ...LISTS_SORT_OPTIONS.map((option) => ({
-          id: `sort-${option.id}`,
-          label: option.label,
-          onClick: () => setListsSort({ by: option.id, desc: option.desc }),
-          selected: listsSort.by === option.id,
-          active: listsSort.by === option.id,
-          reserveActiveSlot: true,
-        })),
-        { id: 'divider' },
-        ...[
-          { id: 'sort-ascending', label: 'Ascending', icon: 'arrow_upward', desc: false },
-          { id: 'sort-descending', label: 'Descending', icon: 'arrow_downward', desc: true },
-        ].map(({ desc, ...item }) => ({
-          ...item,
-          onClick: () => setListsSort({ ...listsSort, desc }),
-          selected: listsSort.desc === desc,
-          active: listsSort.desc === desc,
-          reserveActiveSlot: true,
-        })),
+        ...LISTS_SORT_OPTIONS.map((option) => {
+          const isSelected = listsSort.by === option.id
+          return {
+            id: `sort-${option.id}`,
+            label: option.label,
+            onClick: () => setListsSort({ by: option.id, desc: option.desc }),
+            selected: isSelected,
+            // only the selected field gets the direction button, clicking it flips asc/desc
+            endActions: isSelected
+              ? [
+                  {
+                    icon: listsSort.desc ? 'arrow_downward' : 'arrow_upward',
+                    tooltip: listsSort.desc ? 'Descending' : 'Ascending',
+                    onClick: () => setListsSort({ ...listsSort, desc: !listsSort.desc }),
+                  },
+                ]
+              : undefined,
+          }
+        }),
       ],
     },
     {
