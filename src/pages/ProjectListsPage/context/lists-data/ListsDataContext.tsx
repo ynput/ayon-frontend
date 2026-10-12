@@ -62,7 +62,15 @@ export const ListsDataProvider = ({
   listDisabled,
   getDisabledFolders,
 }: ListsDataProviderProps) => {
-  const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
+  const {
+    powerLicense: livePowerLicense,
+    isLoading: isLoadingLicense,
+    storedLicense,
+  } = usePowerpack()
+  // the license changes the table layout (folders), so use the last known license while the
+  // check runs instead of waiting for it, unless there never was one
+  const powerLicense = isLoadingLicense ? !!storedLicense : livePowerLicense
+  const isWaitingForLicense = isLoadingLicense && storedLicense === null
   const { projectName, isLoading: isFetchingProject } = useProjectContext()
 
   const isLoadingProject = useQueryArgumentChangeLoading({ projectName }, isFetchingProject)
@@ -177,7 +185,7 @@ export const ListsDataProvider = ({
           !columnsConfigReady ||
           isLoadingProject ||
           isLoadingFolders ||
-          isLoadingLicense,
+          isWaitingForLicense,
         isLoadingMore: isFetchingNextPage,
         isError,
         fetchNextPage,

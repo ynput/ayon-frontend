@@ -803,7 +803,7 @@ const buildTreeTableColumns = ({
                     pt: {
                       icon: {
                         style: {
-                          fontVariationSettings: "'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20",
+                          fontVariationSettings: "'FILL' 1",
                         },
                       },
                     },
