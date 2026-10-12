@@ -70,7 +70,7 @@ test.describe('lists sorting', () => {
     await lists.sortLists('Name')
     await expect(rows).toHaveText(labels(['apple', 'banana', 'Cherry']))
 
-    await lists.sortLists('Descending')
+    await lists.flipSortDirection('Descending')
     await expect(rows).toHaveText(labels(['Cherry', 'banana', 'apple']))
     await expect.poll(savedSort).toEqual({ by: 'label', desc: true })
 
