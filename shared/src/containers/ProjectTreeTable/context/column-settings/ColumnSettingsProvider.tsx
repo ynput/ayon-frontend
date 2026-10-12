@@ -470,7 +470,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       setColumnSizing(newSizing, newRowHeight)
       return
     }
-    setColumnSizing(newSizing)
+      setColumnSizing(newSizing, internalRowHeight ?? undefined)
   }
 
   const setThumbnailResizeDetached = (detached: boolean) => {
