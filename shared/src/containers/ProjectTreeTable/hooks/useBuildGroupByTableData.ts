@@ -229,7 +229,11 @@ const useBuildGroupByTableData = ({
       }
 
       const canHaveUngrouped =
-        groupBy.id === 'tags' || groupBy.id === 'assignees' || groupBy.id.startsWith('attrib.')
+        groupBy.id === 'tags' ||
+        groupBy.id === 'assignees' ||
+        // folder groups come from the cached folder list, which can miss a folder's first version
+        groupBy.id === 'folderId' ||
+        groupBy.id.startsWith('attrib.')
       if (canHaveUngrouped) getUnGroupedGroup()
 
       for (const [, entity] of entities) {
@@ -329,9 +333,11 @@ const useBuildGroupByTableData = ({
       })
 
       // filter out empty groups — Ungrouped has no server count, keep it reachable
+      // an undefined count means stats haven't arrived yet, not an empty group
       const nonEmptyGroups = groupsList.filter(
         (group) =>
-          (group.group?.count ?? 0) > 0 ||
+          group.group?.count === undefined ||
+          group.group.count > 0 ||
           (group.subRows?.length ?? 0) > 0 ||
           group.group?.value === UNGROUPED_VALUE,
       )
