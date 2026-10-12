@@ -80,6 +80,9 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     }
   }
   const columnsConfig = normalizeColumnsConfig(config as ColumnsConfig | undefined, columnIdAliases)
+  // debounced writes read this, so a setting changed while one is pending isn't overwritten
+  const latestColumnsConfigRef = React.useRef(columnsConfig)
+  latestColumnsConfigRef.current = columnsConfig
 
   const {
     columnOrder: columnOrderInit = [],
@@ -344,7 +347,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     if (summaryHiddenTimeoutRef.current) clearTimeout(summaryHiddenTimeoutRef.current)
     summaryHiddenTimeoutRef.current = setTimeout(() => {
       onChangeWithColumns({
-        ...columnsConfig,
+        ...latestColumnsConfigRef.current,
         columnSummaryHidden,
       })
       pendingSummaryHiddenRef.current = null
