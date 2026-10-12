@@ -59,8 +59,11 @@ test.describe('lists sorting', () => {
     await lists.goto(projectName)
     const rows = lists.listRows('srt ')
     const savedSort = async () =>
+      (await api.getWorkingViewSettings('lists', projectName))?.listsSort
+    const userSort = async () =>
       (await api.getUser(adminCredentials().name)).data?.frontendPreferences?.lists?.[projectName]
         ?.listsSort
+    const initialUserSort = await userSort()
 
     await expect(rows).toHaveText(labels(['apple', 'Cherry', 'banana']))
 
@@ -77,5 +80,6 @@ test.describe('lists sorting', () => {
     await lists.sortLists('Created')
     await expect(rows).toHaveText(labels(['apple', 'Cherry', 'banana']))
     await expect.poll(savedSort).toEqual({ by: 'createdAt', desc: true })
+    expect(await userSort()).toEqual(initialUserSort)
   })
 })
