@@ -1,12 +1,15 @@
-# Column summary stats over the full filtered folder set (Overview footer).
-# Targets are built from the visible columns so the backend only aggregates
-# what the footer shows.
+# Column summary stats over the folder set of the table (Overview footer).
+# Takes the same filters as the table's folder search (REST /folders/search),
+# includeParents adds the parents the hierarchy shows. Targets are built from the
+# visible columns so the backend only aggregates what the footer shows.
 query GetFolderColumnStats(
   $projectName: String!
   $filter: String
   $search: String
   $taskFilter: String
   $taskSearch: String
+  $globalSearch: String
+  $includeParents: Boolean
   $parentIds: [String!]
   $ids: [String!]
   $targets: [MetricTargetInput!]
@@ -21,6 +24,8 @@ query GetFolderColumnStats(
       search: $search
       taskFilter: $taskFilter
       taskSearch: $taskSearch
+      globalSearch: $globalSearch
+      includeParents: $includeParents
       parentIds: $parentIds
       ids: $ids
       includeFolderChildren: $includeFolderChildren
