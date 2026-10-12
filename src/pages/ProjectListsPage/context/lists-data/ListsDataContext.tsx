@@ -4,7 +4,7 @@ import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
 import { useQueryArgumentChangeLoading, useUserProjectConfig, useLocalStorage } from '@shared/hooks'
 import useGetListsData from '../../hooks/useGetListsData'
-import { buildListsTableData } from '../../util'
+import { buildListsTableData, DEFAULT_LISTS_SORT, ListsSort } from '../../util'
 import { usePowerpack, useProjectContext } from '@shared/context'
 import { ListsDataContext } from './ListsDataContextInstance'
 
@@ -24,6 +24,9 @@ export interface ListsDataContextValue {
   // filters
   listsFilters: Filter[]
   setListsFilters: (filters: Filter[]) => Promise<void>
+  // sorting
+  listsSort: ListsSort
+  setListsSort: (sort: ListsSort) => void
   // show archived
   showArchived: boolean
   setShowArchived: (show: boolean) => void
@@ -32,6 +35,8 @@ export interface ListsDataContextValue {
 
 interface ListsDataProviderProps {
   children: ReactNode
+  listsSort?: ListsSort
+  setListsSort?: (sort: ListsSort) => void
   entityListTypes?: string[]
   isReview?: boolean
   // picker mode: ignore the page's saved list filters (selection dialog, not the Lists page)
@@ -47,6 +52,8 @@ interface ListsDataProviderProps {
 // fetch all lists and provide methods to update the lists
 export const ListsDataProvider = ({
   children,
+  listsSort = DEFAULT_LISTS_SORT,
+  setListsSort = () => {},
   entityListTypes,
   isReview,
   picker,
@@ -150,6 +157,7 @@ export const ListsDataProvider = ({
         showArchived,
         listDisabled,
         getDisabledFolders ? (folder) => disabledFolderMessages.get(folder.id) : undefined,
+        listsSort,
       ),
     [
       listsData,
@@ -159,6 +167,7 @@ export const ListsDataProvider = ({
       listDisabled,
       getDisabledFolders,
       disabledFolderMessages,
+      listsSort,
     ],
   )
 
@@ -183,6 +192,9 @@ export const ListsDataProvider = ({
         // filters
         listsFilters,
         setListsFilters,
+        // sorting
+        listsSort,
+        setListsSort,
         // show archived
         showArchived,
         setShowArchived,

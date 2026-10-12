@@ -11,6 +11,7 @@ Some parts of the codebase have their own `AGENTS.md` next to the code. It expla
 | --- | --- |
 | Markdown editor (Lexical): comments, descriptions, text cells | [shared/src/components/MarkdownEditor/AGENTS.md](shared/src/components/MarkdownEditor/AGENTS.md) |
 | Page load benchmarks | [tests/performance/AGENTS.md](tests/performance/AGENTS.md) |
+| Playwright tests: unit and e2e, fixtures, page objects | [tests/AGENTS.md](tests/AGENTS.md) |
 
 ## Load performance
 Every page load waits on `/api/info`, then the route's own queries. Keep anything else off that path, and check changes with the page load benchmarks (`yarn perf:build`, see the guide).

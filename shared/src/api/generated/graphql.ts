@@ -1855,7 +1855,7 @@ export type GetListItemsQueryVariables = Exact<{
   after?: string | null | undefined;
   before?: string | null | undefined;
   last?: number | null | undefined;
-  sortBy?: string | null | undefined;
+  sortBy?: Array<string> | string | null | undefined;
   filter?: string | null | undefined;
   search?: string | null | undefined;
   showComments?: boolean;
@@ -1997,7 +1997,7 @@ export type GetTasksListQueryVariables = Exact<{
   first?: number | null | undefined;
   before?: string | null | undefined;
   last?: number | null | undefined;
-  sortBy?: string | null | undefined;
+  sortBy?: Array<string> | string | null | undefined;
   showComments?: boolean;
   includeFolderChildren?: boolean;
 }>;
@@ -2101,7 +2101,7 @@ export type GetProductsQueryVariables = Exact<{
   first?: number | null | undefined;
   before?: string | null | undefined;
   last?: number | null | undefined;
-  sortBy?: string | null | undefined;
+  sortBy?: Array<string> | string | null | undefined;
   showComments?: boolean;
 }>;
 
@@ -2140,7 +2140,7 @@ export type GetVersionsQueryVariables = Exact<{
   first?: number | null | undefined;
   before?: string | null | undefined;
   last?: number | null | undefined;
-  sortBy?: string | null | undefined;
+  sortBy?: Array<string> | string | null | undefined;
   showComments?: boolean;
 }>;
 
@@ -2165,7 +2165,7 @@ export type GetVersionsByProductIdQueryVariables = Exact<{
   featuredOnlyEntityType?: string | null | undefined;
   latestPerFolder?: boolean | null | undefined;
   hasReviewables?: boolean | null | undefined;
-  sortBy?: string | null | undefined;
+  sortBy?: Array<string> | string | null | undefined;
   first?: number | null | undefined;
   last?: number | null | undefined;
   after?: string | null | undefined;
@@ -3214,7 +3214,7 @@ export const GetProductVersionsDocument = new TypedDocumentString(`
 }
     `);
 export const GetListItemsDocument = new TypedDocumentString(`
-    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String, $search: String, $showComments: Boolean! = false) {
+    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: [String!], $filter: String, $search: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     entityLists(ids: [$listId]) {
       pageInfo {
@@ -3648,7 +3648,7 @@ fragment TaskPropsFragment on TaskNode {
   }
 }`);
 export const GetTasksListDocument = new TypedDocumentString(`
-    query GetTasksList($projectName: String!, $folderIds: [String!], $taskIds: [String!], $filter: String, $folderFilter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false, $includeFolderChildren: Boolean! = true) {
+    query GetTasksList($projectName: String!, $folderIds: [String!], $taskIds: [String!], $filter: String, $folderFilter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: [String!], $showComments: Boolean! = false, $includeFolderChildren: Boolean! = true) {
   project(name: $projectName) {
     name
     tasks(
@@ -3927,7 +3927,7 @@ export const GetLatestProductVersionDocument = new TypedDocumentString(`
 }
     `);
 export const GetProductsDocument = new TypedDocumentString(`
-    query GetProducts($projectName: String!, $productIds: [String!], $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $featuredVersionOrder: [String!], $search: String, $folderIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
+    query GetProducts($projectName: String!, $productIds: [String!], $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $featuredVersionOrder: [String!], $search: String, $folderIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $sortBy: [String!], $showComments: Boolean! = false) {
   project(name: $projectName) {
     products(
       ids: $productIds
@@ -4060,7 +4060,7 @@ export const GetProductsColumnStatsDocument = new TypedDocumentString(`
   distribution
 }`);
 export const GetVersionsDocument = new TypedDocumentString(`
-    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean, $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $showComments: Boolean! = false) {
+    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean, $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: [String!], $showComments: Boolean! = false) {
   project(name: $projectName) {
     versions(
       ids: $versionIds
@@ -4175,7 +4175,7 @@ export const GetVersionsAttribsDocument = new TypedDocumentString(`
 }
     `);
 export const GetVersionsByProductIdDocument = new TypedDocumentString(`
-    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $folderFilter: String, $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean, $hasReviewables: Boolean, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String, $showComments: Boolean! = false) {
+    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $folderFilter: String, $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean, $hasReviewables: Boolean, $sortBy: [String!], $first: Int, $last: Int, $after: String, $before: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     versions(
       productIds: $productIds

@@ -11,6 +11,7 @@ export * from './getEntityId'
 export * from './extractVersionFromFilename'
 export * from './versionUploadHelpers'
 export * from './columnConfigConverter'
+export * from './sortingHelpers'
 export * from './checkName'
 export * from './humanizeFieldName'
 export * from './pluralize'
@@ -33,6 +34,7 @@ export * from './realtimeUpdatesUtils'
 export * from './parseFilename'
 export * from './mentionTypeOptions'
 export * from './searchTerms'
+export * from './activeEntities'
 
 import isHTMLElement from './isHTMLElement'
 export { isHTMLElement }
@@ -40,3 +42,5 @@ export { isHTMLElement }
 import PubSub from './pubsub'
 export { PubSub }
 export * from './afterStartup'
+export { getEntityIcon, getEntityColor } from './iconUtils'
+export type { IconAnatomy } from './iconUtils'

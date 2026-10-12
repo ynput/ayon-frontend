@@ -172,6 +172,15 @@ export const HeaderCell = styled.th`
   }
 `
 
+// position of a column in a multi-key sort, shown next to its sort button
+export const SortIndex = styled.span`
+  margin-left: -2px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--md-sys-color-outline);
+  user-select: none;
+`
+
 export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
   display: none;
 

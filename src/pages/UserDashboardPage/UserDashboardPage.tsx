@@ -50,6 +50,8 @@ type PageLink = NavLinkItem & {
   viewType?: ViewType
   showProjectList?: boolean
   isMultiSelect?: boolean
+  // page only makes sense with at least one project; shows the "No Projects" state otherwise
+  requiresProjects?: boolean
 }
 
 // these pull in the settings editor (new project dialog), only load them when they are shown
@@ -149,6 +151,7 @@ const UserDashboardPage: React.FC = () => {
         // viewType: 'tasks',
         showProjectList: true,
         isMultiSelect: true,
+        requiresProjects: true,
       },
       {
         name: 'Projects',
@@ -157,6 +160,7 @@ const UserDashboardPage: React.FC = () => {
         viewType: 'projects-overview',
         component: <ProjectsPage onNewProject={() => setShowNewProject(true)} />,
         showProjectList: false,
+        requiresProjects: true,
       },
       // Show bookings splash when planner addon is not installed;
       // when installed the remote page from the planner addon handles /dashboard/bookings
@@ -254,25 +258,33 @@ const UserDashboardPage: React.FC = () => {
   const isBuiltInPage = !addonName && (!module || BUILT_IN_MODULES.includes(module))
   if (!isBuiltInPage && (isLoadingProjects || isLoadingRemotePages)) return <LoadingPage />
 
-  if (!isLoadingProjects && !projects.length)
-    return (
-      <Suspense fallback={<LoadingPage />}>
-        <UserDashboardNoProjects />
-      </Suspense>
-    )
-
   if (isGuest) {
     return <GuestUserPageLocked />
   }
 
   if (!activePage?.component) return null
 
+  // Keep the tab bar and non-project pages (e.g. addon studio pages used for first-run setup)
+  // reachable on a server with no projects; only project-based pages show the empty state.
+  const showNoProjects = !isLoadingProjects && !projects.length && !!activePage.requiresProjects
+
   const {
     component: moduleComponent,
     showProjectList = false,
     isMultiSelect = false,
     viewType,
-  } = activePage
+  } = showNoProjects
+    ? {
+        component: (
+          <Suspense fallback={<LoadingPage />}>
+            <UserDashboardNoProjects />
+          </Suspense>
+        ),
+        showProjectList: false,
+        isMultiSelect: false,
+        viewType: undefined,
+      }
+    : activePage
 
   return (
     <>
