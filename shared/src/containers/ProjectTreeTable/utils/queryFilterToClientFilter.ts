@@ -345,7 +345,7 @@ const convertConditionValueToFilterValues = (
     let isCustomValue = false
 
     // Handle LIKE operator with wildcards - strip them and mark as custom
-    if (operator === 'like' && typeof val === 'string') {
+    if ((operator === 'like' || operator === 'notlike') && typeof val === 'string') {
       // Remove leading and trailing % wildcards
       stringValue = val.replace(/^%/, '').replace(/%$/, '')
       isCustomValue = true
@@ -385,7 +385,15 @@ const convertConditionValueToFilterValues = (
 }
 
 const isInvertedOperator = (operator: QueryCondition['operator'], type?: string): boolean => {
-  const invertedOperators = ['ne', 'notin', 'excludes', 'excludesall', 'excludesany', 'notnull']
+  const invertedOperators = [
+    'ne',
+    'notin',
+    'notlike',
+    'excludes',
+    'excludesall',
+    'excludesany',
+    'notnull',
+  ]
   return operator ? invertedOperators.includes(operator) : false
 }
 
