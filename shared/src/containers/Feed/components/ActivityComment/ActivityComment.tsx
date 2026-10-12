@@ -113,6 +113,10 @@ const ActivityComment = ({
     origin,
   } = activity
   if (!authorName) authorName = author?.name || ''
+  // realtime thumbnail patches can add a version without attrib, treat that as unknown
+  const annotationFrameStart: number | null | undefined = activity.version?.attrib
+    ? activity.version.attrib.frameStart ?? null
+    : undefined
   authorFullName = getActivityUserName({ name: authorName, label: authorFullName })
 
   // the same comment can be shown twice at once (e.g. in the viewer and the details panel behind
@@ -294,6 +298,7 @@ const ActivityComment = ({
             <CommentInput
               initValue={body}
               initFiles={files}
+              annotationFrameStart={annotationFrameStart}
               initCategory={categoryData?.name}
               data={activity.activityData}
               activityId={activityId}
@@ -384,6 +389,7 @@ const ActivityComment = ({
                 isDownloadable
                 onExpand={onFileExpand}
                 onAnnotationClick={onAnnotationClick}
+                pt={{ file: { annotationFrameStart } }}
                 onRemove={undefined}
               />
             </>

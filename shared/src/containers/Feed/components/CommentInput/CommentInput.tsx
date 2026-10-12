@@ -62,6 +62,7 @@ type UploadingFile = {
 interface CommentInputProps {
   initValue: string | null
   initFiles?: any[]
+  annotationFrameStart?: number | null
   initCategory?: string | null
   data?: any
   activityId?: string
@@ -99,6 +100,7 @@ const MENTION_BUTTONS: { trigger: MentionTrigger; icon: IconType; tooltip: strin
 const CommentInput: FC<CommentInputProps> = ({
   initValue,
   initFiles = [],
+  annotationFrameStart,
   initCategory = null,
   data = {},
   activityId,
@@ -863,6 +865,7 @@ const CommentInput: FC<CommentInputProps> = ({
               isEditing
               pt={{
                 file: {
+                  annotationFrameStart,
                   style: {
                     height: isEditing ? 70 : undefined,
                   },
