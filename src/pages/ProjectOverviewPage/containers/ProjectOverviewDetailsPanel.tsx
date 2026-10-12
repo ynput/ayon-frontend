@@ -5,10 +5,14 @@ import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import type { DetailsPanelEntityData, ProjectModel } from '@shared/api'
 import {
+  parseCellId,
+  useOptionalSelectionCellsContext,
   useProjectTableContext,
   useSelectedRowsContext,
   useDetailsPanelEntityContext,
 } from '@shared/containers/ProjectTreeTable'
+import { useRegisterActiveEntities } from '@shared/util'
+import type { ActiveEntity } from '@shared/util'
 import { EntityMap } from '@shared/containers/ProjectTreeTable'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
@@ -100,10 +104,41 @@ const ProjectOverviewDetailsPanel = ({
             onUriOpen={onUriOpen}
           />
           <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
+          <RegisterOverviewSelection projectName={projectName} />
         </>
       )}
     </EntityListsContextBoundary>
   )
+}
+
+/**
+ * Tells global features (the links dialog) what is selected in the table, even
+ * while the details panel is closed. A focused cell counts as selecting its
+ * row. Kept separate so cell focus changes only re-render this component.
+ */
+const RegisterOverviewSelection = ({ projectName }: { projectName: string }) => {
+  const { getEntityById } = useProjectTableContext()
+  const { selectedRows } = useSelectedRowsContext()
+  const selectedEntity = useDetailsPanelEntityContext()?.selectedEntity || null
+  const selectedCells = useOptionalSelectionCellsContext()?.selectedCells
+
+  const rowIds = selectedRows.length
+    ? selectedRows
+    : [...new Set([...(selectedCells || [])].map((c) => parseCellId(c)?.rowId))]
+  const fromRows: ActiveEntity[] = rowIds.flatMap((rowId) => {
+    const entity = rowId ? getEntityById(rowId) : undefined
+    return entity
+      ? [{ id: entity.entityId || entity.id, entityType: entity.entityType, projectName }]
+      : []
+  })
+  const active: ActiveEntity[] = fromRows.length
+    ? fromRows
+    : selectedEntity
+    ? [{ id: selectedEntity.entityId, entityType: selectedEntity.entityType, projectName }]
+    : []
+
+  useRegisterActiveEntities(active)
+  return null
 }
 
 /**
