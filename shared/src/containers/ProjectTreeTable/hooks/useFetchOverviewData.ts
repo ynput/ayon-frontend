@@ -187,29 +187,9 @@ export const useFetchOverviewData = ({
     isFetching: isFetchingExpandedFoldersTasks,
     error: expandedFoldersTasksError,
     isUninitialized: isUninitializedExpandedFoldersTasks,
-    originalArgs: expandedFoldersTasksFetchedArgs,
-    refetch: refetchExpandedFoldersTasks,
   } = useGetOverviewTasksByFoldersQuery(expandedFoldersTasksArgs, {
     skip: skipExpandedFoldersTasks,
   })
-
-  // All expanded folders share one cache entry, and RTK Query drops a request for an entry that
-  // is still loading. A folder expanded while another folder's tasks were loading would never get
-  // its tasks, so fetch the folders the last request did not cover once it settles.
-  useEffect(() => {
-    if (skipExpandedFoldersTasks || isFetchingExpandedFoldersTasks) return
-    if (isUninitializedExpandedFoldersTasks || expandedFoldersTasksError) return
-    const fetchedIds = new Set(expandedFoldersTasksFetchedArgs?.parentIds)
-    if (visibleFolderIdsToQuery.some((id) => !fetchedIds.has(id))) refetchExpandedFoldersTasks()
-  }, [
-    skipExpandedFoldersTasks,
-    isFetchingExpandedFoldersTasks,
-    isUninitializedExpandedFoldersTasks,
-    expandedFoldersTasksError,
-    expandedFoldersTasksFetchedArgs,
-    visibleFolderIdsToQuery,
-    refetchExpandedFoldersTasks,
-  ])
 
   const skipFoldersByTaskFilter =
     (!taskFilters.filterString &&
