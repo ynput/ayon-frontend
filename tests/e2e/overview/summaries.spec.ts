@@ -215,6 +215,7 @@ test.describe('overview summary matches the table', () => {
     await openWithView(api, overview, projectName, {
       showHierarchy: false,
       groupBy: 'folder',
+      showEmptyGroups: true,
       conditions: [textSearch('sh030')],
     })
     await expectSummaryToMatchTable(overview, { folders: ['sh030'], tasks: 0 })
