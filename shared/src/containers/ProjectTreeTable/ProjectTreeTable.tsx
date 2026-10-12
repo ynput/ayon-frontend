@@ -1267,7 +1267,10 @@ const TableHeadCell = ({
                   if (column.id === 'thumbnail') setThumbnailResizeDetached(e.shiftKey)
                   header.getResizeHandler()(e)
                 },
-                onTouchStart: header.getResizeHandler(),
+onTouchStart: (e: React.TouchEvent) => {
+                  if (column.id === 'thumbnail') setThumbnailResizeDetached(false)
+                  header.getResizeHandler()(e)
+                }
                 onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
                 className: clsx('resize-handle', {
                   resizing: column.getIsResizing(),
