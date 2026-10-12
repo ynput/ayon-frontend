@@ -13,6 +13,7 @@ query GetVersionsColumnStats(
   $featuredOnly: [String!]
   $featuredOnlyEntityType: String
   $latestPerFolder: Boolean
+  $hasReviewables: Boolean
 ) {
   project(name: $projectName) {
     versions(
@@ -28,6 +29,7 @@ query GetVersionsColumnStats(
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType
       latestPerFolder: $latestPerFolder
+      hasReviewables: $hasReviewables
     ) {
       fieldStats {
         ...ColumnStatsFragment

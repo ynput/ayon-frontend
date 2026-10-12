@@ -9,6 +9,7 @@ query GetProductsColumnStats(
   $folderIds: [String!]
   $productIds: [String!]
   $targets: [MetricTargetInput!]
+  $hasReviewables: Boolean
 ) {
   project(name: $projectName) {
     products(
@@ -19,6 +20,7 @@ query GetProductsColumnStats(
       taskFilter: $taskFilter
       folderFilter: $folderFilter
       folderIds: $folderIds
+      hasReviewables: $hasReviewables
       includeFolderChildren: true
     ) {
       fieldStats {

@@ -24,6 +24,12 @@ interface UseProjectOverviewStatsParams {
   selectedFolders: string[]
   selectedTaskIds: string[]
   showHierarchy: boolean
+  // The folders of the table data (hierarchy, flat folders view); the folder summary aggregates
+  // exactly these. null when that is every folder of the project, undefined when the table shows
+  // no folder rows (task list), where the folders are derived from the filters.
+  tableFolderIds?: string[] | null
+  // the table's folder set is still loading, so tableFolderIds is not final yet
+  isLoadingTableFolders?: boolean
 }
 
 export const useProjectOverviewStats = ({
@@ -34,6 +40,8 @@ export const useProjectOverviewStats = ({
   selectedFolders,
   selectedTaskIds,
   showHierarchy,
+  tableFolderIds,
+  isLoadingTableFolders,
 }: UseProjectOverviewStatsParams) => {
   const { projectName } = useProjectContext()
   const { attribFields } = useProjectDataContext()
@@ -103,21 +111,36 @@ export const useProjectOverviewStats = ({
     [selectedFolders, getFolderIdsWithoutChildren],
   )
 
-  const folderStatsArgs: GetFolderColumnStatsQueryVariables = {
-    projectName,
-    filter: folderFilter || undefined,
-    search: folderSearch || undefined,
-    taskFilter: taskFilter || undefined,
-    taskSearch: taskSearch || undefined,
-    [showHierarchy ? 'parentIds' : 'ids']: selectedFolderIdsWithoutChildren.length
-      ? selectedFolderIdsWithoutChildren
-      : undefined,
-    targets: folderTargets,
-    includeFolderChildren: true,
-    hideEmptyFolders: groupByConfig?.showEmpty === false && !showHierarchy ? true : undefined,
-  }
+  // The table data already applies every filter, search and selection to its folders, including
+  // parents of matches (hierarchy) and folders without tasks (flat folders view), which the
+  // filter arguments alone can't express, so count those folders directly.
+  const folderStatsArgs: GetFolderColumnStatsQueryVariables =
+    tableFolderIds === null
+      ? { projectName, targets: folderTargets, includeFolderChildren: true }
+      : tableFolderIds
+      ? {
+          projectName,
+          ids: tableFolderIds,
+          includeFolderChildren: false,
+          targets: folderTargets,
+        }
+      : {
+          projectName,
+          filter: folderFilter || undefined,
+          search: folderSearch || undefined,
+          taskFilter: taskFilter || undefined,
+          taskSearch: taskSearch || undefined,
+          [showHierarchy ? 'parentIds' : 'ids']: selectedFolderIdsWithoutChildren.length
+            ? selectedFolderIdsWithoutChildren
+            : undefined,
+          targets: folderTargets,
+          includeFolderChildren: true,
+          hideEmptyFolders: groupByConfig?.showEmpty === false && !showHierarchy ? true : undefined,
+        }
 
-  const folderQuery = useGetFolderColumnStatsQuery(folderStatsArgs, { skip })
+  const folderQuery = useGetFolderColumnStatsQuery(folderStatsArgs, {
+    skip: skip || isLoadingTableFolders,
+  })
 
   const taskStatsArgs: GetTaskColumnStatsQueryVariables = {
     projectName,
