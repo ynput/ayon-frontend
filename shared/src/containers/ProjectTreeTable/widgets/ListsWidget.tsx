@@ -1,6 +1,7 @@
 import { FC, MouseEvent, useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import clsx from 'clsx'
+import { Icon } from '@ynput/ayon-react-components'
 import { Chips, ChipValue } from '@shared/components/Chips/Chips'
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import {
@@ -13,10 +14,29 @@ import type {
   ListMembership,
   ListsMembershipEntityType,
 } from '@shared/api/queries/entityLists/getListsMembership'
+import { getListIcon } from '@shared/util'
 import { useEntityListsMembership } from '../hooks/useListsMembership'
 import { useProjectTableContext } from '../context/project-table'
 import { LIST_COLUMNS } from '../utils/listColumns'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
+
+const ListTags = styled(Chips)`
+  .chip {
+    background-color: transparent;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-high-hover);
+    }
+  }
+
+  .open-icon {
+    opacity: 0;
+  }
+
+  .chip:hover .open-icon {
+    opacity: 1;
+  }
+`
 
 const LoadingChip = styled.span`
   height: 24px;
@@ -84,8 +104,14 @@ const EntityListsChips: FC<ListsWidgetProps & { value: ListsWidgetData }> = ({
 
   const chips: ChipValue[] = useMemo(
     () =>
-      items.map(({ list, open }) => ({ label: list.label, tooltip: list.label, onClick: open })),
-    [items],
+      items.map(({ list, open }) => ({
+        label: list.label,
+        tooltip: list.label,
+        icon: getListIcon({ entityListType: list.entityListType, entityType }),
+        suffix: open && <Icon icon="open_in_new" className="open-icon" />,
+        onClick: open,
+      })),
+    [items, entityType],
   )
 
   // the table ignores keys while a cell is editing and keeps focus on the cell
@@ -103,7 +129,7 @@ const EntityListsChips: FC<ListsWidgetProps & { value: ListsWidgetData }> = ({
 
   return (
     <>
-      <Chips values={chips} pt={{ chip: { className: EDIT_TRIGGER_CLASS } }} />
+      <ListTags values={chips} pt={{ chip: { className: EDIT_TRIGGER_CLASS } }} />
       {isEditing && (
         <CellEditingDialog isEditing={isEditing} anchorId={cellId} onClose={onCancelEdit}>
           {/* the portal still bubbles mousedown to the table cell, which would swallow the click */}
@@ -112,6 +138,7 @@ const EntityListsChips: FC<ListsWidgetProps & { value: ListsWidgetData }> = ({
             <LinksList>
               {items.map(({ list, open }) => (
                 <LinkItem key={list.id} className={clsx({ clickable: !!open })} onClick={open}>
+                  <Icon icon={getListIcon({ entityListType: list.entityListType, entityType })} />
                   <span className="title">
                     <span className="label">{list.label}</span>
                   </span>

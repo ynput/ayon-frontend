@@ -84,6 +84,7 @@ export type ChipValue = {
 interface ChipsProps {
   values: ChipValue[]
   disabled?: boolean
+  className?: string
   pt?: {
     chip?: Partial<HTMLAttributes<HTMLDivElement>>
   }
@@ -94,7 +95,7 @@ type ChipsLayout = {
   rows: number
 }
 
-export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
+export const Chips: FC<ChipsProps> = ({ values, disabled, className, pt }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [{ visibleCount, rows }, setLayout] = useState<ChipsLayout>({
     visibleCount: 0,
@@ -179,7 +180,7 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
   const hiddenCount = visibleCount ? values.length - visibleValues.length : 0
 
   return (
-    <ChipsContainer ref={containerRef} className={clsx({ 'multi-row': rows > 1 })}>
+    <ChipsContainer ref={containerRef} className={clsx(className, { 'multi-row': rows > 1 })}>
       {visibleValues.map((chip, index) => (
         <Chip
           {...pt?.chip}
