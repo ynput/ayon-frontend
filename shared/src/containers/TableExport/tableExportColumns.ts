@@ -1,13 +1,18 @@
 import type { ColumnOrderState, ColumnPinningState, VisibilityState } from '@tanstack/react-table'
+import type { LinkTypeModel } from '@shared/api'
 import { checkColumnVisibility } from '../ProjectTreeTable/utils/checkColumnVisibility'
 import { normalizeColumnId } from '../ProjectTreeTable/utils/columnIds'
+import { parseScopedColumnId } from '../ProjectTreeTable/utils/cellUtils'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable/constants'
 import {
   COLUMN_LABELS,
   getColumnLabel,
+  getLinkColumnId,
+  getLinkLabel,
   getNameColumnLabel,
+  getScopedHeader,
 } from '../ProjectTreeTable/buildTreeTableColumns'
-import type { ProjectTableAttribute } from '../ProjectTreeTable/types'
+import type { ParentColumnDefinition, ProjectTableAttribute } from '../ProjectTreeTable/types'
 
 // the type column: folder or task type in the hierarchy, product type for products
 export type SubTypeKey = 'folder_or_task_type' | 'product_type'
@@ -31,42 +36,65 @@ const COLUMN_KEYS: Record<string, string> = {
   taskType: 'task_type',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
-  // parent columns
-  folder_subType: 'folder_type',
-  task_subType: 'task_type',
-  product_subType: 'product_type',
-  product_productBaseType: 'product_base_type',
+}
+
+// Parent columns (folder_status, product_attrib_x) export as `<scope>.<key>`, only for the
+// fields the server reads from a row's folder, task or product.
+const PARENT_KEYS: Record<string, Record<string, string>> = {
+  folder: { subType: 'folder_type' },
+  task: { subType: 'task_type' },
+  product: { subType: 'product_type', productBaseType: 'product_base_type' },
+}
+const PARENT_FIELD_KEYS: Record<string, string> = {
+  status: 'status',
+  tags: 'tags',
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
 }
 
 const NOT_DATA_COLUMNS = [ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID]
 
 export const getExportColumnKey = (columnId: string, subTypeKey: SubTypeKey) => {
   const id = normalizeColumnId(columnId)
-  if (id === 'subType') return subTypeKey
-  if (id.startsWith('attrib_')) return `attrib.${id.slice('attrib_'.length)}`
-  return COLUMN_KEYS[id]
+  if (COLUMN_KEYS[id]) return COLUMN_KEYS[id]
+  const { scope, field, isAttrib } = parseScopedColumnId(id)
+  if (scope === 'primary') {
+    if (isAttrib) return `attrib.${field}`
+    return field === 'subType' ? subTypeKey : undefined
+  }
+  if (!PARENT_KEYS[scope]) return undefined
+  const key = isAttrib ? `attrib.${field}` : PARENT_KEYS[scope][field] || PARENT_FIELD_KEYS[field]
+  return key && `${scope}.${key}`
 }
 
-// parent entity columns, e.g. folder_subType or task_attrib_priority
-const PARENT_COLUMN = /^(folder|task|product|version)_(.+)$/
+type LabelContext = {
+  attribFields: ProjectTableAttribute[]
+  scopes: string[]
+  linkTypes?: Pick<LinkTypeModel, 'name' | 'linkType'>[]
+  parentColumns?: Pick<ParentColumnDefinition, 'id' | 'label'>[]
+}
 
-export const getExportColumnLabel = (
-  columnId: string,
-  { attribFields, scopes }: { attribFields: ProjectTableAttribute[]; scopes: string[] },
-): string => {
+// the table's header label of a column
+export const getExportColumnLabel = (columnId: string, context: LabelContext): string => {
+  const { attribFields, scopes, linkTypes = [], parentColumns = [] } = context
   const id = normalizeColumnId(columnId)
   if (id === 'name') return getNameColumnLabel(scopes)
-  if (id.startsWith('attrib_')) {
-    const name = id.slice('attrib_'.length)
-    return attribFields.find((field) => field.name === name)?.data.title || name
+  const parentColumn = parentColumns.find((column) => column.id === id)
+  if (parentColumn) return parentColumn.label
+  if (id.startsWith('link_')) {
+    for (const link of linkTypes) {
+      for (const direction of ['in', 'out']) {
+        if (getLinkColumnId(link, direction) === id) return getLinkLabel(link, direction)
+      }
+    }
+    return id
   }
-  const parent = id.match(PARENT_COLUMN)
-  if (parent && !(id in COLUMN_LABELS)) {
-    const [, scope, field] = parent
-    const label = getExportColumnLabel(field, { attribFields, scopes: [scope] })
-    return `${scope.charAt(0).toUpperCase()}${scope.slice(1)} ${label.toLowerCase()}`
-  }
-  return getColumnLabel(id, scopes)
+  if (id in COLUMN_LABELS) return getColumnLabel(id, scopes)
+  const { scope, field, isAttrib } = parseScopedColumnId(id)
+  const label = isAttrib
+    ? attribFields.find((attrib) => attrib.name === field)?.data.title || field
+    : getColumnLabel(field, scope === 'primary' ? scopes : [scope])
+  return getScopedHeader(scope, label)
 }
 
 // the data columns the table shows, in its order (left pinned columns first)

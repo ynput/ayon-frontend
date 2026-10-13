@@ -1,10 +1,12 @@
 import { FC, useCallback, useMemo } from 'react'
+import { useProjectContext } from '@shared/context'
 import { useColumnSettingsContext } from '../ProjectTreeTable/context/column-settings'
 import { useSelectionCellsContext } from '../ProjectTreeTable/context/selection-cells'
 import { useProjectTableContext } from '../ProjectTreeTable/context/project-table'
 import { parseCellId } from '../ProjectTreeTable/utils/cellUtils'
 import { ROW_SELECTION_COLUMN_ID } from '../ProjectTreeTable/constants'
 import { GROUP_BY_ID } from '../ProjectTreeTable/hooks/useBuildGroupByTableData'
+import type { ParentColumnDefinition } from '../ProjectTreeTable/types'
 import { TableExportDialog } from './TableExportDialog'
 import { useTableExportContext } from './TableExportContextInstance'
 import { TableExportContent, useTableExport } from './useTableExport'
@@ -27,6 +29,7 @@ export type TableExportDialogHostProps = {
   canImport?: boolean // the rows can be imported back with Import CSV
   // the rows to export: the whole table, or the selected table rows
   getRows: (scope: TableExportScope, selectedRowIds: string[]) => TableExportRows
+  parentColumns?: ParentColumnDefinition[] // the table's parent columns, for their labels
 }
 
 const IMPORT_COLUMNS = ['entity_type', 'path']
@@ -37,11 +40,14 @@ export const TableExportDialogHost: FC<TableExportDialogHostProps> = ({
   subTypeKey,
   canImport,
   getRows,
+  parentColumns,
 }) => {
   const tableExport = useTableExportContext()
   const { selectedCells } = useSelectionCellsContext()
   const columnSettings = useColumnSettingsContext()
   const { attribFields, scopes } = useProjectTableContext()
+  const { linkTypes } = useProjectContext()
+  const labelContext = { attribFields, scopes, linkTypes, parentColumns }
   const exportTable = useTableExport()
 
   const selection = useMemo(() => {
@@ -78,7 +84,7 @@ export const TableExportDialogHost: FC<TableExportDialogHostProps> = ({
   const getSkippedColumns = (scope: TableExportScope, settings: TableExportSettings) =>
     getColumnIds(scope, settings)
       .filter((id) => !getExportColumnKey(id, subTypeKey))
-      .map((id) => getExportColumnLabel(id, { attribFields, scopes }))
+      .map((id) => getExportColumnLabel(id, labelContext))
 
   const handleExport = (scope: TableExportScope, settings: TableExportSettings) => {
     const columns: string[] = []
@@ -88,7 +94,7 @@ export const TableExportDialogHost: FC<TableExportDialogHostProps> = ({
       const key = getExportColumnKey(id, subTypeKey)
       if (!key || columnLabels[key]) continue
       if (!columns.includes(key)) columns.push(key)
-      columnLabels[key] = getExportColumnLabel(id, { attribFields, scopes })
+      columnLabels[key] = getExportColumnLabel(id, labelContext)
     }
     return exportTable(projectName, scope, settings, {
       ...getRows(scope, selection.rowIds),

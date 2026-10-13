@@ -12,6 +12,8 @@ attribute the user may read, also rows the table has not loaded, and follow the 
 - `columns` are export keys, not table column ids. `tableExportColumns.ts` maps them; a table column without a key is listed
   as "Not exported" in the dialog. A new column needs a key here and a column on the server (an entity field, `attrib.*` or
   one of the server's extra columns).
+- Parent columns (`folder_status`, `product_attrib_x`) export as `<scope>.<key>`, filled from the row's folder, task or
+  product. Only the fields the server reads for parents are mapped (status, tags, dates, types, attributes).
 - `columnLabels` are the table's header labels, used when column names are labels.
 - Import CSV can read a file back only for folders and tasks (`canImport`), as CSV with field names, raw values and the
   `entity_type` and `path` columns. The dialog's "Use import settings" sets exactly that.

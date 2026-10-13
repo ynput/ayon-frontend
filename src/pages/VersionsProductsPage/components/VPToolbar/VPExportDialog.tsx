@@ -6,12 +6,11 @@ import {
 } from '@shared/containers/TableExport'
 import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
 import { useProjectContext } from '@shared/context'
+import { getForwardSortBy } from '@shared/util'
 import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/vp-data'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
 import type { QueryArguments } from '@pages/VersionsProductsPage/context/vp-data/VPDataContext'
-
-const sortBy = ({ sortBy, desc }: QueryArguments) =>
-  sortBy ? [`${desc ? '-' : ''}${sortBy}`] : undefined
+import { VP_PARENT_COLUMNS } from '../VPTableSettings/VPTableSettingsHelpers'
 
 // empty folder ids match nothing, the table sends them only when ids take over
 const folderIds = (args: QueryArguments) => (args.folderIds?.length ? args.folderIds : undefined)
@@ -47,7 +46,7 @@ const VPExportDialog: FC = () => {
           ...versionRows,
           productFilter: versions.productFilter,
           taskFilter: versions.taskFilter,
-          sortBy: sortBy(versions),
+          sortBy: getForwardSortBy({ sortBy: versions.sortBy, desc: versions.desc }),
         },
       }
     }
@@ -67,7 +66,12 @@ const VPExportDialog: FC = () => {
   }
 
   return (
-    <TableExportDialogHost projectName={projectName} subTypeKey="product_type" getRows={getRows} />
+    <TableExportDialogHost
+      projectName={projectName}
+      subTypeKey="product_type"
+      getRows={getRows}
+      parentColumns={VP_PARENT_COLUMNS}
+    />
   )
 }
 

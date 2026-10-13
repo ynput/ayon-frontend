@@ -48,7 +48,12 @@ export interface ListItemsDataContextValue {
   error?: unknown
   isInitialized: boolean
   // the items query's filter, search and sorting, for exports
-  listItemsQueryArgs: { filter?: string; search?: string; sortBy?: string; desc?: boolean }
+  listItemsQueryArgs: {
+    filter?: string
+    search?: string
+    sortBy?: string | string[]
+    desc?: boolean
+  }
   // filters
   listItemsFilters: QueryFilter
   setListItemsFilters: (filters: QueryFilter) => void

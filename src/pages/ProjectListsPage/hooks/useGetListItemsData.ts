@@ -63,7 +63,7 @@ export interface UseGetListItemsDataReturn {
   fieldStatsLoading: boolean
   fieldStatsError: boolean
   mainCountLabels: { primary: string }
-  queryArgs: { filter?: string; search?: string; sortBy?: string; desc?: boolean }
+  queryArgs: { filter?: string; search?: string; sortBy?: string | string[]; desc?: boolean }
 }
 
 const useGetListItemsData = ({

@@ -447,7 +447,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         openImportDialog('entity_list_item', projectName, selectedList?.id)
                       }
                     />
-                    <ListExportDialog />
+                    <ListExportDialog parentColumns={parentColumns} />
                     <Actions
                       entities={[
                         {

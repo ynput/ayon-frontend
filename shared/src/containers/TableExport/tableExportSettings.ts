@@ -56,5 +56,6 @@ export const downloadUrl = (url: string, fileName: string) => {
   a.href = url
   a.download = fileName
   a.click()
-  URL.revokeObjectURL(url)
+  // revoking right away can cancel the download in Safari
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
