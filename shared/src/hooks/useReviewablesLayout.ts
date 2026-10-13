@@ -1,7 +1,7 @@
 import { RefObject, useEffect, useState } from 'react'
 
 // with more reviewables than this, they need a guaranteed share of the toolbar
-const MAX_REVIEWABLES_WITHOUT_MIN_HEIGHT = 3
+const MAX_REVIEWABLES_WITHOUT_MIN_HEIGHT = 4
 // minimum share of the toolbar height the reviewables get when stacked above the tools
 const MIN_REVIEWABLES_HEIGHT_RATIO = 0.3
 
@@ -25,6 +25,8 @@ export function useReviewablesLayout({
 }: Options): ReviewablesLayout {
   const [containerHeight, setContainerHeight] = useState(0)
   const [toolsHeight, setToolsHeight] = useState(0)
+
+  console.log('containerHeight:', containerHeight, 'toolsHeight:', toolsHeight)
 
   useEffect(() => {
     const container = containerRef.current
