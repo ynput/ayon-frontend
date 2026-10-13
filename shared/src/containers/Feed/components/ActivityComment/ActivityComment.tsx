@@ -45,6 +45,7 @@ import { copyToClipboard } from '@shared/util'
 
 type Props = {
   activity: any
+  annotationFrameStart?: number | null
   onCheckChange?: Function
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
   onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
@@ -68,6 +69,7 @@ type Props = {
 
 const ActivityComment = ({
   activity = {},
+  annotationFrameStart,
   onCheckChange,
   onDelete,
   onUpdate,
@@ -114,10 +116,6 @@ const ActivityComment = ({
     origin,
   } = activity
   if (!authorName) authorName = author?.name || ''
-  // realtime thumbnail patches can add a version without attrib, treat that as unknown
-  const annotationFrameStart: number | null | undefined = activity.version?.attrib
-    ? activity.version.attrib.frameStart ?? null
-    : undefined
   authorFullName = getActivityUserName({ name: authorName, label: authorFullName })
 
   // the same comment can be shown twice at once (e.g. in the viewer and the details panel behind

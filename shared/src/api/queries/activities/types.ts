@@ -66,7 +66,6 @@ export type FeedActivityReaction = {
 export type FeedActivityVersion = {
   attrib: {
     comment?: string | null
-    frameStart?: number | null
     [key: string]: any
   }
   [key: string]: any

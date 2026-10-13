@@ -1756,7 +1756,7 @@ export type StatsOperation =
   | 'PERCENTAGE_NOT_FILLED'
   | 'SUM';
 
-export type ActivityFragmentFragment = { activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId: string | null, body: string, createdAt: unknown, updatedAt: unknown, author: { name: string, deleted: boolean, active: boolean, attrib: { fullName: string | null } } | null, files: Array<{ id: string, name: string | null, size: string, mime: string | null, mediaInfo: unknown }>, origin: { id: string, name: string, label: string | null, type: string } | null, reactions: Array<{ fullName: string | null, userName: string, reaction: string, timestamp: unknown }>, version: { thumbnailHash: string, status: string, attrib: { comment: string | null, frameStart: number | null } } | null };
+export type ActivityFragmentFragment = { activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId: string | null, body: string, createdAt: unknown, updatedAt: unknown, author: { name: string, deleted: boolean, active: boolean, attrib: { fullName: string | null } } | null, files: Array<{ id: string, name: string | null, size: string, mime: string | null, mediaInfo: unknown }>, origin: { id: string, name: string, label: string | null, type: string } | null, reactions: Array<{ fullName: string | null, userName: string, reaction: string, timestamp: unknown }>, version: { thumbnailHash: string, status: string, attrib: { comment: string | null } } | null };
 
 export type GetActivitiesByIdQueryVariables = Exact<{
   projectName: string;
@@ -1765,7 +1765,7 @@ export type GetActivitiesByIdQueryVariables = Exact<{
 }>;
 
 
-export type GetActivitiesByIdQuery = { project: { name: string, activities: { pageInfo: { hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string | null, endCursor: string | null }, edges: Array<{ cursor: string | null, node: { activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId: string | null, body: string, createdAt: unknown, updatedAt: unknown, author: { name: string, deleted: boolean, active: boolean, attrib: { fullName: string | null } } | null, files: Array<{ id: string, name: string | null, size: string, mime: string | null, mediaInfo: unknown }>, origin: { id: string, name: string, label: string | null, type: string } | null, reactions: Array<{ fullName: string | null, userName: string, reaction: string, timestamp: unknown }>, version: { thumbnailHash: string, status: string, attrib: { comment: string | null, frameStart: number | null } } | null } }> } } };
+export type GetActivitiesByIdQuery = { project: { name: string, activities: { pageInfo: { hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string | null, endCursor: string | null }, edges: Array<{ cursor: string | null, node: { activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId: string | null, body: string, createdAt: unknown, updatedAt: unknown, author: { name: string, deleted: boolean, active: boolean, attrib: { fullName: string | null } } | null, files: Array<{ id: string, name: string | null, size: string, mime: string | null, mediaInfo: unknown }>, origin: { id: string, name: string, label: string | null, type: string } | null, reactions: Array<{ fullName: string | null, userName: string, reaction: string, timestamp: unknown }>, version: { thumbnailHash: string, status: string, attrib: { comment: string | null } } | null } }> } } };
 
 export type GetActivityUsersQueryVariables = Exact<{
   projects?: Array<string> | string | null | undefined;
@@ -1788,7 +1788,7 @@ export type GetActivitiesQueryVariables = Exact<{
 }>;
 
 
-export type GetActivitiesQuery = { project: { name: string, activities: { pageInfo: { hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string | null, endCursor: string | null }, edges: Array<{ cursor: string | null, node: { activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId: string | null, body: string, createdAt: unknown, updatedAt: unknown, author: { name: string, deleted: boolean, active: boolean, attrib: { fullName: string | null } } | null, files: Array<{ id: string, name: string | null, size: string, mime: string | null, mediaInfo: unknown }>, origin: { id: string, name: string, label: string | null, type: string } | null, reactions: Array<{ fullName: string | null, userName: string, reaction: string, timestamp: unknown }>, version: { thumbnailHash: string, status: string, attrib: { comment: string | null, frameStart: number | null } } | null } }> } } };
+export type GetActivitiesQuery = { project: { name: string, activities: { pageInfo: { hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string | null, endCursor: string | null }, edges: Array<{ cursor: string | null, node: { activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId: string | null, body: string, createdAt: unknown, updatedAt: unknown, author: { name: string, deleted: boolean, active: boolean, attrib: { fullName: string | null } } | null, files: Array<{ id: string, name: string | null, size: string, mime: string | null, mediaInfo: unknown }>, origin: { id: string, name: string, label: string | null, type: string } | null, reactions: Array<{ fullName: string | null, userName: string, reaction: string, timestamp: unknown }>, version: { thumbnailHash: string, status: string, attrib: { comment: string | null } } | null } }> } } };
 
 export type GetEntitiesChecklistsQueryVariables = Exact<{
   projectName: string;
@@ -1797,6 +1797,14 @@ export type GetEntitiesChecklistsQueryVariables = Exact<{
 
 
 export type GetEntitiesChecklistsQuery = { project: { name: string, activities: { edges: Array<{ cursor: string | null, node: { activityId: string, body: string } }> } } };
+
+export type GetVersionsFrameStartQueryVariables = Exact<{
+  projectName: string;
+  versionIds: Array<string> | string;
+}>;
+
+
+export type GetVersionsFrameStartQuery = { project: { versions: { edges: Array<{ node: { id: string, attrib: { frameStart: number | null } } }> } } };
 
 export type GetDetailsPanelFolderQueryVariables = Exact<{
   projectName: string;
@@ -2337,7 +2345,6 @@ export const ActivityFragmentFragmentDoc = new TypedDocumentString(`
     status
     attrib {
       comment
-      frameStart
     }
   }
 }
@@ -2864,7 +2871,6 @@ export const GetActivitiesByIdDocument = new TypedDocumentString(`
     status
     attrib {
       comment
-      frameStart
     }
   }
 }`);
@@ -2954,7 +2960,6 @@ export const GetActivitiesDocument = new TypedDocumentString(`
     status
     attrib {
       comment
-      frameStart
     }
   }
 }`);
@@ -2973,6 +2978,22 @@ export const GetEntitiesChecklistsDocument = new TypedDocumentString(`
         node {
           activityId
           body
+        }
+      }
+    }
+  }
+}
+    `);
+export const GetVersionsFrameStartDocument = new TypedDocumentString(`
+    query GetVersionsFrameStart($projectName: String!, $versionIds: [String!]!) {
+  project(name: $projectName) {
+    versions(ids: $versionIds) {
+      edges {
+        node {
+          id
+          attrib {
+            frameStart
+          }
         }
       }
     }
@@ -4605,6 +4626,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetEntitiesChecklists: build.query<GetEntitiesChecklistsQuery, GetEntitiesChecklistsQueryVariables>({
       query: (variables) => ({ document: GetEntitiesChecklistsDocument as unknown as string, variables })
+    }),
+    GetVersionsFrameStart: build.query<GetVersionsFrameStartQuery, GetVersionsFrameStartQueryVariables>({
+      query: (variables) => ({ document: GetVersionsFrameStartDocument as unknown as string, variables })
     }),
     GetDetailsPanelFolder: build.query<GetDetailsPanelFolderQuery, GetDetailsPanelFolderQueryVariables>({
       query: (variables) => ({ document: GetDetailsPanelFolderDocument as unknown as string, variables })

@@ -40,7 +40,6 @@ fragment ActivityFragment on ActivityNode {
     status
     attrib {
       comment
-      frameStart
     }
   }
 }
