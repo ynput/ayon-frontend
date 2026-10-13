@@ -1699,10 +1699,15 @@
     react-toastify "^9.0.3"
     sass "1.99.0"
 
-"@ynput/ayon-react-components@^1.21.0":
-  version "1.21.0"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.21.0.tgz#dff66ed645aa173b575ad87ccf8451705630a306"
-  integrity sha512-0EQHIjBGaRY5jwi4Wj3A/ngotTR7S4K2O0lPExlmTaSMNGIZ6vBolHcpAMUtiB3eXiFsgFhad9bsWSk+trFa0g==
+"@ynput/ayon-react-components@^1.22.0":
+  version "1.22.0"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.22.0.tgz#6144d3ccf7c29dbf3a886d4630362051c95faf08"
+  integrity sha512-H8+KZT6wOFzcozGPoBuzHjzRK2Q9WUc1MiGoCG49b0QIbvl2v9s+9nx03q0HfCaXAD2ZdG4nCUzfBJnERabjrw==
+  dependencies:
+    clsx "^2.1.1"
+    match-sorter "^8.2.0"
+    overlayscrollbars "^2.3.2"
+    overlayscrollbars-react "^0.5.2"
 
 acorn-jsx@^5.3.2:
   version "5.3.2"
@@ -1921,7 +1926,7 @@ classnames@^2.2.6:
   resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.5.1.tgz#ba774c614be0f016da105c858e7159eae8e7687b"
   integrity sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==
 
-clsx@2.1.1:
+clsx@2.1.1, clsx@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/clsx/-/clsx-2.1.1.tgz#eed397c9fd8bd882bfb18deab7102049a2f32999"
   integrity sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==
@@ -2979,6 +2984,14 @@ match-sorter@6.4.0:
     "@babel/runtime" "^7.23.8"
     remove-accents "0.5.0"
 
+match-sorter@^8.2.0:
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/match-sorter/-/match-sorter-8.3.0.tgz#85cb4c3b6b25df110b44d66ed6661625efb21834"
+  integrity sha512-8Py1GbZi5zsclYSFcPAH4H5xfTbeD0bOREA7qP/t8bW4MbOSlPl8sbqHOedEV7O+Bxyvxm6xs/v6BXJGe+JDNA==
+  dependencies:
+    "@babel/runtime" "^7.23.8"
+    remove-accents "0.5.0"
+
 math-intrinsics@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/math-intrinsics/-/math-intrinsics-1.1.0.tgz#a0dd74be81e2aa5c2f27e65ce283605ee4e2b7f9"
@@ -3577,6 +3590,16 @@ optionator@^0.9.3:
     prelude-ls "^1.2.1"
     type-check "^0.4.0"
     word-wrap "^1.2.5"
+
+overlayscrollbars-react@^0.5.2:
+  version "0.5.6"
+  resolved "https://registry.yarnpkg.com/overlayscrollbars-react/-/overlayscrollbars-react-0.5.6.tgz#e9779f9fc2c1a3288570a45c83f8e42518bfb8c1"
+  integrity sha512-E5To04bL5brn9GVCZ36SnfGanxa2I2MDkWoa4Cjo5wol7l+diAgi4DBc983V7l2nOk/OLJ6Feg4kySspQEGDBw==
+
+overlayscrollbars@^2.3.2:
+  version "2.16.0"
+  resolved "https://registry.yarnpkg.com/overlayscrollbars/-/overlayscrollbars-2.16.0.tgz#dda1352649d37a5d2eb5faf8ec3ea765bf815632"
+  integrity sha512-N03oje/q7j93D0aLZtoCdsDSYLmhheSsv8H7oSLE7HhdV9P/bmCURtLV/KbPye7P/bpfyt/obSfDpGUYoJ0OWg==
 
 p-limit@^3.0.2:
   version "3.1.0"

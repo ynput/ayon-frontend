@@ -12,13 +12,13 @@ const StyledItem = styled.span`
   white-space: nowrap;
 
   [icon='crop_square'] {
-    font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+    font-variation-settings: 'FILL' 1;
     font-size: 16px;
   }
 
   &.selected {
     [icon='crop_square'] {
-      font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+      font-variation-settings: 'FILL' 0;
       color: var(--md-sys-color-on-surface) !important;
     }
   }

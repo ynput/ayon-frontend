@@ -68,5 +68,9 @@ export const useLoadRemotePages = ({
     return [...modulesPages, ...fallbackPages]
   }, [modulesData, fallbacks, remotesInitialized, isLoadingModulePages, modules])
 
-  return { remotePages: loadedPages, isLoading: isLoadingModulePages || isLoadingRemotes }
+  return {
+    remotePages: loadedPages,
+    // remotes not being registered yet means their modules haven't started loading
+    isLoading: !skip && (isLoadingModulePages || isLoadingRemotes || !remotesInitialized),
+  }
 }

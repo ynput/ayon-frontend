@@ -1,5 +1,7 @@
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 import { registerRemotes } from '@module-federation/enhanced/runtime'
+import { toast } from 'react-toastify'
+import { RefreshToast } from '@shared/components/RefreshToast/RefreshToast'
 import { useListFrontendModulesQuery } from '@shared/api'
 import type { FrontendModuleListItem } from '@shared/api'
 import { useGlobalContext } from '../global/GlobalContextInstance'
@@ -25,7 +27,11 @@ type Props = {
 
 export const RemoteModulesProvider = ({ children, skip }: Props) => {
   // only load if logged in
-  const { data: addonRemoteModules = [], isLoading } = useListFrontendModulesQuery(undefined, {
+  const {
+    data: addonRemoteModules = [],
+    isLoading,
+    isFetching,
+  } = useListFrontendModulesQuery(undefined, {
     skip,
   })
 
@@ -35,6 +41,37 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
   } = useGlobalContext()
 
   const [remotesInitialized, setRemotesInitialized] = useState(false)
+  // addon versions the remotes were registered with
+  const registeredVersions = useRef<Record<string, string>>({})
+
+  // Module federation can't swap a remote once registered, so after an addon update
+  // (server restart or bundle change) the page would keep running the old addon build
+  // against the new server. Ask the user to refresh so the new remotes get registered.
+  useEffect(() => {
+    if (!remotesInitialized || isFetching) return
+
+    const updatedAddons = addonRemoteModules.filter(({ addonName, addonVersion }) => {
+      const registeredVersion = registeredVersions.current[addonName]
+      return registeredVersion !== undefined && registeredVersion !== addonVersion
+    })
+
+    const toastId = 'addon-versions-changed'
+
+    // versions changed back to the loaded ones, the page is current again
+    if (!updatedAddons.length) {
+      toast.dismiss(toastId)
+      return
+    }
+
+    const names = updatedAddons.map((a) => `${a.addonName} ${a.addonVersion}`).join(', ')
+    const render = <RefreshToast message={`Addons updated (${names}). Refresh to load them.`} />
+
+    if (toast.isActive(toastId)) {
+      toast.update(toastId, { render })
+    } else {
+      toast.info(render, { toastId, autoClose: false, closeOnClick: false })
+    }
+  }, [addonRemoteModules, isFetching, remotesInitialized])
 
   useEffect(() => {
     // waiting for loading or it has already been initialized
@@ -61,6 +98,8 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
         })
       })
     })
+
+    registeredVersions.current = Object.fromEntries(allRemotes.map((r) => [r.addon, r.version]))
 
     registerRemotes(
       allRemotes.map((r) => ({

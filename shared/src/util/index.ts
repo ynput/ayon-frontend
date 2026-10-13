@@ -41,5 +41,6 @@ export { isHTMLElement }
 
 import PubSub from './pubsub'
 export { PubSub }
+export * from './afterStartup'
 export { getEntityIcon, getEntityColor } from './iconUtils'
 export type { IconAnatomy } from './iconUtils'

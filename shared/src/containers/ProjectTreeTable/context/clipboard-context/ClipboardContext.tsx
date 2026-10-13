@@ -13,6 +13,7 @@ import {
   getLinkEntityIdsByColumnId,
   parseCellId,
 } from '../../utils/cellUtils'
+import { getFolderColumnValue } from '../../utils/folderColumn'
 
 // Types
 import { TableRow } from '../../types/table'
@@ -212,13 +213,19 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
                     (entity as any).task?.name
                   : getCellValue(entity, sourceField)
 
-              // folder is an object on some entities (product/task) or nested under
-              // product (version) - copy the display name the cell shows,
-              // falling back to the last parent (parent folder name on tasks/folders)
-              if (colId === 'folder_entity' && typeof foundValue !== 'string') {
-                const folder = foundValue || (entity as any).product?.folder
-                const parents = 'parents' in entity ? entity.parents : undefined
-                foundValue = folder?.label || folder?.name || parents?.[parents.length - 1] || ''
+              if (colId === 'folder_entity') {
+                // copy what the cell shows (the same helper the column uses)
+                const shown = displayRow && getFolderColumnValue(displayRow)
+                if (shown) {
+                  foundValue = shown
+                } else if (typeof foundValue !== 'string') {
+                  // folder is an object on some entities (product/task) or nested under
+                  // product (version) - copy its display name, falling back to the
+                  // last parent (parent folder name on tasks/folders)
+                  const folder = foundValue || (entity as any).product?.folder
+                  const parents = 'parents' in entity ? entity.parents : undefined
+                  foundValue = folder?.label || folder?.name || parents?.[parents.length - 1] || ''
+                }
               }
 
               // Raw entity nodes (flat lists) either lack display-computed columns or hold a
