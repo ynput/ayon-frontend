@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import styled from 'styled-components'
 import type { TableRow } from '@shared/containers/ProjectTreeTable/types/table'
 import { useCellEditing } from '@shared/containers/ProjectTreeTable/context/cell-editing'
+import type { EntityUpdate } from '@shared/containers/ProjectTreeTable/hooks/useUpdateTableData'
 import { theme } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { TableMeta } from '@tanstack/react-table'
@@ -132,31 +133,22 @@ export const RenameForm: React.FC<InlineEditingWidgetProps> = ({
       onClose?.()
 
       try {
-        const { meta, entityRowId } = valueData || {}
-
-        // Use rowId prop as fallback if entityRowId is undefined
+        const { entityRowId } = valueData || {}
+        const rowId = entityRowId as string
+        const type = entityType as string
+        const updates: EntityUpdate[] = []
 
         if (name !== initialName && !nameDisabled) {
-          // we must await to ensure we do not have server deadlock when multiple requests are made at the same time
-          // HACK: we should ideally batch these updates in updateEntities function, but this is a quick fix
-          await meta?.updateEntities?.({
-            field: 'name',
-            value: name,
-            type: entityType as string,
-            rowId: entityRowId as string,
-          })
+          updates.push({ field: 'name', value: name, type, rowId, id: rowId })
         }
 
         if (label !== initialLabel && !labelDisabled) {
-          const finalLabel = label.trim()
-
-          meta?.updateEntities?.({
-            field: 'label',
-            value: finalLabel,
-            type: entityType as string,
-            rowId: entityRowId as string,
-          })
+          updates.push({ field: 'label', value: label.trim(), type, rowId, id: rowId })
         }
+
+        // one call so name and label go out as a single operation (avoids concurrent request deadlocks)
+        // and are recorded as one history entry, so a single undo reverts the whole rename
+        if (updates.length) await updateEntities(updates, true)
       } catch (error) {
         console.error('Failed to update entity:', error)
       }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-import CodeEditor from '@uiw/react-textarea-code-editor'
+import { CodeEditor } from '@shared/components/CodeEditor'
 import { Button, SaveButton, Dialog } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 

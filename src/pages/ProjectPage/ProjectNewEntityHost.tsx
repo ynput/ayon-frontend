@@ -15,8 +15,11 @@ export const ProjectNewEntityHost = (props: NewEntityProps) => {
   const { parentFolderIds } = useNewEntityContext()
 
   const handleNewEntities = useMemo(
-    () => (ops: OperationResponseModel[], stayOpen: boolean) => {
+    () => (ops: OperationResponseModel[], stayOpen: boolean, createdInFolderIds: string[]) => {
       if (!projectTableContext || !selectionContext) return
+
+      // explicit parents (context menu) or the folders resolved from the selection (toolbar "Create")
+      const parentIds = parentFolderIds ?? createdInFolderIds
 
       const selectedCellRowIds = new Set(
         Array.from(selectionContext.selectedCells)
@@ -24,9 +27,7 @@ export const ProjectNewEntityHost = (props: NewEntityProps) => {
           .filter((rowId): rowId is string => !!rowId),
       )
       const shouldExpandParents =
-        parentFolderIds !== null &&
-        parentFolderIds.length > 0 &&
-        parentFolderIds.every((parentId) => selectedCellRowIds.has(parentId))
+        parentIds.length > 0 && parentIds.every((parentId) => selectedCellRowIds.has(parentId))
 
       if (
         shouldExpandParents &&
@@ -35,7 +36,7 @@ export const ProjectNewEntityHost = (props: NewEntityProps) => {
       ) {
         const expanded = { ...projectTableContext.expanded }
         if (projectTableContext.expanded) {
-          for (const parentId of parentFolderIds) expanded[parentId] = true
+          for (const parentId of parentIds) expanded[parentId] = true
           projectTableContext.setExpanded(expanded)
         }
       }

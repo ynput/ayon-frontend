@@ -7,7 +7,7 @@ import styled from 'styled-components'
 import ListsFiltersBar from './ListsFiltersBar'
 import { Menu, MenuContainer, MenuItemType, TableSearch } from '@shared/components'
 import { useMenuContext } from '@shared/context'
-import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
+import { LISTS_SORT_OPTIONS, parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
 import { usePowerpack } from '@shared/context'
 import { useAppSelector } from '@state/store'
@@ -32,15 +32,15 @@ const HeaderTop = styled(Header)`
   container-type: inline-size;
 
   /* when this container gets smaller than */
-  /* 188px remove add-list button  */
+  /* 188px remove folder button (the panel's default width, keep the primary add-list action) */
   @container (max-width: 188px) {
-    .add-list {
+    .add-folder {
       display: none;
     }
   }
-  /* 155px remove folder button */
+  /* 155px remove add-list button */
   @container (max-width: 155px) {
-    .add-folder {
+    .add-list {
       display: none;
     }
   }
@@ -129,7 +129,8 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     selectAllLists,
   } = useListsContext()
 
-  const { showArchived, setShowArchived, listsFilters, setListsFilters } = useListsDataContext()
+  const { showArchived, setShowArchived, listsFilters, setListsFilters, listsSort, setListsSort } =
+    useListsDataContext()
 
   const filtersBarRef = useRef<SearchFilterRef>(null)
   const barVisible = filtersBar && (listsFiltersOpen || listsFilters.length > 0)
@@ -296,7 +297,33 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
           },
         ]
       : []),
-
+    {
+      id: 'sort',
+      label: 'Sort lists',
+      icon: 'sort',
+      isPinned: false,
+      items: [
+        ...LISTS_SORT_OPTIONS.map((option) => {
+          const isSelected = listsSort.by === option.id
+          return {
+            id: `sort-${option.id}`,
+            label: option.label,
+            onClick: () => setListsSort({ by: option.id, desc: option.desc }),
+            selected: isSelected,
+            // only the selected field gets the direction button, clicking it flips asc/desc
+            endActions: isSelected
+              ? [
+                  {
+                    icon: listsSort.desc ? 'arrow_downward' : 'arrow_upward',
+                    tooltip: listsSort.desc ? 'Descending' : 'Ascending',
+                    onClick: () => setListsSort({ ...listsSort, desc: !listsSort.desc }),
+                  },
+                ]
+              : undefined,
+          }
+        }),
+      ],
+    },
     {
       id: 'delete',
       label: 'Delete selection',

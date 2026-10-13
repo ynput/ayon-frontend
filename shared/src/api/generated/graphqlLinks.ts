@@ -1865,6 +1865,40 @@ export type GetRepresentationsLinksQuery = { project: { representations: { edges
                 | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
                | null }> } } }> } } };
 
+export type GetLinksIntoEntitiesQueryVariables = Exact<{
+  projectName: string;
+  entityIds: Array<string> | string;
+  first: number;
+  after?: string | null | undefined;
+}>;
+
+
+export type GetLinksIntoEntitiesQuery = { project: { links: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ id: string, linkType: string, inputId: string, inputType: string, outputId: string, outputType: string, node:
+          | { __typename: 'FolderNode', label: string | null, id: string, name: string, parents: Array<string>, subType: string }
+          | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
+          | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
+          | { __typename: 'TaskNode', label: string | null, id: string, name: string, parents: Array<string>, subType: string }
+          | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
+          | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
+         | null }> } } };
+
+export type GetLinksFromEntitiesQueryVariables = Exact<{
+  projectName: string;
+  entityIds: Array<string> | string;
+  first: number;
+  after?: string | null | undefined;
+}>;
+
+
+export type GetLinksFromEntitiesQuery = { project: { links: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ id: string, linkType: string, inputId: string, inputType: string, outputId: string, outputType: string, node:
+          | { __typename: 'FolderNode', label: string | null, id: string, name: string, parents: Array<string>, subType: string }
+          | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
+          | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
+          | { __typename: 'TaskNode', label: string | null, id: string, name: string, parents: Array<string>, subType: string }
+          | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
+          | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
+         | null }> } } };
+
 export type GetSearchedFoldersQueryVariables = Exact<{
   projectName: string;
   search?: string | null | undefined;
@@ -2448,6 +2482,84 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
     hasReviewables
   }
 }`);
+export const GetLinksIntoEntitiesDocument = new TypedDocumentString(`
+    query GetLinksIntoEntities($projectName: String!, $entityIds: [String!]!, $first: Int!, $after: String) {
+  project(name: $projectName) {
+    links(outputIds: $entityIds, first: $first, after: $after) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        id
+        linkType
+        inputId
+        inputType
+        outputId
+        outputType
+        node: inputNode {
+          ...OverviewEntityLinkNodeFragment
+        }
+      }
+    }
+  }
+}
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+  ... on VersionNode {
+    hasReviewables
+  }
+}`);
+export const GetLinksFromEntitiesDocument = new TypedDocumentString(`
+    query GetLinksFromEntities($projectName: String!, $entityIds: [String!]!, $first: Int!, $after: String) {
+  project(name: $projectName) {
+    links(inputIds: $entityIds, first: $first, after: $after) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        id
+        linkType
+        inputId
+        inputType
+        outputId
+        outputType
+        node: outputNode {
+          ...OverviewEntityLinkNodeFragment
+        }
+      }
+    }
+  }
+}
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+  ... on VersionNode {
+    hasReviewables
+  }
+}`);
 export const GetSearchedFoldersDocument = new TypedDocumentString(`
     query GetSearchedFolders($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
@@ -2773,6 +2885,12 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetRepresentationsLinks: build.query<GetRepresentationsLinksQuery, GetRepresentationsLinksQueryVariables>({
       query: (variables) => ({ document: GetRepresentationsLinksDocument as unknown as string, variables })
+    }),
+    GetLinksIntoEntities: build.query<GetLinksIntoEntitiesQuery, GetLinksIntoEntitiesQueryVariables>({
+      query: (variables) => ({ document: GetLinksIntoEntitiesDocument as unknown as string, variables })
+    }),
+    GetLinksFromEntities: build.query<GetLinksFromEntitiesQuery, GetLinksFromEntitiesQueryVariables>({
+      query: (variables) => ({ document: GetLinksFromEntitiesDocument as unknown as string, variables })
     }),
     GetSearchedFolders: build.query<GetSearchedFoldersQuery, GetSearchedFoldersQueryVariables>({
       query: (variables) => ({ document: GetSearchedFoldersDocument as unknown as string, variables })

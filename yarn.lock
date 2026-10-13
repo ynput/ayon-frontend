@@ -2024,12 +2024,12 @@
   resolved "https://registry.yarnpkg.com/@pkgr/core/-/core-0.2.9.tgz#d229a7b7f9dac167a156992ef23c7f023653f53b"
   integrity sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==
 
-"@playwright/test@1.59.1":
-  version "1.59.1"
-  resolved "https://registry.yarnpkg.com/@playwright/test/-/test-1.59.1.tgz#5c4d38eac84a61527af466602ae20277685a02d6"
-  integrity sha512-PG6q63nQg5c9rIi4/Z5lR5IVF7yU5MqmKaPOe0HSc0O2cX1fPi96sUQu5j7eo4gKCkB2AnNGoWt7y4/Xx3Kcqg==
+"@playwright/test@1.63.0":
+  version "1.63.0"
+  resolved "https://registry.yarnpkg.com/@playwright/test/-/test-1.63.0.tgz#808020c46e8b6b91f9d628cd0ebcbb32bdfd8b6c"
+  integrity sha512-oxMK4vllB9RK5NQ2l1pq1IfOf2AvnEuj/vYGDj0H2nMtmtZpKtCwt/l00GEO6xjGfpBNAvjovvYdCm50dRQkpQ==
   dependencies:
-    playwright "1.59.1"
+    playwright "1.63.0"
 
 "@popperjs/core@^2.11.8", "@popperjs/core@^2.9.2":
   version "2.11.8"
@@ -2740,10 +2740,15 @@
     react-toastify "^9.0.3"
     sass "1.99.0"
 
-"@ynput/ayon-react-components@^1.21.0":
-  version "1.21.0"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.21.0.tgz#dff66ed645aa173b575ad87ccf8451705630a306"
-  integrity sha512-0EQHIjBGaRY5jwi4Wj3A/ngotTR7S4K2O0lPExlmTaSMNGIZ6vBolHcpAMUtiB3eXiFsgFhad9bsWSk+trFa0g==
+"@ynput/ayon-react-components@^1.22.0":
+  version "1.22.0"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.22.0.tgz#6144d3ccf7c29dbf3a886d4630362051c95faf08"
+  integrity sha512-H8+KZT6wOFzcozGPoBuzHjzRK2Q9WUc1MiGoCG49b0QIbvl2v9s+9nx03q0HfCaXAD2ZdG4nCUzfBJnERabjrw==
+  dependencies:
+    clsx "^2.1.1"
+    match-sorter "^8.2.0"
+    overlayscrollbars "^2.3.2"
+    overlayscrollbars-react "^0.5.2"
 
 acorn-jsx@^5.3.2:
   version "5.3.2"
@@ -3284,7 +3289,7 @@ cliui@^9.0.1:
     strip-ansi "^7.1.0"
     wrap-ansi "^9.0.0"
 
-clsx@2.1.1:
+clsx@2.1.1, clsx@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/clsx/-/clsx-2.1.1.tgz#eed397c9fd8bd882bfb18deab7102049a2f32999"
   integrity sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==
@@ -4216,11 +4221,6 @@ fscreen@1.2.0, fscreen@^1.0.2:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/fscreen/-/fscreen-1.2.0.tgz#1a8c88e06bc16a07b473ad96196fb06d6657f59e"
   integrity sha512-hlq4+BU0hlPmwsFjwGGzZ+OZ9N/wq9Ljg/sq3pX+2CD7hrJsX9tJgWWK/wiNTFM212CLHWhicOoqwXyZGGetJg==
-
-fsevents@2.3.2:
-  version "2.3.2"
-  resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.2.tgz#8a526f78b8fdf4623b709e0b975c52c24c02fd1a"
-  integrity sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==
 
 fsevents@~2.3.2, fsevents@~2.3.3:
   version "2.3.3"
@@ -5263,7 +5263,7 @@ locate-path@^6.0.0:
   dependencies:
     p-locate "^5.0.0"
 
-lodash-es@^4.17.21:
+lodash-es@4.18.1, lodash-es@^4.17.21:
   version "4.18.1"
   resolved "https://registry.yarnpkg.com/lodash-es/-/lodash-es-4.18.1.tgz#b962eeb80d9d983a900bf342961fb7418ca10b1d"
   integrity sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==
@@ -5381,6 +5381,14 @@ match-sorter@6.4.0:
   version "6.4.0"
   resolved "https://registry.yarnpkg.com/match-sorter/-/match-sorter-6.4.0.tgz#ae9c166cb3c9efd337690b3160c0e28cb8377c13"
   integrity sha512-d4664ahzdL1QTTvmK1iI0JsrxWeJ6gn33qkYtnPg3mcn+naBLtXSgSPOe+X2vUgtgGwaAk3eiaj7gwKjjMAq+Q==
+  dependencies:
+    "@babel/runtime" "^7.23.8"
+    remove-accents "0.5.0"
+
+match-sorter@^8.2.0:
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/match-sorter/-/match-sorter-8.3.0.tgz#85cb4c3b6b25df110b44d66ed6661625efb21834"
+  integrity sha512-8Py1GbZi5zsclYSFcPAH4H5xfTbeD0bOREA7qP/t8bW4MbOSlPl8sbqHOedEV7O+Bxyvxm6xs/v6BXJGe+JDNA==
   dependencies:
     "@babel/runtime" "^7.23.8"
     remove-accents "0.5.0"
@@ -6178,6 +6186,16 @@ optionator@^0.9.3:
     type-check "^0.4.0"
     word-wrap "^1.2.5"
 
+overlayscrollbars-react@^0.5.2:
+  version "0.5.6"
+  resolved "https://registry.yarnpkg.com/overlayscrollbars-react/-/overlayscrollbars-react-0.5.6.tgz#e9779f9fc2c1a3288570a45c83f8e42518bfb8c1"
+  integrity sha512-E5To04bL5brn9GVCZ36SnfGanxa2I2MDkWoa4Cjo5wol7l+diAgi4DBc983V7l2nOk/OLJ6Feg4kySspQEGDBw==
+
+overlayscrollbars@^2.3.2:
+  version "2.16.0"
+  resolved "https://registry.yarnpkg.com/overlayscrollbars/-/overlayscrollbars-2.16.0.tgz#dda1352649d37a5d2eb5faf8ec3ea765bf815632"
+  integrity sha512-N03oje/q7j93D0aLZtoCdsDSYLmhheSsv8H7oSLE7HhdV9P/bmCURtLV/KbPye7P/bpfyt/obSfDpGUYoJ0OWg==
+
 own-keys@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/own-keys/-/own-keys-1.0.1.tgz#e4006910a2bf913585289676eebd6f390cf51358"
@@ -6357,19 +6375,17 @@ picomatch@^4.0.2, picomatch@^4.0.3, picomatch@^4.0.4:
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-4.0.4.tgz#fd6f5e00a143086e074dffe4c924b8fb293b0589"
   integrity sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==
 
-playwright-core@1.59.1:
-  version "1.59.1"
-  resolved "https://registry.yarnpkg.com/playwright-core/-/playwright-core-1.59.1.tgz#d8a2b28bcb8f2bd08ef3df93b02ae83c813244b2"
-  integrity sha512-HBV/RJg81z5BiiZ9yPzIiClYV/QMsDCKUyogwH9p3MCP6IYjUFu/MActgYAvK0oWyV9NlwM3GLBjADyWgydVyg==
+playwright-core@1.63.0:
+  version "1.63.0"
+  resolved "https://registry.yarnpkg.com/playwright-core/-/playwright-core-1.63.0.tgz#e57665bc32846c213ac39a1e4d5bc6228e76b376"
+  integrity sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==
 
-playwright@1.59.1:
-  version "1.59.1"
-  resolved "https://registry.yarnpkg.com/playwright/-/playwright-1.59.1.tgz#f7b0ca61637ae25264cec370df671bbe1f368a4a"
-  integrity sha512-C8oWjPR3F81yljW9o5OxcWzfh6avkVwDD2VYdwIGqTkl+OGFISgypqzfu7dOe4QNLL2aqcWBmI3PMtLIK233lw==
+playwright@1.63.0:
+  version "1.63.0"
+  resolved "https://registry.yarnpkg.com/playwright/-/playwright-1.63.0.tgz#99b56f9f69b1b70c44f00bf84b2fe52348ae2511"
+  integrity sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==
   dependencies:
-    playwright-core "1.59.1"
-  optionalDependencies:
-    fsevents "2.3.2"
+    playwright-core "1.63.0"
 
 possible-typed-array-names@^1.0.0:
   version "1.1.0"

@@ -1,5 +1,4 @@
 import { toast } from 'react-toastify'
-import { EntitiesMap, FolderNodeMap, TaskNodeMap } from '../../types/table'
 import { ParsedClipboardData } from './clipboardTypes'
 
 export const clipboardError = (error: string) => toast.error(error)
@@ -19,25 +18,6 @@ export const parseClipboardText = (clipboardText: string): ParsedClipboardData[]
   })
 
   return parsedData
-}
-
-// Get the full path for an entity
-export const getEntityPath = (entityId: string, entitiesMap: EntitiesMap): string => {
-  const entity = entitiesMap.get(entityId)
-  if (!entity) return ''
-
-  const name = entity.name || ''
-  // @ts-ignore
-  const parentId = entity.folderId || entity.parentId
-
-  // If no parent, return just the name
-  if (!parentId) return name
-
-  // If has parent, get parent path (parents are always folders)
-  const parentPath = getEntityPath(parentId, entitiesMap)
-
-  // Combine paths with " / " separator
-  return parentPath ? `${parentPath} / ${name}` : name
 }
 
 // Process a field value based on its type

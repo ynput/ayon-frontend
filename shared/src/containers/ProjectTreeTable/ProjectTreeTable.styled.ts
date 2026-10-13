@@ -172,6 +172,15 @@ export const HeaderCell = styled.th`
   }
 `
 
+// position of a column in a multi-key sort, shown next to its sort button
+export const SortIndex = styled.span`
+  margin-left: -2px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--md-sys-color-outline);
+  user-select: none;
+`
+
 export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
   display: none;
 
@@ -217,7 +226,7 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
     display: flex !important;
   }
   .pin-button {
-    font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 10;
+    font-variation-settings: 'FILL' 1;
   }
 
   .header-menu {

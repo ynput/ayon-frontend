@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.6.2",
+  "version": "0.6.5",
   "description": "Shared React components for AYON frontend",
   "module": "dist/index.es.js",
   "exports": {
@@ -137,7 +137,7 @@
     "@tanstack/react-virtual": "3.13.23",
     "@uiw/react-textarea-code-editor": "2.1.9",
     "@ynput/ayon-player": "1.0.2",
-    "@ynput/ayon-react-components": "^1.21.0",
+    "@ynput/ayon-react-components": "^1.22.0",
     "axios": "1.20.0",
     "clsx": "2.1.1",
     "custom-protocol-check": "1.4.0",
