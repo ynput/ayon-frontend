@@ -189,6 +189,28 @@ export const TagsSelect = styled(TagsSelectComponent)`
   }
 `
 
+export const ReadOnlyTags = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--md-sys-color-on-surface-variant);
+
+  span {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-radius: 3px;
+    padding: 0 4px;
+  }
+`
+
 export const PriorityEnumDropdown = styled(EnumDropdown)`
   width: max-content;
   justify-self: end;

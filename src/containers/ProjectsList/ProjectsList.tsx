@@ -6,7 +6,7 @@ import buildProjectsTableData, { buildProjectFolderRowId } from './buildProjects
 import { MENU_ID } from './ProjectsListTableHeader'
 import useProjectMenuController from './hooks/useProjectMenuController'
 import type { Hidden } from './hooks/useProjectsListMenuItems'
-import { useMenuContext } from '@shared/context/MenuContext'
+import { useMenuContext } from '@shared/context'
 import { useQueryParam } from 'use-query-params'
 import { useLocalStorage } from '@shared/hooks'
 import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'

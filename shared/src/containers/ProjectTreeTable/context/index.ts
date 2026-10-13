@@ -1,21 +1,10 @@
 export * from './clipboard'
-
-export * from './CellEditingContext'
-export * from './CellEditingProvider'
-export * from './ClipboardContext'
-// column settings context
-export * from './ColumnSettingsProvider'
-export * from './ColumnSettingsContext'
-// project table context
-export * from './ProjectTableContext'
-export * from './ProjectTableQueriesContext'
-// selected rows context
-export * from './SelectedRowsContext'
-export * from './SelectedRowsProvider'
-// details panel entity context
-export * from './DetailsPanelEntityContext'
-// selection cells context
-export * from './SelectionCellsContext'
-export * from './SelectionCellsProvider'
-// full table selection context
-export * from './ProjectDataContext'
+export * from './cell-editing'
+export * from './clipboard-context'
+export * from './column-settings'
+export * from './details-panel-entity'
+export * from './project-data'
+export * from './project-table'
+export * from './project-table-queries'
+export * from './selected-rows'
+export * from './selection-cells'

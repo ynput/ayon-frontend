@@ -3,7 +3,7 @@ import { AttributeField, DetailsPanelAttributesEditor } from '../DetailsPanelAtt
 import { useUpdateEntityListMutation, useGetAttributeListQuery } from '@shared/api'
 import type { EntityListModel } from '@shared/api'
 import { toast } from 'react-toastify'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 
 interface ListAttributeFormProps {
   projectName: string

@@ -7,7 +7,7 @@ import type {
   SourceModel,
   AddonListItem,
 } from '@shared/api'
-import { getPlatformLabel } from '@pages/AccountPage/DownloadsPage/DownloadsPage'
+import { getPlatformLabel } from '@pages/AccountPage/DownloadsPage/DownloadsPageHelpers'
 import { formatDistance } from 'date-fns'
 import type { ReleaseForm } from './hooks/useReleaseForm'
 import { DownloadAddonsApiArg } from '@shared/api'

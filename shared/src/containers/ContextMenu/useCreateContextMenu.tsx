@@ -1,7 +1,7 @@
 import { useCallback, useMemo, MouseEvent, RefObject } from 'react'
 import ContextMenuItem, { ContextMenuItemProps } from './ContextMenuItem'
-import { useContextMenu } from './ContextMenuContext'
-import type { PowerpackContextType, PowerpackFeature } from '@shared/context/PowerpackContext'
+import { useContextMenu } from './context/context-menu'
+import type { PowerpackContextType, PowerpackFeature } from '@shared/context'
 
 // Extend the item type based on the ContextMenuItemProps
 export interface ContextMenuItemType extends Omit<ContextMenuItemProps, 'contextMenuRef'> {

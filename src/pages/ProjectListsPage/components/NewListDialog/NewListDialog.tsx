@@ -11,15 +11,9 @@ import type { NewListForm } from '@pages/ProjectListsPage/hooks/useNewList'
 import * as Styled from './NewListDialog.styled'
 import { getEntityTypeIcon } from '@shared/util'
 import { Error } from '@containers/ReleaseInstallerDialog/ReleaseInstaller.styled'
+import { entityTypeOptions } from './NewListDialogHelpers'
 
-export const listEntityTypes = ['folder', 'version', 'task'] as const
-export type ListEntityType = (typeof listEntityTypes)[number]
-
-export const entityTypeOptions = listEntityTypes.map((type) => ({
-  label: type.charAt(0).toUpperCase() + type.slice(1),
-  value: type,
-  icon: getEntityTypeIcon(type),
-}))
+export type { ListEntityType } from './NewListDialogHelpers'
 
 interface NewListDialogProps extends Omit<DialogProps, 'onChange' | 'hidden'> {
   form?: NewListForm | null

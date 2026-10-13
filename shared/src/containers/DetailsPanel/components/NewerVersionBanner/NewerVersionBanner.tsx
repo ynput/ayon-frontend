@@ -2,16 +2,9 @@ import { FC } from 'react'
 import { InfoMessage } from '@shared/components/InfoMessage'
 import type { DetailsPanelEntityData } from '@shared/api'
 
-type LatestVersion = NonNullable<NonNullable<DetailsPanelEntityData['product']>['latestVersion']>
-
-export const getNewerLatestVersion = (
-  entity: DetailsPanelEntityData | undefined,
-): LatestVersion | undefined => {
-  const current = entity?.version?.version
-  const latest = entity?.product?.latestVersion
-  if (entity?.entityType !== 'version' || !current || current <= 0 || !latest?.active) return
-  return latest.version > current ? latest : undefined
-}
+export type LatestVersion = NonNullable<
+  NonNullable<DetailsPanelEntityData['product']>['latestVersion']
+>
 
 export type ResolveVersionJump = (versionId: string) => (() => void) | undefined
 

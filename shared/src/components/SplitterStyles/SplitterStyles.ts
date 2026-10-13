@@ -26,7 +26,7 @@ export const SplitterStyles = createGlobalStyle`
       height: 2px;
       border-radius: 50%;
       translate: -50% -50%;
-      background: var(--md-sys-color-outline);
+      background: var(--md-sys-color-outline-variant);
       pointer-events: none;
       transition: opacity 0.1s ease-out;
     }
@@ -62,19 +62,19 @@ export const SplitterStyles = createGlobalStyle`
     transition: opacity 0.1s ease-out;
   }
   .p-splitter.p-component > .p-splitter-gutter:hover > .p-splitter-gutter-handle {
-    opacity: 1;
+    opacity: 0.75;
     transition-delay: 0.2s;
   }
   .p-splitter.p-component > .p-splitter-gutter.p-splitter-gutter-resizing > .p-splitter-gutter-handle {
-    opacity: 1;
+    opacity: 0.75;
     transition-delay: 0s;
   }
 
   .p-splitter-horizontal > .p-splitter-gutter {
     &::before {
       box-shadow:
-        0 -5px 0 var(--md-sys-color-outline),
-        0 5px 0 var(--md-sys-color-outline);
+        0 -5px 0 var(--md-sys-color-outline-variant),
+        0 5px 0 var(--md-sys-color-outline-variant);
     }
     &::after {
       inset: 0 -3px;
@@ -84,8 +84,8 @@ export const SplitterStyles = createGlobalStyle`
   .p-splitter-vertical > .p-splitter-gutter {
     &::before {
       box-shadow:
-        -5px 0 0 var(--md-sys-color-outline),
-        5px 0 0 var(--md-sys-color-outline);
+        -5px 0 0 var(--md-sys-color-outline-variant),
+        5px 0 0 var(--md-sys-color-outline-variant);
     }
     &::after {
       inset: -3px 0;

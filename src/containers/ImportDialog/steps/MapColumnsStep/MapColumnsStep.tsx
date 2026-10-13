@@ -31,7 +31,8 @@ import {
   MappersTableHeaderErrorHandling,
   MappersTableActionCol
 } from "../common.styled"
-import MapperRow, { MappingState, TARGET_OPTION_MAPPING_SEPARATOR } from "../MapperRow"
+import MapperRow, { TARGET_OPTION_MAPPING_SEPARATOR } from "../MapperRow"
+import { MappingState } from "../MapperRowHelpers"
 import { confirmDialog } from "primereact/confirmdialog"
 import usePreset from "@containers/ImportDialog/hooks/usePreset"
 import useMultiSelect from "@containers/ImportDialog/hooks/useMultiSelect"

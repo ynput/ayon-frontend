@@ -2,6 +2,7 @@ import type { Status } from '@shared/api'
 import { TaskTypeStatusBar } from '@containers/TasksProgress/helpers/formatTaskProgressForTable'
 import { FC } from 'react'
 import * as Styled from './TaskStatusBar.styled'
+import { stateOrder } from './TaskStatusBarHelpers'
 import { isEmpty } from 'lodash'
 import { getTextColor } from '@ynput/ayon-react-components'
 
@@ -9,8 +10,6 @@ interface TaskStatusBarProps {
   statuses: Status[]
   statusCounts: TaskTypeStatusBar
 }
-
-export const stateOrder = ['done', 'in_progress', 'blocked', 'not_started']
 
 export const TaskStatusBar: FC<TaskStatusBarProps> = ({ statuses = [], statusCounts = {} }) => {
   const lastState = stateOrder[stateOrder.length - 1]

@@ -31,6 +31,7 @@ interface ActivityItemProps {
   onCheckChange?: (e: React.ChangeEvent<HTMLInputElement>, activity: any) => void
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
   onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
+  onDuplicate?: (activity: any) => void
   isGuest?: boolean
 }
 

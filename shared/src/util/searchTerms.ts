@@ -1,9 +1,10 @@
 import { rankItem, rankings, Ranking, RankingInfo } from '@tanstack/match-sorter-utils'
 
-// Client-side search tokenization for SimpleTable: comma = OR, space = AND within a comma part.
+// Client-side search tokenization for SimpleTable: comma (or new line, tab) = OR,
+// space = AND within a comma part.
 export const parseSearchQuery = (query: string): string[][] =>
   query
-    .split(',')
+    .split(/[,\r\n\t]/)
     .map((part) => part.trim().split(/\s+/).filter(Boolean))
     .filter((terms) => terms.length > 0)
 
@@ -40,4 +41,16 @@ export const matchSearchQuery = (haystack: string, groups: string[][]): RankingI
   }
 
   return best ?? noMatch
+}
+
+// A list pasted from a spreadsheet column or row, or one name per line, as a comma
+// separated search. Returns null when the text has no new lines or tabs, so the
+// browser can paste it as usual. Single-line inputs drop new lines on paste, so
+// this has to run in the paste handler, not on the input value.
+export const pastedListToSearch = (text: string): string | null => {
+  if (!/[\r\n\t]/.test(text)) return null
+  return text
+    .replace(/[\r\n\t]+/g, ',')
+    .replace(/,+/g, ',')
+    .replace(/^,|,$/g, '')
 }

@@ -31,7 +31,7 @@
       "@types": ["./types"],
       "@queries/*": ["./services/*"],
       "@pages/*": ["./pages/*"],
-      "@context/*": ["./context/*"],
+      "@context": ["./context"],
       "@state/*": ["./features/*"],
       "@helpers/*": ["./helpers/*"],
       "@shared/*": ["../shared/src/*"],

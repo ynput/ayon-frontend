@@ -5,7 +5,8 @@ import type { FolderType, Status, Tag, TaskType } from '../types/project'
 type Params = {
   users: {
     name: string
-    fullName?: string
+    fullName?: string | null
+    hidden?: boolean
   }[]
   statuses: Status[]
   folderTypes: FolderType[]
@@ -38,10 +39,11 @@ export const getTableFieldOptions = ({
       }))
 
   return {
-    assignee: users.map(({ name, fullName }) => ({
+    assignee: users.map(({ name, fullName, hidden }) => ({
       value: name,
       label: fullName || name,
       icon: `/api/users/${name}/avatar`,
+      hidden,
     })),
     status: getStatusOptions(scopes),
     folderStatus: getStatusOptions(['folder']),

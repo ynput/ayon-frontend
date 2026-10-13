@@ -39,7 +39,7 @@ import { confirmDialog } from 'primereact/confirmdialog'
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
 import arrayEquals from '@helpers/arrayEquals'
 import { cloneDeep } from 'lodash'
-import { usePaste } from '@context/PasteContext'
+import { usePaste } from '@context'
 import styled from 'styled-components'
 
 import SettingsListHeader from './SettingsListHeader'
@@ -49,8 +49,8 @@ import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import LoadingPage from '@pages/LoadingPage'
 import PerProjectBundleConfig, {
   FROZEN_BUNDLE_ICON,
-  projectBundleFromName,
 } from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
+import { projectBundleFromName } from '../../components/PerProjectBundleConfig/PerProjectBundleConfigHelpers'
 import { useSessionStorage } from '@shared/hooks'
 import { InfoMessage } from '@shared/components'
 
@@ -278,8 +278,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         await setAddonSettings(payload).unwrap()
 
         updatedKeys.push(key)
-      } catch (e) {
+      } catch (error) {
         allOk = false
+        const e = error?.data || error
         toast.error(
           <>
             <strong>Unable to save {variant} settings</strong>
@@ -287,7 +288,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             {addonName} {addonVersion}
             <br />
             {e.detail}
-            {e.errors?.length && (
+            {e.errors?.length > 0 && (
               <ul>
                 {e.errors.map((error, i) => (
                   <li key={i}>

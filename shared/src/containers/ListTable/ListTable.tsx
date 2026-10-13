@@ -36,7 +36,7 @@ import { useTableEditing } from './hooks/useTableEditing'
 import { useTableDnd } from './hooks/useTableDnd'
 import { useColumnWidthVars } from './hooks/useColumnWidthVars'
 import { useCreateContextMenu } from '../ContextMenu'
-import { isCustomGroupRowValue } from './ListTableGroupRow'
+import { isCustomGroupRowValue } from './ListTableGroupRowHelpers'
 import type { ListTableProps } from './ListTable.types'
 
 export type {

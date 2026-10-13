@@ -102,6 +102,15 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   let displayValue = value === null || value === undefined ? '' : value
   const labelValue = field.data.title || field.name
 
+  const isEmptyValue =
+    value === null ||
+    value === undefined ||
+    value === '' ||
+    (Array.isArray(value) && value.length === 0)
+  if (type !== 'boolean' && isReadOnly && !isMixed && isEmptyValue) {
+    return <FieldValueText>-</FieldValueText>
+  }
+
   // Handle different field types
   switch (true) {
     case type === 'boolean':

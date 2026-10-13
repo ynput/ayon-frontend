@@ -1,20 +1,19 @@
 import { FC, useCallback, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useViewsContext } from '../context/ViewsContext'
+import { useViewsContext } from '../context'
 import { getViewsPortalContainer } from '../utils/portalUtils'
 import { ViewsMenu } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { useGlobalContext } from '@shared/context/GlobalContext'
-import { usePowerpack } from '@shared/context/PowerpackContext'
+import { useGlobalContext, usePowerpack } from '@shared/context'
 import * as Styled from '../Views.styled'
 import { VIEWS_DIALOG_CLASS } from '../ViewsDialogContainer/ViewsDialogContainer'
 import BaseViewsTagContainer from '@shared/containers/Views/ViewsMenuContainer/BaseViewsTags'
 
 const PowerIcon = styled(Icon)`
   color: var(--md-sys-color-tertiary);
-  font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+  font-variation-settings: 'FILL' 1;
 `
 
 import { WORKING_VIEW_ID, NEW_VIEW_ID } from '../types'

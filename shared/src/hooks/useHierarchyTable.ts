@@ -2,7 +2,7 @@
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import type { FolderType, FolderListItem } from '@shared/api'
 import { useCallback, useMemo } from 'react'
-import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
+import { useProjectFoldersContext } from '@shared/context'
 import { getEntityThumbnailUrl } from '@shared/util'
 
 type Props = {

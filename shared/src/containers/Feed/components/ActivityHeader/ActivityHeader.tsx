@@ -3,7 +3,7 @@ import * as Styled from './ActivityHeader.styled'
 import ActivityReference from '../ActivityReference/ActivityReference'
 import ActivityDate from '../ActivityDate'
 import { Icon, UserImage } from '@ynput/ayon-react-components'
-import { RefTooltip } from '../../context/FeedContext'
+import { RefTooltip } from '../../context/feed'
 import { ANONYMOUS_GUEST_NAME_PREFIX } from '../ActivityVersionReview/ActivityVersionReview'
 
 interface Origin {
@@ -80,12 +80,9 @@ const ActivityHeader: React.FC<ActivityHeaderProps> = ({
   return (
     <Styled.Header>
       <Styled.Body>
-        {name && !noUser && <UserImage
-          name={name}
-          fullName={fullName}
-          src={userImageSrc}
-          size={22}
-        />}
+        {name && !noUser && (
+          <UserImage name={name} fullName={fullName} src={userImageSrc} size={22} />
+        )}
         {noUser && <Icon icon="account_circle" />}
         <h5>{fullName || activity.activityData?.author || 'Unknown'}</h5>
         {isRef && (

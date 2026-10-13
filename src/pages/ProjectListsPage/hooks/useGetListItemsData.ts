@@ -23,6 +23,7 @@ import {
 import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
+import { buildSortArgs } from '@shared/util'
 import { extractSearchFromFilters } from '../util/searchToQueryFilter'
 import { OnSyncDataCallback, usePowerpack, useProjectContext } from '@shared/context'
 import { useListsViewSettings, useProjectDataContext, useViewsContext } from '@shared/containers'
@@ -97,7 +98,6 @@ const useGetListItemsData = ({
     : ''
 
   // Create sort params for infinite query
-  const singleSort = { ...sorting[0] }
   const parseSorting = (sorting?: string): string | undefined => {
     if (!sorting) return undefined
     const sortId = getColumnSortKey(sorting, true, entityType) ?? ''
@@ -110,7 +110,7 @@ const useGetListItemsData = ({
     if (scopedTypeSortKeys[sorting]) return scopedTypeSortKeys[sorting]
 
     let parsedSortId = sortId
-    if (singleSort?.id === 'name' && entityType === 'version') {
+    if (sorting === 'name' && entityType === 'version') {
       parsedSortId = 'path'
     } else if (parsedSortId.startsWith('attrib') && parsedSortId.includes('_')) {
       // convert attrib sorting to query format
@@ -143,11 +143,15 @@ const useGetListItemsData = ({
     return parsedSortId
   }
 
+  const { sortBy, desc } = buildSortArgs(
+    sorting.map((sort) => ({ key: parseSorting(sort.id), desc: sort.desc })),
+  )
+
   const listItemsArgs = {
     projectName,
     listId: listId || '',
-    sortBy: parseSorting(singleSort?.id),
-    desc: singleSort?.desc,
+    sortBy,
+    desc,
     filter: queryFilterString || undefined,
     search,
     showComments,
@@ -173,8 +177,8 @@ const useGetListItemsData = ({
     {
       projectName: projectName || '',
       listId: listId || '',
-      sortBy: parseSorting(singleSort?.id) || '',
-      desc: singleSort?.desc || false,
+      sortBy: sortBy?.toString() || '',
+      desc,
       filter: queryFilterString || '',
       search: search || '',
     },

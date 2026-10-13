@@ -2,12 +2,11 @@ import { KeyboardEvent, useMemo, useState } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import {
   DELETE_CONFIRM_THRESHOLD,
-  DELETE_TYPE_ORDER,
   DeleteConfirmContent,
-  sumExpectedCounts,
   type ExpectedDeleteCounts,
 } from './DeleteConfirmContent'
-import type { DeletableEntityType } from '@shared/context/DeleteEntitiesContext'
+import { DELETE_TYPE_ORDER, sumExpectedCounts } from './DeleteConfirmContentHelpers'
+import type { DeletableEntityType } from '@shared/context'
 import * as Styled from './DeleteEntitiesConfirmDialog.styled'
 
 export type DeleteConfirmPayload = {
@@ -64,8 +63,8 @@ export const DeleteEntitiesConfirmDialog = ({
   const isConfirmed = requiresCounts
     ? countTypes.every((type) => matchesCount(countValues[type], expectedCounts[type] as number))
     : requiresName
-      ? nameValue.trim() === expectedName
-      : true
+    ? nameValue.trim() === expectedName
+    : true
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' && isConfirmed) {

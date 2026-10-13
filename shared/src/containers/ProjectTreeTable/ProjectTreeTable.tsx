@@ -42,13 +42,18 @@ import { FilterErrorActions } from '@shared/components/FilterErrorActions/Filter
 import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
-import { useCellEditing } from './context/CellEditingContext'
-import { useSelectionCellsContext } from './context/SelectionCellsContext'
-import { ClipboardProvider } from './context/ClipboardContext'
-import { useSelectedRowsContext } from './context/SelectedRowsContext'
-import { useColumnSettingsContext } from './context/ColumnSettingsContext'
+import { useCellEditing } from './context/cell-editing'
+import { useSelectionCellsContext } from './context/selection-cells'
+import { ClipboardProvider } from './context/clipboard-context'
+import { useSelectedRowsContext } from './context/selected-rows'
+import { useColumnSettingsContext } from './context/column-settings'
 import { TableColumnDropIndicator } from './components/ColumnDropIndicator'
-import { useMenuContext } from '../../context/MenuContext'
+import {
+  useMenuContext,
+  useProjectContext,
+  usePowerpack,
+  setDetailsPanelTabForScope,
+} from '@shared/context'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
 
 // Hook imports
@@ -61,7 +66,7 @@ import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import useDynamicRowHeight from './hooks/useDynamicRowHeight'
 
-import { useProjectDataContext } from './context/ProjectDataContext'
+import { useProjectDataContext } from './context/project-data'
 
 // Utility function imports
 import { isGroupId } from './hooks/useBuildGroupByTableData'
@@ -78,7 +83,7 @@ import {
   SummaryCellContentProps,
 } from './types'
 import type { EnumItem } from '@shared/api'
-import { ToggleExpandAll, useProjectTableContext, parseRowId } from './context/ProjectTableContext'
+import { ToggleExpandAll, useProjectTableContext, parseRowId } from './context/project-table'
 import {
   checkColumnVisibility,
   ensureAtLeastOneVisibleColumn,
@@ -98,7 +103,7 @@ import {
   type UniqueIdentifier,
   // Removed: DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, DragEndEvent, DragStartEvent, Active, Over, useSensor, useSensors
 } from '@dnd-kit/core'
-import type { NewEntityOpenConfig } from '@shared/containers/NewEntity/context/NewEntityContext'
+import type { NewEntityOpenConfig } from '@shared/containers/NewEntity/context/new-entity'
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import {
   SortableContext,
@@ -108,15 +113,13 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { useProjectContext } from '@shared/context/ProjectContext'
-import { usePowerpack } from '@shared/context/PowerpackContext'
-import { setDetailsPanelTabForScope } from '@shared/context/DetailsPanelContext'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { ColumnsConfig } from './types/columnConfig'
 import { getRequestErrorString } from '@shared/util'
+import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'> & { id?: string },
@@ -523,6 +526,7 @@ export const ProjectTreeTable = ({
     enableSorting,
     getSortedRowModel: getSortedRowModel(),
     sortDescFirst: false,
+    maxMultiSortColCount: MAX_SORT_KEYS,
     manualSorting: !clientSorting,
     onSortingChange: sortingOnChange,
     columnResizeMode: 'onChange',
@@ -585,7 +589,7 @@ export const ProjectTreeTable = ({
   useEffect(() => {
     if (!rows.length) return
     const rowIds = rows.map((row) => row.id)
-    const colIds = table.getAllLeafColumns().map((col) => col.id)
+    const colIds = table.getVisibleLeafColumns().map((col) => col.id)
     const colIdsSortedByPinning = [...colIds].sort((a, b) => {
       if (ROW_SELECTION_COLUMN_ID === b) return 1
       const colA = columnPinning.left?.includes(a) ? 0 : 1
@@ -594,7 +598,7 @@ export const ProjectTreeTable = ({
     })
 
     registerGrid(rowIds, colIdsSortedByPinning)
-  }, [rows, table.getAllLeafColumns(), columnPinning, ROW_SELECTION_COLUMN_ID, registerGrid])
+  }, [rows, table.getVisibleLeafColumns(), columnPinning, ROW_SELECTION_COLUMN_ID, registerGrid])
 
   const visibleColumns = table.getVisibleLeafColumns()
 
@@ -1142,8 +1146,18 @@ const TableHeadCell = ({
 
   // toggle sort via the same direct updateSorting call the Customize panel uses;
   // routing through TanStack's onSortingChange did not apply under manualSorting.
-  const handleToggleSort = () => {
+  // a plain click sorts by this column only, shift+click keeps the other sort keys
+  const handleToggleSort = (event: React.MouseEvent) => {
     const current = sortingState?.find((s) => s.id === column.id)
+    if (event.shiftKey && sortingState?.length) {
+      const next = !current
+        ? [...sortingState, { id: column.id, desc: false }]
+        : !current.desc
+        ? sortingState.map((s) => (s.id === column.id ? { ...s, desc: true } : s))
+        : sortingState.filter((s) => s.id !== column.id)
+      if (next.length <= MAX_SORT_KEYS) updateSorting(next)
+      return
+    }
     const next = !current
       ? [{ id: column.id, desc: false }]
       : !current.desc
@@ -1151,6 +1165,9 @@ const TableHeadCell = ({
       : []
     updateSorting(next)
   }
+
+  // with several sort keys, show where this column comes in the order
+  const sortIndex = (sortingState?.length ?? 0) > 1 ? column.getSortIndex() : -1
 
   // Check if this column is pinned
   const isThisColumnPinned = columnPinning.left?.includes(column.id) || false
@@ -1236,6 +1253,9 @@ const TableHeadCell = ({
                 onClick={handleToggleSort}
                 selected={!!column.getIsSorted()}
               />
+            )}
+            {canSort && sortIndex > -1 && (
+              <Styled.SortIndex className="sort-index">{sortIndex + 1}</Styled.SortIndex>
             )}
 
             {/* COLUMN PINNING - only show on pinned columns (exclude selection column) */}

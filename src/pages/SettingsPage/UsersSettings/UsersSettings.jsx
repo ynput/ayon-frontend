@@ -275,7 +275,7 @@ const UsersSettings = () => {
                   setShowDeleteUser,
                   setShowInviteUser,
                   isLoading,
-                  isSelfSelected,
+                  selfName,
                   managerDisabled,
                 }}
               />

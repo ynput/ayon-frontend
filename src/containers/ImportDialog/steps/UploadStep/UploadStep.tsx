@@ -6,6 +6,7 @@ import { ImportData, parseCSV } from "../../utils";
 import styled from "styled-components";
 import { useUploadFileMutation } from "@queries/dataImport";
 import Stats from "../Stats";
+import { HiddenFileInput } from "./UploadStep.styled";
 
 type Props = StepProps<ImportData> & {
   importSchema: ImportSchema
@@ -33,10 +34,6 @@ const FileUploadHint = styled.p`
   color: var(--md-sys-color-outline);
   flex-basis: 100%;
   text-align: center;
-`
-
-export const HiddenFileInput = styled.input`
-  display: none;
 `
 
 export default function UploadStep({ importContext, onBack, onNext }: Props) {

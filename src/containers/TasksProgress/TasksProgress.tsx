@@ -15,7 +15,7 @@ import { useRootFolders } from './hooks'
 // shared
 import {
   refreshActiveAndPurgeOthers,
-  useGetAllProjectUsersAsAssigneeQuery,
+  useGetUsersAssigneeQuery,
   useUpdateEntitiesMutation,
 } from '@shared/api'
 import type { FolderType, Status, TaskType, EnumItem } from '@shared/api'
@@ -123,7 +123,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   const [activeTask, setActiveTask] = useState<string | null>(null)
   //   GET PROJECT ASSIGNEES
-  const { data: users = [] } = useGetAllProjectUsersAsAssigneeQuery(
+  const { data: users = [] } = useGetUsersAssigneeQuery(
     { projectName },
     { skip: !projectName },
   )

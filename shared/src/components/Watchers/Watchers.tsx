@@ -1,4 +1,5 @@
 import { useGetEntitiesWatchersQuery, useSetEntitiesWatchersMutation } from '@shared/api'
+import { getSelectableAssignees } from '@shared/util'
 import { DropdownRef, WatcherSelect, WatcherSelectProps } from '@ynput/ayon-react-components'
 import { forwardRef } from 'react'
 import { toast } from 'react-toastify'
@@ -63,6 +64,7 @@ export const Watchers = forwardRef<DropdownRef, WatchersProps>(
       <WatcherSelect
         align="right"
         {...props}
+        options={getSelectableAssignees(props.options, uniqueWatchers)}
         value={uniqueWatchers}
         currentUser={userName}
         onChange={handleChange}

@@ -20,6 +20,7 @@ import {
 import { useDateRangeFilter, CustomDateRangeDialog } from '@shared/components/SearchFilter'
 import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
 import { useSlicerContext } from '@shared/containers'
+import { pastedListToSearch } from '@shared/util'
 import { useProjectFoldersContext } from '@shared/context'
 
 interface SearchFilterWrapperProps
@@ -246,15 +247,10 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const handleDropdownPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement
     if (!(target instanceof HTMLInputElement)) return
-    const text = e.clipboardData?.getData('text') ?? ''
-    if (!/[\r\n\t]/.test(text)) return
+    const normalized = pastedListToSearch(e.clipboardData?.getData('text') ?? '')
+    if (normalized === null) return
     e.preventDefault()
     e.stopPropagation()
-
-    const normalized = text
-      .replace(/[\r\n\t]+/g, ',')
-      .replace(/,+/g, ',')
-      .replace(/^,|,$/g, '')
 
     const input = target
     const start = input.selectionStart ?? input.value.length

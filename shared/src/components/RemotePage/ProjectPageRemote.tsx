@@ -1,7 +1,7 @@
 // a hoc component that helps to wrap remote project pages
 // set up slicer
 
-import { useSlicerContext } from '@shared/containers/Slicer/context/SlicerContext'
+import { useSlicerContext } from '@shared/containers/Slicer/context/slicer'
 import { Slicer } from '@shared/containers/Slicer/components/Slicer'
 import { defaultSliceOptions } from '@shared/containers/Slicer/hooks/useTableDataBySlice'
 import {

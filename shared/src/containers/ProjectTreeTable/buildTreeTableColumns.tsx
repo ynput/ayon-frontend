@@ -42,11 +42,23 @@ import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { isEntityRestricted, READ_ONLY } from './utils/restrictedEntity'
 import { getColumnDisplayConfig } from './types/columnConfig'
 import { ENTITY_COLUMN_IDS, normalizeColumnId } from './utils/columnIds'
+import { getFolderColumnEntity, getFolderColumnValue } from './utils/folderColumn'
 import { upperFirst } from 'lodash'
 
 export const isEntityExpandable = (entityType: string) => ['folder', 'product'].includes(entityType)
 
 export const COLUMN_MIN_SIZE = 50
+
+// attributes whose edit is applied to every selected cell of the column
+const MULTI_CELL_EDIT_TYPES: AttributeData['type'][] = [
+  'string',
+  'integer',
+  'float',
+  'boolean',
+  'datetime',
+]
+const supportsMultiCellEdit = (data: AttributeData) =>
+  hasEnumOptions(data) || MULTI_CELL_EDIT_TYPES.includes(data.type)
 
 export const COLUMN_LABELS: Record<string, string> = {
   thumbnail: 'Thumbnail',
@@ -244,10 +256,19 @@ const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
 
 const naturalSortCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
 
+// With several sort keys a tie has to fall through to the next key, so only the
+// last key breaks ties by name. A sorting function isn't given the table, it is
+// reached through a cell and only when there is a tie.
+const isLastSortKey = (row: Row<any>, columnId: string) => {
+  const sorting = row.getAllCells()[0]?.getContext().table.getState().sorting
+  return !sorting?.length || sorting[sorting.length - 1].id === columnId
+}
+
 const withNameTieBreaker = (sortFn: SortingFn<any>): SortingFn<any> => {
   return (rowA, rowB, ...args) => {
     const result = sortFn(rowA, rowB, ...args)
     if (result !== 0) return result
+    if (!isLastSortKey(rowA, args[0])) return 0
     const labelA = rowA.original.primary.label || rowA.original.primary.name || ''
     const labelB = rowB.original.primary.label || rowB.original.primary.name || ''
     return naturalSortCollator.compare(labelA, labelB)
@@ -783,7 +804,7 @@ const buildTreeTableColumns = ({
                     pt: {
                       icon: {
                         style: {
-                          fontVariationSettings: "'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20",
+                          fontVariationSettings: "'FILL' 1",
                         },
                       },
                     },
@@ -968,8 +989,7 @@ const buildTreeTableColumns = ({
   if (isIncluded(ENTITY_COLUMN_IDS.folder)) {
     staticColumns.push({
       id: ENTITY_COLUMN_IDS.folder,
-      accessorFn: (row) =>
-        row.group ? undefined : row.parents?.folder?.label || row.parents?.folder?.name,
+      accessorFn: (row) => getFolderColumnValue(row),
       header: getColumnLabel(ENTITY_COLUMN_IDS.folder),
       minSize: COLUMN_MIN_SIZE,
       sortDescFirst: COLUMN_SORT_CONFIG.folder_entity.sortDescFirst,
@@ -979,8 +999,8 @@ const buildTreeTableColumns = ({
       enablePinning: true,
       enableHiding: true,
       cell: ({ row, column, table }) => {
-        const folder = row.original.parents?.folder
-        if (!folder || row.original.group || row.original.metaType) return null
+        const folder = getFolderColumnEntity(row.original)
+        if (!folder) return null
 
         return (
           <EntityWidget
@@ -1397,8 +1417,7 @@ const buildTreeTableColumns = ({
         sortingFn: withLoadingStateSort(
           withNameTieBreaker((a, b, c) => attribSort(a, b, c, attrib.data)),
         ),
-        enableSorting:
-          !isMultiSelectAttribute(attrib) && canSort(attrib.name) && canSort('attrib'),
+        enableSorting: !isMultiSelectAttribute(attrib) && canSort(attrib.name) && canSort('attrib'),
         enableResizing: true,
         enablePinning: true,
         enableHiding: true,
@@ -1434,7 +1453,11 @@ const buildTreeTableColumns = ({
               options={attrib.data.enum || []}
               isLoadingOptions={!!attrib.enumIsLoading}
               tooltip={attrib.enumError}
-              pt={{ enum: { error: toDropdownErrorText(attrib.enumError) } }}
+              pt={{
+                enum: { error: toDropdownErrorText(attrib.enumError) },
+                // markdown attributes can mention the users, tasks and versions of the entity
+                text: { mentionEntity: { entityId: id, entityType: type } },
+              }}
               midnightExclusiveFields={row.original.midnightExclusiveFields}
               isCollapsed={!!row.original.childOnlyMatch}
               isInherited={isInherited}
@@ -1460,7 +1483,7 @@ const buildTreeTableColumns = ({
                   },
                   {
                     selection:
-                      entity === row.original.primary && hasEnumOptions(attrib.data)
+                      entity === row.original.primary && supportsMultiCellEdit(attrib.data)
                         ? meta?.selection
                         : undefined,
                   },
@@ -1716,5 +1739,5 @@ export const getValueIdType = (
 
   // The returned id and type identify the entity that owns the value. Widgets
   // use them for updates, links, and deciding which entity-specific UI to show.
-  return { value, id: valueEntity.id, type: valueEntity.entityType }
+  return { value, id: row.id, type: valueEntity.entityType }
 }

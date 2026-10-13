@@ -16,7 +16,7 @@ import {
   ColumnsConfig,
   TableGroupBy,
   useColumnSettingsContext,
-} from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
+} from '@shared/containers/ProjectTreeTable/context/column-settings'
 import ColumnItem from './ColumnItem'
 import SortableColumnItem from './SortableColumnItem'
 
@@ -52,7 +52,7 @@ import {
   SettingsPanelItemTemplate,
   SettingsPanelItemTemplateProps,
 } from '../SettingsPanel/SettingsPanelItemTemplate'
-import type { SettingHighlightedId } from '@shared/context/SettingsPanelContext'
+import type { SettingHighlightedId } from '@shared/context'
 import { InputSwitch } from '@ynput/ayon-react-components'
 
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'

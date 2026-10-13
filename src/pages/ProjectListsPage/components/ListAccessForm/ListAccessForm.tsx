@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { useListsModuleContext } from '@pages/ProjectListsPage/context/ListsModulesContext'
+import { useListsModuleContext } from '@pages/ProjectListsPage/context/lists-modules'
 import {
   EntityListModel,
   useGetActivityCategoriesQuery,
@@ -8,7 +8,7 @@ import {
 } from '@shared/api'
 import { RequiredAddonVersion } from '@shared/components/Powerpack'
 import { useGlobalContext, usePowerpack } from '@shared/context'
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { Section } from '../ListDetailsPanel/ListDetailsPanel.styled'
 import { copyToClipboard } from '@shared/util'
@@ -50,7 +50,11 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
     requiredVersion,
     isLoading: isLoadingModule,
     GuestAccess,
+    requestModules,
   } = useListsModuleContext()
+  useEffect(() => {
+    requestModules()
+  }, [requestModules])
 
   const handleCopyLink = () => {
     const path = isReview

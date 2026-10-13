@@ -1,8 +1,8 @@
 import { FC } from 'react'
 import { ColumnSettingsProvider, ColumnDndProvider } from '@shared/containers'
-import { useVPViewsContext } from '../context/VPViewsContext'
+import { useVPViewsContext } from '../context/vp-views'
 import { DEFAULT_COLUMNS_VERSION } from '@pages/ProjectsPage/constants'
-import { VP_COLUMN_ID_ALIASES } from '../components/VPTableSettings/VPTableSettings'
+import { VP_COLUMN_ID_ALIASES } from '../components/VPTableSettings/VPTableSettingsHelpers'
 
 interface VPColumnSettingsProviderProps {
   children: React.ReactNode

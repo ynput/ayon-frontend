@@ -1,4 +1,4 @@
-import { MappingState } from "../MapperRow"
+import { MappingState } from "../MapperRowHelpers"
 import { ColumnAction, ColumnMappings } from "../common"
 
 export const getMapperState = (column: string, mappings: ColumnMappings = {}) => {

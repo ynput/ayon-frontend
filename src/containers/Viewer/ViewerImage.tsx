@@ -1,6 +1,6 @@
 import { FC, useRef, useState, useEffect, CSSProperties } from 'react'
 import { Image } from './Viewer.styled'
-import { useViewer } from '@context/ViewerContext'
+import { useViewer } from '@context'
 import styled, { keyframes } from 'styled-components'
 import type { AnnotationsContainerDimensions } from './'
 import { Icon } from '@ynput/ayon-react-components'

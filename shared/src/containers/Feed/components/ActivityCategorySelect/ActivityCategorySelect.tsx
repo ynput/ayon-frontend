@@ -4,20 +4,8 @@ import { FC } from 'react'
 import { CategoryTag } from './CategoryTag'
 import styled from 'styled-components'
 import { CategoryDropdownItem } from './CategoryDropdownItem'
-import type { PowerpackFeature } from '@shared/context/PowerpackContext'
+import type { PowerpackFeature } from '@shared/context'
 import { toast } from 'react-toastify'
-
-export const isCategoryHidden = (
-  categories: ActivityCategory[],
-  { isGuest, isAdmin }: { isGuest?: boolean; isAdmin: boolean },
-) => {
-  // guest can never see categories. They create comments with categories but cannot see them
-  if (isGuest) return true
-  // if there are no categories a regular user has access to, hide the category select
-  if (!categories.length && !isAdmin) return true
-  // admins always see the category select, even if there are no categories
-  return false
-}
 
 const CATEGORY_PP_MIN_VERSION = '1.3.0'
 
@@ -26,7 +14,7 @@ const StyledDropdown = styled(Dropdown)`
     /* remove all styles and just use a wrapper */
     background-color: unset !important;
 
-    /* override the default quill styles */
+    /* override the default button styles */
     padding: 0 !important;
     height: 32px !important;
     width: unset !important;

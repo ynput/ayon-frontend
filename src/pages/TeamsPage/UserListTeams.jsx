@@ -115,16 +115,18 @@ const UserListTeams = ({
   // create ref and model
   const [contextMenuShow] = useCreateContextMenu([])
 
+  // rows call this with { originalEvent, data }, the panel around the table (a right-click on its
+  // empty space) with the DOM event
   const handleContext = (e) => {
-    // we all of this to keep users in sync
-    // when right clicking on a new user we need to use the event NOT selectedUsers as it is not updated yet
-    let users = selectedUsers
-    if (selectedUsers.length < 2) users = [e.data.name]
+    // selectedUsers is not updated yet when the menu opens, so a right-clicked user that is not
+    // selected is used instead of the selection
+    const name = e.data?.name
+    const users = name && !selectedUsers.includes(name) ? [name] : selectedUsers
 
     const addToList = getAddToList(users, teams)
     const removeFromList = getRemoveFromList(users, teams)
     contextMenuShow(
-      e.originalEvent,
+      e.originalEvent || e,
       createListItems(
         showAllUsers,
         onShowAllUsers,

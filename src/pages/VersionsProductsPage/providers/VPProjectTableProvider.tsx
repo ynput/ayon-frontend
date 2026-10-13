@@ -11,9 +11,9 @@ import {
 } from '@shared/containers'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { FC, useCallback, useMemo } from 'react'
-import { useVersionsDataContext } from '../context/VPDataContext'
+import { useVersionsDataContext } from '../context/vp-data'
 import { buildVersionTableRow } from '../util'
-import { useVPViewsContext } from '../context/VPViewsContext'
+import { useVPViewsContext } from '../context/vp-views'
 import { useProjectContext, useSubtasksModulesContext } from '@shared/context'
 
 interface VPProjectTableProviderProps {

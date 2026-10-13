@@ -3,7 +3,7 @@ import * as Styled from './ViewItem.styled'
 import clsx from 'clsx'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { confirmDialog } from 'primereact/confirmdialog'
-import { useViewsContext } from '../context/ViewsContext'
+import { useViewsContext } from '../context'
 
 export interface ViewItem {
   id: string

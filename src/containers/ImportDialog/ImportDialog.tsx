@@ -8,7 +8,7 @@ import { ViewsMenuContainer, ViewsProvider, ViewsButton } from "@shared/containe
 import { useDispatch } from "react-redux";
 import ViewsDialogContainer from "@shared/containers/Views/ViewsDialogContainer/ViewsDialogContainer";
 import ImportSteps from "./Steps";
-import { useImportDialogContext } from "./context/ImportDialogProvider";
+import { useImportDialogContext } from "./context/ImportDialogProviderInstance"
 
 const dialogSizeForStep: Record<ImportStep, DialogProps["size"]> = {
   [ImportStep.UPLOAD]: "lg",

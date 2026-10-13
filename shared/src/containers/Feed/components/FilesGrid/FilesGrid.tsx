@@ -2,6 +2,7 @@ import * as Styled from './FilesGrid.styled'
 import clsx from 'clsx'
 import FileUploadCard, { FileUploadCardProps } from '../FileUploadCard'
 import { isFilePreviewable } from '../FileUploadPreview'
+import { getFileURL } from '../FileUploadPreview/fileUtils'
 import { useCallback } from 'react'
 
 export interface FilesGridProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -55,7 +56,9 @@ const FilesGrid: React.FC<FilesGridProps> = ({
           src={
             file.unsavedAnnotation
               ? file.thumbnail
-              : `/api/projects/${projectName}/files/${file.id}`
+              : file.id
+                ? getFileURL(file.id, projectName)
+                : undefined
           }
           unsavedAnnotation={file.unsavedAnnotation}
           savedAnnotation={file.annotation}

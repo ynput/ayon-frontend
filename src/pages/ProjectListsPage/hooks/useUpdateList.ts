@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useListsDataContext } from '../context/ListsDataContext'
-import type { ListsContextType } from '../context/ListsContext'
+import { useListsDataContext } from '../context/lists-data'
+import type { ListsContextType } from '../context/lists'
 import {
   EntityListFolderData,
   EntityListFolderPatchModel,

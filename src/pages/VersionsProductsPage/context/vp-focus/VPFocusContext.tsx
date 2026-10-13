@@ -1,0 +1,96 @@
+import { FC, ReactNode, useRef, useCallback } from 'react'
+import { VPFocusContext } from './VPFocusContextInstance'
+
+export interface VPFocusContextValue {
+  versionsTableRef: React.RefObject<HTMLDivElement>
+  gridContainerRef: React.RefObject<HTMLDivElement>
+  focusVersionsTable: () => void
+  focusGrid: () => void
+}
+
+interface VPFocusProviderProps {
+  children: ReactNode
+}
+
+export const VPFocusProvider: FC<VPFocusProviderProps> = ({ children }) => {
+  const versionsTableRef = useRef<HTMLDivElement>(null)
+  const gridContainerRef = useRef<HTMLDivElement>(null)
+
+  const focusVersionsTable = useCallback(() => {
+    if (!versionsTableRef.current) return
+
+    // Small delay to ensure the table has rendered
+    requestAnimationFrame(() => {
+      if (!versionsTableRef.current) return
+
+      // Try multiple strategies to find a focusable element
+
+      // 1. Try to find a selected row first
+      let targetElement = versionsTableRef.current.querySelector(
+        'tbody td.selected[tabindex="0"]',
+      ) as HTMLElement
+
+      // 2. If no selected cell, find any body cell with tabindex
+      if (!targetElement) {
+        targetElement = versionsTableRef.current.querySelector(
+          'tbody td[tabindex="0"]',
+        ) as HTMLElement
+      }
+
+      // 3. If still nothing, try to find a focusable body element
+      if (!targetElement) {
+        targetElement = versionsTableRef.current.querySelector(
+          'tbody [tabindex]:not([tabindex="-1"])',
+        ) as HTMLElement
+      }
+
+      // Focus the found element
+      if (targetElement) {
+        targetElement.focus()
+
+        // Scroll into view if needed
+        targetElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    })
+  }, [])
+
+  const focusGrid = useCallback(() => {
+    if (!gridContainerRef.current) return
+
+    requestAnimationFrame(() => {
+      if (!gridContainerRef.current) return
+
+      // Try to find a selected entity card (EntityCard with isActive prop adds .active class)
+      let targetElement = gridContainerRef.current.querySelector(
+        '.entity-card.active',
+      ) as HTMLElement
+
+      // If no selected card, try any entity card
+      if (!targetElement) {
+        targetElement = gridContainerRef.current.querySelector('.entity-card') as HTMLElement
+      }
+
+      // If still no card found, try divs with data-entity-id
+      if (!targetElement) {
+        targetElement = gridContainerRef.current.querySelector('[data-entity-id]') as HTMLElement
+      }
+
+      // Focus the found element or the grid container itself
+      if (targetElement) {
+        targetElement.focus()
+        targetElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      } else {
+        // Fallback to focusing the grid container
+        gridContainerRef.current.focus()
+      }
+    })
+  }, [])
+
+  return (
+    <VPFocusContext.Provider
+      value={{ versionsTableRef, gridContainerRef, focusVersionsTable, focusGrid }}
+    >
+      {children}
+    </VPFocusContext.Provider>
+  )
+}

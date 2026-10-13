@@ -4,7 +4,7 @@ export * from './Feed'
 
 export * from './components/FileUploadPreview'
 export * from './components/ActivityCategorySelect'
-export * from './context/FeedContext'
+export * from './context/feed'
 
 export { ActivityReferenceTooltip, FileUploadPreview }
 

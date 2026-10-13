@@ -2,21 +2,13 @@ import { FC } from 'react'
 import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
 import { formatDistance } from 'date-fns'
-
-const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000
+import { getInvitationState } from './InvitationStatusHelpers'
 
 export type InvitationState = 'none' | 'pending' | 'accepted' | 'expired'
 
-type InvitationFields = {
+export type InvitationFields = {
   inviteSentAt?: string | null
   inviteAcceptedAt?: string | null
-}
-
-export const getInvitationState = (user: InvitationFields): InvitationState => {
-  if (user.inviteAcceptedAt) return 'accepted'
-  if (!user.inviteSentAt) return 'none'
-  const sentMs = new Date(user.inviteSentAt).getTime()
-  return Date.now() - sentMs > INVITE_TTL_MS ? 'expired' : 'pending'
 }
 
 const Pill = styled.span<{ $state: Exclude<InvitationState, 'none'>; $plain?: boolean }>`

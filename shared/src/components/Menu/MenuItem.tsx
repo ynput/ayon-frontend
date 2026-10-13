@@ -1,11 +1,11 @@
-import { Icon, ShortcutTag } from '@ynput/ayon-react-components'
-import React, { forwardRef } from 'react'
+import { Button, Icon, ShortcutTag } from '@ynput/ayon-react-components'
+import React, { ComponentProps, forwardRef } from 'react'
 import * as Styled from './Menu.styled'
 import { isArray } from 'lodash'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
-import { usePowerpack } from '@shared/context/PowerpackContext'
-import type { MenuItemType } from './Menu'
+import { usePowerpack } from '@shared/context'
+import type { MenuItemEndAction, MenuItemType } from './Menu'
 
 export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLElement>, 'label'> {
   label?: string | string[]
@@ -25,6 +25,7 @@ export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLElement>, '
   active?: boolean
   // keeps the checkmark slot when unchecked so toggling doesn't resize the menu
   reserveActiveSlot?: boolean
+  endActions?: MenuItemEndAction[]
   target?: string
 }
 
@@ -48,6 +49,7 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
       powerFeature,
       active,
       reserveActiveSlot,
+      endActions = [],
       ...props
     },
     ref,
@@ -96,6 +98,26 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
             icon="check"
             style={{ marginLeft: 'auto', visibility: active ? 'visible' : 'hidden' }}
           />
+        )}
+
+        {!!endActions.length && (
+          <Styled.EndActions>
+            {endActions.map((action) => (
+              <Styled.EndAction
+                key={action.icon}
+                variant="text"
+                icon={action.icon as ComponentProps<typeof Button>['icon']}
+                className="menu-item-end-action"
+                data-tooltip={action.tooltip}
+                aria-label={action.tooltip}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  action.onClick(e)
+                }}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+            ))}
+          </Styled.EndActions>
         )}
 
         {!!items.length && <Icon icon="arrow_right" className="more" />}

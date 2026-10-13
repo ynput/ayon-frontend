@@ -1,36 +1,22 @@
 import { useMemo } from 'react'
-import { RowSelectionState } from '@tanstack/react-table'
+import { resolveSlicerFolders } from './resolveSlicerFolders'
+import type { SelectedFoldersResult, SliceRowSelection } from './resolveSlicerFolders'
+
+export type { SelectedFoldersResult, SliceRowSelection }
+export { NO_MATCH_FOLDER_ID, scopeIdsToFolders } from './resolveSlicerFolders'
 
 interface UseSelectedFoldersProps {
-  rowSelection: RowSelectionState
-  sliceType: string
-  pinnedRowSelection?: RowSelectionState | null
+  slices: SliceRowSelection[]
   entityListFolderIds?: string[]
+  getChildFolderIds?: (folderIds: string[], includeSelf?: boolean) => string[]
 }
 
 export const useSelectedFolders = ({
-  rowSelection,
-  sliceType,
-  pinnedRowSelection,
+  slices,
   entityListFolderIds,
-}: UseSelectedFoldersProps): string[] => {
-  return useMemo(() => {
-    // When entity list slice is active, use folder IDs directly (or empty array if none)
-    if (sliceType === 'entityList') {
-      return entityListFolderIds?.length ? entityListFolderIds : []
-    }
-
-    let selection: RowSelectionState = {}
-
-    if (sliceType === 'hierarchy') {
-      selection = rowSelection
-    } else if (pinnedRowSelection) {
-      selection = pinnedRowSelection
-    }
-
-    // Process the selection inside useMemo
-    return Object.entries(selection)
-      .filter(([, value]) => value)
-      .map(([id]) => id)
-  }, [rowSelection, pinnedRowSelection, sliceType, entityListFolderIds])
-}
+  getChildFolderIds,
+}: UseSelectedFoldersProps): SelectedFoldersResult =>
+  useMemo(
+    () => resolveSlicerFolders(slices, entityListFolderIds, getChildFolderIds),
+    [slices, entityListFolderIds, getChildFolderIds],
+  )

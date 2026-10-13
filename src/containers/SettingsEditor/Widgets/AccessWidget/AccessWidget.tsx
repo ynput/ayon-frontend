@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react'
 import { updateChangedKeys, parseContext } from '../../helpers'
-import AccessEditorDialog, {
-  AccessOption,
-  AccessValues,
-  DEFAULT_SHARE_OPTIONS,
-} from './AccessEditorDialog'
+import AccessEditorDialog, { AccessOption, AccessValues } from './AccessEditorDialog'
+import { DEFAULT_SHARE_OPTIONS } from './AccessEditorDialogHelpers'
 import { AccessPreviewButton } from './AccessPreviewButton'
 import {
   EVERY_GUESTS_KEY,

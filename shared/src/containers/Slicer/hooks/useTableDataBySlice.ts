@@ -5,20 +5,24 @@ import useProjectAnatomySlices from './useProjectAnatomySlices'
 import { Slice, SliceData, SliceTypeField, TableData } from '../types'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import type { SliceType } from '../types'
-import { useSlicerContext } from '../context/SlicerContext'
+import { useSlicerContext, type OnSliceTypeChange } from '../context/slicer'
 import useSlicerAttributesData from './useSlicerAttributesData'
 import { useEntityListsSlice } from './useEntityListsSlice'
 import { getAttributeIcon, getEntityTypeIcon, hasEnumOptions } from '@shared/util'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 import type { GroupCountsMap } from '@shared/api'
 import { UNGROUPED_VALUE } from '../../ProjectTreeTable/hooks/useBuildGroupByTableData'
 
 interface TableDataBySliceProps {
   sliceFields: SliceTypeField[]
+  usedSliceTypes?: SliceType[] // dimensions held by other panels
   entityTypes?: string[] // entity types
   counts?: GroupCountsMap
   filled?: number
   countsComplete?: boolean
+  // per-panel overrides; defaults keep the single-panel (first slice) behaviour
+  sliceType?: SliceType
+  onSliceTypeChange?: OnSliceTypeChange
 }
 
 const getRowCount = (
@@ -119,12 +123,22 @@ export const defaultSliceOptions: SliceTypeField[] = [
 
 const useTableDataBySlice = ({
   sliceFields,
+  usedSliceTypes = [],
   entityTypes = [],
   counts,
   filled = 0,
   countsComplete = false,
+  sliceType: sliceTypeOverride,
+  onSliceTypeChange: onSliceTypeChangeOverride,
 }: TableDataBySliceProps): TableData => {
-  const { sliceType, onSliceTypeChange, useExtraSlices, isLoadingExtraSlices } = useSlicerContext()
+  const {
+    sliceType: contextSliceType,
+    onSliceTypeChange: contextOnSliceTypeChange,
+    useExtraSlices,
+    isLoadingExtraSlices,
+  } = useSlicerContext()
+  const sliceType = sliceTypeOverride ?? contextSliceType
+  const onSliceTypeChange = onSliceTypeChangeOverride ?? contextOnSliceTypeChange
   const { projectName } = useProjectContext()
   const { formatAttribute } = useExtraSlices()
 
@@ -266,6 +280,16 @@ const useTableDataBySlice = ({
   const [slice, setSlice] = useState<Slice>(initSlice)
   const sliceConfig = builtInSlices[sliceType]
 
+  // a stored slice type can outlive its source (deleted attribute, page that no longer
+  // offers it); fall back instead of leaving the panel permanently blank
+  const fallbackSliceType = sliceOptions.find(
+    (option) => builtInSlices[option.value] && !usedSliceTypes.includes(option.value),
+  )?.value
+  useEffect(() => {
+    if (isLoadingData || sliceConfig || !fallbackSliceType) return
+    onSliceTypeChange(fallbackSliceType, false)
+  }, [isLoadingData, sliceConfig, fallbackSliceType])
+
   const handleSliceTypeChange = (sliceType: SliceType, pinCurrent?: boolean) => {
     // get slice data object
     const sliceConfig = builtInSlices[sliceType]
@@ -296,8 +320,8 @@ const useTableDataBySlice = ({
           window.alert(
             'Slice options failed to load. This likely means the PowerFeatures addon is out of date. Please update to the latest version.',
           )
-          // setSlice type to hierarchy
-          onSliceTypeChange('hierarchy', false)
+          // hierarchy may already be taken by another panel, so use whatever is free
+          onSliceTypeChange(fallbackSliceType ?? 'hierarchy', false)
           throw new Error('Slice data is undefined')
         }
 

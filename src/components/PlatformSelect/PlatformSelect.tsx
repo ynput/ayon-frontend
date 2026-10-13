@@ -1,7 +1,10 @@
 import { forwardRef } from 'react'
 import styled from 'styled-components'
 import AddonCard from '@components/AddonCard/AddonCard'
-import { getPlatformIcon, getPlatformLabel } from '@pages/AccountPage/DownloadsPage/DownloadsPage'
+import {
+  getPlatformIcon,
+  getPlatformLabel,
+} from '@pages/AccountPage/DownloadsPage/DownloadsPageHelpers'
 
 const Container = styled.div`
   width: 100%;

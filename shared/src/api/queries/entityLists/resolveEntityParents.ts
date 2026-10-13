@@ -8,6 +8,17 @@ export interface SelectedEntityIds {
   productIds: string[]
 }
 
+// entityId → parent folderId, one map per entity type
+export interface EntityParentMaps {
+  taskFolderIds: Record<string, string>
+  versionFolderIds: Record<string, string>
+  productFolderIds: Record<string, string>
+}
+
+export interface ResolvedEntityParents extends SelectedEntityIds {
+  parentMaps: EntityParentMaps
+}
+
 type AppDispatch = ThunkDispatch<unknown, unknown, UnknownAction>
 
 /**
@@ -23,11 +34,15 @@ export const resolveEntityParents = async (
   entityIds: SelectedEntityIds,
   projectName: string,
   dispatch: AppDispatch,
-): Promise<SelectedEntityIds> => {
+): Promise<ResolvedEntityParents> => {
   const folderIds = new Set(entityIds.folderIds)
   const taskIds = new Set(entityIds.taskIds)
   const versionIds = new Set(entityIds.versionIds)
   const productIds = new Set(entityIds.productIds)
+
+  const taskFolderIds: Record<string, string> = {}
+  const versionFolderIds: Record<string, string> = {}
+  const productFolderIds: Record<string, string> = {}
 
   const promises: Promise<void>[] = []
 
@@ -47,6 +62,7 @@ export const resolveEntityParents = async (
           for (const task of result.tasks) {
             if (task.folderId) {
               folderIds.add(task.folderId)
+              taskFolderIds[task.id] = task.folderId
             }
           }
         }),
@@ -75,6 +91,10 @@ export const resolveEntityParents = async (
             }
             if (version.product?.folder?.id) {
               folderIds.add(version.product.folder.id)
+              versionFolderIds[version.id] = version.product.folder.id
+              if (version.product?.id) {
+                productFolderIds[version.product.id] = version.product.folder.id
+              }
             }
           }
         }),
@@ -97,6 +117,7 @@ export const resolveEntityParents = async (
           for (const product of result.products) {
             if (product.folderId) {
               folderIds.add(product.folderId)
+              productFolderIds[product.id] = product.folderId
             }
           }
         }),
@@ -110,5 +131,6 @@ export const resolveEntityParents = async (
     taskIds: [...taskIds],
     versionIds: [...versionIds],
     productIds: [...productIds],
+    parentMaps: { taskFolderIds, versionFolderIds, productFolderIds },
   }
 }

@@ -101,7 +101,11 @@ const CommentWrapper: FC<{ children: React.ReactNode }> = ({ children }) => {
     e.clipboardData.setData('text/html', result.html)
   }, [])
 
-  return <div onCopy={handleCopy}>{parsedChildren}</div>
+  return (
+    <div className="comment-text" onCopy={handleCopy}>
+      {parsedChildren}
+    </div>
+  )
 }
 
 export default CommentWrapper

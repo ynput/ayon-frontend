@@ -18,7 +18,10 @@ const ActivityReferenceTooltip: React.FC<ActivityReferenceTooltipProps> = () => 
         const target = event.target as Element | null
         const escapedId = CSS.escape(`ref-${id.replaceAll('.', '-')}`)
         const closestRef = target?.closest(`#${escapedId}`)
-        if (!closestRef) {
+        // moving straight onto another reference / mention: it opens its own tooltip (its mouse
+        // enter runs before this listener), closing here would hide that one
+        const otherRef = target?.closest('[data-mention-value], .reference')
+        if (!closestRef && !otherRef) {
           // close
           setRefTooltip(null)
           document.removeEventListener('mouseover', handleMouseOver)

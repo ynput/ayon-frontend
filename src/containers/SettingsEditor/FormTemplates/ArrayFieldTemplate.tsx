@@ -8,19 +8,7 @@ import DraggableItem from './DraggableItem'
 import ArrayItemTemplate from './ArrayFieldItemTemplate'
 import styled from 'styled-components'
 import { $Any } from '@types'
-
-export const ArrayItemControls = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  gap: 5px;
-
-  button {
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-  }
-`
+import { ArrayItemControls } from './ArrayFieldTemplate.styled'
 
 const FormArrayField = styled.div`
   flex-grow: 1;

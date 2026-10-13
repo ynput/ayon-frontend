@@ -1,7 +1,7 @@
-import { getFuzzyDate } from '../components/ActivityDate'
+import { getFuzzyDate } from '../components/ActivityDateHelpers'
 import { getEntityTypeIcon } from '@shared/util'
 import type { VersionSuggestionItem } from '@shared/api/generated'
-import type { ProjectContextValue } from '@shared/context/ProjectContext'
+import type { ProjectContextValue } from '@shared/context'
 
 const getMentionVersions = (
   versions: VersionSuggestionItem[] = [],

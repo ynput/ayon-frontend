@@ -80,3 +80,8 @@ export const normalizeQueryError = (error: unknown, fallbackStatus = 500): Fetch
     },
   }
 }
+
+export const getQueryErrorCodes = (error: any): string[] => {
+  const codes = error?.data?.errorCodes ?? error?.errorCodes
+  return Array.isArray(codes) ? codes : []
+}

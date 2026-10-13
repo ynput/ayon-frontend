@@ -1,12 +1,8 @@
 import { FC, useCallback } from 'react'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import {
-  ListsDataProvider,
-  useListsDataContext,
-} from '@pages/ProjectListsPage/context/ListsDataContext'
-import { ListsProvider } from '@pages/ProjectListsPage/context/ListsProvider'
-import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
+import { ListsDataProvider, useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
+import { ListsProvider, useListsContext } from '@pages/ProjectListsPage/context/lists'
 import ListsTable from '../ListsTable/ListsTable'
 import { buildFolderMap, parseListFolderRowId, wouldCreateCircularDependency } from '../../util'
 import type { EntityListFolderModel } from '@shared/api'
@@ -127,13 +123,7 @@ const MoveToFolderDialogInner: FC<MoveToFolderDialogProps> = ({
       }
     >
       <TableContainer>
-        <ListsTable
-          picker
-          foldersOnly
-          singleSelect
-          isReview={isReview}
-          onRowSubmit={moveTo}
-        />
+        <ListsTable picker foldersOnly singleSelect isReview={isReview} onRowSubmit={moveTo} />
       </TableContainer>
     </Dialog>
   )

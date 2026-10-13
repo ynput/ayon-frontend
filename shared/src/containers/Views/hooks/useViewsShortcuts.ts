@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react'
-import { useViewsContext } from '../context/ViewsContext'
+import { useViewsContext } from '../context'
 
 /**
  * Hook to handle keyboard shortcuts for Views functionality.

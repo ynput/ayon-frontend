@@ -13,6 +13,7 @@ import type {
 } from '@shared/api'
 import { useGroupedPagination } from '@shared/hooks/useGroupedPagination'
 import { getGroupByDataType } from '@shared/util'
+import { buildSortArgs } from '@shared/util/sortingHelpers'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
@@ -20,14 +21,13 @@ import { determineLoadingTaskFolders } from '../utils/loadingUtils'
 import type { LoadingTasks, SoftErrorAction } from '../types'
 import { getFolderIdsToQueryFromExpanded } from '../utils/getFolderIdsToQueryFromExpanded'
 import type { TasksByFolderMap } from '../types/table'
-import type { TableGroupBy } from '../context/ColumnSettingsContext'
+import type { TableGroupBy } from '../context/column-settings'
 import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
 import { getGroupQueries } from '../utils/getGroupQueries'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
 import { useGetEntityLinksQuery } from '@shared/api'
-import type { OnSyncDataCallback } from '@shared/context/EntityUpdatesContext'
-import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
+import { useProjectFoldersContext, type OnSyncDataCallback } from '@shared/context'
 import { debounce } from 'lodash'
 import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
@@ -229,11 +229,14 @@ export const useFetchOverviewData = ({
   // create a list of folders that are current visible in the table
   // root folders are always visible
   // then a folder is visible if it's parent is expanded
+  // plus any folder rendered in the viewport (flat folder view shows nested folders as top-level rows)
   const visibleFolders = useMemo(() => {
     const visibleSet = new Set<string>()
+    const folderIds = new Set<string>()
 
     // Check each folder in the map
     folders.forEach((folder) => {
+      folderIds.add(folder.id as string)
       // Root folders are always visible
       if (!folder.parentId) {
         visibleSet.add(folder.id)
@@ -251,8 +254,13 @@ export const useFetchOverviewData = ({
       }
     })
 
+    for (const id of debouncedVisibleEntityIds) {
+      if (folderIds.has(id)) visibleSet.add(id)
+    }
+
     return visibleSet
   }, [
+    debouncedVisibleEntityIds,
     folders,
     foldersByTaskFilter,
     skipFoldersByTaskFilter,
@@ -395,8 +403,12 @@ export const useFetchOverviewData = ({
   }, [sorting, tasksListCursor])
 
   // Create sort params for infinite query
-  const singleSort = { ...sorting[0] }
-  const taskSortId = getColumnSortKey(singleSort?.id, showHierarchy, 'task')
+  const { sortBy: tasksSortBy, desc: tasksSortDesc } = buildSortArgs(
+    sorting.map((sort) => ({
+      key: getColumnSortKey(sort.id, showHierarchy, 'task')?.replace('_', '.'),
+      desc: sort.desc,
+    })),
+  )
   const tasksFolderIdsParams = selectedFolders.length
     ? Array.from(
         new Set([...foldersMap.keys(), ...(excludeSelectedFolders ? selectedFolders : [])]),
@@ -432,8 +444,8 @@ export const useFetchOverviewData = ({
     search: taskFilters.search,
     folderIds: getTasksListFolderIds(),
     taskIds: taskIds?.length ? taskIds : undefined,
-    sortBy: taskSortId ? taskSortId.replace('_', '.') : undefined,
-    desc: !!singleSort?.desc,
+    sortBy: tasksSortBy,
+    desc: tasksSortDesc,
     showComments,
     includeFolderChildren: !getTasksDirectlyUnderFolder,
   }
@@ -456,7 +468,7 @@ export const useFetchOverviewData = ({
       (((showHierarchy && !getTasksDirectlyUnderFolder) || isFlatFolderView) && !taskIds?.length),
     initialPageParam: {
       cursor: '',
-      desc: !!singleSort?.desc,
+      desc: tasksSortDesc,
     },
   })
 
@@ -509,8 +521,8 @@ export const useFetchOverviewData = ({
   const groupTasksArgs: GetGroupedTasksListArgs = {
     projectName,
     groups: groupQueries,
-    sortBy: taskSortId ? taskSortId.replace('_', '.') : undefined,
-    desc: !!singleSort?.desc,
+    sortBy: tasksSortBy,
+    desc: tasksSortDesc,
     search: taskFilters.search,
     folderFilter: folderFilters.filterString,
     folderIds: tasksFolderIdsParams,

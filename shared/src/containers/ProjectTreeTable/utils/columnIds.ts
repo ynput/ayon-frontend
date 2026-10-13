@@ -5,7 +5,7 @@ import type {
   SortingState,
   VisibilityState,
 } from '@tanstack/react-table'
-import type { ColumnsConfig } from '../context/ColumnSettingsContext'
+import type { ColumnsConfig } from '../context/column-settings'
 
 export const ENTITY_COLUMN_IDS = {
   folder: 'folder_entity',
