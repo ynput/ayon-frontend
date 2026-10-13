@@ -1,4 +1,4 @@
-import { FC, lazy, useCallback, useEffect, useState } from 'react'
+import { FC, ReactNode, lazy, useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
@@ -26,13 +26,22 @@ import { toast } from 'react-toastify'
 
 interface AppRoutesProps {}
 
-// catch-all route: an unknown path may be an addon route, so load those straight away
-const UnknownRoute = ({ isLoading, onMount }: { isLoading: boolean; onMount: () => void }) => {
+// for paths an addon route may take over: load the addon routes straight away and
+// show the loading page until they are ready, instead of the built in page underneath
+const WaitForAddonRoutes = ({
+  isLoading,
+  onMount,
+  children,
+}: {
+  isLoading: boolean
+  onMount: () => void
+  children: ReactNode
+}) => {
   useEffect(() => {
     onMount()
   }, [onMount])
 
-  return isLoading ? <LoadingPage /> : <ErrorPage code="404" />
+  return isLoading ? <LoadingPage /> : <>{children}</>
 }
 
 const AppRoutes: FC<AppRoutesProps> = () => {
@@ -58,6 +67,8 @@ const AppRoutes: FC<AppRoutesProps> = () => {
     return <LoadingPage />
   }
 
+  const isLoadingRemoteRoutes = !loadRemoteRoutes || isLoadingModules
+
   return (
     <Routes>
       {remotePages.map((remote) => (
@@ -82,16 +93,19 @@ const AppRoutes: FC<AppRoutesProps> = () => {
       <Route path="/manageProjects" element={<ProjectManagerPage />} />
       <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
       {/* Allow reviews route for all levels */}
+      {/* the review addon's route replaces this one with the review session */}
       <Route
         path={'/projects/:projectName/reviews/:sessionId'}
         element={
-          <ProtectedRoute
-            isAllowed={level > 0}
-            redirectPath="/"
-            preserveParams={['uri', 'type', 'project', 'id', 'activity', 'sessionId']}
-          >
-            <ProjectPage />
-          </ProtectedRoute>
+          <WaitForAddonRoutes isLoading={isLoadingRemoteRoutes} onMount={requestRemoteRoutes}>
+            <ProtectedRoute
+              isAllowed={level > 0}
+              redirectPath="/"
+              preserveParams={['uri', 'type', 'project', 'id', 'activity', 'sessionId']}
+            >
+              <ProjectPage />
+            </ProtectedRoute>
+          </WaitForAddonRoutes>
         }
       />
       <Route
@@ -181,13 +195,13 @@ const AppRoutes: FC<AppRoutesProps> = () => {
           </ProtectedRoute>
         }
       />
+      {/* an unknown path may be an addon route */}
       <Route
         path="*"
         element={
-          <UnknownRoute
-            isLoading={!loadRemoteRoutes || isLoadingModules}
-            onMount={requestRemoteRoutes}
-          />
+          <WaitForAddonRoutes isLoading={isLoadingRemoteRoutes} onMount={requestRemoteRoutes}>
+            <ErrorPage code="404" />
+          </WaitForAddonRoutes>
         }
       />
     </Routes>
