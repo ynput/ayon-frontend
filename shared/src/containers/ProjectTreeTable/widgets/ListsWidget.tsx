@@ -22,14 +22,16 @@ import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 
 const ListTags = styled(Chips)`
   .chip {
-    background-color: transparent;
-
-    &:hover {
-      background-color: var(--md-sys-color-surface-container-high-hover);
-    }
+    position: relative;
   }
 
   .open-icon {
+    position: absolute;
+    top: 50%;
+    right: 2px;
+    transform: translateY(-50%);
+    border-radius: var(--border-radius-m);
+    background-color: var(--md-sys-color-surface-container-high-hover);
     opacity: 0;
   }
 
@@ -107,11 +109,10 @@ const EntityListsChips: FC<ListsWidgetProps & { value: ListsWidgetData }> = ({
       items.map(({ list, open }) => ({
         label: list.label,
         tooltip: list.label,
-        icon: getListIcon({ entityListType: list.entityListType, entityType }),
         suffix: open && <Icon icon="open_in_new" className="open-icon" />,
         onClick: open,
       })),
-    [items, entityType],
+    [items],
   )
 
   // the table ignores keys while a cell is editing and keeps focus on the cell
