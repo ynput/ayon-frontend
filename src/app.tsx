@@ -65,7 +65,7 @@ import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseIn
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import { DetailsPanelFloating } from '@shared/containers'
-import { FeedbackProvider, PowerpackDialog } from '@shared/components'
+import { FeedbackProvider, PowerpackDialog, SplitterStyles } from '@shared/components'
 import AppRemoteLoader from './remote/AppRemoteLoader'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 import { goToFrame, openViewer } from '@state/viewer'
@@ -198,6 +198,7 @@ const App = () => {
     () => (
       <>
         <Favicon />
+        <SplitterStyles />
         <Suspense fallback={<LoadingPage />}>
           <GlobalProvider>
             <FeedbackProvider>
