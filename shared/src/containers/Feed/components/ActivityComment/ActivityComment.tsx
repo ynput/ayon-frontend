@@ -40,6 +40,7 @@ import { createCommentFlags } from './createCommentFlags'
 import ActivityCommentMenu from './ActivityCommentMenu'
 import { useCategoryData } from '../../hooks/useCategoryData'
 import { getActivityUserName } from '../../helpers/getActivityUserName'
+import { formatVersionFrame } from '../../helpers/versionFrames'
 import { copyToClipboard } from '@shared/util'
 
 type Props = {
@@ -239,7 +240,9 @@ const ActivityComment = ({
 
   // the frame (range) this comment is linked to, if any
   const frameLink = useMemo(() => getActivityFrameLink(activity), [activity])
-  const formatFrame = commentFrameLink?.formatFrame ?? String
+  const formatFrame =
+    commentFrameLink?.formatFrame ??
+    ((frame: number) => formatVersionFrame(frame, annotationFrameStart))
   const onFrameLinkClick = () => {
     if (!frameLink) return
     // hosts without frame link support can still jump to the first frame
