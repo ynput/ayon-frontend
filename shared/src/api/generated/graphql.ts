@@ -121,7 +121,7 @@ export type BaseNode = {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   /** Entity lists containing this entity */
-  entityLists: Array<EntityListNode>;
+  entityLists: Array<EntityListInfo>;
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
@@ -188,6 +188,15 @@ export type EntityListEdge = {
   __typename?: 'EntityListEdge';
   cursor?: Maybe<Scalars['String']['output']>;
   node: EntityListNode;
+};
+
+export type EntityListInfo = {
+  __typename?: 'EntityListInfo';
+  active: Scalars['Boolean']['output'];
+  entityListType: Scalars['String']['output'];
+  entityType: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  label: Scalars['String']['output'];
 };
 
 export type EntityListItemEdge = {
@@ -353,7 +362,7 @@ export type FolderNode = BaseNode & {
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
   /** Entity lists containing this entity */
-  entityLists: Array<EntityListNode>;
+  entityLists: Array<EntityListInfo>;
   folderType: Scalars['String']['output'];
   hasChildren: Scalars['Boolean']['output'];
   hasProducts: Scalars['Boolean']['output'];
@@ -617,7 +626,7 @@ export type ProductNode = BaseNode & {
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
   /** Entity lists containing this entity */
-  entityLists: Array<EntityListNode>;
+  entityLists: Array<EntityListInfo>;
   featuredVersion?: Maybe<VersionNode>;
   /** Parent folder of the product */
   folder: FolderNode;
@@ -1249,7 +1258,7 @@ export type RepresentationNode = BaseNode & {
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
   /** Entity lists containing this entity */
-  entityLists: Array<EntityListNode>;
+  entityLists: Array<EntityListInfo>;
   /** Number of files of the representation */
   fileCount: Scalars['Int']['output'];
   /** Files in the representation */
@@ -1390,7 +1399,7 @@ export type TaskNode = BaseNode & {
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
   /** Entity lists containing this entity */
-  entityLists: Array<EntityListNode>;
+  entityLists: Array<EntityListInfo>;
   /** Parent folder of the task */
   folder: FolderNode;
   folderId: Scalars['String']['output'];
@@ -1626,7 +1635,7 @@ export type VersionNode = BaseNode & {
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
   /** Entity lists containing this entity */
-  entityLists: Array<EntityListNode>;
+  entityLists: Array<EntityListInfo>;
   featuredVersionType?: Maybe<Scalars['String']['output']>;
   hasReviewables: Scalars['Boolean']['output'];
   heroVersionId?: Maybe<Scalars['String']['output']>;
@@ -1731,7 +1740,7 @@ export type WorkfileNode = BaseNode & {
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
   /** Entity lists containing this entity */
-  entityLists: Array<EntityListNode>;
+  entityLists: Array<EntityListInfo>;
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
@@ -2477,7 +2486,7 @@ export const DetailsPanelVersionFragmentFragmentDoc = new TypedDocumentString(`
 }
     `, {"fragmentName":"DetailsPanelVersionFragment"});
 export const ListMembershipFragmentFragmentDoc = new TypedDocumentString(`
-    fragment ListMembershipFragment on EntityListNode {
+    fragment ListMembershipFragment on EntityListInfo {
   id
   label
   entityListType
@@ -3564,7 +3573,7 @@ export const GetFoldersListsMembershipDocument = new TypedDocumentString(`
     }
   }
 }
-    fragment ListMembershipFragment on EntityListNode {
+    fragment ListMembershipFragment on EntityListInfo {
   id
   label
   entityListType
@@ -3584,7 +3593,7 @@ export const GetTasksListsMembershipDocument = new TypedDocumentString(`
     }
   }
 }
-    fragment ListMembershipFragment on EntityListNode {
+    fragment ListMembershipFragment on EntityListInfo {
   id
   label
   entityListType
@@ -3604,7 +3613,7 @@ export const GetVersionsListsMembershipDocument = new TypedDocumentString(`
     }
   }
 }
-    fragment ListMembershipFragment on EntityListNode {
+    fragment ListMembershipFragment on EntityListInfo {
   id
   label
   entityListType

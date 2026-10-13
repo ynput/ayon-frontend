@@ -1,4 +1,4 @@
-fragment ListMembershipFragment on EntityListNode {
+fragment ListMembershipFragment on EntityListInfo {
   id
   label
   entityListType
