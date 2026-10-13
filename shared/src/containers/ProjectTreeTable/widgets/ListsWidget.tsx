@@ -77,14 +77,17 @@ const EntityListsChips: FC<ListsWidgetProps & { value: ListsWidgetData }> = ({
   isEditing,
   onCancelEdit,
 }) => {
-  const { useNavigate = useNoNavigate } = useProjectTableContext()
+  const { useNavigate = useNoNavigate, hiddenListIds } = useProjectTableContext()
   const navigate = useNavigate()
   const allLists = useEntityListsMembership(projectName, entityType, entityId)
   const column = LIST_COLUMNS[columnId]
 
   const lists = useMemo(
-    () => allLists?.filter((list) => list.entityListType === column?.listType),
-    [allLists, column],
+    () =>
+      allLists?.filter(
+        (list) => list.entityListType === column?.listType && !hiddenListIds?.includes(list.id),
+      ),
+    [allLists, column, hiddenListIds],
   )
 
   const items = useMemo(
