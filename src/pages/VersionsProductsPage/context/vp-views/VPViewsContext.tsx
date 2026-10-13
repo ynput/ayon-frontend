@@ -5,7 +5,9 @@ import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHe
 import {
   convertColumnConfigToTanstackStates,
   convertTanstackStatesToColumnConfig,
+  parseViewSorting,
 } from '@shared/util'
+import type { SortingState } from '@tanstack/react-table'
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { VPViewsContext } from './VPViewsContextInstance'
 
@@ -53,13 +55,8 @@ export type VPViewsContextValue = {
   latestPerFolder: boolean | undefined
   onUpdateLatestPerFolder: (enabled: boolean) => void
 
-  // Sort management
-  sortBy: string | undefined
-  onUpdateSortBy: (sortBy: string | undefined) => void
-
-  sortDesc: boolean
-  onUpdateSortDesc: (sortDesc: boolean) => void
-  onUpdateSorting: (sortBy: string | undefined, sortDesc: boolean) => void
+  // Sort keys of the API queries, in order of precedence
+  sorting: SortingState
 }
 
 interface VersionsViewsProviderProps {
@@ -85,8 +82,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   const [localFeaturedVersionOrder, setLocalFeaturedVersionOrder] = useState<string[] | null>(null)
   const [localShowEmptyGroups, setLocalShowEmptyGroups] = useState<boolean | null>(null)
   const [localLatestPerFolder, setLocalLatestPerFolder] = useState<boolean | null>(null)
-  const [localSortBy, setLocalSortBy] = useState<string | undefined | null>(null)
-  const [localSortDesc, setLocalSortDesc] = useState<boolean | null>(null)
+  const [localSorting, setLocalSorting] = useState<SortingState | null>(null)
 
   // Get view update helper
   const { updateViewSettings } = useViewUpdateHelper()
@@ -134,10 +130,9 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [versionsSettings?.latestPerFolder, serverViewGroupBy],
   )
 
-  const serverSortBy = useMemo(() => versionsSettings?.sortBy ?? 'name', [versionsSettings?.sortBy])
-  const serverSortDesc = useMemo(
-    () => versionsSettings?.sortDesc ?? false,
-    [versionsSettings?.sortDesc],
+  const serverSorting = useMemo(
+    () => parseViewSorting(versionsSettings?.sortBy ?? 'name', versionsSettings?.sortDesc),
+    [JSON.stringify(versionsSettings?.sortBy), versionsSettings?.sortDesc],
   )
 
   const serverColumns = useMemo(
@@ -146,7 +141,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   )
 
   // Sync local state with server when viewSettings change
-  // Note: Excluded localColumns, localSortBy/localSortDesc, localShowGrid, and localViewGroupBy
+  // Note: Excluded localColumns, localSorting, localShowGrid, and localViewGroupBy
   // because we manage them ourselves for immediate updates
   useEffect(() => {
     setLocalFilters(null)
@@ -209,13 +204,9 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     () => (localLatestPerFolder !== null ? localLatestPerFolder : serverLatestPerFolder),
     [localLatestPerFolder, serverLatestPerFolder],
   )
-  const sortBy = useMemo(
-    () => (localSortBy !== null ? localSortBy : serverSortBy),
-    [localSortBy, JSON.stringify(serverSortBy)],
-  )
-  const sortDesc = useMemo(
-    () => (localSortDesc !== null ? localSortDesc : serverSortDesc),
-    [localSortDesc, serverSortDesc],
+  const sorting = useMemo(
+    () => (localSorting !== null ? localSorting : serverSorting),
+    [localSorting, serverSorting],
   )
   const columns = useMemo(() => localColumns || serverColumns, [localColumns, serverColumns])
 
@@ -313,8 +304,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
 
       // Keep the API sorting state in sync with the table sorting state.
       if (tableSettings.sorting !== undefined) {
-        setLocalSortBy(settings.sortBy)
-        setLocalSortDesc(settings.sortDesc ?? false)
+        setLocalSorting(tableSettings.sorting)
       }
 
       // Persist only the fields that changed to server
@@ -438,44 +428,6 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [updateViewSettings],
   )
 
-  // Sort by update handler
-  const onUpdateSortBy = useCallback(
-    async (newSortBy: string | undefined) => {
-      await updateViewSettings({ sortBy: newSortBy }, setLocalSortBy, newSortBy, {
-        errorMessage: 'Failed to update sort by setting',
-      })
-    },
-    [updateViewSettings],
-  )
-
-  // Sort desc update handler
-  const onUpdateSortDesc = useCallback(
-    async (newSortDesc: boolean) => {
-      await updateViewSettings({ sortDesc: newSortDesc }, setLocalSortDesc, newSortDesc, {
-        errorMessage: 'Failed to update sort direction',
-      })
-    },
-    [updateViewSettings],
-  )
-
-  // updating sortBy and sortDesc together
-  const onUpdateSorting = useCallback(
-    async (newSortBy: string | undefined, newSortDesc: boolean) => {
-      await updateViewSettings(
-        { sortBy: newSortBy, sortDesc: newSortDesc },
-        () => {
-          setLocalSortBy(newSortBy)
-          setLocalSortDesc(newSortDesc)
-        },
-        { sortBy: newSortBy, sortDesc: newSortDesc },
-        {
-          errorMessage: 'Failed to update sorting',
-        },
-      )
-    },
-    [updateViewSettings],
-  )
-
   return (
     <VPViewsContext.Provider
       value={{
@@ -504,11 +456,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
         onUpdateShowEmptyGroups,
         latestPerFolder,
         onUpdateLatestPerFolder,
-        sortBy,
-        onUpdateSortBy,
-        sortDesc,
-        onUpdateSortDesc,
-        onUpdateSorting,
+        sorting,
       }}
     >
       {children}

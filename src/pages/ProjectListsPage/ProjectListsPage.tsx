@@ -47,7 +47,7 @@ import { UniqueIdentifier } from '@dnd-kit/core'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
 import { MoveToFolderDialogContainer } from './components/MoveToFolderDialog'
-import { useSlicerContext, useViewsContext } from '@shared/containers/index.ts'
+import { useSlicerContext, useViewsContext, useViewsState } from '@shared/containers/index.ts'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
 import DndContextWrapper from './components/DndContextWrapper'
 import { toast } from 'react-toastify'
@@ -64,6 +64,7 @@ import ListExportDialog from './components/ListExportDialog'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
 import usePatchListsCaches from './hooks/usePatchListsCaches'
+import { DEFAULT_LISTS_SORT, ListsSort, resolveListsSort } from './util'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -94,13 +95,25 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
   entityListTypes,
   isReview,
 }) => {
+  const [savedListsSort, setListsSort] = useViewsState<{ listsSort: ListsSort }, 'listsSort'>(
+    'listsSort',
+    DEFAULT_LISTS_SORT,
+  )
+  const { by, desc } = resolveListsSort(savedListsSort)
+  const listsSort = useMemo(() => ({ by, desc }), [by, desc])
+
   // lists page does not support grouping yet
   const modules = undefined
 
   return (
     <ReviewCardsSettingsProvider>
       <ListsModuleProvider>
-        <ListsDataProvider entityListTypes={entityListTypes} isReview={isReview}>
+        <ListsDataProvider
+          entityListTypes={entityListTypes}
+          isReview={isReview}
+          listsSort={listsSort}
+          setListsSort={setListsSort}
+        >
           <ListsProvider isReview={isReview}>
             <TableExportProvider>
               <ListItemsDataProvider>
