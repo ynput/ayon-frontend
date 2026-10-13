@@ -140,9 +140,7 @@ const EntityListsChips: FC<ListsWidgetProps & { value: ListsWidgetData }> = ({
               {items.map(({ list, open }) => (
                 <LinkItem key={list.id} className={clsx({ clickable: !!open })} onClick={open}>
                   <Icon icon={getListIcon({ entityListType: list.entityListType, entityType })} />
-                  <span className="title">
-                    <span className="label">{list.label}</span>
-                  </span>
+                  <span className="title">{list.label}</span>
                 </LinkItem>
               ))}
             </LinksList>
