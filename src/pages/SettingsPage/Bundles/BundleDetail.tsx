@@ -167,9 +167,9 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
           onAddonAutoUpdate={handleAddonAutoSave}
           createdAt={(bundle ?? selectedBundles[0])?.createdAt}
           updatedAt={(bundle ?? selectedBundles[0])?.updatedAt}
-          note={bundle && <BundleNote bundle={bundle} />}
         >
           <AddonSearchInput />
+          {bundle && <BundleNote key={bundle.name} bundle={bundle} />}
           <BundleDeps bundle={bundle} onChange={undefined as any} />
         </BundleForm>
       )}

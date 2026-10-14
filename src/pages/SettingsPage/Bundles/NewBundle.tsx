@@ -371,7 +371,6 @@ const NewBundle: React.FC<NewBundleProps> = ({
         addonListRef={addonListRef}
         createdAt={isDev ? initBundle?.createdAt : undefined}
         updatedAt={isDev ? initBundle?.updatedAt : undefined}
-        note={isDev && initBundle?.name && <BundleNote bundle={initBundle as any} />}
       >
         <Styled.AddonTools>
           <AddonSearchInput />
@@ -452,6 +451,9 @@ const NewBundle: React.FC<NewBundleProps> = ({
             </>
           )}
         </Styled.AddonTools>
+        {isDev && initBundle?.name && (
+          <BundleNote key={initBundle.name} bundle={initBundle as any} />
+        )}
         {isDev && <BundleDeps bundle={formData} onChange={handleDepPackagesDevChange} />}
 
         <BundleChecks

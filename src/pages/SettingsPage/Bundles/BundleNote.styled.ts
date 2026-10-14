@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import { BorderedSection } from '@ynput/ayon-react-components'
 
 export const NoteSection = styled(BorderedSection)`
-  flex: 1;
+  flex: none;
   min-height: 120px;
 `
 

@@ -40,7 +40,6 @@ type BundleFormProps = {
   onAddonAutoUpdate?: (addon: string, version: string | null) => void
   createdAt?: string
   updatedAt?: string
-  note?: React.ReactNode
 }
 
 const formatTimestamp = (value?: string) => {
@@ -63,7 +62,6 @@ const BundleForm: React.FC<BundleFormProps> = ({
   onAddonAutoUpdate,
   createdAt,
   updatedAt,
-  note,
 }) => {
   const showNameError = formData && !formData?.name && isNew
   const currentUser = useAppSelector((state) => state.user.name)
@@ -87,118 +85,115 @@ const BundleForm: React.FC<BundleFormProps> = ({
 
   return (
     <Styled.StyledPanel>
-      <Styled.TopColumns>
-        <Styled.StyledFormLayout>
-          <BundleStyled.FormRow>
-            <label htmlFor="bundle-name">Bundle name</label>
-            <div className="field">
-              {isNew ? (
-                <Styled.BundleNameContainer>
-                  <Styled.BundleNameInput $hasError={!!showNameError}>
-                    <InputText
-                      value={formData?.name || ''}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      disabled={!formData || isDev}
-                      id={'bundle-name'}
-                    />
-                  </Styled.BundleNameInput>
-                </Styled.BundleNameContainer>
-              ) : (
-                <Styled.BundleName>{formData?.name}</Styled.BundleName>
-              )}
-            </div>
-          </BundleStyled.FormRow>
-          {createdAt && (
-            <>
-              <RCFormRow label="Created">
-                <span>{formatTimestamp(createdAt)}</span>
-              </RCFormRow>
-              <RCFormRow label="Updated">
-                <span>{formatTimestamp(updatedAt)}</span>
-              </RCFormRow>
-            </>
-          )}
-          <RCFormRow label="Launcher version">
+      <Styled.StyledFormLayout>
+        <BundleStyled.FormRow>
+          <label htmlFor="bundle-name">Bundle name</label>
+          <div className="field">
             {isNew ? (
-              <InstallerSelector
-                value={formData?.installerVersion ? [formData?.installerVersion] : []}
-                options={installers}
-                onChange={(e) => setFormData({ ...formData, installerVersion: e[0] })}
-                disabled={!formData}
-              />
+              <Styled.BundleNameContainer>
+                <Styled.BundleNameInput $hasError={!!showNameError}>
+                  <InputText
+                    value={formData?.name || ''}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    disabled={!formData || isDev}
+                    id={'bundle-name'}
+                  />
+                </Styled.BundleNameInput>
+              </Styled.BundleNameContainer>
             ) : (
-              <Styled.LauncherVersionContainer>
-                <Styled.LauncherVersionTitle>
-                  {formData?.installerVersion || 'NONE'}
-                </Styled.LauncherVersionTitle>
-                <>
-                  {!!installerPlatforms?.length &&
-                    installerPlatforms.map((platform, i) => {
-                      const PlatformTag: any = BundleStyled.PlatformTag
-                      return (
-                        <PlatformTag key={platform + '-' + i} $platform={platform}>
-                          {upperFirst(platform === 'darwin' ? 'macOS' : platform)}
-                        </PlatformTag>
-                      )
-                    })}
-                </>
-              </Styled.LauncherVersionContainer>
+              <Styled.BundleName>{formData?.name}</Styled.BundleName>
             )}
+          </div>
+        </BundleStyled.FormRow>
+        {createdAt && (
+          <>
+            <RCFormRow label="Created">
+              <span>{formatTimestamp(createdAt)}</span>
+            </RCFormRow>
+            <RCFormRow label="Updated">
+              <span>{formatTimestamp(updatedAt)}</span>
+            </RCFormRow>
+          </>
+        )}
+        <RCFormRow label="Launcher version">
+          {isNew ? (
+            <InstallerSelector
+              value={formData?.installerVersion ? [formData?.installerVersion] : []}
+              options={installers}
+              onChange={(e) => setFormData({ ...formData, installerVersion: e[0] })}
+              disabled={!formData}
+            />
+          ) : (
+            <Styled.LauncherVersionContainer>
+              <Styled.LauncherVersionTitle>
+                {formData?.installerVersion || 'NONE'}
+              </Styled.LauncherVersionTitle>
+              <>
+                {!!installerPlatforms?.length &&
+                  installerPlatforms.map((platform, i) => {
+                    const PlatformTag: any = BundleStyled.PlatformTag
+                    return (
+                      <PlatformTag key={platform + '-' + i} $platform={platform}>
+                        {upperFirst(platform === 'darwin' ? 'macOS' : platform)}
+                      </PlatformTag>
+                    )
+                  })}
+              </>
+            </Styled.LauncherVersionContainer>
+          )}
+        </RCFormRow>
+        {developerMode && !isDev && (
+          <RCFormRow label="Dev bundle">
+            <InputSwitch
+              checked={formData.isDev}
+              onChange={() =>
+                setFormData({ ...formData, isDev: !formData.isDev, isProject: false })
+              }
+            />
           </RCFormRow>
-          {developerMode && !isDev && (
-            <RCFormRow label="Dev bundle">
-              <InputSwitch
-                checked={formData.isDev}
-                onChange={() =>
-                  setFormData({ ...formData, isDev: !formData.isDev, isProject: false })
-                }
-              />
-            </RCFormRow>
-          )}
-          {(isDev || developerMode) && (
-            <RCFormRow label="Assigned dev" fieldStyle={Styled.DevFieldContainer}>
-              {(() => {
-                const DevSelect: any = BundleStyled.DevSelect
-                return (
-                  <DevSelect
-                    editor
-                    emptyMessage={'Assign developer...'}
-                    value={[formData.activeUser || '']}
-                    options={devSelectOptions}
-                    disabled={isLoading || !formData.isDev}
-                    multiSelect={false}
-                    onChange={(v: string[]) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        activeUser: v[0],
-                      }))
-                    }
-                  />
-                )
-              })()}
-              {(() => {
-                const BadgeButton: any = BundleStyled.BadgeButton
-                return (
-                  <BadgeButton
-                    label="Assign to me"
-                    $hl={'developer-surface'}
-                    icon={'person_pin_circle'}
-                    style={Styled.AssignButtonContainer}
-                    disabled={formData.activeUser === currentUser || isLoading || !formData.isDev}
-                    onClick={() => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        activeUser: currentUser,
-                      }))
-                    }}
-                  />
-                )
-              })()}
-            </RCFormRow>
-          )}
-        </Styled.StyledFormLayout>
-        {note && <Styled.NoteColumn>{note}</Styled.NoteColumn>}
-      </Styled.TopColumns>
+        )}
+        {(isDev || developerMode) && (
+          <RCFormRow label="Assigned dev" fieldStyle={Styled.DevFieldContainer}>
+            {(() => {
+              const DevSelect: any = BundleStyled.DevSelect
+              return (
+                <DevSelect
+                  editor
+                  emptyMessage={'Assign developer...'}
+                  value={[formData.activeUser || '']}
+                  options={devSelectOptions}
+                  disabled={isLoading || !formData.isDev}
+                  multiSelect={false}
+                  onChange={(v: string[]) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      activeUser: v[0],
+                    }))
+                  }
+                />
+              )
+            })()}
+            {(() => {
+              const BadgeButton: any = BundleStyled.BadgeButton
+              return (
+                <BadgeButton
+                  label="Assign to me"
+                  $hl={'developer-surface'}
+                  icon={'person_pin_circle'}
+                  style={Styled.AssignButtonContainer}
+                  disabled={formData.activeUser === currentUser || isLoading || !formData.isDev}
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      activeUser: currentUser,
+                    }))
+                  }}
+                />
+              )
+            })()}
+          </RCFormRow>
+        )}
+      </Styled.StyledFormLayout>
       <Divider />
       <Styled.StyledColumns>
         <Styled.AddonListSection>
