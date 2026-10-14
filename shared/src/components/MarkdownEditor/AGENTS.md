@@ -13,6 +13,7 @@ Read this guide before changing anything in this folder, or anything that render
 | Text table cells | `shared/src/containers/ProjectTreeTable/widgets/TextContentWidget.tsx` | `submitOnEnter`. Stops Enter and Escape from bubbling to the table, but the editor handles them first. Mentions come from the `mentionEntity` prop. |
 | Markdown attribute cells | `shared/src/containers/ProjectTreeTable/widgets/MarkdownWidget.tsx` | Dialog editor. |
 | Playground | `src/pages/EditorPlaygroundPage/` at route `/dev/editor` | Available in dev, or for user level 700 and above. Mock mentions, plus the comment renderer side by side. **Use it to check changes.** |
+| Addons (e.g. ayon-reports) | `@ynput/ayon-frontend-shared/components` | Bundle their own shared copy. Need a react-redux store with the shared `api` (emoji tracking). No `mentions` or `onUploadMedia`. |
 
 Read-only markdown is **not** rendered by the editor. It is rendered by `react-markdown` (see [Rendering outside the editor](#rendering-outside-the-editor)).
 
@@ -74,7 +75,7 @@ Every place that reads the markdown needs to know about it:
 
 ### Variants
 
-`variant="document"` (default) has the toolbar on top, and Enter adds a line. `variant="message"` gets a floating toolbar, `submitOnEnter`, menus at the top and a growing height. Each default can be overridden by its prop (see `VARIANTS`). Toolbar layouts: `DEFAULT_TOOLBAR` and `FLOATING_TOOLBAR` in `types.ts`. Headings, code blocks and inline code are left out on purpose; they live in the `/` menu.
+`variant="document"` (default) has the toolbar on top, and Enter adds a line. `variant="message"` gets a floating toolbar, `submitOnEnter`, menus at the top and a growing height. Each default can be overridden by its prop (see `VARIANTS`). Toolbar layouts: `DEFAULT_TOOLBAR`, `FLOATING_TOOLBAR` and `DESCRIPTION_TOOLBAR` in `types.ts`. The first two leave out headings, code blocks and inline code on purpose; they live in the `/` menu. `DESCRIPTION_TOOLBAR` adds headings and code blocks and has no check list.
 
 ### Plugins (`plugins/`)
 
