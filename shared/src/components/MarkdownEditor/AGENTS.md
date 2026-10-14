@@ -13,7 +13,7 @@ Read this guide before changing anything in this folder, or anything that render
 | Text table cells | `shared/src/containers/ProjectTreeTable/widgets/TextContentWidget.tsx` | `submitOnEnter`. Stops Enter and Escape from bubbling to the table, but the editor handles them first. Mentions come from the `mentionEntity` prop. |
 | Markdown attribute cells | `shared/src/containers/ProjectTreeTable/widgets/MarkdownWidget.tsx` | Dialog editor. |
 | Playground | `src/pages/EditorPlaygroundPage/` at route `/dev/editor` | Available in dev, or for user level 700 and above. Mock mentions, plus the comment renderer side by side. **Use it to check changes.** |
-| Addons (e.g. ayon-reports) | `@ynput/ayon-frontend-shared/components` | Bundle their own shared copy. Need a react-redux store with the shared `api` (emoji tracking). No `mentions` or `onUploadMedia`. |
+| Addons (e.g. ayon-reports) | `@ynput/ayon-frontend-shared/components` | Bundle their own shared copy. Need a react-redux store with the shared `api` (emoji tracking). Need `@module-federation/enhanced` installed: `components` and `context` import its runtime (`registerRemotes`) at load time. No `mentions` or `onUploadMedia`. |
 
 Read-only markdown is **not** rendered by the editor. It is rendered by `react-markdown` (see [Rendering outside the editor](#rendering-outside-the-editor)).
 
@@ -173,6 +173,7 @@ Pass `commands: EditorCommand[]` (`types.ts`: `id`, `label`, `icon`, `keywords`,
 | Feed comments | `ActivityComment.tsx`: `react-markdown` with `remark-gfm`, `remark-emoji` and `remark-directive`. Components come from `ActivityMarkdownComponents.tsx` (`aTag` renders mentions as references, plus `codeTag`, `inputTag` and `blockquoteTag`). `p` goes through `renderMediaParagraph` and `renderYouTubeParagraph`. `remarkLiteralDirectives.ts` turns every directive that is not in `COMMENT_DIRECTIVES` back into text, otherwise `:word` (e.g. `Note:fix this`) is dropped; add new directives to that list. |
 | Table cells | `TextWidget.tsx`: `react-markdown`, with `aTag`-like mention rendering through `ActivityReference`. |
 | Feed field changes | `ActivityFieldChange.tsx` calls `markdownToPlainText` for `description` and markdown widgets. Mentions and links show their label, and nothing is linked. |
+| Addons | `react-markdown` with the feed plugins and `codeTag`, `inputTag`, `blockquoteTag`, `remarkLiteralDirectives` and `COMMENT_DIRECTIVES` from `@ynput/ayon-frontend-shared/Feed`. `aTag` is not exported (it needs feed helpers), so addons render links themselves. `inputTag(props, { activity, onCheckChange })`: without `onCheckChange` the checkbox is display only. |
 
 `react-markdown` drops non-http urls by default, which would break mentions (`user:luke`). Every renderer must pass `urlTransform` to keep them.
 
