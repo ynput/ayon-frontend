@@ -362,6 +362,8 @@ const NewBundle: React.FC<NewBundleProps> = ({
         onAddonDevChange={handleAddonDevChange}
         developerMode={developerMode}
         addonListRef={addonListRef}
+        createdAt={isDev ? initBundle?.createdAt : undefined}
+        updatedAt={isDev ? initBundle?.updatedAt : undefined}
       >
         <Styled.AddonTools>
           <AddonSearchInput />

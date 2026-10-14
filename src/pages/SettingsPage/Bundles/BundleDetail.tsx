@@ -24,6 +24,8 @@ type Bundle = {
   addonDevelopment?: Record<string, { enabled?: boolean; path?: string }>
   activeUser?: string
   isDev?: boolean
+  createdAt?: string
+  updatedAt?: string
 }
 
 // Addon type now imported from ./types
@@ -161,6 +163,8 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
           addonListRef={addonListRef}
           {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
           onAddonAutoUpdate={handleAddonAutoSave}
+          createdAt={(bundle ?? selectedBundles[0])?.createdAt}
+          updatedAt={(bundle ?? selectedBundles[0])?.updatedAt}
         >
           <AddonSearchInput />
           <BundleDeps bundle={bundle} onChange={undefined as any} />
