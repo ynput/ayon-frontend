@@ -35,6 +35,8 @@ While writing tests, run only your specs: `npx playwright test --project=chromiu
 
 ## How the e2e tests are built
 
+**Scope.** Only the frontend's own pages. Addon pages (planner, review, reports and other addons) are tested in their addons' repos, so don't add tests for them here.
+
 **Isolation.** Every test gets its own project from the `projectName` fixture (`fixtures.ts`).
 - The project is created through the API before the test and deleted after it, so tests never see each other's data.
 - Users from the `createUser` fixture and the group from the `accessGroup` fixture are deleted after the test.
@@ -130,7 +132,6 @@ Still open (worked around in the tests, marked with `FLAG` in the code):
 - Backend: project deletes racing cross-project reads (inbox, kanban) fail or deadlock until ynput/ayon-backend#1164 is merged; keep the default of 2 workers until then.
 - With focus on a hierarchy slicer row, Shift+R renames the folder instead of syncing (`useRowKeydown`); focus the grid before pressing it.
 - `checkColumnVisibility` prefix-matches plain column ids (`tests/unit/columnVisibility.spec.ts`); a fix must also change the callers that pass `'link_'`.
-- Review addon 0.7.5: opening an empty review session crashes the app; planner addon 2.3.0: the schedule of a new project gets 500s. Both are addon bugs (separate repos).
 - Backend: uploaded files of deleted projects are only moved to `.trash` folders, which are never purged.
 - Backend (planner addon 2.3.1-dev): `handle_user_created` re-syncs every user and fails with a unique violation when two users are created at the same time.
 
