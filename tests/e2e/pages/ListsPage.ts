@@ -298,11 +298,6 @@ export const hasPowerpack = async (api: AyonApi) => {
   return addons.some((a: any) => a.name === 'powerpack' && a.productionVersion)
 }
 
-export const hasReviewAddon = async (api: AyonApi) => {
-  const { addons } = await api.get('/api/addons')
-  return addons.some((a: any) => a.name === 'review' && a.productionVersion)
-}
-
 /** The "Add to list" dialog opened from any entity context menu */
 export const addToList = async (page: Page, listLabel: string) => {
   const addDialog = dialog(page, 'Add to list')
