@@ -6,10 +6,27 @@ export const StyledPanel = styled(Panel)`
   overflow: hidden;
 `
 
+export const TopColumns = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1500px;
+`
+
 export const StyledFormLayout = styled(FormLayout)`
   gap: 8px;
   padding-top: 1px;
   max-width: 900px;
+  flex: 1;
+`
+
+export const NoteColumn = styled.div`
+  min-width: clamp(300px, 25vw, 400px);
+  max-width: clamp(300px, 25vw, 400px);
+  display: flex;
+  flex-direction: column;
 `
 
 export const BundleNameContainer = styled.div`

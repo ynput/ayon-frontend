@@ -16,7 +16,7 @@ import {
 } from './hooks'
 
 // descriptions have no check lists (those belong in comments)
-const DESCRIPTION_TOOLBAR: ToolbarLayout = [
+export const DESCRIPTION_TOOLBAR: ToolbarLayout = [
   'h1',
   'h2',
   'h3',
