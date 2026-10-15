@@ -439,13 +439,18 @@ export const ProjectTreeTable = ({
     return getNameColumnLabel(scopes)
   }
 
+  // keyed by content: callers may pass a new array each render, and rebuilding the columns
+  // gives every cell a new component type, so React remounts the whole table body
+  const includeParentsKey = includeParents?.join(',')
+  const stableIncludeParents = useMemo(() => includeParents, [includeParentsKey])
+
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
       scopes,
       attribs: columnAttribs,
       links: linkTypes,
       includeLinks,
-      includeParents,
+      includeParents: stableIncludeParents,
       showHierarchy,
       isFlatFolderView,
       options,
@@ -484,7 +489,7 @@ export const ProjectTreeTable = ({
     options,
     linkTypes,
     includeLinks,
-    includeParents,
+    stableIncludeParents,
     parentColumns,
     extraColumns,
     excludedColumns,
