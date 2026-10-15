@@ -96,8 +96,6 @@ const DetailsPanelProviderWithSubtasks = (
 }
 
 const App = () => {
-  // must run before <BrowserRouter> renders, otherwise the router keeps the handoff param in its own location
-  consumeUriHandoff()
   const user = useAppSelector((state) => state.user) // NOTE: careful, this does not contain uiExposureLevel on first login!!
   const viewer = useAppSelector((state) => state.viewer) || []
   const dispatch = useAppDispatch()
@@ -401,6 +399,10 @@ const App = () => {
   }
 
   if (serverError && !noAdminUser) return <FeedbackProvider>{errorComponent}</FeedbackProvider>
+
+  // only once authenticated (LoginPage stores the full url for the post-login redirect),
+  // but still before <BrowserRouter> renders so the router never sees the handoff param
+  consumeUriHandoff()
 
   return (
     <>

@@ -31,14 +31,13 @@ const getSettingsPathname = ({ project, site }: { project?: string; site?: strin
   return site ? '/settings/site' : '/settings/studio'
 }
 
-// pages that can show an entity from the uri: the project's own pages and My Tasks
+// pages whose details panel opens context entities (DetailsPanelContext) from the uri
+const ENTITY_MODULES = ['overview', 'tasks', 'browser', 'products']
+
 const canShowEntity = (projectName: string, pathname: string): boolean => {
-  const projectRoot = `/projects/${projectName}`
-  return (
-    pathname === projectRoot ||
-    pathname.startsWith(`${projectRoot}/`) ||
-    pathname.startsWith('/dashboard/tasks')
-  )
+  if (pathname.startsWith('/dashboard/tasks')) return true
+  const module = pathname.split('/')[3]
+  return pathname.startsWith(`/projects/${projectName}/`) && ENTITY_MODULES.includes(module)
 }
 
 // the uri state is in-memory only, so a full reload must carry it in the url
