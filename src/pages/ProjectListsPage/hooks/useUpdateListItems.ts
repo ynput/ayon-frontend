@@ -35,8 +35,6 @@ const useUpdateListItems = ({ updateEntities, listItemsMap }: Props) => {
 
       for (const operation of operations) {
         const { data = {}, meta, rowId } = operation
-        // rows only in the compared list are read-only (paste and multi-cell edits reach here too)
-        if (!listItemsMap.has(rowId)) continue
         // compare view columns with the entities' values always write to the entities
         const toEntity = meta?.listValueTarget === 'entity'
         const entityUpdate: Record<string, any> = {}

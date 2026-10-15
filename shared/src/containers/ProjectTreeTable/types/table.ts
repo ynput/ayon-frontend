@@ -28,8 +28,8 @@ export type FolderListItem = {
 
 export type EntityType = 'folder' | 'task' | 'product' | 'version'
 
-// Extra marking a page can put on an attribute cell (e.g. a value set on a list item)
-export type AttribCellMark = {
+// Extra marking a page can put on any cell (TableRow.cellMarks), e.g. a value set on a list item
+export type CellMark = {
   placeholder?: string // shown greyed and read-only instead of the value (e.g. "Not in list")
   highlight?: string // background tint in this colour
   warning?: boolean // warning icon before the value
@@ -52,7 +52,6 @@ export interface BaseEntityData {
   thumbnailHash?: string
   attrib?: Record<string, any>
   ownAttrib?: string[]
-  attribMarks?: Record<string, AttribCellMark>
   links?: Record<string, LinkValue>
   latestComments?: EntityComment[]
 }
@@ -155,7 +154,8 @@ export interface TableRow {
   group?: GroupData
   subRows?: TableRow[]
   childOnlyMatch?: boolean
-  readOnly?: boolean // no cell of the row can be edited
+  readOnly?: boolean // no cell of the row can be edited (enforced for every edit path)
+  cellMarks?: Record<string, CellMark> // column id -> mark on that cell
 }
 
 export const getScopedEntity = (row: TableRow, scope: EntityScope): EntityData | undefined =>

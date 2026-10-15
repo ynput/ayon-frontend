@@ -17,7 +17,7 @@ import type {
   ContextMenuItemConstructor,
   ContextMenuItemConstructors,
 } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
-import { parseCellId } from '@shared/containers/ProjectTreeTable'
+import { parseCellId, type CellMark } from '@shared/containers/ProjectTreeTable'
 import { useEntityListsContext } from '../entity-lists/EntityListsContextInstance'
 import useReorderListItem, { UseReorderListItemReturn } from '../../hooks/useReorderListItem'
 import useBuildListItemsTableData from '../../hooks/useBuildListItemsTableData'
@@ -41,6 +41,10 @@ import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
 
 const NO_LIST_VALUES_SETTINGS: CompareSettings = {}
+
+// the module marks attributes; the table marks cells by column id
+const toCellMarks = (marks: Record<string, CellMark> = {}): Record<string, CellMark> =>
+  Object.fromEntries(Object.entries(marks).map(([name, mark]) => [`attrib_${name}`, mark]))
 
 export interface ListItemsDataContextValue {
   // Project Info
@@ -275,11 +279,11 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         getListItemValueSources(item),
         listValuesRules,
       )
-      const attribMarks = { ...marks }
-      for (const [name, mark] of Object.entries(compareView.marks.get(item.id) || {})) {
-        attribMarks[name] = { ...attribMarks[name], ...mark }
+      const cellMarks = toCellMarks(marks)
+      for (const [id, mark] of Object.entries(toCellMarks(compareView.marks.get(item.id)))) {
+        cellMarks[id] = { ...cellMarks[id], ...mark }
       }
-      return { attrib, ownAttrib, attribMarks }
+      return { attrib, ownAttrib, cellMarks }
     },
     [listValues, listValuesRules, compareView.marks],
   )
@@ -295,7 +299,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     (item: EntityListItemWithLinks) => ({
       attrib: {},
       ownAttrib: [],
-      attribMarks: compareView.marks.get(item.id) || {},
+      cellMarks: toCellMarks(compareView.marks.get(item.id)),
     }),
     [compareView.marks],
   )

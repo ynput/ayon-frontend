@@ -25,7 +25,8 @@ import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidg
 import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { READ_ONLY } from '../utils'
 import type { AttributeData, EnumItem, EntityComment } from '@shared/api'
-import type { AttribCellMark } from '../types'
+import type { CellMark } from '../types'
+import { useTableCellContext } from '../context/table-cell'
 import { CELL_PADDING_Y } from '../constants'
 
 const Cell = styled.div`
@@ -71,7 +72,7 @@ const Cell = styled.div`
   }
 `
 
-// AttribCellMark.highlight: behind the cell, so a dimmed (inherited) cell gets the same tint
+// CellMark.highlight: behind the cell, so a dimmed (inherited) cell gets the same tint
 const HighlightTint = styled.span`
   position: absolute;
   inset: 0;
@@ -123,7 +124,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   folderId?: string | null
   midnightExclusiveFields?: string[]
   tooltip?: string
-  mark?: AttribCellMark
+  mark?: CellMark // merged over the row's mark for this cell (TableRow.cellMarks)
   onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
   // options passthrough props
   pt?: {
@@ -142,7 +143,7 @@ export interface WidgetBaseProps {
   onCancelEdit?: () => void
 }
 
-export const CellWidget: FC<EditorCellProps> = ({
+const CellWidgetContent: FC<EditorCellProps> = ({
   rowId,
   columnId,
   value,
@@ -459,4 +460,28 @@ export const CellWidget: FC<EditorCellProps> = ({
       </Cell>
     </>
   )
+}
+
+// Applies what the row says about this cell: TableRow.readOnly and TableRow.cellMarks.
+// A mark's placeholder replaces the value with read-only, greyed text.
+export const CellWidget: FC<EditorCellProps> = ({ mark: markProp, isReadOnly, ...props }) => {
+  const { mark: rowMark, isRowReadOnly } = useTableCellContext()
+  const mark = rowMark && markProp ? { ...rowMark, ...markProp } : markProp || rowMark
+
+  if (mark?.placeholder) {
+    return (
+      <CellWidgetContent
+        rowId={props.rowId}
+        columnId={props.columnId}
+        className={props.className}
+        value={mark.placeholder}
+        attributeData={{ type: 'string' }}
+        mark={mark}
+        isInherited
+        isReadOnly
+      />
+    )
+  }
+
+  return <CellWidgetContent {...props} mark={mark} isReadOnly={isReadOnly || isRowReadOnly} />
 }

@@ -1,7 +1,7 @@
 // Contract between the Lists page and the powerpack `ListValues` module (remote `slicer`).
 // The powerpack keeps its own copy of these types: change both sides together, see AGENTS.md.
 import type { ComponentType } from 'react'
-import type { AttribCellMark } from '@shared/containers/ProjectTreeTable'
+import type { CellMark } from '@shared/containers/ProjectTreeTable'
 
 export const LIST_VALUES_API_VERSION = 1
 
@@ -31,7 +31,7 @@ export type ListValuesContext = {
 export type ResolvedListItemValues = {
   attrib: Record<string, unknown> // values the cells show
   ownAttrib: string[] // attributes shown as set (the rest are shown greyed as inherited)
-  marks: Record<string, AttribCellMark>
+  marks: Record<string, CellMark> // attribute -> mark on its cell
 }
 
 export type ListValueEditTarget = 'entity' | 'listItem'
@@ -83,7 +83,7 @@ export type CompareView<T> = {
   setCompareWith: (compareWith: string | null) => void
   compareWithList: (list: ListRef) => void
   values?: Map<string, Record<string, ListValueComparison>> // row id -> attribute -> compared value
-  marks: Map<string, Record<string, AttribCellMark>> // row id -> attribute -> marks on the list's cells
+  marks: Map<string, Record<string, CellMark>> // row id -> attribute -> marks on the list's cells
   compareOnlyItems: T[] // only in the compared list: read-only rows after the list's own
   refetchCompareOnly: () => void
 }

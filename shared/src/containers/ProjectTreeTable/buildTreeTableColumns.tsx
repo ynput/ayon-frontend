@@ -462,7 +462,6 @@ const createParentColumn = (definition: ParentColumnDefinition): ColumnDef<Table
       const meta = table.options.meta
       const updateField = definition.updateField || field
       const isReadOnly =
-        !!row.original.readOnly ||
         definition.readOnly === true ||
         meta?.readOnly?.includes(column.id) ||
         (definition.readOnly !== false && meta?.readOnly?.includes(updateField))
@@ -524,7 +523,6 @@ const createParentAttributeColumn = (
       const value = getScopedValue(row.original, scope, attribute.name, true)
       const isInherited = !entity.ownAttrib?.includes(attribute.name)
       const isReadOnly =
-        !!row.original.readOnly ||
         attribute.readOnly ||
         meta?.readOnly?.includes(id) ||
         meta?.readOnly?.includes(`attrib_${attribute.name}`) ||
@@ -754,7 +752,7 @@ const buildTreeTableColumns = ({
                 entityType={type}
                 attributeData={{ type: 'name' }}
                 isCollapsed={!!row.original.childOnlyMatch}
-                isReadOnly={!!row.original.readOnly || meta?.readOnly?.includes(column.id)}
+                isReadOnly={meta?.readOnly?.includes(column.id)}
               />
             )}
           </TableCellContent>
@@ -800,7 +798,6 @@ const buildTreeTableColumns = ({
               )
             }
             isReadOnly={
-              !!row.original.readOnly ||
               meta?.readOnly?.includes(column.id) ||
               isEntityRestricted(type) ||
               parseScopedColumnId(column.id).scope !== 'primary'
@@ -909,7 +906,6 @@ const buildTreeTableColumns = ({
               )
             }
             isReadOnly={
-              !!row.original.readOnly ||
               isProductType ||
               meta?.readOnly?.includes(column.id) ||
               meta?.readOnly?.includes(fieldId) ||
@@ -978,7 +974,6 @@ const buildTreeTableColumns = ({
               )
             }
             isReadOnly={
-              !!row.original.readOnly ||
               meta?.readOnly?.includes(column.id) ||
               isEntityRestricted(type) ||
               parseScopedColumnId(column.id).scope !== 'primary'
@@ -1244,7 +1239,6 @@ const buildTreeTableColumns = ({
               )
             }
             isReadOnly={
-              !!row.original.readOnly ||
               meta?.readOnly?.includes(column.id) ||
               isEntityRestricted(type) ||
               parseScopedColumnId(column.id).scope !== 'primary'
@@ -1349,7 +1343,7 @@ const buildTreeTableColumns = ({
             value={subtasksData.subtasks?.map((s: any) => s.label || s.name) || []}
             valueData={subtasksData}
             attributeData={{ type: 'subtasks' }}
-            isReadOnly={!!row.original.readOnly || meta?.readOnly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id)}
           />
         )
       },
@@ -1451,22 +1445,6 @@ const buildTreeTableColumns = ({
           // if the attribute is not in scope, we should nothing
           if (outOfScopeAndNoValue) return null
 
-          const mark = entity.attribMarks?.[columnIdParsed]
-          if (mark?.placeholder) {
-            return (
-              <CellWidget
-                rowId={row.id}
-                className="attrib"
-                columnId={column.id}
-                value={mark.placeholder}
-                attributeData={{ type: 'string' }}
-                mark={mark}
-                isInherited
-                isReadOnly
-              />
-            )
-          }
-
           return (
             <CellWidget
               rowId={row.id}
@@ -1489,9 +1467,7 @@ const buildTreeTableColumns = ({
               midnightExclusiveFields={row.original.midnightExclusiveFields}
               isCollapsed={!!row.original.childOnlyMatch}
               isInherited={isInherited}
-              mark={mark}
               isReadOnly={
-                !!row.original.readOnly ||
                 // check attrib is not read only
                 attrib.readOnly ||
                 // check if there is any other reason the cell should be read only

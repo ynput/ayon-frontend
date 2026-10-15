@@ -36,7 +36,8 @@ instead of changing the hook order.
 What the module does, and what core gives it:
 
 - `resolveValues` gives each row's `attrib`, `ownAttrib` (the rest is greyed as inherited) and marks
-  (tooltips); `ListItemsDataContext` builds the rows (`getRowValues`).
+  (tooltips); `ListItemsDataContext` builds the rows (`getRowValues`). The module marks attributes by
+  name; the page turns them into the table's `TableRow.cellMarks`, keyed by column id (`attrib_<name>`).
 - `getEditTarget` routes attribute edits (`useUpdateListItems`). Compare columns with the entities'
   values send `meta.listValueTarget = 'entity'`; list attributes always go to the list item; fields
   only the entity has (status, assignees, ...) always go to the entity, and with the powerpack their
@@ -66,11 +67,12 @@ What the module does, and what core gives it:
   a column resize or row height change would otherwise save them as hidden. Each pair gets
   `ColumnConfig.groupEdge` (start on the attribute column, end on the compare column).
 - Rows only in the compared list: their row id is the compared list's item id, so they're not in
-  `listItemsMap`. `useUpdateListItems` drops edits to such rows (paste and multi-cell edits bypass the
-  read-only cells) and list item menu actions skip them; they offer "Add to this list" instead.
+  `listItemsMap`. They are `TableRow.readOnly`, which the table enforces for every edit path (typing,
+  multi-cell edits, paste, clear, undo), so no edit to them reaches `useUpdateListItems`. List item menu
+  actions skip them; they offer "Add to this list" instead.
 - The lists sidebar doesn't select a list on right-click (`SimpleTable` `selectOnContextMenu`), so its
   menu items act on the right-clicked rows.
-- The tint (`AttribCellMark.highlight`) is a layer behind the cell, so the opacity of greyed values
+- The tint (`CellMark.highlight`) is a layer behind the cell, so the opacity of greyed values
   doesn't fade it; the cell is the td's first child with an id (`useCellContextMenu`).
 - Paste derives the field from the column id, so a paste into a compare column arrives as a top-level
   attribute name. `useUpdateListItems` drops top-level attribute names for that reason.

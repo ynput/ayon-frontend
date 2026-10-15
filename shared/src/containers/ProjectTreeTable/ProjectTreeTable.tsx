@@ -46,6 +46,7 @@ import { useCellEditing } from './context/cell-editing'
 import { useSelectionCellsContext } from './context/selection-cells'
 import { ClipboardProvider } from './context/clipboard-context'
 import { useSelectedRowsContext } from './context/selected-rows'
+import { TableCellContext } from './context/table-cell'
 import { useColumnSettingsContext } from './context/column-settings'
 import { TableColumnDropIndicator } from './components/ColumnDropIndicator'
 import {
@@ -1751,6 +1752,9 @@ const TD = ({
     cell.getContext().table.options.meta?.columnsConfig,
     cell.column.id,
   )
+  const cellMark = cell.row.original.cellMarks?.[cell.column.id]
+  const isRowReadOnly = !!cell.row.original.readOnly
+  const cellContext = useMemo(() => ({ mark: cellMark, isRowReadOnly }), [cellMark, isRowReadOnly])
 
   return (
     <Styled.TD
@@ -1932,7 +1936,9 @@ const TD = ({
         // keyboard events are handled in useKeyboardNavigation hook
       }}
     >
-      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      <TableCellContext.Provider value={cellContext}>
+        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      </TableCellContext.Provider>
       {columnConfig?.groupEdge && <Styled.GroupEdge className={columnConfig.groupEdge} />}
     </Styled.TD>
   )

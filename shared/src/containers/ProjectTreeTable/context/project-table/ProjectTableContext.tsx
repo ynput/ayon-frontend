@@ -80,6 +80,7 @@ export interface ProjectTableContextType {
   fetchNextPage: ProjectTableProviderProps['fetchNextPage']
   onSyncData: ProjectTableProviderProps['onSyncData']
   getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
+  isRowReadOnly: (rowId: string) => boolean // TableRow.readOnly: no cell of the row can be edited
   loadingLinksEntityIds?: Set<string>
 
   // grouping
@@ -388,6 +389,20 @@ export const ProjectTableProvider = ({
     [foldersMap, tasksMap, entitiesMap],
   )
 
+  // rows marked read-only (TableRow.readOnly): every edit path skips them
+  const readOnlyRowIds = useMemo(() => {
+    const ids = new Set<string>()
+    const walk = (rows: TableRow[]) => {
+      for (const row of rows) {
+        if (row.readOnly) ids.add(row.id)
+        if (row.subRows?.length) walk(row.subRows)
+      }
+    }
+    walk(tableData)
+    return ids
+  }, [tableData])
+  const isRowReadOnly = useCallback((rowId: string) => readOnlyRowIds.has(rowId), [readOnlyRowIds])
+
   // get folder relationship functions
   const {
     getInheritedDependents,
@@ -495,6 +510,7 @@ export const ProjectTableProvider = ({
         toggleExpandAll,
         toggleExpands,
         getEntityById,
+        isRowReadOnly,
         // folder relationships
         getInheritedDependents,
         findInheritedValueFromAncestors,

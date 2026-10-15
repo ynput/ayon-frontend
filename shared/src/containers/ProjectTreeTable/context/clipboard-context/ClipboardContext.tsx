@@ -61,7 +61,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities, history } = useCellEditing()
   const { pasteTableLinks } = usePasteLinks()
-  const { getEntityById, attribFields, tableData } = useProjectTableContext()
+  const { getEntityById, attribFields, tableData, isRowReadOnly } = useProjectTableContext()
 
   const displayRowsById = useMemo(() => {
     const map = new Map<string, TableRow>()
@@ -471,12 +471,18 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         const { rowId, colId } = position
         if (colId === ROW_SELECTION_COLUMN_ID || !visibleColumnIds.includes(colId)) return
+        // nothing is pasted into read-only rows (subtasks and links don't go through updateEntities)
+        if (isRowReadOnly(rowId)) return
 
         if (!cellsByRow.has(rowId)) {
           cellsByRow.set(rowId, new Set())
         }
         cellsByRow.get(rowId)?.add(colId)
       })
+      if (!cellsByRow.size) {
+        clipboardError('These rows are read-only. Paste operation cancelled.')
+        return
+      }
 
       // Get sorted row IDs and column IDs
       const sortedRows = Array.from(cellsByRow.keys()).sort((a, b) => {
@@ -1009,6 +1015,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       pasteTableLinks,
       columnEnums,
       getEntityById,
+      isRowReadOnly,
       visibleColumns,
       attribFields,
       projectName,
