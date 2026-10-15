@@ -11,8 +11,9 @@ import type { Addon } from './types'
 import BundleForm from './BundleForm'
 import * as Styled from './Bundles.styled'
 import getLatestSemver from './getLatestSemver'
-import { isEqual, union } from 'lodash'
+import { isEqual, omit, union } from 'lodash'
 import BundleDeps from './BundleDeps'
+import BundleNote from './BundleNote'
 import useAddonSelection from './useAddonSelection'
 import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '@containers/Shortcuts'
@@ -36,6 +37,9 @@ const removeEmptyDevAddons = (addons: AddonDevelopment = {}): AddonDevelopment =
 }
 
 type Installer = { version: string; platforms?: string[] }
+
+// the note saves itself and the server stamps the dates, so neither is a dev bundle change
+const NON_FORM_KEYS = ['description', 'createdAt', 'updatedAt']
 
 interface LocalBundleFormData {
   addons?: Record<string, any>
@@ -216,10 +220,12 @@ const NewBundle: React.FC<NewBundleProps> = ({
 
   useEffect(() => {
     if (!initBundle) return
-    const latestFormData = { ...formData }
+    const latestFormData: LocalBundleFormData = omit(formData, NON_FORM_KEYS)
     latestFormData['addonDevelopment'] = removeEmptyDevAddons(latestFormData['addonDevelopment'])
     // check for changes
-    isEqual(initBundle, latestFormData) ? setDevChanges(false) : setDevChanges(true)
+    isEqual(omit(initBundle, NON_FORM_KEYS), latestFormData)
+      ? setDevChanges(false)
+      : setDevChanges(true)
   }, [initBundle, formData])
 
   const handleUpdate = async () => {
@@ -231,6 +237,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
     var allKeys = union(Object.keys(initBundle || {}), Object.keys(formData || {}))
     // for each key, check if the values are the same, if not, add to changes
     for (const key of allKeys) {
+      if (NON_FORM_KEYS.includes(key)) continue
       if (!isEqual(initBundle[key], formData[key])) {
         changes[key] = formData[key]
       }
@@ -362,6 +369,8 @@ const NewBundle: React.FC<NewBundleProps> = ({
         onAddonDevChange={handleAddonDevChange}
         developerMode={developerMode}
         addonListRef={addonListRef}
+        createdAt={isDev ? initBundle?.createdAt : undefined}
+        updatedAt={isDev ? initBundle?.updatedAt : undefined}
       >
         <Styled.AddonTools>
           <AddonSearchInput />
@@ -442,6 +451,9 @@ const NewBundle: React.FC<NewBundleProps> = ({
             </>
           )}
         </Styled.AddonTools>
+        {isDev && initBundle?.name && (
+          <BundleNote key={initBundle.name} bundle={initBundle as any} />
+        )}
         {isDev && <BundleDeps bundle={formData} onChange={handleDepPackagesDevChange} />}
 
         <BundleChecks

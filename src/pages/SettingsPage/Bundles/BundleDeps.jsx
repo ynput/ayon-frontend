@@ -84,7 +84,7 @@ const BundleDeps = ({ bundle, onChange }) => {
           onCancel={handleCloseForm}
         />
       </Dialog>
-      <section style={{ flex: 1, overflow: 'hidden' }}>
+      <section style={{ flex: 'none', overflow: 'hidden' }}>
         <h2>Dependency Packages</h2>
         {bundle && (
           <FormLayout style={{ maxWidth: 'max-content', minWidth: 300 }}>

@@ -78,7 +78,12 @@ export const AddonListInnerSection = styled.section`
 `
 
 export const SidebarSection = styled(Section)`
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  && > * {
+    flex: none;
+  }
   align-items: flex-start;
   min-width: clamp(300px, 25vw, 400px);
   max-width: clamp(300px, 25vw, 400px);

@@ -4,6 +4,7 @@ import { Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
 import BundleForm from './BundleForm'
 import BundleDeps from './BundleDeps'
+import BundleNote from './BundleNote'
 import { cloneDeep, upperFirst } from 'lodash'
 import BundleCompare from './BundleCompare'
 import useAddonSelection from './useAddonSelection'
@@ -24,6 +25,9 @@ type Bundle = {
   addonDevelopment?: Record<string, { enabled?: boolean; path?: string }>
   activeUser?: string
   isDev?: boolean
+  createdAt?: string
+  updatedAt?: string
+  description?: string | null
 }
 
 // Addon type now imported from ./types
@@ -161,8 +165,11 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
           addonListRef={addonListRef}
           {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
           onAddonAutoUpdate={handleAddonAutoSave}
+          createdAt={(bundle ?? selectedBundles[0])?.createdAt}
+          updatedAt={(bundle ?? selectedBundles[0])?.updatedAt}
         >
           <AddonSearchInput />
+          {bundle && <BundleNote key={bundle.name} bundle={bundle} />}
           <BundleDeps bundle={bundle} onChange={undefined as any} />
         </BundleForm>
       )}

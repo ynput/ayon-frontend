@@ -4,6 +4,7 @@ import BundlesAddonList from './BundlesAddonList'
 import * as BundleStyled from './Bundles.styled'
 import * as Styled from './BundleForm.styled'
 import { upperFirst } from 'lodash'
+import { format, isValid } from 'date-fns'
 import InstallerSelector from './InstallerSelector'
 import { useAppSelector } from '@state/store'
 import { useGetUsersQuery } from '@shared/api'
@@ -37,6 +38,13 @@ type BundleFormProps = {
   developerMode?: boolean
   addonListRef?: any
   onAddonAutoUpdate?: (addon: string, version: string | null) => void
+  createdAt?: string
+  updatedAt?: string
+}
+
+const formatTimestamp = (value?: string) => {
+  const date = value ? new Date(value) : null
+  return date && isValid(date) ? format(date, 'PPpp') : 'Unknown'
 }
 
 const BundleForm: React.FC<BundleFormProps> = ({
@@ -52,6 +60,8 @@ const BundleForm: React.FC<BundleFormProps> = ({
   developerMode,
   addonListRef,
   onAddonAutoUpdate,
+  createdAt,
+  updatedAt,
 }) => {
   const showNameError = formData && !formData?.name && isNew
   const currentUser = useAppSelector((state) => state.user.name)
@@ -95,6 +105,16 @@ const BundleForm: React.FC<BundleFormProps> = ({
             )}
           </div>
         </BundleStyled.FormRow>
+        {createdAt && (
+          <>
+            <RCFormRow label="Created">
+              <span>{formatTimestamp(createdAt)}</span>
+            </RCFormRow>
+            <RCFormRow label="Updated">
+              <span>{formatTimestamp(updatedAt)}</span>
+            </RCFormRow>
+          </>
+        )}
         <RCFormRow label="Launcher version">
           {isNew ? (
             <InstallerSelector
