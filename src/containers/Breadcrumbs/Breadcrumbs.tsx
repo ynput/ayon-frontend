@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
 import { upperFirst } from 'lodash'
+import { toast } from 'react-toastify'
 import { copyToClipboard, parseUri } from '@shared/util'
 import { URL_PARAM_ID, useURIContext } from '@shared/context'
+import { Module, ModulePath } from '@pages/ProjectManagerPage/mappers'
 import clsx from 'clsx'
 
 const parseQueryParams = (query: string): Record<string, string> => {
@@ -26,32 +27,40 @@ const getSettingsScopeLabel = (query: string): string => {
 }
 
 const getSettingsPathname = ({ project, site }: { project?: string; site?: string }): string => {
-  if (project) return site ? '/manageProjects/siteSettings' : '/manageProjects/projectSettings'
+  if (project) return ModulePath[site ? Module.siteSettings : Module.projectSettings]
   return site ? '/settings/site' : '/settings/studio'
 }
 
-const getEntityPathname = (projectName: string, pathname: string): string => {
+// pages that can show an entity from the uri: the project's own pages and My Tasks
+const canShowEntity = (projectName: string, pathname: string): boolean => {
   const projectRoot = `/projects/${projectName}`
-  const onProjectPage = pathname === projectRoot || pathname.startsWith(`${projectRoot}/`)
-  return onProjectPage ? pathname : `${projectRoot}/overview`
+  return (
+    pathname === projectRoot ||
+    pathname.startsWith(`${projectRoot}/`) ||
+    pathname.startsWith('/dashboard/tasks')
+  )
 }
 
 // the uri state is in-memory only, so a full reload must carry it in the url
-const getUriTargetUrl = (uri: string, pathname: string): string | null => {
+const getUriTargetUrl = (uri: string, location: Location): string | null => {
   const { type, settings, entity } = parseUri(uri)
-  if (!type) return null
-
-  const params = new URLSearchParams()
-  params.set(URL_PARAM_ID, uri)
 
   if (type === 'settings' && settings) {
+    const params = new URLSearchParams()
+    params.set(URL_PARAM_ID, uri)
     if (settings.project) params.set('project', settings.project)
     return `${getSettingsPathname(settings)}?${params}`
   }
 
-  if (!entity?.projectName) return null
+  // the details panel has no product resolution
+  if (type !== 'entity' || !entity?.projectName || entity.entityType === 'product') return null
+
+  const stay = canShowEntity(entity.projectName, location.pathname)
+  const params = new URLSearchParams(stay ? location.search : '')
+  params.set(URL_PARAM_ID, uri)
   params.set('project', entity.projectName)
-  return `${getEntityPathname(entity.projectName, pathname)}?${params}`
+  const pathname = stay ? location.pathname : `/projects/${entity.projectName}/overview`
+  return `${pathname}?${params}`
 }
 
 const getPathnameLabel = (pathname: string): string => {
@@ -105,15 +114,6 @@ const Breadcrumbs = () => {
 
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // URIProvider already read the handoff param on mount; drop it so a refresh follows the current selection
-  const [searchParams, setSearchParams] = useSearchParams()
-  useEffect(() => {
-    if (!searchParams.has(URL_PARAM_ID)) return
-    const next = new URLSearchParams(searchParams)
-    next.delete(URL_PARAM_ID)
-    setSearchParams(next, { replace: true })
-  }, [])
-
   // keep localUri in sync with real uri
   useEffect(() => {
     setLocalUri(uri)
@@ -146,8 +146,9 @@ const Breadcrumbs = () => {
     // blur input
     inputRef.current?.blur()
 
-    const target = getUriTargetUrl(localUri.trim(), location.pathname)
+    const target = getUriTargetUrl(localUri.trim(), location)
     if (!target) {
+      toast.warning('Unsupported URI')
       setLocalUri(uri)
       return
     }

@@ -49,6 +49,7 @@ import {
 } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
 import { MenuProvider, URIProvider, DeleteEntitiesProvider } from '@shared/context'
+import { consumeUriHandoff } from '@shared/util'
 
 // containers
 import Header from '@containers/header'
@@ -95,6 +96,8 @@ const DetailsPanelProviderWithSubtasks = (
 }
 
 const App = () => {
+  // must run before <BrowserRouter> renders, otherwise the router keeps the handoff param in its own location
+  consumeUriHandoff()
   const user = useAppSelector((state) => state.user) // NOTE: careful, this does not contain uiExposureLevel on first login!!
   const viewer = useAppSelector((state) => state.viewer) || []
   const dispatch = useAppDispatch()

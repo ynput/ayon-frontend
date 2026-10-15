@@ -114,7 +114,7 @@ const AddonSettingsPanel = ({
     if (currentSelection?.path) uri += `/${currentSelection.path.join('/')}`
     const params = new URLSearchParams()
     if (projectName) params.set('project', projectName)
-    if (siteId) params.set('site', siteId)
+    if (siteId && siteId !== '_') params.set('site', siteId)
     const query = params.toString()
     if (query) uri += `?${query}`
     setUri(uri)
