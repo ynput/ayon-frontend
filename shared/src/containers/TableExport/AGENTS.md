@@ -1,7 +1,7 @@
 # Table export
 
 The Export dialog of project tables (overview, products, lists and review sessions). The server builds the file
-(`POST /api/csv/table/export`, ayon-backend `api/data_import/export_table.py`), so exports contain every row and inherited
+(`POST /api/export-table`, ayon-backend `api/table_export/export_table.py`), so exports contain every row and inherited
 attribute the user may read, also rows the table has not loaded, and follow the user's folder and attribute permissions.
 
 ## Contract

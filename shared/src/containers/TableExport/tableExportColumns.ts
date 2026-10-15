@@ -17,7 +17,7 @@ import type { ParentColumnDefinition, ProjectTableAttribute } from '../ProjectTr
 // the type column: folder or task type in the hierarchy, product type for products
 export type SubTypeKey = 'folder_or_task_type' | 'product_type'
 
-// table column id -> export column key (POST /api/csv/table/export)
+// table column id -> export column key (POST /api/export-table)
 const COLUMN_KEYS: Record<string, string> = {
   name: 'name',
   status: 'status',
