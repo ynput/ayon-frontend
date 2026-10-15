@@ -377,8 +377,12 @@ export const ProjectTreeTable = ({
     async (entity, config) => {
       const { selection = [] } = config || {}
       const { field, value, isAttrib } = entity
-      const isFieldColumn = (colId?: string) =>
-        !colId?.includes('attrib_') || colId.replace('attrib_', '') === field
+      const fieldColumnId = isAttrib
+        ? `attrib_${field}`
+        : ['folderType', 'taskType', 'productType'].includes(field)
+        ? 'subType'
+        : field
+      const isFieldColumn = (colId?: string) => colId === fieldColumnId
       // an editor closed by clicking another cell saves after that click has moved the selection,
       // so the edit only applies to the selection while the edited cell is still part of it
       const isEditedCellSelected = [...selectedCells].some((cellId) => {
