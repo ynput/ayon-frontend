@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
@@ -29,6 +30,12 @@ const getSettingsPathname = ({ project, site }: { project?: string; site?: strin
   return site ? '/settings/site' : '/settings/studio'
 }
 
+const getEntityPathname = (projectName: string, pathname: string): string => {
+  const projectRoot = `/projects/${projectName}`
+  const onProjectPage = pathname === projectRoot || pathname.startsWith(`${projectRoot}/`)
+  return onProjectPage ? pathname : `${projectRoot}/overview`
+}
+
 // the uri state is in-memory only, so a full reload must carry it in the url
 const getUriTargetUrl = (uri: string, pathname: string): string | null => {
   const { type, settings, entity } = parseUri(uri)
@@ -42,8 +49,9 @@ const getUriTargetUrl = (uri: string, pathname: string): string | null => {
     return `${getSettingsPathname(settings)}?${params}`
   }
 
-  if (entity) params.set('project', entity.projectName)
-  return `${pathname}?${params}`
+  if (!entity?.projectName) return null
+  params.set('project', entity.projectName)
+  return `${getEntityPathname(entity.projectName, pathname)}?${params}`
 }
 
 const getPathnameLabel = (pathname: string): string => {
@@ -96,6 +104,15 @@ const Breadcrumbs = () => {
   const { uri = '' } = useURIContext()
 
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // URIProvider already read the handoff param on mount; drop it so a refresh follows the current selection
+  const [searchParams, setSearchParams] = useSearchParams()
+  useEffect(() => {
+    if (!searchParams.has(URL_PARAM_ID)) return
+    const next = new URLSearchParams(searchParams)
+    next.delete(URL_PARAM_ID)
+    setSearchParams(next, { replace: true })
+  }, [])
 
   // keep localUri in sync with real uri
   useEffect(() => {
