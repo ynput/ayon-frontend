@@ -3,8 +3,8 @@ import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
 import { upperFirst } from 'lodash'
-import { copyToClipboard } from '@shared/util'
-import { useURIContext } from '@shared/context'
+import { copyToClipboard, parseUri } from '@shared/util'
+import { URL_PARAM_ID, useURIContext } from '@shared/context'
 import clsx from 'clsx'
 
 const parseQueryParams = (query: string): Record<string, string> => {
@@ -22,6 +22,28 @@ const parseQueryParams = (query: string): Record<string, string> => {
 
 const getSettingsScopeLabel = (query: string): string => {
   return query?.includes('project') ? 'Projects Manager' : 'Studio Settings'
+}
+
+const getSettingsPathname = ({ project, site }: { project?: string; site?: string }): string => {
+  if (project) return site ? '/manageProjects/siteSettings' : '/manageProjects/projectSettings'
+  return site ? '/settings/site' : '/settings/studio'
+}
+
+// the uri state is in-memory only, so a full reload must carry it in the url
+const getUriTargetUrl = (uri: string, pathname: string): string | null => {
+  const { type, settings, entity } = parseUri(uri)
+  if (!type) return null
+
+  const params = new URLSearchParams()
+  params.set(URL_PARAM_ID, uri)
+
+  if (type === 'settings' && settings) {
+    if (settings.project) params.set('project', settings.project)
+    return `${getSettingsPathname(settings)}?${params}`
+  }
+
+  if (entity) params.set('project', entity.projectName)
+  return `${pathname}?${params}`
 }
 
 const getPathnameLabel = (pathname: string): string => {
@@ -72,7 +94,6 @@ const Breadcrumbs = () => {
   const [localUri, setLocalUri] = useState<string>('')
   const [editMode, setEditMode] = useState<boolean>(false)
   const { uri = '' } = useURIContext()
-  const { setUri } = useURIContext()
 
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -102,23 +123,20 @@ const Breadcrumbs = () => {
     }
   }, [editMode])
 
-  const goThere = async (e?: React.SyntheticEvent) => {
+  const goThere = (e?: React.SyntheticEvent) => {
     e?.preventDefault()
     setEditMode(false)
     // blur input
     inputRef.current?.blur()
 
-    try {
-      //  set uri
-      setUri(localUri)
-      // refresh page ensures that states use this new uri
-      location.reload()
-    } catch (error) {
-      console.error(error)
+    const target = getUriTargetUrl(localUri.trim(), location.pathname)
+    if (!target) {
       setLocalUri(uri)
-    } finally {
-      setEditMode(false)
+      return
     }
+
+    // full load so every page reads the new uri fresh on mount
+    location.assign(target)
   }
 
   const onCopy = () => {

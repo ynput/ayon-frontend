@@ -61,10 +61,13 @@ interface URIProviderProps {
 const URIProvider: FC<URIProviderProps> = ({ children }) => {
   const pathname = location.pathname
 
-  const [uri, setUri] = useState('')
+  // read once on mount: breadcrumbs "go to URI" hands the uri over through the url param and reloads
+  const [uri, setUri] = useState(
+    () => new URLSearchParams(window.location.search).get(URL_PARAM_ID) ?? '',
+  )
 
   // when the scope is outside settings and project, set uri to null
-  const scopes = ['projects', 'settings', 'dashboard/tasks']
+  const scopes = ['projects', 'settings', 'manageProjects', 'dashboard/tasks']
   useEffect(() => {
     const matchingScope = scopes.some((scope) => pathname.startsWith(`/${scope}`))
 
