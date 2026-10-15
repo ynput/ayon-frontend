@@ -376,12 +376,20 @@ export const ProjectTreeTable = ({
   const handleCellUpdate: CellUpdate = useCallback(
     async (entity, config) => {
       const { selection = [] } = config || {}
+      const { field, value, isAttrib } = entity
+      const isFieldColumn = (colId?: string) =>
+        !colId?.includes('attrib_') || colId.replace('attrib_', '') === field
+      // an editor closed by clicking another cell saves after that click has moved the selection,
+      // so the edit only applies to the selection while the edited cell is still part of it
+      const isEditedCellSelected = [...selectedCells].some((cellId) => {
+        const { colId, rowId } = parseCellId(cellId) || {}
+        return rowId === entity.rowId && isFieldColumn(colId)
+      })
       const entitiesToUpdate: EntityUpdate[] = []
-      if (!selection?.length) {
+      if (!selection?.length || !isEditedCellSelected) {
         entitiesToUpdate.push({ ...entity, id: entity.id || entity.rowId })
       } else {
-        // if includeSelection is true, update all the selected cells with the same columnId
-        const { field, value, isAttrib } = entity
+        // update all the selected cells with the same columnId
         for (const cellId of selectedCells) {
           const { colId, rowId } = parseCellId(cellId) || {}
 
@@ -394,7 +402,7 @@ export const ProjectTreeTable = ({
             continue
           }
 
-          if ((!colId?.includes('attrib_') || colId?.replace('attrib_', '') === field) && rowId) {
+          if (isFieldColumn(colId) && rowId) {
             entitiesToUpdate.push({
               field: field,
               rowId: rowId,
@@ -1841,7 +1849,6 @@ const TD = ({
             }, 0)
             return
           }
-          setEditingCellId(null)
         }
 
         proceedWithSelection()
