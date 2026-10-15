@@ -95,10 +95,11 @@ const buildPrimaryEntity = (item: EntityListItemWithLinks, isRestricted: boolean
     updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : undefined,
     path: item.parents?.join('/'),
     hasReviewables: getHasReviewables(item),
-    attrib: item.attrib || {},
+    // the shown values come from getRowValues (list values over entity values)
+    attrib: item.entityAttrib || {},
     ownAttrib: item.ownAttrib
       ? [...item.ownAttrib, ...item.ownItemAttrib]
-      : Object.keys(item.attrib || {}),
+      : Object.keys(item.entityAttrib || {}),
   }
 
   if (isRestricted) {

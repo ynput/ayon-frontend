@@ -79,10 +79,9 @@ type ItemNodeData = {
 
 export type QueryEntityListItemNode = QueryEntityListItemEdge['node'] & ItemNodeData
 
-// attrib: entity values with the list item's values over them
-// listAttrib: values set on the list item, entityAttrib: the entity's values
+// listAttrib: values set on the list item, entityAttrib: the entity's values.
+// What a cell shows is resolved from both (see ProjectListsPage/listValues).
 type ListItemValues = {
-  attrib: Record<string, unknown>
   listAttrib: Record<string, unknown>
   entityAttrib: Record<string, unknown>
 }

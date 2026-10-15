@@ -281,10 +281,8 @@ const useGetListItemsData = ({
     id: i.id, // Use the actual list item ID from the backend
     entityId: i.entityId,
     entityType: RESTRICTED_ENTITY_TYPE,
-    allAttrib: '',
     itemAttrib: '',
     entityAllAttrib: '',
-    attrib: {},
     listAttrib: {},
     entityAttrib: {},
     ownAttrib: [],

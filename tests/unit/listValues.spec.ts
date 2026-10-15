@@ -92,27 +92,25 @@ test.describe('toEntityValueKeys', () => {
 
 test.describe('cached list item values', () => {
   const cached = () => ({
-    attrib: { priority: 'low', fps: 25 },
     listAttrib: { priority: 'low' } as Record<string, unknown>,
     entityAttrib: { priority: 'high', fps: 25 } as Record<string, unknown>,
   })
 
-  test('a list value shows over the entity value, removing it falls back to the entity', () => {
+  test('a list value is set on the list item, removing it leaves the entity value', () => {
     const item = cached()
     patchListItemListValues(item, { fps: 24 })
-    expect(item.attrib).toEqual({ priority: 'low', fps: 24 })
     expect(item.listAttrib).toEqual({ priority: 'low', fps: 24 })
 
     patchListItemListValues(item, { priority: null })
-    expect(item.attrib).toEqual({ priority: 'high', fps: 24 })
     expect(item.listAttrib).toEqual({ fps: 24 })
+    expect(item.entityAttrib).toEqual({ priority: 'high', fps: 25 })
   })
 
-  test('an entity value changes the shown value only without a list value', () => {
+  test('an entity value changes only the entity values', () => {
     const item = cached()
     patchListItemEntityValues(item, { priority: 'urgent', fps: 30 })
     expect(item.entityAttrib).toEqual({ priority: 'urgent', fps: 30 })
-    expect(item.attrib).toEqual({ priority: 'low', fps: 30 })
+    expect(item.listAttrib).toEqual({ priority: 'low' })
   })
 })
 

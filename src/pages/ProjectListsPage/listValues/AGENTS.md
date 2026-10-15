@@ -9,16 +9,18 @@ setting slot, the rendering of compare columns and rows, and a community fallbac
 
 ## Data
 
-`GetListItems` returns three maps per item (`getLists.ts`, typed in `EntityListItem`):
+`GetListItems` returns two maps per item (`getLists.ts`, typed in `EntityListItem`):
 
 | Field | From | What |
 | --- | --- | --- |
 | `listAttrib` | edge `attrib` | values set on the list item (own attributes and overrides) |
 | `entityAttrib` | node `allAttrib` | the entity's values, inherited ones included |
-| `attrib` | edge `allAttrib` | list values over entity values; what the backend sorts and filters `attrib.*` by |
 
-`entityAttrib.*` sorts and filters by the entity's values only. Optimistic cache patches keep the three
-maps in step (`shared/src/api/queries/entityLists/listItemValues.ts`).
+There is deliberately no merged map in the cache: what a cell shows is resolved from these two by the
+module's `resolveValues`, and keeping a third copy in step on every optimistic patch was only a source of
+drift. The backend still has the merged values: its `attrib.*` sort and filter keys use list values over
+entity values, `entityAttrib.*` the entity's values only. Optimistic cache patches update one map each
+(`shared/src/api/queries/entityLists/listItemValues.ts`).
 
 ## Contract with the powerpack
 

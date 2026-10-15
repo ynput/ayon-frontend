@@ -87,7 +87,6 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
               return {
                 ...node,
                 ...edge,
-                attrib: parseJSONField(edge.allAttrib),
                 listAttrib: parseJSONField(edge.itemAttrib),
                 entityAttrib: parseJSONField(node?.entityAllAttrib),
               } as GetListItemsResult['items'][number]
