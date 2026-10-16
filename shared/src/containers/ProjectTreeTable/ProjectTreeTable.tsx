@@ -190,6 +190,9 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   // called whenever the set of rows currently rendered in the viewport changes
   // (entity ids, not row ids - group suffixes are stripped)
   onVisibleRowsChange?: (entityIds: string[]) => void
+  // scrolls this row into view once it is in the table, then calls onScrolledToRow
+  scrollToRowId?: string | null
+  onScrolledToRow?: (rowId: string) => void
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -229,6 +232,8 @@ export const ProjectTreeTable = ({
   onColumnVisibleChange,
   onColumnVisibleChangeSubscribed,
   onVisibleRowsChange,
+  scrollToRowId,
+  onScrolledToRow,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -834,6 +839,8 @@ export const ProjectTreeTable = ({
               onResetView={onResetView}
               contextMenuItems={propsContextMenuItems}
               onVisibleRowsChange={onVisibleRowsChange}
+              scrollToRowId={scrollToRowId}
+              onScrolledToRow={onScrolledToRow}
             />
             {summariesEnabled && !error && (
               <TableFooterRow
@@ -1330,6 +1337,8 @@ interface TableBodyProps {
   onResetView?: () => void
   contextMenuItems?: ContextMenuItemConstructors
   onVisibleRowsChange?: (entityIds: string[]) => void
+  scrollToRowId?: string | null
+  onScrolledToRow?: (rowId: string) => void
 }
 
 const TableBody = ({
@@ -1353,6 +1362,8 @@ const TableBody = ({
   onResetView,
   contextMenuItems,
   onVisibleRowsChange,
+  scrollToRowId,
+  onScrolledToRow,
 }: TableBodyProps) => {
   const headerLabels = useMemo(() => {
     const allColumns = table.getAllColumns()
@@ -1418,6 +1429,14 @@ const TableBody = ({
 
     onVisibleRowsChange(uniqueIds)
   }, [virtualRows, rows, onVisibleRowsChange])
+
+  useEffect(() => {
+    if (!scrollToRowId) return
+    const index = rows.findIndex((row) => row.id === scrollToRowId)
+    if (index === -1) return
+    rowVirtualizer.scrollToIndex(index, { align: 'center' })
+    onScrolledToRow?.(scrollToRowId)
+  }, [scrollToRowId, rows, rowVirtualizer, onScrolledToRow])
 
   // Memoize the measureElement callback
   const measureRowElement = useCallback(
