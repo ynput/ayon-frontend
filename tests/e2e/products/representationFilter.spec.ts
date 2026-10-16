@@ -62,8 +62,7 @@ test.describe('products representation filter', () => {
       .toEqual([{ key: 'representation_extension', value: '%abc%', operator: 'like' }])
   })
 
-  // needs ynput/ayon-backend#1190: the products resolver does not take representationFilter yet
-  test.fixme('filter product rows by representation name', async ({ page, api, projectName }) => {
+  test('filter product rows by representation name', async ({ page, api, projectName }) => {
     await publish(api, projectName)
     await api.setWorkingViewSettings('versions', projectName, { showProducts: true })
     const products = new ProductsPage(page)
