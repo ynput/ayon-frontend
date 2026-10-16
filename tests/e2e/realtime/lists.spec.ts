@@ -55,4 +55,25 @@ test.describe('lists live updates', () => {
     await expect(lists.listRow('Dailies')).toBeVisible(LIVE_UPDATE)
     await expect(lists.listRow('Client review')).toBeVisible()
   })
+
+  test('a list changed elsewhere moves up when sorted by updated date', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const oldId = await api.createEntityList(projectName, { label: 'srt old' })
+    await api.createEntityList(projectName, { label: 'srt new' })
+
+    const lists = new ListsPage(page)
+    const live = new LiveUpdates(page)
+    await lists.goto(projectName)
+    await lists.sortLists('Updated')
+    const rows = lists.listRows('srt ')
+    await expect(rows).toHaveText([/srt new/, /srt old/])
+    await live.expectSubscribed('entity_list.changed', projectName)
+
+    await api.updateEntityList(projectName, oldId, { label: 'srt old renamed' })
+
+    await expect(rows).toHaveText([/srt old renamed/, /srt new/], LIVE_UPDATE)
+  })
 })

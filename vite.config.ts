@@ -4,6 +4,7 @@ import { fileURLToPath, URL } from 'url'
 import path from 'path'
 import { federation } from '@module-federation/vite'
 import { dependencies } from './package.json'
+import { lodashEs } from './vite-plugins/lodashEs'
 
 const CLAUDE_DIR = fileURLToPath(new URL('./.claude', import.meta.url))
 
@@ -73,6 +74,7 @@ export default ({ mode }) => {
       },
     },
     plugins: [
+      lodashEs(['src', 'shared/src']),
       federation({
         name: 'host',
         remotes: {},

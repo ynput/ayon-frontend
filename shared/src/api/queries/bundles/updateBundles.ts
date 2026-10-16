@@ -38,6 +38,7 @@ const enhancedUpdateBundles = api.enhanceEndpoints({
         { type: 'addonList' },
         { type: 'addonSettingsList' },
         { type: 'marketAddon' },
+        { type: 'frontendModules' },
       ],
     },
   },
@@ -72,6 +73,7 @@ const updateBundles = enhancedUpdateBundles.injectEndpoints({
         { type: 'bundleList' },
         { type: 'addonList' },
         { type: 'addonSettingsList' },
+        { type: 'frontendModules' },
       ],
     }),
 
@@ -89,6 +91,7 @@ const updateBundles = enhancedUpdateBundles.injectEndpoints({
         { type: 'addonSettings' },
         { type: 'addonSettingsOverrides' },
         { type: 'marketAddon' },
+        { type: 'frontendModules' },
       ],
     }),
 
@@ -114,6 +117,7 @@ const updateBundles = enhancedUpdateBundles.injectEndpoints({
         { type: 'addonSettings' },
         { type: 'addonSettingsOverrides' },
         { type: 'addonSettingsList' },
+        { type: 'frontendModules' },
       ],
     }),
   }), // endpoints

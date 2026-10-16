@@ -35,6 +35,8 @@ While writing tests, run only your specs: `npx playwright test --project=chromiu
 
 ## How the e2e tests are built
 
+**Scope.** Only the frontend's own pages. Addon pages (planner, review, reports and other addons) are tested in their addons' repos, so don't add tests for them here.
+
 **Isolation.** Every test gets its own project from the `projectName` fixture (`fixtures.ts`).
 - The project is created through the API before the test and deleted after it, so tests never see each other's data.
 - Users from the `createUser` fixture and the group from the `accessGroup` fixture are deleted after the test.
@@ -91,7 +93,7 @@ While writing tests, run only your specs: `npx playwright test --project=chromiu
 - **Overview power features:** the "Search and filter" placeholder disappears once a chip exists, so click `.search-filter` for the textbox; its options are plain `li` items. `SearchFilterBar` (`pages/SearchFilterBar.ts`) wraps this for the overview and products pages; a free text value (`addText`) is typed into the new chip, not into the dropdown. Copy and paste need `context.grantPermissions(['clipboard-read', 'clipboard-write'])`, and copying is async: poll `navigator.clipboard.readText()` before pasting. Date cells open the native picker: fill the `input[type=date]` and click another cell (`setDateCell`). Root folders are not sorted by name, so don't assert row order unless the test sorts. Deleting several entities asks for counts (`confirmDeleteCounts`).
 - **Activity feed:** `.comment` also matches the comment box's submit button, so count comments with `.feed li.comment`. Commenting makes the author a watcher, so watch tests must not seed admin comments first. The watcher picker lists licensed users only. `version.publish` activities come from a server event and their order varies; GraphQL `activities(last: N)` is newest first.
 - **Settings editor lists** (anatomy statuses, types, ...) are addressed by index (`root_statuses_<i>_name`); get it from the API (anatomy order), new items go last. Text fields and color pickers commit on blur (`fillText`, `setColor`), and `setOptions` selects exactly the given options of a multi-select. Names must not exist in the default anatomy already (e.g. "Matchmove"), or the save fails. Removing a status or type that is in use is refused (409) and nothing is saved.
-- **Unit tests** (`tests/unit/`) are transpiled to CommonJS: use static imports only. They can import pure modules (single files under `shared/src/util/`, not its index; `ProjectTreeTable/utils/*`; MarkdownEditor `markdown/plainText`, `links/*`, `media/mediaUtils`). They cannot import anything that loads `@ynput/ayon-react-components` at runtime or reaches `@shared/api` (its client reads `window.location` on import). `yarn test-typecheck` does not cover `tests/unit`. Run them without the app build: `TEST_SERVER_URL=http://localhost:3100 npx playwright test --project=unit`.
+- **Unit tests** (`tests/unit/`) are transpiled to CommonJS: use static imports only. They can import pure modules (single files under `shared/src/util/`, not its index; `ProjectTreeTable/utils/*`; MarkdownEditor `markdown/plainText`, `links/*`, `media/mediaUtils`). They cannot import anything that loads `@ynput/ayon-react-components` at runtime or reaches `@shared/api` (its client reads `window.location` on import). `yarn test-typecheck` does not cover `tests/unit`. Run them without the app build: `TEST_SERVER_URL=http://localhost:3100 npx playwright test --project=unit`. To render a component, use `renderToHtml` (`tests/unit/support/render.ts`): Playwright compiles JSX to its own element objects, which React can't render as they are.
 
 
 ## Known issues found while writing the suite
@@ -131,7 +133,6 @@ Still open (worked around in the tests, marked with `FLAG` in the code):
 - Backend: project deletes racing cross-project reads (inbox, kanban) fail or deadlock until ynput/ayon-backend#1164 is merged; keep the default of 2 workers until then.
 - With focus on a hierarchy slicer row, Shift+R renames the folder instead of syncing (`useRowKeydown`); focus the grid before pressing it.
 - `checkColumnVisibility` prefix-matches plain column ids (`tests/unit/columnVisibility.spec.ts`); a fix must also change the callers that pass `'link_'`.
-- Review addon 0.7.5: opening an empty review session crashes the app; planner addon 2.3.0: the schedule of a new project gets 500s. Both are addon bugs (separate repos).
 - Backend: uploaded files of deleted projects are only moved to `.trash` folders, which are never purged.
 - Backend (planner addon 2.3.1-dev): `handle_user_created` re-syncs every user and fails with a unique violation when two users are created at the same time.
 

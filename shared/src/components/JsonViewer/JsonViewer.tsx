@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react'
 import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
-import CodeEditor from '@uiw/react-textarea-code-editor'
+import { CodeEditor } from '@shared/components/CodeEditor'
 
 import { copyToClipboard } from '@shared/util'
 

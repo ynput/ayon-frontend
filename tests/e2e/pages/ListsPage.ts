@@ -19,6 +19,23 @@ export class ListsPage {
     return this.page.getByRole('row').filter({ hasText: label }).first()
   }
 
+  listRows(text: string) {
+    return this.page.getByRole('row').filter({ hasText: text })
+  }
+
+  async sortLists(option: string) {
+    await this.headerMenu('Sort lists')
+    await menuItem(this.page, option).click()
+  }
+
+  // the direction is a button on the selected sort row; clicking it keeps the menu open, so close it after
+  async flipSortDirection(to: 'Ascending' | 'Descending') {
+    await this.headerMenu('Sort lists')
+    await this.page.locator('.menu-item.selected .menu-item-end-action').click()
+    await expect(this.page.getByRole('button', { name: to, exact: true })).toBeVisible()
+    await this.page.keyboard.press('Escape')
+  }
+
   async createList({ label, entityType }: { label: string; entityType?: string }) {
     await this.addListButton.click()
     await this.submitNewListDialog({ label, entityType })
@@ -279,11 +296,6 @@ export class ListsPage {
 export const hasPowerpack = async (api: AyonApi) => {
   const { addons } = await api.get('/api/addons')
   return addons.some((a: any) => a.name === 'powerpack' && a.productionVersion)
-}
-
-export const hasReviewAddon = async (api: AyonApi) => {
-  const { addons } = await api.get('/api/addons')
-  return addons.some((a: any) => a.name === 'review' && a.productionVersion)
 }
 
 /** The "Add to list" dialog opened from any entity context menu */

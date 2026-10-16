@@ -1803,6 +1803,14 @@ export type GetEntitiesChecklistsQueryVariables = Exact<{
 
 export type GetEntitiesChecklistsQuery = { project: { name: string, activities: { edges: Array<{ cursor: string | null, node: { activityId: string, body: string } }> } } };
 
+export type GetVersionsFrameStartQueryVariables = Exact<{
+  projectName: string;
+  versionIds: Array<string> | string;
+}>;
+
+
+export type GetVersionsFrameStartQuery = { project: { versions: { edges: Array<{ node: { id: string, attrib: { frameStart: number | null } } }> } } };
+
 export type GetDetailsPanelFolderQueryVariables = Exact<{
   projectName: string;
   entityId: string;
@@ -2980,6 +2988,22 @@ export const GetEntitiesChecklistsDocument = new TypedDocumentString(`
         node {
           activityId
           body
+        }
+      }
+    }
+  }
+}
+    `);
+export const GetVersionsFrameStartDocument = new TypedDocumentString(`
+    query GetVersionsFrameStart($projectName: String!, $versionIds: [String!]!) {
+  project(name: $projectName) {
+    versions(ids: $versionIds) {
+      edges {
+        node {
+          id
+          attrib {
+            frameStart
+          }
         }
       }
     }
@@ -4617,6 +4641,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetEntitiesChecklists: build.query<GetEntitiesChecklistsQuery, GetEntitiesChecklistsQueryVariables>({
       query: (variables) => ({ document: GetEntitiesChecklistsDocument as unknown as string, variables })
+    }),
+    GetVersionsFrameStart: build.query<GetVersionsFrameStartQuery, GetVersionsFrameStartQueryVariables>({
+      query: (variables) => ({ document: GetVersionsFrameStartDocument as unknown as string, variables })
     }),
     GetDetailsPanelFolder: build.query<GetDetailsPanelFolderQuery, GetDetailsPanelFolderQueryVariables>({
       query: (variables) => ({ document: GetDetailsPanelFolderDocument as unknown as string, variables })

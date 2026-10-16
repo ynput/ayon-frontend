@@ -50,6 +50,7 @@ import type { DetailsPanelEntityType, FeedActivity } from '@shared/api'
 import { VersionReviewPill } from './VersionReviewPill'
 import { VersionReviewFeedback, type CommentDuplicate } from './types'
 import { parseFrameRange } from './parseFrameRange'
+import { formatVersionFrame, toStoredFrameRange } from '../../helpers/versionFrames'
 import { cloneProjectFile } from './cloneProjectFile'
 
 type UploadingFile = {
@@ -62,6 +63,7 @@ type UploadingFile = {
 interface CommentInputProps {
   initValue: string | null
   initFiles?: any[]
+  annotationFrameStart?: number | null
   initCategory?: string | null
   data?: any
   activityId?: string
@@ -99,6 +101,7 @@ const MENTION_BUTTONS: { trigger: MentionTrigger; icon: IconType; tooltip: strin
 const CommentInput: FC<CommentInputProps> = ({
   initValue,
   initFiles = [],
+  annotationFrameStart,
   initCategory = null,
   data = {},
   activityId,
@@ -191,7 +194,14 @@ const CommentInput: FC<CommentInputProps> = ({
   const showFrameLink = isEditing
     ? !!frameLinkEntity || !!currentManualFrameLink
     : !!commentFrameLink && !!frameLinkEntity
-  const formatFrame = commentFrameLink?.formatFrame ?? String
+  const hostFormatFrame = commentFrameLink?.formatFrame
+  const formatFrame =
+    hostFormatFrame ?? ((frame: number) => formatVersionFrame(frame, annotationFrameStart))
+  // typed frames are shown with the version offset, store them relative again
+  const parseFrameInput = (value: string) =>
+    hostFormatFrame
+      ? parseFrameRange(value)
+      : toStoredFrameRange(parseFrameRange(value), annotationFrameStart)
   const frameLinkLabel = frameLink
     ? frameLink.endFrame > frameLink.startFrame
       ? `${formatFrame(frameLink.startFrame)}-${formatFrame(frameLink.endFrame)}`
@@ -217,7 +227,7 @@ const CommentInput: FC<CommentInputProps> = ({
 
   const handleFrameInputChange = (value: string) => {
     setFrameInput(value)
-    const range = parseFrameRange(value)
+    const range = parseFrameInput(value)
     if (range) setFrameLinkPreview(range)
   }
 
@@ -240,7 +250,7 @@ const CommentInput: FC<CommentInputProps> = ({
       setFrameInputOpen(false)
       return
     }
-    const range = parseFrameRange(frameInput)
+    const range = parseFrameInput(frameInput)
     if (range) {
       setManualFrameLink(range)
       setFrameLinkPreview(range)
@@ -863,6 +873,7 @@ const CommentInput: FC<CommentInputProps> = ({
               isEditing
               pt={{
                 file: {
+                  annotationFrameStart,
                   style: {
                     height: isEditing ? 70 : undefined,
                   },

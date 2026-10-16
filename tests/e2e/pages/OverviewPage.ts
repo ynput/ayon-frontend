@@ -147,6 +147,26 @@ export class OverviewPage {
     await this.page.locator(`.options [data-value="${value}"]`).first().click()
   }
 
+  /** Toggle values in a multi-select enum cell (tags, assignees, ...), then close it by clicking another cell (the row's name by default) */
+  async toggleEnumCellValues(
+    label: string,
+    columnId: string,
+    values: string[],
+    closeBy: Locator = this.nameCell(label),
+  ) {
+    await this.cell(label, columnId).dblclick()
+    const options = this.page.locator('.options')
+    for (const value of values) {
+      const option = options.locator(`[data-value="${value}"]`).first()
+      const selected = option.locator('.selected')
+      const wasSelected = (await selected.count()) > 0
+      await option.click()
+      await expect(selected).toHaveCount(wasSelected ? 0 : 1)
+    }
+    await closeBy.click()
+    await expect(options).toBeHidden()
+  }
+
   async deleteRow(label: string) {
     await this.selectRow(label)
     await this.nameCell(label).click({ button: 'right' })
