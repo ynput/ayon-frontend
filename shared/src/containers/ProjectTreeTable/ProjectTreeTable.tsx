@@ -120,6 +120,7 @@ import { toast } from 'react-toastify'
 import { ColumnsConfig } from './types/columnConfig'
 import { getRequestErrorString } from '@shared/util'
 import { getFilmstripTarget } from '@shared/components/Filmstrip'
+import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'> & { id?: string },
@@ -376,12 +377,24 @@ export const ProjectTreeTable = ({
   const handleCellUpdate: CellUpdate = useCallback(
     async (entity, config) => {
       const { selection = [] } = config || {}
+      const { field, value, isAttrib } = entity
+      const fieldColumnId = isAttrib
+        ? `attrib_${field}`
+        : ['folderType', 'taskType', 'productType'].includes(field)
+        ? 'subType'
+        : field
+      const isFieldColumn = (colId?: string) => colId === fieldColumnId
+      // an editor closed by clicking another cell saves after that click has moved the selection,
+      // so the edit only applies to the selection while the edited cell is still part of it
+      const isEditedCellSelected = [...selectedCells].some((cellId) => {
+        const { colId, rowId } = parseCellId(cellId) || {}
+        return rowId === entity.rowId && isFieldColumn(colId)
+      })
       const entitiesToUpdate: EntityUpdate[] = []
-      if (!selection?.length) {
+      if (!selection?.length || !isEditedCellSelected) {
         entitiesToUpdate.push({ ...entity, id: entity.id || entity.rowId })
       } else {
-        // if includeSelection is true, update all the selected cells with the same columnId
-        const { field, value, isAttrib } = entity
+        // update all the selected cells with the same columnId
         for (const cellId of selectedCells) {
           const { colId, rowId } = parseCellId(cellId) || {}
 
@@ -394,7 +407,7 @@ export const ProjectTreeTable = ({
             continue
           }
 
-          if ((!colId?.includes('attrib_') || colId?.replace('attrib_', '') === field) && rowId) {
+          if (isFieldColumn(colId) && rowId) {
             entitiesToUpdate.push({
               field: field,
               rowId: rowId,
@@ -427,13 +440,18 @@ export const ProjectTreeTable = ({
     return getNameColumnLabel(scopes)
   }
 
+  // keyed by content: callers may pass a new array each render, and rebuilding the columns
+  // gives every cell a new component type, so React remounts the whole table body
+  const includeParentsKey = includeParents?.join(',')
+  const stableIncludeParents = useMemo(() => includeParents, [includeParentsKey])
+
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
       scopes,
       attribs: columnAttribs,
       links: linkTypes,
       includeLinks,
-      includeParents,
+      includeParents: stableIncludeParents,
       showHierarchy,
       isFlatFolderView,
       options,
@@ -472,7 +490,7 @@ export const ProjectTreeTable = ({
     options,
     linkTypes,
     includeLinks,
-    includeParents,
+    stableIncludeParents,
     parentColumns,
     extraColumns,
     excludedColumns,
@@ -526,6 +544,7 @@ export const ProjectTreeTable = ({
     enableSorting,
     getSortedRowModel: getSortedRowModel(),
     sortDescFirst: false,
+    maxMultiSortColCount: MAX_SORT_KEYS,
     manualSorting: !clientSorting,
     onSortingChange: sortingOnChange,
     columnResizeMode: 'onChange',
@@ -588,7 +607,7 @@ export const ProjectTreeTable = ({
   useEffect(() => {
     if (!rows.length) return
     const rowIds = rows.map((row) => row.id)
-    const colIds = table.getAllLeafColumns().map((col) => col.id)
+    const colIds = table.getVisibleLeafColumns().map((col) => col.id)
     const colIdsSortedByPinning = [...colIds].sort((a, b) => {
       if (ROW_SELECTION_COLUMN_ID === b) return 1
       const colA = columnPinning.left?.includes(a) ? 0 : 1
@@ -597,7 +616,7 @@ export const ProjectTreeTable = ({
     })
 
     registerGrid(rowIds, colIdsSortedByPinning)
-  }, [rows, table.getAllLeafColumns(), columnPinning, ROW_SELECTION_COLUMN_ID, registerGrid])
+  }, [rows, table.getVisibleLeafColumns(), columnPinning, ROW_SELECTION_COLUMN_ID, registerGrid])
 
   const visibleColumns = table.getVisibleLeafColumns()
 
@@ -1145,8 +1164,18 @@ const TableHeadCell = ({
 
   // toggle sort via the same direct updateSorting call the Customize panel uses;
   // routing through TanStack's onSortingChange did not apply under manualSorting.
-  const handleToggleSort = () => {
+  // a plain click sorts by this column only, shift+click keeps the other sort keys
+  const handleToggleSort = (event: React.MouseEvent) => {
     const current = sortingState?.find((s) => s.id === column.id)
+    if (event.shiftKey && sortingState?.length) {
+      const next = !current
+        ? [...sortingState, { id: column.id, desc: false }]
+        : !current.desc
+        ? sortingState.map((s) => (s.id === column.id ? { ...s, desc: true } : s))
+        : sortingState.filter((s) => s.id !== column.id)
+      if (next.length <= MAX_SORT_KEYS) updateSorting(next)
+      return
+    }
     const next = !current
       ? [{ id: column.id, desc: false }]
       : !current.desc
@@ -1154,6 +1183,9 @@ const TableHeadCell = ({
       : []
     updateSorting(next)
   }
+
+  // with several sort keys, show where this column comes in the order
+  const sortIndex = (sortingState?.length ?? 0) > 1 ? column.getSortIndex() : -1
 
   // Check if this column is pinned
   const isThisColumnPinned = columnPinning.left?.includes(column.id) || false
@@ -1239,6 +1271,9 @@ const TableHeadCell = ({
                 onClick={handleToggleSort}
                 selected={!!column.getIsSorted()}
               />
+            )}
+            {canSort && sortIndex > -1 && (
+              <Styled.SortIndex className="sort-index">{sortIndex + 1}</Styled.SortIndex>
             )}
 
             {/* COLUMN PINNING - only show on pinned columns (exclude selection column) */}
@@ -1830,7 +1865,6 @@ const TD = ({
             }, 0)
             return
           }
-          setEditingCellId(null)
         }
 
         proceedWithSelection()

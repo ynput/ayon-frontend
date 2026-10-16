@@ -36,6 +36,7 @@ import useReferenceTooltip from '../../hooks/useReferenceTooltip'
 
 // State management
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
+import useCommentDraft, { getCommentDraftKey } from './hooks/useCommentDraft'
 import { useFeedContext } from '../../context/feed'
 import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
 import {
@@ -49,6 +50,7 @@ import type { DetailsPanelEntityType, FeedActivity } from '@shared/api'
 import { VersionReviewPill } from './VersionReviewPill'
 import { VersionReviewFeedback, type CommentDuplicate } from './types'
 import { parseFrameRange } from './parseFrameRange'
+import { formatVersionFrame, toStoredFrameRange } from '../../helpers/versionFrames'
 import { cloneProjectFile } from './cloneProjectFile'
 
 type UploadingFile = {
@@ -61,6 +63,7 @@ type UploadingFile = {
 interface CommentInputProps {
   initValue: string | null
   initFiles?: any[]
+  annotationFrameStart?: number | null
   initCategory?: string | null
   data?: any
   activityId?: string
@@ -77,6 +80,8 @@ interface CommentInputProps {
   isOpen: boolean
   onOpen?: () => void
   onClose?: () => void
+  // keep a draft of a new comment in local storage, restored for the same entities
+  saveDraft?: boolean
 }
 
 const getProjectFileUrl = (projectName: string, id: string) =>
@@ -96,6 +101,7 @@ const MENTION_BUTTONS: { trigger: MentionTrigger; icon: IconType; tooltip: strin
 const CommentInput: FC<CommentInputProps> = ({
   initValue,
   initFiles = [],
+  annotationFrameStart,
   initCategory = null,
   data = {},
   activityId,
@@ -111,6 +117,7 @@ const CommentInput: FC<CommentInputProps> = ({
   isOpen,
   onOpen,
   onClose,
+  saveDraft = true,
 }) => {
   const {
     projectName,
@@ -120,6 +127,8 @@ const CommentInput: FC<CommentInputProps> = ({
     mentionSuggestionsData,
     categories,
     isGuest,
+    userName,
+    editingId,
   } = useFeedContext()
 
   const { hasLicense, onPowerFeature, user, openSlideOut, commentFrameLink } =
@@ -146,6 +155,8 @@ const CommentInput: FC<CommentInputProps> = ({
   const [isDropping, setIsDropping] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadedAnnotations, setUploadedAnnotations] = useState<SavedAnnotationMetadata[]>([])
+  // annotations being posted with the comment, removed from the unsaved ones once it's saved
+  const [submittingAnnotationIds, setSubmittingAnnotationIds] = useState<string[]>([])
 
   const { annotations, removeAnnotation, goToAnnotation } = useAnnotationsSync({
     entityId: entities[0]?.id,
@@ -183,7 +194,14 @@ const CommentInput: FC<CommentInputProps> = ({
   const showFrameLink = isEditing
     ? !!frameLinkEntity || !!currentManualFrameLink
     : !!commentFrameLink && !!frameLinkEntity
-  const formatFrame = commentFrameLink?.formatFrame ?? String
+  const hostFormatFrame = commentFrameLink?.formatFrame
+  const formatFrame =
+    hostFormatFrame ?? ((frame: number) => formatVersionFrame(frame, annotationFrameStart))
+  // typed frames are shown with the version offset, store them relative again
+  const parseFrameInput = (value: string) =>
+    hostFormatFrame
+      ? parseFrameRange(value)
+      : toStoredFrameRange(parseFrameRange(value), annotationFrameStart)
   const frameLinkLabel = frameLink
     ? frameLink.endFrame > frameLink.startFrame
       ? `${formatFrame(frameLink.startFrame)}-${formatFrame(frameLink.endFrame)}`
@@ -209,7 +227,7 @@ const CommentInput: FC<CommentInputProps> = ({
 
   const handleFrameInputChange = (value: string) => {
     setFrameInput(value)
-    const range = parseFrameRange(value)
+    const range = parseFrameInput(value)
     if (range) setFrameLinkPreview(range)
   }
 
@@ -232,7 +250,7 @@ const CommentInput: FC<CommentInputProps> = ({
       setFrameInputOpen(false)
       return
     }
-    const range = parseFrameRange(frameInput)
+    const range = parseFrameInput(frameInput)
     if (range) {
       setManualFrameLink(range)
       setFrameLinkPreview(range)
@@ -286,6 +304,30 @@ const CommentInput: FC<CommentInputProps> = ({
 
   // CATEGORY STATE
   const [category, setCategory] = useState<null | string>(initCategory)
+
+  // DRAFT: only for new comments, edits of existing ones aren't kept
+  useCommentDraft({
+    draftKey:
+      saveDraft && !isEditing
+        ? getCommentDraftKey(
+            projectName,
+            userName,
+            entities.map((e) => e.id),
+          )
+        : null,
+    draft: { text: editorValue, files, uploadedAnnotations, category },
+    paused: isSubmitting,
+    restore: (draft) => {
+      setEditorValue(draft.text)
+      setFiles(draft.files)
+      setUploadedAnnotations(draft.uploadedAnnotations)
+      setCategory(draft.category)
+      // show a restored draft, unless another comment is being edited
+      const hasDraft =
+        !!draft.text.trim() || !!draft.files.length || !!draft.uploadedAnnotations.length
+      if (hasDraft && !isOpen && !editingId) onOpen?.()
+    },
+  })
   const categoryOptions = categories.filter((cat) => cat.accessLevel >= 20)
   const categoryData = categories.find((cat) => cat.name === category)
   // Compute blended background color for category
@@ -347,9 +389,18 @@ const CommentInput: FC<CommentInputProps> = ({
     setRefTooltip({ id, name: id, type, label, pos: { left: x + width / 2, top: y } })
   }
 
+  // Only focus the editor when the user opened it. It also opens on its own (a new
+  // annotation, a restored draft), and taking focus then would swallow the keys meant
+  // for the player, e.g. a shortcut typed into the comment instead.
+  const [openedByUser, setOpenedByUser] = useState(false)
+  useEffect(() => {
+    if (!isOpen) setOpenedByUser(false)
+  }, [isOpen])
+
   const handleOpenClick = () => {
     if (isOpen || disabled) return
 
+    setOpenedByUser(true)
     onOpen && onOpen()
   }
 
@@ -591,6 +642,7 @@ const CommentInput: FC<CommentInputProps> = ({
   useEffect(() => {
     if (!duplicate || handledDuplicate.current === duplicate.key) return
     handledDuplicate.current = duplicate.key
+    setOpenedByUser(true)
     onDuplicateHandled?.()
     insertDuplicate(duplicate)
   }, [duplicate?.key])
@@ -616,10 +668,15 @@ const CommentInput: FC<CommentInputProps> = ({
       // upload any annotations first
       let annotationFiles = []
       let newAnnotations = uploadedAnnotations
+      let postedAnnotationIds: string[] = []
       if (annotations.length) {
+        setSubmittingAnnotationIds(annotations.map((annotation) => annotation.id))
         const { files, metadata } = await uploadAnnotations(annotations)
         annotationFiles = files
         newAnnotations = [...newAnnotations, ...metadata]
+        postedAnnotationIds = metadata.map((annotation) => annotation.id)
+        // hidden while posting, they stay unsaved (and editable) if posting fails
+        setSubmittingAnnotationIds(postedAnnotationIds)
       }
 
       // get current files data and merge it with the new metadata
@@ -651,6 +708,8 @@ const CommentInput: FC<CommentInputProps> = ({
         setFiles([])
         try {
           await onSubmit(markdown, uploadedFiles, newData)
+          // only now do the annotations belong to the comment
+          postedAnnotationIds.forEach((id) => removeAnnotation?.(id))
           if (isEditing) commentFrameLink?.setEditPreview(null)
           setUploadedAnnotations([])
           // the link now belongs to the submitted comment
@@ -658,9 +717,10 @@ const CommentInput: FC<CommentInputProps> = ({
           if (!isEditing) setManualFrameLink(null)
         } catch (error) {
           // error is handled in rtk query mutation
+          // the drawn annotations are still unsaved, so they're uploaded again on the next try
           setEditorValue(submittedValue)
-          setFiles(uploadedFiles)
-          setUploadedAnnotations(newAnnotations)
+          setFiles(keptFiles)
+          setUploadedAnnotations(uploadedAnnotations)
           return
         }
       }
@@ -668,12 +728,13 @@ const CommentInput: FC<CommentInputProps> = ({
       console.error(error)
       toast.error('Something went wrong')
     } finally {
+      setSubmittingAnnotationIds([])
       setIsSubmitting(false)
     }
   }
 
   const allFiles = [
-    ...annotations,
+    ...annotations.filter((annotation) => !submittingAnnotationIds.includes(annotation.id)),
     ...(files || []).filter((file: any) => !file.isAnnotationLayer && !file.isInline),
     ...filesUploading,
   ].sort((a, b) => a.order - b.order)
@@ -762,8 +823,7 @@ const CommentInput: FC<CommentInputProps> = ({
     </>
   )
 
-  // don't take focus from an annotation that opened the input
-  const autoFocus = !(annotations.length > 0 && files.length === 0)
+  const autoFocus = isEditing || openedByUser
   const frameValueText = frameInputOpen ? frameInput || 'Frame or range' : frameLinkLabel || ''
   const frameValueWidth = `calc(${Math.max(frameValueText.length, 1) + 2}ch + 16px)`
 
@@ -813,6 +873,7 @@ const CommentInput: FC<CommentInputProps> = ({
               isEditing
               pt={{
                 file: {
+                  annotationFrameStart,
                   style: {
                     height: isEditing ? 70 : undefined,
                   },

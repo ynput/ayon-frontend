@@ -1,7 +1,6 @@
 import { forwardRef, useState, useEffect, useRef, useCallback } from 'react'
 import Markdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import rehypeRaw from 'rehype-raw'
 import { TextWidgetInput } from './TextWidgetInput'
 import { WidgetBaseProps } from './CellWidget'
 import styled from 'styled-components'
@@ -16,6 +15,7 @@ import { CellId } from '../utils/cellUtils'
 import { MENTION_REF_TYPES } from '@shared/components/MarkdownEditor'
 import ActivityReference from '@shared/containers/Feed/components/ActivityReference/ActivityReference'
 import { StyledBaseTextWidget } from './TextWidget.styled'
+import { useRehypeRaw } from './useRehypeRaw'
 
 // ── Styled components ──────────────────────────────────────────────
 
@@ -163,6 +163,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     },
     ref,
   ) => {
+    const rehypeRaw = useRehypeRaw(!!isMarkdown)
     const requestEdit = onRequestEdit || (() => undefined)
     const getCurrentDraft = getDraftValue || (() => null)
     const setCurrentDraft = setDraftValue || (() => undefined)
@@ -300,7 +301,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         return (
           <Markdown
             remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw]}
+            rehypePlugins={rehypeRaw ? [rehypeRaw] : []}
             // keep mention urls (`user:id`), which the default transform drops as unsafe
             urlTransform={(url) => (parseMentionHref(url) ? url : defaultUrlTransform(url))}
             components={{

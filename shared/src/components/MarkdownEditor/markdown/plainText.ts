@@ -8,7 +8,7 @@ export const markdownToPlainText = (markdown: string): string =>
     // code fences (the code itself stays)
     .replace(/^\s*(```|~~~).*$/gm, '')
     // images, mentions `[label](type:id)` and links, keep the text
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/!?\[([^\]]*)\]\((?:\\.|[^)\\])*\)/g, '$1')
     // autolinks and html (e.g. legacy <u>, &nbsp;)
     .replace(/<(https?:[^>]+)>/g, '$1')
     .replace(/<\/?[a-z][^>]*>/gi, '')
@@ -23,8 +23,8 @@ export const markdownToPlainText = (markdown: string): string =>
     .replace(/`([^`]*)`/g, '$1')
     .replace(/(\*\*|__)(.+?)\1/g, '$2')
     .replace(/~~(.+?)~~/g, '$1')
-    .replace(/(^|[^\w*])\*(?!\s)([^*]+?)\*(?!\w)/g, '$1$2')
-    .replace(/(^|[^\w])_(?!\s)([^_]+?)_(?!\w)/g, '$1$2')
+    .replace(/(^|[^\w*\\])\*(?!\s)([^*]+?)\*(?!\w)/g, '$1$2')
+    .replace(/(^|[^\w\\])_(?!\s)([^_]+?)_(?!\w)/g, '$1$2')
     // hard breaks and escapes
     .replace(/\\\n/g, '\n')
     .replace(/\\([\\`*_{}[\]()#+\-.!~>|])/g, '$1')

@@ -278,8 +278,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         await setAddonSettings(payload).unwrap()
 
         updatedKeys.push(key)
-      } catch (e) {
+      } catch (error) {
         allOk = false
+        const e = error?.data || error
         toast.error(
           <>
             <strong>Unable to save {variant} settings</strong>
@@ -287,7 +288,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             {addonName} {addonVersion}
             <br />
             {e.detail}
-            {e.errors?.length && (
+            {e.errors?.length > 0 && (
               <ul>
                 {e.errors.map((error, i) => (
                   <li key={i}>

@@ -24,7 +24,7 @@ export const Checkbox = styled.label`
     .icon {
       color: var(--md-sys-color-tertiary);
       /* fill icon */
-      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+      font-variation-settings: 'FILL' 1;
     }
   }
 `

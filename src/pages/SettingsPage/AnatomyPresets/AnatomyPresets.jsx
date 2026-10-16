@@ -66,6 +66,8 @@ const AnatomyPresets = () => {
   }, [presetList.length])
 
   const isSelectedPrimary = useMemo(() => {
+    // the built-in default is not in the list, it is primary when no preset is
+    if (selectedPreset === '_') return presetList.every((p) => !p.primary)
     // find preset in list
     const preset = presetList.find((p) => p.name === selectedPreset)
     return preset && preset.primary

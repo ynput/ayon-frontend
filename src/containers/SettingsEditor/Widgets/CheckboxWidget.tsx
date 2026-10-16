@@ -31,7 +31,7 @@ const CheckboxWidget = function (props: $Any) {
     if (!props.onChange) return
     if (value === null) return
     if (value === props.value) return
-    if (props.value === undefined && value === getDefaultValue(props)) {
+    if ((props.value === undefined || props.value === null) && value === getDefaultValue(props)) {
       return
     }
     // this timeout must be here. idk why. if not,

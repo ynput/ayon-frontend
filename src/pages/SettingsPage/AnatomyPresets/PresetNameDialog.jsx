@@ -14,10 +14,12 @@ const PresetNameDialog = ({
   const inputRef = useRef(null)
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
+    if (!isOpen) return
+    setValue(initialValue)
+    if (inputRef.current) {
       setTimeout(() => inputRef.current.focus(), 100)
     }
-  }, [isOpen])
+  }, [isOpen, initialValue])
 
   const handleSave = () => {
     if (value.trim()) {
