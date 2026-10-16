@@ -70,6 +70,9 @@ import useCompareColumns from './hooks/useCompareColumns'
 import { CompareListPicker } from './components/ListPicker'
 import { useListsDataContext } from './context/lists-data'
 import type { ListRowContextMenuBuilder } from './hooks/useListContextMenu'
+import { useCompareLists } from './hooks/useCompareLists'
+import { isTooBigToCompare } from './listValues/compareLimit'
+import type { TableRowAction } from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
 import {
   COMPARE_ENTITY_COLUMN_PREFIX,
   COMPARE_LIST_COLUMN_PREFIX,
@@ -346,7 +349,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName } = useProjectContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
-  const { selectedList } = useListsContext()
+  const { selectedList, selectedLists } = useListsContext()
   const {
     listItemsData,
     deleteListItemAction,
@@ -358,7 +361,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
     useSelectionCellsContext()
 
   // list values (powerpack): the compare controls and the lists sidebar's menu items
-  const { module: listValues } = useListValuesContext()
+  const { module: listValues, isPowerFeature } = useListValuesContext()
   const { compareView } = useListItemsDataContext()
   const { listsMap } = useListsDataContext()
   const shownList = useMemo<ListRef | undefined>(
@@ -370,16 +373,42 @@ const ProjectLists: FC<ProjectListsProps> = ({
       },
     [selectedList?.id, selectedList?.label, selectedList?.entityType],
   )
+  // compare two selected lists, or the shown list with a hovered one
+  const { canCompareLists, compareLists } = useCompareLists()
   const listMenuBuilders = useMemo<ListRowContextMenuBuilder[]>(
     () => [
-      (_e, { rowId, selectedRows }) => {
-        const list = listsMap.get(rowId)
-        if (!list || selectedRows.length > 1) return undefined
-        const listRef = { id: list.id, label: list.label, entityType: list.entityType }
-        return listValues.getListMenuItems(listRef, shownList, compareView)
+      (_e, { selectedRows }) => {
+        if (selectedRows.length !== 2) return undefined
+        const [shown, compared] = selectedRows.map((id) => listsMap.get(id))
+        if (!shown || !canCompareLists(shown, compared)) return undefined
+        return {
+          label: 'Compare lists',
+          icon: 'compare_arrows',
+          disabled: isTooBigToCompare(compared),
+          powerFeature: isPowerFeature ? undefined : 'listValues',
+          command: () => compareLists(shown, compared),
+        }
       },
     ],
-    [listsMap, listValues, shownList, compareView],
+    [listsMap, canCompareLists, compareLists, isPowerFeature],
+  )
+  const getListRowActions = useCallback(
+    (listId: string): TableRowAction[] | undefined => {
+      const compared = listsMap.get(listId)
+      if (selectedLists.length !== 1 || !selectedList) return undefined
+      if (!canCompareLists(selectedList, compared) || isTooBigToCompare(compared)) return undefined
+      return [
+        {
+          icon: 'compare_arrows',
+          'data-tooltip': `Compare ${selectedList.label} with this list`,
+          onClick: (e) => {
+            e.stopPropagation()
+            compareLists(selectedList, compared)
+          },
+        },
+      ]
+    },
+    [listsMap, selectedLists.length, selectedList, canCompareLists, compareLists],
   )
 
   const handleGoToCustomAttrib = (attrib: string) => {
@@ -423,7 +452,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
       >
         <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
           <Section wrap>
-            <ListsTable isReview={isReview} rowContextMenuBuilders={listMenuBuilders} />
+            <ListsTable
+              isReview={isReview}
+              rowContextMenuBuilders={listMenuBuilders}
+              getRowActions={getListRowActions}
+            />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={88}>

@@ -22,8 +22,4 @@ export const communityListValues: ListValuesModule = {
   useCompareView: () => NO_COMPARE_VIEW,
   getCellMenuItems: () => [],
   getColumnMenuItems: () => [],
-  getListMenuItems: (list, shownList) =>
-    shownList && list.id !== shownList.id && list.entityType === shownList.entityType
-      ? [{ label: 'Compare with current list', icon: 'compare_arrows', powerFeature: 'listValues' }]
-      : [],
 }

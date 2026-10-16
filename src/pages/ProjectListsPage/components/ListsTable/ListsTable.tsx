@@ -6,6 +6,7 @@ import SimpleTable, {
   SimpleTableCellTemplate,
   SimpleTableProvider,
 } from '@shared/containers/SimpleTable'
+import type { TableRowAction } from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
 import ListsTableHeader, { ButtonType } from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
 import useListContextMenu, {
@@ -26,6 +27,7 @@ interface ListsTableProps {
   onRowSubmit?: (id: string) => void
   onCreateList?: () => void
   scrollToRowId?: string
+  getRowActions?: (listId: string) => TableRowAction[] | undefined // buttons at the row's end
 }
 
 const ListsTable: FC<ListsTableProps> = ({
@@ -38,6 +40,7 @@ const ListsTable: FC<ListsTableProps> = ({
   onRowSubmit,
   onCreateList,
   scrollToRowId,
+  getRowActions,
 }) => {
   const {
     rowSelection,
@@ -94,6 +97,7 @@ const ListsTable: FC<ListsTableProps> = ({
           key={listId}
           iconColor={data.color}
           enableNonFolderIndent={false}
+          actions={picker ? undefined : getRowActions?.(listId)}
           // no lists are fetched in folders-only mode, so every count would read 0
           badge={
             isDisabled
@@ -107,7 +111,7 @@ const ListsTable: FC<ListsTableProps> = ({
         />
       )
     },
-    [foldersOnly],
+    [foldersOnly, picker, getRowActions],
   )
 
   return (
@@ -163,7 +167,6 @@ const ListsTable: FC<ListsTableProps> = ({
             isMultiSelect={!singleSelect}
             enableClickToDeselect={false}
             rowContextMenuBuilders={rowContextMenuBuildersAll}
-            selectOnContextMenu={false}
             renamingId={picker ? undefined : renamingList}
             onRename={picker ? undefined : handleRename}
             onSubmitRename={picker ? undefined : handleSubmitRename}

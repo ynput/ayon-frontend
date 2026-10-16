@@ -31,8 +31,7 @@ export const FOLDER_ICON_ADD = 'create_new_folder'
 export const FOLDER_ICON_EDIT = 'folder_managed'
 export const FOLDER_ICON_REMOVE = 'folder_off'
 
-// enabled=false in picker mode: the table renders no row menu there.
-// Right-click doesn't select the row (the active list stays), so the items act on context.selectedRows.
+// enabled=false in picker mode: the table renders no row menu there
 const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], enabled = true) => {
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
@@ -50,7 +49,6 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
     onRemoveFoldersFromFolder,
     openMoveToFolder,
     selectAllLists,
-    setRowSelection,
   } = useListsContext()
   const { powerLicense } = usePowerpack()
 
@@ -251,10 +249,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
         {
           label: 'Details',
           icon: 'info',
-          command: () => {
-            setRowSelection({ [firstSelectedRow]: true })
-            setListDetailsOpen(true)
-          },
+          command: () => setListDetailsOpen(true),
           disabled: multipleSelected,
           hidden: !allSelectedRowsAreLists,
           shortcut: 'Double click',
@@ -311,7 +306,6 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
       clearListItems,
       isReview,
       powerLicense,
-      setRowSelection,
       extraBuilders,
     ],
   )

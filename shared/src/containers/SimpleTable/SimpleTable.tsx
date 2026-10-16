@@ -1,12 +1,4 @@
-import {
-  FC,
-  useMemo,
-  useRef,
-  MouseEvent as ReactMouseEvent,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react'
+import { FC, useMemo, useRef, MouseEvent as ReactMouseEvent, useCallback, useEffect } from 'react'
 import * as Styled from './SimpleTable.styled'
 import {
   useReactTable,
@@ -144,7 +136,6 @@ const SimpleTable: FC<SimpleTableProps> = ({
   onRowDoubleClick,
   onRowOptionClick,
   rowContextMenuBuilders = [],
-  selectOnContextMenu = true,
   children,
   pt,
   fitContent,
@@ -166,12 +157,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   const rowIdPrefixRef = useRef(rowIdPrefix)
   rowIdPrefixRef.current = rowIdPrefix
   const toDomId = (id: string) => (rowIdPrefixRef.current ? `${rowIdPrefixRef.current}-${id}` : id)
-  const [showRowContextMenu, , isContextMenuOpen] = useCreateContextMenu()
-  // the row a context menu was opened on without selecting it
-  const [contextRowId, setContextRowId] = useState<string | null>(null)
-  useEffect(() => {
-    if (!isContextMenuOpen) setContextRowId(null)
-  }, [isContextMenuOpen])
+  const [showRowContextMenu] = useCreateContextMenu()
 
   // Refs for values used inside the columns memo.
   // Assigning synchronously (not via useEffect) means the cell function always reads
@@ -572,7 +558,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
       const nextSelectedRows = selectedIds.includes(rowId) ? selectedIds : [rowId]
 
-      if (!selectedIds.includes(rowId) && selectOnContextMenu) {
+      if (!selectedIds.includes(rowId)) {
         // convert array to RowSelectionState object
         const nextSelection: RowSelectionState = { [rowId]: true }
         onRowSelectionChange?.(nextSelection)
@@ -594,18 +580,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
       )
 
       if (menuItems.length > 0) {
-        if (!selectedIds.includes(rowId) && !selectOnContextMenu) setContextRowId(rowId)
         showRowContextMenu(e as any, menuItems)
       }
     },
-    [
-      rowContextMenuBuilders,
-      rows,
-      rowSelection,
-      onRowSelectionChange,
-      showRowContextMenu,
-      selectOnContextMenu,
-    ],
+    [rowContextMenuBuilders, rows, rowSelection, onRowSelectionChange, showRowContextMenu],
   )
 
   //The virtualizer needs to know the scrollable container element
@@ -706,9 +684,6 @@ const SimpleTable: FC<SimpleTableProps> = ({
                   id={toDomId(row.id)}
                   onContextMenu={(e) => handleRowContextMenu(row.id, virtualRow.index, e)}
                   {...pt?.row}
-                  className={clsx(pt?.row?.className, {
-                    'context-target': row.id === contextRowId,
-                  })}
                   style={{
                     transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
                     ...pt?.row?.style, // custom styles to be passed

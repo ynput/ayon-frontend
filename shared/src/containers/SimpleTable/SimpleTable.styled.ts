@@ -53,12 +53,6 @@ export const TableContainer = styled.div`
     /* transform: set on dynamically */
   }
 
-  /* right-clicked without being selected: outline while its context menu is open */
-  tr.context-target td > * {
-    outline: 1px solid var(--md-sys-color-primary);
-    outline-offset: -1px;
-  }
-
   td {
     padding: 1px 0px;
     width: 100%;
@@ -152,9 +146,14 @@ export const Cell = styled.div`
   }
 
   .actions {
-    display: flex;
+    /* hidden while none of its icons show, so its gap doesn't move the badge */
+    display: none;
     align-items: center;
     gap: var(--base-gap-small);
+
+    &:has(.icon.show-always, .icon.active) {
+      display: flex;
+    }
 
     .icon {
       border-radius: var(--border-radius-m);
@@ -179,6 +178,7 @@ export const Cell = styled.div`
 
   &:hover {
     .actions {
+      display: flex;
       .icon:not(.show-hidden) {
         display: flex;
       }
@@ -189,6 +189,7 @@ export const Cell = styled.div`
   }
 
   &.pinned {
+    .actions,
     .pin {
       display: flex;
     }

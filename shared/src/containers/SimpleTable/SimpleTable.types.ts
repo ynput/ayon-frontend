@@ -98,8 +98,6 @@ export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   fitContent?: boolean
   rowIdPrefix?: string // namespaces rendered row DOM ids (multiple tables can share row ids)
   rowContextMenuBuilders?: SimpleTableRowContextMenuBuilder[]
-  // false: right-click doesn't select the row; the menu acts on it, outlined while the menu is open
-  selectOnContextMenu?: boolean
   children?: (
     props: SimpleTableCellTemplateProps,
     row: Row<SimpleTableRow>,

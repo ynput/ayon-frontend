@@ -157,10 +157,4 @@ export type ListValuesModule = {
     host: ListValueActionsHost,
   ) => ListValueMenuItem[]
   getColumnMenuItems: (attrib: string, host: ListValueActionsHost) => ListValueMenuItem[]
-  // the lists sidebar menu of another list
-  getListMenuItems: (
-    list: ListRef,
-    shownList: ListRef | undefined,
-    view: CompareView<unknown>,
-  ) => ListValueMenuItem[]
 }
