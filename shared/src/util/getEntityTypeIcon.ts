@@ -33,3 +33,6 @@ export const getEntityTypeIcon = (type: string, fallback?: string) => {
 
   return typeIcon
 }
+
+export const getListIcon = (list: { entityListType: string; entityType: string }) =>
+  list.entityListType === 'review-session' ? 'subscriptions' : getEntityTypeIcon(list.entityType)
