@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState, useMemo, useCallback, useId } from 'react'
+import { FC, ReactNode, useState, useCallback, useId } from 'react'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
 import SimpleTable, {
