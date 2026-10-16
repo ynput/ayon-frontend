@@ -2,7 +2,8 @@ import { HTMLAttributes, useEffect, useState } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import * as Styled from './Thumbnail.styled'
-import { getEntityThumbnailUrl } from '@shared/util'
+import { getEntityFilmstripUrl, getEntityThumbnailUrl } from '@shared/util'
+import { Filmstrip } from '../Filmstrip'
 
 export interface ThumbnailProps extends Omit<HTMLAttributes<HTMLDivElement>, 'color'> {
   projectName?: string
@@ -18,6 +19,8 @@ export interface ThumbnailProps extends Omit<HTMLAttributes<HTMLDivElement>, 'co
   src?: string
   hoverIcon?: string
   showBorder?: boolean
+  /** show a hover-scrub filmstrip (the entity should have reviewables) */
+  filmstrip?: boolean
 }
 
 export const Thumbnail = ({
@@ -34,6 +37,7 @@ export const Thumbnail = ({
   src,
   hoverIcon,
   showBorder = true,
+  filmstrip,
   ...props
 }: ThumbnailProps) => {
   const isProject = entityType === 'project'
@@ -92,6 +96,12 @@ export const Thumbnail = ({
         />
       )}
       {hoverIcon && <Icon icon={hoverIcon} className="hover-icon" />}
+      {filmstrip && !isLoading && !disabled && (
+        <Filmstrip
+          src={getEntityFilmstripUrl({ projectName, entityType, entityId, thumbnailHash })}
+          fit="contain"
+        />
+      )}
     </Styled.Card>
   )
 }

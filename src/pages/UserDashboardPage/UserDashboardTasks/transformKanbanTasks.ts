@@ -4,7 +4,7 @@
 
 import type { GetKanbanResponse, KanbanNode, Status, TaskType, EnumItem } from '@shared/api'
 import { $Any } from '@/types'
-import { getEntityThumbnailUrl } from '@shared/util'
+import { getEntityFilmstripUrl, getEntityThumbnailUrl } from '@shared/util'
 
 type ProjectsInfo = {
   [key: string]: $Any
@@ -19,6 +19,7 @@ type ExtraInfo = {
 
 export interface TransformedKanbanTask extends KanbanNode, ExtraInfo {
   thumbnailUrl: string | null
+  filmstripUrl: string | null
   parentFolder: string
 }
 
@@ -65,6 +66,14 @@ const transformKanbanTasks = (
         entityId: task.id,
         thumbnailHash: task.thumbnailHash,
       }),
+      filmstripUrl: task.hasReviewables
+        ? getEntityFilmstripUrl({
+            projectName: task.projectName,
+            entityType: 'task',
+            entityId: task.id,
+            thumbnailHash: task.thumbnailHash,
+          })
+        : null,
       statusInfo,
       taskInfo,
       priorityInfo,

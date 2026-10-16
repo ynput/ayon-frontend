@@ -50,3 +50,37 @@ export const getProjectThumbnailUrl = (projectName: string, thumbnailHash?: stri
   const hashParam = thumbnailHash ? `?hash=${thumbnailHash}` : ''
   return `/api/projects/${projectName}/thumbnail${hashParam}`
 }
+
+// Entity types that can have a filmstrip (resolved from their latest video reviewable)
+export const FILMSTRIP_ENTITY_TYPES = ['folder', 'task', 'version']
+
+export interface GetEntityFilmstripUrlParams {
+  projectName?: string
+  entityType?: string
+  entityId?: string
+  thumbnailHash?: string // appended as ?hash= for cache busting, same as thumbnails
+}
+
+/**
+ * Builds a hover-scrub filmstrip URL for a project entity.
+ *
+ * Returns `null` for entity types without filmstrips (products, workfiles, projects...)
+ * or when the required identity information is missing.
+ */
+export const getEntityFilmstripUrl = ({
+  projectName,
+  entityType,
+  entityId,
+  thumbnailHash,
+}: GetEntityFilmstripUrlParams): string | null => {
+  if (!projectName || !entityId || !entityType) return null
+  if (!FILMSTRIP_ENTITY_TYPES.includes(entityType)) return null
+  const hashParam = thumbnailHash ? `?hash=${thumbnailHash}` : ''
+  return `/api/projects/${projectName}/${entityType}s/${entityId}/filmstrip${hashParam}`
+}
+
+/** Builds a hover-scrub filmstrip URL for a project file (e.g. a reviewable) */
+export const getFileFilmstripUrl = (projectName?: string, fileId?: string): string | null => {
+  if (!projectName || !fileId) return null
+  return `/api/projects/${projectName}/files/${fileId}/filmstrip`
+}

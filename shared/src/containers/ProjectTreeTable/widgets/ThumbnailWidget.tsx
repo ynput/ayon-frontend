@@ -1,7 +1,8 @@
 import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
 import { FC, memo } from 'react'
 import styled from 'styled-components'
-import { getEntityThumbnailUrl } from '@shared/util'
+import { getEntityFilmstripUrl, getEntityThumbnailUrl } from '@shared/util'
+import { Filmstrip } from '@shared/components/Filmstrip'
 
 const Wrapper = styled.div`
   position: absolute;
@@ -18,6 +19,11 @@ const Inner = styled.div`
   //aspect-ratio: 1.77;
 
   overflow: hidden;
+
+  /* the hover-scrub filmstrip replaces the static image */
+  &[data-filmstrip-active] > img {
+    visibility: hidden;
+  }
 `
 
 const Image = styled.img`
@@ -60,7 +66,17 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
 
   return (
     <Wrapper className="thumbnail-widget" key={url || thumbnailUrl} id={id}>
-      <Inner {...props}>{valid && <Image src={url || thumbnailUrl || undefined} />}</Inner>
+      <Inner {...props}>
+        {valid && <Image src={url || thumbnailUrl || undefined} />}
+        {valid && isPlayable && (
+          <Filmstrip
+            src={getEntityFilmstripUrl({ projectName, entityType, entityId, thumbnailHash })}
+            fit="contain"
+            // same level as the image, so the playable icon stays on top
+            style={{ zIndex: 20 }}
+          />
+        )}
+      </Inner>
       {isPlayable && <StyledPlayableIcon />}
     </Wrapper>
   )

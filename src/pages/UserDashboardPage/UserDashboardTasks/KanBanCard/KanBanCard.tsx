@@ -3,6 +3,7 @@ import * as Styled from './KanBanCard.styled'
 import clsx from 'clsx'
 import { TransformedKanbanTask } from '../transformKanbanTasks'
 import { $Any } from '@types'
+import { useEntityCardFilmstrip } from '@shared/components'
 
 interface KanBanCardProps extends React.HTMLAttributes<HTMLDivElement> {
   task: TransformedKanbanTask & $Any
@@ -32,6 +33,10 @@ const KanBanCard = forwardRef<HTMLDivElement, KanBanCardProps>(
     },
     ref,
   ) => {
+    const { thumbnailProps, filmstrip } = useEntityCardFilmstrip(task.filmstripUrl, {
+      disabled: isDragging || isOverlay || isLoading,
+    })
+
     if (!inView && inView !== undefined && !isLoading)
       return <div style={{ minHeight: 'var(--min-height)' }}></div>
 
@@ -63,8 +68,10 @@ const KanBanCard = forwardRef<HTMLDivElement, KanBanCardProps>(
           className={clsx({ overlay: isOverlay }, props.className)}
           $index={index}
           isDraggable
+          pt={{ thumbnail: thumbnailProps }}
           {...props}
         />
+        {filmstrip}
       </>
     )
   },
