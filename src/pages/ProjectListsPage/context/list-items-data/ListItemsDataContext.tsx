@@ -44,6 +44,11 @@ export interface ListItemsDataContextValue {
   fetchNextPage: () => void
   isLoadingAll: boolean
   isLoadingMore: boolean
+  hasNextPage: boolean
+  // the list items query has not run yet (no list, or waiting for views)
+  isUninitialized: boolean
+  // any fetch of the list items, also background refetches
+  isFetching: boolean
   isError?: boolean
   error?: unknown
   isInitialized: boolean
@@ -171,6 +176,9 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     data: listItemsData,
     isLoading,
     isFetchingNextPage,
+    hasNextPage,
+    isUninitialized,
+    isFetching,
     isError,
     error,
     fetchNextPage,
@@ -288,6 +296,9 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         listItemsMap,
         isLoadingAll: isLoading || isLoadingData,
         isLoadingMore: isFetchingNextPage,
+        hasNextPage,
+        isUninitialized,
+        isFetching,
         isError,
         error,
         fetchNextPage,
