@@ -1,4 +1,4 @@
-import { Fragment, ReactNode, useCallback, useMemo } from 'react'
+import { ReactNode, useCallback, useMemo } from 'react'
 import { useLoadModule } from '@shared/hooks'
 import { usePowerpack } from '@shared/context'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
@@ -11,12 +11,25 @@ import { ListValuesContext, type ListValuesContextValue } from './ListValuesCont
 // first powerpack version with the ListValues module
 const LIST_VALUES_MIN_VERSION = '1.6.7'
 
-export const ListValuesProvider = ({ children }: { children: ReactNode }) => {
-  const { powerLicense } = usePowerpack()
+type Props = { children: ReactNode }
+
+// Renders the page once the module is known: the module's hooks (useCompareView) run below, so
+// building the page with the fallback first would build it twice
+export const ListValuesProvider = ({ children }: Props) => {
+  const { powerLicense, isLoading } = usePowerpack()
+  if (isLoading) return null
+  return (
+    <ModuleProvider key={powerLicense ? 'powerpack' : 'community'} powerLicense={powerLicense}>
+      {children}
+    </ModuleProvider>
+  )
+}
+
+const ModuleProvider = ({ children, powerLicense }: Props & { powerLicense: boolean }) => {
   const { listAttributes } = useListsAttributesContext()
   const { attribFields } = useProjectDataContext()
 
-  const [loadedModule] = useLoadModule<ListValuesModule>({
+  const [loadedModule, { isLoading }] = useLoadModule<ListValuesModule>({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'ListValues',
@@ -54,10 +67,6 @@ export const ListValuesProvider = ({ children }: { children: ReactNode }) => {
     [module, isPowerFeature, rules, readsEntityValue],
   )
 
-  // the module's hooks (useCompareView) run below: a different module remounts them
-  return (
-    <ListValuesContext.Provider value={value}>
-      <Fragment key={isPowerFeature ? 'powerpack' : 'community'}>{children}</Fragment>
-    </ListValuesContext.Provider>
-  )
+  if (isLoading) return null
+  return <ListValuesContext.Provider value={value}>{children}</ListValuesContext.Provider>
 }

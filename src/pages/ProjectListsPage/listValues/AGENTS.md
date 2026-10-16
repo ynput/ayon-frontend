@@ -29,9 +29,9 @@ entity values, `entityAttrib.*` the entity's values only. Optimistic cache patch
 `ListValuesProvider` loads the module with `useLoadModule` (`skip` without a powerpack license,
 `minVersion` = the first powerpack version with it).
 
-The module exports a hook (`useCompareView`), so the subtree below `ListValuesProvider` is keyed by the
-module: when the powerpack module replaces the fallback (once, while the page loads) it remounts
-instead of changing the hook order.
+The module exports a hook (`useCompareView`), so `ListValuesProvider` renders nothing until the license
+and the module are known: starting with the fallback and swapping in the module would change the hook
+order, and remounting the page instead builds it twice.
 
 What the module does, and what core gives it:
 
@@ -45,7 +45,8 @@ What the module does, and what core gives it:
   one bulk `PATCH /lists/{id}/items`. `readsEntityValue` (edit target is the entity, i.e. without the
   powerpack) switches sort and filter keys from `attrib.*` to `entityAttrib.*` (`entityValueFilter.ts`).
 - `useCompareView(host)` (called in `ListItemsDataContext`) owns the compare choice, loads the compared
-  list through `host.useListItems` (`useListItemsForListValues`, the page's RTK cache), and returns the
+  list through `host.useListItems` (`useListItemsForListValues`, the page's RTK cache) whole and once,
+  not filtered to the rows on screen (that would be a new request for every page), and returns the
   compared values with their tint, marks for the list's cells and the items only in the compared list
   ("Show entities from both lists"). Core renders the compare columns (`useCompareColumns`) and appends
   those items as rows with `TableRow.readOnly`.
@@ -70,6 +71,11 @@ What the module does, and what core gives it:
   `listItemsMap`. They are `TableRow.readOnly`, which the table enforces for every edit path (typing,
   multi-cell edits, paste, clear, undo), so no edit to them reaches `useUpdateListItems`. List item menu
   actions skip them; they offer "Add to this list" instead.
+- The compared list is loaded in one query (`useListItemsForListValues`), so compare is limited to
+  lists of up to 5000 items (`compareLimit.ts`, by the list's `count`). Bigger lists are disabled in
+  the compare picker (`CompareListPicker`, around the module's `isDisabled`); picked another way (the
+  sidebar menu, a saved view), they aren't loaded and `ListItemsDataContext` turns compare off with a
+  warning.
 - The lists sidebar doesn't select a list on right-click (`SimpleTable` `selectOnContextMenu`), so its
   menu items act on the right-clicked rows.
 - The tint (`CellMark.highlight`) is a layer behind the cell, so the opacity of greyed values

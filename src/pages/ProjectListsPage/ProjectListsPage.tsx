@@ -67,7 +67,7 @@ import usePatchListsCaches from './hooks/usePatchListsCaches'
 import { ListValuesProvider, useListValuesContext } from './context/list-values'
 import { COMPARE_WITH_ENTITIES, type ListRef } from './listValues/types'
 import useCompareColumns from './hooks/useCompareColumns'
-import ListPicker from './components/ListPicker'
+import { CompareListPicker } from './components/ListPicker'
 import { useListsDataContext } from './context/lists-data'
 import type { ListRowContextMenuBuilder } from './hooks/useListContextMenu'
 import {
@@ -517,7 +517,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         <listValues.Controls
                           view={compareView}
                           shownList={shownList}
-                          ListPicker={ListPicker}
+                          ListPicker={CompareListPicker}
                         />
                       </>
                     )}

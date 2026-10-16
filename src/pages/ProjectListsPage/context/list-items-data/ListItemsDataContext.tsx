@@ -1,4 +1,5 @@
-import { ReactNode, useMemo, useCallback, useState } from 'react'
+import { ReactNode, useMemo, useCallback, useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import {
   checkColumnVisibility,
   ProjectDataContextProps,
@@ -36,6 +37,7 @@ import useListValueActions from '../../hooks/useListValueActions'
 import { useListItemsForListValues } from '../../hooks/useListItemsForListValues'
 import { getListItemValueSources, toListValuesItem } from '../../listValues/listItemValueSources'
 import type { CompareSettings, CompareView, ListRef } from '../../listValues/types'
+import { COMPARE_TOO_MANY_ITEMS, isTooBigToCompare } from '../../listValues/compareLimit'
 import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
@@ -271,6 +273,16 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     settings: listValuesSettings,
     useListItems: useListItemsForListValues,
   })
+
+  // a list too big to compare can still be picked from the sidebar menu or a saved view
+  const comparedListId = compareView.comparedList?.id
+  const isComparedListTooBig = !!comparedListId && isTooBigToCompare(listsMap.get(comparedListId))
+  const { setCompareWith } = compareView
+  useEffect(() => {
+    if (!isComparedListTooBig) return
+    toast.warn(COMPARE_TOO_MANY_ITEMS)
+    setCompareWith(null)
+  }, [isComparedListTooBig, setCompareWith])
 
   // what each row shows: list values or entity values, plus the compare view's marks
   const getRowValues = useCallback(
