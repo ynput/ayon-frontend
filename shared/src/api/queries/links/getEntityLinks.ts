@@ -13,6 +13,10 @@ import { formatEntityLabel } from './utils/formatEntityLinks'
 import { toast } from 'react-toastify'
 import { createRealtimeBatcher, PubSub, waitForRealtimeJitter } from '@shared/util'
 import { normalizeQueryError } from '@shared/api/base/queryError'
+import { chunk } from 'lodash'
+
+// entities per links request, more are fetched in further requests
+const LINKS_BATCH_SIZE = 100
 
 /**
  * Custom queryFn for fetching entity links with optimized caching behavior.
@@ -125,15 +129,20 @@ const injectedQueries = foldersApi.injectEndpoints({
           const resultPath = entityResultPaths[entityType]
 
           // Fetch only the entities that aren't already cached
-          const result = await dispatch(
-            (gqlLinksApi.endpoints as any)[endpoint].initiate(
-              { projectName, entityIds: entityIdsToFetch },
-              { forceRefetch: true },
+          const results = await Promise.all(
+            chunk(entityIdsToFetch, LINKS_BATCH_SIZE).map((batchIds) =>
+              dispatch(
+                (gqlLinksApi.endpoints as any)[endpoint].initiate(
+                  { projectName, entityIds: batchIds },
+                  { forceRefetch: true },
+                ),
+              ).unwrap(),
             ),
-          ).unwrap()
+          )
 
-          const newEntities =
-            result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => {
+          const newEntities = results
+            .flatMap((result: any) => result.project?.[resultPath]?.edges || [])
+            .map(({ node }: { node: any }) => {
               // Log restricted links
               const restrictedLinks =
                 node.links.edges?.filter((e: EntityLinkQuery | null) => !e?.node) || []
@@ -176,7 +185,7 @@ const injectedQueries = foldersApi.injectEndpoints({
                     } as EntityLink
                   }) || [], // Flatten the edges structure
               }
-            }) || []
+            })
 
           // Return the new entities - the merge function will handle combining with existing cache
           return { data: newEntities }
