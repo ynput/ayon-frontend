@@ -88,6 +88,8 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     users = []
   }
 
+  const existingUserNames = new Set(users.map((user) => user.name))
+
   // filter out users that have 0 accessGroups for the selected projects
   users = users.filter(
     (user) =>
@@ -112,8 +114,22 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
     // isUser doesn't have access to users list
     if (!isUser || !users) {
+      // team members that are not listed (deleted users, or no access to the project) so they can be removed
+      const listedUserNames = new Set(users.map((user) => user.name))
+      const missingMembers = [...new Set(teams.flatMap((team) => team.members.map((m) => m.name)))]
+        .filter((name) => !listedUserNames.has(name))
+        .map((name) => ({
+          name,
+          attrib: {},
+          isMissing: true,
+          missingReason: existingUserNames.has(name)
+            ? 'User has no access to this project'
+            : 'User does not exist',
+        }))
+
       // admins and managers for editing
-      users.forEach((user) => {
+      const editableUsers = [...users, ...missingMembers]
+      editableUsers.forEach((user) => {
         usersObject[user.name] = { teams: {} }
         const teamsList = []
         let rolesList = []
@@ -183,7 +199,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     }
 
     return [userList, usersObject]
-  }, [users, teams, selectedTeams])
+  }, [users, teams, selectedTeams, existingUserNames])
 
   // SORTING
   userList = useMemo(() => {
