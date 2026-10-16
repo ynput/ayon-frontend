@@ -444,7 +444,12 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     )}
                     <TableExportButton
                       onImport={() =>
-                        openImportDialog('entity_list_item', projectName, selectedList?.id)
+                        openImportDialog(
+                          'entity_list_item',
+                          projectName,
+                          selectedList?.id,
+                          selectedList?.label,
+                        )
                       }
                     />
                     <ListExportDialog parentColumns={parentColumns} />

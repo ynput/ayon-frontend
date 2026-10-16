@@ -149,8 +149,11 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
           let uri = `ayon+settings://${addonName}`
           //if (addon.version) uri += `:${addon.version}`
           uri += `/${change.join('/')}`
-          if (_projectName && _projectName !== '_') uri += `?project=${_projectName}`
-          if (_siteName && _siteName !== '_') uri += `&site=${_siteName}`
+          const params = new URLSearchParams()
+          if (_projectName && _projectName !== '_') params.set('project', _projectName)
+          if (_siteName && _siteName !== '_') params.set('site', _siteName)
+          const query = params.toString()
+          if (query) uri += `?${query}`
           setUri(uri)
           return
         }

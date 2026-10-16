@@ -376,12 +376,24 @@ export const ProjectTreeTable = ({
   const handleCellUpdate: CellUpdate = useCallback(
     async (entity, config) => {
       const { selection = [] } = config || {}
+      const { field, value, isAttrib } = entity
+      const fieldColumnId = isAttrib
+        ? `attrib_${field}`
+        : ['folderType', 'taskType', 'productType'].includes(field)
+        ? 'subType'
+        : field
+      const isFieldColumn = (colId?: string) => colId === fieldColumnId
+      // an editor closed by clicking another cell saves after that click has moved the selection,
+      // so the edit only applies to the selection while the edited cell is still part of it
+      const isEditedCellSelected = [...selectedCells].some((cellId) => {
+        const { colId, rowId } = parseCellId(cellId) || {}
+        return rowId === entity.rowId && isFieldColumn(colId)
+      })
       const entitiesToUpdate: EntityUpdate[] = []
-      if (!selection?.length) {
+      if (!selection?.length || !isEditedCellSelected) {
         entitiesToUpdate.push({ ...entity, id: entity.id || entity.rowId })
       } else {
-        // if includeSelection is true, update all the selected cells with the same columnId
-        const { field, value, isAttrib } = entity
+        // update all the selected cells with the same columnId
         for (const cellId of selectedCells) {
           const { colId, rowId } = parseCellId(cellId) || {}
 
@@ -394,7 +406,7 @@ export const ProjectTreeTable = ({
             continue
           }
 
-          if ((!colId?.includes('attrib_') || colId?.replace('attrib_', '') === field) && rowId) {
+          if (isFieldColumn(colId) && rowId) {
             entitiesToUpdate.push({
               field: field,
               rowId: rowId,
@@ -427,13 +439,18 @@ export const ProjectTreeTable = ({
     return getNameColumnLabel(scopes)
   }
 
+  // keyed by content: callers may pass a new array each render, and rebuilding the columns
+  // gives every cell a new component type, so React remounts the whole table body
+  const includeParentsKey = includeParents?.join(',')
+  const stableIncludeParents = useMemo(() => includeParents, [includeParentsKey])
+
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
       scopes,
       attribs: columnAttribs,
       links: linkTypes,
       includeLinks,
-      includeParents,
+      includeParents: stableIncludeParents,
       showHierarchy,
       isFlatFolderView,
       options,
@@ -472,7 +489,7 @@ export const ProjectTreeTable = ({
     options,
     linkTypes,
     includeLinks,
-    includeParents,
+    stableIncludeParents,
     parentColumns,
     extraColumns,
     excludedColumns,
@@ -1841,7 +1858,6 @@ const TD = ({
             }, 0)
             return
           }
-          setEditingCellId(null)
         }
 
         proceedWithSelection()
