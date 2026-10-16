@@ -129,6 +129,7 @@ const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) =>
     'show-details',
     'rename',
     'open-viewer',
+    'match-aspect-ratio',
     'expand-collapse',
     menuItemsAddToList(),
     unGroupTasksItem,

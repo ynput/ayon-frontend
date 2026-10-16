@@ -7,6 +7,7 @@ import { useSelectionCellsContext } from '../context/selection-cells'
 import { useProjectTableContext } from '../context/project-table'
 import { ROW_SELECTION_COLUMN_ID } from '../constants'
 import { useProjectDataContext } from '../context/project-data'
+import { useColumnSettingsContext } from '../context/column-settings'
 import { useCellEditing } from '../context/cell-editing'
 import { InheritFromParentEntity } from './useUpdateTableData'
 import { ProjectTableAttribute, TableRow } from '../types'
@@ -53,6 +54,7 @@ type DefaultMenuItem =
   | 'create-folder'
   | 'create-task'
   | 'open-viewer'
+  | 'match-aspect-ratio'
 export type ContextMenuItemConstructor = (
   e: ContextEvent,
   cell: TableCellContextData,
@@ -108,6 +110,7 @@ const useCellContextMenu = ({
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
   const { inheritFromParent, history, setEditingCellId } = useCellEditing()
+  const { columnSizing, setColumnSizing } = useColumnSettingsContext()
 
   // update entity context
 
@@ -224,6 +227,31 @@ const useCellContextMenu = ({
       cell.isGroup ||
       cell.entityType === 'unknown',
   })
+
+  const matchAspectRatioItem: ContextMenuItemConstructor = (e, cell) => {
+    const isThumbnailColumn = cell.columnId === 'thumbnail' || cell.columnId.endsWith('_thumbnail')
+    const cellEl = (e.target as HTMLElement).closest('td')
+    const image = cellEl?.querySelector('img')
+    const imageBox = image?.parentElement
+    const canMatch = !!image?.naturalWidth && !!image.naturalHeight && !!imageBox?.clientHeight
+
+    return {
+      label: 'Match aspect ratio',
+      icon: 'aspect_ratio',
+      command: () => {
+        if (!cellEl || !image || !imageBox) return
+        const columnWidth = cellEl.offsetWidth
+        // keep the cell padding, only resize the box the image is fitted into
+        const padding = columnWidth - imageBox.clientWidth
+        const ratio = image.naturalWidth / image.naturalHeight
+        const newWidth = Math.round(imageBox.clientHeight * ratio + padding)
+        // setColumnSizing directly so the row height stays as it is
+        setColumnSizing({ ...columnSizing, [cell.columnId]: Math.max(24, newWidth) })
+      },
+      hidden: !isThumbnailColumn || cell.isGroup,
+      disabled: !canMatch,
+    }
+  }
 
   const expandCollapseChildrenItems: ContextMenuItemConstructor = (e, cell, selected, meta) => [
     {
@@ -389,6 +417,7 @@ const useCellContextMenu = ({
     ['create-folder']: createFolderItems,
     ['create-task']: createTaskItem,
     ['open-viewer']: openViewerItem,
+    ['match-aspect-ratio']: matchAspectRatioItem,
   }
 
   const getCellData = (cellId: string): TableCellContextData | undefined => {

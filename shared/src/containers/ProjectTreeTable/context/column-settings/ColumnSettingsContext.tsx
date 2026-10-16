@@ -64,6 +64,8 @@ export interface ColumnSettingsContextType {
   columnSizing: ColumnSizingState
   setColumnSizing: (columnSizing: ColumnSizingState) => void
   columnSizingOnChange: OnChangeFn<ColumnSizingState>
+  // shift-drag on the thumbnail column resizes the column only, not the row height
+  setThumbnailResizeDetached: (detached: boolean) => void
 
   // Column summary calc type (footer)
   columnSummaries: Record<string, SummaryCalc>
