@@ -143,8 +143,8 @@ export type BaseNodeActivitiesArgs = {
 
 
 export type BaseNodeEntityListsArgs = {
-  active?: InputMaybe<Scalars['Boolean']['input']>;
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -277,6 +277,12 @@ export type EntityListsConnection = {
   /** Pagination information */
   pageInfo: PageInfo;
 };
+
+export enum EntityVisibility {
+  All = 'ALL',
+  Hidden = 'HIDDEN',
+  Visible = 'VISIBLE'
+}
 
 export type EventEdge = {
   __typename?: 'EventEdge';
@@ -412,8 +418,8 @@ export type FolderNodeActivitiesArgs = {
 
 
 export type FolderNodeEntityListsArgs = {
-  active?: InputMaybe<Scalars['Boolean']['input']>;
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -664,8 +670,8 @@ export type ProductNodeActivitiesArgs = {
 
 
 export type ProductNodeEntityListsArgs = {
-  active?: InputMaybe<Scalars['Boolean']['input']>;
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1291,8 +1297,8 @@ export type RepresentationNodeActivitiesArgs = {
 
 
 export type RepresentationNodeEntityListsArgs = {
-  active?: InputMaybe<Scalars['Boolean']['input']>;
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1441,8 +1447,8 @@ export type TaskNodeActivitiesArgs = {
 
 
 export type TaskNodeEntityListsArgs = {
-  active?: InputMaybe<Scalars['Boolean']['input']>;
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1678,8 +1684,8 @@ export type VersionNodeActivitiesArgs = {
 
 
 export type VersionNodeEntityListsArgs = {
-  active?: InputMaybe<Scalars['Boolean']['input']>;
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1771,8 +1777,8 @@ export type WorkfileNodeActivitiesArgs = {
 
 
 export type WorkfileNodeEntityListsArgs = {
-  active?: InputMaybe<Scalars['Boolean']['input']>;
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -3565,7 +3571,7 @@ export const GetFoldersListsMembershipDocument = new TypedDocumentString(`
       edges {
         node {
           id
-          entityLists(active: true, entityListTypes: ["generic", "review-session"]) {
+          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
@@ -3585,7 +3591,7 @@ export const GetTasksListsMembershipDocument = new TypedDocumentString(`
       edges {
         node {
           id
-          entityLists(active: true, entityListTypes: ["generic", "review-session"]) {
+          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
@@ -3605,7 +3611,7 @@ export const GetVersionsListsMembershipDocument = new TypedDocumentString(`
       edges {
         node {
           id
-          entityLists(active: true, entityListTypes: ["generic", "review-session"]) {
+          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
