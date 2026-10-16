@@ -288,8 +288,8 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
   const onDeleteList = async (listId: string) => {
     // delete list in the backend
     await deleteListMutation({ listId, projectName }).unwrap()
-    // set the row selection to empty
-    setRowSelection({})
+    // a right-clicked list can be deleted without being selected
+    if (rowSelection[listId]) setRowSelection({})
   }
   const { deleteLists } = useDeleteList({ onDeleteList })
 
