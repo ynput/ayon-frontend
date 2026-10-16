@@ -1,6 +1,6 @@
 // this is used to render a remote page and provide it with all the props it needs
 // NOTE: it must be wrapped with ViewsProvider someone (probably already by WithViews hoc)
-import type { GenericViewModel } from '@shared/api'
+import type { DetailsPanelEntityType, GenericViewModel } from '@shared/api'
 import { useViewsContext } from '@shared/containers/Views/context'
 import {
   updateViewSettings,
@@ -32,6 +32,39 @@ export interface RemotePageContext {
   detailsPanelEntity?: DetailsPanelEntityContextType
 }
 
+/** What the details panel shows: entities of one type in the page's project. */
+export interface RemoteDetailsPanelEntities {
+  entityType: DetailsPanelEntityType
+  entityIds: string[]
+}
+
+/** The host's details panel. Calling open again shows other entities, e.g. to follow a selection. */
+export interface RemoteDetailsPanel {
+  isOpen: boolean
+  entities: RemoteDetailsPanelEntities | null
+  open: (entities: RemoteDetailsPanelEntities) => void
+  close: () => void
+}
+
+/** What the viewer opens: a folder, task or product, optionally with versions selected. */
+export interface RemoteViewerTarget {
+  projectName?: string
+  folderId?: string
+  taskId?: string
+  productId?: string
+  selectedProductId?: string
+  versionIds?: string[]
+  reviewableIds?: string[]
+  quickView?: boolean
+}
+
+/** The host's viewer (player). */
+export interface RemoteViewer {
+  isOpen: boolean
+  open: (target: RemoteViewerTarget) => void
+  close: () => void
+}
+
 export interface RemotePageProps {
   router: RouterTypes
   toast?: any
@@ -43,6 +76,9 @@ export interface RemotePageProps {
   onGoToFrame?: (frame: number) => void
   onOpenViewer?: (args: any) => void
   onUpdateEntity?: (data: { operations: any[]; entityType: string }) => void
+  // host UI blocks, when the page's host has them
+  detailsPanel?: RemoteDetailsPanel
+  viewer?: RemoteViewer
   // project specific
   projectName?: string
   state?: any
@@ -59,6 +95,8 @@ export interface RemotePageWrapperProps {
   onGoToFrame?: (frame: number) => void
   onOpenViewer?: (args: any) => void
   onUpdateEntity?: (data: { operations: any[]; entityType: string }) => void
+  detailsPanel?: RemoteDetailsPanel
+  viewer?: RemoteViewer
 }
 
 export const RemotePageWrapper: FC<RemotePageWrapperProps> = ({
@@ -71,6 +109,8 @@ export const RemotePageWrapper: FC<RemotePageWrapperProps> = ({
   onGoToFrame,
   onOpenViewer,
   onUpdateEntity,
+  detailsPanel,
+  viewer,
   ...props
 }) => {
   const views = useViewsContext()
@@ -94,6 +134,8 @@ export const RemotePageWrapper: FC<RemotePageWrapperProps> = ({
       onGoToFrame={onGoToFrame}
       onOpenViewer={onOpenViewer}
       onUpdateEntity={onUpdateEntity}
+      detailsPanel={detailsPanel}
+      viewer={viewer}
       toast={toast}
       {...props}
     />

@@ -20,6 +20,7 @@ export type RemoteAddonProject = {
   module: string
   viewType?: string // if the addon is using views
   slicer?: { fields: string[] }
+  detailsPanel?: boolean // the page opens the host's details panel (detailsPanel prop)
 }
 
 // types for props passed to the provider
