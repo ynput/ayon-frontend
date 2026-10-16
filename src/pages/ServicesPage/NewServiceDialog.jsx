@@ -224,7 +224,7 @@ const ServiceDialog = ({ onHide, editService = null }) => {
         if (separatorIndex === -1) return acc
         const key = line.slice(0, separatorIndex).trim()
         const value = line.slice(separatorIndex + 1).trim()
-        if (key && value) {
+        if (key) {
           acc[key] = value
         }
         return acc
