@@ -74,6 +74,10 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
   const buildContextMenu = useCallback(
     (_e: React.MouseEvent<HTMLTableRowElement>, context: ListRowContextMenuContext) => {
       const { selectedRows } = context
+      const extraItems = extraBuilders.flatMap((builder) => {
+        const items = builder(_e, context)
+        return !items ? [] : Array.isArray(items) ? items : [items]
+      })
 
       const newSelectedLists = listsData.filter((list) =>
         selectedRows.some((selected) => list?.id === selected),
@@ -241,6 +245,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
           hidden: !selectedFolderIds.length, // hide if no folders selected per spec
           command: () => selectAllLists({ rowIds: selectedRows }),
         },
+        ...extraItems,
         {
           label: 'Details',
           icon: 'info',
@@ -301,13 +306,11 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
       clearListItems,
       isReview,
       powerLicense,
+      extraBuilders,
     ],
   )
 
-  return useMemo(
-    () => (enabled ? [buildContextMenu, ...extraBuilders] : []),
-    [enabled, buildContextMenu, extraBuilders],
-  )
+  return useMemo(() => (enabled ? [buildContextMenu] : []), [enabled, buildContextMenu])
 }
 
 export default useListContextMenu

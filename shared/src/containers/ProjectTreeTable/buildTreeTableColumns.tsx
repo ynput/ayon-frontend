@@ -376,7 +376,13 @@ export type DefaultColumns =
   | 'updatedAt'
   | 'comments'
 
-export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
+export type TreeTableExtraColumn = {
+  column: ColumnDef<TableRow>
+  position?: number
+  // id of the column this one is placed right after (also in a saved column order);
+  // such a column is always shown and not saved in the column settings
+  after?: string
+}
 
 export type BuildTreeTableColumnsProps = {
   scopes: string[]
@@ -1629,8 +1635,11 @@ const buildTreeTableColumns = ({
 
   // Add extra columns if provided
   if (extraColumns) {
-    extraColumns.forEach(({ column, position = -1 }) => {
-      if (position >= 0 && position < allColumns.length) {
+    extraColumns.forEach(({ column, position = -1, after }) => {
+      const afterIndex = after ? allColumns.findIndex((c) => c.id === after) : -1
+      if (afterIndex >= 0) {
+        allColumns.splice(afterIndex + 1, 0, column)
+      } else if (position >= 0 && position < allColumns.length) {
         allColumns.splice(position, 0, column)
       } else {
         allColumns.push(column)

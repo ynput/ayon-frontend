@@ -19,6 +19,7 @@ import {
 } from './refetchFilteredEntities'
 import { patchParentEntitiesInVersions, patchVersions } from './patchVersions'
 import { patchProducts } from './patchProducts'
+import { patchListItemEntityValues } from '../entityLists/listItemValues'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
@@ -389,7 +390,9 @@ const patchListItems = (
                 for (const page of draft.pages) {
                   const item = page.items.find((item) => item.entityId === listOperation.entityId)
                   if (item) {
-                    updateEntityWithOperation(item, listOperation.data)
+                    const { attrib, ...fields } = listOperation.data
+                    updateEntityWithOperation(item, fields)
+                    patchListItemEntityValues(item, attrib)
                   }
                 }
               }

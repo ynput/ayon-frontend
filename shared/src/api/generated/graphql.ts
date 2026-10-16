@@ -188,11 +188,12 @@ export type EntityListItemEdge = {
   Entity?: Maybe<BaseNode>;
   Forbidden: Scalars['Boolean']['output'];
   allAttrib: Scalars['String']['output'];
-  attrib: Scalars['String']['output'];
+  attrib: Scalars['JSON']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   cursor?: Maybe<Scalars['String']['output']>;
   data: Scalars['String']['output'];
+  entityAttrib: Scalars['JSON']['output'];
   entityId: Scalars['String']['output'];
   entityType: Scalars['String']['output'];
   folderPath: Scalars['String']['output'];
@@ -1909,7 +1910,7 @@ export type GetListItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetListItemsQuery = { project: { entityLists: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ node: { id: string, active: boolean, items: { pageInfo: { hasNextPage: boolean, hasPreviousPage: boolean, endCursor: string | null }, edges: Array<{ id: string, entityId: string, entityType: string, allAttrib: string, position: number, ownItemAttrib: Array<string>, node:
+export type GetListItemsQuery = { project: { entityLists: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ node: { id: string, active: boolean, items: { pageInfo: { hasNextPage: boolean, hasPreviousPage: boolean, endCursor: string | null }, edges: Array<{ id: string, entityId: string, entityType: string, entityAttrib: unknown, position: number, itemAttrib: unknown, ownItemAttrib: Array<string>, node:
                 | { label: string | null, status: string, tags: Array<string>, folderType: string, path: string | null, ownAttrib: Array<string>, hasReviewables: boolean, thumbnailHash: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folderId: string, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null }
                 | { status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folder: { name: string, label: string | null, path: string | null, folderType: string } }
                 | { active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string> }
@@ -3311,8 +3312,9 @@ export const GetListItemsDocument = new TypedDocumentString(`
               id
               entityId
               entityType
-              allAttrib
+              itemAttrib: attrib
               ownItemAttrib: ownAttrib
+              entityAttrib
               position
               node {
                 ...ListItemFragment

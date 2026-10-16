@@ -38,8 +38,9 @@ query GetListItems(
               id
               entityId
               entityType
-              allAttrib
+              itemAttrib: attrib
               ownItemAttrib: ownAttrib
+              entityAttrib
               position
               node {
                 ...ListItemFragment

@@ -7,7 +7,6 @@ import type {
   GetListsQuery,
   GetListsQueryVariables,
 } from '@shared/api/generated'
-import { parseJSONField } from '../overview'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 import {
   createRealtimeBatcher,
@@ -83,11 +82,17 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
         }
         return {
           items: response.project.entityLists.edges.flatMap((listEdge) =>
-            listEdge.node.items.edges.map(({ node, ...edge }) => {
+            listEdge.node.items.edges.map(({ node, itemAttrib, entityAttrib, ...edge }) => {
+              // itemAttrib: entity values with the item's over them, ownItemAttrib: the item's
+              const attrib = (itemAttrib || {}) as Record<string, unknown>
+              const listAttrib = Object.fromEntries(
+                edge.ownItemAttrib.filter((key) => key in attrib).map((key) => [key, attrib[key]]),
+              )
               return {
                 ...node,
                 ...edge,
-                attrib: parseJSONField(edge.allAttrib),
+                listAttrib,
+                entityAttrib: (entityAttrib || {}) as Record<string, unknown>,
               } as GetListItemsResult['items'][number]
             }),
           ),
@@ -531,6 +536,7 @@ export const {
   useGetListItemsInfiniteInfiniteQuery,
   useGetListsItemsForReviewSessionInfiniteQuery,
   useLazyGetListsItemsForReviewSessionQuery,
+  useGetListItemsQuery,
   useLazyGetListItemsQuery,
 } = getListsGqlApiInjected
 
