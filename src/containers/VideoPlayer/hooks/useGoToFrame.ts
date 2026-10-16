@@ -32,7 +32,7 @@ const useGoToFrame = ({ setCurrentTime, frameRate, duration, videoElement }: Pro
     time = Math.max(0, Math.min(duration, time))
     videoElement.currentTime = time
     setCurrentTime(time)
-  }, [frame, position, frameRate, duration, setCurrentTime, videoElement])
+  }, [frame, position, frameRate, duration, setCurrentTime, videoElement, dispatch])
 }
 
 export default useGoToFrame
