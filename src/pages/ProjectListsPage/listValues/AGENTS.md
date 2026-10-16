@@ -60,9 +60,9 @@ What the module does, and what core gives it:
   attribute column header menus (`ColumnConfig.menuItems`); `useListValueActions` gives them the
   requests, loading every list item, toasts and the confirm dialog (`ListValueActionsHost`).
 - Comparing from the lists sidebar is core's (`useCompareLists`): "Compare lists" in the menu and on
-  the page when two lists of one entity type are selected, and a compare button on hovered lists of
-  the shown list's type. It selects the first list and calls the module's `compareWithList`; without
-  the powerpack it opens the powerpack dialog.
+  the page when two lists of one entity type are selected. It selects the first list and calls the
+  module's `compareWithList`; without the powerpack it opens the powerpack dialog. The compared list
+  shows a compare tag left of its count (`ListsTable` `getRowTag`).
 
 ## Gotchas
 
@@ -78,8 +78,8 @@ What the module does, and what core gives it:
   actions skip them; they offer "Add to this list" instead.
 - The compared list is loaded in one query (`useListItemsForListValues`), so compare is limited to
   lists of up to 5000 items (`compareLimit.ts`, by the list's `count`). Bigger lists are disabled in
-  the compare picker (`CompareListPicker`, around the module's `isDisabled`) and in "Compare lists",
-  and get no hover button; picked another way (a saved view), they aren't loaded and `ListItemsDataContext` turns compare off with a
+  the compare picker (`CompareListPicker`, around the module's `isDisabled`) and in "Compare lists";
+  picked another way (a saved view), they aren't loaded and `ListItemsDataContext` turns compare off with a
   warning.
 - The tint (`CellMark.highlight`) is a layer behind the cell, so the opacity of greyed values
   doesn't fade it; the cell is the td's first child with an id (`useCellContextMenu`).

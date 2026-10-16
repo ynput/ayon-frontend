@@ -143,6 +143,12 @@ export const Cell = styled.div`
   .badges {
     color: var(--md-sys-color-outline);
     padding-right: 4px;
+
+    /* an icon tag, the size of an action button */
+    .badge-icon {
+      padding: var(--padding-s);
+      color: var(--md-sys-color-on-surface);
+    }
   }
 
   .actions {

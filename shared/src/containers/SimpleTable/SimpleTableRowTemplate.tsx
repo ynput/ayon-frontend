@@ -5,7 +5,6 @@ import clsx from 'clsx'
 
 export interface TableRowAction extends IconProps {
   show?: 'always' | 'hover' | 'hidden'
-  'data-tooltip'?: string
 }
 
 export type RowExpanderProps = {

@@ -6,7 +6,7 @@ import {
 import { FC, useCallback, useEffect, useMemo } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import { Icon, Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { ListsDataProvider } from './context/lists-data'
 import ListsTable from './components/ListsTable/ListsTable'
@@ -72,7 +72,6 @@ import { useListsDataContext } from './context/lists-data'
 import type { ListRowContextMenuBuilder } from './hooks/useListContextMenu'
 import { useCompareLists } from './hooks/useCompareLists'
 import { isTooBigToCompare } from './listValues/compareLimit'
-import type { TableRowAction } from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
 import {
   COMPARE_ENTITY_COLUMN_PREFIX,
   COMPARE_LIST_COLUMN_PREFIX,
@@ -349,7 +348,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName } = useProjectContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
-  const { selectedList, selectedLists } = useListsContext()
+  const { selectedList } = useListsContext()
   const {
     listItemsData,
     deleteListItemAction,
@@ -373,7 +372,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
       },
     [selectedList?.id, selectedList?.label, selectedList?.entityType],
   )
-  // compare two selected lists, or the shown list with a hovered one
+  // compare two selected lists
   const { canCompareLists, compareLists } = useCompareLists()
   const listMenuBuilders = useMemo<ListRowContextMenuBuilder[]>(
     () => [
@@ -392,23 +391,18 @@ const ProjectLists: FC<ProjectListsProps> = ({
     ],
     [listsMap, canCompareLists, compareLists, isPowerFeature],
   )
-  const getListRowActions = useCallback(
-    (listId: string): TableRowAction[] | undefined => {
-      const compared = listsMap.get(listId)
-      if (selectedLists.length !== 1 || !selectedList) return undefined
-      if (!canCompareLists(selectedList, compared) || isTooBigToCompare(compared)) return undefined
-      return [
-        {
-          icon: 'compare_arrows',
-          'data-tooltip': `Compare ${selectedList.label} with this list`,
-          onClick: (e) => {
-            e.stopPropagation()
-            compareLists(selectedList, compared)
-          },
-        },
-      ]
-    },
-    [listsMap, selectedLists.length, selectedList, canCompareLists, compareLists],
+  // the list the shown one is compared with
+  const comparedListId = selectedList ? compareView.comparedList?.id : undefined
+  const getListRowTag = useCallback(
+    (listId: string) =>
+      listId === comparedListId && (
+        <Icon
+          icon="compare_arrows"
+          className="badge-icon"
+          data-tooltip={`Comparing ${selectedList?.label} with this list`}
+        />
+      ),
+    [comparedListId, selectedList?.label],
   )
 
   const handleGoToCustomAttrib = (attrib: string) => {
@@ -455,7 +449,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
             <ListsTable
               isReview={isReview}
               rowContextMenuBuilders={listMenuBuilders}
-              getRowActions={getListRowActions}
+              getRowTag={getListRowTag}
             />
           </Section>
         </SplitterPanel>
