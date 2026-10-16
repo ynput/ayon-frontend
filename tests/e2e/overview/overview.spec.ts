@@ -193,3 +193,42 @@ test.describe('project overview editing', () => {
     await expect(overview.row('castle_env')).toBeHidden()
   })
 })
+
+test.describe('overview links', () => {
+  test('links of many rows are loaded in batches', async ({ page, api, projectName }) => {
+    const sequence = await api.createFolder(projectName, { name: 'sq010', folderType: 'Sequence' })
+    const shots = []
+    for (let i = 1; i <= 120; i++) {
+      const name = `sh${String(i).padStart(3, '0')}`
+      shots.push(
+        await api.createFolder(projectName, { name, folderType: 'Shot', parentId: sequence.id }),
+      )
+    }
+    const asset = await api.createFolder(projectName, { name: 'prop_crate', folderType: 'Asset' })
+    await api.post(`/api/projects/${projectName}/links`, {
+      input: shots[119].id,
+      output: asset.id,
+      linkType: 'breakdown|folder|folder',
+    })
+    const linkColumn = 'link_breakdown_folder_folder_out'
+    await api.setWorkingViewColumns('overview', projectName, ['name', linkColumn])
+    const requestedIds: number[] = []
+    page.on('request', (request) => {
+      if (!request.url().endsWith('/graphql')) return
+      const body = request.postDataJSON()
+      if (body?.operationName === 'GetFoldersLinks') {
+        requestedIds.push(body.variables.entityIds.length)
+      }
+    })
+
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.expand('sq010')
+    await overview.table.hover()
+    await page.mouse.wheel(0, 20_000)
+
+    await expect(overview.cell('sh120', linkColumn)).toContainText('prop_crate')
+    expect(requestedIds.reduce((sum, ids) => sum + ids, 0)).toBeGreaterThanOrEqual(122)
+    expect(Math.max(...requestedIds)).toBeLessThanOrEqual(100)
+  })
+})
