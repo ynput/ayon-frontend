@@ -38,6 +38,24 @@ test.describe('project anatomy: tags and link types', () => {
       .toEqual(['client approved'])
   })
 
+  test('a new tag can be typed right after adding it', async ({ page, api, projectName }) => {
+    const index = (await api.getProject(projectName)).tags.length
+    const manager = new ProjectsManagerPage(page)
+    await manager.goto('anatomy', projectName)
+    await manager.anatomy.expand('Tags')
+
+    await manager.anatomy.addItem('root_tags')
+
+    await expect(manager.anatomy.textbox(`root_tags_${index}_name`)).toBeFocused()
+    await page.keyboard.type('typed at once')
+    await manager.anatomy.textbox(`root_tags_${index}_name`).blur()
+    await manager.saveAnatomy()
+
+    await expect
+      .poll(async () => (await api.getProject(projectName)).tags[index]?.name)
+      .toBe('typed at once')
+  })
+
   test('a link type added in the anatomy can be shown as overview columns', async ({
     page,
     api,
