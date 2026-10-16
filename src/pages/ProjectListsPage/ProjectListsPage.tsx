@@ -441,6 +441,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       importContext="entity_list_item"
                       projectName={projectName}
                       folderId={selectedList?.id}
+                      folderLabel={selectedList?.label}
                     />
                     <Actions
                       entities={[
