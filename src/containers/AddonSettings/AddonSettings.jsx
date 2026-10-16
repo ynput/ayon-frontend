@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -170,8 +170,16 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     return bundles.filter((bundle) => bundle.isDev && bundle.activeUser === userName)
   }, [bundles, userName])
 
+  // the variant picked in this tab survives leaving the page, until developer mode is toggled
+  const variantChosen = useRef(sessionStorage.getItem('variant-type') !== null)
+  const previousDeveloperMode = useRef(developerMode)
+
   // Update selectedBundle when developer mode changes
   useEffect(() => {
+    const developerModeChanged = previousDeveloperMode.current !== developerMode
+    previousDeveloperMode.current = developerMode
+    if (variantChosen.current && !developerModeChanged) return
+
     if (developerMode) {
       // Switch to dev bundle when entering developer mode
       const devBundle = devBundles.find((bundle) => bundle.isDev && bundle.activeUser === userName)
@@ -181,6 +189,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           bundleName: devBundle.name,
           projectBundleName: undefined,
         })
+        variantChosen.current = true
       }
       // If no dev bundle found, stay on current variant (don't switch)
     } else {
@@ -190,6 +199,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         bundleName: null,
         projectBundleName: undefined,
       })
+      variantChosen.current = true
     }
   }, [developerMode, JSON.stringify(devBundles), userName])
 
