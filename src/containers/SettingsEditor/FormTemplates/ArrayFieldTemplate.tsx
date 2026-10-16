@@ -1,6 +1,6 @@
 import { ArrayFieldTemplateProps } from '@rjsf/utils'
 import { Button } from '@ynput/ayon-react-components'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { closestCenter, DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
 import { createPortal } from 'react-dom'
@@ -31,14 +31,29 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
     formContext.onSetChangedKeys([{ path, isChanged: true }])
   }
 
+  const containerRef = useRef<HTMLDivElement>(null)
+  const focusAddedItem = useRef(false)
+
   const onAddItem = () => {
     const id = props.idSchema.$id
     const formContext = props.formContext
     const path = formContext.overrides[id]?.path
 
     formContext.onSetChangedKeys([{ path, isChanged: true }])
+    focusAddedItem.current = true
     props.onAddClick()
   }
+
+  // move the focus from the add button into the new item, so typing goes there
+  useEffect(() => {
+    if (!focusAddedItem.current) return
+    focusAddedItem.current = false
+    const itemElements = containerRef.current?.querySelectorAll(
+      `[data-array-item="${props.idSchema.$id}"]`,
+    )
+    const added = itemElements?.[itemElements.length - 1]
+    added?.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, select')?.focus()
+  }, [props.items.length, props.idSchema.$id])
 
   const [draggedItemId, setDraggedItemId] = useState<string | null>()
 
@@ -65,7 +80,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   const draggedItem = items.find((item) => item.id === draggedItemId)
 
   return (
-    <DndContextWrapper>
+    <DndContextWrapper ref={containerRef}>
     <DndContext
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
@@ -74,7 +89,11 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         {items.map((item, idx) => (
           <DraggableItem id={item.id} isVisible={item.id !== draggedItemId} key={idx}>
-            <FormArrayFieldWrapper onChange={onArrayChanged(item)} item={item} />
+            <FormArrayFieldWrapper
+              onChange={onArrayChanged(item)}
+              item={item}
+              arrayId={props.idSchema.$id}
+            />
           </DraggableItem>
         ))}
       </SortableContext>
@@ -100,10 +119,18 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   )
 }
 
-const FormArrayFieldWrapper = ({ item, onChange }: { item: $Any; onChange?: () => void }) => {
+const FormArrayFieldWrapper = ({
+  item,
+  onChange,
+  arrayId,
+}: {
+  item: $Any
+  onChange?: () => void
+  arrayId?: string
+}) => {
   const { key, ...dynProps } = item
   return (
-    <FormArrayField>
+    <FormArrayField data-array-item={arrayId}>
       <ArrayItemTemplate onChange={onChange} {...dynProps} />
     </FormArrayField>
   )
