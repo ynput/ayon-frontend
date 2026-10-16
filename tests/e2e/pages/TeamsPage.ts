@@ -38,6 +38,12 @@ export class TeamsPage {
     await menuItem(this.page, `Add to ${team}`).click()
   }
 
+  async removeUserFromTeam(user: string, team: string) {
+    await this.userRow(user).click({ button: 'right' })
+    await menuItem(this.page, 'Remove from team').hover()
+    await menuItem(this.page, team).click()
+  }
+
   get leaderRow() {
     return formRow(this.page, 'Leader')
   }
