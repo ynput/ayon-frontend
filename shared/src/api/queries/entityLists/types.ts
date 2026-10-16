@@ -87,7 +87,7 @@ type ListItemValues = {
 }
 
 export type EntityListItem = NonNullable<QueryEntityListItemNode> &
-  Omit<QueryEntityListItemEdge, 'node'> &
+  Omit<QueryEntityListItemEdge, 'node' | 'itemAttrib' | 'entityAttrib'> &
   ListItemValues
 // Define the result type for items query
 export type GetListItemsResult = {
@@ -97,7 +97,9 @@ export type GetListItemsResult = {
     hasPreviousPage?: boolean | null
     endCursor?: string | null
   }
-  items: (QueryEntityListItemNode & Omit<QueryEntityListItemEdge, 'node'> & ListItemValues)[]
+  items: (QueryEntityListItemNode &
+    Omit<QueryEntityListItemEdge, 'node' | 'itemAttrib' | 'entityAttrib'> &
+    ListItemValues)[]
 }
 
 export type ListItemsPageParam = {
