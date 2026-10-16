@@ -47,6 +47,13 @@ export interface ListItemsDataContextValue {
   isError?: boolean
   error?: unknown
   isInitialized: boolean
+  // the items query's filter, search and sorting, for exports
+  listItemsQueryArgs: {
+    filter?: string
+    search?: string
+    sortBy?: string | string[]
+    desc?: boolean
+  }
   // filters
   listItemsFilters: QueryFilter
   setListItemsFilters: (filters: QueryFilter) => void
@@ -180,6 +187,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     fieldStatsLoading,
     fieldStatsError,
     mainCountLabels,
+    queryArgs: listItemsQueryArgs,
   } = useGetListItemsData({
     projectName,
     entityType: selectedList?.entityType,
@@ -269,6 +277,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     'copy-paste',
     'show-details',
     'open-viewer',
+    'export',
     // add context menu to add to lists but filter out own list
     menuItemsAddToList((item) => item.id !== selectedListId),
     replaceItemContextMenu,
@@ -291,6 +300,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         isError,
         error,
         fetchNextPage,
+        listItemsQueryArgs,
         // filters
         listItemsFilters,
         setListItemsFilters,

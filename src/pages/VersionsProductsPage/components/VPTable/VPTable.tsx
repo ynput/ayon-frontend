@@ -74,6 +74,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
           'copy-paste',
           'show-details',
           'open-viewer',
+          'export',
           uploadVersionItem,
           addToListItem,
           productDetailItem,
