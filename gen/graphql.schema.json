@@ -218,6 +218,18 @@
             "deprecationReason": null
           },
           {
+            "name": "mediaInfo",
+            "description": "Media info extracted from the file",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSON",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "mime",
             "description": null,
             "args": [],
@@ -2428,9 +2440,17 @@
                 "name": "sortBy",
                 "description": null,
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -2625,6 +2645,36 @@
         "inputFields": null,
         "interfaces": [],
         "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "EntityVisibility",
+        "description": null,
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "ALL",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "HIDDEN",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "VISIBLE",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
         "possibleTypes": null
       },
       {
@@ -4023,6 +4073,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "hasReviewables",
+                "description": "Filter products that have at least one version with reviewables",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "ids",
                 "description": "List of ids to be returned",
                 "type": {
@@ -4045,6 +4107,22 @@
               {
                 "name": "includeFolderChildren",
                 "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -4175,6 +4253,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "representationFilter",
+                "description": "Filter products by their representations (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "search",
                 "description": "Fuzzy text search filter",
                 "type": {
@@ -4188,11 +4278,19 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, productType, productBaseType, folderName, folderType, status, createdAt, updatedAt, createdBy, updatedBy, tags, path, version",
+                "description": "Sort by one or more of name, productType, productBaseType, folderName, folderType, status, createdAt, updatedAt, createdBy, updatedBy, tags, path, version. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -4251,8 +4349,8 @@
                 "deprecationReason": null
               },
               {
-                "name": "representationFilter",
-                "description": "Filter products by their representations (via versions) using QueryFilter",
+                "name": "versionFilter",
+                "description": "Filter products by their versions using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -4263,14 +4361,18 @@
                 "deprecationReason": null
               },
               {
-                "name": "versionFilter",
-                "description": "Filter products by their versions using QueryFilter",
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
                 },
-                "defaultValue": "null",
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -4588,6 +4690,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -4633,11 +4751,19 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy, folderName",
+                "description": "Sort by one or more of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy, folderName. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -4720,6 +4846,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -7098,6 +7240,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -7154,18 +7312,6 @@
                 "deprecationReason": null
               },
               {
-                "name": "representationFilter",
-                "description": "Filter versions by their representations using QueryFilter",
-                "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
-                },
-                "defaultValue": "null",
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
                 "name": "productIds",
                 "description": "List of parent products IDs",
                 "type": {
@@ -7186,6 +7332,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "representationFilter",
+                "description": "Filter versions by their representations using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "search",
                 "description": "Fuzzy text search filter",
                 "type": {
@@ -7199,11 +7357,19 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, productType, productBaseType, productName, folderName, folderType, taskName, taskType, path",
+                "description": "Sort by one or more of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, productType, productBaseType, productName, folderName, folderType, taskName, taskType, path. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -7310,6 +7476,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -8528,11 +8710,19 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of label, owner, entityListType, createdAt, updatedAt, count, active",
+                "description": "Sort by one or more of label, owner, entityListType, createdAt, updatedAt, count, active. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -8854,6 +9044,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -8975,11 +9181,19 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, createdAt, updatedAt, createdBy, updatedBy, folderType",
+                "description": "Sort by one or more of name, createdAt, updatedAt, createdBy, updatedBy, folderType. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -9046,6 +9260,22 @@
                   "ofType": null
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -9574,6 +9804,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "hasReviewables",
+                "description": "Filter products that have at least one version with reviewables",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "ids",
                 "description": "List of ids to be returned",
                 "type": {
@@ -9596,6 +9838,22 @@
               {
                 "name": "includeFolderChildren",
                 "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -9726,6 +9984,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "representationFilter",
+                "description": "Filter products by their representations (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "search",
                 "description": "Fuzzy text search filter",
                 "type": {
@@ -9739,11 +10009,19 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, productType, productBaseType, folderName, folderType, status, createdAt, updatedAt, createdBy, updatedBy, tags, path, version",
+                "description": "Sort by one or more of name, productType, productBaseType, folderName, folderType, status, createdAt, updatedAt, createdBy, updatedBy, tags, path, version. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -9802,8 +10080,8 @@
                 "deprecationReason": null
               },
               {
-                "name": "representationFilter",
-                "description": "Filter products by their representations (via versions) using QueryFilter",
+                "name": "versionFilter",
+                "description": "Filter products by their versions using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -9814,14 +10092,18 @@
                 "deprecationReason": null
               },
               {
-                "name": "versionFilter",
-                "description": "Filter products by their versions using QueryFilter",
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
                 },
-                "defaultValue": "null",
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -9980,6 +10262,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -10080,6 +10378,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -10459,6 +10773,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -10504,11 +10834,19 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy, folderName",
+                "description": "Sort by one or more of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy, folderName. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -10591,6 +10929,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -10969,6 +11323,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -11025,18 +11395,6 @@
                 "deprecationReason": null
               },
               {
-                "name": "representationFilter",
-                "description": "Filter versions by their representations using QueryFilter",
-                "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
-                },
-                "defaultValue": "null",
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
                 "name": "productIds",
                 "description": "List of parent products IDs",
                 "type": {
@@ -11057,6 +11415,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "representationFilter",
+                "description": "Filter versions by their representations using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "search",
                 "description": "Fuzzy text search filter",
                 "type": {
@@ -11070,11 +11440,19 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, productType, productBaseType, productName, folderName, folderType, taskName, taskType, path",
+                "description": "Sort by one or more of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, productType, productBaseType, productName, folderName, folderType, taskName, taskType, path. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -11181,6 +11559,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -11299,6 +11693,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -11356,11 +11766,19 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, status, createdAt, updatedAt",
+                "description": "Sort by one or more of name, status, createdAt, updatedAt. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -11423,6 +11841,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -12136,6 +12570,22 @@
                   "ofType": null
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -14780,6 +15230,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -14836,18 +15302,6 @@
                 "deprecationReason": null
               },
               {
-                "name": "representationFilter",
-                "description": "Filter versions by their representations using QueryFilter",
-                "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
-                },
-                "defaultValue": "null",
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
                 "name": "productIds",
                 "description": "List of parent products IDs",
                 "type": {
@@ -14868,6 +15322,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "representationFilter",
+                "description": "Filter versions by their representations using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "search",
                 "description": "Fuzzy text search filter",
                 "type": {
@@ -14881,11 +15347,19 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, productType, productBaseType, productName, folderName, folderType, taskName, taskType, path",
+                "description": "Sort by one or more of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, productType, productBaseType, productName, folderName, folderType, taskName, taskType, path. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -14994,6 +15468,22 @@
                 "defaultValue": "null",
                 "isDeprecated": false,
                 "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
+                "isDeprecated": false,
+                "deprecationReason": null
               }
             ],
             "type": {
@@ -15081,6 +15571,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -15138,11 +15644,19 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, status, createdAt, updatedAt",
+                "description": "Sort by one or more of name, status, createdAt, updatedAt. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -15205,6 +15719,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -16935,6 +17465,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeInternalFolder",
+                "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -17035,6 +17581,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "visibility",
+                "description": "Filter by visibility. VISIBLE returns only visible entities, HIDDEN returns only hidden entities, ALL (default) returns both.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "EntityVisibility",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "ALL",
                 "isDeprecated": false,
                 "deprecationReason": null
               }
@@ -18948,9 +19510,13 @@
             "name": "reason",
             "description": "Explains why this element was deprecated, usually also including a suggestion for how to access supported similar data. Formatted using the Markdown syntax, as specified by [CommonMark](https://commonmark.org/).",
             "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
             },
             "defaultValue": "\"No longer supported\"",
             "isDeprecated": false,
@@ -18988,7 +19554,7 @@
       },
       {
         "name": "oneOf",
-        "description": "Indicates an Input Object is a OneOf Input Object.",
+        "description": "Indicates exactly one field must be supplied and this field must not be `null`.",
         "isRepeatable": false,
         "locations": [
           "INPUT_OBJECT"
