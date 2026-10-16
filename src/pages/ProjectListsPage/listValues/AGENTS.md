@@ -13,13 +13,15 @@ setting slot, the rendering of compare columns and rows, and a community fallbac
 
 | Field | From | What |
 | --- | --- | --- |
-| `listAttrib` | edge `attrib` | values set on the list item (own attributes and overrides) |
-| `entityAttrib` | node `allAttrib` | the entity's values, inherited ones included |
+| `listAttrib` | edge `attrib` (JSON), the keys in edge `ownAttrib` | values set on the list item (own attributes and overrides) |
+| `entityAttrib` | edge `entityAttrib` (JSON) | the entity's values, inherited ones included |
 
-There is deliberately no merged map in the cache: what a cell shows is resolved from these two by the
-module's `resolveValues`, and keeping a third copy in step on every optimistic patch was only a source of
-drift. The backend still has the merged values: its `attrib.*` sort and filter keys use list values over
-entity values, `entityAttrib.*` the entity's values only. Optimistic cache patches update one map each
+The edge's `attrib` is the entity's values with the item's over them, like an entity's `attrib`; only
+the item's keys are kept from it. There is deliberately no merged map in the cache: what a cell shows
+is resolved from these two by the module's `resolveValues`, and keeping a third copy in step on every
+optimistic patch was only a source of drift. The backend's `attrib.*` sort and filter keys use list
+values over entity values, `entityAttrib.*` the entity's values only. Optimistic cache patches update
+one map each
 (`shared/src/api/queries/entityLists/listItemValues.ts`).
 
 ## Contract with the powerpack
