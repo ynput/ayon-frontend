@@ -6,8 +6,13 @@ import BundleForm from './BundleForm'
 import BundleDeps from './BundleDeps'
 import { cloneDeep, upperFirst } from 'lodash'
 import BundleCompare from './BundleCompare'
+import BundleChecks from './BundleChecks/BundleChecks'
 import useAddonSelection from './useAddonSelection'
-import { useUpdateBundleMutation, useListBundlesQuery } from '@shared/api'
+import {
+  useUpdateBundleMutation,
+  useListBundlesQuery,
+  useCheckBundleCompatibilityQuery,
+} from '@shared/api'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import type { Addon } from './types'
 import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/context/addon-search'
@@ -73,7 +78,26 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
 
   // Select addon if query search has addon=addonName
   const addonListRef = useRef<any>()
-  useAddonSelection<Addon>(filteredAddons, setSelectedAddons, addonListRef, [formData])
+  const { selectAndScrollToAddon } = useAddonSelection<Addon>(
+    filteredAddons,
+    setSelectedAddons,
+    addonListRef,
+    [formData],
+  )
+
+  const {
+    data: bundleCheckData = {},
+    isFetching: isFetchingCheck,
+    isError: isCheckError,
+  } = useCheckBundleCompatibilityQuery(
+    { bundleModel: formData },
+    { skip: !formData?.name || selectedBundles.length > 1 },
+  ) as any
+
+  const handleIssueClick = (addonName: string) => {
+    const addon = addons.find((a) => a.name === addonName)
+    if (addon) selectAndScrollToAddon(addon)
+  }
 
   // every time we select a new bundle, update the form data
   useEffect(() => {
@@ -164,6 +188,12 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
         >
           <AddonSearchInput />
           <BundleDeps bundle={bundle} onChange={undefined as any} />
+          <BundleChecks
+            check={bundleCheckData}
+            isLoading={isFetchingCheck}
+            isCheckError={isCheckError}
+            onIssueClick={handleIssueClick}
+          />
         </BundleForm>
       )}
     </>
