@@ -74,6 +74,21 @@ export class DetailsPanel {
     await this.root.getByRole('navigation').getByRole('button', { name, exact: true }).click()
   }
 
+  subtask(label: string) {
+    return this.root.getByRole('listitem').filter({ hasText: label })
+  }
+
+  async searchSubtasks(text: string) {
+    await this.search(this.root, text)
+  }
+
+  private async search(scope: Locator, text: string) {
+    await scope.getByRole('textbox', { name: 'Search and filter' }).click()
+    await this.page.keyboard.type(text)
+    // Cmd/Ctrl+Enter adds the text as a search even when a filter name contains it
+    await this.page.keyboard.press('ControlOrMeta+Enter')
+  }
+
   get description() {
     return this.root.locator('.description-editor').first()
   }
@@ -225,16 +240,12 @@ export class DetailsPanel {
   }
 
   async searchFeed(text: string) {
-    const feed = this.root.locator('.feed')
-    await feed.getByRole('textbox', { name: 'Search and filter' }).click()
     const reloaded = this.page.waitForResponse(
       (res) =>
         new URL(res.url()).pathname === '/graphql' &&
         (res.request().postData() ?? '').includes('query GetActivities('),
     )
-    await this.page.keyboard.type(text)
-    // Cmd/Ctrl+Enter adds the text as a search even when a filter name contains it
-    await this.page.keyboard.press('ControlOrMeta+Enter')
+    await this.search(this.root.locator('.feed'), text)
     await reloaded
   }
 

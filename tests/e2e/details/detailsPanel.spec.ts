@@ -98,4 +98,37 @@ test.describe('details panel', () => {
       })
       .toEqual({ frameStart: 1009, own: true })
   })
+
+  test('search subtasks for all words of any comma separated part', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    test.skip(!(await api.hasAddon('planner')), 'subtasks need the planner addon')
+    const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    await api.createTask(projectName, {
+      folderId: folder.id,
+      name: 'layout',
+      taskType: 'Layout',
+      data: {
+        subtasks: [
+          { name: 'shadow', label: 'Shadow on the car' },
+          { name: 'paint', label: 'Car paint too red' },
+          { name: 'sky', label: 'Sky is flat' },
+        ],
+      },
+    })
+    // FLAG: opening Subtasks before the planner module has loaded shows the planner upsell and returns to the feed
+    const plannerLoaded = page.waitForResponse((res) => res.url().includes('/SubtasksManager-'))
+    const { panel } = await openTask(page, projectName)
+    await plannerLoaded
+    await panel.openTab('subtasks')
+    await expect(panel.subtask('Sky is flat')).toBeVisible()
+
+    await panel.searchSubtasks('car red, sky')
+
+    await expect(panel.subtask('Shadow on the car')).toBeHidden()
+    await expect(panel.subtask('Car paint too red')).toBeVisible()
+    await expect(panel.subtask('Sky is flat')).toBeVisible()
+  })
 })
