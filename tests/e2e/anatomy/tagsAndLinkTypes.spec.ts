@@ -38,7 +38,11 @@ test.describe('project anatomy: tags and link types', () => {
       .toEqual(['client approved'])
   })
 
-  test('a new tag can be typed right after adding it', async ({ page, api, projectName }) => {
+  test('a new tag can be typed right after adding it, Shift+Enter starts the next one', async ({
+    page,
+    api,
+    projectName,
+  }) => {
     const index = (await api.getProject(projectName)).tags.length
     const manager = new ProjectsManagerPage(page)
     await manager.goto('anatomy', projectName)
@@ -48,12 +52,17 @@ test.describe('project anatomy: tags and link types', () => {
 
     await expect(manager.anatomy.textbox(`root_tags_${index}_name`)).toBeFocused()
     await page.keyboard.type('typed at once')
-    await manager.anatomy.textbox(`root_tags_${index}_name`).blur()
+    await page.keyboard.press('Shift+Enter')
+    await expect(manager.anatomy.textbox(`root_tags_${index + 1}_name`)).toBeFocused()
+    await page.keyboard.type('and the next')
+    await manager.anatomy.textbox(`root_tags_${index + 1}_name`).blur()
     await manager.saveAnatomy()
 
     await expect
-      .poll(async () => (await api.getProject(projectName)).tags[index]?.name)
-      .toBe('typed at once')
+      .poll(async () =>
+        (await api.getProject(projectName)).tags.slice(index).map((t: any) => t.name),
+      )
+      .toEqual(['typed at once', 'and the next'])
   })
 
   test('a link type added in the anatomy can be shown as overview columns', async ({

@@ -44,6 +44,24 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
     props.onAddClick()
   }
 
+  const onAddItemRef = useRef(onAddItem)
+  onAddItemRef.current = onAddItem
+
+  // Shift+Enter in a field of an item saves it and starts the next item.
+  // Runs in the capture phase, as text fields stop Enter from bubbling.
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Enter' || !e.shiftKey || !props.canAdd || props.schema?.disabled) return
+    const target = e.target as HTMLElement
+    if (target.tagName !== 'INPUT') return
+    const itemArrayId = target.closest('[data-array-item]')?.getAttribute('data-array-item')
+    if (itemArrayId !== props.idSchema.$id) return
+    e.preventDefault()
+    e.stopPropagation()
+    // text fields save on blur, so the item is added once that change is in the form data
+    target.blur()
+    setTimeout(() => onAddItemRef.current())
+  }
+
   // move the focus from the add button into the new item, so typing goes there
   useEffect(() => {
     if (!focusAddedItem.current) return
@@ -80,7 +98,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   const draggedItem = items.find((item) => item.id === draggedItemId)
 
   return (
-    <DndContextWrapper ref={containerRef}>
+    <DndContextWrapper ref={containerRef} onKeyDownCapture={handleKeyDown}>
     <DndContext
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
