@@ -9,6 +9,8 @@ export type GetGroupQueriesParams = {
   groupBy: TableGroupBy
   groupPageCounts: Record<string, number>
   dataType?: string
+  // filter column when it differs from the grouping key (e.g. folder -> id)
+  conditionKey?: string
 }
 
 export type GroupQuery = { value: string; count: number; filter: string }
@@ -28,6 +30,7 @@ export const getGroupQueries = ({
   groupBy,
   groupPageCounts,
   dataType,
+  conditionKey = groupBy.id,
 }: GetGroupQueriesParams): GroupQuery[] => {
   if (!groups.length) return []
 
@@ -37,7 +40,7 @@ export const getGroupQueries = ({
 
   const named: GroupQuery[] = groups.map((group) => {
     const condition: QueryCondition = {
-      key: groupBy.id,
+      key: conditionKey,
       value: [group.value],
       operator: list ? 'includesany' : 'in',
     }
@@ -50,7 +53,7 @@ export const getGroupQueries = ({
   })
 
   const ungroupedCondition: QueryCondition = {
-    key: groupBy.id,
+    key: conditionKey,
     value: groups.map((g) => g.value),
     operator: list ? 'excludesany' : 'notin',
   }

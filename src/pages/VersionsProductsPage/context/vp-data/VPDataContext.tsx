@@ -582,6 +582,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: productsFetchNextPage,
     isFetchingNextPage: productsIsFetchingNextPage,
     isFetching: isFetchingProducts,
+    isLoading: isLoadingProducts,
     isUninitialized: isProductsUninitialized,
     error: productsError,
   } = useGetProductsInfiniteQuery(productArguments, {
@@ -599,6 +600,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: versionsFetchNextPage,
     isFetchingNextPage: versionsIsFetchingNextPage,
     isFetching: isFetchingVersions,
+    isLoading: isLoadingVersions,
     isUninitialized: isVersionsUninitialized,
     error: versionsError,
   } = useGetVersionsInfiniteQuery(versionArguments, {
@@ -613,22 +615,28 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     groups,
     versions: groupedVersions,
     incrementPageCount: incrementGroupPage,
+    isLoadingGroups,
     isUninitialized: isGroupedVersionsUninitialized,
     queryArgs: groupedVersionsArgs,
   } = useVersionsGroupBy({
     projectName,
     versionFilters: combinedVersionFilter.combinedFilters,
     taskFilters: combinedTaskFilter.combinedFilters,
+    folderFilters: combinedFolderFilter.combinedFilters,
     folderFilter: combinedFolderFilter.filterString,
     modules,
     versionArguments,
     expanded,
   })
 
-  const isLoadingTable = useQueryArgumentChangeLoading(
+  const isLoadingQueryArgs = useQueryArgumentChangeLoading(
     { ...queryArgs, featuredVersionOrder },
     isFetchingProducts || isFetchingVersions || isLoadingSlicerData,
   )
+  // switching grouping keeps the query args, so cover the source that just became active
+  const isLoadingTable =
+    isLoadingQueryArgs ||
+    (groupBy ? isLoadingGroups : showProducts ? isLoadingProducts : isLoadingVersions)
 
   // Dynamic pagination based on showProducts
   const hasNextPage = showProducts ? productsHasNextPage : versionsHasNextPage
