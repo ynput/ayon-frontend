@@ -308,7 +308,8 @@ const InboxMessage = ({
           showBorder={false}
           data-tooltip={isPlaceholder ? undefined : entityTooltip}
         />
-        <span className={clsx('title', { loading: isPlaceholder })}>{path.join(' - ')}</span>
+        <span className={clsx('project-name', { loading: isPlaceholder })}>{projectName}</span>
+        <span className={clsx('title', { loading: isPlaceholder })}>{path.join(' / ')}</span>
       </Styled.Left>
       <Styled.Middle className={clsx('middle', { loading: isPlaceholder })}>
         <Styled.Unread className={clsx(Typography.bodySmall, { hide: (unReadCount ?? 0) < 2 })}>
