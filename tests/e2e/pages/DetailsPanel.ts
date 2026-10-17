@@ -224,6 +224,20 @@ export class DetailsPanel {
     await reloaded
   }
 
+  async searchFeed(text: string) {
+    const feed = this.root.locator('.feed')
+    await feed.getByRole('textbox', { name: 'Search and filter' }).click()
+    const reloaded = this.page.waitForResponse(
+      (res) =>
+        new URL(res.url()).pathname === '/graphql' &&
+        (res.request().postData() ?? '').includes('query GetActivities('),
+    )
+    await this.page.keyboard.type(text)
+    // Cmd/Ctrl+Enter adds the text as a search even when a filter name contains it
+    await this.page.keyboard.press('ControlOrMeta+Enter')
+    await reloaded
+  }
+
   // FLAG: the new comment box has no role or name, so it is the `.comment-container` directly in the feed
   get newCommentBox() {
     return this.root.locator('.feed > .comment-container')
