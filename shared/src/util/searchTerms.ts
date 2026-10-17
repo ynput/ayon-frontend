@@ -56,6 +56,21 @@ export const matchSearchQuery = (haystack: string, groups: string[][]): RankingI
   return best ?? noMatch
 }
 
+// best matches first
+export const filterBySearchQuery = <T>(
+  items: T[],
+  query: string,
+  toHaystack: (item: T) => string,
+): T[] => {
+  const groups = parseSearchQuery(query)
+  if (!groups.length) return items
+  return items
+    .map((item) => ({ item, rank: matchSearchQuery(toHaystack(item), groups) }))
+    .filter(({ rank }) => rank.passed)
+    .sort((a, b) => b.rank.rank - a.rank.rank)
+    .map(({ item }) => item)
+}
+
 // A list pasted from a spreadsheet column or row, or one name per line, as a comma
 // separated search. Returns null when the text has no new lines or tabs, so the
 // browser can paste it as usual. Single-line inputs drop new lines on paste, so
