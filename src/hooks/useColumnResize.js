@@ -5,20 +5,11 @@ const useColumnResize = (name) => {
   const [columnsWidths, setColumnWidths] = useLocalStorage(name + '-columns-widths', {})
 
   const handleColumnResize = (e) => {
-    const key = name + '-columns-widths'
     const field = e.column.props.field
     const width = e.element.offsetWidth
 
     // set localstorage for column size change
-    let oldWidthState = {}
-    if (localStorage.getItem(key)) {
-      oldWidthState = JSON.parse(localStorage.getItem(key))
-    }
-
-    const newWidthState = { ...oldWidthState, [field]: width }
-    console.log('updating column widths for: ' + name + ' - ' + field)
-
-    setColumnWidths(newWidthState)
+    setColumnWidths((oldWidthState) => ({ ...(oldWidthState || {}), [field]: width }))
   }
 
   return [columnsWidths, handleColumnResize]
