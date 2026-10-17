@@ -288,7 +288,10 @@ export const CellWidget: FC<EditorCellProps> = ({
         return <CommentsWidget value={valueData as EntityComment[] | undefined} {...sharedProps} />
       }
 
-      case !!options.length || !!attributeData?.enumResolver: {
+      // lists that accept new values (tags) stay a dropdown even with no options yet
+      case !!options.length ||
+        !!attributeData?.enumResolver ||
+        (!!enableCustomValues && !!type?.includes('list')): {
         const enumValue = Array.isArray(value) ? value : [value]
         if (isReadOnly) {
           const selectedOptions = options.filter((option) => enumValue.includes(option.value))

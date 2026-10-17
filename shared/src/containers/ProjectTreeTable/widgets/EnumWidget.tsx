@@ -128,7 +128,11 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
         : newValue.filter((v) => options.find((o) => o.value === v))
 
       if (type?.includes('list')) {
-        onChange(filteredValue, 'Click')
+        // the "Type to add new items" row has an empty value while nothing is typed
+        onChange(
+          (filteredValue as string[]).filter((v) => v !== ''),
+          'Click',
+        )
       } else {
         // check if the value is an array or a string and for arrays take the first value only
         filteredValue = Array.isArray(filteredValue) ? filteredValue[0] : filteredValue

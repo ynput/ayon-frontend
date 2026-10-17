@@ -1771,8 +1771,9 @@ const TD = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
-        // check we are not clicking in a dropdown
-        if (target.closest('.options')) return
+        // check we are not clicking in a dropdown, or in anything the cell opened in a portal
+        // (e.g. a dropdown's search box), which would lose its focus to the cell
+        if (target.closest('.options') || !e.currentTarget.contains(target)) return
 
         e.currentTarget.focus()
 

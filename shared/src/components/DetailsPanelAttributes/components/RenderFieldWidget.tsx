@@ -131,7 +131,8 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         />
       )
 
-    case hasEnumOptions(field.data): {
+    // lists that accept new values (tags) stay a dropdown even with no options yet
+    case hasEnumOptions(field.data) || (!!field.enableCustomValues && !!type?.includes('list')): {
       const isListType = type?.includes('list')
       let valueArray = []
 

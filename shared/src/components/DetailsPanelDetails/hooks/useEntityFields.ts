@@ -90,6 +90,7 @@ export const useEntityFields = ({
       },
       {
         name: 'tags',
+        enableCustomValues: true,
         data: {
           type: 'list_of_strings',
           title: 'Tags',
