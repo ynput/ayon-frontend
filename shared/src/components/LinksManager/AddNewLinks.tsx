@@ -1,4 +1,5 @@
-import { FC, useState, useMemo, useRef, useEffect, Fragment } from 'react'
+import { FC, useMemo, useRef, useEffect, Fragment } from 'react'
+import { useDebounce } from 'primereact/hooks'
 import * as Styled from './LinksManager.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
@@ -23,7 +24,11 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
   onSearchTypeChange,
   onAdd,
 }) => {
-  const [search, setSearch] = useState('')
+  const [search, debouncedSearch, setSearch] = useDebounce('', 300) as [
+    string,
+    string,
+    (search: string) => void,
+  ]
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -37,9 +42,9 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
     {
       projectName,
       entityType: targetEntityType,
-      search,
+      search: debouncedSearch,
     },
-    { skip: !search },
+    { skip: !debouncedSearch },
   )
 
   // Flatten all entities from all pages
