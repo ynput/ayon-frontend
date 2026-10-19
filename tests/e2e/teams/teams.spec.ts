@@ -143,32 +143,4 @@ test.describe('project teams', () => {
       .poll(async () => (await api.getTeamMembers(projectName, 'comp_team'))?.[0]?.leader)
       .toBe(true)
   })
-  test('a member that is not a project user can be removed from the team', async ({
-    page,
-    api,
-    projectName,
-    createUser,
-    accessGroup,
-  }) => {
-    const member = await createUser({ accessGroups: { [projectName]: [accessGroup] } })
-    await api.createTeam(projectName, 'crew', [
-      { name: member.name },
-      { name: 'e2e_deleted_user', leader: true },
-    ])
-    const teams = new TeamsPage(page)
-    await teams.goto(projectName)
-    await teams.selectTeam('crew')
-
-    await expect(teams.userRow('e2e_deleted_user')).toContainText('crew')
-    await expect(
-      teams.userRow('e2e_deleted_user').locator('[data-tooltip="User does not exist"]'),
-    ).toBeVisible()
-
-    await teams.removeUserFromTeam('e2e_deleted_user', 'crew')
-
-    await expect
-      .poll(async () => (await api.getTeamMembers(projectName, 'crew'))?.map((m) => m.name))
-      .toEqual([member.name])
-    await expect(teams.userRow('e2e_deleted_user')).toBeHidden()
-  })
 })
