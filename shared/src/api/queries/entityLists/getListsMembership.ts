@@ -23,6 +23,8 @@ export type GetListsMembershipArgs = {
 export type ListsMembershipMap = Record<string, ListMembership[]>
 
 const CHUNK_SIZE = 500
+// realtime refetches every cached entity, so list changes from others apply at most this often
+const REALTIME_REFETCH_DELAY = 30000
 
 type MembershipNode = { id: string; entityLists: ListMembership[] }
 
@@ -110,8 +112,8 @@ const listsMembershipApi = gqlApi.injectEndpoints({
         ]
       },
       // List events name the list and its entity type, but not which entities changed. Events for
-      // lists of this entity type share one batch key, so a burst of them ends in one refetch of
-      // every cached entity, which replaces their lists.
+      // lists of this entity type share one batch key: the first starts a REALTIME_REFETCH_DELAY
+      // timer, and when it fires one refetch of every cached entity replaces their lists.
       async onCacheEntryAdded(
         { projectName, entityType },
         { cacheDataLoaded, cacheEntryRemoved, getCacheEntry, updateCachedData, dispatch },
@@ -133,6 +135,7 @@ const listsMembershipApi = gqlApi.injectEndpoints({
             })
           },
           () => 'membership',
+          REALTIME_REFETCH_DELAY,
         )
 
         try {
