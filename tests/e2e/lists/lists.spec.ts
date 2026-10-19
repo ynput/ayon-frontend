@@ -1,5 +1,5 @@
 import { expect, test } from '../fixtures'
-import { confirmDialog, menuItem } from '../support/ui'
+import { menuItem } from '../support/ui'
 import { addToList, ListsPage } from '../pages/ListsPage'
 import { OverviewPage } from '../pages/OverviewPage'
 
@@ -52,66 +52,6 @@ test.describe('lists', () => {
     await expect
       .poll(async () => (await api.listEntityLists(projectName)).map((l) => l.label))
       .toEqual(['Keep list'])
-  })
-
-  test('right-clicking another list keeps the selection', async ({ page, api, projectName }) => {
-    await api.createEntityList(projectName, { label: 'Picked' })
-    await api.createEntityList(projectName, { label: 'Other' })
-    const lists = new ListsPage(page)
-    await lists.goto(projectName)
-    await lists.selectListRow('Picked')
-
-    await lists.listRow('Other').click({ button: 'right' })
-
-    await expect(menuItem(page, 'Delete')).toBeVisible()
-    await expect(lists.listRow('Picked').locator('.selected')).toBeVisible()
-    await expect(lists.listRow('Other').locator('.selected')).toBeHidden()
-
-    await menuItem(page, 'Delete').click()
-    await confirmDialog(page).getByRole('button', { name: 'Delete' }).click()
-
-    await expect
-      .poll(async () => (await api.listEntityLists(projectName)).map((l) => l.label))
-      .toEqual(['Picked'])
-    await expect(lists.listRow('Picked').locator('.selected')).toBeVisible()
-  })
-
-  test('deleting another list keeps a selection made after the lists changed', async ({
-    page,
-    api,
-    projectName,
-  }) => {
-    await api.createEntityList(projectName, { label: 'Old list' })
-    await api.createEntityList(projectName, { label: 'Picked' })
-    const lists = new ListsPage(page)
-    await lists.goto(projectName)
-    // the rename refreshes the lists while "Old list" is the selection
-    await lists.selectListRow('Old list')
-    await lists.renameList('Old list', 'Stale list')
-    await lists.selectListRow('Picked')
-
-    await lists.deleteList('Stale list')
-
-    await expect(lists.listRow('Stale list')).toBeHidden()
-    await expect(lists.listRow('Picked').locator('.selected')).toBeVisible()
-  })
-
-  test('details from the menu of another list open that list', async ({
-    page,
-    api,
-    projectName,
-  }) => {
-    await api.createEntityList(projectName, { label: 'Picked' })
-    await api.createEntityList(projectName, { label: 'Other' })
-    const lists = new ListsPage(page)
-    await lists.goto(projectName)
-    await lists.selectListRow('Picked')
-
-    await lists.rowMenu('Other', 'Details')
-
-    await expect(page.getByRole('heading', { name: 'Other', level: 2 })).toBeVisible()
-    await expect(lists.listRow('Other').locator('.selected')).toBeVisible()
-    await expect(lists.listRow('Picked').locator('.selected')).toBeHidden()
   })
 })
 

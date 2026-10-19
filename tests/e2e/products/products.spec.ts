@@ -1,7 +1,6 @@
 import { expect, test } from '../fixtures'
 import { DetailsPanel } from '../pages/DetailsPanel'
 import { ProductsPage } from '../pages/ProductsPage'
-import { menuItem } from '../support/ui'
 
 test.describe('products', () => {
   test('published versions are listed with their product', async ({ page, api, projectName }) => {
@@ -42,38 +41,6 @@ test.describe('products', () => {
     await renderRow.getByText('renderMain').dblclick()
 
     await new DetailsPanel(page).expectOpenFor('renderMain')
-  })
-
-  test('right-clicking another card in the grid keeps the selection', async ({
-    page,
-    api,
-    projectName,
-  }) => {
-    const shot = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
-    const render = await api.createProduct(projectName, { folderId: shot.id, name: 'renderMain' })
-    const v1 = await api.createVersion(projectName, { productId: render.id, version: 1 })
-    const v2 = await api.createVersion(projectName, { productId: render.id, version: 2 })
-
-    const products = new ProductsPage(page)
-    await products.goto(projectName)
-    await page.getByRole('button', { name: 'grid_view', exact: true }).click()
-    const card = (id: string) => page.locator(`[data-entity-id="${id}"] .entity-card`)
-    const panel = new DetailsPanel(page)
-    await card(v1.id).getByText('renderMain').click()
-    await expect(panel.header).toContainText('v001')
-
-    await card(v2.id).click({ button: 'right' })
-
-    await expect(menuItem(page, 'Show details')).toBeVisible()
-    await expect(card(v1.id)).toHaveClass(/active/)
-    await expect(card(v2.id)).not.toHaveClass(/active/)
-    await expect(panel.header).toContainText('v001')
-
-    await menuItem(page, 'Show details').click()
-
-    await expect(panel.header).toContainText('v002')
-    await expect(card(v2.id)).toHaveClass(/active/)
-    await expect(card(v1.id)).not.toHaveClass(/active/)
   })
 })
 

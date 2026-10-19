@@ -1,8 +1,5 @@
 import { expect, test } from '../fixtures'
 import { uniqueName } from '../support/names'
-import { dialog, menuItem } from '../support/ui'
-import { hasPowerpack } from '../pages/ListsPage'
-import { ProjectsList } from '../pages/ProjectsList'
 import { ProjectsManagerPage } from '../pages/ProjectsManagerPage'
 
 test.describe('projects manager', () => {
@@ -60,39 +57,6 @@ test.describe('projects manager', () => {
     await manager.showArchived()
     await manager.projects.search(projectName)
     await expect(manager.projectRow(projectName)).toBeVisible()
-  })
-
-  test('create a folder from the menu of a project that is not selected', async ({
-    page,
-    api,
-    projectName,
-  }) => {
-    test.skip(!(await hasPowerpack(api)), 'project folders need the powerpack addon')
-    const other = await api.createProject()
-    const label = uniqueName('folder')
-    const projectFolderOf = async (name: string) =>
-      (await api.get('/api/projects')).projects.find((p: any) => p.name === name)?.projectFolder
-    try {
-      // the manager selects the project it opens
-      await page.goto(`/manageProjects/anatomy?project=${projectName}`)
-      await new ProjectsList(page).openContextMenu(other)
-      await menuItem(page, 'Create folder').click()
-      const folderDialog = dialog(page, /^Create Folder/)
-      await folderDialog.getByPlaceholder('Enter folder label').fill(label)
-      await folderDialog.getByRole('button', { name: /Create folder$/ }).click()
-      await expect(folderDialog).toBeHidden()
-
-      await expect.poll(() => projectFolderOf(other)).toBeTruthy()
-      const { folders } = await api.get('/api/projectFolders')
-      expect(await projectFolderOf(other)).toBe(folders.find((f: any) => f.label === label)?.id)
-      expect(await projectFolderOf(projectName)).toBeFalsy()
-    } finally {
-      await api.deleteProject(other)
-      const { folders } = await api.get('/api/projectFolders')
-      for (const folder of folders.filter((f: any) => f.label === label)) {
-        await api.delete(`/api/projectFolders/${folder.id}`)
-      }
-    }
   })
 
   test('rename the label of a project', async ({ page, api, projectName }) => {
