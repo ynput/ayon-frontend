@@ -41,6 +41,17 @@ const ListTags = styled(Chips)`
   }
 `
 
+const LoadError = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--md-sys-color-error);
+
+  .icon {
+    font-size: 18px;
+  }
+`
+
 const LoadingChip = styled.span`
   height: 24px;
   width: 64px;
@@ -95,7 +106,7 @@ const EntityListsChips: FC<ListsWidgetProps & { value: ListsWidgetData }> = ({
 }) => {
   const { useNavigate = useNoNavigate, hiddenListIds } = useProjectTableContext()
   const navigate = useNavigate()
-  const allLists = useEntityListsMembership(projectName, entityType, entityId)
+  const { lists: allLists, error } = useEntityListsMembership(projectName, entityType, entityId)
   const column = LIST_COLUMNS[columnId]
 
   const lists = useMemo(
@@ -149,6 +160,14 @@ const EntityListsChips: FC<ListsWidgetProps & { value: ListsWidgetData }> = ({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isEditing, onCancelEdit])
 
+  if (error) {
+    return (
+      <LoadError data-tooltip={`Lists failed to load, sync to try again: ${error}`}>
+        <Icon icon="error" />
+        Failed to load
+      </LoadError>
+    )
+  }
   if (!lists) return <LoadingChip className="loading" />
   if (!lists.length) return null
 

@@ -8,6 +8,7 @@ import {
   listsMembershipApi,
   useGetListsMembershipQuery,
 } from '@shared/api/queries/entityLists/getListsMembership'
+import { getRequestErrorString } from '@shared/util'
 
 const VISIBLE_ENTITIES_DEBOUNCE_MS = 200
 
@@ -69,12 +70,13 @@ export const useFetchListsMembership = ({
   )
 }
 
-// undefined while the entity's lists have not been fetched yet
+// `lists` is undefined while the entity's lists are loading or failed to load. `error` is set
+// when the fetch that should have loaded them failed. Entities fetched before keep their lists.
 export const useEntityListsMembership = (
   projectName: string,
   entityType: ListsMembershipEntityType,
   entityId: string,
-): ListMembership[] | undefined => {
+): { lists?: ListMembership[]; error?: string } => {
   const selectMembership = useMemo(
     () =>
       listsMembershipApi.endpoints.getListsMembership.select({
@@ -85,10 +87,12 @@ export const useEntityListsMembership = (
     [projectName, entityType],
   )
 
-  return useSelector((state: any) => {
+  const lists = useSelector((state: any) => selectMembership(state).data?.[entityId])
+  const error = useSelector((state: any) => {
     const entry = selectMembership(state)
-    return entry.data?.[entityId] ?? (entry.isError ? NO_LISTS : undefined)
+    if (!entry.isError || entry.data?.[entityId]) return undefined
+    return getRequestErrorString(entry.error) || 'Unknown error'
   })
-}
 
-const NO_LISTS: ListMembership[] = []
+  return { lists, error }
+}
