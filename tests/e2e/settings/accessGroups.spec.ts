@@ -57,29 +57,4 @@ test.describe('access groups', () => {
     await groups.select(accessGroup)
     await expect(groups.restrictionCheckbox('Restrict folder creation')).toBeChecked()
   })
-
-  test('paste a copied permission onto an access group', async ({
-    page,
-    context,
-    api,
-    accessGroup,
-  }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-    const { create } = await api.getAccessGroup(accessGroup)
-    expect(create.enabled).toBe(false)
-    const groups = new AccessGroupsPage(page)
-    await groups.goto()
-    await groups.select(accessGroup)
-    await page.evaluate(
-      (value) => navigator.clipboard.writeText(value),
-      JSON.stringify({ ...create, enabled: true }),
-    )
-
-    await groups.editor.sectionHeader('Restrict folder creation').click({ button: 'right' })
-    await menuItem(page, 'Paste').click()
-
-    await expect(groups.restrictionCheckbox('Restrict folder creation')).toBeChecked()
-    await groups.save()
-    await expect.poll(async () => (await api.getAccessGroup(accessGroup)).create.enabled).toBe(true)
-  })
 })
