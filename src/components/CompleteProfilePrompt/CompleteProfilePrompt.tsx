@@ -51,6 +51,9 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
     // Check if user has email
     const hasEmail = user.attrib?.email && user.attrib.email.trim() !== ''
 
+    // Check if user has full name
+    const hasFullName = user.attrib?.fullName && user.attrib.fullName.trim() !== ''
+
     // Initialize fullName from user data if available
     if (user.attrib?.fullName) {
       setFullName(user.attrib.fullName)
@@ -62,8 +65,8 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
     // Only show on dashboard paths
     const isDashboardPath = location.pathname.startsWith('/dashboard')
 
-    // Show dialog if no email and not dismissed and on dashboard path
-    if (!hasEmail && !isDismissed && isDashboardPath) {
+    // Show dialog if neither email nor full name is set, not dismissed and on dashboard path
+    if (!hasEmail && !hasFullName && !isDismissed && isDashboardPath) {
       setIsOpen(true)
     } else if (isOpen && !isDashboardPath) {
       // Close dialog if we navigate away from dashboard
@@ -74,7 +77,15 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
   const handleSave = async () => {
     if (!user) return
 
-    if (!email || !email.includes('@')) {
+    const trimmedEmail = email.trim()
+    const trimmedFullName = fullName.trim()
+
+    if (!trimmedEmail && !trimmedFullName) {
+      toast.error('Please enter your full name or email address')
+      return
+    }
+
+    if (trimmedEmail && !trimmedEmail.includes('@')) {
       toast.error('Please enter a valid email address')
       return
     }
@@ -84,8 +95,8 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
         name: user.name,
         patch: {
           attrib: {
-            email: email.trim(),
-            fullName: fullName.trim() || undefined,
+            email: trimmedEmail || undefined,
+            fullName: trimmedFullName || undefined,
           },
         },
       }).unwrap()
@@ -93,8 +104,8 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
       // Update Redux state
       dispatch(
         updateUserAttribs({
-          email: email.trim(),
-          fullName: fullName.trim() || undefined,
+          email: trimmedEmail || undefined,
+          fullName: trimmedFullName || undefined,
         }),
       )
       // remove dismissed flag from localStorage
@@ -124,7 +135,7 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
           <Button label="Later" onClick={handleDismiss} variant="text" />
           <SaveButton
             label="Save profile"
-            active={!!email}
+            active={!!email.trim() || !!fullName.trim()}
             saving={isUpdatingUser}
             onClick={handleSave}
           />
