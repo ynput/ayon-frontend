@@ -26,16 +26,14 @@ const CHUNK_SIZE = 500
 
 type MembershipNode = { id: string; entityLists: ListMembership[] }
 
-// `listIds` limits the result to those lists, for realtime updates of the lists that changed
 const fetchMembership = async (
   dispatch: (action: any) => any,
   { projectName, entityType, entityIds }: GetListsMembershipArgs,
-  listIds?: string[],
 ): Promise<ListsMembershipMap> => {
   const options = { forceRefetch: true, subscribe: false }
 
   const fetchChunk = async (ids: string[]): Promise<MembershipNode[]> => {
-    const args = { projectName, entityIds: ids, listIds }
+    const args = { projectName, entityIds: ids }
     if (entityType === 'folder') {
       const res = await dispatch(
         gqlApi.endpoints.GetFoldersListsMembership.initiate(args, options),
@@ -111,45 +109,30 @@ const listsMembershipApi = gqlApi.injectEndpoints({
           ...Array.from(listIds).map((id) => ({ type: 'entityList' as const, id })),
         ]
       },
-      // List events name the list and its entity type, but not which entities changed. Events
-      // for lists of this entity type are batched by list id, then one query fetches only those
-      // lists for every cached entity, and they replace the old entries of those lists.
+      // List events name the list and its entity type, but not which entities changed. Events for
+      // lists of this entity type share one batch key, so a burst of them ends in one refetch of
+      // every cached entity, which replaces their lists.
       async onCacheEntryAdded(
         { projectName, entityType },
         { cacheDataLoaded, cacheEntryRemoved, getCacheEntry, updateCachedData, dispatch },
       ) {
         let token: string | undefined
         const batcher = createRealtimeBatcher<string>(
-          async (listIds, isActive) => {
+          async (_listIds, isActive) => {
             const entityIds = Object.keys(getCacheEntry().data || {})
             if (!entityIds.length) return
-            try {
-              await waitForRealtimeJitter()
-              const fresh = await fetchMembership(
-                dispatch,
-                { projectName, entityType, entityIds },
-                listIds,
-              )
-              if (!isActive()) return
-              const changed = new Set(listIds)
-              updateCachedData((draft) => {
-                for (const [entityId, lists] of Object.entries(fresh)) {
-                  const current = draft[entityId]
-                  // dropped by a forced refetch during the fetch
-                  if (!current) continue
-                  if (!lists.length && !current.some((list) => changed.has(list.id))) continue
-                  // same order as the server: by label
-                  draft[entityId] = [
-                    ...current.filter((list) => !changed.has(list.id)),
-                    ...lists,
-                  ].sort((a, b) => a.label.localeCompare(b.label))
-                }
-              })
-            } catch (error) {
-              console.error('Realtime lists membership update failed', error)
-            }
+            await waitForRealtimeJitter()
+            // a failed fetch is logged by the base client and the batcher
+            const fresh = await fetchMembership(dispatch, { projectName, entityType, entityIds })
+            if (!isActive()) return
+            updateCachedData((draft) => {
+              for (const [entityId, lists] of Object.entries(fresh)) {
+                // dropped by a forced refetch during the fetch
+                if (draft[entityId]) draft[entityId] = lists
+              }
+            })
           },
-          (listId) => listId,
+          () => 'membership',
         )
 
         try {

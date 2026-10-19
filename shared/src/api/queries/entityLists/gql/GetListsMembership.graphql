@@ -5,17 +5,13 @@ fragment ListMembershipFragment on EntityListInfo {
   itemIds
 }
 
-query GetFoldersListsMembership($projectName: String!, $entityIds: [String!], $listIds: [String!]) {
+query GetFoldersListsMembership($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
     folders(ids: $entityIds, last: 5000) {
       edges {
         node {
           id
-          entityLists(
-            visibility: VISIBLE
-            entityListTypes: ["generic", "review-session"]
-            ids: $listIds
-          ) {
+          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
@@ -24,17 +20,13 @@ query GetFoldersListsMembership($projectName: String!, $entityIds: [String!], $l
   }
 }
 
-query GetTasksListsMembership($projectName: String!, $entityIds: [String!], $listIds: [String!]) {
+query GetTasksListsMembership($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
     tasks(ids: $entityIds, last: 5000) {
       edges {
         node {
           id
-          entityLists(
-            visibility: VISIBLE
-            entityListTypes: ["generic", "review-session"]
-            ids: $listIds
-          ) {
+          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
@@ -43,21 +35,13 @@ query GetTasksListsMembership($projectName: String!, $entityIds: [String!], $lis
   }
 }
 
-query GetVersionsListsMembership(
-  $projectName: String!
-  $entityIds: [String!]
-  $listIds: [String!]
-) {
+query GetVersionsListsMembership($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
     versions(ids: $entityIds, last: 5000) {
       edges {
         node {
           id
-          entityLists(
-            visibility: VISIBLE
-            entityListTypes: ["generic", "review-session"]
-            ids: $listIds
-          ) {
+          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
