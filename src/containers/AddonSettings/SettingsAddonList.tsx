@@ -134,7 +134,7 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
         })
       }
     }
-  }, [uriType, settings, selectedAddons, setSelectedAddons, onAddonFocus])
+  }, [uriType, settings, addons, selectedAddons, setSelectedAddons, onAddonFocus])
 
   const onSelectionChange = (e: any) => {
     // if e.value is an array [], just set the selection

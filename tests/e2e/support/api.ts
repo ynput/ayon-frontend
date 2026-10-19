@@ -95,6 +95,12 @@ export class AyonApi {
     return res.data
   }
 
+  /** for features that come from an addon's frontend modules */
+  async hasAddon(name: string): Promise<boolean> {
+    const { addons } = await this.get('/api/addons')
+    return addons.some((a: any) => a.name === name && a.productionVersion)
+  }
+
   // ---------------------------------------------------------------------------
   // projects
   // ---------------------------------------------------------------------------
@@ -246,12 +252,13 @@ export class AyonApi {
 
   async createRepresentation(
     project: string,
-    data: { versionId: string; name: string; files: string[] },
+    data: { versionId: string; name: string; files: string[]; attrib?: Record<string, unknown> },
   ) {
     const { id } = await this.post(`/api/projects/${project}/representations`, {
       versionId: data.versionId,
       name: data.name,
       files: data.files.map((path, i) => ({ id: `${i}`.padStart(32, '0'), path, size: 0 })),
+      attrib: data.attrib,
     })
     return id as string
   }

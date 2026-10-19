@@ -38,14 +38,16 @@ const BundleChecks = ({ check = {}, isLoading = true, isCheckError = false, onIs
       break
   }
 
-  //   sort by severity error first then by addon name
+  //   sort global (no addon) first, then by severity error first, then by addon name
   const sortedIssues = [...issues].sort((a, b) => {
-    if (a.severity === 'error' && b.severity !== 'error') {
+    if (!a.addon !== !b.addon) {
+      return a.addon ? 1 : -1
+    } else if (a.severity === 'error' && b.severity !== 'error') {
       return -1
     } else if (a.severity !== 'error' && b.severity === 'error') {
       return 1
     } else {
-      return a.addon.localeCompare(b.addon)
+      return (a.addon ?? '').localeCompare(b.addon ?? '')
     }
   })
 
@@ -64,7 +66,8 @@ const BundleChecks = ({ check = {}, isLoading = true, isCheckError = false, onIs
               onClick={() => onIssueClick(issue.requiredAddon)}
             >
               <Icon icon={issue.severity} />
-              {issue.addon}: {issue.message}
+              {issue.addon && `${issue.addon}: `}
+              {issue.message}
             </Styled.ErrorItem>
           ))}
         </Styled.ErrorsList>

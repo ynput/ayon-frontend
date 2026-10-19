@@ -23,6 +23,7 @@ import { SortingState, VisibilityState } from '@tanstack/react-table'
 import { useProjectContext, OnSyncDataCallback } from '@shared/context'
 import type { FieldStats } from '@shared/api'
 import { useReviewCardsSettingsContext } from '../review-cards-settings/ReviewCardsSettingsContextInstance'
+import useViewListItemData from '../../hooks/useViewListItemData'
 import useReplaceListItem from '../../hooks/useReplaceListItem'
 import { ListItemsDataContext } from './ListItemsDataContextInstance'
 import { DEFAULT_COLUMN_VISIBILITY, DEFAULT_COLUMNS_BY_TYPE } from './ListItemsDataContextHelpers'
@@ -44,6 +45,13 @@ export interface ListItemsDataContextValue {
   fetchNextPage: () => void
   isLoadingAll: boolean
   isLoadingMore: boolean
+  hasNextPage: boolean
+  // the list items query has not run yet (no list, or waiting for views)
+  isUninitialized: boolean
+  // any fetch of the list items, also background refetches
+  isFetching: boolean
+  // the filter and search sent with the list items query
+  listItemsQuery: { filter?: string; search?: string }
   isError?: boolean
   error?: unknown
   isInitialized: boolean
@@ -66,6 +74,8 @@ export interface ListItemsDataContextValue {
   reorderListItem: UseReorderListItemReturn['reorderListItem']
   // replace list items
   replaceListItemsState: readonly [null | string[], (ids: null | string[]) => void]
+  // list item shown in the data dialog
+  viewListItemDataState: readonly [null | string, (id: null | string) => void]
   // reset filters
   resetFilters: () => void
   refetch: () => void
@@ -171,6 +181,11 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     data: listItemsData,
     isLoading,
     isFetchingNextPage,
+    hasNextPage,
+    isUninitialized,
+    isFetching,
+    queryFilter,
+    search: querySearch,
     isError,
     error,
     fetchNextPage,
@@ -248,6 +263,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     entityType: listEntityType || '',
   })
 
+  const { viewDataContextMenu, state: viewListItemDataState } = useViewListItemData()
+
   const handleReorderFinished = () => {
     // remove any sorting
     updateSorting([])
@@ -272,6 +289,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     // add context menu to add to lists but filter out own list
     menuItemsAddToList((item) => item.id !== selectedListId),
     replaceItemContextMenu,
+    viewDataContextMenu,
     deleteListItemMenuItem,
   ]
 
@@ -288,6 +306,10 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         listItemsMap,
         isLoadingAll: isLoading || isLoadingData,
         isLoadingMore: isFetchingNextPage,
+        hasNextPage,
+        isUninitialized,
+        isFetching,
+        listItemsQuery: { filter: queryFilter, search: querySearch },
         isError,
         error,
         fetchNextPage,
@@ -310,6 +332,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         reorderListItem,
         // replace list items
         replaceListItemsState,
+        viewListItemDataState,
         resetFilters,
         refetch,
         onSyncData,
