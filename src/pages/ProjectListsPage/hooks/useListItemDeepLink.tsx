@@ -27,6 +27,8 @@ type PendingDeepLink = {
   staleFilters?: string
   // where the items are, from one query by id before any pages are loaded
   check?: {
+    filter?: string
+    search?: string
     visible: string[] // match the current filters, page until they are loaded
     hidden: string[] // in the list but hidden by the filters or search
     gone: string[] // not in the list
@@ -82,7 +84,10 @@ const useListItemDeepLink = () => {
   // don't load every page of the list before we can say they are missing
   const isCheckReady =
     !!pending &&
-    !pending.check &&
+    !isUninitialized &&
+    (!pending.check ||
+      pending.check.filter !== queryFilter ||
+      pending.check.search !== querySearch) &&
     urlListId === pending.listId &&
     selectedList?.id === pending.listId &&
     pending.staleFilters !== filtersKey
@@ -112,13 +117,15 @@ const useListItemDeepLink = () => {
         const isFiltered = !!queryFilter || !!querySearch
         const existing = visible.size < ids.length && isFiltered ? await findIds() : visible
         return {
+          filter: queryFilter,
+          search: querySearch,
           visible: ids.filter((id) => visible.has(id)),
           hidden: ids.filter((id) => existing.has(id) && !visible.has(id)),
           gone: ids.filter((id) => !existing.has(id)),
         }
       } catch {
         // fall back to looking through the pages
-        return { visible: ids, hidden: [], gone: [] }
+        return { filter: queryFilter, search: querySearch, visible: ids, hidden: [], gone: [] }
       }
     }
 
@@ -136,7 +143,14 @@ const useListItemDeepLink = () => {
     // the user switched to another list
     if (urlListId !== pending.listId)
       return setPending((prev) => (prev === pending ? null : prev))
-    if (!pending.check || selectedList?.id !== pending.listId || isUninitialized) return
+    if (
+      !pending.check ||
+      pending.check.filter !== queryFilter ||
+      pending.check.search !== querySearch ||
+      selectedList?.id !== pending.listId ||
+      isUninitialized
+    )
+      return
     // isLoadingAll turns on a render after the filters change, isFetching right away
     if (isLoadingAll || isFetching) return
     if (isError) return setPending(null)
@@ -196,6 +210,8 @@ const useListItemDeepLink = () => {
     listItemsMap,
     listItemsData,
     filtersKey,
+    queryFilter,
+    querySearch,
   ])
 
   const onScrolledToRow = useCallback(() => setScrollToRowId(null), [])
