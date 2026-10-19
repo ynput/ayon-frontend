@@ -35,22 +35,20 @@ While writing tests, run only your specs: `npx playwright test --project=chromiu
 
 ## When to add a test
 
-E2E tests are slow and costly to keep working, so the suite stays small. Decide per test whether it belongs in it.
+A test is cheaper than someone finding the bug or checking it by hand, so add them. What matters is that each one stays cheap to run and to keep working.
 
 **Add an e2e test for**
 - a main user flow of a page or feature: create, edit, delete, save, share.
 - a critical path, where a regression loses or corrupts data or opens access: saving settings, permissions, deletes, imports.
-- a bug that already came back once, or is easy to break again from another area.
+- every bug fix: reproduce the bug, so it can't come back unnoticed. A fixed bug is a regression test, not an edge case.
 
-**Don't add one for**
-- an edge case of a single fix (an anatomy with no tags, one key combination, one empty state). Test it by hand and say so in the PR description.
-- variants of the same behaviour, e.g. one spec per search syntax. One spec that covers the main case is enough.
-- implementation details: request counts, batch sizes, payload shapes, inline styles or colours. Assert what the user sees.
-- a niche check that needs heavy setup, like creating 100+ entities, admins or bundles on every run.
+**Keep each test cheap**
+- Prefer extending over adding. Add an assertion to an existing spec that already walks through that flow, instead of a new spec with its own setup.
+- Set up only what the test needs through the API. Avoid creating 100+ entities, admins or bundles on every run.
+- Assert what the user sees, not implementation details: request counts, batch sizes, payload shapes, inline styles or colours. Those break on refactors without a real bug.
+- Cover variants of one behaviour (e.g. search syntaxes) in one spec, not one spec each.
 
-**Prefer extending over adding.** For a fix, add an assertion to an existing spec that already walks through that flow, instead of a new spec.
-
-**Tests written while working.** Agents may write tests to check their own change. Before opening the PR, remove the ones that don't meet the bar above, and say in the PR description what was tested by hand instead.
+**Tests written while working.** Agents may write tests to check their own change. Keep the ones that meet the points above, rework or remove the rest before opening the PR.
 
 ## How the e2e tests are built
 
