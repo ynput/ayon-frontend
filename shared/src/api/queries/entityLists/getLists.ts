@@ -226,7 +226,11 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
                   if (!list) return
                   Object.assign(list, getListFromSummary(list))
                 } else if (topic === 'entity_list.created') {
-                  if (draft.pages.length !== 0) {
+                  // a refetch may have brought the new list already
+                  const known = draft.pages.some((page: any) =>
+                    page.lists.some((item: any) => item.id === id),
+                  )
+                  if (draft.pages.length !== 0 && !known) {
                     draft.pages[0].lists.unshift(getListFromSummary())
                   }
                 } else if (topic === 'entity_list.deleted') {
