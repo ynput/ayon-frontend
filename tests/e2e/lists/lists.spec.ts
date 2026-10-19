@@ -76,6 +76,26 @@ test.describe('lists', () => {
     await expect(lists.listRow('Picked').locator('.selected')).toBeVisible()
   })
 
+  test('deleting another list keeps a selection made after the lists changed', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    await api.createEntityList(projectName, { label: 'Old list' })
+    await api.createEntityList(projectName, { label: 'Picked' })
+    const lists = new ListsPage(page)
+    await lists.goto(projectName)
+    // the rename refreshes the lists while "Old list" is the selection
+    await lists.selectListRow('Old list')
+    await lists.renameList('Old list', 'Stale list')
+    await lists.selectListRow('Picked')
+
+    await lists.deleteList('Stale list')
+
+    await expect(lists.listRow('Stale list')).toBeHidden()
+    await expect(lists.listRow('Picked').locator('.selected')).toBeVisible()
+  })
+
   test('details from the menu of another list open that list', async ({
     page,
     api,

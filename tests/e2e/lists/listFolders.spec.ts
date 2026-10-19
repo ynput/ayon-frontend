@@ -39,6 +39,28 @@ test.describe('list folders', () => {
     await expect(lists.listRow('Client notes')).toBeVisible()
   })
 
+  test('create a folder from the menu of a list that is not selected', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const mondayId = await api.createEntityList(projectName, { label: 'Monday picks' })
+    const tuesdayId = await api.createEntityList(projectName, { label: 'Tuesday picks' })
+    const lists = new ListsPage(page)
+    await lists.goto(projectName)
+    await lists.selectListRow('Monday picks')
+
+    await lists.rowMenu('Tuesday picks', 'Create folder')
+    await lists.submitFolderDialog('Dailies')
+
+    await expect.poll(async () => (await api.listEntityListFolders(projectName)).length).toBe(1)
+    const [folder] = await api.listEntityListFolders(projectName)
+    await expect
+      .poll(async () => (await api.getEntityList(projectName, tuesdayId)).entityListFolderId)
+      .toBe(folder.id)
+    expect((await api.getEntityList(projectName, mondayId)).entityListFolderId).toBeFalsy()
+  })
+
   test('move a list into a folder', async ({ page, api, projectName }) => {
     const folderId = await api.createEntityListFolder(projectName, { label: 'Dailies' })
     const listId = await api.createEntityList(projectName, { label: 'Monday picks' })
