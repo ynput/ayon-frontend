@@ -3,11 +3,17 @@ import { cloneDeep } from 'lodash'
 import { getValueByPath, setValueByPath, sameKeysStructure } from '@containers/AddonSettings/utils'
 import { usePaste } from '@context'
 
+type SettingsFormData = Record<string, any>
+
 // pastes a copied settings value (JSON) at a path of the form data
-const useSettingsPaste = (formData, setFormData) => {
+const useSettingsPaste = (
+  formData: SettingsFormData,
+  setFormData: (data: SettingsFormData) => void,
+  { strict = false }: { strict?: boolean } = {},
+) => {
   const { requestPaste } = usePaste()
 
-  return async (path) => {
+  return async (path: string[]) => {
     const pastedContent = await requestPaste()
     if (!pastedContent) {
       toast.error('No content to paste')
@@ -25,10 +31,8 @@ const useSettingsPaste = (formData, setFormData) => {
       toast.error('No data to paste')
       return
     }
-    if (!sameKeysStructure(oldValue, value)) {
+    if (!sameKeysStructure(oldValue, value, strict)) {
       toast.error('Incompatible data structure')
-      console.log('oldValue', oldValue)
-      console.log('value', value)
       return
     }
 

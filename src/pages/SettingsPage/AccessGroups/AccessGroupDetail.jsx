@@ -87,7 +87,8 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   // This conditions checks if there are any local (NOT global) project settings for user group
   const noLocalSettings = projectName && !isProjectLevel
 
-  const onPasteValue = useSettingsPaste(formData, setFormData)
+  // a pasted section with other keys would save a broken access group
+  const onPasteValue = useSettingsPaste(formData, setFormData, { strict: true })
 
   const permissionsEditor = useMemo(() => {
     return (
