@@ -5,7 +5,6 @@ import {
   gqlApi,
   GetProjectsQuery,
   GetProjectsQueryVariables,
-  GetProjectUsedTagsQuery,
   ProjectFragmentFragment,
 } from '@shared/api/generated'
 
@@ -56,14 +55,13 @@ export type GetProjectsResult = {
 
 type GQLDefinitions = DefinitionsFromApi<typeof gqlApi>
 // update the definitions to include the new types
-type GQLUpdatedDefinitions = Omit<GQLDefinitions, 'GetProjects' | 'GetProjectUsedTags'> & {
+type GQLUpdatedDefinitions = Omit<GQLDefinitions, 'GetProjects'> & {
   GetProjects: OverrideResultType<GQLDefinitions['GetProjects'], GetProjectsResult>
-  GetProjectUsedTags: OverrideResultType<GQLDefinitions['GetProjectUsedTags'], string[]>
 }
 // keep high until ayon-backend#1109: a page shortened by access filtering looks like the last page
 export const PROJECTS_PER_PAGE = 2000
 
-// enhance graphql
+// enhance graphql - used only for the infinite query below
 const enhancedGraphql = gqlApi.enhanceEndpoints<TagTypes, GQLUpdatedDefinitions>({
   endpoints: {
     GetProjects: {
@@ -74,11 +72,6 @@ const enhancedGraphql = gqlApi.enhanceEndpoints<TagTypes, GQLUpdatedDefinitions>
         })),
         pageInfo: res.projects.pageInfo,
       }),
-    },
-    // tags on any entity of the project, including ones that are not in the anatomy
-    GetProjectUsedTags: {
-      transformResponse: (res: GetProjectUsedTagsQuery) => res.project.usedTags,
-      providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
     },
   },
 })
@@ -145,7 +138,6 @@ export const getProjectsGraphql = enhancedGraphql.injectEndpoints({
   overrideExisting: true,
 })
 
-export const { useGetProjectsInfiniteInfiniteQuery, useGetProjectUsedTagsQuery } =
-  getProjectsGraphql
+export const { useGetProjectsInfiniteInfiniteQuery } = getProjectsGraphql
 
 export default enhancedProject

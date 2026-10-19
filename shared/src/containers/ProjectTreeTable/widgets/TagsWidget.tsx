@@ -3,7 +3,6 @@ import clsx from 'clsx'
 import { useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import type { EnumItem } from '@shared/api'
-import { useProjectTags } from '@shared/hooks/useProjectTags'
 import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
@@ -19,7 +18,6 @@ export interface TagsWidgetProps extends WidgetBaseProps {
   value: (string | number | boolean)[]
   // the anatomy tags
   options: EnumItem[]
-  projectName?: string
   placeholder?: string
   align?: 'left' | 'right'
   className?: string
@@ -31,7 +29,6 @@ export interface TagsWidgetProps extends WidgetBaseProps {
 export const TagsWidget = ({
   value,
   options,
-  projectName,
   isEditing,
   isReadOnly,
   onChange,
@@ -47,17 +44,17 @@ export const TagsWidget = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [valueKey],
   )
-  const anatomyTags = useMemo(
-    () => options.map((option) => ({ name: option.value.toString(), color: option.color })),
-    [options],
-  )
+  // the anatomy tags with their colours, then the values that are not in the anatomy
+  const tags = useMemo(() => {
+    const result: Record<string, { name: string; color: string }> = {}
+    for (const option of options) {
+      const name = option.value.toString()
+      result[name] = { name, color: option.color || '' }
+    }
+    for (const name of values) if (!result[name]) result[name] = { name, color: '' }
+    return result
+  }, [options, values])
   const isEditable = !!isEditing && !isReadOnly
-  const { tags, addUsedTags } = useProjectTags({
-    projectName,
-    anatomyTags,
-    values,
-    skip: !isEditable,
-  })
 
   const dropdownRef = useRef<DropdownRef>(null)
   useEffect(() => {
@@ -76,10 +73,7 @@ export const TagsWidget = ({
         editor
         align={align}
         placeholder={placeholder}
-        onChange={(names) => {
-          addUsedTags(names)
-          onChange(names, 'Click')
-        }}
+        onChange={(names) => onChange(names, 'Click')}
         onClose={onCancelEdit}
         className={className}
       />
