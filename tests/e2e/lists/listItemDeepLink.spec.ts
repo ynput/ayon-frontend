@@ -41,6 +41,24 @@ test.describe('list item links', () => {
     await expect(page).not.toHaveURL(/listItemId/)
   })
 
+  test('stop at once when a linked item is not in the list', async ({ page, api, projectName }) => {
+    test.slow()
+    const { listId } = await seedFolderList(api, projectName, 110)
+
+    // count the requests for later pages of the list items
+    let laterPages = 0
+    page.on('request', (request) => {
+      const body = request.postDataJSON?.()
+      if (body?.query?.includes('query GetListItems(') && body.variables?.after) laterPages++
+    })
+
+    await page.goto(deepLink(`/projects/${projectName}/lists`, 'list', listId, ['0'.repeat(32)]))
+    await expect(toast(page, '1 linked item is no longer in this list')).toBeVisible({
+      timeout: 30_000,
+    })
+    expect(laterPages).toBe(0)
+  })
+
   test('offer to clear filters that hide a linked item', async ({ page, api, projectName }) => {
     const { listId, folders } = await seedFolderList(api, projectName, 2)
     await api.updateFolder(projectName, folders[0].id, { attrib: { priority: 'urgent' } })
@@ -56,7 +74,7 @@ test.describe('list item links', () => {
     const lists = new ListsPage(page)
     await page.goto(deepLink(`/projects/${projectName}/lists`, 'list', listId, [hidden.id]))
 
-    const notShown = toast(page, '1 linked item is not shown')
+    const notShown = toast(page, '1 linked item is hidden by the current filters')
     await expect(notShown).toBeVisible({ timeout: 30_000 })
     await expect(lists.itemNameCell('f002')).toBeHidden()
     await notShown.getByRole('button', { name: 'Clear filters' }).click()

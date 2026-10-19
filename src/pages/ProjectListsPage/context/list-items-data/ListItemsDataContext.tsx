@@ -49,6 +49,8 @@ export interface ListItemsDataContextValue {
   isUninitialized: boolean
   // any fetch of the list items, also background refetches
   isFetching: boolean
+  // the filter and search sent with the list items query
+  listItemsQuery: { filter?: string; search?: string }
   isError?: boolean
   error?: unknown
   isInitialized: boolean
@@ -179,6 +181,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     hasNextPage,
     isUninitialized,
     isFetching,
+    queryFilter,
+    search: querySearch,
     isError,
     error,
     fetchNextPage,
@@ -299,6 +303,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         hasNextPage,
         isUninitialized,
         isFetching,
+        listItemsQuery: { filter: queryFilter, search: querySearch },
         isError,
         error,
         fetchNextPage,
