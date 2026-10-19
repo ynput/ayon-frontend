@@ -8,6 +8,19 @@ export const parseSearchQuery = (query: string): string[][] =>
     .map((part) => part.trim().split(/\s+/).filter(Boolean))
     .filter((terms) => terms.length > 0)
 
+// The same search as a filter with one condition per term, for searches matched elsewhere
+export const searchQueryToFilter = <C>(query: string, toCondition: (term: string) => C) => {
+  const groups = parseSearchQuery(query)
+  if (!groups.length) return null
+  return {
+    operator: 'or' as const,
+    conditions: groups.map((terms) => ({
+      operator: 'and' as const,
+      conditions: terms.map(toCondition),
+    })),
+  }
+}
+
 const rankOf = (rank: Ranking, passed: boolean): RankingInfo =>
   Object.freeze({
     rankedValue: '',
