@@ -63,6 +63,31 @@ test.describe('references in comments', () => {
     ])
   })
 
+  test('mention one of several comma separated tasks', async ({ page, api, projectName }) => {
+    const { folder, lighting, comp } = await setup(api, projectName)
+    for (const [name, taskType] of [
+      ['anim', 'Animation'],
+      ['fx', 'FX'],
+    ])
+      await api.createTask(projectName, { folderId: folder.id, name, taskType })
+    const panel = await openTask(page, projectName, 'lighting')
+    await panel.openCommentBox()
+
+    await panel.commentEditor.pressSequentially('Match ')
+    await panel.commentEditor.pressSequentially('@@@anim,comp')
+
+    await expect(panel.mentionOption('fx')).toBeHidden()
+    await expect(panel.mentionOption('anim')).toBeVisible()
+    await panel.mentionOption('comp').click()
+    await panel.submitComment()
+
+    await expect
+      .poll(async () =>
+        (await api.listActivities(projectName, 'task', lighting.id)).map((a) => a.body.trim()),
+      )
+      .toEqual([`Match [comp](task:${comp.id})`])
+  })
+
   test('mention a version of the task', async ({ page, api, projectName }) => {
     const { lighting, version } = await setup(api, projectName)
     const panel = await openTask(page, projectName, 'lighting')

@@ -281,12 +281,15 @@ export class DetailsPanel {
 
   async mention(trigger: '@' | '@@' | '@@@', search: string, label: string, editor?: Locator) {
     await (editor ?? this.commentEditor).pressSequentially(`${trigger}${search}`)
+    await this.mentionOption(label).click()
+  }
+
+  mentionOption(label: string) {
     // options read "<icon> <context> - <label> [<age>]", e.g. "image renderMain - v001 Just now"
     const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    await this.page
+    return this.page
       .getByRole('listbox')
       .getByRole('option', { name: new RegExp(`(^| )${escaped}( |$)`) })
-      .click()
   }
 
   // FLAG: references are spans without a role; they are found by their `reference` class
