@@ -339,7 +339,14 @@ const CommentInput: FC<CommentInputProps> = ({
   const containerRef = useRef<HTMLDivElement>(null)
 
   const hasText = !!editorValue.trim()
-  const isEmpty = !hasText && !files.length && !annotations.length
+const isEmpty =
+    !hasText &&
+    !files.length &&
+    !filesUploading.length &&
+    !inlineUploads &&
+    !uploadedAnnotations.length &&
+    !annotations.length &&
+    !isSubmitting
 
   // the checklists filter starts a new comment with a checklist item
   const isChecklistsFilter = !!feedFilter?.conditions?.some(
