@@ -3636,10 +3636,7 @@ export const GetFoldersListsMembershipDocument = new TypedDocumentString(`
       edges {
         node {
           id
-          entityLists(
-            visibility: VISIBLE
-            entityListTypes: ["generic", "review-session"]
-          ) {
+          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
@@ -3660,10 +3657,7 @@ export const GetTasksListsMembershipDocument = new TypedDocumentString(`
       edges {
         node {
           id
-          entityLists(
-            visibility: VISIBLE
-            entityListTypes: ["generic", "review-session"]
-          ) {
+          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
@@ -3684,10 +3678,7 @@ export const GetVersionsListsMembershipDocument = new TypedDocumentString(`
       edges {
         node {
           id
-          entityLists(
-            visibility: VISIBLE
-            entityListTypes: ["generic", "review-session"]
-          ) {
+          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
             ...ListMembershipFragment
           }
         }
