@@ -33,6 +33,25 @@ If a test server is already listening on 3100 it is reused locally. **It will no
 
 While writing tests, run only your specs: `npx playwright test --project=chromium --no-deps --workers=1 --retries=0 tests/e2e/<area>`. `--no-deps` skips the login setup once `playwright/.auth/admin.json` exists. When several runs share one checkout, give each its own `--output=<dir>`, or they delete each other's `test-results/`.
 
+## When to add a test
+
+E2E tests are slow and costly to keep working, so the suite stays small. Decide per test whether it belongs in it.
+
+**Add an e2e test for**
+- a main user flow of a page or feature: create, edit, delete, save, share.
+- a critical path, where a regression loses or corrupts data or opens access: saving settings, permissions, deletes, imports.
+- a bug that already came back once, or is easy to break again from another area.
+
+**Don't add one for**
+- an edge case of a single fix (an anatomy with no tags, one key combination, one empty state). Test it by hand and say so in the PR description.
+- variants of the same behaviour, e.g. one spec per search syntax. One spec that covers the main case is enough.
+- implementation details: request counts, batch sizes, payload shapes, inline styles or colours. Assert what the user sees.
+- a niche check that needs heavy setup, like creating 100+ entities, admins or bundles on every run.
+
+**Prefer extending over adding.** For a fix, add an assertion to an existing spec that already walks through that flow, instead of a new spec.
+
+**Tests written while working.** Agents may write tests to check their own change. Before opening the PR, remove the ones that don't meet the bar above, and say in the PR description what was tested by hand instead.
+
 ## How the e2e tests are built
 
 **Scope.** Only the frontend's own pages. Addon pages (planner, review, reports and other addons) are tested in their addons' repos, so don't add tests for them here.
