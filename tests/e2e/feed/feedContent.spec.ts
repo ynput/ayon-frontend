@@ -128,6 +128,24 @@ test.describe('feed content', () => {
       .toBe(1)
   })
 
+  test('search the feed for all words of any comma separated part', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const { task } = await setup(api, projectName)
+    for (const text of ['Shadow on the car is too hard', 'Car paint is too red', 'Sky is flat'])
+      await api.createComment(projectName, 'task', task.id, text)
+    const panel = await openDetails(page, projectName, 'lighting')
+    await expect(panel.comment('Sky is flat')).toBeVisible()
+
+    await panel.searchFeed('car red, sky')
+
+    await expect(panel.comment('Shadow on the car is too hard')).toBeHidden()
+    await expect(panel.comment('Car paint is too red')).toBeVisible()
+    await expect(panel.comment('Sky is flat')).toBeVisible()
+  })
+
   test('older comments load when scrolling up the feed', async ({ page, api, projectName }) => {
     const { task } = await setup(api, projectName)
     // one page is 30 activities (`activitiesLast` in Feed.tsx)

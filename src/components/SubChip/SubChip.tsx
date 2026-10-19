@@ -38,6 +38,10 @@ const Studio = styled.span`
   /* border radius right */
   border-radius: 0 4px 4px 0;
 
+  &.only {
+    border-radius: 4px;
+  }
+
   &.included {
     background-color: var(--color-sub-studio);
     color: var(--color-on-sub-studio);
@@ -52,6 +56,7 @@ const Studio = styled.span`
 interface SubChipProps {
   includedWithPro?: boolean // is it included with Pro sub?
   includedWithStudio?: boolean // is it included with Studio sub? (default true)
+  studioOnly?: boolean // not available with Pro sub at all
   size?: 'sm' | 'md'
 }
 
@@ -59,9 +64,24 @@ const SubChip: FC<SubChipProps> = ({
   size = 'md',
   includedWithPro = false,
   includedWithStudio = true,
+  studioOnly = false,
 }) => {
   const proLabel = size === 'md' ? 'Pro' : 'P'
-  const studioLabel = size === 'md' ? 'Studio' : 'S'
+  const studioLabel = size === 'md' ? (studioOnly ? 'Studio only' : 'Studio') : 'S'
+
+  if (studioOnly) {
+    return (
+      <Chip>
+        <Studio
+          data-tooltip="Only available with AYON Studio subscription"
+          data-tooltip-delay={0}
+          className={clsx('only', { included: includedWithStudio })}
+        >
+          {studioLabel}
+        </Studio>
+      </Chip>
+    )
+  }
 
   return (
     <Chip>

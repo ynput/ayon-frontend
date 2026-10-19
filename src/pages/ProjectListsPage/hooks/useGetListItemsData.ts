@@ -53,6 +53,12 @@ export interface UseGetListItemsDataReturn {
   data: EntityListItemWithLinks[]
   isLoading: boolean
   isFetchingNextPage: boolean
+  hasNextPage: boolean
+  isUninitialized: boolean
+  // any fetch of the list items, also background refetches (isLoading only shows argument changes)
+  isFetching: boolean
+  queryFilter?: string
+  search?: string
   isError: boolean
   error?: unknown
 
@@ -164,6 +170,7 @@ const useGetListItemsData = ({
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
+    isUninitialized,
     isError,
     error,
     refetch: refetchListItems,
@@ -370,6 +377,12 @@ const useGetListItemsData = ({
     data: dataWithLinks,
     isLoading,
     isFetchingNextPage,
+    hasNextPage,
+    isUninitialized,
+    isFetching: isFetchingListItems,
+    // the filter and search the items are queried with
+    queryFilter: listItemsArgs.filter,
+    search: listItemsArgs.search,
     onSyncData,
     isError,
     error,
