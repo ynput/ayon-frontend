@@ -149,6 +149,7 @@ const ListsTable: FC<ListsTableProps> = ({
               picker
                 ? [
                     'new-folder',
+                    'import-list',
                     'delete',
                     'filter',
                     ...(onCreateList ? [] : ['new-list']),

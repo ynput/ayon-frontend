@@ -36,6 +36,8 @@ interface ListItemsTableProps {
   dndActiveId?: UniqueIdentifier | null // Added prop
   viewOnly?: boolean
   columnsConfig?: ProjectTreeTableProps['columnsConfig']
+  scrollToRowId?: string | null
+  onScrolledToRow?: (rowId: string) => void
 }
 
 const ListItemsTable: FC<ListItemsTableProps> = ({
@@ -48,6 +50,8 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   dndActiveId, // Destructure new prop
   viewOnly,
   columnsConfig,
+  scrollToRowId,
+  onScrolledToRow,
 }) => {
   const { projectName } = useProjectContext()
   const { togglePanel } = useSettingsPanel()
@@ -163,6 +167,8 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         fieldStatsLoading={fieldStatsLoading}
         mainCountLabels={mainCountLabels}
         columnsConfig={columnsConfig}
+        scrollToRowId={scrollToRowId}
+        onScrolledToRow={onScrolledToRow}
       />
       <ListItemsShortcuts />
       <AddColumnButton

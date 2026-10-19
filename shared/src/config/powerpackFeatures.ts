@@ -13,8 +13,8 @@ export type PowerpackFeature =
   | 'commentCategories'
   | 'projectFolders'
   | 'columnSummaries'
-  | 'entityLinks'
   | 'listValues'
+  | 'entityLinks'
 
 export const powerpackFeatureOrder: PowerpackFeature[] = [
   'annotations',
@@ -29,8 +29,8 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'listAttributes',
   'commentCategories',
   'columnSummaries',
-  'entityLinks',
   'listValues',
+  'entityLinks',
 ]
 
 export const powerpackFeatures: {
@@ -97,16 +97,16 @@ export const powerpackFeatures: {
     description: 'Aggregate each column totals, averages, distributions in a summary footer.',
     bullet: 'Per-column summary footer',
   },
-  entityLinks: {
-    label: 'Entity Links',
-    description:
-      'Press G on any entity for a graph of everything linked to it, or L to see and edit its links in columns, including the links of everything below a folder.',
-    bullet: 'See and edit links of any entity',
-  },
   listValues: {
     label: 'List Values',
     description:
       'Keep separate attribute values in each list and compare them with the entities or another list.',
     bullet: 'Per-list values and compare view',
+  },
+  entityLinks: {
+    label: 'Entity Links',
+    description:
+      'Press G on any entity for a graph of everything linked to it, or L to see and edit its links in columns, including the links of everything below a folder.',
+    bullet: 'See and edit links of any entity',
   },
 }

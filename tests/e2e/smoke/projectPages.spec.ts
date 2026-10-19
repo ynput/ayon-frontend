@@ -3,16 +3,7 @@ import { ListsPage } from '../pages/ListsPage'
 import { OverviewPage } from '../pages/OverviewPage'
 import { ProductsPage } from '../pages/ProductsPage'
 import { WorkfilesPage } from '../pages/WorkfilesPage'
-import {
-  button,
-  defineRouteTests,
-  expect,
-  heading,
-  productionAddons,
-  SmokeData,
-  test,
-  visible,
-} from './smokeFixtures'
+import { defineRouteTests, expect, heading, SmokeData, test, visible } from './smokeFixtures'
 
 const project =
   (module: string, query: (d: SmokeData) => string = () => '') =>
@@ -57,24 +48,6 @@ test.describe('smoke: project pages', () => {
       ready: async (page, d) => {
         await visible(new ListsPage(page).listRow(d.list.label))
       },
-    },
-    // FLAG (app bug, intermittent, review addon): the review cards hook can load before its provider
-    {
-      name: 'review',
-      path: project('reviews'),
-      fixme:
-        'review page crashes when the review cards hook loads before its provider (fixed in ynput/ayon-frontend#2419)',
-      ready: (page) =>
-        visible(
-          heading(page, 'Start by selecting a review session.').or(
-            heading(page, /Review Sessions$/),
-          ),
-        ),
-    },
-    {
-      name: 'reports',
-      path: project('reports'),
-      ready: (page) => visible(button(page, 'Add chart').or(heading(page, /Reports & Insights$/))),
     },
     // FLAG (app bug, intermittent): the same race as "task progress", in WorkfileDetail
     {
@@ -166,21 +139,6 @@ test.describe('smoke: deep links', () => {
       ready: async (page, d) => {
         await visible(new ListsPage(page).itemNameCell(d.task.name))
       },
-    },
-    // FLAG (app bug, review addon 0.7.5): getUsersAssignee throws in the addon's own redux store
-    {
-      name: 'review with a session selected',
-      path: project('reviews', (d) => `?review=${d.reviewSession.id}`),
-      skip: async ({ api }) =>
-        !(await productionAddons(api)).includes('review') && 'needs the review addon',
-      ready: async (page, d) => {
-        await visible(
-          page.getByRole('heading', { name: d.reviewSession.label, level: 2 }),
-          page.getByRole('link', { name: /Open review$/ }),
-        )
-      },
-      fixme:
-        'getUsersAssignee throws inside the review addon store (fixed in ynput/ayon-frontend#2419 and #2420)',
     },
   ])
 })

@@ -31,7 +31,7 @@ const StyledClose = styled(Button)`
 
   .icon {
     font-size: 15px;
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 200, 'opsz' 20;
+    font-variation-settings: 'FILL' 0;
   }
   background-color: unset !important;
   opacity: 0;

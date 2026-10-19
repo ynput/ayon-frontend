@@ -8,6 +8,7 @@ yarn-error.log
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/perf-results/
 
 playwright/.auth
 .__mf__temp/
