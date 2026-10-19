@@ -218,7 +218,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
         {
           label: 'Create folder',
           icon: FOLDER_ICON_ADD,
-          command: () => onOpenFolderList({}),
+          command: () => onOpenFolderList({ rowIds: selectedRows }),
           shortcut: 'F',
           hidden: !allSelectedRowsAreLists,
           powerFeature: powerLicense ? undefined : 'listFolders',

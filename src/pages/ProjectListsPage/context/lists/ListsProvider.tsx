@@ -255,7 +255,7 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
     onCreatedFolders: handleCreatedFolders,
   })
 
-  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, parentId }) => {
+  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, parentId, rowIds }) => {
     if (!powerLicense) {
       setPowerpackDialog('listFolders')
       return
@@ -267,6 +267,7 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
       return setListFolderOpen({
         isOpen: true,
         parentId,
+        rowIds,
       })
     }
 

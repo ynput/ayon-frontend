@@ -84,17 +84,20 @@ export const useProjectMenuController = ({
     isOpen: boolean
     folderId?: string
     initial?: Partial<ProjectFolderFormData>
+    // rows to create the folder for, the selection when not set
+    rowIds?: string[]
   }>({ isOpen: false })
   const navigate = useNavigate()
   const { getDefaultTab } = useProjectDefaultTab()
   const [handleProjectSelectionDispatches] = useProjectSelectDispatcher()
 
   const handleOpenFolderDialog = useCallback(
-    (data?: Partial<ProjectFolderFormData>, folderId?: string) => {
+    (data?: Partial<ProjectFolderFormData>, folderId?: string, rowIds?: string[]) => {
       setFolderDialogState({
         isOpen: true,
         folderId,
         initial: data,
+        rowIds,
       })
     },
     [],
@@ -197,8 +200,8 @@ export const useProjectMenuController = ({
     onManage: onOpenProjectManage,
     onShowArchivedToggle,
     powerLicense,
-    onCreateFolder: ({ folderId, projectNames }) =>
-      handleOpenFolderDialog({ parentId: folderId, projectNames }),
+    onCreateFolder: ({ folderId, projectNames, rowIds }) =>
+      handleOpenFolderDialog({ parentId: folderId, projectNames }, undefined, rowIds),
     onPutProjectsInFolder,
     onPutFolderInFolder,
     onRemoveProjectsFromFolder,
@@ -249,13 +252,15 @@ export const useProjectMenuController = ({
     [buildContextMenuItems, folderGroupColumnId],
   )
 
+  // a folder created from a context menu is for the rows the menu acts on, not the selection
+  const folderDialogRowIds = folderDialogState.rowIds ?? selection
   const rowSelection = useMemo(
     () =>
-      selection.reduce((acc, id) => {
+      folderDialogRowIds.reduce((acc, id) => {
         acc[id] = true
         return acc
       }, {} as RowSelectionState),
-    [selection],
+    [folderDialogRowIds],
   )
 
   const folderDialogProps: ProjectFolderDialogProps = {
@@ -263,7 +268,7 @@ export const useProjectMenuController = ({
     onClose: handleCloseFolderDialog,
     initial: folderDialogState.initial,
     folderId: folderDialogState.folderId,
-    projectNames: selection,
+    projectNames: folderDialogRowIds,
     onPutProjectsInFolder,
     rowSelection,
     folders,

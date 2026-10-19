@@ -49,9 +49,12 @@ interface MenuItemProps {
   onCreateFolder?: ({
     folderId,
     projectNames,
+    rowIds,
   }: {
     folderId?: string
     projectNames?: string[]
+    // the rows the menu acts on
+    rowIds?: string[]
   }) => void
   onPutProjectsInFolder?: (projectNames: string[], projectFolderId?: string) => Promise<void>
   onPutFolderInFolder?: (folderId: string, projectFolderId?: string) => Promise<void>
@@ -155,11 +158,13 @@ const useProjectsListMenuItems = ({
       selectedFolder,
       isSelectedProject,
       newSelectedProjects,
+      rowIds,
     }: {
       isSelectedRowFolder: boolean
       selectedFolder: ProjectFolderModel | null | undefined
       isSelectedProject: boolean
       newSelectedProjects: ListProjectsItemModel[]
+      rowIds: string[]
     }) => {
       if (!powerLicense) {
         setPowerpackDialog('projectFolders')
@@ -167,13 +172,14 @@ const useProjectsListMenuItems = ({
       }
 
       if (isSelectedRowFolder) {
-        onCreateFolder?.({ folderId: selectedFolder?.id })
+        onCreateFolder?.({ folderId: selectedFolder?.id, rowIds })
       } else if (isSelectedProject) {
         onCreateFolder?.({
           projectNames: newSelectedProjects.map((project) => project.name),
+          rowIds,
         })
       } else {
-        onCreateFolder?.({})
+        onCreateFolder?.({ rowIds })
       }
     },
     [powerLicense, setPowerpackDialog, onCreateFolder],
@@ -449,6 +455,7 @@ const useProjectsListMenuItems = ({
               selectedFolder,
               isSelectedProject,
               newSelectedProjects,
+              rowIds: selection,
             }),
         },
 
