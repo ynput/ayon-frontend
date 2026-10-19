@@ -29,7 +29,11 @@ import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModu
 import { useGetEntityLinksQuery } from '@shared/api'
 import { useProjectFoldersContext, type OnSyncDataCallback } from '@shared/context'
 import { debounce } from 'lodash'
-import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
+import {
+  refreshActiveAndPurgeOthers,
+  refreshListsMembership,
+  refreshOtherActiveQueries,
+} from '@shared/api'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { getColumnSortKey } from '../buildTreeTableColumns'
 
@@ -745,15 +749,17 @@ export const useFetchOverviewData = ({
     }
 
     // refresh the active queries
-    await Promise.all(
-      queriesToRefresh.map(({ endpointName, args }) =>
+    await Promise.all([
+      ...queriesToRefresh.map(({ endpointName, args }) =>
         dispatch(
           refreshActiveAndPurgeOthers(endpointName, args, {
             refreshOtherActiveQueries: false,
           }),
         ).unwrap(),
       ),
-    )
+      // the Lists and Review sessions columns
+      isFullSync && dispatch(refreshListsMembership(projectName)),
+    ])
 
     // then later on refresh any other caches
     queriesToRefresh.map(({ endpointName, args }) =>
