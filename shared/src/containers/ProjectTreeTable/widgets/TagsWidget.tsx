@@ -7,6 +7,9 @@ import { useProjectTags } from '@shared/hooks/useProjectTags'
 import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
+// the colour TagsSelect gives tags that have none, a hex so the chip text colour can be worked out
+const NO_COLOR_TAG = '#353B46'
+
 const StyledTagsSelect = styled(TagsSelect)`
   width: 100%;
   height: 100%;
@@ -88,7 +91,7 @@ export const TagsWidget = ({
       options.find((option) => option.value === v) ?? {
         value: v,
         label: v,
-        color: 'var(--md-sys-color-surface-container)',
+        color: NO_COLOR_TAG,
       },
   )
 
