@@ -31,8 +31,9 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
     formContext.onSetChangedKeys([{ path, isChanged: true }])
   }
 
-  const containerRef = useRef<HTMLDivElement>(null)
-  const focusAddedItem = useRef(false)
+  const canAddItems = props.canAdd && !props.schema?.disabled
+  // index of the added item, which takes the focus when it mounts so typing goes there
+  const [itemToFocus, setItemToFocus] = useState<number | null>(null)
 
   const onAddItem = () => {
     const id = props.idSchema.$id
@@ -40,17 +41,14 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
     const path = formContext.overrides[id]?.path
 
     formContext.onSetChangedKeys([{ path, isChanged: true }])
-    focusAddedItem.current = true
+    setItemToFocus(props.items.length)
     props.onAddClick()
   }
-
-  const onAddItemRef = useRef(onAddItem)
-  onAddItemRef.current = onAddItem
 
   // Shift+Enter in a field of an item saves it and starts the next item.
   // Runs in the capture phase, as text fields stop Enter from bubbling.
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key !== 'Enter' || !e.shiftKey || !props.canAdd || props.schema?.disabled) return
+    if (e.key !== 'Enter' || !e.shiftKey || !canAddItems) return
     const target = e.target as HTMLElement
     if (target.tagName !== 'INPUT') return
     const itemArrayId = target.closest('[data-array-item]')?.getAttribute('data-array-item')
@@ -59,19 +57,8 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
     e.stopPropagation()
     // text fields save on blur, so the item is added once that change is in the form data
     target.blur()
-    setTimeout(() => onAddItemRef.current())
+    setTimeout(onAddItem)
   }
-
-  // move the focus from the add button into the new item, so typing goes there
-  useEffect(() => {
-    if (!focusAddedItem.current) return
-    focusAddedItem.current = false
-    const itemElements = containerRef.current?.querySelectorAll(
-      `[data-array-item="${props.idSchema.$id}"]`,
-    )
-    const added = itemElements?.[itemElements.length - 1]
-    added?.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, select')?.focus()
-  }, [props.items.length, props.idSchema.$id])
 
   const [draggedItemId, setDraggedItemId] = useState<string | null>()
 
@@ -98,7 +85,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   const draggedItem = items.find((item) => item.id === draggedItemId)
 
   return (
-    <DndContextWrapper ref={containerRef} onKeyDownCapture={handleKeyDown}>
+    <DndContextWrapper onKeyDownCapture={handleKeyDown}>
     <DndContext
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
@@ -111,14 +98,21 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
               onChange={onArrayChanged(item)}
               item={item}
               arrayId={props.idSchema.$id}
+              focusOnMount={idx === itemToFocus}
+              onFocused={() => setItemToFocus(null)}
             />
           </DraggableItem>
         ))}
       </SortableContext>
 
-      {props.canAdd && !props.schema?.disabled && (
+      {canAddItems && (
         <ArrayItemControls>
-          <Button onClick={onAddItem} icon="add" />
+          <Button
+            onClick={onAddItem}
+            icon="add"
+            data-tooltip="Add item"
+            data-shortcut="Shift+Enter"
+          />
         </ArrayItemControls>
       )}
 
@@ -141,14 +135,26 @@ const FormArrayFieldWrapper = ({
   item,
   onChange,
   arrayId,
+  focusOnMount,
+  onFocused,
 }: {
   item: $Any
   onChange?: () => void
   arrayId?: string
+  focusOnMount?: boolean
+  onFocused?: () => void
 }) => {
   const { key, ...dynProps } = item
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!focusOnMount) return
+    ref.current?.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, select')?.focus()
+    onFocused?.()
+  }, [focusOnMount])
+
   return (
-    <FormArrayField data-array-item={arrayId}>
+    <FormArrayField ref={ref} data-array-item={arrayId}>
       <ArrayItemTemplate onChange={onChange} {...dynProps} />
     </FormArrayField>
   )
