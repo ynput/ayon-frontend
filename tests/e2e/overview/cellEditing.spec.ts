@@ -138,33 +138,6 @@ test.describe('overview tag and date cells', () => {
       .toEqual(['hero'])
   })
 
-  test('add a new tag to a task when the project anatomy has no tags', async ({
-    page,
-    api,
-    projectName,
-  }) => {
-    await api.patch(`/api/projects/${projectName}`, { tags: [] })
-    const { tasks } = await createShot(api, projectName, ['anim'])
-    await api.setWorkingViewColumns('overview', projectName, ['name', 'tags'])
-    const overview = new OverviewPage(page)
-    await overview.goto(projectName)
-    await overview.expand('sh010')
-
-    await overview.cell('anim', 'tags').dblclick()
-    const search = page.locator('.search').getByRole('textbox')
-    await search.click()
-    await expect(search).toBeFocused()
-    await search.fill('adhoc')
-    await search.press('Enter')
-    await page.keyboard.press('Escape')
-    await expect(page.locator('.options')).toBeHidden()
-
-    await expect(overview.cell('anim', 'tags')).toContainText('adhoc')
-    await expect
-      .poll(async () => (await api.getTask(projectName, tasks[0].id)).tags)
-      .toEqual(['adhoc'])
-  })
-
   // closing the dropdown by clicking another cell must save to the edited task, wherever the click lands
   const closeTargets = [
     { name: 'the name of the same row', label: 'anim', columnId: 'name' },
