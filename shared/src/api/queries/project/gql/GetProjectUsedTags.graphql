@@ -1,0 +1,5 @@
+query GetProjectUsedTags($projectName: String!) {
+  project(name: $projectName) {
+    usedTags
+  }
+}

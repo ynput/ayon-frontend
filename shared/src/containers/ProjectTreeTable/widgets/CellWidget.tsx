@@ -6,6 +6,7 @@ import { BooleanWidget, BooleanWidgetProps } from './BooleanWidget'
 import { CollapsedWidget } from './CollapsedWidget'
 import { DateWidget, DateWidgetProps } from './DateWidget'
 import { EnumWidget, EnumWidgetProps } from './EnumWidget'
+import { TagsWidget } from './TagsWidget'
 import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
 import { LinksWidget, LinkWidgetData } from './LinksWidget'
 import { isLinkEditable } from './LinksWidgetHelpers'
@@ -288,10 +289,19 @@ export const CellWidget: FC<EditorCellProps> = ({
         return <CommentsWidget value={valueData as EntityComment[] | undefined} {...sharedProps} />
       }
 
-      // lists that accept new values (tags) stay a dropdown even with no options yet
-      case !!options.length ||
-        !!attributeData?.enumResolver ||
-        (!!enableCustomValues && !!type?.includes('list')): {
+      case attributeData?.widget === 'tags': {
+        return (
+          <TagsWidget
+            value={Array.isArray(value) ? value : [value]}
+            options={options}
+            projectName={projectName}
+            pt={pt?.enum?.pt}
+            {...sharedProps}
+          />
+        )
+      }
+
+      case !!options.length || !!attributeData?.enumResolver: {
         const enumValue = Array.isArray(value) ? value : [value]
         if (isReadOnly) {
           const selectedOptions = options.filter((option) => enumValue.includes(option.value))

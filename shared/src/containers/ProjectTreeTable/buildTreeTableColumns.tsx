@@ -1223,7 +1223,7 @@ const buildTreeTableColumns = ({
             className={clsx('tags', { loading: row.original.isLoading })}
             columnId={column.id}
             value={value}
-            attributeData={{ type: 'list_of_strings' }}
+            attributeData={{ type: 'list_of_strings', widget: 'tags' }}
             options={meta?.options?.tag}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>

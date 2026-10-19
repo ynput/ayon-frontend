@@ -7,6 +7,7 @@ import {
   BooleanWidget,
   DateWidget,
   EnumWidget,
+  TagsWidget,
 } from '@shared/containers/ProjectTreeTable/widgets'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
 import { useScopedTypes } from '@shared/hooks/useScopedTypes'
@@ -41,6 +42,12 @@ const StyledEnumWidget = styled(EnumWidget)`
     }
   }
   &:hover {
+    background-color: unset;
+  }
+`
+
+const StyledTagsWidget = styled(TagsWidget)`
+  &.enum:hover {
     background-color: unset;
   }
 `
@@ -131,8 +138,21 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         />
       )
 
-    // lists that accept new values (tags) stay a dropdown even with no options yet
-    case hasEnumOptions(field.data) || (!!field.enableCustomValues && !!type?.includes('list')): {
+    case widget === 'tags':
+      return (
+        <StyledTagsWidget
+          value={Array.isArray(displayValue) ? displayValue : []}
+          options={attributeEnumOptions}
+          projectName={enumProjectName}
+          pt={{ template: { style: { height: 32 }, className: 'enum' } }}
+          placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
+          onCancelEdit={onCancelEdit}
+          align="right"
+          {...widgetCommonProps}
+        />
+      )
+
+    case hasEnumOptions(field.data): {
       const isListType = type?.includes('list')
       let valueArray = []
 
