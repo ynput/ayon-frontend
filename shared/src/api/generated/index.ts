@@ -358,6 +358,10 @@ export type {
   GetWorkfileThumbnailApiResponse,
 } from './thumbnails'
 
+// traits
+export * from './traits'
+export { api as traitsApi } from './traits'
+
 // uRIs
 export * from './uRIs'
 export { api as uRIsApi } from './uRIs'

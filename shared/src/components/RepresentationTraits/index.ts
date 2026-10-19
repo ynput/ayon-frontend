@@ -1,0 +1,5 @@
+export * from './RepresentationTraits'
+export { hasTraits } from './utils/traitModel'
+export { parseTraitId } from './utils/parseTraitId'
+export type { ParsedTraitId } from './utils/parseTraitId'
+export type { TraitWidgetProps } from './registry'

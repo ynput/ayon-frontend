@@ -112,6 +112,7 @@ const tagTypes = [
   'task',
   'taskColumnStats',
   'team',
+  'traitDefinitions',
   'user',
   'userPool',
   'version',
