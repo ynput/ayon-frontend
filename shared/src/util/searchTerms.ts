@@ -8,6 +8,19 @@ export const parseSearchQuery = (query: string): string[][] =>
     .map((part) => part.trim().split(/\s+/).filter(Boolean))
     .filter((terms) => terms.length > 0)
 
+// The same search as a filter with one condition per term, for searches matched elsewhere
+export const searchQueryToFilter = <C>(query: string, toCondition: (term: string) => C) => {
+  const groups = parseSearchQuery(query)
+  if (!groups.length) return null
+  return {
+    operator: 'or' as const,
+    conditions: groups.map((terms) => ({
+      operator: 'and' as const,
+      conditions: terms.map(toCondition),
+    })),
+  }
+}
+
 const rankOf = (rank: Ranking, passed: boolean): RankingInfo =>
   Object.freeze({
     rankedValue: '',
@@ -41,6 +54,21 @@ export const matchSearchQuery = (haystack: string, groups: string[][]): RankingI
   }
 
   return best ?? noMatch
+}
+
+// best matches first
+export const filterBySearchQuery = <T>(
+  items: T[],
+  query: string,
+  toHaystack: (item: T) => string,
+): T[] => {
+  const groups = parseSearchQuery(query)
+  if (!groups.length) return items
+  return items
+    .map((item) => ({ item, rank: matchSearchQuery(toHaystack(item), groups) }))
+    .filter(({ rank }) => rank.passed)
+    .sort((a, b) => b.rank.rank - a.rank.rank)
+    .map(({ item }) => item)
 }
 
 // A list pasted from a spreadsheet column or row, or one name per line, as a comma

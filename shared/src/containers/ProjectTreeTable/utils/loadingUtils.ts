@@ -2,17 +2,19 @@ import { TableRow } from '../types/table'
 import { FolderNodeMap } from '../types/table'
 import { LoadingTasks } from '../types'
 import type { AttributeModel } from '@shared/api'
-import { v4 as uuid } from 'uuid'
 
 /**
  * Generates an array of placeholder rows for loading state
- * @param attribs - Attribute models used to populate empty attribute fields
  * @param count - Number of loading rows to generate (default: 50)
+ * @param attrib - Attribute values for the placeholder rows
+ * @param key - Makes the ids unique within the table, e.g. the id of the row they load under.
+ * The ids must stay the same across renders: the table reports its visible row ids, and new ids
+ * every render make the page re-render (and rebuild these rows) in a loop until loading ends.
  * @returns Array of TableRow objects with loading state
  */
-export const generateLoadingRows = (count = 50, attrib = {}): TableRow[] => {
+export const generateLoadingRows = (count = 50, attrib = {}, key = 'table'): TableRow[] => {
   return new Array(count).fill(0).map((_, index) => ({
-    id: uuid(),
+    id: `loading-${key}-${index}`,
     primary: {
       id: `loading-${index}`,
       entityType: 'folder',

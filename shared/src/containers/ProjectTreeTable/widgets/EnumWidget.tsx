@@ -1,6 +1,6 @@
 import { Dropdown, DropdownProps, DropdownRef } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
-import { forwardRef, useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
@@ -60,7 +60,14 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     _ref,
   ) => {
     // convert value to string array
-    const valueAsStrings = value.map((v) => v?.toString()).filter((v) => !!v)
+    // the dropdown drops its unsaved selection whenever it gets a new value array, and the table
+    // re-renders while it is open, so keep the same array until the values themselves change
+    const valueKey = JSON.stringify(value)
+    const valueAsStrings = useMemo(
+      () => value.map((v) => v?.toString()).filter((v) => !!v),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [valueKey],
+    )
     let selectedOptions = options.filter((option) =>
       valueAsStrings.includes(option.value.toString()),
     )

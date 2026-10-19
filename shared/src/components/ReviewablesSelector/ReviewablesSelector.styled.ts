@@ -3,6 +3,8 @@ import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 
 export const ReviewablesSelector = styled.div`
+  --reviewable-card-width: 62px;
+
   position: relative;
   flex: 1;
   z-index: 1000;
@@ -21,6 +23,7 @@ export const Scrollable = styled(PerfectScrollbar)`
 
 export const ReviewableCard = styled.div`
   position: relative;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -42,9 +45,8 @@ export const ReviewableCard = styled.div`
   }
 
   .file-thumbnail {
-    width: 100%;
-    height: 62px;
-    width: 62px;
+    width: var(--reviewable-card-width);
+    aspect-ratio: 16 / 9;
     object-fit: cover;
     border-radius: var(--border-radius-m);
   }
@@ -85,8 +87,9 @@ export const Label = styled.span`
 `
 
 export const AddButton = styled(Button)`
-  width: 62px;
-  min-height: 62px;
+  width: var(--reviewable-card-width);
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
   background-color: var(--md-sys-color-surface-container-high);
 
   &:hover {

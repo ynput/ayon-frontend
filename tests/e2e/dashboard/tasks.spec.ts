@@ -145,6 +145,51 @@ test.describe('dashboard tasks list and filter', () => {
     await expect(dashboard.columnHeadingOf(anim.id)).toHaveText(/^Not ready - 1$/)
   })
 
+  test('filter the board for any of several terms, or for all words', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const me = adminCredentials().name
+    const sh010 = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const sh020 = await api.createFolder(projectName, { name: 'sh020', folderType: 'Shot' })
+    const anim010 = await api.createTask(projectName, {
+      folderId: sh010.id,
+      name: 'anim',
+      taskType: 'Animation',
+      assignees: [me],
+    })
+    const comp010 = await api.createTask(projectName, {
+      folderId: sh010.id,
+      name: 'comp',
+      taskType: 'Compositing',
+      assignees: [me],
+    })
+    const anim020 = await api.createTask(projectName, {
+      folderId: sh020.id,
+      name: 'anim',
+      taskType: 'Animation',
+      assignees: [me],
+    })
+
+    const dashboard = new DashboardTasksPage(page)
+    await dashboard.goto()
+    await dashboard.selectProject(projectName)
+    await expect(dashboard.card(anim010.id)).toBeVisible()
+
+    await dashboard.filter('sh020 anim')
+
+    await expect(dashboard.card(anim020.id)).toBeVisible()
+    await expect(dashboard.card(anim010.id)).toBeHidden()
+    await expect(dashboard.card(comp010.id)).toBeHidden()
+
+    await dashboard.filter('comp, sh020')
+
+    await expect(dashboard.card(comp010.id)).toBeVisible()
+    await expect(dashboard.card(anim020.id)).toBeVisible()
+    await expect(dashboard.card(anim010.id)).toBeHidden()
+  })
+
   test('changing the status in the details panel moves the card', async ({
     page,
     api,
