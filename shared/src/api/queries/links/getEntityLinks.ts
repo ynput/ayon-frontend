@@ -128,17 +128,28 @@ const injectedQueries = foldersApi.injectEndpoints({
           const endpoint = entityEndpoints[entityType]
           const resultPath = entityResultPaths[entityType]
 
-          // Fetch only the entities that aren't already cached
-          const results = await Promise.all(
-            chunk(entityIdsToFetch, LINKS_BATCH_SIZE).map((batchIds) =>
-              dispatch(
+          // Fetch only the entities that aren't already cached, one batch after another to keep
+          // the load per user down. A failed batch leaves its entities uncached, so they are
+          // fetched again next time.
+          const results: any[] = []
+          let batchError: unknown
+          for (const batchIds of chunk(entityIdsToFetch, LINKS_BATCH_SIZE)) {
+            try {
+              const result = await dispatch(
                 (gqlLinksApi.endpoints as any)[endpoint].initiate(
                   { projectName, entityIds: batchIds },
-                  { forceRefetch: true },
+                  { forceRefetch: true, subscribe: false },
                 ),
-              ).unwrap(),
-            ),
-          )
+              ).unwrap()
+              results.push(result)
+            } catch (error) {
+              batchError = error
+            }
+          }
+          if (batchError) {
+            if (!results.length) throw batchError
+            toast.error(`Error fetching some ${entityType} links`)
+          }
 
           const newEntities = results
             .flatMap((result: any) => result.project?.[resultPath]?.edges || [])
