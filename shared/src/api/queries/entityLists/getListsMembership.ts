@@ -1,7 +1,9 @@
+import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { gqlApi } from '@shared/api/generated'
 import type { ListMembershipFragmentFragment } from '@shared/api/generated'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 import { createRealtimeBatcher, PubSub, waitForRealtimeJitter } from '@shared/util'
+import type { ListItemMessage } from './types'
 
 export type ListMembership = ListMembershipFragmentFragment
 export type ListsMembershipEntityType = 'folder' | 'task' | 'version'
@@ -24,14 +26,16 @@ const CHUNK_SIZE = 500
 
 type MembershipNode = { id: string; entityLists: ListMembership[] }
 
+// `listIds` limits the result to those lists, for realtime updates of the lists that changed
 const fetchMembership = async (
   dispatch: (action: any) => any,
   { projectName, entityType, entityIds }: GetListsMembershipArgs,
+  listIds?: string[],
 ): Promise<ListsMembershipMap> => {
   const options = { forceRefetch: true, subscribe: false }
 
   const fetchChunk = async (ids: string[]): Promise<MembershipNode[]> => {
-    const args = { projectName, entityIds: ids }
+    const args = { projectName, entityIds: ids, listIds }
     if (entityType === 'folder') {
       const res = await dispatch(
         gqlApi.endpoints.GetFoldersListsMembership.initiate(args, options),
@@ -62,18 +66,28 @@ const fetchMembership = async (
   return membership
 }
 
+const getCachedMembership = (getState: () => unknown, queryCacheKey?: string): ListsMembershipMap =>
+  (queryCacheKey && (getState() as any)[gqlApi.reducerPath]?.queries?.[queryCacheKey]?.data) || {}
+
 const listsMembershipApi = gqlApi.injectEndpoints({
   endpoints: (build) => ({
     // One cache per project and entity type. Each call only fetches the ids that are not cached yet.
+    // The query returns the whole map instead of using `merge`: RTK builds `providesTags` from the
+    // query's own result, so returning only the new ids would drop the tags of everything cached.
     getListsMembership: build.query<ListsMembershipMap, GetListsMembershipArgs>({
       queryFn: async (args, { dispatch, getState, queryCacheKey, forced }) => {
         try {
-          const cached: ListsMembershipMap =
-            (queryCacheKey && (getState() as any).restApi?.queries?.[queryCacheKey]?.data) || {}
-          const entityIds = forced ? args.entityIds : args.entityIds.filter((id) => !cached[id])
-          if (!entityIds.length) return { data: {} }
+          // invalidated or refetched: fetch the ids on screen and drop the rest, which would be
+          // stale, so they are fetched again when they scroll back into view
+          if (forced) return { data: await fetchMembership(dispatch, args) }
 
-          return { data: await fetchMembership(dispatch, { ...args, entityIds }) }
+          const cached = getCachedMembership(getState, queryCacheKey)
+          const missingIds = args.entityIds.filter((id) => !cached[id])
+          if (!missingIds.length) return { data: cached }
+
+          const fetched = await fetchMembership(dispatch, { ...args, entityIds: missingIds })
+          // read the cache again, a realtime update may have changed it during the fetch
+          return { data: { ...getCachedMembership(getState, queryCacheKey), ...fetched } }
         } catch (error) {
           return { error: normalizeQueryError(error) }
         }
@@ -88,51 +102,62 @@ const listsMembershipApi = gqlApi.injectEndpoints({
         const previousIds = new Set(previousArg.entityIds)
         return currentArg.entityIds.some((id) => !previousIds.has(id))
       },
-      merge: (currentCache, newItems) => {
-        Object.assign(currentCache, newItems)
-      },
-      providesTags: (result, _error, { entityIds }) => {
+      providesTags: (result) => {
         const listIds = new Set(
           Object.values(result || {}).flatMap((lists) => lists.map((list) => list.id)),
         )
         return [
-          ...entityIds.map((id) => ({ type: 'entityListItem' as const, id })),
+          ...Object.keys(result || {}).map((id) => ({ type: 'entityListItem' as const, id })),
           ...Array.from(listIds).map((id) => ({ type: 'entityList' as const, id })),
         ]
       },
-      // list events do not say which entities changed, so refetch everything cached for the project
+      // List events name the list and its entity type, but not which entities changed. Events
+      // for lists of this entity type are batched by list id, then one query fetches only those
+      // lists for every cached entity, and they replace the old entries of those lists.
       async onCacheEntryAdded(
         { projectName, entityType },
         { cacheDataLoaded, cacheEntryRemoved, getCacheEntry, updateCachedData, dispatch },
       ) {
         let token: string | undefined
-        const batcher = createRealtimeBatcher<{ projectName: string }>(
-          async (_items, isActive) => {
+        const batcher = createRealtimeBatcher<string>(
+          async (listIds, isActive) => {
             const entityIds = Object.keys(getCacheEntry().data || {})
             if (!entityIds.length) return
             try {
               await waitForRealtimeJitter()
-              const membership = await fetchMembership(dispatch, {
-                projectName,
-                entityType,
-                entityIds,
-              })
+              const fresh = await fetchMembership(
+                dispatch,
+                { projectName, entityType, entityIds },
+                listIds,
+              )
               if (!isActive()) return
+              const changed = new Set(listIds)
               updateCachedData((draft) => {
-                Object.assign(draft, membership)
+                for (const [entityId, lists] of Object.entries(fresh)) {
+                  const current = draft[entityId]
+                  // dropped by a forced refetch during the fetch
+                  if (!current) continue
+                  if (!lists.length && !current.some((list) => changed.has(list.id))) continue
+                  // same order as the server: by label
+                  draft[entityId] = [
+                    ...current.filter((list) => !changed.has(list.id)),
+                    ...lists,
+                  ].sort((a, b) => a.label.localeCompare(b.label))
+                }
               })
             } catch (error) {
               console.error('Realtime lists membership update failed', error)
             }
           },
-          (item) => item.projectName,
+          (listId) => listId,
         )
 
         try {
           await cacheDataLoaded
-          token = PubSub.subscribe('entity_list', (_topic: string, message: any) => {
-            if (message?.project !== projectName) return
-            batcher.add({ projectName })
+          token = PubSub.subscribe('entity_list', (_topic: string, message: ListItemMessage) => {
+            const { id, entity_type } = message?.summary || {}
+            if (message?.project !== projectName || entity_type !== entityType || !id) return
+            batcher.add(id)
           })
         } catch {
           // cache entry removed before it loaded
@@ -148,3 +173,23 @@ const listsMembershipApi = gqlApi.injectEndpoints({
 
 export const { useGetListsMembershipQuery } = listsMembershipApi
 export { listsMembershipApi }
+
+// For the pages' refresh/sync button: refetch the lists of the entities on screen, for every
+// entity type cached for the project. Forced, so entities off screen are dropped and fetched again
+// when they scroll back into view.
+export const refreshListsMembership =
+  (projectName: string) =>
+  (dispatch: ThunkDispatch<any, any, UnknownAction>, getState: () => any) =>
+    Promise.all(
+      listsMembershipApi.util
+        .selectCachedArgsForQuery(getState(), 'getListsMembership')
+        .filter((args) => args.projectName === projectName)
+        .map((args) =>
+          dispatch(
+            listsMembershipApi.endpoints.getListsMembership.initiate(args, {
+              forceRefetch: true,
+              subscribe: false,
+            }),
+          ),
+        ),
+    )

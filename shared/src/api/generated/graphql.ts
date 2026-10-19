@@ -144,6 +144,7 @@ export type BaseNodeActivitiesArgs = {
 
 export type BaseNodeEntityListsArgs = {
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
   visibility?: EntityVisibility;
 };
 
@@ -196,6 +197,8 @@ export type EntityListInfo = {
   entityListType: Scalars['String']['output'];
   entityType: Scalars['String']['output'];
   id: Scalars['String']['output'];
+  /** List items of the entity in this list, in list order */
+  itemIds: Array<Scalars['String']['output']>;
   label: Scalars['String']['output'];
 };
 
@@ -419,6 +422,7 @@ export type FolderNodeActivitiesArgs = {
 
 export type FolderNodeEntityListsArgs = {
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
   visibility?: EntityVisibility;
 };
 
@@ -671,6 +675,7 @@ export type ProductNodeActivitiesArgs = {
 
 export type ProductNodeEntityListsArgs = {
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
   visibility?: EntityVisibility;
 };
 
@@ -1298,6 +1303,7 @@ export type RepresentationNodeActivitiesArgs = {
 
 export type RepresentationNodeEntityListsArgs = {
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
   visibility?: EntityVisibility;
 };
 
@@ -1448,6 +1454,7 @@ export type TaskNodeActivitiesArgs = {
 
 export type TaskNodeEntityListsArgs = {
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
   visibility?: EntityVisibility;
 };
 
@@ -1685,6 +1692,7 @@ export type VersionNodeActivitiesArgs = {
 
 export type VersionNodeEntityListsArgs = {
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
   visibility?: EntityVisibility;
 };
 
@@ -1778,6 +1786,7 @@ export type WorkfileNodeActivitiesArgs = {
 
 export type WorkfileNodeEntityListsArgs = {
   entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
   visibility?: EntityVisibility;
 };
 
@@ -1973,31 +1982,34 @@ export type GetListsItemsForReviewSessionQueryVariables = Exact<{
 
 export type GetListsItemsForReviewSessionQuery = { project: { entityLists: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ node: { id: string, label: string, active: boolean, entityType: string, updatedAt: unknown, count: number, accessLevel: number } }> } } };
 
-export type ListMembershipFragmentFragment = { id: string, label: string, entityListType: string };
+export type ListMembershipFragmentFragment = { id: string, label: string, entityListType: string, itemIds: Array<string> };
 
 export type GetFoldersListsMembershipQueryVariables = Exact<{
   projectName: string;
   entityIds?: Array<string> | string | null | undefined;
+  listIds?: Array<string> | string | null | undefined;
 }>;
 
 
-export type GetFoldersListsMembershipQuery = { project: { folders: { edges: Array<{ node: { id: string, entityLists: Array<{ id: string, label: string, entityListType: string }> } }> } } };
+export type GetFoldersListsMembershipQuery = { project: { folders: { edges: Array<{ node: { id: string, entityLists: Array<{ id: string, label: string, entityListType: string, itemIds: Array<string> }> } }> } } };
 
 export type GetTasksListsMembershipQueryVariables = Exact<{
   projectName: string;
   entityIds?: Array<string> | string | null | undefined;
+  listIds?: Array<string> | string | null | undefined;
 }>;
 
 
-export type GetTasksListsMembershipQuery = { project: { tasks: { edges: Array<{ node: { id: string, entityLists: Array<{ id: string, label: string, entityListType: string }> } }> } } };
+export type GetTasksListsMembershipQuery = { project: { tasks: { edges: Array<{ node: { id: string, entityLists: Array<{ id: string, label: string, entityListType: string, itemIds: Array<string> }> } }> } } };
 
 export type GetVersionsListsMembershipQueryVariables = Exact<{
   projectName: string;
   entityIds?: Array<string> | string | null | undefined;
+  listIds?: Array<string> | string | null | undefined;
 }>;
 
 
-export type GetVersionsListsMembershipQuery = { project: { versions: { edges: Array<{ node: { id: string, entityLists: Array<{ id: string, label: string, entityListType: string }> } }> } } };
+export type GetVersionsListsMembershipQuery = { project: { versions: { edges: Array<{ node: { id: string, entityLists: Array<{ id: string, label: string, entityListType: string, itemIds: Array<string> }> } }> } } };
 
 type ListItemFragment_FolderNode_Fragment = { label: string | null, status: string, tags: Array<string>, folderType: string, path: string | null, ownAttrib: Array<string>, hasReviewables: boolean, thumbnailHash: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folderId: string, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null };
 
@@ -2496,6 +2508,7 @@ export const ListMembershipFragmentFragmentDoc = new TypedDocumentString(`
   id
   label
   entityListType
+  itemIds
 }
     `, {"fragmentName":"ListMembershipFragment"});
 export const SubTaskFragmentFragmentDoc = new TypedDocumentString(`
@@ -3565,13 +3578,17 @@ export const GetListsItemsForReviewSessionDocument = new TypedDocumentString(`
 }
     `);
 export const GetFoldersListsMembershipDocument = new TypedDocumentString(`
-    query GetFoldersListsMembership($projectName: String!, $entityIds: [String!]) {
+    query GetFoldersListsMembership($projectName: String!, $entityIds: [String!], $listIds: [String!]) {
   project(name: $projectName) {
     folders(ids: $entityIds, last: 5000) {
       edges {
         node {
           id
-          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
+          entityLists(
+            visibility: VISIBLE
+            entityListTypes: ["generic", "review-session"]
+            ids: $listIds
+          ) {
             ...ListMembershipFragment
           }
         }
@@ -3583,15 +3600,20 @@ export const GetFoldersListsMembershipDocument = new TypedDocumentString(`
   id
   label
   entityListType
+  itemIds
 }`);
 export const GetTasksListsMembershipDocument = new TypedDocumentString(`
-    query GetTasksListsMembership($projectName: String!, $entityIds: [String!]) {
+    query GetTasksListsMembership($projectName: String!, $entityIds: [String!], $listIds: [String!]) {
   project(name: $projectName) {
     tasks(ids: $entityIds, last: 5000) {
       edges {
         node {
           id
-          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
+          entityLists(
+            visibility: VISIBLE
+            entityListTypes: ["generic", "review-session"]
+            ids: $listIds
+          ) {
             ...ListMembershipFragment
           }
         }
@@ -3603,15 +3625,20 @@ export const GetTasksListsMembershipDocument = new TypedDocumentString(`
   id
   label
   entityListType
+  itemIds
 }`);
 export const GetVersionsListsMembershipDocument = new TypedDocumentString(`
-    query GetVersionsListsMembership($projectName: String!, $entityIds: [String!]) {
+    query GetVersionsListsMembership($projectName: String!, $entityIds: [String!], $listIds: [String!]) {
   project(name: $projectName) {
     versions(ids: $entityIds, last: 5000) {
       edges {
         node {
           id
-          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
+          entityLists(
+            visibility: VISIBLE
+            entityListTypes: ["generic", "review-session"]
+            ids: $listIds
+          ) {
             ...ListMembershipFragment
           }
         }
@@ -3623,6 +3650,7 @@ export const GetVersionsListsMembershipDocument = new TypedDocumentString(`
   id
   label
   entityListType
+  itemIds
 }`);
 export const GetUpdatedAndNewFoldersDocument = new TypedDocumentString(`
     query GetUpdatedAndNewFolders($projectName: String!, $folderIds: [String!]!, $first: Int) {
