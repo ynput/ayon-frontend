@@ -294,6 +294,7 @@ export const CellWidget: FC<EditorCellProps> = ({
           <TagsWidget
             value={Array.isArray(value) ? value : [value]}
             options={options}
+            projectName={projectName}
             pt={pt?.enum?.pt}
             {...sharedProps}
           />

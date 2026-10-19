@@ -1,4 +1,4 @@
-import { RefObject, useMemo, useRef } from 'react'
+import { RefObject, useMemo, useRef, useState } from 'react'
 import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
 import { DropdownRef, getTextColor } from '@ynput/ayon-react-components'
@@ -13,6 +13,7 @@ import type { Status } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions, getSelectableAssignees } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
+import { useProjectTags } from '@shared/hooks/useProjectTags'
 import { useEntityEditing } from '@shared/components/DetailsPanelDetails/hooks/useEntityEditing'
 import { useDetailsPanelContext, type DetailsPanelTab } from '@shared/context'
 
@@ -137,14 +138,14 @@ const DetailsPanelHeader = ({
   const statusesValue = useMemo(() => entities.map((t) => t.status), [entities])
   const priorityValues = useMemo(() => entities.map((t) => t.attrib?.priority), [entities])
   const tagsValues: string[][] = useMemo(() => entities.map((t) => t.tags), [entities])
-  const tagsOptionsObject = useMemo(
-    () =>
-      tagsOptions.reduce((acc, tag) => {
-        acc[tag.name] = tag
-        return acc
-      }, {}),
-    [tagsOptions],
-  )
+  const [tagsOpened, setTagsOpened] = useState(false)
+  const isSingleProject = entities.every((e) => e.projectName === firstEntity?.projectName)
+  const { tags: tagsOptionsObject, addUsedTags } = useProjectTags({
+    projectName: isSingleProject ? firstEntity?.projectName : undefined,
+    anatomyTags: tagsOptions,
+    values: union(...tagsValues),
+    skip: !tagsOpened,
+  })
 
   const isMultiple = entities.length > 1
   const isPlayable = !isMultiple && !!firstEntity?.hasReviewables
@@ -240,7 +241,11 @@ const DetailsPanelHeader = ({
                     options={[]}
                     editable
                     editor
-                    onChange={(value) => handleUpdate('tags', value)}
+                    onChange={(value) => {
+                      addUsedTags(value)
+                      handleUpdate('tags', value)
+                    }}
+                    onOpen={() => setTagsOpened(true)}
                     align="right"
                     styleDropdown={{ display: isLoading ? 'none' : 'unset' }}
                     className="tags-select"
