@@ -134,7 +134,8 @@ const useListItemDeepLink = () => {
   useEffect(() => {
     if (!pending) return
     // the user switched to another list
-    if (urlListId !== pending.listId) return setPending(null)
+    if (urlListId !== pending.listId)
+      return setPending((prev) => (prev === pending ? null : prev))
     if (!pending.check || selectedList?.id !== pending.listId || isUninitialized) return
     // isLoadingAll turns on a render after the filters change, isFetching right away
     if (isLoadingAll || isFetching) return
