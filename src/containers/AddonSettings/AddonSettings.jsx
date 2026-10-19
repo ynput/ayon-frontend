@@ -619,22 +619,28 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   const [addonListContextMenu] = useCreateContextMenu([])
   const showAddonListContextMenu = (e) => {
-    setTimeout(() => {
-      const menuItems = [
-        {
-          label: 'Copy settings from...',
-          command: () => setShowCopySettings(true),
-        },
-      ]
-      if (user?.data?.isAdmin) {
-        menuItems.push({
-          label: 'Low-level editor',
-          command: () => setShowRawEdit(true),
-          disabled: selectedAddons.length !== 1,
-        })
-      }
-      addonListContextMenu(e.originalEvent, menuItems)
-    }, 50)
+    if (!e.data?.name) return
+    const isSelected = selectedAddons.some((addon) => addon.name === e.data.name)
+    const targetAddons = isSelected ? selectedAddons : [e.data]
+    // the dialogs act on the selected addons, so an action selects a right-clicked addon first
+    const withSelection = (open) => () => {
+      if (!isSelected) onSelectAddon(targetAddons)
+      open()
+    }
+    const menuItems = [
+      {
+        label: 'Copy settings from...',
+        command: withSelection(() => setShowCopySettings(true)),
+      },
+    ]
+    if (user?.data?.isAdmin) {
+      menuItems.push({
+        label: 'Low-level editor',
+        command: withSelection(() => setShowRawEdit(true)),
+        disabled: targetAddons.length !== 1,
+      })
+    }
+    addonListContextMenu(e.originalEvent, menuItems)
   }
 
   //
