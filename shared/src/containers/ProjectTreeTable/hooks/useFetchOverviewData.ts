@@ -26,7 +26,7 @@ import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
 import { getGroupQueries } from '../utils/getGroupQueries'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
-import { useGetEntityLinksQuery } from '@shared/api'
+import { useGetEntityLinksInBatchesQuery } from '@shared/api'
 import { useProjectFoldersContext, type OnSyncDataCallback } from '@shared/context'
 import { debounce } from 'lodash'
 import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
@@ -280,7 +280,7 @@ export const useFetchOverviewData = ({
     data: foldersLinks = [],
     isUninitialized: isUninitializedFoldersLinks,
     isFetching: isFetchingFoldersLinks,
-  } = useGetEntityLinksQuery(foldersLinksArgs, { skip: isLoadingViews || skipLinks })
+  } = useGetEntityLinksInBatchesQuery(foldersLinksArgs, { skip: isLoadingViews || skipLinks })
 
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {
@@ -578,7 +578,7 @@ export const useFetchOverviewData = ({
     data: tasksLinks = [],
     isUninitialized: isUninitializedTasksLinks,
     isFetching: isFetchingTasksLinks,
-  } = useGetEntityLinksQuery(tasksLinksArgs, {
+  } = useGetEntityLinksInBatchesQuery(tasksLinksArgs, {
     skip: isLoadingViews || visibleTasks.size === 0 || skipLinks,
   })
 

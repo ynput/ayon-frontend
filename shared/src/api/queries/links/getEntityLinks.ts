@@ -14,6 +14,7 @@ import { toast } from 'react-toastify'
 import { createRealtimeBatcher, PubSub, waitForRealtimeJitter } from '@shared/util'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 import { chunk } from 'lodash'
+import { useMemo } from 'react'
 
 // entities per links request, more are fetched in further requests
 const LINKS_BATCH_SIZE = 100
@@ -352,4 +353,36 @@ const injectedQueries = foldersApi.injectEndpoints({
 })
 
 export const { useGetEntityLinksQuery } = injectedQueries
+
+/**
+ * useGetEntityLinksQuery for many entities: asks for one batch of uncached entities at a time, so
+ * the first rows show their links while the rest are still loading.
+ */
+export const useGetEntityLinksInBatchesQuery = (
+  args: GetEntityLinksArgs,
+  options?: { skip?: boolean },
+) => {
+  const { projectName, entityType, entityIds } = args
+  // one cache entry holds the links of every entity of the project and type
+  const { data: cachedEntities } = injectedQueries.endpoints.getEntityLinks.useQueryState(args)
+  const idsKey = entityIds.join(',')
+
+  const batchArgs = useMemo(() => {
+    const cachedIds = new Set(cachedEntities?.map((entity) => entity.id))
+    const cached = entityIds.filter((id) => cachedIds.has(id))
+    const uncached = entityIds.filter((id) => !cachedIds.has(id))
+    return {
+      projectName,
+      entityType,
+      entityIds: [...cached, ...uncached.slice(0, LINKS_BATCH_SIZE)],
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectName, entityType, idsKey, cachedEntities])
+
+  const result = useGetEntityLinksQuery(batchArgs, options)
+  // entities waiting for a later batch count as loading
+  const isWaiting =
+    !options?.skip && !result.isError && batchArgs.entityIds.length < entityIds.length
+  return { ...result, isFetching: result.isFetching || isWaiting }
+}
 export { injectedQueries as entityLinksApi }
