@@ -38,6 +38,7 @@ import useExtraColumns from './hooks/useExtraColumns'
 import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
 import useUpdateListItems from './hooks/useUpdateListItems'
 import ReplaceListItemsDialog from './components/ReplaceListItemsDialog'
+import ListItemDataDialog from './components/ListItemDataDialog'
 import { Actions } from '@shared/containers/Actions/Actions'
 import { ListsModuleProvider } from './context/lists-modules'
 import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
@@ -239,6 +240,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                       />
                       <ListsShortcuts />
                       <ReplaceListItemsDialog />
+                      <ListItemDataDialog />
                       <MoveToFolderDialogContainer />
                     </CellEditingProvider>
                   </SelectedRowsProvider>
