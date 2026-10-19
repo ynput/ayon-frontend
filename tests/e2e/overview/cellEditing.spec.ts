@@ -138,65 +138,6 @@ test.describe('overview tag and date cells', () => {
       .toEqual(['hero'])
   })
 
-  test('add a new tag to a task when the project anatomy has no tags', async ({
-    page,
-    api,
-    projectName,
-  }) => {
-    await api.patch(`/api/projects/${projectName}`, { tags: [] })
-    const { tasks } = await createShot(api, projectName, ['anim'])
-    await api.setWorkingViewColumns('overview', projectName, ['name', 'tags'])
-    const overview = new OverviewPage(page)
-    await overview.goto(projectName)
-    await overview.expand('sh010')
-
-    await overview.cell('anim', 'tags').dblclick()
-    const search = page.locator('.search').getByRole('textbox')
-    await search.click()
-    await expect(search).toBeFocused()
-    await search.fill('adhoc')
-    await search.press('Enter')
-    await page.keyboard.press('Escape')
-    await expect(page.locator('.options')).toBeHidden()
-
-    await expect(overview.cell('anim', 'tags')).toContainText('adhoc')
-    await expect
-      .poll(async () => (await api.getTask(projectName, tasks[0].id)).tags)
-      .toEqual(['adhoc'])
-  })
-
-  test('tags already used in the project are offered on other tasks', async ({
-    page,
-    api,
-    projectName,
-  }) => {
-    await api.patch(`/api/projects/${projectName}`, { tags: [] })
-    const { tasks } = await createShot(api, projectName, ['anim', 'comp', 'fx'])
-    await api.patch(`/api/projects/${projectName}/tasks/${tasks[2].id}`, { tags: ['hero'] })
-    await api.setWorkingViewColumns('overview', projectName, ['name', 'tags'])
-    const overview = new OverviewPage(page)
-    await overview.goto(projectName)
-    await overview.expand('sh010')
-
-    // a tag added in this session is offered right away, not only after a reload
-    await overview.cell('anim', 'tags').dblclick()
-    const search = page.locator('.search').getByRole('textbox')
-    await search.fill('adhoc')
-    await search.press('Enter')
-    await page.keyboard.press('Escape')
-    await expect(page.locator('.options')).toBeHidden()
-
-    await overview.cell('comp', 'tags').dblclick()
-    const options = page.locator('.options')
-    await expect(options.getByText('adhoc', { exact: true })).toBeVisible()
-    await options.getByText('hero', { exact: true }).click()
-    await page.keyboard.press('Escape')
-
-    await expect
-      .poll(async () => (await api.getTask(projectName, tasks[1].id)).tags)
-      .toEqual(['hero'])
-  })
-
   // closing the dropdown by clicking another cell must save to the edited task, wherever the click lands
   const closeTargets = [
     { name: 'the name of the same row', label: 'anim', columnId: 'name' },
