@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -119,7 +119,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   const siteId = showSites ? selectedSites[0] || '_' : undefined
 
-  const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
+  const { data: { bundles = [] } = {}, isLoading: bundlesLoading } = useListBundlesQuery({
+    archived: false,
+  })
 
   const [selectedBundle, setSelectedBundle] = useSessionStorage('variant-type', {
     variant: 'production',
@@ -171,14 +173,14 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   }, [bundles, userName])
 
   // the variant picked in this tab survives leaving the page, until developer mode is toggled
-  const variantChosen = useRef(sessionStorage.getItem('variant-type') !== null)
-  const previousDeveloperMode = useRef(developerMode)
+  const [variantDeveloperMode, setVariantDeveloperMode] = useSessionStorage(
+    'variant-developer-mode',
+    null,
+  )
 
   // Update selectedBundle when developer mode changes
   useEffect(() => {
-    const developerModeChanged = previousDeveloperMode.current !== developerMode
-    previousDeveloperMode.current = developerMode
-    if (variantChosen.current && !developerModeChanged) return
+    if (variantDeveloperMode === !!developerMode) return
 
     if (developerMode) {
       // Switch to dev bundle when entering developer mode
@@ -189,9 +191,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           bundleName: devBundle.name,
           projectBundleName: undefined,
         })
-        variantChosen.current = true
       }
       // If no dev bundle found, stay on current variant (don't switch)
+      if (devBundle || !bundlesLoading) setVariantDeveloperMode(true)
     } else {
       // Switch back to production when leaving developer mode
       setSelectedBundle({
@@ -199,9 +201,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         bundleName: null,
         projectBundleName: undefined,
       })
-      variantChosen.current = true
+      setVariantDeveloperMode(false)
     }
-  }, [developerMode, JSON.stringify(devBundles), userName])
+  }, [developerMode, variantDeveloperMode, bundlesLoading, JSON.stringify(devBundles), userName])
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
