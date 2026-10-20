@@ -50,6 +50,14 @@ A test is cheaper than someone finding the bug or checking it by hand, so add th
 
 **Tests written while working.** Agents may write tests to check their own change. Keep the ones that meet the points above, rework or remove the rest before opening the PR.
 
+**Agent bug fix flow.** Tests are meant to run on every PR in CI, so a reported bug can be handled mostly unattended:
+1. One agent writes a test that fails because of the bug. It confirms the bug, or the agent comments on the issue that it can't reproduce it.
+2. A different agent writes the fix that makes the test pass. The agent that fixes must not write or change the test, or it grades its own work.
+3. The fix stays as small as the bug needs. Don't bend the code around the test when a one-line change fixes it.
+4. The PR carries the test and the fix together. The reviewer checks first that the test makes sense, really reproduces the bug, and passes.
+
+Prefer e2e over unit for these: they cover what the user hit. CI runs the whole suite, not a subset picked by the PR's area, because a change can break code it didn't mean to touch. Some features can't run in headless Chromium yet (e.g. WebCodecs playback in Review); cover what can run and leave the rest to manual testing.
+
 ## How the e2e tests are built
 
 **Scope.** Only the frontend's own pages. Addon pages (planner, review, reports and other addons) are tested in their addons' repos, so don't add tests for them here.
