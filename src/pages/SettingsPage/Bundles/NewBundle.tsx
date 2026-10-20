@@ -19,7 +19,7 @@ import * as Styled from './Bundles.styled'
 import getLatestSemver from './getLatestSemver'
 import { isEqual, omit, union } from 'lodash'
 import BundleDeps from './BundleDeps'
-import { BundleDescriptionField } from './BundleNote'
+import BundleDescriptionField from './BundleDescriptionField'
 import useAddonSelection from './useAddonSelection'
 import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '@containers/Shortcuts'
@@ -331,7 +331,8 @@ const NewBundle: React.FC<NewBundleProps> = ({
   }
 
   const allAddonsSelected =
-    !!filteredAddons.length && selectedAddons.length === filteredAddons.length
+    !!filteredAddons.length &&
+    filteredAddons.every((addon) => selectedAddons.some((s) => s.name === addon.name))
   const toggleSelectAll = () => setSelectedAddons(allAddonsSelected ? [] : filteredAddons)
 
   // SHORTCUTS
@@ -426,7 +427,6 @@ const NewBundle: React.FC<NewBundleProps> = ({
                       { key: 'enabled', value: true },
                     )
                   }
-                  style={{ width: 'auto', gap: 8 }}
                   data-tooltip="Enable development for selected addons"
                 />
                 <Styled.BadgeButton
@@ -440,7 +440,6 @@ const NewBundle: React.FC<NewBundleProps> = ({
                       { key: 'enabled', value: false },
                     )
                   }
-                  style={{ width: 'auto', gap: 8 }}
                   data-tooltip="Disable development for selected addons"
                 />
               </>

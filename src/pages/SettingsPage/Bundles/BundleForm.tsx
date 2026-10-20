@@ -101,7 +101,7 @@ const BundleForm: React.FC<BundleFormProps> = ({
   const editableDetails = (
     <BorderedSection title="Details" autoHeight showHeader withPadding>
       <Styled.FieldRow>
-        <FieldLabel name="bundleName" data={{ title: 'Bundle name' }} />
+        <FieldLabel name="bundleName" data={{ title: 'Bundle name' }} id="bundle-name-label" />
         <div className="field">
           <Styled.BundleNameInput $hasError={!!showNameError}>
             <InputText
@@ -109,6 +109,7 @@ const BundleForm: React.FC<BundleFormProps> = ({
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               disabled={isDev}
               id="bundle-name"
+              aria-labelledby="bundle-name-label"
             />
           </Styled.BundleNameInput>
         </div>

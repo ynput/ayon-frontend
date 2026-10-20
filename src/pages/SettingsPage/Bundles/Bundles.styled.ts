@@ -90,6 +90,8 @@ export const AddonTools = styled.div`
 
   button {
     height: 32px;
+    width: auto;
+    gap: 8px;
   }
 `
 
