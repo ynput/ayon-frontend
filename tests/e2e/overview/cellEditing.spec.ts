@@ -204,6 +204,48 @@ test.describe('overview tag and date cells', () => {
       .toEqual([second.name])
   })
 
+  test('assignee options are alphabetical, selected first', async ({
+    page,
+    api,
+    projectName,
+    createUser,
+    accessGroup,
+  }) => {
+    const accessGroups = { [projectName]: [accessGroup] }
+    const users: Record<string, string> = {}
+    for (const fullName of ['Delta', 'alpha', 'Émile', 'Charlie', 'Bravo']) {
+      users[fullName] = (await createUser({ licensed: true, accessGroups, fullName })).name
+    }
+    const { tasks } = await createShot(api, projectName, ['anim'])
+    await api.patch(`/api/projects/${projectName}/tasks/${tasks[0].id}`, {
+      assignees: [users.Delta, users.alpha, users.Charlie],
+    })
+    await api.setWorkingViewColumns('overview', projectName, ['name', 'assignees'])
+    // the server may already sort users: reverse them so the table has to sort itself
+    await page.route('**/api/enum/users?*', async (route) => {
+      const response = await route.fetch()
+      await route.fulfill({ response, json: (await response.json()).reverse() })
+    })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.expand('sh010')
+
+    await overview.cell('anim', 'assignees').dblclick()
+    const options = page.locator('.options [data-value]')
+    await expect(options.first()).toBeVisible()
+
+    const ours = new Set(Object.values(users))
+    await expect
+      .poll(async () =>
+        (
+          await options.evaluateAll((els) =>
+            els.map((el) => (el as HTMLElement).dataset.value ?? ''),
+          )
+        ).filter((name) => ours.has(name)),
+      )
+      .toEqual(['alpha', 'Charlie', 'Delta', 'Bravo', 'Émile'].map((fullName) => users[fullName]))
+  })
+
   test('set a date attribute', async ({ page, api, projectName }) => {
     const { tasks } = await createShot(api, projectName, ['anim'])
     await api.setWorkingViewColumns('overview', projectName, ['name', 'attrib_startDate'])
