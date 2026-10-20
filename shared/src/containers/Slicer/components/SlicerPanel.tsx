@@ -285,7 +285,6 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
           },
         ]
       : []),
-    { id: 'divider' },
     buildSortMenuItem({
       id: 'sort',
       options: getSliceSortOptions(sliceType),
@@ -345,6 +344,21 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
           // the buttons act on the panel, not on the collapsed header they sit in
           onClick={(event) => event.stopPropagation()}
         >
+          {!isCollapsed && !isSearching && (
+            <>
+              <HeaderButton
+                icon="more_horiz"
+                id={menuId}
+                className={clsx('slicer-menu', { active: isMenuOpen })}
+                data-tooltip="More"
+                data-tooltip-delay={0}
+                onClick={() => toggleMenuOpen(menuId)}
+              />
+              <MenuContainer targetId={menuId} id={menuId} align="left">
+                <Menu menu={menuItems} onClose={() => toggleMenuOpen(false)} />
+              </MenuContainer>
+            </>
+          )}
           {!isCollapsed && (
             <SlicerSearch
               open={isSearching}
@@ -378,21 +392,6 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
               data-tooltip-delay={0}
               onClick={() => removeSlicePanel(panel.id)}
             />
-          )}
-          {!isCollapsed && !isSearching && (
-            <>
-              <HeaderButton
-                icon="more_horiz"
-                id={menuId}
-                className={clsx('slicer-menu', { active: isMenuOpen })}
-                data-tooltip="More"
-                data-tooltip-delay={0}
-                onClick={() => toggleMenuOpen(menuId)}
-              />
-              <MenuContainer targetId={menuId} id={menuId} align="left">
-                <Menu menu={menuItems} onClose={() => toggleMenuOpen(false)} />
-              </MenuContainer>
-            </>
           )}
         </HeaderActions>
       </PanelHeader>
