@@ -2,6 +2,7 @@ import {
   buildMetricTargets,
   mergeFieldStats,
   refreshActiveAndPurgeOthers,
+  refreshListsMembership,
   refreshOtherActiveQueries,
   shouldSkipColumnStats,
   toListItemsStatsTargets,
@@ -357,15 +358,17 @@ const useGetListItemsData = ({
       queriesToRefresh.push({ endpointName: 'GetListItemsColumnStats', args: statsArgs })
     }
 
-    await Promise.all(
-      queriesToRefresh.map(({ endpointName, args }) =>
+    await Promise.all([
+      ...queriesToRefresh.map(({ endpointName, args }) =>
         dispatch(
           refreshActiveAndPurgeOthers(endpointName, args, {
             refreshOtherActiveQueries: false,
           }),
         ).unwrap(),
       ),
-    )
+      // the Lists and Review sessions columns
+      syncListItems && dispatch(refreshListsMembership(projectName)),
+    ])
     await Promise.all(
       queriesToRefresh.map(({ endpointName, args }) =>
         dispatch(refreshOtherActiveQueries(endpointName, args)),

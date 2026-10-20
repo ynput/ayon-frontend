@@ -38,9 +38,9 @@ const StyledLicenseRow = styled.div`
 `
 
 export const ProfileRow = ({ rowData }) => {
-  const { name, self, isMissing } = rowData
+  const { name, self, isMissing, missingReason } = rowData
   return (
-    <StyledProfileRow>
+    <StyledProfileRow data-tooltip={missingReason}>
       <UserImage
         name={name}
         size={25}
