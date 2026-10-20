@@ -1,21 +1,100 @@
 import styled from 'styled-components'
-import { Panel, FormLayout, Section } from '@ynput/ayon-react-components'
+import { Splitter } from 'primereact/splitter'
+import { theme } from '@ynput/ayon-react-components'
 
-export const StyledPanel = styled(Panel)`
-  flex-grow: 1;
+export const FormSplitter = styled(Splitter)`
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   overflow: hidden;
 `
 
-export const StyledFormLayout = styled(FormLayout)`
-  gap: 8px;
-  padding-top: 1px;
-  max-width: 900px;
+export const AddonsPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--base-gap-small);
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
 `
 
-export const BundleNameContainer = styled.div`
+export const AddonsHeader = styled.div`
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
   align-items: center;
+  gap: var(--base-gap-small);
+  min-height: 32px;
+
+  & > input {
+    flex: 1;
+    min-width: 160px;
+    max-width: 240px;
+    margin-left: auto;
+  }
+`
+
+export const AddonsTitle = styled.span`
+  display: flex;
+  align-items: center;
+  ${theme.labelLarge}
+  height: 32px;
+  padding-left: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`
+
+export const AddonsList = styled.div`
+  flex: 1;
+  min-height: 0;
+`
+
+// same stack as the entity details panel
+export const DetailsCards = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  overflow-y: auto;
+  padding: 0 8px 8px;
+
+  & > * {
+    flex: none;
+  }
+`
+
+// grid of the details panel attribute rows
+export const FieldRow = styled.div`
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr);
+  column-gap: 4px;
+  align-items: center;
+  min-height: 32px;
+
+  .field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+`
+
+export const FieldGrow = styled.div`
+  flex: 1;
+  min-width: 0;
+
+  & > * {
+    width: 100%;
+  }
+`
+
+export const FieldText = styled.span`
+  color: var(--md-sys-color-on-surface);
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `
 
 export const BundleNameInput = styled.div<{ $hasError?: boolean }>`
@@ -33,73 +112,6 @@ export const BundleNameInput = styled.div<{ $hasError?: boolean }>`
   }
 `
 
-export const ProjectSwitchContainer = styled.div`
-  display: flex;
-  gap: 4px;
-  align-items: center;
-
-  .switch-body {
-    min-width: unset;
-  }
-`
-
-export const BundleName = styled.h2`
-  margin: 0;
-`
-
-export const LauncherVersionContainer = styled.div`
-  display: flex;
-  gap: 4px;
-  align-items: center;
-`
-
-export const LauncherVersionTitle = styled.h2`
-  margin: 0;
-  margin-right: 32px;
-`
-
-export const StyledColumns = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 16px;
-  overflow: hidden;
-  max-width: 1500px;
-`
-
-export const AddonListSection = styled.section`
-  height: 100%;
-  min-width: 500px;
-  flex: 1;
-`
-
-export const AddonListInnerSection = styled.section`
-  height: 100%;
-`
-
-export const SidebarSection = styled(Section)`
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  && > * {
-    flex: none;
-  }
-  align-items: flex-start;
-  min-width: clamp(300px, 25vw, 400px);
-  max-width: clamp(300px, 25vw, 400px);
-  height: 100%;
-  flex-grow: unset;
-`
-
-export const DevFieldContainer = {
-  flexDirection: 'row' as const,
-  gap: 8,
-}
-
-export const AssignButtonContainer = {
-  justifyContent: 'center' as const,
-  width: 'auto' as const,
-}
 export const SearchHintText = styled.span`
   grid-column: 1 / -1;
   font-size: 12px;

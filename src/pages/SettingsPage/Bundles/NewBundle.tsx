@@ -1,6 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
-import { Button, SaveButton, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import {
+  BorderedSection,
+  Button,
+  SaveButton,
+  Spacer,
+  Toolbar,
+} from '@ynput/ayon-react-components'
 import {
   useCreateBundleMutation,
   useUpdateBundleMutation,
@@ -13,7 +19,7 @@ import * as Styled from './Bundles.styled'
 import getLatestSemver from './getLatestSemver'
 import { isEqual, omit, union } from 'lodash'
 import BundleDeps from './BundleDeps'
-import BundleNote from './BundleNote'
+import { BundleDescriptionField } from './BundleNote'
 import useAddonSelection from './useAddonSelection'
 import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '@containers/Shortcuts'
@@ -21,7 +27,6 @@ import BundleChecks from './BundleChecks/BundleChecks'
 import usePrevious from '@hooks/usePrevious'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/context/addon-search'
-import { AddonSearchInput } from '@pages/SettingsPage/Bundles/AddonSearchInput.tsx'
 
 type AddonDevelopment = Record<string, { enabled?: boolean; path?: string }>
 
@@ -38,8 +43,17 @@ const removeEmptyDevAddons = (addons: AddonDevelopment = {}): AddonDevelopment =
 
 type Installer = { version: string; platforms?: string[] }
 
-// the note saves itself and the server stamps the dates, so neither is a dev bundle change
-const NON_FORM_KEYS = ['description', 'createdAt', 'updatedAt']
+// the server stamps the dates, so they are never a dev bundle change
+const NON_FORM_KEYS = ['createdAt', 'updatedAt']
+
+// an emptied editor and a bundle that never had a description both mean no description
+const normalizeDescription = (description?: string | null) =>
+  description?.trim() ? description : null
+
+const toComparable = (bundle: LocalBundleFormData | null): LocalBundleFormData => ({
+  ...omit(bundle, NON_FORM_KEYS),
+  description: normalizeDescription(bundle?.description),
+})
 
 interface LocalBundleFormData {
   addons?: Record<string, any>
@@ -91,15 +105,20 @@ const NewBundle: React.FC<NewBundleProps> = ({
     }
   }, [formData])
 
+  // typing a description must not re-run the compatibility check
+  const bundleCheckModel = useMemo(
+    () => formData && omit(formData, ['description', ...NON_FORM_KEYS]),
+    [formData],
+  )
   const {
     data: bundleCheckData = {},
     isFetching: isFetchingCheck,
     isError: isCheckError,
   } = useCheckBundleCompatibilityQuery(
     {
-      bundleModel: formData as any,
+      bundleModel: bundleCheckModel as any,
     },
-    { skip: !formData || skipBundleCheck },
+    { skip: !bundleCheckModel || skipBundleCheck },
   ) as any
 
   const bundleCheckError = bundleCheckData.issues?.some((issue: any) => issue.severity === 'error')
@@ -192,7 +211,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
   }, [searchParams, formData])
 
   const handleSave = async () => {
-    const data = { ...formData }
+    const data = { ...formData, description: normalizeDescription(formData?.description) }
 
     if (!data?.name) {
       toast.error('Name is required')
@@ -220,26 +239,25 @@ const NewBundle: React.FC<NewBundleProps> = ({
 
   useEffect(() => {
     if (!initBundle) return
-    const latestFormData: LocalBundleFormData = omit(formData, NON_FORM_KEYS)
+    const latestFormData = toComparable(formData)
     latestFormData['addonDevelopment'] = removeEmptyDevAddons(latestFormData['addonDevelopment'])
     // check for changes
-    isEqual(omit(initBundle, NON_FORM_KEYS), latestFormData)
-      ? setDevChanges(false)
-      : setDevChanges(true)
+    isEqual(toComparable(initBundle), latestFormData) ? setDevChanges(false) : setDevChanges(true)
   }, [initBundle, formData])
 
   const handleUpdate = async () => {
     if (!initBundle || !formData) return
 
     // find the changes between initBundle and formData
+    const initData = toComparable(initBundle)
+    const latestData = toComparable(formData)
     const changes: any = {}
     // create a unique list of keys
-    var allKeys = union(Object.keys(initBundle || {}), Object.keys(formData || {}))
+    var allKeys = union(Object.keys(initData), Object.keys(latestData))
     // for each key, check if the values are the same, if not, add to changes
     for (const key of allKeys) {
-      if (NON_FORM_KEYS.includes(key)) continue
-      if (!isEqual(initBundle[key], formData[key])) {
-        changes[key] = formData[key]
+      if (!isEqual(initData[key], latestData[key])) {
+        changes[key] = latestData[key]
       }
     }
 
@@ -312,14 +330,15 @@ const NewBundle: React.FC<NewBundleProps> = ({
     selectAndScrollToAddon(addon)
   }
 
+  const allAddonsSelected =
+    !!filteredAddons.length && selectedAddons.length === filteredAddons.length
+  const toggleSelectAll = () => setSelectedAddons(allAddonsSelected ? [] : filteredAddons)
+
   // SHORTCUTS
   const shortcuts: Array<{ key: string; action: () => void }> = [
     {
       key: 'A',
-      action: () =>
-        selectedAddons.length === filteredAddons.length
-          ? setSelectedAddons([])
-          : setSelectedAddons(filteredAddons),
+      action: toggleSelectAll,
     },
   ]
 
@@ -371,97 +390,77 @@ const NewBundle: React.FC<NewBundleProps> = ({
         addonListRef={addonListRef}
         createdAt={isDev ? initBundle?.createdAt : undefined}
         updatedAt={isDev ? initBundle?.updatedAt : undefined}
+        addonTools={
+          <Styled.AddonTools>
+            <Button
+              label={allAddonsSelected ? 'Deselect all' : 'Select all'}
+              icon={allAddonsSelected ? 'deselect' : 'select_all'}
+              onClick={toggleSelectAll}
+              data-shortcut={getPlatformShortcutKey('a', [KeyMode.Shift])}
+            />
+            <Button
+              label="Select activated"
+              icon="check_circle"
+              onClick={() =>
+                setSelectedAddons(filteredAddons.filter((a) => !!formData?.addons?.[a.name]))
+              }
+              data-tooltip="Select addons that have a version"
+            />
+            <Button
+              label="Version latest"
+              icon="vertical_align_top"
+              disabled={!selectedAddons.length}
+              onClick={() => setSelectedVersion(true)}
+              data-tooltip="Set selected addons to latest version"
+            />
+            {(isDev || formData?.isDev) && (
+              <>
+                <Styled.BadgeButton
+                  label="Enable development"
+                  icon="code"
+                  $hl={'developer-surface'}
+                  disabled={!selectedAddons.length}
+                  onClick={() =>
+                    handleAddonDevChange(
+                      selectedAddons.map((a) => a.name),
+                      { key: 'enabled', value: true },
+                    )
+                  }
+                  style={{ width: 'auto', gap: 8 }}
+                  data-tooltip="Enable development for selected addons"
+                />
+                <Styled.BadgeButton
+                  label="Disable development"
+                  icon="code_off"
+                  $hl={'developer-surface'}
+                  disabled={!selectedAddons.length}
+                  onClick={() =>
+                    handleAddonDevChange(
+                      selectedAddons.map((a) => a.name),
+                      { key: 'enabled', value: false },
+                    )
+                  }
+                  style={{ width: 'auto', gap: 8 }}
+                  data-tooltip="Disable development for selected addons"
+                />
+              </>
+            )}
+          </Styled.AddonTools>
+        }
       >
-        <Styled.AddonTools>
-          <AddonSearchInput />
-          <Button
-            label="Select all addons"
-            icon="select_all"
-            onClick={() => setSelectedAddons(filteredAddons)}
-            data-shortcut={getPlatformShortcutKey('a', [KeyMode.Shift])}
-            id="select"
-          />
-          <Button
-            label="Deselect all addons"
-            icon="deselect"
-            onClick={() => setSelectedAddons([])}
-            data-shortcut={getPlatformShortcutKey('a', [KeyMode.Shift])}
-            id="deselect"
-          />
-          <Button
-            label="Select activated"
-            icon="check_circle"
-            onClick={() =>
-              setSelectedAddons(filteredAddons.filter((a) => !!formData?.addons?.[a.name]))
-            }
-            data-tooltip="Select addons that have a version"
-          />
-          <Button
-            label="Select deactivated"
-            icon="block"
-            onClick={() =>
-              setSelectedAddons(filteredAddons.filter((a) => !formData?.addons?.[a.name]))
-            }
-            data-tooltip="Select addons that have a NONE version"
-          />
-          <Button
-            label="Version latest"
-            icon="vertical_align_top"
-            disabled={!selectedAddons.length}
-            onClick={() => setSelectedVersion(true)}
-            data-tooltip="Set selected addons to latest version"
-          />
-          <Button
-            label="Version NONE"
-            icon="vertical_align_bottom"
-            disabled={!selectedAddons.length}
-            onClick={() => setSelectedVersion(false)}
-            data-tooltip="Set selected addons to NONE"
-          />
-          {(isDev || formData?.isDev) && (
-            <>
-              <Styled.BadgeButton
-                label="Enable development"
-                icon="code"
-                $hl={'developer-surface'}
-                disabled={!selectedAddons.length}
-                onClick={() =>
-                  handleAddonDevChange(
-                    selectedAddons.map((a) => a.name),
-                    { key: 'enabled', value: true },
-                  )
-                }
-                style={{ width: '100%', gap: 8 }}
-                data-tooltip="Enable development for selected addons"
-              />
-              <Styled.BadgeButton
-                label="Disable development"
-                icon="code_off"
-                $hl={'developer-surface'}
-                disabled={!selectedAddons.length}
-                onClick={() =>
-                  handleAddonDevChange(
-                    selectedAddons.map((a) => a.name),
-                    { key: 'enabled', value: false },
-                  )
-                }
-                style={{ width: '100%', gap: 8 }}
-                data-tooltip="Disable development for selected addons"
-              />
-            </>
-          )}
-        </Styled.AddonTools>
-        {isDev && initBundle?.name && (
-          <BundleNote key={initBundle.name} bundle={initBundle as any} />
-        )}
-        {isDev && <BundleDeps bundle={formData} onChange={handleDepPackagesDevChange} />}
-
-        <BundleChecks
-          check={bundleCheckData}
-          isLoading={isFetchingCheck}
-          isCheckError={isCheckError}
-          onIssueClick={handleIssueClick}
+        <BundleDeps bundle={formData} onChange={handleDepPackagesDevChange} />
+        <BundleDescriptionField
+          value={formData?.description}
+          onChange={(description) => setFormData((prev) => prev && { ...prev, description })}
         />
+        <BorderedSection title="Checks" autoHeight showHeader withPadding>
+          <BundleChecks
+            check={bundleCheckData}
+            isLoading={isFetchingCheck}
+            isCheckError={isCheckError}
+            onIssueClick={handleIssueClick}
+          />
+        </BorderedSection>
       </BundleForm>
     </>
   )

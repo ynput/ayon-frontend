@@ -1,13 +1,15 @@
-import { Divider, FormRow as RCFormRow, InputSwitch, InputText } from '@ynput/ayon-react-components'
+import { BorderedSection, InputSwitch, InputText } from '@ynput/ayon-react-components'
 import React, { useMemo } from 'react'
+import { SplitterPanel } from 'primereact/splitter'
+import { format, isValid } from 'date-fns'
 import BundlesAddonList from './BundlesAddonList'
 import * as BundleStyled from './Bundles.styled'
 import * as Styled from './BundleForm.styled'
-import { upperFirst } from 'lodash'
-import { format, isValid } from 'date-fns'
 import InstallerSelector from './InstallerSelector'
+import { AddonSearchInput } from './AddonSearchInput'
 import { useAppSelector } from '@state/store'
 import { useGetUsersQuery } from '@shared/api'
+import { FieldLabel } from '@shared/components/DetailsPanelDetails'
 import type { Addon } from './types'
 
 type Installer = { version: string; platforms?: string[] }
@@ -29,6 +31,7 @@ type BundleFormProps = {
   isDev?: boolean
   installers?: Installer[]
   children?: React.ReactNode
+  addonTools?: React.ReactNode
   selectedAddons: Addon[]
   setSelectedAddons: (sel: any) => void
   onAddonDevChange?: (
@@ -47,6 +50,13 @@ const formatTimestamp = (value?: string) => {
   return date && isValid(date) ? format(date, 'PPpp') : 'Unknown'
 }
 
+const ReadOnlyRow = ({ name, title, value }: { name: string; title: string; value: string }) => (
+  <Styled.FieldRow>
+    <FieldLabel name={name} data={{ title }} />
+    <Styled.FieldText data-tooltip={value}>{value}</Styled.FieldText>
+  </Styled.FieldRow>
+)
+
 const BundleForm: React.FC<BundleFormProps> = ({
   formData,
   setFormData,
@@ -54,6 +64,7 @@ const BundleForm: React.FC<BundleFormProps> = ({
   isDev,
   installers = [],
   children,
+  addonTools,
   selectedAddons,
   setSelectedAddons,
   onAddonDevChange,
@@ -67,9 +78,6 @@ const BundleForm: React.FC<BundleFormProps> = ({
   const currentUser = useAppSelector((state) => state.user.name)
   const { data: users = [], isLoading } = useGetUsersQuery({ selfName: currentUser }) as any
   const devs = users?.filter((u: any) => u.isDeveloper)
-  const installerPlatforms = installers.find(
-    (i) => i.version === formData?.installerVersion,
-  )?.platforms
 
   const devSelectOptions = useMemo(
     () =>
@@ -83,77 +91,57 @@ const BundleForm: React.FC<BundleFormProps> = ({
 
   if (!formData) return null
 
-  return (
-    <Styled.StyledPanel>
-      <Styled.StyledFormLayout>
-        <BundleStyled.FormRow>
-          <label htmlFor="bundle-name">Bundle name</label>
-          <div className="field">
-            {isNew ? (
-              <Styled.BundleNameContainer>
-                <Styled.BundleNameInput $hasError={!!showNameError}>
-                  <InputText
-                    value={formData?.name || ''}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    disabled={!formData || isDev}
-                    id={'bundle-name'}
-                  />
-                </Styled.BundleNameInput>
-              </Styled.BundleNameContainer>
-            ) : (
-              <Styled.BundleName>{formData?.name}</Styled.BundleName>
-            )}
-          </div>
-        </BundleStyled.FormRow>
-        {createdAt && (
-          <>
-            <RCFormRow label="Created">
-              <span>{formatTimestamp(createdAt)}</span>
-            </RCFormRow>
-            <RCFormRow label="Updated">
-              <span>{formatTimestamp(updatedAt)}</span>
-            </RCFormRow>
-          </>
-        )}
-        <RCFormRow label="Launcher version">
-          {isNew ? (
+  const dateRows = (
+    <>
+      <ReadOnlyRow name="createdAt" title="Created at" value={formatTimestamp(createdAt)} />
+      <ReadOnlyRow name="updatedAt" title="Updated at" value={formatTimestamp(updatedAt)} />
+    </>
+  )
+
+  const editableDetails = (
+    <BorderedSection title="Details" autoHeight showHeader withPadding>
+      <Styled.FieldRow>
+        <FieldLabel name="bundleName" data={{ title: 'Bundle name' }} />
+        <div className="field">
+          <Styled.BundleNameInput $hasError={!!showNameError}>
+            <InputText
+              value={formData.name || ''}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              disabled={isDev}
+              id="bundle-name"
+            />
+          </Styled.BundleNameInput>
+        </div>
+      </Styled.FieldRow>
+      <Styled.FieldRow>
+        <FieldLabel name="installerVersion" data={{ title: 'Launcher version' }} />
+        <div className="field">
+          <Styled.FieldGrow>
             <InstallerSelector
-              value={formData?.installerVersion ? [formData?.installerVersion] : []}
+              value={formData.installerVersion ? [formData.installerVersion] : []}
               options={installers}
               onChange={(e) => setFormData({ ...formData, installerVersion: e[0] })}
-              disabled={!formData}
             />
-          ) : (
-            <Styled.LauncherVersionContainer>
-              <Styled.LauncherVersionTitle>
-                {formData?.installerVersion || 'NONE'}
-              </Styled.LauncherVersionTitle>
-              <>
-                {!!installerPlatforms?.length &&
-                  installerPlatforms.map((platform, i) => {
-                    const PlatformTag: any = BundleStyled.PlatformTag
-                    return (
-                      <PlatformTag key={platform + '-' + i} $platform={platform}>
-                        {upperFirst(platform === 'darwin' ? 'macOS' : platform)}
-                      </PlatformTag>
-                    )
-                  })}
-              </>
-            </Styled.LauncherVersionContainer>
-          )}
-        </RCFormRow>
-        {developerMode && !isDev && (
-          <RCFormRow label="Dev bundle">
+          </Styled.FieldGrow>
+        </div>
+      </Styled.FieldRow>
+      {developerMode && !isDev && (
+        <Styled.FieldRow>
+          <FieldLabel name="devBundle" data={{ title: 'Dev bundle' }} />
+          <div className="field">
             <InputSwitch
               checked={formData.isDev}
               onChange={() =>
                 setFormData({ ...formData, isDev: !formData.isDev, isProject: false })
               }
             />
-          </RCFormRow>
-        )}
-        {(isDev || developerMode) && (
-          <RCFormRow label="Assigned dev" fieldStyle={Styled.DevFieldContainer}>
+          </div>
+        </Styled.FieldRow>
+      )}
+      {(isDev || developerMode) && (
+        <Styled.FieldRow>
+          <FieldLabel name="activeUser" data={{ title: 'Assigned dev' }} />
+          <div className="field">
             {(() => {
               const DevSelect: any = BundleStyled.DevSelect
               return (
@@ -180,7 +168,6 @@ const BundleForm: React.FC<BundleFormProps> = ({
                   label="Assign to me"
                   $hl={'developer-surface'}
                   icon={'person_pin_circle'}
-                  style={Styled.AssignButtonContainer}
                   disabled={formData.activeUser === currentUser || isLoading || !formData.isDev}
                   onClick={() => {
                     setFormData((prev) => ({
@@ -191,13 +178,34 @@ const BundleForm: React.FC<BundleFormProps> = ({
                 />
               )
             })()}
-          </RCFormRow>
-        )}
-      </Styled.StyledFormLayout>
-      <Divider />
-      <Styled.StyledColumns>
-        <Styled.AddonListSection>
-          <Styled.AddonListInnerSection>
+          </div>
+        </Styled.FieldRow>
+      )}
+      {createdAt && dateRows}
+    </BorderedSection>
+  )
+
+  const readOnlyDetails = (
+    <BorderedSection title="Details" autoHeight showHeader withPadding>
+      <ReadOnlyRow name="name" title="Name" value={formData.name || ''} />
+      <ReadOnlyRow
+        name="installerVersion"
+        title="Launcher version"
+        value={formData.installerVersion || 'NONE'}
+      />
+      {dateRows}
+    </BorderedSection>
+  )
+
+  return (
+    <Styled.FormSplitter layout="horizontal" stateKey="bundles-form-splitter" stateStorage="local">
+      <SplitterPanel size={65} style={{ minWidth: 400 }}>
+        <Styled.AddonsPanel>
+          <Styled.AddonsHeader>
+            {isNew ? addonTools : <Styled.AddonsTitle>{formData.name}</Styled.AddonsTitle>}
+            <AddonSearchInput />
+          </Styled.AddonsHeader>
+          <Styled.AddonsList>
             <BundlesAddonList
               readOnly={!isNew}
               {...{ formData, setFormData }}
@@ -208,11 +216,16 @@ const BundleForm: React.FC<BundleFormProps> = ({
               ref={addonListRef}
               onAddonAutoUpdate={onAddonAutoUpdate}
             />
-          </Styled.AddonListInnerSection>
-        </Styled.AddonListSection>
-        <Styled.SidebarSection>{children}</Styled.SidebarSection>
-      </Styled.StyledColumns>
-    </Styled.StyledPanel>
+          </Styled.AddonsList>
+        </Styled.AddonsPanel>
+      </SplitterPanel>
+      <SplitterPanel size={35} style={{ minWidth: 300 }}>
+        <Styled.DetailsCards>
+          {isNew ? editableDetails : readOnlyDetails}
+          {children}
+        </Styled.DetailsCards>
+      </SplitterPanel>
+    </Styled.FormSplitter>
   )
 }
 

@@ -1,27 +1,6 @@
 import { AssigneeSelect, Button, Toolbar, Icon, InputText } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
-export const FormRow = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--base-gap-large);
-
-  label {
-    min-width: 120px;
-  }
-
-  .field {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: left;
-    overflow: hidden;
-    padding: 1px;
-    margin: -1px;
-  }
-`
-
 const platformColors: Record<string, string> = {
   windows: '#00a2ed',
   linux: '#f47421',
@@ -105,20 +84,12 @@ export const MainToolbar = styled(Toolbar)`
 `
 
 export const AddonTools = styled.div`
-  flex: none;
-  max-width: max-content;
-  /* 2x2 grid */
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: var(--base-gap-large);
-  padding-top: 1px;
-  padding-right: 1px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--base-gap-small);
 
   button {
-    height: 36px;
-    justify-content: flex-start;
-    padding: 4px 16px;
+    height: 32px;
   }
 `
 

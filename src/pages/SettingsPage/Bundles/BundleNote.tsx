@@ -39,10 +39,10 @@ const BundleNote: React.FC<BundleNoteProps> = ({ bundle }) => {
     }
     try {
       await updateBundle(args).unwrap()
-      toast.success('Bundle note saved')
+      toast.success('Bundle description saved')
       handleCancel()
     } catch (error) {
-      toast.error((error as any)?.data?.detail || 'Failed to save bundle note')
+      toast.error((error as any)?.data?.detail || 'Failed to save bundle description')
     }
   }
 
@@ -54,7 +54,7 @@ const BundleNote: React.FC<BundleNoteProps> = ({ bundle }) => {
 
   return (
     <Styled.NoteSection
-      title="Note"
+      title="Description"
       autoHeight
       showHeader={!isEditing}
       enableHover={!isEditing}
@@ -68,8 +68,8 @@ const BundleNote: React.FC<BundleNoteProps> = ({ bundle }) => {
             onChange={isEditing ? setEditorValue : undefined}
             placeholder={
               isEditing
-                ? 'Write a note, or type / to add headings, lists, code and more...'
-                : 'Add a note...'
+                ? 'Describe it, or type / to add headings, lists, code and more...'
+                : 'Add a description...'
             }
             readOnly={!isEditing}
             toolbar={isEditing ? DESCRIPTION_TOOLBAR : false}
@@ -91,5 +91,31 @@ const BundleNote: React.FC<BundleNoteProps> = ({ bundle }) => {
     </Styled.NoteSection>
   )
 }
+
+type BundleDescriptionFieldProps = {
+  value?: string | null
+  onChange: (value: string) => void
+}
+
+export const BundleDescriptionField: React.FC<BundleDescriptionFieldProps> = ({
+  value,
+  onChange,
+}) => (
+  <Styled.NoteSection title="Description" autoHeight showHeader>
+    <Styled.Content className="editing">
+      <Styled.Editor className="block-shortcuts">
+        <MarkdownEditor
+          value={value || ''}
+          onChange={onChange}
+          placeholder="Describe it, or type / to add headings, lists, code and more..."
+          toolbar={DESCRIPTION_TOOLBAR}
+          bordered={false}
+          minHeight={60}
+          maxHeight={400}
+        />
+      </Styled.Editor>
+    </Styled.Content>
+  </Styled.NoteSection>
+)
 
 export default BundleNote

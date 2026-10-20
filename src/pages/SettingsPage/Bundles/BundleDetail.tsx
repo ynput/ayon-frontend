@@ -12,7 +12,6 @@ import { useUpdateBundleMutation, useListBundlesQuery } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import type { Addon } from './types'
 import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/context/addon-search'
-import { AddonSearchInput } from '@pages/SettingsPage/Bundles/AddonSearchInput.tsx'
 
 type Installer = { version: string; platforms?: string[] }
 type Bundle = {
@@ -168,9 +167,8 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
           createdAt={(bundle ?? selectedBundles[0])?.createdAt}
           updatedAt={(bundle ?? selectedBundles[0])?.updatedAt}
         >
-          <AddonSearchInput />
-          {bundle && <BundleNote key={bundle.name} bundle={bundle} />}
           <BundleDeps bundle={bundle} onChange={undefined as any} />
+          {bundle && <BundleNote key={bundle.name} bundle={bundle} />}
         </BundleForm>
       )}
     </>
