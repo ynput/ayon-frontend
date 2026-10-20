@@ -93,7 +93,7 @@ export const sortSliceRows = (
   sort: SliceSort,
 ): SimpleTableRow[] => {
   const fallback = getDefaultSliceSort(sliceType)
-  // the data already arrives in the default order, keep it untouched
-  if (sort.by === fallback.by && sort.desc === fallback.desc) return rows
+  // Name sorts must use the same comparator in both directions.
+  if (sort.by !== 'label' && sort.by === fallback.by && sort.desc === fallback.desc) return rows
   return sortSiblings(rows, sliceType, sort)
 }
