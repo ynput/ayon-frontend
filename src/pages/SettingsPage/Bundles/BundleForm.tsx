@@ -53,7 +53,7 @@ const formatTimestamp = (value?: string) => {
 const ReadOnlyRow = ({ name, title, value }: { name: string; title: string; value: string }) => (
   <Styled.FieldRow>
     <FieldLabel name={name} data={{ title }} />
-    <Styled.FieldText data-tooltip={value}>{value}</Styled.FieldText>
+    <Styled.FieldText>{value}</Styled.FieldText>
   </Styled.FieldRow>
 )
 
