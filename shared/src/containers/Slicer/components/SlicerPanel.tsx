@@ -19,7 +19,9 @@ import { SimpleTableProvider } from '@shared/containers/SimpleTable/context/simp
 import { OnSliceTypeChange, useSlicerContext } from '../context/slicer'
 import styled from 'styled-components'
 import { SyncButton } from '@shared/components/SyncButton/SyncButton'
-import { useProjectFoldersContext, usePowerpack } from '@shared/context'
+import { useMenuContext, useProjectFoldersContext, usePowerpack } from '@shared/context'
+import { buildSortMenuItem, Menu, MenuContainer, type MenuItemType } from '@shared/components/Menu'
+import { getSliceSortOptions } from '../util/sliceSort'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
 import SlicerPanelSummary from './SlicerPanelSummary'
 
@@ -136,6 +138,9 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     isViewSyncPending,
     onOpenViewer,
     onAddToList: contextOnAddToList,
+    page,
+    getSliceSort,
+    setSliceSort,
   } = useSlicerContext()
 
   const { refetch } = useProjectFoldersContext()
@@ -199,6 +204,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     countsComplete: complete,
     sliceType: panel.sliceType,
     onSliceTypeChange: handlePanelSliceTypeChange,
+    sort: getSliceSort(panel.sliceType),
   })
 
   const isHierarchy = sliceType === 'hierarchy'
@@ -244,6 +250,49 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     if (!powerLicense) return setPowerpackDialog('slicer')
     addSlicePanel(unusedSliceTypes[0])
   }
+
+  const { menuOpen, toggleMenuOpen } = useMenuContext()
+  // one menu per panel, and the slice type can hold a dot (attrib.x)
+  const menuId = `slicer-menu-${page}-${panel.id}`.replace(/[^\w-]/g, '-')
+  const isMenuOpen = menuOpen === menuId
+
+  // the header buttons stay as quick actions, the menu lists them too
+  const menuItems: MenuItemType[] = [
+    {
+      id: 'search',
+      label: `Search ${searchSubject}`,
+      icon: 'search',
+      onClick: () => onSearchChange(''),
+    },
+    ...(canSplit && isPrimary
+      ? [
+          {
+            id: 'split',
+            label: 'Split slicer',
+            icon: 'splitscreen_add',
+            powerFeature: 'slicer' as const,
+            onClick: handleSplit,
+          },
+        ]
+      : []),
+    ...(!isPrimary
+      ? [
+          {
+            id: 'remove-panel',
+            label: 'Remove panel',
+            icon: 'close',
+            onClick: () => removeSlicePanel(panel.id),
+          },
+        ]
+      : []),
+    { id: 'divider' },
+    buildSortMenuItem({
+      id: 'sort',
+      options: getSliceSortOptions(sliceType),
+      sort: getSliceSort(sliceType),
+      onChange: (sort) => setSliceSort(sliceType, sort),
+    }),
+  ]
 
   const handleDropdownChange = (value: (string | number)[]) => {
     const selected = String(value[0]) as SliceType
@@ -329,6 +378,21 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
               data-tooltip-delay={0}
               onClick={() => removeSlicePanel(panel.id)}
             />
+          )}
+          {!isCollapsed && !isSearching && (
+            <>
+              <HeaderButton
+                icon="more_horiz"
+                id={menuId}
+                className={clsx('slicer-menu', { active: isMenuOpen })}
+                data-tooltip="More"
+                data-tooltip-delay={0}
+                onClick={() => toggleMenuOpen(menuId)}
+              />
+              <MenuContainer targetId={menuId} id={menuId} align="left">
+                <Menu menu={menuItems} onClose={() => toggleMenuOpen(false)} />
+              </MenuContainer>
+            </>
           )}
         </HeaderActions>
       </PanelHeader>

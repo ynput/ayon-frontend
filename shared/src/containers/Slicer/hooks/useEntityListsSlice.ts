@@ -128,6 +128,10 @@ export const useEntityListsSlice = (enabled: boolean = true) => {
           label: list.label,
           entityType: list.entityType,
           listId: list.id,
+          // for sorting
+          active: list.active,
+          createdAt: list.createdAt,
+          updatedAt: list.updatedAt,
         },
       })
 
@@ -208,6 +212,9 @@ export const useEntityListsSlice = (enabled: boolean = true) => {
         label: list.label,
         entityType: list.entityType,
         listId: list.id,
+        active: list.active,
+        createdAt: list.createdAt,
+        updatedAt: list.updatedAt,
       },
     }))
   }, [listsData, powerLicense, listFolders])
