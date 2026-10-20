@@ -1,5 +1,6 @@
 import { expect, test } from '../fixtures'
 import { DetailsPanel } from '../pages/DetailsPanel'
+import { addToList } from '../pages/ListsPage'
 import { ProductsPage } from '../pages/ProductsPage'
 import { menuItem } from '../support/ui'
 
@@ -53,6 +54,10 @@ test.describe('products', () => {
     const render = await api.createProduct(projectName, { folderId: shot.id, name: 'renderMain' })
     const v1 = await api.createVersion(projectName, { productId: render.id, version: 1 })
     const v2 = await api.createVersion(projectName, { productId: render.id, version: 2 })
+    const listId = await api.createEntityList(projectName, {
+      label: 'Dailies versions',
+      entityType: 'version',
+    })
 
     const products = new ProductsPage(page)
     await products.goto(projectName)
@@ -64,11 +69,22 @@ test.describe('products', () => {
 
     await card(v2.id).click({ button: 'right' })
 
-    await expect(menuItem(page, 'Show details')).toBeVisible()
+    await expect(menuItem(page, 'Add to list (v002)')).toBeVisible()
     await expect(card(v1.id)).toHaveClass(/active/)
     await expect(card(v2.id)).not.toHaveClass(/active/)
     await expect(panel.header).toContainText('v001')
 
+    await menuItem(page, 'Add to list (v002)').click()
+    await addToList(page, 'Dailies versions')
+
+    await expect
+      .poll(async () => (await api.getEntityList(projectName, listId)).items.map((i) => i.entityId))
+      .toEqual([v2.id])
+    await expect(card(v1.id)).toHaveClass(/active/)
+    await expect(card(v2.id)).not.toHaveClass(/active/)
+    await expect(panel.header).toContainText('v001')
+
+    await card(v2.id).click({ button: 'right' })
     await menuItem(page, 'Show details').click()
 
     await expect(panel.header).toContainText('v002')

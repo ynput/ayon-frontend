@@ -68,14 +68,27 @@ test.describe('projects manager', () => {
     projectName,
   }) => {
     test.skip(!(await hasPowerpack(api)), 'project folders need the powerpack addon')
-    const other = await api.createProject()
+    // the shared prefix lets one search show both projects
+    const other = await api.createProject({ name: `${projectName}_f` })
     const label = uniqueName('folder')
     const projectFolderOf = async (name: string) =>
       (await api.get('/api/projects')).projects.find((p: any) => p.name === name)?.projectFolder
     try {
       // the manager selects the project it opens
       await page.goto(`/manageProjects/anatomy?project=${projectName}`)
-      await new ProjectsList(page).openContextMenu(other)
+      const list = new ProjectsList(page)
+      await list.search(projectName)
+      await list.expectSelection([projectName], [other])
+
+      // the menu is built when it opens, and only offers folders once the powerpack license check is done
+      await expect(async () => {
+        await list.row(other, { exact: true }).click({ button: 'right' })
+        await expect(menuItem(page, 'Move project')).toBeVisible({ timeout: 1_000 })
+      }).toPass()
+
+      await list.expectSelection([projectName], [other])
+      await expect(page).toHaveURL(new RegExp(`[?&]project=${projectName}(&|$)`))
+
       await menuItem(page, 'Create folder').click()
       const folderDialog = dialog(page, /^Create Folder/)
       await folderDialog.getByPlaceholder('Enter folder label').fill(label)
@@ -86,6 +99,7 @@ test.describe('projects manager', () => {
       const { folders } = await api.get('/api/projectFolders')
       expect(await projectFolderOf(other)).toBe(folders.find((f: any) => f.label === label)?.id)
       expect(await projectFolderOf(projectName)).toBeFalsy()
+      await list.expectSelection([projectName], [other])
     } finally {
       await api.deleteProject(other)
       const { folders } = await api.get('/api/projectFolders')
@@ -160,5 +174,33 @@ test.describe('projects manager', () => {
     await expect
       .poll(async () => (await api.getUser(user.name)).data.accessGroups?.[projectName])
       .toEqual([accessGroup])
+  })
+
+  test('give access to a user that is not selected from its context menu', async ({
+    page,
+    api,
+    projectName,
+    createUser,
+    accessGroup,
+  }) => {
+    const selected = await createUser()
+    const target = await createUser()
+    const manager = new ProjectsManagerPage(page)
+    await manager.goto('projectAccess', projectName)
+    await manager.selectAccessUser(selected.name)
+
+    await manager.openAccessUserMenu(target.name)
+
+    await manager.expectAccessUserSelected(selected.name)
+    await manager.expectAccessUserSelected(target.name, false)
+
+    await manager.addProjectAccessFromMenu(target.name, accessGroup)
+
+    await expect(manager.accessUserRow(target.name)).toContainText(accessGroup)
+    await expect(manager.accessUserRow(selected.name)).not.toContainText(accessGroup)
+    await expect
+      .poll(async () => (await api.getUser(target.name)).data.accessGroups?.[projectName])
+      .toEqual([accessGroup])
+    expect((await api.getUser(selected.name)).data.accessGroups?.[projectName]).toBeUndefined()
   })
 })

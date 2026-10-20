@@ -107,7 +107,13 @@ test.describe('lists', () => {
     await lists.goto(projectName)
     await lists.selectListRow('Picked')
 
-    await lists.rowMenu('Other', 'Details')
+    await lists.listRow('Other').click({ button: 'right' })
+
+    await expect(menuItem(page, 'Details')).toBeVisible()
+    await expect(lists.listRow('Picked').locator('.selected')).toBeVisible()
+    await expect(lists.listRow('Other').locator('.selected')).toBeHidden()
+
+    await menuItem(page, 'Details').click()
 
     await expect(page.getByRole('heading', { name: 'Other', level: 2 })).toBeVisible()
     await expect(lists.listRow('Other').locator('.selected')).toBeVisible()

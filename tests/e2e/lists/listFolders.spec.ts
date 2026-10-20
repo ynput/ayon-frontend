@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures'
 import { hasPowerpack, ListsPage } from '../pages/ListsPage'
-import { confirmDialog } from '../support/ui'
+import { confirmDialog, menuItem } from '../support/ui'
 
 test.describe('list folders', () => {
   test.beforeEach(async ({ api }) => {
@@ -50,7 +50,13 @@ test.describe('list folders', () => {
     await lists.goto(projectName)
     await lists.selectListRow('Monday picks')
 
-    await lists.rowMenu('Tuesday picks', 'Create folder')
+    await lists.listRow('Tuesday picks').click({ button: 'right' })
+
+    await expect(menuItem(page, 'Create folder')).toBeVisible()
+    await expect(lists.listRow('Monday picks').locator('.selected')).toBeVisible()
+    await expect(lists.listRow('Tuesday picks').locator('.selected')).toBeHidden()
+
+    await menuItem(page, 'Create folder').click()
     await lists.submitFolderDialog('Dailies')
 
     await expect.poll(async () => (await api.listEntityListFolders(projectName)).length).toBe(1)
@@ -59,6 +65,9 @@ test.describe('list folders', () => {
       .poll(async () => (await api.getEntityList(projectName, tuesdayId)).entityListFolderId)
       .toBe(folder.id)
     expect((await api.getEntityList(projectName, mondayId)).entityListFolderId).toBeFalsy()
+    await expect(lists.listRow('Dailies')).toBeVisible()
+    await expect(lists.listRow('Monday picks').locator('.selected')).toBeVisible()
+    await expect(lists.listRow('Tuesday picks').locator('.selected')).toBeHidden()
   })
 
   test('move a list into a folder', async ({ page, api, projectName }) => {

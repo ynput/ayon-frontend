@@ -83,7 +83,13 @@ test.describe('dashboard tasks', () => {
     await new DetailsPanel(page).expectOpenFor('open_me')
   })
 
-  test('right-clicking another card keeps the selection', async ({ page, api, projectName }) => {
+  test('right-clicking another card keeps the selection', async ({
+    page,
+    context,
+    api,
+    projectName,
+  }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
     const me = adminCredentials().name
     const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
     const first = await api.createTask(projectName, {
@@ -105,10 +111,17 @@ test.describe('dashboard tasks', () => {
 
     await dashboard.card(second.id).click({ button: 'right' })
 
-    await expect(menuItem(page, 'Show details')).toBeVisible()
+    await expect(menuItem(page, 'Copy task ID')).toBeVisible()
     await expect(dashboard.card(first.id)).toHaveClass(/active/)
     await expect(dashboard.card(second.id)).not.toHaveClass(/active/)
 
+    await menuItem(page, 'Copy task ID').click()
+
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(second.id)
+    await expect(dashboard.card(first.id)).toHaveClass(/active/)
+    await expect(dashboard.card(second.id)).not.toHaveClass(/active/)
+
+    await dashboard.card(second.id).click({ button: 'right' })
     // the details follow the selection, so showing them selects the right-clicked card
     await menuItem(page, 'Show details').click()
 
