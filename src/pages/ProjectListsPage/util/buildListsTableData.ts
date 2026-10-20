@@ -1,7 +1,7 @@
 import { EntityList, EntityListFolderModel } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { getListIcon, buildHierarchicalTableRows, HierarchicalFolderNode } from '@shared/util'
-import { DEFAULT_LISTS_SORT, ListsSort, sortLists as sortListsBy } from './sortLists'
+import { DEFAULT_LISTS_SORT, ListsSort, sortLists as sortListsBy } from '@shared/util/sortLists'
 const FOLDER_ICON = 'snippet_folder'
 
 export const LIST_FOLDER_ROW_ID_PREFIX = 'folder'
