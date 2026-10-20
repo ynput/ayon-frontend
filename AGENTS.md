@@ -13,6 +13,12 @@ Some parts of the codebase have their own `AGENTS.md` next to the code. It expla
 | Page load benchmarks | [tests/performance/AGENTS.md](tests/performance/AGENTS.md) |
 | Playwright tests: unit and e2e, fixtures, page objects | [tests/AGENTS.md](tests/AGENTS.md) |
 
+## Dependencies
+- There is one install, the root `node_modules`; `shared/` has no lockfile or `node_modules` of its own. Code in `shared/src` resolves packages from the root, so the app and shared always get the same copy (two copies mean two React contexts).
+- A package used by `shared/src` goes in both `package.json` files, at the same version: the root one installs it, and `shared/package.json` declares it for the published `@ynput/ayon-frontend-shared`. Build tools for `yarn build:shared` go in the root `devDependencies`.
+- Never run `yarn install` inside `shared/`. The dev server warns when `shared/node_modules` exists.
+- Worktrees can symlink the root `node_modules` to the main checkout's.
+
 ## Load performance
 Every page load waits on `/api/info`, then the route's own queries. Keep anything else off that path, and check changes with the page load benchmarks (`yarn perf:build`, see the guide).
 - Don't gate built in pages on addon remote modules (`useLoadRemotePages`, `useLoadModule`): addon bundles are large. Render with the fallback, or only wait when the current page is the addon's.

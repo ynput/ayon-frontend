@@ -49,6 +49,7 @@ import {
 } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
 import { MenuProvider, URIProvider, DeleteEntitiesProvider } from '@shared/context'
+import { consumeUriHandoff } from '@shared/util'
 
 // containers
 import Header from '@containers/header'
@@ -398,6 +399,10 @@ const App = () => {
   }
 
   if (serverError && !noAdminUser) return <FeedbackProvider>{errorComponent}</FeedbackProvider>
+
+  // only once authenticated (LoginPage stores the full url for the post-login redirect),
+  // but still before <BrowserRouter> renders so the router never sees the handoff param
+  consumeUriHandoff()
 
   return (
     <>

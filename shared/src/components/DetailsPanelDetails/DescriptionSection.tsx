@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Button, BorderedSection } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
-import { MarkdownEditor, type ToolbarLayout } from '@shared/components/MarkdownEditor'
+import { MarkdownEditor, DESCRIPTION_TOOLBAR } from '@shared/components/MarkdownEditor'
 import {
   StyledContent,
   StyledEditor,
@@ -14,24 +14,6 @@ import {
   useDescriptionMentions,
   type DescriptionMentionsContext,
 } from './hooks'
-
-// descriptions have no check lists (those belong in comments)
-export const DESCRIPTION_TOOLBAR: ToolbarLayout = [
-  'h1',
-  'h2',
-  'h3',
-  '|',
-  'bold',
-  'italic',
-  'strikethrough',
-  'link',
-  '|',
-  'codeBlock',
-  'quote',
-  '|',
-  'numberList',
-  'bulletList',
-]
 
 interface DescriptionSectionProps {
   description: string

@@ -5,6 +5,7 @@ import { FC, useMemo } from 'react'
 import { DeveloperSwitch } from './DeveloperSwitch'
 import { toast } from 'react-toastify'
 import { useUpdateUserMutation } from '@shared/api'
+import { setSettingsVariantForDeveloperMode } from '@containers/AddonSettings/settingsVariant'
 import { DefaultItemTemplate, Dropdown } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
@@ -84,6 +85,7 @@ const BundleModeSelector: FC<BundleModeSelectorProps> = ({}) => {
       const newDeveloperMode = !developerMode
       // optimistic update the switch
       dispatch(toggleDevMode(newDeveloperMode))
+      setSettingsVariantForDeveloperMode(newDeveloperMode)
 
       await updateUser({
         name: user.name,
@@ -112,6 +114,7 @@ const BundleModeSelector: FC<BundleModeSelectorProps> = ({}) => {
     try {
       if (developerMode !== isDev) {
         dispatch(toggleDevMode(isDev))
+        setSettingsVariantForDeveloperMode(isDev)
         promises.push(
           updateUser({
             name: user.name,

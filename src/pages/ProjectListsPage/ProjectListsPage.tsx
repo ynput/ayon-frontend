@@ -3,7 +3,7 @@ import {
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
-import { FC, useCallback, useEffect, useMemo } from 'react'
+import { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
@@ -38,6 +38,7 @@ import useExtraColumns from './hooks/useExtraColumns'
 import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
 import useUpdateListItems from './hooks/useUpdateListItems'
 import ReplaceListItemsDialog from './components/ReplaceListItemsDialog'
+import ListItemDataDialog from './components/ListItemDataDialog'
 import { Actions } from '@shared/containers/Actions/Actions'
 import { ListsModuleProvider } from './context/lists-modules'
 import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
@@ -62,6 +63,7 @@ import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
 import usePatchListsCaches from './hooks/usePatchListsCaches'
+import useListItemDeepLink from './hooks/useListItemDeepLink'
 import { DEFAULT_LISTS_SORT, ListsSort, resolveListsSort } from './util'
 
 type ProjectListsPageProps = {
@@ -185,6 +187,8 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     [selectedList],
   )
 
+  const hiddenListIds = useMemo(() => (selectedList ? [selectedList.id] : []), [selectedList])
+
   return (
     <SettingsPanelProvider>
       <ColumnSettingsProvider
@@ -217,6 +221,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                 playerOpen={viewerOpen}
                 onOpenPlayer={handleOpenPlayer}
                 onResetView={(selectedList?.count || 0) > 0 ? handleResetView : undefined}
+                hiddenListIds={hiddenListIds}
                 SubtasksManager={SubtasksManager}
                 useParams={useParams}
                 useNavigate={useNavigate}
@@ -238,6 +243,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                       />
                       <ListsShortcuts />
                       <ReplaceListItemsDialog />
+                      <ListItemDataDialog />
                       <MoveToFolderDialogContainer />
                     </CellEditingProvider>
                   </SelectedRowsProvider>
@@ -312,6 +318,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
 
   const patchListsCaches = usePatchListsCaches({ listId: selectedList?.id || '' })
 
+  // select and scroll to the items named by listItemId url params
+  const { scrollToRowId, onScrolledToRow } = useListItemDeepLink()
+  // last selection reported by the review cards
+  const cardsSelectionRef = useRef<string[]>([])
+
   // if the addon is outdated, make sure we land in table view
   useEffect(() => {
     if (!reviewSessionCardsOutdated) return
@@ -348,7 +359,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
                 gridSize={gridHeight}
                 playlistView={pageDisplayStyle === 'playlist'}
                 onSelectionChange={(versionIds) => {
-                  if (versionIds.length === 0) return clearSelection()
+                  const cardsHadSelection = cardsSelectionRef.current.length > 0
+                  cardsSelectionRef.current = versionIds
+                  // the cards also report an empty selection while they load,
+                  // only clear a selection they made (keeps e.g. listItemId links selected)
+                  if (versionIds.length === 0) {
+                    if (cardsHadSelection) clearSelection()
+                    return
+                  }
 
                   const areRowsSelected = Array.from(selectedCells).some(
                     (cellId) => parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID,
@@ -441,6 +459,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       importContext="entity_list_item"
                       projectName={projectName}
                       folderId={selectedList?.id}
+                      folderLabel={selectedList?.label}
                     />
                     <Actions
                       entities={[
@@ -498,6 +517,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
                             isReview={isReview && !reviewSessionCardsOutdated}
                             dndActiveId={dndActiveId} // Pass prop
                             viewOnly={(selectedList?.accessLevel || 0) < 20}
+                            scrollToRowId={scrollToRowId}
+                            onScrolledToRow={onScrolledToRow}
                           />
                         )}
                       </SplitterPanel>

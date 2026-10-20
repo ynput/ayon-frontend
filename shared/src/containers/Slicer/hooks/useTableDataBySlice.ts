@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useHierarchyTable } from '@shared/hooks/useHierarchyTable'
 import useUsersTable from './useUsersTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
-import { Slice, SliceData, SliceTypeField, TableData } from '../types'
+import { Slice, SliceData, SliceSort, SliceTypeField, TableData } from '../types'
+import { sortSliceRows } from '../util/sliceSort'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import type { SliceType } from '../types'
 import { useSlicerContext, type OnSliceTypeChange } from '../context/slicer'
@@ -23,6 +24,7 @@ interface TableDataBySliceProps {
   // per-panel overrides; defaults keep the single-panel (first slice) behaviour
   sliceType?: SliceType
   onSliceTypeChange?: OnSliceTypeChange
+  sort?: SliceSort
 }
 
 const getRowCount = (
@@ -130,6 +132,7 @@ const useTableDataBySlice = ({
   countsComplete = false,
   sliceType: sliceTypeOverride,
   onSliceTypeChange: onSliceTypeChangeOverride,
+  sort,
 }: TableDataBySliceProps): TableData => {
   const {
     sliceType: contextSliceType,
@@ -346,9 +349,18 @@ const useTableDataBySlice = ({
     fetchData()
   }, [sliceType, projectName, isLoadingData, sliceType === 'hierarchy' ? hierarchyData : null])
 
+  // the sort object is rebuilt on every render, so depend on its values
+  const sortBy = sort?.by
+  const sortDesc = !!sort?.desc
+  const sortedData = useMemo(
+    () =>
+      sortBy ? sortSliceRows(slice.data, sliceType, { by: sortBy, desc: sortDesc }) : slice.data,
+    [slice.data, sliceType, sortBy, sortDesc],
+  )
+
   const dataWithBadges = useMemo(
-    () => decorateBadges(slice.data, counts, filled, countsComplete),
-    [slice.data, counts, filled, countsComplete],
+    () => decorateBadges(sortedData, counts, filled, countsComplete),
+    [sortedData, counts, filled, countsComplete],
   )
 
   // from slice data, flatten into a map of ids to rows

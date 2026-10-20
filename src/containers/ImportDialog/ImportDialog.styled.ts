@@ -23,6 +23,10 @@ export const DialogHeading = styled.h1`
   align-items: center;
 `
 
+export const ImportTarget = styled.span`
+  color: var(--md-sys-color-primary);
+`
+
 export const ImportContextWrapper = styled.span`
   background: var(--md-sys-color-surface-container-low);
   padding: 0 var(--padding-s);
