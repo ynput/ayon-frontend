@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { Splitter } from 'primereact/splitter'
 import { theme } from '@ynput/ayon-react-components'
 
@@ -9,7 +9,15 @@ export const FormSplitter = styled(Splitter)`
   overflow: hidden;
 `
 
+// same panel surface as the lists and overview pages
+const panelSurface = css`
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--border-radius-m);
+  padding: var(--padding-m);
+`
+
 export const AddonsPanel = styled.div`
+  ${panelSurface}
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-small);
@@ -56,7 +64,7 @@ export const DetailsCards = styled.div`
   gap: 12px;
   height: 100%;
   overflow-y: auto;
-  padding: 0 8px 8px;
+  ${panelSurface}
 
   & > * {
     flex: none;
