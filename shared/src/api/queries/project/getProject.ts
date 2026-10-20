@@ -13,8 +13,10 @@ import {
   DefinitionsFromApi,
   FetchBaseQueryError,
   OverrideResultType,
+  QueryStatus,
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
+import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { parseJSONField } from '../overview'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 type Definitions = DefinitionsFromApi<typeof projectsApi>
@@ -75,13 +77,19 @@ const enhancedGraphql = gqlApi.enhanceEndpoints<TagTypes, GQLUpdatedDefinitions>
         pageInfo: res.projects.pageInfo,
       }),
     },
-    // tags on any entity of the project, including ones that are not in the anatomy
+    // tags on any entity of the project, including ones that are not in the anatomy.
+    // A slow query, so it is kept for a while; saved tags are added by addProjectUsedTags
     GetProjectUsedTags: {
       transformResponse: (res: GetProjectUsedTagsQuery) => res.project.usedTags,
-      providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
+      providesTags: (_res, _error, { projectName }) => [
+        { type: 'project', id: usedTagsCacheId(projectName) },
+      ],
+      keepUnusedDataFor: 30 * 60,
     },
   },
 })
+
+const usedTagsCacheId = (projectName: string) => `${projectName}-usedTags`
 
 type ProjectsPageParam = { cursor: string; first?: number }
 
@@ -147,5 +155,30 @@ export const getProjectsGraphql = enhancedGraphql.injectEndpoints({
 
 export const { useGetProjectsInfiniteInfiniteQuery, useGetProjectUsedTagsQuery } =
   getProjectsGraphql
+
+// called once tags are saved on entities: adds them to the loaded used tags, and refetches the
+// list when a request for it is still running, as its answer may not have them yet
+export const addProjectUsedTags = (
+  projectName: string | undefined,
+  tags: string[],
+  { dispatch, getState }: { dispatch: ThunkDispatch<any, any, UnknownAction>; getState: () => any },
+) => {
+  if (!projectName || !tags.length) return
+  const entry = getProjectsGraphql.endpoints.GetProjectUsedTags.select({ projectName })(getState())
+  if (entry.data) {
+    dispatch(
+      getProjectsGraphql.util.updateQueryData('GetProjectUsedTags', { projectName }, (draft) => {
+        for (const tag of tags) if (!draft.includes(tag)) draft.push(tag)
+      }),
+    )
+  }
+  if (entry.status === QueryStatus.pending) {
+    dispatch(
+      getProjectsGraphql.util.invalidateTags([
+        { type: 'project', id: usedTagsCacheId(projectName) },
+      ]),
+    )
+  }
+}
 
 export default enhancedProject

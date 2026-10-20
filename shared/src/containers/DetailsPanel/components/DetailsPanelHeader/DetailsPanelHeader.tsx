@@ -138,12 +138,13 @@ const DetailsPanelHeader = ({
   const statusesValue = useMemo(() => entities.map((t) => t.status), [entities])
   const priorityValues = useMemo(() => entities.map((t) => t.attrib?.priority), [entities])
   const tagsValues: string[][] = useMemo(() => entities.map((t) => t.tags), [entities])
+  const allTags = useMemo(() => union(...tagsValues), [tagsValues])
   const [tagsOpened, setTagsOpened] = useState(false)
   const isSingleProject = entities.every((e) => e.projectName === firstEntity?.projectName)
-  const { tags: tagsOptionsObject, addUsedTags } = useProjectTags({
+  const tagsOptionsObject = useProjectTags({
     projectName: isSingleProject ? firstEntity?.projectName : undefined,
     anatomyTags: tagsOptions,
-    values: union(...tagsValues),
+    values: allTags,
     skip: !tagsOpened,
   })
 
@@ -241,10 +242,7 @@ const DetailsPanelHeader = ({
                     options={[]}
                     editable
                     editor
-                    onChange={(value) => {
-                      addUsedTags(value)
-                      handleUpdate('tags', value)
-                    }}
+                    onChange={(value) => handleUpdate('tags', value)}
                     onOpen={() => setTagsOpened(true)}
                     align="right"
                     styleDropdown={{ display: isLoading ? 'none' : 'unset' }}

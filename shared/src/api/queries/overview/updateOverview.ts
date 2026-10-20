@@ -20,6 +20,7 @@ import {
 import { patchParentEntitiesInVersions, patchVersions } from './patchVersions'
 import { patchProducts } from './patchProducts'
 import { normalizeQueryError } from '@shared/api/base/queryError'
+import { addProjectUsedTags } from '../project/getProject'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
 
@@ -619,6 +620,9 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
 
         try {
           await queryFulfilled
+
+          const savedTags = operations.flatMap((operation) => operation.data?.tags ?? [])
+          addProjectUsedTags(projectName, savedTags, { dispatch, getState })
 
           // Background refetch logic - runs after successful mutation
           // This ensures calculated attributes are up-to-date and entities are correctly filtered

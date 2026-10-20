@@ -52,7 +52,7 @@ export const TagsWidget = ({
     [options],
   )
   const isEditable = !!isEditing && !isReadOnly
-  const { tags, addUsedTags } = useProjectTags({
+  const tags = useProjectTags({
     projectName,
     anatomyTags,
     values,
@@ -76,10 +76,7 @@ export const TagsWidget = ({
         editor
         align={align}
         placeholder={placeholder}
-        onChange={(names) => {
-          addUsedTags(names)
-          onChange(names, 'Click')
-        }}
+        onChange={(names) => onChange(names, 'Click')}
         onClose={onCancelEdit}
         className={className}
       />
