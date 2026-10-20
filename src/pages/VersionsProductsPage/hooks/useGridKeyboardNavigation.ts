@@ -144,6 +144,11 @@ export const useGridKeyboardNavigation = ({
         openPlayerWithId(entityId)
       }
 
+      // a comment being written in the open player keeps the caret
+      const keepFocus = !!(document.activeElement as HTMLElement | null)?.closest(
+        '#viewer-dialog .comment-container',
+      )
+
       // Focus and scroll the selected card into view
       requestAnimationFrame(() => {
         if (!gridContainerRef.current) return
@@ -154,7 +159,7 @@ export const useGridKeyboardNavigation = ({
         ) as HTMLElement
 
         if (card) {
-          card.focus()
+          if (!keepFocus) card.focus()
           card.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
         }
       })
