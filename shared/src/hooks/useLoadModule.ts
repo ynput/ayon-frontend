@@ -86,6 +86,8 @@ export const useLoadModule = <T>({
       setIsLoading(false)
       return
     }
+    // a skip → load switch (e.g. license resolved) left this false
+    setIsLoading(true)
     loadRemote<{ default: T }>(`${remote}/${module}`, {
       from: 'runtime',
     })
