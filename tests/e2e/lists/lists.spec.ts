@@ -1,5 +1,5 @@
 import { expect, test } from '../fixtures'
-import { confirmDialog, menuItem } from '../support/ui'
+import { confirmDialog, menuItem, toast } from '../support/ui'
 import { addToList, ListsPage } from '../pages/ListsPage'
 import { OverviewPage } from '../pages/OverviewPage'
 
@@ -52,6 +52,57 @@ test.describe('lists', () => {
     await expect
       .poll(async () => (await api.listEntityLists(projectName)).map((l) => l.label))
       .toEqual(['Keep list'])
+  })
+
+  test('duplicate a list from its menu', async ({ page, api, projectName }) => {
+    const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const comp = await api.createTask(projectName, { folderId: folder.id, name: 'comp' })
+    const anim = await api.createTask(projectName, { folderId: folder.id, name: 'anim' })
+    const listId = await api.createEntityList(projectName, { label: 'Dailies' })
+    await api.addEntityListItem(projectName, listId, comp.id)
+    await api.addEntityListItem(projectName, listId, anim.id)
+    await api.setEntityListAttributes(projectName, listId, [
+      { name: 'clientNote', data: { type: 'string', title: 'Client note' } },
+    ])
+    const lists = new ListsPage(page)
+    await lists.goto(projectName)
+
+    await lists.rowMenu('Dailies', 'Duplicate')
+
+    await expect(toast(page, 'List duplicated')).toBeVisible()
+    await expect(lists.listRow('Dailies (copy)').locator('.selected')).toBeVisible()
+    await expect
+      .poll(async () => (await api.listEntityLists(projectName)).map((l) => l.label).sort())
+      .toEqual(['Dailies', 'Dailies (copy)'])
+    const copyId = (await api.listEntityLists(projectName)).find(
+      (l) => l.label === 'Dailies (copy)',
+    )!.id
+    const copy = await api.getEntityList(projectName, copyId)
+    expect(copy.entityType).toBe('task')
+    expect(copy.items.map((item) => item.entityId)).toEqual([comp.id, anim.id])
+    expect(await api.getEntityListAttributes(projectName, copyId)).toEqual([
+      { name: 'clientNote', data: expect.objectContaining({ title: 'Client note' }) },
+    ])
+    // the original is untouched
+    expect((await api.getEntityList(projectName, listId)).items).toHaveLength(2)
+  })
+
+  test('duplicate selected lists from the header menu', async ({ page, api, projectName }) => {
+    await api.createEntityList(projectName, { label: 'Dailies' })
+    await api.createEntityList(projectName, { label: 'Picks' })
+    const lists = new ListsPage(page)
+    await lists.goto(projectName)
+    await lists.selectListRow('Dailies')
+    await lists.selectListRow('Picks', { add: true })
+
+    await lists.headerMenu('Duplicate selection')
+
+    await expect(toast(page, 'Duplicated 2 lists')).toBeVisible()
+    await expect(lists.listRow('Dailies (copy)').locator('.selected')).toBeVisible()
+    await expect(lists.listRow('Picks (copy)').locator('.selected')).toBeVisible()
+    await expect
+      .poll(async () => (await api.listEntityLists(projectName)).map((l) => l.label).sort())
+      .toEqual(['Dailies', 'Dailies (copy)', 'Picks', 'Picks (copy)'])
   })
 
   test('right-clicking another list keeps the selection', async ({ page, api, projectName }) => {

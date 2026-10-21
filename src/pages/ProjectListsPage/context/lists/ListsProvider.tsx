@@ -8,6 +8,7 @@ import {
 } from '@shared/api'
 import type { EntityListPatchModel, EntityListPostModel, EntityListSummary } from '@shared/api'
 import useDeleteList from '../../hooks/useDeleteList'
+import useDuplicateList from '../../hooks/useDuplicateList'
 import useUpdateList from '../../hooks/useUpdateList'
 import { useListsDataContext } from '../lists-data/ListsDataContextInstance'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
@@ -294,6 +295,13 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
   }
   const { deleteLists } = useDeleteList({ onDeleteList })
 
+  // DUPLICATE LIST
+  const { duplicateLists } = useDuplicateList({
+    projectName,
+    onCreateNewList,
+    onCreated: handleCreatedList,
+  })
+
   // Helper to select all lists within selected folders (including descendants) or root lists
   const selectAllLists = useCallback(
     ({ rowIds }: { rowIds?: string[] } = {}) => {
@@ -397,6 +405,7 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
         onPutFoldersInFolder,
         onRemoveFoldersFromFolder,
         deleteLists,
+        duplicateLists,
         // info dialog
         listDetailsOpen,
         setListDetailsOpen,

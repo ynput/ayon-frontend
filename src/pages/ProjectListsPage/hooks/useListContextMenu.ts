@@ -41,6 +41,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
     openRenameList,
     setListDetailsOpen,
     deleteLists,
+    duplicateLists,
     createReviewSessionList,
     isReview,
     onOpenFolderList,
@@ -191,6 +192,13 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
           hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
         },
         {
+          label: 'Duplicate',
+          icon: 'content_copy',
+          command: () => duplicateLists(selectedListIds),
+          // review sessions carry review addon data, only plain lists are copied
+          hidden: !allSelectedRowsAreLists || isReview,
+        },
+        {
           label: 'Edit folder',
           icon: FOLDER_ICON_EDIT,
           command: () => {
@@ -296,6 +304,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
       setListDetailsOpen,
       setRowSelection,
       deleteLists,
+      duplicateLists,
       createReviewSessionList,
       onOpenFolderList,
       onDeleteListFolders,
