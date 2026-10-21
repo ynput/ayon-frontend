@@ -10,7 +10,7 @@ import type { ListValuesOutdated } from '../../listValues/listValuesOutdated'
 import { ListValuesContext, type ListValuesContextValue } from './ListValuesContextInstance'
 
 // first powerpack version with the ListValues module
-const LIST_VALUES_MIN_VERSION = '1.6.7'
+const LIST_VALUES_MIN_VERSION = '1.6.8'
 
 type Props = { children: ReactNode }
 
@@ -30,7 +30,7 @@ const ModuleProvider = ({ children, powerLicense }: Props & { powerLicense: bool
   const { listAttributes } = useListsAttributesContext()
   const { attribFields } = useProjectDataContext()
 
-  const [loadedModule, { isLoading, outdated }] = useLoadModule<ListValuesModule>({
+  const [loadedModule, { isLoading, isLoaded, outdated }] = useLoadModule<ListValuesModule>({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'ListValues',
@@ -42,16 +42,18 @@ const ModuleProvider = ({ children, powerLicense }: Props & { powerLicense: bool
     loadedModule?.apiVersion === LIST_VALUES_API_VERSION ? loadedModule : communityListValues
   const isPowerFeature = module !== communityListValues
 
+  // with a license, the module failed to load without being outdated: the production bundle has
+  // no addon or no ListValues module (useLoadModule doesn't say which)
+  const notInBundle = powerLicense && !isLoading && !isLoaded && !outdated
+
   // useLoadModule builds a new object each render: keep one until the versions change
   const outdatedCurrent = outdated?.current
   const outdatedRequired = outdated?.required
-  const outdatedVersion = useMemo<ListValuesOutdated | undefined>(
-    () =>
-      outdatedCurrent && outdatedRequired
-        ? { current: outdatedCurrent, required: outdatedRequired }
-        : undefined,
-    [outdatedCurrent, outdatedRequired],
-  )
+  const outdatedVersion = useMemo<ListValuesOutdated | undefined>(() => {
+    if (outdatedRequired) return { current: outdatedCurrent, required: outdatedRequired }
+    if (notInBundle) return { required: LIST_VALUES_MIN_VERSION }
+    return undefined
+  }, [outdatedCurrent, outdatedRequired, notInBundle])
 
   const listAttributeNames = useMemo(() => listAttributes.map((a) => a.name), [listAttributes])
 
