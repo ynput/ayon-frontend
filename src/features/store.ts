@@ -13,27 +13,32 @@ import releaseInstallerReducer, { releaseInstallerLocalItems } from '@state/rele
 import progressReducer from '@state/progress'
 
 // API
-import { api } from '@shared/api'
+import { api, dynamicMiddleware, rootReducer } from '@shared/api'
 
 // Middleware
 import localStorageMiddleware from './middleware/localStorageMiddleware'
 import searchParamsMiddleware from './middleware/searchParamsMiddleware'
 
+// The root reducer comes from shared so addons can inject their own slices into this store.
+// overrideExisting keeps hot reloaded reducers working, the root reducer outlives this module.
+const injectOptions = { overrideExisting: true }
+const reducer = rootReducer
+  .inject({ reducerPath: 'user', reducer: userReducer }, injectOptions)
+  .inject({ reducerPath: 'context', reducer: contextReducer }, injectOptions)
+  .inject({ reducerPath: 'project', reducer: projectReducer }, injectOptions)
+  .inject({ reducerPath: 'dashboard', reducer: dashboardReducer }, injectOptions)
+  .inject({ reducerPath: 'addonsManager', reducer: addonsManagerReducer }, injectOptions)
+  .inject({ reducerPath: 'viewer', reducer: viewerReducer }, injectOptions)
+  .inject({ reducerPath: 'releaseInstaller', reducer: releaseInstallerReducer }, injectOptions)
+  .inject({ reducerPath: 'progress', reducer: progressReducer }, injectOptions)
+
 const store = configureStore({
-  reducer: {
-    user: userReducer,
-    context: contextReducer,
-    project: projectReducer,
-    dashboard: dashboardReducer,
-    addonsManager: addonsManagerReducer,
-    viewer: viewerReducer,
-    releaseInstaller: releaseInstallerReducer,
-    progress: progressReducer,
-    [api.reducerPath]: api.reducer,
-  },
+  reducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(api.middleware)
+      // addons add their middleware here (addMiddleware from @shared/api)
+      .concat(dynamicMiddleware.middleware)
       .concat(
         localStorageMiddleware({
           ...dashboardLocalItems,

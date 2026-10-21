@@ -111,6 +111,8 @@ export default ({ mode }) => {
           '@ynput/ayon-react-components': {
             singleton: true,
           },
+          // @reduxjs/toolkit, react-redux and @ynput/ayon-frontend-shared are provided to addons
+          // at runtime instead, see src/remote/hostSharedModules.ts
         },
       }),
       react(),

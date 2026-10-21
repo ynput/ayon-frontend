@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import ReactDOM from 'react-dom/client'
 import { init } from '@module-federation/enhanced/runtime'
+import { shareHostModules } from './remote/hostSharedModules'
 
 // Initialize Module Federation runtime
 // Use dynamic origin based on current window.location for production deployments
@@ -8,6 +9,8 @@ init({
   name: 'host',
   remotes: [],
 })
+// addons get the host's @shared modules (one store, api cache and set of contexts)
+shareHostModules()
 // keep this entry free of components so hot updates never re-run it (see AppRoot.tsx)
 import AppRoot from './AppRoot'
 

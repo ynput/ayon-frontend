@@ -12,7 +12,6 @@ import {
 } from 'react'
 import clsx from 'clsx'
 import InboxDetailsPanel from '../InboxDetailsPanel'
-import { useDispatch } from 'react-redux'
 import Shortcuts from '@containers/Shortcuts'
 import { InView } from 'react-intersection-observer'
 import { toast } from 'react-toastify'
@@ -52,7 +51,7 @@ import {
 import { useDetailsPanelContext, useGlobalContext } from '@shared/context'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
-import { useAppSelector } from '@state/store'
+import { useAppDispatch, useAppSelector } from '@state/store'
 // Types
 import type {
   InboxFilter,
@@ -96,7 +95,7 @@ interface InboxProps {
 }
 
 const Inbox = ({ filter }: InboxProps) => {
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const { setHighlightedActivities } = useDetailsPanelContext()
   const {
     projects: { all: projects },
