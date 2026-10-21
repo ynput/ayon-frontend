@@ -405,7 +405,8 @@ export type BuildTreeTableColumnsProps = {
   parentColumns?: ParentColumnDefinition[]
 }
 
-const getScopedHeader = (scope: EntityScope, header: string) =>
+// the column header and its settings item both use this, so they always read the same
+export const getScopedHeader = (scope: EntityScope, header: string) =>
   scope === 'primary' ? header : `${upperFirst(scope)} ${header}`
 
 const createEntityColumn = (
