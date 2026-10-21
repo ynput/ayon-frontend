@@ -32,15 +32,28 @@ test.describe('users settings', () => {
     }
   })
 
-  test('delete a user', async ({ page, api, createUser }) => {
-    const { name } = await createUser()
+  test('delete a user that is not selected from its context menu', async ({
+    page,
+    api,
+    createUser,
+  }) => {
+    const keep = await createUser()
+    const target = await createUser()
     const users = new UsersSettingsPage(page)
     await users.goto()
+    await users.select(keep.name)
 
-    await users.deleteUser(name)
+    await users.openContextMenu(target.name)
 
-    await expect(users.row(name)).toBeHidden()
-    await expect.poll(() => api.userExists(name)).toBe(false)
+    await users.expectSelected(keep.name)
+    await users.expectSelected(target.name, false)
+
+    await users.deleteUserFromMenu(target.name)
+
+    await expect(users.row(target.name)).toBeHidden()
+    await expect(users.row(keep.name)).toBeVisible()
+    await expect.poll(() => api.userExists(target.name)).toBe(false)
+    expect(await api.userExists(keep.name)).toBe(true)
   })
 
   test('delete several users at once', async ({ page, api, createUser }) => {
@@ -75,6 +88,12 @@ test.describe('users settings', () => {
     await users.goto()
     await users.select(selectedA.name)
     await users.addToSelection(selectedB.name)
+
+    await users.openContextMenu(target.name)
+
+    await users.expectSelected(selectedA.name)
+    await users.expectSelected(selectedB.name)
+    await users.expectSelected(target.name, false)
 
     await users.setPasswordFromMenu(target.name, newPassword)
 

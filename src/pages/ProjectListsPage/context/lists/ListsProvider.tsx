@@ -255,7 +255,7 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
     onCreatedFolders: handleCreatedFolders,
   })
 
-  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, parentId }) => {
+  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, parentId, rowIds }) => {
     if (!powerLicense) {
       setPowerpackDialog('listFolders')
       return
@@ -267,6 +267,7 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
       return setListFolderOpen({
         isOpen: true,
         parentId,
+        rowIds,
       })
     }
 
@@ -288,8 +289,8 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
   const onDeleteList = async (listId: string) => {
     // delete list in the backend
     await deleteListMutation({ listId, projectName }).unwrap()
-    // set the row selection to empty
-    setRowSelection({})
+    // a right-clicked list can be deleted without being selected
+    if (rowSelection[listId]) setRowSelection({})
   }
   const { deleteLists } = useDeleteList({ onDeleteList })
 

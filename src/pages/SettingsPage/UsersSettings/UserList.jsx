@@ -94,11 +94,7 @@ const UserList = ({
   }, [selectedUsers, selectedProjects, userList])
 
   const onContextMenu = (e) => {
-    let newSelectedUsers = [...selectedUsers]
-    if (!selectedUsers.includes(e.data.name)) {
-      newSelectedUsers = [e.data.name]
-    }
-    onSelectUsers(newSelectedUsers)
+    const newSelectedUsers = selectedUsers.includes(e.data.name) ? selectedUsers : [e.data.name]
     ctxMenuShow(e.originalEvent, ctxMenuItems(newSelectedUsers))
   }
 
@@ -110,8 +106,13 @@ const UserList = ({
   }
 
   // IDEA: Can these go into the details panel as well?
-  // built from the right-clicked selection, the `selection` state is not updated yet at this point
+  // built from the right-clicked selection; the dialogs act on the selected users, so an action
+  // selects a right-clicked user that is not selected yet
   const ctxMenuItems = (newSelectedUsers) => {
+    const withSelection = (open) => () => {
+      if (newSelectedUsers !== selectedUsers) onSelectUsers(newSelectedUsers)
+      open()
+    }
     const ctxSelection = userList.filter((u) => newSelectedUsers.includes(u.name))
     const ctxSelfSelected = newSelectedUsers.includes(selfName)
     const ctxHasInvitable = ctxSelection.some((u) => !!u.attrib?.email)
@@ -124,25 +125,25 @@ const UserList = ({
       {
         label: 'Set username',
         disabled: ctxSelection.length !== 1,
-        command: () => setShowRenameUser(true),
+        command: withSelection(() => setShowRenameUser(true)),
         icon: 'edit',
       },
       {
         label: 'Set password',
         disabled: ctxSelection.length !== 1,
-        command: () => setShowSetPassword(true),
+        command: withSelection(() => setShowSetPassword(true)),
         icon: 'key',
       },
       {
         label: inviteLabel,
         disabled: !ctxHasInvitable || managerDisabled,
-        command: () => setShowInviteUser(true),
+        command: withSelection(() => setShowInviteUser(true)),
         icon: 'mail',
       },
       {
         label: 'Delete selected',
         disabled: !ctxSelection.length || ctxSelfSelected,
-        command: () => setShowDeleteUser(newSelectedUsers),
+        command: withSelection(() => setShowDeleteUser(newSelectedUsers)),
         icon: 'delete',
         danger: true,
       },

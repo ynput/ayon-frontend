@@ -139,7 +139,6 @@ Fixed in separate PRs. The covering tests are `test.fixme` until these are merge
 - ynput/ayon-frontend#2399: the first column change in a project reordered the other columns (`tableView.spec.ts`).
 - ynput/ayon-frontend#2400: the secrets page showed a "0" when there were no stored secrets (`secrets.spec.ts`).
 - ynput/ayon-frontend#2401: "Set as primary" stayed enabled for the built-in anatomy preset while it was primary (`anatomyPresets.spec.ts`).
-- ynput/ayon-frontend#2402: right-clicking a user that was not selected in the teams users table acted on the previous selection (`teams.spec.ts`).
 - ynput/ayon-backend#1190: the products resolver had no representation filter, so "Show products" could not narrow product rows by representation (`representationFilter.spec.ts`). Until a server has it, the products query is rejected and "Show products" lists nothing.
 
 Found in round 2, also fixed in separate PRs (the tests are `test.fixme` with a note naming the PR):

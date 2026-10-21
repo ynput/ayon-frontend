@@ -27,7 +27,8 @@ export const TR = styled.tr`
     border-right: 2px solid var(--md-sys-color-surface-container);
   }
 
-  &:hover {
+  &:hover,
+  &[data-context-menu-target] {
     .inner-td {
       background-color: var(--md-sys-color-surface-container-hover);
       border-top-color: var(--md-sys-color-surface-container-hover);
