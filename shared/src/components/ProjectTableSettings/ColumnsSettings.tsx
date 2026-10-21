@@ -59,9 +59,9 @@ import { InputSwitch } from '@ynput/ayon-react-components'
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'
 const NO_SCOPES: string[] = []
 
-// parent columns are named exactly as their table header, so they need no section path
+// attributes and parent columns are named exactly as their table header, so they need no section path
 const getColumnSettingsPath = (column: AddColumnItem, scopes: string[]) => {
-  if (column.parentScope) return undefined
+  if (column.attrib || column.parentScope) return undefined
   return getAddColumnSection(column, scopes)?.label
 }
 
