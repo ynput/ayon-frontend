@@ -1,4 +1,5 @@
 import type { ProductType } from '@shared/api'
+import { labelCollator } from '@shared/util/sortLists'
 import type { BuiltInFieldOptions } from '../types'
 import type { FolderType, Status, Tag, TaskType } from '../types/project'
 
@@ -39,12 +40,15 @@ export const getTableFieldOptions = ({
       }))
 
   return {
-    assignee: users.map(({ name, fullName, hidden }) => ({
-      value: name,
-      label: fullName || name,
-      icon: `/api/users/${name}/avatar`,
-      hidden,
-    })),
+    // sorted by the label the dropdown shows, not the username
+    assignee: users
+      .map(({ name, fullName, hidden }) => ({
+        value: name,
+        label: fullName?.trim() || name,
+        icon: `/api/users/${name}/avatar`,
+        hidden,
+      }))
+      .sort((a, b) => labelCollator.compare(a.label, b.label)),
     status: getStatusOptions(scopes),
     folderStatus: getStatusOptions(['folder']),
     taskStatus: getStatusOptions(['task']),

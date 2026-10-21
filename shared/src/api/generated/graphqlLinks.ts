@@ -121,6 +121,8 @@ export type BaseNode = {
   allAttrib: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
@@ -138,6 +140,12 @@ export type BaseNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type BaseNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -181,6 +189,17 @@ export type EntityListEdge = {
   __typename?: 'EntityListEdge';
   cursor?: Maybe<Scalars['String']['output']>;
   node: EntityListNode;
+};
+
+export type EntityListInfo = {
+  __typename?: 'EntityListInfo';
+  active: Scalars['Boolean']['output'];
+  entityListType: Scalars['String']['output'];
+  entityType: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  /** List items of the entity in this list, in list order */
+  itemIds: Array<Scalars['String']['output']>;
+  label: Scalars['String']['output'];
 };
 
 export type EntityListItemEdge = {
@@ -351,6 +370,8 @@ export type FolderNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   folderType: Scalars['String']['output'];
   hasChildren: Scalars['Boolean']['output'];
   hasProducts: Scalars['Boolean']['output'];
@@ -396,6 +417,12 @@ export type FolderNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type FolderNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -613,6 +640,8 @@ export type ProductNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   featuredVersion?: Maybe<VersionNode>;
   /** Parent folder of the product */
   folder: FolderNode;
@@ -646,6 +675,12 @@ export type ProductNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type ProductNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1256,6 +1291,8 @@ export type RepresentationNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   /** Number of files of the representation */
   fileCount: Scalars['Int']['output'];
   /** Files in the representation */
@@ -1284,6 +1321,12 @@ export type RepresentationNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type RepresentationNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1389,6 +1432,8 @@ export type TaskNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   /** Parent folder of the task */
   folder: FolderNode;
   folderId: Scalars['String']['output'];
@@ -1426,6 +1471,12 @@ export type TaskNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type TaskNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1622,6 +1673,8 @@ export type VersionNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   featuredVersionType?: Maybe<Scalars['String']['output']>;
   hasReviewables: Scalars['Boolean']['output'];
   heroVersionId?: Maybe<Scalars['String']['output']>;
@@ -1660,6 +1713,12 @@ export type VersionNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type VersionNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1721,6 +1780,8 @@ export type WorkfileNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
@@ -1747,6 +1808,12 @@ export type WorkfileNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type WorkfileNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 

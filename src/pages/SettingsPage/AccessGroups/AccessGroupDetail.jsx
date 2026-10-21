@@ -9,6 +9,7 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import SettingsEditor from '@containers/SettingsEditor'
+import useSettingsPaste from '@containers/SettingsEditor/useSettingsPaste'
 import { isEqual } from 'lodash'
 import {
   useDeleteAccessGroupMutation,
@@ -86,6 +87,9 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   // This conditions checks if there are any local (NOT global) project settings for user group
   const noLocalSettings = projectName && !isProjectLevel
 
+  // a pasted section with other keys would save a broken access group
+  const onPasteValue = useSettingsPaste(formData, setFormData, { strict: true })
+
   const permissionsEditor = useMemo(() => {
     return (
       <SettingsEditor
@@ -96,10 +100,11 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
         level={projectName ? 'project' : 'studio'}
         context={{
           headerProjectName: projectName,
+          onPasteValue,
         }}
       />
     )
-  }, [schema, originalData, formData, projectName, setFormData])
+  }, [schema, originalData, formData, projectName, setFormData, onPasteValue])
 
   return (
     <Section style={{ flex: 2 }}>

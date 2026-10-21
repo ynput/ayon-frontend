@@ -17,7 +17,7 @@ const SubtasksManagerFallback: FC<SubtasksManagerProps> = (props) => {
 }
 
 export interface SubtasksModulesContextType {
-  SubtasksManager: typeof SubtasksManagerFallback
+  SubtasksManager?: typeof SubtasksManagerFallback
   requiredVersion: string | undefined
   isLoading: boolean
 }
@@ -32,7 +32,11 @@ export const SubtasksModulesProvider: FC<{ children: ReactNode }> = ({ children 
 
   return (
     <SubtasksModulesContext.Provider
-      value={{ SubtasksManager, requiredVersion: outdated?.required, isLoading }}
+      value={{
+        SubtasksManager: isLoading ? undefined : SubtasksManager,
+        requiredVersion: outdated?.required,
+        isLoading,
+      }}
     >
       {children}
     </SubtasksModulesContext.Provider>

@@ -38,13 +38,17 @@ export default function useKeyboardNavigation() {
         return
       }
 
+      // the comment input only lets row nav keys through while it is empty; the caret stays in it
+      const fromEmptyComment = fromOpenPlayer && !!target.closest('.comment-container')
+
       // Skip if event target is an input element or contentEditable
       if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable ||
-        target.getAttribute('role') === 'textbox' ||
-        target.tagName === 'LI'
+        !fromEmptyComment &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.getAttribute('role') === 'textbox' ||
+          target.tagName === 'LI')
       ) {
         return
       }
@@ -92,7 +96,8 @@ export default function useKeyboardNavigation() {
             if (newRowId) {
               const newCellId = getCellId(newRowId, colId)
               selectCell(newCellId, e.shiftKey, e.shiftKey)
-              focusCellElement(newCellId)
+              if (fromEmptyComment) focusCell(newCellId)
+              else focusCellElement(newCellId)
 
               // if the player is open, update with new selected cell
               if (playerOpen) {
@@ -108,7 +113,8 @@ export default function useKeyboardNavigation() {
           if (newRowId) {
             const newCellId = getCellId(newRowId, colId)
             selectCell(newCellId, e.shiftKey, e.shiftKey)
-            focusCellElement(newCellId)
+            if (fromEmptyComment) focusCell(newCellId)
+            else focusCellElement(newCellId)
 
             // if the player is open, update with new selected cell
             if (playerOpen) {
@@ -241,6 +247,7 @@ export default function useKeyboardNavigation() {
       focusedCellId,
       gridMap,
       selectCell,
+      focusCell,
       focusCellElement,
       clearSelection,
       setEditingCellId,

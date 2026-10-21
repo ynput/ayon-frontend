@@ -23,18 +23,27 @@ test.describe('access groups', () => {
     }
   })
 
-  test('delete an access group', async ({ page, api }) => {
+  test('delete an access group that is not selected', async ({ page, api, accessGroup }) => {
     const name = uniqueName('ag')
     await api.createAccessGroup(name)
     try {
-      await page.goto('/settings/accessGroups')
-      const row = page.getByRole('row', { name: name })
-      await row.click({ button: 'right' })
+      const groups = new AccessGroupsPage(page)
+      await groups.goto()
+      await groups.select(accessGroup)
+
+      await groups.row(name).click({ button: 'right' })
+
+      await expect(menuItem(page, 'Delete')).toBeVisible()
+      await groups.expectSelected(accessGroup)
+      await groups.expectSelected(name, false)
+
       await menuItem(page, 'Delete').click()
       await confirmDialog(page).getByRole('button', { name: 'Delete' }).click()
 
-      await expect(row).toBeHidden()
+      await expect(groups.row(name)).toBeHidden()
+      await groups.expectSelected(accessGroup)
       await expect.poll(() => api.listAccessGroupNames()).not.toContain(name)
+      expect(await api.listAccessGroupNames()).toContain(accessGroup)
     } finally {
       await api.deleteAccessGroup(name)
     }

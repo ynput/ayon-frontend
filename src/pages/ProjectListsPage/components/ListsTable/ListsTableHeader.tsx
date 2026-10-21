@@ -5,7 +5,13 @@ import { SearchFilterRef, theme } from '@ynput/ayon-react-components'
 import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import ListsFiltersBar from './ListsFiltersBar'
-import { Menu, MenuContainer, MenuItemType, TableSearch } from '@shared/components'
+import {
+  buildSortMenuItem,
+  Menu,
+  MenuContainer,
+  MenuItemType,
+  TableSearch,
+} from '@shared/components'
 import { useMenuContext } from '@shared/context'
 import { LISTS_SORT_OPTIONS, parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
@@ -311,33 +317,12 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
           },
         ]
       : []),
-    {
-      id: 'sort',
+    buildSortMenuItem({
       label: 'Sort lists',
-      icon: 'sort',
-      isPinned: false,
-      items: [
-        ...LISTS_SORT_OPTIONS.map((option) => {
-          const isSelected = listsSort.by === option.id
-          return {
-            id: `sort-${option.id}`,
-            label: option.label,
-            onClick: () => setListsSort({ by: option.id, desc: option.desc }),
-            selected: isSelected,
-            // only the selected field gets the direction button, clicking it flips asc/desc
-            endActions: isSelected
-              ? [
-                  {
-                    icon: listsSort.desc ? 'arrow_downward' : 'arrow_upward',
-                    tooltip: listsSort.desc ? 'Descending' : 'Ascending',
-                    onClick: () => setListsSort({ ...listsSort, desc: !listsSort.desc }),
-                  },
-                ]
-              : undefined,
-          }
-        }),
-      ],
-    },
+      options: LISTS_SORT_OPTIONS,
+      sort: listsSort,
+      onChange: setListsSort,
+    }),
     {
       id: 'delete',
       label: 'Delete selection',
