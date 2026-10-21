@@ -29,7 +29,10 @@ one map each
 `types.ts` is the contract. The powerpack keeps a copy of it, so change both sides together and bump
 `LIST_VALUES_API_VERSION` on a breaking change (core falls back to `communityListValues` on a mismatch).
 `ListValuesProvider` loads the module with `useLoadModule` (`skip` without a powerpack license,
-`minVersion` = the first powerpack version with it).
+`minVersion` = the first powerpack version with it). An installed powerpack below `minVersion` is
+`outdated` (not a missing feature): the Compare button shows `ListValuesOutdatedButton` and the compare
+actions toast the version they need (`listValuesOutdatedMessage`) instead of opening the upsell. A
+mismatched `apiVersion` falls back silently.
 
 The module exports a hook (`useCompareView`), so `ListValuesProvider` renders nothing until the license
 and the module are known: starting with the fallback and swapping in the module would change the hook

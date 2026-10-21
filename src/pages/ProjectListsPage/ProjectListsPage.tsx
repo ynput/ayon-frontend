@@ -73,6 +73,7 @@ import { useListsDataContext } from './context/lists-data'
 import type { ListRowContextMenuBuilder } from './hooks/useListContextMenu'
 import { useCompareLists } from './hooks/useCompareLists'
 import { isTooBigToCompare } from './listValues/compareLimit'
+import { ListValuesOutdatedButton } from './listValues/ListValuesOutdatedButton'
 import {
   COMPARE_ENTITY_COLUMN_PREFIX,
   COMPARE_LIST_COLUMN_PREFIX,
@@ -366,7 +367,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
     useSelectionCellsContext()
 
   // list values (powerpack): the compare controls and the lists sidebar's menu items
-  const { module: listValues, isPowerFeature } = useListValuesContext()
+  const { module: listValues, isPowerFeature, outdated } = useListValuesContext()
   const { compareView } = useListItemsDataContext()
   const { listsMap } = useListsDataContext()
   const shownList = useMemo<ListRef | undefined>(
@@ -392,7 +393,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
           label: 'Compare lists',
           icon: 'compare_arrows',
           disabled: isTooBigToCompare(compared),
-          powerFeature: isPowerFeature ? undefined : 'listValues',
+          powerFeature: isPowerFeature || outdated ? undefined : 'listValues',
           command: () => compareLists(shown, compared),
         }
       },
@@ -406,12 +407,20 @@ const ProjectLists: FC<ProjectListsProps> = ({
           label: 'Compare with current list',
           icon: 'compare_arrows',
           disabled: isTooBigToCompare(compared),
-          powerFeature: isPowerFeature ? undefined : 'listValues',
+          powerFeature: isPowerFeature || outdated ? undefined : 'listValues',
           command: () => compareLists(shown, compared),
         }
       },
     ],
-    [listsMap, canCompareLists, compareLists, isPowerFeature, selectedList?.id, comparedListId],
+    [
+      listsMap,
+      canCompareLists,
+      compareLists,
+      isPowerFeature,
+      outdated,
+      selectedList?.id,
+      comparedListId,
+    ],
   )
   const getListRowTag = useCallback(
     (listId: string) =>
@@ -573,11 +582,15 @@ const ProjectLists: FC<ProjectListsProps> = ({
                           entityType={selectedList.entityType}
                           projectName={projectName}
                         />
-                        <listValues.Controls
-                          view={compareView}
-                          shownList={shownList}
-                          ListPicker={CompareListPicker}
-                        />
+                        {!isPowerFeature && outdated ? (
+                          <ListValuesOutdatedButton outdated={outdated} />
+                        ) : (
+                          <listValues.Controls
+                            view={compareView}
+                            shownList={shownList}
+                            ListPicker={CompareListPicker}
+                          />
+                        )}
                       </>
                     )}
                     {

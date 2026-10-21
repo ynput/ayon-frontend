@@ -3,10 +3,13 @@ import type {
   ListValuesContext as ListValuesRulesContext,
   ListValuesModule,
 } from '../../listValues/types'
+import type { ListValuesOutdated } from '../../listValues/listValuesOutdated'
 
 export interface ListValuesContextValue {
   module: ListValuesModule // the powerpack module, or the community fallback
   isPowerFeature: boolean
+  // the powerpack is installed but older than the module: the version it needs
+  outdated?: ListValuesOutdated
   rules: ListValuesRulesContext
   // the table shows the entity's value of this attribute (not the list value), so the query
   // sorts and filters by it

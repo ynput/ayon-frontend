@@ -6,6 +6,7 @@ import { useListsAttributesContext } from '../lists-attributes'
 import { communityListValues } from '../../listValues/communityListValues'
 import { LIST_VALUES_API_VERSION, type ListValuesModule } from '../../listValues/types'
 import { formatListValue } from '../../listValues/formatListValue'
+import type { ListValuesOutdated } from '../../listValues/listValuesOutdated'
 import { ListValuesContext, type ListValuesContextValue } from './ListValuesContextInstance'
 
 // first powerpack version with the ListValues module
@@ -29,7 +30,7 @@ const ModuleProvider = ({ children, powerLicense }: Props & { powerLicense: bool
   const { listAttributes } = useListsAttributesContext()
   const { attribFields } = useProjectDataContext()
 
-  const [loadedModule, { isLoading }] = useLoadModule<ListValuesModule>({
+  const [loadedModule, { isLoading, outdated }] = useLoadModule<ListValuesModule>({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'ListValues',
@@ -40,6 +41,17 @@ const ModuleProvider = ({ children, powerLicense }: Props & { powerLicense: bool
   const module =
     loadedModule?.apiVersion === LIST_VALUES_API_VERSION ? loadedModule : communityListValues
   const isPowerFeature = module !== communityListValues
+
+  // useLoadModule builds a new object each render: keep one until the versions change
+  const outdatedCurrent = outdated?.current
+  const outdatedRequired = outdated?.required
+  const outdatedVersion = useMemo<ListValuesOutdated | undefined>(
+    () =>
+      outdatedCurrent && outdatedRequired
+        ? { current: outdatedCurrent, required: outdatedRequired }
+        : undefined,
+    [outdatedCurrent, outdatedRequired],
+  )
 
   const listAttributeNames = useMemo(() => listAttributes.map((a) => a.name), [listAttributes])
 
@@ -63,8 +75,8 @@ const ModuleProvider = ({ children, powerLicense }: Props & { powerLicense: bool
   )
 
   const value: ListValuesContextValue = useMemo(
-    () => ({ module, isPowerFeature, rules, readsEntityValue }),
-    [module, isPowerFeature, rules, readsEntityValue],
+    () => ({ module, isPowerFeature, outdated: outdatedVersion, rules, readsEntityValue }),
+    [module, isPowerFeature, outdatedVersion, rules, readsEntityValue],
   )
 
   if (isLoading) return null
