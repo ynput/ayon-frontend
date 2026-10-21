@@ -286,6 +286,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     'copy-paste',
     'show-details',
     'open-viewer',
+    'match-aspect-ratio',
     // add context menu to add to lists but filter out own list
     menuItemsAddToList((item) => item.id !== selectedListId),
     replaceItemContextMenu,
