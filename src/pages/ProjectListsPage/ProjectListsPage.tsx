@@ -378,7 +378,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
       },
     [selectedList?.id, selectedList?.label, selectedList?.entityType],
   )
-  // compare two selected lists
+  // the list the shown one is compared with
+  const comparedListId = selectedList ? compareView.comparedList?.id : undefined
+  // compare lists from the sidebar menu
   const { canCompareLists, compareLists } = useCompareLists()
   const listMenuBuilders = useMemo<ListRowContextMenuBuilder[]>(
     () => [
@@ -394,11 +396,23 @@ const ProjectLists: FC<ProjectListsProps> = ({
           command: () => compareLists(shown, compared),
         }
       },
+      // compare the shown list with a list right-clicked outside the selection
+      (_e, { rowId, isSelected }) => {
+        if (isSelected || rowId === comparedListId) return undefined
+        const shown = selectedList && listsMap.get(selectedList.id)
+        const compared = listsMap.get(rowId)
+        if (!shown || !canCompareLists(shown, compared)) return undefined
+        return {
+          label: 'Compare with current list',
+          icon: 'compare_arrows',
+          disabled: isTooBigToCompare(compared),
+          powerFeature: isPowerFeature ? undefined : 'listValues',
+          command: () => compareLists(shown, compared),
+        }
+      },
     ],
-    [listsMap, canCompareLists, compareLists, isPowerFeature],
+    [listsMap, canCompareLists, compareLists, isPowerFeature, selectedList?.id, comparedListId],
   )
-  // the list the shown one is compared with
-  const comparedListId = selectedList ? compareView.comparedList?.id : undefined
   const getListRowTag = useCallback(
     (listId: string) =>
       listId === comparedListId && (

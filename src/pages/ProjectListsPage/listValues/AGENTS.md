@@ -60,9 +60,11 @@ What the module does, and what core gives it:
   attribute column header menus (`ColumnConfig.menuItems`); `useListValueActions` gives them the
   requests, loading every list item, toasts and the confirm dialog (`ListValueActionsHost`).
 - Comparing from the lists sidebar is core's (`useCompareLists`): "Compare lists" in the menu and on
-  the page when two lists of one entity type are selected. It selects the first list and calls the
-  module's `compareWithList`; without the powerpack it opens the powerpack dialog. The compared list
-  shows a compare tag left of its count (`ListsTable` `getRowTag`).
+  the page when two lists of one entity type are selected, and "Compare with current list" when a list
+  outside the selection is right-clicked (right-click doesn't change the selection there). It selects
+  the shown list and calls the module's `compareWithList`; without the powerpack it opens the
+  powerpack dialog. The compared list shows a compare tag left of its count (`ListsTable` `getRowTag`)
+  and isn't offered again.
 
 ## Gotchas
 
