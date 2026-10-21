@@ -80,9 +80,15 @@ What the module does, and what core gives it:
   actions skip them; they offer "Add to this list" instead.
 - The compared list is loaded in one query (`useListItemsForListValues`), so compare is limited to
   lists of up to 5000 items (`compareLimit.ts`, by the list's `count`). Bigger lists are disabled in
-  the compare picker (`CompareListPicker`, around the module's `isDisabled`) and in "Compare lists";
-  picked another way (a saved view), they aren't loaded and `ListItemsDataContext` turns compare off with a
-  warning.
+  the compare picker (`CompareListPicker`, by the picker's own list records: it also shows the lists
+  the sidebar's filters hide) and in "Compare lists"; picked another way (a saved view), they aren't
+  loaded and `ListItemsDataContext` turns compare off with a warning. A list the sidebar hasn't loaded
+  has no count there, so `useCompareListTooBig` reads `hasNextPage` of its whole-list query, the one the
+  module makes, and `useListItemsForListValues` never returns a part of a list.
+- The table's entity lookup (`entitiesMap`, used for undo history, inherit and cell menus) is
+  `tableEntitiesMap`, not `listItemsMap`: the list items with the values their cells show
+  (`attrib`, `ownAttrib`), plus the rows only in the compared list. `useUpdateListItems` still routes
+  edits with `listItemsMap`, whose `ownAttrib` is the entity's.
 - The tint (`CellMark.highlight`) is a layer behind the cell, so the opacity of greyed values
   doesn't fade it; the cell is the td's first child with an id (`useCellContextMenu`).
 - Paste derives the field from the column id, so a paste into a compare column arrives as a top-level

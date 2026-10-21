@@ -35,13 +35,17 @@ import { DEFAULT_COLUMN_VISIBILITY, DEFAULT_COLUMNS_BY_TYPE } from './ListItemsD
 import { useListValuesContext } from '../list-values'
 import { useListsDataContext } from '../lists-data'
 import useListValueActions from '../../hooks/useListValueActions'
-import { useListItemsForListValues } from '../../hooks/useListItemsForListValues'
+import {
+  useCompareListTooBig,
+  useListItemsForListValues,
+} from '../../hooks/useListItemsForListValues'
 import { getListItemValueSources, toListValuesItem } from '../../listValues/listItemValueSources'
 import type { CompareSettings, CompareView, ListRef } from '../../listValues/types'
-import { COMPARE_TOO_MANY_ITEMS, isTooBigToCompare } from '../../listValues/compareLimit'
+import { COMPARE_TOO_MANY_ITEMS } from '../../listValues/compareLimit'
 import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
+export type TableEntity = EntityListItemWithLinks & { attrib: Record<string, unknown> }
 
 const NO_LIST_VALUES_SETTINGS: CompareSettings = {}
 
@@ -61,6 +65,9 @@ export interface ListItemsDataContextValue {
   listItemsData: EntityListItemWithLinks[]
   listItemsTableData: TableRow[]
   listItemsMap: ListItemsMap
+  // the table's entity lookup (undo history, inherit, cell menus): the values the cells show,
+  // and the rows only in the compared list
+  tableEntitiesMap: Map<string, TableEntity>
   // the powerpack ListValues module's compare view (empty without the powerpack)
   compareView: CompareView<EntityListItemWithLinks>
   listValuesSettings: CompareSettings
@@ -291,7 +298,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   // a list too big to compare can still be picked from the sidebar menu or a saved view
   const comparedListId = compareView.comparedList?.id
-  const isComparedListTooBig = !!comparedListId && isTooBigToCompare(listsMap.get(comparedListId))
+  const isComparedListTooBig = useCompareListTooBig(comparedListId)
   const { setCompareWith } = compareView
   useEffect(() => {
     if (!isComparedListTooBig) return
@@ -346,10 +353,25 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     [shownListTableData, compareOnlyTableData],
   )
 
+  // the list items don't hold the values the cells show as one map (see listValues/AGENTS.md)
+  const tableEntitiesMap = useMemo(() => {
+    const items = new Map(listItemsMap)
+    for (const item of compareView.compareOnlyItems) items.set(item.id, item)
+    const map = new Map<string, TableEntity>()
+    for (const row of listItemsTableData) {
+      const item = items.get(row.id)
+      if (!item) continue
+      const { attrib = {}, ownAttrib = [] } = row.primary
+      map.set(row.id, { ...item, attrib, ownAttrib })
+    }
+    return map
+  }, [listItemsMap, compareView.compareOnlyItems, listItemsTableData])
+
+  // the table looks folders up here first, so they have the values their cells show too
   const foldersMap = useMemo<FolderNodeMap>(
     () =>
       new Map(
-        listItemsData
+        [...tableEntitiesMap.values()]
           .filter((item) => item.entityType === 'folder')
           .map(
             (item) =>
@@ -367,7 +389,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
               ] as const,
           ),
       ),
-    [listItemsData],
+    [tableEntitiesMap],
   )
   const tasksMap: TaskNodeMap = new Map()
 
@@ -467,6 +489,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         listItemsData,
         listItemsTableData,
         listItemsMap,
+        tableEntitiesMap,
         compareView,
         listValuesSettings,
         setListValuesSettings,

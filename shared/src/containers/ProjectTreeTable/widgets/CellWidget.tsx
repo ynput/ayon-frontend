@@ -269,11 +269,13 @@ const CellWidgetContent: FC<EditorCellProps> = ({
       case type === 'links': {
         const linksValue = valueData as LinkWidgetData | undefined
 
-        const isEditable = isLinkEditable(
-          linksValue?.direction || 'out',
-          linksValue?.link.linkType || '',
-          linksValue?.entityType || '',
-        )
+        const isEditable =
+          !isReadOnly &&
+          isLinkEditable(
+            linksValue?.direction || 'out',
+            linksValue?.link.linkType || '',
+            linksValue?.entityType || '',
+          )
 
         // overwrite readonly state if the cell is currently being edited
         isReadOnly = !isEditable

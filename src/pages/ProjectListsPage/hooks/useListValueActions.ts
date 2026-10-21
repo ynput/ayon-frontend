@@ -120,12 +120,13 @@ const useListValueActions = ({
     updateEntities,
   ])
 
-  const listValueMenuItem: ContextMenuItemConstructor = (_e, _cell, selectedCells) => {
+  // meta.selectedCells: the third argument has one cell per entity
+  const listValueMenuItem: ContextMenuItemConstructor = (_e, _cell, _selectedCells, meta) => {
     if (!host) return undefined
-    const cells = selectedCells.flatMap((cell) => {
-      const rowId = parseCellId(cell.cellId)?.rowId
-      if (!rowId || !cell.columnId.startsWith('attrib_')) return []
-      return [{ rowId, attrib: cell.columnId.replace('attrib_', '') }]
+    const cells = meta.selectedCells.flatMap((cellId) => {
+      const { rowId, colId } = parseCellId(cellId) || {}
+      if (!rowId || !colId?.startsWith('attrib_') || !listItemsMap.has(rowId)) return []
+      return [{ rowId, attrib: colId.replace('attrib_', '') }]
     })
     return cells.length ? module.getCellMenuItems(cells, host) : undefined
   }

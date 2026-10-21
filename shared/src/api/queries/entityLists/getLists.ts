@@ -99,6 +99,16 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
           pageInfo: firstEdge.node.items.pageInfo,
         }
       },
+      // like getListItemsInfinite, whose realtime updates invalidate these tags
+      providesTags: (result, _e, { listId, projectName }) => [
+        { type: 'entityListItem', id: 'LIST' },
+        { type: 'entityListItem', id: listId },
+        { type: 'entityListItem', id: projectName },
+        ...(result?.items || []).flatMap((item) => [
+          { type: 'entityListItem' as const, id: item.id },
+          { type: 'entityListItem' as const, id: item.entityId },
+        ]),
+      ],
       keepUnusedDataFor: CACHE_TIME,
     },
     GetListsItemsForReviewSession: {

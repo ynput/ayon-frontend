@@ -75,10 +75,23 @@ const ListPickerTable: FC<Omit<ListPickerProps, 'isDisabled'>> = ({
   )
 }
 
+type Props = ListPickerProps & {
+  // core checks that need the picker's list record, e.g. its count
+  isListDisabled?: (list: EntityList) => string | undefined
+}
+
 // The page's lists in a single-select picker, for the powerpack's dialogs (e.g. compare with list)
-export const ListPicker: FC<ListPickerProps> = ({ isDisabled, initialSelection, ...props }) => {
+export const ListPicker: FC<Props> = ({
+  isDisabled,
+  isListDisabled,
+  initialSelection,
+  ...props
+}) => {
   const { isReview } = useListsContext()
-  const listDisabled = useCallback((list: EntityList) => isDisabled(toListRef(list)), [isDisabled])
+  const listDisabled = useCallback(
+    (list: EntityList) => isDisabled(toListRef(list)) ?? isListDisabled?.(list),
+    [isDisabled, isListDisabled],
+  )
 
   return (
     <ListsDataProvider

@@ -6,6 +6,14 @@ import type { EntityListItemWithLinks } from './useGetListItemsData'
 import { useListsDataContext } from '../context/lists-data'
 import { isTooBigToCompare, MAX_COMPARE_ITEMS } from '../listValues/compareLimit'
 
+const listItemsArgs = (projectName: string, listId?: string, filter?: string, search?: string) => ({
+  projectName,
+  listId: listId || '',
+  first: MAX_COMPARE_ITEMS,
+  filter,
+  search,
+})
+
 // The ListValues module's UseListItems: a list's items, through the page's query cache
 export const useListItemsForListValues: UseListItems<EntityListItemWithLinks> = ({
   listId,
@@ -19,10 +27,12 @@ export const useListItemsForListValues: UseListItems<EntityListItemWithLinks> = 
   const isTooBig = !!listId && isTooBigToCompare(listsMap.get(listId))
   const isSkipped = !!skip || !listId || !projectName || isTooBig
   const { data, refetch } = useGetListItemsQuery(
-    { projectName, listId: listId || '', first: MAX_COMPARE_ITEMS, filter, search },
+    listItemsArgs(projectName, listId, filter, search),
     { skip: isSkipped },
   )
 
+  // more items than one query loads: never compare with a part of the list
+  const isIncomplete = !!data?.pageInfo.hasNextPage
   const items = useMemo(
     () => data?.items.map((item) => ({ ...item, links: [] } as unknown as EntityListItemWithLinks)),
     [data],
@@ -31,5 +41,17 @@ export const useListItemsForListValues: UseListItems<EntityListItemWithLinks> = 
     if (!isSkipped) refetch()
   }, [isSkipped, refetch])
 
-  return { items: isSkipped ? undefined : items, refetch: refetchItems }
+  return { items: isSkipped || isIncomplete ? undefined : items, refetch: refetchItems }
+}
+
+// Whether a list is too big to compare: its count, or for a list the sidebar hasn't loaded
+// (hidden by its filters), its whole-list query, the same one the module makes
+export const useCompareListTooBig = (listId?: string) => {
+  const { projectName } = useProjectContext()
+  const { listsMap } = useListsDataContext()
+  const list = listId ? listsMap.get(listId) : undefined
+  const { data } = useGetListItemsQuery(listItemsArgs(projectName, listId), {
+    skip: !listId || !projectName || !!list,
+  })
+  return !!listId && (list ? isTooBigToCompare(list) : !!data?.pageInfo.hasNextPage)
 }
