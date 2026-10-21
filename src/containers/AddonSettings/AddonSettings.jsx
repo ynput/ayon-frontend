@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -52,6 +52,7 @@ import PerProjectBundleConfig, {
 } from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
 import { projectBundleFromName } from '../../components/PerProjectBundleConfig/PerProjectBundleConfigHelpers'
 import { useSessionStorage } from '@shared/hooks'
+import { SETTINGS_VARIANT_KEY } from './settingsVariant'
 import { InfoMessage } from '@shared/components'
 
 /*
@@ -121,8 +122,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
 
-  const [selectedBundle, setSelectedBundle] = useSessionStorage('variant-type', {
-    variant: 'production',
+  // kept per browser tab; toggling developer mode sets it (setSettingsVariantForDeveloperMode)
+  const [storedBundle, setSelectedBundle] = useSessionStorage(SETTINGS_VARIANT_KEY, {
+    variant: developerMode ? 'dev' : 'production',
     bundleName: null,
     projectBundleName: undefined,
   })
@@ -170,28 +172,20 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     return bundles.filter((bundle) => bundle.isDev && bundle.activeUser === userName)
   }, [bundles, userName])
 
-  // Update selectedBundle when developer mode changes
-  useEffect(() => {
-    if (developerMode) {
-      // Switch to dev bundle when entering developer mode
-      const devBundle = devBundles.find((bundle) => bundle.isDev && bundle.activeUser === userName)
-      if (devBundle) {
-        setSelectedBundle({
-          variant: devBundle.name,
-          bundleName: devBundle.name,
-          projectBundleName: undefined,
-        })
-      }
-      // If no dev bundle found, stay on current variant (don't switch)
-    } else {
-      // Switch back to production when leaving developer mode
-      setSelectedBundle({
-        variant: 'production',
-        bundleName: null,
-        projectBundleName: undefined,
-      })
+  // 'dev' is the user's dev bundle; a dev bundle falls back to production without developer mode
+  const selectedBundle = useMemo(() => {
+    const production = { variant: 'production', bundleName: null, projectBundleName: undefined }
+    if (!developerMode && !['production', 'staging'].includes(storedBundle.variant)) {
+      return production
     }
-  }, [developerMode, JSON.stringify(devBundles), userName])
+    if (storedBundle.variant === 'dev') {
+      const devBundle = devBundles[0]
+      return devBundle
+        ? { variant: devBundle.name, bundleName: devBundle.name, projectBundleName: undefined }
+        : production
+    }
+    return storedBundle
+  }, [storedBundle, devBundles, developerMode])
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
@@ -619,22 +613,28 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   const [addonListContextMenu] = useCreateContextMenu([])
   const showAddonListContextMenu = (e) => {
-    setTimeout(() => {
-      const menuItems = [
-        {
-          label: 'Copy settings from...',
-          command: () => setShowCopySettings(true),
-        },
-      ]
-      if (user?.data?.isAdmin) {
-        menuItems.push({
-          label: 'Low-level editor',
-          command: () => setShowRawEdit(true),
-          disabled: selectedAddons.length !== 1,
-        })
-      }
-      addonListContextMenu(e.originalEvent, menuItems)
-    }, 50)
+    if (!e.data?.name) return
+    const isSelected = selectedAddons.some((addon) => addon.name === e.data.name)
+    const targetAddons = isSelected ? selectedAddons : [e.data]
+    // the dialogs act on the selected addons, so an action selects a right-clicked addon first
+    const withSelection = (open) => () => {
+      if (!isSelected) onSelectAddon(targetAddons)
+      open()
+    }
+    const menuItems = [
+      {
+        label: 'Copy settings from...',
+        command: withSelection(() => setShowCopySettings(true)),
+      },
+    ]
+    if (user?.data?.isAdmin) {
+      menuItems.push({
+        label: 'Low-level editor',
+        command: withSelection(() => setShowRawEdit(true)),
+        disabled: targetAddons.length !== 1,
+      })
+    }
+    addonListContextMenu(e.originalEvent, menuItems)
   }
 
   //

@@ -10,10 +10,15 @@ export type ListDetailsOpenState = {
   isOpen: boolean
   folderId?: string // id of folder being edited, undefined for create
   parentId?: string // parent folder to create the new folder inside (create mode)
+  rowIds?: string[] // rows to create the folder for (create mode), the selection when not set
   initial?: Partial<ListFolderFormData>
 }
 
-export type OnOpenFolderListParams = (params: { folderId?: string; parentId?: string }) => void
+export type OnOpenFolderListParams = (params: {
+  folderId?: string
+  parentId?: string
+  rowIds?: string[]
+}) => void
 
 export type MoveToFolderState = {
   moving: 'lists' | 'folders'

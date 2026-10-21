@@ -51,23 +51,8 @@ export const useVPGridContextMenu = (contextMenuItems: VPContextMenuItems) => {
         id.includes(ROW_SELECTION_COLUMN_ID),
       )
 
-      // If the right-clicked item is not in the current selection, update selection to just this item
-      if (!selectedEntityIds.includes(entityId)) {
-        const nameCellId = getCellId(entityId, GRID_COLUMN_ID)
-        const newSelection = new Set<string>([nameCellId])
-
-        // Only add row selection cell if details panel is already open
-        if (hasRowSelection) {
-          const rowCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)
-          newSelection.add(rowCellId)
-        }
-
-        setSelectedCells(newSelection)
-        setFocusedCellId(nameCellId)
-      }
-
-      // Determine which entity IDs to use
-      const targetEntityIds = selectedEntityIds.includes(entityId) ? selectedEntityIds : [entityId]
+      const isSelected = selectedEntityIds.includes(entityId)
+      const targetEntityIds = isSelected ? selectedEntityIds : [entityId]
 
       // Get entity for cell context
       const entity = entitiesMap.get(entityId)
@@ -111,8 +96,15 @@ export const useVPGridContextMenu = (contextMenuItems: VPContextMenuItems) => {
         mockMeta,
         mockContext,
       )
-      if (showDetailsMenuItem) {
-        menuItems.push(showDetailsMenuItem)
+      if (showDetailsMenuItem && !Array.isArray(showDetailsMenuItem)) {
+        const nameCellId = getCellId(entityId, GRID_COLUMN_ID)
+        const showTargetDetails = () => {
+          setSelectedCells(new Set([nameCellId, getCellId(entityId, ROW_SELECTION_COLUMN_ID)]))
+          setFocusedCellId(nameCellId)
+        }
+        menuItems.push(
+          isSelected ? showDetailsMenuItem : { ...showDetailsMenuItem, command: showTargetDetails },
+        )
       }
 
       const openViewerMenuItem = openViewerItem(

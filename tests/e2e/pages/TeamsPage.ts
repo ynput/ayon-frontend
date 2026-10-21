@@ -33,8 +33,13 @@ export class TeamsPage {
     await expect(this.userRow(name)).toHaveClass(/\bp-highlight\b/)
   }
 
-  async addUserToSelectedTeam(user: string, team: string) {
+  async openUserMenu(user: string) {
     await this.userRow(user).click({ button: 'right' })
+    await expect(menuItem(this.page, 'Add to team')).toBeVisible()
+  }
+
+  async addUserToSelectedTeam(user: string, team: string) {
+    await this.openUserMenu(user)
     await menuItem(this.page, `Add to ${team}`).click()
   }
 
@@ -50,8 +55,12 @@ export class TeamsPage {
     await expect(checkbox).toBeChecked({ checked: leader })
   }
 
-  async duplicateTeam(source: string, newName: string) {
-    await this.teamRow(source).click({ button: 'right' })
+  async openTeamMenu(name: string) {
+    await this.teamRow(name).click({ button: 'right' })
+    await expect(menuItem(this.page, 'Duplicate Team')).toBeVisible()
+  }
+
+  async duplicateFromMenu(source: string, newName: string) {
     await menuItem(this.page, 'Duplicate Team').click()
     const duplicate = dialog(this.page, `Duplicate Team - ${source}`)
     await expect(duplicate).toBeVisible()
@@ -61,8 +70,7 @@ export class TeamsPage {
     await expect(duplicate).toBeHidden()
   }
 
-  async deleteTeam(name: string) {
-    await this.teamRow(name).click({ button: 'right' })
+  async deleteFromMenu() {
     await menuItem(this.page, 'Delete Team').click()
     await confirmDialog(this.page).getByRole('button', { name: 'Delete' }).click()
   }

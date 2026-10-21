@@ -555,14 +555,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
       e.stopPropagation()
 
       const selectedIds = Object.keys(rowSelection)
-
-      const nextSelectedRows = selectedIds.includes(rowId) ? selectedIds : [rowId]
-
-      if (!selectedIds.includes(rowId)) {
-        // convert array to RowSelectionState object
-        const nextSelection: RowSelectionState = { [rowId]: true }
-        onRowSelectionChange?.(nextSelection)
-      }
+      const isSelected = selectedIds.includes(rowId)
+      const nextSelectedRows = isSelected ? selectedIds : [rowId]
 
       const menuItems = rowContextMenuBuilders.flatMap((builder) =>
         toMenuItems(
@@ -574,7 +568,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
             selectedTableRows: nextSelectedRows
               .map((selectedRowId) => table.getRowModel().rowsById[selectedRowId])
               .filter((selectedRow): selectedRow is Row<SimpleTableRow> => !!selectedRow),
-            isSelected: nextSelectedRows.includes(rowId),
+            isSelected,
           }),
         ),
       )
@@ -583,7 +577,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
         showRowContextMenu(e as any, menuItems)
       }
     },
-    [rowContextMenuBuilders, rows, rowSelection, onRowSelectionChange, showRowContextMenu],
+    [rowContextMenuBuilders, rows, rowSelection, showRowContextMenu],
   )
 
   //The virtualizer needs to know the scrollable container element

@@ -255,6 +255,8 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     [selectedList],
   )
 
+  const hiddenListIds = useMemo(() => (selectedList ? [selectedList.id] : []), [selectedList])
+
   return (
     <SettingsPanelProvider>
       <ColumnSettingsProvider
@@ -287,6 +289,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                 playerOpen={viewerOpen}
                 onOpenPlayer={handleOpenPlayer}
                 onResetView={(selectedList?.count || 0) > 0 ? handleResetView : undefined}
+                hiddenListIds={hiddenListIds}
                 SubtasksManager={SubtasksManager}
                 useParams={useParams}
                 useNavigate={useNavigate}

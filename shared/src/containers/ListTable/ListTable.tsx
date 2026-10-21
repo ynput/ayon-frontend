@@ -264,14 +264,8 @@ export function ListTable<TData extends RowData>({
       e.preventDefault()
       e.stopPropagation()
 
-      const nextSelectedRows = isGroupRow
-        ? selectedRows
-        : selectedRows.includes(rowId)
-        ? selectedRows
-        : [rowId]
-      if (!isGroupRow && !selectedRows.includes(rowId)) {
-        onSelectedRowsChange?.(nextSelectedRows)
-      }
+      const isSelected = selectedRows.includes(rowId)
+      const nextSelectedRows = isGroupRow || isSelected ? selectedRows : [rowId]
 
       const menuItems = rowContextMenuBuilders.flatMap((builder) =>
         toMenuItems(
@@ -280,7 +274,7 @@ export function ListTable<TData extends RowData>({
             rowIndex,
             row,
             selectedRows: nextSelectedRows,
-            isSelected: nextSelectedRows.includes(rowId),
+            isSelected,
             isGroupRow,
             ...groupContext,
           }),
@@ -291,7 +285,7 @@ export function ListTable<TData extends RowData>({
         showRowContextMenu(e, menuItems)
       }
     },
-    [rowContextMenuBuilders, rows, selectedRows, onSelectedRowsChange, showRowContextMenu],
+    [rowContextMenuBuilders, rows, selectedRows, showRowContextMenu],
   )
 
   // --- Editing ---

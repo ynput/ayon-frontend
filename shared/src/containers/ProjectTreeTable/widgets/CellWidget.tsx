@@ -11,6 +11,7 @@ import { LinksWidget, LinkWidgetData } from './LinksWidget'
 import { isLinkEditable } from './LinksWidgetHelpers'
 import { SubtasksWidget, SubtasksWidgetData } from './SubtasksWidget'
 import { CommentsWidget } from './CommentsWidget'
+import { ListsWidget, ListsWidgetData } from './ListsWidget'
 
 // Contexts
 import { useCellEditing } from '../context/cell-editing'
@@ -83,7 +84,7 @@ const HighlightTint = styled.span`
 export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
 type WidgetAttributeData = {
-  type: AttributeData['type'] | 'links' | 'name' | 'subtasks' | 'comments'
+  type: AttributeData['type'] | 'links' | 'name' | 'subtasks' | 'comments' | 'lists'
   widget?: AttributeData['widget']
   enumResolver?: AttributeData['enumResolver']
 }
@@ -305,6 +306,17 @@ const CellWidgetContent: FC<EditorCellProps> = ({
 
       case type === 'comments': {
         return <CommentsWidget value={valueData as EntityComment[] | undefined} {...sharedProps} />
+      }
+
+      case type === 'lists': {
+        return (
+          <ListsWidget
+            value={valueData as ListsWidgetData | undefined}
+            projectName={projectName}
+            cellId={cellId}
+            {...sharedProps}
+          />
+        )
       }
 
       case !!options.length || !!attributeData?.enumResolver: {

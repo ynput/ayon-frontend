@@ -42,12 +42,6 @@ const UserListTeams = ({
     onUpdateTeams(updatedTeams)
   }
 
-  const onContextSelectionChange = (e) => {
-    const name = e.value.name
-    const index = selectedUsers.indexOf(name)
-    if (index === -1) onSelectUsers([name])
-  }
-
   // two arrays one for adding to teams and one for removing from teams
   // only one user that is not in the team is required to add to the team
   function getAddToList(selectedUsers, teams) {
@@ -118,8 +112,7 @@ const UserListTeams = ({
   // rows call this with { originalEvent, data }, the panel around the table (a right-click on its
   // empty space) with the DOM event
   const handleContext = (e) => {
-    // selectedUsers is not updated yet when the menu opens, so a right-clicked user that is not
-    // selected is used instead of the selection
+    // a right-clicked user that is not selected is acted on alone, without selecting it
     const name = e.data?.name
     const users = name && !selectedUsers.includes(name) ? [name] : selectedUsers
 
@@ -147,7 +140,6 @@ const UserListTeams = ({
         userList={tableData}
         isLoading={isLoading}
         onSelectionChange={onSelectionChange}
-        onContextSelectionChange={onContextSelectionChange}
         selection={selection}
         className={clsx('user-list-table', { loading: isLoading })}
         rowClassName={() => clsx({ loading: isLoading })}
@@ -171,7 +163,6 @@ const UserListTeams = ({
           className={clsx('user-list-table', { loading: isLoading })}
           rowClassName={() => clsx({ loading: isLoading })}
           onSelectionChange={onSelectionChange}
-          onContextMenuSelectionChange={onContextSelectionChange}
           onContextMenu={handleContext}
           selection={selection}
           resizableColumns

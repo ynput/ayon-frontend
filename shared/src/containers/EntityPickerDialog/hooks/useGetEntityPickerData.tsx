@@ -15,7 +15,7 @@ import {
   entityHierarchies,
 } from '../util'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
-import { matchSorter } from 'match-sorter'
+import { filterBySearchQuery } from '@shared/util/searchTerms'
 
 export type EntityQueryResult = {
   data: (SearchEntityLink | FolderListItem)[]
@@ -69,12 +69,13 @@ export const useGetEntityPickerData = ({
     includeThumbnails: true,
   })
 
-  const foldersData = useMemo(() => {
-    if (!search.folder) return foldersDataRaw
-    return matchSorter(foldersDataRaw, search.folder, {
-      keys: ['name', 'label', 'path'],
-    })
-  }, [foldersDataRaw, search.folder])
+  const foldersData = useMemo(
+    () =>
+      filterBySearchQuery(foldersDataRaw, search.folder ?? '', (folder) =>
+        [folder.name, folder.label, folder.path].join(' '),
+      ),
+    [foldersDataRaw, search.folder],
+  )
 
   //   create flat filtered data when searching on folders
   const foldersTable = useMemo(

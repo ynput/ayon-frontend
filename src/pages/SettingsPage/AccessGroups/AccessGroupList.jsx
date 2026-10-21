@@ -63,7 +63,6 @@ const AccessGroupList = ({
 
   const onContextMenu = (event) => {
     const eventData = event?.data
-    onSelectionChange(eventData)
     ctxMenuShow(event.originalEvent, ctxMenuItems(eventData))
   }
 

@@ -13,7 +13,7 @@ interface ListFolderFormDialogProps {}
 
 export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
   const {
-    listFolderOpen: { isOpen, initial, folderId, parentId },
+    listFolderOpen: { isOpen, initial, folderId, parentId, rowIds },
     setListFolderOpen,
     onCreateListFolder,
     onUpdateListFolder,
@@ -22,7 +22,7 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
     isReview,
   } = useListsContext()
 
-  const { listFolders } = useListsDataContext()
+  const { listFolders, listsMap } = useListsDataContext()
 
   const mode = folderId ? 'edit' : 'create'
 
@@ -36,11 +36,14 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // when creating a folder, we need to derive the context from the selection
-  const selectedListIds = selectedRows.filter((id) => !parseListFolderRowId(id))
-  const selectedFolderIds = selectedRows
+  // when creating a folder, we need to derive the context from the selection, or from the rows
+  // of the context menu that opened the dialog
+  const targetRows = rowIds ?? selectedRows
+  const selectedListIds = targetRows.filter((id) => !parseListFolderRowId(id))
+  const selectedFolderIds = targetRows
     .map((id) => parseListFolderRowId(id))
     .filter((id): id is string => !!id)
+  const targetList = rowIds ? listsMap.get(selectedListIds[0]) : selectedList
 
   const listIdsToAdd =
     mode === 'create' && !parentId && selectedFolderIds.length === 0 ? selectedListIds : []
@@ -50,8 +53,8 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
         ? [parentId]
         : selectedFolderIds.length > 0
         ? selectedFolderIds
-        : selectedList?.entityListFolderId
-        ? [selectedList.entityListFolderId]
+        : targetList?.entityListFolderId
+        ? [targetList.entityListFolderId]
         : []
       : []
 
