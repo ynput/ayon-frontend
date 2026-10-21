@@ -423,8 +423,8 @@ const useCellContextMenu = ({
   const handleTableBodyContextMenu = (e: ContextEvent) => {
     const target = e.target as HTMLElement
     const tdEl = target.closest('td')
-    // get id of first child of td
-    const cellId = tdEl?.firstElementChild?.id
+    // the cell is the td's first child with an id (a highlight tint comes before it)
+    const cellId = tdEl?.querySelector(':scope > [id]')?.id
 
     if (!cellId) return
 
