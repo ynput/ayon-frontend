@@ -17,6 +17,7 @@ import {
   TableGroupBy,
   useColumnSettingsContext,
 } from '@shared/containers/ProjectTreeTable/context/column-settings'
+import { getScopedHeader } from '@shared/containers/ProjectTreeTable'
 import ColumnItem from './ColumnItem'
 import SortableColumnItem from './SortableColumnItem'
 
@@ -58,16 +59,26 @@ import { InputSwitch } from '@ynput/ayon-react-components'
 const ADD_COLUMN_MENU_LIST_ID = 'add-column-menu-list'
 const NO_SCOPES: string[] = []
 
+// parent columns are named exactly as their table header, so they need no section path
 const getColumnSettingsPath = (column: AddColumnItem, scopes: string[]) => {
-  if (column.parentScope && column.attrib) {
-    return `${column.parentScope.charAt(0).toUpperCase()}${column.parentScope.slice(1)} attributes`
-  }
+  if (column.parentScope) return undefined
   return getAddColumnSection(column, scopes)?.label
 }
 
+// parent attributes only have their title in the column list, the header adds the scope
+const getColumnSettingsLabel = (column: AddColumnItem) =>
+  column.parentScope && column.attrib
+    ? getScopedHeader(column.parentScope, column.label)
+    : column.label
+
 const getColumnSettingsItem = (column: AddColumnItem, scopes: string[]): AddColumnItem => {
   const path = getColumnSettingsPath(column, scopes)
-  return { ...column, icon: column.icon ?? getDefaultColumnIcon(column), ...(path ? { path } : {}) }
+  return {
+    ...column,
+    label: getColumnSettingsLabel(column),
+    icon: column.icon ?? getDefaultColumnIcon(column),
+    ...(path ? { path } : {}),
+  }
 }
 
 export interface SettingSwitchProps
@@ -297,9 +308,12 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     const terms = search.toLowerCase().split(/\s+/).filter(Boolean)
     return (
       columns
-        .map((col) => ({ ...col, path: getAddColumnSection(col, scopes)?.label }))
+        .map((col) => ({ ...col, path: getColumnSettingsPath(col, scopes) }))
         .filter((col) => {
-          const searchable = [col.path, col.label].filter(Boolean).join(' / ').toLowerCase()
+          const searchable = [col.path, getColumnSettingsLabel(col)]
+            .filter(Boolean)
+            .join(' / ')
+            .toLowerCase()
           return terms.every((term) => searchable.includes(term))
         })
         // default column order, but grouped (sectioned) columns sink to the bottom
