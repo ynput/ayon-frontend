@@ -57,7 +57,8 @@ function FieldTemplate(props: FieldTemplateProps) {
   }, [props.formContext.changedKeys, path])
 
   const overrideLevel = fieldChanged ? 'edit' : override?.level || 'default'
-  const labelStyle: CSS.Properties = override?.inGroup ? { fontStyle: 'italic' } : {}
+  // classic marks a value overridden with its whole group in italics; flat leaves it out
+  const labelStyle: CSS.Properties = override?.inGroup && !flatLayout ? { fontStyle: 'italic' } : {}
 
   // Context menu
 

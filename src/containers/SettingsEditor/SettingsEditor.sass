@@ -467,6 +467,12 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
     .dropdown.form-field
       width: 100%
 
+  // an ordered list's value has no width of its own (OrderedListWidget), so it takes the
+  // row's second half like a text field
+  #{$flat-row}.setting-field-select .form-inline-field-widget:has(> .settings-ordered-list)
+    flex: 0 1 50%
+    min-width: 200px
+
   // in a compact row it stretches under its label like every other field (the widget
   // caps it at 800px in classic)
   .layout-compact #{$flat-field}.setting-field-select .form-inline-field-widget .dropdown.form-field
