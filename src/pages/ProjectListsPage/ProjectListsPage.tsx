@@ -61,8 +61,8 @@ import { useReviewCardsSettingsContext } from './context/review-cards-settings'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
 import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
-import { TableExportButton, TableExportProvider } from '@shared/containers/TableExport'
-import ListExportDialog from './components/ListExportDialog'
+import { TableExportButton } from '@shared/containers/TableExport'
+import ListExportSource from './components/ListExportSource'
 import { isEntityAttribReadOnly } from './util/getColumnConfigFromType'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
@@ -134,15 +134,13 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
           setListsSort={setListsSort}
         >
           <ListsProvider isReview={isReview}>
-            <TableExportProvider>
-              <ListsAttributesProvider>
-                <ListValuesProvider>
-                  <ListItemsDataProvider>
-                    <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
-                  </ListItemsDataProvider>
-                </ListValuesProvider>
-              </ListsAttributesProvider>
-            </TableExportProvider>
+            <ListsAttributesProvider>
+              <ListValuesProvider>
+                <ListItemsDataProvider>
+                  <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
+                </ListItemsDataProvider>
+              </ListValuesProvider>
+            </ListsAttributesProvider>
           </ListsProvider>
         </ListsDataProvider>
       </ListsModuleProvider>
@@ -623,7 +621,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         )
                       }
                     />
-                    <ListExportDialog parentColumns={parentColumns} />
+                    <ListExportSource parentColumns={parentColumns} />
                     <Actions
                       entities={[
                         {

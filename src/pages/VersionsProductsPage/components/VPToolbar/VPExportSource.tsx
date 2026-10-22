@@ -1,9 +1,6 @@
 import { FC } from 'react'
-import {
-  TableExportDialogHost,
-  TableExportRows,
-  TableExportScope,
-} from '@shared/containers/TableExport'
+import { TableExportSource } from '@shared/containers/TableExport'
+import type { TableExportRows, TableExportScope } from '@shared/context'
 import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
 import { useProjectContext } from '@shared/context'
 import { getForwardSortBy } from '@shared/util'
@@ -17,7 +14,7 @@ const folderIds = (args: QueryArguments) => (args.folderIds?.length ? args.folde
 
 // The whole table is exported with the view's filters: products with all their versions
 // (as if expanded), or the versions list
-const VPExportDialog: FC = () => {
+const VPExportSource: FC = () => {
   const { projectName } = useProjectContext()
   const { productArguments: products, versionArguments: versions } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
@@ -69,7 +66,7 @@ const VPExportDialog: FC = () => {
   }
 
   return (
-    <TableExportDialogHost
+    <TableExportSource
       projectName={projectName}
       subTypeKey="product_type"
       getRows={getRows}
@@ -78,4 +75,4 @@ const VPExportDialog: FC = () => {
   )
 }
 
-export default VPExportDialog
+export default VPExportSource

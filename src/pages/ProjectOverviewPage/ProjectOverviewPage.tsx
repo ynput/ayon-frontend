@@ -37,7 +37,7 @@ import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operation
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
 import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
-import OverviewExportDialog from './components/OverviewExportDialog'
+import OverviewExportSource from './components/OverviewExportSource'
 import { TableExportButton } from '@shared/containers/TableExport'
 import { getBundleModeFromUser } from '@shared/util'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
@@ -248,7 +248,7 @@ const ProjectOverviewPage: FC = () => {
         </SplitterPanel>
         <SplitterPanel size={slicerSize[1]}>
           <Section wrap direction="column" style={{ height: '100%' }}>
-            <OverviewExportDialog />
+            <OverviewExportSource />
             <Toolbar>
               <ProjectNewEntityHost showButton />
               <OverviewActions />

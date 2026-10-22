@@ -15,10 +15,9 @@ import { GROUP_BY_ID } from './useBuildGroupByTableData'
 import { ColumnDef } from '@tanstack/react-table'
 import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
-import { CSV_DELIMITERS } from '../../TableExport/tableExportSettings'
-import { useTableExportContext } from '../../TableExport/TableExportContextInstance'
+import { CSV_DELIMITERS } from '../../TableExport/csvFile'
 import { useMemo } from 'react'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, useTableExportContext } from '@shared/context'
 import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierarchySelection'
 import {
   newEntityDefinitions,
@@ -298,12 +297,13 @@ const useCellContextMenu = ({
   }
 
   const tableExport = useTableExportContext()
+  // the Power Pack export when the table registered what it exports, else the cells as shown
   const exportItem: ContextMenuItemConstructor = (e, cell) =>
-    tableExport
+    tableExport?.isAvailable && tableExport.source
       ? {
           label: 'Export...',
           icon: 'download',
-          command: () => tableExport.openExportDialog('selection'),
+          command: () => tableExport.openExport('selection'),
           hidden: cell.isGroup,
         }
       : {

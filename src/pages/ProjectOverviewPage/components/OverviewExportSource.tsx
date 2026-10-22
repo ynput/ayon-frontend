@@ -1,9 +1,6 @@
 import { FC } from 'react'
-import {
-  TableExportDialogHost,
-  TableExportRows,
-  TableExportScope,
-} from '@shared/containers/TableExport'
+import { TableExportSource } from '@shared/containers/TableExport'
+import type { TableExportRows, TableExportScope } from '@shared/context'
 import {
   getTasksSortArgs,
   useColumnSettingsContext,
@@ -14,7 +11,7 @@ import { getForwardSortBy } from '@shared/util'
 import { useProjectOverviewContext } from '../context/project-overview'
 
 // The whole table is exported as if every folder was expanded, with the view's filters
-const OverviewExportDialog: FC = () => {
+const OverviewExportSource: FC = () => {
   const {
     projectName,
     foldersMap,
@@ -58,7 +55,7 @@ const OverviewExportDialog: FC = () => {
   }
 
   return (
-    <TableExportDialogHost
+    <TableExportSource
       projectName={projectName}
       subTypeKey="folder_or_task_type"
       canImport
@@ -67,4 +64,4 @@ const OverviewExportDialog: FC = () => {
   )
 }
 
-export default OverviewExportDialog
+export default OverviewExportSource

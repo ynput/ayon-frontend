@@ -1,8 +1,7 @@
 import { FC, useId } from 'react'
 import { Button } from '@ynput/ayon-react-components'
-import { useMenuContext } from '@shared/context'
+import { useMenuContext, useTableExportContext } from '@shared/context'
 import { Menu, MenuContainer } from '@shared/components/Menu'
-import { useTableExportContext } from './TableExportContextInstance'
 
 type TableExportButtonProps = {
   // with an import, one button opens a menu with both, to save toolbar space
@@ -13,7 +12,7 @@ export const TableExportButton: FC<TableExportButtonProps> = ({ onImport }) => {
   const tableExport = useTableExportContext()
   const { toggleMenuOpen, setMenuOpen } = useMenuContext()
   const menuId = useId()
-  const openExport = () => tableExport?.openExportDialog('table')
+  const openExport = () => tableExport?.openExport('table')
 
   if (!onImport) {
     return (
@@ -30,6 +29,7 @@ export const TableExportButton: FC<TableExportButtonProps> = ({ onImport }) => {
     <>
       <Button
         id={menuId}
+        data-testid="table-import-export"
         icon="swap_vert"
         label="Import / Export"
         onClick={() => toggleMenuOpen(menuId)}
@@ -37,7 +37,13 @@ export const TableExportButton: FC<TableExportButtonProps> = ({ onImport }) => {
       <MenuContainer targetId={menuId} id={menuId} align="right">
         <Menu
           menu={[
-            { id: 'import', label: 'Import CSV...', icon: 'upload_file', onClick: onImport },
+            {
+              id: 'import',
+              label: 'Import CSV...',
+              icon: 'upload_file',
+              onClick: onImport,
+              'data-testid': 'import-csv',
+            },
             { id: 'export', label: 'Export...', icon: 'download', onClick: openExport },
           ]}
           onClose={() => setMenuOpen(false)}

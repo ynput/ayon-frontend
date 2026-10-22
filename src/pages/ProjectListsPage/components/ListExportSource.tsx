@@ -1,9 +1,6 @@
 import { FC } from 'react'
-import {
-  TableExportDialogHost,
-  TableExportRows,
-  TableExportScope,
-} from '@shared/containers/TableExport'
+import { TableExportSource } from '@shared/containers/TableExport'
+import type { TableExportRows, TableExportScope } from '@shared/context'
 import { useProjectContext } from '@shared/context'
 import type { ParentColumnDefinition } from '@shared/containers/ProjectTreeTable'
 import { getForwardSortBy } from '@shared/util'
@@ -11,7 +8,7 @@ import { useListsContext } from '../context'
 import { useListItemsDataContext } from '../context/list-items-data'
 
 // Exports list items with the list's filter and order. Table rows are list item ids.
-const ListExportDialog: FC<{ parentColumns?: ParentColumnDefinition[] }> = ({ parentColumns }) => {
+const ListExportSource: FC<{ parentColumns?: ParentColumnDefinition[] }> = ({ parentColumns }) => {
   const { projectName } = useProjectContext()
   const { selectedList } = useListsContext()
   const { listItemsQueryArgs } = useListItemsDataContext()
@@ -32,7 +29,7 @@ const ListExportDialog: FC<{ parentColumns?: ParentColumnDefinition[] }> = ({ pa
   })
 
   return (
-    <TableExportDialogHost
+    <TableExportSource
       projectName={projectName}
       subTypeKey={
         ['folder', 'task'].includes(selectedList.entityType)
@@ -45,4 +42,4 @@ const ListExportDialog: FC<{ parentColumns?: ParentColumnDefinition[] }> = ({ pa
   )
 }
 
-export default ListExportDialog
+export default ListExportSource

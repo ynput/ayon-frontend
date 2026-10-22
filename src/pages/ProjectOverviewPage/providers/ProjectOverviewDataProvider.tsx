@@ -1,5 +1,4 @@
 import { FC } from 'react'
-import { TableExportProvider } from '@shared/containers/TableExport'
 import { ColumnSettingsProvider, ColumnDndProvider } from '@shared/containers/ProjectTreeTable'
 import { useGroupByRemoteModules } from '@shared/hooks'
 import { SettingsPanelProvider } from '@shared/context'
@@ -33,13 +32,11 @@ const ProjectOverviewDataProvider: FC = () => {
       defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
     >
       <ColumnDndProvider>
-        <TableExportProvider>
-          <ProjectOverviewProvider modules={modules}>
-            <SettingsPanelProvider>
-              <ProjectOverviewTableProvider modules={modules} />
-            </SettingsPanelProvider>
-          </ProjectOverviewProvider>
-        </TableExportProvider>
+        <ProjectOverviewProvider modules={modules}>
+          <SettingsPanelProvider>
+            <ProjectOverviewTableProvider modules={modules} />
+          </SettingsPanelProvider>
+        </ProjectOverviewProvider>
       </ColumnDndProvider>
     </ColumnSettingsProvider>
   )

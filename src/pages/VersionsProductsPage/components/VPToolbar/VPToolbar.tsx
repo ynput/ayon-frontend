@@ -7,7 +7,7 @@ import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
 import { useGetGroupedFields, useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import styled from 'styled-components'
 import { TableExportButton } from '@shared/containers/TableExport'
-import VPExportDialog from './VPExportDialog'
+import VPExportSource from './VPExportSource'
 
 const GroupByDropdown = styled(SortingDropdown)<{
   $disableSortOrder?: boolean
@@ -140,7 +140,7 @@ const VPToolbar: FC = () => {
       />
       <TableGridSwitch showGrid={showGrid} onChange={(value) => onUpdateShowGrid(value)} />
       <TableExportButton />
-      <VPExportDialog />
+      <VPExportSource />
       <CustomizeButton />
     </Toolbar>
   )

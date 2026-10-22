@@ -19,11 +19,7 @@ import { getFolderColumnValue } from '../../utils/folderColumn'
 import { TableRow } from '../../types/table'
 import { EntityUpdate } from '../../hooks/useUpdateTableData'
 import usePasteLinks, { LinkUpdate } from '../../hooks/usePasteLinks'
-import {
-  DEFAULT_TABLE_EXPORT_SETTINGS,
-  downloadUrl,
-  getExportFileName,
-} from '../../../TableExport/tableExportSettings'
+import { downloadUrl, getCsvFileName } from '../../../TableExport/csvFile'
 import { useUpdateSubtasksMutation } from '@shared/api'
 
 // Import from the new modular files
@@ -364,7 +360,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     [selectedCells, entitiesMap, gridMap],
   )
 
-  // tables without an export dialog (TableExportProvider) export the cells as shown
+  // without the Power Pack table export, the selected cells are exported as shown
   const exportCSV: ClipboardContextType['exportCSV'] = useCallback(
     async (selected, projectName, delimiter) => {
       selected = selected || Array.from(selectedCells)
@@ -376,8 +372,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         if (!text) return
         const type = delimiter === '\t' ? 'text/tab-separated-values' : 'text/csv'
         const url = URL.createObjectURL(new Blob([text], { type }))
-        const settings = { ...DEFAULT_TABLE_EXPORT_SETTINGS, format: 'csv' as const, delimiter }
-        downloadUrl(url, getExportFileName(projectName, 'selection', settings))
+        downloadUrl(url, getCsvFileName(projectName, delimiter))
       } catch (error) {
         console.error('Failed to export selection:', error)
       }

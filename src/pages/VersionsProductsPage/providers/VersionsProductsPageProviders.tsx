@@ -6,7 +6,6 @@ import {
   SelectionCellsProvider,
 } from '@shared/containers'
 import { SettingsPanelProvider } from '@shared/context'
-import { TableExportProvider } from '@shared/containers/TableExport'
 import { FC } from 'react'
 import { VPProjectTableProvider } from './VPProjectTableProvider'
 import { VPColumnSettingsProvider } from './VPColumnSettingsProvider'
@@ -43,9 +42,7 @@ const VersionsProductsPageProviders: FC<VersionsProductsPageProvidersProps> = ({
                     <SelectionCellsProvider>
                       <SelectedRowsProvider>
                         <VersionsSelectionProvider>
-                          <CellEditingProvider>
-                            <TableExportProvider>{children}</TableExportProvider>
-                          </CellEditingProvider>
+                          <CellEditingProvider>{children}</CellEditingProvider>
                         </VersionsSelectionProvider>
                       </SelectedRowsProvider>
                     </SelectionCellsProvider>
