@@ -50,9 +50,47 @@ type Props = {
   isVisible?: boolean
   children: ReactNode
   isOverlay?: boolean
+  /** Flat layout: the handle hides until the item is hovered, see SettingsEditor.sass */
+  flatLayout?: boolean
 }
 
-const DraggableItem = ({ id, isVisible = true, isOverlay, children }: Props) => {
+const DraggableItem = ({ id, isVisible = true, isOverlay, flatLayout, children }: Props) => {
+  if (isOverlay) {
+    return <DragPreview flatLayout={flatLayout}>{children}</DragPreview>
+  }
+
+  return (
+    <SortableDraggableItem id={id} isVisible={isVisible} flatLayout={flatLayout}>
+      {children}
+    </SortableDraggableItem>
+  )
+}
+
+const DragPreview = ({ flatLayout, children }: { flatLayout?: boolean; children: ReactNode }) => (
+  <div>
+    <DraggableContainer
+      style={{ display: 'flex' }}
+      className={clsx('isOverlay', flatLayout && 'settings-array-item')}
+    >
+      <StyledIconWrapper className="drag-handle">
+        <StyledIcon className="icon draggable" icon="drag_indicator" id="icon" />
+      </StyledIconWrapper>
+      {children}
+    </DraggableContainer>
+  </div>
+)
+
+const SortableDraggableItem = ({
+  id,
+  isVisible,
+  flatLayout,
+  children,
+}: {
+  id: string
+  isVisible: boolean
+  flatLayout?: boolean
+  children: ReactNode
+}) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id,
     animateLayoutChanges: () => false,
@@ -71,8 +109,11 @@ const DraggableItem = ({ id, isVisible = true, isOverlay, children }: Props) => 
         opacity: isVisible ? 1 : 0,
       }}
     >
-      <DraggableContainer style={{ display: 'flex' }} className={clsx({ isOverlay })}>
-        <StyledIconWrapper>
+      <DraggableContainer
+        style={{ display: 'flex' }}
+        className={clsx(flatLayout && 'settings-array-item')}
+      >
+        <StyledIconWrapper className="drag-handle">
           <StyledIcon
             {...listeners}
             {...attributes}
