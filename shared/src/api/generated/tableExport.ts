@@ -37,6 +37,8 @@ export type ExportTasksQuery = {
   folderFilter?: string
   /** Fuzzy text search */
   search?: string
+  /** Row order, as the GraphQL sortBy argument. Without it, tasks are in the tree with the folders */
+  sortBy?: string[]
 }
 export type ExportProductsQuery = {
   /** Only products with these ids */

@@ -182,11 +182,14 @@ export const TableExportDialog: FC<TableExportDialogProps> = ({
   const update = (patch: Partial<TableExportSettings>) =>
     setSavedSettings({ ...settings, ...patch })
 
-  const [scope, setScope] = useState<TableExportScope>(initialScope)
+  // the user's choice, kept while the dialog is open (the selection can change meanwhile)
+  const [chosenScope, setScope] = useState<TableExportScope | null>(null)
   const [isExporting, setIsExporting] = useState(false)
   useEffect(() => {
-    if (isOpen) setScope(selectedRowsCount ? initialScope : 'table')
-  }, [isOpen, initialScope, selectedRowsCount])
+    if (isOpen) setScope(null)
+  }, [isOpen])
+  // without selected rows only the table can be exported
+  const scope = selectedRowsCount ? chosenScope ?? initialScope : 'table'
 
   const handleExport = async () => {
     setIsExporting(true)
