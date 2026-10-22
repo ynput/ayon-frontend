@@ -239,6 +239,41 @@ export class DetailsPanel {
     await reloaded
   }
 
+  // FLAG: filter chips have no role or name; the feed's chip is found by its tooltip ("Category: A, B")
+  get categoryFilterChip() {
+    return this.root.locator('.feed .search-filter-item[data-tooltip^="Category"]')
+  }
+
+  /** Filter the feed by one or more categories ("No category" included); several match any of them */
+  async filterFeedByCategory(first: string, ...more: string[]) {
+    const feed = this.root.locator('.feed')
+    const option = (label: string) =>
+      feed
+        .getByRole('listitem')
+        .filter({ has: this.page.getByText(label, { exact: true }) })
+        .first()
+    const reloaded = () =>
+      this.page.waitForResponse(
+        (res) =>
+          new URL(res.url()).pathname === '/graphql' &&
+          (res.request().postData() ?? '').includes('query GetActivities('),
+      )
+
+    await feed.getByRole('textbox', { name: 'Search and filter' }).click()
+    await option('Category').click()
+    // the first value applies at once
+    let done = reloaded()
+    await option(first).click()
+    await done
+    if (!more.length) return
+    // the chip reopens the values as a multi-select that applies on Confirm
+    await this.categoryFilterChip.click()
+    for (const category of more) await option(category).click()
+    done = reloaded()
+    await feed.getByRole('button', { name: 'Confirm' }).click()
+    await done
+  }
+
   async searchFeed(text: string) {
     const reloaded = this.page.waitForResponse(
       (res) =>
@@ -261,6 +296,55 @@ export class DetailsPanel {
 
   async submitComment() {
     await this.newCommentBox.getByRole('button', { name: 'Comment', exact: true }).click()
+  }
+
+  // FLAG: the category picker is an unlabeled dropdown; its value is a tag reading the category or "Category"
+  categoryPicker(scope: Locator = this.newCommentBox) {
+    return scope.locator('.dropdown:has(.editing)').first()
+  }
+
+  /** Pick a category (or "No category") in the picker of the new comment box or of an edited comment */
+  async pickCategory(category: string, scope: Locator = this.newCommentBox) {
+    await this.categoryPicker(scope).click()
+    // FLAG: picker options are plain `li` items; "No category" has no data-value of its own
+    await this.page.locator('.options li').filter({ hasText: category }).first().click()
+    await expect(this.page.locator('.options')).toBeHidden()
+  }
+
+  /** The categories the picker offers, without "No category" */
+  async categoryOptions(scope: Locator = this.newCommentBox) {
+    await this.categoryPicker(scope).click()
+    const options = this.page.locator('.options li[data-value]')
+    await expect(options.first()).toBeVisible()
+    const labels = await options.allInnerTexts()
+    await this.page.keyboard.press('Escape')
+    await expect(this.page.locator('.options')).toBeHidden()
+    // option text is "<icon ligature><label>"
+    return labels.map((l) => l.replace(/^(crop_square|clear)/, '').trim())
+  }
+
+  async addCommentInCategory(text: string, category: string) {
+    // the box stays open after posting
+    if (!(await this.commentEditor.isVisible())) await this.openCommentBox()
+    await this.pickCategory(category)
+    await this.commentEditor.pressSequentially(text)
+    await this.submitComment()
+    await expect(this.comment(text)).toBeVisible()
+  }
+
+  async changeCommentCategory(text: string, category: string) {
+    const id = await this.comment(text).getAttribute('id')
+    const comment = this.root.locator(`.comment[id="${id}"]`)
+    await comment.hover()
+    await comment.getByRole('button', { name: 'edit_square' }).click()
+    await this.pickCategory(category, comment)
+    await comment.getByRole('button', { name: 'Save' }).click()
+    await expect(comment.locator('[contenteditable="true"]')).toBeHidden()
+  }
+
+  // FLAG: the category flag is a span without a role, found by its tooltip ("Category: X" or "Category not found...")
+  categoryFlag(commentText: string) {
+    return this.comment(commentText).locator('[data-tooltip^="Category"]')
   }
 
   // FLAG: the attach button is icon-only, its accessible name is the icon ligature "attach_file"
