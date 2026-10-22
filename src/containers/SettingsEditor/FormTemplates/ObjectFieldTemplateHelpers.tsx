@@ -327,12 +327,20 @@ export const buildObjectFields = ({
   }
 
   const leadsWithName = schema.layout === 'expanded' || namedListItem
-  const orderedProperties = leadsWithName
+  const namedFirst = leadsWithName
     ? [
         ...visibleProperties.filter((element) => element.name === 'name'),
         ...visibleProperties.filter((element) => element.name !== 'name'),
       ]
     : visibleProperties
+  // switches always sit at the end of their row: in a row of fields side by side (boxed
+  // list rows), they are the last cells
+  const isSwitch = (element: (typeof visibleProperties)[number]) =>
+    element.content.props?.schema?.type === 'boolean'
+  const orderedProperties =
+    flatLayout && layout === 'compact'
+      ? [...namedFirst.filter((element) => !isSwitch(element)), ...namedFirst.filter(isSwitch)]
+      : namedFirst
 
   let items = orderedProperties.map(renderItem)
   if (leadsListItem && items.length > 1) {

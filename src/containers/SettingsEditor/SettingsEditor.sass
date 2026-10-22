@@ -934,9 +934,12 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
         > .form-object-field-item > div[data-hidden="false"]:has(> .setting-field-select)
           flex: 1 1 160px
 
-        // a switch sits centred in a fixed column, like a table's checkbox column
+        // a switch sits centred in a fixed column, like a table's checkbox column. Switches
+        // come last (ObjectFieldTemplateHelpers) and keep to the end, by the X, even when
+        // the cells before them don't take all the room
         > .form-object-field-item > div[data-hidden="false"]:has(> .setting-field-toggle)
           flex: 0 0 72px
+          margin-left: auto
 
           .form-inline-field-widget
             flex: 1
