@@ -8,15 +8,19 @@ attribute the user may read, also rows the table has not loaded, and follow the 
 - The request names rows by source: `folderIds`, `tasks`, `products`, `versions`, `entityList`. Tasks, products, versions and
   list items take the arguments of their GraphQL queries (filters, search, sortBy...), so a page sends what its table already
   queries with. Selections send ids (`entityList.itemIds` are list item ids, not entity ids).
-- With products and no version ids, the server exports the versions of the exported products.
+- With products and no version ids, the server exports the versions of the exported products. Each product is followed
+  by its versions: products in the order of `products.sortBy`, versions in the order of `versions.sortBy`, as when every
+  product is expanded in the table. Send both sorts and the `representationFilter` the table queries with.
 - `columns` are export keys, not table column ids. `tableExportColumns.ts` maps them; a table column without a key is listed
   as "Not exported" in the dialog. A new column needs a key here and a column on the server (an entity field, `attrib.*` or
   one of the server's extra columns).
 - Parent columns (`folder_status`, `product_attrib_x`) export as `<scope>.<key>`, filled from the row's folder, task or
-  product. Only the fields the server reads for parents are mapped (status, tags, dates, types, attributes).
+  product. Only the fields the server reads for parents are mapped (status, tags, dates, types, attributes). The server
+  also fills name, label and path where the parent has them; it rejects other parent fields as unknown columns.
 - `columnLabels` are the table's header labels, used when column names are labels.
 - Import CSV can read a file back only for folders and tasks (`canImport`), as CSV with field names, raw values and the
-  `entity_type` and `path` columns. The dialog's "Use import settings" sets exactly that.
+  `entity_type` and `path` columns. The dialog's "Use import settings" sets exactly that. Import CSV reads any delimiter
+  but only takes `.csv` files, so a Tab delimiter (a `.tsv`) is not importable and the button switches it to a comma.
 
 ## Adding export to a page
 1. Wrap the page in `TableExportProvider` above the provider that builds its context menu items.
@@ -28,6 +32,7 @@ attribute the user may read, also rows the table has not loaded, and follow the 
 
 ## Gotchas
 - Visible columns come from the column settings, not `gridMap`: grid and card views don't register their columns.
+  Their visibility is resolved by `resolveColumnVisibility`, the function the table uses, so the two can't disagree.
 - The export is a plain `fetch`, not an RTK mutation. The file does not belong in the store, and the review addon's modules
   install their own copy of the API middleware, which throws for mutations it does not know.
 - The dialog settings (except rows) persist in localStorage (`table-export-settings`).

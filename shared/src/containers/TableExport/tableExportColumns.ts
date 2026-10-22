@@ -1,6 +1,6 @@
 import type { ColumnOrderState, ColumnPinningState, VisibilityState } from '@tanstack/react-table'
 import type { LinkTypeModel } from '@shared/api'
-import { checkColumnVisibility } from '../ProjectTreeTable/utils/checkColumnVisibility'
+import { resolveColumnVisibility } from '../ProjectTreeTable/utils/checkColumnVisibility'
 import { normalizeColumnId } from '../ProjectTreeTable/utils/columnIds'
 import { parseScopedColumnId } from '../ProjectTreeTable/utils/cellUtils'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable/constants'
@@ -98,6 +98,7 @@ export const getExportColumnLabel = (columnId: string, context: LabelContext): s
 }
 
 // the data columns the table shows, in its order (left pinned columns first)
+// (the table's own columns: list compare columns placed after others are not exported)
 export const getVisibleColumnIds = ({
   allColumns,
   columnOrder,
@@ -115,9 +116,8 @@ export const getVisibleColumnIds = ({
   // columns missing from the saved order follow in definition order
   const ordered = Array.from(new Set([...columnOrder.filter((id) => known.includes(id)), ...known]))
   const left = (columnPinning.left || []).filter((id) => ordered.includes(id))
+  const visibility = resolveColumnVisibility(columnVisibility, ordered, defaultColumnVisibility)
   return [...left, ...ordered.filter((id) => !left.includes(id))].filter(
-    (id) =>
-      !NOT_DATA_COLUMNS.includes(id) &&
-      checkColumnVisibility(columnVisibility, id, defaultColumnVisibility),
+    (id) => !NOT_DATA_COLUMNS.includes(id) && visibility[id],
   )
 }

@@ -29,10 +29,29 @@ export const IMPORTABLE_SETTINGS: Partial<TableExportSettings> = {
   includeImportColumns: true,
 }
 
+// Import CSV reads any delimiter, but only takes .csv files: tab separated is a .tsv
 export const isImportable = (settings: TableExportSettings) =>
+  settings.delimiter !== '\t' &&
   (Object.keys(IMPORTABLE_SETTINGS) as (keyof TableExportSettings)[]).every(
     (key) => settings[key] === IMPORTABLE_SETTINGS[key],
   )
+
+export const getImportableSettings = (settings: TableExportSettings): TableExportSettings => ({
+  ...settings,
+  ...IMPORTABLE_SETTINGS,
+  delimiter: settings.delimiter === '\t' ? ',' : settings.delimiter,
+})
+
+// the message of a failed export response, `data` is its JSON body if it has one
+export const getExportErrorMessage = (status: number, statusText: string, data: unknown) => {
+  const { detail, errors } = (data || {}) as { detail?: unknown; errors?: { msg?: unknown }[] }
+  if (typeof detail !== 'string' || !detail) return `${status} ${statusText}`.trim()
+  // request validation errors say what is wrong in `errors`
+  const messages = Array.isArray(errors)
+    ? errors.flatMap((error) => (typeof error?.msg === 'string' ? [error.msg] : []))
+    : []
+  return messages.length ? `${detail}: ${messages.join(', ')}` : detail
+}
 
 export const CSV_DELIMITERS: { value: CsvDelimiter; label: string }[] = [
   { value: ',', label: 'Comma' },

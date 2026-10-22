@@ -4,6 +4,7 @@ import type { ExportTableRequest } from '@shared/api/generated/tableExport'
 import { getRequestErrorString } from '@shared/util'
 import {
   downloadUrl,
+  getExportErrorMessage,
   getExportFileName,
   TableExportScope,
   TableExportSettings,
@@ -30,8 +31,10 @@ const requestExport = async (request: ExportTableRequest) => {
     body: JSON.stringify(request),
   })
   if (!response.ok) {
-    // the standard request error shape, for getRequestErrorString
-    throw { status: response.status, data: await response.json().catch(() => ({})) }
+    // the standard request error shape, with a detail getRequestErrorString can show
+    const data = await response.json().catch(() => ({}))
+    const detail = getExportErrorMessage(response.status, response.statusText, data)
+    throw { status: response.status, data: { ...data, detail } }
   }
   return URL.createObjectURL(await response.blob())
 }

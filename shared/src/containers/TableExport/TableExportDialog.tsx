@@ -13,7 +13,7 @@ import {
   CSV_DELIMITERS,
   CsvDelimiter,
   DEFAULT_TABLE_EXPORT_SETTINGS,
-  IMPORTABLE_SETTINGS,
+  getImportableSettings,
   isImportable,
   TABLE_EXPORT_SETTINGS_KEY,
   TableExportScope,
@@ -328,7 +328,7 @@ export const TableExportDialog: FC<TableExportDialogProps> = ({
               <Button
                 label="Use import settings"
                 variant="text"
-                onClick={() => update(IMPORTABLE_SETTINGS)}
+                onClick={() => setSavedSettings(getImportableSettings(settings))}
               />
             </Note>
           ))}

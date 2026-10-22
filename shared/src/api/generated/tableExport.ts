@@ -53,6 +53,8 @@ export type ExportProductsQuery = {
   versionFilter?: string
   /** Task QueryFilter (JSON) */
   taskFilter?: string
+  /** Representation QueryFilter (JSON) */
+  representationFilter?: string
   /** Row order, as the GraphQL sortBy argument */
   sortBy?: string[]
   /** Which version fills the version and author columns */
@@ -75,6 +77,8 @@ export type ExportVersionsQuery = {
   productFilter?: string
   /** Task QueryFilter (JSON) */
   taskFilter?: string
+  /** Representation QueryFilter (JSON) */
+  representationFilter?: string
   /** One version per product: 'hero', 'latestDone', 'latest' */
   featuredOnly?: string[]
   /** Latest version per folder */

@@ -36,9 +36,11 @@ const VPExportDialog: FC = () => {
       folderIds: folderIds(versions),
       filter: versions.versionFilter,
       folderFilter: versions.folderFilter,
+      representationFilter: versions.representationFilter,
       featuredOnly: versions.featuredOnly,
       latestPerFolder: !!versions.latestPerFolder,
       hasReviewables: versions.hasReviewables,
+      sortBy: getForwardSortBy({ sortBy: versions.sortBy, desc: versions.desc }),
     }
     if (!showProducts) {
       return {
@@ -46,7 +48,6 @@ const VPExportDialog: FC = () => {
           ...versionRows,
           productFilter: versions.productFilter,
           taskFilter: versions.taskFilter,
-          sortBy: getForwardSortBy({ sortBy: versions.sortBy, desc: versions.desc }),
         },
       }
     }
@@ -58,9 +59,11 @@ const VPExportDialog: FC = () => {
         folderFilter: products.folderFilter,
         versionFilter: products.versionFilter,
         taskFilter: products.taskFilter,
+        representationFilter: products.representationFilter,
+        sortBy: getForwardSortBy({ sortBy: products.sortBy, desc: products.desc }),
         featuredVersionOrder: products.featuredVersionOrder,
       },
-      // the versions of the exported products, filtered like expanded products
+      // the versions of the exported products, filtered and sorted like expanded products
       versions: { ...versionRows, ids: undefined, productIds: undefined, folderIds: undefined },
     }
   }
