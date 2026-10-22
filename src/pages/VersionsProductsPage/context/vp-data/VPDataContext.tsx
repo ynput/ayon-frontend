@@ -45,7 +45,11 @@ import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
 import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
 import type { FieldStats } from '@shared/api'
-import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
+import {
+  refreshActiveAndPurgeOthers,
+  refreshListsMembership,
+  refreshOtherActiveQueries,
+} from '@shared/api'
 import {
   DEFAULT_FEATURED_ORDER,
   FEATURED_VERSION_TYPES,
@@ -782,15 +786,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       queriesToRefresh.push({ endpointName: 'GetVersionsColumnStats', args: versionStatsArgs })
     }
 
-    await Promise.all(
-      queriesToRefresh.map(({ endpointName, args }) =>
+    await Promise.all([
+      ...queriesToRefresh.map(({ endpointName, args }) =>
         dispatch(
           refreshActiveAndPurgeOthers(endpointName, args, {
             refreshOtherActiveQueries: false,
           }),
         ).unwrap(),
       ),
-    )
+      // the Lists and Review sessions columns
+      dispatch(refreshListsMembership(projectName)),
+    ])
 
     await Promise.all(
       queriesToRefresh.map(({ endpointName, args }) =>

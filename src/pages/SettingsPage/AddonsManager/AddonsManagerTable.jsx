@@ -66,15 +66,10 @@ const AddonsManagerTable = ({
   const [ctxMenuShow] = useCreateContextMenu([])
 
   const handleContextClick = (e) => {
-    let contextSelection = []
-    // is new click not in original selection?
-    if (!selection.includes(e.data[field])) {
-      // then update selection to new click
-      onChange([e.data[field]])
-      contextSelection = [e.data[field]]
-    } else {
-      contextSelection = tableSelection.map((d) => d[field])
-    }
+    // a right-clicked row outside the selection is acted on alone, without selecting it
+    const contextSelection = selection.includes(e.data[field])
+      ? tableSelection.map((d) => d[field])
+      : [e.data[field]]
 
     // check new selection is deletable
     const deleteEnabled =

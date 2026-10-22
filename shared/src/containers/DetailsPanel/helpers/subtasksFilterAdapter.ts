@@ -8,6 +8,7 @@ import {
 import type { QueryCondition, QueryFilter } from '@shared/api'
 import { tryMergeDatetimeRange } from '@shared/containers/ProjectTreeTable/utils/queryFilterToClientFilter'
 import { convertDateFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils/clientFilterToQueryFilter'
+import { searchQueryToFilter } from '@shared/util/searchTerms'
 
 export const SUBTASKS_BOOLEAN_KEYS = ['done', 'isDone']
 
@@ -132,4 +133,13 @@ export const clientFiltersToSubtasksFilter = (clientFilters: Filter[]): QueryFil
     conditions.push({ operator: 'or', conditions: searchConditions })
 
   return { operator: 'and', conditions }
+}
+
+// the subtasks module matches each search condition as a whole, so give it one per term
+export const splitSubtasksSearch = (
+  node: QueryCondition | QueryFilter,
+): QueryCondition | QueryFilter => {
+  if (!isCondition(node)) return { ...node, conditions: node.conditions?.map(splitSubtasksSearch) }
+  if (node.key !== 'search' || typeof node.value !== 'string') return node
+  return searchQueryToFilter(node.value, (term) => ({ ...node, value: term })) ?? node
 }

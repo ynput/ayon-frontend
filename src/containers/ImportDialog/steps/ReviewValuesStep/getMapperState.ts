@@ -1,6 +1,7 @@
 import { ImportableColumn } from "@shared/api/generated/dataImport"
 import { TargetValue, ValueAction, ValueMappings } from "../common"
 import { MappingState } from "../MapperRowHelpers"
+import { isIsoDate } from "./dates"
 
 const validateValue = (settings: ImportableColumn, value: TargetValue) => {
   if (typeof value === "boolean") {
@@ -14,10 +15,11 @@ const validateValue = (settings: ImportableColumn, value: TargetValue) => {
       return /true|false/i.test(value)
     case "float":
       return !Number.isNaN(parseFloat(value))
+    case "datetime":
+      return isIsoDate(value)
     case "string":
     // we don't know how to validate the types below - yet!
     case "dict":
-    case "datetime":
     case "list_of_strings":
     case "list_of_any":
     case "list_of_integers":

@@ -48,7 +48,7 @@ const useDeleteList = ({ onDeleteList }: UseDeleteListProps): UseDeleteListRetur
         throw error
       }
     },
-    [listsMap],
+    [listsMap, onDeleteList],
   )
 
   return { deleteLists }

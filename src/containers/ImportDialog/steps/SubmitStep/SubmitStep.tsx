@@ -1,5 +1,5 @@
 import {
-  formatFailedItems,
+  getImportStatsItems,
   ImportContext,
   ImportDataMessage,
   ImportDataProcessSummary,
@@ -15,10 +15,18 @@ import { useState } from "react";
 import { EmptyPlaceholder } from "@shared/components";
 import styled from "styled-components";
 import Stats from "../Stats";
+import { ImportMode } from "../importMode";
+import { ImportStatus } from "@shared/api/generated/dataImport";
+import { useNavigate } from "react-router-dom";
 
 type Props = StepProps<void> & {
   data: ImportData
+  // the import response, set once the request is done
+  result?: ImportStatus | null
+  error?: unknown
   importContext: ImportContext
+  importMode: ImportMode
+  projectName?: string
 }
 
 const SuccessState = styled(EmptyPlaceholder)`
@@ -32,10 +40,17 @@ const SuccessState = styled(EmptyPlaceholder)`
   }
 `
 
-export default function SubmitStep({ data, importContext, onNext  }: Props) {
+const ErrorState = styled(EmptyPlaceholder)`
+  position: static;
+  transform: none;
+  margin: auto;
+`
+
+export default function SubmitStep({ data, result, error, importContext, importMode, projectName, onNext  }: Props) {
+  const navigate = useNavigate()
   const [importProgress, setImportProgress] = useState(0)
   const [importDescription, setImportDescription] = useState<string | null>(null)
-  const [importResult, setImportResult] = useState<ImportDataProcessSummary | null>(null)
+  const [eventResult, setEventResult] = useState<ImportDataProcessSummary | null>(null)
   type PhaseType = 'upload' | 'processing' | 'unsupported' | 'queued' | 'waiting' | 'importing' | 'validating';
   const [importPhase, setImportPhase] = useState<PhaseType>("validating")
 
@@ -48,13 +63,16 @@ export default function SubmitStep({ data, importContext, onNext  }: Props) {
       setImportPhase(((message.summary as ImportDataProcessSummary)?.phase as PhaseType) ?? 'validating')
 
       if(message.status === "finished" || message.status === "failed") {
-        setImportResult(message.summary as ImportDataProcessSummary)
+        setEventResult(message.summary as ImportDataProcessSummary)
       }
 
     },
     null,
     { disableDebounce: true },
   )
+
+  // the events may not arrive (e.g. websocket not connected), the response always does
+  const importResult = result ?? eventResult
 
   return (
     <>
@@ -68,32 +86,27 @@ export default function SubmitStep({ data, importContext, onNext  }: Props) {
             >
               <Stats
                 heading={data.fileName}
-                subtitle={`Imported ${itemsLabelForImportContext[importContext]}`}
+                subtitle={importMode === ImportMode.UPDATE_ONLY
+                  ? `Updated existing ${itemsLabelForImportContext[importContext]}`
+                  : `Imported ${itemsLabelForImportContext[importContext]}`}
                 size={getFileSizeString(data.fileSize)}
-                items={[
-                  {
-                    text: `Created: ${importResult.created}`,
-                    icon: "add",
-                  },
-                  {
-                    text: `Updated: ${importResult.updated}`,
-                    icon: "difference",
-                  },
-                  {
-                    text: `Skipped: ${importResult.skipped}`,
-                    icon: "do_not_disturb",
-                  },
-                  {
-                    text: `Errors: ${importResult.failed}`,
-                    icon: "error",
-                    danger: !!importResult.failed,
-                    tooltip: importResult.failedItems
-                      && formatFailedItems(importResult.failedItems as Record<string, string>)
-                  },
-                ]}
+                items={getImportStatsItems(importResult, true)}
               />
+              {
+                result?.entityListId && projectName && (
+                  <Button
+                    variant="filled"
+                    icon="playlist_add"
+                    label="Open the new list"
+                    onClick={() => {
+                      navigate(`/projects/${projectName}/lists?list=${result.entityListId}`)
+                      onNext()
+                    }}
+                  />
+                )
+              }
               <Button
-                variant="filled"
+                variant={result?.entityListId ? "surface" : "filled"}
                 label="Close"
                 onClick={() => {
                   onNext()
@@ -103,7 +116,14 @@ export default function SubmitStep({ data, importContext, onNext  }: Props) {
           )
         }
         {
-          !importResult && (
+          !importResult && !!error && (
+            <ErrorState message="Import failed" error={error}>
+              <Button variant="filled" label="Close" onClick={() => onNext()} />
+            </ErrorState>
+          )
+        }
+        {
+          !importResult && !error && (
             <>
             <ProgressBar
               type={importPhase}

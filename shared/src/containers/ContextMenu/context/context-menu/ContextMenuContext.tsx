@@ -1,5 +1,5 @@
 import React, { useRef, useState, ReactNode, RefObject } from 'react'
-import { ContextMenuContext } from './ContextMenuContextInstance'
+import { CONTEXT_MENU_TARGET_ATTR, ContextMenuContext } from './ContextMenuContextInstance'
 
 interface ContextMenuItem {
   // Define the structure of your menu items
@@ -12,6 +12,7 @@ interface ContextMenuItem {
 export interface ContextMenuContextType {
   openContext: (event: React.MouseEvent, model: ContextMenuItem[]) => void
   closeContext: () => void
+  clearContextTarget: () => void
   ref: RefObject<any>
   model: ContextMenuItem[]
   isContextOpen: boolean
@@ -27,10 +28,23 @@ function ContextMenuProvider({ children }: ContextMenuProviderProps) {
 
   const ref = useRef<any>(null)
   const [model, setModel] = useState<ContextMenuItem[]>([])
+  // the element that was right-clicked, kept looking hovered while the menu is open
+  const targetRef = useRef<HTMLElement | null>(null)
+
+  function clearContextTarget() {
+    targetRef.current?.removeAttribute(CONTEXT_MENU_TARGET_ATTR)
+    targetRef.current = null
+  }
 
   function openContext(event: React.MouseEvent, model: ContextMenuItem[]) {
     if (!event || !ref.current || !model?.length) return
     event.preventDefault()
+    clearContextTarget()
+    const target = event.currentTarget
+    if (target instanceof HTMLElement) {
+      target.setAttribute(CONTEXT_MENU_TARGET_ATTR, '')
+      targetRef.current = target
+    }
     setModel(model)
     ref.current.show(event)
   }
@@ -42,7 +56,15 @@ function ContextMenuProvider({ children }: ContextMenuProviderProps) {
 
   return (
     <ContextMenuContext.Provider
-      value={{ openContext, closeContext, ref, model, isContextOpen, setIsContextOpen }}
+      value={{
+        openContext,
+        closeContext,
+        clearContextTarget,
+        ref,
+        model,
+        isContextOpen,
+        setIsContextOpen,
+      }}
     >
       {children}
     </ContextMenuContext.Provider>

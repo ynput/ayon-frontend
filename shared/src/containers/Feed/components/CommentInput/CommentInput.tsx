@@ -336,8 +336,17 @@ const CommentInput: FC<CommentInputProps> = ({
   // REFS
   const editorRef = useRef<MarkdownEditorHandle>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const hasText = !!editorValue.trim()
+const isEmpty =
+    !hasText &&
+    !files.length &&
+    !filesUploading.length &&
+    !inlineUploads &&
+    !uploadedAnnotations.length &&
+    !annotations.length &&
+    !isSubmitting
 
   // the checklists filter starts a new comment with a checklist item
   const isChecklistsFilter = !!feedFilter?.conditions?.some(
@@ -414,6 +423,9 @@ const CommentInput: FC<CommentInputProps> = ({
 
     // always close editor
     onClose && onClose()
+
+    // the editor unmounts, keep the focus in the viewer so its keys keep working
+    containerRef.current?.closest<HTMLElement>('#viewer-dialog')?.focus()
   }
 
   const handleFileUploaded = ({ file, data }: any, isAnnotationLayer = false) => {
@@ -830,13 +842,20 @@ const CommentInput: FC<CommentInputProps> = ({
   return (
     <>
       <Styled.AutoHeight
+        ref={containerRef}
         // the mention picker spans the whole input, above it
         className={clsx('comment-container', 'md-mention-anchor', { isOpen, isEditing })}
         onDragOver={handleDragOver}
         onDragLeave={() => setIsDropping(false)}
         onDrop={handleDrop}
         onClick={() => setIsDropping(false)}
-        onKeyDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          // an empty new comment lets up/down through, so they move the selection behind the viewer
+          const isRowNavKey = e.key === 'ArrowUp' || e.key === 'ArrowDown'
+          const fromEditor = (e.target as HTMLElement).isContentEditable
+          if (isRowNavKey && fromEditor && isEmpty && !isEditing) return
+          e.stopPropagation()
+        }}
       >
         {versionReview && lastOwnVersionReview && (
           <VersionReviewPill lastOwnVersionReview={lastOwnVersionReview} />

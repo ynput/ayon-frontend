@@ -131,6 +131,9 @@ export interface ProjectTableContextType {
   // Views
   onResetView?: () => void
 
+  // lists not shown in the list columns, e.g. the list being viewed
+  hiddenListIds?: string[]
+
   // router hooks
   useParams?: typeof useParams
   useNavigate?: typeof useNavigate
@@ -244,6 +247,7 @@ export interface ProjectTableProviderProps {
   ) => void
   // views
   onResetView?: () => void
+  hiddenListIds?: string[]
   // router hooks
   useParams?: typeof useParams
   useNavigate?: typeof useNavigate
@@ -299,6 +303,7 @@ export const ProjectTableProvider = ({
   onOpenPlayer,
   // views
   onResetView,
+  hiddenListIds,
   useParams,
   useNavigate,
   useLocation,
@@ -512,6 +517,7 @@ export const ProjectTableProvider = ({
         onOpenPlayer,
         // views
         onResetView,
+        hiddenListIds,
         // router hooks
         useParams,
         useNavigate,

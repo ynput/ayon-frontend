@@ -49,6 +49,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
     onRemoveFoldersFromFolder,
     openMoveToFolder,
     selectAllLists,
+    setRowSelection,
   } = useListsContext()
   const { powerLicense } = usePowerpack()
 
@@ -73,7 +74,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
 
   const buildContextMenu = useCallback(
     (_e: React.MouseEvent<HTMLTableRowElement>, context: ListRowContextMenuContext) => {
-      const { selectedRows } = context
+      const { selectedRows, rowId, isSelected } = context
 
       const newSelectedLists = listsData.filter((list) =>
         selectedRows.some((selected) => list?.id === selected),
@@ -217,7 +218,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
         {
           label: 'Create folder',
           icon: FOLDER_ICON_ADD,
-          command: () => onOpenFolderList({}),
+          command: () => onOpenFolderList({ rowIds: selectedRows }),
           shortcut: 'F',
           hidden: !allSelectedRowsAreLists,
           powerFeature: powerLicense ? undefined : 'listFolders',
@@ -244,7 +245,10 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
         {
           label: 'Details',
           icon: 'info',
-          command: () => setListDetailsOpen(true),
+          command: () => {
+            if (!isSelected) setRowSelection({ [rowId]: true })
+            setListDetailsOpen(true)
+          },
           disabled: multipleSelected,
           hidden: !allSelectedRowsAreLists,
           shortcut: 'Double click',
@@ -290,6 +294,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
       listFolders,
       openRenameList,
       setListDetailsOpen,
+      setRowSelection,
       deleteLists,
       createReviewSessionList,
       onOpenFolderList,

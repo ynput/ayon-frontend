@@ -9,6 +9,9 @@ export interface DetailsDialogProps {
   entityIds: string[]
   visible: boolean
   onHide: () => void
+  // show this data instead of fetching the entity, e.g. for list items
+  data?: unknown
+  header?: string
 }
 
 export const DetailsDialog = ({
@@ -17,16 +20,19 @@ export const DetailsDialog = ({
   entityIds,
   visible,
   onHide,
+  data: dataProp,
+  header,
 }: DetailsDialogProps) => {
   const {
-    data = {},
+    data: fetchedData = {},
     isLoading,
     isError,
     error,
   } = useGetEntityQuery(
     { projectName, entityType: entityType, entityId: entityIds?.[0] },
-    { skip: !visible },
+    { skip: !visible || dataProp !== undefined },
   )
+  const data = dataProp ?? fetchedData
 
   // Show error toast if the query errored
   if (isError) {
@@ -42,7 +48,7 @@ export const DetailsDialog = ({
       onClose={onHide}
       size="lg"
       style={{ width: '50vw' }}
-      header={`${entityType} detail`}
+      header={header ?? `${entityType} detail`}
     >
       {isLoading || isError ? (
         <pre>{isLoading ? 'loading...' : 'error...'}</pre>

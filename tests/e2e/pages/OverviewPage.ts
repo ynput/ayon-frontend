@@ -351,6 +351,12 @@ export class OverviewPage {
     return dialog(this.page, /^Select Folder/)
   }
 
+  async searchMoveDialog(text: string) {
+    const picker = this.moveDialog()
+    await picker.getByRole('button', { name: 'search', exact: true }).click()
+    await picker.getByPlaceholder('Search', { exact: true }).fill(text)
+  }
+
   async moveTo(folderLabel: string) {
     const picker = this.moveDialog()
     await expect(picker).toBeVisible()

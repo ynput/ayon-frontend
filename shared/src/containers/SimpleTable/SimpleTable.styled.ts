@@ -97,13 +97,15 @@ export const Cell = styled.div`
     pointer-events: none;
   }
 
-  &:hover {
+  &:hover,
+  tr[data-context-menu-target] & {
     background-color: var(--md-sys-color-surface-container-hover);
   }
 
   &.selected {
     background-color: var(--md-sys-color-primary-container);
-    &:hover {
+    &:hover,
+    tr[data-context-menu-target] & {
       background-color: var(--md-sys-color-primary-container-hover);
     }
 

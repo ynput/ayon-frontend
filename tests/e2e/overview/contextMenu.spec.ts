@@ -104,6 +104,41 @@ test.describe('overview context menu', () => {
     await expect(overview.nameCells()).toHaveText([/sh010$/, /sh020$/, /comp$/])
   })
 
+  test('find the target folder by searching for all words of any comma separated part', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const sq010 = await api.createFolder(projectName, { name: 'sq010', folderType: 'Sequence' })
+    const sq020 = await api.createFolder(projectName, { name: 'sq020', folderType: 'Sequence' })
+    await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot', parentId: sq010.id })
+    const sh020 = await api.createFolder(projectName, {
+      name: 'sh020',
+      folderType: 'Shot',
+      parentId: sq010.id,
+    })
+    await api.createFolder(projectName, { name: 'sh030', folderType: 'Shot', parentId: sq020.id })
+    const source = await api.createFolder(projectName, { name: 'sh040', folderType: 'Shot' })
+    const task = await api.createTask(projectName, {
+      folderId: source.id,
+      name: 'comp',
+      taskType: 'Compositing',
+    })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.expand('sh040')
+    await overview.rowMenu('comp', 'Move')
+
+    await overview.searchMoveDialog('sq010 sh020, sh030')
+
+    const picker = overview.moveDialog()
+    await expect(picker.getByText('sh010', { exact: true })).toBeHidden()
+    await expect(picker.getByText('sh020', { exact: true })).toBeVisible()
+    await expect(picker.getByText('sh030', { exact: true })).toBeVisible()
+    await overview.moveTo('sh020')
+    await expect.poll(async () => (await api.getTask(projectName, task.id)).folderId).toBe(sh020.id)
+  })
+
   test('expand children opens the whole branch', async ({ page, api, projectName }) => {
     const sequence = await api.createFolder(projectName, { name: 'sq010', folderType: 'Sequence' })
     const shot = await api.createFolder(projectName, {

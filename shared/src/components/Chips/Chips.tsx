@@ -78,11 +78,13 @@ export type ChipValue = {
   icon?: string
   prefix?: React.ReactNode
   suffix?: React.ReactNode
+  onClick?: React.MouseEventHandler<HTMLDivElement>
 }
 
 interface ChipsProps {
   values: ChipValue[]
   disabled?: boolean
+  className?: string
   pt?: {
     chip?: Partial<HTMLAttributes<HTMLDivElement>>
   }
@@ -93,7 +95,7 @@ type ChipsLayout = {
   rows: number
 }
 
-export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
+export const Chips: FC<ChipsProps> = ({ values, disabled, className, pt }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [{ visibleCount, rows }, setLayout] = useState<ChipsLayout>({
     visibleCount: 0,
@@ -178,12 +180,15 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
   const hiddenCount = visibleCount ? values.length - visibleValues.length : 0
 
   return (
-    <ChipsContainer ref={containerRef} className={clsx({ 'multi-row': rows > 1 })}>
+    <ChipsContainer ref={containerRef} className={clsx(className, { 'multi-row': rows > 1 })}>
       {visibleValues.map((chip, index) => (
         <Chip
           {...pt?.chip}
           key={chip.label + index}
           data-tooltip={chip.tooltip}
+          onClick={chip.onClick ?? pt?.chip?.onClick}
+          // table cells re-render on mousedown, which would swallow the click
+          onMouseDown={chip.onClick ? (e) => e.stopPropagation() : pt?.chip?.onMouseDown}
           className={clsx(
             'chip',
             { last: index === visibleValues.length - 1 && hiddenCount > 0 },

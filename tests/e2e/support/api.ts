@@ -95,6 +95,12 @@ export class AyonApi {
     return res.data
   }
 
+  /** for features that come from an addon's frontend modules */
+  async hasAddon(name: string): Promise<boolean> {
+    const { addons } = await this.get('/api/addons')
+    return addons.some((a: any) => a.name === name && a.productionVersion)
+  }
+
   // ---------------------------------------------------------------------------
   // projects
   // ---------------------------------------------------------------------------

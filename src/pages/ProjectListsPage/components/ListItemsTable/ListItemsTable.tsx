@@ -28,6 +28,8 @@ interface ListItemsTableProps {
   isReview?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
   viewOnly?: boolean
+  scrollToRowId?: string | null
+  onScrolledToRow?: (rowId: string) => void
 }
 
 const ListItemsTable: FC<ListItemsTableProps> = ({
@@ -39,6 +41,8 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   isReview,
   dndActiveId, // Destructure new prop
   viewOnly,
+  scrollToRowId,
+  onScrolledToRow,
 }) => {
   const { projectName } = useProjectContext()
   const { togglePanel } = useSettingsPanel()
@@ -133,6 +137,8 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         fieldStats={fieldStats}
         fieldStatsLoading={fieldStatsLoading}
         mainCountLabels={mainCountLabels}
+        scrollToRowId={scrollToRowId}
+        onScrolledToRow={onScrolledToRow}
       />
       <ListItemsShortcuts />
       <AddColumnButton
