@@ -16,6 +16,7 @@ export default function ImportDialogButton({ importContext, projectName, folderI
     <Button
       icon="upload_file"
       label="Import CSV"
+      data-testid="import-csv"
       onClick={() => openForContext(importContext, projectName, folderId, folderLabel)}
     />
   )
