@@ -414,36 +414,6 @@ const NewBundle: React.FC<NewBundleProps> = ({
               onClick={() => setSelectedVersion(true)}
               data-tooltip="Set selected addons to latest version"
             />
-            {(isDev || formData?.isDev) && (
-              <>
-                <Styled.BadgeButton
-                  label="Enable development"
-                  icon="code"
-                  $hl={'developer-surface'}
-                  disabled={!selectedAddons.length}
-                  onClick={() =>
-                    handleAddonDevChange(
-                      selectedAddons.map((a) => a.name),
-                      { key: 'enabled', value: true },
-                    )
-                  }
-                  data-tooltip="Enable development for selected addons"
-                />
-                <Styled.BadgeButton
-                  label="Disable development"
-                  icon="code_off"
-                  $hl={'developer-surface'}
-                  disabled={!selectedAddons.length}
-                  onClick={() =>
-                    handleAddonDevChange(
-                      selectedAddons.map((a) => a.name),
-                      { key: 'enabled', value: false },
-                    )
-                  }
-                  data-tooltip="Disable development for selected addons"
-                />
-              </>
-            )}
           </Styled.AddonTools>
         }
       >

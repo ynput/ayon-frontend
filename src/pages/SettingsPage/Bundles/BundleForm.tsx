@@ -203,7 +203,7 @@ const BundleForm: React.FC<BundleFormProps> = ({
       <SplitterPanel size={65} style={{ minWidth: 400 }}>
         <Styled.AddonsPanel>
           <Styled.AddonsHeader>
-            {isNew ? addonTools : <Styled.AddonsTitle>{formData.name}</Styled.AddonsTitle>}
+            {isNew ? addonTools : <Styled.AddonsTitle>Bundle addons</Styled.AddonsTitle>}
             <AddonSearchInput />
           </Styled.AddonsHeader>
           <Styled.AddonsList>
