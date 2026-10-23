@@ -46,7 +46,7 @@ export const TableExportButton: FC<TableExportButtonProps> = ({ onImport }) => {
             },
             {
               id: 'export',
-              label: 'Export...',
+              label: 'Export',
               icon: 'download',
               powerFeature: 'tableExport',
               onClick: openExport,
