@@ -89,7 +89,7 @@ import type { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext, parseRowId } from './context/project-table'
 import {
   checkColumnVisibility,
-  ensureAtLeastOneVisibleColumn,
+  resolveColumnVisibility,
   getEntityViewierIds,
   getReadOnlyLists,
   getTableFieldOptions,
@@ -536,18 +536,17 @@ export const ProjectTreeTable = ({
   const resolvedColumnVisibility = useMemo(() => {
     const merged = { ...columnVisibility }
     placedColumnIds.forEach((id) => (merged[id] = true))
+    const explicitVisibility: Record<string, boolean | undefined> = {}
     columns.forEach((col) => {
       // @ts-ignore
-      const explicitVisible = col.visible
-      if (col.id && merged[col.id] === undefined) {
-        if (explicitVisible !== undefined) {
-          merged[col.id] = explicitVisible
-        } else {
-          merged[col.id] = checkColumnVisibility({}, col.id, defaultColumnVisibility)
-        }
-      }
+      if (col.id) explicitVisibility[col.id] = col.visible
     })
-    return ensureAtLeastOneVisibleColumn(merged, columns.map((c) => c.id as string).filter(Boolean))
+    return resolveColumnVisibility(
+      merged,
+      columns.map((c) => c.id as string).filter(Boolean),
+      defaultColumnVisibility,
+      explicitVisibility,
+    )
   }, [columnVisibility, defaultColumnVisibility, columns, placedColumnIds])
 
   const table = useReactTable({

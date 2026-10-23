@@ -254,17 +254,11 @@ export const Item = styled.li`
     }
   }
 
-  &.power {
-    &,
-    .icon {
-      color: var(--md-sys-color-tertiary);
-    }
-    [icon='bolt'] {
-      font-variation-settings: 'FILL' 1;
-    }
-    .shortcut {
-      color: var(--md-sys-color-on-surface);
-    }
+  /* needs a Power Pack license: a bolt at the end of the row */
+  .power-bolt {
+    margin-left: auto;
+    color: var(--md-sys-color-tertiary);
+    font-variation-settings: 'FILL' 1;
   }
 
   &.disabled {

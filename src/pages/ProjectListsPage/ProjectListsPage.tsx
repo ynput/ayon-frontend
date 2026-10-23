@@ -60,8 +60,10 @@ import { ReviewCardsSettingsProvider } from './context/review-cards-settings'
 import { useReviewCardsSettingsContext } from './context/review-cards-settings'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
+import { TableExportButton } from '@shared/containers/TableExport'
+import ListExportSource from './components/ListExportSource'
 import { isEntityAttribReadOnly } from './util/getColumnConfigFromType'
-import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
 import usePatchListsCaches from './hooks/usePatchListsCaches'
@@ -354,6 +356,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName } = useProjectContext()
+  const { openForContext: openImportDialog } = useImportDialogContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList } = useListsContext()
   const {
@@ -608,12 +611,17 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         />
                       </>
                     )}
-                    <ImportDialogButton
-                      importContext="entity_list_item"
-                      projectName={projectName}
-                      folderId={selectedList?.id}
-                      folderLabel={selectedList?.label}
+                    <TableExportButton
+                      onImport={() =>
+                        openImportDialog(
+                          'entity_list_item',
+                          projectName,
+                          selectedList?.id,
+                          selectedList?.label,
+                        )
+                      }
                     />
+                    <ListExportSource parentColumns={parentColumns} />
                     <Actions
                       entities={[
                         {

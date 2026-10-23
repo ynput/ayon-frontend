@@ -88,6 +88,9 @@ export interface VersionsDataContextValue {
   // separate filters
   versionFilter: QueryFilter
   productFilter: QueryFilter
+  // arguments of the table's own products and versions queries, for exports
+  productArguments: QueryArguments & { featuredVersionOrder?: string[] }
+  versionArguments: QueryArguments
   // combined filter strings (incl. slicer + entity-list selection) for the
   // column-summary stats queries
   columnStatsArgs: {
@@ -809,6 +812,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const value: VersionsDataContextValue = {
     versionFilter,
     productFilter,
+    productArguments,
+    versionArguments,
     columnStatsArgs: {
       projectName,
       productFilter: combinedProductFilter.filterString,
