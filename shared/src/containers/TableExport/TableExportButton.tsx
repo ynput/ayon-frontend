@@ -44,7 +44,13 @@ export const TableExportButton: FC<TableExportButtonProps> = ({ onImport }) => {
               onClick: onImport,
               'data-testid': 'import-csv',
             },
-            { id: 'export', label: 'Export...', icon: 'download', onClick: openExport },
+            {
+              id: 'export',
+              label: 'Export...',
+              icon: 'download',
+              powerFeature: 'tableExport',
+              onClick: openExport,
+            },
           ]}
           onClose={() => setMenuOpen(false)}
         />
