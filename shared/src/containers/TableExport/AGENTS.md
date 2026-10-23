@@ -33,6 +33,9 @@ user's folder and attribute permissions. The host only says what the open table 
 - `columnLabels` are the table's header labels, used when column names are labels.
 - Import CSV can read a file back only for folders and tasks (`canImport`), as CSV with field names, raw values and the
   `entity_type` and `path` columns (`options.includeImportColumns`).
+- Import CSV stops at a column it doesn't know. So that file only has the columns in Import CSV's field list
+  (`GET /api/csv/export/hierarchy/fields`, fetched while the dialog is open), and `getSkippedColumns` lists the others
+  with "(Import CSV can't read it)", e.g. the Folder column (the path already holds the parent).
 
 ## Adding export to a page
 1. Add the built-in `'export'` item to the context menu. With the Power Pack export available and a registered source it

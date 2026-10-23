@@ -1,5 +1,11 @@
 import { FC, useEffect, useMemo } from 'react'
-import { useProjectContext, useTableExportContext } from '@shared/context'
+import { useSearchParams } from 'react-router-dom'
+import { dataImportApi } from '@shared/api'
+import {
+  TABLE_EXPORT_SEARCH_PARAM,
+  useProjectContext,
+  useTableExportContext,
+} from '@shared/context'
 import type {
   TableExportContent,
   TableExportOptions,
@@ -30,6 +36,11 @@ export type TableExportSourceProps = {
 }
 
 const IMPORT_COLUMNS = ['entity_type', 'path']
+const NOT_IMPORTABLE = "(Import CSV can't read it)"
+
+// the dialog's importable file: a raw CSV with the import columns
+const isForImport = ({ includeImportColumns, format, content }: TableExportOptions) =>
+  includeImportColumns && format === 'csv' && content === 'raw'
 
 // Registers what the page's table exports (rows, columns and their labels) for the Power Pack
 // export dialog. Rendered inside the page's table providers.
@@ -46,6 +57,17 @@ export const TableExportSource: FC<TableExportSourceProps> = ({
   const columnSettings = useColumnSettingsContext()
   const { attribFields, scopes } = useProjectTableContext()
   const { linkTypes } = useProjectContext()
+
+  // the columns Import CSV reads, only fetched while the dialog is open
+  const [searchParams] = useSearchParams()
+  const { data: importFields } = dataImportApi.useExportFieldsQuery(
+    { projectName, entityType: 'hierarchy' },
+    { skip: !canImport || !searchParams.has(TABLE_EXPORT_SEARCH_PARAM) },
+  )
+  const importKeys = useMemo(
+    () => importFields && new Set(importFields.map((field) => field.key)),
+    [importFields],
+  )
 
   const selection = useMemo(() => {
     const rowIds = new Set<string>()
@@ -78,10 +100,17 @@ export const TableExportSource: FC<TableExportSourceProps> = ({
       return visible.filter((id) => selection.columnIds.has(id))
     }
 
+    // an importable file only has columns Import CSV can read, other columns stop the import
+    const isImportable = (key: string, options: TableExportOptions) =>
+      !canImport || !isForImport(options) || !importKeys || importKeys.has(key)
+
     const getSkippedColumns = (scope: TableExportScope, options: TableExportOptions) =>
-      getColumnIds(scope, options)
-        .filter((id) => !getExportColumnKey(id, subTypeKey))
-        .map((id) => getExportColumnLabel(id, labelContext))
+      getColumnIds(scope, options).flatMap((id) => {
+        const key = getExportColumnKey(id, subTypeKey)
+        const label = getExportColumnLabel(id, labelContext)
+        if (!key) return [label]
+        return isImportable(key, options) ? [] : [`${label} ${NOT_IMPORTABLE}`]
+      })
 
     const getContent = (
       scope: TableExportScope,
@@ -92,7 +121,7 @@ export const TableExportSource: FC<TableExportSourceProps> = ({
       if (canImport && options.includeImportColumns) columns.push(...IMPORT_COLUMNS)
       for (const id of getColumnIds(scope, options)) {
         const key = getExportColumnKey(id, subTypeKey)
-        if (!key || columnLabels[key]) continue
+        if (!key || columnLabels[key] || !isImportable(key, options)) continue
         if (!columns.includes(key)) columns.push(key)
         columnLabels[key] = getExportColumnLabel(id, labelContext)
       }
@@ -117,6 +146,7 @@ export const TableExportSource: FC<TableExportSourceProps> = ({
     attribFields,
     scopes,
     linkTypes,
+    importKeys,
   ])
 
   useEffect(() => registerSource?.(source), [registerSource, source])

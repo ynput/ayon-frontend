@@ -8,9 +8,12 @@ export type TableExportScope = 'table' | 'selection'
 // the URL search param that opens the export dialog, its value is the scope
 export const TABLE_EXPORT_SEARCH_PARAM = 'tableExport'
 
+// The dialog passes all its settings, the format and content too
 export type TableExportOptions = {
   includeImportColumns: boolean // entity type and path, needed to import the file back
   selectionColumns: 'selected' | 'visible' // the columns of a selection export
+  format?: 'xlsx' | 'csv'
+  content?: 'readable' | 'raw' // raw: field names and stored values
 }
 
 export type TableExportTasksQuery = {
