@@ -13,6 +13,11 @@ import { formatEntityLabel } from './utils/formatEntityLinks'
 import { toast } from 'react-toastify'
 import { createRealtimeBatcher, PubSub, waitForRealtimeJitter } from '@shared/util'
 import { normalizeQueryError } from '@shared/api/base/queryError'
+import { chunk } from 'lodash'
+import { useMemo } from 'react'
+
+// entities per links request, more are fetched in further requests
+const LINKS_BATCH_SIZE = 100
 
 /**
  * Custom queryFn for fetching entity links with optimized caching behavior.
@@ -124,16 +129,32 @@ const injectedQueries = foldersApi.injectEndpoints({
           const endpoint = entityEndpoints[entityType]
           const resultPath = entityResultPaths[entityType]
 
-          // Fetch only the entities that aren't already cached
-          const result = await dispatch(
-            (gqlLinksApi.endpoints as any)[endpoint].initiate(
-              { projectName, entityIds: entityIdsToFetch },
-              { forceRefetch: true },
-            ),
-          ).unwrap()
+          // Fetch only the entities that aren't already cached, one batch after another to keep
+          // the load per user down. A failed batch leaves its entities uncached, so they are
+          // fetched again next time.
+          const results: any[] = []
+          let batchError: unknown
+          for (const batchIds of chunk(entityIdsToFetch, LINKS_BATCH_SIZE)) {
+            try {
+              const result = await dispatch(
+                (gqlLinksApi.endpoints as any)[endpoint].initiate(
+                  { projectName, entityIds: batchIds },
+                  { forceRefetch: true, subscribe: false },
+                ),
+              ).unwrap()
+              results.push(result)
+            } catch (error) {
+              batchError = error
+            }
+          }
+          if (batchError) {
+            if (!results.length) throw batchError
+            toast.error(`Error fetching some ${entityType} links`)
+          }
 
-          const newEntities =
-            result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => {
+          const newEntities = results
+            .flatMap((result: any) => result.project?.[resultPath]?.edges || [])
+            .map(({ node }: { node: any }) => {
               // Log restricted links
               const restrictedLinks =
                 node.links.edges?.filter((e: EntityLinkQuery | null) => !e?.node) || []
@@ -176,7 +197,7 @@ const injectedQueries = foldersApi.injectEndpoints({
                     } as EntityLink
                   }) || [], // Flatten the edges structure
               }
-            }) || []
+            })
 
           // Return the new entities - the merge function will handle combining with existing cache
           return { data: newEntities }
@@ -332,4 +353,36 @@ const injectedQueries = foldersApi.injectEndpoints({
 })
 
 export const { useGetEntityLinksQuery } = injectedQueries
+
+/**
+ * useGetEntityLinksQuery for many entities: asks for one batch of uncached entities at a time, so
+ * the first rows show their links while the rest are still loading.
+ */
+export const useGetEntityLinksInBatchesQuery = (
+  args: GetEntityLinksArgs,
+  options?: { skip?: boolean },
+) => {
+  const { projectName, entityType, entityIds } = args
+  // one cache entry holds the links of every entity of the project and type
+  const { data: cachedEntities } = injectedQueries.endpoints.getEntityLinks.useQueryState(args)
+  const idsKey = entityIds.join(',')
+
+  const batchArgs = useMemo(() => {
+    const cachedIds = new Set(cachedEntities?.map((entity) => entity.id))
+    const cached = entityIds.filter((id) => cachedIds.has(id))
+    const uncached = entityIds.filter((id) => !cachedIds.has(id))
+    return {
+      projectName,
+      entityType,
+      entityIds: [...cached, ...uncached.slice(0, LINKS_BATCH_SIZE)],
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectName, entityType, idsKey, cachedEntities])
+
+  const result = useGetEntityLinksQuery(batchArgs, options)
+  // entities waiting for a later batch count as loading
+  const isWaiting =
+    !options?.skip && !result.isError && batchArgs.entityIds.length < entityIds.length
+  return { ...result, isFetching: result.isFetching || isWaiting }
+}
 export { injectedQueries as entityLinksApi }
