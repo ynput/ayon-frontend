@@ -5,19 +5,47 @@
 // Power Pack offers. This slot owns the shortcuts, the selection and the view,
 // the module owns the dialog.
 
-import { FC, useCallback, useEffect, useState } from 'react'
+import { Component, FC, ReactNode, useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import { detailsPanelEntityTypes } from '@shared/api'
+import {
+  detailsPanelEntityTypes,
+  useGetEntitiesDetailsPanelQuery,
+  useGetEntityQuery,
+  useGetFolderListQuery,
+  useGetLinksOfEntitiesQuery,
+  useGetProductVersionsQuery,
+} from '@shared/api'
 import type { DetailsPanelEntityType } from '@shared/api'
 import {
+  AddNewLinks,
+  groupLinksByEntity,
+  LinkManagerItem,
+  useUpdateLinks,
+} from '@shared/components/LinksManager'
+import { EntityIcon } from '@shared/components/EntityIcon'
+import { Thumbnail } from '@shared/components/Thumbnail'
+import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog'
+import {
+  ProjectContextProvider,
+  ProjectFoldersContextProvider,
   useDetailsPanelContext,
   useGlobalContext,
   usePowerpack,
+  useProjectContext,
   useRemoteModules,
 } from '@shared/context'
+import type { ProjectContextValue } from '@shared/context'
 import { useGetProductionAddon } from '@shared/hooks/useGetProductionAddon'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
-import { getActiveEntities, shouldBlockShortcuts } from '@shared/util'
+import { useLocalStorage } from '@shared/hooks/useLocalStorage'
+import {
+  getActiveEntities,
+  getEntityColor,
+  getEntityIcon,
+  getEntityId,
+  getRequestErrorString,
+  shouldBlockShortcuts,
+} from '@shared/util'
 import type { ActiveEntity } from '@shared/util'
 
 export type EntityLinksView = 'graph' | 'columns'
@@ -47,7 +75,98 @@ export interface EntityLinksDialogProps {
   onOpenInNodegraph?: (entity: ActiveEntity) => void
   /** guests can only look at links */
   readOnly: boolean
+  /** managers see "Unknown" for links to entities they cannot see, others "Access restricted" */
+  isManager: boolean
+  /** the entities' project, for the dialog and the shared components it renders */
+  project: ProjectContextValue
+  host: EntityLinksHost
 }
+
+/**
+ * What the dialog uses of the web UI. The dialog has no store of its own: it
+ * shares the web UI's cache and live updates, and links changed there show up
+ * in the rest of the web UI right away. The module imports only types from the
+ * shared library, so it bundles none of it.
+ */
+export interface EntityLinksHost {
+  useGetLinksOfEntitiesQuery: typeof useGetLinksOfEntitiesQuery
+  useGetEntitiesDetailsPanelQuery: typeof useGetEntitiesDetailsPanelQuery
+  useGetEntityQuery: typeof useGetEntityQuery
+  useGetFolderListQuery: typeof useGetFolderListQuery
+  useGetProductVersionsQuery: typeof useGetProductVersionsQuery
+  useUpdateLinks: typeof useUpdateLinks
+  AddNewLinks: typeof AddNewLinks
+  /** with the project's folders available to it */
+  EntityPickerDialog: typeof EntityPickerDialog
+  Thumbnail: typeof Thumbnail
+  LinkManagerItem: typeof LinkManagerItem
+  EntityIcon: typeof EntityIcon
+  useLocalStorage: typeof useLocalStorage
+  detailsPanelEntityTypes: typeof detailsPanelEntityTypes
+  groupLinksByEntity: typeof groupLinksByEntity
+  getEntityIcon: typeof getEntityIcon
+  getEntityColor: typeof getEntityColor
+  getEntityId: typeof getEntityId
+  getRequestErrorString: typeof getRequestErrorString
+}
+
+// the slot sits above the providers of the project pages
+const LinksEntityPicker: typeof EntityPickerDialog = (props) => (
+  <ProjectFoldersContextProvider projectName={props.projectName}>
+    <EntityPickerDialog {...props} />
+  </ProjectFoldersContextProvider>
+)
+
+const LINKS_HOST: EntityLinksHost = {
+  useGetLinksOfEntitiesQuery,
+  useGetEntitiesDetailsPanelQuery,
+  useGetEntityQuery,
+  useGetFolderListQuery,
+  useGetProductVersionsQuery,
+  useUpdateLinks,
+  AddNewLinks,
+  EntityPickerDialog: LinksEntityPicker,
+  Thumbnail,
+  LinkManagerItem,
+  EntityIcon,
+  useLocalStorage,
+  detailsPanelEntityTypes,
+  groupLinksByEntity,
+  getEntityIcon,
+  getEntityColor,
+  getEntityId,
+  getRequestErrorString,
+}
+
+// a links module that does not fit this web UI must not take the app down with it
+class LinksDialogBoundary extends Component<
+  { children: ReactNode; onError: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false }
+
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error('Links dialog failed', error)
+    toast.error('The links dialog failed, see the browser console')
+    this.props.onError()
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
+
+type ProjectLinksDialogProps = Omit<EntityLinksDialogProps, 'project'> & {
+  Dialog: FC<EntityLinksDialogProps>
+}
+
+const ProjectLinksDialog: FC<ProjectLinksDialogProps> = ({ Dialog, ...props }) => (
+  <Dialog {...props} project={useProjectContext()} />
+)
 
 // Without the Power Pack, G and L open the Power Pack dialog on the links feature.
 const EntityLinksDialogFallback: FC<EntityLinksDialogProps> = ({ onClose }) => {
@@ -162,15 +281,23 @@ export const EntityLinksSlot: FC = () => {
 
   if (!dialog) return null
 
+  const { projectName } = dialog.entities[0]
   return (
-    <EntityLinksDialog
-      entities={dialog.entities}
-      view={dialog.view}
-      onViewChange={setView}
-      onClose={close}
-      onOpenDetails={openDetails}
-      onOpenInNodegraph={hasNodegraph ? openInNodegraph : undefined}
-      readOnly={!!user?.data?.isGuest}
-    />
+    <LinksDialogBoundary onError={close}>
+      <ProjectContextProvider key={projectName} projectName={projectName}>
+        <ProjectLinksDialog
+          Dialog={EntityLinksDialog}
+          entities={dialog.entities}
+          view={dialog.view}
+          onViewChange={setView}
+          onClose={close}
+          onOpenDetails={openDetails}
+          onOpenInNodegraph={hasNodegraph ? openInNodegraph : undefined}
+          readOnly={!!user?.data?.isGuest}
+          isManager={!!(user?.data?.isAdmin || user?.data?.isManager)}
+          host={LINKS_HOST}
+        />
+      </ProjectContextProvider>
+    </LinksDialogBoundary>
   )
 }
