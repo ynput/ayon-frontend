@@ -2207,10 +2207,10 @@
     redux-thunk "^3.1.0"
     reselect "^5.1.0"
 
-"@remix-run/router@1.23.4":
-  version "1.23.4"
-  resolved "https://registry.yarnpkg.com/@remix-run/router/-/router-1.23.4.tgz#d2becd2afca4a40c30a659d913b9b0bcc28bced8"
-  integrity sha512-q7j5geK7xs3UJSdm9/iytUNclBnLmYx1EnSeCFXHPeutdqgIMeFeHtUZgS3EhlKxdBEAu8OwtJCwmLrEzpSs7Q==
+"@remix-run/route-pattern@^0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@remix-run/route-pattern/-/route-pattern-0.22.1.tgz#4937466528a59a7c9d882f725aac92536d20e010"
+  integrity sha512-czdGJWh09Lapvcqt7Vb09KlrU2PhRJ8xQaI+AItTuD9aDJ5MAgxnS38lnys6Ll+6RJEqPiaUqTwIQhVLwFvv+w==
 
 "@repeaterjs/repeater@^3.0.4", "@repeaterjs/repeater@^3.0.6":
   version "3.0.6"
@@ -2574,6 +2574,23 @@
   integrity sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw==
   dependencies:
     "@types/ms" "*"
+
+"@types/dom-mediacapture-transform@^0.1.11":
+  version "0.1.12"
+  resolved "https://registry.yarnpkg.com/@types/dom-mediacapture-transform/-/dom-mediacapture-transform-0.1.12.tgz#82fdc7aa2eb97a7a73e2df774080068bef2e599b"
+  integrity sha512-d7/QsLRwF864A5mgIM/YrfiglHoYn7zgCcAoJgW404r+2DwnNr7EBbLnCWpmOMgH8y0te73L1AV6H1bmauaWFw==
+  dependencies:
+    "@types/dom-webcodecs" "*"
+
+"@types/dom-webcodecs@*":
+  version "0.1.19"
+  resolved "https://registry.yarnpkg.com/@types/dom-webcodecs/-/dom-webcodecs-0.1.19.tgz#46479c9f47fb0024b762aa38987b38e3c31ac650"
+  integrity sha512-+yFUIDUaASFz0vQpWBErPxun/Lb+F0TdrlTsj50gm7K797YzEx2TmV6fEiwciHyFNghlZYPgQXH5qRcwMHcJFQ==
+
+"@types/dom-webcodecs@0.1.13":
+  version "0.1.13"
+  resolved "https://registry.yarnpkg.com/@types/dom-webcodecs/-/dom-webcodecs-0.1.13.tgz#d8be5da4f01b20721307b08ad2cca903ccf4f47f"
+  integrity sha512-O5hkiFIcjjszPIYyUSyvScyvrBoV3NOEEZx/pMlsu44TKzWNkLVBBxnxJz42in5n3QIolYOcBYFCPZZ0h8SkwQ==
 
 "@types/eslint@9.6.1":
   version "9.6.1"
@@ -2960,10 +2977,10 @@
   dependencies:
     tslib "^2.6.3"
 
-"@ynput/ayon-player@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-player/-/ayon-player-1.0.2.tgz#0a932b0be848542b4270dccf9de85c4cbc1d9c44"
-  integrity sha512-2k6VYRm48/YJcjoXE/g+LDEExR39lB9bLU4ancekBDAiUxRU4p6glu0nj7VyGAcy3KMlag53IFD9TJIw2djZIQ==
+"@ynput/ayon-player@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-player/-/ayon-player-1.1.0.tgz#8c42b8fee943a2b316fe1b8038f9673e6cb29c8f"
+  integrity sha512-80xSGMw6cR7GfBecI5w9SG9U/df6nrIHHXhKLvSBMTLi94p550Apvyt7HRwa7bvhPWLFNoSnjcs9sbf9SJkZOw==
   dependencies:
     "@dnd-kit/core" "6.3.1"
     "@dnd-kit/sortable" "^10.0.0"
@@ -2972,11 +2989,11 @@
     "@tanstack/react-table" "8.21.3"
     graphql "16.13.2"
     lodash "^4.18.1"
-    panzoom "^9.4.4"
+    mediabunny "^1.56.2"
     primeicons "6.0.1"
     react-datepicker "4.11.0"
     react-redux "9.2.0"
-    react-router-dom "6.30.3"
+    react-router-dom "7.18.4"
     react-toastify "^9.0.3"
     sass "1.99.0"
 
@@ -3079,13 +3096,6 @@ ajv@~8.18.0:
     fast-uri "^3.0.1"
     json-schema-traverse "^1.0.0"
     require-from-string "^2.0.2"
-
-amator@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/amator/-/amator-1.1.0.tgz#08c6b60bc93aec2b61bbfc0c4d677d30323cc0f1"
-  integrity sha512-V5+aH8pe+Z3u/UG3L3pG3BaFQGXAyXHVQDroRwjPHdh08bcUEchAVsU1MCuJSCaU5o60wTK6KaE6te5memzgYw==
-  dependencies:
-    bezier-easing "^2.0.3"
 
 ansi-colors@4.1.3, ansi-colors@^4.1.3:
   version "4.1.3"
@@ -3298,11 +3308,6 @@ baseline-browser-mapping@^2.11.20:
   version "2.11.22"
   resolved "https://registry.yarnpkg.com/baseline-browser-mapping/-/baseline-browser-mapping-2.11.22.tgz#d8b612f54517d8b3a31734623779e5ab8c5ff0b9"
   integrity sha512-pWc4w51fBFd7mav43/zKRC+RI6f4yfzQoVlfvE8dECePyfkn1bzLp01Fj0QACcyCZyFhiEMyD2qScfKRWgWibA==
-
-bezier-easing@^2.0.3:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/bezier-easing/-/bezier-easing-2.1.0.tgz#c04dfe8b926d6ecaca1813d69ff179b7c2025d86"
-  integrity sha512-gbIqZ/eslnUFC1tjEvtz0sgx+xTK20wDnYMIA27VA04R7w6xxXQPZDbibjA9DTWZRA2CXtwHykkVzlCaAJAZig==
 
 brace-expansion@^1.1.7:
   version "1.1.21"
@@ -3659,6 +3664,11 @@ convert-source-map@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/convert-source-map/-/convert-source-map-2.0.0.tgz#4b560f649fc4e918dd0ab75cf4961e8bc882d82a"
   integrity sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==
+
+cookie-es@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/cookie-es/-/cookie-es-3.1.1.tgz#c4a8a16cf88cb5a185b23f4a61d6e9a85eb53287"
+  integrity sha512-UaXxwISYJPTr9hwQxMFYZ7kNhSXboMXP+Z3TRX6f1/NyaGPfuNUZOWP1pUEb75B2HjfklIYLVRfWiFZJyC6Npg==
 
 cookie@^1.0.1:
   version "1.1.1"
@@ -5937,6 +5947,14 @@ mdast-util-to-string@^4.0.0:
   dependencies:
     "@types/mdast" "^4.0.0"
 
+mediabunny@^1.56.2:
+  version "1.62.1"
+  resolved "https://registry.yarnpkg.com/mediabunny/-/mediabunny-1.62.1.tgz#7cb7b46550442571db8dccc6f75bebd739542348"
+  integrity sha512-lYzeerDwo9QLhBCipqQDXOSV7InvaIFplllZQviPO5rPwH+IUr8M1uvumk1olIUgMRGkPiInRriv25WFErUgMw==
+  dependencies:
+    "@types/dom-mediacapture-transform" "^0.1.11"
+    "@types/dom-webcodecs" "0.1.13"
+
 merge2@^1.3.0, merge2@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/merge2/-/merge2-1.4.1.tgz#4368892f885e907455a6fd7dc55c0c9d404990ae"
@@ -6314,11 +6332,6 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==
 
-ngraph.events@^1.2.2:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/ngraph.events/-/ngraph.events-1.4.0.tgz#3153c0a5760172c744f7b2dbc5a3d8a72703e357"
-  integrity sha512-NeDGI4DSyjBNBRtA86222JoYietsmCXbs8CEB0dZ51Xeh4lhVl1y3wpWLumczvnha8sFQIW4E0vvVWwgmX2mGw==
-
 no-case@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/no-case/-/no-case-3.0.4.tgz#d361fd5c9800f558551a8369fc0dcd4662b6124d"
@@ -6579,15 +6592,6 @@ p-locate@^5.0.0:
   integrity sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==
   dependencies:
     p-limit "^3.0.2"
-
-panzoom@^9.4.4:
-  version "9.4.4"
-  resolved "https://registry.yarnpkg.com/panzoom/-/panzoom-9.4.4.tgz#777487c93678a223a6d2cfe842389e452d883847"
-  integrity sha512-r1KfkNZvsBw59IPq7Yy+GWZnZE1YCG/t7aG6caSkij/TBqdxTzmxNTm/lHf3h6qlVMFisIGIO+lgS2Ym23PIoA==
-  dependencies:
-    amator "^1.1.0"
-    ngraph.events "^1.2.2"
-    wheel "^1.0.0"
 
 papaparse@5.5.3:
   version "5.5.3"
@@ -7009,27 +7013,12 @@ react-refresh@^0.17.0:
   resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.17.0.tgz#b7e579c3657f23d04eccbe4ad2e58a8ed51e7e53"
   integrity sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==
 
-react-router-dom@6.30.3, react-router-dom@6.30.6:
-  version "6.30.6"
-  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-6.30.6.tgz#acaf0db65efeddabd0840616243c97f578b3baf3"
-  integrity sha512-0RHKZz7wwffvkU+2MFVT2NnjK44ssLEV+m0CAJaS2Ksmorrwj7WxH00jO0SOCW26/tINUnJHToXblDs33I38YQ==
-  dependencies:
-    "@remix-run/router" "1.23.4"
-    react-router "6.30.6"
-
 react-router-dom@7.18.4:
   version "7.18.4"
   resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-7.18.4.tgz#07b72b8aab2d80af847425107f966f1688c703d0"
   integrity sha512-yrfmJHIpDG7taCpqKjT1G5B6q3O2K+RN8/fgNf0lTjCwiPbQ0ei6vXX9ZjQR+7ld8Tr7Z5xmyMnZ8YJrphWQUw==
   dependencies:
     react-router "7.18.4"
-
-react-router@6.30.6:
-  version "6.30.6"
-  resolved "https://registry.yarnpkg.com/react-router/-/react-router-6.30.6.tgz#a2ad70f3472de61c61e44182b3e5a25fd91f9f68"
-  integrity sha512-5HfK7k5im7LTOB0EqCQmfvy4C13G92Ssj1VTmouTK3AJvyjKTnFuCV0vcMAD/JS+JC4DvDIBRrlAeJIFjh5VWg==
-  dependencies:
-    "@remix-run/router" "1.23.4"
 
 react-router@7.18.4:
   version "7.18.4"
@@ -7038,6 +7027,14 @@ react-router@7.18.4:
   dependencies:
     cookie "^1.0.1"
     set-cookie-parser "^2.6.0"
+
+react-router@^8.5.0:
+  version "8.5.0"
+  resolved "https://registry.yarnpkg.com/react-router/-/react-router-8.5.0.tgz#c676f3c3e976f82702f774a6bb332c4979f6ba56"
+  integrity sha512-9nEd/deifcTJIIcUaNIyQGkyXD0D6QVB9XD2O5GgHpP3xu3U5RXm87YQ8++Wn8JQWgMBM/5+PjWPM/7n7O7WHA==
+  dependencies:
+    "@remix-run/route-pattern" "^0.22.1"
+    cookie-es "^3.1.1"
 
 react-side-effect@^2.1.0:
   version "2.1.2"
@@ -8517,11 +8514,6 @@ whatwg-url@^5.0.0:
   dependencies:
     tr46 "~0.0.3"
     webidl-conversions "^3.0.0"
-
-wheel@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/wheel/-/wheel-1.0.0.tgz#6cf46e06a854181adb8649228077f8b0d5c574ce"
-  integrity sha512-XiCMHibOiqalCQ+BaNSwRoZ9FDTAvOsXxGHXChBugewDj7HC8VBIER71dEOiRH1fSdLbRCQzngKTSiZ06ZQzeA==
 
 which-boxed-primitive@^1.1.0, which-boxed-primitive@^1.1.1:
   version "1.1.1"
