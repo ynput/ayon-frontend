@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures'
 import { hasPowerpack, ListsPage } from '../pages/ListsPage'
-import { confirmDialog } from '../support/ui'
+import { confirmDialog, menuItem } from '../support/ui'
 
 test.describe('list folders', () => {
   test.beforeEach(async ({ api }) => {
@@ -37,6 +37,37 @@ test.describe('list folders', () => {
     await expect(lists.listRow('Monday picks')).toBeHidden()
     await expect(lists.listRow('Tuesday picks')).toBeHidden()
     await expect(lists.listRow('Client notes')).toBeVisible()
+  })
+
+  test('create a folder from the menu of a list that is not selected', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const mondayId = await api.createEntityList(projectName, { label: 'Monday picks' })
+    const tuesdayId = await api.createEntityList(projectName, { label: 'Tuesday picks' })
+    const lists = new ListsPage(page)
+    await lists.goto(projectName)
+    await lists.selectListRow('Monday picks')
+
+    await lists.listRow('Tuesday picks').click({ button: 'right' })
+
+    await expect(menuItem(page, 'Create folder')).toBeVisible()
+    await expect(lists.listRow('Monday picks').locator('.selected')).toBeVisible()
+    await expect(lists.listRow('Tuesday picks').locator('.selected')).toBeHidden()
+
+    await menuItem(page, 'Create folder').click()
+    await lists.submitFolderDialog('Dailies')
+
+    await expect.poll(async () => (await api.listEntityListFolders(projectName)).length).toBe(1)
+    const [folder] = await api.listEntityListFolders(projectName)
+    await expect
+      .poll(async () => (await api.getEntityList(projectName, tuesdayId)).entityListFolderId)
+      .toBe(folder.id)
+    expect((await api.getEntityList(projectName, mondayId)).entityListFolderId).toBeFalsy()
+    await expect(lists.listRow('Dailies')).toBeVisible()
+    await expect(lists.listRow('Monday picks').locator('.selected')).toBeVisible()
+    await expect(lists.listRow('Tuesday picks').locator('.selected')).toBeHidden()
   })
 
   test('move a list into a folder', async ({ page, api, projectName }) => {

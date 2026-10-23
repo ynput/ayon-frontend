@@ -103,7 +103,7 @@ export type GetTasksListArgs = {
   folderIds?: string[]
   taskIds?: string[]
   desc?: boolean
-  sortBy?: string
+  sortBy?: string | string[]
   showComments?: boolean
   includeFolderChildren?: boolean
 }
@@ -119,7 +119,7 @@ export type GetGroupedTasksListArgs = {
   folderFilter?: string
   folderIds?: string[]
   desc?: boolean
-  sortBy?: string
+  sortBy?: string | string[]
   groupCount?: number // optional override for all groups
   showComments?: boolean
 }

@@ -270,7 +270,7 @@ test.describe('overview keyboard', () => {
 test.describe('overview sorting', () => {
   const workingView = (api: AyonApi, projectName: string) => async () => {
     const settings = await api.getWorkingViewSettings('overview', projectName)
-    return { sortBy: settings?.sortBy, sortDesc: settings?.sortDesc }
+    return { sortBy: settings?.sortBy }
   }
 
   test('sort rows by a column from its header', async ({ page, api, projectName }) => {
@@ -288,14 +288,14 @@ test.describe('overview sorting', () => {
     await expect(overview.nameCells()).toHaveText([/sh_b$/, /sh_c$/, /sh_a$/])
     await expect
       .poll(workingView(api, projectName))
-      .toEqual({ sortBy: 'attrib_fps', sortDesc: false })
+      .toEqual({ sortBy: ['attrib_fps'] })
 
     await overview.toggleSort('attrib_fps')
 
     await expect(overview.nameCells()).toHaveText([/sh_a$/, /sh_c$/, /sh_b$/])
     await expect
       .poll(workingView(api, projectName))
-      .toEqual({ sortBy: 'attrib_fps', sortDesc: true })
+      .toEqual({ sortBy: ['-attrib_fps'] })
   })
 
   test('the sort is kept after a reload', async ({ page, api, projectName }) => {
@@ -309,7 +309,7 @@ test.describe('overview sorting', () => {
     await overview.toggleSort('attrib_fps')
     await expect
       .poll(workingView(api, projectName))
-      .toEqual({ sortBy: 'attrib_fps', sortDesc: false })
+      .toEqual({ sortBy: ['attrib_fps'] })
 
     await overview.goto(projectName)
 

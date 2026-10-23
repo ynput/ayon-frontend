@@ -5,10 +5,15 @@
  * Supports per-column configuration for display, behavior, styling, and other settings.
  */
 
+import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
+
 export type DisplayConfig = Record<string, boolean>
 
 export type ColumnConfig = {
   display?: DisplayConfig
+  headerIcon?: { icon: string; tooltip?: string } // icon next to the column header
+  groupEdge?: 'start' | 'end' // thicker outer edge binding the column to its neighbour
+  menuItems?: ColumnMenuItemType[] // extra items at the end of the column header menu
 }
 
 export type ColumnsConfig = Record<string, ColumnConfig>

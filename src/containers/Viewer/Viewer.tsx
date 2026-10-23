@@ -22,7 +22,11 @@ import {
 } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
 import { ProjectContextProvider, useProjectContext } from '@shared/context'
-import { useSessionStorage, useReviewablesKeyboardNavigation } from '@shared/hooks'
+import {
+  useSessionStorage,
+  useReviewablesKeyboardNavigation,
+  useReviewablesLayout,
+} from '@shared/hooks'
 import clsx from 'clsx'
 
 interface ViewerProps {
@@ -369,6 +373,15 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
       }),
   })
 
+  // put the annotation tools beside the reviewables when stacking would squash the reviewables
+  const rightToolBarRef = useRef<HTMLDivElement>(null)
+  const annotationToolsRef = useRef<HTMLDivElement>(null)
+  const rightToolBarLayout = useReviewablesLayout({
+    containerRef: rightToolBarRef,
+    toolsRef: annotationToolsRef,
+    reviewablesCount: playable.length,
+  })
+
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 
   return (
@@ -432,7 +445,10 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
           />
         </Styled.FullScreenWrapper>
 
-        <Styled.RightToolBar className={clsx({ hidden: theater })}>
+        <Styled.RightToolBar
+          ref={rightToolBarRef}
+          className={clsx(rightToolBarLayout, { hidden: theater })}
+        >
           <ReviewablesSelector
             ref={reviewablesSelectorRef}
             reviewables={playable}
@@ -441,7 +457,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             projectName={projectName}
             onUpload={handleUploadAction(true)}
           />
-          <div id="annotation-tools" style={{ position: 'relative' }}></div>
+          <Styled.AnnotationTools id="annotation-tools" ref={annotationToolsRef} />
         </Styled.RightToolBar>
 
         <ViewerDetailsPanel

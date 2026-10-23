@@ -1,4 +1,5 @@
 import { ProjectTreeTable } from '@shared/containers'
+import type { EntityType } from '@shared/containers'
 import { FC } from 'react'
 import { useVersionsDataContext } from '../../context/vp-data'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
@@ -8,6 +9,8 @@ import styled from 'styled-components'
 import { VP_EXTRA_COLUMNS, VP_PARENT_COLUMNS } from '../VPTableSettings/VPTableSettingsHelpers'
 
 const VP_EXCLUDED_COLUMNS = ['assignees']
+// module constant: a new array each render rebuilds the table columns, which remounts every cell
+const VP_INCLUDE_PARENTS: EntityType[] = ['folder', 'product', 'task']
 
 const TableWrapper = styled.div`
   position: relative;
@@ -52,7 +55,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         isExpandable={showProducts}
         isLoading={isLoading}
         includeLinks={false}
-        includeParents={['folder', 'product', 'task']}
+        includeParents={VP_INCLUDE_PARENTS}
         parentColumns={VP_PARENT_COLUMNS}
         showColumnSummaries
         fieldStats={fieldStats}

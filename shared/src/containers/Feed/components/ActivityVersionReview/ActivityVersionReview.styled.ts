@@ -40,7 +40,7 @@ export const Body = styled.div`
   width: 100%;
 
   .icon {
-    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
+    font-variation-settings: 'FILL' 1;
     font-size: 16px;
   }
 

@@ -12,7 +12,7 @@ type Props = {
 }
 
 const useAnnotationsUpload = ({ projectName, onSuccess, onProgress, onStart, onError }: Props) => {
-  const { removeAnnotation, exportAnnotationComposite } = useFeedContext()
+  const { exportAnnotationComposite } = useFeedContext()
 
   const uploadAnnotation = async (annotation: any) => {
     const composite = await exportAnnotationComposite?.(annotation.id)
@@ -35,10 +35,9 @@ const useAnnotationsUpload = ({ projectName, onSuccess, onProgress, onStart, onE
       uploadFile(transparentFile, projectName, () => {}),
     ])
 
-    // swap this annotation for its uploaded file straight away, without waiting for the others
+    // the annotation itself stays unsaved until the comment is saved, see CommentInput
     const [compositeUpload, transparentUpload] = uploads
     const files = [onSuccess(compositeUpload), onSuccess(transparentUpload, true)]
-    removeAnnotation?.(annotation.id)
 
     return { annotation, uploads, files }
   }

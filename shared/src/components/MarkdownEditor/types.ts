@@ -119,6 +119,24 @@ export const DEFAULT_TOOLBAR: ToolbarLayout = [
   'checkList',
 ]
 
+// descriptions have no check lists (those belong in comments)
+export const DESCRIPTION_TOOLBAR: ToolbarLayout = [
+  'h1',
+  'h2',
+  'h3',
+  '|',
+  'bold',
+  'italic',
+  'strikethrough',
+  'link',
+  '|',
+  'codeBlock',
+  'quote',
+  '|',
+  'numberList',
+  'bulletList',
+]
+
 // shown over the selected text
 export const FLOATING_TOOLBAR: ToolbarLayout = [
   'bold',

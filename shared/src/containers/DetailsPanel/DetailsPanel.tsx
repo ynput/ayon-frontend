@@ -9,7 +9,11 @@ import type { Tag, DetailsPanelEntityType, DetailsPanelEntityData } from '@share
 import { DetailsPanelDetails } from '@shared/components/DetailsPanelDetails/DetailsPanelDetails'
 import { EntityPath } from '@shared/components/EntityPath/EntityPath'
 import { Watchers } from '@shared/components/Watchers/Watchers'
-import { extractEntityHierarchyFromParents } from '@shared/util'
+import {
+  ACTIVE_ENTITIES_PRIORITY,
+  extractEntityHierarchyFromParents,
+  useRegisterActiveEntities,
+} from '@shared/util'
 import {
   usePiPWindow,
   ProjectContextProvider,
@@ -138,6 +142,12 @@ DetailsPanelProps) => {
   const activeProjectNames = contextEntities?.entities
     ? contextEntities.entities.map((e) => e.projectName)
     : projectNames
+
+  // let global features (e.g. the links dialog) know what is being shown
+  useRegisterActiveEntities(
+    activeEntityType ? activeEntities.map((e) => ({ ...e, entityType: activeEntityType })) : [],
+    isSlideOut ? ACTIVE_ENTITIES_PRIORITY.slideOut : ACTIVE_ENTITIES_PRIORITY.detailsPanel,
+  )
 
   // Fire onOpen callback once when component mounts and renders
   useEffect(() => {

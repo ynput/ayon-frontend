@@ -22,6 +22,7 @@ type Params = {
   versionFilter?: string
   taskFilter?: string
   folderFilter?: string
+  representationFilter?: string
   folderIds?: string[]
   versionIds?: string[]
   productIds?: string[]
@@ -37,6 +38,7 @@ export const useVPColumnStats = ({
   versionFilter,
   taskFilter,
   folderFilter,
+  representationFilter,
   folderIds,
   versionIds,
   productIds,
@@ -105,6 +107,7 @@ export const useVPColumnStats = ({
     versionFilter,
     taskFilter,
     folderFilter,
+    representationFilter,
     folderIds: folderIdsWithoutChildren,
     versionIds,
     productIds,

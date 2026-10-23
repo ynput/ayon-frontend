@@ -341,9 +341,12 @@ export const useViewsState = <
 
   const setValue = useCallback(
     (nextValue: SetStateAction<PathValue<Settings, P>>) => {
-      if (isLoadingViews || !settings) return
+      if (isLoadingViews) return
 
-      const latestSettings = (getLatestSettings().settings as Settings | undefined) ?? settings
+      // No settings yet (e.g. no working view in a fresh project): start from empty settings.
+      // updateViewSettings creates the working view, and still aborts if the baseline is unknown.
+      const latestSettings =
+        (getLatestSettings().settings as Settings | undefined) ?? settings ?? ({} as Settings)
       const currentValue =
         localValueRef.current !== null
           ? localValueRef.current

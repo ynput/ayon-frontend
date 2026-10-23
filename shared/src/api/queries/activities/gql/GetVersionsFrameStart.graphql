@@ -1,0 +1,14 @@
+query GetVersionsFrameStart($projectName: String!, $versionIds: [String!]!) {
+  project(name: $projectName) {
+    versions(ids: $versionIds) {
+      edges {
+        node {
+          id
+          attrib {
+            frameStart
+          }
+        }
+      }
+    }
+  }
+}

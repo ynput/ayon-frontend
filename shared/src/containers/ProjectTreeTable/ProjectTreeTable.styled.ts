@@ -172,6 +172,15 @@ export const HeaderCell = styled.th`
   }
 `
 
+// position of a column in a multi-key sort, shown next to its sort button
+export const SortIndex = styled.span`
+  margin-left: -2px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--md-sys-color-outline);
+  user-select: none;
+`
+
 export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
   display: none;
 
@@ -217,7 +226,7 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
     display: flex !important;
   }
   .pin-button {
-    font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 10;
+    font-variation-settings: 'FILL' 1;
   }
 
   .header-menu {
@@ -591,5 +600,24 @@ export const SoftErrorBanner = styled.div`
     pointer-events: auto;
     box-shadow: var(--md-sys-shadow-level-2);
     padding: var(--padding-s);
+  }
+`
+
+// thicker edge binding a column to its neighbour, e.g. a compare view pair. Centred on the
+// column boundary, so an end edge and the next group's start edge overlap into one line.
+export const GroupEdge = styled.span`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: color-mix(in srgb, var(--md-sys-color-outline) 45%, transparent);
+  pointer-events: none;
+  z-index: 3;
+
+  &.start {
+    left: -2px;
+  }
+  &.end {
+    right: -1px;
   }
 `

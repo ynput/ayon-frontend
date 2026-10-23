@@ -5,6 +5,7 @@ import type {
   GetActivitiesQueryVariables,
   GetActivityUsersQuery,
   GetEntitiesChecklistsQuery,
+  GetVersionsFrameStartQuery,
 } from '@shared/api/generated'
 import { provideSharedActivityTags, taskProvideTags } from './util/activitiesHelpers'
 import {
@@ -30,6 +31,10 @@ type UpdatedDefinitions = Omit<Definitions, 'GetActivitiesById'> & {
   GetActivities: OverrideResultType<Definitions['GetActivities'], ActivitiesResult>
   GetEntitiesChecklists: OverrideResultType<Definitions['GetEntitiesChecklists'], ChecklistCount>
   GetActivityUsers: OverrideResultType<Definitions['GetActivityUsers'], ActivityUserNode[]>
+  GetVersionsFrameStart: OverrideResultType<
+    Definitions['GetVersionsFrameStart'],
+    Record<string, number | null>
+  >
 }
 
 const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -43,6 +48,12 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
     GetActivitiesById: {
       transformResponse: (res: GetActivitiesByIdQuery) =>
         transformActivityData(res.project.activities.edges, res.project.activities.pageInfo),
+    },
+    GetVersionsFrameStart: {
+      transformResponse: (res: GetVersionsFrameStartQuery) =>
+        Object.fromEntries(
+          res.project.versions.edges.map(({ node }) => [node.id, node.attrib.frameStart]),
+        ),
     },
     GetEntitiesChecklists: {
       transformResponse: (res: GetEntitiesChecklistsQuery) => countChecklists(res),
@@ -175,6 +186,7 @@ export const {
   useGetActivitiesQuery,
   useGetActivitiesInfiniteInfiniteQuery,
   useGetActivityUsersQuery,
+  useGetVersionsFrameStartQuery,
 } = getActivitiesGQLApi
 
 export { getActivitiesGQLApi }

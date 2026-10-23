@@ -1,5 +1,5 @@
 import React from 'react'
-import CodeEditor from '@uiw/react-textarea-code-editor'
+import { CodeEditor } from '@shared/components/CodeEditor'
 import { useEffect, useState } from 'react'
 import { equiv, getDefaultValue, parseContext, updateChangedKeys } from '../helpers'
 import { $Any } from '@types'

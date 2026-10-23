@@ -50,9 +50,16 @@ interface ListsProviderProps {
   isReview?: boolean
   // picker mode keeps selection in local state instead of URL query params
   picker?: boolean
+  // picker mode: rows selected when it opens
+  initialSelection?: string[]
 }
 
-export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps) => {
+export const ListsProvider = ({
+  children,
+  isReview,
+  picker,
+  initialSelection,
+}: ListsProviderProps) => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
   const { projectName } = useProjectContext()
   const { listsMap, listsData, listFolders, disabledListIds } = useListsDataContext()
@@ -75,7 +82,9 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
   const reviewVersion = getProductionAddon('review')?.productionVersion
 
   // picker mode: selection lives in local state, never touches the URL
-  const [pickerSelection, setPickerSelection] = useState<RowSelectionState>({})
+  const [pickerSelection, setPickerSelection] = useState<RowSelectionState>(() =>
+    Object.fromEntries((initialSelection || []).map((id) => [id, true])),
+  )
 
   const rowSelection = useMemo(
     () => (picker ? pickerSelection : isReview ? unstableReviewSelection : unstableListSelection),
@@ -255,7 +264,7 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
     onCreatedFolders: handleCreatedFolders,
   })
 
-  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, parentId }) => {
+  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, parentId, rowIds }) => {
     if (!powerLicense) {
       setPowerpackDialog('listFolders')
       return
@@ -267,6 +276,7 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
       return setListFolderOpen({
         isOpen: true,
         parentId,
+        rowIds,
       })
     }
 
@@ -288,8 +298,8 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
   const onDeleteList = async (listId: string) => {
     // delete list in the backend
     await deleteListMutation({ listId, projectName }).unwrap()
-    // set the row selection to empty
-    setRowSelection({})
+    // a right-clicked list can be deleted without being selected
+    if (rowSelection[listId]) setRowSelection({})
   }
   const { deleteLists } = useDeleteList({ onDeleteList })
 

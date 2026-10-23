@@ -6,6 +6,12 @@ import { copyToClipboard } from '@shared/util'
 import { Button } from '@ynput/ayon-react-components'
 import { useMenuContext, usePowerpack, type PowerpackFeature } from '@shared/context'
 
+export interface MenuItemEndAction {
+  icon: string
+  tooltip?: string
+  onClick: (e: React.MouseEvent) => void
+}
+
 export interface MenuItemType {
   id: string
   label?: string | string[]
@@ -24,6 +30,8 @@ export interface MenuItemType {
   powerFeature?: PowerpackFeature
   active?: boolean
   reserveActiveSlot?: boolean
+  // small icon buttons at the end of the row, clicking one does not trigger the item or close the menu
+  endActions?: MenuItemEndAction[]
   hidden?: boolean
   node?: ReactNode
   [key: string]: any
@@ -53,7 +61,12 @@ const findSubMenuItems = (items: MenuItemType[], id: string): MenuItemType[] | u
   }
 }
 
+const haveSameEndActions = (a: MenuItemEndAction[] = [], b: MenuItemEndAction[] = []) =>
+  a.length === b.length &&
+  a.every((action, i) => action.icon === b[i].icon && action.tooltip === b[i].tooltip)
+
 // icon/selected/active matter too: toggling a column keeps the same ids but flips its checkmark
+// endActions too: flipping a sort direction keeps the same ids but changes the end button's icon
 const haveSameItems = (a: MenuItemType[], b: MenuItemType[]) =>
   a.length === b.length &&
   a.every(
@@ -61,7 +74,8 @@ const haveSameItems = (a: MenuItemType[], b: MenuItemType[]) =>
       item.id === b[i].id &&
       item.icon === b[i].icon &&
       item.selected === b[i].selected &&
-      item.active === b[i].active,
+      item.active === b[i].active &&
+      haveSameEndActions(item.endActions, b[i].endActions),
   )
 
 export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer = '' }) => {

@@ -169,4 +169,41 @@ test.describe('list items', () => {
       .poll(async () => (await api.listEntityLists(projectName))[0].entityIds)
       .toEqual([shot.id])
   })
+  test('searching for several terms lists the items matching any of them', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const listId = await api.createEntityList(projectName, { label: 'Dailies' })
+    for (const [name, taskType] of [
+      ['anim', 'Animation'],
+      ['comp', 'Compositing'],
+      ['fx', 'FX'],
+    ]) {
+      const task = await api.createTask(projectName, { folderId: folder.id, name, taskType })
+      await api.addEntityListItem(projectName, listId, task.id)
+    }
+    // one search chip with two values, as the search bar saves "anim, comp"
+    await api.setWorkingViewSettings('lists', projectName, {
+      filter: {
+        operator: 'and',
+        conditions: [
+          {
+            operator: 'or',
+            conditions: [
+              { key: '--search--', value: 'anim', operator: 'like' },
+              { key: '--search--', value: 'comp', operator: 'like' },
+            ],
+          },
+        ],
+      },
+    })
+    const lists = new ListsPage(page)
+    await lists.goto(projectName)
+
+    await lists.openList('Dailies')
+
+    await expect(lists.itemNameCells()).toHaveText([/anim$/, /comp$/])
+  })
 })

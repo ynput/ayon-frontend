@@ -13,6 +13,7 @@ import {
   getLinkEntityIdsByColumnId,
   parseCellId,
 } from '../../utils/cellUtils'
+import { getFolderColumnValue } from '../../utils/folderColumn'
 
 // Types
 import { TableRow } from '../../types/table'
@@ -22,7 +23,6 @@ import { useUpdateSubtasksMutation } from '@shared/api'
 
 // Import from the new modular files
 import {
-  getEntityPath,
   parseClipboardText,
   clipboardError,
   processFieldValue,
@@ -62,7 +62,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities, history } = useCellEditing()
   const { pasteTableLinks } = usePasteLinks()
-  const { getEntityById, attribFields, tableData } = useProjectTableContext()
+  const { getEntityById, attribFields, tableData, isRowReadOnly } = useProjectTableContext()
 
   const displayRowsById = useMemo(() => {
     const map = new Map<string, TableRow>()
@@ -213,13 +213,19 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
                     (entity as any).task?.name
                   : getCellValue(entity, sourceField)
 
-              // folder is an object on some entities (product/task) or nested under
-              // product (version) - copy the display name the cell shows,
-              // falling back to the last parent (parent folder name on tasks/folders)
-              if (colId === 'folder_entity' && typeof foundValue !== 'string') {
-                const folder = foundValue || (entity as any).product?.folder
-                const parents = 'parents' in entity ? entity.parents : undefined
-                foundValue = folder?.label || folder?.name || parents?.[parents.length - 1] || ''
+              if (colId === 'folder_entity') {
+                // copy what the cell shows (the same helper the column uses)
+                const shown = displayRow && getFolderColumnValue(displayRow)
+                if (shown) {
+                  foundValue = shown
+                } else if (typeof foundValue !== 'string') {
+                  // folder is an object on some entities (product/task) or nested under
+                  // product (version) - copy its display name, falling back to the
+                  // last parent (parent folder name on tasks/folders)
+                  const folder = foundValue || (entity as any).product?.folder
+                  const parents = 'parents' in entity ? entity.parents : undefined
+                  foundValue = folder?.label || folder?.name || parents?.[parents.length - 1] || ''
+                }
               }
 
               // Raw entity nodes (flat lists) either lack display-computed columns or hold a
@@ -252,14 +258,15 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               // convert to string if foundValue is not undefined or null use empty string otherwise
               cellValue = foundValue !== undefined && foundValue !== null ? String(foundValue) : ''
 
-              // Hierarchical tables resolve a full path; flat lists (raw nodes keyed by row id)
-              // can't, so fall back to the built display row label/name the cell shows
+              // Always copy just the entity name, never the full path. Flat lists (raw nodes
+              // keyed by row id) aren't in entitiesMap, so fall back to the built display row
+              // label/name the cell shows
               if (colId === 'name') {
                 cellValue =
                   (displayRow?.primary.entityType === 'version'
                     ? displayRow.primary.label || displayRow.primary.name
                     : undefined) ||
-                  getEntityPath(entity.entityId || entity.id, entitiesMap) ||
+                  entitiesMap.get(entity.entityId || entity.id)?.name ||
                   (displayRow as any)?.label ||
                   displayRow?.primary?.name ||
                   (entity as any).label ||
@@ -471,12 +478,18 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         const { rowId, colId } = position
         if (colId === ROW_SELECTION_COLUMN_ID || !visibleColumnIds.includes(colId)) return
+        // nothing is pasted into read-only rows (subtasks and links don't go through updateEntities)
+        if (isRowReadOnly(rowId)) return
 
         if (!cellsByRow.has(rowId)) {
           cellsByRow.set(rowId, new Set())
         }
         cellsByRow.get(rowId)?.add(colId)
       })
+      if (!cellsByRow.size) {
+        clipboardError('These rows are read-only. Paste operation cancelled.')
+        return
+      }
 
       // Get sorted row IDs and column IDs
       const sortedRows = Array.from(cellsByRow.keys()).sort((a, b) => {
@@ -1009,6 +1022,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       pasteTableLinks,
       columnEnums,
       getEntityById,
+      isRowReadOnly,
       visibleColumns,
       attribFields,
       projectName,

@@ -21,6 +21,7 @@ export const FILTER_TYPES_BY_SCOPE: Record<ScopeType, FilterFieldType[]> = {
     'folderType',
   ],
   product: [...BASE, 'productName', 'productBaseType'],
+  representation: [...BASE, 'name', 'extension'],
   user: [...BASE],
 }
 

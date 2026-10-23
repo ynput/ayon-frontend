@@ -1,5 +1,6 @@
 import { expect, test } from '../fixtures'
-import { OverviewPage } from '../pages/OverviewPage'
+import { confirmDeleteCounts, OverviewPage } from '../pages/OverviewPage'
+import { dialog } from '../support/ui'
 
 test.describe('project overview', () => {
   test('create a root folder', async ({ page, api, projectName }) => {
@@ -117,6 +118,37 @@ test.describe('project overview', () => {
 
     await expect(overview.row('delete_me')).toBeHidden()
     await expect(overview.row('keep_me')).toBeVisible()
+    await expect
+      .poll(async () => (await api.listFolders(projectName)).map((f) => f.id))
+      .not.toContain(doomed.id)
+  })
+
+  test('force deleting a folder with published versions asks to type it', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const doomed = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const product = await api.createProduct(projectName, {
+      folderId: doomed.id,
+      name: 'renderMain',
+    })
+    await api.createVersion(projectName, { productId: product.id, version: 1 })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+
+    await overview.selectRow('sh010')
+    await overview.rowMenu('sh010', 'Delete')
+    await confirmDeleteCounts(page, /^Delete forever/, { folder: 1, product: 1, version: 1 })
+
+    const force = dialog(page, /^Force delete/)
+    await expect(force).toBeVisible()
+    const submit = force.getByTestId('delete-confirm-submit')
+    await expect(submit).toBeDisabled()
+    await force.getByTestId('delete-confirm-name-input').fill('force delete')
+    await submit.click()
+
+    await expect(overview.row('sh010')).toBeHidden()
     await expect
       .poll(async () => (await api.listFolders(projectName)).map((f) => f.id))
       .not.toContain(doomed.id)

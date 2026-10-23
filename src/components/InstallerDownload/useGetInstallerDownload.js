@@ -5,10 +5,13 @@ import { useLocalStorage } from '@shared/hooks'
 import { toast } from 'react-toastify'
 import { useListInstallersQuery } from '@queries/installers/getInstallers'
 
-const useGetInstallerDownload = () => {
-  const { data: { installers = [] } = {} } = useListInstallersQuery({})
+const useGetInstallerDownload = ({ skip = false } = {}) => {
+  const { data: { installers = [] } = {} } = useListInstallersQuery({}, { skip })
 
-  const { data: { bundles: bundleList = [] } = {} } = useListBundlesQuery({ archived: true })
+  const { data: { bundles: bundleList = [] } = {} } = useListBundlesQuery(
+    { archived: true },
+    { skip },
+  )
   const production = useMemo(() => {
     return bundleList.find((bundle) => bundle.isProduction)
   }, [bundleList])

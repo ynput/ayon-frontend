@@ -17,6 +17,27 @@ export type PowerpackDialogType = {
   icon?: string
 }
 
+// the license check runs in the powerpack remote module, so it only finishes once module
+// federation has loaded it. The last result is remembered for pages whose layout depends on it.
+const LICENSE_STORAGE_KEY = 'powerpack-license'
+
+const readStoredLicense = (): boolean | null => {
+  try {
+    const value = localStorage.getItem(LICENSE_STORAGE_KEY)
+    return value === null ? null : value === 'true'
+  } catch {
+    return null
+  }
+}
+
+const storeLicense = (value: boolean) => {
+  try {
+    localStorage.setItem(LICENSE_STORAGE_KEY, String(value))
+  } catch {
+    // storage unavailable, the next load just waits for the check again
+  }
+}
+
 /** Selection for an addon-specific dialog */
 export type AddonDialogSelection = {
   addon: string
@@ -34,6 +55,10 @@ export type PowerpackContextType = {
   addonDialog: (AddonConfig & { selectedFeature?: string }) | null
   powerLicense: boolean
   isLoading: boolean
+  // result of the last check (from an earlier load), null if there never was one.
+  // Only for layout that would otherwise wait for the check: `powerLicense` and `isLoading` stay
+  // the source of truth, and loading power features early would slow the page down.
+  storedLicense: boolean | null
 }
 
 export const PowerpackProvider = ({
@@ -82,6 +107,7 @@ export const PowerpackProvider = ({
 
   // check license state
   const [powerLicense, setPowerLicense] = useState(false)
+  const [storedLicense] = useState(readStoredLicense)
 
   // loading state
   const [isLoading, setIsLoading] = useState(true)
@@ -111,6 +137,7 @@ export const PowerpackProvider = ({
         try {
           const hasPowerLicense = await checkPowerLicense()
           setPowerLicense(hasPowerLicense)
+          storeLicense(hasPowerLicense)
         } catch (error) {
           console.error('Error checking power license:', error)
           setPowerLicense(false)
@@ -128,13 +155,14 @@ export const PowerpackProvider = ({
     () => ({
       powerLicense: powerLicense,
       isLoading,
+      storedLicense,
       selectedPowerPack,
       selectedAddon,
       setPowerpackDialog,
       powerpackDialog: resolvePowerPackDialog(selectedPowerPack),
       addonDialog: resolveAddonDialog(selectedAddon),
     }),
-    [powerLicense, selectedPowerPack, selectedAddon, setPowerpackDialog, isLoading],
+    [powerLicense, selectedPowerPack, selectedAddon, setPowerpackDialog, isLoading, storedLicense],
   )
 
   return <PowerpackContext.Provider value={value}>{children}</PowerpackContext.Provider>

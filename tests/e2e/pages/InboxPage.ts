@@ -4,11 +4,20 @@ import { menuItem } from '../support/ui'
 export class InboxPage {
   constructor(readonly page: Page) {}
 
-  async goto(tab: 'important' | 'other' | 'cleared') {
-    await this.page.goto(`/inbox/${tab}`)
+  async goto(tab: 'important' | 'other' | 'cleared', projectName?: string) {
+    const query = projectName ? `?inboxProject=${encodeURIComponent(projectName)}` : ''
+    await this.page.goto(`/inbox/${tab}${query}`)
     await expect(this.page.getByRole('button', { name: /^refresh Refresh/ })).toBeVisible({
       timeout: 30_000,
     })
+  }
+
+  /** search needs a project, see `goto` */
+  async search(text: string) {
+    await this.page.getByRole('textbox', { name: 'Search and filter' }).click()
+    await this.page.keyboard.type(text)
+    // Cmd/Ctrl+Enter adds the text as a search even when a filter name contains it
+    await this.page.keyboard.press('ControlOrMeta+Enter')
   }
 
   get messages(): Locator {

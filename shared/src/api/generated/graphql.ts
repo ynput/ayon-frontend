@@ -121,6 +121,8 @@ export type BaseNode = {
   allAttrib: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
@@ -138,6 +140,12 @@ export type BaseNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type BaseNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -183,16 +191,28 @@ export type EntityListEdge = {
   node: EntityListNode;
 };
 
+export type EntityListInfo = {
+  __typename?: 'EntityListInfo';
+  active: Scalars['Boolean']['output'];
+  entityListType: Scalars['String']['output'];
+  entityType: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  /** List items of the entity in this list, in list order */
+  itemIds: Array<Scalars['String']['output']>;
+  label: Scalars['String']['output'];
+};
+
 export type EntityListItemEdge = {
   __typename?: 'EntityListItemEdge';
   Entity?: Maybe<BaseNode>;
   Forbidden: Scalars['Boolean']['output'];
   allAttrib: Scalars['String']['output'];
-  attrib: Scalars['String']['output'];
+  attrib: Scalars['JSON']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   cursor?: Maybe<Scalars['String']['output']>;
   data: Scalars['String']['output'];
+  entityAttrib: Scalars['JSON']['output'];
   entityId: Scalars['String']['output'];
   entityType: Scalars['String']['output'];
   folderPath: Scalars['String']['output'];
@@ -251,7 +271,7 @@ export type EntityListNodeItemsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type EntityListsConnection = {
@@ -351,6 +371,8 @@ export type FolderNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   folderType: Scalars['String']['output'];
   hasChildren: Scalars['Boolean']['output'];
   hasProducts: Scalars['Boolean']['output'];
@@ -399,6 +421,12 @@ export type FolderNodeActivitiesArgs = {
 };
 
 
+export type FolderNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
+};
+
+
 export type FolderNodeLinksArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   direction?: InputMaybe<Scalars['String']['input']>;
@@ -430,8 +458,9 @@ export type FolderNodeProductsArgs = {
   pathEx?: InputMaybe<Scalars['String']['input']>;
   productBaseTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   productTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  representationFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
@@ -459,7 +488,7 @@ export type FolderNodeTasksArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   tagsAny?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -612,6 +641,8 @@ export type ProductNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   featuredVersion?: Maybe<VersionNode>;
   /** Parent folder of the product */
   folder: FolderNode;
@@ -645,6 +676,12 @@ export type ProductNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type ProductNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -690,7 +727,7 @@ export type ProductNodeVersionsArgs = {
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
   representationFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
@@ -879,7 +916,7 @@ export type ProjectNodeEntityListsArgs = {
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   last?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 
@@ -920,7 +957,7 @@ export type ProjectNodeFoldersArgs = {
   pathEx?: InputMaybe<Scalars['String']['input']>;
   paths?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
@@ -975,8 +1012,9 @@ export type ProjectNodeProductsArgs = {
   pathEx?: InputMaybe<Scalars['String']['input']>;
   productBaseTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   productTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  representationFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
@@ -1037,7 +1075,7 @@ export type ProjectNodeTasksArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   tagsAny?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1078,7 +1116,7 @@ export type ProjectNodeVersionsArgs = {
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
   representationFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
@@ -1105,7 +1143,7 @@ export type ProjectNodeWorkfilesArgs = {
   pathEx?: InputMaybe<Scalars['String']['input']>;
   paths?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1256,6 +1294,8 @@ export type RepresentationNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   /** Number of files of the representation */
   fileCount: Scalars['Int']['output'];
   /** Files in the representation */
@@ -1284,6 +1324,12 @@ export type RepresentationNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type RepresentationNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1389,6 +1435,8 @@ export type TaskNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   /** Parent folder of the task */
   folder: FolderNode;
   folderId: Scalars['String']['output'];
@@ -1429,6 +1477,12 @@ export type TaskNodeActivitiesArgs = {
 };
 
 
+export type TaskNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
+};
+
+
 export type TaskNodeLinksArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   direction?: InputMaybe<Scalars['String']['input']>;
@@ -1466,7 +1520,7 @@ export type TaskNodeVersionsArgs = {
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
   representationFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
@@ -1488,7 +1542,7 @@ export type TaskNodeWorkfilesArgs = {
   pathEx?: InputMaybe<Scalars['String']['input']>;
   paths?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
-  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1622,6 +1676,8 @@ export type VersionNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   featuredVersionType?: Maybe<Scalars['String']['output']>;
   hasReviewables: Scalars['Boolean']['output'];
   heroVersionId?: Maybe<Scalars['String']['output']>;
@@ -1660,6 +1716,12 @@ export type VersionNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type VersionNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1721,6 +1783,8 @@ export type WorkfileNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
@@ -1747,6 +1811,12 @@ export type WorkfileNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type WorkfileNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1837,6 +1907,14 @@ export type GetEntitiesChecklistsQueryVariables = Exact<{
 
 export type GetEntitiesChecklistsQuery = { project: { name: string, activities: { edges: Array<{ cursor: string | null, node: { activityId: string, body: string } }> } } };
 
+export type GetVersionsFrameStartQueryVariables = Exact<{
+  projectName: string;
+  versionIds: Array<string> | string;
+}>;
+
+
+export type GetVersionsFrameStartQuery = { project: { versions: { edges: Array<{ node: { id: string, attrib: { frameStart: number | null } } }> } } };
+
 export type GetDetailsPanelFolderQueryVariables = Exact<{
   projectName: string;
   entityId: string;
@@ -1901,7 +1979,7 @@ export type GetListItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetListItemsQuery = { project: { entityLists: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ node: { id: string, active: boolean, items: { pageInfo: { hasNextPage: boolean, hasPreviousPage: boolean, endCursor: string | null }, edges: Array<{ id: string, entityId: string, entityType: string, allAttrib: string, position: number, ownItemAttrib: Array<string>, node:
+export type GetListItemsQuery = { project: { entityLists: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ node: { id: string, active: boolean, items: { pageInfo: { hasNextPage: boolean, hasPreviousPage: boolean, endCursor: string | null }, edges: Array<{ id: string, entityId: string, entityType: string, entityAttrib: unknown, position: number, itemAttrib: unknown, ownItemAttrib: Array<string>, node:
                 | { label: string | null, status: string, tags: Array<string>, folderType: string, path: string | null, ownAttrib: Array<string>, hasReviewables: boolean, thumbnailHash: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folderId: string, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null }
                 | { status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folder: { name: string, label: string | null, path: string | null, folderType: string } }
                 | { active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string> }
@@ -1940,6 +2018,32 @@ export type GetListsItemsForReviewSessionQueryVariables = Exact<{
 
 
 export type GetListsItemsForReviewSessionQuery = { project: { entityLists: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ node: { id: string, label: string, active: boolean, entityType: string, updatedAt: unknown, count: number, accessLevel: number } }> } } };
+
+export type ListMembershipFragmentFragment = { id: string, label: string, entityListType: string, itemIds: Array<string> };
+
+export type GetFoldersListsMembershipQueryVariables = Exact<{
+  projectName: string;
+  entityIds?: Array<string> | string | null | undefined;
+}>;
+
+
+export type GetFoldersListsMembershipQuery = { project: { folders: { edges: Array<{ node: { id: string, entityLists: Array<{ id: string, label: string, entityListType: string, itemIds: Array<string> }> } }> } } };
+
+export type GetTasksListsMembershipQueryVariables = Exact<{
+  projectName: string;
+  entityIds?: Array<string> | string | null | undefined;
+}>;
+
+
+export type GetTasksListsMembershipQuery = { project: { tasks: { edges: Array<{ node: { id: string, entityLists: Array<{ id: string, label: string, entityListType: string, itemIds: Array<string> }> } }> } } };
+
+export type GetVersionsListsMembershipQueryVariables = Exact<{
+  projectName: string;
+  entityIds?: Array<string> | string | null | undefined;
+}>;
+
+
+export type GetVersionsListsMembershipQuery = { project: { versions: { edges: Array<{ node: { id: string, entityLists: Array<{ id: string, label: string, entityListType: string, itemIds: Array<string> }> } }> } } };
 
 type ListItemFragment_FolderNode_Fragment = { label: string | null, status: string, tags: Array<string>, folderType: string, path: string | null, ownAttrib: Array<string>, hasReviewables: boolean, thumbnailHash: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folderId: string, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null };
 
@@ -2135,6 +2239,7 @@ export type GetProductsQueryVariables = Exact<{
   versionFilter?: string | null | undefined;
   taskFilter?: string | null | undefined;
   folderFilter?: string | null | undefined;
+  representationFilter?: string | null | undefined;
   featuredVersionOrder?: Array<string> | string | null | undefined;
   search?: string | null | undefined;
   folderIds?: Array<string> | string | null | undefined;
@@ -2155,6 +2260,7 @@ export type GetProductsColumnStatsQueryVariables = Exact<{
   versionFilter?: string | null | undefined;
   taskFilter?: string | null | undefined;
   folderFilter?: string | null | undefined;
+  representationFilter?: string | null | undefined;
   folderIds?: Array<string> | string | null | undefined;
   productIds?: Array<string> | string | null | undefined;
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
@@ -2171,6 +2277,7 @@ export type GetVersionsQueryVariables = Exact<{
   productFilter?: string | null | undefined;
   taskFilter?: string | null | undefined;
   folderFilter?: string | null | undefined;
+  representationFilter?: string | null | undefined;
   featuredOnly?: Array<string> | string | null | undefined;
   featuredOnlyEntityType?: string | null | undefined;
   latestPerFolder?: boolean | null | undefined;
@@ -2202,6 +2309,7 @@ export type GetVersionsByProductIdQueryVariables = Exact<{
   versionFilter?: string | null | undefined;
   taskFilter?: string | null | undefined;
   folderFilter?: string | null | undefined;
+  representationFilter?: string | null | undefined;
   featuredOnly?: Array<string> | string | null | undefined;
   featuredOnlyEntityType?: string | null | undefined;
   latestPerFolder?: boolean | null | undefined;
@@ -2223,6 +2331,7 @@ export type GetVersionsColumnStatsQueryVariables = Exact<{
   productFilter?: string | null | undefined;
   taskFilter?: string | null | undefined;
   folderFilter?: string | null | undefined;
+  representationFilter?: string | null | undefined;
   folderIds?: Array<string> | string | null | undefined;
   versionIds?: Array<string> | string | null | undefined;
   productIds?: Array<string> | string | null | undefined;
@@ -2230,7 +2339,6 @@ export type GetVersionsColumnStatsQueryVariables = Exact<{
   featuredOnly?: Array<string> | string | null | undefined;
   featuredOnlyEntityType?: string | null | undefined;
   latestPerFolder?: boolean | null | undefined;
-  hasReviewables?: boolean | null | undefined;
 }>;
 
 
@@ -2436,6 +2544,14 @@ export const DetailsPanelVersionFragmentFragmentDoc = new TypedDocumentString(`
   author
 }
     `, {"fragmentName":"DetailsPanelVersionFragment"});
+export const ListMembershipFragmentFragmentDoc = new TypedDocumentString(`
+    fragment ListMembershipFragment on EntityListInfo {
+  id
+  label
+  entityListType
+  itemIds
+}
+    `, {"fragmentName":"ListMembershipFragment"});
 export const SubTaskFragmentFragmentDoc = new TypedDocumentString(`
     fragment SubTaskFragment on SubTaskNode {
   id
@@ -3018,6 +3134,22 @@ export const GetEntitiesChecklistsDocument = new TypedDocumentString(`
   }
 }
     `);
+export const GetVersionsFrameStartDocument = new TypedDocumentString(`
+    query GetVersionsFrameStart($projectName: String!, $versionIds: [String!]!) {
+  project(name: $projectName) {
+    versions(ids: $versionIds) {
+      edges {
+        node {
+          id
+          attrib {
+            frameStart
+          }
+        }
+      }
+    }
+  }
+}
+    `);
 export const GetDetailsPanelFolderDocument = new TypedDocumentString(`
     query GetDetailsPanelFolder($projectName: String!, $entityId: String!) {
   project(name: $projectName) {
@@ -3285,8 +3417,9 @@ export const GetListItemsDocument = new TypedDocumentString(`
               id
               entityId
               entityType
-              allAttrib
+              itemAttrib: attrib
               ownItemAttrib: ownAttrib
+              entityAttrib
               position
               node {
                 ...ListItemFragment
@@ -3502,6 +3635,69 @@ export const GetListsItemsForReviewSessionDocument = new TypedDocumentString(`
   }
 }
     `);
+export const GetFoldersListsMembershipDocument = new TypedDocumentString(`
+    query GetFoldersListsMembership($projectName: String!, $entityIds: [String!]) {
+  project(name: $projectName) {
+    folders(ids: $entityIds, last: 5000) {
+      edges {
+        node {
+          id
+          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
+            ...ListMembershipFragment
+          }
+        }
+      }
+    }
+  }
+}
+    fragment ListMembershipFragment on EntityListInfo {
+  id
+  label
+  entityListType
+  itemIds
+}`);
+export const GetTasksListsMembershipDocument = new TypedDocumentString(`
+    query GetTasksListsMembership($projectName: String!, $entityIds: [String!]) {
+  project(name: $projectName) {
+    tasks(ids: $entityIds, last: 5000) {
+      edges {
+        node {
+          id
+          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
+            ...ListMembershipFragment
+          }
+        }
+      }
+    }
+  }
+}
+    fragment ListMembershipFragment on EntityListInfo {
+  id
+  label
+  entityListType
+  itemIds
+}`);
+export const GetVersionsListsMembershipDocument = new TypedDocumentString(`
+    query GetVersionsListsMembership($projectName: String!, $entityIds: [String!]) {
+  project(name: $projectName) {
+    versions(ids: $entityIds, last: 5000) {
+      edges {
+        node {
+          id
+          entityLists(visibility: VISIBLE, entityListTypes: ["generic", "review-session"]) {
+            ...ListMembershipFragment
+          }
+        }
+      }
+    }
+  }
+}
+    fragment ListMembershipFragment on EntityListInfo {
+  id
+  label
+  entityListType
+  itemIds
+}`);
 export const GetUpdatedAndNewFoldersDocument = new TypedDocumentString(`
     query GetUpdatedAndNewFolders($projectName: String!, $folderIds: [String!]!, $first: Int) {
   project(name: $projectName) {
@@ -3971,7 +4167,7 @@ export const GetLatestProductVersionDocument = new TypedDocumentString(`
 }
     `);
 export const GetProductsDocument = new TypedDocumentString(`
-    query GetProducts($projectName: String!, $productIds: [String!], $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $featuredVersionOrder: [String!], $search: String, $folderIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $sortBy: [String!], $showComments: Boolean! = false) {
+    query GetProducts($projectName: String!, $productIds: [String!], $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $representationFilter: String, $featuredVersionOrder: [String!], $search: String, $folderIds: [String!], $after: String, $first: Int, $before: String, $last: Int, $sortBy: [String!], $showComments: Boolean! = false) {
   project(name: $projectName) {
     products(
       ids: $productIds
@@ -3979,6 +4175,7 @@ export const GetProductsDocument = new TypedDocumentString(`
       versionFilter: $versionFilter
       taskFilter: $taskFilter
       folderFilter: $folderFilter
+      representationFilter: $representationFilter
       search: $search
       folderIds: $folderIds
       includeFolderChildren: true
@@ -4068,7 +4265,7 @@ fragment VersionBase on VersionNode {
   }
 }`);
 export const GetProductsColumnStatsDocument = new TypedDocumentString(`
-    query GetProductsColumnStats($projectName: String!, $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $folderIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
+    query GetProductsColumnStats($projectName: String!, $productFilter: String, $versionFilter: String, $taskFilter: String, $folderFilter: String, $representationFilter: String, $folderIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!]) {
   project(name: $projectName) {
     products(
       calculateSpecificStatistics: $targets
@@ -4077,6 +4274,7 @@ export const GetProductsColumnStatsDocument = new TypedDocumentString(`
       versionFilter: $versionFilter
       taskFilter: $taskFilter
       folderFilter: $folderFilter
+      representationFilter: $representationFilter
       folderIds: $folderIds
       includeFolderChildren: true
     ) {
@@ -4104,7 +4302,7 @@ export const GetProductsColumnStatsDocument = new TypedDocumentString(`
   distribution
 }`);
 export const GetVersionsDocument = new TypedDocumentString(`
-    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean, $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: [String!], $showComments: Boolean! = false) {
+    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $representationFilter: String, $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean, $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: [String!], $showComments: Boolean! = false) {
   project(name: $projectName) {
     versions(
       ids: $versionIds
@@ -4113,6 +4311,7 @@ export const GetVersionsDocument = new TypedDocumentString(`
       productFilter: $productFilter
       taskFilter: $taskFilter
       folderFilter: $folderFilter
+      representationFilter: $representationFilter
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType
       latestPerFolder: $latestPerFolder
@@ -4219,13 +4418,14 @@ export const GetVersionsAttribsDocument = new TypedDocumentString(`
 }
     `);
 export const GetVersionsByProductIdDocument = new TypedDocumentString(`
-    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $folderFilter: String, $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean, $hasReviewables: Boolean, $sortBy: [String!], $first: Int, $last: Int, $after: String, $before: String, $showComments: Boolean! = false) {
+    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $folderFilter: String, $representationFilter: String, $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean, $hasReviewables: Boolean, $sortBy: [String!], $first: Int, $last: Int, $after: String, $before: String, $showComments: Boolean! = false) {
   project(name: $projectName) {
     versions(
       productIds: $productIds
       filter: $versionFilter
       taskFilter: $taskFilter
       folderFilter: $folderFilter
+      representationFilter: $representationFilter
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType
       latestPerFolder: $latestPerFolder
@@ -4315,7 +4515,7 @@ fragment VersionExtended on VersionNode {
   }
 }`);
 export const GetVersionsColumnStatsDocument = new TypedDocumentString(`
-    query GetVersionsColumnStats($projectName: String!, $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $folderIds: [String!], $versionIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!], $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean, $hasReviewables: Boolean) {
+    query GetVersionsColumnStats($projectName: String!, $versionFilter: String, $productFilter: String, $taskFilter: String, $folderFilter: String, $representationFilter: String, $folderIds: [String!], $versionIds: [String!], $productIds: [String!], $targets: [MetricTargetInput!], $featuredOnly: [String!], $featuredOnlyEntityType: String, $latestPerFolder: Boolean) {
   project(name: $projectName) {
     versions(
       calculateSpecificStatistics: $targets
@@ -4325,12 +4525,12 @@ export const GetVersionsColumnStatsDocument = new TypedDocumentString(`
       productFilter: $productFilter
       taskFilter: $taskFilter
       folderFilter: $folderFilter
+      representationFilter: $representationFilter
       folderIds: $folderIds
       includeFolderChildren: true
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType
       latestPerFolder: $latestPerFolder
-      hasReviewables: $hasReviewables
     ) {
       fieldStats {
         ...ColumnStatsFragment
@@ -4648,6 +4848,9 @@ const injectedRtkApi = api.injectEndpoints({
     GetEntitiesChecklists: build.query<GetEntitiesChecklistsQuery, GetEntitiesChecklistsQueryVariables>({
       query: (variables) => ({ document: GetEntitiesChecklistsDocument as unknown as string, variables })
     }),
+    GetVersionsFrameStart: build.query<GetVersionsFrameStartQuery, GetVersionsFrameStartQueryVariables>({
+      query: (variables) => ({ document: GetVersionsFrameStartDocument as unknown as string, variables })
+    }),
     GetDetailsPanelFolder: build.query<GetDetailsPanelFolderQuery, GetDetailsPanelFolderQueryVariables>({
       query: (variables) => ({ document: GetDetailsPanelFolderDocument as unknown as string, variables })
     }),
@@ -4674,6 +4877,15 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetListsItemsForReviewSession: build.query<GetListsItemsForReviewSessionQuery, GetListsItemsForReviewSessionQueryVariables>({
       query: (variables) => ({ document: GetListsItemsForReviewSessionDocument as unknown as string, variables })
+    }),
+    GetFoldersListsMembership: build.query<GetFoldersListsMembershipQuery, GetFoldersListsMembershipQueryVariables>({
+      query: (variables) => ({ document: GetFoldersListsMembershipDocument as unknown as string, variables })
+    }),
+    GetTasksListsMembership: build.query<GetTasksListsMembershipQuery, GetTasksListsMembershipQueryVariables>({
+      query: (variables) => ({ document: GetTasksListsMembershipDocument as unknown as string, variables })
+    }),
+    GetVersionsListsMembership: build.query<GetVersionsListsMembershipQuery, GetVersionsListsMembershipQueryVariables>({
+      query: (variables) => ({ document: GetVersionsListsMembershipDocument as unknown as string, variables })
     }),
     GetUpdatedAndNewFolders: build.query<GetUpdatedAndNewFoldersQuery, GetUpdatedAndNewFoldersQueryVariables>({
       query: (variables) => ({ document: GetUpdatedAndNewFoldersDocument as unknown as string, variables })

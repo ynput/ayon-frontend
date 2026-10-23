@@ -1,5 +1,22 @@
 import type { EntityUri, SettingsUri } from '@shared/context'
 
+export const URL_PARAM_ID = 'uri'
+
+let handoffUri: string | undefined
+
+// breadcrumbs "go to URI" hands the uri over through the url and reloads;
+// read it once and strip it before the router captures the url so it can't leak back into later navigations
+export const consumeUriHandoff = (): string => {
+  if (handoffUri !== undefined) return handoffUri
+  const url = new URL(window.location.href)
+  handoffUri = url.searchParams.get(URL_PARAM_ID) ?? ''
+  if (handoffUri) {
+    url.searchParams.delete(URL_PARAM_ID)
+    window.history.replaceState(window.history.state, '', url)
+  }
+  return handoffUri
+}
+
 // helper to parse uri into base and query components
 const parseUriComponents = (uri: string): { baseUri: string; queryParams: URLSearchParams } => {
   const parts = uri.split('://')[1].split('?')
