@@ -131,7 +131,7 @@ test.describe('overview table export', () => {
   })
 
   // FLAG (app bug): Import CSV did not map the values of a combined folder_or_task_type column
-  // fixed on fix/import-combined-type-values, switch back to test() once it is merged
+  // fixed in ynput/ayon-frontend#2529, switch back to test() once it is merged
   test.fixme(
     'a raw CSV export with the import settings imports into another project',
     async ({ page, api, projectName }, testInfo) => {
