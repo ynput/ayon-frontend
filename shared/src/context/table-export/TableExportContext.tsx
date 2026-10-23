@@ -13,6 +13,7 @@ import {
 const ADDON = 'powerpack'
 const REMOTE = 'tableExport'
 const MODULE = 'TableExportApp'
+const PP_VERSION = '1.6.9'
 
 // At the app root, inside the router. Pages register what their table exports, the
 // toolbar and the context menu open the export, the Power Pack module renders the dialog.
@@ -35,7 +36,8 @@ export const TableExportProvider = ({ children }: { children: ReactNode }) => {
   const openExport = useCallback(
     (scope: TableExportScope) => {
       if (!powerLicense) return setPowerpackDialog('tableExport')
-      if (!isInstalled) return void toast.error('Update the Power Pack addon to export tables')
+      if (!isInstalled)
+        return void toast.error('Update to Power Pack ' + PP_VERSION + ' to export tables')
       setSearchParams((params) => {
         params.set(TABLE_EXPORT_SEARCH_PARAM, scope)
         return params
