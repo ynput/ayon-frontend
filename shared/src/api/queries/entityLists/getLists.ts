@@ -550,4 +550,4 @@ export const {
   useLazyGetListItemsQuery,
 } = getListsGqlApiInjected
 
-export const { useGetEntityListQuery } = getListsApiEnhanced
+export const { useGetEntityListQuery, useLazyGetEntityListQuery } = getListsApiEnhanced
