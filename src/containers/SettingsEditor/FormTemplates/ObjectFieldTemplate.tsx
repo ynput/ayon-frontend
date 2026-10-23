@@ -1,30 +1,46 @@
-import clsx from 'clsx'
-import { toast } from 'react-toastify'
 import { useMemo } from 'react'
-import ReactMarkdown from 'react-markdown'
-import SettingsPanel from '../SettingsPanel'
+import { useSettingsGroupDepth } from '../SettingsGroup/SettingsGroupContextInstance'
+import { isPanelSectionObject } from '../SettingsGroup/SettingsGroupHelpers'
+import { useSettingsListItem } from '../SettingsGroup/SettingsListItemContextInstance'
+import {
+  buildObjectContextMenu,
+  buildObjectFields,
+  buildLongDescription,
+  buildObjectTitle,
+  getEnabledToggler,
+  getObjectOverrideLevel,
+  showObjectContextMenu,
+} from './ObjectFieldTemplateHelpers'
+import ObjectFieldTemplateView from './ObjectFieldTemplateView'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 
-import { Badge, BadgeWrapper } from '@shared/components'
-import { copyToClipboard } from '@shared/util'
 import { $Any } from '@types'
 import { ObjectFieldTemplateProps } from '@rjsf/utils'
 import { matchesFilterKeys } from './searchMatcher'
 
-const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
-  // return true, if first array starts with second array
-  if ((arr2 || []).length > (arr1 || []).length) return false
-  if ((arr2 || []).length === 0) return true
-  for (let i = 0; i < arr2.length; i++) {
-    if (arr1[i] !== arr2[i]) return false
-  }
-  return true
-}
-
 function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
   const [contextMenu] = useCreateContextMenu([])
   let className = 'form-object-field'
-  if (props.schema.layout) className += ` layout-${props.schema.layout}`
+
+  const flatLayout = !!props.formContext.flatLayout
+  const isRoot = props.idSchema.$id === 'root'
+  const groupDepth = useSettingsGroupDepth()
+  // set when this object is a list item that folds; it then always gets a header
+  const listItem = useSettingsListItem()
+  // an open list item leads with its name (or first field); the rest sit in a panel
+  const leadsListItem = flatLayout && !!listItem
+  const namedListItem = leadsListItem && !!listItem?.named
+  // In the flat layout the root's loose fields have no card of their own, so it makes some
+  const wrapsLooseFields =
+    flatLayout && groupDepth === 0 && (isRoot || props.schema.layout === 'root')
+  // a card's or section's fields sit in inset panels, between its sub-groups
+  const panelsFields =
+    flatLayout &&
+    isPanelSectionObject({
+      layout: props.schema.layout,
+      isRoot,
+      isListItem: !!listItem,
+    })
 
   // Highlight overrides and changed fields
 
@@ -32,23 +48,10 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
   const override = props.formContext.overrides[objId]
   const path = override?.path
 
-  const overrideLevel = useMemo(() => {
-    // check whether a child object is changed locally
-    for (const changedPath of props.formContext.changedKeys) {
-      if (arrayStartsWith(changedPath, path)) {
-        return 'edit'
-      }
-    }
-
-    for (const changedId in props.formContext.overrides) {
-      const changedPath = props.formContext.overrides[changedId].path
-      if (arrayStartsWith(changedPath, path)) {
-        return props.formContext.overrides[changedId].level
-      }
-    }
-
-    return 'default'
-  }, [path, props.formContext.changedKeys, props.formContext.overrides])
+  const overrideLevel = useMemo(
+    () => getObjectOverrideLevel(props.formContext.changedKeys, props.formContext.overrides, path),
+    [path, props.formContext.changedKeys, props.formContext.overrides],
+  )
 
   if (props.schema.isgroup && overrideLevel === 'edit') {
     className += ' group-changed'
@@ -58,239 +61,116 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
 
   const shortDescription = props.schema.description && props.schema.description.split('\n')[0]
 
-  const longDescription = useMemo(() => {
-    if (!props.schema.description) return null
-    return (
-      <div className="form-object-field-help">
-        <ReactMarkdown>{props.schema.description}</ReactMarkdown>
-      </div>
-    )
-  }, [props.schema.description])
+  const longDescription = useMemo(
+    () => buildLongDescription(props.schema.description),
+    [props.schema.description],
+  )
 
   // memoize the fields
 
-  const enabledToggler = useMemo(() => {
-    for (const element of props.properties) {
-      if (element?.name === 'enabled') {
-        return <span className="form-object-header-enabled-toggler">{element.content}</span>
-      }
-    }
-  }, [props.properties])
+  const enabledToggler = useMemo(() => getEnabledToggler(props.properties), [props.properties])
 
-  const fields = useMemo(() => {
-    let hiddenFields: $Any[] = []
-    for (const propName in props?.schema?.properties || {}) {
-      //@ts-ignore
-      const ppts = props?.schema?.properties[propName]
-      //@ts-ignore
-      const validScopes = [...(ppts?.scope || ['studio', 'project'])]
-      if (
-        validScopes.includes('studio') &&
-        props.formContext.includeStudioScope &&
-        !validScopes.includes('site')
-      ) {
-        validScopes.push('project')
-      }
+  const { properties, schema, formContext, formData, registry, idSchema, id } = props
+  const fields = useMemo(
+    () =>
+      buildObjectFields({
+        properties,
+        schema,
+        formContext,
+        formData,
+        registry,
+        idSchema,
+        id,
+        className,
+        wrapsLooseFields,
+        panelsFields,
+        flatLayout,
+        leadsListItem,
+        namedListItem,
+        longDescription,
+      }),
+    [
+      properties,
+      schema,
+      formContext,
+      formData,
+      registry,
+      idSchema,
+      id,
+      className,
+      wrapsLooseFields,
+      panelsFields,
+      flatLayout,
+      leadsListItem,
+      namedListItem,
+      longDescription,
+    ],
+  )
 
-      if (!validScopes.includes(props.formContext.level)) {
-        // console.log(`Hiding field ${propName} due to scope`, validScopes, props.formContext.level, props.formContext)
-        hiddenFields.push(propName)
-      }
+  const objectId = props.idSchema.$id
+  const { level, onRemoveAllOverrides, onPinOverride, onRemoveOverride, onPasteValue } =
+    props.formContext
 
-      //@ts-ignore
-      if (ppts.conditionalEnum) {
-        const value = props.formData?.[propName]
-        // multiselect enums keep their options in items.enum and store an array
-        const isMultiselect = Array.isArray(value) || !!ppts?.items?.enum
-        const options: $Any[] = (isMultiselect ? ppts?.items?.enum : ppts?.enum) || []
-        const selected: $Any[] = isMultiselect ? value || [] : [value]
-        hiddenFields = [...hiddenFields, ...options.filter((e: $Any) => !selected.includes(e))]
-      }
-    }
-
-    if (props.schema.layout === 'expanded') {
-      let nameField = null
-      let otherFields = []
-
-      for (const element of props.properties) {
-        if (element?.name === 'name') nameField = element.content
-        else otherFields.push(element.content)
-      }
-      return (
-        <div style={{ width: '100%' }}>
-          {longDescription}
-          <div className={className}>
-            <div className="name-field">{nameField}</div>
-            <div className="data-fields">
-              {otherFields
-                .filter((f) => !hiddenFields.includes(f.props.name))
-                .map((element) => element)}
-            </div>
-          </div>
-        </div>
-      )
-    } // ugly layout
-
-    const matches = matchesFilterKeys(
-      props.formContext.searchText,
-      props.formContext.filterKeys,
-      props.formContext.addonName,
-      props.idSchema.$id,
-    )
-
-    return (
-      <div
-        data-hidden={matches ? 'false' : 'true'}
-        style={{
-          visibility: matches ? 'visible' : 'hidden',
-          position: matches ? 'relative' : 'absolute',
-          height: matches ? 'auto' : 0,
-        }}
-      >
-        {longDescription}
-        <div className={className} data-test="test-aa" data-fieldid={props.id}>
-          {props.properties
-            .filter(
-              (element) =>
-                (element.name !== 'enabled' || ['compact', 'root'].includes(props.schema.layout)) &&
-                !hiddenFields.includes(element.name),
-            )
-            .map((element, index) => {
-              let widget = element.content.props?.schema?.widget
-              widget = widget || (element.content.props?.name === 'shortName' ? 'short' : null)
-              return (
-                <div
-                  key={index}
-                  className={clsx('form-object-field-item', widget && `widget-${widget}`)}
-                >
-                  {element.content}
-                </div>
-              )
-            })}
-        </div>
-      </div>
-    )
-  }, [props.properties, className])
+  const contextMenuModel = useMemo(
+    () =>
+      buildObjectContextMenu({
+        objectId,
+        level,
+        onRemoveAllOverrides,
+        onPinOverride,
+        onRemoveOverride,
+        onPasteValue,
+        formData,
+        override,
+        overrideLevel,
+        path,
+      }),
+    [
+      objectId,
+      level,
+      onRemoveAllOverrides,
+      onPinOverride,
+      onRemoveOverride,
+      onPasteValue,
+      formData,
+      override,
+      overrideLevel,
+      path,
+    ],
+  )
 
   // aaand... render
 
-  if (['compact', 'root', 'expanded'].includes(props.schema.layout)) return fields
-
-  const contextMenuModel = useMemo(() => {
-    let model = []
-
-    if (props.idSchema.$id === 'root') {
-      model.push({
-        label: `Remove all ${props.formContext.level} overrides`,
-        disabled: !props.formContext.onRemoveAllOverrides,
-        command: () => {
-          props.formContext.onRemoveAllOverrides()
-        },
-      })
-    } else {
-      const rmPath = override?.inGroup || path || ['root']
-      if (props.formContext.onPinOverride)
-        model.push({
-          label: `Add current ${rmPath[rmPath.length - 1]} value as ${
-            props.formContext.level
-          } override`,
-          command: () => props.formContext.onPinOverride(rmPath),
-          disabled: overrideLevel === props.formContext.level,
-        })
-      if (props.formContext.onRemoveOverride)
-        model.push({
-          label: `Remove ${props.formContext.level} override from ${rmPath[rmPath.length - 1]}`,
-          command: () => props.formContext.onRemoveOverride(rmPath),
-          disabled: overrideLevel !== props.formContext.level,
-        })
-    }
-
-    model.push(
-      {
-        label: 'Copy',
-        command: () => {
-          if (!props.formData || (Array.isArray(props.formData) && props.formData.length === 0)) {
-            console.log('No data to copy', props)
-            toast.warn('No data to copy')
-            return
-          }
-          copyToClipboard(JSON.stringify(props.formData, null, 2))
-        },
-      },
-      {
-        label: 'Paste',
-        disabled: !props.formContext.onPasteValue,
-        command: () => {
-          props.formContext.onPasteValue(path || [])
-        },
-      },
-    )
-    return model
-  }, [override, overrideLevel, path, props.formData])
+  if (['compact', 'root', 'expanded'].includes(props.schema.layout) && !listItem) return fields()
 
   // Title + handle root object
-
-  let stringTitle = props.title
-  let rootTitle
-  let titleComponent
-  // In case of "pseudo-dicts" (array of objects with a "name" attribute)
-  // use the "name" attributeas the title
 
   if (!props.schema?.properties) {
     console.warn(`object schema does not have any props:`, props.schema)
   }
 
-  if ('name' in (props.schema.properties || {})) {
-    let label = null
-    if ('label' in (props.schema.properties || {})) label = props.formData.label
-    stringTitle = label || props.formData?.name || <span className="new-object">Unnamed item</span>
-  }
-
-  if (props.idSchema.$id === 'root' && props.formContext.formTitle) {
-    stringTitle = props.formContext.formTitle
-  }
-
-  if (props.idSchema.$id === 'root') {
-    const projectMark = props.formContext.headerProjectName && (
-      <Badge color="project" label={props.formContext.headerProjectName} />
-    )
-    const siteMark = props.formContext.headerSiteId && (
-      <Badge color="site" label={props.formContext.headerSiteId} />
-    )
-
-    const envMark = props.formContext.headerVariant && (
-      <Badge
-        color={
-          ['production', 'staging'].includes(props.formContext.headerVariant)
-            ? props.formContext.headerVariant
-            : 'developer'
-        }
-        label={props.formContext.headerVariant}
-      />
-    )
-
-    rootTitle = (
-      <>
-        {stringTitle}
-        <BadgeWrapper>
-          {projectMark}
-          {siteMark}
-          {envMark}
-        </BadgeWrapper>
-      </>
-    )
-  } // Root object - show badges and title
-
-  titleComponent = props.idSchema.$id === 'root' ? rootTitle : stringTitle
+  const titleComponent = buildObjectTitle({
+    title: props.title,
+    schema: props.schema,
+    formData: props.formData,
+    objectId,
+    formTitle: props.formContext.formTitle,
+    headerProjectName: props.formContext.headerProjectName,
+    headerSiteId: props.formContext.headerSiteId,
+    headerVariant: props.formContext.headerVariant,
+    listItem,
+  })
 
   // Execute context menu
 
-  const onContextMenu = (e: $Any) => {
-    if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path || [])
-    if (!contextMenuModel?.length) return
-    e.preventDefault()
-    contextMenu(e, contextMenuModel)
-  }
+  const onContextMenu = (e: $Any) =>
+    showObjectContextMenu(
+      e,
+      props.formContext.onSetBreadcrumbs,
+      path,
+      contextMenuModel,
+      contextMenu,
+    )
 
   const matches = matchesFilterKeys(
     props.formContext.searchText,
@@ -299,32 +179,24 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
     props.idSchema.$id,
   )
 
+  const onGroupClick = () => props.formContext.onSetBreadcrumbs?.(path)
+
   return (
-    <div
-      data-schema-id={props.idSchema.$id}
-      data-hidden={matches ? 'false' : 'true'}
-      style={{
-        visibility: matches ? 'visible' : 'hidden',
-        position: matches ? 'relative' : 'absolute',
-        height: matches ? 'auto' : 0,
-      }}
-    >
-      <SettingsPanel
-        objId={objId}
-        onClick={() => {
-          if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path)
-        }}
-        title={titleComponent}
-        description={shortDescription}
-        className={`obj-override-${overrideLevel}`}
-        enabledToggler={enabledToggler}
-        onContextMenu={onContextMenu}
-        currentId={props.formContext.currentId}
-        layout={undefined}
-      >
-        {fields}
-      </SettingsPanel>
-    </div>
+    <ObjectFieldTemplateView
+      objId={objId}
+      isRoot={isRoot}
+      flatLayout={flatLayout}
+      matches={matches}
+      title={titleComponent}
+      groupDescription={props.schema.description}
+      shortDescription={shortDescription}
+      overrideLevel={overrideLevel}
+      enabledToggler={enabledToggler}
+      onContextMenu={onContextMenu}
+      onGroupClick={onGroupClick}
+      currentId={props.formContext.currentId}
+      fields={fields}
+    />
   )
 }
 

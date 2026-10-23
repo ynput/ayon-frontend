@@ -2,6 +2,11 @@ import { ArrayFieldTemplateItemType } from '@rjsf/utils'
 import { $Any } from '@types'
 import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import clsx from 'clsx'
+import { ReactElement, cloneElement } from 'react'
+import { RemoveItemButton } from './ArrayFieldTemplate.styled'
+import { SettingsListItemContext } from '../SettingsGroup/SettingsListItemContextInstance'
+import { useListItemFold } from './useListItemFold'
 
 const ArrayItemControls = styled.div`
   display: flex;
@@ -40,6 +45,8 @@ type Props = ArrayFieldTemplateItemType & {
     _owner: $Any
   }
   onChange: Function
+  /** False when the list's values are too long for boxed rows (see listValuesFitRows) */
+  rowsFit?: boolean
 }
 
 const ArrayItemTemplate = (props: Props) => {
@@ -56,25 +63,63 @@ const ArrayItemTemplate = (props: Props) => {
     //  children.props.schema.properties.name.fixedValue = itemName
   }
 
+  const formContext = props.registry?.formContext
+  const flatLayout = !!formContext?.flatLayout
+  const childProps = (props.children as $Any)?.props || {}
+  // an item holding one control, not a group, is drawn as a single bordered field
+  const itemType = childProps.schema?.type
+  const isSimple = flatLayout && !['object', 'array'].includes(itemType)
+
+  const { isFoldable, itemState, onItemRemoved, rowSchema } = useListItemFold({
+    registry: props.registry,
+    childProps,
+    index: props.index,
+    rowsFit: props.rowsFit,
+  })
+
   const onRemoveItem = () => {
     props.onChange()
     props.onDropIndexClick(props.index)()
+    onItemRemoved()
   }
 
   const rmButton = props.hasRemove && !parentSchema.disabled && (
-    <ArrayItemControls>
-      <DeleteButton
-        onClick={onRemoveItem}
-        icon="delete"
-        className="delete"
-        disabled={undeletable}
-      />
+    <ArrayItemControls className="array-item-controls">
+      {flatLayout ? (
+        <RemoveItemButton
+          onClick={onRemoveItem}
+          icon="close"
+          variant="text"
+          className="delete remove-item"
+          aria-label="Remove item"
+          data-tooltip="Remove item"
+          disabled={undeletable}
+        />
+      ) : (
+        <DeleteButton
+          onClick={onRemoveItem}
+          icon="delete"
+          className="delete"
+          disabled={undeletable}
+        />
+      )}
     </ArrayItemControls>
   )
 
+  // a short item renders with the compact layout, which draws it as a boxed row
+  const content = rowSchema
+    ? cloneElement(props.children as unknown as ReactElement, { schema: rowSchema })
+    : props.children
+
   return (
-    <FormArrayFieldItem>
-      {props.children}
+    <FormArrayFieldItem className={clsx('array-item-row', isSimple && 'array-item-simple')}>
+      {isFoldable ? (
+        <SettingsListItemContext.Provider value={itemState}>
+          {content}
+        </SettingsListItemContext.Provider>
+      ) : (
+        content
+      )}
       {rmButton}
     </FormArrayFieldItem>
   )

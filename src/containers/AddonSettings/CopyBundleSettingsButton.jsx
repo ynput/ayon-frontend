@@ -20,13 +20,17 @@ const CopyBundleSettingsButton = ({
 }) => {
   const [dialogVisible, setDialogVisible] = useState(false)
 
-  // Get a complete list of target addons (what's in the addon list)
+  // Get a complete list of target addons (what's in the addon list). It is the whole
+  // settings payload, so it only loads once the dialog opens
 
-  const { data: targetAddons, loading } = useGetAddonSettingsListQuery({
-    projectName,
-    siteId,
-    variant,
-  })
+  const { data: targetAddons, loading } = useGetAddonSettingsListQuery(
+    {
+      projectName,
+      siteId,
+      variant,
+    },
+    { skip: !dialogVisible },
+  )
 
   const selectedAddons = useMemo(() => {
     if (loading) return []
