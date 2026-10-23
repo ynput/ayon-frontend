@@ -940,6 +940,7 @@ export type ProjectNodeFoldersArgs = {
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  globalSearch?: InputMaybe<Scalars['String']['input']>;
   hasChildren?: InputMaybe<Scalars['Boolean']['input']>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   hasProducts?: InputMaybe<Scalars['Boolean']['input']>;
@@ -947,6 +948,7 @@ export type ProjectNodeFoldersArgs = {
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   includeFolderChildren?: Scalars['Boolean']['input'];
   includeInternalFolder?: Scalars['Boolean']['input'];
+  includeParents?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -2081,6 +2083,8 @@ export type GetFolderColumnStatsQueryVariables = Exact<{
   search?: string | null | undefined;
   taskFilter?: string | null | undefined;
   taskSearch?: string | null | undefined;
+  globalSearch?: string | null | undefined;
+  includeParents?: boolean | null | undefined;
   parentIds?: Array<string> | string | null | undefined;
   ids?: Array<string> | string | null | undefined;
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
@@ -3724,7 +3728,7 @@ export const GetUpdatedAndNewFoldersDocument = new TypedDocumentString(`
 }
     `);
 export const GetFolderColumnStatsDocument = new TypedDocumentString(`
-    query GetFolderColumnStats($projectName: String!, $filter: String, $search: String, $taskFilter: String, $taskSearch: String, $parentIds: [String!], $ids: [String!], $targets: [MetricTargetInput!], $includeFolderChildren: Boolean! = true, $hideEmptyFolders: Boolean) {
+    query GetFolderColumnStats($projectName: String!, $filter: String, $search: String, $taskFilter: String, $taskSearch: String, $globalSearch: String, $includeParents: Boolean, $parentIds: [String!], $ids: [String!], $targets: [MetricTargetInput!], $includeFolderChildren: Boolean! = true, $hideEmptyFolders: Boolean) {
   project(name: $projectName) {
     name
     folders(
@@ -3733,6 +3737,8 @@ export const GetFolderColumnStatsDocument = new TypedDocumentString(`
       search: $search
       taskFilter: $taskFilter
       taskSearch: $taskSearch
+      globalSearch: $globalSearch
+      includeParents: $includeParents
       parentIds: $parentIds
       ids: $ids
       includeFolderChildren: $includeFolderChildren

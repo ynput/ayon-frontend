@@ -9259,6 +9259,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "globalSearch",
+                "description": "\nFuzzy text search matching folders by their own fields\nor by any of their tasks (same as the REST folder search)\n",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "hasChildren",
                 "description": "Whether to filter by folders with children",
                 "type": {
@@ -9345,6 +9357,22 @@
               {
                 "name": "includeInternalFolder",
                 "description": "Whether to include the AYON internal folder and its descendants",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeParents",
+                "description": "\nInclude the parent folders of the matching folders.\nParents are only limited by access, visibility, ids and parentIds.\n",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,

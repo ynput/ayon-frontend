@@ -939,6 +939,7 @@ export type ProjectNodeFoldersArgs = {
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  globalSearch?: InputMaybe<Scalars['String']['input']>;
   hasChildren?: InputMaybe<Scalars['Boolean']['input']>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   hasProducts?: InputMaybe<Scalars['Boolean']['input']>;
@@ -946,6 +947,7 @@ export type ProjectNodeFoldersArgs = {
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   includeFolderChildren?: Scalars['Boolean']['input'];
   includeInternalFolder?: Scalars['Boolean']['input'];
+  includeParents?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
