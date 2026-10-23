@@ -207,7 +207,7 @@ const useCellContextMenu = ({
       isEntityRestricted(cell.entityType),
   })
 
-  const openViewerItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({
+  const openViewerItem: ContextMenuItemConstructor = (e, cell) => ({
     label: 'Open in viewer',
     icon: 'play_circle',
     shortcut: 'Spacebar',
@@ -301,7 +301,7 @@ const useCellContextMenu = ({
   const exportItem: ContextMenuItemConstructor = (e, cell) =>
     tableExport?.isAvailable && tableExport.source
       ? {
-          label: 'Export...',
+          label: 'Export',
           icon: 'download',
           command: () => tableExport.openExport('selection'),
           hidden: cell.isGroup,

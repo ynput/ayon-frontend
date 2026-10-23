@@ -39,7 +39,7 @@ export const TableExportButton: FC<TableExportButtonProps> = ({ onImport }) => {
           menu={[
             {
               id: 'import',
-              label: 'Import CSV...',
+              label: 'Import CSV',
               icon: 'upload_file',
               onClick: onImport,
               'data-testid': 'import-csv',
