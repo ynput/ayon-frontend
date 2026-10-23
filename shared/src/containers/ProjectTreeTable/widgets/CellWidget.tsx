@@ -6,6 +6,7 @@ import { BooleanWidget, BooleanWidgetProps } from './BooleanWidget'
 import { CollapsedWidget } from './CollapsedWidget'
 import { DateWidget, DateWidgetProps } from './DateWidget'
 import { EnumWidget, EnumWidgetProps } from './EnumWidget'
+import { TagsWidget } from './TagsWidget'
 import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
 import { LinksWidget, LinkWidgetData } from './LinksWidget'
 import { isLinkEditable } from './LinksWidgetHelpers'
@@ -316,6 +317,17 @@ const CellWidgetContent: FC<EditorCellProps> = ({
             value={valueData as ListsWidgetData | undefined}
             projectName={projectName}
             cellId={cellId}
+            {...sharedProps}
+          />
+        )
+      }
+
+      case attributeData?.widget === 'tags': {
+        return (
+          <TagsWidget
+            value={Array.isArray(value) ? value : [value]}
+            options={options}
+            pt={pt?.enum?.pt}
             {...sharedProps}
           />
         )

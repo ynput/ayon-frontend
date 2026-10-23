@@ -93,6 +93,7 @@ export const useEntityFields = ({
         data: {
           type: 'list_of_strings',
           title: 'Tags',
+          widget: 'tags',
           enum: tags.map((tag) => ({
             value: tag.name,
             label: tag.name,

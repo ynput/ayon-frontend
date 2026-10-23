@@ -7,6 +7,7 @@ import {
   BooleanWidget,
   DateWidget,
   EnumWidget,
+  TagsWidget,
 } from '@shared/containers/ProjectTreeTable/widgets'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
 import { useScopedTypes } from '@shared/hooks/useScopedTypes'
@@ -41,6 +42,12 @@ const StyledEnumWidget = styled(EnumWidget)`
     }
   }
   &:hover {
+    background-color: unset;
+  }
+`
+
+const StyledTagsWidget = styled(TagsWidget)`
+  &.enum:hover {
     background-color: unset;
   }
 `
@@ -128,6 +135,19 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           style={{ width: 'fit-content' }}
           autoFocus={false}
           isMidnightExclusive={isMidnightExclusive}
+        />
+      )
+
+    case widget === 'tags':
+      return (
+        <StyledTagsWidget
+          value={Array.isArray(displayValue) ? displayValue : []}
+          options={attributeEnumOptions}
+          pt={{ template: { style: { height: 32 }, className: 'enum' } }}
+          placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
+          onCancelEdit={onCancelEdit}
+          align="right"
+          {...widgetCommonProps}
         />
       )
 

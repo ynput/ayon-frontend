@@ -1,6 +1,7 @@
 export * from './CollapsedWidget'
 export * from './DateWidget'
 export * from './EnumWidget'
+export * from './TagsWidget'
 export * from './EnumCellValue'
 export * from './TextWidget'
 export * from './TextWidget.styled'
