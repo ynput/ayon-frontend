@@ -32,6 +32,8 @@ export interface ViewerState {
   upload: boolean
   fullscreen: boolean
   goToFrame: number | null
+  // relative position (0-1) to seek to once the video is loaded, e.g. a hovered filmstrip frame
+  goToPosition: number | null
 }
 
 const initialState: ViewerState = {
@@ -41,6 +43,7 @@ const initialState: ViewerState = {
   fullscreen: false,
   quickView: false, // used to open quick view mode (reduced UI for quick view)
   goToFrame: null,
+  goToPosition: null,
 }
 
 const viewerSlice = createSlice({
@@ -58,6 +61,7 @@ const viewerSlice = createSlice({
         state.folderId = payload.folderId ?? null
         state.versionIds = payload.versionIds ?? []
         state.reviewableIds = payload.reviewableIds ?? []
+        state.goToPosition = payload.goToPosition ?? null
 
         if (state.productId || state.taskId || state.folderId) state.isOpen = true
       },
@@ -109,6 +113,7 @@ const viewerSlice = createSlice({
       state.reviewableIds = []
       state.isOpen = false
       state.selectedProductId = null
+      state.goToPosition = null
     },
     toggleUpload: (state: ViewerState, { payload }: PayloadAction<boolean>) => {
       state.upload = payload
@@ -122,6 +127,9 @@ const viewerSlice = createSlice({
     goToFrame: (state: ViewerState, { payload }: PayloadAction<ViewerState['goToFrame']>) => {
       state.goToFrame = payload
     },
+    goToPosition: (state: ViewerState, { payload }: PayloadAction<ViewerState['goToPosition']>) => {
+      state.goToPosition = payload
+    },
   },
 })
 
@@ -133,6 +141,7 @@ export const {
   toggleUpload,
   toggleFullscreen,
   goToFrame,
+  goToPosition,
 } = viewerSlice.actions
 export default viewerSlice.reducer
 

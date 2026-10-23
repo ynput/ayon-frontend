@@ -73,6 +73,7 @@ export const StackedThumbnails = ({
   isLoading,
   className,
   style,
+  filmstrip,
   ...props
 }: StackedThumbnailsProps) => {
   const { onContextMenu } = useContext(ThumbnailUploadContext)
@@ -100,6 +101,7 @@ export const StackedThumbnails = ({
             thumbnailHash={thumb.thumbnailHash}
             isLoading={isLoading}
             src={thumb.src}
+            filmstrip={filmstrip && !isStacking}
             // @ts-ignore — Thumbnail forwards onContextMenu to its root element
             onContextMenu={onContextMenu}
             {...props}

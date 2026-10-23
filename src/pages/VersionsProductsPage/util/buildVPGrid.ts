@@ -2,7 +2,7 @@
 import { HERO_SYMBOL } from './buildVPRows'
 import { ProductsMap, VersionsMap } from './buildVPMaps'
 import { ProductType } from '@shared/api'
-import { getEntityTypeIcon, getEntityThumbnailUrl } from '@shared/util'
+import { getEntityTypeIcon, getEntityThumbnailUrl, getEntityFilmstripUrl } from '@shared/util'
 
 type EntityGridNode = {
   id: string
@@ -15,6 +15,7 @@ type EntityGridNode = {
   author?: string | null
   isPlayable: boolean
   thumbnailUrl: string | undefined
+  filmstripUrl?: string | null
   versions?: string[]
   groups?: { value?: string; hasNextPage?: string }[] // grouping metadata
 }
@@ -53,6 +54,14 @@ const buildProductsGrid = (
             thumbnailHash: product.featuredVersion.thumbnailHash,
           }) ?? undefined
         : undefined,
+      filmstripUrl: product.featuredVersion?.hasReviewables
+        ? getEntityFilmstripUrl({
+            projectName,
+            entityType: 'version',
+            entityId: product.featuredVersion.id,
+            thumbnailHash: product.featuredVersion.thumbnailHash,
+          })
+        : null,
     }
   })
 }
@@ -82,6 +91,14 @@ const buildVersionsGrid = (
           entityId: version.id,
           thumbnailHash: version.thumbnailHash,
         }) ?? undefined,
+      filmstripUrl: version.hasReviewables
+        ? getEntityFilmstripUrl({
+            projectName,
+            entityType: 'version',
+            entityId: version.id,
+            thumbnailHash: version.thumbnailHash,
+          })
+        : null,
       groups: version.groups,
     }
   })

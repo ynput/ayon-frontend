@@ -1,8 +1,8 @@
 import { FC } from 'react'
 import * as Styled from './FolderBody.styled'
 import clsx from 'clsx'
-import { EntityCard } from '@ynput/ayon-react-components'
-import { getEntityTypeIcon, getEntityThumbnailUrl } from '@shared/util'
+import { getEntityTypeIcon, getEntityThumbnailUrl, getEntityFilmstripUrl } from '@shared/util'
+import { FilmstripEntityCard } from '@shared/components'
 import type { Status } from '@shared/api'
 import { useProjectContext } from '@shared/context'
 
@@ -63,11 +63,22 @@ export const FolderBody: FC<FolderBodyProps> = ({
       <Styled.ContentContainer>
         {folder.status && <Styled.Status size="icon" status={folder.status} />}
         <Styled.ContentWrapper className={clsx({ expanded: isExpanded })}>
-          <EntityCard
+          <FilmstripEntityCard
             title={folder.name}
             titleIcon={icon}
             titleColor={color}
             imageUrl={thumbnailUrl ?? undefined}
+            // folders do not know about reviewables, the server responds with no content
+            filmstripUrl={
+              isExpanded
+                ? getEntityFilmstripUrl({
+                    projectName,
+                    entityType: 'folder',
+                    entityId: folder.id,
+                    thumbnailHash: folder.thumbnailHash,
+                  })
+                : null
+            }
             imageIcon={icon}
             status={folder.status}
             onClick={() => onFolderOpen?.(folder.id)}
@@ -86,6 +97,7 @@ export const FolderBody: FC<FolderBodyProps> = ({
             src={thumbnailUrl ?? undefined}
             hoverIcon="expand_all"
             onClick={() => !isExpanded && onExpandToggle()}
+            filmstrip={!isExpanded}
           />
         </Styled.ThumbnailCard>
         <Styled.Path

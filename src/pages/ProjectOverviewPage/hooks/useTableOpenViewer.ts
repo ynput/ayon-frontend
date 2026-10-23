@@ -15,7 +15,11 @@ const useTableOpenViewer = ({ projectName }: TableOpenViewerProps) => {
       const payload: Partial<ViewerState> = {
         projectName,
         quickView: config?.quickView ?? false,
+        goToPosition: config?.goToPosition ?? null,
       }
+      // the reviewable the hovered filmstrip came from; the viewer falls back to the first
+      // playable one when it is not part of the opened version
+      if (config?.reviewableId) payload.reviewableIds = [config.reviewableId]
 
       if (targetIds.versionId) {
         payload.versionIds = [targetIds.versionId]
