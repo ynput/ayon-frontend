@@ -22,6 +22,7 @@ import { useAppSelector } from '@/features/store'
 import type { ReactNode } from 'react'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
 import { UserDashboardPageRemote } from './UserDashboardPageRemote'
 import LoadingPage from '@pages/LoadingPage'
 import { WithViews } from '@/hoc/WithViews'
@@ -206,6 +207,7 @@ const UserDashboardPage: React.FC = () => {
             />
           ),
           viewType: remote.viewType,
+          startContent: <RemotePageBundleDot bundle={remote.remoteBundle} />,
           showProjectList,
           isMultiSelect: false,
         }

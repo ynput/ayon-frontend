@@ -5,6 +5,7 @@ import { RefreshToast } from '@shared/components/RefreshToast/RefreshToast'
 import { useListFrontendModulesQuery } from '@shared/api'
 import type { FrontendModuleListItem } from '@shared/api'
 import { getBundleModeFromUser } from '@shared/util'
+import type { BundleMode } from '@shared/util'
 import { useGlobalContext } from '../global/GlobalContextInstance'
 import { RemoteModulesContext } from './RemoteModulesContextInstance'
 
@@ -19,6 +20,8 @@ export type RemoteModulesContextType = {
   isLoading: boolean
   modules: FrontendModuleListItem[]
   remotesInitialized: boolean
+  // bundle the registered modules come from, set once the remotes are registered
+  variant?: BundleMode
 }
 
 type Props = {
@@ -49,6 +52,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
   )
 
   const [remotesInitialized, setRemotesInitialized] = useState(false)
+  const [loadedVariant, setLoadedVariant] = useState<BundleMode>()
   // addon versions and bundle variant the remotes were registered with
   const registeredVersions = useRef<Record<string, string>>({})
   const registeredVariant = useRef<string | undefined>(undefined)
@@ -96,6 +100,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     // no remotes found, nothing to do
     if (!addonRemoteModules.length) {
       registeredVariant.current = variant
+      setLoadedVariant(variant)
       setRemotesInitialized(true)
       return
     }
@@ -118,6 +123,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
 
     registeredVersions.current = Object.fromEntries(allRemotes.map((r) => [r.addon, r.version]))
     registeredVariant.current = variant
+    setLoadedVariant(variant)
 
     registerRemotes(
       allRemotes.map((r) => ({
@@ -141,6 +147,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
         isLoading,
         modules: addonRemoteModules,
         remotesInitialized,
+        variant: loadedVariant,
       }}
     >
       {children}

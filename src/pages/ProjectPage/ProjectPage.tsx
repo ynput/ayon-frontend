@@ -18,6 +18,8 @@ import { useGetProjectAddonsQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
+import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
+import type { RemotePageBundle } from '@/remote/useLoadRemotePages'
 import { SlicerProvider } from '@shared/containers/Slicer'
 import { usePrefetchViews, useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
@@ -249,7 +251,7 @@ const ProjectPageInner = () => {
     moduleKey: 'Project',
     skip: !projectName,
   }) as {
-    remotePages: RemoteAddonProject[]
+    remotePages: (RemoteAddonProject & { remoteBundle?: RemotePageBundle })[]
     isLoading: boolean
   }
 
@@ -322,6 +324,7 @@ const ProjectPageInner = () => {
           module: remote.module,
           path: `/projects/${projectName}/${remote.module}`,
           viewType: remote.viewType,
+          startContent: <RemotePageBundleDot bundle={remote.remoteBundle} />,
         })),
       ...addonsData
         .filter((addon) => {
