@@ -69,8 +69,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
       return registeredVersion !== undefined && registeredVersion !== addonVersion
     })
 
-    // with no modules in the new bundle, pages fall back and no stale remote runs
-    const variantChanged = variant !== registeredVariant.current && addonRemoteModules.length > 0
+    const variantChanged = variant !== registeredVariant.current
 
     const toastId = 'addon-versions-changed'
 
