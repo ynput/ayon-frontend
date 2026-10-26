@@ -78,6 +78,16 @@ export interface SlotMap {
     pieces: { run: Loader<RunPiece<'detailsPanel.menuItem'>> }
   }
   /**
+   * An item in the project list's menus (dashboard, project menu, studio pages' ProjectList): the
+   * right-click menu, the "more" dropdown, or both (`in`). It acts on the selected projects.
+   */
+  'projectList.menuItem': {
+    version: 1
+    meta: ListMenuItemMeta
+    context: ProjectListMenuItemContext
+    pieces: { run: Loader<RunPiece<'projectList.menuItem'>> }
+  }
+  /**
    * An item in the right-click menu of the project tables' cells, for the selected entities. It
    * shows from the description; `run` loads when the menu opens and is called on click.
    */
@@ -220,6 +230,22 @@ export interface EntityMenuItemContext extends ProjectNameScope {
   entities: EntityRef[]
 }
 
+/** Which menu a list's menu item is in: the right-click menu or the "more" dropdown. */
+export type MenuKind = 'context' | 'dropdown'
+
+/** Description of a `projectList.menuItem` or `slicer.menuItem` contribution. */
+export interface ListMenuItemMeta extends MenuItemMeta {
+  /** which menus show it: both when not set */
+  in?: MenuKind[]
+}
+
+/** Context of a project list menu item. */
+export interface ProjectListMenuItemContext {
+  /** the selected projects (project folders left out) */
+  projectNames: string[]
+  menu: MenuKind
+}
+
 /** Context of a studio page. */
 export interface StudioPageContext {
   /** projects selected in the page's `<ProjectList>`; saved per page */
@@ -257,6 +283,7 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   'detailsPanel.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
   tableColumn: { version: 1, required: ['label'], pieces: ['cell'], optionalPieces: ['useData'] },
   entityMenuItem: { version: 1, required: ['label', 'icon'], pieces: ['run'] },
+  'projectList.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
 }
 
 export const isKnownSlot = (slot: unknown): slot is SlotName =>

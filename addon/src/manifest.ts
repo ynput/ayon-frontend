@@ -10,6 +10,7 @@ export {
   detailsPanelTab,
   entityMenuItem,
   headerItem,
+  projectListMenuItem,
   projectPage,
   studioPage,
   tableColumn,

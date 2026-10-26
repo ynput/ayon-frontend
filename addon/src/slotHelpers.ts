@@ -24,6 +24,10 @@ export const detailsPanelMenuItem = (item: ContributionFields<'detailsPanel.menu
 export const entityMenuItem = (item: ContributionFields<'entityMenuItem'>) =>
   contribute('entityMenuItem', item)
 
+/** An item in the project list's right-click menu and/or "more" dropdown (`in`). */
+export const projectListMenuItem = (item: ContributionFields<'projectList.menuItem'>) =>
+  contribute('projectList.menuItem', item)
+
 /** A read-only column in the project tables. */
 export const tableColumn = (column: ContributionFields<'tableColumn'>) =>
   contribute('tableColumn', column)
