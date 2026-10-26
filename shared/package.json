@@ -111,7 +111,7 @@
     "@babel/preset-typescript": "7.27.0",
     "@microsoft/api-extractor": "^7.59.2",
     "@module-federation/enhanced": "2.3.2",
-    "@module-federation/vite": "1.14.2",
+    "@module-federation/vite": "1.23.5",
     "@types/prismjs": "1.26.5",
     "@vitejs/plugin-react": "4.7.0",
     "typescript": "5.9.3",
