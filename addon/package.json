@@ -17,7 +17,14 @@
     "./host": {
       "types": "./dist/types/host.d.ts",
       "import": "./dist/host.es.js"
-    }
+    },
+    "./check": {
+      "types": "./dist/types/check.d.ts",
+      "import": "./dist/check.es.js"
+    },
+    "./AGENTS.md": "./AGENTS.md",
+    "./slots.json": "./dist/slots.json",
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
@@ -27,7 +34,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "vite build"
+    "build": "vite build && node scripts/generate-docs.mjs"
   },
   "peerDependencies": {
     "react": ">=18",

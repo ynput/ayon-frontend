@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test'
+import { spawnSync } from 'child_process'
+import path from 'path'
 import { createElement } from 'react'
 import { renderToString } from 'react-dom/server'
 import { checkManifest, formatSkipped } from '../../addon/src/validate'
@@ -107,4 +109,14 @@ test('useSlot in another slot throws an error naming both slots', () => {
     "useSlot('project.page') was called outside any addon slot",
   )
   expect(renderInSlot('project.page', ['project.page', 'studio.page'])).not.toThrow()
+})
+
+// agents read the shipped AGENTS.md: it must match SlotMap
+test('addon/AGENTS.md is generated from the current SlotMap', () => {
+  const result = spawnSync(process.execPath, ['addon/scripts/generate-docs.mjs', '--check'], {
+    cwd: path.join(__dirname, '../..'),
+    encoding: 'utf8',
+  })
+  expect(`${result.stdout}${result.stderr}`).toContain('up to date')
+  expect(result.status).toBe(0)
 })

@@ -27,6 +27,7 @@ export default defineConfig({
         index: resolve(__dirname, 'src/index.ts'),
         manifest: resolve(__dirname, 'src/manifest.ts'),
         host: resolve(__dirname, 'src/host.ts'),
+        check: resolve(__dirname, 'src/check.ts'),
       },
       formats: ['es'],
     },

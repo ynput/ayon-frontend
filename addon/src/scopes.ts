@@ -84,6 +84,7 @@ export interface PageMeta {
   id: string
   /** the tab label */
   title: string
+  /** `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them */
   access?: Access
   /** the view type its views are saved under, when the page uses views */
   viewType?: string

@@ -145,7 +145,9 @@ export interface SlotMap {
 
 /** Description of a `header.item` contribution. */
 export interface HeaderItemMeta {
+  /** unique among the addon's header items */
   id: string
+  /** shown next to the icon on the left, as the tooltip on the right */
   label: string
   /** a Material Symbols icon name */
   icon: string
@@ -165,6 +167,7 @@ export interface HeaderItemContext extends PopupScope {
 
 /** Description of a `detailsPanel.tab` contribution. */
 export interface DetailsPanelTabMeta {
+  /** the tab id is `<addon>.<id>` */
   id: string
   /** the tab button's tooltip */
   label: string
@@ -185,7 +188,9 @@ export type RunPiece<S extends SlotName> = (context: SlotContext<S>) => void | P
 
 /** Description of a menu item contribution. */
 export interface MenuItemMeta {
+  /** unique among the addon's items of the slot */
   id: string
+  /** the menu entry */
   label: string
   /** a Material Symbols icon name */
   icon: string
@@ -300,6 +305,7 @@ export interface SlicerMenuItemContext extends ProjectNameScope {
 
 /** Description of a `projectTable.toolbarItem` contribution. */
 export interface ProjectTableToolbarItemMeta {
+  /** unique among the addon's toolbar items */
   id: string
   /** a Material Symbols icon name */
   icon: string
@@ -320,6 +326,7 @@ export interface ProjectTableToolbarItemContext extends ProjectNameScope, PopupS
 
 /** Description of a `projectTable.customizeSection` contribution. */
 export interface ProjectTableCustomizeSectionMeta {
+  /** unique among the addon's sections */
   id: string
   /** the section's entry in Customize and its title when open */
   title: string
