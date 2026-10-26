@@ -1,10 +1,23 @@
 import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
+    getSystemDeprecations: build.query<
+      GetSystemDeprecationsApiResponse,
+      GetSystemDeprecationsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/system/deprecations`,
+        params: {
+          latest: queryArg.latest,
+        },
+      }),
+    }),
     listFrontendModules: build.query<ListFrontendModulesApiResponse, ListFrontendModulesApiArg>({
       query: (queryArg) => ({
         url: `/api/frontendModules`,
-        params: { variant: queryArg.variant },
+        params: {
+          variant: queryArg.variant,
+        },
       }),
     }),
     getSites: build.query<GetSitesApiResponse, GetSitesApiArg>({
@@ -38,6 +51,18 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     getSystemMetrics: build.query<GetSystemMetricsApiResponse, GetSystemMetricsApiArg>({
       query: () => ({ url: `/api/metrics/system` }),
+    }),
+    getTracemallocMetrics: build.query<
+      GetTracemallocMetricsApiResponse,
+      GetTracemallocMetricsApiArg
+    >({
+      query: () => ({ url: `/api/metrics/tracemalloc` }),
+    }),
+    stopTracemallocMetrics: build.mutation<
+      StopTracemallocMetricsApiResponse,
+      StopTracemallocMetricsApiArg
+    >({
+      query: () => ({ url: `/api/metrics/tracemalloc`, method: 'DELETE' }),
     }),
     getListOfSecrets: build.query<GetListOfSecretsApiResponse, GetListOfSecretsApiArg>({
       query: () => ({ url: `/api/secrets` }),
@@ -75,6 +100,12 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
+export type GetSystemDeprecationsApiResponse =
+  /** status 200 Successful Response */ DeprecationsModel
+export type GetSystemDeprecationsApiArg = {
+  /** Only report the latest version of each addon */
+  latest?: boolean
+}
 export type ListFrontendModulesApiResponse =
   /** status 200 Successful Response */ FrontendModuleListItem[]
 export type ListFrontendModulesApiArg = {
@@ -83,8 +114,8 @@ export type ListFrontendModulesApiArg = {
 }
 export type GetSitesApiResponse = /** status 200 Successful Response */ SiteInfo[]
 export type GetSitesApiArg = {
-  platform?: 'windows' | 'linux' | 'darwin'
-  hostname?: string
+  platform?: ('windows' | 'linux' | 'darwin') | null
+  hostname?: string | null
 }
 export type DeleteSiteApiResponse = /** status 200 Successful Response */ any
 export type DeleteSiteApiArg = {
@@ -104,6 +135,10 @@ export type GetProductionMetricsApiArg = {
 }
 export type GetSystemMetricsApiResponse = /** status 200 Successful Response */ any
 export type GetSystemMetricsApiArg = void
+export type GetTracemallocMetricsApiResponse = /** status 200 Successful Response */ any
+export type GetTracemallocMetricsApiArg = void
+export type StopTracemallocMetricsApiResponse = /** status 200 Successful Response */ any
+export type StopTracemallocMetricsApiArg = void
 export type GetListOfSecretsApiResponse = /** status 200 Successful Response */ Secret[]
 export type GetListOfSecretsApiArg = void
 export type GetSecretApiResponse = /** status 200 Successful Response */ Secret
@@ -128,6 +163,36 @@ export type SetRestartRequiredApiResponse = /** status 200 Successful Response *
 export type SetRestartRequiredApiArg = {
   restartRequiredModel: RestartRequiredModel
 }
+export type DeprecationItem = {
+  category: string
+  message: string
+  /** Path relative to the addon or server directory */
+  file: string
+  line: number
+  /** How many times the deprecated feature was used */
+  count: number
+}
+export type AddonDeprecations = {
+  addonName: string
+  addonVersion: string
+  deprecations?: DeprecationItem[]
+}
+export type DeprecationsModel = {
+  /** Deprecated features used by the server itself */
+  server?: DeprecationItem[]
+  /** Deprecated features used by the addons */
+  addons?: AddonDeprecations[]
+}
+export type ValidationError = {
+  loc: (string | number)[]
+  msg: string
+  type: string
+  input?: any
+  ctx?: object
+}
+export type HttpValidationError = {
+  detail?: ValidationError[]
+}
 export type FrontendModuleListItem = {
   addonName: string
   addonVersion: string
@@ -142,14 +207,6 @@ export type SiteInfo = {
   version: string
   users: string[]
 }
-export type ValidationError = {
-  loc: (string | number)[]
-  msg: string
-  type: string
-}
-export type HttpValidationError = {
-  detail?: ValidationError[]
-}
 export type ReleaseInfo = {
   version: string
   buildDate: string
@@ -159,20 +216,20 @@ export type ReleaseInfo = {
   frontendCommit: string
   backendCommit: string
 }
-export type UserAttribModel = {
-  fullName?: string
-  email?: string
-  avatarUrl?: string
-  developerMode?: boolean
-}
 export type UserModel = {
-  /** Name is an unique id of the {entity_name} */
+  /** Unique name of the user */
   name: string
-  uiExposureLevel?: number
-  attrib?: UserAttribModel
-  data?: Record<string, any>
-  /** Whether the user is active */
+  uiExposureLevel?: number | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
+  /** List of attributes explicitly set on the entity itself (not inherited) */
   ownAttrib?: string[]
   /** Time of creation */
   createdAt?: string
@@ -182,26 +239,30 @@ export type UserModel = {
 export type IconModel = {
   type?: 'material-symbols' | 'url'
   /** The name of the icon (for type material-symbols) */
-  name?: string
+  name?: string | null
   /** The color of the icon (for type material-symbols) */
-  color?: string
+  color?: string | null
   /** The URL of the icon (for type url) */
-  url?: string
+  url?: string | null
 }
 export type EnumItem = {
   value: string | number | number | boolean
   label: string
-  description?: string
-  fulltext?: string[]
-  group?: string
+  description?: string | null
+  fulltext?: string[] | null
+  group?: string | null
   /** Icon name (material symbol) or IconModel object */
-  icon?: string | IconModel
-  color?: string
-  shortName?: string
+  icon?: string | IconModel | null
+  color?: string | null
+  shortName?: string | null
   /** Enum item is visible, but not selectable */
   disabled?: boolean
   /** Message to show when the option is disabled */
-  disabledMessage?: string
+  disabledMessage?: string | null
+  /** Enum item is not visible in the dropdown */
+  hidden?: boolean
+  /** Extra badge labels to display next to the item */
+  badges?: string[] | null
 }
 export type AttributeData = {
   /** Type of attribute value */
@@ -217,36 +278,40 @@ export type AttributeData = {
     | 'list_of_submodels'
     | 'dict'
   /** Nice, human readable title of the attribute */
-  title?: string
-  description?: string
+  title?: string | null
+  description?: string | null
   /** Example value of the field. */
   example?: any
   /** Default value for the attribute. Do not set for list types. */
   default?: any
-  gt?: number | number
-  ge?: number | number
-  lt?: number | number
-  le?: number | number
-  minLength?: number
-  maxLength?: number
+  gt?: number | number | null
+  ge?: number | number | null
+  lt?: number | number | null
+  le?: number | number | null
+  minLength?: number | null
+  maxLength?: number | null
   /** Minimum number of items in list type. */
-  minItems?: number
+  minItems?: number | null
   /** Only for list types. Maximum number of items in the list. */
-  maxItems?: number
+  maxItems?: number | null
   /** Only for string types. The value must match this regex. */
-  regex?: string
+  regex?: string | null
   /** List of enum items used for displaying select widgets */
-  enum?: EnumItem[]
+  enum?: EnumItem[] | null
   /** Name of the function that provides enum values dynamically. */
-  enumResolver?: string
+  enumResolver?: string | null
   /** Settings passed to the enum resolver function. */
-  enumResolverSettings?: object
+  enumResolverSettings?: {
+    [key: string]: any
+  } | null
   /** Inherit the attribute value from the parent entity. */
   inherit?: boolean
   /** Specific widget style this field should use. */
-  widget?: string
+  widget?: string | null
   /** Any additional config specific for the widget style.(Date formats, precision etc.) */
-  widgetSettings?: object
+  widgetSettings?: {
+    [key: string]: any
+  } | null
 }
 export type AttributeModel = {
   name: string
@@ -268,11 +333,11 @@ export type SsoOption = {
   /** If True, the provider will not be shown in the UI */
   hidden?: boolean
   /** Nice human-readable title of the provider */
-  title?: string
-  icon?: string
+  title?: string | null
+  icon?: string | null
   color?: string
   textColor?: string
-  redirectKey?: string
+  redirectKey?: string | null
   url: string
   args?: {
     [key: string]: string
@@ -281,33 +346,36 @@ export type SsoOption = {
 }
 export type InfoResponseModel = {
   /** Instance specific message to be displayed in the login page */
-  motd?: string
+  motd?: string | null
   /** URL of the background image for the login page */
-  loginPageBackground?: string
+  loginPageBackground?: string | null
+  /** Replaced by `studio_logo`, kept for backward compatibility */
+  loginPageBrand?: string | null
   /** URL of the brand logo for the login page */
-  loginPageBrand?: string
+  studioLogo?: string | null
   /** Information about the current release */
-  releaseInfo?: ReleaseInfo
+  releaseInfo?: ReleaseInfo | null
   /** Version of the Ayon API */
   version?: string
   /** Time (seconds) since the server was started */
   uptime?: number
   /** No admin user exists, display 'Create admin user' form */
-  noAdminUser?: boolean
-  onboarding?: boolean
+  noAdminUser?: boolean | null
+  onboarding?: boolean | null
   /** Password authentication will not be shown on the login page */
-  hidePasswordAuth?: boolean
-  passwordRecoveryAvailable?: boolean
-  user?: UserModel
-  attributes?: AttributeModel[]
-  sites?: SiteInfo[]
-  ssoOptions?: SsoOption[]
-  frontendFlags?: string[]
-  extras?: string
+  hidePasswordAuth?: boolean | null
+  passwordRecoveryAvailable?: boolean | null
+  user?: UserModel | null
+  /** Deprecated. Use the `/api/attributes` endpoint instead. */
+  attributes?: AttributeModel[] | null
+  sites?: SiteInfo[] | null
+  ssoOptions?: SsoOption[] | null
+  frontendFlags?: string[] | null
+  extras?: string | null
   /** If set, the changelog will not be shown to the user */
-  disableChangelog?: boolean
-  disableFeedback?: boolean
-  offlineMode?: boolean
+  disableChangelog?: boolean | null
+  disableFeedback?: boolean | null
+  offlineMode?: boolean | null
 }
 export type SystemMetricsData = {
   cpuUsage?: number
@@ -342,33 +410,33 @@ export type ProjectMetrics = {
   representationCount?: number
   taskCount?: number
   workfileCount?: number
-  rootCount?: number
-  teamCount?: number
+  rootCount?: number | null
+  teamCount?: number | null
   /** Duration in days */
-  duration?: number
-  dbSize?: number
-  storageUtilization?: number
+  duration?: number | null
+  dbSize?: number | null
+  storageUtilization?: number | null
   /** List of folder types in the project. Collected only in the 'saturated' mode. */
-  folderTypes?: string[]
+  folderTypes?: string[] | null
   /** List of task types in the project. Collected only in the 'saturated' mode. */
-  taskTypes?: string[]
+  taskTypes?: string[] | null
   /** List of statuses in the project. Collected only in the 'saturated' mode. */
-  statuses?: string[]
+  statuses?: string[] | null
 }
 export type ProductionBundle = {
   addons?: {
     [key: string]: string
   }
-  launcherVersion?: string
+  launcherVersion?: string | null
   dependencyPackages?: {
-    [key: string]: string
+    [key: string]: string | null
   }
 }
 export type SettingsOverrides = {
-  addonName?: string
-  addonVersion?: string
+  addonName?: string | null
+  addonVersion?: string | null
   /** List of paths to settings, which have a studio override */
-  paths?: string[][]
+  paths?: string[][] | null
 }
 export type ServiceInfo = {
   addonName: string
@@ -384,41 +452,41 @@ export type TrafficStat = {
 export type UserStat = {
   date: string
   users: {
-    [key: string]: string
+    [key: string]: string | null
   }
 }
 export type Metrics = {
   version?: string
   /** Information about the branch and commit of the current release */
-  releaseInfo?: ReleaseInfo
+  releaseInfo?: ReleaseInfo | null
   /** Time (seconds) since the server was (re)started */
   uptime?: number
   /** System metrics data
     Contains information about machine utilization,
     and database sizes.
      */
-  system?: SystemMetricsData
+  system?: SystemMetricsData | null
   /** Number of total and active users, admins and managers */
-  userCounts?: UserCounts
+  userCounts?: UserCounts | null
   /** Number of total and active projects */
-  projectCounts?: ProjectCounts
+  projectCounts?: ProjectCounts | null
   /** Project specific metrics
     
     Contain information about size and usage of each active project.
      */
-  projects?: ProjectMetrics[]
+  projects?: ProjectMetrics[] | null
   /** Average number of events per project
     
     This disregards projects with less than 300 events
     (such as testing projects).
      */
-  averageProjectEventCount?: number
+  averageProjectEventCount?: number | null
   /** Addons and their versions installed on the server
     
     We track what addons are installed on the server, and compare this to the
     addons which are actually used in the production bundle.
      */
-  installedAddons?: any[][]
+  installedAddons?: [string, string][] | null
   /** Return the count of events per topic.
     
     This helps us with optimization of event clean-up,
@@ -426,7 +494,7 @@ export type Metrics = {
      */
   eventTopics?: {
     [key: string]: number
-  }
+  } | null
   /** Addons and their versions used in the production bundle
     
     We track what addons are used in the production bundle, as well as what
@@ -435,7 +503,7 @@ export type Metrics = {
     and if not, to notify the user that they should update in case of
     security issues or other important changes.
      */
-  productionBundle?: ProductionBundle
+  productionBundle?: ProductionBundle | null
   /** Studio settings overrides
     
     We track what settings are overridden in the studio settings.
@@ -443,19 +511,19 @@ export type Metrics = {
     settings are not used at all. This is used to determine how we should
     organize the settings in the UI and how the settings could be improved.
      */
-  studioSettingsOverrides?: SettingsOverrides[]
+  studioSettingsOverrides?: SettingsOverrides[] | null
   /** List of active services */
-  services?: ServiceInfo[]
-  trafficStats?: TrafficStat[]
-  userStats?: UserStat[]
+  services?: ServiceInfo[] | null
+  trafficStats?: TrafficStat[] | null
+  userStats?: UserStat[] | null
 }
 export type Secret = {
-  name?: string
-  value?: string
+  name?: string | null
+  value?: string | null
 }
 export type RestartRequiredModel = {
   /** Whether the server requires a restart */
   required: boolean
   /** The reason for the restart */
-  reason?: string
+  reason?: string | null
 }
