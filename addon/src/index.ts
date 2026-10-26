@@ -11,10 +11,13 @@ export type {
   SlotName,
   SlotProps,
   StudioPageContext,
+  HeaderItemContext,
+  HeaderItemMeta,
 } from './slots'
 export type {
   Access,
   PageMeta,
+  PopupScope,
   ProjectInfo,
   ProjectNameScope,
   ProjectScope,

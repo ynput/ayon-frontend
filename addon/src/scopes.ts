@@ -42,6 +42,17 @@ export interface SlicerScope {
   slicer: SlicerSelection
 }
 
+/**
+ * Slots whose component the host opens from a button it draws (header items, toolbar items).
+ * The component loads on the first click and stays mounted; it shows itself while `open`.
+ */
+export interface PopupScope {
+  open: boolean
+  onClose: () => void
+  /** the button, to anchor a popover to */
+  anchor: HTMLElement | null
+}
+
 /** Who sees a page: everyone when not set. Admins see manager pages too. */
 export type Access = 'manager' | 'admin'
 

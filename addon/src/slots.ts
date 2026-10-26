@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import type { PageMeta, ProjectScope, SlicerScope } from './scopes'
+import type { PageMeta, PopupScope, ProjectScope, SlicerScope } from './scopes'
 
 // The slots: places in the AYON web UI that addons contribute to.
 // SlotMap is the single source of truth. Each entry has the slot's version, the description the
@@ -38,6 +38,36 @@ export interface SlotMap {
     context: StudioPageContext
     pieces: { component: Loader<ComponentType<SlotProps<'studio.page'>>> }
   }
+  /**
+   * A button in the main header. The host draws it from the description, like its own buttons;
+   * `component` (a dialog or popover) loads on the first click and gets `open` / `onClose`.
+   */
+  'header.item': {
+    version: 1
+    meta: HeaderItemMeta
+    context: HeaderItemContext
+    pieces: { component: Loader<ComponentType<SlotProps<'header.item'>>> }
+  }
+}
+
+/** Description of a `header.item` contribution. */
+export interface HeaderItemMeta {
+  id: string
+  label: string
+  /** a Material Symbols icon name */
+  icon: string
+  /** shown on hover; the label when not set */
+  tooltip?: string
+  /** `left`: after the Home button; `right`: before chat and the inbox */
+  placement: 'left' | 'right'
+  /** order among addon items on the same side, lowest first */
+  order?: number
+}
+
+/** Context of a header item. */
+export interface HeaderItemContext extends PopupScope {
+  /** the project whose page is open, else `null` */
+  projectName: string | null
 }
 
 /** Context of a studio page. */
@@ -72,6 +102,7 @@ export interface SlotDefinition {
 export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   'project.page': { version: 1, required: ['title'], pieces: ['component'] },
   'studio.page': { version: 1, required: ['title'], pieces: ['component'] },
+  'header.item': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
 }
 
 export const isKnownSlot = (slot: unknown): slot is SlotName =>

@@ -11,3 +11,7 @@ export const projectPage = (page: ContributionFields<'project.page'>) =>
 /** A tab on the dashboard, at `/dashboard/<id>`. */
 export const studioPage = (page: ContributionFields<'studio.page'>) =>
   contribute('studio.page', page)
+
+/** A button in the main header that opens the addon's dialog or popover. */
+export const headerItem = (item: ContributionFields<'header.item'>) =>
+  contribute('header.item', item)
