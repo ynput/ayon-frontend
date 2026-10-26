@@ -28,6 +28,22 @@ export interface ProjectScope extends ProjectNameScope {
   project: ProjectInfo | undefined
 }
 
+/** An entity a slot is about: its id and type, and its name when the host has it. */
+export interface EntityRef {
+  id: string
+  /** `folder`, `task`, `product`, `version`, `representation` */
+  entityType: string
+  projectName: string
+  name?: string
+  label?: string
+}
+
+/** Slots about one or more entities of one type. */
+export interface EntityScope {
+  entityType: string
+  entities: EntityRef[]
+}
+
 /** What is selected in the project page's slicer. */
 export interface SlicerSelection {
   /** `hierarchy`, `assignees`, `status`, `taskType`, ... */

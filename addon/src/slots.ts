@@ -1,5 +1,12 @@
 import type { ComponentType } from 'react'
-import type { PageMeta, PopupScope, ProjectScope, SlicerScope } from './scopes'
+import type {
+  EntityScope,
+  PageMeta,
+  PopupScope,
+  ProjectNameScope,
+  ProjectScope,
+  SlicerScope,
+} from './scopes'
 
 // The slots: places in the AYON web UI that addons contribute to.
 // SlotMap is the single source of truth. Each entry has the slot's version, the description the
@@ -48,6 +55,16 @@ export interface SlotMap {
     context: HeaderItemContext
     pieces: { component: Loader<ComponentType<SlotProps<'header.item'>>> }
   }
+  /**
+   * A tab in the details panel. The tab button shows from the description, for `entityTypes`;
+   * `component` loads when the tab is first opened.
+   */
+  'detailsPanel.tab': {
+    version: 1
+    meta: DetailsPanelTabMeta
+    context: DetailsPanelTabContext
+    pieces: { component: Loader<ComponentType<SlotProps<'detailsPanel.tab'>>> }
+  }
 }
 
 /** Description of a `header.item` contribution. */
@@ -68,6 +85,23 @@ export interface HeaderItemMeta {
 export interface HeaderItemContext extends PopupScope {
   /** the project whose page is open, else `null` */
   projectName: string | null
+}
+
+/** Description of a `detailsPanel.tab` contribution. */
+export interface DetailsPanelTabMeta {
+  id: string
+  /** the tab button's tooltip */
+  label: string
+  /** a Material Symbols icon name, the tab button */
+  icon: string
+  /** entity types the tab shows for; all when not set */
+  entityTypes?: string[]
+}
+
+/** Context of a details panel tab. */
+export interface DetailsPanelTabContext extends ProjectNameScope, EntityScope {
+  /** where the panel is open (`overview`, `dashboard`, `inbox`, ...); the panel opens in many places */
+  scope: string
 }
 
 /** Context of a studio page. */
@@ -103,6 +137,7 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   'project.page': { version: 1, required: ['title'], pieces: ['component'] },
   'studio.page': { version: 1, required: ['title'], pieces: ['component'] },
   'header.item': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
+  'detailsPanel.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
 }
 
 export const isKnownSlot = (slot: unknown): slot is SlotName =>

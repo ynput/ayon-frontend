@@ -13,9 +13,13 @@ export type {
   StudioPageContext,
   HeaderItemContext,
   HeaderItemMeta,
+  DetailsPanelTabContext,
+  DetailsPanelTabMeta,
 } from './slots'
 export type {
   Access,
+  EntityRef,
+  EntityScope,
   PageMeta,
   PopupScope,
   ProjectInfo,
