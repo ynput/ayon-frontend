@@ -35,6 +35,15 @@ The addon API lives in `addon/` (`@ynput/ayon-addon`, not published yet). The ho
 - **The package imports nothing from `src/` or `@shared`, not even types**: its `.d.ts` must stand alone in an addon's `node_modules`. Public types are its own (`ProjectInfo` is the stable part of the project model). What it needs from the app (`useUser`, later the layout components) the app registers with `provideHost` in `src/remote/addonHost.ts`, before the first render. The standalone dev shell registers its own.
 - **Shared depends on the package, not the other way round.** Shared containers read the registry, so `shared/package.json` lists `@ynput/ayon-addon` as a peer and the shared build keeps it external. A copy bundled into shared would be a second registry that the standalone dev shell can't reach.
 
+## Developing an addon in the real frontend (dev override)
+
+`?addonDev=<addon>@http://localhost:5173` makes `RemoteModulesProvider` load that one addon from its dev server instead of the installed version (`shared/src/context/remote-modules/addonDevOverride.ts`). It is stored in localStorage until `?addonDev=off` or the banner's close button.
+
+- **Who:** users in developer mode and service users (API-key sessions: agents, CI). Anyone else gets a console warning and the installed addons. **Where from:** `localhost`, `127.0.0.1` or `[::1]` only, so a link can't point the page at another machine's code.
+- **What it loads:** `ayon-addon dev` (`@ynput/ayon-addon-dev`) serves a watched production build of the addon plus `/ayon-addon.json` (name, version, remote, modules, build id). The provider reads that file before registering the remotes, so the dev addon may differ from the installed one, or not be installed at all.
+- **Reload on save:** federation can't swap a registered remote, so the banner polls `/ayon-addon.json` and reloads the page when the build id changes. Not Fast Refresh: a remote's dev-server modules need React Refresh's preamble from the page that loads them, which the host doesn't have; the watched build always works.
+- Service users are treated as admins in the frontend (`src/features/user.js`), as the server does: `/api/info` doesn't send their UI exposure level, which hid project pages from API-key sessions.
+
 ## Rules and gotchas
 
 - **Keep `hostSharedEntries.ts` and `ENTRY_NAMES` in `hostSharedModules.ts` in sync with `build.lib.entry` in `shared/vite.config.ts`.** An entry the host doesn't provide falls back to the addon's own copy, and that copy brings its own api and contexts. `tests/unit/hostSharedModules.spec.ts` checks the lists match.
