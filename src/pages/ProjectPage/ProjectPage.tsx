@@ -36,7 +36,7 @@ import {
 } from '@shared/context'
 import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
-import { useGetProductionAddon } from '@shared/hooks'
+import { useGetBundleAddon } from '@shared/hooks'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
@@ -194,7 +194,9 @@ const ProjectPageInner = () => {
    * project data to the store, and renders the requested page.
    */
   const { siteInfo } = useGlobalContext()
-  const { uiExposureLevel = 0, frontendFlags = [] } = siteInfo || {}
+  const { uiExposureLevel = 0 } = siteInfo || {}
+  // null in the generated type, a default value only covers undefined
+  const frontendFlags = siteInfo?.frontendFlags ?? []
   const {
     projectName,
     name: loadedProjectName,
@@ -230,10 +232,10 @@ const ProjectPageInner = () => {
     isError: addonsIsError,
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
 
-  const { getProductionAddon, isLoading: addonsListLoading } = useGetProductionAddon()
-  // Try checking multiple addons in one go if we wanted, or just call on demand
-  const hasReview = !!getProductionAddon('review')
-  const hasReports = !!getProductionAddon('reports')
+  // addons in the bundle the user's addon modules come from (production, staging or dev)
+  const { getBundleAddonVersion, isLoading: addonsListLoading } = useGetBundleAddon()
+  const hasReview = !!getBundleAddonVersion('review')
+  const hasReports = !!getBundleAddonVersion('reports')
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {

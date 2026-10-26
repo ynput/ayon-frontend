@@ -24,6 +24,11 @@ export type RemoteModulesContextType = {
   variant?: BundleMode
 }
 
+type Registered = {
+  variant: BundleMode
+  modules: FrontendModuleListItem[]
+}
+
 type Props = {
   children: ReactNode
   skip?: boolean
@@ -52,7 +57,9 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
   )
 
   const [remotesInitialized, setRemotesInitialized] = useState(false)
-  const [loadedVariant, setLoadedVariant] = useState<BundleMode>()
+  // what the remotes were registered with. Federation keeps running these until a refresh,
+  // so consumers get this snapshot, and the live list is only used to ask for the refresh.
+  const [registered, setRegistered] = useState<Registered>()
   // addon versions and bundle variant the remotes were registered with
   const registeredVersions = useRef<Record<string, string>>({})
   const registeredVariant = useRef<string | undefined>(undefined)
@@ -99,7 +106,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     // no remotes found, nothing to do
     if (!addonRemoteModules.length) {
       registeredVariant.current = variant
-      setLoadedVariant(variant)
+      setRegistered({ variant, modules: addonRemoteModules })
       setRemotesInitialized(true)
       return
     }
@@ -122,7 +129,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
 
     registeredVersions.current = Object.fromEntries(allRemotes.map((r) => [r.addon, r.version]))
     registeredVariant.current = variant
-    setLoadedVariant(variant)
+    setRegistered({ variant, modules: addonRemoteModules })
 
     registerRemotes(
       allRemotes.map((r) => ({
@@ -144,9 +151,9 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     <RemoteModulesContext.Provider
       value={{
         isLoading,
-        modules: addonRemoteModules,
+        modules: registered?.modules ?? addonRemoteModules,
         remotesInitialized,
-        variant: loadedVariant,
+        variant: registered?.variant,
       }}
     >
       {children}

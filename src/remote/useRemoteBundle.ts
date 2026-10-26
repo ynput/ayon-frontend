@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useRemoteModules } from '@shared/context'
-import { useListBundlesQuery } from '@shared/api'
+import { useGetBundleAddon } from '@shared/hooks'
 import type { BundleMode } from '@shared/util'
 
 // set on pages whose addon comes from the staging or dev bundle, not production
@@ -12,15 +12,9 @@ export type RemotePageBundle = {
 
 // Which bundle an addon's remote modules were loaded from, when it is not production
 export const useRemoteBundle = () => {
-  const { modules, variant = 'production' } = useRemoteModules()
-
-  // with no dev bundle the server sends the production modules, so they aren't marked as dev
-  const { data: { bundles = [] } = {}, isSuccess: hasCheckedDevBundles } = useListBundlesQuery(
-    { archived: false },
-    { skip: variant !== 'developer' },
-  )
-  const hasDevBundle = hasCheckedDevBundles && bundles.some((bundle) => bundle.isDev)
-  const bundleVariant = variant === 'developer' && !hasDevBundle ? 'production' : variant
+  // the registered modules, so the version is the one that runs until a refresh
+  const { modules } = useRemoteModules()
+  const { bundleVariant } = useGetBundleAddon()
 
   const getAddonBundle = useCallback(
     (addonName: string): RemotePageBundle | undefined => {

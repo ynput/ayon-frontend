@@ -16,7 +16,7 @@ import ListsContext, {
   MoveToFolderState,
   OnOpenFolderListParams,
 } from './ListsContext'
-import { useGetProductionAddon } from '@shared/hooks'
+import { useGetBundleAddon } from '@shared/hooks'
 import { useSessionStorage } from '@shared/hooks'
 import { buildListFolderRowId, parseListFolderRowId } from '../../util/buildListsTableData'
 import useInitialListsExpanded from '../../hooks/useInitialListsExpanded'
@@ -78,8 +78,8 @@ export const ListsProvider = ({
   )
 
   // find out if and what version of the review addon is installed
-  const { getProductionAddon } = useGetProductionAddon()
-  const reviewVersion = getProductionAddon('review')?.productionVersion
+  const { getBundleAddonVersion } = useGetBundleAddon()
+  const reviewVersion = getBundleAddonVersion('review')
 
   // picker mode: selection lives in local state, never touches the URL
   const [pickerSelection, setPickerSelection] = useState<RowSelectionState>(() =>
