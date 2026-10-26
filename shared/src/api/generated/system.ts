@@ -2,7 +2,10 @@ import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     listFrontendModules: build.query<ListFrontendModulesApiResponse, ListFrontendModulesApiArg>({
-      query: () => ({ url: `/api/frontendModules` }),
+      query: (queryArg) => ({
+        url: `/api/frontendModules`,
+        params: { variant: queryArg.variant },
+      }),
     }),
     getSites: build.query<GetSitesApiResponse, GetSitesApiArg>({
       query: (queryArg) => ({
@@ -74,7 +77,10 @@ const injectedRtkApi = api.injectEndpoints({
 export { injectedRtkApi as api }
 export type ListFrontendModulesApiResponse =
   /** status 200 Successful Response */ FrontendModuleListItem[]
-export type ListFrontendModulesApiArg = void
+export type ListFrontendModulesApiArg = {
+  /** production, staging, or developer (the user's dev bundle) */
+  variant?: string
+}
 export type GetSitesApiResponse = /** status 200 Successful Response */ SiteInfo[]
 export type GetSitesApiArg = {
   platform?: 'windows' | 'linux' | 'darwin'

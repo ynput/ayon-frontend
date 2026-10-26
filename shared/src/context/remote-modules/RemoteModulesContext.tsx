@@ -4,6 +4,7 @@ import { toast } from 'react-toastify'
 import { RefreshToast } from '@shared/components/RefreshToast/RefreshToast'
 import { useListFrontendModulesQuery } from '@shared/api'
 import type { FrontendModuleListItem } from '@shared/api'
+import { getBundleModeFromUser } from '@shared/util'
 import { useGlobalContext } from '../global/GlobalContextInstance'
 import { RemoteModulesContext } from './RemoteModulesContextInstance'
 
@@ -26,27 +27,36 @@ type Props = {
 }
 
 export const RemoteModulesProvider = ({ children, skip }: Props) => {
-  // only load if logged in
+  const {
+    siteInfo,
+    user,
+    isLoading: { siteInfo: isLoadingInfo, user: isLoadingUser },
+  } = useGlobalContext()
+
+  // the modules of the bundle the user is on (production, staging or their dev bundle)
+  const variant = getBundleModeFromUser(user)
+
+  // only load if logged in, and once we know the bundle the user is on
   const {
     data: addonRemoteModules = [],
     isLoading,
     isFetching,
-  } = useListFrontendModulesQuery(undefined, {
-    skip,
-  })
-
-  const {
-    siteInfo,
-    isLoading: { siteInfo: isLoadingInfo },
-  } = useGlobalContext()
+  } = useListFrontendModulesQuery(
+    { variant },
+    {
+      skip: skip || isLoadingUser,
+    },
+  )
 
   const [remotesInitialized, setRemotesInitialized] = useState(false)
-  // addon versions the remotes were registered with
+  // addon versions and bundle variant the remotes were registered with
   const registeredVersions = useRef<Record<string, string>>({})
+  const registeredVariant = useRef<string | undefined>(undefined)
 
   // Module federation can't swap a remote once registered, so after an addon update
   // (server restart or bundle change) the page would keep running the old addon build
   // against the new server. Ask the user to refresh so the new remotes get registered.
+  // Switching bundle (e.g. turning on developer mode) needs the same refresh.
   useEffect(() => {
     if (!remotesInitialized || isFetching) return
 
@@ -55,30 +65,37 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
       return registeredVersion !== undefined && registeredVersion !== addonVersion
     })
 
+    // with no modules in the new bundle, pages fall back and no stale remote runs
+    const variantChanged = variant !== registeredVariant.current && addonRemoteModules.length > 0
+
     const toastId = 'addon-versions-changed'
 
     // versions changed back to the loaded ones, the page is current again
-    if (!updatedAddons.length) {
+    if (!updatedAddons.length && !variantChanged) {
       toast.dismiss(toastId)
       return
     }
 
     const names = updatedAddons.map((a) => `${a.addonName} ${a.addonVersion}`).join(', ')
-    const render = <RefreshToast message={`Addons updated (${names}). Refresh to load them.`} />
+    const message = variantChanged
+      ? 'Bundle changed. Refresh to load its addon modules.'
+      : `Addons updated (${names}). Refresh to load them.`
+    const render = <RefreshToast message={message} />
 
     if (toast.isActive(toastId)) {
       toast.update(toastId, { render })
     } else {
       toast.info(render, { toastId, autoClose: false, closeOnClick: false })
     }
-  }, [addonRemoteModules, isFetching, remotesInitialized])
+  }, [addonRemoteModules, isFetching, remotesInitialized, variant])
 
   useEffect(() => {
     // waiting for loading or it has already been initialized
-    if (isLoading || isLoadingInfo || remotesInitialized) return
+    if (isLoading || isLoadingInfo || isLoadingUser || remotesInitialized) return
 
     // no remotes found, nothing to do
     if (!addonRemoteModules.length) {
+      registeredVariant.current = variant
       setRemotesInitialized(true)
       return
     }
@@ -100,6 +117,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     })
 
     registeredVersions.current = Object.fromEntries(allRemotes.map((r) => [r.addon, r.version]))
+    registeredVariant.current = variant
 
     registerRemotes(
       allRemotes.map((r) => ({
@@ -115,7 +133,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     )
 
     setRemotesInitialized(true)
-  }, [addonRemoteModules, isLoading, isLoadingInfo, remotesInitialized])
+  }, [addonRemoteModules, isLoading, isLoadingInfo, isLoadingUser, remotesInitialized, variant])
 
   return (
     <RemoteModulesContext.Provider
