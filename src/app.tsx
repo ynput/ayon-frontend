@@ -70,6 +70,7 @@ import { useLazyGetSiteInfoQuery, useGetYnputCloudInfoQuery } from '@shared/api'
 import { usersApi } from '@shared/api/generated'
 import { systemQueries } from '@shared/api'
 import { takeEarlySiteInfo } from '@helpers/earlySiteInfo'
+import { withServiceUserAccess } from '@helpers/serviceUser'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
@@ -162,12 +163,13 @@ const App = () => {
         }
 
         if (response.user) {
+          const user = withServiceUserAccess(response.user)
           // /api/info already returns the current user: seed it so /api/users/me isn't
           // requested again before the routes can render
-          dispatch(usersApi.util.upsertQueryData('getCurrentUser', undefined, response.user))
+          dispatch(usersApi.util.upsertQueryData('getCurrentUser', undefined, user))
           dispatch(
             login({
-              user: response.user,
+              user,
               accessToken: storedAccessToken,
             }),
           )
