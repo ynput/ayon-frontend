@@ -1,0 +1,37 @@
+{
+  "name": "@ynput/ayon-addon",
+  "version": "0.1.0",
+  "description": "Public API for AYON addon frontends: slots, manifest and the host's globals",
+  "type": "module",
+  "module": "dist/index.es.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.es.js"
+    },
+    "./manifest": {
+      "types": "./dist/types/manifest.d.ts",
+      "import": "./dist/manifest.es.js"
+    },
+    "./host": {
+      "types": "./dist/types/host.d.ts",
+      "import": "./dist/host.es.js"
+    }
+  },
+  "files": [
+    "dist",
+    "AGENTS.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vite build"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-router-dom": ">=6.4",
+    "react-toastify": ">=9"
+  }
+}

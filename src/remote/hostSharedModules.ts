@@ -2,14 +2,16 @@ import { registerShared } from '@module-federation/enhanced/runtime'
 import * as reduxToolkit from '@reduxjs/toolkit'
 import * as reactRedux from 'react-redux'
 import * as reactToastify from 'react-toastify'
+import * as addonApi from '@ynput/ayon-addon'
 import { dependencies } from '../../package.json'
 import { version } from '../../shared/package.json'
+import { version as addonApiVersion } from '../../addon/package.json'
 import { routerExports } from './hostRouterExports'
 
-// Addons import @ynput/ayon-frontend-shared, @reduxjs/toolkit, react-redux, react-router and
-// react-toastify. Providing the host's own modules under those names makes addons that share them
-// use the host's instances: one RTK Query api and cache, one root reducer, the same React
-// contexts, the host's router and its toast container.
+// Addons import @ynput/ayon-frontend-shared, @reduxjs/toolkit, react-redux, react-router,
+// react-toastify and @ynput/ayon-addon. Providing the host's own modules under those names makes
+// addons that share them use the host's instances: one RTK Query api and cache, one root reducer,
+// the same React contexts, the host's router and its toast container, one slot registry.
 // See src/remote/AGENTS.md.
 
 const PACKAGE = '@ynput/ayon-frontend-shared'
@@ -65,6 +67,8 @@ export const shareHostModules = () =>
     'react-router-dom': share(dependencies['react-router-dom'], async () => asLib(routerExports)),
     // toast() only reaches a ToastContainer from the same copy of the package
     'react-toastify': share(dependencies['react-toastify'], async () => asLib(reactToastify)),
+    // the addon API: addons list it with import: false, so this is the only copy they ever get
+    '@ynput/ayon-addon': share(addonApiVersion, async () => asLib(addonApi)),
     ...Object.fromEntries(
       ENTRY_NAMES.map((entry) => [
         entry === 'index' ? PACKAGE : `${PACKAGE}/${entry}`,

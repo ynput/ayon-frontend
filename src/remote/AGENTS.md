@@ -24,6 +24,17 @@ What an addon gets from that:
 
 `ayon-addon-full-template` shows the addon side: its federation config, a slice and endpoints.
 
+## Slots and manifests (`@ynput/ayon-addon`)
+
+The addon API lives in `addon/` (`@ynput/ayon-addon`, not published yet). The host builds it from source (alias in `vite.config.ts`, paths in both tsconfigs) and registers it in `hostSharedModules.ts`. Addons list it in their federation `shared` with `import: false`, so they never bundle a copy: everything they import from it is the host's.
+
+- **Manifest.** An addon that lists `manifest` in `frontend_modules` and exposes `./manifest` declares its contributions there (`defineAddon({ contributes: [...] })`). The manifest imports from `@ynput/ayon-addon/manifest`, which the addon bundles (plain functions): the main entry is the host's copy, and a helper an older AYON doesn't have yet would be `undefined` and stop the whole manifest from loading. `RemoteModulesProvider` loads every manifest right after registering the remotes and calls `registerManifest`; then `setManifestsLoading(false)`. Addons without a manifest keep keyword matching (`App`, `Project`, `Studio`, `Route`) unchanged.
+- **Registry.** A module-level store in `addon/src/registry.ts`, read with `useContributions(slot)`. Contributions are keyed `<addon>.<id>`. An unknown slot, an invalid id, a missing description field or piece, and duplicates are skipped with a console warning naming them (`addon/src/validate.ts`, also what `ayon-addon check` runs).
+- **Slots.** `SlotMap` (`addon/src/slots.ts`) is the source of truth for each slot's description, context and pieces; `SLOTS` is what the host checks at run time. Adding a slot: one `SlotMap` entry, one `SLOTS` entry, a named helper for addons, and the placement in the host. Discovery and loading don't change.
+- **Rendering.** Surfaces render a contribution with `ContributionView` (lazy piece, loading state, error boundary, slot context for `useSlot`). Menu items call `runContribution`, which reports errors as a toast. Never render a piece without one of these: an addon's crash must stay inside its own area.
+- **The package imports nothing from `src/` or `@shared`** (type-only imports are fine, the build inlines them). What it needs from the app (`useUser`, later the layout components) the app registers with `provideHost` in `src/remote/addonHost.ts`, before the first render. The standalone dev shell registers its own.
+- **Shared depends on the package, not the other way round.** Shared containers read the registry, so `shared/package.json` lists `@ynput/ayon-addon` as a peer and the shared build keeps it external. A copy bundled into shared would be a second registry that the standalone dev shell can't reach.
+
 ## Rules and gotchas
 
 - **Keep `hostSharedEntries.ts` and `ENTRY_NAMES` in `hostSharedModules.ts` in sync with `build.lib.entry` in `shared/vite.config.ts`.** An entry the host doesn't provide falls back to the addon's own copy, and that copy brings its own api and contexts. `tests/unit/hostSharedModules.spec.ts` checks the lists match.

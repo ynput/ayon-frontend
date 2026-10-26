@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from 'react'
-import { registerRemotes } from '@module-federation/enhanced/runtime'
+import { loadRemote, registerRemotes } from '@module-federation/enhanced/runtime'
+import { MANIFEST_MODULE, registerManifest, setManifestsLoading } from '@ynput/ayon-addon/host'
 import { toast } from 'react-toastify'
 import { RefreshToast } from '@shared/components/RefreshToast/RefreshToast'
 import { useListFrontendModulesQuery } from '@shared/api'
@@ -23,6 +24,28 @@ export type RemoteModulesContextType = {
 type Props = {
   children: ReactNode
   skip?: boolean
+}
+
+// Addons that list a `manifest` module declare their contributions to slots in it
+// (@ynput/ayon-addon). It holds descriptions only, so every manifest loads at startup; the
+// contributions' code loads when their slot needs it.
+const loadManifests = async (remotes: Module[]) => {
+  await Promise.all(
+    remotes
+      .filter((r) => r.modules.includes(MANIFEST_MODULE))
+      .map(async (r) => {
+        try {
+          const manifest = await loadRemote<{ default: unknown }>(
+            `${r.remote}/${MANIFEST_MODULE}`,
+            { from: 'runtime' },
+          )
+          registerManifest({ name: r.addon, version: r.version, remote: r.remote }, manifest?.default)
+        } catch (error) {
+          console.error(`[addon ${r.addon}] its manifest failed to load`, error)
+        }
+      }),
+  )
+  setManifestsLoading(false)
 }
 
 export const RemoteModulesProvider = ({ children, skip }: Props) => {
@@ -80,6 +103,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     // no remotes found, nothing to do
     if (!addonRemoteModules.length) {
       setRemotesInitialized(true)
+      setManifestsLoading(false)
       return
     }
 
@@ -115,6 +139,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     )
 
     setRemotesInitialized(true)
+    loadManifests(allRemotes)
   }, [addonRemoteModules, isLoading, isLoadingInfo, remotesInitialized])
 
   return (
