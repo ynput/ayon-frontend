@@ -22,6 +22,8 @@ export type {
   ListMenuItemMeta,
   MenuKind,
   ProjectListMenuItemContext,
+  ProjectTableToolbarItemContext,
+  ProjectTableToolbarItemMeta,
   SlicerMenuItemContext,
   SlicerMenuItemMeta,
   SlicerRowRef,

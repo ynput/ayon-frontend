@@ -32,6 +32,10 @@ export const projectListMenuItem = (item: ContributionFields<'projectList.menuIt
 export const slicerMenuItem = (item: ContributionFields<'slicer.menuItem'>) =>
   contribute('slicer.menuItem', item)
 
+/** A button in the project tables' toolbar that opens the addon's dialog or popover. */
+export const projectTableToolbarItem = (item: ContributionFields<'projectTable.toolbarItem'>) =>
+  contribute('projectTable.toolbarItem', item)
+
 /** A read-only column in the project tables. */
 export const tableColumn = (column: ContributionFields<'tableColumn'>) =>
   contribute('tableColumn', column)

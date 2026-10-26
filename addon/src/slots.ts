@@ -108,6 +108,16 @@ export interface SlotMap {
     pieces: { run: Loader<RunPiece<'entityMenuItem'>> }
   }
   /**
+   * A button in the project tables' toolbar, before Customize (Overview, Products, Lists). The
+   * host draws it from the description; `component` (a dialog or popover) loads on the first click.
+   */
+  'projectTable.toolbarItem': {
+    version: 1
+    meta: ProjectTableToolbarItemMeta
+    context: ProjectTableToolbarItemContext
+    pieces: { component: Loader<ComponentType<SlotProps<'projectTable.toolbarItem'>>> }
+  }
+  /**
    * A read-only column in the project tables (Overview, Products, Lists). It is in the column
    * settings from the description; `cell` and `useData` load with the table. Not sortable, and
    * pasting into it changes nothing.
@@ -278,6 +288,26 @@ export interface SlicerMenuItemContext extends ProjectNameScope {
   menu: MenuKind
 }
 
+/** Description of a `projectTable.toolbarItem` contribution. */
+export interface ProjectTableToolbarItemMeta {
+  id: string
+  /** a Material Symbols icon name */
+  icon: string
+  /** shown next to the icon; an icon-only button when not set */
+  label?: string
+  /** shown on hover; the label when not set */
+  tooltip?: string
+  /** which tables' toolbars show it; all (Overview, Products, Lists) when not set */
+  pages?: ProjectTablePage[]
+}
+
+/** Context of a project table toolbar item. */
+export interface ProjectTableToolbarItemContext extends ProjectNameScope, PopupScope {
+  page: ProjectTablePage
+  /** on Lists: the open list */
+  list?: { id: string; label: string; entityType: string }
+}
+
 /** Context of a studio page. */
 export interface StudioPageContext {
   /** projects selected in the page's `<ProjectList>`; saved per page */
@@ -317,6 +347,7 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   entityMenuItem: { version: 1, required: ['label', 'icon'], pieces: ['run'] },
   'projectList.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
   'slicer.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
+  'projectTable.toolbarItem': { version: 1, required: ['icon'], pieces: ['component'] },
 }
 
 export const isKnownSlot = (slot: unknown): slot is SlotName =>

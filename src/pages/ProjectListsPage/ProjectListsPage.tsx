@@ -18,6 +18,7 @@ import { useListsAttributesContext } from './context/lists-attributes'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton, SyncButton } from '@shared/components'
+import AddonToolbarItems from '@/remote/AddonToolbarItems'
 import {
   SettingsPanelProvider,
   useProjectContext,
@@ -657,6 +658,16 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         }}
                       />
                     )}
+                    <AddonToolbarItems
+                      page="lists"
+                      list={
+                        selectedList && {
+                          id: selectedList.id,
+                          label: selectedList.label,
+                          entityType: selectedList.entityType,
+                        }
+                      }
+                    />
                     <CustomizeButton />
                   </Toolbar>
                 )}

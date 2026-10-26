@@ -17,6 +17,7 @@ import { Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
 import { CustomizeButton, SyncButton, buildScopes } from '@shared/components'
+import AddonToolbarItems from '@/remote/AddonToolbarItems'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import { ProjectNewEntityHost } from '../ProjectPage/ProjectNewEntityHost'
 import { Actions } from '@shared/containers/Actions/Actions'
@@ -282,6 +283,7 @@ const ProjectOverviewPage: FC = () => {
                 bundleMode={bundleMode}
                 align="right"
               />
+              <AddonToolbarItems page="overview" />
               <CustomizeButton />
             </Toolbar>
             <Splitter
