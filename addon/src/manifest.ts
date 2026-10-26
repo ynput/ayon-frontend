@@ -12,6 +12,7 @@ export {
   headerItem,
   projectListMenuItem,
   projectPage,
+  slicerMenuItem,
   studioPage,
   tableColumn,
 } from './slotHelpers'

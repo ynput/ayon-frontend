@@ -28,6 +28,10 @@ export const entityMenuItem = (item: ContributionFields<'entityMenuItem'>) =>
 export const projectListMenuItem = (item: ContributionFields<'projectList.menuItem'>) =>
   contribute('projectList.menuItem', item)
 
+/** An item in the slicer's right-click menu and/or panel dropdown (`in`). */
+export const slicerMenuItem = (item: ContributionFields<'slicer.menuItem'>) =>
+  contribute('slicer.menuItem', item)
+
 /** A read-only column in the project tables. */
 export const tableColumn = (column: ContributionFields<'tableColumn'>) =>
   contribute('tableColumn', column)

@@ -88,6 +88,16 @@ export interface SlotMap {
     pieces: { run: Loader<RunPiece<'projectList.menuItem'>> }
   }
   /**
+   * An item in the project page slicer's menus: the right-click menu, the panel's dropdown, or both
+   * (`in`), for the slice types it lists.
+   */
+  'slicer.menuItem': {
+    version: 1
+    meta: SlicerMenuItemMeta
+    context: SlicerMenuItemContext
+    pieces: { run: Loader<RunPiece<'slicer.menuItem'>> }
+  }
+  /**
    * An item in the right-click menu of the project tables' cells, for the selected entities. It
    * shows from the description; `run` loads when the menu opens and is called on click.
    */
@@ -246,6 +256,28 @@ export interface ProjectListMenuItemContext {
   menu: MenuKind
 }
 
+/** Description of a `slicer.menuItem` contribution. */
+export interface SlicerMenuItemMeta extends ListMenuItemMeta {
+  /** slice types it shows for (`hierarchy`, `assignees`, `status`, ...); all when not set */
+  sliceTypes?: string[]
+}
+
+/** A row of the slicer: a folder in `hierarchy`, a value (user, status, type) in the others. */
+export interface SlicerRowRef {
+  id: string
+  label?: string
+  /** for `hierarchy` rows: `folder` (or `task`) */
+  entityType?: string
+}
+
+/** Context of a slicer menu item. */
+export interface SlicerMenuItemContext extends ProjectNameScope {
+  sliceType: string
+  /** the rows it acts on: the selected ones, or the right-clicked one */
+  selected: SlicerRowRef[]
+  menu: MenuKind
+}
+
 /** Context of a studio page. */
 export interface StudioPageContext {
   /** projects selected in the page's `<ProjectList>`; saved per page */
@@ -284,6 +316,7 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   tableColumn: { version: 1, required: ['label'], pieces: ['cell'], optionalPieces: ['useData'] },
   entityMenuItem: { version: 1, required: ['label', 'icon'], pieces: ['run'] },
   'projectList.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
+  'slicer.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
 }
 
 export const isKnownSlot = (slot: unknown): slot is SlotName =>
