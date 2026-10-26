@@ -12,7 +12,15 @@ export type {
   SlotProps,
   StudioPageContext,
 } from './slots'
-export type { Access, PageMeta, ProjectInfo, ProjectNameScope, ProjectScope } from './scopes'
+export type {
+  Access,
+  PageMeta,
+  ProjectInfo,
+  ProjectNameScope,
+  ProjectScope,
+  SlicerScope,
+  SlicerSelection,
+} from './scopes'
 export type {
   AddonInfo,
   AddonManifest,
@@ -27,6 +35,15 @@ export type { ContributionsResult } from './registry'
 export { ContributionView, ContributionErrorBoundary } from './ContributionView'
 export type { ContributionViewProps } from './ContributionView'
 export { prefetchPiece, runContribution } from './pieces'
+
+// layout: the host's slicer and project list, placed by the addon
+export { ProjectList, ProjectPageLayout, Slicer, StudioPageLayout } from './layout'
+export type {
+  ProjectListProps,
+  ProjectPageLayoutProps,
+  SlicerProps,
+  StudioPageLayoutProps,
+} from './layout'
 
 // globals: the same in every slot
 export { useUser } from './globals'

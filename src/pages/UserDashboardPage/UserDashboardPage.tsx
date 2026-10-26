@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo, useState } from 'react'
+import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useNavigate, useParams } from 'react-router-dom'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
@@ -11,9 +11,9 @@ import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from './DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
-import { Splitter, SplitterPanel } from 'primereact/splitter'
+import { SplitterPanel } from 'primereact/splitter'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
-import styled from 'styled-components'
+import { ProjectsListSplitter } from './UserDashboardPage.styled'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
@@ -25,6 +25,8 @@ import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { useContributions } from '@ynput/ayon-addon'
 import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
 import { AddonStudioPage } from '@/remote/AddonPages'
+import { StudioPageSelectionProvider } from '@/remote/AddonLayout'
+import { ProjectList, StudioPageLayout } from '@ynput/ayon-addon'
 import { UserDashboardPageRemote } from './UserDashboardPageRemote'
 import LoadingPage from '@pages/LoadingPage'
 import { WithViews } from '@/hoc/WithViews'
@@ -65,17 +67,6 @@ const UserDashboardNoProjects = lazy(
 
 // pages rendered by this repo, they don't need to wait for addon remote modules to load
 const BUILT_IN_MODULES = ['tasks', 'projects']
-
-const StyledSplitter = styled(Splitter)`
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-
-  .p-splitter-gutter {
-    z-index: 50;
-  }
-`
 
 const UserDashboardPage: React.FC = () => {
   const { module, addonName } = useParams<{ module?: string; addonName?: string }>()
@@ -120,7 +111,19 @@ const UserDashboardPage: React.FC = () => {
   const dispatch = useDispatch()
   //   selected projects
   const selectedProjects = useAppSelector((state: any) => state.dashboard.selectedProjects)
-  const setSelectedProjects = (projects: string[]) => dispatch(onProjectSelected(projects))
+  const setSelectedProjects = useCallback(
+    (projects: string[]) => dispatch(onProjectSelected(projects)),
+    [dispatch],
+  )
+  // legacy studio pages with the `projects` key share the dashboard's selection
+  const legacyStudioSelection = useMemo(
+    () => ({
+      selection: selectedProjects,
+      onSelect: setSelectedProjects,
+      onNewProject: () => setShowNewProject(true),
+    }),
+    [selectedProjects, setSelectedProjects],
+  )
 
   // Filter out folder IDs from selection - only actual project names should be used for API queries
   const selectedProjectNames = useMemo(
@@ -206,20 +209,28 @@ const UserDashboardPage: React.FC = () => {
       // Add remote Studio pages
       ...remotePages.map((remote) => {
         const showProjectList = !!(remote as any).projects
+        const page = (
+          <UserDashboardPageRemote
+            Component={remote.component}
+            viewType={remote.viewType}
+            state={showProjectList ? { selectedProjects } : undefined}
+            key={remote.id}
+          />
+        )
         return {
           name: remote.name || remote.module,
           path: `/dashboard/${remote.module}`,
           module: remote.module,
-          component: (
-            <UserDashboardPageRemote
-              Component={remote.component}
-              viewType={remote.viewType}
-              state={showProjectList ? { selectedProjects } : undefined}
-              key={remote.id}
-            />
+          // the `projects` key renders through the layout components studio.page contributions use
+          component: showProjectList ? (
+            <StudioPageSelectionProvider value={legacyStudioSelection} key={remote.id}>
+              <StudioPageLayout sidebar={<ProjectList />}>{page}</StudioPageLayout>
+            </StudioPageSelectionProvider>
+          ) : (
+            page
           ),
           viewType: remote.viewType,
-          showProjectList,
+          showProjectList: false,
           isMultiSelect: false,
         }
       }),
@@ -228,7 +239,13 @@ const UserDashboardPage: React.FC = () => {
         path: `/dashboard/${page.id}`,
         module: page.id,
         accessLevels: pageAccessLevels(page.access),
-        component: <AddonStudioPage contribution={page} key={page.key} />,
+        component: (
+          <AddonStudioPage
+            contribution={page}
+            onNewProject={() => setShowNewProject(true)}
+            key={page.key}
+          />
+        ),
         viewType: page.viewType as ViewType | undefined,
         showProjectList: false,
       })),
@@ -247,6 +264,7 @@ const UserDashboardPage: React.FC = () => {
       addonsData,
       remotePages,
       addonStudioPages,
+      legacyStudioSelection,
       projectsInfoWithProjects,
       isLoadingInfo,
       selectedProjects,
@@ -319,7 +337,7 @@ const UserDashboardPage: React.FC = () => {
           <WithViews viewType={viewType}>
             <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
               {showProjectList ? (
-                <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
+                <ProjectsListSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
                   <SplitterPanel size={15}>
                     <ProjectsList
                       multiSelect={isMultiSelect}
@@ -331,7 +349,7 @@ const UserDashboardPage: React.FC = () => {
                   <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
                     {moduleComponent}
                   </SplitterPanel>
-                </StyledSplitter>
+                </ProjectsListSplitter>
               ) : (
                 moduleComponent
               )}

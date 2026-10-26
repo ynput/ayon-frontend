@@ -2,6 +2,8 @@ import { provideHost } from '@ynput/ayon-addon/host'
 import type { AddonUser } from '@ynput/ayon-addon'
 import { useMemo } from 'react'
 import { useAppSelector } from '@state/store'
+import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
+import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
 
 // The host's implementations of what @ynput/ayon-addon exports but can't build itself
 // (it imports nothing from this app). See src/remote/AGENTS.md.
@@ -26,4 +28,13 @@ const useUser = (): AddonUser | undefined => {
 }
 
 // Must run before the first render.
-export const provideAddonHost = () => provideHost({ useUser })
+export const provideAddonHost = () =>
+  provideHost({
+    useUser,
+    components: {
+      ProjectPageLayout: ProjectPageLayoutHost,
+      Slicer: SlicerHost,
+      StudioPageLayout: StudioPageLayoutHost,
+      ProjectList: ProjectListHost,
+    },
+  })

@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import type { PageMeta, ProjectScope } from './scopes'
+import type { PageMeta, ProjectScope, SlicerScope } from './scopes'
 
 // The slots: places in the AYON web UI that addons contribute to.
 // SlotMap is the single source of truth. Each entry has the slot's version, the description the
@@ -25,7 +25,7 @@ export interface SlotMap {
   'project.page': {
     version: 1
     meta: PageMeta
-    context: ProjectScope
+    context: ProjectScope & SlicerScope
     pieces: { component: Loader<ComponentType<SlotProps<'project.page'>>> }
   }
   /**
@@ -41,7 +41,10 @@ export interface SlotMap {
 }
 
 /** Context of a studio page. */
-export interface StudioPageContext {}
+export interface StudioPageContext {
+  /** projects selected in the page's `<ProjectList>`; saved per page */
+  selectedProjects: string[]
+}
 
 /** The name of a slot, e.g. `'project.page'`. */
 export type SlotName = keyof SlotMap & string

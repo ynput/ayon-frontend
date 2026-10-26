@@ -28,6 +28,20 @@ export interface ProjectScope extends ProjectNameScope {
   project: ProjectInfo | undefined
 }
 
+/** What is selected in the project page's slicer. */
+export interface SlicerSelection {
+  /** `hierarchy`, `assignees`, `status`, `taskType`, ... */
+  sliceType: string
+  /** ids of the selected rows: folder ids for `hierarchy`, the values for the others */
+  selection: string[]
+}
+
+/** Slots on a project page, which always has the host's slicer state (selection, per page). */
+export interface SlicerScope {
+  /** empty until the user selects something in a `<Slicer>` the page places */
+  slicer: SlicerSelection
+}
+
 /** Who sees a page: everyone when not set. Admins see manager pages too. */
 export type Access = 'manager' | 'admin'
 
