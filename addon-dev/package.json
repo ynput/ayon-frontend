@@ -15,7 +15,9 @@
       "types": "./dist/eslint.d.ts",
       "import": "./dist/eslint.js"
     },
-    "./AGENTS.md": "./AGENTS.md"
+    "./AGENTS.md": "./AGENTS.md",
+    "./shell": "./dist/shell/index.js",
+    "./shell/style.css": "./dist/shell/style.css"
   },
   "files": [
     "dist",
@@ -25,11 +27,22 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && chmod +x dist/cli.js"
+    "build": "tsc -p tsconfig.json && chmod +x dist/cli.js && vite build --config shell/vite.config.ts",
+    "typecheck:shell": "tsc -p shell/tsconfig.json"
+  },
+  "dependencies": {
+    "@tanstack/react-table": "^8.21.3"
   },
   "peerDependencies": {
     "@module-federation/vite": ">=1.14",
     "@ynput/ayon-addon": "^0.1.0",
-    "vite": ">=6"
+    "vite": ">=6",
+    "@ynput/ayon-frontend-shared": ">=0.7.0",
+    "playwright": ">=1.40"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": true
+    }
   }
 }

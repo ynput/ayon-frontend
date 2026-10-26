@@ -2,10 +2,12 @@
 //   build: module federation (remote `name`, ./manifest exposed, every package AYON provides
 //          shared, @ynput/ayon-addon with import: false), output in dist/modules/<name>
 //   `ayon-addon dev`: the same build, watched, plus /ayon-addon.json for AYON's dev override
+//   `ayon-addon dev --standalone`: the Vite dev server with the dev shell (standalone.ts)
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import path from 'path'
 import type { Plugin, PluginOption, UserConfig } from 'vite'
 import { findPackageDir, importFromProject, installedVersion, readAddonProject } from './project.js'
+import { standalonePlugin } from './standalone.js'
 
 export interface AyonAddonOptions {
   /** the federation remote name: the key in the server's `frontend_modules` */
@@ -16,6 +18,8 @@ export interface AyonAddonOptions {
   exposes?: Record<string, string>
   /** more packages to share with AYON as singletons */
   shared?: string[]
+  /** where `ayon-addon preview` reads fixtures (default dev/fixtures) */
+  fixtures?: string
 }
 
 /** What `ayon-addon dev` serves next to the build, read by AYON's dev override. */
@@ -28,7 +32,7 @@ export interface AddonDevInfo {
 }
 
 // packages AYON provides to addons (vite federation config and src/remote/hostSharedModules.ts)
-const HOST_PACKAGES = [
+export const HOST_PACKAGES = [
   'react',
   'react-dom',
   'styled-components',
@@ -39,10 +43,13 @@ const HOST_PACKAGES = [
   'react-router-dom',
   'react-toastify',
 ]
-const SHARED_PACKAGE = '@ynput/ayon-frontend-shared'
-const ADDON_API = '@ynput/ayon-addon'
+export const SHARED_PACKAGE = '@ynput/ayon-frontend-shared'
+export const ADDON_API = '@ynput/ayon-addon'
 
 const readJson = (file: string) => JSON.parse(readFileSync(file, 'utf8'))
+
+// the build's entry when the addon has no index.html: AYON loads remoteEntry.js, nothing else
+const BUILD_ENTRY = '\0ayon-addon-build-entry'
 
 const buildShared = (root: string, extra: string[] = []) => {
   const pkg = readJson(path.join(root, 'package.json'))
@@ -131,9 +138,18 @@ export const ayonAddon = async (options: AyonAddonOptions): Promise<PluginOption
                 cssCodeSplit: false,
                 minify: mode !== 'development',
                 sourcemap: mode === 'development',
+                ...(existsSync(path.join(root, 'index.html'))
+                  ? {}
+                  : { rollupOptions: { input: { 'ayon-addon': BUILD_ENTRY } } }),
               }
             : undefined,
       }
+    },
+    resolveId(id) {
+      if (id === BUILD_ENTRY) return id
+    },
+    load(id) {
+      if (id === BUILD_ENTRY) return 'export {}'
     },
   }
 
@@ -154,7 +170,15 @@ export const ayonAddon = async (options: AyonAddonOptions): Promise<PluginOption
     },
   }
 
-  return [...federationPlugins, config, devInfo]
+  const standalone = standalonePlugin({
+    root,
+    project,
+    remote: options.name,
+    manifest,
+    fixtures: options.fixtures || 'dev/fixtures',
+  })
+
+  return [...federationPlugins, config, devInfo, standalone]
 }
 
 export default ayonAddon

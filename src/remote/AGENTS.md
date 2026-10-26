@@ -45,6 +45,10 @@ The addon API lives in `addon/` (`@ynput/ayon-addon`, not published yet). The ho
 - **Reload on save:** federation can't swap a registered remote, so the banner polls `/ayon-addon.json` and reloads the page when the build id changes. Not Fast Refresh: a remote's dev-server modules need React Refresh's preamble from the page that loads them, which the host doesn't have; the watched build always works.
 - Service users are treated as admins in the frontend (`src/features/user.js`), as the server does: `/api/info` doesn't send their UI exposure level, which hid project pages from API-key sessions.
 
+## The standalone dev shell (`ayon-addon dev --standalone`)
+
+`addon-dev/shell` renders an addon's contributions without this app: AYON's providers and the surfaces that live in shared (DetailsPanel, Slicer, SettingsPanel, the addon column cells), stand-ins for the ones that live here (header, page tabs, ProjectsList, ProjectTreeTable with its page data layer). It imports only `@ynput/ayon-frontend-shared` entries and `@ynput/ayon-addon`; what it needs from shared must be exported there (e.g. `LoginPage`, `ProjectPageLayoutHost`, `useAddonCustomizeSections`, `AddonColumnDataScope`). When a shared surface gains a provider dependency, the shell's provider stack (`addon-dev/shell/src/Shell.tsx`, `Stage.tsx`) needs it too: `ayon-addon open` on the template's contributions catches that.
+
 ## Rules and gotchas
 
 - **Keep `hostSharedEntries.ts` and `ENTRY_NAMES` in `hostSharedModules.ts` in sync with `build.lib.entry` in `shared/vite.config.ts`.** An entry the host doesn't provide falls back to the addon's own copy, and that copy brings its own api and contexts. `tests/unit/hostSharedModules.spec.ts` checks the lists match.

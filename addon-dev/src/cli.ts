@@ -1,13 +1,18 @@
 #!/usr/bin/env node
 // ayon-addon: dev server and checks for AYON addon frontends. Every command prints JSON with --json.
 //   ayon-addon dev [--port 5173]     watched build + server for AYON's dev override (?addonDev=)
+//   ayon-addon dev --standalone      the dev shell: the addon in AYON's surfaces, hot reload
 //   ayon-addon slots [--json]        the slots of the installed @ynput/ayon-addon
 //   ayon-addon check [--json] [--no-types]
+//   ayon-addon open <slot> <id>      the dev shell in a headless browser (live server)
+//   ayon-addon preview <slot> <id> --fixture <name>   the same from a fixture, no server
 import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import { createServer } from 'http'
 import path from 'path'
+import { browse, formatBrowse } from './browse.js'
 import { checkAddon, formatCheck } from './check.js'
 import { findConnection, findPackageDir, importFromProject, readAddonProject } from './project.js'
+import { STANDALONE_ENV } from './standalone.js'
 
 const argv = process.argv.slice(2)
 const command = argv[0]
@@ -64,7 +69,32 @@ const findDevInfo = () => {
   return file && { dir: path.dirname(file), info: JSON.parse(readFileSync(file, 'utf8')) }
 }
 
+// the Vite dev server with the dev shell (ayonAddon()'s standalone plugin)
+const devStandalone = async () => {
+  const project = readAddonProject(root)
+  const connection = findConnection(root)
+  const vite = await importFromProject<typeof import('vite')>(root, 'vite')
+  process.env[STANDALONE_ENV] = '1'
+  const server = await vite.createServer({
+    root,
+    server: { port: Number(option('port', '5174')) },
+  })
+  await server.listen()
+  const url = server.resolvedUrls!.local[0]
+  print(
+    { url, addon: project.name, server: connection.serverUrl, signedInWithKey: !!connection.apiKey },
+    [
+      `${project.name} ${project.version}: dev shell at ${url}`,
+      `AYON: ${connection.serverUrl}, ${
+        connection.apiKey ? `signed in with the key from ${connection.apiKeySource}` : 'sign in on the page'
+      }`,
+      'Preview without a server: ?preview=<fixture> (dev/fixtures/<fixture>.json)',
+    ].join('\n'),
+  )
+}
+
 const dev = async () => {
+  if (flag('standalone')) return devStandalone()
   const port = Number(option('port', '5173'))
   const project = readAddonProject(root)
   const vite = await importFromProject<typeof import('vite')>(root, 'vite')
@@ -126,17 +156,68 @@ const check = async () => {
   process.exitCode = result.ok ? 0 : 1
 }
 
+// the arguments that aren't flags or flag values
+const BOOLEAN_FLAGS = ['--json', '--run', '--no-types', '--standalone', '--prune']
+const positional = () => {
+  const values: string[] = []
+  for (let i = 1; i < argv.length; i++) {
+    if (!argv[i].startsWith('--')) values.push(argv[i])
+    else if (!BOOLEAN_FLAGS.includes(argv[i])) i++
+  }
+  return values
+}
+
+const browseCommand = (mode: 'live' | 'preview') => async () => {
+  const [slot, id] = positional()
+  if (!slot || !id) throw new Error(`usage: ayon-addon ${command} <slot> <id> (see ayon-addon help)`)
+  const fixture = option('fixture')
+  if (mode === 'preview' && !fixture) throw new Error('preview needs --fixture <name>')
+  const result = await browse({
+    root,
+    slot,
+    id,
+    fixture: mode === 'preview' ? fixture : undefined,
+    project: option('project'),
+    entities: option('entities'),
+    page: option('page'),
+    url: option('url'),
+    screenshot: option('screenshot'),
+    run: flag('run'),
+    saveFixture: option('save-fixture'),
+    prune: flag('prune'),
+    timeout: option('timeout') ? Number(option('timeout')) : undefined,
+  })
+  print(result, formatBrowse(result))
+  process.exitCode = result.ok ? 0 : 1
+}
+
 const HELP = `ayon-addon: tools for AYON addon frontends (run in the addon's frontend folder)
 
   dev [--port 5173]            build on every change and serve it for AYON's dev override:
                                open AYON with ?addonDev=<addon>@http://localhost:5173
+  dev --standalone [--port 5174]
+                               the dev shell: the addon's contributions in AYON's surfaces,
+                               hot reload, a developer panel to pick slot, project, entities
   slots [--json]               the slots of the installed @ynput/ayon-addon
   check [--json] [--no-types]  the manifest as AYON reads it, the pieces' files, the types
+  open <slot> <id> [--project <name>] [--entities type:id,...] [--page overview|products|lists]
+       [--run] [--screenshot <file>] [--save-fixture <name>] [--url <dev shell>] [--json]
+                               render one contribution in the dev shell, headless, and report
+                               errors, toasts, its context (and the clipboard with --run)
+  preview <slot> <id> --fixture <name> [--run] [--prune] [--screenshot <file>] [--json]
+                               the same from dev/fixtures/<name>.json, without a server;
+                               --prune drops the answers the preview didn't use
 
 Sign-in: AYON_SERVER_URL and AYON_API_KEY; in the AYON dev workbench, the local stack and
 data/local-api-key.`
 
-const commands: Record<string, () => Promise<void>> = { dev, slots, check }
+const commands: Record<string, () => Promise<void>> = {
+  dev,
+  slots,
+  check,
+  open: browseCommand('live'),
+  preview: browseCommand('preview'),
+}
 const run = commands[command]
 if (!run) {
   console.log(HELP)
