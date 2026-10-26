@@ -82,11 +82,17 @@ const UserDashboardPage: React.FC = () => {
   const isManager = user?.data?.isManager
   const isGuest = user?.data?.isGuest
 
+  // addons in the bundle the user's addon modules come from (production, staging or dev)
+  const { getBundleAddonVersion, isLoading: isLoadingBundleAddons } = useGetBundleAddon()
+
   const {
     data: addonsData = [],
     //isLoading: addonsLoading,
     //isError: addonsIsError,
-  } = useGetDashboardAddonsQuery({})
+  } = useGetDashboardAddonsQuery(
+    { getVersion: getBundleAddonVersion },
+    { skip: isLoadingBundleAddons },
+  )
 
   // Load remote Studio pages
   const { remotePages, isLoading: isLoadingRemotePages } = useLoadRemotePages({
@@ -94,7 +100,6 @@ const UserDashboardPage: React.FC = () => {
     skip: false,
   })
 
-  const { getBundleAddonVersion } = useGetBundleAddon()
   const hasPlanner = !!getBundleAddonVersion('planner')
 
   const navigate = useNavigate()

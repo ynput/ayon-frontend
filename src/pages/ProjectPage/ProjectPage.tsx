@@ -226,14 +226,17 @@ const ProjectPageInner = () => {
   const { trackCurrentTab } = useProjectDefaultTab()
   const [showContextDialog, setShowContextDialog] = useState(false)
 
+  // addons in the bundle the user's addon modules come from (production, staging or dev)
+  const { getBundleAddonVersion, isLoading: addonsListLoading } = useGetBundleAddon()
+
   const {
     data: addonsData = [],
     isLoading: addonsLoading,
     isError: addonsIsError,
-  } = useGetProjectAddonsQuery({}, { skip: !projectName })
-
-  // addons in the bundle the user's addon modules come from (production, staging or dev)
-  const { getBundleAddonVersion, isLoading: addonsListLoading } = useGetBundleAddon()
+  } = useGetProjectAddonsQuery(
+    { getVersion: getBundleAddonVersion },
+    { skip: !projectName || addonsListLoading },
+  )
   const hasReview = !!getBundleAddonVersion('review')
   const hasReports = !!getBundleAddonVersion('reports')
 

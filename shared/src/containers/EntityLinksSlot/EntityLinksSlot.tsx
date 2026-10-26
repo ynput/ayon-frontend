@@ -15,7 +15,7 @@ import {
   usePowerpack,
   useRemoteModules,
 } from '@shared/context'
-import { useGetProductionAddon } from '@shared/hooks/useGetProductionAddon'
+import { useGetBundleAddon } from '@shared/hooks/useGetBundleAddon'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { getActiveEntities, shouldBlockShortcuts } from '@shared/util'
 import type { ActiveEntity } from '@shared/util'
@@ -87,8 +87,8 @@ export const EntityLinksSlot: FC = () => {
     !isLoaded && !!modules.find((m) => m.addonName === 'powerpack')?.modules?.links
   const { openSlideOut, useNavigate } = useDetailsPanelContext()
   const navigate = useNavigate()
-  const { getProductionAddon } = useGetProductionAddon()
-  const hasNodegraph = !!getProductionAddon('nodegraph', { minVersion: NODEGRAPH_MIN_VERSION })
+  const { getBundleAddonVersion } = useGetBundleAddon()
+  const hasNodegraph = !!getBundleAddonVersion('nodegraph', { minVersion: NODEGRAPH_MIN_VERSION })
   const { user } = useGlobalContext()
 
   const close = useCallback(() => setDialog(null), [])
