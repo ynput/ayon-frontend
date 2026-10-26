@@ -19,7 +19,8 @@ import { getProjectDisplayName } from '@shared/util'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
 import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
-import type { RemotePageBundle } from '@/remote/useLoadRemotePages'
+import { useRemoteBundle } from '@/remote/useRemoteBundle'
+import type { RemotePageBundle } from '@/remote/useRemoteBundle'
 import { SlicerProvider } from '@shared/containers/Slicer'
 import { usePrefetchViews, useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
@@ -255,6 +256,9 @@ const ProjectPageInner = () => {
     isLoading: boolean
   }
 
+  // built in tabs that render addon remote modules are marked like remote pages
+  const { getAddonBundle } = useRemoteBundle()
+
   // get remote project module pages
   const links: NavLinkItem[] = useMemo(
     () => [
@@ -298,18 +302,25 @@ const ProjectPageInner = () => {
         path: `/projects/${projectName}/reviews`,
         module: 'reviews',
         viewType: 'reviews',
+        startContent: <RemotePageBundleDot bundle={getAddonBundle('review')} />,
       },
       ...ADDON_PAGES.map(({ name, module: addonModule, viewType }) => ({
         name,
         path: `/projects/${projectName}/${addonModule}`,
         module: addonModule,
         viewType,
+        startContent: (
+          <RemotePageBundleDot
+            bundle={remotePages.find((remote) => remote.module === addonModule)?.remoteBundle}
+          />
+        ),
       })),
       {
         name: 'Reports',
         path: `/projects/${projectName}/reports`,
         module: 'reports',
         viewType: 'reports',
+        startContent: <RemotePageBundleDot bundle={getAddonBundle('reports')} />,
       },
       {
         name: 'Workfiles',
@@ -353,7 +364,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, module],
+    [addonsData, projectName, remotePages, module, getAddonBundle],
   )
 
   const activeLink = useMemo(() => {

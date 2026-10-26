@@ -1,16 +1,8 @@
 import { useMemo } from 'react'
 import { useRemoteModules } from '@shared/context'
-import { useListBundlesQuery } from '@shared/api'
 import { ModuleSpec, useLoadModules } from '@shared/hooks'
-import type { BundleMode } from '@shared/util'
+import { useRemoteBundle } from './useRemoteBundle'
 import LoadingPage from '@pages/LoadingPage'
-
-// set on pages whose addon comes from the staging or dev bundle, not production
-export type RemotePageBundle = {
-  variant: Exclude<BundleMode, 'production'>
-  addonName: string
-  addonVersion: string
-}
 
 interface ProjectRemoteLoaderProps {
   fallbacks?: Map<string, any>
@@ -23,21 +15,9 @@ export const useLoadRemotePages = ({
   moduleKey,
   skip = false,
 }: ProjectRemoteLoaderProps) => {
-  const {
-    modules,
-    remotesInitialized,
-    isLoading: isLoadingRemotes,
-    variant = 'production',
-  } = useRemoteModules()
+  const { modules, remotesInitialized, isLoading: isLoadingRemotes } = useRemoteModules()
 
-  // with no dev bundle the server sends the production modules, so they aren't marked as dev
-  const { data: { bundles = [] } = {}, isSuccess: hasCheckedDevBundles } = useListBundlesQuery(
-    { archived: false },
-    { skip: variant !== 'developer' },
-  )
-  const hasDevBundle = bundles.some((bundle) => bundle.isDev)
-  const pagesVariant =
-    variant === 'developer' && !(hasCheckedDevBundles && hasDevBundle) ? 'production' : variant
+  const { getAddonBundle } = useRemoteBundle()
 
   const pageModules = useMemo<ModuleSpec<any>[]>(() => {
     const pageModules: ModuleSpec<any>[] = []
@@ -70,15 +50,11 @@ export const useLoadRemotePages = ({
   const loadedPages = useMemo(() => {
     const modulesPages = modulesData
       .filter((result) => result[1].isLoaded)
-      .map(([page, { addon }]) => {
-        const addonVersion = modules.find((m) => m.addonName === addon)?.addonVersion
-        const remoteBundle: RemotePageBundle | undefined =
-          pagesVariant !== 'production' && addonVersion
-            ? { variant: pagesVariant, addonName: addon, addonVersion }
-            : undefined
-
-        return { ...page, isFallback: false, remoteBundle }
-      })
+      .map(([page, { addon }]) => ({
+        ...page,
+        isFallback: false,
+        remoteBundle: getAddonBundle(addon),
+      }))
 
     const fallbackPages = Array.from(fallbacks?.entries() || [])
       .filter(([key]) => !modulesPages.some((page) => page.id === key))
@@ -94,7 +70,7 @@ export const useLoadRemotePages = ({
       })
 
     return [...modulesPages, ...fallbackPages]
-  }, [modulesData, fallbacks, remotesInitialized, isLoadingModulePages, modules, pagesVariant])
+  }, [modulesData, fallbacks, remotesInitialized, isLoadingModulePages, modules, getAddonBundle])
 
   return {
     remotePages: loadedPages,

@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import type { RemotePageBundle } from './useLoadRemotePages'
+import type { RemotePageBundle } from './useRemoteBundle'
 
 const BUNDLE_LABELS: Record<RemotePageBundle['variant'], string> = {
   staging: 'staging',
