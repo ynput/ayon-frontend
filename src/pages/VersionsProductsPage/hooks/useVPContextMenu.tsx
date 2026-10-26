@@ -8,6 +8,7 @@ import {
   useSelectionCellsContext,
   useProjectTableContext,
   getEntityViewierIds,
+  useAddonEntityMenuItems,
 } from '@shared/containers'
 import { useVersionsDataContext } from '../context/vp-data'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
@@ -43,6 +44,8 @@ export interface VPContextMenuItems {
   versionDetailItem: ContextMenuItemConstructor
   deleteVersionItem: ContextMenuItemConstructor
   deleteProductItem: ContextMenuItemConstructor
+  // items addons contribute (entityMenuItem slot)
+  addonItems: ContextMenuItemConstructor
 }
 
 export const useVPContextMenu = (callbacks?: {
@@ -411,6 +414,8 @@ export const useVPContextMenu = (callbacks?: {
     [entitiesMap, handleDeleteProduct],
   )
 
+  const addonItems = useAddonEntityMenuItems('products')
+
   return {
     showDetailsItem,
     openViewerItem,
@@ -420,5 +425,6 @@ export const useVPContextMenu = (callbacks?: {
     versionDetailItem,
     deleteVersionItem,
     deleteProductItem,
+    addonItems,
   }
 }

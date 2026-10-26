@@ -20,6 +20,10 @@ export const detailsPanelTab = (tab: ContributionFields<'detailsPanel.tab'>) =>
 export const detailsPanelMenuItem = (item: ContributionFields<'detailsPanel.menuItem'>) =>
   contribute('detailsPanel.menuItem', item)
 
+/** An item in the project tables' right-click menu, acting on the selected entities. */
+export const entityMenuItem = (item: ContributionFields<'entityMenuItem'>) =>
+  contribute('entityMenuItem', item)
+
 /** A read-only column in the project tables. */
 export const tableColumn = (column: ContributionFields<'tableColumn'>) =>
   contribute('tableColumn', column)

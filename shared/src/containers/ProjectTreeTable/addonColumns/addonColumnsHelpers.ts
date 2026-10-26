@@ -10,8 +10,11 @@ export const isAddonColumnId = (columnId: string) => columnId.startsWith(ADDON_C
 export const getAddonColumnId = (column: Contribution<'tableColumn'>) =>
   `${ADDON_COLUMN_PREFIX}${column.addon.name.replace(/[^A-Za-z0-9]/g, '_')}__${column.id}`
 
-export const appliesToPage = (column: Contribution<'tableColumn'>, page: ProjectTablePage) =>
-  !column.pages?.length || column.pages.includes(page)
+// tableColumn and entityMenuItem contributions narrow themselves to some tables with `pages`
+export const appliesToPage = (
+  contribution: { pages?: ProjectTablePage[] },
+  page: ProjectTablePage,
+) => !contribution.pages?.length || contribution.pages.includes(page)
 
 /** What the table needs to know about an addon column (ColumnDef meta). */
 export interface AddonColumnMeta {

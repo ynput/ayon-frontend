@@ -19,6 +19,8 @@ export type {
   DetailsPanelMenuItemMeta,
   MenuItemMeta,
   RunPiece,
+  EntityMenuItemContext,
+  EntityMenuItemMeta,
   TableCellContext,
   TableColumnDataArgs,
   TableColumnDataHook,

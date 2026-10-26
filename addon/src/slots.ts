@@ -78,6 +78,16 @@ export interface SlotMap {
     pieces: { run: Loader<RunPiece<'detailsPanel.menuItem'>> }
   }
   /**
+   * An item in the right-click menu of the project tables' cells, for the selected entities. It
+   * shows from the description; `run` loads when the menu opens and is called on click.
+   */
+  entityMenuItem: {
+    version: 1
+    meta: EntityMenuItemMeta
+    context: EntityMenuItemContext
+    pieces: { run: Loader<RunPiece<'entityMenuItem'>> }
+  }
+  /**
    * A read-only column in the project tables (Overview, Products, Lists). It is in the column
    * settings from the description; `cell` and `useData` load with the table. Not sortable, and
    * pasting into it changes nothing.
@@ -193,6 +203,23 @@ export interface TableColumnDataArgs extends ProjectNameScope {
  */
 export type TableColumnDataHook = (args: TableColumnDataArgs) => Record<string, unknown> | undefined
 
+/** Description of an `entityMenuItem` contribution. */
+export interface EntityMenuItemMeta extends MenuItemMeta {
+  /** entity types it acts on: shown only when every selected entity is one of them. All when not set */
+  entityTypes?: string[]
+  /** which tables offer it; all (Overview, Products, Lists) when not set */
+  pages?: ProjectTablePage[]
+  /** `single`: only for one selected entity; `multi` (default): for one or more */
+  selection?: 'single' | 'multi'
+}
+
+/** Context of an entity menu item. */
+export interface EntityMenuItemContext extends ProjectNameScope {
+  page: ProjectTablePage
+  /** the selected entities (not table rows: list items resolve to their entity) */
+  entities: EntityRef[]
+}
+
 /** Context of a studio page. */
 export interface StudioPageContext {
   /** projects selected in the page's `<ProjectList>`; saved per page */
@@ -229,6 +256,7 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   'detailsPanel.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
   'detailsPanel.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
   tableColumn: { version: 1, required: ['label'], pieces: ['cell'], optionalPieces: ['useData'] },
+  entityMenuItem: { version: 1, required: ['label', 'icon'], pieces: ['run'] },
 }
 
 export const isKnownSlot = (slot: unknown): slot is SlotName =>

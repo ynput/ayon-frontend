@@ -4,6 +4,7 @@ import {
   ContextMenuItemConstructor,
   ContextMenuItemConstructors,
   TableCellContextData,
+  useAddonEntityMenuItems,
   useColumnSettingsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useCallback } from 'react'
@@ -22,6 +23,8 @@ const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) =>
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
   const { folders } = useProjectFoldersContext()
+  // items addons contribute (entityMenuItem slot)
+  const addonItems = useAddonEntityMenuItems('overview')
 
   // right click on a group header to un group the tasks
   const unGroupTasksItem: ContextMenuItemConstructor = useCallback(
@@ -138,6 +141,7 @@ const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) =>
     moveItem,
     'create-folder',
     'create-task',
+    addonItems,
     'delete',
   ]
 

@@ -47,6 +47,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     addToListItem,
     productDetailItem,
     versionDetailItem,
+    addonItems,
   } = contextMenuItems
 
   return (
@@ -87,6 +88,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
           addToListItem,
           productDetailItem,
           versionDetailItem,
+          addonItems,
           deleteVersionItem,
           deleteProductItem,
         ]}

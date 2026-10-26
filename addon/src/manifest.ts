@@ -8,6 +8,7 @@ export type { AddonManifest, ContributionFields, ContributionInput } from './con
 export {
   detailsPanelMenuItem,
   detailsPanelTab,
+  entityMenuItem,
   headerItem,
   projectPage,
   studioPage,
