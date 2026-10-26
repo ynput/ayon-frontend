@@ -19,6 +19,10 @@ export type {
   DetailsPanelMenuItemMeta,
   MenuItemMeta,
   RunPiece,
+  TableCellContext,
+  TableColumnDataArgs,
+  TableColumnDataHook,
+  TableColumnMeta,
 } from './slots'
 export type {
   Access,
@@ -27,6 +31,7 @@ export type {
   PageMeta,
   PopupScope,
   ProjectInfo,
+  ProjectTablePage,
   ProjectNameScope,
   ProjectScope,
   SlicerScope,

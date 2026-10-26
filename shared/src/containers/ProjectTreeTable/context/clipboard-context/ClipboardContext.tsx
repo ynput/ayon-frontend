@@ -14,6 +14,7 @@ import {
   parseCellId,
 } from '../../utils/cellUtils'
 import { getFolderColumnValue } from '../../utils/folderColumn'
+import { isAddonColumnId } from '../../addonColumns/addonColumnsHelpers'
 
 // Types
 import { TableRow } from '../../types/table'
@@ -474,6 +475,8 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         const { rowId, colId } = position
         if (colId === ROW_SELECTION_COLUMN_ID || !visibleColumnIds.includes(colId)) return
+        // addon columns are read-only, and their ids are no field names (`split('_').pop()`)
+        if (isAddonColumnId(colId)) return
         // nothing is pasted into read-only rows (subtasks and links don't go through updateEntities)
         if (isRowReadOnly(rowId)) return
 

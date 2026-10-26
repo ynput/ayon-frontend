@@ -2,6 +2,7 @@ import {
   parseCellId,
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
+  useAddonTableColumns,
 } from '@shared/containers/ProjectTreeTable'
 import { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import { ListsProvider, useListsContext } from './context'
@@ -216,9 +217,16 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     columnVisibility: columns.columnVisibility || {},
     defaultColumnVisibility,
   })
+  // columns addons contribute (tableColumn slot)
+  const { columns: addonColumns, settingsColumns: addonSettingsColumns } =
+    useAddonTableColumns('lists')
   const extraColumns = useMemo(
-    () => [...listColumnConfig.extraColumns, ...compareColumns],
-    [listColumnConfig.extraColumns, compareColumns],
+    () => [...listColumnConfig.extraColumns, ...compareColumns, ...addonColumns],
+    [listColumnConfig.extraColumns, compareColumns, addonColumns],
+  )
+  const extraColumnsSettings = useMemo(
+    () => [...listColumnConfig.extraColumnsSettings, ...addonSettingsColumns],
+    [listColumnConfig.extraColumnsSettings, addonSettingsColumns],
   )
   const { getListValueColumnMenuItems } = props
   const columnsConfig = useMemo(() => {
@@ -306,7 +314,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                       <ProjectLists
                         extraColumns={extraColumns}
                         columnsConfig={columnsConfig}
-                        extraColumnsSettings={listColumnConfig.extraColumnsSettings}
+                        extraColumnsSettings={extraColumnsSettings}
                         parentColumns={listColumnConfig.parentColumns}
                         includeParents={listColumnConfig.includeParents}
                         columnIdAliases={listColumnConfig.columnIdAliases}

@@ -44,6 +44,9 @@ export interface EntityScope {
   entities: EntityRef[]
 }
 
+/** The project pages with a project table (ProjectTreeTable). */
+export type ProjectTablePage = 'overview' | 'products' | 'lists'
+
 /** What is selected in the project page's slicer. */
 export interface SlicerSelection {
   /** `hierarchy`, `assignees`, `status`, `taskType`, ... */

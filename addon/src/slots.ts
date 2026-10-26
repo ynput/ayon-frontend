@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 import type {
   EntityRef,
   EntityScope,
+  ProjectTablePage,
   PageMeta,
   PopupScope,
   ProjectNameScope,
@@ -76,6 +77,20 @@ export interface SlotMap {
     context: DetailsPanelMenuItemContext
     pieces: { run: Loader<RunPiece<'detailsPanel.menuItem'>> }
   }
+  /**
+   * A read-only column in the project tables (Overview, Products, Lists). It is in the column
+   * settings from the description; `cell` and `useData` load with the table. Not sortable, and
+   * pasting into it changes nothing.
+   */
+  tableColumn: {
+    version: 1
+    meta: TableColumnMeta
+    context: TableCellContext
+    pieces: {
+      cell: Loader<ComponentType<SlotProps<'tableColumn'>>>
+      useData?: Loader<TableColumnDataHook>
+    }
+  }
 }
 
 /** Description of a `header.item` contribution. */
@@ -139,6 +154,45 @@ export interface DetailsPanelMenuItemContext extends ProjectNameScope {
   selectedEntities: EntityRef[]
 }
 
+/** Description of a `tableColumn` contribution. */
+export interface TableColumnMeta {
+  /** part of the column id, so only letters, digits and `_` */
+  id: string
+  /** the column header and its name in the column settings */
+  label: string
+  icon?: string
+  /** entity types with a cell; other rows show an empty read-only cell. All when not set */
+  entityTypes?: string[]
+  /** which tables offer it; all (Overview, Products, Lists) when not set */
+  pages?: ProjectTablePage[]
+  /** width in pixels */
+  width?: number
+  /** shown before the user picks columns; off by default, like most columns */
+  defaultVisible?: boolean
+}
+
+/** Context of one cell of a `tableColumn`. */
+export interface TableCellContext extends ProjectNameScope {
+  page: ProjectTablePage
+  entity: EntityRef
+  /** what the column's `useData` returned for this entity; `undefined` without `useData` */
+  value: unknown
+}
+
+/** What a column's `useData` hook gets. */
+export interface TableColumnDataArgs extends ProjectNameScope {
+  page: ProjectTablePage
+  /** the rows on screen (entities, not list items) */
+  entities: EntityRef[]
+}
+
+/**
+ * A column's data hook: called once per table with the rows on screen, while the column is
+ * shown. Return values by entity id; each cell gets its own as `value`. Fetch through the shared
+ * api (RTK Query) so the cache dedupes and invalidates it.
+ */
+export type TableColumnDataHook = (args: TableColumnDataArgs) => Record<string, unknown> | undefined
+
 /** Context of a studio page. */
 export interface StudioPageContext {
   /** projects selected in the page's `<ProjectList>`; saved per page */
@@ -174,6 +228,7 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   'header.item': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
   'detailsPanel.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
   'detailsPanel.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
+  tableColumn: { version: 1, required: ['label'], pieces: ['cell'], optionalPieces: ['useData'] },
 }
 
 export const isKnownSlot = (slot: unknown): slot is SlotName =>

@@ -11,4 +11,5 @@ export {
   headerItem,
   projectPage,
   studioPage,
+  tableColumn,
 } from './slotHelpers'
