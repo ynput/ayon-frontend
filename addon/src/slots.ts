@@ -1,3 +1,6 @@
+import type { ComponentType } from 'react'
+import type { PageMeta, ProjectScope } from './scopes'
+
 // The slots: places in the AYON web UI that addons contribute to.
 // SlotMap is the single source of truth. Each entry has the slot's version, the description the
 // host reads straight from the manifest (`meta`), the context the addon's code gets (`context`)
@@ -14,7 +17,31 @@ export type Loader<T> = () => Promise<{ default: T }>
  * the slot's `version`, its description fields (`meta`), the context its code gets (`context`)
  * and its pieces (`pieces`).
  */
-export interface SlotMap {}
+export interface SlotMap {
+  /**
+   * A tab on the project page, at `/projects/<project>/<id>`. The tab shows from the
+   * description; `component` loads when the page is first opened.
+   */
+  'project.page': {
+    version: 1
+    meta: PageMeta
+    context: ProjectScope
+    pieces: { component: Loader<ComponentType<SlotProps<'project.page'>>> }
+  }
+  /**
+   * A tab on the dashboard (studio level), at `/dashboard/<id>`. The tab shows from the
+   * description; `component` loads when the page is first opened.
+   */
+  'studio.page': {
+    version: 1
+    meta: PageMeta
+    context: StudioPageContext
+    pieces: { component: Loader<ComponentType<SlotProps<'studio.page'>>> }
+  }
+}
+
+/** Context of a studio page. */
+export interface StudioPageContext {}
 
 /** The name of a slot, e.g. `'project.page'`. */
 export type SlotName = keyof SlotMap & string
@@ -39,7 +66,10 @@ export interface SlotDefinition {
 }
 
 /** The slots this host knows. A contribution to any other slot is skipped. */
-export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {}
+export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
+  'project.page': { version: 1, required: ['title'], pieces: ['component'] },
+  'studio.page': { version: 1, required: ['title'], pieces: ['component'] },
+}
 
 export const isKnownSlot = (slot: unknown): slot is SlotName =>
   typeof slot === 'string' && Object.prototype.hasOwnProperty.call(SLOTS, slot)

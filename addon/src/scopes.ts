@@ -1,0 +1,46 @@
+// Building blocks of slot contexts, so a field means the same in every slot that has it.
+
+/**
+ * A project, as slots pass it. The fields addons can rely on; AYON passes the full project
+ * model, so more may be there.
+ */
+export interface ProjectInfo {
+  name: string
+  code: string
+  label?: string
+  active?: boolean
+  library?: boolean
+  attrib?: Record<string, unknown>
+  statuses?: { name: string; color?: string; icon?: string; state?: string; scope?: string[] }[]
+  folderTypes?: { name: string; icon?: string; color?: string }[]
+  taskTypes?: { name: string; icon?: string; color?: string; shortName?: string }[]
+  tags?: { name: string; color?: string }[]
+}
+
+/** Slots that are about one project. */
+export interface ProjectNameScope {
+  projectName: string
+}
+
+/** Slots that are about one project, with the project itself. */
+export interface ProjectScope extends ProjectNameScope {
+  /** the project; `undefined` while it loads */
+  project: ProjectInfo | undefined
+}
+
+/** Who sees a page: everyone when not set. Admins see manager pages too. */
+export type Access = 'manager' | 'admin'
+
+/** Description of a page contribution (`project.page`, `studio.page`). */
+export interface PageMeta {
+  /**
+   * The page's URL segment and tab id: `/projects/<project>/<id>`, `/dashboard/<id>`.
+   * A built-in page with the same id wins.
+   */
+  id: string
+  /** the tab label */
+  title: string
+  access?: Access
+  /** the view type its views are saved under, when the page uses views */
+  viewType?: string
+}

@@ -22,6 +22,9 @@ import { useAppSelector } from '@/features/store'
 import type { ReactNode } from 'react'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import { useContributions } from '@ynput/ayon-addon'
+import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
+import { AddonStudioPage } from '@/remote/AddonPages'
 import { UserDashboardPageRemote } from './UserDashboardPageRemote'
 import LoadingPage from '@pages/LoadingPage'
 import { WithViews } from '@/hoc/WithViews'
@@ -95,6 +98,16 @@ const UserDashboardPage: React.FC = () => {
 
   const { getProductionAddon } = useGetProductionAddon()
   const hasPlanner = !!getProductionAddon('planner')
+
+  // pages addons contribute to the studio.page slot; built-in and legacy pages win on an id clash
+  const { contributions: studioPageContributions, isLoading: isLoadingContributions } =
+    useContributions('studio.page')
+  const addonStudioPages = useAddonPages(studioPageContributions, [
+    ...BUILT_IN_MODULES,
+    'planner',
+    ...(addonsData as DashboardAddon[]).map((a) => a.name),
+    ...remotePages.map((p) => p.module),
+  ])
 
   const navigate = useNavigate()
   const [showNewProject, setShowNewProject] = useState<boolean>(false)
@@ -210,6 +223,15 @@ const UserDashboardPage: React.FC = () => {
           isMultiSelect: false,
         }
       }),
+      ...addonStudioPages.map((page) => ({
+        name: page.title,
+        path: `/dashboard/${page.id}`,
+        module: page.id,
+        accessLevels: pageAccessLevels(page.access),
+        component: <AddonStudioPage contribution={page} key={page.key} />,
+        viewType: page.viewType as ViewType | undefined,
+        showProjectList: false,
+      })),
       { node: 'spacer' },
       {
         node: (
@@ -224,6 +246,7 @@ const UserDashboardPage: React.FC = () => {
     [
       addonsData,
       remotePages,
+      addonStudioPages,
       projectsInfoWithProjects,
       isLoadingInfo,
       selectedProjects,
@@ -256,7 +279,8 @@ const UserDashboardPage: React.FC = () => {
   // the built in pages render while the projects load (the projects list shows its own loading
   // state), so their data, e.g. the tasks of the selected projects, starts loading straight away
   const isBuiltInPage = !addonName && (!module || BUILT_IN_MODULES.includes(module))
-  if (!isBuiltInPage && (isLoadingProjects || isLoadingRemotePages)) return <LoadingPage />
+  if (!isBuiltInPage && (isLoadingProjects || isLoadingRemotePages || isLoadingContributions))
+    return <LoadingPage />
 
   if (isGuest) {
     return <GuestUserPageLocked />

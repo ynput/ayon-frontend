@@ -18,7 +18,7 @@ interface RegistryState {
 let state: RegistryState = { contributions: [], skipped: [], addons: [], isLoading: true }
 const listeners = new Set<() => void>()
 // per-slot snapshots, rebuilt lazily after each change (useSyncExternalStore needs stable values)
-let slotSnapshots = new Map<string, ContributionsResult<SlotName>>()
+let slotSnapshots = new Map<string, { contributions: AnyContribution[]; isLoading: boolean }>()
 
 const setState = (next: Partial<RegistryState>) => {
   state = { ...state, ...next }
@@ -80,12 +80,12 @@ export const getContributions = <S extends SlotName>(slot: S): ContributionsResu
   let snapshot = slotSnapshots.get(slot)
   if (!snapshot) {
     snapshot = {
-      contributions: state.contributions.filter((c) => c.slot === slot) as Contribution<S>[],
+      contributions: state.contributions.filter((c) => c.slot === slot),
       isLoading: state.isLoading,
     }
     slotSnapshots.set(slot, snapshot)
   }
-  return snapshot as ContributionsResult<S>
+  return snapshot as unknown as ContributionsResult<S>
 }
 
 /**

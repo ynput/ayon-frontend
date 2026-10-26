@@ -5,7 +5,7 @@ import { readFileSync } from 'fs'
 import { resolve } from 'path'
 
 // The package bundles only its own code: react, react-router-dom and react-toastify are the
-// host's (peerDependencies). Types it uses from shared are inlined into the bundled .d.ts.
+// host's (peerDependencies). It imports nothing from shared or the app, not even types.
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url)).toString())
 const peers = Object.keys(pkg.peerDependencies || {})
 const isPeer = (id: string) => peers.some((name) => id === name || id.startsWith(`${name}/`))
@@ -21,9 +21,6 @@ export default defineConfig({
       bundleTypes: true,
     }),
   ],
-  resolve: {
-    alias: { '@shared': resolve(__dirname, '../shared/src') },
-  },
   build: {
     lib: {
       entry: {

@@ -4,12 +4,21 @@
 // from useSlot / the props of the contribution's component.
 
 // slots and manifests (the manifest itself uses @ynput/ayon-addon/manifest, see there)
-export type { Loader, SlotContext, SlotMap, SlotName, SlotProps } from './slots'
+export type {
+  Loader,
+  SlotContext,
+  SlotMap,
+  SlotName,
+  SlotProps,
+  StudioPageContext,
+} from './slots'
+export type { Access, PageMeta, ProjectInfo, ProjectNameScope, ProjectScope } from './scopes'
 export type {
   AddonInfo,
   AddonManifest,
   AnyContribution,
   Contribution,
+  ContributionFields,
   ContributionInput,
 } from './contributions'
 export { useSlot } from './useSlot'

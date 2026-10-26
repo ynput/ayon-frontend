@@ -4,4 +4,5 @@
 // older AYON must not stop the manifest from loading. The host then skips contributions to
 // slots it doesn't know, and the rest of the addon works.
 export { contribute, defineAddon } from './contributions'
-export type { AddonManifest, ContributionInput } from './contributions'
+export type { AddonManifest, ContributionFields, ContributionInput } from './contributions'
+export { projectPage, studioPage } from './slotHelpers'

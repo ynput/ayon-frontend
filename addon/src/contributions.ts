@@ -1,5 +1,8 @@
 import type { SlotMap, SlotName } from './slots'
 
+/** The fields of a contribution to slot `S`: its description and its pieces. */
+export type ContributionFields<S extends SlotName> = SlotMap[S]['meta'] & SlotMap[S]['pieces']
+
 /** What an addon writes for a contribution to slot `S`: the slot, its description and pieces. */
 export type ContributionInput<S extends SlotName = SlotName> = S extends SlotName
   ? { slot: S } & SlotMap[S]['meta'] & SlotMap[S]['pieces']
@@ -51,5 +54,5 @@ export const defineAddon = (manifest: AddonManifest): AddonManifest => manifest
 /** A contribution to any slot by name. The named helpers (`studioPage`, ...) are shorthands. */
 export const contribute = <S extends SlotName>(
   slot: S,
-  contribution: SlotMap[S]['meta'] & SlotMap[S]['pieces'],
+  contribution: ContributionFields<S>,
 ): ContributionInput<S> => ({ ...(contribution as object), slot }) as ContributionInput<S>
