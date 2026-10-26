@@ -1,3 +1,5 @@
+import type { JSX } from 'react'
+
 // svgs from https://fontawesomeicons.com/svg/icons
 
 const DiscordIcon = () => (
@@ -39,8 +41,8 @@ const SlackIcon = () => (
   </svg>
 )
 
-const OAuth2ProviderIcon = ({ name }) => {
-  const data = {
+const OAuth2ProviderIcon = ({ name }: { name: string }) => {
+  const data: Record<string, JSX.Element> = {
     discord: <DiscordIcon />,
     slack: <SlackIcon />,
     google: <GoogleIcon />,

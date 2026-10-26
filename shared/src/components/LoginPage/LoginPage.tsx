@@ -1,20 +1,48 @@
 import axios from 'axios'
 import { useEffect, useState, useMemo } from 'react'
+import type { FormEvent, ReactNode } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
-import { login } from '@state/user'
-import api from '@shared/api'
+import { api } from '@shared/api'
 import AuthLink from './AuthLink'
 import { useGetSiteInfoQuery } from '@shared/api'
-import LoadingPage from '../LoadingPage'
-import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import * as Styled from './LoginPage.styled'
 import remarkGfm from 'remark-gfm'
 import Markdown from 'react-markdown'
 import LoginTerms from './LoginTerms'
 
-const LoginPage = ({ isFirstTime = false }) => {
+/** What a successful login gives the host, which stores the session (see storeAccessToken). */
+export interface LoginResult {
+  user: any
+  accessToken?: string
+  redirectUrl?: string | null
+}
+
+export interface LoginPageProps {
+  /** stores the session: ayon-frontend dispatches its `login`, the addon dev shell stores the token */
+  onLogin: (result: LoginResult) => void
+  /** shown while the site info or an SSO callback loads */
+  loading?: ReactNode
+  isFirstTime?: boolean
+}
+
+type SsoOption = {
+  name: string
+  title?: string
+  url: string
+  args?: Record<string, string>
+  redirectKey: string
+  icon?: string
+  color?: string
+  textColor?: string
+  hidden?: boolean
+  callback?: string
+}
+
+// The login page of ayon-frontend, in shared so an addon's standalone dev shell signs in the
+// same way: password and SSO, the token stored like the app stores it.
+export const LoginPage = ({ onLogin, loading = null, isFirstTime = false }: LoginPageProps) => {
   const dispatch = useDispatch()
 
   // get query params from url
@@ -32,8 +60,20 @@ const LoginPage = ({ isFirstTime = false }) => {
 
   // site information
   const [isLoading, setIsLoading] = useState(false)
-  const { data: info = {}, isLoading: isLoadingInfo } = useGetSiteInfoQuery({ full: true })
+  const { data: siteInfo, isLoading: isLoadingInfo } = useGetSiteInfoQuery({ full: true })
+  const info = (siteInfo || {}) as {
+    motd?: string
+    loginPageBrand?: string
+    loginPageBackground?: string
+    ssoOptions?: SsoOption[]
+    hidePasswordAuth?: boolean
+    passwordRecoveryAvailable?: boolean
+  }
   const { motd, loginPageBrand = '', loginPageBackground = '' } = info
+
+  useEffect(() => {
+    document.title = 'Login • AYON'
+  }, [])
 
   // store the current url in local storage to preserve the redirect across auth flows
 
@@ -45,7 +85,7 @@ const LoginPage = ({ isFirstTime = false }) => {
 
   // Password login handler
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!(name && password)) {
       toast.error('Please enter username and password to login')
@@ -56,9 +96,10 @@ const LoginPage = ({ isFirstTime = false }) => {
 
     try {
       response = await axios.post('/api/auth/login', { name, password })
-    } catch (err) {
+    } catch (error) {
+      const err = error as { response?: { data?: { detail?: string }; status?: number } }
       console.error('Login error', err.response?.data || err)
-      toast.error(err.response.data.detail || `Unable to login: Error ${err.response.status}`)
+      toast.error(err.response?.data?.detail || `Unable to login: Error ${err.response?.status}`)
       return
     }
 
@@ -70,11 +111,11 @@ const LoginPage = ({ isFirstTime = false }) => {
 
     localStorage.removeItem('auth-preferred-url')
     toast.info(response.data.detail)
-    dispatch(login({ user: response.data.user, accessToken: response.data.token }))
+    onLogin({ user: response.data.user, accessToken: response.data.token })
     dispatch(api.util.resetApiState())
   } // handleSubmit
 
-  const handleSSOCallback = async (ssoOptions) => {
+  const handleSSOCallback = async (ssoOptions?: SsoOption[]) => {
     // First we check if there's a provider name in the URL
     // And abort if there isn't
     const provider = window.location.pathname.split('/')[2]
@@ -100,7 +141,9 @@ const LoginPage = ({ isFirstTime = false }) => {
     // We need to handle the situation ssoOptions is undefined.
     // That happens, when user is already logged in
     // but wants to re-login using a token
-    let providerConfig = (info?.ssoOptions || []).find((o) => o.name === provider)
+    let providerConfig: Pick<SsoOption, 'name' | 'callback'> | undefined = (
+      info?.ssoOptions || []
+    ).find((o) => o.name === provider)
     if (provider === '_token') {
       // special case for token auth
       // we don't have a providerConfig for this, but we can still proceed
@@ -122,18 +165,19 @@ const LoginPage = ({ isFirstTime = false }) => {
 
     let success = false
     let response = null
-    let redirectUrl = null
+    let redirectUrl: string | null = null
 
     try {
       console.debug('SSO Callback', providerConfig.callback)
-      response = await axios.get(providerConfig.callback, { params: qs })
+      response = await axios.get(providerConfig.callback as string, { params: qs })
       success = true
-    } catch (err) {
-      console.error('SSO Callback error', err.response.data)
+    } catch (error) {
+      const err = error as { response?: { data?: { detail?: string }; status?: number } }
+      console.error('SSO Callback error', err.response?.data)
       toast.error(
         <>
           <p>Unable to login using {providerConfig.name}:</p>
-          <p>{err.response?.data?.detail || `Error ${err.response.status}`}</p>
+          <p>{err.response?.data?.detail || `Error ${err.response?.status}`}</p>
         </>,
       )
     }
@@ -177,7 +221,7 @@ const LoginPage = ({ isFirstTime = false }) => {
 
       setIsLoading(false)
       localStorage.removeItem('auth-preferred-url')
-      dispatch(login({ user, accessToken, redirectUrl }))
+      onLogin({ user, accessToken, redirectUrl })
       dispatch(api.util.resetApiState())
     } else {
       // we don't want to retry!
@@ -201,7 +245,7 @@ const LoginPage = ({ isFirstTime = false }) => {
 
   // Should we show the password login?
 
-  let showPasswordLogin =
+  const showPasswordLogin =
     showAllProviders ||
     !info?.hidePasswordAuth ||
     (featuredProviders?.length && featuredProviders.includes('password')) ||
@@ -245,7 +289,7 @@ const LoginPage = ({ isFirstTime = false }) => {
 
   // Loading state
 
-  if (isLoading || isLoadingInfo) return isFirstTime ? null : <LoadingPage />
+  if (isLoading || isLoadingInfo) return isFirstTime ? null : <>{loading}</>
 
   //
   // Render the login page
@@ -253,7 +297,6 @@ const LoginPage = ({ isFirstTime = false }) => {
 
   return (
     <>
-      <DocumentTitle title="Login • AYON" />
       <main className="center">
         {loginPageBackground && <Styled.BG src={loginPageBackground} />}
         <Styled.LoginForm>
@@ -261,7 +304,7 @@ const LoginPage = ({ isFirstTime = false }) => {
             <Panel>
               {loginPageBrand && <Styled.Logo src={loginPageBrand} />}
               <Styled.MessageMarkdown>
-                <Markdown remarkPlugins={remarkGfm}>{motd}</Markdown>
+                <Markdown remarkPlugins={[remarkGfm]}>{motd}</Markdown>
               </Styled.MessageMarkdown>
             </Panel>
           )}
@@ -323,4 +366,4 @@ const LoginPage = ({ isFirstTime = false }) => {
   )
 }
 
-export default LoginPage
+
