@@ -118,6 +118,16 @@ export interface SlotMap {
     pieces: { component: Loader<ComponentType<SlotProps<'projectTable.toolbarItem'>>> }
   }
   /**
+   * A section in the project tables' Customize panel (Overview, Products, Lists). The entry shows
+   * from the description; `component` loads when the section is opened.
+   */
+  'projectTable.customizeSection': {
+    version: 1
+    meta: ProjectTableCustomizeSectionMeta
+    context: ProjectTableCustomizeSectionContext
+    pieces: { component: Loader<ComponentType<SlotProps<'projectTable.customizeSection'>>> }
+  }
+  /**
    * A read-only column in the project tables (Overview, Products, Lists). It is in the column
    * settings from the description; `cell` and `useData` load with the table. Not sortable, and
    * pasting into it changes nothing.
@@ -308,6 +318,22 @@ export interface ProjectTableToolbarItemContext extends ProjectNameScope, PopupS
   list?: { id: string; label: string; entityType: string }
 }
 
+/** Description of a `projectTable.customizeSection` contribution. */
+export interface ProjectTableCustomizeSectionMeta {
+  id: string
+  /** the section's entry in Customize and its title when open */
+  title: string
+  /** a Material Symbols icon name */
+  icon: string
+  /** which tables' Customize panels show it; all (Overview, Products, Lists) when not set */
+  pages?: ProjectTablePage[]
+}
+
+/** Context of a Customize section. */
+export interface ProjectTableCustomizeSectionContext extends ProjectNameScope {
+  page: ProjectTablePage
+}
+
 /** Context of a studio page. */
 export interface StudioPageContext {
   /** projects selected in the page's `<ProjectList>`; saved per page */
@@ -348,6 +374,11 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   'projectList.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
   'slicer.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
   'projectTable.toolbarItem': { version: 1, required: ['icon'], pieces: ['component'] },
+  'projectTable.customizeSection': {
+    version: 1,
+    required: ['title', 'icon'],
+    pieces: ['component'],
+  },
 }
 
 export const isKnownSlot = (slot: unknown): slot is SlotName =>

@@ -36,6 +36,11 @@ export const slicerMenuItem = (item: ContributionFields<'slicer.menuItem'>) =>
 export const projectTableToolbarItem = (item: ContributionFields<'projectTable.toolbarItem'>) =>
   contribute('projectTable.toolbarItem', item)
 
+/** A section in the project tables' Customize panel. */
+export const projectTableCustomizeSection = (
+  section: ContributionFields<'projectTable.customizeSection'>,
+) => contribute('projectTable.customizeSection', section)
+
 /** A read-only column in the project tables. */
 export const tableColumn = (column: ContributionFields<'tableColumn'>) =>
   contribute('tableColumn', column)

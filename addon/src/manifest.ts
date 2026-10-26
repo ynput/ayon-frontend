@@ -12,6 +12,7 @@ export {
   headerItem,
   projectListMenuItem,
   projectPage,
+  projectTableCustomizeSection,
   projectTableToolbarItem,
   slicerMenuItem,
   studioPage,
