@@ -16,6 +16,10 @@ export const studioPage = (page: ContributionFields<'studio.page'>) =>
 export const detailsPanelTab = (tab: ContributionFields<'detailsPanel.tab'>) =>
   contribute('detailsPanel.tab', tab)
 
+/** An item in the details panel's "more" menu, for the entity types it lists. */
+export const detailsPanelMenuItem = (item: ContributionFields<'detailsPanel.menuItem'>) =>
+  contribute('detailsPanel.menuItem', item)
+
 /** A button in the main header that opens the addon's dialog or popover. */
 export const headerItem = (item: ContributionFields<'header.item'>) =>
   contribute('header.item', item)

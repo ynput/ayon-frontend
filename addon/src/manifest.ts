@@ -5,4 +5,10 @@
 // slots it doesn't know, and the rest of the addon works.
 export { contribute, defineAddon } from './contributions'
 export type { AddonManifest, ContributionFields, ContributionInput } from './contributions'
-export { detailsPanelTab, headerItem, projectPage, studioPage } from './slotHelpers'
+export {
+  detailsPanelMenuItem,
+  detailsPanelTab,
+  headerItem,
+  projectPage,
+  studioPage,
+} from './slotHelpers'

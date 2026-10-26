@@ -15,6 +15,10 @@ export type {
   HeaderItemMeta,
   DetailsPanelTabContext,
   DetailsPanelTabMeta,
+  DetailsPanelMenuItemContext,
+  DetailsPanelMenuItemMeta,
+  MenuItemMeta,
+  RunPiece,
 } from './slots'
 export type {
   Access,

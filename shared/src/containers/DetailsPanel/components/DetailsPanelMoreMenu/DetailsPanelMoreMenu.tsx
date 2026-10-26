@@ -1,5 +1,7 @@
-import { useContext, useId, useMemo, useRef, useState } from 'react'
+import { useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
+import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
+import type { MenuItemType } from '@shared/components/Menu/Menu'
 import { Button } from '@ynput/ayon-react-components'
 import { Menu } from '@shared/components/Menu/Menu'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
@@ -138,6 +140,49 @@ export const DetailsPanelMoreMenu = ({
     deleteContext?.deleteEntities(deletableEntities)
   }
 
+  // items addons contribute to this menu (detailsPanel.menuItem slot, @ynput/ayon-addon)
+  const { contributions: addonMenuItems } = useContributions('detailsPanel.menuItem')
+  const applicableAddonItems = useMemo(
+    () =>
+      addonMenuItems.filter(
+        (item) => !item.entityTypes?.length || item.entityTypes.includes(entityType),
+      ),
+    [addonMenuItems, entityType],
+  )
+  const addonContext = useMemo(() => {
+    const source: SelectedEntityRef[] = selectedEntities.length
+      ? selectedEntities
+      : entityId
+      ? [{ entityId, entityType, projectName }]
+      : []
+    return {
+      projectName: projectName || '',
+      entityType,
+      selectedEntities: source.map((e) => ({
+        id: e.entityId,
+        entityType: e.entityType || entityType,
+        projectName: e.projectName || projectName || '',
+        name: e.name,
+        label: e.label || undefined,
+      })),
+    }
+  }, [selectedEntities, entityId, entityType, projectName])
+  const addonItems = useMemo<MenuItemType[]>(
+    () =>
+      applicableAddonItems.map((item) => ({
+        id: item.key,
+        label: item.label,
+        icon: item.icon,
+        'data-addon-item': item.key,
+        onClick: () => runContribution(item, addonContext),
+      })),
+    [applicableAddonItems, addonContext],
+  )
+  // the items draw from their descriptions; their code loads when the menu opens
+  useEffect(() => {
+    if (isOpen) applicableAddonItems.forEach((item) => prefetchPiece(item.run))
+  }, [isOpen, applicableAddonItems])
+
   const { items } = useMenuOptions({
     entityType,
     entityId,
@@ -150,6 +195,7 @@ export const DetailsPanelMoreMenu = ({
     canOpenViewer,
     canDelete,
     entityListsContext,
+    extraItems: addonItems,
     onPip: () => onOpenPip?.(),
     onOpenViewer: () => viewerArgs && onOpenViewer?.(viewerArgs),
     onUploadThumbnail: () => triggerThumbnailUpload?.(),

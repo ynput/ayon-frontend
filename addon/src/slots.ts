@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import type {
+  EntityRef,
   EntityScope,
   PageMeta,
   PopupScope,
@@ -65,6 +66,16 @@ export interface SlotMap {
     context: DetailsPanelTabContext
     pieces: { component: Loader<ComponentType<SlotProps<'detailsPanel.tab'>>> }
   }
+  /**
+   * An item in the details panel's "more" menu. It shows from the description; `run` loads when
+   * the menu opens and is called on click.
+   */
+  'detailsPanel.menuItem': {
+    version: 1
+    meta: DetailsPanelMenuItemMeta
+    context: DetailsPanelMenuItemContext
+    pieces: { run: Loader<RunPiece<'detailsPanel.menuItem'>> }
+  }
 }
 
 /** Description of a `header.item` contribution. */
@@ -104,6 +115,30 @@ export interface DetailsPanelTabContext extends ProjectNameScope, EntityScope {
   scope: string
 }
 
+/** What a menu item's `run` piece exports as default: called on click with the slot context. */
+export type RunPiece<S extends SlotName> = (context: SlotContext<S>) => void | Promise<void>
+
+/** Description of a menu item contribution. */
+export interface MenuItemMeta {
+  id: string
+  label: string
+  /** a Material Symbols icon name */
+  icon: string
+}
+
+/** Description of a `detailsPanel.menuItem` contribution. */
+export interface DetailsPanelMenuItemMeta extends MenuItemMeta {
+  /** entity types the item shows for; all when not set */
+  entityTypes?: string[]
+}
+
+/** Context of a details panel menu item. */
+export interface DetailsPanelMenuItemContext extends ProjectNameScope {
+  entityType: string
+  /** the entities the panel shows */
+  selectedEntities: EntityRef[]
+}
+
 /** Context of a studio page. */
 export interface StudioPageContext {
   /** projects selected in the page's `<ProjectList>`; saved per page */
@@ -138,6 +173,7 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   'studio.page': { version: 1, required: ['title'], pieces: ['component'] },
   'header.item': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
   'detailsPanel.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
+  'detailsPanel.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
 }
 
 export const isKnownSlot = (slot: unknown): slot is SlotName =>
