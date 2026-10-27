@@ -93,12 +93,16 @@ const UserDashboardPage: React.FC = () => {
   // pages addons contribute to the studio.page slot; built-in and legacy pages win on an id clash
   const { contributions: studioPageContributions, isLoading: isLoadingContributions } =
     useContributions('studio.page')
-  const addonStudioPages = useAddonPages(studioPageContributions, [
-    ...BUILT_IN_MODULES,
-    'planner',
-    ...(addonsData as DashboardAddon[]).map((a) => a.name),
-    ...remotePages.map((p) => p.module),
-  ])
+  const addonStudioPages = useAddonPages(
+    studioPageContributions,
+    [
+      ...BUILT_IN_MODULES,
+      'planner',
+      ...(addonsData as DashboardAddon[]).map((a) => a.name),
+      ...remotePages.map((p) => p.module),
+    ],
+    remotePages.map((p) => p.viewType),
+  )
 
   const navigate = useNavigate()
   const [showNewProject, setShowNewProject] = useState<boolean>(false)

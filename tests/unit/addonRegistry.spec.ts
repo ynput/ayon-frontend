@@ -76,6 +76,26 @@ test('invalid ids, missing fields and pieces, and duplicates are skipped', () =>
   ])
 })
 
+// the real page slots: access and viewType are checked when set
+test('pages with an invalid access or view type are skipped', () => {
+  const page = { slot: 'project.page', title: 'Budget', component: loader }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...page, id: 'plain' },
+      { ...page, id: 'withViews', viewType: 'my-addon.budget', access: 'manager' },
+      { ...page, id: 'badViewType', viewType: 'my budget' },
+      { ...page, id: 'badAccess', access: 'managers' },
+      { ...page, slot: 'studio.page', id: 'numberViewType', viewType: 3 },
+    ],
+  })
+  expect(contributions.map((c) => c.id)).toEqual(['plain', 'withViews'])
+  expect(skipped.map((s) => [s.id, s.reason])).toEqual([
+    ['badViewType', 'invalid viewType "my budget"'],
+    ['badAccess', 'invalid access "managers"'],
+    ['numberViewType', 'invalid viewType 3'],
+  ])
+})
+
 test('a manifest without a contributes list is reported', () => {
   const { contributions, skipped } = checkManifest(addon, { default: {} }, slots)
   expect(contributions).toEqual([])

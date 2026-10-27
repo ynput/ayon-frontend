@@ -35,7 +35,7 @@ A tab on the project page, at `/projects/<project>/<id>`. The tab shows from the
 | `id` (required) | `string` | The page's URL segment and tab id: `/projects/<project>/<id>`, `/dashboard/<id>`. A built-in page with the same id wins. |
 | `title` (required) | `string` | the tab label |
 | `access` | `Access \| undefined` | `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them |
-| `viewType` | `string \| undefined` | the view type its views are saved under, when the page uses views |
+| `viewType` | `string \| undefined` | Gives the page views: the host shows the views menu and the page gets `views` in its context. The type its views are saved under, e.g. `budget`: letters, digits, `_`, `-` and `.`. It must be the page's own: one AYON or another page already uses is not shown. |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
@@ -43,6 +43,8 @@ A tab on the project page, at `/projects/<project>/<id>`. The tab shows from the
 | `project` (required) | `ProjectInfo \| undefined` | the project; `undefined` while it loads |
 | `projectName` (required) | `string` |  |
 | `slicer` (required) | `SlicerSelection` | empty until the user selects something in a `<Slicer>` the page places |
+| `projectFolders` (required) | `ProjectFolders` | every folder of the project, with lookups for parents and children |
+| `views` (required) | `PageViews \| undefined` | `undefined` when the page's description has no `viewType` |
 
 Pieces: `component`.
 
@@ -55,12 +57,13 @@ A tab on the dashboard (studio level), at `/dashboard/<id>`. The tab shows from 
 | `id` (required) | `string` | The page's URL segment and tab id: `/projects/<project>/<id>`, `/dashboard/<id>`. A built-in page with the same id wins. |
 | `title` (required) | `string` | the tab label |
 | `access` | `Access \| undefined` | `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them |
-| `viewType` | `string \| undefined` | the view type its views are saved under, when the page uses views |
+| `viewType` | `string \| undefined` | Gives the page views: the host shows the views menu and the page gets `views` in its context. The type its views are saved under, e.g. `budget`: letters, digits, `_`, `-` and `.`. It must be the page's own: one AYON or another page already uses is not shown. |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'studio.page'` | the slot this is rendered in |
 | `selectedProjects` (required) | `string[]` | projects selected in the page's `<ProjectList>`; saved per page |
+| `views` (required) | `PageViews \| undefined` | `undefined` when the page's description has no `viewType` |
 
 Pieces: `component`.
 

@@ -259,12 +259,16 @@ const ProjectPageInner = () => {
   // pages addons contribute to the project.page slot; built-in and legacy pages win on an id clash
   const { contributions: pageContributions, isLoading: isLoadingContributions } =
     useContributions('project.page')
-  const addonPages = useAddonPages(pageContributions, [
-    ...BUILT_IN_MODULES,
-    ...ADDON_PAGES.map((p) => p.module),
-    ...remotePages.map((p) => p.module),
-    ...addonsData.map((a) => a.name),
-  ])
+  const addonPages = useAddonPages(
+    pageContributions,
+    [
+      ...BUILT_IN_MODULES,
+      ...ADDON_PAGES.map((p) => p.module),
+      ...remotePages.map((p) => p.module),
+      ...addonsData.map((a) => a.name),
+    ],
+    [...ADDON_PAGES.map((p) => p.viewType), ...remotePages.map((p) => p.viewType)],
+  )
 
   // get remote project module pages
   const links: NavLinkItem[] = useMemo(
