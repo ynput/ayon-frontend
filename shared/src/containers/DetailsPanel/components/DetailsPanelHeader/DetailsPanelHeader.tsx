@@ -1,4 +1,4 @@
-import { RefObject, useMemo, useRef, useState } from 'react'
+import { RefObject, useMemo, useRef } from 'react'
 import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
 import {
@@ -19,7 +19,6 @@ import type { Status } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions, getSelectableAssignees } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
-import { useProjectTags } from '@shared/hooks/useProjectTags'
 import { useEntityEditing } from '@shared/components/DetailsPanelDetails/hooks/useEntityEditing'
 import { useDetailsPanelContext, type DetailsPanelTab } from '@shared/context'
 
@@ -144,15 +143,14 @@ const DetailsPanelHeader = ({
   const statusesValue = useMemo(() => entities.map((t) => t.status), [entities])
   const priorityValues = useMemo(() => entities.map((t) => t.attrib?.priority), [entities])
   const tagsValues: string[][] = useMemo(() => entities.map((t) => t.tags), [entities])
-  const allTags = useMemo(() => union(...tagsValues), [tagsValues])
-  const [tagsOpened, setTagsOpened] = useState(false)
-  const isSingleProject = entities.every((e) => e.projectName === firstEntity?.projectName)
-  const tagsOptionsObject = useProjectTags({
-    projectName: isSingleProject ? firstEntity?.projectName : undefined,
-    anatomyTags: tagsOptions,
-    values: allTags,
-    skip: !tagsOpened,
-  })
+  const tagsOptionsObject = useMemo(
+    () =>
+      tagsOptions.reduce((acc, tag) => {
+        acc[tag.name] = tag
+        return acc
+      }, {}),
+    [tagsOptions],
+  )
 
   const isMultiple = entities.length > 1
   // several entities: tags and assignees are added to or removed from each of them
@@ -266,7 +264,6 @@ const DetailsPanelHeader = ({
                     mixedTotal={entities.length}
                     mixedLabel={`${entityType}s`}
                     onMixedChange={(change) => handleMixedChange('tags', change)}
-                    onOpen={() => setTagsOpened(true)}
                     align="right"
                     styleDropdown={{ display: isLoading ? 'none' : 'unset' }}
                     className="tags-select"

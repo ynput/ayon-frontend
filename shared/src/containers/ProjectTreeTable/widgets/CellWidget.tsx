@@ -333,7 +333,6 @@ export const CellWidget: FC<EditorCellProps> = ({
           <TagsWidget
             value={mixedValue || (Array.isArray(value) ? value : [value])}
             options={options}
-            projectName={projectName}
             pt={pt?.enum?.pt}
             {...mixedProps}
             {...sharedProps}

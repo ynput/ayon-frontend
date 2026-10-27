@@ -5,7 +5,6 @@ import {
   gqlApi,
   GetProjectsQuery,
   GetProjectsQueryVariables,
-  GetProjectUsedTagsQuery,
   ProjectFragmentFragment,
 } from '@shared/api/generated'
 
@@ -13,10 +12,8 @@ import {
   DefinitionsFromApi,
   FetchBaseQueryError,
   OverrideResultType,
-  QueryStatus,
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
-import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { parseJSONField } from '../overview'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 type Definitions = DefinitionsFromApi<typeof projectsApi>
@@ -58,14 +55,13 @@ export type GetProjectsResult = {
 
 type GQLDefinitions = DefinitionsFromApi<typeof gqlApi>
 // update the definitions to include the new types
-type GQLUpdatedDefinitions = Omit<GQLDefinitions, 'GetProjects' | 'GetProjectUsedTags'> & {
+type GQLUpdatedDefinitions = Omit<GQLDefinitions, 'GetProjects'> & {
   GetProjects: OverrideResultType<GQLDefinitions['GetProjects'], GetProjectsResult>
-  GetProjectUsedTags: OverrideResultType<GQLDefinitions['GetProjectUsedTags'], string[]>
 }
 // keep high until ayon-backend#1109: a page shortened by access filtering looks like the last page
 export const PROJECTS_PER_PAGE = 2000
 
-// enhance graphql
+// enhance graphql - used only for the infinite query below
 const enhancedGraphql = gqlApi.enhanceEndpoints<TagTypes, GQLUpdatedDefinitions>({
   endpoints: {
     GetProjects: {
@@ -77,19 +73,8 @@ const enhancedGraphql = gqlApi.enhanceEndpoints<TagTypes, GQLUpdatedDefinitions>
         pageInfo: res.projects.pageInfo,
       }),
     },
-    // tags on any entity of the project, including ones that are not in the anatomy.
-    // A slow query, so it is kept for a while; saved tags are added by addProjectUsedTags
-    GetProjectUsedTags: {
-      transformResponse: (res: GetProjectUsedTagsQuery) => res.project.usedTags,
-      providesTags: (_res, _error, { projectName }) => [
-        { type: 'project', id: usedTagsCacheId(projectName) },
-      ],
-      keepUnusedDataFor: 30 * 60,
-    },
   },
 })
-
-const usedTagsCacheId = (projectName: string) => `${projectName}-usedTags`
 
 type ProjectsPageParam = { cursor: string; first?: number }
 
@@ -153,32 +138,6 @@ export const getProjectsGraphql = enhancedGraphql.injectEndpoints({
   overrideExisting: true,
 })
 
-export const { useGetProjectsInfiniteInfiniteQuery, useGetProjectUsedTagsQuery } =
-  getProjectsGraphql
-
-// called once tags are saved on entities: adds them to the loaded used tags, and refetches the
-// list when a request for it is still running, as its answer may not have them yet
-export const addProjectUsedTags = (
-  projectName: string | undefined,
-  tags: string[],
-  { dispatch, getState }: { dispatch: ThunkDispatch<any, any, UnknownAction>; getState: () => any },
-) => {
-  if (!projectName || !tags.length) return
-  const entry = getProjectsGraphql.endpoints.GetProjectUsedTags.select({ projectName })(getState())
-  if (entry.data) {
-    dispatch(
-      getProjectsGraphql.util.updateQueryData('GetProjectUsedTags', { projectName }, (draft) => {
-        for (const tag of tags) if (!draft.includes(tag)) draft.push(tag)
-      }),
-    )
-  }
-  if (entry.status === QueryStatus.pending) {
-    dispatch(
-      getProjectsGraphql.util.invalidateTags([
-        { type: 'project', id: usedTagsCacheId(projectName) },
-      ]),
-    )
-  }
-}
+export const { useGetProjectsInfiniteInfiniteQuery } = getProjectsGraphql
 
 export default enhancedProject
