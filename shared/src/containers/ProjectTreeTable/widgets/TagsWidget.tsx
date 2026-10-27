@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import type { EnumItem } from '@shared/api'
 import { useProjectTags } from '@shared/hooks/useProjectTags'
-import { useCreateProjectTag } from '@shared/hooks/useCreateProjectTag'
+import { projectTagColorLabel, useProjectTagColor } from '@shared/hooks/useProjectTagColor'
 import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
@@ -27,8 +27,8 @@ export interface TagsWidgetProps
   placeholder?: string
   align?: 'left' | 'right'
   className?: string
-  // the project's tags field: managers can save a tag without a colour to the project with one
-  canAddToProject?: boolean
+  // the project's tags field: managers can pick the colours of the project tags here
+  isProjectTags?: boolean
   pt?: {
     template?: Partial<EnumTemplateProps>
   }
@@ -45,7 +45,7 @@ export const TagsWidget = ({
   placeholder,
   align,
   className,
-  canAddToProject,
+  isProjectTags,
   pt,
   ...mixedProps
 }: TagsWidgetProps) => {
@@ -67,7 +67,7 @@ export const TagsWidget = ({
     skip: !isEditable,
   })
 
-  const onCreateTag = useCreateProjectTag(canAddToProject ? projectName : undefined)
+  const onTagColorChange = useProjectTagColor(isProjectTags ? projectName : undefined)
 
   const dropdownRef = useRef<DropdownRef>(null)
   useEffect(() => {
@@ -87,8 +87,8 @@ export const TagsWidget = ({
         align={align}
         placeholder={placeholder}
         onChange={(names) => onChange(names, 'Click')}
-        onCreateTag={onCreateTag}
-        createTagLabel="Add to project tags"
+        onTagColorChange={onTagColorChange}
+        tagColorLabel={projectTagColorLabel}
         {...mixedProps}
         onClose={onCancelEdit}
         className={className}

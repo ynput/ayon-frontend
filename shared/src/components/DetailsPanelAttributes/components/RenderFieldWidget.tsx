@@ -171,7 +171,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           options={attributeEnumOptions}
           projectName={enumProjectName}
           // entities of one project, the tag goes to its anatomy
-          canAddToProject={field.name === 'tags' && new Set(projectNames).size <= 1}
+          isProjectTags={field.name === 'tags' && new Set(projectNames).size <= 1}
           pt={{ template: { style: { height: 32 }, className: 'enum' } }}
           placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
           {...mixedProps}

@@ -20,7 +20,7 @@ import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions, getSelectableAssignees } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
 import { useProjectTags } from '@shared/hooks/useProjectTags'
-import { useCreateProjectTag } from '@shared/hooks/useCreateProjectTag'
+import { projectTagColorLabel, useProjectTagColor } from '@shared/hooks/useProjectTagColor'
 import { useEntityEditing } from '@shared/components/DetailsPanelDetails/hooks/useEntityEditing'
 import { useDetailsPanelContext, type DetailsPanelTab } from '@shared/context'
 
@@ -155,7 +155,9 @@ const DetailsPanelHeader = ({
     skip: !tagsOpened,
   })
 
-  const onCreateTag = useCreateProjectTag(isSingleProject ? firstEntity?.projectName : undefined)
+  const onTagColorChange = useProjectTagColor(
+    isSingleProject ? firstEntity?.projectName : undefined,
+  )
   const isMultiple = entities.length > 1
   // several entities: tags and assignees are added to or removed from each of them
   const tagsCounts = useMemo(() => getMixedCounts(tagsValues), [tagsValues])
@@ -268,8 +270,8 @@ const DetailsPanelHeader = ({
                     mixedTotal={entities.length}
                     mixedLabel={`${entityType}s`}
                     onMixedChange={(change) => handleMixedChange('tags', change)}
-                    onCreateTag={onCreateTag}
-                    createTagLabel="Add to project tags"
+                    onTagColorChange={onTagColorChange}
+                    tagColorLabel={projectTagColorLabel}
                     onOpen={() => setTagsOpened(true)}
                     align="right"
                     styleDropdown={{ display: isLoading ? 'none' : 'unset' }}
