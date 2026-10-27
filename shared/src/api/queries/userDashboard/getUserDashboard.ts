@@ -21,6 +21,7 @@ import {
   waitForRealtimeJitter,
 } from '@shared/util'
 import convertAccessGroupsData, { AccessGroups } from './convertAccessGroupsData'
+import type { UserAttrib } from '../users/getUsers'
 
 // GetKanban response type
 export type GetKanbanResponse = KanbanNode[]
@@ -28,8 +29,8 @@ export type GetKanbanResponse = KanbanNode[]
 // GetKanbanProjectUsers response type
 export type KanbanProjectUserNode = Omit<
   GetKanbanProjectUsersQuery['users']['edges'][0]['node'],
-  'accessGroups'
-> & { accessGroups: AccessGroups; projects: string[]; avatarUrl: string }
+  'accessGroups' | 'attrib'
+> & { accessGroups: AccessGroups; projects: string[]; avatarUrl: string; attrib: UserAttrib }
 export type GetKanbanProjectUsersResponse = KanbanProjectUserNode[]
 
 export interface MessageSummary {
@@ -356,6 +357,7 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
 
           return {
             ...user,
+            attrib: user.attrib as UserAttrib,
             accessGroups: accessGroups,
             projects: projectsAccess,
             avatarUrl,
