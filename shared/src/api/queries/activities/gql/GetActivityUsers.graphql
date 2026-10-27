@@ -3,9 +3,7 @@ query GetActivityUsers($projects: [String!]) {
     edges {
       node {
         name
-        attrib {
-          fullName
-        }
+        attrib(names: ["fullName"])
       }
     }
   }
