@@ -275,6 +275,11 @@ export interface MenuItemMeta {
 export interface DetailsPanelMenuItemMeta extends MenuItemMeta {
   /** entity types the item shows for; all when not set */
   entityTypes?: string[]
+  /**
+   * shown as an icon button in the panel's header, next to the "more" button, instead of in its
+   * menu (the label is the tooltip); `position` and `order` then order the header buttons
+   */
+  pinned?: boolean
 }
 
 /** Context of a details panel menu item. */
@@ -474,7 +479,14 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     check: checkButton,
   },
   'detailsPanel.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
-  'detailsPanel.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
+  'detailsPanel.menuItem': {
+    version: 1,
+    required: ['label', 'icon'],
+    pieces: ['run'],
+    optional: menuItemFields,
+    check: (item) =>
+      item.pinned !== undefined && typeof item.pinned !== 'boolean' ? 'pinned must be true or false' : undefined,
+  },
   tableColumn: { version: 1, required: ['label'], pieces: ['cell'], optionalPieces: ['useData'] },
   entityMenuItem: { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
   'projectList.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },

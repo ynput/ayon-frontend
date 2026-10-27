@@ -122,6 +122,7 @@ An item in the details panel's "more" menu. It shows from the description; `run`
 | Description field | Type | |
 |---|---|---|
 | `entityTypes` | `string[] \| undefined` | entity types the item shows for; all when not set |
+| `pinned` | `boolean \| undefined` | shown as an icon button in the panel's header, next to the "more" button, instead of in its menu (the label is the tooltip); `position` and `order` then order the header buttons |
 | `id` (required) | `string` | unique among the addon's items of the slot |
 | `label` (required) | `string` | the menu entry |
 | `icon` (required) | `string` | a Material Symbols icon name |
