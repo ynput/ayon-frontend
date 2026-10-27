@@ -1,6 +1,7 @@
-import { useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
+import { menuItemsAt } from '@ynput/ayon-addon/host'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 import { Button } from '@ynput/ayon-react-components'
 import { Menu } from '@shared/components/Menu/Menu'
@@ -167,16 +168,24 @@ export const DetailsPanelMoreMenu = ({
       })),
     }
   }, [selectedEntities, entityId, entityType, projectName])
-  const addonItems = useMemo<MenuItemType[]>(
-    () =>
-      applicableAddonItems.map((item) => ({
-        id: item.key,
-        label: item.label,
-        icon: item.icon,
-        'data-addon-item': item.key,
-        onClick: () => runContribution(item, addonContext),
-      })),
-    [applicableAddonItems, addonContext],
+  const toMenuItem = useCallback(
+    (item: (typeof applicableAddonItems)[number]): MenuItemType => ({
+      id: item.key,
+      label: item.label,
+      icon: item.icon,
+      'data-addon-item': item.key,
+      onClick: () => runContribution(item, addonContext),
+    }),
+    [addonContext],
+  )
+  // `top` items first in the menu, the rest (default) above View data and Delete
+  const addonTopItems = useMemo(
+    () => menuItemsAt(applicableAddonItems, 'top').map(toMenuItem),
+    [applicableAddonItems, toMenuItem],
+  )
+  const addonItems = useMemo(
+    () => menuItemsAt(applicableAddonItems, 'bottom').map(toMenuItem),
+    [applicableAddonItems, toMenuItem],
   )
   // the items draw from their descriptions; their code loads when the menu opens
   useEffect(() => {
@@ -195,6 +204,7 @@ export const DetailsPanelMoreMenu = ({
     canOpenViewer,
     canDelete,
     entityListsContext,
+    extraTopItems: addonTopItems,
     extraItems: addonItems,
     onPip: () => onOpenPip?.(),
     onOpenViewer: () => viewerArgs && onOpenViewer?.(viewerArgs),

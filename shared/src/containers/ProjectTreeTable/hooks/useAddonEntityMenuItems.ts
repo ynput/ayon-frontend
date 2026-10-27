@@ -1,22 +1,29 @@
 import { useCallback } from 'react'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
-import type { EntityRef, ProjectTablePage } from '@ynput/ayon-addon'
+import type { EntityRef, MenuItemPosition, ProjectTablePage } from '@ynput/ayon-addon'
+import { menuItemsAt } from '@ynput/ayon-addon/host'
 import { useProjectContext } from '@shared/context'
 import type { ContextMenuItemConstructor } from './useCellContextMenu'
 import { appliesToPage } from '../addonColumns/addonColumnsHelpers'
 
 /**
  * Items addons contribute to the cells' right-click menu (entityMenuItem slot, @ynput/ayon-addon),
- * as one constructor a page adds to its contextMenuItems. The items draw from their descriptions;
- * `run` starts loading when the menu opens.
+ * as one constructor a page adds to its contextMenuItems: the `top` ones first in the list, the
+ * `bottom` ones (default) right before 'delete'. The items draw from their descriptions; `run`
+ * starts loading when the menu opens.
  */
-export const useAddonEntityMenuItems = (page: ProjectTablePage): ContextMenuItemConstructor => {
+export const useAddonEntityMenuItems = (
+  page: ProjectTablePage,
+  position: MenuItemPosition = 'bottom',
+): ContextMenuItemConstructor => {
   const { contributions } = useContributions('entityMenuItem')
   const { projectName } = useProjectContext()
 
   return useCallback<ContextMenuItemConstructor>(
     (_e, cell, selectedCells, meta) => {
-      const items = contributions.filter((item) => appliesToPage(item, page))
+      const items = menuItemsAt(contributions, position).filter((item) =>
+        appliesToPage(item, page),
+      )
       if (!items.length) return undefined
 
       // like the built-in items: the selected cells (not row checkboxes), else the selected rows,

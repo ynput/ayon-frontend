@@ -45,6 +45,7 @@ export interface VPContextMenuItems {
   deleteVersionItem: ContextMenuItemConstructor
   deleteProductItem: ContextMenuItemConstructor
   // items addons contribute (entityMenuItem slot)
+  addonTopItems: ContextMenuItemConstructor
   addonItems: ContextMenuItemConstructor
 }
 
@@ -414,6 +415,8 @@ export const useVPContextMenu = (callbacks?: {
     [entitiesMap, handleDeleteProduct],
   )
 
+  // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
+  const addonTopItems = useAddonEntityMenuItems('products', 'top')
   const addonItems = useAddonEntityMenuItems('products')
 
   return {
@@ -425,6 +428,7 @@ export const useVPContextMenu = (callbacks?: {
     versionDetailItem,
     deleteVersionItem,
     deleteProductItem,
+    addonTopItems,
     addonItems,
   }
 }

@@ -1,5 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
+import type { MenuItemPosition } from '@ynput/ayon-addon'
+import { menuItemsAt } from '@ynput/ayon-addon/host'
 import { usePowerpack } from '@shared/context'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import { EntityListFolderModel, ProjectFolderModel, ListProjectsItemModel } from '@shared/api'
@@ -355,20 +357,24 @@ const useProjectsListMenuItems = ({
       // the right-click menu opens (the dropdown's items are built with the list, so on click)
       const menu = command ? 'context' : 'dropdown'
       const selectedProjectNames = selection.filter((id) => !parseProjectFolderRowId(id))
-      const addonItems: MenuItem[] = selectedProjectNames.length
-        ? addonMenuItems
-            .filter((item) => !item.in?.length || item.in.includes(menu))
-            .map((item) => {
-              if (command) prefetchPiece(item.run)
-              return {
-                id: item.key,
-                label: item.label,
-                icon: item.icon,
-                [command ? 'command' : 'onClick']: () =>
-                  runContribution(item, { projectNames: selectedProjectNames, menu }),
-              }
-            })
-        : []
+      const buildAddonItems = (position: MenuItemPosition): MenuItem[] =>
+        selectedProjectNames.length
+          ? menuItemsAt(addonMenuItems, position)
+              .filter((item) => !item.in?.length || item.in.includes(menu))
+              .map((item) => {
+                if (command) prefetchPiece(item.run)
+                return {
+                  id: item.key,
+                  label: item.label,
+                  icon: item.icon,
+                  [command ? 'command' : 'onClick']: () =>
+                    runContribution(item, { projectNames: selectedProjectNames, menu }),
+                }
+              })
+          : []
+      // `top` items first in the menu, the rest (default) above Archive and Delete
+      const addonTopItems = buildAddonItems('top')
+      const addonItems = buildAddonItems('bottom')
 
       const projectFolderSubmenu = createProjectFolderSubmenu()
       const folderFolderSubmenu = createFolderFolderSubmenu()
@@ -388,6 +394,8 @@ const useProjectsListMenuItems = ({
         : null
 
       const allItems: MenuItem[] = [
+        ...addonTopItems,
+        ...(addonTopItems.length ? [{ id: 'divider' }] : []),
         {
           id: 'search',
           label: 'Search',

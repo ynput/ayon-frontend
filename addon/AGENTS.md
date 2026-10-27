@@ -121,6 +121,8 @@ An item in the details panel's "more" menu. It shows from the description; `run`
 | `id` (required) | `string` | unique among the addon's items of the slot |
 | `label` (required) | `string` | the menu entry |
 | `icon` (required) | `string` | a Material Symbols icon name |
+| `position` | `MenuItemPosition \| undefined` | `top`: first in the menu; `bottom` (default): after the menu's own items, above the destructive ones (Delete, Archive) |
+| `order` | `number \| undefined` | order among addon items with the same position, lowest first |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
@@ -141,6 +143,8 @@ An item in the project list's menus (dashboard, project menu, studio pages' Proj
 | `id` (required) | `string` | unique among the addon's items of the slot |
 | `label` (required) | `string` | the menu entry |
 | `icon` (required) | `string` | a Material Symbols icon name |
+| `position` | `MenuItemPosition \| undefined` | `top`: first in the menu; `bottom` (default): after the menu's own items, above the destructive ones (Delete, Archive) |
+| `order` | `number \| undefined` | order among addon items with the same position, lowest first |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
@@ -161,6 +165,8 @@ An item in the project page slicer's menus: the right-click menu, the panel's dr
 | `id` (required) | `string` | unique among the addon's items of the slot |
 | `label` (required) | `string` | the menu entry |
 | `icon` (required) | `string` | a Material Symbols icon name |
+| `position` | `MenuItemPosition \| undefined` | `top`: first in the menu; `bottom` (default): after the menu's own items, above the destructive ones (Delete, Archive) |
+| `order` | `number \| undefined` | order among addon items with the same position, lowest first |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
@@ -184,6 +190,8 @@ An item in the right-click menu of the project tables' cells, for the selected e
 | `id` (required) | `string` | unique among the addon's items of the slot |
 | `label` (required) | `string` | the menu entry |
 | `icon` (required) | `string` | a Material Symbols icon name |
+| `position` | `MenuItemPosition \| undefined` | `top`: first in the menu; `bottom` (default): after the menu's own items, above the destructive ones (Delete, Archive) |
+| `order` | `number \| undefined` | order among addon items with the same position, lowest first |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|

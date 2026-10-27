@@ -476,11 +476,13 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     }
   }
 
-  // items addons contribute (entityMenuItem slot)
+  // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
+  const addonEntityTopItems = useAddonEntityMenuItems('lists', 'top')
   const addonEntityItems = useAddonEntityMenuItems('lists')
 
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [
+    addonEntityTopItems,
     'copy-paste',
     'show-details',
     'open-viewer',
