@@ -178,19 +178,31 @@ export const DetailsPanelMoreMenu = ({
     }),
     [addonContext],
   )
-  // `top` items first in the menu, the rest (default) above View data and Delete
+  // pinned items are buttons next to this one, the rest are in the menu: `top` ones first, the
+  // others (default) above View data and Delete
+  const pinnedAddonItems = useMemo(
+    () => [
+      ...menuItemsAt(applicableAddonItems, 'top'),
+      ...menuItemsAt(applicableAddonItems, 'bottom'),
+    ].filter((item) => item.pinned),
+    [applicableAddonItems],
+  )
+  const menuAddonItems = useMemo(
+    () => applicableAddonItems.filter((item) => !item.pinned),
+    [applicableAddonItems],
+  )
   const addonTopItems = useMemo(
-    () => menuItemsAt(applicableAddonItems, 'top').map(toMenuItem),
-    [applicableAddonItems, toMenuItem],
+    () => menuItemsAt(menuAddonItems, 'top').map(toMenuItem),
+    [menuAddonItems, toMenuItem],
   )
   const addonItems = useMemo(
-    () => menuItemsAt(applicableAddonItems, 'bottom').map(toMenuItem),
-    [applicableAddonItems, toMenuItem],
+    () => menuItemsAt(menuAddonItems, 'bottom').map(toMenuItem),
+    [menuAddonItems, toMenuItem],
   )
   // the items draw from their descriptions; their code loads when the menu opens
   useEffect(() => {
-    if (isOpen) applicableAddonItems.forEach((item) => prefetchPiece(item.run))
-  }, [isOpen, applicableAddonItems])
+    if (isOpen) menuAddonItems.forEach((item) => prefetchPiece(item.run))
+  }, [isOpen, menuAddonItems])
 
   const { items } = useMenuOptions({
     entityType,
@@ -220,6 +232,19 @@ export const DetailsPanelMoreMenu = ({
 
   return (
     <>
+      {pinnedAddonItems.map((item) => (
+        <Button
+          key={item.key}
+          // addons name any Material Symbols icon
+          icon={item.icon as never}
+          variant="text"
+          data-tooltip={item.label}
+          aria-label={item.label}
+          data-addon-item={item.key}
+          onMouseEnter={() => prefetchPiece(item.run)}
+          onClick={() => runContribution(item, addonContext)}
+        />
+      ))}
       <Button
         ref={buttonRef}
         icon="more_horiz"

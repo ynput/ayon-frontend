@@ -140,6 +140,18 @@ test('header and toolbar items have exactly one action and an icon unless they d
   ])
 })
 
+test('a details panel item is pinned with true or false', () => {
+  const item = { slot: 'detailsPanel.menuItem', label: 'Copy link', icon: 'add_link', run: loader }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...item, id: 'pinned', pinned: true },
+      { ...item, id: 'yes', pinned: 'yes' },
+    ],
+  })
+  expect(contributions.map((c) => c.id)).toEqual(['pinned'])
+  expect(skipped.map((s) => [s.id, s.reason])).toEqual([['yes', 'pinned must be true or false']])
+})
+
 test('a manifest without a contributes list is reported', () => {
   const { contributions, skipped } = checkManifest(addon, { default: {} }, slots)
   expect(contributions).toEqual([])
