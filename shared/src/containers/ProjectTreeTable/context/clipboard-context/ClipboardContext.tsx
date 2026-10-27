@@ -14,7 +14,7 @@ import {
   parseCellId,
 } from '../../utils/cellUtils'
 import { getFolderColumnValue } from '../../utils/folderColumn'
-import { isAddonColumnId } from '../../addonColumns/addonColumnsHelpers'
+import { getAddonColumnText, isAddonColumnId } from '../../addonColumns/addonColumnsHelpers'
 
 // Types
 import { TableRow } from '../../types/table'
@@ -200,7 +200,10 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             let cellValue = ''
 
             // special handling of link cells
-            if (colId.startsWith('link_')) {
+            if (isAddonColumnId(colId)) {
+              // what the addon column's useData returned for the entity, as text
+              cellValue = getAddonColumnText(colId, entity.id)
+            } else if (colId.startsWith('link_')) {
               cellValue = getLinkEntityIdsByColumnId(entity.links, colId)
             } else if (colId === 'subtasks') {
               // Special handling for subtasks - convert to TSV format
