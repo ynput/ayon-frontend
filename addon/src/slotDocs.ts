@@ -7,7 +7,12 @@ export interface SlotDoc {
   /** where it shows */
   where: string
   /** when its code loads */
-  loads: 'first shown' | 'with the page' | 'first click' | 'menu open / click'
+  loads:
+    | 'first shown'
+    | 'with the page'
+    | 'first click'
+    | 'menu open / click'
+    | 'first click (component: with the page)'
 }
 
 export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
@@ -23,8 +28,8 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
   },
   'header.item': {
     helper: 'headerItem',
-    where: "a button in the main header, left (after Home) or right (before chat)",
-    loads: 'first click',
+    where: "an item in the main header, left (after Home) or right (before chat)",
+    loads: 'first click (component: with the page)',
   },
   'detailsPanel.tab': {
     helper: 'detailsPanelTab',
@@ -58,8 +63,8 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
   },
   'projectTable.toolbarItem': {
     helper: 'projectTableToolbarItem',
-    where: "a button in the project tables' toolbar, before Customize",
-    loads: 'first click',
+    where: "an item in the project tables' toolbar, before Customize",
+    loads: 'first click (component: with the page)',
   },
   'projectTable.customizeSection': {
     helper: 'projectTableCustomizeSection',

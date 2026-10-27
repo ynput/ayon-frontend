@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import { useContributions } from '@ynput/ayon-addon'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
 import { useProjectContext } from '@shared/context'
-import { AddonPopupItem } from './AddonPopupItem'
+import { AddonButton } from '@shared/components/AddonLayout/AddonButton'
 
 interface AddonToolbarItemsProps {
   page: ProjectTablePage
@@ -13,8 +13,9 @@ interface AddonToolbarItemsProps {
   list?: { id: string; label: string; entityType: string }
 }
 
-// Buttons addons contribute to the project tables' toolbar (projectTable.toolbarItem slot,
+// Items addons contribute to the project tables' toolbar (projectTable.toolbarItem slot,
 // @ynput/ayon-addon), drawn like the toolbar's own buttons and placed before Customize.
+// AddonButton does what the item asks on click, or renders the addon's own component.
 const AddonToolbarItems = ({ page, list }: AddonToolbarItemsProps) => {
   const { projectName } = useProjectContext()
   const { contributions } = useContributions('projectTable.toolbarItem')
@@ -38,7 +39,7 @@ const AddonToolbarItems = ({ page, list }: AddonToolbarItemsProps) => {
   return (
     <>
       {items.map((item) => (
-        <AddonPopupItem
+        <AddonButton
           key={item.key}
           contribution={item}
           context={context}

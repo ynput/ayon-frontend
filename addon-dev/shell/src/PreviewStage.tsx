@@ -9,7 +9,7 @@ import { ShellTable } from './ShellTable'
 import { isMenuSlot } from './slotNeeds'
 import { setStage } from './status'
 import type { ShellSelection } from './types'
-import { Approximated, PopupButton } from './parts'
+import { Approximated, ButtonItem } from './parts'
 
 const FRAME_WIDTH: Partial<Record<string, number>> = {
   'detailsPanel.tab': 620,
@@ -61,7 +61,7 @@ export const PreviewStage = ({
       return (
         <div className="ayon-shell-bar">
           <span className="spacer" />
-          <PopupButton contribution={contribution} context={context} autoOpen onContext={onPopupContext} />
+          <ButtonItem contribution={contribution} context={context} autoOpen onContext={onPopupContext} />
         </div>
       )
     }

@@ -102,6 +102,11 @@ export const checkManifest = (
       )
       continue
     }
+    const problem = definition.check?.(item as Record<string, unknown>)
+    if (problem) {
+      skip(problem, slotName, idName)
+      continue
+    }
     const dedupeKey = `${slotName}:${idName}`
     if (seen.has(dedupeKey)) {
       skip(`duplicate id in slot "${slotName}"`, slotName, idName)

@@ -57,10 +57,8 @@ ts.forEachChild(slotsFile, (node) => {
   for (const member of node.members) {
     const name = member.name.text ?? member.name.getText()
     const parts = Object.fromEntries(member.type.members.map((m) => [m.name.getText(), m]))
-    const pieces = parts.pieces.type.members.map((m) => ({
-      name: m.name.getText(),
-      optional: !!m.questionToken,
-    }))
+    // through the checker, so a named pieces type (ButtonPieces<S>) works like an inline one
+    const pieces = fields(parts.pieces.type).map(({ name, optional }) => ({ name, optional }))
     slots.push({
       name,
       version: Number(parts.version.type.getText()),
@@ -119,6 +117,9 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
 - A component gets its slot's context as props (\`SlotProps<'<slot>'>\`); components below it call
   \`useSlot('<slot>')\` (or a list of slots). It throws when rendered in another slot.
 - Menu items have a \`run\` piece: a function that gets the context (\`SlotContext<'<slot>'>\`) on click.
+- Header and toolbar items set exactly one action: \`to\` (navigate), \`run\`, \`dialog\` (AYON opens
+  its dialog around your content, which gets \`close\`), \`menu\` (a function returning the items) or
+  \`component\` (your own JSX instead of AYON's button). Their code gets \`navigate\` in the context.
 - Globals are imports, never context: \`useUser\`, \`useNavigate\` and the other router hooks, \`Link\`,
   \`toast\`, the layout components (\`ProjectPageLayout\`, \`Slicer\`, \`StudioPageLayout\`,
   \`ProjectList\`). Data comes from \`@ynput/ayon-frontend-shared/api\` (AYON's api and cache).
