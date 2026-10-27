@@ -258,6 +258,7 @@ const Bundles = () => {
       addons: duplicatedAddons,
       installerVersion: bundle.installerVersion,
       dependencyPackages: bundle.dependencyPackages,
+      description: bundle.description,
       isArchived: false,
       isStaging: false,
       isProduction: false,

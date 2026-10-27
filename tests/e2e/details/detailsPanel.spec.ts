@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test'
 import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
+import { requireAddon } from '../support/addons'
 import { OverviewPage } from '../pages/OverviewPage'
 
 const setup = async (api: AyonApi, projectName: string) => {
@@ -39,7 +40,7 @@ test.describe('details panel', () => {
     api,
     projectName,
   }) => {
-    test.skip(!(await api.hasAddon('planner')), 'subtasks need the planner addon')
+    await requireAddon(api, 'planner')
     const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
     await api.createTask(projectName, {
       folderId: folder.id,
@@ -134,7 +135,7 @@ test.describe('details panel', () => {
     api,
     projectName,
   }) => {
-    test.skip(!(await api.hasAddon('planner')), 'subtasks need the planner addon')
+    await requireAddon(api, 'planner')
     const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
     await api.createTask(projectName, {
       folderId: folder.id,

@@ -40,7 +40,7 @@ import { inferMapping } from "./inferMapping"
 import { mappingUpdater } from "./mappingUpdater"
 import { getMapperState } from "./getMapperState"
 import { sortMappingsToReviewEntries } from "./sorting"
-import { entityTypeDependentColumns, getValueMappingDependencies, parseUniqueValueIfHierarchy, preprocessRowsIfHierarchy } from "../hierarchy"
+import { entityTypeDependentColumns, FOLDER_TASK_TYPE_COMBINED_COLUMN, getValueMappingDependencies, parseUniqueValueIfHierarchy, preprocessRowsIfHierarchy } from "../hierarchy"
 import { getMappingsToReview, getResolvedColumns, getUniqueValuesForColumn, getUnresolvedValues } from "./mappings"
 import ReviewValuesColumnsList from "./ColumnsList"
 
@@ -296,7 +296,12 @@ export default function ReviewValuesStep({
         inferredMappings,
         Object.fromEntries(
           Object.entries(mappingsToReview)
-            .filter(([, { targetColumn }]) => entityTypeDependentColumns.has(targetColumn))
+            // the combined folder/task type column needs the entity types too
+            .filter(
+              ([, { targetColumn }]) =>
+                entityTypeDependentColumns.has(targetColumn) ||
+                targetColumn === FOLDER_TASK_TYPE_COMBINED_COLUMN,
+            )
             // In the 2nd pass, we give the inferrer a new unique values set
             // taking into account the mapping inferred in the 1st pass.
             .map(createInferrer(getUniqueValuesForColumn(

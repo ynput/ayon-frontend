@@ -77,13 +77,10 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
         {...props}
         aria-label={labelsArray.join(', ')}
       >
-        {(icon || isPowerFeature) && (
-          <Icon
-            icon={isPowerFeature ? 'bolt' : icon!}
-            className={hoverIcon && !isPowerFeature ? 'hover-swap-default' : undefined}
-          />
+        {icon && (
+          <Icon icon={icon} className={hoverIcon ? 'hover-swap-default' : undefined} />
         )}
-        {hoverIcon && !isPowerFeature && <Icon icon={hoverIcon} className="hover-swap" />}
+        {hoverIcon && <Icon icon={hoverIcon} className="hover-swap" />}
         {img && <Styled.Img src={img} alt={`${label} icon`} />}
         {labelsArray.map((label, index) => (
           <span key={index}>{label}</span>
@@ -119,6 +116,8 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
             ))}
           </Styled.EndActions>
         )}
+
+        {isPowerFeature && <Icon icon="bolt" className="power-bolt" />}
 
         {!!items.length && <Icon icon="arrow_right" className="more" />}
       </Styled.Item>

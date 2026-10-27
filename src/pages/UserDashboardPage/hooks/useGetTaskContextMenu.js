@@ -12,13 +12,34 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInOverview } = {}
 
   const openTaskInViewer = useOpenTaskInViewer()
 
+  const selectTask = (task) =>
+    dispatch(
+      onTaskSelected({
+        ids: [task.id],
+        types: [task.taskType],
+        data: [
+          {
+            id: task.id,
+            projectName: task.projectName,
+            taskType: task.taskType,
+            name: task.name,
+          },
+        ],
+      }),
+    )
+
   const getContextMenuItems = (task) => {
+    const isSelected = selectedTasks.includes(task.id)
+    const showsDetails = isOpen && isSelected
     return [
       {
-        label: isOpen ? 'Hide details' : 'Show details',
+        label: showsDetails ? 'Hide details' : 'Show details',
         icon: 'dock_to_left',
-        shortcut: isOpen ? 'Escape' : 'Double click',
-        command: () => setOpen(!isOpen),
+        shortcut: showsDetails ? 'Escape' : 'Double click',
+        command: () => {
+          if (!isSelected) selectTask(task)
+          setOpen(!showsDetails)
+        },
       },
       {
         label: 'Open in viewer',
@@ -36,13 +57,13 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInOverview } = {}
         label: 'Copy task ID',
         command: () => copyToClipboard(task.id),
         icon: 'content_copy',
-        disabled: selectedTasks.includes(task.id) && selectedTasks.length > 1,
+        disabled: isSelected && selectedTasks.length > 1,
       },
       {
         label: 'Copy latest version ID',
         command: () => copyToClipboard(task.latestVersionId),
         icon: 'content_copy',
-        disabled: !task.latestVersionId || selectedTasks.length > 1,
+        disabled: !task.latestVersionId || (isSelected && selectedTasks.length > 1),
       },
     ]
   }
@@ -58,24 +79,6 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInOverview } = {}
     const selectedTask = tasks.find((t) => t.id === taskId.id)
 
     if (!selectedTask) return
-
-    // if task not already selected, select it and remove all other selections
-    if (!selectedTasks.includes(selectedTask.id)) {
-      dispatch(
-        onTaskSelected({
-          ids: [selectedTask.id],
-          types: [selectedTask.taskType],
-          data: [
-            {
-              id: selectedTask.id,
-              projectName: selectedTask.projectName,
-              taskType: selectedTask.taskType,
-              name: selectedTask.name,
-            },
-          ],
-        }),
-      )
-    }
 
     // get context model
     const contextMenuItems = getContextMenuItems(selectedTask)

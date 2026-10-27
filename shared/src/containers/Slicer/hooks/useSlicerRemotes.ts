@@ -16,7 +16,7 @@ export const useSlicerRemotes = () => {
     }
   }
 
-  const { powerLicense } = usePowerpack()
+  const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
 
   // slicer transformers
   const [useExtraSlices, { isLoading: isLoadingExtraSlices }] = useLoadModule({
@@ -35,5 +35,9 @@ export const useSlicerRemotes = () => {
     skip: !powerLicense, // skip loading if powerpack license is not available
   })
 
-  return { useExtraSlices, isLoadingExtraSlices, SlicerDropdown: SlicerDropdown }
+  return {
+    useExtraSlices,
+    isLoadingExtraSlices: isLoadingLicense || isLoadingExtraSlices,
+    SlicerDropdown: SlicerDropdown,
+  }
 }

@@ -11,6 +11,7 @@ import { LinksWidget, LinkWidgetData } from './LinksWidget'
 import { isLinkEditable } from './LinksWidgetHelpers'
 import { SubtasksWidget, SubtasksWidgetData } from './SubtasksWidget'
 import { CommentsWidget } from './CommentsWidget'
+import { ListsWidget, ListsWidgetData } from './ListsWidget'
 
 // Contexts
 import { useCellEditing } from '../context/cell-editing'
@@ -25,6 +26,8 @@ import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidg
 import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { READ_ONLY } from '../utils'
 import type { AttributeData, EnumItem, EntityComment } from '@shared/api'
+import type { CellMark } from '../types'
+import { useTableCellContext } from '../context/table-cell'
 import { CELL_PADDING_Y } from '../constants'
 
 const Cell = styled.div`
@@ -60,13 +63,28 @@ const Cell = styled.div`
   &.entity-widget {
     cursor: pointer;
   }
+
+  &.warning::before {
+    content: 'warning';
+    font-family: 'Material Symbols Outlined';
+    font-size: 16px;
+    margin-right: 4px;
+    color: var(--md-sys-color-warning);
+  }
+`
+
+// CellMark.highlight: behind the cell, so a dimmed (inherited) cell gets the same tint
+const HighlightTint = styled.span`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 `
 
 // use this class to trigger the editing mode on a single click
 export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
 type WidgetAttributeData = {
-  type: AttributeData['type'] | 'links' | 'name' | 'subtasks' | 'comments'
+  type: AttributeData['type'] | 'links' | 'name' | 'subtasks' | 'comments' | 'lists'
   widget?: AttributeData['widget']
   enumResolver?: AttributeData['enumResolver']
 }
@@ -107,6 +125,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   folderId?: string | null
   midnightExclusiveFields?: string[]
   tooltip?: string
+  mark?: CellMark // merged over the row's mark for this cell (TableRow.cellMarks)
   onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
   // options passthrough props
   pt?: {
@@ -125,7 +144,7 @@ export interface WidgetBaseProps {
   onCancelEdit?: () => void
 }
 
-export const CellWidget: FC<EditorCellProps> = ({
+const CellWidgetContent: FC<EditorCellProps> = ({
   rowId,
   columnId,
   value,
@@ -142,6 +161,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   folderId,
   midnightExclusiveFields,
   tooltip,
+  mark,
   onChange,
   entityType,
   pt,
@@ -249,11 +269,13 @@ export const CellWidget: FC<EditorCellProps> = ({
       case type === 'links': {
         const linksValue = valueData as LinkWidgetData | undefined
 
-        const isEditable = isLinkEditable(
-          linksValue?.direction || 'out',
-          linksValue?.link.linkType || '',
-          linksValue?.entityType || '',
-        )
+        const isEditable =
+          !isReadOnly &&
+          isLinkEditable(
+            linksValue?.direction || 'out',
+            linksValue?.link.linkType || '',
+            linksValue?.entityType || '',
+          )
 
         // overwrite readonly state if the cell is currently being edited
         isReadOnly = !isEditable
@@ -286,6 +308,17 @@ export const CellWidget: FC<EditorCellProps> = ({
 
       case type === 'comments': {
         return <CommentsWidget value={valueData as EntityComment[] | undefined} {...sharedProps} />
+      }
+
+      case type === 'lists': {
+        return (
+          <ListsWidget
+            value={valueData as ListsWidgetData | undefined}
+            projectName={projectName}
+            cellId={cellId}
+            {...sharedProps}
+          />
+        )
       }
 
       case !!options.length || !!attributeData?.enumResolver: {
@@ -397,39 +430,72 @@ export const CellWidget: FC<EditorCellProps> = ({
   ])
 
   return (
-    <Cell
-      {...props}
-      onKeyDown={(event) => {
-        props.onKeyDown?.(event)
-        if (
-          event.defaultPrevented ||
-          event.key !== 'Enter' ||
-          type !== 'boolean' ||
-          options.length ||
-          attributeData?.enumResolver ||
-          isReadOnly ||
-          isCollapsed
-        )
-          return
+    <>
+      {mark?.highlight && (
+        <HighlightTint
+          style={{ backgroundColor: `color-mix(in srgb, ${mark.highlight} 25%, transparent)` }}
+        />
+      )}
+      <Cell
+        {...props}
+        onKeyDown={(event) => {
+          props.onKeyDown?.(event)
+          if (
+            event.defaultPrevented ||
+            event.key !== 'Enter' ||
+            type !== 'boolean' ||
+            options.length ||
+            attributeData?.enumResolver ||
+            isReadOnly ||
+            isCollapsed
+          )
+            return
 
-        event.preventDefault()
-        event.stopPropagation()
-        handleOnChange(!value, 'Enter')
-      }}
-      className={clsx(props.className, {
-        inherited: isInherited && !isCurrentCellEditing,
-        [READ_ONLY]: isReadOnly,
-        editable: !isReadOnly,
-      })}
-      ref={ref}
-      id={cellId}
-      data-tooltip={
-        tooltip ||
-        (isInherited && !isCurrentCellEditing && isCurrentCellFocused ? 'Inherited' : undefined)
-      }
-      data-tooltip-delay={200}
-    >
-      {widget}
-    </Cell>
+          event.preventDefault()
+          event.stopPropagation()
+          handleOnChange(!value, 'Enter')
+        }}
+        className={clsx(props.className, {
+          inherited: isInherited && !isCurrentCellEditing,
+          [READ_ONLY]: isReadOnly,
+          editable: !isReadOnly,
+          warning: mark?.warning,
+        })}
+        ref={ref}
+        id={cellId}
+        data-tooltip={
+          tooltip ||
+          (!isCurrentCellEditing && mark?.tooltip) ||
+          (isInherited && !isCurrentCellEditing && isCurrentCellFocused ? 'Inherited' : undefined)
+        }
+        data-tooltip-delay={200}
+      >
+        {widget}
+      </Cell>
+    </>
   )
+}
+
+// Applies what the row says about this cell: TableRow.readOnly and TableRow.cellMarks.
+// A mark's placeholder replaces the value with read-only, greyed text.
+export const CellWidget: FC<EditorCellProps> = ({ mark: markProp, isReadOnly, ...props }) => {
+  const { mark: rowMark, isRowReadOnly } = useTableCellContext()
+  const mark = rowMark && markProp ? { ...rowMark, ...markProp } : markProp || rowMark
+
+  if (mark?.placeholder) {
+    return (
+      <CellWidgetContent
+        rowId={props.rowId}
+        columnId={props.columnId}
+        className={props.className}
+        value={mark.placeholder}
+        attributeData={{ type: 'string' }}
+        mark={mark}
+        isInherited
+        isReadOnly
+      />
+    )
+  }
+
+  return <CellWidgetContent {...props} mark={mark} isReadOnly={isReadOnly || isRowReadOnly} />
 }

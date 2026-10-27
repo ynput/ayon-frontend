@@ -2,6 +2,7 @@ import { expect, test } from '../fixtures'
 import { adminCredentials } from '../support/env'
 import { DashboardTasksPage } from '../pages/DashboardTasksPage'
 import { DetailsPanel } from '../pages/DetailsPanel'
+import { menuItem } from '../support/ui'
 
 test.describe('dashboard tasks', () => {
   test('tasks assigned to me show up on the board under their status', async ({
@@ -80,6 +81,53 @@ test.describe('dashboard tasks', () => {
     await dashboard.card(task.id).getByText('open_me', { exact: true }).click()
 
     await new DetailsPanel(page).expectOpenFor('open_me')
+  })
+
+  test('right-clicking another card keeps the selection', async ({
+    page,
+    context,
+    api,
+    projectName,
+  }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+    const me = adminCredentials().name
+    const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const first = await api.createTask(projectName, {
+      folderId: folder.id,
+      name: 'first',
+      assignees: [me],
+    })
+    const second = await api.createTask(projectName, {
+      folderId: folder.id,
+      name: 'second',
+      assignees: [me],
+    })
+
+    const dashboard = new DashboardTasksPage(page)
+    await dashboard.goto()
+    await dashboard.selectProject(projectName)
+    await dashboard.card(first.id).click()
+    await expect(dashboard.card(first.id)).toHaveClass(/active/)
+
+    await dashboard.card(second.id).click({ button: 'right' })
+
+    await expect(menuItem(page, 'Copy task ID')).toBeVisible()
+    await expect(dashboard.card(first.id)).toHaveClass(/active/)
+    await expect(dashboard.card(second.id)).not.toHaveClass(/active/)
+
+    await menuItem(page, 'Copy task ID').click()
+
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(second.id)
+    await expect(dashboard.card(first.id)).toHaveClass(/active/)
+    await expect(dashboard.card(second.id)).not.toHaveClass(/active/)
+
+    await dashboard.card(second.id).click({ button: 'right' })
+    // the details follow the selection, so showing them selects the right-clicked card
+    await menuItem(page, 'Show details').click()
+
+    await new DetailsPanel(page).expectOpenFor('second')
+    await expect(dashboard.card(second.id)).toHaveClass(/active/)
+    await expect(dashboard.card(first.id)).not.toHaveClass(/active/)
   })
 })
 

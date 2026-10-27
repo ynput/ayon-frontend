@@ -238,10 +238,11 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     sliceFilters: slicerTaskFilters,
     config: { searchKey: 'name' },
   })
+  // folder names stay filter conditions: the folder search of the table (REST folder search) and
+  // the task queries (folderFilter) have no folder text search, so a search would be dropped there
   const combinedFolderFilter = useQueryFilters({
     queryFilters: folderFilter,
     sliceFilters: slicerFolderFilters,
-    config: { searchKey: 'name' },
   })
 
   // Use the shared hook to handle filter logic (for backward compatibility)
@@ -301,7 +302,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
       const countsFolderFilter = buildQueryFilters({
         queryFilters: folderFilter,
         sliceFilters: otherFolderFilters,
-        config: { searchKey: 'name' },
       })
       return {
         projectName,
@@ -342,6 +342,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     selectedFolders,
     selectedTaskIds,
     showHierarchy,
+    isFlatFolderView,
+    excludeSelectedFolders: !listPanelSelected,
   })
 
   // DATA FETCHING
