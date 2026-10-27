@@ -76,7 +76,8 @@ import { CellId, getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
-import { Button, Icon } from '@ynput/ayon-react-components'
+import { applyMixedChange, Button, Icon } from '@ynput/ayon-react-components'
+import { isEqual } from 'lodash'
 import {
   ProjectTableAttribute,
   BuiltInFieldOptions,
@@ -97,6 +98,7 @@ import {
   getEntitiesLabelFromScopes,
 } from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
+import { getEntityListValue, type ListChange } from './hooks/useMixedCellValues'
 
 // dnd-kit imports
 import {
@@ -125,7 +127,7 @@ import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'> & { id?: string },
-  config?: { selection?: string[] },
+  config?: { selection?: string[]; listChange?: ListChange },
 ) => Promise<void>
 
 // rendered while the powerpack summaries remote is unavailable (no license / old addon)
@@ -382,7 +384,7 @@ export const ProjectTreeTable = ({
 
   const handleCellUpdate: CellUpdate = useCallback(
     async (entity, config) => {
-      const { selection = [] } = config || {}
+      const { selection = [], listChange } = config || {}
       const { field, value, isAttrib } = entity
       const fieldColumnId = isAttrib
         ? `attrib_${field}`
@@ -397,7 +399,25 @@ export const ProjectTreeTable = ({
         return rowId === entity.rowId && isFieldColumn(colId)
       })
       const entitiesToUpdate: EntityUpdate[] = []
-      if (!selection?.length || !isEditedCellSelected) {
+      if (listChange) {
+        // each cell keeps its own values, plus or minus the changed ones
+        for (const cellId of listChange.cellIds) {
+          const { rowId } = parseCellId(cellId) || {}
+          const cellEntity = getEntityById(rowId || '')
+          if (!rowId || !cellEntity) continue
+          const currentValue = getEntityListValue(cellEntity, fieldColumnId)
+          const nextValue = applyMixedChange(currentValue, listChange)
+          if (isEqual(currentValue, nextValue)) continue
+          entitiesToUpdate.push({
+            field,
+            rowId,
+            id: cellEntity.entityId,
+            value: nextValue,
+            isAttrib,
+            type: cellEntity.entityType,
+          })
+        }
+      } else if (!selection?.length || !isEditedCellSelected) {
         entitiesToUpdate.push({ ...entity, id: entity.id || entity.rowId })
       } else {
         // update all the selected cells with the same columnId

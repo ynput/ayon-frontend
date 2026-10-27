@@ -972,10 +972,10 @@ const buildTreeTableColumns = ({
             attributeData={{ type: 'list_of_strings' }}
             options={meta?.options?.assignee}
             isCollapsed={!!row.original.childOnlyMatch}
-            onChange={(value) =>
+            onChange={(value, _key, listChange) =>
               meta?.updateEntities?.(
                 { field: column.id, value, type, rowId: row.id },
-                { selection: meta?.selection },
+                { selection: meta?.selection, listChange },
               )
             }
             isReadOnly={
@@ -1236,10 +1236,10 @@ const buildTreeTableColumns = ({
             attributeData={{ type: 'list_of_strings', widget: 'tags' }}
             options={meta?.options?.tag}
             isCollapsed={!!row.original.childOnlyMatch}
-            onChange={(value) =>
+            onChange={(value, _key, listChange) =>
               meta?.updateEntities?.(
                 { field: column.id, value, type, rowId: row.id },
-                { selection: meta?.selection },
+                { selection: meta?.selection, listChange },
               )
             }
             isReadOnly={
@@ -1521,7 +1521,7 @@ const buildTreeTableColumns = ({
                 ) ||
                 parseScopedColumnId(column.id).scope !== 'primary'
               }
-              onChange={(value) =>
+              onChange={(value, _key, listChange) =>
                 meta?.updateEntities?.(
                   {
                     field: columnIdParsed,
@@ -1537,6 +1537,7 @@ const buildTreeTableColumns = ({
                       entity === row.original.primary && supportsMultiCellEdit(attrib.data)
                         ? meta?.selection
                         : undefined,
+                    listChange,
                   },
                 )
               }

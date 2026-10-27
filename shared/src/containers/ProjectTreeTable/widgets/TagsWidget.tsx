@@ -1,4 +1,4 @@
-import { DropdownRef, TagsSelect } from '@ynput/ayon-react-components'
+import { DropdownRef, TagsSelect, type DropdownProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
@@ -15,7 +15,10 @@ const StyledTagsSelect = styled(TagsSelect)`
   height: 100%;
 `
 
-export interface TagsWidgetProps extends WidgetBaseProps {
+export interface TagsWidgetProps
+  // editing the tags of several entities, see the ARC Dropdown
+  extends Pick<DropdownProps, 'mixedCounts' | 'mixedTotal' | 'mixedLabel' | 'onMixedChange'>,
+    WidgetBaseProps {
   value: (string | number | boolean)[]
   // the anatomy tags
   options: EnumItem[]
@@ -40,6 +43,7 @@ export const TagsWidget = ({
   align,
   className,
   pt,
+  ...mixedProps
 }: TagsWidgetProps) => {
   const valueKey = JSON.stringify(value)
   const values = useMemo(
@@ -77,6 +81,7 @@ export const TagsWidget = ({
         align={align}
         placeholder={placeholder}
         onChange={(names) => onChange(names, 'Click')}
+        {...mixedProps}
         onClose={onCancelEdit}
         className={className}
       />
