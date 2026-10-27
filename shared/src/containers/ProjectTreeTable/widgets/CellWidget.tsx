@@ -335,6 +335,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             options={options}
             projectName={projectName}
             pt={pt?.enum?.pt}
+            canAddToProject={columnId === 'tags'}
             {...mixedProps}
             {...sharedProps}
           />
