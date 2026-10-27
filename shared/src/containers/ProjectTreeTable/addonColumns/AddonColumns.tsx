@@ -7,6 +7,9 @@ import { Icon } from '@ynput/ayon-react-components'
 import { useProjectContext } from '@shared/context'
 import type { TableRow } from '../types'
 import type { AddonColumnMeta } from './addonColumnsHelpers'
+import { setAddonColumnValues } from './addonColumnsHelpers'
+import { TableCellContent } from '../ProjectTreeTable.styled'
+import { getCellId } from '../utils/cellUtils'
 import { AddonColumnDataContext, useAddonColumnValue } from './AddonColumnDataContextInstance'
 import type { AddonColumnData } from './AddonColumnDataContextInstance'
 
@@ -23,7 +26,8 @@ interface AddonColumnCellProps extends AddonColumnMeta {
 }
 
 // one cell of an addon column: the host's read-only placeholder for groups, loading rows and other
-// entity types; the addon's cell (loaded with the table) for the rest
+// entity types; the addon's cell (loaded with the table) for the rest. Either sits in the table's
+// own cell element (the cell id), so selection, the right-click menu and copy work as in any column.
 export const AddonColumnCell = ({ contribution, page, columnId, row }: AddonColumnCellProps) => {
   const { projectName } = useProjectContext()
   const { primary, group, metaType, isLoading } = row.original
@@ -50,15 +54,22 @@ export const AddonColumnCell = ({ contribution, page, columnId, row }: AddonColu
     [projectName, page, value, primary.id, primary.entityType, primary.name, primary.label],
   )
 
-  if (!applies) return <div className={isLoading ? 'readonly loading' : 'readonly'} />
   return (
-    <ContributionView
-      contribution={contribution}
-      piece="cell"
-      context={context}
-      loading={<div className="readonly loading" />}
-      error={(error) => <CellError error={error} />}
-    />
+    <TableCellContent
+      id={getCellId(row.id, columnId)}
+      className={isLoading ? 'readonly loading' : 'readonly'}
+      tabIndex={0}
+    >
+      {applies && (
+        <ContributionView
+          contribution={contribution}
+          piece="cell"
+          context={context}
+          loading={<div className="readonly loading" />}
+          error={(error) => <CellError error={error} />}
+        />
+      )}
+    </TableCellContent>
   )
 }
 
@@ -123,10 +134,12 @@ export const AddonColumnDataScope = ({
   const { projectName } = useProjectContext()
   const [data, setData] = useState<AddonColumnData>({})
   const onData = useCallback(
-    (columnId: string, columnData: Record<string, unknown> | undefined) =>
+    (columnId: string, columnData: Record<string, unknown> | undefined) => {
+      setAddonColumnValues(columnId, columnData)
       setData((current) =>
         current[columnId] === columnData ? current : { ...current, [columnId]: columnData },
-      ),
+      )
+    },
     [],
   )
 

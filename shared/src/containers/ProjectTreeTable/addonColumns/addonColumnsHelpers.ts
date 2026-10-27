@@ -21,3 +21,20 @@ export interface AddonColumnMeta {
   contribution: Contribution<'tableColumn'>
   page: ProjectTablePage
 }
+
+// What each addon column's useData last returned, by column id, then entity id. The clipboard
+// copies it: it sits above the table, so it can't read the table's AddonColumnDataContext.
+const lastColumnValues = new Map<string, Record<string, unknown> | undefined>()
+
+export const setAddonColumnValues = (columnId: string, values: Record<string, unknown> | undefined) =>
+  lastColumnValues.set(columnId, values)
+
+/** An addon cell's value as copied text: strings, numbers and booleans, lists joined with `, `. */
+export const getAddonColumnText = (columnId: string, entityId: string): string => {
+  const value = lastColumnValues.get(columnId)?.[entityId]
+  if (Array.isArray(value)) return value.filter((item) => typeof item !== 'object').join(', ')
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+  return ''
+}
