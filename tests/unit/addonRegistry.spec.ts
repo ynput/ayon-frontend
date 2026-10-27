@@ -4,6 +4,7 @@ import path from 'path'
 import { createElement } from 'react'
 import { renderToString } from 'react-dom/server'
 import { checkManifest, formatSkipped } from '../../addon/src/validate'
+import { menuItemsAt } from '../../addon/src/menus'
 import { useSlot } from '../../addon/src/useSlot'
 import { SlotReactContext } from '../../addon/src/SlotContextInstance'
 
@@ -94,6 +95,26 @@ test('pages with an invalid access or view type are skipped', () => {
     ['badAccess', 'invalid access "managers"'],
     ['numberViewType', 'invalid viewType 3'],
   ])
+})
+
+test('menu items are placed at the top or bottom and sorted by order', () => {
+  const items = [
+    { key: 'a', position: 'top' as const, order: 2 },
+    { key: 'b' },
+    { key: 'c', position: 'top' as const },
+    { key: 'd', position: 'bottom' as const, order: -1 },
+    { key: 'e', position: 'top' as const, order: 2 },
+  ]
+  expect(menuItemsAt(items, 'top').map((i) => i.key)).toEqual(['c', 'a', 'e'])
+  expect(menuItemsAt(items, 'bottom').map((i) => i.key)).toEqual(['d', 'b'])
+
+  const { skipped } = checkManifest(addon, {
+    contributes: [
+      { slot: 'entityMenuItem', id: 'ok', label: 'A', icon: 'link', run: loader, position: 'top' },
+      { slot: 'entityMenuItem', id: 'bad', label: 'B', icon: 'link', run: loader, position: 'first' },
+    ],
+  })
+  expect(skipped.map((s) => [s.id, s.reason])).toEqual([['bad', 'invalid position "first"']])
 })
 
 test('a manifest without a contributes list is reported', () => {

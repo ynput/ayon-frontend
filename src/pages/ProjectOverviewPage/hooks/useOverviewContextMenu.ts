@@ -23,7 +23,8 @@ const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) =>
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
   const { folders } = useProjectFoldersContext()
-  // items addons contribute (entityMenuItem slot)
+  // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
+  const addonTopItems = useAddonEntityMenuItems('overview', 'top')
   const addonItems = useAddonEntityMenuItems('overview')
 
   // right click on a group header to un group the tasks
@@ -128,6 +129,7 @@ const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) =>
 
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [
+    addonTopItems,
     'copy-paste',
     'show-details',
     'rename',

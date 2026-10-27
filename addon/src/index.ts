@@ -18,6 +18,7 @@ export type {
   DetailsPanelMenuItemContext,
   DetailsPanelMenuItemMeta,
   MenuItemMeta,
+  MenuItemPosition,
   RunPiece,
   ListMenuItemMeta,
   MenuKind,

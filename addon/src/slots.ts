@@ -188,6 +188,9 @@ export interface DetailsPanelTabContext extends ProjectNameScope, EntityScope {
 /** What a menu item's `run` piece exports as default: called on click with the slot context. */
 export type RunPiece<S extends SlotName> = (context: SlotContext<S>) => void | Promise<void>
 
+/** Where an addon's item goes in a menu. */
+export type MenuItemPosition = 'top' | 'bottom'
+
 /** Description of a menu item contribution. */
 export interface MenuItemMeta {
   /** unique among the addon's items of the slot */
@@ -196,6 +199,13 @@ export interface MenuItemMeta {
   label: string
   /** a Material Symbols icon name */
   icon: string
+  /**
+   * `top`: first in the menu; `bottom` (default): after the menu's own items, above the
+   * destructive ones (Delete, Archive)
+   */
+  position?: MenuItemPosition
+  /** order among addon items with the same position, lowest first */
+  order?: number
 }
 
 /** Description of a `detailsPanel.menuItem` contribution. */
@@ -376,6 +386,7 @@ export interface SlotDefinition {
 // the server's NAME_REGEX: what the views API takes as a view type
 const VIEW_TYPE_PATTERN = /^[a-zA-Z0-9_]([a-zA-Z0-9_.-]*[a-zA-Z0-9_])?$/
 const pageFields = { access: /^(manager|admin)$/, viewType: VIEW_TYPE_PATTERN }
+const menuItemFields = { position: /^(top|bottom)$/ }
 
 /** The slots this host knows. A contribution to any other slot is skipped. */
 export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
@@ -383,11 +394,11 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   'studio.page': { version: 1, required: ['title'], pieces: ['component'], optional: pageFields },
   'header.item': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
   'detailsPanel.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
-  'detailsPanel.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
+  'detailsPanel.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
   tableColumn: { version: 1, required: ['label'], pieces: ['cell'], optionalPieces: ['useData'] },
-  entityMenuItem: { version: 1, required: ['label', 'icon'], pieces: ['run'] },
-  'projectList.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
-  'slicer.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },
+  entityMenuItem: { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
+  'projectList.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
+  'slicer.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
   'projectTable.toolbarItem': { version: 1, required: ['icon'], pieces: ['component'] },
   'projectTable.customizeSection': {
     version: 1,
