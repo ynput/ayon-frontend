@@ -5,9 +5,11 @@ import type {
   ProjectTablePage,
   PageMeta,
   PopupScope,
+  ProjectFoldersScope,
   ProjectNameScope,
   ProjectScope,
   SlicerScope,
+  ViewsScope,
 } from './scopes'
 
 // The slots: places in the AYON web UI that addons contribute to.
@@ -34,7 +36,7 @@ export interface SlotMap {
   'project.page': {
     version: 1
     meta: PageMeta
-    context: ProjectScope & SlicerScope
+    context: ProjectScope & SlicerScope & ProjectFoldersScope & ViewsScope
     pieces: { component: Loader<ComponentType<SlotProps<'project.page'>>> }
   }
   /**
@@ -342,7 +344,7 @@ export interface ProjectTableCustomizeSectionContext extends ProjectNameScope {
 }
 
 /** Context of a studio page. */
-export interface StudioPageContext {
+export interface StudioPageContext extends ViewsScope {
   /** projects selected in the page's `<ProjectList>`; saved per page */
   selectedProjects: string[]
 }
@@ -367,12 +369,18 @@ export interface SlotDefinition {
   pieces: readonly string[]
   /** pieces that may be left out */
   optionalPieces?: readonly string[]
+  /** description fields that may be left out, and the pattern they must match when set */
+  optional?: { readonly [field: string]: RegExp }
 }
+
+// the server's NAME_REGEX: what the views API takes as a view type
+const VIEW_TYPE_PATTERN = /^[a-zA-Z0-9_]([a-zA-Z0-9_.-]*[a-zA-Z0-9_])?$/
+const pageFields = { access: /^(manager|admin)$/, viewType: VIEW_TYPE_PATTERN }
 
 /** The slots this host knows. A contribution to any other slot is skipped. */
 export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
-  'project.page': { version: 1, required: ['title'], pieces: ['component'] },
-  'studio.page': { version: 1, required: ['title'], pieces: ['component'] },
+  'project.page': { version: 1, required: ['title'], pieces: ['component'], optional: pageFields },
+  'studio.page': { version: 1, required: ['title'], pieces: ['component'], optional: pageFields },
   'header.item': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
   'detailsPanel.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
   'detailsPanel.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'] },

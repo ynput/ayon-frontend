@@ -1,7 +1,9 @@
 import { ContributionView } from '@ynput/ayon-addon'
 import type { Contribution } from '@ynput/ayon-addon'
-import { useGetProjectQuery } from '@shared/api'
-import { useSlicerContext } from '@shared/containers/Slicer'
+import {
+  useProjectPageSlotContext,
+  useStudioPageSlotContext,
+} from '@shared/components/AddonLayout/pageSlotContext'
 import { useLocalStorage } from '@shared/hooks/useLocalStorage'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 import { useAppSelector } from '@state/store'
@@ -25,21 +27,8 @@ export const AddonProjectPage = ({
   contribution: Contribution<'project.page'>
   projectName: string
 }) => {
-  // already in the cache: ProjectContextProvider runs the same query
-  const { data: project } = useGetProjectQuery({ projectName })
-  // ProjectPage keeps a slicer per page (SlicerProvider page={module}); the page places it
-  const { rowSelection, sliceType } = useSlicerContext()
-  const slicer = useMemo(
-    () => ({
-      sliceType,
-      selection: Object.keys(rowSelection).filter((id) => rowSelection[id]),
-    }),
-    [sliceType, rowSelection],
-  )
-  const context = useMemo(
-    () => ({ projectName, project, slicer }),
-    [projectName, project, slicer],
-  )
+  // project, slicer selection, project folders and views, from the providers ProjectPage renders
+  const context = useProjectPageSlotContext(projectName)
   const allowed = usePageAccess(contribution)
 
   if (!allowed) return null
@@ -62,7 +51,7 @@ export const AddonStudioPage = ({
     () => selection.filter((id) => !parseProjectFolderRowId(id)),
     [selection],
   )
-  const context = useMemo(() => ({ selectedProjects }), [selectedProjects])
+  const context = useStudioPageSlotContext(selectedProjects)
   const studioPage = useMemo(
     () => ({ selection, onSelect: setSelection, onNewProject }),
     [selection, setSelection, onNewProject],

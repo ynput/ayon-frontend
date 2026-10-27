@@ -23,6 +23,8 @@ import {
   SettingsPanel,
   SlicerHost,
   useAddonCustomizeSections,
+  useProjectPageSlotContext,
+  useStudioPageSlotContext,
 } from '@ynput/ayon-frontend-shared/components'
 import { StudioSelectionProvider } from './host'
 import { needsProject } from './slotNeeds'
@@ -42,13 +44,14 @@ const idOf = (contribution: AnyContribution) => (contribution as { id: string })
 /** Reports the selected contribution's context (developer panel, `ayon-addon open`). */
 const useReport = (
   contribution: AnyContribution,
-  context: Context | undefined,
+  // slot contexts are interfaces (no index signature), the status page only reads them
+  context: object | undefined,
   ready: boolean,
   run?: boolean,
 ) => {
   useEffect(() => {
     setStage({
-      context,
+      context: context as Context | undefined,
       ready,
       run: run && context ? () => runContribution(contribution as never, context as never) : undefined,
     })
@@ -94,14 +97,8 @@ const PageTabs = ({
 // project.page: AYON's slicer state per page, the page decides where the slicer goes
 const ProjectPageBody = ({ contribution, selection }: StageProps) => {
   const projectName = selection.projectName!
-  const { data: project } = useGetProjectQuery({ projectName })
-  const { rowSelection, sliceType } = useSlicerContext()
-  const slicer = useMemo(
-    () => ({ sliceType, selection: Object.keys(rowSelection).filter((id) => rowSelection[id]) }),
-    [sliceType, rowSelection],
-  )
-  const context = useMemo(() => ({ projectName, project, slicer }), [projectName, project, slicer])
-  useReport(contribution, context, !!project)
+  const context = useProjectPageSlotContext(projectName)
+  useReport(contribution, context, !!context.project)
   return (
     <div className="ayon-shell-body" data-shell-surface="project-page">
       <ContributionView contribution={contribution as never} context={context as never} />
@@ -186,13 +183,29 @@ const useStoredSelection = (key: string) => {
 }
 
 // studio.page: each page keeps its own project selection (AYON stores it per page too)
+const StudioPageBody = ({
+  contribution,
+  selectedProjects,
+}: {
+  contribution: StageProps['contribution']
+  selectedProjects: string[]
+}) => {
+  const context = useStudioPageSlotContext(selectedProjects)
+  useReport(contribution, context, true)
+  return (
+    <div className="ayon-shell-body" data-shell-surface="studio-page">
+      <ContributionView contribution={contribution as never} context={context as never} />
+    </div>
+  )
+}
+
+// what UserDashboardPage (ayon-frontend) puts around a studio page: WithViews, studio scoped
 const StudioPageStage = ({
   contribution,
   onSelect,
 }: StageProps & { onSelect: (id: string) => void }) => {
+  const dispatch = useDispatch()
   const studio = useStoredSelection(`dashboard/${idOf(contribution)}/selectedProjects`)
-  const context = useMemo(() => ({ selectedProjects: studio.selection }), [studio.selection])
-  useReport(contribution, context, true)
   return (
     <>
       <PageTabs
@@ -201,11 +214,15 @@ const StudioPageStage = ({
         current={idOf(contribution)}
         onSelect={onSelect}
       />
-      <StudioSelectionProvider value={studio}>
-        <div className="ayon-shell-body" data-shell-surface="studio-page">
-          <ContributionView contribution={contribution as never} context={context as never} />
-        </div>
-      </StudioSelectionProvider>
+      <ViewsProvider
+        key={contribution.key}
+        viewType={(contribution as { viewType?: string }).viewType}
+        dispatch={dispatch}
+      >
+        <StudioSelectionProvider value={studio}>
+          <StudioPageBody contribution={contribution} selectedProjects={studio.selection} />
+        </StudioSelectionProvider>
+      </ViewsProvider>
     </>
   )
 }

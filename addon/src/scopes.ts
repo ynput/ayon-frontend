@@ -61,6 +61,70 @@ export interface SlicerScope {
   slicer: SlicerSelection
 }
 
+/** A folder of the project, as slots pass it. AYON passes its folder list item, so more may be there. */
+export interface FolderInfo {
+  id: string
+  name: string
+  label?: string
+  folderType: string
+  /** `/` separated names from the project root, e.g. `assets/characters/hero` */
+  path: string
+  /** unset for folders at the project root */
+  parentId?: string
+  /** names of the parents, from the project root */
+  parents: string[]
+  status: string
+  tags?: string[]
+  hasTasks?: boolean
+  hasChildren?: boolean
+  attrib?: Record<string, unknown>
+}
+
+/** The project's folders. The host loads them once per project, for every page of it. */
+export interface ProjectFolders {
+  /** every folder of the project; empty while they load */
+  folders: FolderInfo[]
+  /** true on the first load and when the project changes */
+  isLoading: boolean
+  getFolderById: (id: string) => FolderInfo | undefined
+  /** ids of the folder's parents, nearest first */
+  getParentFolderIds: (folderId: string) => string[]
+  /** ids of every folder inside the given ones, and the given ones too with `includeSelf` */
+  getChildFolderIds: (folderIds: string[], includeSelf?: boolean) => string[]
+  /** the given folders, without those inside another one of them */
+  getFolderIdsWithoutChildren: (folderIds: string[]) => string[]
+}
+
+/** Slots on a project page, which always has the project's folders. */
+export interface ProjectFoldersScope {
+  /** every folder of the project, with lookups for parents and children */
+  projectFolders: ProjectFolders
+}
+
+/**
+ * The views of a page with a `viewType`. The host shows the views menu (saved views, the user's
+ * working view, sharing); the page reads the selected view's settings and saves changes here.
+ */
+export interface PageViews {
+  /** the page's `viewType` */
+  viewType: string
+  /** settings of the selected view: the page decides their shape. `undefined` while loading */
+  settings: Record<string, unknown> | undefined
+  /** true until the selected view's settings have loaded: don't save before that */
+  isLoading: boolean
+  /**
+   * Saves settings the user changed: they are merged into the selected view's settings and stored
+   * in the user's working view, which becomes the selected view (as on the built-in pages).
+   */
+  updateSettings: (settings: Record<string, unknown>) => Promise<void>
+}
+
+/** Pages, which have views when their description sets `viewType`. */
+export interface ViewsScope {
+  /** `undefined` when the page's description has no `viewType` */
+  views: PageViews | undefined
+}
+
 /**
  * Slots whose component the host opens from a button it draws (header items, toolbar items).
  * The component loads on the first click and stays mounted; it shows itself while `open`.
@@ -86,6 +150,10 @@ export interface PageMeta {
   title: string
   /** `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them */
   access?: Access
-  /** the view type its views are saved under, when the page uses views */
+  /**
+   * Gives the page views: the host shows the views menu and the page gets `views` in its context.
+   * The type its views are saved under, e.g. `budget`: letters, digits, `_`, `-` and `.`. It must
+   * be the page's own: one AYON or another page already uses is not shown.
+   */
   viewType?: string
 }

@@ -71,6 +71,20 @@ export const checkManifest = (
       skip(`missing ${missing.join(', ')}`, slotName, idName)
       continue
     }
+    const badFields = Object.entries(definition.optional || {}).filter(([field, pattern]) => {
+      const value = (item as Record<string, unknown>)[field]
+      return value !== undefined && (typeof value !== 'string' || !pattern.test(value))
+    })
+    if (badFields.length) {
+      skip(
+        badFields
+          .map(([field]) => `invalid ${field} ${describe((item as Record<string, unknown>)[field])}`)
+          .join(', '),
+        slotName,
+        idName,
+      )
+      continue
+    }
     const badPieces = [
       ...definition.pieces.filter(
         (piece) => typeof (item as Record<string, unknown>)[piece] !== 'function',
