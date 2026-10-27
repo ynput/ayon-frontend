@@ -2164,13 +2164,6 @@ export type GetProjectLatestQueryVariables = Exact<{
 
 export type GetProjectLatestQuery = { project: { name: string } };
 
-export type GetProjectUsedTagsQueryVariables = Exact<{
-  projectName: string;
-}>;
-
-
-export type GetProjectUsedTagsQuery = { project: { usedTags: Array<string> } };
-
 export type GetProjectsQueryVariables = Exact<{
   first?: number | null | undefined;
   after?: string | null | undefined;
@@ -3991,13 +3984,6 @@ export const GetProjectLatestDocument = new TypedDocumentString(`
   }
 }
     `);
-export const GetProjectUsedTagsDocument = new TypedDocumentString(`
-    query GetProjectUsedTags($projectName: String!) {
-  project(name: $projectName) {
-    usedTags
-  }
-}
-    `);
 export const GetProjectsDocument = new TypedDocumentString(`
     query GetProjects($first: Int, $after: String) {
   projects(first: $first, after: $after, includeSkeleton: true) {
@@ -4916,9 +4902,6 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetProjectLatest: build.query<GetProjectLatestQuery, GetProjectLatestQueryVariables>({
       query: (variables) => ({ document: GetProjectLatestDocument as unknown as string, variables })
-    }),
-    GetProjectUsedTags: build.query<GetProjectUsedTagsQuery, GetProjectUsedTagsQueryVariables>({
-      query: (variables) => ({ document: GetProjectUsedTagsDocument as unknown as string, variables })
     }),
     GetProjects: build.query<GetProjectsQuery, GetProjectsQueryVariables | void>({
       query: (variables) => ({ document: GetProjectsDocument as unknown as string, variables })

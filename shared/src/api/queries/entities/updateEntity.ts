@@ -9,7 +9,6 @@ import { gqlApi } from '@shared/api/generated'
 import type { GetTasksProgressQuery, KanbanNode, OperationModel } from '@shared/api/generated'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import type { RootState } from '@reduxjs/toolkit/query'
-import { addProjectUsedTags } from '../project/getProject'
 
 type EntityType = OperationModel['entityType']
 type EntityData = Record<string, unknown> & {
@@ -357,10 +356,6 @@ const updateEntity = api.injectEndpoints({
 
         try {
           await queryFulfilled
-
-          if (Array.isArray(data?.tags)) {
-            addProjectUsedTags(projectName, data.tags, { dispatch, getState })
-          }
 
           // now invalidate any tags
           if (invalidationTagsAfterComplete.length) {
