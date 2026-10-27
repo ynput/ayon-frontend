@@ -1,7 +1,13 @@
 import { RefObject, useMemo, useRef, useState } from 'react'
 import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
-import { DropdownRef, getTextColor } from '@ynput/ayon-react-components'
+import {
+  applyMixedChange,
+  DropdownRef,
+  getMixedCounts,
+  getTextColor,
+  type MixedChange,
+} from '@ynput/ayon-react-components'
 
 import { EntityPanelUploader } from '@shared/components/EntityPanelUploader/EntityPanelUploader'
 import { StackedThumbnails } from '@shared/components/Thumbnail/StackedThumbnails'
@@ -149,6 +155,12 @@ const DetailsPanelHeader = ({
   })
 
   const isMultiple = entities.length > 1
+  // several entities: tags and assignees are added to or removed from each of them
+  const tagsCounts = useMemo(() => getMixedCounts(tagsValues), [tagsValues])
+  const assigneesCounts = useMemo(
+    () => getMixedCounts(entities.map((e) => e.task?.assignees || [])),
+    [entities],
+  )
   const isPlayable = !isMultiple && !!firstEntity?.hasReviewables
   const isThumbnailClickable = thumbnails.length === 1
 
@@ -167,6 +179,13 @@ const DetailsPanelHeader = ({
     if (field === 'assignees' && !canEditAssignees) return
     if (value === null || value === undefined) return console.error('value is null or undefined')
     return updateEntity(field, value)
+  }
+
+  const handleMixedChange = (field: 'tags' | 'assignees', change: MixedChange) => {
+    const values = new Map(
+      entities.map((e) => [e.id, (field === 'tags' ? e.tags : e.task?.assignees) || []]),
+    )
+    handleUpdate(field, (entityId: string) => applyMixedChange(values.get(entityId) || [], change))
   }
 
   const handleThumbnailClick = () => {
@@ -243,6 +262,10 @@ const DetailsPanelHeader = ({
                     editable
                     editor
                     onChange={(value) => handleUpdate('tags', value)}
+                    mixedCounts={isMultiple ? tagsCounts : undefined}
+                    mixedTotal={entities.length}
+                    mixedLabel={`${entityType}s`}
+                    onMixedChange={(change) => handleMixedChange('tags', change)}
                     onOpen={() => setTagsOpened(true)}
                     align="right"
                     styleDropdown={{ display: isLoading ? 'none' : 'unset' }}
@@ -308,6 +331,10 @@ const DetailsPanelHeader = ({
                 emptyMessage={canEditAssignees ? 'Assign user' : '-'}
                 align="right"
                 onChange={(value) => handleUpdate('assignees', value)}
+                mixedCounts={isMultiple && entityType === 'task' ? assigneesCounts : undefined}
+                mixedTotal={entities.length}
+                mixedLabel={`${entityType}s`}
+                onMixedChange={(change) => handleMixedChange('assignees', change)}
                 className="assignee-select"
                 data-tooltip={
                   entityUsers.length ? (entityType === 'task' ? 'Assigned users' : 'Author') : ''
