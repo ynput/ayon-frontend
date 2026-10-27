@@ -41,26 +41,36 @@ const patchProjectTags = (
   return patches
 }
 
+// the colour the anatomy gives a tag without one (ayon-backend settings/anatomy/tags.py)
+export const DEFAULT_TAG_COLOR = '#cacaca'
+
 const projectTagsApi = projectQueries.injectEndpoints({
   endpoints: (build) => ({
-    // adds the tag to the project anatomy, or changes the colour of the one there
-    setProjectTagColor: build.mutation<void, { projectName: string; tag: Tag }>({
-      queryFn: async ({ projectName, tag }, { dispatch, getState }, _extra, baseQuery) => {
+    // adds the tags to the project anatomy, and sets the colours of the ones given with a colour
+    saveProjectTags: build.mutation<void, { projectName: string; tags: Tag[] }>({
+      queryFn: async ({ projectName, tags }, { dispatch, getState }, _extra, baseQuery) => {
         // the tags are saved as one list: change the project's current tags, not the loaded ones
         const project = await baseQuery({ url: `/api/projects/${projectName}`, method: 'GET' })
         if (project.error) return { error: project.error }
-        const current = (project.data as { tags?: Tag[] })?.tags || []
-        const tags = current.some((existing) => existing.name === tag.name)
-          ? current.map((existing) =>
-              existing.name === tag.name ? { ...existing, color: tag.color } : existing,
-            )
-          : [...current, tag]
+        const next = [...((project.data as { tags?: Tag[] })?.tags || [])]
+        let changed = false
+        for (const tag of tags) {
+          const index = next.findIndex((existing) => existing.name === tag.name)
+          if (index === -1) {
+            next.push({ name: tag.name, color: tag.color || DEFAULT_TAG_COLOR })
+            changed = true
+          } else if (tag.color && next[index].color !== tag.color) {
+            next[index] = { ...next[index], color: tag.color }
+            changed = true
+          }
+        }
+        if (!changed) return { data: undefined }
 
-        const patches = patchProjectTags(projectName, tags, dispatch, getState)
+        const patches = patchProjectTags(projectName, next, dispatch, getState)
         const saved = await baseQuery({
           url: `/api/projects/${projectName}`,
           method: 'PATCH',
-          body: { tags },
+          body: { tags: next },
         })
         if (saved.error) {
           patches.forEach((patch) => patch.undo())
@@ -72,4 +82,4 @@ const projectTagsApi = projectQueries.injectEndpoints({
   }),
 })
 
-export const { useSetProjectTagColorMutation } = projectTagsApi
+export const { useSaveProjectTagsMutation } = projectTagsApi

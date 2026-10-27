@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import type { EnumItem } from '@shared/api'
 import { useProjectTags } from '@shared/hooks/useProjectTags'
-import { projectTagColorLabel, useProjectTagColor } from '@shared/hooks/useProjectTagColor'
+import { projectTagColorLabel, useEditProjectTags } from '@shared/hooks/useEditProjectTags'
 import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
@@ -27,7 +27,8 @@ export interface TagsWidgetProps
   placeholder?: string
   align?: 'left' | 'right'
   className?: string
-  // the project's tags field: managers can pick the colours of the project tags here
+  // the project's tags field: for managers, new tags go to the project anatomy, and they can pick
+  // the tags' colours
   isProjectTags?: boolean
   pt?: {
     template?: Partial<EnumTemplateProps>
@@ -67,7 +68,10 @@ export const TagsWidget = ({
     skip: !isEditable,
   })
 
-  const onTagColorChange = useProjectTagColor(isProjectTags ? projectName : undefined)
+  const projectTags = useEditProjectTags(
+    isProjectTags && isEditable ? projectName : undefined,
+    anatomyTags,
+  )
 
   const dropdownRef = useRef<DropdownRef>(null)
   useEffect(() => {
@@ -86,10 +90,20 @@ export const TagsWidget = ({
         editor
         align={align}
         placeholder={placeholder}
-        onChange={(names) => onChange(names, 'Click')}
-        onTagColorChange={onTagColorChange}
+        onChange={(names) => {
+          projectTags?.addTags(names.filter((name) => !values.includes(name)))
+          onChange(names, 'Click')
+        }}
+        onTagColorChange={projectTags?.setTagColor}
         tagColorLabel={projectTagColorLabel}
         {...mixedProps}
+        onMixedChange={
+          mixedProps.onMixedChange &&
+          ((change) => {
+            projectTags?.addTags(change.add)
+            mixedProps.onMixedChange?.(change)
+          })
+        }
         onClose={onCancelEdit}
         className={className}
       />

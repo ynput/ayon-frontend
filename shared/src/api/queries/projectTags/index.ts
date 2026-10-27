@@ -1,1 +1,1 @@
-export * from './setProjectTagColor'
+export * from './saveProjectTags'

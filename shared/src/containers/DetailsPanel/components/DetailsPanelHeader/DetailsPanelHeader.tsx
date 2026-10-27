@@ -20,7 +20,7 @@ import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions, getSelectableAssignees } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
 import { useProjectTags } from '@shared/hooks/useProjectTags'
-import { projectTagColorLabel, useProjectTagColor } from '@shared/hooks/useProjectTagColor'
+import { projectTagColorLabel, useEditProjectTags } from '@shared/hooks/useEditProjectTags'
 import { useEntityEditing } from '@shared/components/DetailsPanelDetails/hooks/useEntityEditing'
 import { useDetailsPanelContext, type DetailsPanelTab } from '@shared/context'
 
@@ -155,8 +155,9 @@ const DetailsPanelHeader = ({
     skip: !tagsOpened,
   })
 
-  const onTagColorChange = useProjectTagColor(
+  const projectTags = useEditProjectTags(
     isSingleProject ? firstEntity?.projectName : undefined,
+    tagsOptions,
   )
   const isMultiple = entities.length > 1
   // several entities: tags and assignees are added to or removed from each of them
@@ -189,6 +190,7 @@ const DetailsPanelHeader = ({
     const values = new Map(
       entities.map((e) => [e.id, (field === 'tags' ? e.tags : e.task?.assignees) || []]),
     )
+    if (field === 'tags') projectTags?.addTags(change.add)
     handleUpdate(field, (entityId: string) => applyMixedChange(values.get(entityId) || [], change))
   }
 
@@ -265,12 +267,15 @@ const DetailsPanelHeader = ({
                     options={[]}
                     editable
                     editor
-                    onChange={(value) => handleUpdate('tags', value)}
+                    onChange={(value) => {
+                      projectTags?.addTags(value.filter((tag) => !allTags.includes(tag)))
+                      handleUpdate('tags', value)
+                    }}
                     mixedCounts={isMultiple ? tagsCounts : undefined}
                     mixedTotal={entities.length}
                     mixedLabel={`${entityType}s`}
                     onMixedChange={(change) => handleMixedChange('tags', change)}
-                    onTagColorChange={onTagColorChange}
+                    onTagColorChange={projectTags?.setTagColor}
                     tagColorLabel={projectTagColorLabel}
                     onOpen={() => setTagsOpened(true)}
                     align="right"
