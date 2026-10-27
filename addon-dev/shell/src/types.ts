@@ -39,7 +39,7 @@ export interface RecordedResponse {
 export interface Fixture {
   slot: SlotName
   id: string
-  /** the slot context without functions (popups get open / onClose from the shell) */
+  /** the slot context without functions (header and toolbar items get navigate, dialogs close) */
   context: Record<string, unknown>
   user?: { name: string; attrib?: Record<string, unknown>; data?: Record<string, unknown> }
   /** keyed `GET /api/...` or `graphql <OperationName>` */

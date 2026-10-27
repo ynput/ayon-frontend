@@ -4,10 +4,11 @@ import { useAppSelector } from '@state/store'
 import clsx from 'clsx'
 import { useMemo } from 'react'
 import HeaderButton from './HeaderButton'
-import { AddonPopupItem } from '@/remote/AddonPopupItem'
+import { AddonButton } from '@shared/components/AddonLayout/AddonButton'
 
-// Buttons addons contribute to the header (header.item slot, @ynput/ayon-addon). Left items
-// show their label like Home; right items are icons like chat and help.
+// Items addons contribute to the header (header.item slot, @ynput/ayon-addon). Left items
+// show their label like Home; right items are icons like chat and help. AddonButton does what the
+// item asks on click (navigate, run, dialog, menu), or renders the addon's own component.
 const AddonHeaderItems = ({ placement }: { placement: 'left' | 'right' }) => {
   const { contributions } = useContributions('header.item')
   const projectName = (useAppSelector((state) => state.project.openProject) as string | null) || null
@@ -24,7 +25,7 @@ const AddonHeaderItems = ({ placement }: { placement: 'left' | 'right' }) => {
   return (
     <>
       {items.map((item) => (
-        <AddonPopupItem
+        <AddonButton
           key={item.key}
           contribution={item}
           context={context}

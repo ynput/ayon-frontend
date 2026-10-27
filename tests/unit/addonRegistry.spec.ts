@@ -117,6 +117,29 @@ test('menu items are placed at the top or bottom and sorted by order', () => {
   expect(skipped.map((s) => [s.id, s.reason])).toEqual([['bad', 'invalid position "first"']])
 })
 
+test('header and toolbar items have exactly one action and an icon unless they draw themselves', () => {
+  const header = { slot: 'header.item', label: 'Comments', placement: 'left' }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...header, id: 'goes', icon: 'chat', to: '/dashboard/comments' },
+      { ...header, id: 'opens', icon: 'chat', dialog: loader },
+      { ...header, id: 'own', component: loader },
+      { ...header, id: 'none', icon: 'chat' },
+      { ...header, id: 'two', icon: 'chat', run: loader, menu: loader },
+      { ...header, id: 'noIcon', run: loader },
+      { ...header, id: 'relative', icon: 'chat', to: 'dashboard' },
+      { slot: 'projectTable.toolbarItem', id: 'menu', icon: 'more_vert', menu: loader },
+    ],
+  })
+  expect(contributions.map((c) => c.id)).toEqual(['goes', 'opens', 'own', 'menu'])
+  expect(skipped.map((s) => [s.id, s.reason])).toEqual([
+    ['none', 'set exactly one of to, run, dialog, menu, component (it has none)'],
+    ['two', 'set exactly one of to, run, dialog, menu, component (it has run, menu)'],
+    ['noIcon', 'missing icon'],
+    ['relative', 'invalid to "dashboard"'],
+  ])
+})
+
 test('a manifest without a contributes list is reported', () => {
   const { contributions, skipped } = checkManifest(addon, { default: {} }, slots)
   expect(contributions).toEqual([])

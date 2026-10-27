@@ -19,6 +19,9 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
 - A component gets its slot's context as props (`SlotProps<'<slot>'>`); components below it call
   `useSlot('<slot>')` (or a list of slots). It throws when rendered in another slot.
 - Menu items have a `run` piece: a function that gets the context (`SlotContext<'<slot>'>`) on click.
+- Header and toolbar items set exactly one action: `to` (navigate), `run`, `dialog` (AYON opens
+  its dialog around your content, which gets `close`), `menu` (a function returning the items) or
+  `component` (your own JSX instead of AYON's button). Their code gets `navigate` in the context.
 - Globals are imports, never context: `useUser`, `useNavigate` and the other router hooks, `Link`,
   `toast`, the layout components (`ProjectPageLayout`, `Slicer`, `StudioPageLayout`,
   `ProjectList`). Data comes from `@ynput/ayon-frontend-shared/api` (AYON's api and cache).
@@ -69,26 +72,27 @@ Pieces: `component`.
 
 ### `header.item`: `headerItem`
 
-A button in the main header. The host draws it from the description, like its own buttons; `component` (a dialog or popover) loads on the first click and gets `open` / `onClose`. Loads: first click.
+A button in the main header, drawn by the host like its own buttons. What a click does is the addon's: navigate (`to`), run code (`run`), open a dialog (`dialog`) or a menu (`menu`); or the addon draws the item itself (`component`, loaded with the header). Set exactly one. Loads: first click (component: with the page).
 
 | Description field | Type | |
 |---|---|---|
 | `id` (required) | `string` | unique among the addon's header items |
 | `label` (required) | `string` | shown next to the icon on the left, as the tooltip on the right |
-| `icon` (required) | `string` | a Material Symbols icon name |
-| `tooltip` | `string \| undefined` | shown on hover; the label when not set |
 | `placement` (required) | `"left" \| "right"` | `left`: after the Home button; `right`: before chat and the inbox |
 | `order` | `number \| undefined` | order among addon items on the same side, lowest first |
+| `icon` | `string \| undefined` | a Material Symbols icon name; required unless the item is a `component` |
+| `tooltip` | `string \| undefined` | shown on hover; the label when not set |
+| `to` | `string \| undefined` | navigates there on click, e.g. `/dashboard/comments` (exactly one action: see the slot) |
+| `dialogTitle` | `string \| undefined` | the `dialog`'s title; the label when not set |
+| `dialogSize` | `"sm" \| "md" \| "lg" \| "full" \| undefined` | the `dialog`'s size, `md` by default |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'header.item'` | the slot this is rendered in |
 | `projectName` (required) | `string \| null` | the project whose page is open, else `null` |
-| `open` (required) | `boolean` |  |
-| `onClose` (required) | `() => void` |  |
-| `anchor` (required) | `HTMLElement \| null` | the button, to anchor a popover to |
+| `navigate` (required) | `(to: string) => void` | goes to an AYON URL, e.g. `navigate('/dashboard/comments')` |
 
-Pieces: `component`.
+Pieces: `run` (optional), `dialog` (optional), `menu` (optional), `component` (optional).
 
 ### `detailsPanel.tab`: `detailsPanelTab`
 
@@ -204,15 +208,18 @@ Pieces: `run`.
 
 ### `projectTable.toolbarItem`: `projectTableToolbarItem`
 
-A button in the project tables' toolbar, before Customize (Overview, Products, Lists). The host draws it from the description; `component` (a dialog or popover) loads on the first click. Loads: first click.
+A button in the project tables' toolbar, before Customize (Overview, Products, Lists), drawn by the host like the toolbar's own. What a click does is the addon's: navigate (`to`), run code (`run`), open a dialog (`dialog`) or a menu (`menu`); or the addon draws the item itself (`component`, loaded with the toolbar). Set exactly one. Loads: first click (component: with the page).
 
 | Description field | Type | |
 |---|---|---|
 | `id` (required) | `string` | unique among the addon's toolbar items |
-| `icon` (required) | `string` | a Material Symbols icon name |
 | `label` | `string \| undefined` | shown next to the icon; an icon-only button when not set |
-| `tooltip` | `string \| undefined` | shown on hover; the label when not set |
 | `pages` | `ProjectTablePage[] \| undefined` | which tables' toolbars show it; all (Overview, Products, Lists) when not set |
+| `icon` | `string \| undefined` | a Material Symbols icon name; required unless the item is a `component` |
+| `tooltip` | `string \| undefined` | shown on hover; the label when not set |
+| `to` | `string \| undefined` | navigates there on click, e.g. `/dashboard/comments` (exactly one action: see the slot) |
+| `dialogTitle` | `string \| undefined` | the `dialog`'s title; the label when not set |
+| `dialogSize` | `"sm" \| "md" \| "lg" \| "full" \| undefined` | the `dialog`'s size, `md` by default |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
@@ -220,11 +227,9 @@ A button in the project tables' toolbar, before Customize (Overview, Products, L
 | `page` (required) | `ProjectTablePage` |  |
 | `list` | `{ id: string; label: string; entityType: string; } \| undefined` | on Lists: the open list |
 | `projectName` (required) | `string` |  |
-| `open` (required) | `boolean` |  |
-| `onClose` (required) | `() => void` |  |
-| `anchor` (required) | `HTMLElement \| null` | the button, to anchor a popover to |
+| `navigate` (required) | `(to: string) => void` | goes to an AYON URL, e.g. `navigate('/dashboard/comments')` |
 
-Pieces: `component`.
+Pieces: `run` (optional), `dialog` (optional), `menu` (optional), `component` (optional).
 
 ### `projectTable.customizeSection`: `projectTableCustomizeSection`
 

@@ -4,7 +4,6 @@ import type {
   EntityScope,
   ProjectTablePage,
   PageMeta,
-  PopupScope,
   ProjectFoldersScope,
   ProjectNameScope,
   ProjectScope,
@@ -50,14 +49,15 @@ export interface SlotMap {
     pieces: { component: Loader<ComponentType<SlotProps<'studio.page'>>> }
   }
   /**
-   * A button in the main header. The host draws it from the description, like its own buttons;
-   * `component` (a dialog or popover) loads on the first click and gets `open` / `onClose`.
+   * A button in the main header, drawn by the host like its own buttons. What a click does is the
+   * addon's: navigate (`to`), run code (`run`), open a dialog (`dialog`) or a menu (`menu`); or the
+   * addon draws the item itself (`component`, loaded with the header). Set exactly one.
    */
   'header.item': {
     version: 1
     meta: HeaderItemMeta
     context: HeaderItemContext
-    pieces: { component: Loader<ComponentType<SlotProps<'header.item'>>> }
+    pieces: ButtonPieces<'header.item'>
   }
   /**
    * A tab in the details panel. The tab button shows from the description, for `entityTypes`;
@@ -110,14 +110,16 @@ export interface SlotMap {
     pieces: { run: Loader<RunPiece<'entityMenuItem'>> }
   }
   /**
-   * A button in the project tables' toolbar, before Customize (Overview, Products, Lists). The
-   * host draws it from the description; `component` (a dialog or popover) loads on the first click.
+   * A button in the project tables' toolbar, before Customize (Overview, Products, Lists), drawn
+   * by the host like the toolbar's own. What a click does is the addon's: navigate (`to`), run code
+   * (`run`), open a dialog (`dialog`) or a menu (`menu`); or the addon draws the item itself
+   * (`component`, loaded with the toolbar). Set exactly one.
    */
   'projectTable.toolbarItem': {
     version: 1
     meta: ProjectTableToolbarItemMeta
     context: ProjectTableToolbarItemContext
-    pieces: { component: Loader<ComponentType<SlotProps<'projectTable.toolbarItem'>>> }
+    pieces: ButtonPieces<'projectTable.toolbarItem'>
   }
   /**
    * A section in the project tables' Customize panel (Overview, Products, Lists). The entry shows
@@ -145,16 +147,77 @@ export interface SlotMap {
   }
 }
 
+/** Description fields of a button the host draws (header and toolbar items). */
+export interface ButtonMeta {
+  /** a Material Symbols icon name; required unless the item is a `component` */
+  icon?: string
+  /** shown on hover; the label when not set */
+  tooltip?: string
+  /** navigates there on click, e.g. `/dashboard/comments` (exactly one action: see the slot) */
+  to?: string
+  /** the `dialog`'s title; the label when not set */
+  dialogTitle?: string
+  /** the `dialog`'s size, `md` by default */
+  dialogSize?: 'sm' | 'md' | 'lg' | 'full'
+}
+
+/** Context of a button's code (`run`, `dialog`, `menu`, `component`) besides the slot's own. */
+export interface ButtonScope {
+  /** goes to an AYON URL, e.g. `navigate('/dashboard/comments')` */
+  navigate: (to: string) => void
+}
+
+/** What a `dialog` piece gets besides the slot context. */
+export interface DialogScope {
+  /** closes the dialog */
+  close: () => void
+}
+
+/** An entry of a button's `menu`. */
+export type AddonMenuItem =
+  | { divider: true }
+  | {
+      id: string
+      label: string
+      icon?: string
+      /** goes to an AYON URL when clicked */
+      to?: string
+      /** opens an external URL in a new tab when clicked */
+      href?: string
+      /** called when clicked; an error is shown as a toast */
+      onClick?: () => void | Promise<void>
+      /** a submenu */
+      items?: AddonMenuItem[]
+      disabled?: boolean
+      selected?: boolean
+      danger?: boolean
+    }
+
+/** What a `menu` piece exports as default: the menu's items, built each time the menu opens. */
+export type MenuPiece<S extends SlotName> = (
+  context: SlotContext<S>,
+) => AddonMenuItem[] | Promise<AddonMenuItem[]>
+
+/**
+ * The pieces of a button: what a click does. Set exactly one of them, or `to` in the description.
+ */
+export interface ButtonPieces<S extends SlotName> {
+  /** called on click with the context (it has `navigate`) */
+  run?: Loader<RunPiece<S>>
+  /** the content of a dialog the host opens and closes: AYON's dialog with title and close button */
+  dialog?: Loader<ComponentType<SlotProps<S> & DialogScope>>
+  /** the items of a menu the host opens under the button, like the header's help menu */
+  menu?: Loader<MenuPiece<S>>
+  /** the addon's own component instead of the host's button: a dropdown, a toggle, anything */
+  component?: Loader<ComponentType<SlotProps<S>>>
+}
+
 /** Description of a `header.item` contribution. */
-export interface HeaderItemMeta {
+export interface HeaderItemMeta extends ButtonMeta {
   /** unique among the addon's header items */
   id: string
   /** shown next to the icon on the left, as the tooltip on the right */
   label: string
-  /** a Material Symbols icon name */
-  icon: string
-  /** shown on hover; the label when not set */
-  tooltip?: string
   /** `left`: after the Home button; `right`: before chat and the inbox */
   placement: 'left' | 'right'
   /** order among addon items on the same side, lowest first */
@@ -162,7 +225,7 @@ export interface HeaderItemMeta {
 }
 
 /** Context of a header item. */
-export interface HeaderItemContext extends PopupScope {
+export interface HeaderItemContext extends ButtonScope {
   /** the project whose page is open, else `null` */
   projectName: string | null
 }
@@ -316,21 +379,17 @@ export interface SlicerMenuItemContext extends ProjectNameScope {
 }
 
 /** Description of a `projectTable.toolbarItem` contribution. */
-export interface ProjectTableToolbarItemMeta {
+export interface ProjectTableToolbarItemMeta extends ButtonMeta {
   /** unique among the addon's toolbar items */
   id: string
-  /** a Material Symbols icon name */
-  icon: string
   /** shown next to the icon; an icon-only button when not set */
   label?: string
-  /** shown on hover; the label when not set */
-  tooltip?: string
   /** which tables' toolbars show it; all (Overview, Products, Lists) when not set */
   pages?: ProjectTablePage[]
 }
 
 /** Context of a project table toolbar item. */
-export interface ProjectTableToolbarItemContext extends ProjectNameScope, PopupScope {
+export interface ProjectTableToolbarItemContext extends ProjectNameScope, ButtonScope {
   page: ProjectTablePage
   /** on Lists: the open list */
   list?: { id: string; label: string; entityType: string }
@@ -381,6 +440,8 @@ export interface SlotDefinition {
   optionalPieces?: readonly string[]
   /** description fields that may be left out, and the pattern they must match when set */
   optional?: { readonly [field: string]: RegExp }
+  /** further rules: returns why the contribution is skipped, or nothing */
+  check?: (contribution: Readonly<Record<string, unknown>>) => string | undefined
 }
 
 // the server's NAME_REGEX: what the views API takes as a view type
@@ -388,18 +449,44 @@ const VIEW_TYPE_PATTERN = /^[a-zA-Z0-9_]([a-zA-Z0-9_.-]*[a-zA-Z0-9_])?$/
 const pageFields = { access: /^(manager|admin)$/, viewType: VIEW_TYPE_PATTERN }
 const menuItemFields = { position: /^(top|bottom)$/ }
 
+// header and toolbar items: exactly one action, and an icon unless the addon draws the item
+const BUTTON_ACTIONS = ['to', 'run', 'dialog', 'menu', 'component'] as const
+const buttonPieces = ['run', 'dialog', 'menu', 'component']
+const buttonFields = { to: /^\//, dialogSize: /^(sm|md|lg|full)$/ }
+const checkButton = (item: Readonly<Record<string, unknown>>) => {
+  const actions = BUTTON_ACTIONS.filter((action) => item[action] !== undefined)
+  if (actions.length !== 1) {
+    return `set exactly one of ${BUTTON_ACTIONS.join(', ')} (it has ${actions.join(', ') || 'none'})`
+  }
+  if (actions[0] !== 'component' && typeof item.icon !== 'string') return 'missing icon'
+}
+
 /** The slots this host knows. A contribution to any other slot is skipped. */
 export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   'project.page': { version: 1, required: ['title'], pieces: ['component'], optional: pageFields },
   'studio.page': { version: 1, required: ['title'], pieces: ['component'], optional: pageFields },
-  'header.item': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
+  'header.item': {
+    version: 1,
+    required: ['label'],
+    pieces: [],
+    optionalPieces: buttonPieces,
+    optional: buttonFields,
+    check: checkButton,
+  },
   'detailsPanel.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
   'detailsPanel.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
   tableColumn: { version: 1, required: ['label'], pieces: ['cell'], optionalPieces: ['useData'] },
   entityMenuItem: { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
   'projectList.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
   'slicer.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
-  'projectTable.toolbarItem': { version: 1, required: ['icon'], pieces: ['component'] },
+  'projectTable.toolbarItem': {
+    version: 1,
+    required: [],
+    pieces: [],
+    optionalPieces: buttonPieces,
+    optional: buttonFields,
+    check: checkButton,
+  },
   'projectTable.customizeSection': {
     version: 1,
     required: ['title', 'icon'],

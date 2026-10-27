@@ -28,7 +28,7 @@ import {
 } from '@ynput/ayon-frontend-shared/components'
 import { StudioSelectionProvider } from './host'
 import { needsProject } from './slotNeeds'
-import { Approximated, PopupButton } from './parts'
+import { Approximated, ButtonItem } from './parts'
 import { PreviewStage } from './PreviewStage'
 import { ShellTable } from './ShellTable'
 import { setStage } from './status'
@@ -238,7 +238,7 @@ const HeaderStage = ({ contribution, selection }: StageProps) => {
       .filter((item) => item.placement === placement)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
   const item = (header: Contribution<'header.item'>) => (
-    <PopupButton
+    <ButtonItem
       key={header.key}
       contribution={header as unknown as AnyContribution}
       context={base}
@@ -403,7 +403,7 @@ const TableStage = ({ contribution, selection }: StageProps) => {
         <Approximated what="project table" />
         <span className="spacer" />
         {pageToolbarItems.map((item) => (
-          <PopupButton
+          <ButtonItem
             key={item.key}
             contribution={item as unknown as AnyContribution}
             context={base}
