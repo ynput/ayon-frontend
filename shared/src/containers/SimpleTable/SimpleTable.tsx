@@ -127,6 +127,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   imgRatio,
   imgPosition,
   onScrollBottom,
+  scrollToRowId,
   onRename,
   renamingId,
   renameInitialValue,
@@ -554,14 +555,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
       e.stopPropagation()
 
       const selectedIds = Object.keys(rowSelection)
-
-      const nextSelectedRows = selectedIds.includes(rowId) ? selectedIds : [rowId]
-
-      if (!selectedIds.includes(rowId)) {
-        // convert array to RowSelectionState object
-        const nextSelection: RowSelectionState = { [rowId]: true }
-        onRowSelectionChange?.(nextSelection)
-      }
+      const isSelected = selectedIds.includes(rowId)
+      const nextSelectedRows = isSelected ? selectedIds : [rowId]
 
       const menuItems = rowContextMenuBuilders.flatMap((builder) =>
         toMenuItems(
@@ -573,7 +568,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
             selectedTableRows: nextSelectedRows
               .map((selectedRowId) => table.getRowModel().rowsById[selectedRowId])
               .filter((selectedRow): selectedRow is Row<SimpleTableRow> => !!selectedRow),
-            isSelected: nextSelectedRows.includes(rowId),
+            isSelected,
           }),
         ),
       )
@@ -582,7 +577,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
         showRowContextMenu(e as any, menuItems)
       }
     },
-    [rowContextMenuBuilders, rows, rowSelection, onRowSelectionChange, showRowContextMenu],
+    [rowContextMenuBuilders, rows, rowSelection, showRowContextMenu],
   )
 
   //The virtualizer needs to know the scrollable container element
@@ -600,6 +595,27 @@ const SimpleTable: FC<SimpleTableProps> = ({
       : undefined,
     overscan: 5,
   })
+
+  // scroll to a row once and focus it, so the arrow keys move on from there
+  const scrolledToRowIdRef = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    if (!scrollToRowId || scrolledToRowIdRef.current === scrollToRowId) return
+    const index = rows.findIndex((row) => row.id === scrollToRowId)
+    if (index < 0) return
+    scrolledToRowIdRef.current = scrollToRowId
+    lastSelectedIdRef.current = scrollToRowId
+    rowVirtualizer.scrollToIndex(index, { align: 'center' })
+    // wait for the virtualizer to render the row
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const rowElement = tableContainerRef.current?.querySelector(
+          `#${CSS.escape(toDomId(scrollToRowId))}`,
+        )
+        const cell = rowElement?.querySelector('[tabindex="0"]') as HTMLElement | null
+        cell?.focus({ preventScroll: true })
+      }),
+    )
+  }, [scrollToRowId, rows, rowVirtualizer])
 
   // Memoize the ref callback to prevent infinite re-renders
   const measureElementRef = useCallback(

@@ -92,6 +92,15 @@ type Params = {
   dispatch: ThunkDispatch<any, any, UnknownAction>
 }
 
+// sortBy and desc of the overview's task list queries
+export const getTasksSortArgs = (sorting: SortingState, showHierarchy: boolean) =>
+  buildSortArgs(
+    sorting.map((sort) => ({
+      key: getColumnSortKey(sort.id, showHierarchy, 'task')?.replace('_', '.'),
+      desc: sort.desc,
+    })),
+  )
+
 export const useFetchOverviewData = ({
   projectName,
   selectedFolders, // comes from the slicer
@@ -407,12 +416,7 @@ export const useFetchOverviewData = ({
   }, [sorting, tasksListCursor])
 
   // Create sort params for infinite query
-  const { sortBy: tasksSortBy, desc: tasksSortDesc } = buildSortArgs(
-    sorting.map((sort) => ({
-      key: getColumnSortKey(sort.id, showHierarchy, 'task')?.replace('_', '.'),
-      desc: sort.desc,
-    })),
-  )
+  const { sortBy: tasksSortBy, desc: tasksSortDesc } = getTasksSortArgs(sorting, showHierarchy)
   const tasksFolderIdsParams = selectedFolders.length
     ? Array.from(
         new Set([...foldersMap.keys(), ...(excludeSelectedFolders ? selectedFolders : [])]),

@@ -207,11 +207,12 @@ export type EntityListItemEdge = {
   Entity?: Maybe<BaseNode>;
   Forbidden: Scalars['Boolean']['output'];
   allAttrib: Scalars['String']['output'];
-  attrib: Scalars['String']['output'];
+  attrib: Scalars['JSON']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   cursor?: Maybe<Scalars['String']['output']>;
   data: Scalars['String']['output'];
+  entityAttrib: Scalars['JSON']['output'];
   entityId: Scalars['String']['output'];
   entityType: Scalars['String']['output'];
   folderPath: Scalars['String']['output'];
@@ -939,6 +940,7 @@ export type ProjectNodeFoldersArgs = {
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  globalSearch?: InputMaybe<Scalars['String']['input']>;
   hasChildren?: InputMaybe<Scalars['Boolean']['input']>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   hasProducts?: InputMaybe<Scalars['Boolean']['input']>;
@@ -946,6 +948,7 @@ export type ProjectNodeFoldersArgs = {
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   includeFolderChildren?: Scalars['Boolean']['input'];
   includeInternalFolder?: Scalars['Boolean']['input'];
+  includeParents?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1976,7 +1979,7 @@ export type GetListItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetListItemsQuery = { project: { entityLists: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ node: { id: string, active: boolean, items: { pageInfo: { hasNextPage: boolean, hasPreviousPage: boolean, endCursor: string | null }, edges: Array<{ id: string, entityId: string, entityType: string, allAttrib: string, position: number, ownItemAttrib: Array<string>, node:
+export type GetListItemsQuery = { project: { entityLists: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, edges: Array<{ node: { id: string, active: boolean, items: { pageInfo: { hasNextPage: boolean, hasPreviousPage: boolean, endCursor: string | null }, edges: Array<{ id: string, entityId: string, entityType: string, entityAttrib: unknown, position: number, itemAttrib: unknown, ownItemAttrib: Array<string>, node:
                 | { label: string | null, status: string, tags: Array<string>, folderType: string, path: string | null, ownAttrib: Array<string>, hasReviewables: boolean, thumbnailHash: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folderId: string, latestComments?: Array<{ activityId: string, body: string, author: string | null, createdAt: string }> | null }
                 | { status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string>, folder: { name: string, label: string | null, path: string | null, folderType: string } }
                 | { active: boolean, name: string, updatedAt: unknown, createdAt: unknown, parents: Array<string> }
@@ -2080,6 +2083,8 @@ export type GetFolderColumnStatsQueryVariables = Exact<{
   search?: string | null | undefined;
   taskFilter?: string | null | undefined;
   taskSearch?: string | null | undefined;
+  globalSearch?: string | null | undefined;
+  includeParents?: boolean | null | undefined;
   parentIds?: Array<string> | string | null | undefined;
   ids?: Array<string> | string | null | undefined;
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
@@ -3419,8 +3424,9 @@ export const GetListItemsDocument = new TypedDocumentString(`
               id
               entityId
               entityType
-              allAttrib
+              itemAttrib: attrib
               ownItemAttrib: ownAttrib
+              entityAttrib
               position
               node {
                 ...ListItemFragment
@@ -3729,7 +3735,7 @@ export const GetUpdatedAndNewFoldersDocument = new TypedDocumentString(`
 }
     `);
 export const GetFolderColumnStatsDocument = new TypedDocumentString(`
-    query GetFolderColumnStats($projectName: String!, $filter: String, $search: String, $taskFilter: String, $taskSearch: String, $parentIds: [String!], $ids: [String!], $targets: [MetricTargetInput!], $includeFolderChildren: Boolean! = true, $hideEmptyFolders: Boolean) {
+    query GetFolderColumnStats($projectName: String!, $filter: String, $search: String, $taskFilter: String, $taskSearch: String, $globalSearch: String, $includeParents: Boolean, $parentIds: [String!], $ids: [String!], $targets: [MetricTargetInput!], $includeFolderChildren: Boolean! = true, $hideEmptyFolders: Boolean) {
   project(name: $projectName) {
     name
     folders(
@@ -3738,6 +3744,8 @@ export const GetFolderColumnStatsDocument = new TypedDocumentString(`
       search: $search
       taskFilter: $taskFilter
       taskSearch: $taskSearch
+      globalSearch: $globalSearch
+      includeParents: $includeParents
       parentIds: $parentIds
       ids: $ids
       includeFolderChildren: $includeFolderChildren

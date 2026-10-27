@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures'
 import { TeamsPage } from '../pages/TeamsPage'
-import { confirmDialog, dialog, menuItem, toast } from '../support/ui'
+import { confirmDialog, dialog, expectRowSelection, menuItem, toast } from '../support/ui'
 
 test.describe('project teams', () => {
   test('create a team', async ({ page, api, projectName }) => {
@@ -47,10 +47,12 @@ test.describe('project teams', () => {
     await teams.goto(projectName)
     await teams.selectTeam('keep_team')
 
-    await teams.deleteTeam('old_team')
+    await teams.openTeamMenu('old_team')
+    await expectRowSelection([teams.teamRow('keep_team')], [teams.teamRow('old_team')])
+    await teams.deleteFromMenu()
 
     await expect(teams.teamRow('old_team')).toBeHidden()
-    await expect(teams.teamRow('keep_team')).toBeVisible()
+    await expectRowSelection([teams.teamRow('keep_team')])
     await expect
       .poll(async () => (await api.listTeams(projectName)).map((t) => t.name))
       .toEqual(['keep_team'])
@@ -72,7 +74,9 @@ test.describe('project teams', () => {
     await teams.goto(projectName)
     await teams.selectTeam('other_team')
 
-    await teams.duplicateTeam('anim_team', 'anim_team_copy')
+    await teams.openTeamMenu('anim_team')
+    await expectRowSelection([teams.teamRow('other_team')], [teams.teamRow('anim_team')])
+    await teams.duplicateFromMenu('anim_team', 'anim_team_copy')
 
     await expect(teams.teamRow('anim_team_copy')).toBeVisible()
     await expect
@@ -97,30 +101,58 @@ test.describe('project teams', () => {
       .toEqual([user.name])
   })
 
-  // FLAG (app bug): UserListTeams built the menu from the previous selection, so it added those users instead
-  // fixed in ynput/ayon-frontend#2402, switch back to test() once it is merged
-  test.fixme(
-    'add a user that is not selected to a team from its context menu',
-    async ({ page, api, projectName, createUser, accessGroup }) => {
-      const access = { accessGroups: { [projectName]: [accessGroup] } }
-      const first = await createUser(access)
-      const second = await createUser(access)
-      const other = await createUser(access)
-      await api.createTeam(projectName, 'fx_team')
-      const teams = new TeamsPage(page)
-      await teams.goto(projectName)
-      await teams.selectTeam('fx_team')
-      await teams.selectUser(first.name)
-      await teams.addUserToSelection(second.name)
+  test('add a user that is not selected to a team from its context menu', async ({
+    page,
+    api,
+    projectName,
+    createUser,
+    accessGroup,
+  }) => {
+    const access = { accessGroups: { [projectName]: [accessGroup] } }
+    const first = await createUser(access)
+    const second = await createUser(access)
+    const other = await createUser(access)
+    await api.createTeam(projectName, 'fx_team')
+    const teams = new TeamsPage(page)
+    await teams.goto(projectName)
+    await teams.selectTeam('fx_team')
+    await teams.selectUser(first.name)
+    await teams.addUserToSelection(second.name)
+    const selected = [teams.userRow(first.name), teams.userRow(second.name)]
 
-      await teams.addUserToSelectedTeam(other.name, 'fx_team')
+    await teams.openUserMenu(other.name)
+    await expectRowSelection(selected, [teams.userRow(other.name)])
+    await menuItem(page, 'Add to fx_team').click()
 
-      await expect(teams.userRow(other.name)).toContainText('fx_team')
-      await expect
-        .poll(async () => (await api.getTeamMembers(projectName, 'fx_team'))?.map((m) => m.name))
-        .toEqual([other.name])
-    },
-  )
+    await expect(teams.userRow(other.name)).toContainText('fx_team')
+    await expect
+      .poll(async () => (await api.getTeamMembers(projectName, 'fx_team'))?.map((m) => m.name))
+      .toEqual([other.name])
+    await expectRowSelection(selected, [teams.userRow(other.name)])
+  })
+
+  test('right-clicking a user in the new team dialog keeps the selection', async ({
+    page,
+    projectName,
+    createUser,
+    accessGroup,
+  }) => {
+    const access = { accessGroups: { [projectName]: [accessGroup] } }
+    const picked = await createUser(access)
+    const other = await createUser(access)
+    const teams = new TeamsPage(page)
+    await teams.goto(projectName)
+    await page.getByRole('button', { name: 'Add New Team' }).click()
+    const newTeam = dialog(page, 'Create New Team')
+    const userRow = (name: string) => newTeam.getByRole('row').filter({ hasText: name })
+    await userRow(picked.name).click()
+    await expectRowSelection([userRow(picked.name)])
+
+    await userRow(other.name).click({ button: 'right' })
+
+    await expect(menuItem(page, 'Add to team')).toBeVisible()
+    await expectRowSelection([userRow(picked.name)], [userRow(other.name)])
+  })
 
   test('make a team member the team leader', async ({
     page,

@@ -36,6 +36,7 @@ export class UsersSettingsPage {
 
   async openContextMenu(name: string) {
     await this.row(name).click({ button: 'right' })
+    await expect(menuItem(this.page, 'Delete selected')).toBeVisible()
   }
 
   async createUser({ name, password }: { name: string; password: string }) {
@@ -51,9 +52,8 @@ export class UsersSettingsPage {
     await expect(newUser).toBeHidden()
   }
 
-  async deleteUser(name: string) {
-    await this.filter(name)
-    await this.row(name).click({ button: 'right' })
+  /** "Delete selected" in the open context menu of `name`, which is the only user it deletes */
+  async deleteUserFromMenu(name: string) {
     await menuItem(this.page, 'Delete selected').click()
     const confirm = dialog(this.page, `Delete ${name}`)
     await expect(confirm).toBeVisible()
@@ -72,8 +72,8 @@ export class UsersSettingsPage {
     await expect(toast(this.page, `Deleted ${count} user(s)`)).toBeVisible()
   }
 
+  /** "Set password" in the open context menu of `name` */
   async setPasswordFromMenu(name: string, password: string) {
-    await this.openContextMenu(name)
     await menuItem(this.page, 'Set password').click()
     const setPassword = dialog(this.page, `Set password for: ${name}`)
     await expect(setPassword).toBeVisible()

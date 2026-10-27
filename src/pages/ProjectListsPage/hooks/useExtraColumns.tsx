@@ -76,7 +76,7 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
     return []
   }, [entityType])
 
-  const extraColumns: TreeTableExtraColumn[] = []
+  const extraColumns = useMemo<TreeTableExtraColumn[]>(() => [], [])
 
   // some extra columns are added in buildTreeTableColumns based on the entity type
   // (author/version/product are only built for version scope) so only offer them in the

@@ -19,6 +19,7 @@ import {
 } from './refetchFilteredEntities'
 import { patchParentEntitiesInVersions, patchVersions } from './patchVersions'
 import { patchProducts } from './patchProducts'
+import { patchListItemEntityValues } from '../entityLists/listItemValues'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 import { addProjectUsedTags } from '../project/getProject'
 // these operations are dedicated to the overview page
@@ -390,7 +391,9 @@ const patchListItems = (
                 for (const page of draft.pages) {
                   const item = page.items.find((item) => item.entityId === listOperation.entityId)
                   if (item) {
-                    updateEntityWithOperation(item, listOperation.data)
+                    const { attrib, ...fields } = listOperation.data
+                    updateEntityWithOperation(item, fields)
+                    patchListItemEntityValues(item, attrib)
                   }
                 }
               }

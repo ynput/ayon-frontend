@@ -77,3 +77,19 @@ export const ensureAtLeastOneVisibleColumn = (
 
   return resolvedVisibility
 }
+
+// The visibility the table shows: a column's saved setting, else its own `visible` flag, else
+// its default. Saved settings of other columns don't apply to it (no prefix matching).
+export const resolveColumnVisibility = (
+  columnVisibility: VisibilityState,
+  columnIds: string[],
+  defaultVisibility?: VisibilityState,
+  explicitVisibility: Record<string, boolean | undefined> = {},
+): VisibilityState => {
+  const resolved = { ...columnVisibility }
+  for (const id of columnIds) {
+    if (resolved[id] !== undefined) continue
+    resolved[id] = explicitVisibility[id] ?? checkColumnVisibility({}, id, defaultVisibility)
+  }
+  return ensureAtLeastOneVisibleColumn(resolved, columnIds)
+}
