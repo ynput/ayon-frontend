@@ -143,7 +143,6 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         <StyledTagsWidget
           value={Array.isArray(displayValue) ? displayValue : []}
           options={attributeEnumOptions}
-          projectName={enumProjectName}
           pt={{ template: { style: { height: 32 }, className: 'enum' } }}
           placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
           onCancelEdit={onCancelEdit}
