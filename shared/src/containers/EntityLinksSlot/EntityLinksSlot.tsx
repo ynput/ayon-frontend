@@ -57,7 +57,7 @@ export const ENTITY_LINKS_SHORTCUTS: Record<string, EntityLinksView> = {
 }
 
 // the Power Pack version that has the links dialog
-const POWERPACK_MIN_VERSION = '1.6.7'
+const POWERPACK_MIN_VERSION = '1.7.2'
 // the Node Graph understands ?entity=type:id deep links from 0.4
 const NODEGRAPH_MIN_VERSION = '0.4.0'
 
