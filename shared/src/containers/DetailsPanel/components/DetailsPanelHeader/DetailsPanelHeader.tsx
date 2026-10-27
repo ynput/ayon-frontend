@@ -19,7 +19,8 @@ import type { Status } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions, getSelectableAssignees } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
-import { projectTagColorLabel, useEditProjectTags } from '@shared/hooks/useEditProjectTags'
+import { useEditProjectTags } from '@shared/hooks/useEditProjectTags'
+import { EnumItemDialog } from '@shared/components/EnumItemDialog'
 import { useEntityEditing } from '@shared/components/DetailsPanelDetails/hooks/useEntityEditing'
 import { useDetailsPanelContext, type DetailsPanelTab } from '@shared/context'
 
@@ -261,28 +262,31 @@ const DetailsPanelHeader = ({
               <Styled.Title>
                 <h2>{title}</h2>
                 {canEditTags ? (
-                  <Styled.TagsSelect
-                    ref={tagsSelectRef}
-                    value={union(...tagsValues)}
-                    tags={tagsOptionsObject}
-                    options={[]}
-                    editable
-                    editor
-                    onChange={(value) => {
-                      projectTags?.addTags(value.filter((tag) => !allTags.includes(tag)))
-                      handleUpdate('tags', value)
-                    }}
-                    mixedCounts={isMultiple ? tagsCounts : undefined}
-                    mixedTotal={entities.length}
-                    mixedLabel={`${entityType}s`}
-                    onMixedChange={(change) => handleMixedChange('tags', change)}
-                    onTagColorChange={projectTags?.setTagColor}
-                    tagColorLabel={projectTagColorLabel}
-                    align="right"
-                    styleDropdown={{ display: isLoading ? 'none' : 'unset' }}
-                    className="tags-select"
-                    itemClassName="details-tag"
-                  />
+                  <>
+                    <Styled.TagsSelect
+                      ref={tagsSelectRef}
+                      value={union(...tagsValues)}
+                      tags={tagsOptionsObject}
+                      options={[]}
+                      editable
+                      editor
+                      onChange={(value) => {
+                        projectTags?.addTags(value.filter((tag) => !allTags.includes(tag)))
+                        handleUpdate('tags', value)
+                      }}
+                      mixedCounts={isMultiple ? tagsCounts : undefined}
+                      mixedTotal={entities.length}
+                      mixedLabel={`${entityType}s`}
+                      onMixedChange={(change) => handleMixedChange('tags', change)}
+                      onEditOption={projectTags?.onEditOption}
+                      editOptionTooltip="Change the colour in the project tags"
+                      align="right"
+                      styleDropdown={{ display: isLoading ? 'none' : 'unset' }}
+                      className="tags-select"
+                      itemClassName="details-tag"
+                    />
+                    {projectTags && <EnumItemDialog {...projectTags.dialog} />}
+                  </>
                 ) : (
                   <Styled.ReadOnlyTags className="tags-select">
                     {union(...tagsValues).length

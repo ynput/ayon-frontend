@@ -3,7 +3,8 @@ import clsx from 'clsx'
 import { useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import type { EnumItem } from '@shared/api'
-import { projectTagColorLabel, useEditProjectTags } from '@shared/hooks/useEditProjectTags'
+import { useEditProjectTags } from '@shared/hooks/useEditProjectTags'
+import { EnumItemDialog } from '@shared/components/EnumItemDialog'
 import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
@@ -26,8 +27,8 @@ export interface TagsWidgetProps
   placeholder?: string
   align?: 'left' | 'right'
   className?: string
-  // the project's tags field: for managers, new tags go to the project anatomy, and they can pick
-  // the tags' colours
+  // the project's tags field: for managers, new tags go to the project anatomy, and they can
+  // create tags with a colour and change the tags' colours
   isProjectTags?: boolean
   pt?: {
     template?: Partial<EnumTemplateProps>
@@ -85,31 +86,34 @@ export const TagsWidget = ({
 
   if (isEditable) {
     return (
-      <StyledTagsSelect
-        ref={dropdownRef}
-        value={values}
-        tags={tags}
-        options={[]}
-        editor
-        align={align}
-        placeholder={placeholder}
-        onChange={(names) => {
-          projectTags?.addTags(names.filter((name) => !values.includes(name)))
-          onChange(names, 'Click')
-        }}
-        onTagColorChange={projectTags?.setTagColor}
-        tagColorLabel={projectTagColorLabel}
-        {...mixedProps}
-        onMixedChange={
-          mixedProps.onMixedChange &&
-          ((change) => {
-            projectTags?.addTags(change.add)
-            mixedProps.onMixedChange?.(change)
-          })
-        }
-        onClose={onCancelEdit}
-        className={className}
-      />
+      <>
+        <StyledTagsSelect
+          ref={dropdownRef}
+          value={values}
+          tags={tags}
+          options={[]}
+          editor
+          align={align}
+          placeholder={placeholder}
+          onChange={(names) => {
+            projectTags?.addTags(names.filter((name) => !values.includes(name)))
+            onChange(names, 'Click')
+          }}
+          onEditOption={projectTags?.onEditOption}
+          editOptionTooltip="Change the colour in the project tags"
+          {...mixedProps}
+          onMixedChange={
+            mixedProps.onMixedChange &&
+            ((change) => {
+              projectTags?.addTags(change.add)
+              mixedProps.onMixedChange?.(change)
+            })
+          }
+          onClose={onCancelEdit}
+          className={className}
+        />
+        {projectTags && <EnumItemDialog {...projectTags.dialog} />}
+      </>
     )
   }
 

@@ -470,6 +470,10 @@ export const ProjectTreeTable = ({
   // gives every cell a new component type, so React remounts the whole table body
   const includeParentsKey = includeParents?.join(',')
   const stableIncludeParents = useMemo(() => includeParents, [includeParentsKey])
+  // the columns only sort by these options; the cells get the others (e.g. tags) from the table
+  // meta, so a tag added to the project doesn't remount the table (and close a cell's editor)
+  const columnOptionsKey = JSON.stringify([options.status, options.folderType, options.taskType])
+  const columnOptions = useMemo(() => options, [columnOptionsKey])
 
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
@@ -480,7 +484,7 @@ export const ProjectTreeTable = ({
       includeParents: stableIncludeParents,
       showHierarchy,
       isFlatFolderView,
-      options,
+      options: columnOptions,
       extraColumns,
       excluded: excludedColumns,
       excludedSorting,
@@ -513,7 +517,7 @@ export const ProjectTreeTable = ({
     showHierarchy,
     isFlatFolderView,
     isExpandable,
-    options,
+    columnOptions,
     linkTypes,
     includeLinks,
     stableIncludeParents,
