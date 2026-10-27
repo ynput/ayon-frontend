@@ -12,9 +12,7 @@ fragment ActivityFragment on ActivityNode {
     name
     deleted
     active
-    attrib {
-      fullName
-    }
+    attrib(names: ["fullName"])
   }
   files {
     id
@@ -38,8 +36,6 @@ fragment ActivityFragment on ActivityNode {
   version {
     thumbnailHash
     status
-    attrib {
-      comment
-    }
+    attrib(names: ["comment"])
   }
 }
