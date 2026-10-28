@@ -70,6 +70,9 @@ export default defineConfig({
       },
       name: 'AyonFrontendShared',
       formats: ['es'],
+      // one stylesheet for the whole package (dist/style.css, exported as ./style.css): the
+      // components' own styles, e.g. the context menu's. The AYON app gets them from the source.
+      cssFileName: 'style',
     },
     rollupOptions: {
       external: (id) => {
@@ -113,6 +116,6 @@ export default defineConfig({
     sourcemap: false,
     emptyOutDir: true,
     minify: true,
-    cssCodeSplit: true,
+    cssCodeSplit: false,
   },
 })

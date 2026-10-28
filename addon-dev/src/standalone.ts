@@ -5,6 +5,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs'
 import type { IncomingMessage, ServerResponse } from 'http'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import type { Plugin, ProxyOptions } from 'vite'
 import { findConnection, findPackageDir } from './project.js'
 import type { AddonProject } from './project.js'
@@ -17,6 +18,10 @@ const FIXTURES_URL = '/__ayon-addon/fixtures'
 const PROXIED = ['/api', '/graphql', '/ws', '/addons', '/static', '/AYON.svg']
 const SHARED = '@ynput/ayon-frontend-shared'
 const DEDUPE = ['@tanstack/react-table']
+// served from their source: one registry for the addon, the shell and the shared package
+const LINKED = ['@ynput/ayon-addon', '@ynput/ayon-addon-dev']
+// the built shell next to this file (dist/shell)
+const SHELL_BUNDLE = fileURLToPath(new URL('./shell/index.js', import.meta.url))
 
 interface StandaloneOptions {
   root: string
@@ -46,6 +51,8 @@ const globalStyles = (root: string) => {
   const sharedDir = findPackageDir(root, SHARED)
   const candidates: [string, string][] = [
     ['@ynput/ayon-react-components', 'dist/style.css'],
+    // the shared components' own styles (the context menu's)
+    [SHARED, 'dist/style.css'],
     ['react-toastify', 'dist/ReactToastify.css'],
     ['primereact', 'resources/primereact.min.css'],
     ['primeicons', 'primeicons.css'],
@@ -55,6 +62,18 @@ const globalStyles = (root: string) => {
     const css = dir && path.join(dir, file)
     return css && existsSync(css) ? [css] : []
   })
+}
+
+const packageOf = (id: string) => id.split('/').slice(0, id.startsWith('@') ? 2 : 1).join('/')
+
+// the packages the shell imports (its bundle keeps every package import as is)
+const shellImports = (root: string) => {
+  if (!existsSync(SHELL_BUNDLE)) return []
+  const bundle = readFileSync(SHELL_BUNDLE, 'utf8')
+  const ids = [...bundle.matchAll(/^(?:import|export)\b[^'"]*["']([^'"./][^'"]*)["']/gm)].map((m) => m[1])
+  return [...new Set(ids)].filter(
+    (id) => !LINKED.includes(packageOf(id)) && !id.endsWith('.css') && findPackageDir(root, packageOf(id)),
+  )
 }
 
 const sendJson = (res: ServerResponse, status: number, body: unknown) => {
@@ -75,6 +94,8 @@ export const standalonePlugin = (options: StandaloneOptions): Plugin => {
   const { root, project, remote, fixtures } = options
   const fixturesDir = path.resolve(root, fixtures)
   const connection = findConnection(root)
+  // relative to the root, as a path in the page and a glob for Vite's scan
+  const manifest = path.posix.normalize(options.manifest).replace(/^\.?\//, '')
 
   return {
     name: 'ayon-addon:standalone',
@@ -106,11 +127,11 @@ export const standalonePlugin = (options: StandaloneOptions): Plugin => {
         server: { proxy },
         resolve: { dedupe: DEDUPE.filter((pkg) => findPackageDir(root, pkg)) },
         optimizeDeps: {
-          // one registry: the addon, the shell and the shared package all use the linked package
-          exclude: ['@ynput/ayon-addon', '@ynput/ayon-addon-dev'],
-          // known up front, so the first load doesn't re-optimize and reload
-          include: sharedEntries,
-          entries: [],
+          exclude: LINKED,
+          // all known up front: a dependency found while the page loads re-optimizes and reloads
+          // it. The addon's are found by scanning from its manifest (pieces are imports of it).
+          include: [...new Set([...sharedEntries, ...shellImports(root)])],
+          entries: [manifest],
         },
       }
     },
@@ -129,7 +150,7 @@ export const standalonePlugin = (options: StandaloneOptions): Plugin => {
       return [
         ...globalStyles(root).map((css) => `import ${JSON.stringify(css)}`),
         `import '@ynput/ayon-addon-dev/shell/style.css'`,
-        `import manifest from ${JSON.stringify(`/${path.posix.normalize(options.manifest).replace(/^\.?\//, '')}`)}`,
+        `import manifest from ${JSON.stringify(`/${manifest}`)}`,
         `import { startShell } from '@ynput/ayon-addon-dev/shell'`,
         `startShell({ ...${JSON.stringify(shellOptions)}, manifest })`,
       ].join('\n')

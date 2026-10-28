@@ -83,26 +83,31 @@ main.center {
 .ayon-shell-note {
   color: var(--md-sys-color-outline);
 }
+/* contributions: an area header, its slots' labels, one line per contribution */
 .ayon-shell-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 .ayon-shell-group-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px;
+  gap: 4px;
+  height: 28px;
+  padding: 0 4px;
   border: none;
   border-radius: 4px;
   background: none;
   color: inherit;
   font: inherit;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 .ayon-shell-group-header:hover {
   background: var(--md-sys-color-surface-container-high);
+}
+.ayon-shell-group-header .icon {
+  font-size: 18px;
+  color: var(--md-sys-color-outline);
 }
 .ayon-shell-group-header small {
   margin-left: auto;
@@ -112,33 +117,36 @@ main.center {
 .ayon-shell-slot {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin: 2px 0 6px 14px;
-  padding-left: 8px;
-  border-left: 1px solid var(--md-sys-color-outline-variant);
+  padding-left: 22px;
 }
 .ayon-shell-slot-label {
-  padding: 2px 8px;
+  padding: 6px 8px 2px;
   font-size: 12px;
   color: var(--md-sys-color-outline);
+  cursor: help;
 }
 .ayon-shell-panel .contribution {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 8px;
+  display: flex;
   align-items: center;
-  width: 100%;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
+  gap: 8px;
+  height: 30px;
+  padding: 0 8px;
   border: none;
+  border-radius: 4px;
   background: none;
   color: inherit;
   font: inherit;
   text-align: left;
+  cursor: pointer;
+}
+.ayon-shell-panel .contribution span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .ayon-shell-panel .contribution .icon {
-  grid-row: span 2;
+  font-size: 18px;
+  color: var(--md-sys-color-outline);
 }
 .ayon-shell-panel .contribution:hover {
   background: var(--md-sys-color-surface-container-high);
@@ -147,9 +155,8 @@ main.center {
   background: var(--md-sys-color-primary-container);
   color: var(--md-sys-color-on-primary-container);
 }
-.ayon-shell-panel .contribution small {
-  font-size: 11px;
-  color: var(--md-sys-color-outline);
+.ayon-shell-panel .contribution.selected .icon {
+  color: inherit;
 }
 .ayon-shell-onstage {
   display: flex;

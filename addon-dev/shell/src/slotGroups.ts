@@ -3,15 +3,13 @@ import type { SlotName } from '@ynput/ayon-addon'
 
 export interface SlotGroup {
   label: string
-  icon: string
   slots: { slot: SlotName; label: string }[]
 }
 
 export const SLOT_GROUPS: SlotGroup[] = [
-  { label: 'Header', icon: 'web_asset', slots: [{ slot: 'header.item', label: 'Items' }] },
+  { label: 'Header', slots: [{ slot: 'header.item', label: 'Items' }] },
   {
     label: 'Studio (dashboard)',
-    icon: 'dashboard',
     slots: [
       { slot: 'studio.page', label: 'Pages' },
       { slot: 'projectList.menuItem', label: 'Project list menu' },
@@ -19,7 +17,6 @@ export const SLOT_GROUPS: SlotGroup[] = [
   },
   {
     label: 'Project',
-    icon: 'folder_open',
     slots: [
       { slot: 'project.page', label: 'Pages' },
       { slot: 'slicer.menuItem', label: 'Slicer menu' },
@@ -27,7 +24,6 @@ export const SLOT_GROUPS: SlotGroup[] = [
   },
   {
     label: 'Project tables',
-    icon: 'table',
     slots: [
       { slot: 'tableColumn', label: 'Columns' },
       { slot: 'entityMenuItem', label: 'Cell menu' },
@@ -37,7 +33,6 @@ export const SLOT_GROUPS: SlotGroup[] = [
   },
   {
     label: 'Details panel',
-    icon: 'side_navigation',
     slots: [
       { slot: 'detailsPanel.tab', label: 'Tabs' },
       { slot: 'detailsPanel.menuItem', label: 'More menu' },

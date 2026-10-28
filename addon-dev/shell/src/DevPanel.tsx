@@ -64,22 +64,23 @@ const Contribution = ({
     <button
       className={`contribution${selected ? ' selected' : ''}`}
       data-contribution={`${contribution.slot}:${id}`}
+      title={id}
       onClick={onClick}
     >
       <Icon icon={(icon || 'extension') as never} />
       <span>{contributionTitle(contribution)}</span>
-      <small>{id}</small>
     </button>
   )
 }
 
+// by area, then by slot; the slot's name and where it shows are in its label's tooltip
 const Contributions = ({ selection, onChange }: Pick<DevPanelProps, 'selection' | 'onChange'>) => {
   const { contributions, skipped } = getRegistry()
   const [collapsed, setCollapsed] = useState<string[]>([])
   const known = SLOT_GROUPS.flatMap((group) => group.slots.map((s) => s.slot as string))
   const other = [...new Set(contributions.map((c) => c.slot))].filter((slot) => !known.includes(slot))
   const groups = other.length
-    ? [...SLOT_GROUPS, { label: 'Other', icon: 'extension', slots: other.map((slot) => ({ slot, label: slot })) }]
+    ? [...SLOT_GROUPS, { label: 'Other', slots: other.map((slot) => ({ slot, label: slot })) }]
     : SLOT_GROUPS
 
   return (
@@ -101,16 +102,21 @@ const Contributions = ({ selection, onChange }: Pick<DevPanelProps, 'selection' 
               }
             >
               <Icon icon={isCollapsed ? 'chevron_right' : 'expand_more'} />
-              <Icon icon={group.icon as never} />
               <span>{group.label}</span>
               <small>{slots.reduce((count, { items }) => count + items.length, 0)}</small>
             </button>
             {!isCollapsed &&
               slots.map(({ slot, label, items }) => (
                 <div key={slot} className="ayon-shell-slot">
-                  <div className="ayon-shell-slot-label" title={SLOT_DOCS[slot as SlotName]?.where}>
-                    {label} <code>{slot}</code>
-                  </div>
+                  {/* an area with one slot needs no slot label */}
+                  {group.slots.length > 1 && (
+                    <div
+                      className="ayon-shell-slot-label"
+                      title={`${slot}: ${SLOT_DOCS[slot as SlotName]?.where || ''}`}
+                    >
+                      {label}
+                    </div>
+                  )}
                   {items.map((c) => (
                     <Contribution
                       key={c.key}

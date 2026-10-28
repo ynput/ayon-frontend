@@ -79,7 +79,8 @@
     "./NewEntity": {
       "types": "./dist/types/NewEntity.d.ts",
       "import": "./dist/NewEntity.es.js"
-    }
+    },
+    "./style.css": "./dist/style.css"
   },
   "files": [
     "dist"
