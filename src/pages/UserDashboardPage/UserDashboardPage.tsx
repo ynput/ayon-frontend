@@ -22,12 +22,13 @@ import { useAppSelector } from '@/features/store'
 import type { ReactNode } from 'react'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
 import { UserDashboardPageRemote } from './UserDashboardPageRemote'
 import LoadingPage from '@pages/LoadingPage'
 import { WithViews } from '@/hoc/WithViews'
 import { ViewType } from '@shared/containers'
 import { ProjectsPage } from '@pages/ProjectsPage'
-import { useGetProductionAddon } from '@shared/hooks'
+import { useGetBundleAddon } from '@shared/hooks'
 import BookingsSplashscreen from '../BookingsPage/BookingsSplashscreen'
 
 interface DashboardAddon {
@@ -81,11 +82,17 @@ const UserDashboardPage: React.FC = () => {
   const isManager = user?.data?.isManager
   const isGuest = user?.data?.isGuest
 
+  // addons in the bundle the user's addon modules come from (production, staging or dev)
+  const { getBundleAddonVersion, isLoading: isLoadingBundleAddons } = useGetBundleAddon()
+
   const {
     data: addonsData = [],
     //isLoading: addonsLoading,
     //isError: addonsIsError,
-  } = useGetDashboardAddonsQuery({})
+  } = useGetDashboardAddonsQuery(
+    { getVersion: getBundleAddonVersion },
+    { skip: isLoadingBundleAddons },
+  )
 
   // Load remote Studio pages
   const { remotePages, isLoading: isLoadingRemotePages } = useLoadRemotePages({
@@ -93,8 +100,7 @@ const UserDashboardPage: React.FC = () => {
     skip: false,
   })
 
-  const { getProductionAddon } = useGetProductionAddon()
-  const hasPlanner = !!getProductionAddon('planner')
+  const hasPlanner = !!getBundleAddonVersion('planner')
 
   const navigate = useNavigate()
   const [showNewProject, setShowNewProject] = useState<boolean>(false)
@@ -206,6 +212,7 @@ const UserDashboardPage: React.FC = () => {
             />
           ),
           viewType: remote.viewType,
+          startContent: <RemotePageBundleDot bundle={remote.remoteBundle} />,
           showProjectList,
           isMultiSelect: false,
         }

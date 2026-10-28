@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useRemoteModules } from '@shared/context'
 import { ModuleSpec, useLoadModules } from '@shared/hooks'
+import { useRemoteBundle } from './useRemoteBundle'
 import LoadingPage from '@pages/LoadingPage'
 
 interface ProjectRemoteLoaderProps {
@@ -15,6 +16,8 @@ export const useLoadRemotePages = ({
   skip = false,
 }: ProjectRemoteLoaderProps) => {
   const { modules, remotesInitialized, isLoading: isLoadingRemotes } = useRemoteModules()
+
+  const { getAddonBundle } = useRemoteBundle()
 
   const pageModules = useMemo<ModuleSpec<any>[]>(() => {
     const pageModules: ModuleSpec<any>[] = []
@@ -47,9 +50,10 @@ export const useLoadRemotePages = ({
   const loadedPages = useMemo(() => {
     const modulesPages = modulesData
       .filter((result) => result[1].isLoaded)
-      .map((result) => ({
-        ...result[0],
+      .map(([page, { addon }]) => ({
+        ...page,
         isFallback: false,
+        remoteBundle: getAddonBundle(addon),
       }))
 
     const fallbackPages = Array.from(fallbacks?.entries() || [])
@@ -66,7 +70,7 @@ export const useLoadRemotePages = ({
       })
 
     return [...modulesPages, ...fallbackPages]
-  }, [modulesData, fallbacks, remotesInitialized, isLoadingModulePages, modules])
+  }, [modulesData, fallbacks, remotesInitialized, isLoadingModulePages, modules, getAddonBundle])
 
   return {
     remotePages: loadedPages,
