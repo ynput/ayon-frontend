@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { markdownStyle } from './markdown'
+import { markdownStyle } from './LoginMarkdown.styled'
 import { theme } from '@ynput/ayon-react-components'
 
 export const LoginForm = styled.div`

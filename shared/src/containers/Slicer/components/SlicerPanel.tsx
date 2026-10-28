@@ -1,4 +1,7 @@
 import { FC, useCallback, useMemo } from 'react'
+import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
+import type { MenuKind } from '@ynput/ayon-addon'
+import type { SimpleTableRowContextMenuBuilder } from '@shared/containers/SimpleTable/SimpleTable.types'
 import SimpleTable from '@shared/containers/SimpleTable/SimpleTable'
 import { Container, Header, HeaderButton } from '@shared/containers/SimpleTable/SimpleTable.styled'
 import { ExpandedState, Row, RowSelectionState } from '@tanstack/react-table'
@@ -141,6 +144,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     page,
     getSliceSort,
     setSliceSort,
+    projectName,
   } = useSlicerContext()
 
   const { refetch } = useProjectFoldersContext()
@@ -223,7 +227,47 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     onOpenViewer,
     openMoveDialog,
   )
-  const rowContextMenuBuilders = isHierarchy ? hierarchyContextMenu.rowContextMenuBuilders : []
+  // items addons contribute (slicer.menuItem slot, @ynput/ayon-addon), for this slice type
+  const { contributions: addonMenuContributions } = useContributions('slicer.menuItem')
+  const addonMenuItems = useMemo(
+    () =>
+      addonMenuContributions.filter(
+        (item) => !item.sliceTypes?.length || item.sliceTypes.includes(sliceType),
+      ),
+    [addonMenuContributions, sliceType],
+  )
+  const buildAddonItems = (menu: MenuKind, selectedIds: string[]) => {
+    if (!selectedIds.length) return []
+    const selected = selectedIds.map((id) => {
+      const row = sliceMap.get(id)
+      return {
+        id,
+        label: row?.label || row?.name || undefined,
+        entityType: (row?.data as { entityType?: string } | undefined)?.entityType,
+      }
+    })
+    const context = { projectName, sliceType, selected, menu }
+    return addonMenuItems
+      .filter((item) => !item.in?.length || item.in.includes(menu))
+      .map((item) => ({
+        id: item.key,
+        label: item.label,
+        icon: item.icon,
+        [menu === 'context' ? 'command' : 'onClick']: () => runContribution(item, context),
+      }))
+  }
+  // the right-clicked row, or the selection it is part of; `run` loads when the menu opens
+  const addonRowContextMenu: SimpleTableRowContextMenuBuilder = (_e, { rowId, selectedRows }) => {
+    addonMenuItems.forEach((item) => prefetchPiece(item.run))
+    return buildAddonItems(
+      'context',
+      selectedRows.includes(rowId) ? selectedRows : [rowId],
+    )
+  }
+  const rowContextMenuBuilders = [
+    ...(isHierarchy ? hierarchyContextMenu.rowContextMenuBuilders : []),
+    ...(addonMenuItems.length ? [addonRowContextMenu] : []),
+  ]
 
   const unusedSliceTypes = useMemo(
     () =>
@@ -291,6 +335,10 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
       sort: getSliceSort(sliceType),
       onChange: (sort) => setSliceSort(sliceType, sort),
     }),
+    ...buildAddonItems(
+      'dropdown',
+      Object.keys(rowSelection).filter((id) => rowSelection[id]),
+    ),
   ]
 
   const handleDropdownChange = (value: (string | number)[]) => {

@@ -1,0 +1,78 @@
+import { ContributionView } from '@ynput/ayon-addon'
+import type { Contribution } from '@ynput/ayon-addon'
+import { useGetProjectQuery } from '@shared/api'
+import { useSlicerContext } from '@shared/containers/Slicer'
+import { useLocalStorage } from '@shared/hooks/useLocalStorage'
+import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
+import { useAppSelector } from '@state/store'
+import LoadingPage from '@pages/LoadingPage'
+import { useMemo } from 'react'
+import { hasPageAccess } from './AddonPagesHelpers'
+import { StudioPageSelectionProvider } from './AddonLayout'
+
+// Pages contributed through the project.page and studio.page slots (@ynput/ayon-addon).
+// Without access the page renders nothing; AppNavLinks hides its tab and redirects.
+
+const usePageAccess = (contribution: Contribution<'project.page' | 'studio.page'>) => {
+  const user = useAppSelector((state) => state.user.data)
+  return hasPageAccess(contribution.access, user)
+}
+
+export const AddonProjectPage = ({
+  contribution,
+  projectName,
+}: {
+  contribution: Contribution<'project.page'>
+  projectName: string
+}) => {
+  // already in the cache: ProjectContextProvider runs the same query
+  const { data: project } = useGetProjectQuery({ projectName })
+  // ProjectPage keeps a slicer per page (SlicerProvider page={module}); the page places it
+  const { rowSelection, sliceType } = useSlicerContext()
+  const slicer = useMemo(
+    () => ({
+      sliceType,
+      selection: Object.keys(rowSelection).filter((id) => rowSelection[id]),
+    }),
+    [sliceType, rowSelection],
+  )
+  const context = useMemo(
+    () => ({ projectName, project, slicer }),
+    [projectName, project, slicer],
+  )
+  const allowed = usePageAccess(contribution)
+
+  if (!allowed) return null
+  return <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} />
+}
+
+export const AddonStudioPage = ({
+  contribution,
+  onNewProject,
+}: {
+  contribution: Contribution<'studio.page'>
+  onNewProject?: () => void
+}) => {
+  // each addon studio page keeps its own project selection, for its ProjectList
+  const [selection, setSelection] = useLocalStorage<string[]>(
+    `dashboard/${contribution.id}/selectedProjects`,
+    [],
+  )
+  const selectedProjects = useMemo(
+    () => selection.filter((id) => !parseProjectFolderRowId(id)),
+    [selection],
+  )
+  const context = useMemo(() => ({ selectedProjects }), [selectedProjects])
+  const studioPage = useMemo(
+    () => ({ selection, onSelect: setSelection, onNewProject }),
+    [selection, setSelection, onNewProject],
+  )
+  const allowed = usePageAccess(contribution)
+
+  if (!allowed) return null
+  return (
+    <StudioPageSelectionProvider value={studioPage}>
+      <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} />
+    </StudioPageSelectionProvider>
+  )
+}

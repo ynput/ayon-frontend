@@ -36,6 +36,8 @@ export default defineConfig({
       entryRoot: 'src',
       bundleTypes: true,
       clearPureImport: false,
+      // a peer package: its types stay imports of @ynput/ayon-addon, not paths into ../addon
+      aliasesExclude: [/^@ynput\/ayon-addon(\/|$)/],
     }),
   ],
   resolve: {

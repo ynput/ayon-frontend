@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react'
+import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import { usePowerpack } from '@shared/context'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import { EntityListFolderModel, ProjectFolderModel, ListProjectsItemModel } from '@shared/api'
@@ -122,6 +123,8 @@ const useProjectsListMenuItems = ({
   onRenameProject,
 }: MenuItemProps) => {
   const { setPowerpackDialog } = usePowerpack()
+  // items addons contribute (projectList.menuItem slot, @ynput/ayon-addon)
+  const { contributions: addonMenuItems } = useContributions('projectList.menuItem')
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
   const handlePin = (allPinned: boolean, selection: string[]) => {
     if (onPin) {
@@ -348,6 +351,25 @@ const useProjectsListMenuItems = ({
         return submenuItems
       }
 
+      // addon items for the selected projects, in the menus their `in` lists; `run` loads when
+      // the right-click menu opens (the dropdown's items are built with the list, so on click)
+      const menu = command ? 'context' : 'dropdown'
+      const selectedProjectNames = selection.filter((id) => !parseProjectFolderRowId(id))
+      const addonItems: MenuItem[] = selectedProjectNames.length
+        ? addonMenuItems
+            .filter((item) => !item.in?.length || item.in.includes(menu))
+            .map((item) => {
+              if (command) prefetchPiece(item.run)
+              return {
+                id: item.key,
+                label: item.label,
+                icon: item.icon,
+                [command ? 'command' : 'onClick']: () =>
+                  runContribution(item, { projectNames: selectedProjectNames, menu }),
+              }
+            })
+        : []
+
       const projectFolderSubmenu = createProjectFolderSubmenu()
       const folderFolderSubmenu = createFolderFolderSubmenu()
 
@@ -461,6 +483,8 @@ const useProjectsListMenuItems = ({
 
         ...(moveMenuItem ? [moveMenuItem] : []),
         { id: 'divider' },
+        ...addonItems,
+        { id: 'divider' },
         {
           id: 'archive-project',
           label: `${singleActive ? 'Archive' : 'Activate'}`,
@@ -538,6 +562,7 @@ const useProjectsListMenuItems = ({
       wouldCreateCircularDependency,
       hidden,
       isMenuItemEnabled,
+      addonMenuItems,
     ],
   )
 

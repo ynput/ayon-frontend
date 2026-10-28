@@ -1,6 +1,6 @@
-import { ProjectTreeTable } from '@shared/containers'
+import { ProjectTreeTable, useAddonTableColumns } from '@shared/containers'
 import type { EntityType } from '@shared/containers'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { useVersionsDataContext } from '../../context/vp-data'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
 import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
@@ -33,6 +33,13 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     fieldStatsError,
   } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
+  // columns addons contribute (tableColumn slot)
+  const { columns: addonColumns, settingsColumns: addonSettingsColumns } =
+    useAddonTableColumns('products')
+  const addColumnItems = useMemo(
+    () => [...VP_EXTRA_COLUMNS, ...addonSettingsColumns],
+    [addonSettingsColumns],
+  )
   const {
     uploadVersionItem,
     deleteVersionItem,
@@ -40,6 +47,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     addToListItem,
     productDetailItem,
     versionDetailItem,
+    addonItems,
   } = contextMenuItems
 
   return (
@@ -52,6 +60,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         onScrollBottomGroupBy={(groupValue: string) => fetchNextPage(groupValue)}
         readOnly={readOnly}
         excludedColumns={VP_EXCLUDED_COLUMNS}
+        extraColumns={addonColumns}
         isExpandable={showProducts}
         isLoading={isLoading}
         includeLinks={false}
@@ -79,12 +88,13 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
           addToListItem,
           productDetailItem,
           versionDetailItem,
+          addonItems,
           deleteVersionItem,
           deleteProductItem,
         ]}
       />
       <AddColumnButton
-        extraColumns={VP_EXTRA_COLUMNS}
+        extraColumns={addColumnItems}
         parentColumns={VP_PARENT_COLUMNS}
         includeLinks={false}
       />

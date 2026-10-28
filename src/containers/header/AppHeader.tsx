@@ -19,6 +19,7 @@ import InboxNotificationIcon from './InboxNotification'
 import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseInstallerPrompt/ReleaseInstallerPrompt'
 import ChatBubbleButton from './ChatBubbleButton'
 import BundleModeSelector from './BundleMode/BundleMode'
+import AddonHeaderItems from './AddonHeaderItems'
 
 const FlexWrapper = styled.div`
   display: flex;
@@ -112,6 +113,8 @@ const Header: React.FC = () => {
           />
         </Link>
 
+        {!user.data.isGuest && <AddonHeaderItems placement="left" />}
+
         <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
       </FlexWrapper>
 
@@ -123,6 +126,7 @@ const Header: React.FC = () => {
 
         {!user.data.isGuest && (
           <>
+            <AddonHeaderItems placement="right" />
             <ChatBubbleButton />
 
             {/* help icon and menu vvv */}

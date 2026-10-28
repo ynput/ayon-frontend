@@ -2,8 +2,11 @@
 // Each tab manages its own sub-filters
 import { FC } from 'react'
 import { Button, Spacer } from '@ynput/ayon-react-components'
+import type { IconType } from '@ynput/ayon-react-components'
+import { prefetchPiece } from '@ynput/ayon-addon'
 import type { DetailsPanelTab } from '@shared/context'
 import type { DetailsPanelEntityType } from '@shared/api'
+import { useAddonTabs } from '../../hooks/useAddonTabs'
 import * as Styled from './DetailsPanelTabs.styled'
 
 // Entity types that don't support the feed tab
@@ -28,6 +31,8 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
   const showFeedTab = !entitiesWithoutFeed.includes(entityType)
   const showSubtasksTab = entitiesWithSubtasks.includes(entityType)
   const showFilesTab = entityType === 'version'
+  // the buttons show from the descriptions; a tab's code loads when it is opened
+  const { tabs: addonTabs } = useAddonTabs(entityType)
 
   return (
     <Styled.TabsContainer className={isLoading ? 'loading' : ''}>
@@ -51,6 +56,20 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
           variant="text"
         />
       )}
+      {addonTabs.map((tab) => (
+        <Button
+          key={tab.key}
+          // addons name any Material Symbols icon
+          icon={tab.icon as IconType}
+          selected={currentTab === tab.key}
+          onClick={() => onTabChange(tab.key as DetailsPanelTab)}
+          onMouseEnter={() => prefetchPiece(tab.component)}
+          data-tooltip={tab.label}
+          data-tooltip-delay={0}
+          data-addon-tab={tab.key}
+          variant="text"
+        />
+      ))}
       <Spacer />
       {showFilesTab && (
         <Button

@@ -2,6 +2,7 @@ import {
   parseCellId,
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
+  useAddonTableColumns,
 } from '@shared/containers/ProjectTreeTable'
 import { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import { ListsProvider, useListsContext } from './context'
@@ -17,6 +18,7 @@ import { useListsAttributesContext } from './context/lists-attributes'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton, SyncButton } from '@shared/components'
+import AddonToolbarItems from '@/remote/AddonToolbarItems'
 import {
   SettingsPanelProvider,
   useProjectContext,
@@ -216,9 +218,16 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     columnVisibility: columns.columnVisibility || {},
     defaultColumnVisibility,
   })
+  // columns addons contribute (tableColumn slot)
+  const { columns: addonColumns, settingsColumns: addonSettingsColumns } =
+    useAddonTableColumns('lists')
   const extraColumns = useMemo(
-    () => [...listColumnConfig.extraColumns, ...compareColumns],
-    [listColumnConfig.extraColumns, compareColumns],
+    () => [...listColumnConfig.extraColumns, ...compareColumns, ...addonColumns],
+    [listColumnConfig.extraColumns, compareColumns, addonColumns],
+  )
+  const extraColumnsSettings = useMemo(
+    () => [...listColumnConfig.extraColumnsSettings, ...addonSettingsColumns],
+    [listColumnConfig.extraColumnsSettings, addonSettingsColumns],
   )
   const { getListValueColumnMenuItems } = props
   const columnsConfig = useMemo(() => {
@@ -306,7 +315,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                       <ProjectLists
                         extraColumns={extraColumns}
                         columnsConfig={columnsConfig}
-                        extraColumnsSettings={listColumnConfig.extraColumnsSettings}
+                        extraColumnsSettings={extraColumnsSettings}
                         parentColumns={listColumnConfig.parentColumns}
                         includeParents={listColumnConfig.includeParents}
                         columnIdAliases={listColumnConfig.columnIdAliases}
@@ -649,6 +658,16 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         }}
                       />
                     )}
+                    <AddonToolbarItems
+                      page="lists"
+                      list={
+                        selectedList && {
+                          id: selectedList.id,
+                          label: selectedList.label,
+                          entityType: selectedList.entityType,
+                        }
+                      }
+                    />
                     <CustomizeButton />
                   </Toolbar>
                 )}

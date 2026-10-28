@@ -1,5 +1,7 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { ProjectTableSettings, SettingConfig } from '@shared/components'
+import { useAddonTableColumns } from '@shared/containers/ProjectTreeTable'
+import { useAddonCustomizeSections } from '@shared/components/ProjectTableSettings/useAddonCustomizeSections'
 import { SettingSwitch } from '@shared/components/ProjectTableSettings/ColumnsSettings'
 import { SizeSlider } from '@shared/components'
 import { useVPViewsContext } from '../../context/vp-views'
@@ -20,7 +22,11 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
     onUpdateFeaturedVersionOrder,
   } = useVPViewsContext()
 
-  const extraColumns = VP_EXTRA_COLUMNS
+  // columns addons contribute (tableColumn slot)
+  const { settingsColumns } = useAddonTableColumns('products')
+  const extraColumns = useMemo(() => [...VP_EXTRA_COLUMNS, ...settingsColumns], [settingsColumns])
+  // sections addons contribute (projectTable.customizeSection slot)
+  const addonSections = useAddonCustomizeSections('products')
 
   const extraSettings: SettingConfig[] = [
     {
@@ -75,7 +81,7 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
     <ProjectTableSettings
       extraColumns={extraColumns}
       parentColumns={VP_PARENT_COLUMNS}
-      settings={extraSettings}
+      settings={[...extraSettings, ...addonSections]}
       includeLinks={false}
       scope="version"
       columnIdAliases={VP_COLUMN_ID_ALIASES}

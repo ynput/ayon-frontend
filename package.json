@@ -6,6 +6,7 @@
     "dev": "vite --port 3000",
     "build": "vite build",
     "build:shared": "yarn --cwd ./shared build",
+    "build:addon": "yarn --cwd ./addon build && yarn --cwd ./addon-dev build",
     "preview": "vite preview",
     "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
     "lint:fix": "eslint --fix 'src/**/*.{jsx,ts,tsx}'",
