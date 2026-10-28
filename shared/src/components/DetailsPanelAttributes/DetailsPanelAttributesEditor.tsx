@@ -4,7 +4,7 @@ import { FC, useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import clsx from 'clsx'
-import { Button, BorderedSection } from '@ynput/ayon-react-components'
+import { Button, BorderedSection, type MixedChange } from '@ynput/ayon-react-components'
 import RenderFieldWidget from './components/RenderFieldWidget'
 import { FieldLabel } from '../DetailsPanelDetails/FieldLabel'
 
@@ -123,6 +123,8 @@ export interface DetailsPanelAttributesEditorProps {
   > // the form data
   mixedFields?: string[] // when multiple entities are selected, this is a list of fields that are mixed
   onChange?: (key: string, value: any) => void
+  // several entities: values to add to and remove from a list field of each of them
+  onMixedChange?: (key: string, change: MixedChange) => void
   entities?: any[] // entities data for scoped statuses
   projectName?: string // enum resolver scope when there are no entities
   entityType?: string // entity type for scoped statuses
@@ -136,6 +138,7 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   enableEditing,
   mixedFields,
   onChange,
+  onMixedChange,
   entities = [],
   projectName,
   entityType = 'task',
@@ -165,6 +168,11 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   const handleValueChange = (fieldName: string, value: CellValue | CellValue[]) => {
     setEditingField(null)
     onChange?.(fieldName, value)
+  }
+
+  const handleMixedChange = (fieldName: string, change: MixedChange) => {
+    setEditingField(null)
+    onMixedChange?.(fieldName, change)
   }
 
   const handleCancelEdit = () => {
@@ -234,6 +242,7 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
                   isReadOnly={isReadOnly}
                   isMixed={isMixed}
                   onChange={handleValueChange}
+                  onMixedChange={onMixedChange && handleMixedChange}
                   onCancelEdit={handleCancelEdit}
                   onExpand={() => {
                     // opens full markdown text editor dialog

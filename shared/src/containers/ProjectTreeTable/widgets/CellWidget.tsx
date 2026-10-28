@@ -1,11 +1,13 @@
 import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
+import { applyMixedChange, type MixedChange } from '@ynput/ayon-react-components'
 
 // Widgets
 import { BooleanWidget, BooleanWidgetProps } from './BooleanWidget'
 import { CollapsedWidget } from './CollapsedWidget'
 import { DateWidget, DateWidgetProps } from './DateWidget'
 import { EnumWidget, EnumWidgetProps } from './EnumWidget'
+import { TagsWidget } from './TagsWidget'
 import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
 import { LinksWidget, LinkWidgetData } from './LinksWidget'
 import { isLinkEditable } from './LinksWidgetHelpers'
@@ -29,6 +31,7 @@ import type { AttributeData, EnumItem, EntityComment } from '@shared/api'
 import type { CellMark } from '../types'
 import { useTableCellContext } from '../context/table-cell'
 import { CELL_PADDING_Y } from '../constants'
+import { useMixedCellValues, type ListChange } from '../hooks/useMixedCellValues'
 
 const Cell = styled.div`
   position: absolute;
@@ -126,7 +129,12 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   midnightExclusiveFields?: string[]
   tooltip?: string
   mark?: CellMark // merged over the row's mark for this cell (TableRow.cellMarks)
-  onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
+  // listChange: a list value edited in several selected cells, to apply to each of them
+  onChange?: (
+    value: CellValue | CellValue[],
+    key?: 'Enter' | 'Click' | 'Escape',
+    listChange?: ListChange,
+  ) => void
   // options passthrough props
   pt?: {
     enum?: Partial<EnumWidgetProps>
@@ -179,6 +187,12 @@ const CellWidgetContent: FC<EditorCellProps> = ({
 
   const isCurrentCellEditing = isEditing(cellId)
   const isCurrentCellFocused = isCellFocused(cellId)
+  // several cells of this list column selected: values are added to or removed from each of them
+  const mixed = useMixedCellValues(
+    cellId,
+    columnId,
+    isCurrentCellEditing && !isReadOnly && type === 'list_of_strings',
+  )
 
   const moveToNextRow = () => {
     const rowIndex = gridMap.rowIdToIndex.get(rowId)
@@ -221,6 +235,20 @@ const CellWidgetContent: FC<EditorCellProps> = ({
     } else {
       setEditingCellId(null)
     }
+  }
+
+  const handleMixedChange = (change: MixedChange) => {
+    setEditingCellId(null)
+    if (isReadOnly || !mixed) return
+    const ownValue = (Array.isArray(value) ? value : [value]).map(String).filter(Boolean)
+    onChange?.(applyMixedChange(ownValue, change), 'Click', { ...change, cellIds: mixed.cellIds })
+  }
+  const mixedValue = mixed && Object.keys(mixed.counts)
+  const mixedProps = mixed && {
+    mixedCounts: mixed.counts,
+    mixedTotal: mixed.total,
+    mixedLabel: mixed.label,
+    onMixedChange: handleMixedChange,
   }
 
   const handleCancel = () => {
@@ -321,6 +349,20 @@ const CellWidgetContent: FC<EditorCellProps> = ({
         )
       }
 
+      case attributeData?.widget === 'tags': {
+        return (
+          <TagsWidget
+            value={mixedValue || (Array.isArray(value) ? value : [value])}
+            options={options}
+            projectName={projectName}
+            pt={pt?.enum?.pt}
+            isProjectTags={columnId === 'tags'}
+            {...mixedProps}
+            {...sharedProps}
+          />
+        )
+      }
+
       case !!options.length || !!attributeData?.enumResolver: {
         const enumValue = Array.isArray(value) ? value : [value]
         if (isReadOnly) {
@@ -356,12 +398,13 @@ const CellWidgetContent: FC<EditorCellProps> = ({
         }
         return (
           <EnumWidget
-            value={enumValue}
+            value={mixedValue || enumValue}
             options={options}
             type={type}
             onOpen={() => setEditingCellId(cellId)}
             enableCustomValues={enableCustomValues}
             isLoadingOptions={isLoadingOptions}
+            {...mixedProps}
             {...sharedProps}
             {...pt?.enum}
           />
@@ -427,6 +470,7 @@ const CellWidgetContent: FC<EditorCellProps> = ({
     isCollapsed,
     isMidnightExclusive,
     handleOnChange,
+    mixed,
   ])
 
   return (
