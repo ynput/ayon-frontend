@@ -7,7 +7,6 @@ import type {
   GetListsQuery,
   GetListsQueryVariables,
 } from '@shared/api/generated'
-import { parseJSONField } from '../overview'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 import {
   createRealtimeBatcher,
@@ -83,17 +82,33 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
         }
         return {
           items: response.project.entityLists.edges.flatMap((listEdge) =>
-            listEdge.node.items.edges.map(({ node, ...edge }) => {
+            listEdge.node.items.edges.map(({ node, itemAttrib, entityAttrib, ...edge }) => {
+              // itemAttrib: entity values with the item's over them, ownItemAttrib: the item's
+              const attrib = (itemAttrib || {}) as Record<string, unknown>
+              const listAttrib = Object.fromEntries(
+                edge.ownItemAttrib.filter((key) => key in attrib).map((key) => [key, attrib[key]]),
+              )
               return {
                 ...node,
                 ...edge,
-                attrib: parseJSONField(edge.allAttrib),
+                listAttrib,
+                entityAttrib: (entityAttrib || {}) as Record<string, unknown>,
               } as GetListItemsResult['items'][number]
             }),
           ),
           pageInfo: firstEdge.node.items.pageInfo,
         }
       },
+      // like getListItemsInfinite, whose realtime updates invalidate these tags
+      providesTags: (result, _e, { listId, projectName }) => [
+        { type: 'entityListItem', id: 'LIST' },
+        { type: 'entityListItem', id: listId },
+        { type: 'entityListItem', id: projectName },
+        ...(result?.items || []).flatMap((item) => [
+          { type: 'entityListItem' as const, id: item.id },
+          { type: 'entityListItem' as const, id: item.entityId },
+        ]),
+      ],
       keepUnusedDataFor: CACHE_TIME,
     },
     GetListsItemsForReviewSession: {
@@ -203,7 +218,6 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
                     allAttrib: '',
                     attrib: {},
                     createdAt: new Date().toISOString(),
-                    updatedAt: '',
                     active: true,
                     access: '',
                     accessLevel: 30,
@@ -214,7 +228,8 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
                     entityListType: summary.entity_list_type,
                     count: summary.count,
                     entityListFolderId: summary.entity_list_folder_id ?? null,
-                    updatedBy: message.createdAt, // estimate the event creation time is about the same as list updated at
+                    // the event's own timestamps have no timezone, so the client clock is the closer estimate
+                    updatedAt: new Date().toISOString(),
                     owner: list?.owner || '', // mainly to shut up typescript
                   }
                 }
@@ -226,7 +241,11 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
                   if (!list) return
                   Object.assign(list, getListFromSummary(list))
                 } else if (topic === 'entity_list.created') {
-                  if (draft.pages.length !== 0) {
+                  // a refetch may have brought the new list already
+                  const known = draft.pages.some((page: any) =>
+                    page.lists.some((item: any) => item.id === id),
+                  )
+                  if (draft.pages.length !== 0 && !known) {
                     draft.pages[0].lists.unshift(getListFromSummary())
                   }
                 } else if (topic === 'entity_list.deleted') {
@@ -527,6 +546,7 @@ export const {
   useGetListItemsInfiniteInfiniteQuery,
   useGetListsItemsForReviewSessionInfiniteQuery,
   useLazyGetListsItemsForReviewSessionQuery,
+  useGetListItemsQuery,
   useLazyGetListItemsQuery,
 } = getListsGqlApiInjected
 

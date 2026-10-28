@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { lazy, Suspense, useMemo, useState } from 'react'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useNavigate, useParams } from 'react-router-dom'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
@@ -7,8 +7,6 @@ import { useDispatch } from 'react-redux'
 import { onProjectSelected } from '@state/dashboard'
 import { useGetProjectsInfoQuery } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
-import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
-import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
 import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from './DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
@@ -52,7 +50,18 @@ type PageLink = NavLinkItem & {
   viewType?: ViewType
   showProjectList?: boolean
   isMultiSelect?: boolean
+  // page only makes sense with at least one project; shows the "No Projects" state otherwise
+  requiresProjects?: boolean
 }
+
+// these pull in the settings editor (new project dialog), only load them when they are shown
+const NewProjectDialog = lazy(() => import('../ProjectManagerPage/NewProjectDialog'))
+const UserDashboardNoProjects = lazy(
+  () => import('./UserDashboardNoProjects/UserDashboardNoProjects'),
+)
+
+// pages rendered by this repo, they don't need to wait for addon remote modules to load
+const BUILT_IN_MODULES = ['tasks', 'projects']
 
 const StyledSplitter = styled(Splitter)`
   height: 100%;
@@ -142,6 +151,7 @@ const UserDashboardPage: React.FC = () => {
         // viewType: 'tasks',
         showProjectList: true,
         isMultiSelect: true,
+        requiresProjects: true,
       },
       {
         name: 'Projects',
@@ -150,6 +160,7 @@ const UserDashboardPage: React.FC = () => {
         viewType: 'projects-overview',
         component: <ProjectsPage onNewProject={() => setShowNewProject(true)} />,
         showProjectList: false,
+        requiresProjects: true,
       },
       // Show bookings splash when planner addon is not installed;
       // when installed the remote page from the planner addon handles /dashboard/bookings
@@ -242,9 +253,10 @@ const UserDashboardPage: React.FC = () => {
   const title = useTitle(addonName || module || '', pages, 'AYON', '')
 
   // Early returns after all hooks
-  if (isLoadingProjects || isLoadingRemotePages) return <LoadingPage />
-
-  if (!projects.length) return <UserDashboardNoProjects />
+  // the built in pages render while the projects load (the projects list shows its own loading
+  // state), so their data, e.g. the tasks of the selected projects, starts loading straight away
+  const isBuiltInPage = !addonName && (!module || BUILT_IN_MODULES.includes(module))
+  if (!isBuiltInPage && (isLoadingProjects || isLoadingRemotePages)) return <LoadingPage />
 
   if (isGuest) {
     return <GuestUserPageLocked />
@@ -252,12 +264,27 @@ const UserDashboardPage: React.FC = () => {
 
   if (!activePage?.component) return null
 
+  // Keep the tab bar and non-project pages (e.g. addon studio pages used for first-run setup)
+  // reachable on a server with no projects; only project-based pages show the empty state.
+  const showNoProjects = !isLoadingProjects && !projects.length && !!activePage.requiresProjects
+
   const {
     component: moduleComponent,
     showProjectList = false,
     isMultiSelect = false,
     viewType,
-  } = activePage
+  } = showNoProjects
+    ? {
+        component: (
+          <Suspense fallback={<LoadingPage />}>
+            <UserDashboardNoProjects />
+          </Suspense>
+        ),
+        showProjectList: false,
+        isMultiSelect: false,
+        viewType: undefined,
+      }
+    : activePage
 
   return (
     <>
@@ -288,13 +315,15 @@ const UserDashboardPage: React.FC = () => {
           </WithViews>
         </main>
         {showNewProject && (
-          <NewProjectDialog
-            onHide={(name?: string) => {
-              setShowNewProject(false)
-              if (name) navigate(`/manageProjects/anatomy?project=${name}`)
-            }}
-            redirect={module !== 'projects'}
-          />
+          <Suspense fallback={null}>
+            <NewProjectDialog
+              onHide={(name?: string) => {
+                setShowNewProject(false)
+                if (name) navigate(`/manageProjects/anatomy?project=${name}`)
+              }}
+              redirect={module !== 'projects'}
+            />
+          </Suspense>
         )}
       </UserDashboardProvider>
     </>

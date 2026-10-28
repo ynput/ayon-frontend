@@ -1,5 +1,6 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import styled from 'styled-components'
+import { getMixedCounts, type MixedChange } from '@ynput/ayon-react-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import {
   TextWidget,
@@ -7,6 +8,7 @@ import {
   BooleanWidget,
   DateWidget,
   EnumWidget,
+  TagsWidget,
 } from '@shared/containers/ProjectTreeTable/widgets'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
 import { useScopedTypes } from '@shared/hooks/useScopedTypes'
@@ -45,6 +47,12 @@ const StyledEnumWidget = styled(EnumWidget)`
   }
 `
 
+const StyledTagsWidget = styled(TagsWidget)`
+  &.enum:hover {
+    background-color: unset;
+  }
+`
+
 interface RenderFieldWidgetProps {
   field: AttributeField
   value: any
@@ -52,6 +60,8 @@ interface RenderFieldWidgetProps {
   isReadOnly: boolean
   isMixed: boolean
   onChange: (fieldName: string, value: CellValue | CellValue[]) => void
+  // several entities: values to add to and remove from the list field of each of them
+  onMixedChange?: (fieldName: string, change: MixedChange) => void
   onCancelEdit: () => void
   onExpand?: () => void
   entities?: DetailsPanelEntityData[]
@@ -66,6 +76,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   isReadOnly,
   isMixed,
   onChange,
+  onMixedChange,
   onCancelEdit,
   onExpand,
   entities = [],
@@ -93,6 +104,28 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
     errorMessage: enumErrorMessage,
   } = useAttributeEnumOptions(field.data, { projectName: enumProjectName })
   const enumError = isEnumError ? getEnumErrorText(enumErrorMessage) : undefined
+  // a list field of several entities: how many of them have each value
+  const mixedCounts = useMemo(() => {
+    if (!onMixedChange || entities.length < 2 || type !== 'list_of_strings') return undefined
+    return getMixedCounts(
+      entities.map((entity) => {
+        const value =
+          field.name === 'tags'
+            ? entity.tags
+            : field.name.startsWith('attrib.')
+            ? entity.attrib?.[field.name.slice('attrib.'.length)]
+            : undefined
+        return Array.isArray(value) ? value.map(String) : []
+      }),
+    )
+  }, [onMixedChange, entities, type, field.name])
+  const mixedProps = mixedCounts && {
+    mixedCounts,
+    mixedTotal: entities.length,
+    mixedLabel: `${entityType}s`,
+    onMixedChange: (change: MixedChange) => onMixedChange?.(field.name, change),
+  }
+
   const isMidnightExclusive =
     field.name === 'attrib.endDate' &&
     entities.length > 0 &&
@@ -128,6 +161,23 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           style={{ width: 'fit-content' }}
           autoFocus={false}
           isMidnightExclusive={isMidnightExclusive}
+        />
+      )
+
+    case widget === 'tags':
+      return (
+        <StyledTagsWidget
+          value={Array.isArray(displayValue) ? displayValue : []}
+          options={attributeEnumOptions}
+          projectName={enumProjectName}
+          // entities of one project, the tag goes to its anatomy
+          isProjectTags={field.name === 'tags' && new Set(projectNames).size <= 1}
+          pt={{ template: { style: { height: 32 }, className: 'enum' } }}
+          placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
+          {...mixedProps}
+          onCancelEdit={onCancelEdit}
+          align="right"
+          {...widgetCommonProps}
         />
       )
 
@@ -216,6 +266,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           isLoadingOptions={isLoadingEnum}
           search={field.enableSearch ?? enumOptions.length >= 5}
           sortBySelected={!enumOptions}
+          {...mixedProps}
           {...widgetCommonProps}
         />
       )

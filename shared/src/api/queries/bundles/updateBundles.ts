@@ -2,6 +2,12 @@
 import api from './getBundles'
 import { projectsApi } from '@shared/api/generated'
 
+// a note save changes nothing addons or settings depend on
+const isDescriptionOnlyPatch = (patch: Record<string, unknown> = {}) => {
+  const keys = Object.keys(patch)
+  return keys.length === 1 && keys[0] === 'description'
+}
+
 const enhancedUpdateBundles = api.enhanceEndpoints({
   endpoints: {
     migrateSettingsByBundle: {
@@ -32,13 +38,16 @@ const enhancedUpdateBundles = api.enhanceEndpoints({
           patchResult.undo()
         }
       },
-      // eslint-disable-next-line no-unused-vars
-      invalidatesTags: () => [
-        { type: 'bundleList' },
-        { type: 'addonList' },
-        { type: 'addonSettingsList' },
-        { type: 'marketAddon' },
-      ],
+      invalidatesTags: (_result, _error, { bundlePatchModel }) =>
+        isDescriptionOnlyPatch(bundlePatchModel)
+          ? [{ type: 'bundleList' }]
+          : [
+              { type: 'bundleList' },
+              { type: 'addonList' },
+              { type: 'addonSettingsList' },
+              { type: 'marketAddon' },
+              { type: 'frontendModules' },
+            ],
     },
   },
 })
@@ -72,6 +81,7 @@ const updateBundles = enhancedUpdateBundles.injectEndpoints({
         { type: 'bundleList' },
         { type: 'addonList' },
         { type: 'addonSettingsList' },
+        { type: 'frontendModules' },
       ],
     }),
 
@@ -89,6 +99,7 @@ const updateBundles = enhancedUpdateBundles.injectEndpoints({
         { type: 'addonSettings' },
         { type: 'addonSettingsOverrides' },
         { type: 'marketAddon' },
+        { type: 'frontendModules' },
       ],
     }),
 
@@ -114,6 +125,7 @@ const updateBundles = enhancedUpdateBundles.injectEndpoints({
         { type: 'addonSettings' },
         { type: 'addonSettingsOverrides' },
         { type: 'addonSettingsList' },
+        { type: 'frontendModules' },
       ],
     }),
   }), // endpoints

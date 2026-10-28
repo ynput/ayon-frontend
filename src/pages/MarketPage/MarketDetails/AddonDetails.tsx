@@ -220,7 +220,10 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
             {(flags?.includes('licensed') || flags?.includes('beta')) && !isLoading && (
               <Styled.Tags>
                 {flags?.includes('licensed') && (
-                  <SubChip includedWithPro={flags.includes('power-feature')} />
+                  <SubChip
+                    includedWithPro={flags.includes('power-feature')}
+                    studioOnly={flags.includes('studio-only')}
+                  />
                 )}
                 {flags?.includes('beta') && (
                   <Styled.BetaTag data-tooltip="This addon is in beta and may have bugs or incomplete features.">

@@ -48,7 +48,13 @@ import {
   useSubtasksModulesContext,
 } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
-import { MenuProvider, URIProvider, DeleteEntitiesProvider } from '@shared/context'
+import {
+  MenuProvider,
+  URIProvider,
+  DeleteEntitiesProvider,
+  TableExportProvider,
+} from '@shared/context'
+import { consumeUriHandoff } from '@shared/util'
 
 // containers
 import Header from '@containers/header'
@@ -61,6 +67,9 @@ import { login } from '@state/user'
 
 // queries
 import { useLazyGetSiteInfoQuery, useGetYnputCloudInfoQuery } from '@shared/api'
+import { usersApi } from '@shared/api/generated'
+import { systemQueries } from '@shared/api'
+import { takeEarlySiteInfo } from '@helpers/earlySiteInfo'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
@@ -69,7 +78,7 @@ import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseIn
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import { DetailsPanelFloating } from '@shared/containers'
-import { FeedbackProvider, PowerpackDialog } from '@shared/components'
+import { FeedbackProvider, PowerpackDialog, SplitterStyles } from '@shared/components'
 import AppRemoteLoader from './remote/AppRemoteLoader'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 import { goToFrame, openViewer } from '@state/viewer'
@@ -136,8 +145,13 @@ const App = () => {
   useEffect(() => {
     setLoading(true)
 
-    getInfo({ full: true })
-      .unwrap()
+    // use the request index.html started when there is one
+    takeEarlySiteInfo()
+      .then(async (early) => {
+        if (!early) return getInfo({ full: true }).unwrap()
+        await dispatch(systemQueries.util.upsertQueryData('getSiteInfo', { full: true }, early))
+        return early
+      })
       .then((response) => {
         setNoAdminUser(!!response?.noAdminUser)
 
@@ -148,6 +162,9 @@ const App = () => {
         }
 
         if (response.user) {
+          // /api/info already returns the current user: seed it so /api/users/me isn't
+          // requested again before the routes can render
+          dispatch(usersApi.util.upsertQueryData('getCurrentUser', undefined, response.user))
           dispatch(
             login({
               user: response.user,
@@ -202,6 +219,7 @@ const App = () => {
     () => (
       <>
         <Favicon />
+        <SplitterStyles />
         <Suspense fallback={<LoadingPage />}>
           <GlobalProvider>
             <FeedbackProvider>
@@ -237,20 +255,22 @@ const App = () => {
                                         <PiPProvider>
                                           <ImportDialogProvider>
                                             <DeleteEntitiesProvider>
-                                              <Header />
-                                              <ShareDialog />
-                                              <ViewerDialog />
-                                              <ConfirmDialog />
-                                              <ImportDialog />
-                                              <FileUploadPreviewContainer />
-                                              <ReleaseInstallerDialog />
-                                              <CompleteProfilePrompt />
-                                              <AppRoutes />
-                                              <DetailsPanelFloating />
-                                              <EntityLinksSlot />
-                                              <PowerpackDialog />
-                                              <AppRemoteLoader />
-                                              <TrialBanner />
+                                              <TableExportProvider>
+                                                <Header />
+                                                <ShareDialog />
+                                                <ViewerDialog />
+                                                <ConfirmDialog />
+                                                <ImportDialog />
+                                                <FileUploadPreviewContainer />
+                                                <ReleaseInstallerDialog />
+                                                <CompleteProfilePrompt />
+                                                <AppRoutes />
+                                                <DetailsPanelFloating />
+                                                <EntityLinksSlot />
+                                                <PowerpackDialog />
+                                                <AppRemoteLoader />
+                                                <TrialBanner />
+                                              </TableExportProvider>
                                             </DeleteEntitiesProvider>
                                           </ImportDialogProvider>
                                         </PiPProvider>
@@ -386,6 +406,10 @@ const App = () => {
   }
 
   if (serverError && !noAdminUser) return <FeedbackProvider>{errorComponent}</FeedbackProvider>
+
+  // only once authenticated (LoginPage stores the full url for the post-login redirect),
+  // but still before <BrowserRouter> renders so the router never sees the handoff param
+  consumeUriHandoff()
 
   return (
     <>

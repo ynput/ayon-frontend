@@ -1,9 +1,13 @@
 import { Button } from '@ynput/ayon-react-components'
 
-export const RefreshToast = () => {
+type RefreshToastProps = {
+  message?: string
+}
+
+export const RefreshToast = ({ message = 'Refresh to see latest changes.' }: RefreshToastProps) => {
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-      Refresh to see latest changes.
+      {message}
       <Button onClick={() => window.location.reload()} variant="filled">
         Refresh
       </Button>

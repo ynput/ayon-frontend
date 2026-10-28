@@ -1,7 +1,8 @@
 import { Page } from '@playwright/test'
 import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
-import { menuItem, toast } from '../support/ui'
+import { dialog, menuItem, toast } from '../support/ui'
+import { AttributesPage } from '../pages/AttributesPage'
 import { DetailsPanel } from '../pages/DetailsPanel'
 import { OverviewPage } from '../pages/OverviewPage'
 import { ProductsPage } from '../pages/ProductsPage'
@@ -151,5 +152,32 @@ test.describe('project anatomy: attributes and roots', () => {
     const path = '/mnt/e2e/projects/shots/sh010/plate.exr'
     await expect(toast(page, `Copied To Clipboard: ${path}`)).toBeVisible()
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(path)
+  })
+})
+
+test.describe('attribute library', () => {
+  test('edit an attribute that is not selected from its context menu', async ({ page, api }) => {
+    const { attributes } = await api.get('/api/attributes')
+    const titleOf = (name: string) => attributes.find((a: any) => a.name === name).data.title
+    const library = new AttributesPage(page)
+    await library.goto()
+    await library.filter('resolution')
+    await library.select('resolutionHeight')
+
+    await library.row('resolutionWidth').click({ button: 'right' })
+
+    await expect(menuItem(page, 'Edit')).toBeVisible()
+    await library.expectSelected('resolutionHeight')
+    await library.expectSelected('resolutionWidth', false)
+
+    await menuItem(page, 'Edit').click()
+
+    const editor = dialog(page, titleOf('resolutionWidth'))
+    await expect(editor).toBeVisible()
+    await expect(editor.getByRole('textbox').first()).toHaveValue(titleOf('resolutionWidth'))
+    await expect(dialog(page, titleOf('resolutionHeight'))).toBeHidden()
+    await editor.getByRole('button', { name: 'close', exact: true }).click()
+    await expect(editor).toBeHidden()
+    await expect(page.getByText('Unsaved Changes')).toBeHidden()
   })
 })

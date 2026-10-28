@@ -4,6 +4,7 @@ query GetVersionsByProductId(
   $versionFilter: String
   $taskFilter: String
   $folderFilter: String
+  $representationFilter: String
   $featuredOnly: [String!]
   $featuredOnlyEntityType: String
   $latestPerFolder: Boolean
@@ -21,6 +22,7 @@ query GetVersionsByProductId(
       filter: $versionFilter
       taskFilter: $taskFilter
       folderFilter: $folderFilter
+      representationFilter: $representationFilter
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType
       latestPerFolder: $latestPerFolder

@@ -1,11 +1,22 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, searchForWorkspaceRoot } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'url'
 import path from 'path'
+import { existsSync, realpathSync } from 'fs'
 import { federation } from '@module-federation/vite'
 import { dependencies } from './package.json'
+import { lodashEs } from './vite-plugins/lodashEs'
 
 const CLAUDE_DIR = fileURLToPath(new URL('./.claude', import.meta.url))
+
+// shared/ installs nothing of its own: its imports resolve from the root node_modules.
+// A leftover shared/node_modules gives shared code its own copy of packages (two React
+// contexts, e.g. "useDndMonitor must be used within a children of <DndContext>").
+if (existsSync(fileURLToPath(new URL('./shared/node_modules', import.meta.url)))) {
+  console.warn(
+    '\x1b[33mshared/node_modules exists: delete it, all packages come from the root node_modules.\x1b[0m',
+  )
+}
 
 export default ({ mode }) => {
   Object.assign(process?.env, loadEnv(mode, process?.cwd(), ''))
@@ -26,6 +37,15 @@ export default ({ mode }) => {
         // Anchored to this project's own .claude folder (not a '**/.claude/**' glob), because
         // a worktree's own path contains .claude and would then ignore every file.
         ignored: (file: string) => file === CLAUDE_DIR || file.startsWith(CLAUDE_DIR + path.sep),
+      },
+      fs: {
+        // worktrees can symlink node_modules to the main checkout. Vite serves files by their
+        // real path, so allow those too, or fonts and other assets in node_modules get a 403.
+        // In a normal checkout the real paths are inside the workspace and this changes nothing.
+        allow: [
+          searchForWorkspaceRoot(process.cwd()),
+          ...(existsSync('node_modules') ? [realpathSync('node_modules')] : []),
+        ],
       },
       proxy: {
         '/api': {
@@ -73,6 +93,7 @@ export default ({ mode }) => {
       },
     },
     plugins: [
+      lodashEs(['src', 'shared/src']),
       federation({
         name: 'host',
         remotes: {},
@@ -90,6 +111,8 @@ export default ({ mode }) => {
           '@ynput/ayon-react-components': {
             singleton: true,
           },
+          // @reduxjs/toolkit, react-redux and @ynput/ayon-frontend-shared are provided to addons
+          // at runtime instead, see src/remote/hostSharedModules.ts
         },
       }),
       react(),

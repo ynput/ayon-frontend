@@ -12,6 +12,7 @@ export * from './extractVersionFromFilename'
 export * from './versionUploadHelpers'
 export * from './columnConfigConverter'
 export * from './sortingHelpers'
+export * from './sortLists'
 export * from './checkName'
 export * from './humanizeFieldName'
 export * from './pluralize'
@@ -41,5 +42,6 @@ export { isHTMLElement }
 
 import PubSub from './pubsub'
 export { PubSub }
+export * from './afterStartup'
 export { getEntityIcon, getEntityColor } from './iconUtils'
 export type { IconAnatomy } from './iconUtils'

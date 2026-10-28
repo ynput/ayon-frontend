@@ -246,12 +246,13 @@ export class AyonApi {
 
   async createRepresentation(
     project: string,
-    data: { versionId: string; name: string; files: string[] },
+    data: { versionId: string; name: string; files: string[]; attrib?: Record<string, unknown> },
   ) {
     const { id } = await this.post(`/api/projects/${project}/representations`, {
       versionId: data.versionId,
       name: data.name,
       files: data.files.map((path, i) => ({ id: `${i}`.padStart(32, '0'), path, size: 0 })),
+      attrib: data.attrib,
     })
     return id as string
   }
@@ -297,10 +298,11 @@ export class AyonApi {
     entityType: 'folder' | 'task' | 'version' | 'product',
     entityId: string,
     body: string,
+    data?: { category?: string | null; [key: string]: unknown },
   ) {
     const { id } = await this.post(
       `/api/projects/${project}/${entityType}s/${entityId}/activities`,
-      { activityType: 'comment', body },
+      { activityType: 'comment', body, ...(data ? { data } : {}) },
     )
     return id as string
   }
@@ -316,13 +318,16 @@ export class AyonApi {
       `query Activities($project: String!, $entityIds: [String!]!, $types: [String!]) {
         project(name: $project) {
           activities(entityIds: $entityIds, activityTypes: $types, last: 100) {
-            edges { node { activityId activityType body reactions { reaction userName } } }
+            edges { node { activityId activityType body category { name } reactions { reaction userName } } }
           }
         }
       }`,
       { project, entityIds: [entityId], types: activityTypes },
     )
-    return data.project.activities.edges.map((e: any) => e.node)
+    return data.project.activities.edges.map((e: any) => ({
+      ...e.node,
+      category: e.node.category?.name ?? null,
+    }))
   }
 
   async uploadProjectFile(project: string, filePath: string, contentType?: string) {
@@ -403,6 +408,36 @@ export class AyonApi {
     watchers: string[],
   ) {
     await this.post(`/api/projects/${project}/${entityType}s/${entityId}/watchers`, { watchers })
+  }
+
+  // ---------------------------------------------------------------------------
+  // addon settings
+  // ---------------------------------------------------------------------------
+
+  /** Studio settings, or the project's settings (studio values with the project's overrides) */
+  async getAddonSettings(addon: string, version: string, project?: string) {
+    return this.get(`/api/addons/${addon}/${version}/settings${project ? `/${project}` : ''}`)
+  }
+
+  /** Saves project settings. Never call this without a project: tests must not change studio settings */
+  async updateProjectAddonSettings(
+    addon: string,
+    version: string,
+    project: string,
+    update: (settings: Record<string, any>) => Record<string, any>,
+  ) {
+    const settings = await this.getAddonSettings(addon, version, project)
+    await this.post(`/api/addons/${addon}/${version}/settings/${project}`, update(settings))
+  }
+
+  /** The project's comment categories this user can see, with their access level */
+  async listActivityCategories(
+    project: string,
+  ): Promise<
+    { name: string; color: string; access?: Record<string, number>; accessLevel: number }[]
+  > {
+    const res = await this.get(`/api/projects/${project}/activityCategories`)
+    return res.categories
   }
 
   // ---------------------------------------------------------------------------

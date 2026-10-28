@@ -1,10 +1,13 @@
 import { expect, Locator, Page } from '@playwright/test'
 import { menuItem } from '../support/ui'
+import { SearchFilterBar } from './SearchFilterBar'
 
 export class ProductsPage {
   readonly table: Locator
+  readonly filters: SearchFilterBar
 
   constructor(readonly page: Page) {
+    this.filters = new SearchFilterBar(page)
     this.table = page
       .getByRole('table')
       .filter({ has: page.getByRole('columnheader', { name: 'Version / Product' }) })

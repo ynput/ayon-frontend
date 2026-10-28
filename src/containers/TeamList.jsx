@@ -63,12 +63,6 @@ const TeamList = ({
     onSelect(result)
   } // onSelectionChange
 
-  const onContextMenuSelectionChange = (event) => {
-    if (!selection.includes(event.value.name)) {
-      onSelect([event.value.name])
-    }
-  }
-
   // GLOBAL CONTEXT MENU
   const globalContextItems = useMemo(
     () => [
@@ -84,7 +78,7 @@ const TeamList = ({
   const [globalContextMenuShow] = useCreateContextMenu(globalContextItems)
 
   // TABLE CONTEXT MENU
-  // built from the right-clicked row, the `selection` prop is not updated yet when the menu opens
+  // built from the right-clicked row, which is acted on alone when it is not selected
   const buildTableContextItems = (ctxSelection) => [
     {
       label: 'Create Team',
@@ -94,7 +88,11 @@ const TeamList = ({
     {
       label: 'Duplicate Team',
       icon: 'content_copy',
-      command: onDuplicate,
+      // duplicating copies the selected team
+      command: () => {
+        if (ctxSelection !== selection) onSelect?.(ctxSelection)
+        onDuplicate()
+      },
       disabled: ctxSelection.length > 1,
     },
     {
@@ -130,7 +128,6 @@ const TeamList = ({
             onSelectionChange={onSelect && onSelectionChange}
             onRowClick={onRowClick}
             onContextMenu={onTableContextMenu}
-            onContextMenuSelectionChange={onContextMenuSelectionChange}
             className={clsx({ loading: isLoading })}
             rowClassName={(rowData) => clsx({ loading: rowData.isLoading })}
             emptyMessage="No teams found"

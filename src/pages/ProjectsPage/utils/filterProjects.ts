@@ -83,6 +83,12 @@ const evaluateCondition = (row: ProjectTableRow, condition: QueryCondition): boo
         .toLowerCase()
         .includes(term)
     }
+    case 'notlike': {
+      const term = stripLikeWildcards(String(resolvedValue ?? '')).toLowerCase()
+      return !String(rowValue ?? '')
+        .toLowerCase()
+        .includes(term)
+    }
     case 'in': {
       const haystack = Array.isArray(resolvedValue) ? resolvedValue : [resolvedValue]
       return haystack.some((v) => String(rowValue) === String(v))

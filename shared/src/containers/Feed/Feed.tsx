@@ -24,6 +24,7 @@ import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import type { SavedAnnotationMetadata } from './index'
 import FeedSearchFilter from './components/FeedSearchFilter'
 import { useLastVersionReview } from './hooks/useLastVersionReview'
+import { useOriginFrameStarts } from './hooks/useOriginFrameStarts'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -143,6 +144,13 @@ export const Feed = ({
 
     setFeedFrameLinks(frameLinks)
   }, [activitiesData])
+
+  const originFrameStarts = useOriginFrameStarts({
+    projectName,
+    entityType,
+    entities,
+    activities: activitiesData,
+  })
 
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
@@ -359,6 +367,7 @@ export const Feed = ({
                 <ActivityItem
                   key={activity.activityId}
                   activity={activity}
+                  annotationFrameStart={originFrameStarts[activity.origin?.id]}
                   onCheckChange={handleCommentChecked}
                   onDelete={deleteComment}
                   onUpdate={async (value, files, _refs, data) =>

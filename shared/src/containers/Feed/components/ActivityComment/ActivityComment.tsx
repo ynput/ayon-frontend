@@ -15,6 +15,7 @@ import FilesGrid, { FilesGridProps } from '../FilesGrid/FilesGrid'
 import { getTextRefs } from './getTextRefs'
 import * as Styled from './ActivityComment.styled'
 import CommentWrapper from './CommentWrapper'
+import remarkLiteralDirectives from './remarkLiteralDirectives'
 import { isFilePreviewable } from '../FileUploadPreview'
 import {
   getProjectFileId,
@@ -40,10 +41,12 @@ import { createCommentFlags } from './createCommentFlags'
 import ActivityCommentMenu from './ActivityCommentMenu'
 import { useCategoryData } from '../../hooks/useCategoryData'
 import { getActivityUserName } from '../../helpers/getActivityUserName'
+import { formatVersionFrame } from '../../helpers/versionFrames'
 import { copyToClipboard } from '@shared/util'
 
 type Props = {
   activity: any
+  annotationFrameStart?: number | null
   onCheckChange?: Function
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
   onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
@@ -67,6 +70,7 @@ type Props = {
 
 const ActivityComment = ({
   activity = {},
+  annotationFrameStart,
   onCheckChange,
   onDelete,
   onUpdate,
@@ -235,7 +239,9 @@ const ActivityComment = ({
 
   // the frame (range) this comment is linked to, if any
   const frameLink = useMemo(() => getActivityFrameLink(activity), [activity])
-  const formatFrame = commentFrameLink?.formatFrame ?? String
+  const formatFrame =
+    commentFrameLink?.formatFrame ??
+    ((frame: number) => formatVersionFrame(frame, annotationFrameStart))
   const onFrameLinkClick = () => {
     if (!frameLink) return
     // hosts without frame link support can still jump to the first frame
@@ -294,6 +300,7 @@ const ActivityComment = ({
             <CommentInput
               initValue={body}
               initFiles={files}
+              annotationFrameStart={annotationFrameStart}
               initCategory={categoryData?.name}
               data={activity.activityData}
               activityId={activityId}
@@ -319,7 +326,13 @@ const ActivityComment = ({
               />
               <CommentWrapper>
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm, emoji, remarkDirective, remarkDirectiveRehype]}
+                  remarkPlugins={[
+                    remarkGfm,
+                    emoji,
+                    remarkDirective,
+                    remarkLiteralDirectives,
+                    remarkDirectiveRehype,
+                  ]}
                   urlTransform={(url) => url}
                   components={{
                     // a links
@@ -384,6 +397,7 @@ const ActivityComment = ({
                 isDownloadable
                 onExpand={onFileExpand}
                 onAnnotationClick={onAnnotationClick}
+                pt={{ file: { annotationFrameStart } }}
                 onRemove={undefined}
               />
             </>

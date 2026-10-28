@@ -2,6 +2,7 @@ import React, { ReactNode, useEffect, useState } from 'react'
 import { useGetFeedbackVerificationQuery } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
 import { FeedbackContext } from './FeedbackContextInstance'
+import { afterStartup } from '@shared/util/afterStartup'
 
 export type FeedbackContextType = {
   loaded: boolean
@@ -36,11 +37,16 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
   const loadScript = () => {
     if (!scriptLoaded) {
-      const script = document.createElement('script')
-      script.src = 'https://do.featurebase.app/js/sdk.js'
-      script.id = 'featurebase-sdk'
-      script.async = true
-      document.body.appendChild(script)
+      // the sdk takes >100ms of main thread time, so it's added once the page has loaded.
+      // Calls made before then are queued by the stub from initialize()
+      afterStartup(() => {
+        if (document.getElementById('featurebase-sdk')) return
+        const script = document.createElement('script')
+        script.src = 'https://do.featurebase.app/js/sdk.js'
+        script.id = 'featurebase-sdk'
+        script.async = true
+        document.body.appendChild(script)
+      })
       setScriptLoaded(true)
     }
   }

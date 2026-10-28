@@ -87,6 +87,7 @@ export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   imgRatio?: number
   imgPosition?: 'start' | 'end'
   onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
+  scrollToRowId?: string // scrolled into view and focused once, when the row first shows
   onRename?: (id: string, row: Row<SimpleTableRow>) => void
   renamingId?: string | null
   renameInitialValue?: string

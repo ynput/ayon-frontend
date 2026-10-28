@@ -82,6 +82,7 @@ const tagTypes = [
   'feedback',
   'folder',
   'folderColumnStats',
+  'frontendModules',
   'hierarchy',
   'inbox',
   'info',

@@ -1,4 +1,4 @@
-import { FC, lazy } from 'react'
+import { FC, ReactNode, lazy, useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
@@ -21,21 +21,53 @@ import { useLoadRemotePages } from '../remote/useLoadRemotePages'
 
 import LoadingPage from '@pages/LoadingPage'
 import { RemoteAddon, useGlobalContext } from '@shared/context'
+import { afterStartup } from '@shared/util'
 import { toast } from 'react-toastify'
 
 interface AppRoutesProps {}
+
+// for paths an addon route may take over: load the addon routes straight away and
+// show the loading page until they are ready, instead of the built in page underneath
+const WaitForAddonRoutes = ({
+  isLoading,
+  onMount,
+  children,
+}: {
+  isLoading: boolean
+  onMount: () => void
+  children: ReactNode
+}) => {
+  useEffect(() => {
+    onMount()
+  }, [onMount])
+
+  return isLoading ? <LoadingPage /> : <>{children}</>
+}
 
 const AppRoutes: FC<AppRoutesProps> = () => {
   const { user } = useGlobalContext()
   const { uiExposureLevel: level = 0 } = user || {}
   // dynamically import routes
+  // these are added as they load, the built in routes don't wait for them
+  const [loadRemoteRoutes, setLoadRemoteRoutes] = useState(false)
+  const requestRemoteRoutes = useCallback(() => setLoadRemoteRoutes(true), [])
   const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
     moduleKey: 'Route',
+    skip: !loadRemoteRoutes,
   }) as { remotePages: RemoteAddon[]; isLoading: boolean }
 
-  if (isLoadingModules || !user) {
+  // addon routes are rarely the page being opened, so they are loaded a little after start up
+  // to keep their (large) bundles from competing with the page that is loading
+  useEffect(() => {
+    if (loadRemoteRoutes) return
+    return afterStartup(requestRemoteRoutes)
+  }, [loadRemoteRoutes, requestRemoteRoutes])
+
+  if (!user) {
     return <LoadingPage />
   }
+
+  const isLoadingRemoteRoutes = !loadRemoteRoutes || isLoadingModules
 
   return (
     <Routes>
@@ -61,16 +93,19 @@ const AppRoutes: FC<AppRoutesProps> = () => {
       <Route path="/manageProjects" element={<ProjectManagerPage />} />
       <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
       {/* Allow reviews route for all levels */}
+      {/* the review addon's route replaces this one with the review session */}
       <Route
         path={'/projects/:projectName/reviews/:sessionId'}
         element={
-          <ProtectedRoute
-            isAllowed={level > 0}
-            redirectPath="/"
-            preserveParams={['uri', 'type', 'project', 'id', 'activity', 'sessionId']}
-          >
-            <ProjectPage />
-          </ProtectedRoute>
+          <WaitForAddonRoutes isLoading={isLoadingRemoteRoutes} onMount={requestRemoteRoutes}>
+            <ProtectedRoute
+              isAllowed={level > 0}
+              redirectPath="/"
+              preserveParams={['uri', 'type', 'project', 'id', 'activity', 'sessionId']}
+            >
+              <ProjectPage />
+            </ProtectedRoute>
+          </WaitForAddonRoutes>
         }
       />
       <Route
@@ -160,7 +195,15 @@ const AppRoutes: FC<AppRoutesProps> = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<ErrorPage code="404" />} />
+      {/* an unknown path may be an addon route */}
+      <Route
+        path="*"
+        element={
+          <WaitForAddonRoutes isLoading={isLoadingRemoteRoutes} onMount={requestRemoteRoutes}>
+            <ErrorPage code="404" />
+          </WaitForAddonRoutes>
+        }
+      />
     </Routes>
   )
 }

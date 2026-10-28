@@ -26,10 +26,13 @@ export const useEntityUpdate = ({ entities, entityType }: UseEntityUpdateParams)
   /**
    * Updates entities with the specified field and value
    * @param field The field to update
-   * @param value The new value for the field
+   * @param value The new value for the field, or a function giving each entity its own value
    * @returns Promise that resolves when the update is complete
    */
-  const updateEntity = async (field: string, value: any): Promise<void> => {
+  const updateEntity = async (
+    field: string,
+    value: any | ((entityId: string) => any),
+  ): Promise<void> => {
     if (value === null || value === undefined) {
       console.error('value is null or undefined')
       return
@@ -41,7 +44,7 @@ export const useEntityUpdate = ({ entities, entityType }: UseEntityUpdateParams)
         id: entity.id,
         projectName: entity.projectName,
         data: {
-          [field]: value,
+          [field]: typeof value === 'function' ? value(entity.id) : value,
         },
         currentAssignees: entity.users,
         meta: {
