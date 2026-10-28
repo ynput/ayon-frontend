@@ -1,5 +1,6 @@
 import { FC, useEffect, useState } from 'react'
 import {
+  Button,
   ColorPicker,
   Dialog,
   FormRow,
@@ -8,6 +9,7 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import { ColorFormRow } from './EnumItemDialog.styled'
 
 const DialogBody = styled.div`
   display: flex;
@@ -75,8 +77,21 @@ export const EnumItemDialog: FC<EnumItemDialogProps> = ({
         size="sm"
         hideCancelButton
         footer={
-          <SaveButton label={isNew ? 'Add' : 'Save'} icon="check" onClick={save} active={!!value} />
+          <>
+            <Button onClick={onCancel}>Cancel</Button>
+            <SaveButton
+              label={isNew ? 'Add' : 'Save'}
+              icon="check"
+              onClick={save}
+              active={!!value}
+            />
+          </>
         }
+        pt={{
+          backdrop: {
+            style: { zIndex: 11000 },
+          },
+        }}
       >
         <DialogBody>
           {isNew && (
@@ -107,9 +122,9 @@ export const EnumItemDialog: FC<EnumItemDialogProps> = ({
             </FormRow>
           )}
           {fields.includes('color') && (
-            <FormRow label="Colour">
-              <ColorPicker value={draft.color} onChange={(color) => update({ color })} />
-            </FormRow>
+            <ColorFormRow label="Colour" style={{ padding: 4 }}>
+              <ColorPicker value={draft.color} onChange={(color: string) => update({ color })} />
+            </ColorFormRow>
           )}
         </DialogBody>
       </Dialog>

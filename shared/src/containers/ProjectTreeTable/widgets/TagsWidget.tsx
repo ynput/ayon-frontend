@@ -72,7 +72,9 @@ export const TagsWidget = ({
     () => options.map((option) => ({ name: option.value.toString() })),
     [options],
   )
-  const projectTags = useEditProjectTags(
+
+  // edit the project tags using the custom hook
+  const editTags = useEditProjectTags(
     isProjectTags && isEditable ? projectName : undefined,
     anatomyTags,
   )
@@ -96,23 +98,23 @@ export const TagsWidget = ({
           align={align}
           placeholder={placeholder}
           onChange={(names) => {
-            projectTags?.addTags(names.filter((name) => !values.includes(name)))
+            editTags?.addTags(names.filter((name) => !values.includes(name)))
             onChange(names, 'Click')
           }}
-          onEditOption={projectTags?.onEditOption}
+          onEditOption={editTags?.onEditOption}
           editOptionTooltip="Change the colour in the project tags"
           {...mixedProps}
           onMixedChange={
             mixedProps.onMixedChange &&
             ((change) => {
-              projectTags?.addTags(change.add)
+              editTags?.addTags(change.add)
               mixedProps.onMixedChange?.(change)
             })
           }
           onClose={onCancelEdit}
           className={className}
         />
-        {projectTags && <EnumItemDialog {...projectTags.dialog} />}
+        {editTags && <EnumItemDialog {...editTags.dialog} />}
       </>
     )
   }
