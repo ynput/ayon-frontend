@@ -1,5 +1,7 @@
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import type { Tag } from '@shared/api/generated'
+import { projectsApi } from '@shared/api/generated'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 import { projectQueries } from '../project'
 import { dashboardQueries } from '../userDashboard'
 
@@ -48,11 +50,12 @@ const projectTagsApi = projectQueries.injectEndpoints({
   endpoints: (build) => ({
     // adds the tags to the project anatomy, and sets the colours of the ones given with a colour
     saveProjectTags: build.mutation<void, { projectName: string; tags: Tag[] }>({
-      queryFn: async ({ projectName, tags }, { dispatch, getState }, _extra, baseQuery) => {
-        // the tags are saved as one list: change the project's current tags, not the loaded ones
-        const project = await baseQuery({ url: `/api/projects/${projectName}`, method: 'GET' })
-        if (project.error) return { error: project.error }
-        const next = [...((project.data as { tags?: Tag[] })?.tags || [])]
+      queryFn: async ({ projectName, tags }, { dispatch, getState }) => {
+        const project = await dispatch(
+          projectQueries.endpoints.getProject.initiate({ projectName }, { subscribe: false }),
+        )
+        if (project.error) return { error: normalizeQueryError(project.error) }
+        const next = [...(project.data?.tags || [])]
         let changed = false
         for (const tag of tags) {
           const index = next.findIndex((existing) => existing.name === tag.name)
@@ -67,14 +70,20 @@ const projectTagsApi = projectQueries.injectEndpoints({
         if (!changed) return { data: undefined }
 
         const patches = patchProjectTags(projectName, next, dispatch, getState)
-        const saved = await baseQuery({
-          url: `/api/projects/${projectName}`,
-          method: 'PATCH',
-          body: { tags: next },
-        })
+        const saved = await dispatch(
+          projectsApi.endpoints.updateProject.initiate(
+            {
+              projectName,
+              projectPatchModel: { tags: next },
+              // @ts-expect-error: skipInvalidate is not part of the original type
+              skipInvalidate: true,
+            },
+            { track: false },
+          ),
+        )
         if (saved.error) {
           patches.forEach((patch) => patch.undo())
-          return { error: saved.error }
+          return { error: normalizeQueryError(saved.error) }
         }
         return { data: undefined }
       },
