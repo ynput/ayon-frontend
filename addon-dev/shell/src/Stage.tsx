@@ -289,7 +289,7 @@ const SlicerStage = (props: StageProps) => (
   </div>
 )
 
-// projectList.menuItem: a stand-in project list with its right-click menu and dropdown
+// projectList.menuItem: AYON's project list with its right-click menu and dropdown
 const ProjectListStage = ({ contribution, selection }: StageProps) => {
   const studio = useStoredSelection('addon-dev/projectList/selectedProjects')
   // ?project= (ayon-addon open --project) selects that project
@@ -303,7 +303,7 @@ const ProjectListStage = ({ contribution, selection }: StageProps) => {
   const { ProjectList } = getHostComponents()
   return (
     <StudioSelectionProvider value={studio}>
-      <div style={{ width: 280 }}>
+      <div style={{ width: 280, height: '100%' }}>
         <ProjectList multiSelect />
       </div>
     </StudioSelectionProvider>

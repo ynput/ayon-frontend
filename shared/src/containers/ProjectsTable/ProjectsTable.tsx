@@ -13,7 +13,7 @@ import { PinnedDivider } from './ProjectsTable.styled'
 
 type ButtonType = 'delete' | 'add' | 'filter' | 'search' | 'select-all'
 
-interface ProjectsTableProps {
+export interface ProjectsTableProps {
   data: SimpleTableRow[]
   isLoading?: boolean
   error?: string | undefined

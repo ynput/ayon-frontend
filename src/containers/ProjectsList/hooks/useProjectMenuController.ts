@@ -13,7 +13,7 @@ import type { ListTableRowContextMenuContext } from '@shared/containers/ListTabl
 import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
-import { buildProjectFolderRowId } from '../buildProjectsTableData'
+import { buildProjectFolderRowId } from '@shared/containers/ProjectsTable'
 import type { ProjectFolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
 import useProjectListUserPreferences from './useProjectListUserPreferences'
 import useProjectListMenuItems, { type Hidden } from './useProjectsListMenuItems'

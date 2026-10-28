@@ -5,7 +5,7 @@ import {
   useStudioPageSlotContext,
 } from '@shared/components/AddonLayout/pageSlotContext'
 import { useLocalStorage } from '@shared/hooks/useLocalStorage'
-import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
+import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
 import { useAppSelector } from '@state/store'
 import LoadingPage from '@pages/LoadingPage'
 import { useMemo } from 'react'

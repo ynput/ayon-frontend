@@ -10,7 +10,7 @@ import {
   FOLDER_ICON_REMOVE,
 } from '@pages/ProjectListsPage/hooks/useListContextMenu.ts'
 import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
-import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData.ts'
+import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
 import { SimpleTableRowContextMenuBuilder } from '@shared/containers/SimpleTable'
 
 export type Hidden = {

@@ -64,6 +64,7 @@ export default defineConfig({
         Slicer: resolve(__dirname, 'src/containers/Slicer/index.ts'),
         Views: resolve(__dirname, 'src/containers/Views/index.ts'),
         SimpleTable: resolve(__dirname, 'src/containers/SimpleTable/index.ts'),
+        ProjectsTable: resolve(__dirname, 'src/containers/ProjectsTable/index.ts'),
         EntityPickerDialog: resolve(__dirname, 'src/containers/EntityPickerDialog/index.ts'),
         ListTable: resolve(__dirname, 'src/containers/ListTable/index.ts'),
         NewEntity: resolve(__dirname, 'src/containers/NewEntity/index.ts'),

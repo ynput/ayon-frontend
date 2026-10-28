@@ -1,12 +1,21 @@
 // The shell's implementations of what @ynput/ayon-addon gets from its host. The project page
-// layout and the slicer are AYON's own (shared); the dashboard's layout and project list live in
-// the ayon-frontend app, so the shell draws simple stand-ins with the same behaviour.
-import { createContext, useContext, useMemo } from 'react'
+// layout, the slicer and the project list's table are AYON's own (shared); the dashboard's layout
+// lives in the ayon-frontend app, so the shell draws a simple stand-in.
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { provideHost } from '@ynput/ayon-addon/host'
 import type { AddonUser, ProjectListProps, StudioPageLayoutProps } from '@ynput/ayon-addon'
-import { useGetCurrentUserQuery, useListProjectsQuery } from '@ynput/ayon-frontend-shared/api'
+import type { ExpandedState } from '@tanstack/react-table'
+import { useGetCurrentUserQuery, useGetProjectFoldersQuery } from '@ynput/ayon-frontend-shared/api'
 import { ProjectPageLayoutHost, SlicerHost } from '@ynput/ayon-frontend-shared/components'
+import { useGlobalContext, useMenuContext, usePowerpack } from '@ynput/ayon-frontend-shared/context'
+import {
+  buildProjectsTableData,
+  parseProjectFolderRowId,
+  PROJECTS_LIST_MENU_ID,
+  ProjectsTable,
+} from '@ynput/ayon-frontend-shared/ProjectsTable'
+import { getProjectDisplayName } from '@ynput/ayon-frontend-shared/util'
 import { useShellMenu } from './menus'
 
 type UserData = { isAdmin?: boolean; isManager?: boolean; isGuest?: boolean; isService?: boolean }
@@ -55,14 +64,41 @@ const StudioPageLayout = ({ sidebar, children }: StudioPageLayoutProps) => (
   </div>
 )
 
+// AYON's project list table (shared), with the addon's menu items in its right-click menu and
+// "more" dropdown. AYON's own items (open, pin, folders, archive) need the app: not here.
 const ProjectList = ({ multiSelect = false }: ProjectListProps) => {
   const studio = useContext(StudioSelectionContext)
-  const { data: projects = [] } = useListProjectsQuery({ active: true })
-  const selected = studio?.selection || []
-  const { openContextMenu, dropdown } = useShellMenu('projectList.menuItem', (menu) => ({
-    projectNames: selected,
+  const { projects: allProjects, isLoading } = useGlobalContext()
+  const { powerLicense } = usePowerpack()
+  const { data: folders } = useGetProjectFoldersQuery()
+  const { toggleMenuOpen } = useMenuContext()
+  const [expanded, setExpanded] = useState<ExpandedState>({})
+  const [search, setSearch] = useState<string>()
+  const selection = useMemo(() => studio?.selection || [], [studio?.selection])
+  const projectNamesOf = (ids: string[]) => ids.filter((id) => !parseProjectFolderRowId(id))
+  const { itemsFor } = useShellMenu('projectList.menuItem', (menu) => ({
+    projectNames: projectNamesOf(selection),
     menu,
   }))
+
+  // by name, as AYON sorts them (the archived ones aren't listed)
+  const projects = useMemo(
+    () =>
+      [...allProjects.active].sort((a, b) =>
+        getProjectDisplayName(a).localeCompare(getProjectDisplayName(b)),
+      ),
+    [allProjects.active],
+  )
+  const showFolders = !search && powerLicense
+  const data = useMemo(
+    () => buildProjectsTableData(projects, showFolders ? folders : [], true, powerLicense),
+    [projects, folders, showFolders, powerLicense],
+  )
+  const onSelect = studio?.onSelect
+  // like AYON's list: the first project when none is selected
+  useEffect(() => {
+    if (onSelect && !selection.length && projects.length) onSelect([projects[0].name])
+  }, [onSelect, selection, projects])
 
   if (!studio) {
     return (
@@ -72,38 +108,33 @@ const ProjectList = ({ multiSelect = false }: ProjectListProps) => {
     )
   }
 
-  const toggle = (name: string, additive: boolean) => {
-    if (!multiSelect || !additive) return studio.onSelect(selected.includes(name) ? [] : [name])
-    studio.onSelect(
-      selected.includes(name) ? selected.filter((n) => n !== name) : [...selected, name],
-    )
-  }
-
   return (
-    <div data-shell-surface="project-list" style={{ display: 'flex', flexDirection: 'column' }}>
-      <div className="ayon-shell-bar" style={{ height: 40 }}>
-        <span>Projects</span>
-        <span className="spacer" />
-        {dropdown}
-      </div>
-      <table className="ayon-shell-table">
-        <tbody>
-          {projects.map((project) => (
-            <tr
-              key={project.name}
-              className={selected.includes(project.name) ? 'selected' : undefined}
-              onClick={(e) => toggle(project.name, e.metaKey || e.ctrlKey || e.shiftKey)}
-              onContextMenu={(e) => {
-                if (!selected.includes(project.name)) studio.onSelect([project.name])
-                openContextMenu(e, { projectNames: selected.includes(project.name) ? selected : [project.name] })
-              }}
-              style={{ cursor: 'pointer' }}
-            >
-              <td>{project.name}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div data-shell-surface="project-list" style={{ display: 'flex', height: '100%' }}>
+      <ProjectsTable
+        data={data}
+        isLoading={isLoading.projects}
+        search={search}
+        onSearch={setSearch}
+        selection={selection}
+        onSelect={studio.onSelect}
+        onRowSelectionChange={(rows) => studio.onSelect(Object.keys(rows).filter((id) => rows[id]))}
+        rowPinning={[]}
+        expanded={expanded}
+        setExpanded={setExpanded}
+        multiSelect={multiSelect}
+        hiddenButtons={multiSelect ? [] : ['select-all']}
+        onSelectAll={() =>
+          studio.onSelect(selection.length === projects.length ? [] : projects.map((p) => p.name))
+        }
+        toggleMenu={(open = true) => toggleMenuOpen(open ? PROJECTS_LIST_MENU_ID : false)}
+        buildMenuItems={() =>
+          itemsFor('dropdown').map(({ command, ...item }) => ({ ...item, onClick: command }))
+        }
+        rowContextMenuBuilders={[
+          (_e, context) =>
+            itemsFor('context', { projectNames: projectNamesOf(context.selectedRows) }),
+        ]}
+      />
     </div>
   )
 }

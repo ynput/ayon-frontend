@@ -68,6 +68,10 @@
       "types": "./dist/types/SimpleTable.d.ts",
       "import": "./dist/SimpleTable.es.js"
     },
+    "./ProjectsTable": {
+      "types": "./dist/types/ProjectsTable.d.ts",
+      "import": "./dist/ProjectsTable.es.js"
+    },
     "./EntityPickerDialog": {
       "types": "./dist/types/EntityPickerDialog.d.ts",
       "import": "./dist/EntityPickerDialog.es.js"

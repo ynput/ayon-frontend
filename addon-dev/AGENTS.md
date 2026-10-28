@@ -55,7 +55,8 @@ shell instead of AYON:
 
 - **Real AYON surfaces** from `@ynput/ayon-frontend-shared`: the details panel, the slicer, the
   Customize panel, and the addon columns' cells and `useData`, in AYON's providers (store, api,
-  contexts). Plain stand-ins for what lives in the AYON app: the header, the project list, and the
+  contexts). AYON's project list table, with only the addon's items in its menus (AYON's own,
+  such as open, pin and folders, need the app). Plain stand-ins for what lives in the AYON app: the header and the
   table around the columns (its rows are the picked entities, its right-click menu has the
   `entityMenuItem` items). Pages render alone, without AYON's page tabs.
 - **Developer panel**, in two resizable halves that scroll on their own: the manifest's

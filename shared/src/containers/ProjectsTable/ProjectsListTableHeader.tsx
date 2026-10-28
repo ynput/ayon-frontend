@@ -1,6 +1,7 @@
 import { Menu, MenuContainer, MenuItemType, TableSearch } from '@shared/components'
 import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
+import type { IconType } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { FC } from 'react'
 import { useMenuContext } from '@shared/context'
@@ -57,7 +58,7 @@ const StyledButtons = styled.div`
 `
 
 interface ButtonCustomization {
-  icon?: string
+  icon?: IconType
   tooltip?: string
   shortcut?: string
 }
@@ -67,7 +68,7 @@ interface ButtonsCustomization {
   add?: ButtonCustomization
   search?: ButtonCustomization
   filter?: {
-    icon?: string
+    icon?: IconType
     tooltip?: string
     activeTooltip?: string
     tooltipDelay?: number
@@ -105,13 +106,13 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
   const isOpen = menuOpen === MENU_ID
 
   const addButton = {
-    icon: 'add',
+    icon: 'add' as const,
     tooltip: 'Add new project',
     ...buttonLabels.add,
   }
 
   const searchButton = {
-    icon: 'search',
+    icon: 'search' as const,
     tooltip: 'Search projects',
     ...buttonLabels.search,
   }
