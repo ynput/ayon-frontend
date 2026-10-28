@@ -116,7 +116,7 @@
     "@vitejs/plugin-react": "4.7.0",
     "typescript": "5.9.3",
     "unplugin-dts": "^1.1.1",
-    "vite": "7.3.5",
+    "vite": "7.3.7",
     "vite-plugin-linter": "4.0.0"
   },
   "dependencies": {
