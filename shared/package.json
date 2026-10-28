@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Shared React components for AYON frontend",
   "module": "dist/index.es.js",
   "exports": {
@@ -99,7 +99,7 @@
     "@rtk-query/graphql-request-base-query": "2.3.2",
     "@tanstack/react-table": "8.21.3",
     "@ynput/ayon-addon": "^0.1.0",
-    "@ynput/ayon-react-components": "^1.23.1",
+    "@ynput/ayon-react-components": "^1.23.0",
     "graphql-request": "7.4.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -139,7 +139,6 @@
     "@tanstack/react-virtual": "3.13.23",
     "@uiw/react-textarea-code-editor": "2.1.9",
     "@ynput/ayon-player": "1.0.2",
-    "@ynput/ayon-react-components": "^1.22.1",
     "axios": "1.20.0",
     "clsx": "2.1.1",
     "custom-protocol-check": "1.4.0",
