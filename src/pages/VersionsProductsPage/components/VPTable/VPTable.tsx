@@ -1,5 +1,6 @@
 import { ProjectTreeTable } from '@shared/containers'
 import type { EntityType } from '@shared/containers'
+import type { MainBreakdownFields } from '@shared/containers/ProjectTreeTable'
 import { FC } from 'react'
 import { useVersionsDataContext } from '../../context/vp-data'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
@@ -7,6 +8,8 @@ import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
 import { AddColumnButton } from '@shared/components'
 import styled from 'styled-components'
 import { VP_EXTRA_COLUMNS, VP_PARENT_COLUMNS } from '../VPTableSettings/VPTableSettingsHelpers'
+
+const MAIN_BREAKDOWN_FIELDS: MainBreakdownFields = { primary: 'productType' }
 
 const VP_EXCLUDED_COLUMNS = ['assignees']
 // module constant: a new array each render rebuilds the table columns, which remounts every cell
@@ -64,7 +67,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         fieldStatsError={fieldStatsError}
         mainCountLabels={{ primary: 'products', secondary: 'versions' }}
         // versions have no subType, so only the products side breaks down
-        mainBreakdownFields={{ primary: 'productType' }}
+        mainBreakdownFields={MAIN_BREAKDOWN_FIELDS}
         columnsConfig={{
           name: {
             display: { path_compact: false, path_full: true },

@@ -264,6 +264,45 @@ test('a view survives a save and load round trip', () => {
   })
 })
 
+test.describe('hidden breakdown items', () => {
+  test('load per column, an empty or malformed list loads as nothing hidden', () => {
+    const config = loadView({
+      columns: [
+        { name: 'status', visible: true, summaryHidden: ['Approved', 'On hold'] },
+        { name: 'tags', visible: true, summaryHidden: [] },
+        { name: 'assignees', visible: true, summaryHidden: 'admin' },
+      ],
+    } as Settings)
+    expect(config.columnSummaryHidden).toEqual({ status: ['Approved', 'On hold'] })
+  })
+
+  test('are saved only on columns that hide something', () => {
+    const settings = saveView(
+      states({
+        columnOrder: ['status', 'tags'],
+        columnSummaryHidden: { status: ['Approved'], tags: [] },
+      }),
+    )
+    expect(settings.columns).toEqual([
+      { name: 'status', visible: false, summaryHidden: ['Approved'] },
+      { name: 'tags', visible: false },
+    ])
+  })
+
+  test('survive a save and load round trip', () => {
+    const columnSummaryHidden = { status: ['Approved'], name: ['folderType:shot'] }
+    const saved = saveView(states({ columnOrder: ['name', 'status'], columnSummaryHidden }))
+    expect(loadView(saved).columnSummaryHidden).toEqual(columnSummaryHidden)
+  })
+
+  test('legacy column ids are mapped to the current ones', () => {
+    const config = normalizeColumnsConfig(
+      states({ columnSummaryHidden: { folderName: ['__empty__'] } }),
+    )
+    expect(config.columnSummaryHidden).toEqual({ [ENTITY_COLUMN_IDS.folder]: ['__empty__'] })
+  })
+})
+
 test('right pinned columns load back as left pinned (views only store a boolean)', () => {
   const saved = saveView(
     states({ columnOrder: ['name', 'status'], columnPinning: { left: [], right: ['status'] } }),

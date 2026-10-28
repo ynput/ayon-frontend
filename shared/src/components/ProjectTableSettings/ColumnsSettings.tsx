@@ -131,6 +131,7 @@ interface ColumnsSettingsProps {
   columnSummaries?: ColumnsConfig['columnSummaries']
   columnSummaryScopes?: ColumnsConfig['columnSummaryScopes']
   columnSummaryFormats?: ColumnsConfig['columnSummaryFormats']
+  columnSummaryHidden?: ColumnsConfig['columnSummaryHidden']
   groupByConfig?: ColumnsConfig['groupByConfig']
   addColumnMenuItems?: MenuItemType[]
   onColumnDragStart?: (column: AddColumnItem, event: React.PointerEvent) => void
@@ -158,6 +159,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   columnSummaries,
   columnSummaryScopes,
   columnSummaryFormats,
+  columnSummaryHidden,
   groupByConfig,
   addColumnMenuItems,
   onColumnDragStart,
@@ -365,6 +367,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     columnSummaries,
     columnSummaryScopes,
     columnSummaryFormats,
+    columnSummaryHidden,
     groupBy,
     groupByConfig,
     sorting,
@@ -705,6 +708,7 @@ export const ColumnsSettingsWithContext: FC<ColumnsSettingsWithContextProps> = (
     columnSummaries,
     columnSummaryScopes,
     columnSummaryFormats,
+    columnSummaryHidden,
   } = useColumnSettingsContext()
 
   return (
@@ -725,6 +729,7 @@ export const ColumnsSettingsWithContext: FC<ColumnsSettingsWithContextProps> = (
       columnSummaries={columnSummaries}
       columnSummaryScopes={columnSummaryScopes}
       columnSummaryFormats={columnSummaryFormats}
+      columnSummaryHidden={columnSummaryHidden}
     />
   )
 }

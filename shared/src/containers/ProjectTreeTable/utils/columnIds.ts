@@ -79,5 +79,6 @@ export const normalizeColumnsConfig = (
     columnSummaries: normalizeColumnRecord(config.columnSummaries, aliases),
     columnSummaryScopes: normalizeColumnRecord(config.columnSummaryScopes, aliases),
     columnSummaryFormats: normalizeColumnRecord(config.columnSummaryFormats, aliases),
+    columnSummaryHidden: normalizeColumnRecord(config.columnSummaryHidden, aliases),
   }
 }

@@ -26,11 +26,12 @@ import { parseViewSorting, serializeViewSorting } from './sortingHelpers'
 // persisted or loaded from saved view settings.
 const INTERNAL_COLUMN_IDS = new Set([ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID])
 
-// summary/summaryScope/summaryFormat persist in the view settings dict but aren't on the generated ColumnItemModel type
+// summary/summaryScope/summaryFormat/summaryHidden persist in the view settings dict but aren't on the generated ColumnItemModel type
 type ColumnItem = ColumnItemModel & {
   summary?: SummaryCalc
   summaryScope?: RowScope
   summaryFormat?: SummaryFormat
+  summaryHidden?: string[]
 }
 
 /**
@@ -55,10 +56,11 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
   const columnSummaries: Record<string, SummaryCalc> = {}
   const columnSummaryScopes: Record<string, RowScope> = {}
   const columnSummaryFormats: Record<string, SummaryFormat> = {}
+  const columnSummaryHidden: Record<string, string[]> = {}
 
   // Process each column from the settings
   columns.forEach((column) => {
-    const { name, visible, pinned, width, summary, summaryScope, summaryFormat } =
+    const { name, visible, pinned, width, summary, summaryScope, summaryFormat, summaryHidden } =
       column as ColumnItem
 
     // Skip internal columns — they are always injected by ColumnSettingsProvider
@@ -94,6 +96,11 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
     if (summaryFormat) {
       columnSummaryFormats[name] = summaryFormat
     }
+
+    // untyped settings dict: a stray string would otherwise read as a list of characters
+    if (Array.isArray(summaryHidden) && summaryHidden.length) {
+      columnSummaryHidden[name] = summaryHidden
+    }
   })
 
   // Handle sorting
@@ -127,6 +134,7 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
     columnSummaries,
     columnSummaryScopes,
     columnSummaryFormats,
+    columnSummaryHidden,
     sorting,
     groupBy,
     groupByConfig,
@@ -193,6 +201,7 @@ function createColumnItem(
   columnSummaries: Record<string, SummaryCalc>,
   columnSummaryScopes: Record<string, RowScope>,
   columnSummaryFormats: Record<string, SummaryFormat>,
+  columnSummaryHidden: Record<string, string[]>,
 ): ColumnItem {
   const column: ColumnItem = {
     name: columnName,
@@ -212,6 +221,10 @@ function createColumnItem(
   // Set summary display format if chosen for this column
   if (columnSummaryFormats[columnName]) {
     column.summaryFormat = columnSummaryFormats[columnName]
+  }
+
+  if (columnSummaryHidden[columnName]?.length) {
+    column.summaryHidden = columnSummaryHidden[columnName]
   }
 
   // Set visibility if defined in state
@@ -255,6 +268,7 @@ export function convertTanstackStatesToColumnConfig(
     columnSummaries = {},
     columnSummaryScopes = {},
     columnSummaryFormats = {},
+    columnSummaryHidden = {},
     sorting,
     groupBy,
     groupByConfig,
@@ -286,6 +300,7 @@ export function convertTanstackStatesToColumnConfig(
       columnSummaries,
       columnSummaryScopes,
       columnSummaryFormats,
+      columnSummaryHidden,
     ),
   )
 
