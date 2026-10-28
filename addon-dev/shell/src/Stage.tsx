@@ -124,25 +124,27 @@ const ProjectPageStage = (props: StageProps) => (
   </ProjectPageProviders>
 )
 
-const useStoredSelection = (key: string) => {
-  const [selection, setSelection] = useState<string[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(key) || '[]')
-    } catch {
-      return []
-    }
-  })
-  const onSelect = useCallback(
-    (next: string[]) => {
-      localStorage.setItem(key, JSON.stringify(next))
-      setSelection(next)
-    },
-    [key],
+type OnChange = (selection: ShellSelection) => void
+
+/**
+ * The studio's project selection, set from the context panel; AYON's project list on a studio
+ * page shows and changes the same one, as on AYON's dashboard. `ayon-addon open --project` gives
+ * one project.
+ */
+const useStudioSelection = (selection: ShellSelection, onChange: OnChange) => {
+  const { projectNames, projectName } = selection
+  const names = useMemo(
+    () => projectNames ?? (projectName ? [projectName] : []),
+    [projectNames, projectName],
   )
-  return useMemo(() => ({ selection, onSelect }), [selection, onSelect])
+  const onSelect = useCallback(
+    (next: string[]) => onChange({ ...selection, projectNames: next }),
+    [selection, onChange],
+  )
+  return useMemo(() => ({ selection: names, onSelect }), [names, onSelect])
 }
 
-// studio.page: each page keeps its own project selection (AYON stores it per page too)
+// studio.page: the page with the studio's project selection
 const StudioPageBody = ({
   contribution,
   selectedProjects,
@@ -160,9 +162,9 @@ const StudioPageBody = ({
 }
 
 // what UserDashboardPage (ayon-frontend) puts around a studio page: WithViews, studio scoped
-const StudioPageStage = ({ contribution }: StageProps) => {
+const StudioPageStage = ({ contribution, selection, onChange }: StageProps & { onChange: OnChange }) => {
   const dispatch = useDispatch()
-  const studio = useStoredSelection(`dashboard/${idOf(contribution)}/selectedProjects`)
+  const studio = useStudioSelection(selection, onChange)
   return (
     <ViewsProvider
       key={contribution.key}
@@ -290,14 +292,8 @@ const SlicerStage = (props: StageProps) => (
 )
 
 // projectList.menuItem: AYON's project list with its right-click menu and dropdown
-const ProjectListStage = ({ contribution, selection }: StageProps) => {
-  const studio = useStoredSelection('addon-dev/projectList/selectedProjects')
-  // ?project= (ayon-addon open --project) selects that project
-  useEffect(() => {
-    if (selection.projectName) studio.onSelect([selection.projectName])
-    // once
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+const ProjectListStage = ({ contribution, selection, onChange }: StageProps & { onChange: OnChange }) => {
+  const studio = useStudioSelection(selection, onChange)
   const context = useMemo(() => ({ projectNames: studio.selection, menu: 'context' }), [studio.selection])
   useReport(contribution, context, true, true)
   const { ProjectList } = getHostComponents()
@@ -396,7 +392,15 @@ const TableStage = ({ contribution, selection }: StageProps) => {
 const getHostComponents = () =>
   getHost().components as Required<NonNullable<ReturnType<typeof getHost>['components']>>
 
-export const Stage = ({ mode, selection }: { mode: 'live' | 'preview'; selection: ShellSelection }) => {
+export const Stage = ({
+  mode,
+  selection,
+  onChange,
+}: {
+  mode: 'live' | 'preview'
+  selection: ShellSelection
+  onChange: OnChange
+}) => {
   const contribution = getRegistry().contributions.find(
     (c) => c.slot === selection.slot && idOf(c) === selection.id,
   )
@@ -434,7 +438,7 @@ export const Stage = ({ mode, selection }: { mode: 'live' | 'preview'; selection
       case 'project.page':
         return <ProjectPageStage {...props} />
       case 'studio.page':
-        return <StudioPageStage {...props} />
+        return <StudioPageStage {...props} onChange={onChange} />
       case 'header.item':
         return <HeaderStage {...props} />
       case 'detailsPanel.tab':
@@ -443,7 +447,7 @@ export const Stage = ({ mode, selection }: { mode: 'live' | 'preview'; selection
       case 'slicer.menuItem':
         return <SlicerStage {...props} />
       case 'projectList.menuItem':
-        return <ProjectListStage {...props} />
+        return <ProjectListStage {...props} onChange={onChange} />
       case 'tableColumn':
       case 'entityMenuItem':
       case 'projectTable.toolbarItem':

@@ -60,12 +60,15 @@ shell instead of AYON:
   table around the columns (its rows are the picked entities, its right-click menu has the
   `entityMenuItem` items). Pages render alone, without AYON's page tabs.
 - **Developer panel**, in two resizable halves that scroll on their own: the manifest's
-  contributions grouped by where they show (header, studio, project, project tables, details
-  panel), then by slot, with the ones AYON would skip and why; below, the one on stage and its
-  context: a project switcher, an entity picker (AYON's) for the slots about entities, the table
-  page, *Run* for menu items, a few lines of the context the contribution gets (click for all of
-  it), *Save* for a fixture.
-- The selection is in the URL (`?slot=…&contribution=…&ctxProject=…&ctxEntities=task:<id>,…`).
+  contributions grouped by the area of AYON they show in (app header, studio, project with its
+  slicer and tables, details panel), then by slot, with the ones AYON would skip and why; below,
+  the context of the one on stage, the only place it is changed: a project switcher, the studio's
+  project selection (also what a studio page's project list shows), an entity picker (AYON's) for
+  the slots about entities, the table page, *Run* for menu items, a few lines of the context the
+  contribution gets (click for all of it), and the preview fixtures.
+- Above the stage, a caption names the contribution, where AYON shows it and its slot.
+- The selection is in the URL
+  (`?slot=…&contribution=…&ctxProject=…&ctxProjects=a,b&ctxEntities=task:<id>,…`).
 - Requests to `/api`, `/graphql`, `/ws` go through the dev server to the AYON server, with the API
   key when there is one (no login page); without a key the page shows AYON's login.
 - It needs a `@ynput/ayon-frontend-shared` build with the addon SDK (until one is released:

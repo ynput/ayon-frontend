@@ -17,6 +17,8 @@ export interface ShellSelection {
   /** the contribution's id in its slot */
   id?: string
   projectName?: string
+  /** the studio's project selection (studio pages, the project list) */
+  projectNames?: string[]
   /** the entities the slot is about (details panel, menus, table rows) */
   entityType?: string
   entities: EntityRef[]

@@ -1,7 +1,9 @@
-// The developer panel: the addon's contributions by where they show (top), and the one on stage
-// with its context: project, entities, table page (bottom). Everything here is also settable from
-// the URL (params.ts), for `ayon-addon open`.
+// The developer panel: the addon's contributions by where AYON shows them (top), and the context
+// the shell gives the one on stage (bottom), each half in its own scroll. The pickers are always
+// in the same order and place; what is on stage is said above the stage (StageCaption).
+// Everything here is also settable from the URL (params.ts), for `ayon-addon open`.
 import { useEffect, useState, useSyncExternalStore } from 'react'
+import type { ReactNode } from 'react'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Button, Dialog, Dropdown, Icon, InputText } from '@ynput/ayon-react-components'
 import { contributionTitle, getRegistry } from '@ynput/ayon-addon/host'
@@ -20,8 +22,15 @@ import {
 } from '@ynput/ayon-frontend-shared/context'
 import { clearAccessToken } from '@ynput/ayon-frontend-shared/util'
 import { getUnmatched, onUnmatched } from './network'
-import { SLOT_GROUPS, slotGroup } from './slotGroups'
-import { ENTITY_TYPES, isMenuSlot, needsEntities, needsProject, needsTablePage } from './slotNeeds'
+import { SLOT_AREAS } from './slotGroups'
+import {
+  ENTITY_TYPES,
+  isMenuSlot,
+  needsEntities,
+  needsProject,
+  needsProjects,
+  needsTablePage,
+} from './slotNeeds'
 import { getStageContext, subscribeStage } from './status'
 import type { ShellOptions, ShellSelection } from './types'
 
@@ -73,47 +82,65 @@ const Contribution = ({
   )
 }
 
-// by area, then by slot; the slot's name and where it shows are in its label's tooltip
+// by area of AYON, then by its part and slot; an area's single slot needs no label of its own
 const Contributions = ({ selection, onChange }: Pick<DevPanelProps, 'selection' | 'onChange'>) => {
   const { contributions, skipped } = getRegistry()
   const [collapsed, setCollapsed] = useState<string[]>([])
-  const known = SLOT_GROUPS.flatMap((group) => group.slots.map((s) => s.slot as string))
+  const known = SLOT_AREAS.flatMap((area) => area.sections.flatMap((s) => s.slots.map((x) => x.slot as string)))
   const other = [...new Set(contributions.map((c) => c.slot))].filter((slot) => !known.includes(slot))
-  const groups = other.length
-    ? [...SLOT_GROUPS, { label: 'Other', slots: other.map((slot) => ({ slot, label: slot })) }]
-    : SLOT_GROUPS
+  const areas = other.length
+    ? [
+        ...SLOT_AREAS,
+        {
+          label: 'Other',
+          icon: 'extension',
+          sections: [{ label: undefined, slots: other.map((slot) => ({ slot, label: slot })) }],
+        },
+      ]
+    : SLOT_AREAS
 
   return (
     <>
-      {groups.map((group) => {
-        const slots = group.slots
-          .map(({ slot, label }) => ({ slot, label, items: contributions.filter((c) => c.slot === slot) }))
-          .filter(({ items }) => items.length)
+      {areas.map((area) => {
+        const slots = area.sections.flatMap((section) =>
+          section.slots
+            .map(({ slot, label }) => ({
+              slot,
+              label,
+              section: section.label,
+              items: contributions.filter((c) => c.slot === slot),
+            }))
+            .filter(({ items }) => items.length),
+        )
         if (!slots.length) return null
-        const isCollapsed = collapsed.includes(group.label)
+        const isCollapsed = collapsed.includes(area.label)
+        const count = slots.reduce((sum, { items }) => sum + items.length, 0)
+        const slotCount = area.sections.reduce((sum, section) => sum + section.slots.length, 0)
         return (
-          <div key={group.label} className="ayon-shell-group">
+          <section key={area.label} className="ayon-shell-area">
             <button
-              className="ayon-shell-group-header"
+              className="ayon-shell-area-header"
+              aria-expanded={!isCollapsed}
               onClick={() =>
                 setCollapsed(
-                  isCollapsed ? collapsed.filter((g) => g !== group.label) : [...collapsed, group.label],
+                  isCollapsed ? collapsed.filter((g) => g !== area.label) : [...collapsed, area.label],
                 )
               }
             >
-              <Icon icon={isCollapsed ? 'chevron_right' : 'expand_more'} />
-              <span>{group.label}</span>
-              <small>{slots.reduce((count, { items }) => count + items.length, 0)}</small>
+              <Icon icon={area.icon as never} />
+              <span>{area.label}</span>
+              <small>{count}</small>
+              <Icon icon={isCollapsed ? 'expand_more' : 'expand_less'} className="toggle" />
             </button>
             {!isCollapsed &&
-              slots.map(({ slot, label, items }) => (
+              slots.map(({ slot, label, section, items }) => (
                 <div key={slot} className="ayon-shell-slot">
-                  {/* an area with one slot needs no slot label */}
-                  {group.slots.length > 1 && (
+                  {slotCount > 1 && (
                     <div
                       className="ayon-shell-slot-label"
                       title={`${slot}: ${SLOT_DOCS[slot as SlotName]?.where || ''}`}
                     >
+                      {section && <span>{section}</span>}
                       {label}
                     </div>
                   )}
@@ -127,22 +154,30 @@ const Contributions = ({ selection, onChange }: Pick<DevPanelProps, 'selection' 
                   ))}
                 </div>
               ))}
-          </div>
+          </section>
         )
       })}
       {skipped.length > 0 && (
-        <>
-          <h3>Skipped</h3>
+        <section className="ayon-shell-area">
+          <div className="ayon-shell-slot-label">Skipped</div>
           {skipped.map((s) => (
             <div key={`${s.slot}:${s.id}`} className="ayon-addon-error" role="alert">
               {s.slot} {s.id}: {s.reason}
             </div>
           ))}
-        </>
+        </section>
       )}
     </>
   )
 }
+
+/** A picker's row: its label, then the control. */
+const Field = ({ label, children }: { label: string; children: ReactNode }) => (
+  <div className="ayon-shell-field">
+    <label>{label}</label>
+    <div>{children}</div>
+  </div>
+)
 
 const ProjectPicker = ({ selection, onChange }: Pick<DevPanelProps, 'selection' | 'onChange'>) => {
   const { data: projects = [] } = useListProjectsQuery({ active: true })
@@ -154,15 +189,32 @@ const ProjectPicker = ({ selection, onChange }: Pick<DevPanelProps, 'selection' 
   }, [projects, selection, onChange])
 
   return (
-    <>
-      <h3>Project</h3>
+    <Field label="Project">
       <Dropdown
         value={selection.projectName ? [selection.projectName] : []}
         options={projects.map((p) => ({ value: p.name, label: p.name }))}
         search
         onChange={(added) => onChange({ ...selection, projectName: added[0], entities: [] })}
       />
-    </>
+    </Field>
+  )
+}
+
+// the studio's project selection: AYON's project list on a studio page shows the same one
+const ProjectsPicker = ({ selection, onChange }: Pick<DevPanelProps, 'selection' | 'onChange'>) => {
+  const { data: projects = [] } = useListProjectsQuery({ active: true })
+  const value = selection.projectNames ?? (selection.projectName ? [selection.projectName] : [])
+  return (
+    <Field label="Projects">
+      <Dropdown
+        value={value}
+        options={projects.map((p) => ({ value: p.name, label: p.name }))}
+        multiSelect
+        search
+        placeholder="None selected"
+        onChange={(names) => onChange({ ...selection, projectNames: names })}
+      />
+    </Field>
   )
 }
 
@@ -190,28 +242,32 @@ const EntitiesPicker = ({ selection, onChange }: Pick<DevPanelProps, 'selection'
 
   if (!projectName) return null
   return (
-    <>
-      <h3>Entities</h3>
-      <Dropdown
-        value={[entityType]}
-        options={ENTITY_TYPES.map((type) => ({ value: type, label: type }))}
-        onChange={(added) => onChange({ ...selection, entityType: added[0], entities: [] })}
-      />
+    <Field label="Entities">
+      <div className="ayon-shell-entities">
+        <Dropdown
+          value={[entityType]}
+          options={ENTITY_TYPES.map((type) => ({ value: type, label: type }))}
+          onChange={(added) => onChange({ ...selection, entityType: added[0], entities: [] })}
+        />
+        <Button
+          icon="ads_click"
+          label={entities.length ? 'Change' : 'Pick'}
+          onClick={() => setPicking(true)}
+        />
+      </div>
       {entities.map((entity) => (
-        <div key={entity.id} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {entity.label || entity.name || entity.id}
-          </span>
+        <div key={entity.id} className="ayon-shell-entity">
+          <span>{entity.label || entity.name || entity.id}</span>
           <Button
             icon="close"
             variant="text"
+            aria-label="Remove"
             onClick={() =>
               onChange({ ...selection, entities: entities.filter((e) => e.id !== entity.id) })
             }
           />
         </div>
       ))}
-      <Button icon="ads_click" label="Pick entities" onClick={() => setPicking(true)} />
       {picking && (
         // the picker reads the project's folders, like on a project page
         <ProjectContextProvider projectName={projectName}>
@@ -230,24 +286,34 @@ const EntitiesPicker = ({ selection, onChange }: Pick<DevPanelProps, 'selection'
           </ProjectFoldersContextProvider>
         </ProjectContextProvider>
       )}
-    </>
+    </Field>
   )
 }
 
 const TablePage = ({ selection, onChange }: Pick<DevPanelProps, 'selection' | 'onChange'>) => (
-  <>
-    <h3>Table page</h3>
+  <Field label="Table">
     <Dropdown
       value={[selection.page || 'overview']}
       options={['overview', 'products', 'lists'].map((page) => ({ value: page, label: page }))}
       onChange={(added) => onChange({ ...selection, page: added[0] as ShellSelection['page'] })}
     />
-  </>
+  </Field>
 )
 
-const SaveFixture = ({ selection }: { selection: ShellSelection }) => {
+// save the live context and responses as a preview fixture, and open the saved ones
+const Fixtures = ({ mode, selection }: Pick<DevPanelProps, 'mode' | 'selection'>) => {
+  const [open, setOpen] = useState(mode === 'preview')
+  const [names, setNames] = useState<string[]>([])
   const [name, setName] = useState('')
   const [saved, setSaved] = useState<string>()
+  const list = () =>
+    fetch('/__ayon-addon/fixtures')
+      .then((response) => (response.ok ? response.json() : []))
+      .then(setNames)
+      .catch(() => setNames([]))
+  useEffect(() => {
+    list()
+  }, [])
   const save = async () => {
     const fixture = window.__AYON_ADDON_SHELL__?.fixture()
     if (!fixture || !name) return
@@ -256,59 +322,60 @@ const SaveFixture = ({ selection }: { selection: ShellSelection }) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(fixture, null, 2),
     })
-    setSaved(response.ok ? `dev/fixtures/${name}.json` : `failed: ${response.status}`)
+    setSaved(response.ok ? `Saved dev/fixtures/${name}.json` : `Failed: ${response.status}`)
+    list()
   }
-  if (!selection.slot || !selection.id) return null
   return (
-    <>
-      <h3>Preview fixture</h3>
-      <div style={{ display: 'flex', gap: 4 }}>
-        <InputText
-          value={name}
-          placeholder={`${selection.id}`}
-          onChange={(e) => setName(e.target.value.replace(/[^\w-]/g, ''))}
-          style={{ flex: 1 }}
-        />
-        <Button icon="save" label="Save" disabled={!name} onClick={save} />
-      </div>
-      {saved && <small>{saved}</small>}
-    </>
-  )
-}
-
-// the saved fixtures, each opens in preview
-const Fixtures = ({ current }: { current?: string }) => {
-  const [names, setNames] = useState<string[]>([])
-  useEffect(() => {
-    fetch('/__ayon-addon/fixtures')
-      .then((response) => (response.ok ? response.json() : []))
-      .then(setNames)
-      .catch(() => setNames([]))
-  }, [])
-  if (!names.length) return null
-  return (
-    <>
-      <h3>Previews</h3>
-      {names.map((name) => (
-        <a
-          key={name}
-          href={`?preview=${encodeURIComponent(name)}`}
-          style={{ fontWeight: name === current ? 'bold' : undefined }}
-        >
-          {name}
-        </a>
-      ))}
-      {current && <a href="?">back to live</a>}
-    </>
+    <div className="ayon-shell-fixtures">
+      <button className="ayon-shell-subheader" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <span className="label">Preview fixtures</span>
+        <small>{names.length || ''}</small>
+        <Icon icon={open ? 'expand_less' : 'expand_more'} />
+      </button>
+      {open && (
+        <>
+          <small className="ayon-shell-note">
+            The context and server answers of a contribution, to render it without a server.
+          </small>
+          {mode === 'live' && selection.slot && selection.id && (
+            <div className="ayon-shell-entities">
+              <InputText
+                value={name}
+                placeholder={`${selection.id}`}
+                onChange={(e) => setName(e.target.value.replace(/[^\w-]/g, ''))}
+              />
+              <Button icon="save" label="Save" disabled={!name} onClick={save} />
+            </div>
+          )}
+          {saved && <small className="ayon-shell-note">{saved}</small>}
+          {names.map((fixture) => (
+            <a
+              key={fixture}
+              className={`ayon-shell-link${fixture === selection.preview ? ' selected' : ''}`}
+              href={`?preview=${encodeURIComponent(fixture)}`}
+            >
+              <Icon icon="description" />
+              {fixture}
+            </a>
+          ))}
+          {selection.preview && (
+            <a className="ayon-shell-link" href="?">
+              <Icon icon="arrow_back" />
+              Back to live
+            </a>
+          )}
+        </>
+      )}
+    </div>
   )
 }
 
 const LiveStatus = ({ options }: { options: ShellOptions }) => {
   const { data: user } = useGetCurrentUserQuery()
   return (
-    <small>
-      {user?.name} at {options.serverUrl}
-      {options.signedInWithKey ? ' (API key)' : ''}
+    <small title={`${user?.name} at ${options.serverUrl}`}>
+      {user?.name} @ {options.serverUrl.replace(/^https?:\/\//, '')}
+      {options.signedInWithKey ? ' · API key' : ''}
       {!options.signedInWithKey && (
         <>
           {' · '}
@@ -332,21 +399,33 @@ const NotInFixture = () => {
   const unmatched = useSyncExternalStore(onUnmatched, () => getUnmatched().join('\n'))
   if (!unmatched) return null
   return (
-    <>
-      <h3>Not in the fixture</h3>
+    <div className="ayon-shell-passed">
+      <div className="ayon-shell-subheader">
+        <span className="label">Not in the fixture</span>
+      </div>
       <pre className="ayon-shell-code">{unmatched}</pre>
-    </>
+    </div>
   )
 }
 
-// a few lines of the context; the whole of it in a dialog
+// the context passed to the contribution: a few lines, the whole of it in a dialog
 const ContextPreview = () => {
   const context = useSyncExternalStore(subscribeStage, getStageContext)
   const [open, setOpen] = useState(false)
   const text = showContext(context)
   return (
-    <>
-      <h3>Context</h3>
+    <div className="ayon-shell-passed">
+      <div className="ayon-shell-subheader">
+        <span className="label">Passed to the contribution</span>
+        <Button
+          icon="open_in_full"
+          variant="text"
+          data-tooltip="Show the whole context"
+          aria-label="Show the whole context"
+          disabled={!context}
+          onClick={() => setOpen(true)}
+        />
+      </div>
       <button
         className="ayon-shell-context"
         data-shell-context
@@ -361,50 +440,51 @@ const ContextPreview = () => {
           <JsonViewer value={JSON.parse(text)} wrap />
         </Dialog>
       )}
-    </>
+    </div>
   )
 }
 
-// what the contribution on stage is, and the context the shell gives it
+// the context the shell gives the contribution on stage: what it is picked from, in a fixed order
 const ContextPanel = ({ mode, selection, onChange }: Omit<DevPanelProps, 'options'>) => {
   const contribution = getRegistry().contributions.find(
     (c) => c.slot === selection.slot && idOf(c) === selection.id,
   )
-  if (!contribution) return <small className="ayon-shell-note">Pick a contribution.</small>
-  const slot = contribution.slot
-  const { group, label } = slotGroup(slot)
+  const slot = contribution?.slot
   const live = mode === 'live'
+  const pickers = live && !!slot && (needsProject(slot) || needsProjects(slot) || needsEntities(slot))
   return (
     <>
-      <h3>On stage</h3>
-      <div className="ayon-shell-onstage">
-        <strong>{contributionTitle(contribution)}</strong>
-        <small>
-          {group ? `${group.label} › ${label}` : label} · <code>{slot}</code>
-        </small>
-        <small>{SLOT_DOCS[slot as SlotName]?.where}</small>
-      </div>
-      {live && needsProject(slot) && <ProjectPicker selection={selection} onChange={onChange} />}
-      {live && needsEntities(slot) && <EntitiesPicker selection={selection} onChange={onChange} />}
-      {live && needsTablePage(slot) && <TablePage selection={selection} onChange={onChange} />}
-      {slot === 'studio.page' && (
-        <small className="ayon-shell-note">
-          selectedProjects comes from the page itself: a ProjectList in its sidebar sets it, as on
-          AYON&apos;s dashboard.
-        </small>
+      <h3>Context</h3>
+      {!contribution ? (
+        <small className="ayon-shell-note">Pick a contribution.</small>
+      ) : (
+        <>
+          {pickers ? (
+            <div className="ayon-shell-fields">
+              {needsProject(slot) && <ProjectPicker selection={selection} onChange={onChange} />}
+              {needsProjects(slot) && <ProjectsPicker selection={selection} onChange={onChange} />}
+              {needsEntities(slot) && <EntitiesPicker selection={selection} onChange={onChange} />}
+              {needsTablePage(slot) && <TablePage selection={selection} onChange={onChange} />}
+            </div>
+          ) : (
+            <small className="ayon-shell-note">
+              {live ? 'Nothing to pick for this slot.' : 'From the fixture.'}
+            </small>
+          )}
+          {isMenuSlot(slot) && (
+            <Button
+              icon="play_arrow"
+              label="Run the menu item"
+              variant="filled"
+              data-shell-action="run"
+              onClick={() => window.__AYON_ADDON_SHELL__?.run()}
+            />
+          )}
+          <ContextPreview />
+          {!live && <NotInFixture />}
+        </>
       )}
-      {isMenuSlot(slot) && (
-        <Button
-          icon="play_arrow"
-          label="Run"
-          data-shell-action="run"
-          onClick={() => window.__AYON_ADDON_SHELL__?.run()}
-        />
-      )}
-      <ContextPreview />
-      {!live && <NotInFixture />}
-      {live && <SaveFixture selection={selection} />}
-      <Fixtures current={selection.preview} />
+      <Fixtures mode={mode} selection={selection} />
     </>
   )
 }
@@ -420,14 +500,17 @@ export const DevPanel = ({ options, mode, selection, onChange }: DevPanelProps) 
   return (
     <aside className="ayon-shell-panel" data-shell-surface="dev-panel">
       <header className="ayon-shell-panel-header">
-        <strong>
-          {options.addon.name} {options.addon.version}
-        </strong>
-        {mode === 'live' ? (
-          <LiveStatus options={options} />
-        ) : (
-          <small>preview: dev/fixtures/{selection.preview}.json, no server</small>
-        )}
+        <Icon icon="extension" />
+        <div>
+          <strong>
+            {options.addon.name} <span>{options.addon.version}</span>
+          </strong>
+          {mode === 'live' ? (
+            <LiveStatus options={options} />
+          ) : (
+            <small>Preview: dev/fixtures/{selection.preview}.json, no server</small>
+          )}
+        </div>
       </header>
       {/* two scrolls: the contributions and the context are always both in view */}
       <Splitter

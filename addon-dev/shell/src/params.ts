@@ -8,6 +8,7 @@ export const PARAMS = {
   slot: 'slot',
   id: 'contribution',
   project: 'ctxProject',
+  projects: 'ctxProjects',
   entities: 'ctxEntities',
   entityType: 'ctxEntityType',
   page: 'ctxPage',
@@ -37,6 +38,7 @@ export const readSelection = (search = window.location.search): ShellSelection =
     slot: slot && isKnownSlot(slot) ? (slot as SlotName) : undefined,
     id: params.get(PARAMS.id) || undefined,
     projectName,
+    projectNames: params.get(PARAMS.projects)?.split(',').filter(Boolean),
     entityType: entities[0]?.entityType || params.get(PARAMS.entityType) || undefined,
     entities,
     page: page && PAGES.includes(page) ? page : undefined,
@@ -53,6 +55,7 @@ export const writeSelection = (selection: ShellSelection) => {
   set(PARAMS.slot, selection.slot)
   set(PARAMS.id, selection.id)
   set(PARAMS.project, selection.projectName)
+  set(PARAMS.projects, selection.projectNames?.join(',') || undefined)
   set(PARAMS.page, selection.page)
   set(
     PARAMS.entities,

@@ -1,50 +1,77 @@
-// The developer panel's contributions, grouped by where AYON shows them, then by slot.
+// The developer panel's contributions, by the area of AYON they show in, then by the part of that
+// area (the project's tables, the studio's project list), then by slot.
 import type { SlotName } from '@ynput/ayon-addon'
 
-export interface SlotGroup {
-  label: string
+export interface SlotSection {
+  /** the part of the area; none for the area's own slots */
+  label?: string
   slots: { slot: SlotName; label: string }[]
 }
 
-export const SLOT_GROUPS: SlotGroup[] = [
-  { label: 'Header', slots: [{ slot: 'header.item', label: 'Items' }] },
+export interface SlotArea {
+  label: string
+  icon: string
+  sections: SlotSection[]
+}
+
+export const SLOT_AREAS: SlotArea[] = [
   {
-    label: 'Studio (dashboard)',
-    slots: [
-      { slot: 'studio.page', label: 'Pages' },
-      { slot: 'projectList.menuItem', label: 'Project list menu' },
+    label: 'App header',
+    icon: 'web_asset',
+    sections: [{ slots: [{ slot: 'header.item', label: 'Items' }] }],
+  },
+  {
+    label: 'Studio',
+    icon: 'home',
+    sections: [
+      { slots: [{ slot: 'studio.page', label: 'Pages' }] },
+      { label: 'Project list', slots: [{ slot: 'projectList.menuItem', label: 'Menu' }] },
     ],
   },
   {
     label: 'Project',
-    slots: [
-      { slot: 'project.page', label: 'Pages' },
-      { slot: 'slicer.menuItem', label: 'Slicer menu' },
-    ],
-  },
-  {
-    label: 'Project tables',
-    slots: [
-      { slot: 'tableColumn', label: 'Columns' },
-      { slot: 'entityMenuItem', label: 'Cell menu' },
-      { slot: 'projectTable.toolbarItem', label: 'Toolbar' },
-      { slot: 'projectTable.customizeSection', label: 'Customize sections' },
+    icon: 'folder_open',
+    sections: [
+      { slots: [{ slot: 'project.page', label: 'Pages' }] },
+      { label: 'Slicer', slots: [{ slot: 'slicer.menuItem', label: 'Menu' }] },
+      {
+        label: 'Tables',
+        slots: [
+          { slot: 'tableColumn', label: 'Columns' },
+          { slot: 'entityMenuItem', label: 'Cell menu' },
+          { slot: 'projectTable.toolbarItem', label: 'Toolbar' },
+          { slot: 'projectTable.customizeSection', label: 'Customize panel' },
+        ],
+      },
     ],
   },
   {
     label: 'Details panel',
-    slots: [
-      { slot: 'detailsPanel.tab', label: 'Tabs' },
-      { slot: 'detailsPanel.menuItem', label: 'More menu' },
+    icon: 'dock_to_left',
+    sections: [
+      {
+        slots: [
+          { slot: 'detailsPanel.tab', label: 'Tabs' },
+          { slot: 'detailsPanel.menuItem', label: 'More menu' },
+        ],
+      },
     ],
   },
 ]
 
-/** The group and label of a slot; slots added to the SDK after this list go under Other. */
-export const slotGroup = (slot: string) => {
-  for (const group of SLOT_GROUPS) {
-    const found = group.slots.find((s) => s.slot === slot)
-    if (found) return { group, label: found.label }
+/** Where a slot is, as labels from its area down: Project › Tables › Cell menu. */
+export const slotPath = (slot: string): string[] => {
+  for (const area of SLOT_AREAS) {
+    for (const section of area.sections) {
+      const found = section.slots.find((s) => s.slot === slot)
+      if (found) return [area.label, ...(section.label ? [section.label] : []), found.label]
+    }
   }
-  return { group: undefined, label: slot }
+  // slots added to the SDK after this list
+  return ['Other', slot]
 }
+
+/** The icon of a slot's area. */
+export const slotIcon = (slot: string) =>
+  SLOT_AREAS.find((area) => area.sections.some((s) => s.slots.some((x) => x.slot === slot)))?.icon ||
+  'extension'
