@@ -17,6 +17,7 @@
     "paths": {
       "@ynput/ayon-addon": ["../../addon/dist/types/index.d.ts"],
       "@ynput/ayon-addon/host": ["../../addon/dist/types/host.d.ts"],
+      "@ynput/ayon-addon/check": ["../../addon/dist/types/check.d.ts"],
       "@ynput/ayon-frontend-shared/*": ["../../shared/dist/types/*.d.ts"]
     }
   },

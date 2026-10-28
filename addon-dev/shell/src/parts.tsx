@@ -5,12 +5,6 @@ import { AddonButton } from '@ynput/ayon-frontend-shared/components'
 
 type Context = Record<string, unknown>
 
-export const Approximated = ({ what }: { what: string }) => (
-  <span className="ayon-shell-approximated" title={`The shell's stand-in for AYON's ${what}`}>
-    approximated
-  </span>
-)
-
 /**
  * A header or toolbar item (header.item, projectTable.toolbarItem): AYON's AddonButton, which does
  * what the item asks on click, with the shell's plain button.

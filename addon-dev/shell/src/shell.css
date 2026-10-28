@@ -24,34 +24,109 @@ main.center {
   align-items: center;
   justify-content: center;
 }
-.ayon-shell {
-  display: grid;
-  grid-template-columns: 300px 1fr;
+.ayon-shell.p-splitter {
   height: 100%;
+  border: none;
+  border-radius: 0;
+  background: none;
 }
 .ayon-shell-panel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  height: 100%;
+  background: var(--md-sys-color-surface-container-low);
+}
+.ayon-shell-panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+.ayon-shell-panel-header small {
+  color: var(--md-sys-color-outline);
+}
+/* AYON's gutters are transparent: the darker background behind them sets the halves apart */
+.ayon-shell-panel-split.p-splitter {
+  flex: 1;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--md-sys-color-surface-container-lowest);
+}
+/* each half scrolls on its own; a long half scrolls instead of squeezing its parts
+   (.p-splitter: AYON's theme makes splitter panels transparent) */
+.p-splitter > .ayon-shell-section {
+  background: var(--md-sys-color-surface-container-low);
+}
+.ayon-shell-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding: 12px;
   overflow: auto;
-  background: var(--md-sys-color-surface-container-low);
-  border-right: 1px solid var(--md-sys-color-outline-variant);
 }
-/* a long panel scrolls instead of squeezing its parts (dropdowns would collapse to 0) */
-.ayon-shell-panel > * {
+.ayon-shell-section > * {
   flex-shrink: 0;
 }
 .ayon-shell-panel h3 {
-  margin: 0;
+  margin: 4px 0 0;
   font-size: 12px;
   text-transform: uppercase;
   color: var(--md-sys-color-outline);
 }
-.ayon-shell-panel .contribution {
+.ayon-shell-panel code {
+  font-size: 11px;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-note {
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-group {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  gap: 2px;
+}
+.ayon-shell-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ayon-shell-group-header:hover {
+  background: var(--md-sys-color-surface-container-high);
+}
+.ayon-shell-group-header small {
+  margin-left: auto;
+  font-weight: normal;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 6px 14px;
+  padding-left: 8px;
+  border-left: 1px solid var(--md-sys-color-outline-variant);
+}
+.ayon-shell-slot-label {
+  padding: 2px 8px;
+  font-size: 12px;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-panel .contribution {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  align-items: center;
   width: 100%;
   padding: 4px 8px;
   border-radius: 4px;
@@ -59,7 +134,11 @@ main.center {
   border: none;
   background: none;
   color: inherit;
+  font: inherit;
   text-align: left;
+}
+.ayon-shell-panel .contribution .icon {
+  grid-row: span 2;
 }
 .ayon-shell-panel .contribution:hover {
   background: var(--md-sys-color-surface-container-high);
@@ -69,9 +148,20 @@ main.center {
   color: var(--md-sys-color-on-primary-container);
 }
 .ayon-shell-panel .contribution small {
+  font-size: 11px;
   color: var(--md-sys-color-outline);
 }
-.ayon-shell-panel pre {
+.ayon-shell-onstage {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+.ayon-shell-onstage small {
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-code {
   margin: 0;
   padding: 8px;
   font-size: 11px;
@@ -79,6 +169,29 @@ main.center {
   word-break: break-all;
   background: var(--md-sys-color-surface-container-lowest);
   border-radius: 4px;
+}
+/* a few lines of the context: the whole of it opens in a dialog */
+.ayon-shell-context {
+  position: relative;
+  max-height: 96px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ayon-shell-context:not(:disabled):hover {
+  border-color: var(--md-sys-color-outline-variant);
+}
+.ayon-shell-context::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 24px;
+  background: linear-gradient(transparent, var(--md-sys-color-surface-container-lowest));
 }
 .ayon-shell-stage {
   display: flex;
@@ -106,13 +219,6 @@ main.center {
   padding: 4px 8px;
   flex-shrink: 0;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-.ayon-shell-approximated {
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: var(--md-sys-color-on-tertiary-container);
-  background: var(--md-sys-color-tertiary-container);
 }
 .ayon-shell-body {
   display: flex;

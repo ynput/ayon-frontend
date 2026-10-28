@@ -11,6 +11,7 @@ import {
   useSearchParams,
 } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
+import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { createStandaloneStore, useGetCurrentUserQuery } from '@ynput/ayon-frontend-shared/api'
 import {
   DeleteEntitiesProvider,
@@ -26,7 +27,7 @@ import {
 } from '@ynput/ayon-frontend-shared/context'
 import { ContextMenuProvider, GlobalContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
 import { ProjectDataProvider } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
-import { LoginPage } from '@ynput/ayon-frontend-shared/components'
+import { LoginPage, SplitterStyles } from '@ynput/ayon-frontend-shared/components'
 import { storeAccessToken } from '@ynput/ayon-frontend-shared/util'
 import { useDispatch } from 'react-redux'
 import { DevPanel } from './DevPanel'
@@ -129,28 +130,27 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
   useEffect(() => setStatus({ selection, mode }), [selection, mode])
 
   return (
-    <div className="ayon-shell">
-      <StageBoundary what="developer panel">
-        <DevPanel options={options} mode={mode} selection={selection} onChange={setSelection} />
-      </StageBoundary>
-      <ProjectProviders
-        // preview renders the contribution alone: only the table columns need the project
-        projectName={
-          mode === 'live' || selection.slot === 'tableColumn' ? selection.projectName : undefined
-        }
-        light={mode === 'preview'}
-      >
-        <StageBoundary key={`${selection.projectName}:${selection.slot}:${selection.id}`}>
-          {/* remounts per project: the project contexts and the slicer start fresh */}
-          <Stage
-            key={selection.projectName || ''}
-            mode={mode}
-            selection={selection}
-            onSelect={(id) => setSelection((current) => ({ ...current, id }))}
-          />
+    <Splitter className="ayon-shell" stateKey="ayon-addon-shell" stateStorage="local">
+      <SplitterPanel size={22} minSize={12} style={{ overflow: 'hidden' }}>
+        <StageBoundary what="developer panel">
+          <DevPanel options={options} mode={mode} selection={selection} onChange={setSelection} />
         </StageBoundary>
-      </ProjectProviders>
-    </div>
+      </SplitterPanel>
+      <SplitterPanel size={78} style={{ overflow: 'hidden', display: 'flex' }}>
+        <ProjectProviders
+          // preview renders the contribution alone: only the table columns need the project
+          projectName={
+            mode === 'live' || selection.slot === 'tableColumn' ? selection.projectName : undefined
+          }
+          light={mode === 'preview'}
+        >
+          <StageBoundary key={`${selection.projectName}:${selection.slot}:${selection.id}`}>
+            {/* remounts per project: the project contexts and the slicer start fresh */}
+            <Stage key={selection.projectName || ''} mode={mode} selection={selection} />
+          </StageBoundary>
+        </ProjectProviders>
+      </SplitterPanel>
+    </Splitter>
   )
 }
 
@@ -163,6 +163,7 @@ export const Shell = ({ options, mode }: { options: ShellOptions; mode: 'live' |
   }, [])
   return (
     <Provider store={store}>
+      <SplitterStyles />
       <BrowserRouter>
         {mode === 'live' ? (
           <SignedIn options={options}>

@@ -55,12 +55,15 @@ shell instead of AYON:
 
 - **Real AYON surfaces** from `@ynput/ayon-frontend-shared`: the details panel, the slicer, the
   Customize panel, and the addon columns' cells and `useData`, in AYON's providers (store, api,
-  contexts). Stand-ins, marked *approximated*, for what lives in the AYON app: the header, the page
-  tabs, the project list, and the table around the columns (its rows are the picked entities, its
-  right-click menu has the `entityMenuItem` items).
-- **Developer panel**: every contribution of the manifest by slot (and the ones AYON would skip,
-  with the reason), a project switcher, an entity picker (AYON's) for the slots about entities, the
-  table page, the context the contribution gets, *Run* for menu items, *Save* for a fixture.
+  contexts). Plain stand-ins for what lives in the AYON app: the header, the project list, and the
+  table around the columns (its rows are the picked entities, its right-click menu has the
+  `entityMenuItem` items). Pages render alone, without AYON's page tabs.
+- **Developer panel**, in two resizable halves that scroll on their own: the manifest's
+  contributions grouped by where they show (header, studio, project, project tables, details
+  panel), then by slot, with the ones AYON would skip and why; below, the one on stage and its
+  context: a project switcher, an entity picker (AYON's) for the slots about entities, the table
+  page, *Run* for menu items, a few lines of the context the contribution gets (click for all of
+  it), *Save* for a fixture.
 - The selection is in the URL (`?slot=…&contribution=…&ctxProject=…&ctxEntities=task:<id>,…`).
 - Requests to `/api`, `/graphql`, `/ws` go through the dev server to the AYON server, with the API
   key when there is one (no login page); without a key the page shows AYON's login.

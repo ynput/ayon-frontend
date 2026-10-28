@@ -83,9 +83,6 @@ const ProjectList = ({ multiSelect = false }: ProjectListProps) => {
     <div data-shell-surface="project-list" style={{ display: 'flex', flexDirection: 'column' }}>
       <div className="ayon-shell-bar" style={{ height: 40 }}>
         <span>Projects</span>
-        <span className="ayon-shell-approximated" title="The shell's stand-in for AYON's project list">
-          approximated
-        </span>
         <span className="spacer" />
         {dropdown}
       </div>

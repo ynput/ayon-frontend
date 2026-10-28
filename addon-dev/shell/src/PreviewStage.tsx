@@ -9,7 +9,7 @@ import { ShellTable } from './ShellTable'
 import { isMenuSlot } from './slotNeeds'
 import { setStage } from './status'
 import type { ShellSelection } from './types'
-import { Approximated, ButtonItem } from './parts'
+import { ButtonItem } from './parts'
 
 const FRAME_WIDTH: Partial<Record<string, number>> = {
   'detailsPanel.tab': 620,
@@ -95,15 +95,5 @@ export const PreviewStage = ({
     )
   })()
 
-  return (
-    <>
-      <div className="ayon-shell-bar">
-        <span>
-          {slot} {(contribution as { id: string }).id}
-        </span>
-        <Approximated what={`place of ${slot}`} />
-      </div>
-      {frame}
-    </>
-  )
+  return frame
 }

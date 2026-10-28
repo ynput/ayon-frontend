@@ -1,7 +1,7 @@
 // The stage: the selected contribution where AYON shows it. AYON's own surfaces where they live
 // in @ynput/ayon-frontend-shared (details panel, slicer, Customize panel, the addon columns' cells
-// and data); stand-ins, marked "approximated", for what lives in the ayon-frontend app (the
-// header, the page tabs, the project list, the table around the columns).
+// and data); plain stand-ins for what lives in the ayon-frontend app (the header, the project
+// list, the table around the columns). Pages render alone, without AYON's page tabs.
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Button } from '@ynput/ayon-react-components'
@@ -28,7 +28,7 @@ import {
 } from '@ynput/ayon-frontend-shared/components'
 import { StudioSelectionProvider } from './host'
 import { needsProject } from './slotNeeds'
-import { Approximated, ButtonItem } from './parts'
+import { ButtonItem } from './parts'
 import { PreviewStage } from './PreviewStage'
 import { ShellTable } from './ShellTable'
 import { setStage } from './status'
@@ -61,38 +61,6 @@ const useReport = (
 const Hint = ({ children }: { children: ReactNode }) => (
   <div style={{ padding: 16, color: 'var(--md-sys-color-outline)' }}>{children}</div>
 )
-
-const PageTabs = ({
-  slot,
-  builtIn,
-  current,
-  onSelect,
-}: {
-  slot: 'project.page' | 'studio.page'
-  builtIn: string[]
-  current: string
-  onSelect: (id: string) => void
-}) => {
-  const { contributions } = useContributions(slot)
-  return (
-    <div className="ayon-shell-tabs">
-      {builtIn.map((label) => (
-        <Button key={label} label={label} variant="text" disabled />
-      ))}
-      {contributions.map((page) => (
-        <Button
-          key={page.key}
-          label={page.title}
-          variant="text"
-          selected={page.id === current}
-          onClick={() => onSelect(page.id)}
-        />
-      ))}
-      <span style={{ flex: 1 }} />
-      <Approximated what="page tabs" />
-    </div>
-  )
-}
 
 // project.page: AYON's slicer state per page, the page decides where the slicer goes
 const ProjectPageBody = ({ contribution, selection }: StageProps) => {
@@ -145,23 +113,15 @@ const ProjectPageProviders = ({
   )
 }
 
-const ProjectPageStage = (props: StageProps & { onSelect: (id: string) => void }) => (
-  <>
-    <PageTabs
-      slot="project.page"
-      builtIn={['Overview', 'Task progress', 'Products', 'Lists']}
-      current={idOf(props.contribution)}
-      onSelect={props.onSelect}
-    />
-    <ProjectPageProviders
-      key={props.contribution.key}
-      page={idOf(props.contribution)}
-      projectName={props.selection.projectName!}
-      viewType={(props.contribution as { viewType?: string }).viewType}
-    >
-      <ProjectPageBody {...props} />
-    </ProjectPageProviders>
-  </>
+const ProjectPageStage = (props: StageProps) => (
+  <ProjectPageProviders
+    key={props.contribution.key}
+    page={idOf(props.contribution)}
+    projectName={props.selection.projectName!}
+    viewType={(props.contribution as { viewType?: string }).viewType}
+  >
+    <ProjectPageBody {...props} />
+  </ProjectPageProviders>
 )
 
 const useStoredSelection = (key: string) => {
@@ -200,30 +160,19 @@ const StudioPageBody = ({
 }
 
 // what UserDashboardPage (ayon-frontend) puts around a studio page: WithViews, studio scoped
-const StudioPageStage = ({
-  contribution,
-  onSelect,
-}: StageProps & { onSelect: (id: string) => void }) => {
+const StudioPageStage = ({ contribution }: StageProps) => {
   const dispatch = useDispatch()
   const studio = useStoredSelection(`dashboard/${idOf(contribution)}/selectedProjects`)
   return (
-    <>
-      <PageTabs
-        slot="studio.page"
-        builtIn={['Projects', 'Tasks', 'Overview']}
-        current={idOf(contribution)}
-        onSelect={onSelect}
-      />
-      <ViewsProvider
-        key={contribution.key}
-        viewType={(contribution as { viewType?: string }).viewType}
-        dispatch={dispatch}
-      >
-        <StudioSelectionProvider value={studio}>
-          <StudioPageBody contribution={contribution} selectedProjects={studio.selection} />
-        </StudioSelectionProvider>
-      </ViewsProvider>
-    </>
+    <ViewsProvider
+      key={contribution.key}
+      viewType={(contribution as { viewType?: string }).viewType}
+      dispatch={dispatch}
+    >
+      <StudioSelectionProvider value={studio}>
+        <StudioPageBody contribution={contribution} selectedProjects={studio.selection} />
+      </StudioSelectionProvider>
+    </ViewsProvider>
   )
 }
 
@@ -251,7 +200,6 @@ const HeaderStage = ({ contribution, selection }: StageProps) => {
       <Button icon="home" variant="text" disabled />
       {sorted('left').map(item)}
       <span className="spacer" />
-      <Approximated what="header" />
       {sorted('right').map(item)}
       <Button icon="forum" variant="text" disabled />
       <Button icon="inbox" variant="text" disabled />
@@ -284,7 +232,7 @@ const DetailsPanelStage = ({ contribution, selection }: StageProps) => {
   )
   useReport(contribution, context, !!project && entities.length > 0, !isTab)
 
-  if (!entities.length) return <Hint>Pick entities in the developer panel.</Hint>
+  if (!entities.length) return <Hint>Pick entities in the context panel.</Hint>
   if (!project) return <Hint>Loading {projectName}…</Hint>
   return (
     <div className="ayon-shell-body" style={{ justifyContent: 'flex-end' }}>
@@ -341,7 +289,7 @@ const SlicerStage = (props: StageProps) => (
   </div>
 )
 
-// projectList.menuItem: the project list (approximated) with its right-click menu and dropdown
+// projectList.menuItem: a stand-in project list with its right-click menu and dropdown
 const ProjectListStage = ({ contribution, selection }: StageProps) => {
   const studio = useStoredSelection('addon-dev/projectList/selectedProjects')
   // ?project= (ayon-addon open --project) selects that project
@@ -400,7 +348,6 @@ const TableStage = ({ contribution, selection }: StageProps) => {
     <div className="ayon-shell-stage" style={{ flex: 1 }}>
       <div className="ayon-shell-bar" data-shell-surface="table-toolbar">
         <span>{page}</span>
-        <Approximated what="project table" />
         <span className="spacer" />
         {pageToolbarItems.map((item) => (
           <ButtonItem
@@ -429,7 +376,7 @@ const TableStage = ({ contribution, selection }: StageProps) => {
               onSelect={setSelected}
             />
           ) : (
-            <Hint>Pick entities in the developer panel: they are the table&apos;s rows.</Hint>
+            <Hint>Pick entities in the context panel: they are the table&apos;s rows.</Hint>
           )}
         </div>
         {isPanelOpen && (
@@ -449,16 +396,7 @@ const TableStage = ({ contribution, selection }: StageProps) => {
 const getHostComponents = () =>
   getHost().components as Required<NonNullable<ReturnType<typeof getHost>['components']>>
 
-export const Stage = ({
-  mode,
-  selection,
-  onSelect,
-}: {
-  mode: 'live' | 'preview'
-  selection: ShellSelection
-  /** another contribution of the same slot (the page tabs) */
-  onSelect: (id: string) => void
-}) => {
+export const Stage = ({ mode, selection }: { mode: 'live' | 'preview'; selection: ShellSelection }) => {
   const contribution = getRegistry().contributions.find(
     (c) => c.slot === selection.slot && idOf(c) === selection.id,
   )
@@ -485,7 +423,7 @@ export const Stage = ({
   if (!selection.projectName && needsProject(contribution.slot)) {
     return (
       <main className="ayon-shell-stage">
-        <Hint>Pick a project in the developer panel.</Hint>
+        <Hint>Pick a project in the context panel.</Hint>
       </main>
     )
   }
@@ -494,9 +432,9 @@ export const Stage = ({
   const body = (() => {
     switch (contribution.slot) {
       case 'project.page':
-        return <ProjectPageStage {...props} onSelect={onSelect} />
+        return <ProjectPageStage {...props} />
       case 'studio.page':
-        return <StudioPageStage {...props} onSelect={onSelect} />
+        return <StudioPageStage {...props} />
       case 'header.item':
         return <HeaderStage {...props} />
       case 'detailsPanel.tab':
