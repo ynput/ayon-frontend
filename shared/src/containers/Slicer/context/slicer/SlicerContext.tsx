@@ -14,7 +14,8 @@ import { readSessionStorage, useSessionStorage } from '@shared/hooks/useSessionS
 import type { ProjectModel, Assignees, AttributeModel, ProductType } from '@shared/api'
 import { SlicerDropdownFallbackProps } from '../../components/SlicerDropdownFallback'
 import { DropdownRef } from '@ynput/ayon-react-components'
-import { PinnedSlice, SlicePanel, SlicerViewSettings, SliceTypeField } from '../../types'
+import { PinnedSlice, SlicePanel, SlicerViewSettings, SliceSort, SliceTypeField } from '../../types'
+import { resolveSliceSort } from '../../util/sliceSort'
 import type { ViewSettings } from '@shared/containers/Views/context'
 import type { UpdateViewSettingsFn } from '@shared/containers/Views/utils/viewUpdateHelper'
 import { SlicerContext } from './SlicerContextInstance'
@@ -68,6 +69,8 @@ export interface SlicerContextValue {
   setPanelExpanded: (panelId: string, expanded: React.SetStateAction<ExpandedState>) => void
   collapsedPanels: string[]
   togglePanelCollapsed: (panelId: string) => void
+  getSliceSort: (sliceType: SliceType) => SliceSort
+  setSliceSort: (sliceType: SliceType, sort: SliceSort) => void
   isViewSyncPending: boolean
   pinnedSlice: PinnedSlice | null
   setPinnedSlice: React.Dispatch<React.SetStateAction<PinnedSlice | null>>
@@ -197,6 +200,19 @@ export const SlicerProvider = ({
       )
     },
     [updateViewSettings, collapsedPanels],
+  )
+
+  const sliceSorts = slicerViewSettings?.sliceSorts
+  const getSliceSort = useCallback(
+    (type: SliceType) => resolveSliceSort(type, sliceSorts?.[type]),
+    [sliceSorts],
+  )
+  const setSliceSort = useCallback(
+    (type: SliceType, sort: SliceSort) => {
+      const noOp = () => {}
+      updateViewSettings({ sliceSorts: { ...sliceSorts, [type]: sort } }, noOp, noOp, {})
+    },
+    [updateViewSettings, sliceSorts],
   )
 
   const togglePanelCollapsed = useCallback(
@@ -400,6 +416,8 @@ export const SlicerProvider = ({
       setPanelExpanded,
       collapsedPanels,
       togglePanelCollapsed,
+      getSliceSort,
+      setSliceSort,
       // ROW SELECTION
       rowSelection,
       onRowSelectionChange,
@@ -423,6 +441,8 @@ export const SlicerProvider = ({
       slices,
       collapsedPanels,
       togglePanelCollapsed,
+      getSliceSort,
+      setSliceSort,
       addSlicePanel,
       removeSlicePanel,
       setPanelSliceType,

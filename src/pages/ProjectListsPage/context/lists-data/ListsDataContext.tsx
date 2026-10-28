@@ -4,7 +4,7 @@ import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
 import { useQueryArgumentChangeLoading, useUserProjectConfig, useLocalStorage } from '@shared/hooks'
 import useGetListsData from '../../hooks/useGetListsData'
-import { buildListsTableData, DEFAULT_LISTS_SORT, ListsSort } from '../../util'
+import { buildListsTableData, DEFAULT_LISTS_SORT, isFolderInScope, ListsSort } from '../../util'
 import { usePowerpack, useProjectContext } from '@shared/context'
 import { ListsDataContext } from './ListsDataContextInstance'
 
@@ -83,13 +83,7 @@ export const ListsDataProvider = ({
   // filter out folders by scope (right now we only have 'generic' and 'review-session')
   // we only show 'generic' folders in non-review mode, and 'review-session' in review mode
   const listFolders = useMemo(
-    () =>
-      listFoldersAll.filter((f) => {
-        const scope = f.data?.scope
-        if (!scope || scope.length === 0) return true // no scope means available for all
-        const hasReviewScope = scope.includes('review-session')
-        return isReview ? hasReviewScope : !hasReviewScope
-      }),
+    () => listFoldersAll.filter((f) => isFolderInScope(f, isReview)),
     [isReview, listFoldersAll],
   )
 

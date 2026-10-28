@@ -88,6 +88,9 @@ export interface VersionsDataContextValue {
   // separate filters
   versionFilter: QueryFilter
   productFilter: QueryFilter
+  // arguments of the table's own products and versions queries, for exports
+  productArguments: QueryArguments & { featuredVersionOrder?: string[] }
+  versionArguments: QueryArguments
   // combined filter strings (incl. slicer + entity-list selection) for the
   // column-summary stats queries
   columnStatsArgs: {
@@ -331,10 +334,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     queryFilters: taskFilter,
     sliceFilters: slicerTaskFilters,
   })
+  // folder names stay filter conditions: products and versions have no folder text search
   const combinedFolderFilter = useQueryFilters({
     queryFilters: folderFilter,
     sliceFilters: slicerFolderFilters,
-    config: { searchKey: 'name' },
   })
   // no slicer panel is representation scoped, so this is the filter bar's conditions only
   const resolvedRepresentationFilter = useMemo(
@@ -402,7 +405,6 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       const countsFolderFilter = buildQueryFilters({
         queryFilters: folderFilter,
         sliceFilters: otherFolderFilters,
-        config: { searchKey: 'name' },
       })
       // a task-list panel narrows via task ids, like entityListTaskFilterString
       const countsTaskFilterString = scopedTaskIds.length
@@ -510,6 +512,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     featuredOnly: featuredVersionFilter,
     featuredOnlyEntityType: featuredVersionFilter?.length ? 'product' : undefined,
     latestPerFolder,
+    hasReviewables: hasReviewablesFilter,
+    showProducts,
   })
 
   const resolveEntityArguments = useCallback(
@@ -808,6 +812,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const value: VersionsDataContextValue = {
     versionFilter,
     productFilter,
+    productArguments,
+    versionArguments,
     columnStatsArgs: {
       projectName,
       productFilter: combinedProductFilter.filterString,

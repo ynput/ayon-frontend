@@ -9,9 +9,12 @@ Some parts of the codebase have their own `AGENTS.md` next to the code. It expla
 
 | Area | Guide |
 | --- | --- |
+| Addon frontends: module federation, sharing the store, api and contexts with addons | [src/remote/AGENTS.md](src/remote/AGENTS.md) |
 | Markdown editor (Lexical): comments, descriptions, text cells | [shared/src/components/MarkdownEditor/AGENTS.md](shared/src/components/MarkdownEditor/AGENTS.md) |
+| Table export: what pages hand to the Power Pack export dialog | [shared/src/containers/TableExport/AGENTS.md](shared/src/containers/TableExport/AGENTS.md) |
 | Page load benchmarks | [tests/performance/AGENTS.md](tests/performance/AGENTS.md) |
 | Playwright tests: unit and e2e, fixtures, page objects | [tests/AGENTS.md](tests/AGENTS.md) |
+| Lists page: list values vs entity values, powerpack module contract | [src/pages/ProjectListsPage/listValues/AGENTS.md](src/pages/ProjectListsPage/listValues/AGENTS.md) |
 
 ## Dependencies
 - There is one install, the root `node_modules`; `shared/` has no lockfile or `node_modules` of its own. Code in `shared/src` resolves packages from the root, so the app and shared always get the same copy (two copies mean two React contexts).

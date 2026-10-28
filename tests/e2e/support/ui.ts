@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test'
+import { expect, Locator, Page } from '@playwright/test'
 
 /** A react-toastify notification containing `text` */
 export const toast = (page: Page, text: string | RegExp) =>
@@ -35,3 +35,9 @@ export const formRow = (scope: Page | Locator, label: string) =>
 
 // FLAG: InputSwitch hides its unnamed checkbox (0x0, opacity 0), so `.check()` never sees it as visible
 export const switchBody = (scope: Locator) => scope.locator('label.switch-body')
+
+// FLAG: primereact DataTable rows do not set aria-selected, selection is only the `p-highlight` class
+export const expectRowSelection = async (selected: Locator[], notSelected: Locator[] = []) => {
+  for (const row of selected) await expect(row).toHaveClass(/\bp-highlight\b/)
+  for (const row of notSelected) await expect(row).not.toHaveClass(/\bp-highlight\b/)
+}

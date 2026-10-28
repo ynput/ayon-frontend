@@ -97,13 +97,15 @@ export const Cell = styled.div`
     pointer-events: none;
   }
 
-  &:hover {
+  &:hover,
+  tr[data-context-menu-target] & {
     background-color: var(--md-sys-color-surface-container-hover);
   }
 
   &.selected {
     background-color: var(--md-sys-color-primary-container);
-    &:hover {
+    &:hover,
+    tr[data-context-menu-target] & {
       background-color: var(--md-sys-color-primary-container-hover);
     }
 
@@ -143,12 +145,23 @@ export const Cell = styled.div`
   .badges {
     color: var(--md-sys-color-outline);
     padding-right: 4px;
+
+    /* an icon tag, the size of an action button */
+    .badge-icon {
+      padding: var(--padding-s);
+      color: var(--md-sys-color-on-surface);
+    }
   }
 
   .actions {
-    display: flex;
+    /* hidden while none of its icons show, so its gap doesn't move the badge */
+    display: none;
     align-items: center;
     gap: var(--base-gap-small);
+
+    &:has(.icon.show-always, .icon.active) {
+      display: flex;
+    }
 
     .icon {
       border-radius: var(--border-radius-m);
@@ -173,6 +186,7 @@ export const Cell = styled.div`
 
   &:hover {
     .actions {
+      display: flex;
       .icon:not(.show-hidden) {
         display: flex;
       }
@@ -183,6 +197,7 @@ export const Cell = styled.div`
   }
 
   &.pinned {
+    .actions,
     .pin {
       display: flex;
     }

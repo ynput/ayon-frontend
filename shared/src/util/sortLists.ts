@@ -32,7 +32,7 @@ interface SortableList {
 const getTime = (date: unknown) => new Date((date as string) || 0).getTime() || 0
 
 // a shared collator is about 20x faster than localeCompare with options (66ms vs 4ms for 3000 lists)
-const labelCollator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true })
+export const labelCollator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true })
 
 const compareLabels = (a: SortableList, b: SortableList) =>
   labelCollator.compare(a.label || '', b.label || '')

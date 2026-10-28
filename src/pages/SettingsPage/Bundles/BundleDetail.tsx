@@ -4,6 +4,8 @@ import { Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
 import BundleForm from './BundleForm'
 import BundleDeps from './BundleDeps'
+import { DescriptionSection } from '@shared/components/DetailsPanelDetails'
+import { getRequestErrorString } from '@shared/util'
 import { cloneDeep, upperFirst } from 'lodash'
 import BundleCompare from './BundleCompare'
 import useAddonSelection from './useAddonSelection'
@@ -11,7 +13,6 @@ import { useUpdateBundleMutation, useListBundlesQuery } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import type { Addon } from './types'
 import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/context/addon-search'
-import { AddonSearchInput } from '@pages/SettingsPage/Bundles/AddonSearchInput.tsx'
 
 type Installer = { version: string; platforms?: string[] }
 type Bundle = {
@@ -24,6 +25,9 @@ type Bundle = {
   addonDevelopment?: Record<string, { enabled?: boolean; path?: string }>
   activeUser?: string
   isDev?: boolean
+  createdAt?: string
+  updatedAt?: string
+  description?: string | null
 }
 
 // Addon type now imported from ./types
@@ -109,6 +113,23 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
     }
   }, [selectedBundles, selectedBundle, addons, currentProductionAddons])
 
+  const handleDescriptionSave = async (value: string) => {
+    const description = value.trim() ? value : null
+    if (description === (bundle.description || null)) return
+    // patch is not part of the api args, it feeds the optimistic update
+    const args = {
+      bundleName: bundle.name,
+      bundlePatchModel: { description },
+      patch: { ...bundle, description },
+    }
+    try {
+      await updateBundle(args).unwrap()
+      toast.success('Bundle description saved')
+    } catch (error) {
+      toast.error(getRequestErrorString(error) || 'Failed to save bundle description')
+    }
+  }
+
   const handleAddonAutoSave = async (addon: string, version: string | null) => {
     try {
       await updateBundle({
@@ -161,9 +182,20 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
           addonListRef={addonListRef}
           {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
           onAddonAutoUpdate={handleAddonAutoSave}
+          createdAt={(bundle ?? selectedBundles[0])?.createdAt}
+          updatedAt={(bundle ?? selectedBundles[0])?.updatedAt}
         >
-          <AddonSearchInput />
           <BundleDeps bundle={bundle} onChange={undefined as any} />
+          {bundle && (
+            <DescriptionSection
+              key={bundle.name}
+              description={bundle.description || ''}
+              isMixed={false}
+              enableEditing
+              isLoading={false}
+              onChange={handleDescriptionSave}
+            />
+          )}
         </BundleForm>
       )}
     </>
