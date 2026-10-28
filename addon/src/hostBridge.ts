@@ -23,6 +23,15 @@ export interface AddonUser {
   isDeveloper: boolean
 }
 
+/**
+ * Dispatches to AYON's store: plain actions, and thunks such as `api.endpoints.x.initiate(args)`
+ * from `@ynput/ayon-frontend-shared/api`, which return what the thunk returns.
+ */
+export interface AddonDispatch {
+  <R>(thunk: (dispatch: any, getState: () => any, extra: any) => R): R
+  <A extends { type: string }>(action: A): A
+}
+
 /** The host's implementations of the layout components. */
 export interface HostComponents {
   ProjectPageLayout: ComponentType<ProjectPageLayoutProps>
@@ -33,6 +42,8 @@ export interface HostComponents {
 
 export interface HostImplementation {
   useUser?: () => AddonUser | undefined
+  /** the dispatch of the host's store */
+  dispatch?: AddonDispatch
   components?: Partial<HostComponents>
 }
 

@@ -85,8 +85,8 @@ export type {
 } from './layout'
 
 // globals: the same in every slot
-export { useUser } from './globals'
-export type { AddonUser } from './hostBridge'
+export { dispatch, useUser } from './globals'
+export type { AddonDispatch, AddonUser } from './hostBridge'
 // the host's router and toasts: an addon's own copies would have no router or container
 export { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 export { toast } from 'react-toastify'

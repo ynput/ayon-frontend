@@ -1,7 +1,7 @@
 import { provideHost } from '@ynput/ayon-addon/host'
 import type { AddonUser } from '@ynput/ayon-addon'
 import { useMemo } from 'react'
-import { useAppSelector } from '@state/store'
+import store, { useAppSelector } from '@state/store'
 import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
 import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
 
@@ -31,6 +31,7 @@ const useUser = (): AddonUser | undefined => {
 export const provideAddonHost = () =>
   provideHost({
     useUser,
+    dispatch: store.dispatch,
     components: {
       ProjectPageLayout: ProjectPageLayoutHost,
       Slicer: SlicerHost,

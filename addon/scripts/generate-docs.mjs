@@ -122,7 +122,9 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   \`component\` (your own JSX instead of AYON's button). Their code gets \`navigate\` in the context.
 - Globals are imports, never context: \`useUser\`, \`useNavigate\` and the other router hooks, \`Link\`,
   \`toast\`, the layout components (\`ProjectPageLayout\`, \`Slicer\`, \`StudioPageLayout\`,
-  \`ProjectList\`). Data comes from \`@ynput/ayon-frontend-shared/api\` (AYON's api and cache).
+  \`ProjectList\`). Data comes from \`@ynput/ayon-frontend-shared/api\` (AYON's api and cache):
+  components use its hooks, \`run\` and \`menu\` pieces \`dispatch(api.endpoints.x.initiate(args))\`
+  with \`dispatch\` from this package (AYON's store).
 - A crash stays inside the contribution: AYON wraps each one in an error boundary (menu items: a toast).
 
 ## Slots
