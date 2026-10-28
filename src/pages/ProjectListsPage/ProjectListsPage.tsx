@@ -660,13 +660,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     )}
                     <AddonToolbarItems
                       page="lists"
-                      list={
-                        selectedList && {
-                          id: selectedList.id,
-                          label: selectedList.label,
-                          entityType: selectedList.entityType,
-                        }
-                      }
+                      list={{
+                        id: selectedList.id,
+                        label: selectedList.label,
+                        entityType: selectedList.entityType,
+                      }}
                     />
                     <CustomizeButton />
                   </Toolbar>
