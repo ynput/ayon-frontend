@@ -1,8 +1,10 @@
-import { DropdownRef, TagsSelect } from '@ynput/ayon-react-components'
+import { DropdownRef, TagsSelect, type DropdownProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import type { EnumItem } from '@shared/api'
+import { useEditProjectTags } from '@shared/hooks/useEditProjectTags'
+import { EnumItemDialog } from '@shared/components/EnumItemDialog'
 import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
@@ -14,13 +16,20 @@ const StyledTagsSelect = styled(TagsSelect)`
   height: 100%;
 `
 
-export interface TagsWidgetProps extends WidgetBaseProps {
+export interface TagsWidgetProps
+  // editing the tags of several entities, see the ARC Dropdown
+  extends Pick<DropdownProps, 'mixedCounts' | 'mixedTotal' | 'mixedLabel' | 'onMixedChange'>,
+    WidgetBaseProps {
   value: (string | number | boolean)[]
   // the anatomy tags
   options: EnumItem[]
+  projectName?: string
   placeholder?: string
   align?: 'left' | 'right'
   className?: string
+  // the project's tags field: for managers, new tags go to the project anatomy, and they can
+  // create tags with a colour and change the tags' colours
+  isProjectTags?: boolean
   pt?: {
     template?: Partial<EnumTemplateProps>
   }
@@ -29,6 +38,7 @@ export interface TagsWidgetProps extends WidgetBaseProps {
 export const TagsWidget = ({
   value,
   options,
+  projectName,
   isEditing,
   isReadOnly,
   onChange,
@@ -36,7 +46,9 @@ export const TagsWidget = ({
   placeholder,
   align,
   className,
+  isProjectTags,
   pt,
+  ...mixedProps
 }: TagsWidgetProps) => {
   const valueKey = JSON.stringify(value)
   const values = useMemo(
@@ -56,6 +68,17 @@ export const TagsWidget = ({
   }, [options, values])
   const isEditable = !!isEditing && !isReadOnly
 
+  const anatomyTags = useMemo(
+    () => options.map((option) => ({ name: option.value.toString() })),
+    [options],
+  )
+
+  // edit the project tags using the custom hook
+  const editTags = useEditProjectTags(
+    isProjectTags && isEditable ? projectName : undefined,
+    anatomyTags,
+  )
+
   const dropdownRef = useRef<DropdownRef>(null)
   useEffect(() => {
     if (isEditable && dropdownRef.current && !dropdownRef.current.isOpen) {
@@ -65,18 +88,34 @@ export const TagsWidget = ({
 
   if (isEditable) {
     return (
-      <StyledTagsSelect
-        ref={dropdownRef}
-        value={values}
-        tags={tags}
-        options={[]}
-        editor
-        align={align}
-        placeholder={placeholder}
-        onChange={(names) => onChange(names, 'Click')}
-        onClose={onCancelEdit}
-        className={className}
-      />
+      <>
+        <StyledTagsSelect
+          ref={dropdownRef}
+          value={values}
+          tags={tags}
+          options={[]}
+          editor
+          align={align}
+          placeholder={placeholder}
+          onChange={(names) => {
+            editTags?.addTags(names.filter((name) => !values.includes(name)))
+            onChange(names, 'Click')
+          }}
+          onEditOption={editTags?.onEditOption}
+          editOptionTooltip="Change the colour in the project tags"
+          {...mixedProps}
+          onMixedChange={
+            mixedProps.onMixedChange &&
+            ((change) => {
+              editTags?.addTags(change.add)
+              mixedProps.onMixedChange?.(change)
+            })
+          }
+          onClose={onCancelEdit}
+          className={className}
+        />
+        {editTags && <EnumItemDialog {...editTags.dialog} />}
+      </>
     )
   }
 
