@@ -74,7 +74,7 @@ ts.forEachChild(slotsFile, (node) => {
   }
 })
 
-const cell = (text) => String(text).replace(/\|/g, '\\|')
+const cell = (text) => String(text).replace(/\\/g, '\\\\').replace(/\|/g, '\\|')
 const table = (rows, header) =>
   [
     `| ${header} | Type | |`,
