@@ -36,10 +36,10 @@ export type TableExportSourceProps = {
 }
 
 const IMPORT_COLUMNS = ['entity_type', 'path']
-const NOT_IMPORTABLE = "(Import CSV can't read it)"
+export const NOT_IMPORTABLE = "(Import CSV can't read it)"
 
 // the dialog's importable file: a raw CSV with the import columns
-const isForImport = ({ includeImportColumns, format, content }: TableExportOptions) =>
+export const isForImport = ({ includeImportColumns, format, content }: TableExportOptions) =>
   includeImportColumns && format === 'csv' && content === 'raw'
 
 // Registers what the page's table exports (rows, columns and their labels) for the Power Pack
