@@ -44,7 +44,6 @@ import BrowserPage from '@pages/BrowserPage'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { ProjectContextProvider } from '@shared/context'
 import { WithViews } from '@/hoc/WithViews'
-import { ProjectPageRemote } from '@shared/components'
 import {
   DetailsPanelEntityProvider,
   ProjectDataProvider,
@@ -54,6 +53,7 @@ import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { OnAddToList, OnOpenViewer } from '@shared/containers/Slicer'
 import { ProjectNewEntityHost } from './ProjectNewEntityHost'
+import { ProjectRemotePage } from './ProjectRemotePage'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
 
@@ -424,9 +424,10 @@ const ProjectPageInner = () => {
       component = (
         // this gets wrapped in ViewsProvider for addons to use views
         <main>
-          <ProjectPageRemote
+          <ProjectRemotePage
             Component={foundRemotePage.component}
             slicer={foundRemotePage.slicer}
+            detailsPanel={foundRemotePage.detailsPanel}
             projectName={projectName}
             key={foundRemotePage.id}
             dispatch={dispatch}
