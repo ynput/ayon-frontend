@@ -316,10 +316,8 @@ export interface TableColumnMeta {
   entityTypes?: string[]
   /** which tables offer it; all (Overview, Products, Lists) when not set */
   pages?: ProjectTablePage[]
-  /** width in pixels */
+  /** width in pixels. Addon columns start hidden: users show them in Customize */
   width?: number
-  /** shown before the user picks columns; off by default, like most columns */
-  defaultVisible?: boolean
 }
 
 /** Context of one cell of a `tableColumn`. */
@@ -340,7 +338,9 @@ export interface TableColumnDataArgs extends ProjectNameScope {
 /**
  * A column's data hook: called once per table with the rows on screen, while the column is
  * shown. Return values by entity id; each cell gets its own as `value`. Fetch through the shared
- * api (RTK Query) so the cache dedupes and invalidates it.
+ * api (RTK Query) so the cache dedupes and invalidates it. AYON compares the result by value, so
+ * a new object on every render is fine; a hook whose values change more than 20 times a second
+ * is stopped and its column stays empty.
  */
 export type TableColumnDataHook = (args: TableColumnDataArgs) => Record<string, unknown> | undefined
 

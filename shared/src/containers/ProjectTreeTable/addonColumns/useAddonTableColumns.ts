@@ -38,9 +38,8 @@ export const useAddonTableColumns = (page: ProjectTablePage) => {
           enableSorting: false,
           enableResizing: true,
           enablePinning: true,
+          // hidden until the user shows it in Customize, like most columns
           enableHiding: true,
-          // read by ProjectTreeTable: shown without a saved setting (explicit visibility)
-          ...(contribution.defaultVisible ? { visible: true } : {}),
           meta: { addonColumn: { contribution, page } },
           cell: ({ row }) =>
             createElement(AddonColumnCell, { contribution, page, columnId: id, row }),

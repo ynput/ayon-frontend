@@ -264,8 +264,7 @@ A read-only column in the project tables (Overview, Products, Lists). It is in t
 | `icon` | `string \| undefined` |  |
 | `entityTypes` | `string[] \| undefined` | entity types with a cell; other rows show an empty read-only cell. All when not set |
 | `pages` | `ProjectTablePage[] \| undefined` | which tables offer it; all (Overview, Products, Lists) when not set |
-| `width` | `number \| undefined` | width in pixels |
-| `defaultVisible` | `boolean \| undefined` | shown before the user picks columns; off by default, like most columns |
+| `width` | `number \| undefined` | width in pixels. Addon columns start hidden: users show them in Customize |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|

@@ -1,4 +1,5 @@
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { ReactNode, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { isEqual } from 'lodash'
 import type { Column, Row } from '@tanstack/react-table'
 import { ContributionErrorBoundary, ContributionView } from '@ynput/ayon-addon'
 import type { EntityRef, TableColumnDataHook } from '@ynput/ayon-addon'
@@ -73,9 +74,15 @@ export const AddonColumnCell = ({ contribution, page, columnId, row }: AddonColu
   )
 }
 
+// a useData that keeps returning different data (new on every render) is stopped after this many
+// changes in a second, instead of rendering the table in a loop
+const MAX_CHANGES_PER_SECOND = 20
+
 // calls the column's useData hook; mounted only once the hook has loaded, so the hook never
-// swaps under a mounted component
-const RunDataHook = ({
+// swaps under a mounted component. Memoized, so the table re-rendering with the data it got
+// doesn't run the hook again; and it passes on data only when it changed, so a hook returning
+// a new object with the same values (no useMemo) doesn't loop either.
+const RunDataHook = memo(function RunDataHook({
   useData,
   columnId,
   args,
@@ -85,13 +92,27 @@ const RunDataHook = ({
   columnId: string
   args: Parameters<TableColumnDataHook>[0]
   onData: (columnId: string, data: Record<string, unknown> | undefined) => void
-}) => {
+}) {
   const data = useData(args)
+  const sent = useRef<{ data?: Record<string, unknown>; changes: number[] }>({ changes: [] })
+  const [looping, setLooping] = useState(false)
+  if (looping) {
+    // to the contribution's error boundary: the column stays empty, the rest of the table works
+    throw new Error(
+      `useData of column "${columnId}" returned different data more than ${MAX_CHANGES_PER_SECOND} times in a second, so AYON stopped it`,
+    )
+  }
+
   useEffect(() => {
-    onData(columnId, data)
+    if (isEqual(sent.current.data, data)) return
+    const now = Date.now()
+    const changes = [...sent.current.changes.filter((time) => now - time < 1000), now]
+    sent.current = { data, changes }
+    if (changes.length > MAX_CHANGES_PER_SECOND) setLooping(true)
+    else onData(columnId, data)
   }, [columnId, data, onData])
   return null
-}
+})
 
 const ColumnDataLoader = ({
   meta,
@@ -182,4 +203,3 @@ export const AddonColumnDataScope = ({
     </AddonColumnDataContext.Provider>
   )
 }
-
