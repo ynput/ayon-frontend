@@ -6,12 +6,15 @@
 //   ayon-addon check [--json] [--no-types]
 //   ayon-addon open <slot> <id>      the dev shell in a headless browser (live server)
 //   ayon-addon preview <slot> <id> --fixture <name>   the same from a fixture, no server
+//   ayon-addon generate-rest         the addon's server endpoints as RTK Query endpoints
 import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import { createServer } from 'http'
 import path from 'path'
 import { browse, formatBrowse } from './browse.js'
 import { checkAddon, formatCheck } from './check.js'
 import { findConnection, findPackageDir, importFromProject, readAddonProject } from './project.js'
+import { generateRest } from './rest.js'
+import type { RestOptions } from './rest.js'
 import { STANDALONE_ENV } from './standalone.js'
 
 const argv = process.argv.slice(2)
@@ -157,8 +160,34 @@ const check = async () => {
   process.exitCode = result.ok ? 0 : 1
 }
 
+// ayonAddon({ rest }) in the addon's vite.config.ts
+const readRestOptions = async (): Promise<RestOptions> => {
+  const vite = await importFromProject<typeof import('vite')>(root, 'vite')
+  const loaded = await vite.loadConfigFromFile({ command: 'build', mode: 'production' }, undefined, root)
+  const flatten = async (plugins: unknown): Promise<unknown[]> => {
+    const value = await plugins
+    return Array.isArray(value) ? (await Promise.all(value.map(flatten))).flat() : [value]
+  }
+  const plugin = (await flatten(loaded?.config.plugins ?? [])).find(
+    (item) => (item as { name?: string } | null)?.name === 'ayon-addon',
+  ) as { api?: { options?: { rest?: RestOptions } } } | undefined
+  return plugin?.api?.options?.rest ?? {}
+}
+
+const generateRestCommand = async () => {
+  const result = await generateRest({
+    root,
+    rest: await readRestOptions(),
+    schemaFile: option('schema'),
+    hooks: flag('hooks'),
+    interactive: !json && !!process.stdin.isTTY,
+    log: (line) => !json && console.log(line),
+  })
+  if (json) print(result, '')
+}
+
 // the arguments that aren't flags or flag values
-const BOOLEAN_FLAGS = ['--json', '--run', '--no-types', '--standalone', '--prune']
+const BOOLEAN_FLAGS = ['--json', '--run', '--no-types', '--standalone', '--ayon', '--prune', '--hooks']
 const positional = () => {
   const values: string[] = []
   for (let i = 1; i < argv.length; i++) {
@@ -208,6 +237,13 @@ const HELP = `ayon-addon: tools for AYON addon frontends (run in the addon's fro
   preview <slot> <id> --fixture <name> [--run] [--prune] [--screenshot <file>] [--json]
                                the same from dev/fixtures/<name>.json, without a server;
                                --prune drops the answers the preview didn't use
+  generate-rest [--schema <file>] [--hooks] [--json]
+                               the addon's server endpoints (its OpenAPI schema, downloaded
+                               from a server with this version installed) as RTK Query
+                               endpoints in AYON's api: src/api/generated/<name>.ts, never
+                               edited. Creates src/api/<name>.ts to enhance them and export
+                               their hooks, or offers to add the hooks of new endpoints
+                               (--hooks: without asking). Options: ayonAddon({ rest })
 
 Sign-in: AYON_SERVER_URL and AYON_API_KEY; in the AYON dev workbench, the local stack and
 data/local-api-key.`
@@ -218,6 +254,7 @@ const commands: Record<string, () => Promise<void>> = {
   check,
   open: browseCommand('live'),
   preview: browseCommand('preview'),
+  'generate-rest': generateRestCommand,
 }
 const run = commands[command]
 if (!run) {

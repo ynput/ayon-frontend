@@ -33,6 +33,7 @@ Run in the addon's frontend folder. Every command takes `--json` for scripts and
 | `ayon-addon check [--no-types]` | The manifest as AYON reads it (slots, ids, fields, pieces), that each piece's file exists, and `tsc` |
 | `ayon-addon open <slot> <id> [--project P] [--entities type:id,...] [--page overview\|products\|lists] [--run] [--screenshot file] [--save-fixture name]` | One contribution in the dev shell in a headless browser, against the server. Reports error boxes, console errors, toasts, the context it got, the clipboard after `--run` (menu items). Exit code 1 when it failed |
 | `ayon-addon preview <slot> <id> --fixture name [--run] [--prune] [--screenshot file]` | The same from `dev/fixtures/<name>.json`, without a server. `--prune` drops the answers it didn't use |
+| `ayon-addon generate-rest [--schema file] [--hooks]` | The addon's server endpoints as RTK Query endpoints in AYON's api (below) |
 
 `open` and `preview` start the dev shell themselves, or use a running one with `--url
 http://localhost:5174`. They need playwright (`yarn add -D playwright`, `npx playwright install
@@ -95,6 +96,27 @@ answers of `dev/fixtures/<name>.json`, and no server:
 - Record one from a live server: *Save* in the developer panel, or `ayon-addon open … --save-fixture
   <name>`; then `ayon-addon preview … --fixture <name> --prune`. A recording holds the server's real
   data: check it before committing it (project names, users, comment text).
+
+## Server endpoints: `ayon-addon generate-rest`
+
+Addons that add their own server endpoints generate the frontend side from the addon's OpenAPI
+schema (needs `@rtk-query/codegen-openapi` as a dev dependency):
+
+1. Downloads `/api/addons/<name>/<version>/openapi.json` (name and version from `package.py`) from
+   a server with that version installed, to `gen/openapi.json` (gitignore it). AYON's own
+   `/openapi.json` has no addon routes. `--schema <file>` uses a saved schema instead.
+2. Generates `src/api/generated/<name>.ts`: the endpoints injected into AYON's api (one cache with
+   AYON's), without hooks. Operation ids are prefixed with the addon name, so endpoints can't
+   clash with AYON's or another addon's (`timetrackerStartSession`). URLs use the default export
+   of `src/addonVersion.ts`, so they call the running version.
+3. **Never edit the generated file.** Tags, `transformResponse` and optimistic updates go in
+   `src/api/<name>.ts`, which enhances the endpoints and exports their hooks. The first run creates
+   it; later runs list endpoints whose hooks it doesn't export and, in a terminal, offer to add
+   them in a block of their own (`--hooks`: without asking). Hooks of removed endpoints are only
+   reported.
+
+Options in `ayonAddon({ rest: { ... } })`: `queries` (POST endpoints that only read, generated as
+queries), `generated`, `api`, `versionModule`, `schema` (paths).
 
 ## Signing in
 

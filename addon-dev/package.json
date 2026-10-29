@@ -38,10 +38,14 @@
     "@ynput/ayon-addon": "^0.1.0",
     "vite": ">=6",
     "@ynput/ayon-frontend-shared": ">=0.7.0",
-    "playwright": ">=1.40"
+    "playwright": ">=1.40",
+    "@rtk-query/codegen-openapi": ">=2"
   },
   "peerDependenciesMeta": {
     "playwright": {
+      "optional": true
+    },
+    "@rtk-query/codegen-openapi": {
       "optional": true
     }
   }

@@ -7,7 +7,10 @@ import { existsSync, readFileSync, writeFileSync } from 'fs'
 import path from 'path'
 import type { Plugin, PluginOption, UserConfig } from 'vite'
 import { findPackageDir, importFromProject, installedVersion, readAddonProject } from './project.js'
+import type { RestOptions } from './rest.js'
 import { standalonePlugin } from './standalone.js'
+
+export type { RestOptions } from './rest.js'
 
 export interface AyonAddonOptions {
   /** the federation remote name: the key in the server's `frontend_modules` */
@@ -20,6 +23,8 @@ export interface AyonAddonOptions {
   shared?: string[]
   /** where `ayon-addon preview` reads fixtures (default dev/fixtures) */
   fixtures?: string
+  /** `ayon-addon generate-rest`: where the endpoints of the addon's server go */
+  rest?: RestOptions
 }
 
 /** What `ayon-addon dev --ayon` serves next to the build, read by AYON's dev override. */
@@ -122,6 +127,8 @@ export const ayonAddon = async (options: AyonAddonOptions): Promise<PluginOption
 
   const config: Plugin = {
     name: 'ayon-addon',
+    // the CLI reads the options from the addon's vite.config.ts (generate-rest)
+    api: { options },
     config(_config, { command, mode }): UserConfig {
       return {
         base: '',
