@@ -98,7 +98,7 @@ export const AddonButton = <S extends ButtonSlot>({
         ref: setAnchor,
         active: dialogOpen || menuOpen === menuId,
         onClick,
-        onMouseEnter: () => action && prefetchPiece(any[action] as never),
+        onMouseEnter: () => action && action !== 'to' && prefetchPiece(any[action] as never),
       })}
       {action === 'dialog' && dialogOpen && (
         <AddonDialog contribution={contribution} context={dialogContext} />
