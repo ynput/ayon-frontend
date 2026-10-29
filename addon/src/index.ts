@@ -39,8 +39,8 @@ export type {
   EntityMenuItemContext,
   EntityMenuItemMeta,
   TableCellContext,
-  TableColumnDataArgs,
-  TableColumnDataHook,
+  TableColumnFetch,
+  TableColumnFetchArgs,
   TableColumnMeta,
   ShortcutTable,
   TableRowRef,
@@ -79,6 +79,7 @@ export type { ContributionsResult } from './registry'
 export { ContributionView, ContributionErrorBoundary } from './ContributionView'
 export type { ContributionViewProps } from './ContributionView'
 export { prefetchPiece, runContribution } from './pieces'
+export { refreshTableColumn } from './tableColumns'
 
 // layout: the host's slicer and project list, placed by the addon
 export { ProjectList, ProjectPageLayout, Slicer, StudioPageLayout } from './layout'

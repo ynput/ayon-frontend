@@ -55,7 +55,7 @@ Only users in developer mode (and service users, for agents) can do this, and on
 of AYON:
 
 - **Real AYON surfaces** from `@ynput/ayon-frontend-shared`: the details panel, the slicer, the
-  Customize panel, and the addon columns' cells and `useData`, in AYON's providers (store, api,
+  Customize panel, and the addon columns' cells and `fetchValues`, in AYON's providers (store, api,
   contexts). AYON's project list table, with only the addon's items in its menus (AYON's own,
   such as open, pin and folders, need the app). Plain stand-ins for what lives in the AYON app: the header and the
   table around the columns (its rows are the picked entities, its right-click menu has the

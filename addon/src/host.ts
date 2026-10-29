@@ -21,5 +21,6 @@ export { contributionTitle, loadPiece, reportContributionError, usePiece } from 
 export type { PieceState } from './pieces'
 export { ContributionError } from './ContributionView'
 export { menuItemsAt } from './menus'
+export { onTableColumnRefresh } from './tableColumns'
 export { isReservedShortcut, matchesShortcut, parseShortcut } from './shortcuts'
 export type { Shortcut } from './shortcuts'

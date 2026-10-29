@@ -1,5 +1,5 @@
 // The stand-in for AYON's project table: the picked entities as rows, with the addon's real
-// columns (cells and useData through AYON's own column code) and right-click menu items.
+// columns (cells and fetchValues through AYON's own column code) and right-click menu items.
 import { useMemo } from 'react'
 import type { MouseEvent } from 'react'
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'

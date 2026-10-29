@@ -21,29 +21,3 @@ export interface AddonColumnMeta {
   contribution: Contribution<'tableColumn'>
   page: ProjectTablePage
 }
-
-// What each addon column's useData returned, by column id, then entity id. The clipboard
-// copies it: it sits above the table, so it can't read the table's AddonColumnDataContext.
-// useData only gets the rows on screen, so results are merged: a selected row scrolled out of
-// view still copies. A new scope (project and table) starts over.
-const columnValues = new Map<string, { scope: string; values: Record<string, unknown> }>()
-
-export const setAddonColumnValues = (
-  scope: string,
-  columnId: string,
-  values: Record<string, unknown> | undefined,
-) => {
-  const current = columnValues.get(columnId)
-  const kept = current?.scope === scope ? current.values : {}
-  columnValues.set(columnId, { scope, values: { ...kept, ...values } })
-}
-
-/** An addon cell's value as copied text: strings, numbers and booleans, lists joined with `, `. */
-export const getAddonColumnText = (columnId: string, entityId: string): string => {
-  const value = columnValues.get(columnId)?.values[entityId]
-  if (Array.isArray(value)) return value.filter((item) => typeof item !== 'object').join(', ')
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return String(value)
-  }
-  return ''
-}

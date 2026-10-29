@@ -23,7 +23,7 @@ export const useAddonTableColumns = (page: ProjectTablePage) => {
   useEffect(() => {
     pageColumns.forEach((column) => {
       prefetchPiece(column.cell)
-      prefetchPiece(column.useData)
+      prefetchPiece(column.fetchValues)
     })
   }, [pageColumns])
 

@@ -14,7 +14,8 @@ import {
   parseCellId,
 } from '../../utils/cellUtils'
 import { getFolderColumnValue } from '../../utils/folderColumn'
-import { getAddonColumnText, isAddonColumnId } from '../../addonColumns/addonColumnsHelpers'
+import { isAddonColumnId } from '../../addonColumns/addonColumnsHelpers'
+import { getAddonColumnText } from '../../addonColumns/addonColumnValues'
 
 // Types
 import { TableRow } from '../../types/table'
@@ -201,7 +202,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
             // special handling of link cells
             if (isAddonColumnId(colId)) {
-              // what the addon column's useData returned for the entity, as text. List items
+              // what the addon column's fetchValues returned for the entity, as text. List items
               // are keyed by their entity (row.primary.id), not the list item id
               cellValue = getAddonColumnText(colId, entity.entityId || entity.id)
             } else if (colId.startsWith('link_')) {

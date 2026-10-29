@@ -134,8 +134,8 @@ export interface SlotMap {
   }
   /**
    * A read-only column in the project tables (Overview, Products, Lists). It is in the column
-   * settings from the description; `cell` and `useData` load with the table. The host draws the
-   * cell box (padding, selection, focus), so `cell` renders only its content; selecting, the
+   * settings from the description; `cell` and `fetchValues` load with the table. The host draws
+   * the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the
    * right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable,
    * and pasting into it changes nothing.
    */
@@ -145,7 +145,7 @@ export interface SlotMap {
     context: TableCellContext
     pieces: {
       cell: Loader<ComponentType<SlotProps<'tableColumn'>>>
-      useData?: Loader<TableColumnDataHook>
+      fetchValues?: Loader<TableColumnFetch>
     }
   }
   /**
@@ -324,25 +324,29 @@ export interface TableColumnMeta {
 export interface TableCellContext extends ProjectNameScope {
   page: ProjectTablePage
   entity: EntityRef
-  /** what the column's `useData` returned for this entity; `undefined` without `useData` */
+  /** what the column's `fetchValues` returned for this entity; `undefined` without `fetchValues` */
   value: unknown
 }
 
-/** What a column's `useData` hook gets. */
-export interface TableColumnDataArgs extends ProjectNameScope {
+/** What a column's `fetchValues` gets. */
+export interface TableColumnFetchArgs extends ProjectNameScope {
   page: ProjectTablePage
-  /** the rows on screen (entities, not list items) */
+  /** the rows to get values for (entities, not list items): at most 100 */
   entities: EntityRef[]
+  /** aborted when the table no longer needs them (another project or table) */
+  signal: AbortSignal
 }
 
 /**
- * A column's data hook: called once per table with the rows on screen, while the column is
- * shown. Return values by entity id; each cell gets its own as `value`. Fetch through the shared
- * api (RTK Query) so the cache dedupes and invalidates it. AYON compares the result by value, so
- * a new object on every render is fine; a hook whose values change more than 20 times a second
- * is stopped and its column stays empty.
+ * Gets a column's values, by entity id; each cell gets its own as `value`. AYON calls it with
+ * the rows that come on screen and that it has no value for yet, in batches once scrolling
+ * pauses, and keeps what it returns: scrolling back costs nothing. A row whose entity changes
+ * (here or by someone else) is asked for again; `refreshTableColumn(id)` asks again for all.
+ * When it throws, those cells show the error and are tried again when they next come on
+ * screen. Fetch through AYON's store (`dispatch(api.endpoints.x.initiate(...))`) to share its
+ * cache.
  */
-export type TableColumnDataHook = (args: TableColumnDataArgs) => Record<string, unknown> | undefined
+export type TableColumnFetch = (args: TableColumnFetchArgs) => Promise<Record<string, unknown>>
 
 /** Description of an `entityMenuItem` contribution. */
 export interface EntityMenuItemMeta extends MenuItemMeta {
@@ -579,7 +583,7 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     check: (item) =>
       item.pinned !== undefined && typeof item.pinned !== 'boolean' ? 'pinned must be true or false' : undefined,
   },
-  tableColumn: { version: 1, required: ['label'], pieces: ['cell'], optionalPieces: ['useData'] },
+  tableColumn: { version: 1, required: ['label'], pieces: ['cell'], optionalPieces: ['fetchValues'] },
   entityMenuItem: { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
   'projectList.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
   'slicer.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },

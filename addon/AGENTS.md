@@ -255,7 +255,7 @@ Pieces: `component`.
 
 ### `tableColumn`: `tableColumn`
 
-A read-only column in the project tables (Overview, Products, Lists). It is in the column settings from the description; `cell` and `useData` load with the table. The host draws the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable, and pasting into it changes nothing. Loads: with the page.
+A read-only column in the project tables (Overview, Products, Lists). It is in the column settings from the description; `cell` and `fetchValues` load with the table. The host draws the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable, and pasting into it changes nothing. Loads: with the page.
 
 | Description field | Type | |
 |---|---|---|
@@ -271,10 +271,10 @@ A read-only column in the project tables (Overview, Products, Lists). It is in t
 | `slot` (required) | `'tableColumn'` | the slot this is rendered in |
 | `page` (required) | `ProjectTablePage` |  |
 | `entity` (required) | `EntityRef` |  |
-| `value` (required) | `unknown` | what the column's `useData` returned for this entity; `undefined` without `useData` |
+| `value` (required) | `unknown` | what the column's `fetchValues` returned for this entity; `undefined` without `fetchValues` |
 | `projectName` (required) | `string` |  |
 
-Pieces: `cell`, `useData` (optional).
+Pieces: `cell`, `fetchValues` (optional).
 
 ### `table.shortcut`: `tableShortcut`
 

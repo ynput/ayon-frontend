@@ -1644,7 +1644,7 @@ const TableBody = ({
     )
   }
 
-  // addon columns' useData runs once for the rows on screen (tableColumn slot)
+  // addon columns get their values for the rows on screen (tableColumn slot)
   const body = (
     <AddonColumnDataScope columns={visibleLeafColumns} entities={visibleEntities}>
       {tbodyContent}

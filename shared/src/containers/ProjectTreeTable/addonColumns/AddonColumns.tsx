@@ -1,18 +1,22 @@
-import { ReactNode, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { isEqual } from 'lodash'
+import { ReactNode, useCallback, useEffect, useMemo, useRef } from 'react'
 import type { Column, Row } from '@tanstack/react-table'
-import { ContributionErrorBoundary, ContributionView } from '@ynput/ayon-addon'
-import type { EntityRef, TableColumnDataHook } from '@ynput/ayon-addon'
-import { usePiece } from '@ynput/ayon-addon/host'
+import { ContributionView } from '@ynput/ayon-addon'
+import type { EntityRef } from '@ynput/ayon-addon'
+import { onTableColumnRefresh, reportContributionError, usePiece } from '@ynput/ayon-addon/host'
 import { Icon } from '@ynput/ayon-react-components'
 import { useProjectContext } from '@shared/context'
 import type { TableRow } from '../types'
 import type { AddonColumnMeta } from './addonColumnsHelpers'
-import { setAddonColumnValues } from './addonColumnsHelpers'
 import { TableCellContent } from '../ProjectTreeTable.styled'
 import { getCellId } from '../utils/cellUtils'
-import { AddonColumnDataContext, useAddonColumnValue } from './AddonColumnDataContextInstance'
-import type { AddonColumnData } from './AddonColumnDataContextInstance'
+import {
+  clearAddonColumn,
+  getAddonColumnEntry,
+  markAddonColumnStale,
+  setAddonColumnEntries,
+  useAddonColumnEntry,
+} from './addonColumnValues'
+import type { AddonColumnEntry } from './addonColumnValues'
 
 // a crashed cell: a small mark, the error in its tooltip and the console
 const CellError = ({ error }: { error: Error }) => (
@@ -37,7 +41,11 @@ export const AddonColumnCell = ({ contribution, page, columnId, row }: AddonColu
     !metaType &&
     !isLoading &&
     (!contribution.entityTypes?.length || contribution.entityTypes.includes(primary.entityType))
-  const value = useAddonColumnValue(columnId, primary.id)
+  const entry = useAddonColumnEntry(columnId, primary.id)
+  const value = entry?.value
+  // the first load of a column with fetchValues; a changed entity keeps its value while it loads
+  const loading =
+    !!contribution.fetchValues && (!entry || (entry.status === 'loading' && !('value' in entry)))
 
   const context = useMemo(
     () => ({
@@ -61,87 +69,170 @@ export const AddonColumnCell = ({ contribution, page, columnId, row }: AddonColu
       className={isLoading ? 'readonly loading' : 'readonly'}
       tabIndex={0}
     >
-      {applies && (
-        <ContributionView
-          contribution={contribution}
-          piece="cell"
-          context={context}
-          loading={<div className="readonly loading" />}
-          error={(error) => <CellError error={error} />}
-        />
+      {applies && entry?.status === 'error' && entry.error ? (
+        <CellError error={entry.error} />
+      ) : applies && loading ? (
+        <div className="readonly loading" />
+      ) : (
+        applies && (
+          <ContributionView
+            contribution={contribution}
+            piece="cell"
+            context={context}
+            loading={<div className="readonly loading" />}
+            error={(error) => <CellError error={error} />}
+          />
+        )
       )}
     </TableCellContent>
   )
 }
 
-// a useData that keeps returning different data (new on every render) is stopped after this many
-// changes in a second, instead of rendering the table in a loop
-const MAX_CHANGES_PER_SECOND = 20
+// rows are asked for in batches: once scrolling pauses this long, or when this many are waiting
+const BATCH_DELAY = 150
+const BATCH_SIZE = 100
 
-// calls the column's useData hook; mounted only once the hook has loaded, so the hook never
-// swaps under a mounted component. Memoized, so the table re-rendering with the data it got
-// doesn't run the hook again; and it passes on data only when it changed, so a hook returning
-// a new object with the same values (no useMemo) doesn't loop either.
-const RunDataHook = memo(function RunDataHook({
-  useData,
-  columnId,
-  args,
-  onData,
-}: {
-  useData: TableColumnDataHook
-  columnId: string
-  args: Parameters<TableColumnDataHook>[0]
-  onData: (columnId: string, data: Record<string, unknown> | undefined) => void
-}) {
-  const data = useData(args)
-  const sent = useRef<{ data?: Record<string, unknown>; changes: number[] }>({ changes: [] })
-  const [looping, setLooping] = useState(false)
-  if (looping) {
-    // to the contribution's error boundary: the column stays empty, the rest of the table works
-    throw new Error(
-      `useData of column "${columnId}" returned different data more than ${MAX_CHANGES_PER_SECOND} times in a second, so AYON stopped it`,
-    )
-  }
+type VersionedEntity = EntityRef & { version: string }
 
-  useEffect(() => {
-    if (isEqual(sent.current.data, data)) return
-    const now = Date.now()
-    const changes = [...sent.current.changes.filter((time) => now - time < 1000), now]
-    sent.current = { data, changes }
-    if (changes.length > MAX_CHANGES_PER_SECOND) setLooping(true)
-    else onData(columnId, data)
-  }, [columnId, data, onData])
-  return null
-})
-
-const ColumnDataLoader = ({
+// Gets one column's values (its fetchValues piece) for the rows on screen that it has none for,
+// or an outdated one (the entity's updatedAt changed, or refreshTableColumn). Results go to the
+// store the cells read; a failed batch shows the error in its cells and asks again when they next
+// come on screen.
+const ColumnValuesFetcher = ({
   meta,
   columnId,
   entities,
-  onData,
 }: {
   meta: AddonColumnMeta
   columnId: string
-  entities: EntityRef[]
-  onData: (columnId: string, data: Record<string, unknown> | undefined) => void
+  entities: VersionedEntity[]
 }) => {
   const { projectName } = useProjectContext()
-  const { value: useData } = usePiece(meta.contribution.useData)
-  const args = useMemo(
-    () => ({ projectName, page: meta.page, entities }),
-    [projectName, meta.page, entities],
+  const { contribution, page } = meta
+  const { value: fetchValues } = usePiece(contribution.fetchValues)
+  const scope = `${projectName}:${page}`
+  const state = useRef({
+    pending: new Map<string, VersionedEntity>(),
+    onScreen: [] as VersionedEntity[],
+    timer: undefined as ReturnType<typeof setTimeout> | undefined,
+    controller: new AbortController(),
+  })
+
+  // another project or table: what's in flight is dropped, the values start over
+  useEffect(() => {
+    const current = state.current
+    current.controller = new AbortController()
+    clearAddonColumn(columnId)
+    return () => {
+      current.controller.abort()
+      clearTimeout(current.timer)
+      current.pending.clear()
+    }
+  }, [columnId, scope])
+
+  const flush = useCallback(() => {
+    const current = state.current
+    clearTimeout(current.timer)
+    current.timer = undefined
+    if (!fetchValues) return
+    // rows that only flew past while scrolling aren't asked for
+    const onScreen = new Set(current.onScreen.map((entity) => entity.id))
+    const waiting = [...current.pending.values()].filter((entity) => onScreen.has(entity.id))
+    current.pending.clear()
+    const { signal } = current.controller
+
+    for (let start = 0; start < waiting.length; start += BATCH_SIZE) {
+      const batch = waiting.slice(start, start + BATCH_SIZE)
+      const loading: Record<string, AddonColumnEntry> = {}
+      batch.forEach(({ id, version }) => {
+        const previous = getAddonColumnEntry(columnId, id)
+        loading[id] = {
+          status: 'loading',
+          version,
+          ...(previous && 'value' in previous ? { value: previous.value } : {}),
+        }
+      })
+      setAddonColumnEntries(columnId, loading)
+
+      // only what's still the latest ask for that row is kept
+      const settle = (entry: (id: string) => Omit<AddonColumnEntry, 'version'>) => {
+        if (signal.aborted) return
+        const entries: Record<string, AddonColumnEntry> = {}
+        batch.forEach(({ id, version }) => {
+          if (getAddonColumnEntry(columnId, id)?.version === version) {
+            entries[id] = { ...entry(id), version }
+          }
+        })
+        setAddonColumnEntries(columnId, entries)
+      }
+      const entityRefs = batch.map(
+        ({ id, entityType, projectName, name, label }): EntityRef => ({
+          id,
+          entityType,
+          projectName,
+          name,
+          label,
+        }),
+      )
+      Promise.resolve()
+        .then(() => fetchValues({ projectName, page, entities: entityRefs, signal }))
+        .then((values) => settle((id) => ({ status: 'loaded', value: values?.[id] })))
+        .catch((error: unknown) => {
+          if (signal.aborted) return
+          const err = error instanceof Error ? error : new Error(String(error))
+          reportContributionError(contribution as never, err)
+          settle(() => ({ status: 'error', error: err }))
+        })
+    }
+  }, [fetchValues, columnId, contribution, projectName, page])
+
+  const ask = useCallback(
+    (wanted: VersionedEntity[]) => {
+      const current = state.current
+      wanted.forEach((entity) => current.pending.set(entity.id, entity))
+      if (!current.pending.size) return
+      if (current.pending.size >= BATCH_SIZE) flush()
+      else {
+        clearTimeout(current.timer)
+        current.timer = setTimeout(flush, BATCH_DELAY)
+      }
+    },
+    [flush],
   )
-  if (!useData) return null
-  return (
-    <ContributionErrorBoundary contribution={meta.contribution as never} fallback={() => null}>
-      <RunDataHook useData={useData} columnId={columnId} args={args} onData={onData} />
-    </ContributionErrorBoundary>
+
+  useEffect(() => {
+    if (!fetchValues) return
+    const current = state.current
+    const before = new Set(current.onScreen.map((entity) => entity.id))
+    current.onScreen = entities
+    ask(
+      entities.filter(({ id, version }) => {
+        const entry = getAddonColumnEntry(columnId, id)
+        if (!entry) return true
+        // a failed row is tried again when it comes back on screen
+        if (entry.status === 'error') return entry.version !== version || !before.has(id)
+        return entry.version !== version
+      }),
+    )
+  }, [entities, fetchValues, columnId, ask])
+
+  // refreshTableColumn(id) from the addon: everything is out of date, the rows on screen ask now
+  useEffect(
+    () =>
+      onTableColumnRefresh((id) => {
+        if (id !== contribution.id) return
+        markAddonColumnStale(columnId)
+        ask(state.current.onScreen)
+      }),
+    [contribution.id, columnId, ask],
   )
+
+  return null
 }
 
 /**
- * Runs the useData hook of every shown addon column once for the rows on screen, and gives the
- * results to the cells. Wraps the table body.
+ * Gets the values of every shown addon column for the rows on screen (fetchValues), into the
+ * store the cells read. Wraps the table body.
  */
 export const AddonColumnDataScope = ({
   columns,
@@ -153,28 +244,16 @@ export const AddonColumnDataScope = ({
   children: ReactNode
 }) => {
   const { projectName } = useProjectContext()
-  const [data, setData] = useState<AddonColumnData>({})
-  const page = columns.find((column) => column.columnDef.meta?.addonColumn)?.columnDef.meta
-    ?.addonColumn?.page
-  const scope = `${projectName}:${page}`
-  const onData = useCallback(
-    (columnId: string, columnData: Record<string, unknown> | undefined) => {
-      setAddonColumnValues(scope, columnId, columnData)
-      setData((current) =>
-        current[columnId] === columnData ? current : { ...current, [columnId]: columnData },
-      )
-    },
-    [scope],
-  )
-
-  const dataColumns = columns.flatMap((column) => {
+  const fetchColumns = columns.flatMap((column) => {
     const meta = column.columnDef.meta?.addonColumn
-    return meta?.contribution.useData ? [{ columnId: column.id, meta }] : []
+    return meta?.contribution.fetchValues ? [{ columnId: column.id, meta }] : []
   })
 
-  // one array per set of rows, not per render: useData would refetch otherwise
-  const entitiesKey = entities.map((entity) => `${entity.entityType}:${entity.id}`).join(',')
-  const entityRefs = useMemo<EntityRef[]>(
+  // one array per set of rows (and their versions), not per render
+  const entitiesKey = entities
+    .map((entity) => `${entity.entityType}:${entity.id}:${entity.updatedAt || ''}`)
+    .join(',')
+  const entityRefs = useMemo<VersionedEntity[]>(
     () =>
       entities.map((entity) => ({
         id: entity.id,
@@ -182,6 +261,7 @@ export const AddonColumnDataScope = ({
         projectName,
         name: entity.name,
         label: entity.label || undefined,
+        version: entity.updatedAt || '',
       })),
     // entities is compared by content
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -189,17 +269,11 @@ export const AddonColumnDataScope = ({
   )
 
   return (
-    <AddonColumnDataContext.Provider value={data}>
-      {dataColumns.map(({ columnId, meta }) => (
-        <ColumnDataLoader
-          key={columnId}
-          meta={meta}
-          columnId={columnId}
-          entities={entityRefs}
-          onData={onData}
-        />
+    <>
+      {fetchColumns.map(({ columnId, meta }) => (
+        <ColumnValuesFetcher key={columnId} meta={meta} columnId={columnId} entities={entityRefs} />
       ))}
       {children}
-    </AddonColumnDataContext.Provider>
+    </>
   )
 }
