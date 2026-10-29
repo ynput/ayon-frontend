@@ -46,6 +46,7 @@ import { useCellEditing } from './context/cell-editing'
 import { useSelectionCellsContext } from './context/selection-cells'
 import { ClipboardProvider } from './context/clipboard-context'
 import { useSelectedRowsContext } from './context/selected-rows'
+import { TableCellContext } from './context/table-cell'
 import { useColumnSettingsContext } from './context/column-settings'
 import { TableColumnDropIndicator } from './components/ColumnDropIndicator'
 import {
@@ -76,7 +77,8 @@ import { CellId, getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
-import { Button, Icon } from '@ynput/ayon-react-components'
+import { applyMixedChange, Button, Icon } from '@ynput/ayon-react-components'
+import { isEqual } from 'lodash'
 import {
   ProjectTableAttribute,
   BuiltInFieldOptions,
@@ -88,7 +90,7 @@ import type { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext, parseRowId } from './context/project-table'
 import {
   checkColumnVisibility,
-  ensureAtLeastOneVisibleColumn,
+  resolveColumnVisibility,
   getEntityViewierIds,
   getReadOnlyLists,
   getTableFieldOptions,
@@ -97,6 +99,7 @@ import {
   getEntitiesLabelFromScopes,
 } from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
+import { getEntityListValue, type ListChange } from './hooks/useMixedCellValues'
 
 // dnd-kit imports
 import {
@@ -119,14 +122,14 @@ import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
-import { ColumnsConfig } from './types/columnConfig'
+import { ColumnsConfig, getColumnConfig } from './types/columnConfig'
 import { getRequestErrorString } from '@shared/util'
 import { getFilmstripTarget } from '@shared/components/Filmstrip'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'> & { id?: string },
-  config?: { selection?: string[] },
+  config?: { selection?: string[]; listChange?: ListChange },
 ) => Promise<void>
 
 // rendered while the powerpack summaries remote is unavailable (no license / old addon)
@@ -383,7 +386,7 @@ export const ProjectTreeTable = ({
 
   const handleCellUpdate: CellUpdate = useCallback(
     async (entity, config) => {
-      const { selection = [] } = config || {}
+      const { selection = [], listChange } = config || {}
       const { field, value, isAttrib } = entity
       const fieldColumnId = isAttrib
         ? `attrib_${field}`
@@ -398,7 +401,25 @@ export const ProjectTreeTable = ({
         return rowId === entity.rowId && isFieldColumn(colId)
       })
       const entitiesToUpdate: EntityUpdate[] = []
-      if (!selection?.length || !isEditedCellSelected) {
+      if (listChange) {
+        // each cell keeps its own values, plus or minus the changed ones
+        for (const cellId of listChange.cellIds) {
+          const { rowId } = parseCellId(cellId) || {}
+          const cellEntity = getEntityById(rowId || '')
+          if (!rowId || !cellEntity) continue
+          const currentValue = getEntityListValue(cellEntity, fieldColumnId)
+          const nextValue = applyMixedChange(currentValue, listChange)
+          if (isEqual(currentValue, nextValue)) continue
+          entitiesToUpdate.push({
+            field,
+            rowId,
+            id: cellEntity.entityId,
+            value: nextValue,
+            isAttrib,
+            type: cellEntity.entityType,
+          })
+        }
+      } else if (!selection?.length || !isEditedCellSelected) {
         entitiesToUpdate.push({ ...entity, id: entity.id || entity.rowId })
       } else {
         // update all the selected cells with the same columnId
@@ -451,6 +472,10 @@ export const ProjectTreeTable = ({
   // gives every cell a new component type, so React remounts the whole table body
   const includeParentsKey = includeParents?.join(',')
   const stableIncludeParents = useMemo(() => includeParents, [includeParentsKey])
+  // the columns only sort by these options; the cells get the others (e.g. tags) from the table
+  // meta, so a tag added to the project doesn't remount the table (and close a cell's editor)
+  const columnOptionsKey = JSON.stringify([options.status, options.folderType, options.taskType])
+  const columnOptions = useMemo(() => options, [columnOptionsKey])
 
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
@@ -461,7 +486,7 @@ export const ProjectTreeTable = ({
       includeParents: stableIncludeParents,
       showHierarchy,
       isFlatFolderView,
-      options,
+      options: columnOptions,
       extraColumns,
       excluded: excludedColumns,
       excludedSorting,
@@ -494,7 +519,7 @@ export const ProjectTreeTable = ({
     showHierarchy,
     isFlatFolderView,
     isExpandable,
-    options,
+    columnOptions,
     linkTypes,
     includeLinks,
     stableIncludeParents,
@@ -507,27 +532,47 @@ export const ProjectTreeTable = ({
     groupBy,
   ])
 
+  // Extra columns placed after another column follow it, also in a saved column order. They are
+  // always shown and not saved in the column settings (visibility, order).
+  const placedColumns = useMemo(
+    () => (extraColumns || []).filter((c) => c.after && c.column.id),
+    [extraColumns],
+  )
+  const placedColumnIds = useMemo(
+    () => new Set(placedColumns.map((c) => c.column.id as string)),
+    [placedColumns],
+  )
+  const resolvedColumnOrder = useMemo(() => {
+    if (!columnOrder.length || !placedColumns.length) return columnOrder
+    const order = columnOrder.filter((id) => !placedColumnIds.has(id))
+    for (const { column, after } of placedColumns) {
+      const index = order.indexOf(after as string)
+      if (index >= 0) order.splice(index + 1, 0, column.id as string)
+    }
+    return order
+  }, [columnOrder, placedColumns, placedColumnIds])
+
   // Keep ColumnSettingsProvider's allColumns ref up to date
   useEffect(() => {
-    const ids = columns.map((c) => c.id!).filter(Boolean)
+    const ids = columns.map((c) => c.id!).filter((id) => id && !placedColumnIds.has(id))
     setAllColumns(ids)
-  }, [columns, setAllColumns])
+  }, [columns, setAllColumns, placedColumnIds])
 
   const resolvedColumnVisibility = useMemo(() => {
     const merged = { ...columnVisibility }
+    placedColumnIds.forEach((id) => (merged[id] = true))
+    const explicitVisibility: Record<string, boolean | undefined> = {}
     columns.forEach((col) => {
       // @ts-ignore
-      const explicitVisible = col.visible
-      if (col.id && merged[col.id] === undefined) {
-        if (explicitVisible !== undefined) {
-          merged[col.id] = explicitVisible
-        } else {
-          merged[col.id] = checkColumnVisibility({}, col.id, defaultColumnVisibility)
-        }
-      }
+      if (col.id) explicitVisibility[col.id] = col.visible
     })
-    return ensureAtLeastOneVisibleColumn(merged, columns.map((c) => c.id as string).filter(Boolean))
-  }, [columnVisibility, defaultColumnVisibility, columns])
+    return resolveColumnVisibility(
+      merged,
+      columns.map((c) => c.id as string).filter(Boolean),
+      defaultColumnVisibility,
+      explicitVisibility,
+    )
+  }, [columnVisibility, defaultColumnVisibility, columns, placedColumnIds])
 
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
@@ -586,7 +631,7 @@ export const ProjectTreeTable = ({
       })(),
       columnSizing,
       columnVisibility: resolvedColumnVisibility,
-      columnOrder,
+      columnOrder: resolvedColumnOrder,
     },
     meta: {
       projectName,
@@ -633,7 +678,7 @@ export const ProjectTreeTable = ({
     tableContainerRef,
     columnPinning,
     columnSizing,
-    columnOrder,
+    columnOrder: resolvedColumnOrder,
   })
 
   // Track column visibility changes for subscribed columns
@@ -1165,6 +1210,12 @@ const TableHeadCell = ({
   isDraggable = true,
 }: TableHeadCellProps) => {
   const { column } = header
+  const columnConfig = getColumnConfig(
+    header.getContext().table.options.meta?.columnsConfig,
+    column.id,
+  )
+  const headerIcon = columnConfig?.headerIcon
+  const extraMenuItems = columnConfig?.menuItems
   const sorting = column.getIsSorted()
   const menuId = `column-header-menu-${column.id}`
   const { menuOpen } = useMenuContext()
@@ -1249,6 +1300,7 @@ const TableHeadCell = ({
           {...(isDraggable ? { ...attributes, ...listeners } : {})}
         >
           {flexRender(column.columnDef.header, header.getContext())}
+          {headerIcon && <Icon icon={headerIcon.icon} data-tooltip={headerIcon.tooltip} />}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
           )}
@@ -1256,13 +1308,14 @@ const TableHeadCell = ({
           <Styled.HeaderButtons className="actions" $isOpen={isOpen} {...preventDragFromActions}>
             {/* Column drag handle */}
 
-            {(canHide || canPin || canSort) && (
+            {(canHide || canPin || canSort || !!extraMenuItems?.length) && (
               <ColumnHeaderMenu
                 className="header-menu"
                 header={header}
                 canHide={canHide}
                 canPin={canPin}
                 canSort={canSort}
+                extraMenuItems={extraMenuItems}
                 isResizing={column.getIsResizing()}
                 menuId={menuId}
                 isOpen={isOpen}
@@ -1315,6 +1368,7 @@ const TableHeadCell = ({
           )}
         </Styled.TableCellContent>
       )}
+      {columnConfig?.groupEdge && <Styled.GroupEdge className={columnConfig.groupEdge} />}
     </Styled.HeaderCell>
   )
 }
@@ -1771,6 +1825,13 @@ const TD = ({
   const isRowSelectionColumn = cell.column.id === ROW_SELECTION_COLUMN_ID
   const isGroup = !!cell.row.original.group
   const isMultipleSelected = selectedCells.size > 1
+  const columnConfig = getColumnConfig(
+    cell.getContext().table.options.meta?.columnsConfig,
+    cell.column.id,
+  )
+  const cellMark = cell.row.original.cellMarks?.[cell.column.id]
+  const isRowReadOnly = !!cell.row.original.readOnly
+  const cellContext = useMemo(() => ({ mark: cellMark, isRowReadOnly }), [cellMark, isRowReadOnly])
 
   return (
     <Styled.TD
@@ -1808,8 +1869,9 @@ const TD = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
-        // check we are not clicking in a dropdown
-        if (target.closest('.options')) return
+        // check we are not clicking in a dropdown, or in anything the cell opened in a portal
+        // (e.g. a dropdown's search box), which would lose its focus to the cell
+        if (target.closest('.options') || !e.currentTarget.contains(target)) return
 
         e.currentTarget.focus()
 
@@ -1820,7 +1882,12 @@ const TD = ({
         if (e.detail === 2) {
           // comments cells are read-only but their double-click opens the details panel, so don't block them here
           const isReadOnly = isTargetReadOnly(e) && cell.column.id !== 'comments'
-          if (isReadOnly || isEntityRestricted(cell.row.original.primary.entityType) || isGroup) {
+          if (
+            isReadOnly ||
+            isEntityRestricted(cell.row.original.primary.entityType) ||
+            isGroup ||
+            cell.row.original.readOnly
+          ) {
             e.preventDefault()
             return
           }
@@ -1874,7 +1941,10 @@ const TD = ({
         if (isGroup && cell.column.id !== 'name') return clearSelection()
 
         // check if this is a restricted entity - prevent editing
-        const isRestricted = isGroup || isEntityRestricted(cell.row.original.primary.entityType)
+        const isRestricted =
+          isGroup ||
+          isEntityRestricted(cell.row.original.primary.entityType) ||
+          !!cell.row.original.readOnly
 
         // if clicking on an edit trigger, start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {
@@ -1949,7 +2019,10 @@ const TD = ({
         // keyboard events are handled in useKeyboardNavigation hook
       }}
     >
-      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      <TableCellContext.Provider value={cellContext}>
+        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      </TableCellContext.Provider>
+      {columnConfig?.groupEdge && <Styled.GroupEdge className={columnConfig.groupEdge} />}
     </Styled.TD>
   )
 }

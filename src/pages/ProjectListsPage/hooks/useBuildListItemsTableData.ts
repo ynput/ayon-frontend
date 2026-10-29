@@ -16,11 +16,16 @@ import {
   RESTRICTED_ENTITY_ICON,
 } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
+// the values a row shows and the marks on its cells, see listValues/AGENTS.md
+export type ListItemRowValues = Pick<EntityData, 'attrib' | 'ownAttrib'> &
+  Pick<TableRow, 'cellMarks'>
+
 type Props = {
   listItemsData: EntityListItemWithLinks[]
+  getRowValues?: (item: EntityListItemWithLinks) => ListItemRowValues
 }
 
-const useBuildListItemsTableData = ({ listItemsData }: Props) => {
+const useBuildListItemsTableData = ({ listItemsData, getRowValues }: Props) => {
   const project = useProjectContext()
 
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
@@ -35,8 +40,10 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         extractSubTypes(item, item.entityType).subType,
       )
 
+      const { cellMarks, ...rowValues } = (!isRestricted && getRowValues?.(item)) || {}
       const primary = {
         ...buildPrimaryEntity(item, isRestricted),
+        ...rowValues,
         icon: isRestricted ? RESTRICTED_ENTITY_ICON : entityTypeData?.icon,
         color: isRestricted ? '' : entityTypeData?.color,
         folderId: extractFolderId(item, item.entityType),
@@ -60,13 +67,14 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         primary,
         parents: buildParentEntities(item),
         subRows: [],
+        cellMarks,
       }
       return row
     })
   }
   const tableData = useMemo(
     () => buildListItemsTableData(listItemsData),
-    [listItemsData, getEntityTypeData],
+    [listItemsData, getEntityTypeData, getRowValues],
   )
   return tableData
 }
@@ -90,10 +98,11 @@ const buildPrimaryEntity = (item: EntityListItemWithLinks, isRestricted: boolean
     updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : undefined,
     path: item.parents?.join('/'),
     hasReviewables: getHasReviewables(item),
-    attrib: item.attrib || {},
+    // the shown values come from getRowValues (list values over entity values)
+    attrib: item.entityAttrib || {},
     ownAttrib: item.ownAttrib
       ? [...item.ownAttrib, ...item.ownItemAttrib]
-      : Object.keys(item.attrib || {}),
+      : Object.keys(item.entityAttrib || {}),
   }
 
   if (isRestricted) {

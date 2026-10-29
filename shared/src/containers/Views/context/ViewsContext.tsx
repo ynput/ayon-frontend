@@ -92,12 +92,21 @@ export interface ViewsContextValue {
 
 const DEFAULT_VIEW_ALIAS = 'view'
 
+// Stable empty list, so skipped queries do not hand consumers a new array on every render
+const NO_VIEWS: ViewListItemModel[] = []
+
 export interface ViewsProviderProps {
   children: ReactNode
   viewType?: string
   viewAlias?: string
   projectName?: string
   dispatch?: any
+  // Opt out of loading data the consumer does not use. Both default to true.
+  // The default and working views are always loaded.
+  include?: {
+    viewsList?: boolean // every view of the type, for the views menu
+    baseViews?: boolean // project and studio base views
+  }
   debug?: {
     powerLicense?: boolean
   }
@@ -109,8 +118,12 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   viewAlias = DEFAULT_VIEW_ALIAS,
   projectName,
   dispatch,
+  include,
   debug,
 }) => {
+  const includeViewsList = include?.viewsList ?? true
+  const includeBaseViews = include?.baseViews ?? true
+
   let { powerLicense } = usePowerpack()
   if (debug?.powerLicense !== undefined) {
     console.warn('Using debug power license:', debug.powerLicense)
@@ -158,9 +171,9 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   // Fetch views data and filter out base views
-  const { currentData: viewsListRaw = [], isLoading: isLoadingViewsList } = useListViewsQuery(
+  const { currentData: viewsListRaw = NO_VIEWS, isLoading: isLoadingViewsList } = useListViewsQuery(
     { projectName: projectName, viewType: viewType as string },
-    { skip: !viewType },
+    { skip: !viewType || !includeViewsList },
   )
 
   // Filter out base views from the list
@@ -194,11 +207,11 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   // Fetch both project and studio base views
   const { currentData: projectBaseView, isLoading: isLoadingProjectBaseView } = useGetBaseViewQuery(
     { projectName: projectName, viewType: viewType as string },
-    { skip: !viewType },
+    { skip: !viewType || !includeBaseViews },
   )
   const { currentData: studioBaseView, isLoading: isLoadingStudioBaseView } = useGetBaseViewQuery(
     { projectName: undefined, viewType: viewType as string },
-    { skip: !viewType },
+    { skip: !viewType || !includeBaseViews },
   )
 
   // isLoadingViews is true ONLY on the very first fetch (no cached data yet).

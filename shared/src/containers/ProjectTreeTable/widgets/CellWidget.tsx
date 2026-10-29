@@ -1,11 +1,13 @@
 import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
+import { applyMixedChange, type MixedChange } from '@ynput/ayon-react-components'
 
 // Widgets
 import { BooleanWidget, BooleanWidgetProps } from './BooleanWidget'
 import { CollapsedWidget } from './CollapsedWidget'
 import { DateWidget, DateWidgetProps } from './DateWidget'
 import { EnumWidget, EnumWidgetProps } from './EnumWidget'
+import { TagsWidget } from './TagsWidget'
 import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
 import { LinksWidget, LinkWidgetData } from './LinksWidget'
 import { isLinkEditable } from './LinksWidgetHelpers'
@@ -26,7 +28,10 @@ import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidg
 import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { READ_ONLY } from '../utils'
 import type { AttributeData, EnumItem, EntityComment } from '@shared/api'
+import type { CellMark } from '../types'
+import { useTableCellContext } from '../context/table-cell'
 import { CELL_PADDING_Y } from '../constants'
+import { useMixedCellValues, type ListChange } from '../hooks/useMixedCellValues'
 
 const Cell = styled.div`
   position: absolute;
@@ -61,6 +66,21 @@ const Cell = styled.div`
   &.entity-widget {
     cursor: pointer;
   }
+
+  &.warning::before {
+    content: 'warning';
+    font-family: 'Material Symbols Outlined';
+    font-size: 16px;
+    margin-right: 4px;
+    color: var(--md-sys-color-warning);
+  }
+`
+
+// CellMark.highlight: behind the cell, so a dimmed (inherited) cell gets the same tint
+const HighlightTint = styled.span`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 `
 
 // use this class to trigger the editing mode on a single click
@@ -108,7 +128,13 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   folderId?: string | null
   midnightExclusiveFields?: string[]
   tooltip?: string
-  onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
+  mark?: CellMark // merged over the row's mark for this cell (TableRow.cellMarks)
+  // listChange: a list value edited in several selected cells, to apply to each of them
+  onChange?: (
+    value: CellValue | CellValue[],
+    key?: 'Enter' | 'Click' | 'Escape',
+    listChange?: ListChange,
+  ) => void
   // options passthrough props
   pt?: {
     enum?: Partial<EnumWidgetProps>
@@ -126,7 +152,7 @@ export interface WidgetBaseProps {
   onCancelEdit?: () => void
 }
 
-export const CellWidget: FC<EditorCellProps> = ({
+const CellWidgetContent: FC<EditorCellProps> = ({
   rowId,
   columnId,
   value,
@@ -143,6 +169,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   folderId,
   midnightExclusiveFields,
   tooltip,
+  mark,
   onChange,
   entityType,
   pt,
@@ -160,6 +187,12 @@ export const CellWidget: FC<EditorCellProps> = ({
 
   const isCurrentCellEditing = isEditing(cellId)
   const isCurrentCellFocused = isCellFocused(cellId)
+  // several cells of this list column selected: values are added to or removed from each of them
+  const mixed = useMixedCellValues(
+    cellId,
+    columnId,
+    isCurrentCellEditing && !isReadOnly && type === 'list_of_strings',
+  )
 
   const moveToNextRow = () => {
     const rowIndex = gridMap.rowIdToIndex.get(rowId)
@@ -202,6 +235,20 @@ export const CellWidget: FC<EditorCellProps> = ({
     } else {
       setEditingCellId(null)
     }
+  }
+
+  const handleMixedChange = (change: MixedChange) => {
+    setEditingCellId(null)
+    if (isReadOnly || !mixed) return
+    const ownValue = (Array.isArray(value) ? value : [value]).map(String).filter(Boolean)
+    onChange?.(applyMixedChange(ownValue, change), 'Click', { ...change, cellIds: mixed.cellIds })
+  }
+  const mixedValue = mixed && Object.keys(mixed.counts)
+  const mixedProps = mixed && {
+    mixedCounts: mixed.counts,
+    mixedTotal: mixed.total,
+    mixedLabel: mixed.label,
+    onMixedChange: handleMixedChange,
   }
 
   const handleCancel = () => {
@@ -250,11 +297,13 @@ export const CellWidget: FC<EditorCellProps> = ({
       case type === 'links': {
         const linksValue = valueData as LinkWidgetData | undefined
 
-        const isEditable = isLinkEditable(
-          linksValue?.direction || 'out',
-          linksValue?.link.linkType || '',
-          linksValue?.entityType || '',
-        )
+        const isEditable =
+          !isReadOnly &&
+          isLinkEditable(
+            linksValue?.direction || 'out',
+            linksValue?.link.linkType || '',
+            linksValue?.entityType || '',
+          )
 
         // overwrite readonly state if the cell is currently being edited
         isReadOnly = !isEditable
@@ -300,6 +349,20 @@ export const CellWidget: FC<EditorCellProps> = ({
         )
       }
 
+      case attributeData?.widget === 'tags': {
+        return (
+          <TagsWidget
+            value={mixedValue || (Array.isArray(value) ? value : [value])}
+            options={options}
+            projectName={projectName}
+            pt={pt?.enum?.pt}
+            isProjectTags={columnId === 'tags'}
+            {...mixedProps}
+            {...sharedProps}
+          />
+        )
+      }
+
       case !!options.length || !!attributeData?.enumResolver: {
         const enumValue = Array.isArray(value) ? value : [value]
         if (isReadOnly) {
@@ -335,12 +398,13 @@ export const CellWidget: FC<EditorCellProps> = ({
         }
         return (
           <EnumWidget
-            value={enumValue}
+            value={mixedValue || enumValue}
             options={options}
             type={type}
             onOpen={() => setEditingCellId(cellId)}
             enableCustomValues={enableCustomValues}
             isLoadingOptions={isLoadingOptions}
+            {...mixedProps}
             {...sharedProps}
             {...pt?.enum}
           />
@@ -406,42 +470,76 @@ export const CellWidget: FC<EditorCellProps> = ({
     isCollapsed,
     isMidnightExclusive,
     handleOnChange,
+    mixed,
   ])
 
   return (
-    <Cell
-      {...props}
-      onKeyDown={(event) => {
-        props.onKeyDown?.(event)
-        if (
-          event.defaultPrevented ||
-          event.key !== 'Enter' ||
-          type !== 'boolean' ||
-          options.length ||
-          attributeData?.enumResolver ||
-          isReadOnly ||
-          isCollapsed
-        )
-          return
+    <>
+      {mark?.highlight && (
+        <HighlightTint
+          style={{ backgroundColor: `color-mix(in srgb, ${mark.highlight} 25%, transparent)` }}
+        />
+      )}
+      <Cell
+        {...props}
+        onKeyDown={(event) => {
+          props.onKeyDown?.(event)
+          if (
+            event.defaultPrevented ||
+            event.key !== 'Enter' ||
+            type !== 'boolean' ||
+            options.length ||
+            attributeData?.enumResolver ||
+            isReadOnly ||
+            isCollapsed
+          )
+            return
 
-        event.preventDefault()
-        event.stopPropagation()
-        handleOnChange(!value, 'Enter')
-      }}
-      className={clsx(props.className, {
-        inherited: isInherited && !isCurrentCellEditing,
-        [READ_ONLY]: isReadOnly,
-        editable: !isReadOnly,
-      })}
-      ref={ref}
-      id={cellId}
-      data-tooltip={
-        tooltip ||
-        (isInherited && !isCurrentCellEditing && isCurrentCellFocused ? 'Inherited' : undefined)
-      }
-      data-tooltip-delay={200}
-    >
-      {widget}
-    </Cell>
+          event.preventDefault()
+          event.stopPropagation()
+          handleOnChange(!value, 'Enter')
+        }}
+        className={clsx(props.className, {
+          inherited: isInherited && !isCurrentCellEditing,
+          [READ_ONLY]: isReadOnly,
+          editable: !isReadOnly,
+          warning: mark?.warning,
+        })}
+        ref={ref}
+        id={cellId}
+        data-tooltip={
+          tooltip ||
+          (!isCurrentCellEditing && mark?.tooltip) ||
+          (isInherited && !isCurrentCellEditing && isCurrentCellFocused ? 'Inherited' : undefined)
+        }
+        data-tooltip-delay={200}
+      >
+        {widget}
+      </Cell>
+    </>
   )
+}
+
+// Applies what the row says about this cell: TableRow.readOnly and TableRow.cellMarks.
+// A mark's placeholder replaces the value with read-only, greyed text.
+export const CellWidget: FC<EditorCellProps> = ({ mark: markProp, isReadOnly, ...props }) => {
+  const { mark: rowMark, isRowReadOnly } = useTableCellContext()
+  const mark = rowMark && markProp ? { ...rowMark, ...markProp } : markProp || rowMark
+
+  if (mark?.placeholder) {
+    return (
+      <CellWidgetContent
+        rowId={props.rowId}
+        columnId={props.columnId}
+        className={props.className}
+        value={mark.placeholder}
+        attributeData={{ type: 'string' }}
+        mark={mark}
+        isInherited
+        isReadOnly
+      />
+    )
+  }
+
+  return <CellWidgetContent {...props} mark={mark} isReadOnly={isReadOnly || isRowReadOnly} />
 }

@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test'
 import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
+import { requireAddon } from '../support/addons'
 import { OverviewPage } from '../pages/OverviewPage'
 
 const setup = async (api: AyonApi, projectName: string) => {
@@ -39,7 +40,7 @@ test.describe('details panel', () => {
     api,
     projectName,
   }) => {
-    test.skip(!(await api.hasAddon('planner')), 'subtasks need the planner addon')
+    await requireAddon(api, 'planner')
     const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
     await api.createTask(projectName, {
       folderId: folder.id,
@@ -129,12 +130,33 @@ test.describe('details panel', () => {
       .toEqual({ frameStart: 1009, own: true })
   })
 
+  test('add a tag when the project anatomy has no tags', async ({ page, api, projectName }) => {
+    await api.patch(`/api/projects/${projectName}`, { tags: [] })
+    const { task } = await setup(api, projectName)
+    const { panel } = await openTask(page, projectName)
+    await panel.openTab('details')
+
+    await panel.attribute('Tags').click()
+    const search = page.locator('.search').getByRole('textbox')
+    await search.click()
+    await expect(search).toBeFocused()
+    await search.fill('adhoc_tag')
+    await search.press('Enter')
+
+    await expect
+      .poll(async () => (await api.getTask(projectName, task.id)).tags)
+      .toEqual(['adhoc_tag'])
+    // Escape would also close the panel, so the dropdown is closed by clicking outside
+    await panel.attribute('Name').click()
+    await expect(panel.attribute('Tags')).toContainText('adhoc_tag')
+  })
+
   test('search subtasks for all words of any comma separated part', async ({
     page,
     api,
     projectName,
   }) => {
-    test.skip(!(await api.hasAddon('planner')), 'subtasks need the planner addon')
+    await requireAddon(api, 'planner')
     const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
     await api.createTask(projectName, {
       folderId: folder.id,

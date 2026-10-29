@@ -386,7 +386,13 @@ export type DefaultColumns =
   | typeof LISTS_COLUMN_ID
   | typeof REVIEW_SESSIONS_COLUMN_ID
 
-export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
+export type TreeTableExtraColumn = {
+  column: ColumnDef<TableRow>
+  position?: number
+  // id of the column this one is placed right after (also in a saved column order);
+  // such a column is always shown and not saved in the column settings
+  after?: string
+}
 
 export type BuildTreeTableColumnsProps = {
   scopes: string[]
@@ -973,10 +979,10 @@ const buildTreeTableColumns = ({
             attributeData={{ type: 'list_of_strings' }}
             options={meta?.options?.assignee}
             isCollapsed={!!row.original.childOnlyMatch}
-            onChange={(value) =>
+            onChange={(value, _key, listChange) =>
               meta?.updateEntities?.(
                 { field: column.id, value, type, rowId: row.id },
-                { selection: meta?.selection },
+                { selection: meta?.selection, listChange },
               )
             }
             isReadOnly={
@@ -1234,13 +1240,13 @@ const buildTreeTableColumns = ({
             className={clsx('tags', { loading: row.original.isLoading })}
             columnId={column.id}
             value={value}
-            attributeData={{ type: 'list_of_strings' }}
+            attributeData={{ type: 'list_of_strings', widget: 'tags' }}
             options={meta?.options?.tag}
             isCollapsed={!!row.original.childOnlyMatch}
-            onChange={(value) =>
+            onChange={(value, _key, listChange) =>
               meta?.updateEntities?.(
                 { field: column.id, value, type, rowId: row.id },
-                { selection: meta?.selection },
+                { selection: meta?.selection, listChange },
               )
             }
             isReadOnly={
@@ -1522,7 +1528,7 @@ const buildTreeTableColumns = ({
                 ) ||
                 parseScopedColumnId(column.id).scope !== 'primary'
               }
-              onChange={(value) =>
+              onChange={(value, _key, listChange) =>
                 meta?.updateEntities?.(
                   {
                     field: columnIdParsed,
@@ -1538,6 +1544,7 @@ const buildTreeTableColumns = ({
                       entity === row.original.primary && supportsMultiCellEdit(attrib.data)
                         ? meta?.selection
                         : undefined,
+                    listChange,
                   },
                 )
               }
@@ -1681,8 +1688,11 @@ const buildTreeTableColumns = ({
 
   // Add extra columns if provided
   if (extraColumns) {
-    extraColumns.forEach(({ column, position = -1 }) => {
-      if (position >= 0 && position < allColumns.length) {
+    extraColumns.forEach(({ column, position = -1, after }) => {
+      const afterIndex = after ? allColumns.findIndex((c) => c.id === after) : -1
+      if (afterIndex >= 0) {
+        allColumns.splice(afterIndex + 1, 0, column)
+      } else if (position >= 0 && position < allColumns.length) {
         allColumns.splice(position, 0, column)
       } else {
         allColumns.push(column)

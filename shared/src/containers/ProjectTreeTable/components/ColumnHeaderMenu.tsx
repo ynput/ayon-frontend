@@ -15,6 +15,7 @@ interface ColumnHeaderMenuProps {
   className?: string
   menuId?: string
   isOpen?: boolean
+  extraMenuItems?: ColumnMenuItemType[]
 }
 
 export const ColumnHeaderMenu = ({
@@ -26,6 +27,7 @@ export const ColumnHeaderMenu = ({
   className,
   menuId,
   isOpen,
+  extraMenuItems,
 }: ColumnHeaderMenuProps) => {
   const { column } = header
   const columnId = String(column.id)
@@ -153,6 +155,21 @@ export const ColumnHeaderMenu = ({
         handleMenuToggle(false)
       },
     })
+  }
+
+  if (extraMenuItems?.length) {
+    if (menuItems.length) menuItems.push({ id: 'divider', type: 'divider' })
+    for (const item of extraMenuItems) {
+      menuItems.push({
+        ...item,
+        onClick: item.onClick
+          ? () => {
+              item.onClick?.()
+              handleMenuToggle(false)
+            }
+          : undefined,
+      })
+    }
   }
 
   if (menuItems.length === 0) {
