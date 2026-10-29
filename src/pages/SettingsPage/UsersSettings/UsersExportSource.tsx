@@ -2,6 +2,7 @@ import { FC, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { dataImportApi, useGetUserPoolsQuery } from '@shared/api'
+import type { UserPoolModel } from '@shared/api'
 import { TABLE_EXPORT_SEARCH_PARAM, useTableExportContext } from '@shared/context'
 import type { TableExportOptions, TableExportScope, TableExportSource } from '@shared/context'
 import { isForImport, NOT_IMPORTABLE } from '@shared/containers/TableExport'
@@ -25,6 +26,9 @@ const USER_COLUMNS: { field: string; key: string; label: string }[] = [
 // what Import CSV needs besides the name to restore the access level it can set
 const IMPORT_COLUMNS = ['data.isAdmin', 'data.isDeveloper']
 
+// a stable default while the pools load, so the source isn't rebuilt on every render
+const NO_POOLS: UserPoolModel[] = []
+
 // the Power Pack version with the users export
 const POWERPACK_VERSION = '1.7.1'
 
@@ -39,7 +43,7 @@ const UsersExportSource: FC<UsersExportSourceProps> = ({ users, selectedUsers })
   const registerSource = tableExport?.registerSource
   // Import CSV only imports users for admins
   const isAdmin = useSelector((state: any) => !!state.user.data.isAdmin)
-  const { data: userPools = [] } = useGetUserPoolsQuery()
+  const { data: userPools = NO_POOLS } = useGetUserPoolsQuery()
 
   // the columns Import CSV reads, only fetched while the dialog is open
   const [searchParams] = useSearchParams()
@@ -58,9 +62,10 @@ const UsersExportSource: FC<UsersExportSourceProps> = ({ users, selectedUsers })
       const { columnOrder = [] } = getUsersTableState()
       const position = (field: string) =>
         columnOrder.includes(field) ? columnOrder.indexOf(field) : columnOrder.length
-      return USER_COLUMNS.filter(({ key }) => key !== 'user_pool' || userPools.length)
-        .map((column, index) => ({ ...column, index }))
-        .sort((a, b) => position(a.field) - position(b.field) || a.index - b.index)
+      // sort is stable: columns the table doesn't list keep the default order
+      return USER_COLUMNS.filter(({ key }) => key !== 'user_pool' || userPools.length).sort(
+        (a, b) => position(a.field) - position(b.field),
+      )
     }
 
     const getNames = (scope: TableExportScope) => {

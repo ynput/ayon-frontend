@@ -1,4 +1,5 @@
 import { UserPoolModel } from '@shared/api'
+import { readLocalStorage } from '@shared/hooks/useLocalStorage'
 import { ColumnSortEvent } from 'primereact/column'
 import PrimeReact from 'primereact/api'
 import { ObjectUtils } from 'primereact/utils'
@@ -133,17 +134,12 @@ const getUserSortFunctions = (
 // the users table's DataTable state (stateKey), saved by the table on every change
 export const USERS_TABLE_STATE_KEY = 'users-datatable'
 
-export const getUsersTableState = (): {
-  sortField?: string
-  sortOrder?: 1 | -1 | 0 | null
-  columnOrder?: string[]
-} => {
-  try {
-    return JSON.parse(localStorage.getItem(USERS_TABLE_STATE_KEY) || '{}')
-  } catch {
-    return {}
-  }
-}
+export const getUsersTableState = () =>
+  readLocalStorage<{
+    sortField?: string
+    sortOrder?: 1 | -1 | 0 | null
+    columnOrder?: string[]
+  }>(USERS_TABLE_STATE_KEY, {})
 
 // the users in the table's order: the column's sort function, or the DataTable's default sort
 const sortUsers = <T extends object>(users: T[], userPools: UserPoolModel[]): T[] => {
