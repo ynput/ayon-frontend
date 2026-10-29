@@ -81,7 +81,7 @@ export const AddonButton = <S extends ButtonSlot>({
         .then((build) => {
           if (typeof build !== 'function') throw new Error('"menu" has no default export function')
           return (build as (ctx: object) => AddonMenuItem[] | Promise<AddonMenuItem[]>)(
-            actionContext,
+            { ...actionContext, slot: any.slot },
           )
         })
         .then((items) => {
