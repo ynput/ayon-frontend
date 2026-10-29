@@ -203,6 +203,24 @@ test('a details panel item is pinned with true or false', () => {
   expect(skipped.map((s) => [s.id, s.reason])).toEqual([['yes', 'pinned must be true or false']])
 })
 
+test('a table column sits in a named submenu or at the top level', () => {
+  const column = { slot: 'tableColumn', label: 'Due in', cell: loader }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...column, id: 'own' },
+      { ...column, id: 'named', menu: 'Production' },
+      { ...column, id: 'top', menu: false },
+      { ...column, id: 'blank', menu: ' ' },
+      { ...column, id: 'yes', menu: true },
+    ],
+  })
+  expect(contributions.map((c) => c.id)).toEqual(['own', 'named', 'top'])
+  expect(skipped.map((s) => [s.id, s.reason])).toEqual([
+    ['blank', 'menu must be a name or false'],
+    ['yes', 'menu must be a name or false'],
+  ])
+})
+
 test('a manifest without a contributes list is reported', () => {
   const { contributions, skipped } = checkManifest(addon, { default: {} }, slots)
   expect(contributions).toEqual([])

@@ -6,6 +6,7 @@ import { useAddColumnsMenu } from './useAddColumnsMenu'
 import { useProjectTableColumnItems } from './useProjectTableColumnItems'
 import { AddColumnMenu } from './AddColumnMenu'
 import type { MenuItemType } from '../Menu'
+import type { AddColumnItem } from './addColumnsMenu'
 import type { ParentColumnDefinition } from '@shared/containers'
 
 const ADD_COLUMN_MENU_TABLE_ID = 'add-column-menu-table'
@@ -23,7 +24,7 @@ const ButtonPosition = styled.div`
 `
 
 interface AddColumnButtonProps {
-  extraColumns?: { value: string; label: string; icon?: string }[]
+  extraColumns?: Pick<AddColumnItem, 'value' | 'label' | 'icon' | 'menu'>[]
   hiddenColumns?: string[]
   includeLinks?: boolean
   extraMenuItems?: MenuItemType[]

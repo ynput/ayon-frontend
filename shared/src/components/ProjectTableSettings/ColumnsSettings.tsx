@@ -62,7 +62,7 @@ const NO_SCOPES: string[] = []
 // attributes and parent columns are named exactly as their table header, so they need no section path
 const getColumnSettingsPath = (column: AddColumnItem, scopes: string[]) => {
   if (column.attrib || column.parentScope) return undefined
-  return getAddColumnSection(column, scopes)?.label
+  return getAddColumnSection(column, scopes)?.label ?? column.menu
 }
 
 // parent attributes only have their title in the column list, the header adds the scope

@@ -265,6 +265,7 @@ A read-only column in the project tables (Overview, Products, Lists). It is in t
 | `entityTypes` | `string[] \| undefined` | entity types with a cell; other rows show an empty read-only cell. All when not set |
 | `pages` | `ProjectTablePage[] \| undefined` | which tables offer it; all (Overview, Products, Lists) when not set |
 | `width` | `number \| undefined` | width in pixels. Addon columns start hidden: users show them in Customize |
+| `menu` | `string \| false \| undefined` | where the column sits in the "Add column" menu: a submenu named after the addon when not set, a submenu with this name (columns giving the same name share it, across addons too), or `false` for the menu's top level |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|

@@ -318,6 +318,12 @@ export interface TableColumnMeta {
   pages?: ProjectTablePage[]
   /** width in pixels. Addon columns start hidden: users show them in Customize */
   width?: number
+  /**
+   * where the column sits in the "Add column" menu: a submenu named after the addon when not
+   * set, a submenu with this name (columns giving the same name share it, across addons too), or
+   * `false` for the menu's top level
+   */
+  menu?: string | false
 }
 
 /** Context of one cell of a `tableColumn`. */
@@ -583,7 +589,16 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     check: (item) =>
       item.pinned !== undefined && typeof item.pinned !== 'boolean' ? 'pinned must be true or false' : undefined,
   },
-  tableColumn: { version: 1, required: ['label'], pieces: ['cell'], optionalPieces: ['fetchValues'] },
+  tableColumn: {
+    version: 1,
+    required: ['label'],
+    pieces: ['cell'],
+    optionalPieces: ['fetchValues'],
+    check: (item) =>
+      item.menu !== undefined && item.menu !== false && !(typeof item.menu === 'string' && item.menu.trim())
+        ? 'menu must be a name or false'
+        : undefined,
+  },
   entityMenuItem: { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
   'projectList.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
   'slicer.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
