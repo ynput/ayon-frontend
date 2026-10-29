@@ -1,4 +1,4 @@
-// `ayon-addon dev --standalone`: the Vite dev server (hot reload) with the dev shell from
+// `ayon-addon dev` (the default): the Vite dev server (hot reload) with the dev shell from
 // @ynput/ayon-addon-dev/shell instead of the addon's own index.html. AYON's requests go through
 // the dev server to the real server, signed in with the API key; preview fixtures are read and
 // written under dev/fixtures.

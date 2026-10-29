@@ -1,5 +1,5 @@
 // Developing an addon inside the real frontend: `?addonDev=<addon>@http://localhost:5173` loads
-// that one addon from the addon's dev server (`ayon-addon dev`) instead of the server, kept in
+// that one addon from the addon's dev server (`ayon-addon dev --ayon`) instead of the server, kept in
 // localStorage until `?addonDev=off`. Only for developer-mode and service users, only from this
 // machine. See src/remote/AGENTS.md.
 
@@ -12,7 +12,7 @@ export interface AddonDevOverride {
   url: string
 }
 
-/** What `ayon-addon dev` serves as /ayon-addon.json next to the build. */
+/** What `ayon-addon dev --ayon` serves as /ayon-addon.json next to the build. */
 export interface AddonDevInfo {
   name: string
   version: string

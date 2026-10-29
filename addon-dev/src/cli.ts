@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // ayon-addon: dev server and checks for AYON addon frontends. Every command prints JSON with --json.
-//   ayon-addon dev [--port 5173]     watched build + server for AYON's dev override (?addonDev=)
-//   ayon-addon dev --standalone      the dev shell: the addon in AYON's surfaces, hot reload
+//   ayon-addon dev [--port 5174]     the dev shell: the addon in AYON's surfaces, hot reload
+//   ayon-addon dev --ayon [--port 5173]   watched build + server for AYON's dev override (?addonDev=)
 //   ayon-addon slots [--json]        the slots of the installed @ynput/ayon-addon
 //   ayon-addon check [--json] [--no-types]
 //   ayon-addon open <slot> <id>      the dev shell in a headless browser (live server)
@@ -94,7 +94,8 @@ const devStandalone = async () => {
 }
 
 const dev = async () => {
-  if (flag('standalone')) return devStandalone()
+  // the dev shell is the default; --standalone is still accepted, as that default
+  if (!flag('ayon')) return devStandalone()
   const port = Number(option('port', '5173'))
   const project = readAddonProject(root)
   const vite = await importFromProject<typeof import('vite')>(root, 'vite')
@@ -193,11 +194,11 @@ const browseCommand = (mode: 'live' | 'preview') => async () => {
 
 const HELP = `ayon-addon: tools for AYON addon frontends (run in the addon's frontend folder)
 
-  dev [--port 5173]            build on every change and serve it for AYON's dev override:
+  dev [--port 5174]            the dev shell: the addon's contributions in AYON's surfaces,
+                               without AYON, hot reload, a developer panel to pick slot,
+                               project, entities
+  dev --ayon [--port 5173]     build on every change and serve it for AYON's dev override:
                                open AYON with ?addonDev=<addon>@http://localhost:5173
-  dev --standalone [--port 5174]
-                               the dev shell: the addon's contributions in AYON's surfaces,
-                               hot reload, a developer panel to pick slot, project, entities
   slots [--json]               the slots of the installed @ynput/ayon-addon
   check [--json] [--no-types]  the manifest as AYON reads it, the pieces' files, the types
   open <slot> <id> [--project <name>] [--entities type:id,...] [--page overview|products|lists]

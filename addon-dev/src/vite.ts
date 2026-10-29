@@ -1,8 +1,8 @@
 // ayonAddon(): the Vite setup of an AYON addon frontend in one plugin.
 //   build: module federation (remote `name`, ./manifest exposed, every package AYON provides
 //          shared, @ynput/ayon-addon with import: false), output in dist/modules/<name>
-//   `ayon-addon dev`: the same build, watched, plus /ayon-addon.json for AYON's dev override
-//   `ayon-addon dev --standalone`: the Vite dev server with the dev shell (standalone.ts)
+//   `ayon-addon dev --ayon`: the same build, watched, plus /ayon-addon.json for AYON's dev override
+//   `ayon-addon dev`: the Vite dev server with the dev shell (standalone.ts)
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import path from 'path'
 import type { Plugin, PluginOption, UserConfig } from 'vite'
@@ -22,7 +22,7 @@ export interface AyonAddonOptions {
   fixtures?: string
 }
 
-/** What `ayon-addon dev` serves next to the build, read by AYON's dev override. */
+/** What `ayon-addon dev --ayon` serves next to the build, read by AYON's dev override. */
 export interface AddonDevInfo {
   name: string
   version: string
@@ -153,7 +153,7 @@ export const ayonAddon = async (options: AyonAddonOptions): Promise<PluginOption
     },
   }
 
-  // `ayon-addon dev` sets AYON_ADDON_DEV: after each rebuild, tell AYON's dev override about it
+  // `ayon-addon dev --ayon` sets AYON_ADDON_DEV: after each rebuild, tell AYON's dev override about it
   const devInfo: Plugin = {
     name: 'ayon-addon:dev-info',
     apply: 'build',

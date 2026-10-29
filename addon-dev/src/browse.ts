@@ -19,7 +19,7 @@ export interface BrowseOptions {
   /** `type:id,type:id` */
   entities?: string
   page?: string
-  /** a running `ayon-addon dev --standalone` */
+  /** a running `ayon-addon dev` */
   url?: string
   screenshot?: string
   /** run the menu item (`run` piece) and report what it did */

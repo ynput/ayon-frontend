@@ -27,8 +27,8 @@ Run in the addon's frontend folder. Every command takes `--json` for scripts and
 
 | Command | What |
 |---|---|
-| `ayon-addon dev [--port 5173]` | Builds on every change and serves the build with CORS. Prints the AYON URL that loads it: `<server>/?addonDev=<addon>@http://localhost:5173` |
-| `ayon-addon dev --standalone [--port 5174]` | The dev shell (below): the addon in AYON's surfaces, without AYON, with hot reload |
+| `ayon-addon dev [--port 5174]` | The dev shell (below): the addon in AYON's surfaces, without AYON, with hot reload |
+| `ayon-addon dev --ayon [--port 5173]` | Builds on every change and serves the build with CORS. Prints the AYON URL that loads it: `<server>/?addonDev=<addon>@http://localhost:5173` |
 | `ayon-addon slots` | The slots of the installed `@ynput/ayon-addon`: helper, where, when the code loads |
 | `ayon-addon check [--no-types]` | The manifest as AYON reads it (slots, ids, fields, pieces), that each piece's file exists, and `tsc` |
 | `ayon-addon open <slot> <id> [--project P] [--entities type:id,...] [--page overview\|products\|lists] [--run] [--screenshot file] [--save-fixture name]` | One contribution in the dev shell in a headless browser, against the server. Reports error boxes, console errors, toasts, the context it got, the clipboard after `--run` (menu items). Exit code 1 when it failed |
@@ -38,9 +38,9 @@ Run in the addon's frontend folder. Every command takes `--json` for scripts and
 http://localhost:5174`. They need playwright (`yarn add -D playwright`, `npx playwright install
 chromium`); in the AYON dev workbench the ayon-frontend checkout's copy is used.
 
-## Developing inside AYON (the default)
+## Developing inside AYON (`dev --ayon`)
 
-1. `ayon-addon dev` in the addon.
+1. `ayon-addon dev --ayon` in the addon.
 2. Open the URL it prints. The page loads your addon from the dev server instead of the installed
    version (also when it isn't installed) and shows a banner. It reloads after every rebuild.
 3. `?addonDev=off`, or the banner's close button, goes back to the installed addon.
@@ -48,10 +48,10 @@ chromium`); in the AYON dev workbench the ayon-frontend checkout's copy is used.
 Only users in developer mode (and service users, for agents) can do this, and only from
 `localhost`.
 
-## Developing without AYON: the dev shell
+## Developing without AYON: the dev shell (`dev`, the default)
 
-`ayon-addon dev --standalone` serves the addon with Vite's dev server (hot reload) inside a dev
-shell instead of AYON:
+`ayon-addon dev` serves the addon with Vite's dev server (hot reload) inside a dev shell instead
+of AYON:
 
 - **Real AYON surfaces** from `@ynput/ayon-frontend-shared`: the details panel, the slicer, the
   Customize panel, and the addon columns' cells and `useData`, in AYON's providers (store, api,

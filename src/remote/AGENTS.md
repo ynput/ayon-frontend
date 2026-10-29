@@ -46,11 +46,11 @@ The addon API lives in `addon/` (`@ynput/ayon-addon`, not published yet). The ho
 `?addonDev=<addon>@http://localhost:5173` makes `RemoteModulesProvider` load that one addon from its dev server instead of the installed version (`shared/src/context/remote-modules/addonDevOverride.ts`). It is stored in localStorage until `?addonDev=off` or the banner's close button.
 
 - **Who:** users in developer mode and service users (API-key sessions: agents, CI). Anyone else gets a console warning and the installed addons. **Where from:** `localhost`, `127.0.0.1` or `[::1]` only, so a link can't point the page at another machine's code.
-- **What it loads:** `ayon-addon dev` (`@ynput/ayon-addon-dev`) serves a watched production build of the addon plus `/ayon-addon.json` (name, version, remote, modules, build id). The provider reads that file before registering the remotes, so the dev addon may differ from the installed one, or not be installed at all.
+- **What it loads:** `ayon-addon dev --ayon` (`@ynput/ayon-addon-dev`) serves a watched production build of the addon plus `/ayon-addon.json` (name, version, remote, modules, build id). The provider reads that file before registering the remotes, so the dev addon may differ from the installed one, or not be installed at all.
 - **Reload on save:** federation can't swap a registered remote, so the banner polls `/ayon-addon.json` and reloads the page when the build id changes. Not Fast Refresh: a remote's dev-server modules need React Refresh's preamble from the page that loads them, which the host doesn't have; the watched build always works.
 - Service users are treated as admins in the frontend (`src/features/user.js`), as the server does: `/api/info` doesn't send their UI exposure level, which hid project pages from API-key sessions.
 
-## The standalone dev shell (`ayon-addon dev --standalone`)
+## The standalone dev shell (`ayon-addon dev`)
 
 `addon-dev/shell` renders an addon's contributions without this app: AYON's providers and the surfaces that live in shared (DetailsPanel, Slicer, SettingsPanel, the addon column cells), stand-ins for the ones that live here (header, page tabs, ProjectsList, ProjectTreeTable with its page data layer). It imports only `@ynput/ayon-frontend-shared` entries and `@ynput/ayon-addon`; what it needs from shared must be exported there (e.g. `LoginPage`, `ProjectPageLayoutHost`, `useAddonCustomizeSections`, `AddonColumnDataScope`). When a shared surface gains a provider dependency, the shell's provider stack (`addon-dev/shell/src/Shell.tsx`, `Stage.tsx`) needs it too: `ayon-addon open` on the template's contributions catches that.
 

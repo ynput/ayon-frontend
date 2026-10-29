@@ -1,5 +1,5 @@
 // @ynput/ayon-addon-dev/shell: the standalone dev shell, started by the virtual entry
-// `ayon-addon dev --standalone` serves (vite.ts). Not for addon code.
+// `ayon-addon dev` serves (vite.ts). Not for addon code.
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { registerManifest, setManifestsLoading } from '@ynput/ayon-addon/host'
@@ -12,7 +12,7 @@ import './shell.css'
 
 export type { Fixture, ShellOptions, ShellSelection, ShellStatus } from './types'
 
-/** Where `ayon-addon dev --standalone` serves the fixtures (dev/fixtures/<name>.json). */
+/** Where `ayon-addon dev` serves the fixtures (dev/fixtures/<name>.json). */
 export const FIXTURES_PATH = '/__ayon-addon/fixtures'
 
 const loadFixture = async (name: string): Promise<Fixture | undefined> => {
