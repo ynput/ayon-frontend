@@ -474,7 +474,7 @@ const ContextPanel = ({ mode, selection, onChange }: Omit<DevPanelProps, 'option
           {isMenuSlot(slot) && (
             <Button
               icon="play_arrow"
-              label="Run the menu item"
+              label={slot === 'table.shortcut' ? 'Press the shortcut' : 'Run the menu item'}
               variant="filled"
               data-shell-action="run"
               onClick={() => window.__AYON_ADDON_SHELL__?.run()}

@@ -276,3 +276,27 @@ A read-only column in the project tables (Overview, Products, Lists). It is in t
 | `projectName` (required) | `string` |  |
 
 Pieces: `cell`, `useData` (optional).
+
+### `table.shortcut`: `tableShortcut`
+
+A keyboard shortcut on the cells of AYON's tables: the project tables (Overview, Products, Lists) and the panels' tables (slicer, project list, lists, versions). Pressed in a cell, it runs code (`run`) or opens a dialog (`dialog`) with the selected rows; set exactly one. AYON's own keys (arrows, Enter, Escape, Tab, Space, `r`, Delete, copy, paste, undo) can't be taken, and the key does nothing while a cell is being edited. Loads: key press.
+
+| Description field | Type | |
+|---|---|---|
+| `id` (required) | `string` | unique among the addon's shortcuts |
+| `label` (required) | `string` | what it does, e.g. `Copy row as JSON`; the dialog's title when `dialogTitle` is not set |
+| `keys` (required) | `string` | the key and its modifiers joined by `+`, lower case: `g`, `shift+mod+c`, `alt+1`, `f2`. `mod` is ⌘ on macOS and Ctrl elsewhere; `ctrl`, `meta`, `alt` and `shift` are the keys themselves. Letters and digits match the key's place on the keyboard, so `alt+g` works on macOS too |
+| `tables` | `ShortcutTable[] \| undefined` | which tables it works in; all when not set. `overview`, `products`, `lists` (the project tables), `slicer`, `projects`, `listsPanel`, `versionsPanel` |
+| `dialogTitle` | `string \| undefined` | the `dialog`'s title; the label when not set |
+| `dialogSize` | `"sm" \| "md" \| "lg" \| "full" \| undefined` | the `dialog`'s size, `md` by default |
+
+| Context (props, `useSlot`) | Type | |
+|---|---|---|
+| `slot` (required) | `'table.shortcut'` | the slot this is rendered in |
+| `table` (required) | `ShortcutTable` | the table the key was pressed in |
+| `projectName` (required) | `string \| null` | the open project; `null` in the project list |
+| `rows` (required) | `TableRowRef[]` | the rows it acts on: the selected ones when the key was pressed in one of them, else its row |
+| `focused` (required) | `{ rowId: string; columnId?: string \| undefined; }` | where the key was pressed: the row's id, and the column's in the project tables |
+| `cells` (required) | `{ rowId: string; columnId: string; }[]` | project tables: the selected cells, by row (entity) and column id; empty elsewhere |
+
+Pieces: `run` (optional), `dialog` (optional).

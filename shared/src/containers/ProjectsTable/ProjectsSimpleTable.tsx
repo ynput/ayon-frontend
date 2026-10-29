@@ -169,6 +169,7 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
       enableNonFolderIndent={true}
       fitContent={fitContent}
       rowContextMenuBuilders={readonly ? [] : rowContextMenuBuilders}
+      addonShortcuts={{ table: 'projects', projectName: null }}
       meta={{
         renamingFolder,
         onSubmitRenameFolder,

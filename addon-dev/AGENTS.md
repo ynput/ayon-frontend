@@ -58,7 +58,7 @@ of AYON:
   contexts). AYON's project list table, with only the addon's items in its menus (AYON's own,
   such as open, pin and folders, need the app). Plain stand-ins for what lives in the AYON app: the header and the
   table around the columns (its rows are the picked entities, its right-click menu has the
-  `entityMenuItem` items). Pages render alone, without AYON's page tabs.
+  `entityMenuItem` items, and once clicked it takes the `table.shortcut` keys). Pages render alone, without AYON's page tabs.
 - **Developer panel**, in two resizable halves that scroll on their own: the manifest's
   contributions grouped by the area of AYON they show in (app header, studio, project with its
   slicer and tables, details panel), then by slot, with the ones AYON would skip and why; below,

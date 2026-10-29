@@ -6,7 +6,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import { ContributionView, runContribution, useContributions } from '@ynput/ayon-addon'
-import type { AnyContribution, Contribution, EntityRef } from '@ynput/ayon-addon'
+import type {
+  AnyContribution,
+  Contribution,
+  EntityRef,
+  TableShortcutContext,
+} from '@ynput/ayon-addon'
 import { getHost, getRegistry } from '@ynput/ayon-addon/host'
 import { useGetProjectQuery, useGetUsersAssigneeQuery } from '@ynput/ayon-frontend-shared/api'
 import {
@@ -20,9 +25,11 @@ import { SlicerProvider, useSlicerContext } from '@ynput/ayon-frontend-shared/Sl
 import { ViewsProvider } from '@ynput/ayon-frontend-shared/Views'
 import { useDispatch } from 'react-redux'
 import {
+  AddonDialog,
   SettingsPanel,
   SlicerHost,
   useAddonCustomizeSections,
+  useAddonTableShortcuts,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
 } from '@ynput/ayon-frontend-shared/components'
@@ -47,13 +54,19 @@ const useReport = (
   // slot contexts are interfaces (no index signature), the status page only reads them
   context: object | undefined,
   ready: boolean,
-  run?: boolean,
+  /** menu items: Run calls `run`; or what Run does */
+  run?: boolean | (() => Promise<void>),
 ) => {
   useEffect(() => {
     setStage({
       context: context as Context | undefined,
       ready,
-      run: run && context ? () => runContribution(contribution as never, context as never) : undefined,
+      run:
+        typeof run === 'function'
+          ? run
+          : run && context
+          ? () => runContribution(contribution as never, context as never)
+          : undefined,
     })
   }, [contribution, context, ready, run])
 }
@@ -306,8 +319,8 @@ const ProjectListStage = ({ contribution, selection, onChange }: StageProps & { 
   )
 }
 
-// the project table slots: a stand-in table with the real addon columns, menu, toolbar items and
-// Customize panel
+// the project table slots: a stand-in table with the real addon columns, menu, shortcuts, toolbar
+// items and Customize panel
 const TableStage = ({ contribution, selection }: StageProps) => {
   const projectName = selection.projectName!
   const page = selection.page || 'overview'
@@ -328,14 +341,45 @@ const TableStage = ({ contribution, selection }: StageProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contribution.key, slot])
 
+  // table.shortcut: the selected rows (else all of them) as AYON's table passes them, from the name
+  // column; the keys work once the table has focus
+  const shortcuts = useAddonTableShortcuts(slot === 'table.shortcut' ? page : undefined)
+  const shortcutContext = useMemo<TableShortcutContext | undefined>(() => {
+    const targets = selected.length ? selected : entities
+    if (slot !== 'table.shortcut' || !targets.length) return undefined
+    const rows = targets.map(({ id, entityType, name, label }) => ({
+      id,
+      entityType,
+      name,
+      label,
+      data: { id, entityType, name, label },
+    }))
+    return {
+      table: page,
+      projectName,
+      rows,
+      focused: { rowId: rows[0].id, columnId: 'name' },
+      cells: rows.map((row) => ({ rowId: row.id, columnId: 'name' })),
+    }
+  }, [slot, page, projectName, entities, selected])
+  const { runShortcut } = shortcuts
+  const pressShortcut = useMemo(
+    () =>
+      shortcutContext &&
+      (async () =>
+        runShortcut(contribution as unknown as Contribution<'table.shortcut'>, shortcutContext)),
+    [runShortcut, contribution, shortcutContext],
+  )
+
   const context = useMemo<Context | undefined>(() => {
     if (slot === 'tableColumn') return { projectName, page, entities }
     if (slot === 'entityMenuItem')
       return { projectName, page, entities: selected.length ? selected : entities }
+    if (slot === 'table.shortcut') return shortcutContext as Context | undefined
     if (slot === 'projectTable.customizeSection') return { projectName, page }
     return popupContext
-  }, [slot, projectName, page, entities, selected, popupContext])
-  useReport(contribution, context, !!context, slot === 'entityMenuItem')
+  }, [slot, projectName, page, entities, selected, shortcutContext, popupContext])
+  useReport(contribution, context, !!context, slot === 'entityMenuItem' || pressShortcut)
 
   const base = useMemo(() => ({ projectName, page }), [projectName, page])
   const pageToolbarItems = toolbarItems.filter((item) => !item.pages?.length || item.pages.includes(page))
@@ -365,12 +409,17 @@ const TableStage = ({ contribution, selection }: StageProps) => {
       <div className="ayon-shell-body">
         <div style={{ flex: 1, overflow: 'auto' }}>
           {entities.length ? (
-            <ShellTable
-              page={page}
-              entities={entities}
-              selected={selected}
-              onSelect={setSelected}
-            />
+            <div
+              tabIndex={0}
+              onKeyDown={(e) => shortcuts.handleShortcut(e, () => shortcutContext)}
+            >
+              <ShellTable
+                page={page}
+                entities={entities}
+                selected={selected}
+                onSelect={setSelected}
+              />
+            </div>
           ) : (
             <Hint>Pick entities in the context panel: they are the table&apos;s rows.</Hint>
           )}
@@ -384,6 +433,9 @@ const TableStage = ({ contribution, selection }: StageProps) => {
           </div>
         )}
       </div>
+      {shortcuts.dialog && (
+        <AddonDialog contribution={shortcuts.dialog.contribution} context={shortcuts.dialog.context} />
+      )}
     </div>
   )
 }
@@ -450,6 +502,7 @@ export const Stage = ({
         return <ProjectListStage {...props} onChange={onChange} />
       case 'tableColumn':
       case 'entityMenuItem':
+      case 'table.shortcut':
       case 'projectTable.toolbarItem':
       case 'projectTable.customizeSection':
         return <TableStage {...props} />

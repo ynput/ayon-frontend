@@ -35,11 +35,14 @@ export const PreviewStage = ({
     [],
   )
   const isPopup = slot === 'header.item' || slot === 'projectTable.toolbarItem'
+  // a table shortcut with a dialog: its content, as for a page
+  const isDialog = slot === 'table.shortcut' && !!(contribution as { dialog?: unknown }).dialog
+  const runs = isMenuSlot(slot) && !isDialog
 
   useEffect(() => {
     if (!fixture) return
-    if (!isPopup) setStage({ context, ready: true, run: isMenuSlot(slot) ? run : undefined })
-  }, [fixture, context, slot, run, isPopup])
+    if (!isPopup) setStage({ context, ready: true, run: runs ? run : undefined })
+  }, [fixture, context, run, isPopup, runs])
 
   if (!fixture) {
     return (
@@ -65,7 +68,18 @@ export const PreviewStage = ({
         </div>
       )
     }
-    if (isMenuSlot(slot)) {
+    if (isDialog) {
+      return (
+        <div className="ayon-shell-body" data-shell-surface="preview-frame">
+          <ContributionView
+            contribution={contribution as never}
+            piece="dialog"
+            context={{ ...context, close: () => undefined } as never}
+          />
+        </div>
+      )
+    }
+    if (runs) {
       const item = contribution as { label?: string; icon?: string }
       return (
         <div style={{ padding: 16 }}>

@@ -3,7 +3,6 @@
 // menu, so they look like AYON's own. Used by the app's header and toolbars and by the dev shell.
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Dialog } from '@ynput/ayon-react-components'
 import { ContributionView, prefetchPiece, runContribution } from '@ynput/ayon-addon'
 import type { AddonMenuItem, AnyContribution, Contribution, SlotMap } from '@ynput/ayon-addon'
 import { loadPiece, reportContributionError } from '@ynput/ayon-addon/host'
@@ -11,6 +10,7 @@ import { Menu } from '@shared/components/Menu/Menu'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
 import { useMenuContext } from '@shared/context'
+import { AddonDialog } from './AddonDialog'
 import { getButtonAction, toMenuItems } from './AddonButtonHelpers'
 import type { ButtonSlot } from './AddonButtonHelpers'
 
@@ -34,23 +34,6 @@ export interface AddonButtonProps<S extends ButtonSlot> {
   onContext?: (context: object) => void
 }
 
-// a crash inside the dialog closes it and shows a toast; the next click tries again
-const ReportCrash = ({
-  contribution,
-  error,
-  onReported,
-}: {
-  contribution: AnyContribution
-  error: Error
-  onReported: () => void
-}) => {
-  useEffect(() => {
-    reportContributionError(contribution, error)
-    onReported()
-  }, [contribution, error, onReported])
-  return null
-}
-
 export const AddonButton = <S extends ButtonSlot>({
   contribution,
   context,
@@ -62,7 +45,7 @@ export const AddonButton = <S extends ButtonSlot>({
   const action = getButtonAction(any)
   const navigate = useNavigate()
   const actionContext = useMemo(
-    () => ({ ...context, navigate: (to: string) => navigate(to) }) as SlotMap[S]['context'],
+    () => ({ ...context, navigate: (to: string) => navigate(to) } as SlotMap[S]['context']),
     [context, navigate],
   )
 
@@ -118,19 +101,7 @@ export const AddonButton = <S extends ButtonSlot>({
         onMouseEnter: () => action && prefetchPiece(any[action] as never),
       })}
       {action === 'dialog' && dialogOpen && (
-        <Dialog
-          isOpen
-          header={String(any.dialogTitle || any.label || any.id)}
-          size={(any.dialogSize as 'sm' | 'md' | 'lg' | 'full') || 'md'}
-          onClose={close}
-        >
-          <ContributionView
-            contribution={contribution}
-            piece="dialog"
-            context={dialogContext}
-            error={(error) => <ReportCrash contribution={any} error={error} onReported={close} />}
-          />
-        </Dialog>
+        <AddonDialog contribution={contribution} context={dialogContext} />
       )}
       {action === 'menu' && (
         <MenuContainer id={menuId} target={anchor}>

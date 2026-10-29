@@ -127,6 +127,8 @@ import { getRequestErrorString } from '@shared/util'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 import type { AddonColumnMeta } from './addonColumns/addonColumnsHelpers'
 import { AddonColumnDataScope } from './addonColumns/AddonColumns'
+import { AddonCellShortcuts } from './addonShortcuts/AddonCellShortcuts'
+import type { ProjectTablePage } from '@ynput/ayon-addon'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'> & { id?: string },
@@ -206,6 +208,8 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   // scrolls this row into view once it is in the table, then calls onScrolledToRow
   scrollToRowId?: string | null
   onScrolledToRow?: (rowId: string) => void
+  // the page, for addon contributions to the table (table.shortcut)
+  addonPage?: ProjectTablePage
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -247,6 +251,7 @@ export const ProjectTreeTable = ({
   onVisibleRowsChange,
   scrollToRowId,
   onScrolledToRow,
+  addonPage,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -833,6 +838,8 @@ export const ProjectTreeTable = ({
       columnReadOnly={readOnlyAttribs}
       visibleColumns={visibleColumns}
     >
+      {/* outside the wrapper: its dialog's events would bubble into the table through the portal */}
+      {addonPage && <AddonCellShortcuts page={addonPage} containerRef={tableContainerRef} />}
       <Styled.TableWrapper {...props}>
         <Styled.TableContainer
           ref={tableContainerRef}

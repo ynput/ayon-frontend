@@ -76,6 +76,7 @@ const ProjectOverviewTable = ({}: Props) => {
     <Section style={{ height: '100%' }}>
       <TableWrapper>
         <ProjectTreeTable
+          addonPage="overview"
           scope={scope}
           sliceId={''}
           // pagination

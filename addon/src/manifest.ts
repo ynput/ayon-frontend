@@ -17,4 +17,5 @@ export {
   slicerMenuItem,
   studioPage,
   tableColumn,
+  tableShortcut,
 } from './slotHelpers'

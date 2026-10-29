@@ -488,6 +488,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
             onCancelRename={isHierarchy ? hierarchyContextMenu.onCancelRename : undefined}
             onRowOptionClick={isHierarchy ? hierarchyContextMenu.onOptionClick : undefined}
             rowContextMenuBuilders={rowContextMenuBuilders}
+            addonShortcuts={{ table: 'slicer', projectName }}
           />
         </SimpleTableProvider>
       )}

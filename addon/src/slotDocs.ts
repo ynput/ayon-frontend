@@ -13,6 +13,7 @@ export interface SlotDoc {
     | 'first click'
     | 'menu open / click'
     | 'first click (component: with the page)'
+    | 'key press'
 }
 
 export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
@@ -70,5 +71,10 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
     helper: 'projectTableCustomizeSection',
     where: "a section in the project tables' Customize panel",
     loads: 'first shown',
+  },
+  'table.shortcut': {
+    helper: 'tableShortcut',
+    where: "a key pressed in a cell of the project tables or the slicer, project list, lists and versions tables",
+    loads: 'key press',
   },
 }

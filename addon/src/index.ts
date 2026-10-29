@@ -42,6 +42,11 @@ export type {
   TableColumnDataArgs,
   TableColumnDataHook,
   TableColumnMeta,
+  ShortcutTable,
+  TableRowRef,
+  TableShortcutContext,
+  TableShortcutMeta,
+  TableShortcutPieces,
 } from './slots'
 export type {
   Access,

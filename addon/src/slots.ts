@@ -10,6 +10,7 @@ import type {
   SlicerScope,
   ViewsScope,
 } from './scopes'
+import { isReservedShortcut, parseShortcut } from './shortcuts'
 
 // The slots: places in the AYON web UI that addons contribute to.
 // SlotMap is the single source of truth. Each entry has the slot's version, the description the
@@ -146,6 +147,19 @@ export interface SlotMap {
       cell: Loader<ComponentType<SlotProps<'tableColumn'>>>
       useData?: Loader<TableColumnDataHook>
     }
+  }
+  /**
+   * A keyboard shortcut on the cells of AYON's tables: the project tables (Overview, Products,
+   * Lists) and the panels' tables (slicer, project list, lists, versions). Pressed in a cell, it
+   * runs code (`run`) or opens a dialog (`dialog`) with the selected rows; set exactly one. AYON's
+   * own keys (arrows, Enter, Escape, Tab, Space, `r`, Delete, copy, paste, undo) can't be taken,
+   * and the key does nothing while a cell is being edited.
+   */
+  'table.shortcut': {
+    version: 1
+    meta: TableShortcutMeta
+    context: TableShortcutContext
+    pieces: TableShortcutPieces
   }
 }
 
@@ -347,6 +361,73 @@ export interface EntityMenuItemContext extends ProjectNameScope {
   entities: EntityRef[]
 }
 
+/**
+ * A table with addon shortcuts: the project tables (`overview`, `products`, `lists`) and the
+ * panels' tables: the slicer, the project list, the Lists page's lists and the Products page's
+ * versions.
+ */
+export type ShortcutTable = ProjectTablePage | 'slicer' | 'projects' | 'listsPanel' | 'versionsPanel'
+
+/** Description of a `table.shortcut` contribution. */
+export interface TableShortcutMeta {
+  /** unique among the addon's shortcuts */
+  id: string
+  /** what it does, e.g. `Copy row as JSON`; the dialog's title when `dialogTitle` is not set */
+  label: string
+  /**
+   * the key and its modifiers joined by `+`, lower case: `g`, `shift+mod+c`, `alt+1`, `f2`. `mod` is
+   * ⌘ on macOS and Ctrl elsewhere; `ctrl`, `meta`, `alt` and `shift` are the keys themselves.
+   * Letters and digits match the key's place on the keyboard, so `alt+g` works on macOS too
+   */
+  keys: string
+  /**
+   * which tables it works in; all when not set. `overview`, `products`, `lists` (the project
+   * tables), `slicer`, `projects`, `listsPanel`, `versionsPanel`
+   */
+  tables?: ShortcutTable[]
+  /** the `dialog`'s title; the label when not set */
+  dialogTitle?: string
+  /** the `dialog`'s size, `md` by default */
+  dialogSize?: 'sm' | 'md' | 'lg' | 'full'
+}
+
+/** A table row a shortcut acts on. */
+export interface TableRowRef {
+  /** project tables: the entity's id (list items resolve to their entity); else the row's id */
+  id: string
+  /** project tables: `folder`, `task`, `product`, `version`, ... */
+  entityType?: string
+  name?: string
+  label?: string
+  /**
+   * the row as the table has it: an entity's fields and `attrib` in the project tables, the
+   * project, list, version or slicer value in the panels
+   */
+  data: Record<string, unknown>
+}
+
+/** Context of a table shortcut. */
+export interface TableShortcutContext {
+  /** the table the key was pressed in */
+  table: ShortcutTable
+  /** the open project; `null` in the project list */
+  projectName: string | null
+  /** the rows it acts on: the selected ones when the key was pressed in one of them, else its row */
+  rows: TableRowRef[]
+  /** where the key was pressed: the row's id, and the column's in the project tables */
+  focused: { rowId: string; columnId?: string }
+  /** project tables: the selected cells, by row (entity) and column id; empty elsewhere */
+  cells: { rowId: string; columnId: string }[]
+}
+
+/** The pieces of a table shortcut: what the key does. Set exactly one. */
+export interface TableShortcutPieces {
+  /** called with the context when the key is pressed */
+  run?: Loader<RunPiece<'table.shortcut'>>
+  /** the content of a dialog the host opens: AYON's dialog with title and close button */
+  dialog?: Loader<ComponentType<SlotProps<'table.shortcut'> & DialogScope>>
+}
+
 /** Which menu a list's menu item is in: the right-click menu or the "more" dropdown. */
 export type MenuKind = 'context' | 'dropdown'
 
@@ -468,6 +549,15 @@ const checkButton = (item: Readonly<Record<string, unknown>>) => {
   if (actions[0] !== 'component' && typeof item.icon !== 'string') return 'missing icon'
 }
 
+// table shortcuts: exactly one action, and keys that parse and aren't AYON's own
+const checkShortcut = (item: Readonly<Record<string, unknown>>) => {
+  const actions = ['run', 'dialog'].filter((action) => item[action] !== undefined)
+  if (actions.length !== 1) return `set exactly one of run, dialog (it has ${actions.join(', ') || 'none'})`
+  const shortcut = parseShortcut(String(item.keys))
+  if (!shortcut) return `keys "${item.keys}" is not a key combination, e.g. "g" or "shift+mod+c"`
+  if (isReservedShortcut(shortcut)) return `keys "${item.keys}" is one of AYON's own table keys`
+}
+
 /** The slots this host knows. A contribution to any other slot is skipped. */
 export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   'project.page': { version: 1, required: ['title'], pieces: ['component'], optional: pageFields },
@@ -505,6 +595,14 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     version: 1,
     required: ['title', 'icon'],
     pieces: ['component'],
+  },
+  'table.shortcut': {
+    version: 1,
+    required: ['label', 'keys'],
+    pieces: [],
+    optionalPieces: ['run', 'dialog'],
+    optional: { dialogSize: buttonFields.dialogSize },
+    check: checkShortcut,
   },
 }
 

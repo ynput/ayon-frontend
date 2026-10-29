@@ -48,3 +48,7 @@ export const tableColumn = (column: ContributionFields<'tableColumn'>) =>
 /** A button in the main header that opens the addon's dialog or popover. */
 export const headerItem = (item: ContributionFields<'header.item'>) =>
   contribute('header.item', item)
+
+/** A keyboard shortcut on the cells of AYON's tables, acting on the selected rows. */
+export const tableShortcut = (shortcut: ContributionFields<'table.shortcut'>) =>
+  contribute('table.shortcut', shortcut)

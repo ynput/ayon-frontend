@@ -54,6 +54,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   return (
     <TableWrapper>
       <ProjectTreeTable
+        addonPage="products"
         scope={'versions-and-products'}
         sliceId={''}
         // pagination
