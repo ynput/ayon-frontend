@@ -73,7 +73,8 @@ export const AddonButton = <S extends ButtonSlot>({
 
   // menu: the shared Menu under the button, like the header's help menu
   const { menuOpen, setMenuOpen, toggleMenuOpen } = useMenuContext()
-  const menuId = `addon:${any.key}`
+  // keys are unique per slot only: a header item and a toolbar item may share one
+  const menuId = `addon:${any.slot}:${any.key}`
   const [menuItems, setMenuItems] = useState<MenuItemType[]>([])
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
 

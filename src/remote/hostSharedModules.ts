@@ -36,6 +36,7 @@ const ENTRY_NAMES = [
   'Slicer',
   'Views',
   'SimpleTable',
+  'ProjectsTable',
   'EntityPickerDialog',
   'ListTable',
   'NewEntity',

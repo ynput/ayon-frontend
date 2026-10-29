@@ -1,8 +1,10 @@
 import type { Fixture, RecordedResponse } from './types'
 
 // The shell's view of the network. Live: records the JSON answers of AYON, for saving the current
-// selection as a preview fixture. Preview: answers from the fixture and never reaches a server.
-// Covers fetch (RTK Query, graphql-request); axios requests (a few shared components) are not.
+// selection as a preview fixture. Preview: answers from the fixture and never reaches a server,
+// for fetch (RTK Query, graphql-request) and XMLHttpRequest (axios, e.g. comment uploads): the dev
+// server's proxy signs requests with the API key, so nothing may get through to it. Live records
+// fetch only.
 
 const originalFetch = window.fetch.bind(window)
 
@@ -72,26 +74,67 @@ const readBody = async (input: RequestInfo | URL, init?: RequestInit) => {
   return undefined
 }
 
+// preview: the fixture's answer, else the shell's own for the app's requests, else a 404 that
+// fails the preview
+const previewAnswer = (key: string): RecordedResponse => {
+  const app = appPath(key)
+  const answer = fixture?.responses[key] || (app ? { status: 200, body: APP_ANSWERS[app] } : undefined)
+  if (!answer) {
+    unmatched.add(key)
+    listeners.forEach((listener) => listener())
+    console.warn(`[ayon-addon preview] no fixture answer for ${key}`)
+    return { status: 404, body: { detail: `no fixture answer for ${key}` } }
+  }
+  if (fixture?.responses[key]) used.add(key)
+  return answer
+}
+
+// preview: AYON requests made with XMLHttpRequest are answered here and never sent
+const OriginalXHR = window.XMLHttpRequest
+class PreviewXHR extends OriginalXHR {
+  private ayonRequest?: { url: URL; method: string }
+
+  open(method: string, url: string | URL, ...rest: [boolean?, string?, string?]) {
+    const target = new URL(String(url), window.location.href)
+    this.ayonRequest = isAyonRequest(target) ? { url: target, method } : undefined
+    // @ts-expect-error the async, user and password arguments are passed on as given
+    return super.open(method, url, ...rest)
+  }
+
+  send(body?: Document | XMLHttpRequestBodyInit | null) {
+    const request = this.ayonRequest
+    if (!request) return super.send(body)
+    void requestKey(request.url, request.method, body as BodyInit | null).then((key) => {
+      const { status, body: answer } = previewAnswer(key)
+      const text = JSON.stringify(answer)
+      const responses: Record<string, unknown> = {
+        readyState: 4,
+        status,
+        statusText: status === 200 ? 'OK' : 'Not Found',
+        responseURL: request.url.href,
+        responseText: text,
+        response: this.responseType === 'json' ? answer : text,
+      }
+      for (const [name, value] of Object.entries(responses)) {
+        Object.defineProperty(this, name, { value, configurable: true })
+      }
+      this.getAllResponseHeaders = () => 'content-type: application/json\r\n'
+      this.getResponseHeader = (name: string) =>
+        name.toLowerCase() === 'content-type' ? 'application/json' : null
+      for (const type of ['readystatechange', 'load', 'loadend']) this.dispatchEvent(new Event(type))
+    })
+  }
+}
+
 export const installNetwork = (mode: 'live' | 'preview') => {
+  if (mode === 'preview') window.XMLHttpRequest = PreviewXHR
   window.fetch = async (input, init) => {
     const { url, method } = toRequest(input, init)
     if (!isAyonRequest(url)) return originalFetch(input, init)
     const key = await requestKey(url, method, await readBody(input, init))
 
     if (mode === 'preview') {
-      const app = appPath(key)
-      const answer =
-        fixture?.responses[key] || (app ? { status: 200, body: APP_ANSWERS[app] } : undefined)
-      if (!answer) {
-        unmatched.add(key)
-        listeners.forEach((listener) => listener())
-        console.warn(`[ayon-addon preview] no fixture answer for ${key}`)
-        return new Response(JSON.stringify({ detail: `no fixture answer for ${key}` }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      }
-      if (fixture?.responses[key]) used.add(key)
+      const answer = previewAnswer(key)
       return new Response(JSON.stringify(answer.body), {
         status: answer.status,
         headers: { 'Content-Type': 'application/json' },

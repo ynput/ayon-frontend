@@ -66,7 +66,8 @@ export const findConnection = (root = process.cwd()): AyonConnection => {
   if (process.env.AYON_API_KEY) {
     return { serverUrl, apiKey: process.env.AYON_API_KEY, apiKeySource: 'AYON_API_KEY' }
   }
-  if (workbench && !process.env.AYON_SERVER_URL) {
+  // another server named explicitly: never send it the local stack's key
+  if (workbench && !process.env.AYON_SERVER_URL && !process.env.SERVER_URL) {
     const keyFile = path.join(workbench, 'data', 'local-api-key')
     return { serverUrl, apiKey: readFileSync(keyFile, 'utf8').trim(), apiKeySource: keyFile }
   }

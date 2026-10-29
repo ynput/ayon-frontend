@@ -133,14 +133,17 @@ export const AddonColumnDataScope = ({
 }) => {
   const { projectName } = useProjectContext()
   const [data, setData] = useState<AddonColumnData>({})
+  const page = columns.find((column) => column.columnDef.meta?.addonColumn)?.columnDef.meta
+    ?.addonColumn?.page
+  const scope = `${projectName}:${page}`
   const onData = useCallback(
     (columnId: string, columnData: Record<string, unknown> | undefined) => {
-      setAddonColumnValues(columnId, columnData)
+      setAddonColumnValues(scope, columnId, columnData)
       setData((current) =>
         current[columnId] === columnData ? current : { ...current, [columnId]: columnData },
       )
     },
-    [],
+    [scope],
   )
 
   const dataColumns = columns.flatMap((column) => {
