@@ -80,6 +80,8 @@ export { ContributionView, ContributionErrorBoundary } from './ContributionView'
 export type { ContributionViewProps } from './ContributionView'
 export { prefetchPiece, runContribution } from './pieces'
 export { refreshTableColumn } from './tableColumns'
+export { entityUrl, navigateToEntity } from './entityLinks'
+export type { EntityLinkRef, EntityUrlOptions } from './entityLinks'
 
 // layout: the host's slicer and project list, placed by the addon
 export { ProjectList, ProjectPageLayout, Slicer, StudioPageLayout } from './layout'

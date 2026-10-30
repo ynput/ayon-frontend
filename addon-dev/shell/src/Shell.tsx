@@ -165,7 +165,11 @@ export const Shell = ({ options, mode }: { options: ShellOptions; mode: 'live' |
   const store = useMemo(() => {
     const standaloneStore = createStandaloneStore()
     // run and menu pieces dispatch to it through @ynput/ayon-addon, as they do to AYON's store
-    provideHost({ dispatch: standaloneStore.dispatch })
+    provideHost({
+      dispatch: standaloneStore.dispatch,
+      // navigateToEntity: the shell has none of AYON's pages, so the link opens in AYON
+      navigate: (to) => window.open(new URL(to, options.serverUrl).href, '_blank', 'noopener'),
+    })
     return standaloneStore
   }, [])
   return (
