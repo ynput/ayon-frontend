@@ -279,3 +279,5 @@ export const {
   useSetRawAddonSettingsOverridesMutation,
   useLazyGetRawAddonSettingsOverridesQuery,
 } = addonSettings
+
+export const usePrefetchAddonSettings = addonSettings.usePrefetch

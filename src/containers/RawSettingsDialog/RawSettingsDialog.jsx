@@ -84,6 +84,7 @@ const RawSettingsDialog = ({
   const [warn, setWarn] = useState(true)
 
   useEffect(() => {
+    let isCurrent = true
     const loadNodeData = async () => {
       const overrides = await triggerGetSettings({
         addonName,
@@ -93,11 +94,14 @@ const RawSettingsDialog = ({
         variant,
       })
 
-      setCode(JSON.stringify(overrides.data, null, 2))
+      if (isCurrent) setCode(JSON.stringify(overrides.data, null, 2))
     }
 
     loadNodeData()
-  }, [addonName, addonVersion, variant])
+    return () => {
+      isCurrent = false
+    }
+  }, [addonName, addonVersion, projectName, siteId, triggerGetSettings, variant])
 
   const onSave = async () => {
     let data = {}
@@ -108,6 +112,8 @@ const RawSettingsDialog = ({
       toast.error('Invalid JSON')
       return
     }
+    // pasted JSON is often minified or unevenly indented: show it laid out like on load
+    setCode(JSON.stringify(data, null, 2))
 
     const result = await saveSettings({
       addonName,

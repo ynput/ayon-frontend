@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { getReadOnlyLists } from '../../shared/src/containers/ProjectTreeTable/utils/getReadOnlyLists'
+import { LIST_COLUMN_IDS } from '../../shared/src/containers/ProjectTreeTable/utils/listColumns'
 
 type Attribute = Parameters<typeof getReadOnlyLists>[0][number]
 
@@ -25,7 +26,7 @@ const sorted = (values: string[]) => [...values].sort()
 test('nothing is read-only without restrictions', () => {
   expect(
     getReadOnlyLists([attrib('fps'), attrib('custom', { builtin: false })], undefined),
-  ).toEqual({ readOnlyColumns: [], readOnlyAttribs: [] })
+  ).toEqual({ readOnlyColumns: [], readOnlyAttribs: LIST_COLUMN_IDS })
 })
 
 test('attributes the user may not write are read-only', () => {
@@ -38,14 +39,14 @@ test('attributes the user may not write are read-only', () => {
     undefined,
   )
   expect(sorted(lists.readOnlyColumns)).toEqual(['attrib_custom', 'attrib_fps'])
-  expect(sorted(lists.readOnlyAttribs)).toEqual(['custom', 'fps'])
+  expect(sorted(lists.readOnlyAttribs)).toEqual(sorted(['custom', 'fps', ...LIST_COLUMN_IDS]))
 })
 
 test('built-in fields missing from the writable fields are read-only', () => {
   const lists = getReadOnlyLists([], ['name', 'status'])
   const locked = BUILT_IN_FIELDS.filter((field) => !['name', 'status'].includes(field))
   expect(sorted(lists.readOnlyColumns)).toEqual(sorted([...locked, 'subType']))
-  expect(sorted(lists.readOnlyAttribs)).toEqual(sorted([...locked, 'subType']))
+  expect(sorted(lists.readOnlyAttribs)).toEqual(sorted([...locked, 'subType', ...LIST_COLUMN_IDS]))
 })
 
 test('writable fields can use snake_case names', () => {
@@ -69,7 +70,7 @@ test('extra read-only columns are added, and known attribute columns are reporte
     'attrib_unknown',
   ])
   expect(sorted(lists.readOnlyColumns)).toEqual(['attrib_fps', 'attrib_unknown', 'status'])
-  expect(lists.readOnlyAttribs).toEqual(['fps'])
+  expect(sorted(lists.readOnlyAttribs)).toEqual(sorted(['fps', ...LIST_COLUMN_IDS]))
 })
 
 test("'attrib' in the extra columns locks every built-in attribute", () => {
@@ -79,7 +80,7 @@ test("'attrib' in the extra columns locks every built-in attribute", () => {
     ['attrib'],
   )
   expect(sorted(lists.readOnlyColumns)).toEqual(['attrib', 'attrib_fps', 'attrib_frameStart'])
-  expect(sorted(lists.readOnlyAttribs)).toEqual(['fps', 'frameStart'])
+  expect(sorted(lists.readOnlyAttribs)).toEqual(sorted(['fps', 'frameStart', ...LIST_COLUMN_IDS]))
 })
 
 // FLAG: with 'attrib' in the extra read-only columns, read-only custom attributes lose their lock

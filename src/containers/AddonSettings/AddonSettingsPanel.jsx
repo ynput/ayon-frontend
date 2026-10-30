@@ -1,5 +1,4 @@
-import { useMemo, useEffect } from 'react'
-import { useDispatch } from 'react-redux'
+import { useCallback, useEffect, useMemo } from 'react'
 
 import {
   useGetAddonSettingsSchemaQuery,
@@ -10,24 +9,22 @@ import {
 import SettingsEditor from '@containers/SettingsEditor'
 import { useURIContext } from '@shared/context'
 
+const noop = () => {}
+
 const AddonSettingsPanel = ({
   addon,
   localData,
   changedKeys,
   projectName = null,
-  searchText,
-  filterKeys,
   siteId = null,
-  onChange = () => {},
-  onLoad = () => {},
-  onSetChangedKeys = () => {},
-  onSelect = () => {},
-  updateAddonSchema = () => {},
+  onChange = noop,
+  onLoad = noop,
+  onSetChangedKeys = noop,
+  onSelect = noop,
+  updateAddonSchema,
   currentSelection = null,
   context,
 }) => {
-  const dispatch = useDispatch()
-
   let settingsLevel = 'studio'
   if (projectName && projectName !== '_') {
     settingsLevel = 'project'
@@ -36,75 +33,42 @@ const AddonSettingsPanel = ({
     }
   }
 
+  const queryArgs = {
+    addonName: addon.name,
+    addonVersion: addon.version,
+    variant: addon.variant,
+    projectName,
+    siteId,
+  }
+
   const {
     data: schema,
     isLoading: schemaLoading,
     isSuccess,
-    refetch: refetchSchema,
-  } = useGetAddonSettingsSchemaQuery({
-    addonName: addon.name,
-    addonVersion: addon.version,
-    variant: addon.variant,
-    projectName,
-    siteId,
-  })
+  } = useGetAddonSettingsSchemaQuery(queryArgs)
 
-  useMemo(() => {
+  useEffect(() => {
     if (isSuccess) {
-      updateAddonSchema(addon.name, schema)
+      updateAddonSchema?.(addon.name, schema)
     }
-  }, [addon.name, addon.version, isSuccess])
+  }, [addon.name, isSuccess, schema, updateAddonSchema])
 
-  const {
-    //eslint-disable-next-line no-unused-vars
-    data: originalData,
-    isLoading: settingsLoading,
-    refetch: refetchSettings,
-  } = useGetAddonSettingsQuery({
-    addonName: addon.name,
-    addonVersion: addon.version,
-    variant: addon.variant,
-    projectName,
-    siteId,
-  })
+  const { data: originalData, isLoading: settingsLoading } = useGetAddonSettingsQuery(queryArgs)
 
-  const {
-    data: overrides,
-    isLoading: overridesLoading,
-    refetch: refetchOverrides,
-  } = useGetAddonSettingsOverridesQuery({
-    addonName: addon.name,
-    addonVersion: addon.version,
-    variant: addon.variant,
-    projectName,
-    siteId,
-  })
-
-  const reload = async (force = false) => {
-    await refetchSchema().unwrap()
-    await refetchOverrides().unwrap()
-    const res = await refetchSettings().unwrap()
-    if (force || !localData) {
-      onChange(res)
-    }
-    onLoad(res)
-  }
+  const { data: overrides, isLoading: overridesLoading } =
+    useGetAddonSettingsOverridesQuery(queryArgs)
 
   useEffect(() => {
-    reload()
-    // eslint-disable-next-line no-unused-vars
-  }, [addon.name, addon.version, addon.variant, siteId, projectName])
-
-  useEffect(() => {
-    if (localData) return
-    reload(true)
-  }, [localData])
+    if (originalData === undefined) return
+    if (!localData) onChange(addon, siteId || '_', originalData)
+    onLoad(addon, siteId || '_', originalData)
+  }, [addon, localData, onChange, onLoad, originalData, siteId])
 
   const breadcrumbs = useMemo(() => {
     if (!currentSelection) return null
     if (currentSelection.addonString !== `${addon.name}@${addon.version}`) return null
     return currentSelection.path
-  }, [currentSelection])
+  }, [addon.name, addon.version, currentSelection])
 
   const { setUri } = useURIContext()
 
@@ -118,55 +82,47 @@ const AddonSettingsPanel = ({
     const query = params.toString()
     if (query) uri += `?${query}`
     setUri(uri)
-  }, [currentSelection, addon.name, addon.version])
+  }, [currentSelection, addon.name, addon.version, projectName, setUri, siteId])
 
   useEffect(() => {
-    return () => {
-      setUri(null)
-    }
-  }, [])
+    return () => setUri(null)
+  }, [setUri])
 
-  const onSetBreadcrumbs = (path) => {
-    const fieldId = ['root', ...(path || [])].join('_')
-    onSelect({
-      addon,
-      addonString: `${addon.name}@${addon.version}`,
-      path,
-      siteId,
-      fieldId,
-      hasOverride: overrides && overrides[fieldId] ? true : false,
-    })
-  }
+  const onSetBreadcrumbs = useCallback(
+    (path) => {
+      const fieldId = ['root', ...(path || [])].join('_')
+      onSelect({
+        addon,
+        addonString: `${addon.name}@${addon.version}`,
+        path,
+        siteId,
+        fieldId,
+        hasOverride: overrides && overrides[fieldId] ? true : false,
+      })
+    },
+    [addon, onSelect, overrides, siteId],
+  )
 
-  const editor = useMemo(() => {
-    // if (schemaLoading || settingsLoading || overridesLoading) return <>Loading...</>
-    // if (!(schema && localData && overrides)) return <>Waiting for data...</>
-    return (
-      <SettingsEditor
-        schema={schema}
-        originalData={originalData}
-        formData={localData}
-        changedKeys={changedKeys}
-        overrides={overrides}
-        onChange={onChange}
-        onSetChangedKeys={onSetChangedKeys}
-        onSetBreadcrumbs={onSetBreadcrumbs}
-        breadcrumbs={breadcrumbs}
-        level={settingsLevel}
-        context={context}
-      />
-    )
-  }, [
-    schema,
-    localData,
-    overrides,
-    breadcrumbs,
-    schemaLoading,
-    settingsLoading,
-    overridesLoading,
-    searchText,
-    filterKeys,
-  ])
+  const handleSettingsChange = useCallback(
+    (data) => onChange(addon, siteId || '_', data),
+    [addon, onChange, siteId],
+  )
+
+  const editor = (
+    <SettingsEditor
+      schema={schema}
+      originalData={originalData}
+      formData={localData}
+      changedKeys={changedKeys}
+      overrides={overrides}
+      onChange={handleSettingsChange}
+      onSetChangedKeys={(data) => onSetChangedKeys(addon, siteId || '_', data)}
+      onSetBreadcrumbs={onSetBreadcrumbs}
+      breadcrumbs={breadcrumbs}
+      level={settingsLevel}
+      context={context}
+    />
+  )
 
   // if (schemaLoading || settingsLoading || overridesLoading) {
   //   return `Loading... ${projectName}`

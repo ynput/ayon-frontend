@@ -134,6 +134,7 @@ const ServerConfig = () => {
         overrides={configOverrides}
         onChange={setFormData}
         onSetChangedKeys={setChangedKeys}
+        outline={false}
       />
     )
   }, [

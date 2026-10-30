@@ -9,6 +9,7 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import SettingsEditor from '@containers/SettingsEditor'
+import { SettingsOutlineToggle } from '@containers/SettingsEditor/SettingsOutline'
 import useSettingsPaste from '@containers/SettingsEditor/useSettingsPaste'
 import { isEqual } from 'lodash'
 import {
@@ -110,6 +111,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
     <Section style={{ flex: 2 }}>
       <Toolbar>
         <Spacer />
+        <SettingsOutlineToggle />
         {isLocalProject && (
           <Button
             onClick={onDeleteLocalGroupSettings}

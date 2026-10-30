@@ -12,6 +12,7 @@ import {
   Dropdown,
 } from '@ynput/ayon-react-components'
 import SettingsEditor from '@containers/SettingsEditor'
+import { SettingsOutlineToggle } from '@containers/SettingsEditor/SettingsOutline'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
 import { LabelWithNameField } from '@components/LabelWithNameField'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
@@ -236,6 +237,7 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
         </>
       )}
       <Spacer />
+      <SettingsOutlineToggle />
       <SaveButton
         label="Create Project"
         onClick={handleSubmit}

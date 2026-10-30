@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, startTransition } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -29,10 +29,8 @@ import {
   useSetAddonSettingsMutation,
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
-  useGetAddonSettingsListQuery,
 } from '@queries/addonSettings'
 
-import { usePromoteBundleMutation } from '@shared/api'
 import { useListBundlesQuery } from '@shared/api'
 import { confirmDialog } from 'primereact/confirmdialog'
 
@@ -63,6 +61,13 @@ import { InfoMessage } from '@shared/components'
 const StyledScrollPanel = styled(ScrollPanel)`
   > div {
     padding-right: 8px;
+
+    /* the flat sheet has even margins of its own: the scrollbar is the only thing on its right */
+    &:has(.settings-flat) {
+      padding-right: 0;
+    }
+    /* its height is fixed, so the settings outline can be as tall as the view (cqh) */
+    container-type: size;
   }
 `
 
@@ -73,25 +78,6 @@ const StyledEmptyPlaceholder = styled(EmptyPlaceholder)`
   align-items: center;
   height: 100%;
   widows: 100%;
-`
-
-const StyledBundleLabel = styled.div`
-  padding: 6px var(--padding-m);
-  background-color: var(--md-sys-color-surface-container-low);
-  border-radius: var(--border-radius-m);
-  width: 100%;
-  display: flex;
-  align-items: center;
-
-  .label {
-    font-style: italic;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    width: 100%;
-    flex: 1;
-    color: var(--md-sys-color-outline);
-  }
 `
 
 const isChildPath = (childPath, parentPath) => {
@@ -106,7 +92,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const isUser = useSelector((state) => state.user.data.isUser)
   //const navigate = useNavigate()
   const user = useSelector((state) => state.user)
-  const developerMode = useMemo(() => user?.attrib?.developerMode, [JSON.stringify(user?.attrib)])
+  const developerMode = user?.attrib?.developerMode
   const userName = useSelector((state) => state.user.name)
 
   const [showHelp, setShowHelp] = useState(false)
@@ -120,7 +106,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   const siteId = showSites ? selectedSites[0] || '_' : undefined
 
-  const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
+  const { data: { bundles = [] } = {}, isLoading: bundlesLoading } = useListBundlesQuery({
+    archived: false,
+  })
 
   // kept per browser tab; toggling developer mode sets it (setSettingsVariantForDeveloperMode)
   const [storedBundle, setSelectedBundle] = useSessionStorage(SETTINGS_VARIANT_KEY, {
@@ -142,7 +130,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const [setAddonSettings, { isLoading: setAddonSettingsUpdating }] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
-  const [promoteBundle] = usePromoteBundleMutation()
   const { requestPaste } = usePaste()
 
   const { isLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
@@ -187,53 +174,61 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     return storedBundle
   }, [storedBundle, devBundles, developerMode])
 
-  const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
-    const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
-    if (key in originalData) return
-    setOriginalData((localData) => {
-      localData[key] = data
-      return { ...localData }
-    })
-  }
+  // the dev bundle is only known once the bundles load: until then the addon list waits,
+  // rather than loading production's whole settings payload for nothing
+  const waitingForBundle = bundlesLoading && developerMode && storedBundle.variant === 'dev'
 
-  const onSettingsChange = (addonName, addonVersion, variant, siteId, data) => {
-    const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
+  const onSettingsLoad = useCallback(
+    (addon, siteId, data) => {
+      const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId}|${projectKey}`
+      setOriginalData((currentData) =>
+        key in currentData ? currentData : { ...currentData, [key]: data },
+      )
+    },
+    [projectKey],
+  )
 
-    setLocalData((localData) => {
-      localData[key] = data
-      return { ...localData }
-    })
-  }
+  const onSettingsChange = useCallback(
+    (addon, siteId, data) => {
+      const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId}|${projectKey}`
+      setLocalData((currentData) => ({ ...currentData, [key]: data }))
+    },
+    [projectKey],
+  )
 
-  const updateChangedKeys = (addonName, addonVersion, variant, siteId, data) => {
-    // data is a list of [{path:list, isChanged: bool}]
+  const updateChangedKeys = useCallback(
+    (addon, siteId, data) => {
+      // data is a list of [{path:list, isChanged: bool}]
 
-    if (data.length === 0) return
-    if (data.length === 1 && !data[0].path?.length) return
+      if (data.length === 0) return
+      if (data.length === 1 && !data[0].path?.length) return
 
-    setChangedKeys((changedKeys) => {
-      const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
-      const keyData = changedKeys[key] || []
+      setChangedKeys((changedKeys) => {
+        const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId}|${projectKey}`
+        const keyData = [...(changedKeys[key] || [])]
 
-      for (const item of data) {
-        const index = keyData.findIndex((keyItem) => arrayEquals(keyItem, item.path))
-        if (index === -1 && item.isChanged) {
-          keyData.push(item.path)
-        } else if (index > -1 && !item.isChanged) {
-          keyData.splice(index, 1)
+        for (const item of data) {
+          const index = keyData.findIndex((keyItem) => arrayEquals(keyItem, item.path))
+          if (index === -1 && item.isChanged) {
+            keyData.push(item.path)
+          } else if (index > -1 && !item.isChanged) {
+            keyData.splice(index, 1)
+          }
         }
-      }
 
-      if (!keyData.length) {
-        delete changedKeys[key]
-        return { ...changedKeys }
-      }
+        if (!keyData.length) {
+          const nextChangedKeys = { ...changedKeys }
+          delete nextChangedKeys[key]
+          return nextChangedKeys
+        }
 
-      return { ...changedKeys, [key]: keyData }
-    })
-  }
+        return { ...changedKeys, [key]: keyData }
+      })
+    },
+    [projectKey],
+  )
 
-  const reloadAddons = (keys) => {
+  const reloadAddons = useCallback((keys) => {
     setLocalData((localData) => {
       const newData = {}
       for (const key in localData) {
@@ -244,9 +239,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       }
       return newData
     })
-  }
+  }, [])
 
-  const onSave = async () => {
+  const onSave = useCallback(async () => {
     let updatedKeys = []
     let allOk = true
 
@@ -312,14 +307,22 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     if (allOk) {
       toast.success('Settings saved')
     }
-  } // onSave
+  }, [
+    changedKeys,
+    localData,
+    unpinnedKeys,
+    setAddonSettings,
+    reloadAddons,
+    setChangedKeys,
+    setUnpinnedKeys,
+  ])
 
-  const onRevertAllChanges = () => {
+  const onRevertAllChanges = useCallback(() => {
     const keys = Object.keys(changedKeys)
     setChangedKeys({})
     setUnpinnedKeys({})
     reloadAddons(keys)
-  } // end of onDismissChanges
+  }, [changedKeys, reloadAddons])
 
   const onRevertChange = (keysToRevert) => {
     // keys to revert is a dict {addonKey: [ [path, to, change1], [path, to, change2] ]}
@@ -329,45 +332,41 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           const returnValue = getValueByPath(originalData[addonKey], path)
           console.log('REVERT ', path, 'TO', returnValue)
           try {
-            localData[addonKey] = setValueByPath(localData[addonKey], path, returnValue)
-          } catch (e) {
-            console.error(e)
+            const nextLocalData = { ...localData }
+            nextLocalData[addonKey] = setValueByPath(
+              cloneDeep(localData[addonKey]),
+              path,
+              returnValue,
+            )
+            return nextLocalData
+          } catch (error) {
+            console.error(error)
+            return localData
           }
-          return { ...localData }
         }) // setLocalData
         setChangedKeys((changedKeys) => {
-          const addonChanges = changedKeys[addonKey] || []
-          // delete the path from the list of changed keys
-          // also delete all children of this path
-
-          for (const index in addonChanges) {
-            if (isChildPath(addonChanges[index], path)) {
-              addonChanges.splice(index, 1)
-            }
-          }
+          const addonChanges = (changedKeys[addonKey] || []).filter(
+            (changedPath) => !isChildPath(changedPath, path),
+          )
 
           if (!addonChanges.length) {
-            delete changedKeys[addonKey]
-            return { ...changedKeys }
+            const nextChangedKeys = { ...changedKeys }
+            delete nextChangedKeys[addonKey]
+            return nextChangedKeys
           }
 
           return { ...changedKeys, [addonKey]: addonChanges }
         }) // setChangedKeys
 
         setUnpinnedKeys((unpinnedKeys) => {
-          const addonChanges = unpinnedKeys[addonKey] || []
-          // delete the path from the list of changed keys
-          // also delete all children of this path
-
-          for (const index in addonChanges) {
-            if (isChildPath(addonChanges[index], path)) {
-              addonChanges.splice(index, 1)
-            }
-          }
+          const addonChanges = (unpinnedKeys[addonKey] || []).filter(
+            (changedPath) => !isChildPath(changedPath, path),
+          )
 
           if (!addonChanges.length) {
-            delete unpinnedKeys[addonKey]
-            return { ...unpinnedKeys }
+            const nextUnpinnedKeys = { ...unpinnedKeys }
+            delete nextUnpinnedKeys[addonKey]
+            return nextUnpinnedKeys
           }
 
           return { ...unpinnedKeys, [addonKey]: addonChanges }
@@ -429,7 +428,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           variant: addon.variant,
           action: 'delete',
         }).unwrap()
-      } catch (e) {
+      } catch {
         toast.error(`Unable to remove ${addon.variant} override of ${addon.name} ${addon.version} `)
         return
       }
@@ -466,7 +465,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           variant: addon.variant,
           siteId,
         }).unwrap()
-      } catch (e) {
+      } catch {
         toast.error(`Unable to remove overrides of ${addon.name} ${addon.version} `)
         return
       }
@@ -503,7 +502,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           variant: addon.variant,
           action: 'pin',
         }).unwrap()
-      } catch (e) {
+      } catch {
         toast.error(`Unable to pin override of ${addon.name} ${addon.version} `)
         return
       }
@@ -572,42 +571,12 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     let value
     try {
       value = JSON.parse(pastedContent)
-    } catch (e) {
+    } catch {
       toast.error('Invalid JSON')
       return
     }
     pushValueToPath(addon, siteId, path, value)
   } // paste
-
-  const onPushToProduction = async () => {
-    // Push the current bundle to production
-
-    const message = (
-      <>
-        <p>
-          Are you sure you want to push <strong>{loadedBundleName}</strong> to production?
-        </p>
-        <p>
-          This will mark the current staging bundle as production and copy all staging studio
-          settings and staging projects overrides to production as well.
-        </p>
-      </>
-    )
-
-    confirmDialog({
-      header: `Push ${loadedBundleName} to production`,
-      message,
-      accept: async () => {
-        await promoteBundle({ name: loadedBundleName }).unwrap()
-        setLocalData({})
-        setOriginalData({})
-        setSelectedAddons([])
-        toast.success('Bundle pushed to production')
-        setSelectedBundle({ variant: 'production', bundleName: null })
-      },
-      reject: () => {},
-    })
-  }
 
   // Addon list context menu
 
@@ -686,7 +655,23 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         )}
       </>
     )
-  }, [selectedBundle, changedKeys, loadedBundleName, projectName, developerMode])
+  }, [
+    selectedBundle,
+    setSelectedBundle,
+    changedKeys,
+    canCommit,
+    loadedBundleName,
+    projectName,
+    showSites,
+    localData,
+    unpinnedKeys,
+    setLocalData,
+    setChangedKeys,
+    setUnpinnedKeys,
+    setSelectedAddons,
+    originalData,
+    setOriginalData,
+  ])
 
   const commitToolbar = useMemo(
     () => (
@@ -714,7 +699,15 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         />
       </>
     ),
-    [onRevertAllChanges, onSave, canCommit],
+    [
+      onRevertAllChanges,
+      onSave,
+      canCommit,
+      bypassPermissions,
+      projectName,
+      setAddonSettingsUpdating,
+      userPermissions,
+    ],
   )
 
   const onSelectAddon = (newSelection) => {
@@ -722,24 +715,38 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     setCurrentSelection(null)
   }
 
-  const onUpdateAddonSchema = (addonName, schema) => {
-    // TODO: Rewrite this to not rely on `settings` in addon settings list
-    // as it requires addon list to load the entire payload, which is not optimal
-    const settings = selectedAddons.find((el) => el.name == addonName).settings
-    const hydratedObject = attachLabels(settings, schema, schema)
-    setSearchTree((prev) => {
-      return {
+  const onUpdateAddonSchema = useCallback(
+    (addonName, schema) => {
+      // TODO: Rewrite this to not rely on `settings` in addon settings list
+      // as it requires addon list to load the entire payload, which is not optimal
+      const addon = selectedAddons.find((el) => el.name === addonName)
+      if (!addon) return
+      const hydratedObject = attachLabels(addon.settings, schema, schema)
+      setSearchTree((prev) => ({
         ...prev,
         [addonName]: hydratedObject,
-      }
-    })
-    setAddonSchemas((prev) => {
-      return {
+      }))
+      setAddonSchemas((prev) => ({
         ...prev,
         [addonName]: schema,
+      }))
+    },
+    [selectedAddons],
+  )
+
+  // re-rendering the forms is a transition: typing and clicks stay responsive meanwhile
+  const onSearchSettings = useCallback((searchText, filterKeys) => {
+    startTransition(() => {
+      if (searchText === undefined) {
+        setSearchText('')
+        setFilterKeys([])
+        return
       }
+
+      setSearchText(searchText)
+      setFilterKeys(filterKeys)
     })
-  }
+  }, [])
 
   if (isLoading) {
     return <LoadingPage />
@@ -800,6 +807,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             projectName={projectName}
             siteSettings={showSites}
             onContextMenu={showAddonListContextMenu}
+            waiting={waitingForBundle}
           />
 
           {showSites && (
@@ -820,16 +828,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             showHelp={showHelp}
             setShowHelp={setShowHelp}
             projectName={projectName}
-            searchCallback={(searchText, filterKeys) => {
-              if (searchText === undefined) {
-                setSearchText('')
-                setFilterKeys([])
-                return
-              }
-
-              setSearchText(searchText)
-              setFilterKeys(filterKeys)
-            }}
+            searchCallback={onSearchSettings}
           />
           <Section>
             <StyledScrollPanel
@@ -872,21 +871,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
                         <AddonSettingsPanel
                           addon={addon}
                           updateAddonSchema={onUpdateAddonSchema}
-                          onChange={(data) =>
-                            onSettingsChange(addon.name, addon.version, addon.variant, siteId, data)
-                          }
-                          onLoad={(data) =>
-                            onSettingsLoad(addon.name, addon.version, addon.variant, siteId, data)
-                          }
-                          onSetChangedKeys={(data) =>
-                            updateChangedKeys(
-                              addon.name,
-                              addon.version,
-                              addon.variant,
-                              siteId,
-                              data,
-                            )
-                          }
+                          onChange={onSettingsChange}
+                          onLoad={onSettingsLoad}
+                          onSetChangedKeys={updateChangedKeys}
                           localData={localData[key]}
                           changedKeys={changedKeys[key]}
                           currentSelection={currentSelection}
@@ -894,9 +881,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
                           projectName={projectName}
                           includeStudioScope={addon.isProjectBundle}
                           siteId={siteId === '_' ? null : siteId}
-                          // Needed for rerender, component memoized
-                          searchText={searchText}
-                          filterKeys={filterKeys}
                           context={{
                             headerProjectName: projectName,
                             headerSiteId: siteId === '_' ? null : siteId,
