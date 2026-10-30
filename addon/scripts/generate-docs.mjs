@@ -125,6 +125,10 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   \`ProjectList\`). Data comes from \`@ynput/ayon-frontend-shared/api\` (AYON's api and cache):
   components use its hooks, \`run\` and \`menu\` pieces \`dispatch(api.endpoints.x.initiate(args))\`
   with \`dispatch\` from this package (AYON's store).
+- Endpoints you inject and tag types you add (\`enhanceEndpoints({ addTagTypes })\`) go into AYON's
+  one api, where names are global: prefix them with your addon name (\`myaddonGetLogs\`,
+  \`myaddonLog\`). A \`tableColumn\` lists the tags its values depend on in \`providesTags\`
+  (yours or AYON's, such as \`task\`) and refreshes when one is invalidated.
 - A crash stays inside the contribution: AYON wraps each one in an error boundary (menu items: a toast).
 
 ## Slots

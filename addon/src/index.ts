@@ -42,6 +42,7 @@ export type {
   TableColumnFetch,
   TableColumnFetchArgs,
   TableColumnMeta,
+  TableColumnTag,
   ShortcutTable,
   TableRowRef,
   TableShortcutContext,
