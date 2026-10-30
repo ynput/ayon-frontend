@@ -104,7 +104,7 @@
     "@reduxjs/toolkit": "2.11.2",
     "@rtk-query/graphql-request-base-query": "2.3.2",
     "@tanstack/react-table": "8.21.3",
-    "@ynput/ayon-addon": "^0.1.0",
+    "@ynput/ayon-addon": "^0.1.1",
     "@ynput/ayon-react-components": "^1.24.0",
     "graphql-request": "7.4.0",
     "react": "18.3.1",

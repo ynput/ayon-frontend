@@ -1,5 +1,5 @@
 <!-- Generated from src/slots.ts by scripts/generate-docs.mjs. Edit those, not this file. -->
-# @ynput/ayon-addon 0.1.0
+# @ynput/ayon-addon 0.1.1
 
 The API for AYON addon frontends. An addon declares what it puts into AYON's **slots** (places in the
 web UI) in one manifest module; AYON reads the descriptions at startup and loads each piece of code

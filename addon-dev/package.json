@@ -41,9 +41,9 @@
   },
   "peerDependencies": {
     "@module-federation/vite": ">=1.14",
-    "@ynput/ayon-addon": "^0.1.0",
+    "@ynput/ayon-addon": "^0.1.1",
     "vite": ">=6",
-    "@ynput/ayon-frontend-shared": ">=0.7.4",
+    "@ynput/ayon-frontend-shared": ">=0.7.5",
     "@ynput/ayon-react-components": "^1.24.0",
     "primereact": ">=9",
     "react": ">=18",
