@@ -7,7 +7,11 @@ import { provideHost } from '@ynput/ayon-addon/host'
 import type { AddonUser, ProjectListProps, StudioPageLayoutProps } from '@ynput/ayon-addon'
 import type { ExpandedState } from '@tanstack/react-table'
 import { useGetCurrentUserQuery, useGetProjectFoldersQuery } from '@ynput/ayon-frontend-shared/api'
-import { ProjectPageLayoutHost, SlicerHost } from '@ynput/ayon-frontend-shared/components'
+import {
+  AddonEntityPicker,
+  ProjectPageLayoutHost,
+  SlicerHost,
+} from '@ynput/ayon-frontend-shared/components'
 import { useGlobalContext, useMenuContext, usePowerpack } from '@ynput/ayon-frontend-shared/context'
 import {
   buildProjectsTableData,
@@ -148,6 +152,7 @@ export const provideShellHost = () =>
       Slicer: SlicerHost,
       StudioPageLayout,
       ProjectList,
+      EntityPicker: AddonEntityPicker,
     },
   })
 

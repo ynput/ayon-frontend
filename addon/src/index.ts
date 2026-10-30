@@ -90,6 +90,10 @@ export type {
   StudioPageLayoutProps,
 } from './layout'
 
+// AYON's entity picker, usable anywhere
+export { EntityPicker } from './EntityPicker'
+export type { EntityPickerProps, PickableEntityType } from './EntityPicker'
+
 // globals: the same in every slot
 export { dispatch, useUser } from './globals'
 export type { AddonDispatch, AddonUser } from './hostBridge'

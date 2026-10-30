@@ -5,6 +5,7 @@ import type {
   SlicerProps,
   StudioPageLayoutProps,
 } from './layout'
+import type { EntityPickerProps } from './EntityPicker'
 
 // What the host provides to the package at startup. The package itself imports nothing from
 // the host app or @ynput/ayon-frontend-shared; components and hooks that need the host's own
@@ -32,12 +33,14 @@ export interface AddonDispatch {
   <A extends { type: string }>(action: A): A
 }
 
-/** The host's implementations of the layout components. */
+/** The host's implementations of the layout components and the entity picker. */
 export interface HostComponents {
   ProjectPageLayout: ComponentType<ProjectPageLayoutProps>
   Slicer: ComponentType<SlicerProps>
   StudioPageLayout: ComponentType<StudioPageLayoutProps>
   ProjectList: ComponentType<ProjectListProps>
+  /** AYON's entity picker, with the project's providers it needs (`EntityPicker`) */
+  EntityPicker: ComponentType<EntityPickerProps>
 }
 
 export interface HostImplementation {

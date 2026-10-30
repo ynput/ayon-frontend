@@ -127,6 +127,38 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   with \`dispatch\` from this package (AYON's store).
 - A crash stays inside the contribution: AYON wraps each one in an error boundary (menu items: a toast).
 
+## Picking entities: \`EntityPicker\`
+
+AYON's entity picker (the dialog AYON uses to link, move or pick a folder, task, product, version,
+...) from one component. It loads the project and its folders itself: render it anywhere (a header
+item, a popover, a studio page, a details panel tab) with no providers around it.
+
+\`\`\`tsx
+import { EntityPicker, type EntityRef } from '@ynput/ayon-addon'
+
+{picking && (
+  <EntityPicker
+    projectName={projectName}
+    entityType="task"
+    initialSelection={task ? [task] : undefined}
+    onClose={() => setPicking(false)}
+    onSubmit={([picked]: EntityRef[]) => {
+      setPicking(false)
+      setTask(picked) // { id, entityType: 'task', projectName, name, label }
+    }}
+  />
+)}
+\`\`\`
+
+- \`entityType\`: \`folder\`, \`task\`, \`product\`, \`version\`, \`representation\` or \`workfile\`. The
+  picker shows the types above it to narrow the list (folders, then tasks for \`task\`).
+- \`onSubmit\` gets \`EntityRef[]\`, the same shape slot contexts use (\`name\` and \`label\` when the
+  picker loaded them). One entity unless \`multiSelect\`. The picker stays open until you stop
+  rendering it: close it in \`onSubmit\` and \`onClose\`.
+- \`initialSelection\`: \`EntityRef\`s (or \`{ id, entityType }\`) selected when it opens, of
+  \`entityType\` or a type above it (a folder opens the tree at it). A slot's \`entities\` fit as they are.
+- One fixed project: put your own project field next to it if the user picks the project.
+
 ## Slots
 
 ${slotSections}
