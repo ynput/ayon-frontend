@@ -44,7 +44,7 @@
     "@ynput/ayon-addon": "^0.1.0",
     "vite": ">=6",
     "@ynput/ayon-frontend-shared": ">=0.7.4",
-    "@ynput/ayon-react-components": "^1.23.0",
+    "@ynput/ayon-react-components": "^1.24.0",
     "primereact": ">=9",
     "react": ">=18",
     "react-dom": ">=18",
