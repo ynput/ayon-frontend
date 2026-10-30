@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-addon-dev",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Dev tooling for AYON addon frontends: Vite plugin, dev server, CLI, lint preset",
   "repository": {
     "type": "git",

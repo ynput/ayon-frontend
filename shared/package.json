@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "Shared React components for AYON frontend",
   "repository": {
     "type": "git",
