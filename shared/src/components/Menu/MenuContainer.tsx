@@ -98,7 +98,13 @@ const MenuInner: React.FC<MenuInnerProps> = ({
 
   // Keyboard handling
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') handleClose()
+    if (e.key !== 'Escape') return
+    // only the menu closes: the portal still bubbles through the React tree, so a dialog or
+    // popover the menu was opened from would close too
+    e.preventDefault()
+    e.stopPropagation()
+    handleClose()
+    target?.focus()
   }
 
   // Click outside handling
