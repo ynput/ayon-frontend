@@ -1,4 +1,5 @@
 import { expect, test } from '../fixtures'
+import { assigned, hierarchy, onlyFolders } from '../permissions/restrictedUser'
 import { AccessGroupsPage } from '../pages/AccessGroupsPage'
 import { uniqueName } from '../support/names'
 import { confirmDialog, dialog, menuItem } from '../support/ui'
@@ -65,5 +66,30 @@ test.describe('access groups', () => {
     await groups.goto()
     await groups.select(accessGroup)
     await expect(groups.restrictionCheckbox('Restrict folder creation')).toBeChecked()
+  })
+
+  test('an assigned folder entry does not show the path of the previously selected group', async ({
+    page,
+    api,
+    accessGroup,
+  }) => {
+    const other = uniqueName('ag')
+    // one entry in each group: the editor reuses the entry's inputs when the entry counts match
+    await api.createAccessGroup(accessGroup, { read: onlyFolders(assigned()) })
+    await api.createAccessGroup(other, { read: onlyFolders(hierarchy('/gs_animation')) })
+    try {
+      const groups = new AccessGroupsPage(page)
+      const path = groups.editor.textbox('root_read_access_list_0_path')
+      await groups.goto()
+      await groups.select(other)
+      await groups.editor.expand('Restrict folder read')
+      await expect(path).toHaveValue('/gs_animation')
+
+      await groups.select(accessGroup)
+      await groups.editor.expand('Restrict folder read')
+      await expect(path).toHaveValue('')
+    } finally {
+      await api.deleteAccessGroup(other)
+    }
   })
 })
