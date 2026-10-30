@@ -20,8 +20,11 @@ import { ENTITY_TOOLTIP, EntityTooltipQuery } from './activityQueries'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import type { ChecklistCount } from './types'
 import { normalizeQueryError } from '@shared/api/base/queryError'
+import type { UserAttrib } from '../users/getUsers'
 
-type ActivityUserNode = GetActivityUsersQuery['users']['edges'][0]['node']
+type ActivityUserNode = Omit<GetActivityUsersQuery['users']['edges'][0]['node'], 'attrib'> & {
+  attrib: UserAttrib
+}
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
@@ -52,7 +55,10 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
     GetVersionsFrameStart: {
       transformResponse: (res: GetVersionsFrameStartQuery) =>
         Object.fromEntries(
-          res.project.versions.edges.map(({ node }) => [node.id, node.attrib.frameStart]),
+          res.project.versions.edges.map(({ node }) => [
+            node.id,
+            (node.attrib as { frameStart: number | null }).frameStart,
+          ]),
         ),
     },
     GetEntitiesChecklists: {
@@ -70,7 +76,8 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
           : [{ type: 'activity', id: 'LIST' }],
     },
     GetActivityUsers: {
-      transformResponse: (res: GetActivityUsersQuery) => res.users.edges.map((edge) => edge.node),
+      transformResponse: (res: GetActivityUsersQuery) =>
+        res.users.edges.map(({ node }) => ({ ...node, attrib: node.attrib as UserAttrib })),
       providesTags: (res) =>
         res?.length
           ? [{ type: 'user', id: 'LIST' }, ...res.map(({ name }) => ({ type: 'user', id: name }))]

@@ -213,18 +213,24 @@ export const useHierarchyContextMenuItems = (
             ),
           }),
       }),
-      (_e, { row, selectedRows }) => ({
-        label: 'Delete',
-        icon: 'delete',
-        danger: true,
-        command: () => actions.onDelete(getSelectedRows(row.original, selectedRows)),
-      }),
     ],
     [actions, getSelectedRows, onOpenNew],
   )
 
+  // kept apart so other items (addon items) can go above it: Delete is always last
+  const deleteContextMenuBuilder = useCallback<SimpleTableRowContextMenuBuilder>(
+    (_e, { row, selectedRows }) => ({
+      label: 'Delete',
+      icon: 'delete',
+      danger: true,
+      command: () => actions.onDelete(getSelectedRows(row.original, selectedRows)),
+    }),
+    [actions, getSelectedRows],
+  )
+
   return {
     rowContextMenuBuilders,
+    deleteContextMenuBuilder,
     onOptionClick: actions.onShowDetails,
     onRename: actions.onRename,
     renamingRow,

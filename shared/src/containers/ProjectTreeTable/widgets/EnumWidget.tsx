@@ -163,13 +163,15 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
               isOpen={false}
               isItem
               isMultiSelect={isMultiSelect}
-              isSelected={isSelected}
+              // a list shows its selection with checkboxes
+              isSelected={isSelected && !isMultiSelect}
               {...pt?.template}
               className={clsx('enum-dropdown-item', pt?.template?.className)}
             />
           )}
           widthExpand
           multiSelect={isMultiSelect}
+          checkboxes={isMultiSelect}
           disableOpen={isReadOnly}
           disabled={isReadOnly}
           sortBySelected

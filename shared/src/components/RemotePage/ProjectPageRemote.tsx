@@ -2,16 +2,9 @@
 // set up slicer
 
 import { useSlicerContext } from '@shared/containers/Slicer/context/slicer'
-import { Slicer } from '@shared/containers/Slicer/components/Slicer'
-import { defaultSliceOptions } from '@shared/containers/Slicer/hooks/useTableDataBySlice'
-import {
-  SLICER_SPLITTER_STATE_KEY,
-  SLICER_SPLITTER_PANEL_CONFIG,
-} from '@shared/containers/Slicer/hooks/useSlicerSplitter'
+import { ProjectPageLayout, Slicer } from '@ynput/ayon-addon'
 import { RemotePageWrapper } from './RemotePageWrapper'
 import type { RemotePageWrapperProps } from './RemotePageWrapper'
-import { Section } from '@ynput/ayon-react-components'
-import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { FC } from 'react'
 
 interface WithSlicerProps {
@@ -19,27 +12,13 @@ interface WithSlicerProps {
   fields: string[]
 }
 
-const WithSlicer = ({ children, fields }: WithSlicerProps) => {
-  const slicerFields = defaultSliceOptions.filter((field) => fields.includes(field.value))
-
-  return (
-    <main style={{ width: '100%', height: '100%' }}>
-      <Splitter
-        layout="horizontal"
-        style={{ width: '100%', height: '100%' }}
-        stateKey={SLICER_SPLITTER_STATE_KEY}
-        stateStorage="local"
-      >
-        <SplitterPanel {...SLICER_SPLITTER_PANEL_CONFIG}>
-          <Section wrap>
-            <Slicer sliceFields={slicerFields} pinnedSliceType="hierarchy" />
-          </Section>
-        </SplitterPanel>
-        <SplitterPanel size={80}>{children}</SplitterPanel>
-      </Splitter>
-    </main>
-  )
-}
+// the legacy `slicer: { fields }` key renders through the same layout components that addons
+// place themselves on project.page contributions (@ynput/ayon-addon)
+const WithSlicer = ({ children, fields }: WithSlicerProps) => (
+  <main style={{ width: '100%', height: '100%' }}>
+    <ProjectPageLayout sidebar={<Slicer fields={fields} />}>{children}</ProjectPageLayout>
+  </main>
+)
 
 export interface ProjectPageRemoteProps extends RemotePageWrapperProps {
   slicer?: { fields: string[] }

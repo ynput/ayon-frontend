@@ -1,6 +1,7 @@
 import { expect, test } from '../fixtures'
 import { hasPowerpack, ListsPage } from '../pages/ListsPage'
-import { confirmDialog, menuItem } from '../support/ui'
+import { OverviewPage } from '../pages/OverviewPage'
+import { confirmDialog, dialog, menuItem } from '../support/ui'
 
 test.describe('list folders', () => {
   test.beforeEach(async ({ api }) => {
@@ -144,6 +145,40 @@ test.describe('list folders', () => {
         return list && (await api.getEntityList(projectName, list.id)).entityListFolderId
       })
       .toBe(folderId)
+  })
+
+  test('create a list in a folder while adding items to it', async ({ page, api, projectName }) => {
+    const shot = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    await api.createEntityListFolder(projectName, { label: 'Dailies' })
+    const clientId = await api.createEntityListFolder(projectName, { label: 'Client' })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+
+    await overview.selectRow('sh010')
+    await overview.nameCell('sh010').click({ button: 'right' })
+    await menuItem(page, 'Add to list').click()
+    const addDialog = dialog(page, 'Add to list')
+    await addDialog.getByRole('row').filter({ hasText: 'Dailies' }).click()
+    await addDialog.getByRole('button', { name: 'add', exact: true }).click()
+
+    const newList = dialog(page, 'Create New List')
+    const folderField = newList.locator('#entityListFolderId')
+    await expect(folderField).toContainText('Dailies')
+    await folderField.getByRole('button').first().click()
+    await page.locator(`.options [data-value="${clientId}"]`).click()
+    await expect(folderField).toContainText('Client')
+    await newList.getByLabel('List label').fill('Hero shots')
+    await newList.getByRole('button', { name: 'Create list' }).click()
+    await expect(newList).toBeHidden()
+
+    await expect
+      .poll(async () => {
+        const [list] = await api.listEntityLists(projectName)
+        if (!list) return null
+        const { label, entityListFolderId } = await api.getEntityList(projectName, list.id)
+        return { label, entityListFolderId, entityIds: list.entityIds }
+      })
+      .toEqual({ label: 'Hero shots', entityListFolderId: clientId, entityIds: [shot.id] })
   })
 
   // FLAG (app bug): searching the lists panel keeps folders collapsed, hiding the matches inside

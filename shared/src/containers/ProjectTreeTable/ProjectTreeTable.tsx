@@ -77,7 +77,8 @@ import { CellId, getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
-import { Button, Icon } from '@ynput/ayon-react-components'
+import { applyMixedChange, Button, Icon } from '@ynput/ayon-react-components'
+import { isEqual } from 'lodash'
 import {
   ProjectTableAttribute,
   BuiltInFieldOptions,
@@ -89,7 +90,7 @@ import type { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext, parseRowId } from './context/project-table'
 import {
   checkColumnVisibility,
-  ensureAtLeastOneVisibleColumn,
+  resolveColumnVisibility,
   getEntityViewierIds,
   getReadOnlyLists,
   getTableFieldOptions,
@@ -98,6 +99,7 @@ import {
   getEntitiesLabelFromScopes,
 } from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
+import { getEntityListValue, type ListChange } from './hooks/useMixedCellValues'
 
 // dnd-kit imports
 import {
@@ -123,16 +125,26 @@ import { toast } from 'react-toastify'
 import { ColumnsConfig, getColumnConfig } from './types/columnConfig'
 import { getRequestErrorString } from '@shared/util'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
+import type { AddonColumnMeta } from './addonColumns/addonColumnsHelpers'
+import { AddonColumnDataScope } from './addonColumns/AddonColumns'
+import { AddonCellShortcuts } from './addonShortcuts/AddonCellShortcuts'
+import type { ProjectTablePage } from '@ynput/ayon-addon'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'> & { id?: string },
-  config?: { selection?: string[] },
+  config?: { selection?: string[]; listChange?: ListChange },
 ) => Promise<void>
 
 // rendered while the powerpack summaries remote is unavailable (no license / old addon)
 const SummaryCellContentFallback: FC<SummaryCellContentProps> = () => null
 
 declare module '@tanstack/react-table' {
+  // the type parameters must match the interface this merges into
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    // a column an addon contributes (tableColumn slot)
+    addonColumn?: AddonColumnMeta
+  }
   interface TableMeta<TData extends RowData> {
     options?: BuiltInFieldOptions
     readOnly?: ProjectTreeTableProps['readOnly']
@@ -196,6 +208,8 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   // scrolls this row into view once it is in the table, then calls onScrolledToRow
   scrollToRowId?: string | null
   onScrolledToRow?: (rowId: string) => void
+  // the page, for addon contributions to the table (table.shortcut)
+  addonPage?: ProjectTablePage
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -237,6 +251,7 @@ export const ProjectTreeTable = ({
   onVisibleRowsChange,
   scrollToRowId,
   onScrolledToRow,
+  addonPage,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -383,7 +398,7 @@ export const ProjectTreeTable = ({
 
   const handleCellUpdate: CellUpdate = useCallback(
     async (entity, config) => {
-      const { selection = [] } = config || {}
+      const { selection = [], listChange } = config || {}
       const { field, value, isAttrib } = entity
       const fieldColumnId = isAttrib
         ? `attrib_${field}`
@@ -398,7 +413,25 @@ export const ProjectTreeTable = ({
         return rowId === entity.rowId && isFieldColumn(colId)
       })
       const entitiesToUpdate: EntityUpdate[] = []
-      if (!selection?.length || !isEditedCellSelected) {
+      if (listChange) {
+        // each cell keeps its own values, plus or minus the changed ones
+        for (const cellId of listChange.cellIds) {
+          const { rowId } = parseCellId(cellId) || {}
+          const cellEntity = getEntityById(rowId || '')
+          if (!rowId || !cellEntity) continue
+          const currentValue = getEntityListValue(cellEntity, fieldColumnId)
+          const nextValue = applyMixedChange(currentValue, listChange)
+          if (isEqual(currentValue, nextValue)) continue
+          entitiesToUpdate.push({
+            field,
+            rowId,
+            id: cellEntity.entityId,
+            value: nextValue,
+            isAttrib,
+            type: cellEntity.entityType,
+          })
+        }
+      } else if (!selection?.length || !isEditedCellSelected) {
         entitiesToUpdate.push({ ...entity, id: entity.id || entity.rowId })
       } else {
         // update all the selected cells with the same columnId
@@ -451,6 +484,10 @@ export const ProjectTreeTable = ({
   // gives every cell a new component type, so React remounts the whole table body
   const includeParentsKey = includeParents?.join(',')
   const stableIncludeParents = useMemo(() => includeParents, [includeParentsKey])
+  // the columns only sort by these options; the cells get the others (e.g. tags) from the table
+  // meta, so a tag added to the project doesn't remount the table (and close a cell's editor)
+  const columnOptionsKey = JSON.stringify([options.status, options.folderType, options.taskType])
+  const columnOptions = useMemo(() => options, [columnOptionsKey])
 
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
@@ -461,7 +498,7 @@ export const ProjectTreeTable = ({
       includeParents: stableIncludeParents,
       showHierarchy,
       isFlatFolderView,
-      options,
+      options: columnOptions,
       extraColumns,
       excluded: excludedColumns,
       excludedSorting,
@@ -494,7 +531,7 @@ export const ProjectTreeTable = ({
     showHierarchy,
     isFlatFolderView,
     isExpandable,
-    options,
+    columnOptions,
     linkTypes,
     includeLinks,
     stableIncludeParents,
@@ -536,18 +573,17 @@ export const ProjectTreeTable = ({
   const resolvedColumnVisibility = useMemo(() => {
     const merged = { ...columnVisibility }
     placedColumnIds.forEach((id) => (merged[id] = true))
+    const explicitVisibility: Record<string, boolean | undefined> = {}
     columns.forEach((col) => {
       // @ts-ignore
-      const explicitVisible = col.visible
-      if (col.id && merged[col.id] === undefined) {
-        if (explicitVisible !== undefined) {
-          merged[col.id] = explicitVisible
-        } else {
-          merged[col.id] = checkColumnVisibility({}, col.id, defaultColumnVisibility)
-        }
-      }
+      if (col.id) explicitVisibility[col.id] = col.visible
     })
-    return ensureAtLeastOneVisibleColumn(merged, columns.map((c) => c.id as string).filter(Boolean))
+    return resolveColumnVisibility(
+      merged,
+      columns.map((c) => c.id as string).filter(Boolean),
+      defaultColumnVisibility,
+      explicitVisibility,
+    )
   }, [columnVisibility, defaultColumnVisibility, columns, placedColumnIds])
 
   const table = useReactTable({
@@ -802,6 +838,8 @@ export const ProjectTreeTable = ({
       columnReadOnly={readOnlyAttribs}
       visibleColumns={visibleColumns}
     >
+      {/* outside the wrapper: its dialog's events would bubble into the table through the portal */}
+      {addonPage && <AddonCellShortcuts page={addonPage} containerRef={tableContainerRef} />}
       <Styled.TableWrapper {...props}>
         <Styled.TableContainer
           ref={tableContainerRef}
@@ -1464,18 +1502,19 @@ const TableBody = ({
   }, [virtualRows, rows, onVisibleRowsChange])
 
   const { projectName } = useProjectContext()
-  const isListsColumnShown = table
-    .getVisibleLeafColumns()
-    .some((column) => LIST_COLUMN_IDS.includes(column.id))
+  const visibleLeafColumns = table.getVisibleLeafColumns()
+  // the entities of the rows on screen, for data fetched per table rather than per cell
+  const visibleEntities = virtualRows.flatMap((virtualRow) => {
+    const row = rows[virtualRow.index]?.original
+    return row && !row.group && !row.metaType && !row.isLoading ? [row.primary] : []
+  })
+  const isListsColumnShown = visibleLeafColumns.some((column) =>
+    LIST_COLUMN_IDS.includes(column.id),
+  )
   useFetchListsMembership({
     projectName,
     enabled: isListsColumnShown,
-    entities: isListsColumnShown
-      ? virtualRows.flatMap((virtualRow) => {
-          const row = rows[virtualRow.index]?.original
-          return row && !row.group && !row.metaType && !row.isLoading ? [row.primary] : []
-        })
-      : [],
+    entities: isListsColumnShown ? visibleEntities : [],
   })
 
   useEffect(() => {
@@ -1500,7 +1539,6 @@ const TableBody = ({
 
   // vertical column lines painted behind the rows so they extend into the empty
   // space between the last row and the summary footer
-  const visibleLeafColumns = table.getVisibleLeafColumns()
   const columnDividerLefts = useMemo(() => {
     const lefts: string[] = []
     const sizeVars: string[] = []
@@ -1606,14 +1644,21 @@ const TableBody = ({
     )
   }
 
+  // addon columns get their values for the rows on screen (tableColumn slot)
+  const body = (
+    <AddonColumnDataScope columns={visibleLeafColumns} entities={visibleEntities}>
+      {tbodyContent}
+    </AddonColumnDataScope>
+  )
+
   if (sortableRows) {
     return (
       <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
-        {tbodyContent}
+        {body}
       </SortableContext>
     )
   } else {
-    return tbodyContent
+    return body
   }
 }
 
@@ -1845,8 +1890,9 @@ const TD = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
-        // check we are not clicking in a dropdown
-        if (target.closest('.options')) return
+        // check we are not clicking in a dropdown, or in anything the cell opened in a portal
+        // (e.g. a dropdown's search box), which would lose its focus to the cell
+        if (target.closest('.options') || !e.currentTarget.contains(target)) return
 
         e.currentTarget.focus()
 

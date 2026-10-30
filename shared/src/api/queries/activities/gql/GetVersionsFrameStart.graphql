@@ -4,9 +4,7 @@ query GetVersionsFrameStart($projectName: String!, $versionIds: [String!]!) {
       edges {
         node {
           id
-          attrib {
-            frameStart
-          }
+          attrib(names: ["frameStart"])
         }
       }
     }

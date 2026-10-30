@@ -3,10 +3,10 @@ import { login } from '@state/user'
 import api, { useAcceptInviteMutation, useGetSiteInfoQuery } from '@shared/api'
 import { toast } from 'react-toastify'
 import { useEffect, useState } from 'react'
-import * as Styled from '@pages/LoginPage/LoginPage.styled'
+import * as Styled from '@shared/components/LoginPage/LoginPage.styled'
 import { Button, InputPassword, Panel } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
-import LoginTerms from './LoginPage/LoginTerms'
+import LoginTerms from '@shared/components/LoginPage/LoginTerms'
 
 const AcceptInviteSkeleton = ({ logo }: { logo?: string }) => (
   <>

@@ -18,7 +18,11 @@ import type {
   ContextMenuItemConstructor,
   ContextMenuItemConstructors,
 } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
-import { parseCellId, type CellMark } from '@shared/containers/ProjectTreeTable'
+import {
+  parseCellId,
+  type CellMark,
+  useAddonEntityMenuItems,
+} from '@shared/containers/ProjectTreeTable'
 import { useEntityListsContext } from '../entity-lists/EntityListsContextInstance'
 import useReorderListItem, { UseReorderListItemReturn } from '../../hooks/useReorderListItem'
 import useBuildListItemsTableData from '../../hooks/useBuildListItemsTableData'
@@ -87,6 +91,13 @@ export interface ListItemsDataContextValue {
   isError?: boolean
   error?: unknown
   isInitialized: boolean
+  // the items query's filter, search and sorting, for exports
+  listItemsQueryArgs: {
+    filter?: string
+    search?: string
+    sortBy?: string | string[]
+    desc?: boolean
+  }
   // filters
   listItemsFilters: QueryFilter
   setListItemsFilters: (filters: QueryFilter) => void
@@ -234,6 +245,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     fieldStatsLoading,
     fieldStatsError,
     mainCountLabels,
+    queryArgs: listItemsQueryArgs,
   } = useGetListItemsData({
     projectName,
     entityType: selectedList?.entityType,
@@ -464,17 +476,24 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     }
   }
 
+  // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
+  const addonEntityTopItems = useAddonEntityMenuItems('lists', 'top')
+  const addonEntityItems = useAddonEntityMenuItems('lists')
+
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [
+    addonEntityTopItems,
     'copy-paste',
     'show-details',
     'open-viewer',
+    'export',
     // add context menu to add to lists but filter out own list
     menuItemsAddToList((item) => item.id !== selectedListId),
     addToShownListMenuItem,
     forListItems(replaceItemContextMenu),
     forListItems(viewDataContextMenu),
     forListItems(listValueMenuItem),
+    addonEntityItems,
     forListItems(deleteListItemMenuItem),
   ]
 
@@ -503,6 +522,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         isError,
         error,
         fetchNextPage,
+        listItemsQueryArgs,
         // filters
         listItemsFilters,
         setListItemsFilters,

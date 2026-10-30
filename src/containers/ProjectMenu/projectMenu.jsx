@@ -10,11 +10,12 @@ import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
 import { updateUserPreferences as updateUserPreferencesAction } from '@state/user'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocation, useNavigate } from 'react-router-dom'
-import buildProjectsTableData, {
+import {
+  ProjectsTable,
+  buildProjectsTableData,
   parseProjectFolderRowId,
-} from '@containers/ProjectsList/buildProjectsTableData'
+} from '@shared/containers/ProjectsTable'
 import { useGlobalContext, usePowerpack } from '@shared/context'
-import ProjectsTable from '@containers/ProjectsList/ProjectsTable'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useNavigate()

@@ -70,6 +70,7 @@ const VersionsListTable: FC<VersionsListTableProps> = ({}) => {
           data={versionsTableData}
           isLoading={false}
           imgRatio={ratio}
+          addonShortcuts={{ table: 'versionsPanel', projectName }}
           pt={{
             cell: {
               style: {

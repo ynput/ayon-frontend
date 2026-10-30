@@ -2,10 +2,13 @@ import { SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import { FC, useCallback, useMemo } from 'react'
 import VPSearchFilter from './VPSearchFilter'
 import { CustomizeButton, SyncButton, TableGridSwitch } from '@shared/components'
+import AddonToolbarItems from '@/remote/AddonToolbarItems'
 import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/vp-data'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
 import { useGetGroupedFields, useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import styled from 'styled-components'
+import { TableExportButton } from '@shared/containers/TableExport'
+import VPExportSource from './VPExportSource'
 
 const GroupByDropdown = styled(SortingDropdown)<{
   $disableSortOrder?: boolean
@@ -137,6 +140,9 @@ const VPToolbar: FC = () => {
         multiSelect={false}
       />
       <TableGridSwitch showGrid={showGrid} onChange={(value) => onUpdateShowGrid(value)} />
+      <TableExportButton />
+      <VPExportSource />
+      <AddonToolbarItems page="products" />
       <CustomizeButton />
     </Toolbar>
   )

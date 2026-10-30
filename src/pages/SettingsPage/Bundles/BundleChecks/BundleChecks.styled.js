@@ -59,7 +59,6 @@ export const Checks = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-large);
-  margin-top: 20px;
   flex: 1;
 
   overflow: hidden;

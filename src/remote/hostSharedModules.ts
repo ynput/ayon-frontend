@@ -1,12 +1,19 @@
 import { registerShared } from '@module-federation/enhanced/runtime'
 import * as reduxToolkit from '@reduxjs/toolkit'
 import * as reactRedux from 'react-redux'
+import * as reactToastify from 'react-toastify'
+import * as primeConfirmDialog from 'primereact/confirmdialog'
+import * as addonApi from '@ynput/ayon-addon'
 import { dependencies } from '../../package.json'
 import { version } from '../../shared/package.json'
+import { version as addonApiVersion } from '../../addon/package.json'
+import { routerExports } from './hostRouterExports'
 
-// Addons import @ynput/ayon-frontend-shared, @reduxjs/toolkit and react-redux. Providing the
-// host's own modules under those names makes addons that share them use the host's instances:
-// one RTK Query api and cache, one root reducer, and the same React contexts.
+// Addons import @ynput/ayon-frontend-shared, @reduxjs/toolkit, react-redux, react-router,
+// react-toastify, primereact/confirmdialog and @ynput/ayon-addon. Providing the host's own modules
+// under those names makes addons that share them use the host's instances: one RTK Query api and
+// cache, one root reducer, the same React contexts, the host's router, its toast container, its
+// confirm dialog and one slot registry.
 // See src/remote/AGENTS.md.
 
 const PACKAGE = '@ynput/ayon-frontend-shared'
@@ -29,6 +36,7 @@ const ENTRY_NAMES = [
   'Slicer',
   'Views',
   'SimpleTable',
+  'ProjectsTable',
   'EntityPickerDialog',
   'ListTable',
   'NewEntity',
@@ -57,6 +65,18 @@ export const shareHostModules = () =>
     // put every host import of them behind an async share load at startup.
     '@reduxjs/toolkit': share(dependencies['@reduxjs/toolkit'], async () => asLib(reduxToolkit)),
     'react-redux': share(dependencies['react-redux'], async () => asLib(reactRedux)),
+    // the router contexts live in react-router, react-router-dom re-exports them
+    'react-router': share(dependencies['react-router'], async () => asLib(routerExports)),
+    'react-router-dom': share(dependencies['react-router-dom'], async () => asLib(routerExports)),
+    // toast() only reaches a ToastContainer from the same copy of the package
+    'react-toastify': share(dependencies['react-toastify'], async () => asLib(reactToastify)),
+    // confirmDialog() opens every ConfirmDialog from the same copy of primereact: with the host's,
+    // an addon's confirms open the host's app-level dialog, and the addon mounts none
+    'primereact/confirmdialog': share(dependencies['primereact'], async () =>
+      asLib(primeConfirmDialog),
+    ),
+    // the addon API: addons list it with import: false, so this is the only copy they ever get
+    '@ynput/ayon-addon': share(addonApiVersion, async () => asLib(addonApi)),
     ...Object.fromEntries(
       ENTRY_NAMES.map((entry) => [
         entry === 'index' ? PACKAGE : `${PACKAGE}/${entry}`,

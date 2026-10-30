@@ -1,11 +1,19 @@
-import { ReactNode, useEffect, useRef, useState } from 'react'
-import { registerRemotes } from '@module-federation/enhanced/runtime'
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { loadRemote, registerRemotes } from '@module-federation/enhanced/runtime'
+import { MANIFEST_MODULE, registerManifest, setManifestsLoading } from '@ynput/ayon-addon/host'
 import { toast } from 'react-toastify'
 import { RefreshToast } from '@shared/components/RefreshToast/RefreshToast'
 import { useListFrontendModulesQuery } from '@shared/api'
 import type { FrontendModuleListItem } from '@shared/api'
 import { useGlobalContext } from '../global/GlobalContextInstance'
 import { RemoteModulesContext } from './RemoteModulesContextInstance'
+import {
+  canUseAddonDevOverride,
+  fetchAddonDevInfo,
+  readAddonDevOverride,
+} from './addonDevOverride'
+import type { AddonDevInfo, AddonDevOverride } from './addonDevOverride'
+import { AddonDevBanner } from './AddonDevBanner'
 
 type Module = {
   remote: string
@@ -14,15 +22,45 @@ type Module = {
   modules: string[]
 }
 
+// an addon loaded from its dev server (?addonDev=...)
+export type AddonDevState =
+  | { status: 'off' }
+  | { status: 'loading'; override: AddonDevOverride }
+  | { status: 'active'; override: AddonDevOverride; info: AddonDevInfo }
+  | { status: 'error'; override: AddonDevOverride; error: string }
+
 export type RemoteModulesContextType = {
   isLoading: boolean
   modules: FrontendModuleListItem[]
   remotesInitialized: boolean
+  addonDev: AddonDevState
 }
 
 type Props = {
   children: ReactNode
   skip?: boolean
+}
+
+// Addons that list a `manifest` module declare their contributions to slots in it
+// (@ynput/ayon-addon). It holds descriptions only, so every manifest loads at startup; the
+// contributions' code loads when their slot needs it.
+const loadManifests = async (remotes: Module[]) => {
+  await Promise.all(
+    remotes
+      .filter((r) => r.modules.includes(MANIFEST_MODULE))
+      .map(async (r) => {
+        try {
+          const manifest = await loadRemote<{ default: unknown }>(
+            `${r.remote}/${MANIFEST_MODULE}`,
+            { from: 'runtime' },
+          )
+          registerManifest({ name: r.addon, version: r.version, remote: r.remote }, manifest?.default)
+        } catch (error) {
+          console.error(`[addon ${r.addon}] its manifest failed to load`, error)
+        }
+      }),
+  )
+  setManifestsLoading(false)
 }
 
 export const RemoteModulesProvider = ({ children, skip }: Props) => {
@@ -37,8 +75,42 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
 
   const {
     siteInfo,
-    isLoading: { siteInfo: isLoadingInfo },
+    user,
+    isLoading: { siteInfo: isLoadingInfo, user: isLoadingUser },
   } = useGlobalContext()
+
+  // the dev override, read once: the remotes can only be registered once anyway
+  const [requestedOverride] = useState(readAddonDevOverride)
+  const [addonDev, setAddonDev] = useState<AddonDevState>(
+    requestedOverride ? { status: 'loading', override: requestedOverride } : { status: 'off' },
+  )
+  useEffect(() => {
+    if (!requestedOverride || isLoadingUser) return
+    if (!canUseAddonDevOverride(user as Parameters<typeof canUseAddonDevOverride>[0])) {
+      console.warn('[addon dev] ignored: only users in developer mode can load addons from a dev server')
+      setAddonDev({ status: 'off' })
+      return
+    }
+    fetchAddonDevInfo(requestedOverride).then(
+      (info) => setAddonDev({ status: 'active', override: requestedOverride, info }),
+      (error) =>
+        setAddonDev({ status: 'error', override: requestedOverride, error: String(error) }),
+    )
+  }, [requestedOverride, isLoadingUser, user])
+
+  // the server's list, with the dev addon in place of its installed version (or added)
+  const effectiveModules = useMemo<FrontendModuleListItem[]>(() => {
+    if (addonDev.status !== 'active') return addonRemoteModules
+    const { override, info } = addonDev
+    return [
+      ...addonRemoteModules.filter((addon) => addon.addonName !== override.addon),
+      {
+        addonName: override.addon,
+        addonVersion: `${info.version}+dev`,
+        modules: { [info.remote]: info.modules },
+      },
+    ]
+  }, [addonRemoteModules, addonDev])
 
   const [remotesInitialized, setRemotesInitialized] = useState(false)
   // addon versions the remotes were registered with
@@ -50,7 +122,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
   useEffect(() => {
     if (!remotesInitialized || isFetching) return
 
-    const updatedAddons = addonRemoteModules.filter(({ addonName, addonVersion }) => {
+    const updatedAddons = effectiveModules.filter(({ addonName, addonVersion }) => {
       const registeredVersion = registeredVersions.current[addonName]
       return registeredVersion !== undefined && registeredVersion !== addonVersion
     })
@@ -71,22 +143,23 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     } else {
       toast.info(render, { toastId, autoClose: false, closeOnClick: false })
     }
-  }, [addonRemoteModules, isFetching, remotesInitialized])
+  }, [effectiveModules, isFetching, remotesInitialized])
 
   useEffect(() => {
     // waiting for loading or it has already been initialized
-    if (isLoading || isLoadingInfo || remotesInitialized) return
+    if (isLoading || isLoadingInfo || remotesInitialized || addonDev.status === 'loading') return
 
     // no remotes found, nothing to do
-    if (!addonRemoteModules.length) {
+    if (!effectiveModules.length) {
       setRemotesInitialized(true)
+      setManifestsLoading(false)
       return
     }
 
     // create a flat map of modules to load
     const allRemotes: Module[] = []
 
-    addonRemoteModules.forEach((addon) => {
+    effectiveModules.forEach((addon) => {
       const { addonName, addonVersion, modules = {} } = addon
 
       Object.entries(modules).forEach(([remote, modules]) => {
@@ -101,31 +174,38 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
 
     registeredVersions.current = Object.fromEntries(allRemotes.map((r) => [r.addon, r.version]))
 
+    const devAddon = addonDev.status === 'active' ? addonDev : undefined
     registerRemotes(
       allRemotes.map((r) => ({
         name: r.remote,
         alias: r.remote,
-        entry: `/addons/${r.addon || r.remote}/${r.version}/frontend/modules/${
-          r.remote
-        }/remoteEntry.js?server=${siteInfo?.releaseInfo?.version || siteInfo?.releaseInfo}-${
-          siteInfo?.releaseInfo?.buildDate
-        }-${new Date().getTime()}`,
+        entry:
+          devAddon && r.addon === devAddon.override.addon
+            ? `${devAddon.override.url}/remoteEntry.js?build=${devAddon.info.buildId}`
+            : `/addons/${r.addon || r.remote}/${r.version}/frontend/modules/${
+                r.remote
+              }/remoteEntry.js?server=${siteInfo?.releaseInfo?.version || siteInfo?.releaseInfo}-${
+                siteInfo?.releaseInfo?.buildDate
+              }-${new Date().getTime()}`,
         type: 'module',
       })),
     )
 
     setRemotesInitialized(true)
-  }, [addonRemoteModules, isLoading, isLoadingInfo, remotesInitialized])
+    loadManifests(allRemotes)
+  }, [effectiveModules, isLoading, isLoadingInfo, remotesInitialized, addonDev])
 
   return (
     <RemoteModulesContext.Provider
       value={{
         isLoading,
-        modules: addonRemoteModules,
+        modules: effectiveModules,
         remotesInitialized,
+        addonDev,
       }}
     >
       {children}
+      {addonDev.status !== 'off' && <AddonDevBanner state={addonDev} />}
     </RemoteModulesContext.Provider>
   )
 }

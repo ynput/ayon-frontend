@@ -36,6 +36,8 @@ export default defineConfig({
       entryRoot: 'src',
       bundleTypes: true,
       clearPureImport: false,
+      // a peer package: its types stay imports of @ynput/ayon-addon, not paths into ../addon
+      aliasesExclude: [/^@ynput\/ayon-addon(\/|$)/],
     }),
   ],
   resolve: {
@@ -62,12 +64,16 @@ export default defineConfig({
         Slicer: resolve(__dirname, 'src/containers/Slicer/index.ts'),
         Views: resolve(__dirname, 'src/containers/Views/index.ts'),
         SimpleTable: resolve(__dirname, 'src/containers/SimpleTable/index.ts'),
+        ProjectsTable: resolve(__dirname, 'src/containers/ProjectsTable/index.ts'),
         EntityPickerDialog: resolve(__dirname, 'src/containers/EntityPickerDialog/index.ts'),
         ListTable: resolve(__dirname, 'src/containers/ListTable/index.ts'),
         NewEntity: resolve(__dirname, 'src/containers/NewEntity/index.ts'),
       },
       name: 'AyonFrontendShared',
       formats: ['es'],
+      // one stylesheet for the whole package (dist/style.css, exported as ./style.css): the
+      // components' own styles, e.g. the context menu's. The AYON app gets them from the source.
+      cssFileName: 'style',
     },
     rollupOptions: {
       external: (id) => {
@@ -111,6 +117,6 @@ export default defineConfig({
     sourcemap: false,
     emptyOutDir: true,
     minify: true,
-    cssCodeSplit: true,
+    cssCodeSplit: false,
   },
 })

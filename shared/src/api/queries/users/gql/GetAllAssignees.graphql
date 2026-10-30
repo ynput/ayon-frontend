@@ -4,9 +4,7 @@ query GetAllAssignees {
       node {
         name
         updatedAt
-        attrib {
-          fullName
-        }
+        attrib(names: ["fullName"])
       }
     }
   }

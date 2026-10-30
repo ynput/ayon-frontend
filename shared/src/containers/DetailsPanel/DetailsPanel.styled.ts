@@ -26,6 +26,15 @@ export const RightTools = styled.div`
   background-color: var(--md-sys-color-surface-container-low);
 `
 
+// an addon tab's content (detailsPanel.tab), in the place of the feed
+export const AddonTabContent = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+`
+
 export const Panel = styled(ARCPanel)`
   gap: 0px;
   height: 100%;

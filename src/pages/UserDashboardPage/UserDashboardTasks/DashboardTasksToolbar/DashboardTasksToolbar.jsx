@@ -12,7 +12,7 @@ import * as Styled from './DashboardTasksToolbar.styled'
 import sortByOptions from './KanBanSortByOptions'
 import { getGroupByOptions } from './KanBanGroupByOptions'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
-import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
+import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
 
 const DashboardTasksToolbar = ({ isLoading, view, setView, projectUsers = [] }) => {
   const dispatch = useDispatch()
