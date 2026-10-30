@@ -77,6 +77,8 @@ const StyledImg = styled.img`
 
 const Count = styled.span`
   color: var(--md-sys-color-outline);
+  white-space: nowrap;
+  flex-shrink: 0;
 `
 
 type GroupHeaderProps = {
@@ -127,7 +129,7 @@ export const GroupHeaderWidget = ({
             {count !== undefined && count > 0 ? (
               <Count>
                 {count}
-                {percentage !== undefined && ` (${percentage}%)`}
+                {percentage !== undefined && ` (${percentage === 0 ? '<1' : percentage}%)`}
               </Count>
             ) : isEmpty ? (
               <Count>(Empty)</Count>
