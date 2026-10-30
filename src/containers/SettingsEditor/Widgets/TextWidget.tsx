@@ -11,8 +11,10 @@ export const TextWidget = (props: $Any) => {
   const [value, setValue] = useState<$Any>(props.value ?? null)
 
   useEffect(() => {
-    if (props.value === undefined) return
-    setValue((currentValue: $Any) => (equiv(currentValue, props.value) ? currentValue : props.value))
+    // Sync the local state with the formData. An unset value clears it too, or a row
+    // reused for another item keeps showing the previous item's value
+    const next = props.value ?? null
+    setValue((currentValue: $Any) => (equiv(currentValue, next) ? currentValue : next))
   }, [props.value])
 
   const onChangeCommit = (type?: $Any) => {

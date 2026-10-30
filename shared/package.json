@@ -1,7 +1,13 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.7.3",
+  "version": "0.7.5",
   "description": "Shared React components for AYON frontend",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ynput/ayon-frontend.git",
+    "directory": "shared"
+  },
+  "license": "FSL-1.1-ALv2",
   "module": "dist/index.es.js",
   "exports": {
     ".": {
@@ -23,10 +29,6 @@
     "./context": {
       "types": "./dist/types/context.d.ts",
       "import": "./dist/context.es.js"
-    },
-    "./shared": {
-      "types": "./dist/types/shared.d.ts",
-      "import": "./dist/shared.es.js"
     },
     "./util": {
       "types": "./dist/types/util.d.ts",
@@ -102,8 +104,8 @@
     "@reduxjs/toolkit": "2.11.2",
     "@rtk-query/graphql-request-base-query": "2.3.2",
     "@tanstack/react-table": "8.21.3",
-    "@ynput/ayon-addon": "^0.1.0",
-    "@ynput/ayon-react-components": "^1.23.0",
+    "@ynput/ayon-addon": "^0.1.1",
+    "@ynput/ayon-react-components": "^1.24.0",
     "graphql-request": "7.4.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",

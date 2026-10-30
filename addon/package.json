@@ -1,7 +1,13 @@
 {
   "name": "@ynput/ayon-addon",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Public API for AYON addon frontends: slots, manifest and the host's globals",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ynput/ayon-frontend.git",
+    "directory": "addon"
+  },
+  "license": "FSL-1.1-ALv2",
   "type": "module",
   "module": "dist/index.es.js",
   "types": "dist/types/index.d.ts",
