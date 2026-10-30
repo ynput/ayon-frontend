@@ -60,10 +60,8 @@ export const TextWidget = (props: $Any) => {
 
   useEffect(() => {
     setValueInitialized(true)
-    // Sync the local state with the formData
-    if (props.value === undefined) {
-      return
-    }
+    // Sync the local state with the formData. An unset value clears it too, or a row
+    // reused for another item keeps showing the previous item's value
     if (equiv(value, props.value)) {
       return
     }
