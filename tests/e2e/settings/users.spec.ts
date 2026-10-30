@@ -1,8 +1,8 @@
 import { expect, test } from '../fixtures'
-import { uniqueName } from '../support/names'
+import { signInAs, uniqueName } from '@ynput/ayon-e2e'
+import { apiAs } from '../support/api'
 import { UsersSettingsPage } from '../pages/UsersSettingsPage'
 import { LoginPage } from '../pages/LoginPage'
-import { apiAs, signInAs } from '../support/session'
 import { randomBytes } from 'crypto'
 
 test.describe('users settings', () => {

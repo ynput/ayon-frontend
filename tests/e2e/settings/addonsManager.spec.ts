@@ -1,5 +1,5 @@
 import { expect, test } from '../fixtures'
-import { expectRowSelection, menuItem } from '../support/ui'
+import { expectRowSelection, menuItem } from '@ynput/ayon-e2e'
 
 test.describe('addons manager', () => {
   test('the menu of an addon that is not selected acts on that addon', async ({ page, api }) => {

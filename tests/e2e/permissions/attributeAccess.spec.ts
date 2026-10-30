@@ -1,8 +1,8 @@
 import { Locator } from '@playwright/test'
 import { expect, test } from './restrictedUser'
-import { AyonApi } from '../support/api'
+import { signInAs } from '@ynput/ayon-e2e'
+import { apiAs, AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
-import { apiAs, signInAs } from '../support/session'
 
 const createShot = async (api: AyonApi, projectName: string, taskData = {}) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })

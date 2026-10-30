@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures'
 import { OverviewPage } from '../pages/OverviewPage'
-import { signInAs } from '../support/session'
+import { signInAs } from '@ynput/ayon-e2e'
 
 test.describe('mentions and inbox', () => {
   test('mention a user in a comment', async ({ page, api, projectName, createUser }) => {

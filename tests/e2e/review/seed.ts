@@ -1,4 +1,5 @@
-import { AyonApi, Reviewable, Version } from '../support/api'
+import { Version } from '@ynput/ayon-e2e'
+import { AyonApi, Reviewable } from '../support/api'
 import { Media } from '../media'
 
 export type SeededVersion = Version & { name: string; reviewables: Reviewable[] }

@@ -1,5 +1,5 @@
 import { expect, Page } from '@playwright/test'
-import { dialog, formRow, menuItem, switchBody, toast } from '../support/ui'
+import { dialog, formRow, menuItem, switchBody, toast } from '@ynput/ayon-e2e'
 
 /** /settings/users */
 export class UsersSettingsPage {

@@ -1,5 +1,8 @@
 import { expect, Locator, Page } from '@playwright/test'
 
+// Locators for AYON's shared UI (@ynput/ayon-react-components, primereact, react-toastify), which
+// addons use too. The FLAGs are accessibility gaps in those components.
+
 /** A react-toastify notification containing `text` */
 export const toast = (page: Page, text: string | RegExp) =>
   page.locator('.Toastify__toast').filter({ hasText: text }).first()
@@ -19,15 +22,19 @@ export const confirmDialog = (page: Page) => page.locator('.p-confirm-dialog')
  * A menu item by its visible label. Covers both menu implementations in the app:
  * - primereact context menus (`role=menuitem`)
  * - the shared `Menu` dropdowns (`<li aria-label>` inside a list)
+ * - menu items whose label is a bare text node after the icon (e.g. addons' own menus)
  * FLAG: material icon ligatures are not aria-hidden, so accessible names look like "archive Archive";
- * matching the label element avoids depending on the icon name.
+ * matching the label element, or the name with one icon word before it, avoids depending on the icon.
  */
 export const menuItem = (page: Page, label: string) =>
   page
     .getByRole('menuitem')
     .filter({ has: page.getByText(label, { exact: true }) })
+    .or(page.getByRole('menuitem', { name: new RegExp(`^(\\S+ )?${escapeRegExp(label)}$`) }))
     .or(page.getByRole('listitem', { name: label, exact: true }))
     .first()
+
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 // FLAG: FormRow labels are not associated with their fields, so `getByLabel` does not work
 export const formRow = (scope: Page | Locator, label: string) =>

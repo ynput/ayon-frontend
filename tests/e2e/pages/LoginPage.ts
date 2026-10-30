@@ -1,5 +1,5 @@
 import { Locator, Page } from '@playwright/test'
-import { menuItem } from '../support/ui'
+import { menuItem } from '@ynput/ayon-e2e'
 
 export class LoginPage {
   readonly usernameInput: Locator

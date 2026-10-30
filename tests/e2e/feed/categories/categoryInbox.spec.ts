@@ -1,4 +1,5 @@
-import { apiAs, signInAs } from '../../support/session'
+import { signInAs } from '@ynput/ayon-e2e'
+import { apiAs } from '../../support/api'
 import { InboxPage } from '../../pages/InboxPage'
 import { NONE, VIEWER, expect, test, user } from './categoryFixtures'
 

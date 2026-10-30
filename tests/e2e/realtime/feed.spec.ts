@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test'
 import { expect, test } from '../fixtures'
-import { AyonApi } from '../support/api'
-import { apiAs, signInAs } from '../support/session'
+import { signInAs } from '@ynput/ayon-e2e'
+import { apiAs, AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
 import { addReaction, deleteComment, editComment, LIVE_UPDATE, LiveUpdates } from './live'
 
