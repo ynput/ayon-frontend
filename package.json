@@ -7,6 +7,7 @@
     "build": "vite build",
     "build:shared": "yarn --cwd ./shared build",
     "build:addon": "yarn build:shared && yarn --cwd ./addon build && yarn --cwd ./addon-dev build",
+    "build:e2e": "tsc -p e2e/tsconfig.json",
     "preview": "vite preview",
     "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
     "lint:fix": "eslint --fix 'src/**/*.{jsx,ts,tsx}'",

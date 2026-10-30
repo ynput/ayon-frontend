@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures'
 import { confirmDeleteCounts, OverviewPage } from '../pages/OverviewPage'
-import { dialog } from '../support/ui'
+import { dialog } from '@ynput/ayon-e2e'
 
 test.describe('project overview', () => {
   test('create a root folder', async ({ page, api, projectName }) => {

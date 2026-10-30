@@ -1,5 +1,5 @@
 import { expect, Page } from '@playwright/test'
-import { confirmDialog, dialog, menuItem, toast } from '../support/ui'
+import { confirmDialog, dialog, menuItem, toast } from '@ynput/ayon-e2e'
 import { SettingsEditor } from './SettingsEditor'
 
 export class AnatomyPresetsPage {

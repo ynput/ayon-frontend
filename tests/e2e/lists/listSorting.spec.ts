@@ -1,7 +1,7 @@
 import { expect, test } from '../fixtures'
 import { ListsPage } from '../pages/ListsPage'
+import { adminCredentials } from '@ynput/ayon-e2e'
 import { AyonApi } from '../support/api'
-import { adminCredentials } from '../support/env'
 
 const COLUMNS = ['name', 'attrib_fps', 'attrib_frameStart'].map((name) => ({ name, visible: true }))
 

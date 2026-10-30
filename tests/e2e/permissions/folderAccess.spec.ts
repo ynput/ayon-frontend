@@ -1,8 +1,7 @@
 import { assigned, expect, hierarchy, onlyFolders, test } from './restrictedUser'
-import { AyonApi } from '../support/api'
+import { dialog, menuItem, signInAs, toast } from '@ynput/ayon-e2e'
+import { apiAs, AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
-import { apiAs, signInAs } from '../support/session'
-import { dialog, menuItem, toast } from '../support/ui'
 
 const createShots = async (api: AyonApi, projectName: string, compAssignees: string[] = []) => {
   const sh010 = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })

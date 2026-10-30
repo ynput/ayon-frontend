@@ -1,5 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test'
-import { menuItem } from '../support/ui'
+import { menuItem } from '@ynput/ayon-e2e'
 import { SearchFilterBar } from './SearchFilterBar'
 
 export class ProductsPage {

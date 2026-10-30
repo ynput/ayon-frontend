@@ -1,7 +1,6 @@
 import { expect, test } from '../fixtures'
 import { AccessGroupsPage } from '../pages/AccessGroupsPage'
-import { uniqueName } from '../support/names'
-import { confirmDialog, dialog, menuItem } from '../support/ui'
+import { confirmDialog, dialog, menuItem, uniqueName } from '@ynput/ayon-e2e'
 
 test.describe('access groups', () => {
   test('create an access group', async ({ page, api }) => {

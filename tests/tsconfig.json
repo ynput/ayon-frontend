@@ -8,7 +8,11 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "noUnusedLocals": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@ynput/ayon-e2e": ["../e2e/src/index.ts"],
+      "@ynput/ayon-e2e/config": ["../e2e/src/config.ts"]
+    }
   },
   "include": ["./e2e/**/*.ts", "../playwright.config.ts"]
 }

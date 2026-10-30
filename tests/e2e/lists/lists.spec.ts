@@ -1,5 +1,5 @@
 import { expect, test } from '../fixtures'
-import { confirmDialog, menuItem } from '../support/ui'
+import { confirmDialog, menuItem } from '@ynput/ayon-e2e'
 import { addToList, ListsPage } from '../pages/ListsPage'
 import { OverviewPage } from '../pages/OverviewPage'
 

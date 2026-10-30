@@ -1,5 +1,5 @@
 import { expect, Page } from '@playwright/test'
-import { confirmDialog, toast } from '../support/ui'
+import { confirmDialog, toast } from '@ynput/ayon-e2e'
 
 // FLAG: secrets are unlabeled rows of inputs: rows are found by their read-only name, buttons by ligature
 export class SecretsPage {

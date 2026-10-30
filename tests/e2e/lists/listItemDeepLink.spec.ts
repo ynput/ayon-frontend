@@ -1,8 +1,8 @@
 import { expect, test } from '../fixtures'
 import { DetailsPanel } from '../pages/DetailsPanel'
 import { ListsPage } from '../pages/ListsPage'
+import { toast } from '@ynput/ayon-e2e'
 import { AyonApi } from '../support/api'
-import { toast } from '../support/ui'
 
 const deepLink = (page: string, param: string, listId: string, itemIds: string[]) =>
   `${page}?${param}=${listId}${itemIds.map((id) => `&listItemId=${id}`).join('')}`

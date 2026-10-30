@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test'
 import { expect, test } from '../fixtures'
+import { dialog, menuItem, toast } from '@ynput/ayon-e2e'
 import { AyonApi } from '../support/api'
-import { dialog, menuItem, toast } from '../support/ui'
 import { AttributesPage } from '../pages/AttributesPage'
 import { DetailsPanel } from '../pages/DetailsPanel'
 import { OverviewPage } from '../pages/OverviewPage'

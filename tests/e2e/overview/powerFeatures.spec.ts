@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures'
+import { toast } from '@ynput/ayon-e2e'
 import { AyonApi } from '../support/api'
-import { toast } from '../support/ui'
 import { confirmDeleteCounts, OverviewPage } from '../pages/OverviewPage'
 
 const createShot = async (api: AyonApi, projectName: string, tasks: [string, string][]) => {
