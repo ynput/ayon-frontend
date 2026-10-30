@@ -1861,23 +1861,6 @@
     "@module-federation/runtime" "2.3.2"
     "@module-federation/sdk" "2.3.2"
 
-"@module-federation/dts-plugin@2.3.1":
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/@module-federation/dts-plugin/-/dts-plugin-2.3.1.tgz#af43e064883a5ab0fbb9f2ef36afe03033a2c30b"
-  integrity sha512-6BJvu+dLDtW/ngpyuOLgpKOgtOnMUTZY51JUyargVckerKRbe7Ul+414YaHj32mu2FpsiHVMl4ig1XnxgnRg2Q==
-  dependencies:
-    "@module-federation/error-codes" "2.3.1"
-    "@module-federation/managers" "2.3.1"
-    "@module-federation/sdk" "2.3.1"
-    "@module-federation/third-party-dts-extractor" "2.3.1"
-    adm-zip "^0.5.10"
-    ansi-colors "^4.1.3"
-    axios "1.13.5"
-    fs-extra "9.1.0"
-    isomorphic-ws "5.0.0"
-    node-schedule "2.1.1"
-    ws "8.18.0"
-
 "@module-federation/dts-plugin@2.3.2":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@module-federation/dts-plugin/-/dts-plugin-2.3.2.tgz#2595a19892ffd5256d9b7c232422878bb4b2edad"
@@ -1893,6 +1876,20 @@
     node-schedule "2.1.1"
     undici "7.24.7"
     ws "8.18.0"
+
+"@module-federation/dts-plugin@2.9.2":
+  version "2.9.2"
+  resolved "https://registry.yarnpkg.com/@module-federation/dts-plugin/-/dts-plugin-2.9.2.tgz#bdc8366645f44ee94450bc11aab988721c19dd39"
+  integrity sha512-J84cRrewtUFnFdMeD/91mHtW+Toh3mAWvGnhsFAc9oEbGwqfzJEfgPJri65xdtzWcNhs1d6FImPMTvnjzOnYvA==
+  dependencies:
+    "@module-federation/error-codes" "2.9.2"
+    "@module-federation/managers" "2.9.2"
+    "@module-federation/sdk" "2.9.2"
+    "@module-federation/third-party-dts-extractor" "2.9.2"
+    adm-zip "^0.6.1"
+    isomorphic-ws "5.0.0"
+    undici "7.29.1"
+    ws "8.21.3"
 
 "@module-federation/enhanced@2.3.2":
   version "2.3.2"
@@ -1915,29 +1912,20 @@
     tapable "2.3.0"
     upath "2.0.1"
 
-"@module-federation/error-codes@2.3.1":
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/@module-federation/error-codes/-/error-codes-2.3.1.tgz#6fa2243b97bb06762aed0effafc4d12f5dc58877"
-  integrity sha512-s3IjT2OYrSBNNmxdTmmrWBpsFfeNszdL6BSqjXLHb1CgXWUYLNXpb05IopnzMhRLcur6MTGuKR0ZSjJbmvQBbg==
-
 "@module-federation/error-codes@2.3.2":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@module-federation/error-codes/-/error-codes-2.3.2.tgz#acbede5c60de5af73b43864463b36195546cb148"
   integrity sha512-Y8F6EG+shNY5mJ0yKcJh4t6HlMYEtqMvABDDmxWulLz/tSV859SL05I5eDR1EvK0jNhLbq8LFipFEToQLqF0AA==
 
+"@module-federation/error-codes@2.9.2":
+  version "2.9.2"
+  resolved "https://registry.yarnpkg.com/@module-federation/error-codes/-/error-codes-2.9.2.tgz#40be8078a43a223acb7895b60d98dea8a480642e"
+  integrity sha512-MTpKubqsJSBgnuw+2Pli1kHL4INeHD5cGnHL84oRANwQAWK7b6lN3ZZTmL3FL6lYn65ImineqZNqGWBv5GQVLQ==
+
 "@module-federation/inject-external-runtime-core-plugin@2.3.2":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@module-federation/inject-external-runtime-core-plugin/-/inject-external-runtime-core-plugin-2.3.2.tgz#143db21b9b25f0659cc6e6b55931766670a09d3c"
   integrity sha512-RoQtwJZE2Y/nu44rzRVLUDtA1EYaoXY4rdxM6vdYTZA4mZWMYtfn1fBbOIrOaiqmH5t1te7hTr5Nu7PW1gLhwQ==
-
-"@module-federation/managers@2.3.1":
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/@module-federation/managers/-/managers-2.3.1.tgz#a4300b92b7cc7ee97ce2cee0e17a3b17bd516440"
-  integrity sha512-kK/4FkoaIxbJbN+R6+cq+igv095hPox8oheZOKkrYA9P6Xv5FiHza+gHlCntiWTMrU8bzqJHH4VYm6gq1RB+dQ==
-  dependencies:
-    "@module-federation/sdk" "2.3.1"
-    find-pkg "2.0.0"
-    fs-extra "9.1.0"
 
 "@module-federation/managers@2.3.2":
   version "2.3.2"
@@ -1946,6 +1934,13 @@
   dependencies:
     "@module-federation/sdk" "2.3.2"
     find-pkg "2.0.0"
+
+"@module-federation/managers@2.9.2":
+  version "2.9.2"
+  resolved "https://registry.yarnpkg.com/@module-federation/managers/-/managers-2.9.2.tgz#1c4d7b5d4e494b3c7b09426a04b59459980b62cd"
+  integrity sha512-VtSKLkT2EA1wqCMFXNiklC+XF+5bZPYY3sUQ9LCFHqKS7v7NOJDrwMV6Qtw3fxH4Y6Pe6P28MiU8D9dlzknCKQ==
+  dependencies:
+    "@module-federation/sdk" "2.9.2"
 
 "@module-federation/manifest@2.3.2":
   version "2.3.2"
@@ -1970,14 +1965,6 @@
     "@module-federation/runtime-tools" "2.3.2"
     "@module-federation/sdk" "2.3.2"
 
-"@module-federation/runtime-core@2.3.1":
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/@module-federation/runtime-core/-/runtime-core-2.3.1.tgz#29f87a51b730d62ccd1614d5aa33216762a4a954"
-  integrity sha512-E0WgaCn32AWzD0n6SCH7VQ+kxk46XyX432PQWARgyQzCX/wyLkaT+We3A18RVNUevRT85YHLrrVIhMKJJVHgjA==
-  dependencies:
-    "@module-federation/error-codes" "2.3.1"
-    "@module-federation/sdk" "2.3.1"
-
 "@module-federation/runtime-core@2.3.2":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@module-federation/runtime-core/-/runtime-core-2.3.2.tgz#75b763164942247b9aa5fd18d2df20b11f0e88d4"
@@ -1986,6 +1973,14 @@
     "@module-federation/error-codes" "2.3.2"
     "@module-federation/sdk" "2.3.2"
 
+"@module-federation/runtime-core@2.9.2":
+  version "2.9.2"
+  resolved "https://registry.yarnpkg.com/@module-federation/runtime-core/-/runtime-core-2.9.2.tgz#e047c2a37e078510a3d1916ec64f0a488ae1f093"
+  integrity sha512-S9roTDqLtAWaaDBuug69ZnXXGEx0pUq/yG06J759bjRgfAg2P9+dWEv1q7rB2eMIp7HH4L6s3ColDRYdL6tJ9w==
+  dependencies:
+    "@module-federation/error-codes" "2.9.2"
+    "@module-federation/sdk" "2.9.2"
+
 "@module-federation/runtime-tools@2.3.2":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@module-federation/runtime-tools/-/runtime-tools-2.3.2.tgz#2d590aae9ff79b704ca766e60343bd4cc9c580da"
@@ -1993,15 +1988,6 @@
   dependencies:
     "@module-federation/runtime" "2.3.2"
     "@module-federation/webpack-bundler-runtime" "2.3.2"
-
-"@module-federation/runtime@2.3.1":
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/@module-federation/runtime/-/runtime-2.3.1.tgz#e67db18b7e720e9f3042e598a42c66f7b7890727"
-  integrity sha512-NiKelHKzOf1Vz8oqcxC/XRUAW224O6lKj9xD0cfp5Bp343iu6s58RlLvX1ypF+UpCl3jA4JM8npGax/3jjyifw==
-  dependencies:
-    "@module-federation/error-codes" "2.3.1"
-    "@module-federation/runtime-core" "2.3.1"
-    "@module-federation/sdk" "2.3.1"
 
 "@module-federation/runtime@2.3.2":
   version "2.3.2"
@@ -2012,24 +1998,24 @@
     "@module-federation/runtime-core" "2.3.2"
     "@module-federation/sdk" "2.3.2"
 
-"@module-federation/sdk@2.3.1":
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/@module-federation/sdk/-/sdk-2.3.1.tgz#3cdc007e5cc6deff5421c22cf0788926b7cbc14c"
-  integrity sha512-lgWxFZyLRKDXWRGlV6ROjFJ6MRaJTxs0bBnS6hS9ONfr/0TkeW4JzDbsfzrB8g4p6IgSKB+wQ9XfibJCGBI5OQ==
+"@module-federation/runtime@2.9.2":
+  version "2.9.2"
+  resolved "https://registry.yarnpkg.com/@module-federation/runtime/-/runtime-2.9.2.tgz#7697f7043a88abc7ebfda2edde35feab52610822"
+  integrity sha512-1lPZVy7TkMTTBMkkjgQt7jA+9FAx226yQqEz+X0lFAIbpxIWfpzNQLD+7IydEe83ZhDJpK3cv/9bn3jjQBZeqQ==
+  dependencies:
+    "@module-federation/error-codes" "2.9.2"
+    "@module-federation/runtime-core" "2.9.2"
+    "@module-federation/sdk" "2.9.2"
 
 "@module-federation/sdk@2.3.2":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@module-federation/sdk/-/sdk-2.3.2.tgz#b93b5133503488d8c6ddd8bb205532de12bcb396"
   integrity sha512-EKiZpLnD2ogy7OcnuU+vkGO5vhh3J25PHwtEzgVGIAsMis3JHYPpY7L1Ue7i0zVrdmI23dVJPBtfGV/Pg7THPA==
 
-"@module-federation/third-party-dts-extractor@2.3.1":
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/@module-federation/third-party-dts-extractor/-/third-party-dts-extractor-2.3.1.tgz#62e8edc60575beb980c493cbf4a832f88d27d0bb"
-  integrity sha512-YpTLzM7H9damh31JX7eFBiCCR1mbibzS4i4JEa4fZ5ICT4hfNIuaAx1OeICGDOzSdl35TYegegCjk91oX6xCJQ==
-  dependencies:
-    find-pkg "2.0.0"
-    fs-extra "9.1.0"
-    resolve "1.22.8"
+"@module-federation/sdk@2.9.2":
+  version "2.9.2"
+  resolved "https://registry.yarnpkg.com/@module-federation/sdk/-/sdk-2.9.2.tgz#ad4d260a8a9a87c8ae4a1837f9458aa010142708"
+  integrity sha512-ILtBFPuYpVcRA/Qay1lJ2hMtZI8fDE/v1n7xiN17e5qx5rSBR3FaamTsmRpN1hIt+gVnoa76CzOP/Y73d8hHNg==
 
 "@module-federation/third-party-dts-extractor@2.3.2":
   version "2.3.2"
@@ -2039,20 +2025,19 @@
     find-pkg "2.0.0"
     resolve "1.22.8"
 
-"@module-federation/vite@1.14.2":
-  version "1.14.2"
-  resolved "https://registry.yarnpkg.com/@module-federation/vite/-/vite-1.14.2.tgz#2af825e7a2279992cbc2b4883becf93f94674788"
-  integrity sha512-SkmwmHzjP73oSpSUIhn/CuSC7wgF5jJEuA66WGVqkkglWPGlx1Zpc9B8Ec/xSgYsA/cR1OHOwC1YaU6UTytpkQ==
+"@module-federation/third-party-dts-extractor@2.9.2":
+  version "2.9.2"
+  resolved "https://registry.yarnpkg.com/@module-federation/third-party-dts-extractor/-/third-party-dts-extractor-2.9.2.tgz#d7c3e071a4fa1e12f07d1a34348ce407fcc92bd2"
+  integrity sha512-FKJVGx+/jIe16RfmwoyIDVMPAttIFJv6AJCLkKf05IRNvI3RJFqQ1tLP1YjcfGuumCbYuWGa4QKnMla7YjVpqg==
+
+"@module-federation/vite@1.23.5":
+  version "1.23.5"
+  resolved "https://registry.yarnpkg.com/@module-federation/vite/-/vite-1.23.5.tgz#4a0cb187b5bdede34eb68456a64ad574505071db"
+  integrity sha512-pZ4gwP3SyuNG9JnYAWFIOJyFz1Kl37hnJyKjajMpPqQwTQkCjY7gn58qEmVwTyBv8VqOA5XxEXe1ZMF3AsOmnw==
   dependencies:
-    "@module-federation/dts-plugin" "2.3.1"
-    "@module-federation/runtime" "2.3.1"
-    "@module-federation/sdk" "2.3.1"
-    "@rollup/pluginutils" "^5.3.0"
-    defu "^6.1.4"
-    es-module-lexer "^2.0.0"
-    estree-walker "^3.0.3"
-    magic-string "^0.30.21"
-    pathe "^2.0.3"
+    "@module-federation/dts-plugin" "2.9.2"
+    "@module-federation/runtime" "2.9.2"
+    "@module-federation/sdk" "2.9.2"
 
 "@module-federation/webpack-bundler-runtime@2.3.2":
   version "2.3.2"
@@ -2263,7 +2248,7 @@
     estree-walker "^2.0.2"
     picomatch "^4.0.2"
 
-"@rollup/pluginutils@^5.1.4", "@rollup/pluginutils@^5.3.0":
+"@rollup/pluginutils@^5.1.4":
   version "5.4.0"
   resolved "https://registry.yarnpkg.com/@rollup/pluginutils/-/pluginutils-5.4.0.tgz#ac23a29ced0247060a210815fca39c17de4d2f26"
   integrity sha512-MfPp06CjRLfXQ3wY0R8vJDYBy/MvVcc9OulEfR0B8Iv9ko+GCNaRZ+EpJYFl27LhKsZK0o420sYCRHCjfCgeUg==
@@ -3029,7 +3014,7 @@ acorn@^8.15.0:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.19.0.tgz#6b26fd97ce1cc9dc50bdf7ad305e9f1384d4f28a"
   integrity sha512-oJlA3XiRm7Cyk6qFD2Jn8ak9B7jSy0qy00ADO3+8dpT0LSjFihQYv4C02LFCSYJV3Q37xYwwRy5m+IpIiUzqWw==
 
-adm-zip@0.5.10, adm-zip@0.6.1, adm-zip@^0.5.10:
+adm-zip@0.5.10, adm-zip@0.6.1, adm-zip@^0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/adm-zip/-/adm-zip-0.6.1.tgz#5b95da4a6e7af0663b71457c06e1517fa6ac8d5f"
   integrity sha512-Xwrja8nx9e5o2N1my4DsKCeKpdrnACyr1wtbPxBDgGzKzKyE9kRtBFA8mWldI+RVlD7CBZNWY/wQ2+ydwOR6kQ==
@@ -3097,7 +3082,7 @@ ajv@~8.18.0:
     json-schema-traverse "^1.0.0"
     require-from-string "^2.0.2"
 
-ansi-colors@4.1.3, ansi-colors@^4.1.3:
+ansi-colors@4.1.3:
   version "4.1.3"
   resolved "https://registry.yarnpkg.com/ansi-colors/-/ansi-colors-4.1.3.tgz#37611340eb2243e70cc604cad35d63270d48781b"
   integrity sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw==
@@ -3246,11 +3231,6 @@ asynckit@^0.4.0:
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
   integrity sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==
 
-at-least-node@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/at-least-node/-/at-least-node-1.0.0.tgz#602cd4b46e844ad4effc92a8011a3c46e0238dc2"
-  integrity sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==
-
 auto-bind@^5.0.0:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/auto-bind/-/auto-bind-5.0.1.tgz#50d8e63ea5a1dddcb5e5e36451c1a8266ffbb2ae"
@@ -3268,7 +3248,7 @@ available-typed-arrays@^1.0.7:
   dependencies:
     possible-typed-array-names "^1.0.0"
 
-axios@1.13.5, axios@1.20.0:
+axios@1.20.0:
   version "1.20.0"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.20.0.tgz#515513445aa60e71d04b6521ca6210829ccb4786"
   integrity sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg==
@@ -3838,11 +3818,6 @@ define-properties@^1.1.3, define-properties@^1.2.1:
     has-property-descriptors "^1.0.0"
     object-keys "^1.1.1"
 
-defu@^6.1.4:
-  version "6.1.7"
-  resolved "https://registry.yarnpkg.com/defu/-/defu-6.1.7.tgz#72543567c8e9f97ff13ce402b6dbe09ac5ae4d23"
-  integrity sha512-7z22QmUWiQ/2d0KkdYmANbRUVABpZ9SNYyH5vx6PZ+nE5bcC0l7uFvEfHlyld/HcGBFTL536ClDt3DEcSlEJAQ==
-
 delayed-stream@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/delayed-stream/-/delayed-stream-1.0.0.tgz#df3ae199acadfb7d440aaae0b29e2272b24ec619"
@@ -4067,11 +4042,6 @@ es-iterator-helpers@^1.2.1:
     internal-slot "^1.1.0"
     iterator.prototype "^1.1.5"
     math-intrinsics "^1.1.0"
-
-es-module-lexer@^2.0.0:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/es-module-lexer/-/es-module-lexer-2.3.1.tgz#5bf2df06999dbbe5f006a5f46a11fb9f5b7b391b"
-  integrity sha512-shc1dbU90Yl/xq1QrC7QRtfcwURZuVRfPhZbDoldJ1cn1gzDvBaBWlv0eFolj5+0znnPJz5TXLxsN77X/12KTA==
 
 es-object-atoms@^1.0.0, es-object-atoms@^1.1.1:
   version "1.1.1"
@@ -4318,13 +4288,6 @@ estree-walker@^2.0.2:
   resolved "https://registry.yarnpkg.com/estree-walker/-/estree-walker-2.0.2.tgz#52f010178c2a4c117a7757cfe942adb7d2da4cac"
   integrity sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==
 
-estree-walker@^3.0.3:
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/estree-walker/-/estree-walker-3.0.3.tgz#67c3e549ec402a487b4fc193d1953a524752340d"
-  integrity sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==
-  dependencies:
-    "@types/estree" "^1.0.0"
-
 esutils@^2.0.2:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/esutils/-/esutils-2.0.3.tgz#74d2eb4de0b8da1293711910d50775b9b710ef64"
@@ -4510,16 +4473,6 @@ formdata-polyfill@^4.0.10:
   integrity sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==
   dependencies:
     fetch-blob "^3.1.2"
-
-fs-extra@9.1.0:
-  version "9.1.0"
-  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-9.1.0.tgz#5954460c764a8da2094ba3554bf839e6b9a7c86d"
-  integrity sha512-hcg3ZmepS30/7BSFqRvoo3DOMQu7IjqxO5nCDt+zM9XWjb33Wg7ziNT+Qvqbuc3+gWpzO02JubVyk2G4Zvo1OQ==
-  dependencies:
-    at-least-node "^1.0.0"
-    graceful-fs "^4.2.0"
-    jsonfile "^6.0.1"
-    universalify "^2.0.0"
 
 fs-extra@~11.3.0:
   version "11.3.6"
@@ -5704,7 +5657,7 @@ luxon@^3.2.1:
   resolved "https://registry.yarnpkg.com/luxon/-/luxon-3.7.2.tgz#d697e48f478553cca187a0f8436aff468e3ba0ba"
   integrity sha512-vtEhXh/gNjI9Yg1u4jX/0YVPMvxzHuGgCm6tC5kZyb08yjGWGnqAjGJvcXbqQR2P3MyMEFnRbpcdFS6PBcLqew==
 
-magic-string@^0.30.17, magic-string@^0.30.21:
+magic-string@^0.30.17:
   version "0.30.21"
   resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.30.21.tgz#56763ec09a0fa8091df27879fd94d19078c00d91"
   integrity sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==
