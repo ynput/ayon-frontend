@@ -1,7 +1,13 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Shared React components for AYON frontend",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ynput/ayon-frontend.git",
+    "directory": "shared"
+  },
+  "license": "FSL-1.1-ALv2",
   "module": "dist/index.es.js",
   "exports": {
     ".": {
@@ -23,10 +29,6 @@
     "./context": {
       "types": "./dist/types/context.d.ts",
       "import": "./dist/context.es.js"
-    },
-    "./shared": {
-      "types": "./dist/types/shared.d.ts",
-      "import": "./dist/shared.es.js"
     },
     "./util": {
       "types": "./dist/types/util.d.ts",

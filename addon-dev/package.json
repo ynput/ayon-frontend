@@ -2,6 +2,12 @@
   "name": "@ynput/ayon-addon-dev",
   "version": "0.1.0",
   "description": "Dev tooling for AYON addon frontends: Vite plugin, dev server, CLI, lint preset",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ynput/ayon-frontend.git",
+    "directory": "addon-dev"
+  },
+  "license": "FSL-1.1-ALv2",
   "type": "module",
   "bin": {
     "ayon-addon": "./dist/cli.js"
@@ -37,7 +43,14 @@
     "@module-federation/vite": ">=1.14",
     "@ynput/ayon-addon": "^0.1.0",
     "vite": ">=6",
-    "@ynput/ayon-frontend-shared": ">=0.7.0",
+    "@ynput/ayon-frontend-shared": ">=0.7.4",
+    "@ynput/ayon-react-components": "^1.23.0",
+    "primereact": ">=9",
+    "react": ">=18",
+    "react-dom": ">=18",
+    "react-redux": ">=9",
+    "react-router-dom": ">=7",
+    "react-toastify": ">=9",
     "playwright": ">=1.40",
     "@rtk-query/codegen-openapi": ">=2"
   },
