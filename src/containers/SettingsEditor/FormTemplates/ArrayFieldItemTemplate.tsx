@@ -2,24 +2,12 @@ import { ArrayFieldTemplateItemType } from '@rjsf/utils'
 import { $Any } from '@types'
 import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import clsx from 'clsx'
 import { ReactElement, cloneElement } from 'react'
-import { RemoveItemButton } from './ArrayFieldTemplate.styled'
+import { ArrayItemControls, RemoveItemButton } from './ArrayFieldTemplate.styled'
 import { SettingsListItemContext } from '../SettingsGroup/SettingsListItemContextInstance'
 import { useListItemFold } from './useListItemFold'
+import type { ListItemLayout } from './listItemLayout'
 
-const ArrayItemControls = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  gap: 5px;
-
-  button {
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-  }
-`
 const FormArrayFieldItem = styled.div`
   flex-grow: 1;
   display: flex;
@@ -45,8 +33,8 @@ type Props = ArrayFieldTemplateItemType & {
     _owner: $Any
   }
   onChange: Function
-  /** False when the list's values are too long for boxed rows (see listValuesFitRows) */
-  rowsFit?: boolean
+  /** How the item is drawn in the flat layout (useListItemLayouts) */
+  layout?: ListItemLayout
 }
 
 const ArrayItemTemplate = (props: Props) => {
@@ -66,15 +54,12 @@ const ArrayItemTemplate = (props: Props) => {
   const formContext = props.registry?.formContext
   const flatLayout = !!formContext?.flatLayout
   const childProps = (props.children as $Any)?.props || {}
-  // an item holding one control, not a group, is drawn as a single bordered field
-  const itemType = childProps.schema?.type
-  const isSimple = flatLayout && !['object', 'array'].includes(itemType)
 
-  const { isFoldable, itemState, onItemRemoved, rowSchema } = useListItemFold({
-    registry: props.registry,
+  const { isFoldable, itemState, onItemRemoved, contentSchema } = useListItemFold({
+    formContext,
+    layout: props.layout,
     childProps,
     index: props.index,
-    rowsFit: props.rowsFit,
   })
 
   const onRemoveItem = () => {
@@ -106,13 +91,13 @@ const ArrayItemTemplate = (props: Props) => {
     </ArrayItemControls>
   )
 
-  // a short item renders with the compact layout, which draws it as a boxed row
-  const content = rowSchema
-    ? cloneElement(props.children as unknown as ReactElement, { schema: rowSchema })
+  // a row or a card renders with the compact layout, which draws its fields side by side
+  const content = contentSchema
+    ? cloneElement(props.children as unknown as ReactElement, { schema: contentSchema })
     : props.children
 
   return (
-    <FormArrayFieldItem className={clsx('array-item-row', isSimple && 'array-item-simple')}>
+    <FormArrayFieldItem className="array-item-row">
       {isFoldable ? (
         <SettingsListItemContext.Provider value={itemState}>
           {content}

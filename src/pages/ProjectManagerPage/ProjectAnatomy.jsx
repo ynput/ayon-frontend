@@ -1,6 +1,7 @@
 import { toast } from 'react-toastify'
 import { useState } from 'react'
 import { ScrollPanel, SaveButton, Spacer, Button } from '@ynput/ayon-react-components'
+import { SettingsOutlineToggle } from '@containers/SettingsEditor/SettingsOutline'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AnatomyEditor from '@containers/AnatomyEditor'
 import { usePaste } from '@context'
@@ -77,6 +78,7 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
             <Button label="Paste anatomy" icon="content_paste" onClick={onPasteAnatomy} />
             {PermissionLevel.readOnly === accessLevel && 'Read-only'}
             <Spacer />
+            <SettingsOutlineToggle />
             <SaveButton
               label="Save changes"
               data-tooltip={

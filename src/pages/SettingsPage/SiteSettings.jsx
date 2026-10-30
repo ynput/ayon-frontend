@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import { Section, Spacer, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayon-react-components'
 
 import SettingsEditor from '@containers/SettingsEditor'
+import { SettingsOutlineToggle } from '@containers/SettingsEditor/SettingsOutline'
 import SettingsAddonList from '@containers/AddonSettings/SettingsAddonList'
 import SiteList from '@containers/SiteList'
 
@@ -119,6 +120,7 @@ const SiteSettings = () => {
       <Section style={{ flexGrow: 1 }}>
         <Toolbar>
           <Spacer />
+          <SettingsOutlineToggle />
           <Button label="Save Changes" icon="check" onClick={() => saveChanges()} />
         </Toolbar>
 

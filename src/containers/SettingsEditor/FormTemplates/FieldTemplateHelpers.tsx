@@ -4,11 +4,12 @@ import { ReactNode, CSSProperties } from 'react'
 import { FieldTemplateProps } from '@rjsf/utils'
 import { $Any } from '@types'
 import SettingsPanel from '../SettingsPanel'
+import SearchHidden from './SearchHidden'
 import { SettingsGroup } from '../SettingsGroup/SettingsGroup'
-import { SettingField } from '../SettingField/SettingField'
-import { getSettingFieldKind } from '../SettingField/SettingFieldHelpers'
+import { SettingField, getSettingFieldKind } from '../SettingField'
 import AccessWidget from '../Widgets/AccessWidget/AccessWidget'
-import { matchesFilterKeys } from './searchMatcher'
+import { ListColorScheme, hasColorField } from '../ListColorScheme'
+import { arrayStartsWith, matchesFilterKeys } from './searchMatcher'
 
 type RenderFieldArgs = {
   props: FieldTemplateProps
@@ -19,15 +20,6 @@ type RenderFieldArgs = {
   overrideLevel: string
   labelStyle?: CSSProperties
   onContextMenu: (event: $Any) => void
-}
-
-const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
-  if ((arr2 || []).length > (arr1 || []).length) return false
-  if ((arr2 || []).length === 0) return true
-  for (let i = 0; i < arr2.length; i++) {
-    if (arr1[i] !== arr2[i]) return false
-  }
-  return true
 }
 
 export const renderFieldTemplate = ({
@@ -77,16 +69,25 @@ export const renderFieldTemplate = ({
       if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
     }
 
+    // an editor that can set a list as a whole (anatomy) offers a colour scheme to draw
+    // the colours of a list of types, statuses or tags from
+    const listPath: string[] | undefined = props.formContext.overrides?.[props.id]?.path
+    const colorScheme =
+      flatLayout &&
+      props.formContext.onSetValue &&
+      listPath &&
+      Array.isArray(props.formData) &&
+      hasColorField(props.schema.items, props.registry) ? (
+        <ListColorScheme
+          listId={props.id}
+          path={listPath}
+          items={props.formData}
+          onSetValue={props.formContext.onSetValue}
+        />
+      ) : undefined
+
     return (
-      <div
-        data-schema-id={props.id}
-        data-hidden={matches ? 'false' : 'true'}
-        style={{
-          visibility: matches ? 'visible' : 'hidden',
-          position: matches ? 'relative' : 'absolute',
-          height: matches ? 'auto' : 0,
-        }}
-      >
+      <SearchHidden matches={matches} schemaId={props.id}>
         {flatLayout ? (
           <SettingsGroup
             objId={props.id}
@@ -94,6 +95,7 @@ export const renderFieldTemplate = ({
             description={props.schema.description}
             className={clsx(classes, 'settings-group-list')}
             isList
+            headerExtra={colorScheme}
             onClick={onGroupClick}
             onContextMenu={onContextMenu}
           >
@@ -114,7 +116,7 @@ export const renderFieldTemplate = ({
             {props.children}
           </SettingsPanel>
         )}
-      </div>
+      </SearchHidden>
     )
   }
 
@@ -137,14 +139,9 @@ export const renderFieldTemplate = ({
   }
 
   return (
-    <div
-      data-schema-id={props.id}
-      data-hidden={matches ? 'false' : 'true'}
-      style={{
-        visibility: matches ? 'visible' : 'hidden',
-        position: matches ? 'relative' : 'absolute',
-        height: matches ? 'auto' : 0,
-      }}
+    <SearchHidden
+      matches={matches}
+      schemaId={props.id}
       className={clsx('form-inline-field-wrapper', `${kebabLabel}-wrapper`)}
     >
       {divider}
@@ -162,6 +159,6 @@ export const renderFieldTemplate = ({
       >
         {mainWidget}
       </SettingField>
-    </div>
+    </SearchHidden>
   )
 }

@@ -9,10 +9,14 @@ export type SettingsListItemState = {
   onToggle: () => void
   /** Whether the item has a name of its own (its title) */
   named: boolean
+  /** The field the item is titled by (name, label or title): it leads the open item */
+  leadField?: string
   /** A few of the item's values, shown at the end of its title row while it's folded */
   summary: string
-  /** Title for an item without a name: its first value, or its position */
+  /** Title for an item without a name: its label or title, else its first value or position */
   fallbackTitle: string
+  /** Nothing to show inside (no fields besides its switch): it can't open */
+  empty: boolean
 }
 
 export const SettingsListItemContext = createContext<SettingsListItemState | null>(null)

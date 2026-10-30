@@ -76,6 +76,7 @@ export const getTextWidgetInputConfig = ({
     opts.value = value ? [value] : []
     opts.onChange = (nextValue: $Any) => props.onChange(nextValue[0])
   } else if (props.schema.widget === 'label') {
+    isPlainText = true
     Input = InputText
     opts.value = value || ''
     opts.disabled = true
@@ -94,6 +95,7 @@ export const getTextWidgetInputConfig = ({
     opts.onBlur = onChangeCommit
     opts.onChange = (event: $Any) => onChange(event.target.value)
   } else if (props.schema.widget === 'hierarchy') {
+    isPlainText = true
     Input = InputText
     opts.value = value || ''
     opts.onBlur = onChangeCommit

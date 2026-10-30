@@ -14,7 +14,7 @@ import { DateTimeWidget } from './Widgets/DateTimeWidget'
 import { FormWrapper } from './SettingsEditor.styled'
 import { useAppSelector } from '@state/store'
 import clsx from 'clsx'
-import { SettingsOutline } from './SettingsOutline/SettingsOutline'
+import { SettingsOutline } from './SettingsOutline'
 
 const waitForElm = (selector, timeout = 3000) => {
   return new Promise((resolve, reject) => {
@@ -100,6 +100,8 @@ const SettingsEditor = ({
   level,
   changedKeys,
   context,
+  // pages that don't want the flat layout's table of contents (Global settings) turn it off
+  outline = true,
 }) => {
   const [localBreadcrumbs, setLocalBreadcrumbs] = useState([])
   const formWrapperRef = useRef()
@@ -215,7 +217,7 @@ const SettingsEditor = ({
     >
       {flatLayout ? (
         <div className="settings-flat-layout">
-          <SettingsOutline sheetRef={sheetRef} />
+          {outline && <SettingsOutline sheetRef={sheetRef} />}
           <div className="settings-flat-sheet" ref={sheetRef}>
             {form}
           </div>

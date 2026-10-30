@@ -10,6 +10,8 @@ import {
 } from './SettingsOutlineHelpers'
 import { getSettingsGroupAnchor } from '../SettingsGroup/SettingsGroupHelpers'
 import { useSettingsOutlineCurrent } from './useSettingsOutlineCurrent'
+import { useSettingsOutlineCollapsed } from './useSettingsOutlineCollapsed'
+import { announceOutline } from './outlineAvailability'
 import * as Styled from './SettingsOutline.styled'
 
 export type SettingsOutlineProps = {
@@ -28,6 +30,8 @@ const UPDATE_DELAY = 150
 export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
   const [items, setItems] = useState<SettingsOutlineItem[]>([])
   const navRef = useRef<HTMLElement>(null)
+  // hidden with the toolbar button (SettingsOutlineToggle)
+  const [collapsed] = useSettingsOutlineCollapsed()
   const { currentId, pinned, pin, native } = useSettingsOutlineCurrent(sheetRef, navRef, items)
 
   useEffect(() => {
@@ -65,12 +69,16 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
     pin(id)
   }
 
-  if (items.length < 2) return null
+  // a single group needs no outline: the toolbar's toggle waits for one with links
+  const hasLinks = items.length >= 2
+  useEffect(() => (hasLinks ? announceOutline() : undefined), [hasLinks])
+
+  if (!hasLinks) return null
 
   return (
     <Styled.Outline
       ref={navRef}
-      className={clsx('settings-outline', pinned && 'is-pinned')}
+      className={clsx('settings-outline', pinned && 'is-pinned', collapsed && 'is-collapsed')}
       aria-label="Settings outline"
     >
       <ul>

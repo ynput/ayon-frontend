@@ -85,6 +85,11 @@ export const Header = styled.header`
     margin-top: var(--settings-subgroup-title-gap);
   }
 
+  /* nothing to open: the row isn't clickable */
+  &.is-empty {
+    cursor: default;
+  }
+
   /* reveal the dimmed actions button while the header is in use */
   &:hover .settings-group-actions,
   .settings-group-actions:focus-visible {
@@ -191,6 +196,13 @@ export const FoldButton = styled(Button)`
     margin-left: -4px;
     padding: 2px;
     color: var(--md-sys-color-on-surface-variant);
+  }
+
+  /* an item with nothing inside: a dimmed arrow that does nothing */
+  &.settings-group-fold:disabled {
+    color: var(--md-sys-color-outline);
+    opacity: 0.5;
+    cursor: default;
   }
 `
 

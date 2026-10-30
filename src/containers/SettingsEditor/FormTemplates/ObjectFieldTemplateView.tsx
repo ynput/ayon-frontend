@@ -2,6 +2,7 @@ import { ReactNode, MouseEvent } from 'react'
 import { ObjectFieldTemplateProps } from '@rjsf/utils'
 import SettingsPanel from '../SettingsPanel'
 import { SettingsGroup } from '../SettingsGroup/SettingsGroup'
+import SearchHidden from './SearchHidden'
 
 type FieldsRenderer = (lead?: ReactNode) => ReactNode
 
@@ -36,15 +37,7 @@ const ObjectFieldTemplateView = ({
   currentId,
   fields,
 }: ObjectFieldTemplateViewProps) => (
-  <div
-    data-schema-id={objId}
-    data-hidden={matches ? 'false' : 'true'}
-    style={{
-      visibility: matches ? 'visible' : 'hidden',
-      position: matches ? 'relative' : 'absolute',
-      height: matches ? 'auto' : 0,
-    }}
-  >
+  <SearchHidden matches={matches} schemaId={objId}>
     {flatLayout ? (
       <SettingsGroup
         objId={objId}
@@ -73,7 +66,7 @@ const ObjectFieldTemplateView = ({
         {fields()}
       </SettingsPanel>
     )}
-  </div>
+  </SearchHidden>
 )
 
 export default ObjectFieldTemplateView

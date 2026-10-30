@@ -55,6 +55,13 @@ export const getSettingsGroupLayout = ({
   }
 }
 
+// Object layouts that draw their fields inline, with no group (title and panel) of their own
+const INLINE_OBJECT_LAYOUTS = ['compact', 'root', 'expanded']
+
+/** Whether an object schema's layout draws its fields inline (no group of its own) */
+export const isInlineObjectLayout = (layout?: string) =>
+  INLINE_OBJECT_LAYOUTS.includes(layout ?? '')
+
 /** Whether an object in the flat layout puts its fields in panels: a card's or a section's */
 export const isPanelSectionObject = ({
   layout,
@@ -64,7 +71,7 @@ export const isPanelSectionObject = ({
   layout?: string
   isRoot: boolean
   isListItem: boolean
-}) => !isRoot && !isListItem && !['compact', 'root', 'expanded'].includes(layout ?? '')
+}) => !isRoot && !isListItem && !isInlineObjectLayout(layout)
 
 /**
  * Whether a (resolved) property schema renders as a group rather than a row.
@@ -73,7 +80,7 @@ export const isPanelSectionObject = ({
 export const isGroupSchema = (schema: $Any): boolean => {
   if (!schema) return false
   if (schema.type === 'object') {
-    return schema.widget !== 'access' && !['compact', 'expanded', 'root'].includes(schema.layout)
+    return schema.widget !== 'access' && !isInlineObjectLayout(schema.layout)
   }
   if (schema.type === 'array') {
     return schema.items?.type !== 'string' && schema.layout !== 'compact'
@@ -126,6 +133,35 @@ export const removedIndex = (removed: number) => (index: number) => {
   return index > removed ? index - 1 : index
 }
 
+export const PLATFORM_KEYS = ['windows', 'linux', 'darwin']
+
+/**
+ * A group of per-platform values: two or three of windows, linux and darwin, all single
+ * strings (a path mapping). It reads as one row, a column per platform, not as a stack.
+ */
+export const isPlatformGroup = (schema: $Any) => {
+  const entries = Object.entries<$Any>(schema?.properties || {})
+  return (
+    entries.length >= 2 &&
+    entries.every(([key, property]) => PLATFORM_KEYS.includes(key) && property?.type === 'string')
+  )
+}
+
+/** Whether a field is shown at the level being edited (studio, project or site) */
+export const isPropertyInScope = (property: $Any, formContext: $Any) => {
+  const validScopes = new Set<string>(property?.scope || ['studio', 'project'])
+  if (validScopes.has('studio') && formContext?.includeStudioScope && !validScopes.has('site')) {
+    validScopes.add('project')
+  }
+  return validScopes.has(formContext?.level)
+}
+
+/** Whether a folding group has anything to show besides its own on/off switch */
+export const hasFoldContent = (schema: $Any, formContext: $Any) =>
+  Object.entries<$Any>(schema?.properties || {}).some(
+    ([key, property]) => key !== 'enabled' && isPropertyInScope(property, formContext),
+  )
+
 // a model with its own title or default is wrapped (Pydantic): allOf: [{ $ref }], and an
 // optional one is anyOf: [{ $ref }, { type: 'null' }]
 const SCHEMA_WRAPPERS = ['allOf', 'anyOf', 'oneOf']
@@ -165,11 +201,17 @@ const formatSummaryValue = (value: unknown): string => {
   return text.includes('\n') || /^[[{]/.test(text) ? '' : text
 }
 
-/** The first few filled-in values of an item, each as "Title: value" */
-export const getListItemSummaryParts = (schema: $Any, formData: $Any, maxParts = 3) => {
+/** The first few filled-in values of an item, each as "Title: value", besides the field it is
+ * titled by (`titleKey`) */
+export const getListItemSummaryParts = (
+  schema: $Any,
+  formData: $Any,
+  maxParts = 3,
+  titleKey?: string,
+) => {
   const parts: string[] = []
   for (const [key, property] of Object.entries<$Any>(schema?.properties || {})) {
-    if (SUMMARY_SKIPPED_FIELDS.includes(key)) continue
+    if (SUMMARY_SKIPPED_FIELDS.includes(key) || key === titleKey) continue
     const text = formatSummaryValue(formData?.[key])
     if (!text) continue
     parts.push(`${property?.title || key}: ${text}`)

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { useSessionStorage } from '@shared/hooks'
 import { $Any } from '@types'
-import { OPEN_LIST_ITEMS_KEY } from '../SettingsGroup/SettingsGroupHelpers'
+import { updateOpenItems, useOpenItem } from './openItemsStore'
 
 type FoldStateArgs = {
   formContext: $Any
@@ -9,25 +8,25 @@ type FoldStateArgs = {
   itemKey: string
   /** The item's field id, to open it when a link points inside it */
   itemId: string
-  /** False when the item doesn't fold: it is never opened by a link */
+  /** False when the item doesn't fold: it is never opened by a link, nor reads the store */
   foldable: boolean
 }
 
 /**
  * Open state of a folding item (a list item, or a group among groups of the same shape).
- * Open items are stored for the browser session. A link or the outline pointing inside
- * an item opens it once, like classic panels; folding it again afterwards sticks.
+ * Open items are stored for the browser session (openItemsStore). A link or the outline
+ * pointing inside an item opens it once, like classic panels; folding it again
+ * afterwards sticks.
  */
 export const useFoldState = ({ formContext, itemKey, itemId, foldable }: FoldStateArgs) => {
-  const [openItems, setOpenItems] = useSessionStorage<string[]>(OPEN_LIST_ITEMS_KEY, [])
-  const isOpen = openItems.includes(itemKey)
+  const isOpen = useOpenItem(itemKey, foldable)
 
   const onToggle = useCallback(
     () =>
-      setOpenItems((prev) =>
+      updateOpenItems((prev) =>
         prev.includes(itemKey) ? prev.filter((key) => key !== itemKey) : [...prev, itemKey],
       ),
-    [itemKey, setOpenItems],
+    [itemKey],
   )
 
   // currentId is 0, not a string, while nothing is selected (SettingsEditor)
@@ -44,5 +43,5 @@ export const useFoldState = ({ formContext, itemKey, itemId, foldable }: FoldSta
   // while searching every item stays open, so no match is hidden inside a folded one
   const expanded = isOpen || !!formContext?.searchText
 
-  return { expanded, onToggle, setOpenItems }
+  return { expanded, onToggle }
 }

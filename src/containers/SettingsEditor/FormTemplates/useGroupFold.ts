@@ -1,6 +1,10 @@
 import { useMemo } from 'react'
 import { $Any } from '@types'
-import { getListItemSummaryParts, getListItemsPrefix } from '../SettingsGroup/SettingsGroupHelpers'
+import {
+  getListItemSummaryParts,
+  getListItemsPrefix,
+  hasFoldContent,
+} from '../SettingsGroup/SettingsGroupHelpers'
 import type { SettingsListItemState } from '../SettingsGroup/SettingsListItemContextInstance'
 import { useFoldState } from './useFoldState'
 
@@ -20,11 +24,13 @@ type GroupFoldArgs = {
  * stored open by its key, as the groups are fixed: they never move like list items.
  */
 export const useGroupFold = ({ formContext, parentId, name, schema, formData }: GroupFoldArgs) => {
+  // a group with only its switch has nothing to open: it stays folded
+  const empty = !hasFoldContent(schema, formContext)
   const { expanded, onToggle } = useFoldState({
     formContext,
     itemKey: `${getListItemsPrefix(formContext, parentId)}${name}`,
     itemId: `${parentId}_${name}`,
-    foldable: true,
+    foldable: !empty,
   })
 
   const summary = useMemo(
@@ -34,7 +40,15 @@ export const useGroupFold = ({ formContext, parentId, name, schema, formData }: 
 
   // the group keeps its own title, so it counts as named
   return useMemo<SettingsListItemState>(
-    () => ({ expanded, onToggle, named: true, summary, fallbackTitle: name }),
-    [expanded, onToggle, summary, name],
+    () => ({
+      expanded: expanded && !empty,
+      onToggle,
+      named: true,
+      leadField: 'name',
+      summary,
+      fallbackTitle: name,
+      empty,
+    }),
+    [expanded, empty, onToggle, summary, name],
   )
 }

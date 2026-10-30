@@ -61,6 +61,11 @@ import { InfoMessage } from '@shared/components'
 const StyledScrollPanel = styled(ScrollPanel)`
   > div {
     padding-right: 8px;
+
+    /* the flat sheet has even margins of its own: the scrollbar is the only thing on its right */
+    &:has(.settings-flat) {
+      padding-right: 0;
+    }
     /* its height is fixed, so the settings outline can be as tall as the view (cqh) */
     container-type: size;
   }
@@ -876,9 +881,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
                           projectName={projectName}
                           includeStudioScope={addon.isProjectBundle}
                           siteId={siteId === '_' ? null : siteId}
-                          // Needed for rerender, component memoized
-                          searchText={searchText}
-                          filterKeys={filterKeys}
                           context={{
                             headerProjectName: projectName,
                             headerSiteId: siteId === '_' ? null : siteId,

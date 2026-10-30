@@ -77,10 +77,16 @@ const buildSelectOptions = ({
     }))
   }
 
+  // A schema with fixed options names its labels, and may name icons and colours the same
+  // way, as maps from value (enumIcons: material symbol name or image URL)
   const enumLabels = schema?.enumLabels || {}
+  const enumIcons = schema?.enumIcons || {}
+  const enumColors = schema?.enumColors || {}
   return enumOptions.map((option: $Any) => ({
     label: enumLabels[option.value] || option.value,
     value: option.value,
+    icon: getEnumItemIcon(enumIcons[option.value]),
+    color: enumColors[option.value],
   }))
 }
 
@@ -349,15 +355,12 @@ const SelectWidget = (props: $Any) => {
     setDropdownMaxHeight(Math.min(300, Math.max(80, availableSpace - 48)))
 
     requestAnimationFrame(() => {
-      const menu = document.querySelector<HTMLElement>('.settings-select-dropdown-menu')
-      if (!menu) return
+      // this dropdown's own list, not the first open menu on the page
+      const optionsList = dropdownRef.current?.getOptions()
+      if (!optionsList) return
 
-      const optionsList = menu.querySelector<HTMLElement>('ul.options')
       const maxMenuWidth = window.innerWidth - 20
-      const menuWidth = Math.min(
-        maxMenuWidth,
-        Math.max(triggerRect.width, optionsList?.scrollWidth || 0),
-      )
+      const menuWidth = Math.min(maxMenuWidth, Math.max(triggerRect.width, optionsList.scrollWidth))
       const spaceLeft = triggerRect.left - 10
       const spaceRight = window.innerWidth - triggerRect.right - 10
       const opensRight = spaceRight >= spaceLeft

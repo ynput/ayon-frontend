@@ -7,13 +7,12 @@ import { checkNumber, getTextWidgetInputConfig } from './TextWidgetHelpers'
 
 export const TextWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
-  const [value, setValue] = useState(null)
-  const [valueInitialized, setValueInitialized] = useState(false)
+  // starts at the saved value, so a field doesn't read as changed before its first sync
+  const [value, setValue] = useState<$Any>(props.value ?? null)
 
   useEffect(() => {
-    setValueInitialized(true)
     if (props.value === undefined) return
-    setValue((currentValue) => (equiv(currentValue, props.value) ? currentValue : props.value))
+    setValue((currentValue: $Any) => (equiv(currentValue, props.value) ? currentValue : props.value))
   }, [props.value])
 
   const onChangeCommit = (type?: $Any) => {
@@ -83,8 +82,7 @@ export const TextWidget = (props: $Any) => {
   }
   if (!isMultilineWidget) return input
 
-  const changed =
-    valueInitialized && originalValue !== undefined && !equiv(value ?? '', originalValue ?? '')
+  const changed = originalValue !== undefined && !equiv(value ?? '', originalValue ?? '')
   return <SettingsTextFold changed={changed}>{input}</SettingsTextFold>
 }
 

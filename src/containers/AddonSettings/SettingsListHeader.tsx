@@ -6,6 +6,7 @@ import { Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import { useCallback, useEffect, useRef } from 'react'
 import { $Any } from '@types'
 import { generateResultsAndFilterIds } from './searchTools'
+import { SettingsOutlineToggle } from '@containers/SettingsEditor/SettingsOutline'
 
 const NO_SUGGESTIONS: Suggestion[] = []
 
@@ -78,6 +79,11 @@ const SettingsListHeader = ({
     [applySearch],
   )
 
+  // a search stays applied while addons are added or their schemas load: their keys are matched too
+  useEffect(() => {
+    if (applied.current.text) applySearch(applied.current.text)
+  }, [applySearch])
+
   useEffect(() => () => clearTimeout(pending.current), [])
 
   if (addonsData.length === 0) return null
@@ -104,6 +110,7 @@ const SettingsListHeader = ({
 
       <Spacer />
 
+      <SettingsOutlineToggle />
       <Button
         onClick={() => {
           setShowHelp(!showHelp)

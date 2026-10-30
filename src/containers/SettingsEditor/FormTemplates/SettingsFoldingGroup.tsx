@@ -13,7 +13,7 @@ type SettingsFoldingGroupProps = {
 }
 
 /** Makes the group rendered inside fold like a list item (see getFoldingGroupNames) */
-export const SettingsFoldingGroup = ({ children, ...args }: SettingsFoldingGroupProps) => {
+const SettingsFoldingGroup = ({ children, ...args }: SettingsFoldingGroupProps) => {
   const foldState = useGroupFold(args)
   return (
     <SettingsListItemContext.Provider value={foldState}>

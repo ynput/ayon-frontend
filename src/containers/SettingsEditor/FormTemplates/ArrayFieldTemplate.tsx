@@ -16,9 +16,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import styled from 'styled-components'
 import { $Any } from '@types'
-import { readSessionStorage, writeSessionStorage } from '@shared/hooks'
 import {
-  OPEN_LIST_ITEMS_KEY,
   getListItemsPrefix,
   isGroupSchema,
   remapOpenListItems,
@@ -27,7 +25,9 @@ import {
 import { AddItemButton, ArrayItemControls } from './ArrayFieldTemplate.styled'
 import ArrayItemTemplate from './ArrayFieldItemTemplate'
 import DraggableItem from './DraggableItem'
-import { getListLayout } from './listItemLayout'
+import { useListItemLayouts } from './useListItemLayouts'
+import type { ListItemLayout } from './listItemLayout'
+import { updateOpenItems } from './openItemsStore'
 
 const FormArrayField = styled.div`
   flex-grow: 1;
@@ -50,12 +50,6 @@ const listCollisionDetection: CollisionDetection = (args) => {
   return collisions.length > 0 ? collisions : closestCenter({ ...args, droppableContainers })
 }
 
-const setOpenItems = (update: (openKeys: string[]) => string[]) =>
-  writeSessionStorage(
-    OPEN_LIST_ITEMS_KEY,
-    update(readSessionStorage<string[]>(OPEN_LIST_ITEMS_KEY, [])),
-  )
-
 const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   const flatLayout = !!props.formContext?.flatLayout
 
@@ -69,7 +63,8 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   const canAddItems = props.canAdd && !props.schema?.disabled
   const [itemToFocus, setItemToFocus] = useState<number | null>(null)
   const openItemsPrefix = getListItemsPrefix(props.formContext, props.idSchema.$id)
-  const { rowsFit, itemsFold } = getListLayout(props)
+  const listRef = useRef<HTMLDivElement>(null)
+  const layouts = useListItemLayouts(props, listRef)
 
   const onAddItem = () => {
     const id = props.idSchema.$id
@@ -79,8 +74,8 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
     formContext.onSetChangedKeys([{ path, isChanged: true }])
     setItemToFocus(props.items.length)
     props.onAddClick()
-    if (flatLayout && itemsFold)
-      setOpenItems((prev) => [...prev, `${openItemsPrefix}${props.items.length}`])
+    if (layouts?.itemsFold)
+      updateOpenItems((prev) => [...prev, `${openItemsPrefix}${props.items.length}`])
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -109,7 +104,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
     onArrayChanged(item)()
     item.onReorderClick(item.index, to)()
     if (flatLayout)
-      setOpenItems((prev) =>
+      updateOpenItems((prev) =>
         remapOpenListItems(prev, openItemsPrefix, reorderedIndex(item.index, to)),
       )
   }
@@ -130,7 +125,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   )
 
   return (
-    <DndContextWrapper className="array-dnd" onKeyDownCapture={handleKeyDown}>
+    <DndContextWrapper ref={listRef} className="array-dnd" onKeyDownCapture={handleKeyDown}>
       <DndContext
         collisionDetection={listCollisionDetection}
         onDragStart={handleDragStart}
@@ -143,12 +138,13 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
               id={item.id}
               isVisible={item.id !== draggedItemId}
               flatLayout={flatLayout}
+              layout={layouts?.items[item.index]}
               key={item.id}
             >
               <FormArrayFieldWrapper
                 onChange={onArrayChanged(item)}
                 item={item}
-                rowsFit={rowsFit}
+                layout={layouts?.items[item.index]}
                 arrayId={props.idSchema.$id}
                 focusOnMount={idx === itemToFocus}
                 onFocused={() => setItemToFocus(null)}
@@ -182,8 +178,16 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
           createPortal(
             <DragOverlay className={clsx('rjsf', flatLayout && 'settings-flat')}>
               <div className={clsx(flatLayout && overlayContextClass)}>
-                <DraggableItem id={draggedItem.id} flatLayout={flatLayout} isOverlay>
-                  <FormArrayFieldWrapper item={draggedItem} rowsFit={rowsFit} />
+                <DraggableItem
+                  id={draggedItem.id}
+                  flatLayout={flatLayout}
+                  layout={layouts?.items[draggedItem.index]}
+                  isOverlay
+                >
+                  <FormArrayFieldWrapper
+                    item={draggedItem}
+                    layout={layouts?.items[draggedItem.index]}
+                  />
                 </DraggableItem>
               </div>
             </DragOverlay>,
@@ -196,15 +200,15 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
 
 const FormArrayFieldWrapper = ({
   item,
+  layout,
   onChange,
-  rowsFit,
   arrayId,
   focusOnMount,
   onFocused,
 }: {
   item: $Any
+  layout?: ListItemLayout
   onChange?: () => void
-  rowsFit?: boolean
   arrayId?: string
   focusOnMount?: boolean
   onFocused?: () => void
@@ -221,7 +225,7 @@ const FormArrayFieldWrapper = ({
 
   return (
     <FormArrayField ref={ref} data-array-item={arrayId}>
-      <ArrayItemTemplate onChange={onChange} rowsFit={rowsFit} {...dynProps} />
+      <ArrayItemTemplate onChange={onChange} layout={layout} {...dynProps} />
     </FormArrayField>
   )
 }

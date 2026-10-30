@@ -14,6 +14,8 @@ export type SettingsGroupProps = {
   title?: ReactNode
   description?: string
   enabledToggler?: ReactNode
+  /** Controls at the end of the title row, before the switch (a list's colour scheme) */
+  headerExtra?: ReactNode
   className?: string
   /** The form root: drawn as the sheet title, its children become cards */
   isRoot?: boolean
@@ -27,7 +29,7 @@ export type SettingsGroupProps = {
 
 type SettingsGroupHeaderProps = Pick<
   SettingsGroupProps,
-  'title' | 'description' | 'enabledToggler' | 'onClick' | 'onContextMenu'
+  'title' | 'description' | 'enabledToggler' | 'headerExtra' | 'onClick' | 'onContextMenu'
 > & {
   listItem: SettingsListItemState | null
 }
@@ -37,6 +39,7 @@ const SettingsGroupHeader = ({
   title,
   description,
   enabledToggler,
+  headerExtra,
   onClick,
   onContextMenu,
   listItem,
@@ -44,7 +47,8 @@ const SettingsGroupHeader = ({
   const onHeaderClick = (e: MouseEvent) => {
     onClick?.()
     // the item's own switch and buttons act on their own, they don't fold it
-    if (!listItem || (e.target as HTMLElement).closest('button, input, label')) return
+    if (!listItem || listItem.empty || (e.target as HTMLElement).closest('button, input, label'))
+      return
     listItem.onToggle()
   }
 
@@ -53,7 +57,7 @@ const SettingsGroupHeader = ({
 
   return (
     <Styled.Header
-      className="settings-group-header"
+      className={clsx('settings-group-header', listItem?.empty && 'is-empty')}
       onClick={onHeaderClick}
       onContextMenu={onContextMenu}
     >
@@ -62,6 +66,7 @@ const SettingsGroupHeader = ({
           className="settings-group-fold"
           variant="text"
           icon={listItem.expanded ? 'expand_more' : 'chevron_right'}
+          disabled={listItem.empty}
           aria-expanded={listItem.expanded}
           aria-label={listItem.expanded ? 'Fold item' : 'Open item'}
           onClick={(e: MouseEvent) => {
@@ -92,6 +97,7 @@ const SettingsGroupHeader = ({
           }}
         />
       )}
+      {headerExtra}
       {enabledToggler && (
         <Styled.HeaderToggle className="settings-group-toggle">
           {enabledToggler}
@@ -136,6 +142,7 @@ export const SettingsGroup = ({
   title,
   description,
   enabledToggler,
+  headerExtra,
   className,
   isRoot,
   isList,
@@ -160,6 +167,7 @@ export const SettingsGroup = ({
       title={isSection && typeof title === 'string' ? toTitleCase(title) : title}
       description={description}
       enabledToggler={enabledToggler}
+      headerExtra={headerExtra}
       onClick={onClick}
       onContextMenu={onContextMenu}
       listItem={listItem}

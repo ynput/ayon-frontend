@@ -22,7 +22,8 @@ export type TemplatePart = {
 const MAX_KEY_LEVEL = 2
 
 // literal text outside keys: letters, digits and spaces; anything else is a separator
-const isWordChar = (char: string) => /[\p{L}\p{N} ]/u.test(char)
+const WORD_CHAR = /[\p{L}\p{N} ]/u
+const isWordChar = (char: string) => WORD_CHAR.test(char)
 
 type OpenKey = {
   /** Lookups so far: the key itself is 0, its first [sub-key] 1, the next 2 */
