@@ -45,3 +45,4 @@ export { PubSub }
 export * from './afterStartup'
 export { getEntityIcon, getEntityColor } from './iconUtils'
 export type { IconAnatomy } from './iconUtils'
+export * from './accessToken'

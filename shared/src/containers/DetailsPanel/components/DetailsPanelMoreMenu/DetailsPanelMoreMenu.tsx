@@ -1,5 +1,8 @@
-import { useContext, useId, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
+import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
+import { menuItemsAt } from '@ynput/ayon-addon/host'
+import type { MenuItemType } from '@shared/components/Menu/Menu'
 import { Button } from '@ynput/ayon-react-components'
 import { Menu } from '@shared/components/Menu/Menu'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
@@ -138,6 +141,69 @@ export const DetailsPanelMoreMenu = ({
     deleteContext?.deleteEntities(deletableEntities)
   }
 
+  // items addons contribute to this menu (detailsPanel.menuItem slot, @ynput/ayon-addon)
+  const { contributions: addonMenuItems } = useContributions('detailsPanel.menuItem')
+  const applicableAddonItems = useMemo(
+    () =>
+      addonMenuItems.filter(
+        (item) => !item.entityTypes?.length || item.entityTypes.includes(entityType),
+      ),
+    [addonMenuItems, entityType],
+  )
+  const addonContext = useMemo(() => {
+    const source: SelectedEntityRef[] = selectedEntities.length
+      ? selectedEntities
+      : entityId
+      ? [{ entityId, entityType, projectName }]
+      : []
+    return {
+      projectName: projectName || '',
+      entityType,
+      selectedEntities: source.map((e) => ({
+        id: e.entityId,
+        entityType: e.entityType || entityType,
+        projectName: e.projectName || projectName || '',
+        name: e.name,
+        label: e.label || undefined,
+      })),
+    }
+  }, [selectedEntities, entityId, entityType, projectName])
+  const toMenuItem = useCallback(
+    (item: (typeof applicableAddonItems)[number]): MenuItemType => ({
+      id: item.key,
+      label: item.label,
+      icon: item.icon,
+      'data-addon-item': item.key,
+      onClick: () => runContribution(item, addonContext),
+    }),
+    [addonContext],
+  )
+  // pinned items are buttons next to this one, the rest are in the menu: `top` ones first, the
+  // others (default) above View data and Delete
+  const pinnedAddonItems = useMemo(
+    () => [
+      ...menuItemsAt(applicableAddonItems, 'top'),
+      ...menuItemsAt(applicableAddonItems, 'bottom'),
+    ].filter((item) => item.pinned),
+    [applicableAddonItems],
+  )
+  const menuAddonItems = useMemo(
+    () => applicableAddonItems.filter((item) => !item.pinned),
+    [applicableAddonItems],
+  )
+  const addonTopItems = useMemo(
+    () => menuItemsAt(menuAddonItems, 'top').map(toMenuItem),
+    [menuAddonItems, toMenuItem],
+  )
+  const addonItems = useMemo(
+    () => menuItemsAt(menuAddonItems, 'bottom').map(toMenuItem),
+    [menuAddonItems, toMenuItem],
+  )
+  // the items draw from their descriptions; their code loads when the menu opens
+  useEffect(() => {
+    if (isOpen) menuAddonItems.forEach((item) => prefetchPiece(item.run))
+  }, [isOpen, menuAddonItems])
+
   const { items } = useMenuOptions({
     entityType,
     entityId,
@@ -150,6 +216,8 @@ export const DetailsPanelMoreMenu = ({
     canOpenViewer,
     canDelete,
     entityListsContext,
+    extraTopItems: addonTopItems,
+    extraItems: addonItems,
     onPip: () => onOpenPip?.(),
     onOpenViewer: () => viewerArgs && onOpenViewer?.(viewerArgs),
     onUploadThumbnail: () => triggerThumbnailUpload?.(),
@@ -164,6 +232,19 @@ export const DetailsPanelMoreMenu = ({
 
   return (
     <>
+      {pinnedAddonItems.map((item) => (
+        <Button
+          key={item.key}
+          // addons name any Material Symbols icon
+          icon={item.icon as never}
+          variant="text"
+          data-tooltip={item.label}
+          aria-label={item.label}
+          data-addon-item={item.key}
+          onMouseEnter={() => prefetchPiece(item.run)}
+          onClick={() => runContribution(item, addonContext)}
+        />
+      ))}
       <Button
         ref={buttonRef}
         icon="more_horiz"

@@ -18,6 +18,11 @@ interface UseMenuOptionsParams {
   canOpenViewer: boolean
   canDelete: boolean
   entityListsContext: DetailsPanelEntityListsContext | undefined
+  // items addons contribute (detailsPanel.menuItem slot), shown before "View data"
+  /** first in the menu (addon items with position `top`) */
+  extraTopItems?: MenuItemType[]
+  /** after the menu's own actions, above View data and Delete */
+  extraItems?: MenuItemType[]
   onPip: () => void
   onOpenViewer: () => void
   onUploadThumbnail: () => void
@@ -61,6 +66,8 @@ export const useMenuOptions = ({
   canOpenViewer,
   canDelete,
   entityListsContext,
+  extraTopItems = [],
+  extraItems = [],
   onPip,
   onOpenViewer,
   onUploadThumbnail,
@@ -84,7 +91,7 @@ export const useMenuOptions = ({
   }, [selectedEntities, entityId, entityType])
 
   return useMemo<MenuOptionsResult>(() => {
-    const items: MenuItemType[] = []
+    const items: MenuItemType[] = [...extraTopItems]
 
     if (canOpenViewer) {
       items.push({
@@ -168,6 +175,8 @@ export const useMenuOptions = ({
       })
     }
 
+    items.push(...extraItems)
+
     items.push({
       id: 'view-data',
       label: 'View data',
@@ -201,6 +210,8 @@ export const useMenuOptions = ({
     canDelete,
     deleteEntities,
     entityListsContext,
+    extraTopItems,
+    extraItems,
     projectName,
     normalizedSelected,
     entityType,

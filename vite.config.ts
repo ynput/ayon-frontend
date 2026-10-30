@@ -163,6 +163,19 @@ export default ({ mode }) => {
           find: '@shared',
           replacement: fileURLToPath(new URL('./shared/src', import.meta.url)),
         },
+        // the addon API is built from source, like @shared; addons get this copy at runtime
+        {
+          find: /^@ynput\/ayon-addon$/,
+          replacement: fileURLToPath(new URL('./addon/src/index.ts', import.meta.url)),
+        },
+        {
+          find: /^@ynput\/ayon-addon\/manifest$/,
+          replacement: fileURLToPath(new URL('./addon/src/manifest.ts', import.meta.url)),
+        },
+        {
+          find: /^@ynput\/ayon-addon\/host$/,
+          replacement: fileURLToPath(new URL('./addon/src/host.ts', import.meta.url)),
+        },
         // @ynput/ayon-player externalises these — point them at the local shared source
         // so the player shares our React contexts instead of getting a second copy
         {

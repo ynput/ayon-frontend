@@ -1,6 +1,7 @@
 import { FC, ReactNode, useState, useCallback, useId } from 'react'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
+import { useProjectContext } from '@shared/context'
 import SimpleTable, {
   Container,
   SimpleTableCellTemplate,
@@ -41,6 +42,7 @@ const ListsTable: FC<ListsTableProps> = ({
   scrollToRowId,
   getRowTag,
 }) => {
+  const { projectName } = useProjectContext()
   const {
     rowSelection,
     setRowSelection,
@@ -175,6 +177,7 @@ const ListsTable: FC<ListsTableProps> = ({
             isMultiSelect={!singleSelect}
             enableClickToDeselect={false}
             rowContextMenuBuilders={rowContextMenuBuildersAll}
+            addonShortcuts={picker ? undefined : { table: 'listsPanel', projectName }}
             renamingId={picker ? undefined : renamingList}
             onRename={picker ? undefined : handleRename}
             onSubmitRename={picker ? undefined : handleSubmitRename}

@@ -18,7 +18,7 @@ import { hasEnumOptions } from '@shared/util'
 import type { ParentColumnDefinition } from '@shared/containers'
 
 interface UseProjectTableColumnItemsProps {
-  extraColumns?: { value: string; label: string; icon?: string }[]
+  extraColumns?: Pick<AddColumnItem, 'value' | 'label' | 'icon' | 'menu'>[]
   hiddenColumns?: string[]
   includeLinks?: boolean
   parentColumns?: ParentColumnDefinition[]

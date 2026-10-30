@@ -18,6 +18,7 @@ import * as RepresentationsList from '@shared/containers/RepresentationsList/ind
 import * as Slicer from '@shared/containers/Slicer/index'
 import * as Views from '@shared/containers/Views/index'
 import * as SimpleTable from '@shared/containers/SimpleTable/index'
+import * as ProjectsTable from '@shared/containers/ProjectsTable/index'
 import * as EntityPickerDialog from '@shared/containers/EntityPickerDialog/index'
 import * as ListTable from '@shared/containers/ListTable/index'
 import * as NewEntity from '@shared/containers/NewEntity/index'
@@ -38,6 +39,7 @@ export const entries: Record<string, unknown> = {
   Slicer,
   Views,
   SimpleTable,
+  ProjectsTable,
   EntityPickerDialog,
   ListTable,
   NewEntity,

@@ -18,7 +18,11 @@ import type {
   ContextMenuItemConstructor,
   ContextMenuItemConstructors,
 } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
-import { parseCellId, type CellMark } from '@shared/containers/ProjectTreeTable'
+import {
+  parseCellId,
+  type CellMark,
+  useAddonEntityMenuItems,
+} from '@shared/containers/ProjectTreeTable'
 import { useEntityListsContext } from '../entity-lists/EntityListsContextInstance'
 import useReorderListItem, { UseReorderListItemReturn } from '../../hooks/useReorderListItem'
 import useBuildListItemsTableData from '../../hooks/useBuildListItemsTableData'
@@ -472,8 +476,13 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     }
   }
 
+  // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
+  const addonEntityTopItems = useAddonEntityMenuItems('lists', 'top')
+  const addonEntityItems = useAddonEntityMenuItems('lists')
+
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [
+    addonEntityTopItems,
     'copy-paste',
     'show-details',
     'open-viewer',
@@ -484,6 +493,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     forListItems(replaceItemContextMenu),
     forListItems(viewDataContextMenu),
     forListItems(listValueMenuItem),
+    addonEntityItems,
     forListItems(deleteListItemMenuItem),
   ]
 
