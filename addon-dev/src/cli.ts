@@ -1,17 +1,20 @@
 #!/usr/bin/env node
 // ayon-addon: dev server and checks for AYON addon frontends. Every command prints JSON with --json.
 //   ayon-addon dev [--port 5174]     the dev shell: the addon in AYON's surfaces, hot reload
-//   ayon-addon dev --ayon [--port 5173]   watched build + server for AYON's dev override (?addonDev=)
+//   ayon-addon dev --ayon [--port 5173] [--open] [--frontend <url>]   watched build + server for
+//                                    AYON's dev override (?addonDev=), checks what it needs on the server
 //   ayon-addon slots [--json]        the slots of the installed @ynput/ayon-addon
 //   ayon-addon check [--json] [--no-types]
 //   ayon-addon open <slot> <id>      the dev shell in a headless browser (live server)
 //   ayon-addon preview <slot> <id> --fixture <name>   the same from a fixture, no server
 //   ayon-addon generate-rest         the addon's server endpoints as RTK Query endpoints
+import { spawn } from 'child_process'
 import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import { createServer } from 'http'
 import path from 'path'
 import { browse, formatBrowse } from './browse.js'
 import { checkAddon, formatCheck } from './check.js'
+import { checkDevRequirements, formatChecks } from './devChecks.js'
 import { findConnection, findPackageDir, importFromProject, readAddonProject } from './project.js'
 import { generateRest } from './rest.js'
 import type { RestOptions } from './rest.js'
@@ -41,26 +44,51 @@ const CONTENT_TYPES: Record<string, string> = {
   '.woff2': 'font/woff2',
 }
 
-// serves the build with CORS: AYON (any origin, also https) loads the remote from here
-const serveDirectory = (dir: string, port: number) =>
-  createServer((request, response) => {
-    response.setHeader('Access-Control-Allow-Origin', '*')
-    // agents' headless browsers send x-api-key on every request, which makes these preflighted
-    response.setHeader('Access-Control-Allow-Headers', '*')
-    response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-    response.setHeader('Access-Control-Allow-Private-Network', 'true')
-    response.setHeader('Cache-Control', 'no-store')
-    if (request.method === 'OPTIONS') return void response.writeHead(204).end()
-    const urlPath = decodeURIComponent((request.url || '/').split('?')[0])
-    const file = path.join(dir, path.normalize(urlPath).replace(/^(\.\.[/\\])+/, ''))
-    if (!file.startsWith(dir) || !existsSync(file) || !statSync(file).isFile()) {
-      return void response.writeHead(404).end('not found')
-    }
-    response.writeHead(200, {
-      'Content-Type': CONTENT_TYPES[path.extname(file)] || 'application/octet-stream',
+// serves the build with CORS: AYON (any origin, also https) loads the remote from here. `dir()` is
+// undefined until the first build: 404 until then, which the page shows and waits out.
+const serveDirectory = (dir: () => string | undefined, port: number) =>
+  new Promise<void>((resolve, reject) => {
+    const server = createServer((request, response) => {
+      response.setHeader('Access-Control-Allow-Origin', '*')
+      // agents' headless browsers send x-api-key on every request, which makes these preflighted
+      response.setHeader('Access-Control-Allow-Headers', '*')
+      response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+      response.setHeader('Access-Control-Allow-Private-Network', 'true')
+      response.setHeader('Cache-Control', 'no-store')
+      if (request.method === 'OPTIONS') return void response.writeHead(204).end()
+      const root = dir()
+      const urlPath = decodeURIComponent((request.url || '/').split('?')[0])
+      const file = root && path.join(root, path.normalize(urlPath).replace(/^(\.\.[/\\])+/, ''))
+      if (!root || !file || !file.startsWith(root) || !existsSync(file) || !statSync(file).isFile()) {
+        return void response.writeHead(404).end('not found')
+      }
+      response.writeHead(200, {
+        'Content-Type': CONTENT_TYPES[path.extname(file)] || 'application/octet-stream',
+      })
+      createReadStream(file).pipe(response)
     })
-    createReadStream(file).pipe(response)
-  }).listen(port)
+    server.once('error', (error: NodeJS.ErrnoException) =>
+      reject(
+        error.code === 'EADDRINUSE'
+          ? new Error(`port ${port} is in use (another \`ayon-addon dev\`?): pick another with --port`)
+          : error,
+      ),
+    )
+    server.listen(port, () => resolve())
+  })
+
+// the system's browser
+const openInBrowser = (url: string) => {
+  const [cmd, ...args] =
+    process.platform === 'darwin'
+      ? ['open', url]
+      : process.platform === 'win32'
+        ? ['cmd', '/c', 'start', '""', url]
+        : ['xdg-open', url]
+  spawn(cmd, args, { stdio: 'ignore', detached: true })
+    .on('error', () => console.error(`could not open a browser: open ${url} yourself`))
+    .unref()
+}
 
 // the build's dev info (dist/modules/<remote>/ayon-addon.json), written by ayonAddon()
 const findDevInfo = () => {
@@ -69,7 +97,7 @@ const findDevInfo = () => {
   const file = readdirSync(modules)
     .map((name) => path.join(modules, name, 'ayon-addon.json'))
     .find((candidate) => existsSync(candidate))
-  return file && { dir: path.dirname(file), info: JSON.parse(readFileSync(file, 'utf8')) }
+  return file ? { dir: path.dirname(file), info: JSON.parse(readFileSync(file, 'utf8')) } : undefined
 }
 
 // the Vite dev server with the dev shell (ayonAddon()'s standalone plugin)
@@ -101,7 +129,13 @@ const dev = async () => {
   if (!flag('ayon')) return devStandalone()
   const port = Number(option('port', '5173'))
   const project = readAddonProject(root)
+  const connection = findConnection(root)
   const vite = await importFromProject<typeof import('vite')>(root, 'vite')
+  let built: ReturnType<typeof findDevInfo>
+  // listening before the build: a page opened early waits for it instead of failing to connect
+  await serveDirectory(() => built?.dir, port)
+  // what the override needs on the server, checked while the first build runs
+  const checks = checkDevRequirements({ project, connection })
   process.env.AYON_ADDON_DEV = '1'
   let served = false
   const watcher = (await vite.build({
@@ -115,7 +149,7 @@ const dev = async () => {
   watcher.on('event', (event) => {
     if (event.code === 'ERROR') console.error(event.error)
     if (event.code !== 'END') return
-    const built = findDevInfo()
+    built = findDevInfo()
     if (!built) {
       console.error('no ayon-addon.json in dist/modules: is ayonAddon() in vite.config.ts?')
       return
@@ -125,18 +159,27 @@ const dev = async () => {
       return
     }
     served = true
-    serveDirectory(built.dir, port)
+    const { info } = built
     const url = `http://localhost:${port}`
-    const open = `${findConnection(root).serverUrl}/?addonDev=${project.name}@${url}`
-    print(
-      { url, addon: project.name, remote: built.info.remote, buildId: built.info.buildId, open },
-      [
-        `${project.name} ${project.version}: built, serving ${url} (remote "${built.info.remote}")`,
-        'Open AYON with this addon from here (developer mode on):',
-        `  ${open}`,
-        'The page reloads after every rebuild. ?addonDev=off goes back to the installed addon.',
-      ].join('\n'),
-    )
+    // the page that loads it: AYON itself, or a frontend dev server in front of it (--frontend)
+    const page = (option('frontend') || connection.serverUrl).replace(/\/+$/, '')
+    const open = `${page}/?addonDev=${project.name}@${url}`
+    void checks.then((results) => {
+      const ok = results.every((check) => check.ok || check.severity !== 'error')
+      print(
+        { url, addon: project.name, remote: info.remote, buildId: info.buildId, open, ok, checks: results },
+        [
+          `${project.name} ${project.version}: built, serving ${url} (remote "${info.remote}")`,
+          `Checks against ${connection.serverUrl}:`,
+          formatChecks(results),
+          'Open AYON with this addon from here (your user needs developer mode on):',
+          `  ${open}`,
+          'The page reloads after every rebuild. If it shows the installed addon, its banner says why.',
+          '?addonDev=off goes back to the installed addon.',
+        ].join('\n'),
+      )
+      if (flag('open')) openInBrowser(open)
+    })
   })
 }
 
@@ -187,7 +230,7 @@ const generateRestCommand = async () => {
 }
 
 // the arguments that aren't flags or flag values
-const BOOLEAN_FLAGS = ['--json', '--run', '--no-types', '--standalone', '--ayon', '--prune', '--hooks']
+const BOOLEAN_FLAGS = ['--json', '--run', '--no-types', '--standalone', '--ayon', '--prune', '--hooks', '--open']
 const positional = () => {
   const values: string[] = []
   for (let i = 1; i < argv.length; i++) {
@@ -226,8 +269,12 @@ const HELP = `ayon-addon: tools for AYON addon frontends (run in the addon's fro
   dev [--port 5174]            the dev shell: the addon's contributions in AYON's surfaces,
                                without AYON, hot reload, a developer panel to pick slot,
                                project, entities
-  dev --ayon [--port 5173]     build on every change and serve it for AYON's dev override:
-                               open AYON with ?addonDev=<addon>@http://localhost:5173
+  dev --ayon [--port 5173] [--open] [--frontend <url>]
+                               build on every change and serve it for AYON's dev override;
+                               checks the server (reachable, the API key's user, the addon
+                               installed in the version the frontend calls) and prints the
+                               URL that loads it, <server or --frontend>/?addonDev=<addon>@
+                               http://localhost:5173 (--open: opens it)
   slots [--json]               the slots of the installed @ynput/ayon-addon
   check [--json] [--no-types]  the manifest as AYON reads it, the pieces' files, the types
   open <slot> <id> [--project <name>] [--entities type:id,...] [--page overview|products|lists]

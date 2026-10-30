@@ -28,7 +28,7 @@ Run in the addon's frontend folder. Every command takes `--json` for scripts and
 | Command | What |
 |---|---|
 | `ayon-addon dev [--port 5174]` | The dev shell (below): the addon in AYON's surfaces, without AYON, with hot reload |
-| `ayon-addon dev --ayon [--port 5173]` | Builds on every change and serves the build with CORS. Prints the AYON URL that loads it: `<server>/?addonDev=<addon>@http://localhost:5173` |
+| `ayon-addon dev --ayon [--port 5173] [--open] [--frontend <url>]` | Builds on every change and serves the build with CORS. Checks what AYON's dev override needs on the server, then prints (`--open`: opens) the AYON URL that loads it: `<server>/?addonDev=<addon>@http://localhost:5173` |
 | `ayon-addon slots` | The slots of the installed `@ynput/ayon-addon`: helper, where, when the code loads |
 | `ayon-addon check [--no-types]` | The manifest as AYON reads it (slots, ids, fields, pieces), that each piece's file exists, and `tsc` |
 | `ayon-addon open <slot> <id> [--project P] [--entities type:id,...] [--page overview\|products\|lists] [--run] [--screenshot file] [--save-fixture name]` | One contribution in the dev shell in a headless browser, against the server. Reports error boxes, console errors, toasts, the context it got, the clipboard after `--run` (menu items). Exit code 1 when it failed |
@@ -41,13 +41,57 @@ chromium`); in the AYON dev workbench the ayon-frontend checkout's copy is used.
 
 ## Developing inside AYON (`dev --ayon`)
 
-1. `ayon-addon dev --ayon` in the addon.
-2. Open the URL it prints. The page loads your addon from the dev server instead of the installed
-   version (also when it isn't installed) and shows a banner. It reloads after every rebuild.
+1. `ayon-addon dev --ayon --open` in the addon (`yarn dev:ayon` in the template and the time tracker).
+2. It checks the server, builds, and opens the URL it prints (without `--open`, open it yourself).
+   The page loads your addon from the dev server instead of the installed version (also when it
+   isn't installed) and shows a banner. It reloads after every rebuild.
 3. `?addonDev=off`, or the banner's close button, goes back to the installed addon.
 
-Only users in developer mode (and service users, for agents) can do this, and only from
-`localhost`.
+- `--frontend http://localhost:3000` puts that page in the URL instead of the server (an
+  ayon-frontend dev server in front of it).
+- `--port` is the addon's dev server port (5173 by default; a port in use stops it with an error).
+- With `--json` it prints one object once the first build is done: `url`, `addon`, `remote`,
+  `buildId`, `open` (the URL), `ok` (no check failed with `error`) and `checks`
+  (`{ id, ok, severity, message, fix }`).
+
+What it checks against the server (`AYON_SERVER_URL` / `AYON_API_KEY`, or the workbench's local
+stack and key), each failure with how to fix it:
+
+| Check | Fails when |
+|---|---|
+| `server` | `/api/info` doesn't answer 200. Nothing else is checked. |
+| `apiKey` | No key: the user and the installed versions can't be checked (warning). |
+| `user` | The key is rejected (error), or the key's user is neither a service user nor in developer mode (warning: a headless browser signed in with it ignores the override). Your own browser user is not known to the CLI: it needs developer mode. |
+| `addonVersion` | `src/addonVersion.ts` and `package.py` name different versions (warning): the frontend calls the endpoints of the former. |
+| `addon` | The addon isn't installed in the version the frontend calls, or that version failed to load on the server. The page still loads the frontend from the dev server, but its endpoint calls (`/api/addons/<name>/<version>/...`) answer 404. An error when the addon has a `server/` folder, else a warning. |
+
+The checks never stop the dev server: fix them while it runs.
+
+### Why isn't my addon loading?
+
+The page always says why in the banner at the bottom left (also in the console). What it says, and
+the fix:
+
+- **ignored ... only users in developer mode**: turn on Developer Mode in AYON's header (a user
+  who doesn't have the switch needs Developer turned on by an admin in Studio settings > Users),
+  then reload. Service users (API keys) always may.
+- **ignored ... is not this machine / is not a URL / use ?addonDev=...**: the parameter must be
+  `<addon>@http://localhost:<port>` (or `127.0.0.1`, `[::1]`): a link can't load code from another
+  machine.
+- **could not load ... no answer from**: the dev server isn't running on that port (or was
+  stopped). The page reloads once it answers.
+- **could not load ... has no /ayon-addon.json**: something else runs on that port (the dev shell,
+  `ayon-addon dev` without `--ayon`), or the first build hasn't finished. The page reloads once it
+  answers.
+- **could not load ... serves "x", not "y"**: the name in the URL isn't the addon's name in
+  `package.py`; use the URL the CLI prints.
+- **its manifest failed to load**: the build is broken or the remote didn't start: see the
+  console and the CLI's output; the page reloads after the next build.
+- **The addon loads but its requests answer 404**: the server doesn't have the addon in the
+  version the frontend calls. `ayon-addon dev --ayon` reports it (`addon` check); install that
+  version.
+- **No banner at all**: the page isn't a frontend with the dev override (an older AYON), or
+  `?addonDev=off` cleared it.
 
 ## Developing without AYON: the dev shell (`dev`, the default)
 
