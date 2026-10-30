@@ -128,8 +128,10 @@ queries), `generated`, `api`, `versionModule`, `schema` (paths).
 - Both can go in the addon frontend's `.env.local` or `.env` (keep them out of git): every
   command loads them at start, `.env.local` first. Variables already set in the shell win.
 - With no key, a command stops and says where to get one (Settings → Users → Add Service User).
-  In a terminal, with no env file yet, it offers to write `.env` from the template
-  (`ENV_TEMPLATE` in `addon-dev/src/project.ts`): the settings and where to get the key, to fill in.
+  In a terminal, with no env file yet, it walks through writing `.env`: the server (default
+  `http://localhost:5000`), then the key, typed without echo (Enter leaves it for later). A key
+  given there lets the command go on; without one it stops after writing the file. The file
+  comes from `envFileContents` in `addon-dev/src/project.ts`.
 
 ## Lint preset
 

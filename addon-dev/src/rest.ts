@@ -93,8 +93,9 @@ const downloadSchema = async (
   addon: { name: string; version: string },
   interactive: boolean,
 ) => {
-  const { serverUrl, apiKey: found } = findConnection(root)
-  const apiKey = await requireApiKey(root, found, interactive)
+  // after the key: the setup may have chosen the server too
+  const apiKey = await requireApiKey(root, findConnection(root).apiKey, interactive)
+  const { serverUrl } = findConnection(root)
   const url = `${serverUrl}/api/addons/${addon.name}/${addon.version}/openapi.json`
   const response = await fetch(url, { headers: { 'x-api-key': apiKey } })
   if (response.status === 401 || response.status === 403) {

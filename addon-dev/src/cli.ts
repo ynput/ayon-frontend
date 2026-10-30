@@ -253,8 +253,8 @@ const HELP = `ayon-addon: tools for AYON addon frontends (run in the addon's fro
                                (--hooks: without asking). Options: ayonAddon({ rest })
 
 Sign-in: AYON_SERVER_URL and AYON_API_KEY, from the environment or the addon's .env.local or
-.env (a terminal can write .env for you); in the AYON dev workbench, the local stack and
-data/local-api-key.`
+.env (in a terminal, a first run walks you through .env); in the AYON dev workbench, the local
+stack and data/local-api-key.`
 
 const commands: Record<string, () => Promise<void>> = {
   dev,

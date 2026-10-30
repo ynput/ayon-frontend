@@ -2,7 +2,12 @@ import { expect, test } from '@playwright/test'
 import { mkdtempSync, rmSync, writeFileSync } from 'fs'
 import os from 'os'
 import path from 'path'
-import { ENV_TEMPLATE, loadProjectEnv, requireApiKey } from '../../addon-dev/src/project'
+import {
+  envFileContents,
+  loadProjectEnv,
+  parseServerUrl,
+  requireApiKey,
+} from '../../addon-dev/src/project'
 
 const keys = [
   'ADDON_ENV_TEST_SHELL',
@@ -79,11 +84,19 @@ test('without a key, the command says where to get one', async () => {
   }
 })
 
+test('the server address must start with http:// or https://', () => {
+  expect(parseServerUrl(' http://localhost:5000/ ')).toBe('http://localhost:5000')
+  expect(parseServerUrl('https://ayon.example.com/ayon')).toBe('https://ayon.example.com/ayon')
+  expect(parseServerUrl('localhost:5000')).toBeUndefined()
+  expect(parseServerUrl('ftp://ayon.example.com')).toBeUndefined()
+  expect(parseServerUrl('')).toBeUndefined()
+})
+
 test('the template loads with no key, so the command still asks for one', async () => {
   const dir = mkdtempSync(path.join(os.tmpdir(), 'addon-env-'))
   const before = Object.fromEntries(keys.map((key) => [key, process.env[key]]))
   try {
-    writeFileSync(path.join(dir, '.env'), ENV_TEMPLATE)
+    writeFileSync(path.join(dir, '.env'), envFileContents('http://localhost:5000'))
     delete process.env.AYON_API_KEY
     loadProjectEnv(dir)
     expect(process.env.AYON_API_KEY ?? '').toBe('')
