@@ -54,6 +54,15 @@ export interface AyonConnection {
 }
 
 /**
+ * Loads the addon's `.env` (AYON_SERVER_URL, AYON_API_KEY, …) into process.env, so no command
+ * needs an `--env-file` or a shell export. Variables already set in the shell win.
+ */
+export const loadProjectEnv = (root = process.cwd()) => {
+  const file = path.join(root, '.env')
+  if (existsSync(file)) process.loadEnvFile(file)
+}
+
+/**
  * AYON_SERVER_URL and AYON_API_KEY win; inside the AYON dev workbench the local stack and its
  * key (data/local-api-key) are the defaults.
  */

@@ -87,6 +87,12 @@ const downloadSchema = async (root: string, addon: { name: string; version: stri
   const { serverUrl, apiKey } = findConnection(root)
   const url = `${serverUrl}/api/addons/${addon.name}/${addon.version}/openapi.json`
   const response = await fetch(url, { headers: apiKey ? { 'x-api-key': apiKey } : {} })
+  if (response.status === 401 || response.status === 403) {
+    const hint = apiKey
+      ? 'the API key was refused'
+      : 'no API key was sent: set AYON_API_KEY, or put it in the .env of this folder'
+    throw new Error(`${url} answered ${response.status}: ${hint}`)
+  }
   if (!response.ok) {
     throw new Error(`${url} answered ${response.status}: is ${addon.name} ${addon.version} installed there?`)
   }

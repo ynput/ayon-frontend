@@ -125,6 +125,8 @@ queries), `generated`, `api`, `versionModule`, `schema` (paths).
   workbench the tools find the local stack and its key (`data/local-api-key`) on their own.
 - `AYON_SERVER_URL` points the tools at another server (default `http://localhost:5000`, or the
   workbench's local stack).
+- Both can go in the addon frontend's `.env` (keep it out of git): every command loads it at
+  start. Variables already set in the shell win.
 
 ## Lint preset
 
