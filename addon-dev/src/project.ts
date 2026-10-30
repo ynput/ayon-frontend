@@ -1,8 +1,10 @@
 // What the tools need to know about the addon they run in: its name and version (package.py),
 // where AYON runs, and how to sign in to it.
-import { existsSync, readFileSync } from 'fs'
+import { spawnSync } from 'child_process'
+import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { createRequire } from 'module'
 import path from 'path'
+import { createInterface } from 'readline/promises'
 import { pathToFileURL } from 'url'
 
 export interface AddonProject {
@@ -53,13 +55,18 @@ export interface AyonConnection {
   apiKeySource?: string
 }
 
+// the addon's env files, in order: the first one that sets a variable wins, and the shell wins over both
+const ENV_FILES = ['.env.local', '.env']
+
 /**
- * Loads the addon's `.env` (AYON_SERVER_URL, AYON_API_KEY, …) into process.env, so no command
- * needs an `--env-file` or a shell export. Variables already set in the shell win.
+ * Loads the addon's `.env.local` and `.env` (AYON_SERVER_URL, AYON_API_KEY, …) into process.env,
+ * so no command needs an `--env-file` or a shell export.
  */
 export const loadProjectEnv = (root = process.cwd()) => {
-  const file = path.join(root, '.env')
-  if (existsSync(file)) process.loadEnvFile(file)
+  for (const name of ENV_FILES) {
+    const file = path.join(root, name)
+    if (existsSync(file)) process.loadEnvFile(file)
+  }
 }
 
 /**
@@ -81,6 +88,59 @@ export const findConnection = (root = process.cwd()): AyonConnection => {
     return { serverUrl, apiKey: readFileSync(keyFile, 'utf8').trim(), apiKeySource: keyFile }
   }
   return { serverUrl }
+}
+
+// written to .env by requireApiKey: the settings, and where the key comes from
+export const ENV_TEMPLATE = `# ayon-addon: the AYON server and an API key for this addon's tools.
+# Every ayon-addon command reads this file. A variable set in your shell wins over it, and
+# .env.local (same format) wins over this file. Keep both out of git.
+
+# The AYON server, when it isn't the local stack (http://localhost:5000 outside the AYON dev workbench)
+AYON_SERVER_URL=
+
+# A service user's key: Settings → Users → Add Service User → Generate new key.
+# AYON shows the key once, so copy it here.
+AYON_API_KEY=
+`
+
+/** What to do when no API key is set: which file to put it in, and where to get the key */
+export const keySetupMessage = (root: string) => {
+  const files = ENV_FILES.map((name) => path.join(root, name)).filter((file) => existsSync(file))
+  const key =
+    "Set AYON_API_KEY to a service user's key: Settings → Users → Add Service User → Generate new key (AYON shows it once)."
+  const file = path.join(root, '.env')
+  return files.length
+    ? `no API key: AYON_API_KEY is not set in ${files.join(' or ')} or in the shell. ${key}`
+    : `no API key: AYON_API_KEY is not set in the shell or in ${file}. ${key} Set AYON_SERVER_URL too if the server isn't http://localhost:5000. Or run this command in a terminal and ayon-addon writes ${file} for you.`
+}
+
+/**
+ * Returns the API key, or stops the command when there is none. In a terminal, with no env file
+ * yet, it first offers to write the template: the key still has to be filled in, so it stops.
+ */
+export const requireApiKey = async (
+  root: string,
+  apiKey: string | undefined,
+  interactive: boolean,
+): Promise<string> => {
+  if (apiKey) return apiKey
+  const file = path.join(root, '.env')
+  const hasEnvFile = ENV_FILES.some((name) => existsSync(path.join(root, name)))
+  if (interactive && !hasEnvFile) {
+    const rl = createInterface({ input: process.stdin, output: process.stdout })
+    const answer = await rl.question(`no API key yet. Create ${file} with the settings? [y/N] `)
+    rl.close()
+    if (/^y(es)?$/i.test(answer.trim())) {
+      writeFileSync(file, ENV_TEMPLATE)
+      // git check-ignore: 1 means git doesn't ignore the file (0 ignored, 128 not a repo)
+      const ignored = spawnSync('git', ['check-ignore', '-q', file], { cwd: root }).status !== 1
+      throw new Error(
+        `created ${file}: set AYON_API_KEY in it, then run the command again` +
+          (ignored ? '' : '. It is not git-ignored: add .env to .gitignore before you commit'),
+      )
+    }
+  }
+  throw new Error(keySetupMessage(root))
 }
 
 /**

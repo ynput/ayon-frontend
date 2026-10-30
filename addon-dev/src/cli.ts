@@ -252,8 +252,9 @@ const HELP = `ayon-addon: tools for AYON addon frontends (run in the addon's fro
                                their hooks, or offers to add the hooks of new endpoints
                                (--hooks: without asking). Options: ayonAddon({ rest })
 
-Sign-in: AYON_SERVER_URL and AYON_API_KEY, from the environment or the addon's .env file; in
-the AYON dev workbench, the local stack and data/local-api-key.`
+Sign-in: AYON_SERVER_URL and AYON_API_KEY, from the environment or the addon's .env.local or
+.env (a terminal can write .env for you); in the AYON dev workbench, the local stack and
+data/local-api-key.`
 
 const commands: Record<string, () => Promise<void>> = {
   dev,
@@ -269,7 +270,9 @@ if (!run) {
   process.exitCode = command && command !== 'help' ? 1 : 0
 } else {
   run().catch((error) => {
-    console.error(json ? JSON.stringify({ ok: false, error: String(error) }) : error)
+    // the message only: a setup problem needs no stack trace (--json keeps everything)
+    const message = error instanceof Error ? error.message : error
+    console.error(json ? JSON.stringify({ ok: false, error: String(error) }) : message)
     process.exitCode = 1
   })
 }

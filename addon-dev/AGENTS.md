@@ -125,8 +125,11 @@ queries), `generated`, `api`, `versionModule`, `schema` (paths).
   workbench the tools find the local stack and its key (`data/local-api-key`) on their own.
 - `AYON_SERVER_URL` points the tools at another server (default `http://localhost:5000`, or the
   workbench's local stack).
-- Both can go in the addon frontend's `.env` (keep it out of git): every command loads it at
-  start. Variables already set in the shell win.
+- Both can go in the addon frontend's `.env.local` or `.env` (keep them out of git): every
+  command loads them at start, `.env.local` first. Variables already set in the shell win.
+- With no key, a command stops and says where to get one (Settings → Users → Add Service User).
+  In a terminal, with no env file yet, it offers to write `.env` from the template
+  (`ENV_TEMPLATE` in `addon-dev/src/project.ts`): the settings and where to get the key, to fill in.
 
 ## Lint preset
 
