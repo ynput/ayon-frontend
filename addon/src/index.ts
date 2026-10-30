@@ -24,6 +24,8 @@ export type {
   ButtonPieces,
   ButtonScope,
   DialogScope,
+  PopoverScope,
+  PopoverButtonScope,
   MenuPiece,
   RunPiece,
   ListMenuItemMeta,
@@ -47,6 +49,8 @@ export type {
   TableShortcutContext,
   TableShortcutMeta,
   TableShortcutPieces,
+  AppServiceContext,
+  AppServiceMeta,
 } from './slots'
 export type {
   Access,

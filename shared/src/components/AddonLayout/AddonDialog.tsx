@@ -6,8 +6,9 @@ import { ContributionView } from '@ynput/ayon-addon'
 import type { AnyContribution, Contribution, SlotMap, SlotName } from '@ynput/ayon-addon'
 import { reportContributionError } from '@ynput/ayon-addon/host'
 
-// a crash inside the dialog closes it and shows a toast; the next click tries again
-const ReportCrash = ({
+// a crash inside the dialog closes it and shows a toast; the next click tries again (also the
+// popover's and the services')
+export const ReportCrash = ({
   contribution,
   error,
   onReported,

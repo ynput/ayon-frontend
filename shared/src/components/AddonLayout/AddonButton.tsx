@@ -1,6 +1,7 @@
 // The host's button for header.item and projectTable.toolbarItem contributions (@ynput/ayon-addon).
-// The addon picks what a click does; the host draws the button (renderButton), the dialog and the
-// menu, so they look like AYON's own. Used by the app's header and toolbars and by the dev shell.
+// The addon picks what a click does; the host draws the button (renderButton), the dialog, the
+// menu and the popover, so they look like AYON's own. Used by the app's header and toolbars and by
+// the dev shell.
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ContributionView, prefetchPiece, runContribution } from '@ynput/ayon-addon'
@@ -11,12 +12,13 @@ import type { MenuItemType } from '@shared/components/Menu/Menu'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
 import { useMenuContext } from '@shared/context'
 import { AddonDialog } from './AddonDialog'
+import { AddonPopover } from './AddonPopover'
 import { getButtonAction, toMenuItems } from './AddonButtonHelpers'
 import type { ButtonSlot } from './AddonButtonHelpers'
 
 export interface AddonButtonRenderProps {
   ref: (element: HTMLElement | null) => void
-  /** its dialog or menu is open */
+  /** its dialog, menu or popover is open */
   active: boolean
   onClick: () => void
   onMouseEnter: () => void
@@ -28,7 +30,7 @@ export interface AddonButtonProps<S extends ButtonSlot> {
   context: Omit<SlotMap[S]['context'], 'navigate'>
   /** the host's button; not called for a `component` item, which draws itself */
   renderButton: (props: AddonButtonRenderProps) => ReactNode
-  /** dev shell: open the dialog right away */
+  /** dev shell: open the dialog or popover right away */
   autoOpen?: boolean
   /** dev shell: the context the item's code gets */
   onContext?: (context: object) => void
@@ -54,6 +56,21 @@ export const AddonButton = <S extends ButtonSlot>({
   const close = useCallback(() => setDialogOpen(false), [])
   const dialogContext = useMemo(() => ({ ...actionContext, close }), [actionContext, close])
 
+  // popover: the header menus' container around the addon's content; its own open state, so a
+  // menu opened inside it (the app has one open menu at a time) doesn't close it
+  const [popoverOpen, setPopoverOpen] = useState(!!autoOpen && action === 'popover')
+  const closePopover = useCallback(() => setPopoverOpen(false), [])
+  const togglePopover = useCallback(() => setPopoverOpen((open) => !open), [])
+  const popoverContext = useMemo(
+    () => ({ ...actionContext, close: closePopover }),
+    [actionContext, closePopover],
+  )
+  // a `component` with a `popover` is the popover's button
+  const buttonContext = useMemo(
+    () => (any.popover ? { ...actionContext, popoverOpen, togglePopover } : actionContext),
+    [any.popover, actionContext, popoverOpen, togglePopover],
+  )
+
   // menu: the shared Menu under the button, like the header's help menu
   const { menuOpen, setMenuOpen, toggleMenuOpen } = useMenuContext()
   // keys are unique per slot only: a header item and a toolbar item may share one
@@ -62,18 +79,46 @@ export const AddonButton = <S extends ButtonSlot>({
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
 
   useEffect(
-    () => onContext?.(action === 'dialog' ? dialogContext : actionContext),
-    [onContext, action, dialogContext, actionContext],
+    () =>
+      onContext?.(
+        action === 'dialog' ? dialogContext : action === 'popover' ? popoverContext : actionContext,
+      ),
+    [onContext, action, dialogContext, popoverContext, actionContext],
   )
 
-  if (action === 'component') {
-    return <ContributionView contribution={contribution} context={actionContext} />
+  const popover = action === 'popover' && (
+    <AddonPopover
+      contribution={contribution}
+      context={popoverContext}
+      open={popoverOpen}
+      anchor={anchor}
+    />
+  )
+
+  if (any.component) {
+    const view = <ContributionView contribution={contribution} context={buttonContext} />
+    if (!popover) return view
+    return (
+      <>
+        {/* the popover hangs from the component's box */}
+        <span
+          ref={setAnchor}
+          className="addon-popover-anchor"
+          style={{ display: 'inline-flex' }}
+          onMouseEnter={() => prefetchPiece(any.popover as never)}
+        >
+          {view}
+        </span>
+        {popover}
+      </>
+    )
   }
 
   const onClick = () => {
     if (action === 'to') navigate(any.to as string)
     else if (action === 'run') runContribution(contribution, actionContext)
     else if (action === 'dialog') setDialogOpen((open) => !open)
+    else if (action === 'popover') togglePopover()
     else if (action === 'menu') {
       if (menuOpen === menuId) return setMenuOpen(false)
       // the items are built each time the menu opens, from the current context
@@ -96,7 +141,7 @@ export const AddonButton = <S extends ButtonSlot>({
     <>
       {renderButton({
         ref: setAnchor,
-        active: dialogOpen || menuOpen === menuId,
+        active: dialogOpen || popoverOpen || menuOpen === menuId,
         onClick,
         onMouseEnter: () => action && action !== 'to' && prefetchPiece(any[action] as never),
       })}
@@ -108,6 +153,7 @@ export const AddonButton = <S extends ButtonSlot>({
           <Menu menu={menuItems} />
         </MenuContainer>
       )}
+      {popover}
     </>
   )
 }

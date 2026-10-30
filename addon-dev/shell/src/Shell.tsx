@@ -27,7 +27,7 @@ import {
 } from '@ynput/ayon-frontend-shared/context'
 import { ContextMenuProvider, GlobalContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
 import { ProjectDataProvider } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
-import { LoginPage, SplitterStyles } from '@ynput/ayon-frontend-shared/components'
+import { AddonServices, LoginPage, SplitterStyles } from '@ynput/ayon-frontend-shared/components'
 import { storeAccessToken } from '@ynput/ayon-frontend-shared/util'
 import { useDispatch } from 'react-redux'
 import { DevPanel } from './DevPanel'
@@ -131,33 +131,37 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
   useEffect(() => setStatus({ selection, mode }), [selection, mode])
 
   return (
-    <Splitter className="ayon-shell" stateKey="ayon-addon-shell" stateStorage="local">
-      <SplitterPanel size={22} minSize={12} style={{ overflow: 'hidden' }}>
-        <StageBoundary what="developer panel">
-          <DevPanel options={options} mode={mode} selection={selection} onChange={setSelection} />
-        </StageBoundary>
-      </SplitterPanel>
-      <SplitterPanel size={78} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <StageCaption mode={mode} selection={selection} />
-        <ProjectProviders
-          // preview renders the contribution alone: only the table columns need the project
-          projectName={
-            mode === 'live' || selection.slot === 'tableColumn' ? selection.projectName : undefined
-          }
-          light={mode === 'preview'}
-        >
-          <StageBoundary key={`${selection.projectName}:${selection.slot}:${selection.id}`}>
-            {/* remounts per project: the project contexts and the slicer start fresh */}
-            <Stage
-              key={selection.projectName || ''}
-              mode={mode}
-              selection={selection}
-              onChange={setSelection}
-            />
+    <>
+      {/* the addon's services, once for the whole shell as in AYON; not remounted per selection */}
+      <AddonServices projectName={selection.projectName ?? null} />
+      <Splitter className="ayon-shell" stateKey="ayon-addon-shell" stateStorage="local">
+        <SplitterPanel size={22} minSize={12} style={{ overflow: 'hidden' }}>
+          <StageBoundary what="developer panel">
+            <DevPanel options={options} mode={mode} selection={selection} onChange={setSelection} />
           </StageBoundary>
-        </ProjectProviders>
-      </SplitterPanel>
-    </Splitter>
+        </SplitterPanel>
+        <SplitterPanel size={78} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <StageCaption mode={mode} selection={selection} />
+          <ProjectProviders
+            // preview renders the contribution alone: only the table columns need the project
+            projectName={
+              mode === 'live' || selection.slot === 'tableColumn' ? selection.projectName : undefined
+            }
+            light={mode === 'preview'}
+          >
+            <StageBoundary key={`${selection.projectName}:${selection.slot}:${selection.id}`}>
+              {/* remounts per project: the project contexts and the slicer start fresh */}
+              <Stage
+                key={selection.projectName || ''}
+                mode={mode}
+                selection={selection}
+                onChange={setSelection}
+              />
+            </StageBoundary>
+          </ProjectProviders>
+        </SplitterPanel>
+      </Splitter>
+    </>
   )
 }
 

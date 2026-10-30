@@ -118,8 +118,17 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   \`useSlot('<slot>')\` (or a list of slots). It throws when rendered in another slot.
 - Menu items have a \`run\` piece: a function that gets the context (\`SlotContext<'<slot>'>\`) on click.
 - Header and toolbar items set exactly one action: \`to\` (navigate), \`run\`, \`dialog\` (AYON opens
-  its dialog around your content, which gets \`close\`), \`menu\` (a function returning the items) or
+  its dialog around your content, which gets \`close\`), \`menu\` (a function returning the items),
+  \`popover\` (AYON opens a popover under the button with your content, which gets \`close\`) or
   \`component\` (your own JSX instead of AYON's button). Their code gets \`navigate\` in the context.
+- A popover is AYON's: it positions it and closes it on a click outside or Escape. Don't build your
+  own overlay. Menus and dialogs opened from inside it close on their own Escape or outside click
+  without closing the popover. A button that needs its own look (a badge, a live value) sets
+  \`component\` **and** \`popover\`: the component is the button and gets \`popoverOpen\` and
+  \`togglePopover\` (its \`onClick\`), typed \`SlotProps<'header.item'> & PopoverButtonScope\`.
+- Code with no UI that runs while AYON is open (a timer's state, websocket listeners, a store
+  listener) is an \`appService\`: a component that returns \`null\`, mounted once for the whole app
+  under AYON's providers, so hooks work. Clean up in its effects.
 - Globals are imports, never context: \`useUser\`, \`useNavigate\` and the other router hooks, \`Link\`,
   \`toast\`, the layout components (\`ProjectPageLayout\`, \`Slicer\`, \`StudioPageLayout\`,
   \`ProjectList\`). Data comes from \`@ynput/ayon-frontend-shared/api\` (AYON's api and cache):

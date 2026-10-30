@@ -43,3 +43,11 @@ export const ButtonItem = ({
     />
   )
 }
+
+/** What the stage shows for an app.service: it has no UI, and runs once for the whole shell. */
+export const ServiceNote = () => (
+  <div style={{ padding: 16, color: 'var(--md-sys-color-outline)' }} data-shell-surface="service">
+    A service has no UI. It is mounted once for the whole shell, as in AYON, and keeps running while
+    you pick other contributions; a crash shows as a toast. Its context is the shell&apos;s project.
+  </div>
+)

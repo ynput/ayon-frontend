@@ -5,11 +5,14 @@ import type { MenuItemType } from '@shared/components/Menu/Menu'
 /** The slots whose contributions are buttons: header.item, projectTable.toolbarItem. */
 export type ButtonSlot = 'header.item' | 'projectTable.toolbarItem'
 
-/** What a button contribution does on click: exactly one is set (checked when the manifest loads). */
-export type ButtonAction = 'to' | 'run' | 'dialog' | 'menu' | 'component'
+/**
+ * What a button contribution does on click: exactly one is set (checked when the manifest loads),
+ * except that a `component` may be a `popover`'s button (the action is then `popover`).
+ */
+export type ButtonAction = 'to' | 'run' | 'dialog' | 'menu' | 'popover' | 'component'
 
 export const getButtonAction = (contribution: AnyContribution): ButtonAction | undefined =>
-  (['to', 'run', 'dialog', 'menu', 'component'] as const).find(
+  (['to', 'run', 'dialog', 'menu', 'popover', 'component'] as const).find(
     (action) => contribution[action] !== undefined,
   )
 

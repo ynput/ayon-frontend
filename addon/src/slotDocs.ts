@@ -14,6 +14,7 @@ export interface SlotDoc {
     | 'menu open / click'
     | 'first click (component: with the page)'
     | 'key press'
+    | 'at startup'
 }
 
 export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
@@ -76,5 +77,10 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
     helper: 'tableShortcut',
     where: "a key pressed in a cell of the project tables or the slicer, project list, lists and versions tables",
     loads: 'key press',
+  },
+  'app.service': {
+    helper: 'appService',
+    where: "nowhere: code with no UI, mounted once while AYON is open",
+    loads: 'at startup',
   },
 }
