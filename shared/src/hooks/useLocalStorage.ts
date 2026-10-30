@@ -2,10 +2,18 @@
  *
  * Features:
  *  - JSON Serializing
- *  - Also value will be updated everywhere, when value updated (via `storage` event)
+ *  - Also value will be updated everywhere, when value updated (via `storage` event for other tabs
+ *    and a keyed custom event for the current tab)
  */
 
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react'
+
+// Same-tab change notification. Carries the key so only hooks using that key react to it.
+const LOCAL_STORAGE_CHANGE_EVENT = 'ayon:local-storage-change'
+
+const notifyLocalStorageChange = (key: string) => {
+  window.dispatchEvent(new CustomEvent<string>(LOCAL_STORAGE_CHANGE_EVENT, { detail: key }))
+}
 
 const parseJSONString = (value: string | null, fallback: any = null) => {
   if (!value) return fallback
@@ -25,13 +33,13 @@ export const readLocalStorage = <T>(key: string, fallback: T): T => {
   }
 }
 
-// Write-only counterpart of useLocalStorage for non-render contexts (event handlers in hot components, plain modules). Dispatches the same storage event the hook listens to,
+// Write-only counterpart of useLocalStorage for non-render contexts (event handlers in hot components, plain modules). Dispatches the same change event the hook listens to,
 // so every mounted useLocalStorage(key) instance picks the change up.
 export const writeLocalStorage = <T>(key: string, value: T): void => {
   if (typeof window === 'undefined') return
   try {
     localStorage.setItem(key, JSON.stringify(value))
-    window.dispatchEvent(new Event('storage'))
+    notifyLocalStorageChange(key)
   } catch (e) {
     console.error(e)
   }
@@ -42,53 +50,75 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, Dispatch<S
   const defaultValueRef = useRef(defaultValue)
   defaultValueRef.current = defaultValue
 
+  // Raw stored string of the current value, used to skip updates when nothing changed
+  const rawValueRef = useRef<string | null>(null)
+
   const [value, setValue] = useState<T>(() => {
     const item = localStorage.getItem(key)
+    rawValueRef.current = item
     return parseJSONString(item, defaultValue)
   })
 
+  // Latest value, so the setter can resolve functional updates without a side effect in a state updater
+  const valueRef = useRef(value)
+  valueRef.current = value
+
   useEffect(() => {
+    const syncFromStorage = (force = false) => {
+      const currentItem = localStorage.getItem(key)
+      if (!force && currentItem === rawValueRef.current) return
+      rawValueRef.current = currentItem
+      const nextValue = parseJSONString(currentItem, defaultValueRef.current)
+      valueRef.current = nextValue
+      setValue(nextValue)
+    }
+
     // Read the latest value from localStorage whenever key changes
-    const currentItem = localStorage.getItem(key)
-    setValue(parseJSONString(currentItem, defaultValueRef.current))
+    syncFromStorage(true)
 
-    if (!currentItem) {
-      localStorage.setItem(key, JSON.stringify(defaultValueRef.current))
+    if (!rawValueRef.current) {
+      const defaultItem = JSON.stringify(defaultValueRef.current)
+      localStorage.setItem(key, defaultItem)
+      rawValueRef.current = defaultItem
     }
 
-    function handler(e: StorageEvent) {
-      // Same-tab writes dispatch a plain Event (no key); only filter real cross-tab events.
-      if (e.key && e.key !== key) return
-
-      const lsi = localStorage.getItem(key)
-      setValue(parseJSONString(lsi, defaultValueRef.current))
+    // Other tabs: native storage event (key is null when storage was cleared)
+    function storageHandler(e: StorageEvent) {
+      if (e.key !== null && e.key !== key) return
+      syncFromStorage()
     }
 
-    window.addEventListener('storage', handler)
+    // Current tab: keyed change event
+    function changeHandler(e: Event) {
+      if ((e as CustomEvent<string>).detail !== key) return
+      syncFromStorage()
+    }
+
+    window.addEventListener('storage', storageHandler)
+    window.addEventListener(LOCAL_STORAGE_CHANGE_EVENT, changeHandler)
 
     return () => {
-      window.removeEventListener('storage', handler)
+      window.removeEventListener('storage', storageHandler)
+      window.removeEventListener(LOCAL_STORAGE_CHANGE_EVENT, changeHandler)
     }
   }, [key]) // Remove defaultValue from dependencies
 
   const setValueWrap: Dispatch<SetStateAction<T>> = useCallback(
     (valueOrFn) => {
       try {
-        setValue((prevValue) => {
-          const nextValue =
-            typeof valueOrFn === 'function'
-              ? (valueOrFn as (prevState: T) => T)(prevValue)
-              : valueOrFn
+        const nextValue =
+          typeof valueOrFn === 'function'
+            ? (valueOrFn as (prevState: T) => T)(valueRef.current)
+            : valueOrFn
 
-          localStorage.setItem(key, JSON.stringify(nextValue))
-          if (typeof window !== 'undefined') {
-            // dispatch event on next tick to avoid updating other components during render
-            setTimeout(() => {
-              window.dispatchEvent(new Event('storage'))
-            }, 0)
-          }
-          return nextValue
-        })
+        const nextItem = JSON.stringify(nextValue)
+        valueRef.current = nextValue
+        rawValueRef.current = nextItem
+        setValue(nextValue)
+
+        localStorage.setItem(key, nextItem)
+        // notify on next tick to avoid updating other components during render
+        setTimeout(() => notifyLocalStorageChange(key), 0)
       } catch (e) {
         console.error(e)
       }
