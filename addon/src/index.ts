@@ -79,7 +79,7 @@ export type { ContributionsResult } from './registry'
 export { ContributionView, ContributionErrorBoundary } from './ContributionView'
 export type { ContributionViewProps } from './ContributionView'
 export { prefetchPiece, runContribution } from './pieces'
-export { refreshTableColumn } from './tableColumns'
+export { refreshTableColumn, addonColumnId, ADDON_COLUMN_PREFIX } from './tableColumns'
 
 // layout: the host's slicer and project list, placed by the addon
 export { ProjectList, ProjectPageLayout, Slicer, StudioPageLayout } from './layout'

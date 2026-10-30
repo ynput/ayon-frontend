@@ -127,6 +127,30 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   with \`dispatch\` from this package (AYON's store).
 - A crash stays inside the contribution: AYON wraps each one in an error boundary (menu items: a toast).
 
+## Table column ids
+
+A \`tableColumn\` contribution shows up in the project tables as \`addon__<addon>__<id>\`: the addon's
+name (anything but letters and digits becomes \`_\`), then the contribution's id. Columns are hidden
+until the user adds them in Customize. Build the id with \`addonColumnId(addon, id)\` (\`ADDON_COLUMN_PREFIX\`
+is the \`addon__\` part) in tests and saved views; do not write it out by hand.
+
+## Common errors
+
+Look in the browser console first: every message starts with \`[addon <name>]\`.
+
+| You see | Cause |
+|---|---|
+| nothing at all, the contribution is missing | The addon's server version with that frontend is not installed or enabled, or the manifest is not listed in the server's \`frontend_modules\`. With \`?addonDev=\`, see "Developing inside AYON" in \`@ynput/ayon-addon-dev\`'s \`AGENTS.md\` |
+| \`skipped contribution "x": this AYON version has no such slot\` | The slot is newer than the AYON you run (\`ayon-addon slots\` lists the installed package's). The rest of the addon works |
+| \`skipped contribution "x" (slot): invalid id …\` / \`missing …\` / \`invalid <field> …\` | The description breaks the slot's rules. \`ayon-addon check\` prints the same reasons without AYON |
+| \`… must be a loader: () => import('./File')\` | A piece is a component or a static import. Pieces are dynamic imports of local files |
+| \`duplicate id in slot "…"\` | Ids are unique within a slot, across the whole addon |
+| \`page "x" (project.page) is not shown: …\` | The page id or \`viewType\` is one AYON, a legacy page or an earlier addon page already uses |
+| \`useSlot(…) was called in a component rendered in slot '…'\` or \`… outside any addon slot\` | The component is used in a slot you did not name: \`useSlot(['a', 'b'])\` names every slot it is used in. Outside a slot it has no context at all |
+| \`the file has no default export\` / \`"run" has no default export function\` | A piece's file must \`export default\` its component or function |
+| \`x (addon): <message>\` toast, and \`[addon <name>] … failed\` in the console | A \`run\`, \`menu\` or dialog piece threw. \`… crashed\` is a component that threw while rendering: it stays inside its own area |
+| \`<name> is not available in this AYON frontend\` | A layout component or picker this AYON version does not provide; update AYON or the SDK |
+
 ## Slots
 
 ${slotSections}

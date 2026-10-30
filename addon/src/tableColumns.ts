@@ -19,3 +19,14 @@ export const onTableColumnRefresh = (listener: RefreshListener) => {
     listeners.delete(listener)
   }
 }
+
+/** Every addon column id in the host's tables starts with this (the column is hidden by default). */
+export const ADDON_COLUMN_PREFIX = 'addon__'
+
+/**
+ * The id of an addon's column in the host's tables, `addon__<addon>__<id>`: what the Customize
+ * panel, saved views and tests refer to. `addon` is the addon's name (anything but letters and
+ * digits becomes `_`), `id` the `tableColumn` contribution's id.
+ */
+export const addonColumnId = (addon: string, id: string) =>
+  `${ADDON_COLUMN_PREFIX}${addon.replace(/[^A-Za-z0-9]/g, '_')}__${id}`
