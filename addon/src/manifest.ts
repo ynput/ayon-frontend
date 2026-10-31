@@ -6,6 +6,7 @@
 export { contribute, defineAddon } from './contributions'
 export type { AddonManifest, ContributionFields, ContributionInput } from './contributions'
 export {
+  appService,
   detailsPanelMenuItem,
   detailsPanelTab,
   entityMenuItem,

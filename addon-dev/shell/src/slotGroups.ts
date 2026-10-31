@@ -21,6 +21,11 @@ export const SLOT_AREAS: SlotArea[] = [
     sections: [{ slots: [{ slot: 'header.item', label: 'Items' }] }],
   },
   {
+    label: 'Background (no UI)',
+    icon: 'memory',
+    sections: [{ slots: [{ slot: 'app.service', label: 'Services' }] }],
+  },
+  {
     label: 'Studio',
     icon: 'home',
     sections: [

@@ -1,5 +1,5 @@
 // what the developer panel asks for, per slot
-const NO_PROJECT: string[] = ['studio.page', 'header.item', 'projectList.menuItem']
+const NO_PROJECT: string[] = ['studio.page', 'header.item', 'projectList.menuItem', 'app.service']
 const PROJECTS: string[] = ['studio.page', 'projectList.menuItem']
 const ENTITIES: string[] = [
   'detailsPanel.tab',

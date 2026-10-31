@@ -20,9 +20,18 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   `useSlot('<slot>')` (or a list of slots). It throws when rendered in another slot.
 - Menu items have a `run` piece: a function that gets the context (`SlotContext<'<slot>'>`) on click.
 - Header and toolbar items set exactly one action: `to` (navigate), `run`, `dialog` (AYON opens
-  its dialog around your content, which gets `close`), `menu` (a function returning the items) or
+  its dialog around your content, which gets `close`), `menu` (a function returning the items),
+  `popover` (AYON opens a popover under the button with your content, which gets `close`) or
   `component` (your own JSX instead of AYON's button). Their code gets `navigate` in the context.
-- Globals are imports, never context: `useNavigate` and the other router hooks, `Link`,
+- A popover is AYON's: it positions it and closes it on a click outside or Escape. Don't build your
+  own overlay. Menus and dialogs opened from inside it close on their own Escape or outside click
+  without closing the popover. A button that needs its own look (a badge, a live value) sets
+  `component` **and** `popover`: the component is the button and gets `popoverOpen` and
+  `togglePopover` (its `onClick`), typed `SlotProps<'header.item'> & PopoverButtonScope`.
+- Code with no UI that runs while AYON is open (a timer's state, websocket listeners, a store
+  listener) is an `appService`: a component that returns `null`, mounted once for the whole app
+  under AYON's providers, so hooks work. Clean up in its effects.
+- Globals are imports, never context: `useUser`, `useNavigate` and the other router hooks, `Link`,
   `toast`, the layout components (`ProjectPageLayout`, `Slicer`, `StudioPageLayout`,
   `ProjectList`), `MoreMenu` (below). Data comes from `@ynput/ayon-frontend-shared/api`
   (AYON's api and cache): components use its hooks, `run` and `menu` pieces
@@ -143,7 +152,7 @@ Pieces: `component`.
 
 ### `header.item`: `headerItem`
 
-A button in the main header, drawn by the host like its own buttons. What a click does is the addon's: navigate (`to`), run code (`run`), open a dialog (`dialog`) or a menu (`menu`); or the addon draws the item itself (`component`, loaded with the header). Set exactly one. Loads: first click (component: with the page).
+A button in the main header, drawn by the host like its own buttons. What a click does is the addon's: navigate (`to`), run code (`run`), open a dialog (`dialog`), a menu (`menu`) or a popover (`popover`); or the addon draws the item itself (`component`, loaded with the header). Set exactly one, except that `component` may draw the button of a `popover`. Loads: first click (component: with the page).
 
 | Description field | Type | |
 |---|---|---|
@@ -164,7 +173,7 @@ A button in the main header, drawn by the host like its own buttons. What a clic
 | `projectName` (required) | `string \| null` | the project whose page is open, else `null` |
 | `navigate` (required) | `(to: string) => void` | goes to an AYON URL, e.g. `navigate('/dashboard/comments')` |
 
-Pieces: `run` (optional), `dialog` (optional), `menu` (optional), `component` (optional).
+Pieces: `run` (optional), `dialog` (optional), `menu` (optional), `popover` (optional), `component` (optional).
 
 ### `detailsPanel.tab`: `detailsPanelTab`
 
@@ -287,7 +296,7 @@ Pieces: `run`.
 
 ### `projectTable.toolbarItem`: `projectTableToolbarItem`
 
-A button in the project tables' toolbar, before Customize (Overview, Products, Lists), drawn by the host like the toolbar's own. What a click does is the addon's: navigate (`to`), run code (`run`), open a dialog (`dialog`) or a menu (`menu`); or the addon draws the item itself (`component`, loaded with the toolbar). Set exactly one. Loads: first click (component: with the page).
+A button in the project tables' toolbar, before Customize (Overview, Products, Lists), drawn by the host like the toolbar's own. What a click does is the addon's: navigate (`to`), run code (`run`), open a dialog (`dialog`), a menu (`menu`) or a popover (`popover`); or the addon draws the item itself (`component`, loaded with the toolbar). Set exactly one, except that `component` may draw the button of a `popover`. Loads: first click (component: with the page).
 
 | Description field | Type | |
 |---|---|---|
@@ -309,7 +318,7 @@ A button in the project tables' toolbar, before Customize (Overview, Products, L
 | `projectName` (required) | `string` |  |
 | `navigate` (required) | `(to: string) => void` | goes to an AYON URL, e.g. `navigate('/dashboard/comments')` |
 
-Pieces: `run` (optional), `dialog` (optional), `menu` (optional), `component` (optional).
+Pieces: `run` (optional), `dialog` (optional), `menu` (optional), `popover` (optional), `component` (optional).
 
 ### `projectTable.customizeSection`: `projectTableCustomizeSection`
 
@@ -382,3 +391,19 @@ A keyboard shortcut on the cells of AYON's tables: the project tables (Overview,
 | `cells` (required) | `{ rowId: string; columnId: string; }[]` | project tables: the selected cells, by row (entity) and column id; empty elsewhere |
 
 Pieces: `run` (optional), `dialog` (optional).
+
+### `app.service`: `appService`
+
+Code with no UI that runs while AYON is open, whatever the page: keeping a state, listening to websocket events, registering a store listener. `component` loads at startup and is mounted once for the whole app, under AYON's providers (store, router, contexts), so it can use hooks; it renders nothing (`return null`). Clean up in its effects. A crash unmounts it and shows a toast; the rest of AYON keeps working. Loads: at startup.
+
+| Description field | Type | |
+|---|---|---|
+| `id` (required) | `string` | unique among the addon's services |
+
+| Context (props, `useSlot`) | Type | |
+|---|---|---|
+| `slot` (required) | `'app.service'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
+| `projectName` (required) | `string \| null` | the project whose page is open, else `null` |
+
+Pieces: `component`.

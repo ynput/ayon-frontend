@@ -19,6 +19,10 @@ interface MenuContainerProps {
   targetId?: string
   align?: AlignType
   theme?: ThemeType
+  /** open state kept by the caller instead of the app's one open menu (`menuOpen === id`) */
+  isOpen?: boolean
+  /** with `isOpen`: called to close it (`onClose` stays the dialog's own event) */
+  onDismiss?: () => void
   children: ReactNode
   [key: string]: any
 }
@@ -29,14 +33,17 @@ export const MenuContainer: React.FC<MenuContainerProps> = ({
   targetId = '',
   align = 'right',
   theme = 'light',
+  isOpen: isOpenProp,
+  onDismiss,
   children,
   ...props
 }) => {
   const { menuOpen, setMenuOpen, navigate } = useMenuContext()
-  const isOpen = menuOpen === id
+  const isOpen = isOpenProp ?? menuOpen === id
 
   const handleClose = () => {
-    setMenuOpen(false)
+    if (isOpenProp !== undefined) onDismiss?.()
+    else setMenuOpen(false)
   }
 
   const handleNavigate = (path?: string) => {
@@ -108,9 +115,10 @@ const MenuInner: React.FC<MenuInnerProps> = ({
     focusTarget?.focus()
   }
 
-  // Click outside handling
+  // Click outside handling: on this menu's backdrop, not on one of a menu opened from inside it
+  // (its click still bubbles here through the React tree)
   const handleOnClick = (e: React.MouseEvent<HTMLDialogElement>) => {
-    if ((e.target as HTMLElement).id === MENU_PORTAL_DIALOG_ID) handleClose()
+    if (e.target === e.currentTarget) handleClose()
   }
 
   // Attach props to children

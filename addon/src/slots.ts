@@ -52,8 +52,9 @@ export interface SlotMap {
   }
   /**
    * A button in the main header, drawn by the host like its own buttons. What a click does is the
-   * addon's: navigate (`to`), run code (`run`), open a dialog (`dialog`) or a menu (`menu`); or the
-   * addon draws the item itself (`component`, loaded with the header). Set exactly one.
+   * addon's: navigate (`to`), run code (`run`), open a dialog (`dialog`), a menu (`menu`) or a
+   * popover (`popover`); or the addon draws the item itself (`component`, loaded with the header).
+   * Set exactly one, except that `component` may draw the button of a `popover`.
    */
   'header.item': {
     version: 1
@@ -114,8 +115,9 @@ export interface SlotMap {
   /**
    * A button in the project tables' toolbar, before Customize (Overview, Products, Lists), drawn
    * by the host like the toolbar's own. What a click does is the addon's: navigate (`to`), run code
-   * (`run`), open a dialog (`dialog`) or a menu (`menu`); or the addon draws the item itself
-   * (`component`, loaded with the toolbar). Set exactly one.
+   * (`run`), open a dialog (`dialog`), a menu (`menu`) or a popover (`popover`); or the addon draws
+   * the item itself (`component`, loaded with the toolbar). Set exactly one, except that
+   * `component` may draw the button of a `popover`.
    */
   'projectTable.toolbarItem': {
     version: 1
@@ -164,6 +166,19 @@ export interface SlotMap {
     context: TableShortcutContext
     pieces: TableShortcutPieces
   }
+  /**
+   * Code with no UI that runs while AYON is open, whatever the page: keeping a state, listening to
+   * websocket events, registering a store listener. `component` loads at startup and is mounted
+   * once for the whole app, under AYON's providers (store, router, contexts), so it can use hooks;
+   * it renders nothing (`return null`). Clean up in its effects. A crash unmounts it and shows a
+   * toast; the rest of AYON keeps working.
+   */
+  'app.service': {
+    version: 1
+    meta: AppServiceMeta
+    context: AppServiceContext
+    pieces: { component: Loader<ComponentType<SlotProps<'app.service'>>> }
+  }
 }
 
 /** Description fields of a button the host draws (header and toolbar items). */
@@ -190,6 +205,23 @@ export interface ButtonScope {
 export interface DialogScope {
   /** closes the dialog */
   close: () => void
+}
+
+/** What a `popover` piece gets besides the slot context. */
+export interface PopoverScope {
+  /** closes the popover */
+  close: () => void
+}
+
+/**
+ * What a `component` gets besides the slot context when it draws the button of a `popover`. The
+ * host anchors the popover on the component's box.
+ */
+export interface PopoverButtonScope {
+  /** the popover is open: show the button as active (`aria-expanded`) */
+  popoverOpen: boolean
+  /** opens or closes the popover: the button's `onClick` */
+  togglePopover: () => void
 }
 
 /** An entry of a button's `menu`. */
@@ -227,8 +259,20 @@ export interface ButtonPieces<S extends SlotName> {
   dialog?: Loader<ComponentType<SlotProps<S> & DialogScope>>
   /** the items of a menu the host opens under the button, like the header's help menu */
   menu?: Loader<MenuPiece<S>>
-  /** the addon's own component instead of the host's button: a dropdown, a toggle, anything */
-  component?: Loader<ComponentType<SlotProps<S>>>
+  /**
+   * the content of a popover the host opens under the button, like the header's menus: the host
+   * positions it and closes it on a click outside or Escape (an Escape or click inside a menu or
+   * dialog opened from the popover closes only that). It gets `close`
+   */
+  popover?: Loader<ComponentType<SlotProps<S> & PopoverScope>>
+  /**
+   * the addon's own component instead of the host's button: a dropdown, a toggle, anything. With
+   * `popover`, it is the popover's button (its icon, a badge, a tooltip of its own) and gets
+   * `popoverOpen` and `togglePopover`
+   */
+  component?:
+    | Loader<ComponentType<SlotProps<S>>>
+    | Loader<ComponentType<SlotProps<S> & PopoverButtonScope>>
 }
 
 /** Description of a `header.item` contribution. */
@@ -515,6 +559,18 @@ export interface ProjectTableToolbarItemContext extends ProjectNameScope, Button
   list?: { id: string; label: string; entityType: string }
 }
 
+/** Description of an `app.service` contribution. */
+export interface AppServiceMeta {
+  /** unique among the addon's services */
+  id: string
+}
+
+/** Context of a service. */
+export interface AppServiceContext {
+  /** the project whose page is open, else `null` */
+  projectName: string | null
+}
+
 /** Description of a `projectTable.customizeSection` contribution. */
 export interface ProjectTableCustomizeSectionMeta {
   /** unique among the addon's sections */
@@ -572,16 +628,18 @@ const VIEW_TYPE_PATTERN = /^[a-zA-Z0-9_]([a-zA-Z0-9_.-]*[a-zA-Z0-9_])?$/
 const pageFields = { access: /^(manager|admin)$/, viewType: VIEW_TYPE_PATTERN }
 const menuItemFields = { position: /^(top|bottom)$/ }
 
-// header and toolbar items: exactly one action, and an icon unless the addon draws the item
-const BUTTON_ACTIONS = ['to', 'run', 'dialog', 'menu', 'component'] as const
-const buttonPieces = ['run', 'dialog', 'menu', 'component']
+// header and toolbar items: exactly one action (a `component` may be a popover's button), and an
+// icon unless the addon draws the item
+const BUTTON_ACTIONS = ['to', 'run', 'dialog', 'menu', 'popover', 'component'] as const
+const buttonPieces = ['run', 'dialog', 'menu', 'popover', 'component']
 const buttonFields = { to: /^\//, dialogSize: /^(sm|md|lg|full)$/ }
 const checkButton = (item: Readonly<Record<string, unknown>>) => {
   const actions = BUTTON_ACTIONS.filter((action) => item[action] !== undefined)
-  if (actions.length !== 1) {
+  const clicks = item.popover !== undefined ? actions.filter((action) => action !== 'component') : actions
+  if (clicks.length !== 1) {
     return `set exactly one of ${BUTTON_ACTIONS.join(', ')} (it has ${actions.join(', ') || 'none'})`
   }
-  if (actions[0] !== 'component' && typeof item.icon !== 'string') return 'missing icon'
+  if (item.component === undefined && typeof item.icon !== 'string') return 'missing icon'
 }
 
 // table shortcuts: exactly one action, and keys that parse and aren't AYON's own
@@ -662,6 +720,7 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     optional: { dialogSize: buttonFields.dialogSize },
     check: checkShortcut,
   },
+  'app.service': { version: 1, required: [], pieces: ['component'] },
 }
 
 export const isKnownSlot = (slot: unknown): slot is SlotName =>
