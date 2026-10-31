@@ -221,6 +221,35 @@ test('a table column sits in a named submenu or at the top level', () => {
   ])
 })
 
+test('a table column lists tag types or { type, id } tags, and has values to refresh', () => {
+  const column = { slot: 'tableColumn', label: 'Time logged', cell: loader, fetchValues: loader }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...column, id: 'types', providesTags: ['myaddonLog', 'task'] },
+      {
+        ...column,
+        id: 'ids',
+        providesTags: [
+          { type: 'myaddonLog', id: 'LIST' },
+          { type: 'task', id: 1 },
+        ],
+      },
+      { ...column, id: 'one', providesTags: 'myaddonLog' },
+      { ...column, id: 'blank', providesTags: [''] },
+      { ...column, id: 'noType', providesTags: [{ id: 'LIST' }] },
+      { ...column, id: 'noValues', fetchValues: undefined, providesTags: ['myaddonLog'] },
+    ],
+  })
+  expect(contributions.map((c) => c.id)).toEqual(['types', 'ids'])
+  const badTags = "providesTags must be a list of tag types or { type, id } tags, e.g. ['myaddonItem']"
+  expect(skipped.map((s) => [s.id, s.reason])).toEqual([
+    ['one', badTags],
+    ['blank', badTags],
+    ['noType', badTags],
+    ['noValues', 'providesTags needs fetchValues: the tags refresh its values'],
+  ])
+})
+
 test('a manifest without a contributes list is reported', () => {
   const { contributions, skipped } = checkManifest(addon, { default: {} }, slots)
   expect(contributions).toEqual([])

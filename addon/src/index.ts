@@ -42,6 +42,7 @@ export type {
   TableColumnFetch,
   TableColumnFetchArgs,
   TableColumnMeta,
+  TableColumnTag,
   ShortcutTable,
   TableRowRef,
   TableShortcutContext,
@@ -93,6 +94,10 @@ export type {
   SlicerProps,
   StudioPageLayoutProps,
 } from './layout'
+
+// AYON's menu under a button, for an addon's own "more" actions
+export { MoreMenu } from './MoreMenu'
+export type { MoreMenuProps } from './MoreMenu'
 
 // globals: the same in every slot
 export { dispatch, useUser } from './globals'

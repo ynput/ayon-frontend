@@ -11,7 +11,11 @@ import {
   useGetProjectFoldersQuery,
   usersApi,
 } from '@ynput/ayon-frontend-shared/api'
-import { ProjectPageLayoutHost, SlicerHost } from '@ynput/ayon-frontend-shared/components'
+import {
+  AddonMoreMenu,
+  ProjectPageLayoutHost,
+  SlicerHost,
+} from '@ynput/ayon-frontend-shared/components'
 import { useGlobalContext, useMenuContext, usePowerpack } from '@ynput/ayon-frontend-shared/context'
 import {
   buildProjectsTableData,
@@ -165,6 +169,7 @@ export const provideShellHost = () =>
       Slicer: SlicerHost,
       StudioPageLayout,
       ProjectList,
+      MoreMenu: AddonMoreMenu,
     },
   })
 

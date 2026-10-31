@@ -123,9 +123,9 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   \`component\` (your own JSX instead of AYON's button). Their code gets \`navigate\` in the context.
 - Globals are imports, never context: \`useNavigate\` and the other router hooks, \`Link\`,
   \`toast\`, the layout components (\`ProjectPageLayout\`, \`Slicer\`, \`StudioPageLayout\`,
-  \`ProjectList\`). Data comes from \`@ynput/ayon-frontend-shared/api\` (AYON's api and cache):
-  components use its hooks, \`run\` and \`menu\` pieces \`dispatch(api.endpoints.x.initiate(args))\`
-  with \`dispatch\` from this package (AYON's store).
+  \`ProjectList\`), \`MoreMenu\` (below). Data comes from \`@ynput/ayon-frontend-shared/api\`
+  (AYON's api and cache): components use its hooks, \`run\` and \`menu\` pieces
+  \`dispatch(api.endpoints.x.initiate(args))\` with \`dispatch\` from this package (AYON's store).
 - Links to an entity come from \`entityUrl(entity, { activity? })\`, never a hand-built URL: the page
   that opens it with its details panel (folders and tasks on Overview; products, versions and
   representations on Products), \`undefined\` for types without a page (e.g. \`workfile\`).
@@ -137,7 +137,45 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   <Link to={entityUrl(entity) ?? ''}>{entity.label}</Link>
   navigateToEntity({ projectName, entityType: 'task', id: log.taskId })
   \`\`\`
+- Endpoints you inject and tag types you add (\`enhanceEndpoints({ addTagTypes })\`) go into AYON's
+  one api, where names are global: prefix them with your addon name (\`myaddonGetLogs\`,
+  \`myaddonLog\`). A \`tableColumn\` lists the tags its values depend on in \`providesTags\`
+  (yours or AYON's, such as \`task\`) and refreshes when one is invalidated.
 - A crash stays inside the contribution: AYON wraps each one in an error boundary (menu items: a toast).
+
+## A "more" menu: \`MoreMenu\`
+
+An addon's own menu (a panel's "…" actions, a row's options) is AYON's menu under a button, from
+one component. Don't build one: \`MoreMenu\` looks and works like AYON's menus everywhere (pages,
+details panel tabs, popovers, dialogs, the dev shell).
+
+\`\`\`tsx
+import { MoreMenu } from '@ynput/ayon-addon'
+
+<MoreMenu
+  data-testid="tracker-more"
+  items={[
+    { id: 'add', label: 'Add time manually', icon: 'more_time', onClick: () => setAdding(true) },
+    { id: 'export', label: 'Export', icon: 'download', items: [
+      { id: 'csv', label: 'CSV', onClick: exportCsv },
+    ] },
+    { divider: true },
+    { id: 'delete', label: 'Delete', icon: 'delete', danger: true, disabled: !selected, onClick: remove },
+  ]}
+/>
+\`\`\`
+
+- Items are the \`AddonMenuItem\`s a \`menu\` piece returns: \`onClick\`, \`to\` (an AYON URL), \`href\`
+  (a new tab), \`items\` (a submenu), \`{ divider: true }\`, \`disabled\`, \`selected\`, \`danger\`. A
+  failing \`onClick\` (also a rejected promise) is shown as a toast naming the addon.
+- The button: \`icon\` (\`more_horiz\` when not set), \`label\` (next to the icon), \`tooltip\` (the label,
+  or \`More\`, when not set; also the accessible name), \`variant\` (\`text\` by default, as AYON's
+  \`Button\`), \`align\` (the menu's edge on the button's: \`right\` by default), \`disabled\`,
+  \`className\`, \`data-testid\`.
+- Escape and a click outside close only the menu: the popover or dialog it is in stays open, and
+  Escape puts the focus back on the button. Keys as in AYON's menus: Tab moves through the items,
+  Enter picks one or opens its submenu, Escape closes the submenu first.
+- In tests the items are \`listitem\`s (\`getByRole('listitem', { name: 'Delete' })\`), not \`menuitem\`s.
 
 ## Slot contexts: one shape
 

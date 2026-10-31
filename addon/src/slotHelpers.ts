@@ -41,7 +41,11 @@ export const projectTableCustomizeSection = (
   section: ContributionFields<'projectTable.customizeSection'>,
 ) => contribute('projectTable.customizeSection', section)
 
-/** A read-only column in the project tables. */
+/**
+ * A read-only column in the project tables. Its values come from `fetchValues`; list the cache
+ * tags they depend on in `providesTags` and invalidating one (your mutations' `invalidatesTags`,
+ * or AYON's) fetches them again, with no `refreshTableColumn` call.
+ */
 export const tableColumn = (column: ContributionFields<'tableColumn'>) =>
   contribute('tableColumn', column)
 

@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import store, { useAppSelector } from '@state/store'
 import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
+import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
 import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
 
 // The host's implementations of what @ynput/ayon-addon exports but can't build itself
@@ -42,6 +43,7 @@ export const provideAddonHost = () =>
       Slicer: SlicerHost,
       StudioPageLayout: StudioPageLayoutHost,
       ProjectList: ProjectListHost,
+      MoreMenu: AddonMoreMenu,
     },
   })
 

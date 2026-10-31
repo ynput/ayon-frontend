@@ -85,7 +85,7 @@ export const AddonButton = <S extends ButtonSlot>({
           )
         })
         .then((items) => {
-          setMenuItems(toMenuItems(items, any))
+          setMenuItems(toMenuItems(items, (error) => reportContributionError(any, error)))
           toggleMenuOpen(menuId)
         })
         .catch((error) => reportContributionError(any, error))
