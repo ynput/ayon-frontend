@@ -24,6 +24,8 @@ export type {
   ButtonPieces,
   ButtonScope,
   DialogScope,
+  PopoverScope,
+  PopoverButtonScope,
   MenuPiece,
   RunPiece,
   ListMenuItemMeta,
@@ -42,11 +44,14 @@ export type {
   TableColumnFetch,
   TableColumnFetchArgs,
   TableColumnMeta,
+  TableColumnTag,
   ShortcutTable,
   TableRowRef,
   TableShortcutContext,
   TableShortcutMeta,
   TableShortcutPieces,
+  AppServiceContext,
+  AppServiceMeta,
 } from './slots'
 export type {
   Access,
@@ -82,6 +87,8 @@ export { ContributionView, ContributionErrorBoundary } from './ContributionView'
 export type { ContributionViewProps } from './ContributionView'
 export { prefetchPiece, runContribution } from './pieces'
 export { refreshTableColumn } from './tableColumns'
+export { entityUrl, navigateToEntity } from './entityLinks'
+export type { EntityLinkRef, EntityUrlOptions } from './entityLinks'
 
 // layout: the host's slicer and project list, placed by the addon
 export { ProjectList, ProjectPageLayout, Slicer, StudioPageLayout } from './layout'
@@ -95,6 +102,9 @@ export type {
 // AYON's entity picker, usable anywhere
 export { EntityPicker } from './EntityPicker'
 export type { EntityPickerProps, PickableEntityType } from './EntityPicker'
+// AYON's menu under a button, for an addon's own "more" actions
+export { MoreMenu } from './MoreMenu'
+export type { MoreMenuProps } from './MoreMenu'
 
 // globals: the same in every slot
 export { dispatch, useUser } from './globals'

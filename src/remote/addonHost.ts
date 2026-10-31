@@ -1,9 +1,11 @@
 import { provideHost } from '@ynput/ayon-addon/host'
 import type { AddonUser } from '@ynput/ayon-addon'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import store, { useAppSelector } from '@state/store'
 import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
+import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
 import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
 
 // The host's implementations of what @ynput/ayon-addon exports but can't build itself
@@ -43,5 +45,13 @@ export const provideAddonHost = () =>
       StudioPageLayout: StudioPageLayoutHost,
       ProjectList: ProjectListHost,
       EntityPicker: AddonEntityPicker,
+      MoreMenu: AddonMoreMenu,
     },
   })
+
+// Gives the package the router's navigate (navigateToEntity). Render it inside <BrowserRouter>.
+export const AddonHostNavigation = () => {
+  const navigate = useNavigate()
+  useEffect(() => provideHost({ navigate: (to) => navigate(to) }), [navigate])
+  return null
+}

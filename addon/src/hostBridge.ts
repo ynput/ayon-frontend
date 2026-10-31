@@ -6,6 +6,7 @@ import type {
   StudioPageLayoutProps,
 } from './layout'
 import type { EntityPickerProps } from './EntityPicker'
+import type { HostMoreMenuProps } from './MoreMenu'
 import type { AddonUser } from './scopes'
 
 export type { AddonUser }
@@ -24,7 +25,7 @@ export interface AddonDispatch {
   <A extends { type: string }>(action: A): A
 }
 
-/** The host's implementations of the layout components and the entity picker. */
+/** The host's implementations of the layout components, the entity picker and the menu button. */
 export interface HostComponents {
   ProjectPageLayout: ComponentType<ProjectPageLayoutProps>
   Slicer: ComponentType<SlicerProps>
@@ -32,6 +33,8 @@ export interface HostComponents {
   ProjectList: ComponentType<ProjectListProps>
   /** AYON's entity picker, with the project's providers it needs (`EntityPicker`) */
   EntityPicker: ComponentType<EntityPickerProps>
+  /** AYON's menu under a button (`MoreMenu`) */
+  MoreMenu: ComponentType<HostMoreMenuProps>
 }
 
 export interface HostImplementation {
@@ -40,6 +43,8 @@ export interface HostImplementation {
   getUser?: () => AddonUser | undefined
   /** the dispatch of the host's store */
   dispatch?: AddonDispatch
+  /** goes to an AYON URL without reloading the page (`navigateToEntity`) */
+  navigate?: (to: string) => void
   components?: Partial<HostComponents>
 }
 

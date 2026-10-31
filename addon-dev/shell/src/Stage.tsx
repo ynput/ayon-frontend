@@ -36,7 +36,7 @@ import {
 } from '@ynput/ayon-frontend-shared/components'
 import { StudioSelectionProvider } from './host'
 import { needsProject } from './slotNeeds'
-import { ButtonItem } from './parts'
+import { ButtonItem, ServiceNote } from './parts'
 import { PreviewStage } from './PreviewStage'
 import { ShellTable } from './ShellTable'
 import { setStage } from './status'
@@ -190,6 +190,13 @@ const StudioPageStage = ({ contribution, selection, onChange }: StageProps & { o
       </StudioSelectionProvider>
     </ViewsProvider>
   )
+}
+
+// app.service: mounted once by the shell (Shell.tsx), not per selection; the stage only says so
+const ServiceStage = ({ contribution, selection }: StageProps) => {
+  const context = useMemo(() => ({ projectName: selection.projectName ?? null }), [selection.projectName])
+  useReport(contribution, context, true)
+  return <ServiceNote />
 }
 
 // header.item: left after the dashboard button, right before chat and inbox
@@ -519,6 +526,8 @@ export const Stage = ({
       case 'projectTable.toolbarItem':
       case 'projectTable.customizeSection':
         return <TableStage {...props} />
+      case 'app.service':
+        return <ServiceStage {...props} />
       default:
         return <Hint>The shell has no stage for {contribution.slot} yet.</Hint>
     }

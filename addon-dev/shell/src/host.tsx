@@ -13,6 +13,7 @@ import {
 } from '@ynput/ayon-frontend-shared/api'
 import {
   AddonEntityPicker,
+  AddonMoreMenu,
   ProjectPageLayoutHost,
   SlicerHost,
 } from '@ynput/ayon-frontend-shared/components'
@@ -170,6 +171,7 @@ export const provideShellHost = () =>
       StudioPageLayout,
       ProjectList,
       EntityPicker: AddonEntityPicker,
+      MoreMenu: AddonMoreMenu,
     },
   })
 
