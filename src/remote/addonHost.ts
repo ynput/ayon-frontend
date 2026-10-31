@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import store, { useAppSelector } from '@state/store'
 import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
+import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
 import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
 
@@ -43,6 +44,7 @@ export const provideAddonHost = () =>
       Slicer: SlicerHost,
       StudioPageLayout: StudioPageLayoutHost,
       ProjectList: ProjectListHost,
+      EntityPicker: AddonEntityPicker,
       MoreMenu: AddonMoreMenu,
     },
   })

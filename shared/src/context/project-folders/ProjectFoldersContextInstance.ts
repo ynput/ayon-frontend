@@ -12,3 +12,6 @@ export const useProjectFoldersContext = () => {
   }
   return context
 }
+
+// non-throwing variant: returns undefined when no ProjectFoldersContextProvider is mounted
+export const useOptionalProjectFoldersContext = () => useContext(ProjectFoldersContext)

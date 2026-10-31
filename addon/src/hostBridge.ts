@@ -5,6 +5,7 @@ import type {
   SlicerProps,
   StudioPageLayoutProps,
 } from './layout'
+import type { EntityPickerProps } from './EntityPicker'
 import type { HostMoreMenuProps } from './MoreMenu'
 import type { AddonUser } from './scopes'
 
@@ -24,12 +25,14 @@ export interface AddonDispatch {
   <A extends { type: string }>(action: A): A
 }
 
-/** The host's implementations of the layout components and the menu button. */
+/** The host's implementations of the layout components, the entity picker and the menu button. */
 export interface HostComponents {
   ProjectPageLayout: ComponentType<ProjectPageLayoutProps>
   Slicer: ComponentType<SlicerProps>
   StudioPageLayout: ComponentType<StudioPageLayoutProps>
   ProjectList: ComponentType<ProjectListProps>
+  /** AYON's entity picker, with the project's providers it needs (`EntityPicker`) */
+  EntityPicker: ComponentType<EntityPickerProps>
   /** AYON's menu under a button (`MoreMenu`) */
   MoreMenu: ComponentType<HostMoreMenuProps>
 }

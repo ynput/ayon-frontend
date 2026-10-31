@@ -99,6 +99,9 @@ export type {
   StudioPageLayoutProps,
 } from './layout'
 
+// AYON's entity picker, usable anywhere
+export { EntityPicker } from './EntityPicker'
+export type { EntityPickerProps, PickableEntityType } from './EntityPicker'
 // AYON's menu under a button, for an addon's own "more" actions
 export { MoreMenu } from './MoreMenu'
 export type { MoreMenuProps } from './MoreMenu'

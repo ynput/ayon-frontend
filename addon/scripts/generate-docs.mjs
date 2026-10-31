@@ -10,21 +10,29 @@ import { fileURLToPath } from 'url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'))
-const program = ts.createProgram(['src/index.ts', 'src/manifest.ts', 'src/check.ts'].map((f) => path.join(root, f)), {
-  strict: true,
-  skipLibCheck: true,
-  jsx: ts.JsxEmit.ReactJSX,
-  module: ts.ModuleKind.ESNext,
-  moduleResolution: ts.ModuleResolutionKind.Bundler,
-  target: ts.ScriptTarget.ESNext,
-})
+const program = ts.createProgram(
+  ['src/index.ts', 'src/manifest.ts', 'src/check.ts'].map((f) => path.join(root, f)),
+  {
+    strict: true,
+    skipLibCheck: true,
+    jsx: ts.JsxEmit.ReactJSX,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+    target: ts.ScriptTarget.ESNext,
+  },
+)
 const checker = program.getTypeChecker()
 const slotsFile = program.getSourceFile(path.join(root, 'src/slots.ts'))
 
-const doc = (symbol) => ts.displayPartsToString(symbol.getDocumentationComment(checker)).replace(/\s+/g, ' ').trim()
+const doc = (symbol) =>
+  ts.displayPartsToString(symbol.getDocumentationComment(checker)).replace(/\s+/g, ' ').trim()
 const typeText = (symbol, node) =>
   checker
-    .typeToString(checker.getTypeOfSymbolAtLocation(symbol, node), undefined, ts.TypeFormatFlags.NoTruncation)
+    .typeToString(
+      checker.getTypeOfSymbolAtLocation(symbol, node),
+      undefined,
+      ts.TypeFormatFlags.NoTruncation,
+    )
     .replace(/\s+/g, ' ')
 
 const fields = (typeNode) => {
@@ -44,7 +52,8 @@ ts.forEachChild(slotDocsFile, function visit(node) {
   if (ts.isVariableDeclaration(node) && node.name.getText() === 'SLOT_DOCS') {
     for (const prop of node.initializer.properties) {
       const entry = {}
-      for (const field of prop.initializer.properties) entry[field.name.getText()] = field.initializer.text
+      for (const field of prop.initializer.properties)
+        entry[field.name.getText()] = field.initializer.text
       slotDocs[prop.name.text ?? prop.name.getText()] = entry
     }
   }
@@ -80,7 +89,12 @@ const table = (rows, header) =>
   [
     `| ${header} | Type | |`,
     '|---|---|---|',
-    ...rows.map((f) => `| \`${f.name}\`${f.optional ? '' : ' (required)'} | \`${cell(f.type)}\` | ${cell(f.doc)} |`),
+    ...rows.map(
+      (f) =>
+        `| \`${f.name}\`${f.optional ? '' : ' (required)'} | \`${cell(f.type)}\` | ${cell(
+          f.doc,
+        )} |`,
+    ),
   ].join('\n')
 
 const slotSections = slots
@@ -152,6 +166,40 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   (yours or AYON's, such as \`task\`) and refreshes when one is invalidated.
 - A crash stays inside the contribution: AYON wraps each one in an error boundary (menu items: a toast).
 
+## Picking entities: \`EntityPicker\`
+
+AYON's entity picker (the dialog AYON uses to link, move or pick a folder, task, product, version,
+...) from one component. It loads the project and its folders itself: render it anywhere (a header
+item, a popover, a studio page, a details panel tab) with no providers around it.
+
+\`\`\`tsx
+import { EntityPicker, type EntityRef } from '@ynput/ayon-addon'
+
+{picking && (
+  <EntityPicker
+    projectName={projectName}
+    entityType="task"
+    initialSelection={task ? [task] : undefined}
+    onClose={() => setPicking(false)}
+    onSubmit={([picked]: EntityRef[]) => {
+      setPicking(false)
+      setTask(picked) // { id, entityType: 'task', projectName, name, label }
+    }}
+  />
+)}
+\`\`\`
+
+- \`entityType\`: \`folder\`, \`task\`, \`product\`, \`version\`, \`representation\` or \`workfile\`. The
+  picker shows the types above it to narrow the list (folders, then tasks for \`task\`).
+- \`onSubmit\` gets \`EntityRef[]\`, the same shape slot contexts use (\`name\` and \`label\` when the
+  picker loaded them). One entity unless \`multiSelect\`. The picker stays open until you stop
+  rendering it: close it in \`onSubmit\` and \`onClose\`.
+- \`initialSelection\`: \`EntityRef\`s (or \`{ id, entityType }\`) selected when it opens, of
+  \`entityType\` or a type above it (a folder opens the tree at it). A slot's \`entities\` fit as they are.
+  An entity on a page the picker hasn't loaded yet stays selected until it loads, or until no page is
+  left to load it.
+- One fixed project: put your own project field next to it if the user picks the project.
+
 ## A "more" menu: \`MoreMenu\`
 
 An addon's own menu (a panel's "…" actions, a row's options) is AYON's menu under a button, from
@@ -220,6 +268,9 @@ if (process.argv.includes('--check')) {
 } else {
   writeFileSync(agentsPath, agents)
   mkdirSync(path.join(root, 'dist'), { recursive: true })
-  writeFileSync(path.join(root, 'dist/slots.json'), JSON.stringify({ version: pkg.version, slots }, null, 2))
+  writeFileSync(
+    path.join(root, 'dist/slots.json'),
+    JSON.stringify({ version: pkg.version, slots }, null, 2),
+  )
   console.log(`wrote AGENTS.md and dist/slots.json (${slots.length} slots)`)
 }

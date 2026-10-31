@@ -13,6 +13,13 @@ import { upperFirst } from 'lodash'
 import useExpandedWithInitialFolders from './hooks/useExpandedWithInitialFolders'
 import { usePreserveChildSelectionByName } from './hooks/usePreserveChildSelectionByName'
 import { useDeselectHiddenRows } from './hooks/useDeselectHiddenRows'
+import type { FolderListItem, SearchEntityLink } from '@shared/api'
+import {
+  ProjectContextProvider,
+  ProjectFoldersContextProvider,
+  useOptionalProjectContext,
+  useOptionalProjectFoldersContext,
+} from '@shared/context'
 
 const COL_MAX_WIDTH = 600
 
@@ -44,13 +51,15 @@ export type PickerEntityType =
   | 'workfile'
 export type PickerSelection = Record<PickerEntityType, RowSelectionState>
 export type PickerSearch = Record<PickerEntityType, string | undefined>
+/** a picked entity as the picker loaded it, `undefined` when it isn't loaded (a later page) */
+export type PickedEntity = SearchEntityLink | FolderListItem | undefined
 
-interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
+export interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
   projectName: string // The name of the project
   entityType: PickerEntityType // The type of entity to pick
   initialSelection?: Partial<PickerSelection> // Initial selection of entities
   isMultiSelect?: boolean // Whether to allow multiple selection
-  onSubmit: (selection: string[]) => void // Callback when the user selects an entity/entities
+  onSubmit: (selection: string[], entities: PickedEntity[]) => void // Callback with the selected ids (and their entities)
   showMoveToRoot?: boolean // Whether to show "Move to root" button
   onMoveToRoot?: () => void // Callback when user clicks "Move to root"
   disabledIds?: string[] // IDs to display as disabled/unselectable
@@ -63,7 +72,33 @@ interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
   isLoading?: boolean // Whether the submit action is loading
 }
 
-export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
+// The picker reads the project (its types) and its folders from the page's providers. Where there
+// are none, or they are another project's (the dashboard, the header, an addon), it brings its own.
+export const EntityPickerDialog: FC<EntityPickerDialogProps> = (props) => {
+  const project = useOptionalProjectContext()
+  const folders = useOptionalProjectFoldersContext()
+  const dialog = <EntityPickerDialogContent {...props} />
+
+  if (project?.projectName !== props.projectName) {
+    return (
+      <ProjectContextProvider projectName={props.projectName}>
+        <ProjectFoldersContextProvider projectName={props.projectName}>
+          {dialog}
+        </ProjectFoldersContextProvider>
+      </ProjectContextProvider>
+    )
+  }
+  if (folders?.projectName !== props.projectName) {
+    return (
+      <ProjectFoldersContextProvider projectName={props.projectName}>
+        {dialog}
+      </ProjectFoldersContextProvider>
+    )
+  }
+  return dialog
+}
+
+const EntityPickerDialogContent: FC<EntityPickerDialogProps> = ({
   projectName,
   entityType,
   initialSelection,
@@ -186,6 +221,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     entityData,
     rowSelection,
     setEntityRowSelection,
+    initialSelection,
   })
 
   // Process table data to filter out excluded IDs and mark disabled rows
@@ -228,6 +264,15 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     return tableData.map((row: any) => recursivelyProcessRows(row, effectiveDisabledIds, false))
   }
 
+  // the ids, and the picked entities from the loaded data
+  const submit = (ids: string[]) => {
+    const loaded = entityData[entityType].data
+    onSubmit(
+      ids,
+      ids.map((id) => loaded.find((entity) => entity.id === id)),
+    )
+  }
+
   const handleSubmit = () => {
     // check the target entity has a selection
     if (!entitySelection[entityType]?.length) {
@@ -237,7 +282,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
       ? entitySelection[entityType]
       : entitySelection[entityType].slice(0, 1)
     // Call the onSubmit callback with the selected entity ids
-    onSubmit(selection)
+    submit(selection)
   }
 
   //   based on the entity type, we need to create a new table for each parent
@@ -296,7 +341,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
               isFolderHierarchy={tableEntityType === 'folder' && !search.folder}
               onSearch={(v) => setEntitySearch(v, tableEntityType)}
               isMultiSelect={tableEntityType === entityType ? !!isMultiSelect : true}
-              onRowSubmit={(id) => (tableEntityType === entityType ? onSubmit([id]) : undefined)}
+              onRowSubmit={(id) => (tableEntityType === entityType ? submit([id]) : undefined)}
               onScrollBottom={() => handleFetchNextPage(tableEntityType)}
             />
           </SimpleTableProvider>
