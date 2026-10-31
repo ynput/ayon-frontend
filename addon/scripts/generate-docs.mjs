@@ -126,6 +126,17 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   \`ProjectList\`), \`MoreMenu\` (below). Data comes from \`@ynput/ayon-frontend-shared/api\`
   (AYON's api and cache): components use its hooks, \`run\` and \`menu\` pieces
   \`dispatch(api.endpoints.x.initiate(args))\` with \`dispatch\` from this package (AYON's store).
+- Links to an entity come from \`entityUrl(entity, { activity? })\`, never a hand-built URL: the page
+  that opens it with its details panel (folders and tasks on Overview; products, versions and
+  representations on Products), \`undefined\` for types without a page (e.g. \`workfile\`).
+  \`navigateToEntity(entity)\` goes there without reloading, also from \`run\` pieces; it returns
+  \`false\` for those types. Any \`EntityRef\` from a context works, the id is enough:
+
+  \`\`\`tsx
+  import { entityUrl, Link, navigateToEntity } from '@ynput/ayon-addon'
+  <Link to={entityUrl(entity) ?? ''}>{entity.label}</Link>
+  navigateToEntity({ projectName, entityType: 'task', id: log.taskId })
+  \`\`\`
 - Endpoints you inject and tag types you add (\`enhanceEndpoints({ addTagTypes })\`) go into AYON's
   one api, where names are global: prefix them with your addon name (\`myaddonGetLogs\`,
   \`myaddonLog\`). A \`tableColumn\` lists the tags its values depend on in \`providesTags\`

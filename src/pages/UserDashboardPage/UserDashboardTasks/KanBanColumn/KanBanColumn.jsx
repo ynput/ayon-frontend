@@ -11,6 +11,7 @@ import KanBanColumnDropzone from './KanBanColumnDropzone'
 import clsx from 'clsx'
 import { useScopedDetailsPanel } from '@shared/context'
 import { useNavigate } from 'react-router-dom'
+import { entityUrl } from '@ynput/ayon-addon'
 
 const KanBanColumn = forwardRef(
   (
@@ -80,7 +81,7 @@ const KanBanColumn = forwardRef(
     const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500, 'dashboard')
 
     const openInOverview = (task) => {
-      navigate(`/projects/${task.projectName}/overview?project=${task.projectName}&type=task&id=${task.id}`)
+      navigate(entityUrl({ projectName: task.projectName, entityType: 'task', id: task.id }))
     }
 
     // CONTEXT MENU
