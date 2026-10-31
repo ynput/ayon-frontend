@@ -86,7 +86,7 @@ export type { ContributionsResult } from './registry'
 export { ContributionView, ContributionErrorBoundary } from './ContributionView'
 export type { ContributionViewProps } from './ContributionView'
 export { prefetchPiece, runContribution } from './pieces'
-export { refreshTableColumn } from './tableColumns'
+export { refreshTableColumn, addonColumnId, ADDON_COLUMN_PREFIX } from './tableColumns'
 export { entityUrl, navigateToEntity } from './entityLinks'
 export type { EntityLinkRef, EntityUrlOptions } from './entityLinks'
 

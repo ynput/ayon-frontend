@@ -1,14 +1,13 @@
+import { ADDON_COLUMN_PREFIX, addonColumnId } from '@ynput/ayon-addon'
 import type { Contribution, ProjectTablePage } from '@ynput/ayon-addon'
 
 // Columns addons contribute to the project tables (tableColumn slot, @ynput/ayon-addon).
 // Their ids are prefixed so the table can tell them apart: paste skips them (ClipboardContext
 // turns any other column id into a field name), and cell ids can't hold `-`.
-export const ADDON_COLUMN_PREFIX = 'addon__'
-
 export const isAddonColumnId = (columnId: string) => columnId.startsWith(ADDON_COLUMN_PREFIX)
 
 export const getAddonColumnId = (column: Contribution<'tableColumn'>) =>
-  `${ADDON_COLUMN_PREFIX}${column.addon.name.replace(/[^A-Za-z0-9]/g, '_')}__${column.id}`
+  addonColumnId(column.addon.name, column.id)
 
 // tableColumn and entityMenuItem contributions narrow themselves to some tables with `pages`
 export const appliesToPage = (
