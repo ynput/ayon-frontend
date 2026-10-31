@@ -193,3 +193,28 @@ test('the version in src/addonVersion.ts is the one checked, and a mismatch with
   })
   expect(summary(checks)).toEqual(['server:ok', 'user:ok', 'addonVersion:warning', 'addon:ok'])
 })
+
+test('the versionModule from ayonAddon({ rest }) is checked instead of src/addonVersion.ts', async () => {
+  // src/addonVersion.ts matches package.py, the configured module is one version behind
+  const project = makeProject('0.2.0')
+  mkdirSync(path.join(project.root, 'src', 'api'), { recursive: true })
+  writeFileSync(path.join(project.root, 'src', 'api', 'version.ts'), 'export default "0.1.0";\n')
+  const fetch = fakeServer({
+    '/api/info': {},
+    '/api/users/me': serviceUser,
+    '/api/addons': installed({ '0.1.0': {} }),
+  })
+
+  const configured = await checkDevRequirements({
+    project,
+    connection,
+    versionModule: 'src/api/version.ts',
+    fetch,
+  })
+  expect(summary(configured)).toEqual(['server:ok', 'user:ok', 'addonVersion:warning', 'addon:ok'])
+  expect(configured[2].message).toContain('src/api/version.ts says 0.1.0')
+
+  // without one, the default module is read: it matches, and its version 0.2.0 is not installed
+  const defaults = await checkDevRequirements({ project, connection, fetch })
+  expect(summary(defaults)).toEqual(['server:ok', 'user:ok', 'addon:error'])
+})

@@ -10,12 +10,18 @@
 //   ayon-addon generate-rest         the addon's server endpoints as RTK Query endpoints
 import { spawn } from 'child_process'
 import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from 'fs'
-import { createServer } from 'http'
+import { createServer, type Server } from 'http'
 import path from 'path'
 import { browse, formatBrowse } from './browse.js'
 import { checkAddon, formatCheck } from './check.js'
 import { checkDevRequirements, formatChecks } from './devChecks.js'
-import { findConnection, findPackageDir, importFromProject, readAddonProject } from './project.js'
+import {
+  findConnection,
+  findPackageDir,
+  importFromProject,
+  loadProjectEnv,
+  readAddonProject,
+} from './project.js'
 import { generateRest } from './rest.js'
 import type { RestOptions } from './rest.js'
 import { STANDALONE_ENV } from './standalone.js'
@@ -31,6 +37,7 @@ const json = flag('json')
 const print = (value: unknown, text: string) => console.log(json ? JSON.stringify(value, null, 2) : text)
 
 const root = process.cwd()
+loadProjectEnv(root)
 
 const CONTENT_TYPES: Record<string, string> = {
   '.js': 'text/javascript',
@@ -47,7 +54,7 @@ const CONTENT_TYPES: Record<string, string> = {
 // serves the build with CORS: AYON (any origin, also https) loads the remote from here. `dir()` is
 // undefined until the first build: 404 until then, which the page shows and waits out.
 const serveDirectory = (dir: () => string | undefined, port: number) =>
-  new Promise<void>((resolve, reject) => {
+  new Promise<Server>((resolve, reject) => {
     const server = createServer((request, response) => {
       response.setHeader('Access-Control-Allow-Origin', '*')
       // agents' headless browsers send x-api-key on every request, which makes these preflighted
@@ -74,7 +81,7 @@ const serveDirectory = (dir: () => string | undefined, port: number) =>
           : error,
       ),
     )
-    server.listen(port, () => resolve())
+    server.listen(port, () => resolve(server))
   })
 
 // the system's browser
@@ -133,18 +140,25 @@ const dev = async () => {
   const vite = await importFromProject<typeof import('vite')>(root, 'vite')
   let built: ReturnType<typeof findDevInfo>
   // listening before the build: a page opened early waits for it instead of failing to connect
-  await serveDirectory(() => built?.dir, port)
+  const server = await serveDirectory(() => built?.dir, port)
   // what the override needs on the server, checked while the first build runs
-  const checks = checkDevRequirements({ project, connection })
+  const versionModule = (await readRestOptions().catch((): RestOptions => ({}))).versionModule
+  const checks = checkDevRequirements({ project, connection, versionModule })
   process.env.AYON_ADDON_DEV = '1'
   let served = false
-  const watcher = (await vite.build({
-    root,
-    mode: 'development',
-    build: { watch: {} },
-    logLevel: 'warn',
-  })) as unknown as {
+  let watcher: {
     on: (event: 'event', listener: (e: { code: string; error?: Error }) => void) => void
+  }
+  try {
+    watcher = (await vite.build({
+      root,
+      mode: 'development',
+      build: { watch: {} },
+      logLevel: 'warn',
+    })) as unknown as typeof watcher
+  } catch (error) {
+    server.close()
+    throw error
   }
   watcher.on('event', (event) => {
     if (event.code === 'ERROR') console.error(event.error)
@@ -292,8 +306,9 @@ const HELP = `ayon-addon: tools for AYON addon frontends (run in the addon's fro
                                their hooks, or offers to add the hooks of new endpoints
                                (--hooks: without asking). Options: ayonAddon({ rest })
 
-Sign-in: AYON_SERVER_URL and AYON_API_KEY; in the AYON dev workbench, the local stack and
-data/local-api-key.`
+Sign-in: AYON_SERVER_URL and AYON_API_KEY, from the environment or the addon's .env.local or
+.env (in a terminal, a first run walks you through .env); in the AYON dev workbench, the local
+stack and data/local-api-key.`
 
 const commands: Record<string, () => Promise<void>> = {
   dev,
@@ -309,7 +324,9 @@ if (!run) {
   process.exitCode = command && command !== 'help' ? 1 : 0
 } else {
   run().catch((error) => {
-    console.error(json ? JSON.stringify({ ok: false, error: String(error) }) : error)
+    // the message only: a setup problem needs no stack trace (--json keeps everything)
+    const message = error instanceof Error ? error.message : error
+    console.error(json ? JSON.stringify({ ok: false, error: String(error) }) : message)
     process.exitCode = 1
   })
 }

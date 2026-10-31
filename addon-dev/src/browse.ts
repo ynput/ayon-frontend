@@ -6,7 +6,7 @@ import { createRequire } from 'module'
 import path from 'path'
 import { pathToFileURL } from 'url'
 import type { ViteDevServer } from 'vite'
-import { findConnection, importFromProject } from './project.js'
+import { findConnection, importFromProject, keySetupMessage } from './project.js'
 import { STANDALONE_ENV } from './standalone.js'
 
 export interface BrowseOptions {
@@ -90,7 +90,7 @@ const startServer = async (root: string): Promise<ViteDevServer> => {
 export const browse = async (options: BrowseOptions): Promise<BrowseResult> => {
   const mode = options.fixture ? 'preview' : 'live'
   if (mode === 'live' && !options.url && !findConnection(options.root).apiKey) {
-    throw new Error('no API key for the headless browser: set AYON_API_KEY (and AYON_SERVER_URL)')
+    throw new Error(keySetupMessage(options.root))
   }
   const server = options.url ? undefined : await startServer(options.root)
   const base = options.url || server!.resolvedUrls!.local[0]

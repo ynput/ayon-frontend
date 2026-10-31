@@ -18,18 +18,18 @@ export interface DevCheck {
 interface CheckOptions {
   project: AddonProject
   connection: AyonConnection
+  /** ayonAddon({ rest: { versionModule } }), relative to the addon's frontend folder */
+  versionModule?: string
   fetch?: typeof globalThis.fetch
 }
 
-// the version the addon's frontend calls its endpoints with (src/addonVersion.ts, see generate-rest)
-export const readFrontendVersion = (root: string) => {
-  for (const file of ['src/addonVersion.ts', 'src/addonVersion.js']) {
-    const full = path.join(root, file)
-    if (!existsSync(full)) continue
-    const version = readFileSync(full, 'utf8').match(/export default\s+["']([^"']+)["']/)?.[1]
-    if (version) return { file, version }
-  }
-  return undefined
+// the version the addon's frontend calls its endpoints with: the default export of its versionModule
+// (src/addonVersion.ts unless configured, see generate-rest)
+export const readFrontendVersion = (root: string, versionModule = 'src/addonVersion.ts') => {
+  const full = path.resolve(root, versionModule)
+  if (!existsSync(full)) return undefined
+  const version = readFileSync(full, 'utf8').match(/export default\s+["']([^"']+)["']/)?.[1]
+  return version ? { file: versionModule, version } : undefined
 }
 
 // the addon has server code: a missing server version breaks its endpoints, not only its settings
@@ -42,6 +42,7 @@ const INSTALL_FIX = (name: string, version: string) =>
 export const checkDevRequirements = async ({
   project,
   connection,
+  versionModule,
   fetch = globalThis.fetch,
 }: CheckOptions): Promise<DevCheck[]> => {
   const { serverUrl, apiKey, apiKeySource } = connection
@@ -127,7 +128,7 @@ export const checkDevRequirements = async ({
   }
 
   // the addon's server side, in the version the frontend calls
-  const frontendVersion = readFrontendVersion(project.root)
+  const frontendVersion = readFrontendVersion(project.root, versionModule)
   if (frontendVersion && frontendVersion.version !== project.version) {
     checks.push({
       id: 'addonVersion',

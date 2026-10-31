@@ -62,7 +62,7 @@ stack and key), each failure with how to fix it:
 | `server` | `/api/info` doesn't answer 200. Nothing else is checked. |
 | `apiKey` | No key: the user and the installed versions can't be checked (warning). |
 | `user` | The key is rejected (error), or the key's user is neither a service user nor in developer mode (warning: a headless browser signed in with it ignores the override). Your own browser user is not known to the CLI: it needs developer mode. |
-| `addonVersion` | `src/addonVersion.ts` and `package.py` name different versions (warning): the frontend calls the endpoints of the former. |
+| `addonVersion` | The `versionModule` (`src/addonVersion.ts` unless `ayonAddon({ rest })` names another) and `package.py` name different versions (warning): the frontend calls the endpoints of the former. |
 | `addon` | The addon isn't installed in the version the frontend calls, or that version failed to load on the server. The page still loads the frontend from the dev server, but its endpoint calls (`/api/addons/<name>/<version>/...`) answer 404. An error when the addon has a `server/` folder, else a warning. |
 
 The checks never stop the dev server: fix them while it runs.
@@ -169,6 +169,13 @@ queries), `generated`, `api`, `versionModule`, `schema` (paths).
   workbench the tools find the local stack and its key (`data/local-api-key`) on their own.
 - `AYON_SERVER_URL` points the tools at another server (default `http://localhost:5000`, or the
   workbench's local stack).
+- Both can go in the addon frontend's `.env.local` or `.env` (keep them out of git): every
+  command loads them at start, `.env.local` first. Variables already set in the shell win.
+- With no key, a command stops and says where to get one (Settings → Users → Add Service User).
+  In a terminal, with no env file yet, it walks through writing `.env`: the server (default
+  `http://localhost:5000`), then the key, typed without echo (Enter leaves it for later). A key
+  given there lets the command go on; without one it stops after writing the file. The file
+  comes from `envFileContents` in `addon-dev/src/project.ts`.
 
 ## Lint preset
 
