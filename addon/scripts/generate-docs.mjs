@@ -10,21 +10,29 @@ import { fileURLToPath } from 'url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'))
-const program = ts.createProgram(['src/index.ts', 'src/manifest.ts', 'src/check.ts'].map((f) => path.join(root, f)), {
-  strict: true,
-  skipLibCheck: true,
-  jsx: ts.JsxEmit.ReactJSX,
-  module: ts.ModuleKind.ESNext,
-  moduleResolution: ts.ModuleResolutionKind.Bundler,
-  target: ts.ScriptTarget.ESNext,
-})
+const program = ts.createProgram(
+  ['src/index.ts', 'src/manifest.ts', 'src/check.ts'].map((f) => path.join(root, f)),
+  {
+    strict: true,
+    skipLibCheck: true,
+    jsx: ts.JsxEmit.ReactJSX,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+    target: ts.ScriptTarget.ESNext,
+  },
+)
 const checker = program.getTypeChecker()
 const slotsFile = program.getSourceFile(path.join(root, 'src/slots.ts'))
 
-const doc = (symbol) => ts.displayPartsToString(symbol.getDocumentationComment(checker)).replace(/\s+/g, ' ').trim()
+const doc = (symbol) =>
+  ts.displayPartsToString(symbol.getDocumentationComment(checker)).replace(/\s+/g, ' ').trim()
 const typeText = (symbol, node) =>
   checker
-    .typeToString(checker.getTypeOfSymbolAtLocation(symbol, node), undefined, ts.TypeFormatFlags.NoTruncation)
+    .typeToString(
+      checker.getTypeOfSymbolAtLocation(symbol, node),
+      undefined,
+      ts.TypeFormatFlags.NoTruncation,
+    )
     .replace(/\s+/g, ' ')
 
 const fields = (typeNode) => {
@@ -44,7 +52,8 @@ ts.forEachChild(slotDocsFile, function visit(node) {
   if (ts.isVariableDeclaration(node) && node.name.getText() === 'SLOT_DOCS') {
     for (const prop of node.initializer.properties) {
       const entry = {}
-      for (const field of prop.initializer.properties) entry[field.name.getText()] = field.initializer.text
+      for (const field of prop.initializer.properties)
+        entry[field.name.getText()] = field.initializer.text
       slotDocs[prop.name.text ?? prop.name.getText()] = entry
     }
   }
@@ -67,6 +76,7 @@ ts.forEachChild(slotsFile, (node) => {
       meta: fields(parts.meta.type),
       context: [
         { name: 'slot', type: `'${name}'`, optional: false, doc: 'the slot this is rendered in' },
+        { name: 'user', type: 'AddonUser', optional: false, doc: 'the signed-in user' },
         ...fields(parts.context.type),
       ],
       pieces,
@@ -79,7 +89,12 @@ const table = (rows, header) =>
   [
     `| ${header} | Type | |`,
     '|---|---|---|',
-    ...rows.map((f) => `| \`${f.name}\`${f.optional ? '' : ' (required)'} | \`${cell(f.type)}\` | ${cell(f.doc)} |`),
+    ...rows.map(
+      (f) =>
+        `| \`${f.name}\`${f.optional ? '' : ' (required)'} | \`${cell(f.type)}\` | ${cell(
+          f.doc,
+        )} |`,
+    ),
   ].join('\n')
 
 const slotSections = slots
@@ -118,13 +133,37 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   \`useSlot('<slot>')\` (or a list of slots). It throws when rendered in another slot.
 - Menu items have a \`run\` piece: a function that gets the context (\`SlotContext<'<slot>'>\`) on click.
 - Header and toolbar items set exactly one action: \`to\` (navigate), \`run\`, \`dialog\` (AYON opens
-  its dialog around your content, which gets \`close\`), \`menu\` (a function returning the items) or
+  its dialog around your content, which gets \`close\`), \`menu\` (a function returning the items),
+  \`popover\` (AYON opens a popover under the button with your content, which gets \`close\`) or
   \`component\` (your own JSX instead of AYON's button). Their code gets \`navigate\` in the context.
+- A popover is AYON's: it positions it and closes it on a click outside or Escape. Don't build your
+  own overlay. Menus and dialogs opened from inside it close on their own Escape or outside click
+  without closing the popover. A button that needs its own look (a badge, a live value) sets
+  \`component\` **and** \`popover\`: the component is the button and gets \`popoverOpen\` and
+  \`togglePopover\` (its \`onClick\`), typed \`SlotProps<'header.item'> & PopoverButtonScope\`.
+- Code with no UI that runs while AYON is open (a timer's state, websocket listeners, a store
+  listener) is an \`appService\`: a component that returns \`null\`, mounted once for the whole app
+  under AYON's providers, so hooks work. Clean up in its effects.
 - Globals are imports, never context: \`useUser\`, \`useNavigate\` and the other router hooks, \`Link\`,
   \`toast\`, the layout components (\`ProjectPageLayout\`, \`Slicer\`, \`StudioPageLayout\`,
-  \`ProjectList\`). Data comes from \`@ynput/ayon-frontend-shared/api\` (AYON's api and cache):
-  components use its hooks, \`run\` and \`menu\` pieces \`dispatch(api.endpoints.x.initiate(args))\`
-  with \`dispatch\` from this package (AYON's store).
+  \`ProjectList\`), \`MoreMenu\` (below). Data comes from \`@ynput/ayon-frontend-shared/api\`
+  (AYON's api and cache): components use its hooks, \`run\` and \`menu\` pieces
+  \`dispatch(api.endpoints.x.initiate(args))\` with \`dispatch\` from this package (AYON's store).
+- Links to an entity come from \`entityUrl(entity, { activity? })\`, never a hand-built URL: the page
+  that opens it with its details panel (folders and tasks on Overview; products, versions and
+  representations on Products), \`undefined\` for types without a page (e.g. \`workfile\`).
+  \`navigateToEntity(entity)\` goes there without reloading, also from \`run\` pieces; it returns
+  \`false\` for those types. Any \`EntityRef\` from a context works, the id is enough:
+
+  \`\`\`tsx
+  import { entityUrl, Link, navigateToEntity } from '@ynput/ayon-addon'
+  <Link to={entityUrl(entity) ?? ''}>{entity.label}</Link>
+  navigateToEntity({ projectName, entityType: 'task', id: log.taskId })
+  \`\`\`
+- Endpoints you inject and tag types you add (\`enhanceEndpoints({ addTagTypes })\`) go into AYON's
+  one api, where names are global: prefix them with your addon name (\`myaddonGetLogs\`,
+  \`myaddonLog\`). A \`tableColumn\` lists the tags its values depend on in \`providesTags\`
+  (yours or AYON's, such as \`task\`) and refreshes when one is invalidated.
 - A crash stays inside the contribution: AYON wraps each one in an error boundary (menu items: a toast).
 
 ## Table column ids
@@ -151,6 +190,92 @@ Look in the browser console first: every message starts with \`[addon <name>]\`.
 | \`x (addon): <message>\` toast, and \`[addon <name>] … failed\` in the console | A \`run\`, \`menu\` or dialog piece threw. \`… crashed\` is a component that threw while rendering: it stays inside its own area |
 | \`<name> is not available in this AYON frontend\` | A layout component or picker this AYON version does not provide; update AYON or the SDK |
 
+## Picking entities: \`EntityPicker\`
+
+AYON's entity picker (the dialog AYON uses to link, move or pick a folder, task, product, version,
+...) from one component. It loads the project and its folders itself: render it anywhere (a header
+item, a popover, a studio page, a details panel tab) with no providers around it.
+
+\`\`\`tsx
+import { EntityPicker, type EntityRef } from '@ynput/ayon-addon'
+
+{picking && (
+  <EntityPicker
+    projectName={projectName}
+    entityType="task"
+    initialSelection={task ? [task] : undefined}
+    onClose={() => setPicking(false)}
+    onSubmit={([picked]: EntityRef[]) => {
+      setPicking(false)
+      setTask(picked) // { id, entityType: 'task', projectName, name, label }
+    }}
+  />
+)}
+\`\`\`
+
+- \`entityType\`: \`folder\`, \`task\`, \`product\`, \`version\`, \`representation\` or \`workfile\`. The
+  picker shows the types above it to narrow the list (folders, then tasks for \`task\`).
+- \`onSubmit\` gets \`EntityRef[]\`, the same shape slot contexts use (\`name\` and \`label\` when the
+  picker loaded them). One entity unless \`multiSelect\`. The picker stays open until you stop
+  rendering it: close it in \`onSubmit\` and \`onClose\`.
+- \`initialSelection\`: \`EntityRef\`s (or \`{ id, entityType }\`) selected when it opens, of
+  \`entityType\` or a type above it (a folder opens the tree at it). A slot's \`entities\` fit as they are.
+  An entity on a page the picker hasn't loaded yet stays selected until it loads, or until no page is
+  left to load it.
+- One fixed project: put your own project field next to it if the user picks the project.
+
+## A "more" menu: \`MoreMenu\`
+
+An addon's own menu (a panel's "…" actions, a row's options) is AYON's menu under a button, from
+one component. Don't build one: \`MoreMenu\` looks and works like AYON's menus everywhere (pages,
+details panel tabs, popovers, dialogs, the dev shell).
+
+\`\`\`tsx
+import { MoreMenu } from '@ynput/ayon-addon'
+
+<MoreMenu
+  data-testid="tracker-more"
+  items={[
+    { id: 'add', label: 'Add time manually', icon: 'more_time', onClick: () => setAdding(true) },
+    { id: 'export', label: 'Export', icon: 'download', items: [
+      { id: 'csv', label: 'CSV', onClick: exportCsv },
+    ] },
+    { divider: true },
+    { id: 'delete', label: 'Delete', icon: 'delete', danger: true, disabled: !selected, onClick: remove },
+  ]}
+/>
+\`\`\`
+
+- Items are the \`AddonMenuItem\`s a \`menu\` piece returns: \`onClick\`, \`to\` (an AYON URL), \`href\`
+  (a new tab), \`items\` (a submenu), \`{ divider: true }\`, \`disabled\`, \`selected\`, \`danger\`. A
+  failing \`onClick\` (also a rejected promise) is shown as a toast naming the addon.
+- The button: \`icon\` (\`more_horiz\` when not set), \`label\` (next to the icon), \`tooltip\` (the label,
+  or \`More\`, when not set; also the accessible name), \`variant\` (\`text\` by default, as AYON's
+  \`Button\`), \`align\` (the menu's edge on the button's: \`right\` by default), \`disabled\`,
+  \`className\`, \`data-testid\`.
+- Escape and a click outside close only the menu: the popover or dialog it is in stays open, and
+  Escape puts the focus back on the button. Keys as in AYON's menus: Tab moves through the items,
+  Enter picks one or opens its submenu, Escape closes the submenu first.
+- In tests the items are \`listitem\`s (\`getByRole('listitem', { name: 'Delete' })\`), not \`menuitem\`s.
+
+## Slot contexts: one shape
+
+The same thing has the same name and type in every slot that has it:
+
+- **\`user\`** (\`AddonUser\`), in every slot: the signed-in user, \`name\`, \`fullName\`, \`email\` and
+  the flags \`isAdmin\` (service users too), \`isManager\` (admins too), \`isGuest\`, \`isService\`,
+  \`isDeveloper\` (developer mode). \`run\` and \`menu\` pieces get it like components; \`useUser()\`
+  is the same user for code below them.
+- **\`projectName\`** (\`string\`), in slots about one project. Where there may be none it is
+  \`string | null\`: \`header.item\` (no project page open) and \`table.shortcut\` (the project list).
+  \`project.page\` also has \`project\` (\`ProjectInfo\`, \`undefined\` while it loads); elsewhere get
+  the project from AYON's api (\`useGetProjectQuery({ projectName })\`, cached).
+- **\`entities\`** (\`EntityRef[]\`: \`id\`, \`entityType\`, \`projectName\`, \`name?\`, \`label?\`), in
+  slots about entities: \`detailsPanel.tab\`, \`detailsPanel.menuItem\` (both also \`entityType\`, all of
+  one type), \`entityMenuItem\`, \`table.shortcut\` (the project tables' rows; empty in the panels'
+  tables) and \`slicer.menuItem\` (hierarchy rows; empty for other slice types). A table cell is one
+  entity: \`tableColumn\` has \`entity\`.
+
 ## Slots
 
 ${slotSections}
@@ -167,6 +292,9 @@ if (process.argv.includes('--check')) {
 } else {
   writeFileSync(agentsPath, agents)
   mkdirSync(path.join(root, 'dist'), { recursive: true })
-  writeFileSync(path.join(root, 'dist/slots.json'), JSON.stringify({ version: pkg.version, slots }, null, 2))
+  writeFileSync(
+    path.join(root, 'dist/slots.json'),
+    JSON.stringify({ version: pkg.version, slots }, null, 2),
+  )
   console.log(`wrote AGENTS.md and dist/slots.json (${slots.length} slots)`)
 }

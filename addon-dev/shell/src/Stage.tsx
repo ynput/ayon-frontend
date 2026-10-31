@@ -30,12 +30,13 @@ import {
   SlicerHost,
   useAddonCustomizeSections,
   useAddonTableShortcuts,
+  shortcutEntities,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
 } from '@ynput/ayon-frontend-shared/components'
 import { StudioSelectionProvider } from './host'
 import { needsProject } from './slotNeeds'
-import { ButtonItem } from './parts'
+import { ButtonItem, ServiceNote } from './parts'
 import { PreviewStage } from './PreviewStage'
 import { ShellTable } from './ShellTable'
 import { setStage } from './status'
@@ -191,6 +192,13 @@ const StudioPageStage = ({ contribution, selection, onChange }: StageProps & { o
   )
 }
 
+// app.service: mounted once by the shell (Shell.tsx), not per selection; the stage only says so
+const ServiceStage = ({ contribution, selection }: StageProps) => {
+  const context = useMemo(() => ({ projectName: selection.projectName ?? null }), [selection.projectName])
+  useReport(contribution, context, true)
+  return <ServiceNote />
+}
+
 // header.item: left after the dashboard button, right before chat and inbox
 const HeaderStage = ({ contribution, selection }: StageProps) => {
   const { contributions } = useContributions('header.item')
@@ -242,7 +250,7 @@ const DetailsPanelStage = ({ contribution, selection }: StageProps) => {
     () =>
       isTab
         ? { projectName, entityType, entities, scope: DETAILS_SCOPE }
-        : { projectName, entityType, selectedEntities: entities },
+        : { projectName, entityType, entities },
     [isTab, projectName, entityType, entities],
   )
   useReport(contribution, context, !!project && entities.length > 0, !isTab)
@@ -272,17 +280,28 @@ const DetailsPanelStage = ({ contribution, selection }: StageProps) => {
 // slicer.menuItem: AYON's slicer; the items are in its right-click menu and dropdown
 const SlicerBody = ({ contribution, selection }: StageProps) => {
   const { rowSelection, sliceType } = useSlicerContext()
-  const context = useMemo(
-    () => ({
+  const context = useMemo(() => {
+    const ids = Object.keys(rowSelection).filter((id) => rowSelection[id])
+    // hierarchy rows are folders and tasks: the picked entities, else folders
+    const entities =
+      sliceType === 'hierarchy'
+        ? ids.map(
+            (id) =>
+              selection.entities.find((entity) => entity.id === id) ?? {
+                id,
+                entityType: 'folder',
+                projectName: selection.projectName!,
+              },
+          )
+        : []
+    return {
       projectName: selection.projectName,
       sliceType,
-      selected: Object.keys(rowSelection)
-        .filter((id) => rowSelection[id])
-        .map((id) => ({ id })),
+      selected: ids.map((id) => ({ id })),
+      entities,
       menu: 'context',
-    }),
-    [selection.projectName, sliceType, rowSelection],
-  )
+    }
+  }, [selection.projectName, selection.entities, sliceType, rowSelection])
   useReport(contribution, context, true, true)
   return (
     // positioned: the slicer's Section fills its container (a splitter panel in AYON)
@@ -358,6 +377,7 @@ const TableStage = ({ contribution, selection }: StageProps) => {
       table: page,
       projectName,
       rows,
+      entities: shortcutEntities(page, projectName, rows),
       focused: { rowId: rows[0].id, columnId: 'name' },
       cells: rows.map((row) => ({ rowId: row.id, columnId: 'name' })),
     }
@@ -506,6 +526,8 @@ export const Stage = ({
       case 'projectTable.toolbarItem':
       case 'projectTable.customizeSection':
         return <TableStage {...props} />
+      case 'app.service':
+        return <ServiceStage {...props} />
       default:
         return <Hint>The shell has no stage for {contribution.slot} yet.</Hint>
     }

@@ -5,23 +5,16 @@ import type {
   SlicerProps,
   StudioPageLayoutProps,
 } from './layout'
+import type { EntityPickerProps } from './EntityPicker'
+import type { HostMoreMenuProps } from './MoreMenu'
+import type { AddonUser } from './scopes'
+
+export type { AddonUser }
 
 // What the host provides to the package at startup. The package itself imports nothing from
 // the host app or @ynput/ayon-frontend-shared; components and hooks that need the host's own
 // code (its user state, its project list, its slicer) call the implementation registered here.
 // The standalone dev shell registers its own.
-
-/** The signed-in user, as addons see it. */
-export interface AddonUser {
-  name: string
-  fullName?: string
-  email?: string
-  isAdmin: boolean
-  isManager: boolean
-  isGuest: boolean
-  /** developer mode is on */
-  isDeveloper: boolean
-}
 
 /**
  * Dispatches to AYON's store: plain actions, and thunks such as `api.endpoints.x.initiate(args)`
@@ -32,18 +25,26 @@ export interface AddonDispatch {
   <A extends { type: string }>(action: A): A
 }
 
-/** The host's implementations of the layout components. */
+/** The host's implementations of the layout components, the entity picker and the menu button. */
 export interface HostComponents {
   ProjectPageLayout: ComponentType<ProjectPageLayoutProps>
   Slicer: ComponentType<SlicerProps>
   StudioPageLayout: ComponentType<StudioPageLayoutProps>
   ProjectList: ComponentType<ProjectListProps>
+  /** AYON's entity picker, with the project's providers it needs (`EntityPicker`) */
+  EntityPicker: ComponentType<EntityPickerProps>
+  /** AYON's menu under a button (`MoreMenu`) */
+  MoreMenu: ComponentType<HostMoreMenuProps>
 }
 
 export interface HostImplementation {
   useUser?: () => AddonUser | undefined
+  /** the same user outside React: `run` and `menu` pieces get it in their context */
+  getUser?: () => AddonUser | undefined
   /** the dispatch of the host's store */
   dispatch?: AddonDispatch
+  /** goes to an AYON URL without reloading the page (`navigateToEntity`) */
+  navigate?: (to: string) => void
   components?: Partial<HostComponents>
 }
 

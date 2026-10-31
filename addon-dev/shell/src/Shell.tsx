@@ -27,7 +27,7 @@ import {
 } from '@ynput/ayon-frontend-shared/context'
 import { ContextMenuProvider, GlobalContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
 import { ProjectDataProvider } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
-import { LoginPage, SplitterStyles } from '@ynput/ayon-frontend-shared/components'
+import { AddonServices, LoginPage, SplitterStyles } from '@ynput/ayon-frontend-shared/components'
 import { storeAccessToken } from '@ynput/ayon-frontend-shared/util'
 import { useDispatch } from 'react-redux'
 import { DevPanel } from './DevPanel'
@@ -38,6 +38,7 @@ import { setStatus } from './status'
 import type { ShellOptions, ShellSelection } from './types'
 import { readSelection, writeSelection } from './params'
 import { provideHost } from '@ynput/ayon-addon/host'
+import { getShellUser } from './host'
 
 const Centered = ({ children }: { children: ReactNode }) => (
   <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>{children}</div>
@@ -131,41 +132,51 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
   useEffect(() => setStatus({ selection, mode }), [selection, mode])
 
   return (
-    <Splitter className="ayon-shell" stateKey="ayon-addon-shell" stateStorage="local">
-      <SplitterPanel size={22} minSize={12} style={{ overflow: 'hidden' }}>
-        <StageBoundary what="developer panel">
-          <DevPanel options={options} mode={mode} selection={selection} onChange={setSelection} />
-        </StageBoundary>
-      </SplitterPanel>
-      <SplitterPanel size={78} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <StageCaption mode={mode} selection={selection} />
-        <ProjectProviders
-          // preview renders the contribution alone: only the table columns need the project
-          projectName={
-            mode === 'live' || selection.slot === 'tableColumn' ? selection.projectName : undefined
-          }
-          light={mode === 'preview'}
-        >
-          <StageBoundary key={`${selection.projectName}:${selection.slot}:${selection.id}`}>
-            {/* remounts per project: the project contexts and the slicer start fresh */}
-            <Stage
-              key={selection.projectName || ''}
-              mode={mode}
-              selection={selection}
-              onChange={setSelection}
-            />
+    <>
+      {/* the addon's services, once for the whole shell as in AYON; not remounted per selection */}
+      <AddonServices projectName={selection.projectName ?? null} />
+      <Splitter className="ayon-shell" stateKey="ayon-addon-shell" stateStorage="local">
+        <SplitterPanel size={22} minSize={12} style={{ overflow: 'hidden' }}>
+          <StageBoundary what="developer panel">
+            <DevPanel options={options} mode={mode} selection={selection} onChange={setSelection} />
           </StageBoundary>
-        </ProjectProviders>
-      </SplitterPanel>
-    </Splitter>
+        </SplitterPanel>
+        <SplitterPanel size={78} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <StageCaption mode={mode} selection={selection} />
+          <ProjectProviders
+            // preview renders the contribution alone: only the table columns need the project
+            projectName={
+              mode === 'live' || selection.slot === 'tableColumn' ? selection.projectName : undefined
+            }
+            light={mode === 'preview'}
+          >
+            <StageBoundary key={`${selection.projectName}:${selection.slot}:${selection.id}`}>
+              {/* remounts per project: the project contexts and the slicer start fresh */}
+              <Stage
+                key={selection.projectName || ''}
+                mode={mode}
+                selection={selection}
+                onChange={setSelection}
+              />
+            </StageBoundary>
+          </ProjectProviders>
+        </SplitterPanel>
+      </Splitter>
+    </>
   )
 }
 
 export const Shell = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'preview' }) => {
   const store = useMemo(() => {
     const standaloneStore = createStandaloneStore()
-    // run and menu pieces dispatch to it through @ynput/ayon-addon, as they do to AYON's store
-    provideHost({ dispatch: standaloneStore.dispatch })
+    // run and menu pieces dispatch to it through @ynput/ayon-addon, as they do to AYON's store,
+    // and get the user its queries loaded in their context
+    provideHost({
+      dispatch: standaloneStore.dispatch,
+      getUser: () => getShellUser(standaloneStore.getState()),
+      // navigateToEntity: the shell has none of AYON's pages, so the link opens in AYON
+      navigate: (to) => window.open(new URL(to, options.serverUrl).href, '_blank', 'noopener'),
+    })
     return standaloneStore
   }, [])
   return (

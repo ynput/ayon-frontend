@@ -1,25 +1,28 @@
 import type { AddonMenuItem, AnyContribution } from '@ynput/ayon-addon'
-import { reportContributionError } from '@ynput/ayon-addon/host'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 
 /** The slots whose contributions are buttons: header.item, projectTable.toolbarItem. */
 export type ButtonSlot = 'header.item' | 'projectTable.toolbarItem'
 
-/** What a button contribution does on click: exactly one is set (checked when the manifest loads). */
-export type ButtonAction = 'to' | 'run' | 'dialog' | 'menu' | 'component'
+/**
+ * What a button contribution does on click: exactly one is set (checked when the manifest loads),
+ * except that a `component` may be a `popover`'s button (the action is then `popover`).
+ */
+export type ButtonAction = 'to' | 'run' | 'dialog' | 'menu' | 'popover' | 'component'
 
 export const getButtonAction = (contribution: AnyContribution): ButtonAction | undefined =>
-  (['to', 'run', 'dialog', 'menu', 'component'] as const).find(
+  (['to', 'run', 'dialog', 'menu', 'popover', 'component'] as const).find(
     (action) => contribution[action] !== undefined,
   )
 
 /**
  * An addon's menu entries as the shared Menu's items: `to` and `href` become links (the Menu
- * follows them), and a failing `onClick` is reported as a toast naming the addon.
+ * follows them), and a failing `onClick` goes to `onError` (`reportContributionError`: a toast
+ * naming the addon). Used by `menu` buttons and `MoreMenu`.
  */
 export const toMenuItems = (
   items: AddonMenuItem[],
-  contribution: AnyContribution,
+  onError: (error: unknown) => void,
 ): MenuItemType[] =>
   items.map((item, index) => {
     if ('divider' in item) return { id: 'divider' }
@@ -35,12 +38,10 @@ export const toMenuItems = (
       ...(onClick
         ? {
             onClick: () => {
-              Promise.resolve()
-                .then(onClick)
-                .catch((error) => reportContributionError(contribution, error))
+              Promise.resolve().then(onClick).catch(onError)
             },
           }
         : {}),
-      ...(subItems?.length ? { items: toMenuItems(subItems, contribution) } : {}),
+      ...(subItems?.length ? { items: toMenuItems(subItems, onError) } : {}),
     }
   })

@@ -9,7 +9,7 @@ import { ShellTable } from './ShellTable'
 import { isMenuSlot } from './slotNeeds'
 import { setStage } from './status'
 import type { ShellSelection } from './types'
-import { ButtonItem } from './parts'
+import { ButtonItem, ServiceNote } from './parts'
 
 const FRAME_WIDTH: Partial<Record<string, number>> = {
   'detailsPanel.tab': 620,
@@ -87,6 +87,8 @@ export const PreviewStage = ({
         </div>
       )
     }
+    // mounted once by the shell (Shell.tsx), not here
+    if (slot === 'app.service') return <ServiceNote />
     if (slot === 'tableColumn') {
       const entities = (context.entities || []) as never[]
       return (
