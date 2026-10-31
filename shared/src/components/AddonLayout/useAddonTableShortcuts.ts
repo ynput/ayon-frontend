@@ -3,7 +3,13 @@
 // function that builds the context (only when a key matches) and renders `dialog` when it is set.
 import { useCallback, useMemo, useState } from 'react'
 import { runContribution, useContributions } from '@ynput/ayon-addon'
-import type { Contribution, ShortcutTable, TableShortcutContext } from '@ynput/ayon-addon'
+import type {
+  Contribution,
+  EntityRef,
+  ShortcutTable,
+  TableRowRef,
+  TableShortcutContext,
+} from '@ynput/ayon-addon'
 import { matchesShortcut, parseShortcut } from '@ynput/ayon-addon/host'
 
 type ShortcutKeyEvent = Pick<
@@ -15,6 +21,26 @@ export interface OpenAddonShortcutDialog {
   contribution: Contribution<'table.shortcut'>
   context: TableShortcutContext & { close: () => void }
 }
+
+/** The context without `entities`: the hook adds them from the rows. */
+export type TableShortcutRows = Omit<TableShortcutContext, 'entities'>
+
+const PROJECT_TABLES: ShortcutTable[] = ['overview', 'products', 'lists']
+
+/**
+ * The entities of a shortcut's rows: every row of the project tables is one (list items resolve
+ * to theirs). The panels' rows are not all entities (the lists panel's are lists), so none there.
+ */
+export const shortcutEntities = (
+  table: ShortcutTable,
+  projectName: string | null,
+  rows: TableRowRef[],
+): EntityRef[] =>
+  PROJECT_TABLES.includes(table) && projectName
+    ? rows.flatMap(({ id, entityType, name, label }) =>
+        entityType ? [{ id, entityType, projectName, name, label }] : [],
+      )
+    : []
 
 /** `table`: which table this is; no shortcuts when not set. */
 export const useAddonTableShortcuts = (table: ShortcutTable | undefined) => {
@@ -35,7 +61,9 @@ export const useAddonTableShortcuts = (table: ShortcutTable | undefined) => {
 
   /** Runs a shortcut's `run`, or opens its dialog. */
   const runShortcut = useCallback(
-    (contribution: Contribution<'table.shortcut'>, context: TableShortcutContext) => {
+    (contribution: Contribution<'table.shortcut'>, rowsContext: TableShortcutRows) => {
+      const { table, projectName, rows } = rowsContext
+      const context = { ...rowsContext, entities: shortcutEntities(table, projectName, rows) }
       if (contribution.dialog) {
         const close = () => setDialog(null)
         setDialog({ contribution, context: { ...context, close } })
@@ -53,7 +81,7 @@ export const useAddonTableShortcuts = (table: ShortcutTable | undefined) => {
   const handleShortcut = useCallback(
     (
       event: ShortcutKeyEvent,
-      getContext: () => Omit<TableShortcutContext, 'table'> | undefined,
+      getContext: () => Omit<TableShortcutRows, 'table'> | undefined,
     ): boolean => {
       if (!table || event.repeat) return false
       const match = shortcuts.find(({ shortcut }) => matchesShortcut(event, shortcut))

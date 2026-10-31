@@ -67,6 +67,7 @@ ts.forEachChild(slotsFile, (node) => {
       meta: fields(parts.meta.type),
       context: [
         { name: 'slot', type: `'${name}'`, optional: false, doc: 'the slot this is rendered in' },
+        { name: 'user', type: 'AddonUser', optional: false, doc: 'the signed-in user' },
         ...fields(parts.context.type),
       ],
       pieces,
@@ -120,7 +121,7 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
 - Header and toolbar items set exactly one action: \`to\` (navigate), \`run\`, \`dialog\` (AYON opens
   its dialog around your content, which gets \`close\`), \`menu\` (a function returning the items) or
   \`component\` (your own JSX instead of AYON's button). Their code gets \`navigate\` in the context.
-- Globals are imports, never context: \`useUser\`, \`useNavigate\` and the other router hooks, \`Link\`,
+- Globals are imports, never context: \`useNavigate\` and the other router hooks, \`Link\`,
   \`toast\`, the layout components (\`ProjectPageLayout\`, \`Slicer\`, \`StudioPageLayout\`,
   \`ProjectList\`), \`MoreMenu\` (below). Data comes from \`@ynput/ayon-frontend-shared/api\`
   (AYON's api and cache): components use its hooks, \`run\` and \`menu\` pieces
@@ -160,6 +161,24 @@ import { MoreMenu } from '@ynput/ayon-addon'
   Escape puts the focus back on the button. Keys as in AYON's menus: Tab moves through the items,
   Enter picks one or opens its submenu, Escape closes the submenu first.
 - In tests the items are \`listitem\`s (\`getByRole('listitem', { name: 'Delete' })\`), not \`menuitem\`s.
+
+## Slot contexts: one shape
+
+The same thing has the same name and type in every slot that has it:
+
+- **\`user\`** (\`AddonUser\`), in every slot: the signed-in user, \`name\`, \`fullName\`, \`email\` and
+  the flags \`isAdmin\` (service users too), \`isManager\` (admins too), \`isGuest\`, \`isService\`,
+  \`isDeveloper\` (developer mode). \`run\` and \`menu\` pieces get it like components; \`useUser()\`
+  is the same user for code below them.
+- **\`projectName\`** (\`string\`), in slots about one project. Where there may be none it is
+  \`string | null\`: \`header.item\` (no project page open) and \`table.shortcut\` (the project list).
+  \`project.page\` also has \`project\` (\`ProjectInfo\`, \`undefined\` while it loads); elsewhere get
+  the project from AYON's api (\`useGetProjectQuery({ projectName })\`, cached).
+- **\`entities\`** (\`EntityRef[]\`: \`id\`, \`entityType\`, \`projectName\`, \`name?\`, \`label?\`), in
+  slots about entities: \`detailsPanel.tab\`, \`detailsPanel.menuItem\` (both also \`entityType\`, all of
+  one type), \`entityMenuItem\`, \`table.shortcut\` (the project tables' rows; empty in the panels'
+  tables) and \`slicer.menuItem\` (hierarchy rows; empty for other slice types). A table cell is one
+  entity: \`tableColumn\` has \`entity\`.
 
 ## Slots
 

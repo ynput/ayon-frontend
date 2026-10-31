@@ -1,8 +1,11 @@
 // What the tools need to know about the addon they run in: its name and version (package.py),
 // where AYON runs, and how to sign in to it.
-import { existsSync, readFileSync } from 'fs'
+import { spawnSync } from 'child_process'
+import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { createRequire } from 'module'
 import path from 'path'
+import { createInterface } from 'readline/promises'
+import { Writable } from 'stream'
 import { pathToFileURL } from 'url'
 
 export interface AddonProject {
@@ -53,6 +56,22 @@ export interface AyonConnection {
   apiKeySource?: string
 }
 
+// the addon's env files, in order: the first one that sets a variable wins, and the shell wins over both
+const ENV_FILES = ['.env.local', '.env']
+
+/**
+ * Loads the addon's `.env.local` and `.env` (AYON_SERVER_URL, AYON_API_KEY, …) into process.env,
+ * so no command needs an `--env-file` or a shell export.
+ */
+export const loadProjectEnv = (root = process.cwd()) => {
+  for (const name of ENV_FILES) {
+    const file = path.join(root, name)
+    if (existsSync(file)) process.loadEnvFile(file)
+  }
+}
+
+export const DEFAULT_SERVER_URL = 'http://localhost:5000'
+
 /**
  * AYON_SERVER_URL and AYON_API_KEY win; inside the AYON dev workbench the local stack and its
  * key (data/local-api-key) are the defaults.
@@ -62,7 +81,7 @@ export const findConnection = (root = process.cwd()): AyonConnection => {
   const serverUrl =
     process.env.AYON_SERVER_URL ||
     process.env.SERVER_URL ||
-    (workbench ? `http://localhost:${workbenchServerPort(workbench)}` : 'http://localhost:5000')
+    (workbench ? `http://localhost:${workbenchServerPort(workbench)}` : DEFAULT_SERVER_URL)
   if (process.env.AYON_API_KEY) {
     return { serverUrl, apiKey: process.env.AYON_API_KEY, apiKeySource: 'AYON_API_KEY' }
   }
@@ -72,6 +91,117 @@ export const findConnection = (root = process.cwd()): AyonConnection => {
     return { serverUrl, apiKey: readFileSync(keyFile, 'utf8').trim(), apiKeySource: keyFile }
   }
   return { serverUrl }
+}
+
+// the .env that requireApiKey writes: the server, and the key when the user gave one
+export const envFileContents = (serverUrl: string, apiKey = '') => `# ayon-addon: the AYON server and an API key for this addon's tools.
+# Every ayon-addon command reads this file. A variable set in your shell wins over it, and
+# .env.local (same format) wins over this file. Keep both out of git.
+
+# The AYON server
+AYON_SERVER_URL=${serverUrl}
+
+# A service user's key: Settings → Users → Add Service User → Generate new key.
+# AYON shows the key once, so copy it here.
+AYON_API_KEY=${apiKey}
+`
+
+/** The server address as typed (without trailing slashes), or undefined when it isn't http(s) */
+export const parseServerUrl = (answer: string) => {
+  const address = answer.trim().replace(/\/+$/, '')
+  try {
+    const { protocol } = new URL(address)
+    return protocol === 'http:' || protocol === 'https:' ? address : undefined
+  } catch {
+    return undefined
+  }
+}
+
+// The setup's questions in one line reader that stays open, so answers typed ahead are not lost
+// between questions. A secret is typed without echo: the reader's output is muted while it's read.
+const openTerminal = () => {
+  let muted = false
+  const output = new Writable({
+    write: (chunk, _encoding, done) => {
+      if (!muted) process.stdout.write(chunk)
+      done()
+    },
+  })
+  const rl = createInterface({ input: process.stdin, output, terminal: true })
+  return {
+    ask: async (question: string, secret = false): Promise<string> => {
+      if (secret) {
+        process.stdout.write(question)
+        muted = true
+      }
+      const answer = await rl.question(secret ? '' : question)
+      if (secret) {
+        muted = false
+        process.stdout.write('\n')
+      }
+      return answer.trim()
+    },
+    close: () => rl.close(),
+  }
+}
+
+/** What to do when no API key is set: which file to put it in, and where to get the key */
+export const keySetupMessage = (root: string) => {
+  const files = ENV_FILES.map((name) => path.join(root, name)).filter((file) => existsSync(file))
+  const key =
+    "Set AYON_API_KEY to a service user's key: Settings → Users → Add Service User → Generate new key (AYON shows it once)."
+  const file = path.join(root, '.env')
+  return files.length
+    ? `no API key: AYON_API_KEY is not set in ${files.join(' or ')} or in the shell. ${key}`
+    : `no API key: AYON_API_KEY is not set in the shell or in ${file}. ${key} Set AYON_SERVER_URL too if the server isn't ${DEFAULT_SERVER_URL}. Or run this command in a terminal and ayon-addon asks for them and writes ${file}.`
+}
+
+/**
+ * Returns the API key, or stops the command when there is none. In a terminal with no env file
+ * yet, it walks through writing one: the server (default http://localhost:5000), then the key,
+ * which can be left empty to add later. A key given there lets the command go on.
+ */
+export const requireApiKey = async (
+  root: string,
+  apiKey: string | undefined,
+  interactive: boolean,
+): Promise<string> => {
+  if (apiKey) return apiKey
+  const file = path.join(root, '.env')
+  const hasEnvFile = ENV_FILES.some((name) => existsSync(path.join(root, name)))
+  if (!interactive || hasEnvFile) throw new Error(keySetupMessage(root))
+
+  const terminal = openTerminal()
+  try {
+    if (/^n/i.test(await terminal.ask(`no API key yet. Set up ${file}? [Y/n] `))) {
+      throw new Error(keySetupMessage(root))
+    }
+    let serverUrl: string | undefined
+    while (!serverUrl) {
+      const answer = await terminal.ask(`AYON server [${DEFAULT_SERVER_URL}]: `)
+      serverUrl = parseServerUrl(answer || DEFAULT_SERVER_URL)
+      if (!serverUrl) console.log('start the address with http:// or https://')
+    }
+    const key = await terminal.ask(
+      'AYON API key (Settings → Users → Add Service User → Generate new key), or Enter to add it later: ',
+      true,
+    )
+    writeFileSync(file, envFileContents(serverUrl, key))
+    // git check-ignore: 1 means git doesn't ignore the file (0 ignored, 128 not a repo)
+    const ignored = spawnSync('git', ['check-ignore', '-q', file], { cwd: root }).status !== 1
+    const warning = ignored ? '' : '. It is not git-ignored: add .env to .gitignore before you commit'
+    if (!key) {
+      throw new Error(
+        `created ${file} with ${serverUrl}: add AYON_API_KEY there, then run the command again${warning}`,
+      )
+    }
+    console.log(`created ${file}${warning}`)
+    process.env.AYON_SERVER_URL = serverUrl
+    process.env.AYON_API_KEY = key
+    return key
+  } finally {
+    terminal.close()
+  }
 }
 
 /**
