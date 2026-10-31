@@ -104,7 +104,8 @@ const MenuInner: React.FC<MenuInnerProps> = ({
     e.preventDefault()
     e.stopPropagation()
     handleClose()
-    target?.focus()
+    const focusTarget = target ?? (targetId ? document.getElementById(targetId) : null)
+    focusTarget?.focus()
   }
 
   // Click outside handling
