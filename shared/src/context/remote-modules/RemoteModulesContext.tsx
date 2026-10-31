@@ -55,6 +55,10 @@ const loadManifests = async (remotes: Module[]) => {
             `${r.remote}/${MANIFEST_MODULE}`,
             { from: 'runtime' },
           )
+          const definition = manifest?.default as { contributes?: unknown } | undefined
+          if (!Array.isArray(definition?.contributes)) {
+            throw new Error('the manifest has no "contributes" list: export default defineAddon({ contributes })')
+          }
           registerManifest({ name: r.addon, version: r.version, remote: r.remote }, manifest?.default)
         } catch (error) {
           console.error(`[addon ${r.addon}] its manifest failed to load`, error)
