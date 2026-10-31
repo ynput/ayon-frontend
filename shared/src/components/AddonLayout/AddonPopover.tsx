@@ -43,6 +43,17 @@ const PopoverBox = ({ anchor, close, children }: PopoverBoxProps) => {
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [anchor, close])
 
+  // MenuContainer focuses the first item once it is positioned. Without one (text, an input, or
+  // still loading), focus would stay on the button and Escape would never reach this surface. A
+  // hidden menu can't take focus, so wait a frame for the position.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const surface = ref.current
+      if (surface && !surface.contains(document.activeElement)) surface.focus()
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
   // Escape in a menu or dialog opened from the popover is theirs: portalled elsewhere, it still
   // bubbles here through the React tree and would close the popover as well
   const onKeyDown = (event: KeyboardEvent) => {

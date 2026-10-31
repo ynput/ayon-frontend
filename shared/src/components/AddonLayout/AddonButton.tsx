@@ -58,9 +58,15 @@ export const AddonButton = <S extends ButtonSlot>({
 
   // popover: the header menus' container around the addon's content; its own open state, so a
   // menu opened inside it (the app has one open menu at a time) doesn't close it
+  // the app's one open menu, which the popover closes when it opens
+  const { menuOpen, setMenuOpen, toggleMenuOpen } = useMenuContext()
   const [popoverOpen, setPopoverOpen] = useState(!!autoOpen && action === 'popover')
   const closePopover = useCallback(() => setPopoverOpen(false), [])
-  const togglePopover = useCallback(() => setPopoverOpen((open) => !open), [])
+  // opening it closes the app's open menu, as opening another header menu would
+  const togglePopover = useCallback(() => {
+    if (!popoverOpen) setMenuOpen(false)
+    setPopoverOpen((open) => !open)
+  }, [popoverOpen, setMenuOpen])
   const popoverContext = useMemo(
     () => ({ ...actionContext, close: closePopover }),
     [actionContext, closePopover],
@@ -72,7 +78,6 @@ export const AddonButton = <S extends ButtonSlot>({
   )
 
   // menu: the shared Menu under the button, like the header's help menu
-  const { menuOpen, setMenuOpen, toggleMenuOpen } = useMenuContext()
   // keys are unique per slot only: a header item and a toolbar item may share one
   const menuId = `addon:${any.slot}:${any.key}`
   const [menuItems, setMenuItems] = useState<MenuItemType[]>([])
