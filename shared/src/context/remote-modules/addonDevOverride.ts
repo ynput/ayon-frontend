@@ -89,7 +89,12 @@ export const addonDevInfoProblem = (info: unknown, { addon, url }: AddonDevOverr
   const missing: string[] = (['name', 'version', 'remote', 'buildId'] as const).filter(
     (key) => typeof value[key] !== 'string' || !value[key],
   )
-  if (!Array.isArray(value.modules)) missing.push('modules')
+  if (
+    !Array.isArray(value.modules) ||
+    value.modules.some((module) => typeof module !== 'string' || !module)
+  ) {
+    missing.push('modules')
+  }
   if (typeof info !== 'object' || !info || missing.length) {
     return `${url}/ayon-addon.json is invalid (no ${missing.join(', ')}): is it served by \`ayon-addon dev --ayon\`?`
   }
