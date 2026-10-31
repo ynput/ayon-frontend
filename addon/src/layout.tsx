@@ -27,7 +27,8 @@ export interface ProjectListProps {
   multiSelect?: boolean
 }
 
-const Missing = ({ name }: { name: string }) => (
+/** Shown instead of a host component this AYON frontend doesn't provide. */
+export const Missing = ({ name }: { name: string }) => (
   <div role="alert" className="ayon-addon-error">
     {name} is not available in this AYON frontend.
   </div>
