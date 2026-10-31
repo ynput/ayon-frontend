@@ -6,7 +6,11 @@ import type { ReactNode } from 'react'
 import { provideHost } from '@ynput/ayon-addon/host'
 import type { AddonUser, ProjectListProps, StudioPageLayoutProps } from '@ynput/ayon-addon'
 import type { ExpandedState } from '@tanstack/react-table'
-import { useGetCurrentUserQuery, useGetProjectFoldersQuery } from '@ynput/ayon-frontend-shared/api'
+import {
+  useGetCurrentUserQuery,
+  useGetProjectFoldersQuery,
+  usersApi,
+} from '@ynput/ayon-frontend-shared/api'
 import { ProjectPageLayoutHost, SlicerHost } from '@ynput/ayon-frontend-shared/components'
 import { useGlobalContext, useMenuContext, usePowerpack } from '@ynput/ayon-frontend-shared/context'
 import {
@@ -20,24 +24,37 @@ import { useShellMenu } from './menus'
 
 type UserData = { isAdmin?: boolean; isManager?: boolean; isGuest?: boolean; isService?: boolean }
 
+type CurrentUser = {
+  name?: string
+  attrib?: { fullName?: string | null; email?: string | null; developerMode?: boolean | null }
+  data?: unknown
+}
+
+const toAddonUser = (user: CurrentUser | undefined): AddonUser | undefined => {
+  if (!user?.name) return undefined
+  const data = (user.data || {}) as UserData
+  // the server treats service users (API key) as admins, so does AYON
+  const isAdmin = !!data.isAdmin || !!data.isService
+  return {
+    name: user.name,
+    fullName: user.attrib?.fullName || undefined,
+    email: user.attrib?.email || undefined,
+    isAdmin,
+    isManager: isAdmin || !!data.isManager,
+    isGuest: !!data.isGuest,
+    isService: !!data.isService,
+    isDeveloper: !!user.attrib?.developerMode || !!data.isService,
+  }
+}
+
 const useUser = (): AddonUser | undefined => {
   const { data: user } = useGetCurrentUserQuery()
-  return useMemo(() => {
-    if (!user?.name) return undefined
-    const data = (user.data || {}) as UserData
-    // the server treats service users (API key) as admins, so does AYON
-    const isAdmin = !!data.isAdmin || !!data.isService
-    return {
-      name: user.name,
-      fullName: user.attrib?.fullName || undefined,
-      email: user.attrib?.email || undefined,
-      isAdmin,
-      isManager: isAdmin || !!data.isManager,
-      isGuest: !!data.isGuest,
-      isDeveloper: !!user.attrib?.developerMode || !!data.isService,
-    }
-  }, [user])
+  return useMemo(() => toAddonUser(user), [user])
 }
+
+/** The user outside React (`run` and `menu` pieces), from the store the shell's queries use. */
+export const getShellUser = (state: object) =>
+  toAddonUser(usersApi.endpoints.getCurrentUser.select()(state as never).data)
 
 /** The project selection of the studio page on stage (AYON keeps one per page). */
 export interface StudioSelection {

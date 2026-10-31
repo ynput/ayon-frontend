@@ -50,6 +50,7 @@ export type {
 } from './slots'
 export type {
   Access,
+  AddonUser,
   EntityRef,
   EntityScope,
   FolderInfo,
@@ -63,6 +64,7 @@ export type {
   ProjectScope,
   SlicerScope,
   SlicerSelection,
+  UserScope,
   ViewsScope,
 } from './scopes'
 export type {
@@ -92,7 +94,7 @@ export type {
 
 // globals: the same in every slot
 export { dispatch, useUser } from './globals'
-export type { AddonDispatch, AddonUser } from './hostBridge'
+export type { AddonDispatch } from './hostBridge'
 // the host's router and toasts: an addon's own copies would have no router or container
 export { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 export { toast } from 'react-toastify'

@@ -156,17 +156,14 @@ export const DetailsPanelMoreMenu = ({
       : entityId
       ? [{ entityId, entityType, projectName }]
       : []
-    return {
-      projectName: projectName || '',
-      entityType,
-      selectedEntities: source.map((e) => ({
-        id: e.entityId,
-        entityType: e.entityType || entityType,
-        projectName: e.projectName || projectName || '',
-        name: e.name,
-        label: e.label || undefined,
-      })),
-    }
+    const entities = source.map((e) => ({
+      id: e.entityId,
+      entityType: e.entityType || entityType,
+      projectName: e.projectName || projectName || '',
+      name: e.name,
+      label: e.label || undefined,
+    }))
+    return { projectName: projectName || '', entityType, entities }
   }, [selectedEntities, entityId, entityType, projectName])
   const toMenuItem = useCallback(
     (item: (typeof applicableAddonItems)[number]): MenuItemType => ({
