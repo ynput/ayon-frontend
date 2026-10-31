@@ -219,6 +219,8 @@ const ColumnValuesFetcher = ({
 
   // everything is out of date, the rows on screen ask now
   const refresh = useCallback(() => {
+    state.current.controller.abort()
+    state.current.controller = new AbortController()
     markAddonColumnStale(columnId)
     ask(state.current.onScreen)
   }, [columnId, ask])
