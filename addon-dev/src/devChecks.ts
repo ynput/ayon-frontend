@@ -48,8 +48,14 @@ export const checkDevRequirements = async ({
   const checks: DevCheck[] = []
   const headers: Record<string, string> = apiKey ? { 'x-api-key': apiKey } : {}
   const get = async (urlPath: string) => {
-    const response = await fetch(`${serverUrl}${urlPath}`, { headers })
-    return { status: response.status, body: response.ok ? await response.json() : undefined }
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 10_000)
+    try {
+      const response = await fetch(`${serverUrl}${urlPath}`, { headers, signal: controller.signal })
+      return { status: response.status, body: response.ok ? await response.json() : undefined }
+    } finally {
+      clearTimeout(timer)
+    }
   }
 
   // the server
