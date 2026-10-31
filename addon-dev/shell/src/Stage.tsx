@@ -243,7 +243,7 @@ const DetailsPanelStage = ({ contribution, selection }: StageProps) => {
     () =>
       isTab
         ? { projectName, entityType, entities, scope: DETAILS_SCOPE }
-        : { projectName, entityType, entities, selectedEntities: entities },
+        : { projectName, entityType, entities },
     [isTab, projectName, entityType, entities],
   )
   useReport(contribution, context, !!project && entities.length > 0, !isTab)

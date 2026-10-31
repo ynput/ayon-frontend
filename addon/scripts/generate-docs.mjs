@@ -144,8 +144,7 @@ The same thing has the same name and type in every slot that has it:
   slots about entities: \`detailsPanel.tab\`, \`detailsPanel.menuItem\` (both also \`entityType\`, all of
   one type), \`entityMenuItem\`, \`table.shortcut\` (the project tables' rows; empty in the panels'
   tables) and \`slicer.menuItem\` (hierarchy rows; empty for other slice types). A table cell is one
-  entity: \`tableColumn\` has \`entity\`. \`selectedEntities\` is the deprecated name in
-  \`detailsPanel.menuItem\`.
+  entity: \`tableColumn\` has \`entity\`.
 
 ## Slots
 

@@ -45,8 +45,7 @@ The same thing has the same name and type in every slot that has it:
   slots about entities: `detailsPanel.tab`, `detailsPanel.menuItem` (both also `entityType`, all of
   one type), `entityMenuItem`, `table.shortcut` (the project tables' rows; empty in the panels'
   tables) and `slicer.menuItem` (hierarchy rows; empty for other slice types). A table cell is one
-  entity: `tableColumn` has `entity`. `selectedEntities` is the deprecated name in
-  `detailsPanel.menuItem`.
+  entity: `tableColumn` has `entity`.
 
 ## Slots
 
@@ -158,7 +157,6 @@ An item in the details panel's "more" menu. It shows from the description; `run`
 |---|---|---|
 | `slot` (required) | `'detailsPanel.menuItem'` | the slot this is rendered in |
 | `user` (required) | `AddonUser` | the signed-in user |
-| `selectedEntities` (required) | `EntityRef[]` | deprecated: the same as `entities`, which every slot about entities has |
 | `projectName` (required) | `string` |  |
 | `entityType` (required) | `string` | the type of every entity in `entities` |
 | `entities` (required) | `EntityRef[]` | the entities the slot is about, e.g. the ones the details panel shows |

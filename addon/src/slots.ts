@@ -300,13 +300,7 @@ export interface DetailsPanelMenuItemMeta extends MenuItemMeta {
 }
 
 /** Context of a details panel menu item. */
-export interface DetailsPanelMenuItemContext extends ProjectNameScope, EntityScope {
-  /**
-   * deprecated: the same as `entities`, which every slot about entities has
-   * @deprecated use `entities`
-   */
-  selectedEntities: EntityRef[]
-}
+export interface DetailsPanelMenuItemContext extends ProjectNameScope, EntityScope {}
 
 /** Description of a `tableColumn` contribution. */
 export interface TableColumnMeta {

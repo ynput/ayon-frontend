@@ -163,8 +163,7 @@ export const DetailsPanelMoreMenu = ({
       name: e.name,
       label: e.label || undefined,
     }))
-    // selectedEntities: the deprecated name of entities
-    return { projectName: projectName || '', entityType, entities, selectedEntities: entities }
+    return { projectName: projectName || '', entityType, entities }
   }, [selectedEntities, entityId, entityType, projectName])
   const toMenuItem = useCallback(
     (item: (typeof applicableAddonItems)[number]): MenuItemType => ({
