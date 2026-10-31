@@ -28,7 +28,9 @@ import DeleteUserDialog from './DeleteUserDialog'
 import InviteUserDialog from './InviteUserDialog'
 import LicensesDialog from '@components/LicensesDialog/LicensesDialog'
 import { useQueryParam } from 'use-query-params'
-import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
+import { TableExportButton } from '@shared/containers/TableExport'
+import UsersExportSource from './UsersExportSource'
 
 // what to show in the access column
 const formatAccessGroups = (rowData) => {
@@ -85,6 +87,7 @@ const UsersSettings = () => {
   const [showInviteUser, setShowInviteUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
   const [showLicenses, setShowLicenses] = useQueryParam('licenses', false)
+  const { openForContext: openImportDialog } = useImportDialogContext()
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
@@ -252,7 +255,8 @@ const UsersSettings = () => {
               icon="mail"
               disabled={!selectedUsers.length}
             />
-            <ImportDialogButton importContext="user" />
+            <TableExportButton onImport={() => openImportDialog('user')} />
+            <UsersExportSource users={filteredData} selectedUsers={selectedUsers} />
             <Button label="Licenses" icon="groups" onClick={() => setShowLicenses(true)} />
           </Toolbar>
           <Splitter

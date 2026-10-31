@@ -1,5 +1,9 @@
 import { UserPoolModel } from '@shared/api'
+import { readLocalStorage } from '@shared/hooks/useLocalStorage'
 import { ColumnSortEvent } from 'primereact/column'
+import PrimeReact from 'primereact/api'
+import { ObjectUtils } from 'primereact/utils'
+import { getInvitationState } from './InvitationStatusHelpers'
 
 /**
  * Sort function for user pool/license column
@@ -108,4 +112,49 @@ const accessGroupsSortFunction = (sortEvent: ColumnSortEvent) => {
   ]
 }
 
-export { accessGroupsSortFunction }
+const INVITE_SORT_RANK = { none: 0, expired: 1, pending: 2, accepted: 3 }
+
+const inviteStatusSortFunction = (event: ColumnSortEvent) => {
+  const { data, order } = event
+  return [...data].sort((a, b) => {
+    const diff = INVITE_SORT_RANK[getInvitationState(a)] - INVITE_SORT_RANK[getInvitationState(b)]
+    return order === 1 ? diff : -diff
+  })
+}
+
+// the sort functions of the table columns that don't sort by their field value
+const getUserSortFunctions = (
+  userPools: UserPoolModel[],
+): Record<string, (event: ColumnSortEvent) => any[]> => ({
+  userPool: (event) => userPoolSortFunction(event, userPools),
+  accessLevel: accessGroupsSortFunction,
+  inviteSentAt: inviteStatusSortFunction,
+})
+
+// the users table's DataTable state (stateKey), saved by the table on every change
+export const USERS_TABLE_STATE_KEY = 'users-datatable'
+
+export const getUsersTableState = () =>
+  readLocalStorage<{
+    sortField?: string
+    sortOrder?: 1 | -1 | 0 | null
+    columnOrder?: string[]
+  }>(USERS_TABLE_STATE_KEY, {})
+
+// the users in the table's order: the column's sort function, or the DataTable's default sort
+const sortUsers = <T extends object>(users: T[], userPools: UserPoolModel[]): T[] => {
+  const { sortField, sortOrder } = getUsersTableState()
+  if (!sortField || !sortOrder) return users
+  const sortFunction = getUserSortFunctions(userPools)[sortField]
+  if (sortFunction) return sortFunction({ data: [...users], field: sortField, order: sortOrder })
+  return [...users].sort((a, b) =>
+    ObjectUtils.sort(
+      ObjectUtils.resolveFieldData(a, sortField),
+      ObjectUtils.resolveFieldData(b, sortField),
+      sortOrder,
+      PrimeReact.locale ?? 'en',
+    ),
+  )
+}
+
+export { accessGroupsSortFunction, getUserSortFunctions, sortUsers }

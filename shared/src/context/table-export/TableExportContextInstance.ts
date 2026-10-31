@@ -63,12 +63,18 @@ export type TableExportListQuery = {
   sortBy?: string[]
 }
 
+// users of the Users settings table, exported in this order
+export type TableExportUsersQuery = {
+  names: string[]
+}
+
 export type TableExportRows = {
   folderIds?: string[]
   tasks?: TableExportTasksQuery
   products?: TableExportProductsQuery
   versions?: TableExportVersionsQuery
   entityList?: TableExportListQuery
+  users?: TableExportUsersQuery // not combined with project rows
 }
 
 // the rows and columns of an export request, the addon adds the project and file options
@@ -79,8 +85,11 @@ export type TableExportContent = TableExportRows & {
 
 // What the open table exports, registered by its page
 export type TableExportSource = {
-  projectName: string
+  projectName: string // empty for tables outside a project (users)
   canImport: boolean // the rows can be imported back with Import CSV
+  importColumnsLabel?: string // what includeImportColumns adds, "entity type and path" by default
+  rowSelection?: boolean // the table selects whole rows, not cells: no selected columns to choose
+  minPowerpackVersion?: string // the Power Pack version that exports this table, if newer than the first
   selectedRowsCount: number
   getContent: (scope: TableExportScope, options: TableExportOptions) => TableExportContent
   // labels of the columns the export leaves out (thumbnails, links, ...)
