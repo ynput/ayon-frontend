@@ -1,7 +1,8 @@
 import { Component, useMemo } from 'react'
 import type { ComponentType, CSSProperties, ErrorInfo, ReactNode } from 'react'
 import type { AnyContribution, Contribution } from './contributions'
-import { contributionTitle, usePiece } from './pieces'
+import { useUser } from './globals'
+import { contributionTitle, pieceContext, usePiece } from './pieces'
 import type { Loader, SlotMap, SlotName } from './slots'
 import { SlotReactContext } from './SlotContextInstance'
 
@@ -118,7 +119,7 @@ const Piece = ({ loader, props, contribution, loading, error }: PieceProps) => {
 /**
  * Renders one piece of a contribution: loads it, shows `loading` meanwhile, keeps a crash inside
  * an error box and gives the piece's components the slot context (`useSlot`). The piece gets the
- * context as props.
+ * context as props, with `slot` and `user` added (shows `loading` until there is a user).
  */
 export const ContributionView = <S extends SlotName>({
   contribution,
@@ -129,19 +130,25 @@ export const ContributionView = <S extends SlotName>({
 }: ContributionViewProps<S>) => {
   const anyContribution = contribution as unknown as AnyContribution
   const { slot } = anyContribution
-  const value = useMemo(() => ({ ...(context as object), slot }), [context, slot])
+  const user = useUser()
+  // nothing renders without the user, so every piece can rely on `user`
+  const value = useMemo(
+    () => (user ? pieceContext(anyContribution, context as object, user) : undefined),
+    [anyContribution, context, user],
+  )
   const active = useMemo(
-    () => ({ slot, value, contribution: anyContribution }),
+    () => value && { slot, value, contribution: anyContribution },
     [slot, value, anyContribution],
   )
   const loader = anyContribution[piece] as Loader<unknown> | undefined
 
+  if (!active) return <>{loading}</>
   return (
     <ContributionErrorBoundary key={anyContribution.key} contribution={anyContribution} fallback={error}>
       <SlotReactContext.Provider value={active}>
         <Piece
           loader={loader}
-          props={value}
+          props={active.value}
           contribution={anyContribution}
           loading={loading}
           error={error}

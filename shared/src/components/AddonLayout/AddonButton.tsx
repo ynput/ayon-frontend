@@ -5,7 +5,7 @@ import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ContributionView, prefetchPiece, runContribution } from '@ynput/ayon-addon'
 import type { AddonMenuItem, AnyContribution, Contribution, SlotMap } from '@ynput/ayon-addon'
-import { loadPiece, reportContributionError } from '@ynput/ayon-addon/host'
+import { loadPiece, pieceContext, reportContributionError } from '@ynput/ayon-addon/host'
 import { Menu } from '@shared/components/Menu/Menu'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
@@ -81,11 +81,11 @@ export const AddonButton = <S extends ButtonSlot>({
         .then((build) => {
           if (typeof build !== 'function') throw new Error('"menu" has no default export function')
           return (build as (ctx: object) => AddonMenuItem[] | Promise<AddonMenuItem[]>)(
-            { ...actionContext, slot: any.slot },
+            pieceContext(any, actionContext),
           )
         })
         .then((items) => {
-          setMenuItems(toMenuItems(items, any))
+          setMenuItems(toMenuItems(items, (error) => reportContributionError(any, error)))
           toggleMenuOpen(menuId)
         })
         .catch((error) => reportContributionError(any, error))

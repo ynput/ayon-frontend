@@ -8,6 +8,7 @@ import type {
   ProjectNameScope,
   ProjectScope,
   SlicerScope,
+  UserScope,
   ViewsScope,
 } from './scopes'
 import { isReservedShortcut, parseShortcut } from './shortcuts'
@@ -301,11 +302,7 @@ export interface DetailsPanelMenuItemMeta extends MenuItemMeta {
 }
 
 /** Context of a details panel menu item. */
-export interface DetailsPanelMenuItemContext extends ProjectNameScope {
-  entityType: string
-  /** the entities the panel shows */
-  selectedEntities: EntityRef[]
-}
+export interface DetailsPanelMenuItemContext extends ProjectNameScope, EntityScope {}
 
 /** Description of a `tableColumn` contribution. */
 export interface TableColumnMeta {
@@ -442,6 +439,11 @@ export interface TableShortcutContext {
   projectName: string | null
   /** the rows it acts on: the selected ones when the key was pressed in one of them, else its row */
   rows: TableRowRef[]
+  /**
+   * the entities of `rows` in the project tables (list items resolve to their entity); empty in
+   * the panels' tables, whose rows are not all entities: read `rows` there
+   */
+  entities: EntityRef[]
   /** where the key was pressed: the row's id, and the column's in the project tables */
   focused: { rowId: string; columnId?: string }
   /** project tables: the selected cells, by row (entity) and column id; empty elsewhere */
@@ -491,6 +493,8 @@ export interface SlicerMenuItemContext extends ProjectNameScope {
   sliceType: string
   /** the rows it acts on: the selected ones, or the right-clicked one */
   selected: SlicerRowRef[]
+  /** `hierarchy`: the folders and tasks of `selected`; empty for the other slice types */
+  entities: EntityRef[]
   menu: MenuKind
 }
 
@@ -537,9 +541,12 @@ export interface StudioPageContext extends ViewsScope {
 /** The name of a slot, e.g. `'project.page'`. */
 export type SlotName = keyof SlotMap & string
 
-/** What the code of a contribution to slot `S` gets: `{ slot: S, ...context }`. */
+/**
+ * What the code of a contribution to slot `S` gets: `{ slot: S, user, ...context }`. The host
+ * passes the slot's own context; `ContributionView` and `runContribution` add `slot` and `user`.
+ */
 export type SlotContext<S extends SlotName> = S extends SlotName
-  ? { slot: S } & SlotMap[S]['context']
+  ? { slot: S } & UserScope & SlotMap[S]['context']
   : never
 
 /** Props of the component a contribution to slot `S` renders. Same as `SlotContext<S>`. */
