@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import type { AnyContribution, Contribution } from './contributions'
+import { getHost } from './hostBridge'
+import type { AddonUser } from './scopes'
 import type { Loader, SlotMap, SlotName } from './slots'
 
 type AnyLoader = Loader<unknown>
@@ -86,6 +88,20 @@ export const reportContributionError = (contribution: AnyContribution, error: un
 }
 
 /**
+ * What a contribution's code gets: the slot's context plus `slot` and the signed-in `user`
+ * (`SlotContext`). Every piece gets it from here, so no surface adds `user` itself. Throws before
+ * sign-in, which AYON never renders addons in.
+ */
+export const pieceContext = (
+  contribution: AnyContribution,
+  context: object,
+  user: AddonUser | undefined = getHost().getUser?.(),
+) => {
+  if (!user) throw new Error('no signed-in user yet')
+  return { ...context, slot: contribution.slot, user }
+}
+
+/**
  * Runs a contribution's `run` piece (menu items): loads it, calls it with the slot context and
  * reports an error instead of throwing, so a broken item can't break the menu it is in.
  */
@@ -99,7 +115,7 @@ export const runContribution = async <S extends SlotName>(
     const loader = any[piece] as AnyLoader
     const run = await loadPiece(loader)
     if (typeof run !== 'function') throw new Error(`"${piece}" has no default export function`)
-    await run({ ...(context as object), slot: any.slot })
+    await run(pieceContext(any, context as object))
   } catch (error) {
     reportContributionError(any, error)
   }

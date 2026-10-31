@@ -88,7 +88,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = (props) => {
       </ProjectContextProvider>
     )
   }
-  if (!folders) {
+  if (folders?.projectName !== props.projectName) {
     return (
       <ProjectFoldersContextProvider projectName={props.projectName}>
         {dialog}
@@ -221,6 +221,7 @@ const EntityPickerDialogContent: FC<EntityPickerDialogProps> = ({
     entityData,
     rowSelection,
     setEntityRowSelection,
+    initialSelection,
   })
 
   // Process table data to filter out excluded IDs and mark disabled rows

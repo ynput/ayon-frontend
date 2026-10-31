@@ -1,4 +1,27 @@
 // Building blocks of slot contexts, so a field means the same in every slot that has it.
+// Every slot's code gets `user`; slots about a project `projectName`; slots about entities
+// `entities` (EntityRef). The shape is described once in the generated AGENTS.md.
+
+/** The signed-in user, as addons see it: in every slot's context (`user`) and from `useUser`. */
+export interface AddonUser {
+  name: string
+  fullName?: string
+  email?: string
+  /** admins, and service users (the server treats them as admins) */
+  isAdmin: boolean
+  /** managers and admins */
+  isManager: boolean
+  isGuest: boolean
+  /** a service user: an API key session (services, agents, CI) */
+  isService: boolean
+  /** developer mode is on */
+  isDeveloper: boolean
+}
+
+/** Every slot: the signed-in user. The host adds it; AYON renders addons only once signed in. */
+export interface UserScope {
+  user: AddonUser
+}
 
 /**
  * A project, as slots pass it. The fields addons can rely on; AYON passes the full project
@@ -40,7 +63,9 @@ export interface EntityRef {
 
 /** Slots about one or more entities of one type. */
 export interface EntityScope {
+  /** the type of every entity in `entities` */
   entityType: string
+  /** the entities the slot is about, e.g. the ones the details panel shows */
   entities: EntityRef[]
 }
 

@@ -10,21 +10,29 @@ import { fileURLToPath } from 'url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'))
-const program = ts.createProgram(['src/index.ts', 'src/manifest.ts', 'src/check.ts'].map((f) => path.join(root, f)), {
-  strict: true,
-  skipLibCheck: true,
-  jsx: ts.JsxEmit.ReactJSX,
-  module: ts.ModuleKind.ESNext,
-  moduleResolution: ts.ModuleResolutionKind.Bundler,
-  target: ts.ScriptTarget.ESNext,
-})
+const program = ts.createProgram(
+  ['src/index.ts', 'src/manifest.ts', 'src/check.ts'].map((f) => path.join(root, f)),
+  {
+    strict: true,
+    skipLibCheck: true,
+    jsx: ts.JsxEmit.ReactJSX,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+    target: ts.ScriptTarget.ESNext,
+  },
+)
 const checker = program.getTypeChecker()
 const slotsFile = program.getSourceFile(path.join(root, 'src/slots.ts'))
 
-const doc = (symbol) => ts.displayPartsToString(symbol.getDocumentationComment(checker)).replace(/\s+/g, ' ').trim()
+const doc = (symbol) =>
+  ts.displayPartsToString(symbol.getDocumentationComment(checker)).replace(/\s+/g, ' ').trim()
 const typeText = (symbol, node) =>
   checker
-    .typeToString(checker.getTypeOfSymbolAtLocation(symbol, node), undefined, ts.TypeFormatFlags.NoTruncation)
+    .typeToString(
+      checker.getTypeOfSymbolAtLocation(symbol, node),
+      undefined,
+      ts.TypeFormatFlags.NoTruncation,
+    )
     .replace(/\s+/g, ' ')
 
 const fields = (typeNode) => {
@@ -44,7 +52,8 @@ ts.forEachChild(slotDocsFile, function visit(node) {
   if (ts.isVariableDeclaration(node) && node.name.getText() === 'SLOT_DOCS') {
     for (const prop of node.initializer.properties) {
       const entry = {}
-      for (const field of prop.initializer.properties) entry[field.name.getText()] = field.initializer.text
+      for (const field of prop.initializer.properties)
+        entry[field.name.getText()] = field.initializer.text
       slotDocs[prop.name.text ?? prop.name.getText()] = entry
     }
   }
@@ -67,6 +76,7 @@ ts.forEachChild(slotsFile, (node) => {
       meta: fields(parts.meta.type),
       context: [
         { name: 'slot', type: `'${name}'`, optional: false, doc: 'the slot this is rendered in' },
+        { name: 'user', type: 'AddonUser', optional: false, doc: 'the signed-in user' },
         ...fields(parts.context.type),
       ],
       pieces,
@@ -79,7 +89,12 @@ const table = (rows, header) =>
   [
     `| ${header} | Type | |`,
     '|---|---|---|',
-    ...rows.map((f) => `| \`${f.name}\`${f.optional ? '' : ' (required)'} | \`${cell(f.type)}\` | ${cell(f.doc)} |`),
+    ...rows.map(
+      (f) =>
+        `| \`${f.name}\`${f.optional ? '' : ' (required)'} | \`${cell(f.type)}\` | ${cell(
+          f.doc,
+        )} |`,
+    ),
   ].join('\n')
 
 const slotSections = slots
@@ -120,7 +135,7 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
 - Header and toolbar items set exactly one action: \`to\` (navigate), \`run\`, \`dialog\` (AYON opens
   its dialog around your content, which gets \`close\`), \`menu\` (a function returning the items) or
   \`component\` (your own JSX instead of AYON's button). Their code gets \`navigate\` in the context.
-- Globals are imports, never context: \`useUser\`, \`useNavigate\` and the other router hooks, \`Link\`,
+- Globals are imports, never context: \`useNavigate\` and the other router hooks, \`Link\`,
   \`toast\`, the layout components (\`ProjectPageLayout\`, \`Slicer\`, \`StudioPageLayout\`,
   \`ProjectList\`). Data comes from \`@ynput/ayon-frontend-shared/api\` (AYON's api and cache):
   components use its hooks, \`run\` and \`menu\` pieces \`dispatch(api.endpoints.x.initiate(args))\`
@@ -157,7 +172,27 @@ import { EntityPicker, type EntityRef } from '@ynput/ayon-addon'
   rendering it: close it in \`onSubmit\` and \`onClose\`.
 - \`initialSelection\`: \`EntityRef\`s (or \`{ id, entityType }\`) selected when it opens, of
   \`entityType\` or a type above it (a folder opens the tree at it). A slot's \`entities\` fit as they are.
+  An entity on a page the picker hasn't loaded yet stays selected until it loads, or until no page is
+  left to load it.
 - One fixed project: put your own project field next to it if the user picks the project.
+
+## Slot contexts: one shape
+
+The same thing has the same name and type in every slot that has it:
+
+- **\`user\`** (\`AddonUser\`), in every slot: the signed-in user, \`name\`, \`fullName\`, \`email\` and
+  the flags \`isAdmin\` (service users too), \`isManager\` (admins too), \`isGuest\`, \`isService\`,
+  \`isDeveloper\` (developer mode). \`run\` and \`menu\` pieces get it like components; \`useUser()\`
+  is the same user for code below them.
+- **\`projectName\`** (\`string\`), in slots about one project. Where there may be none it is
+  \`string | null\`: \`header.item\` (no project page open) and \`table.shortcut\` (the project list).
+  \`project.page\` also has \`project\` (\`ProjectInfo\`, \`undefined\` while it loads); elsewhere get
+  the project from AYON's api (\`useGetProjectQuery({ projectName })\`, cached).
+- **\`entities\`** (\`EntityRef[]\`: \`id\`, \`entityType\`, \`projectName\`, \`name?\`, \`label?\`), in
+  slots about entities: \`detailsPanel.tab\`, \`detailsPanel.menuItem\` (both also \`entityType\`, all of
+  one type), \`entityMenuItem\`, \`table.shortcut\` (the project tables' rows; empty in the panels'
+  tables) and \`slicer.menuItem\` (hierarchy rows; empty for other slice types). A table cell is one
+  entity: \`tableColumn\` has \`entity\`.
 
 ## Slots
 
@@ -175,6 +210,9 @@ if (process.argv.includes('--check')) {
 } else {
   writeFileSync(agentsPath, agents)
   mkdirSync(path.join(root, 'dist'), { recursive: true })
-  writeFileSync(path.join(root, 'dist/slots.json'), JSON.stringify({ version: pkg.version, slots }, null, 2))
+  writeFileSync(
+    path.join(root, 'dist/slots.json'),
+    JSON.stringify({ version: pkg.version, slots }, null, 2),
+  )
   console.log(`wrote AGENTS.md and dist/slots.json (${slots.length} slots)`)
 }
