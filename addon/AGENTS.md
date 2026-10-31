@@ -27,6 +27,10 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   `ProjectList`), `MoreMenu` (below). Data comes from `@ynput/ayon-frontend-shared/api`
   (AYON's api and cache): components use its hooks, `run` and `menu` pieces
   `dispatch(api.endpoints.x.initiate(args))` with `dispatch` from this package (AYON's store).
+- Endpoints you inject and tag types you add (`enhanceEndpoints({ addTagTypes })`) go into AYON's
+  one api, where names are global: prefix them with your addon name (`myaddonGetLogs`,
+  `myaddonLog`). A `tableColumn` lists the tags its values depend on in `providesTags`
+  (yours or AYON's, such as `task`) and refreshes when one is invalidated.
 - A crash stays inside the contribution: AYON wraps each one in an error boundary (menu items: a toast).
 
 ## A "more" menu: `MoreMenu`
@@ -318,7 +322,7 @@ Pieces: `component`.
 
 ### `tableColumn`: `tableColumn`
 
-A read-only column in the project tables (Overview, Products, Lists). It is in the column settings from the description; `cell` and `fetchValues` load with the table. The host draws the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable, and pasting into it changes nothing. Loads: with the page.
+A read-only column in the project tables (Overview, Products, Lists). It is in the column settings from the description; `cell` and `fetchValues` load with the table. The host draws the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable, and pasting into it changes nothing. When the values depend on data your mutations change, list its cache tags in `providesTags` and the column refreshes itself when they are invalidated: `tableColumn({ id, label, cell, fetchValues, providesTags: [{ type: 'myaddonLog', id: 'LIST' }] })`. Loads: with the page.
 
 | Description field | Type | |
 |---|---|---|
@@ -329,6 +333,7 @@ A read-only column in the project tables (Overview, Products, Lists). It is in t
 | `pages` | `ProjectTablePage[] \| undefined` | which tables offer it; all (Overview, Products, Lists) when not set |
 | `width` | `number \| undefined` | width in pixels. Addon columns start hidden: users show them in Customize |
 | `menu` | `string \| false \| undefined` | where the column sits in the "Add column" menu: a submenu named after the addon when not set, a submenu with this name (columns giving the same name share it, across addons too), or `false` for the menu's top level |
+| `providesTags` | `TableColumnTag[] \| undefined` | cache tags of AYON's api that the values depend on: when one is invalidated (by your mutations or AYON's), the values are fetched again as with `refreshTableColumn`. Needs `fetchValues`. Names as you register them (`enhanceEndpoints({ addTagTypes })`, prefixed with your addon name) or AYON's own. A plain name follows invalidations of the whole type only: to follow `{ type, id }`, such as a list tag, give that tag |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
