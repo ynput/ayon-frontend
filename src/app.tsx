@@ -82,6 +82,7 @@ import { DetailsPanelFloating } from '@shared/containers'
 import { FeedbackProvider, PowerpackDialog, SplitterStyles } from '@shared/components'
 import AppRemoteLoader from './remote/AppRemoteLoader'
 import AppAddonServices from './remote/AppAddonServices'
+import { AddonHostNavigation } from './remote/addonHost'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
@@ -273,6 +274,7 @@ const App = () => {
                                                 <PowerpackDialog />
                                                 <AppRemoteLoader />
                                                 <AppAddonServices />
+                                                <AddonHostNavigation />
                                                 <TrialBanner />
                                               </TableExportProvider>
                                             </DeleteEntitiesProvider>

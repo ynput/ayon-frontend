@@ -30,6 +30,7 @@ import {
   SlicerHost,
   useAddonCustomizeSections,
   useAddonTableShortcuts,
+  shortcutEntities,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
 } from '@ynput/ayon-frontend-shared/components'
@@ -249,7 +250,7 @@ const DetailsPanelStage = ({ contribution, selection }: StageProps) => {
     () =>
       isTab
         ? { projectName, entityType, entities, scope: DETAILS_SCOPE }
-        : { projectName, entityType, selectedEntities: entities },
+        : { projectName, entityType, entities },
     [isTab, projectName, entityType, entities],
   )
   useReport(contribution, context, !!project && entities.length > 0, !isTab)
@@ -279,17 +280,28 @@ const DetailsPanelStage = ({ contribution, selection }: StageProps) => {
 // slicer.menuItem: AYON's slicer; the items are in its right-click menu and dropdown
 const SlicerBody = ({ contribution, selection }: StageProps) => {
   const { rowSelection, sliceType } = useSlicerContext()
-  const context = useMemo(
-    () => ({
+  const context = useMemo(() => {
+    const ids = Object.keys(rowSelection).filter((id) => rowSelection[id])
+    // hierarchy rows are folders and tasks: the picked entities, else folders
+    const entities =
+      sliceType === 'hierarchy'
+        ? ids.map(
+            (id) =>
+              selection.entities.find((entity) => entity.id === id) ?? {
+                id,
+                entityType: 'folder',
+                projectName: selection.projectName!,
+              },
+          )
+        : []
+    return {
       projectName: selection.projectName,
       sliceType,
-      selected: Object.keys(rowSelection)
-        .filter((id) => rowSelection[id])
-        .map((id) => ({ id })),
+      selected: ids.map((id) => ({ id })),
+      entities,
       menu: 'context',
-    }),
-    [selection.projectName, sliceType, rowSelection],
-  )
+    }
+  }, [selection.projectName, selection.entities, sliceType, rowSelection])
   useReport(contribution, context, true, true)
   return (
     // positioned: the slicer's Section fills its container (a splitter panel in AYON)
@@ -365,6 +377,7 @@ const TableStage = ({ contribution, selection }: StageProps) => {
       table: page,
       projectName,
       rows,
+      entities: shortcutEntities(page, projectName, rows),
       focused: { rowId: rows[0].id, columnId: 'name' },
       cells: rows.map((row) => ({ rowId: row.id, columnId: 'name' })),
     }

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { entityUrl } from '@ynput/ayon-addon'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 import type { DeletableEntity } from '@shared/context'
 import { pluralize } from '@shared/util'
@@ -37,21 +38,15 @@ export interface MenuOptionsResult {
   shareLink: string | null
 }
 
-// folder/task open in Overview; product/version/representation open in Products.
 const buildEntityShareLink = (
   entityType: string,
   entityId: string,
   projectName: string,
 ): string | null => {
-  const path =
-    entityType === 'folder' || entityType === 'task'
-      ? 'overview'
-      : entityType === 'product' || entityType === 'version' || entityType === 'representation'
-      ? 'products'
-      : null
-  if (!path) return null
+  const url = entityUrl({ entityType, id: entityId, projectName })
+  if (!url) return null
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  return `${origin}/projects/${projectName}/${path}?project=${projectName}&type=${entityType}&id=${entityId}`
+  return `${origin}${url}`
 }
 
 export const useMenuOptions = ({

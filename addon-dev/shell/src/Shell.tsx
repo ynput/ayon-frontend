@@ -38,6 +38,7 @@ import { setStatus } from './status'
 import type { ShellOptions, ShellSelection } from './types'
 import { readSelection, writeSelection } from './params'
 import { provideHost } from '@ynput/ayon-addon/host'
+import { getShellUser } from './host'
 
 const Centered = ({ children }: { children: ReactNode }) => (
   <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>{children}</div>
@@ -168,8 +169,14 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
 export const Shell = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'preview' }) => {
   const store = useMemo(() => {
     const standaloneStore = createStandaloneStore()
-    // run and menu pieces dispatch to it through @ynput/ayon-addon, as they do to AYON's store
-    provideHost({ dispatch: standaloneStore.dispatch })
+    // run and menu pieces dispatch to it through @ynput/ayon-addon, as they do to AYON's store,
+    // and get the user its queries loaded in their context
+    provideHost({
+      dispatch: standaloneStore.dispatch,
+      getUser: () => getShellUser(standaloneStore.getState()),
+      // navigateToEntity: the shell has none of AYON's pages, so the link opens in AYON
+      navigate: (to) => window.open(new URL(to, options.serverUrl).href, '_blank', 'noopener'),
+    })
     return standaloneStore
   }, [])
   return (

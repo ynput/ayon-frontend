@@ -33,10 +33,77 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   under AYON's providers, so hooks work. Clean up in its effects.
 - Globals are imports, never context: `useUser`, `useNavigate` and the other router hooks, `Link`,
   `toast`, the layout components (`ProjectPageLayout`, `Slicer`, `StudioPageLayout`,
-  `ProjectList`). Data comes from `@ynput/ayon-frontend-shared/api` (AYON's api and cache):
-  components use its hooks, `run` and `menu` pieces `dispatch(api.endpoints.x.initiate(args))`
-  with `dispatch` from this package (AYON's store).
+  `ProjectList`), `MoreMenu` (below). Data comes from `@ynput/ayon-frontend-shared/api`
+  (AYON's api and cache): components use its hooks, `run` and `menu` pieces
+  `dispatch(api.endpoints.x.initiate(args))` with `dispatch` from this package (AYON's store).
+- Links to an entity come from `entityUrl(entity, { activity? })`, never a hand-built URL: the page
+  that opens it with its details panel (folders and tasks on Overview; products, versions and
+  representations on Products), `undefined` for types without a page (e.g. `workfile`).
+  `navigateToEntity(entity)` goes there without reloading, also from `run` pieces; it returns
+  `false` for those types. Any `EntityRef` from a context works, the id is enough:
+
+  ```tsx
+  import { entityUrl, Link, navigateToEntity } from '@ynput/ayon-addon'
+  <Link to={entityUrl(entity) ?? ''}>{entity.label}</Link>
+  navigateToEntity({ projectName, entityType: 'task', id: log.taskId })
+  ```
+- Endpoints you inject and tag types you add (`enhanceEndpoints({ addTagTypes })`) go into AYON's
+  one api, where names are global: prefix them with your addon name (`myaddonGetLogs`,
+  `myaddonLog`). A `tableColumn` lists the tags its values depend on in `providesTags`
+  (yours or AYON's, such as `task`) and refreshes when one is invalidated.
 - A crash stays inside the contribution: AYON wraps each one in an error boundary (menu items: a toast).
+
+## A "more" menu: `MoreMenu`
+
+An addon's own menu (a panel's "…" actions, a row's options) is AYON's menu under a button, from
+one component. Don't build one: `MoreMenu` looks and works like AYON's menus everywhere (pages,
+details panel tabs, popovers, dialogs, the dev shell).
+
+```tsx
+import { MoreMenu } from '@ynput/ayon-addon'
+
+<MoreMenu
+  data-testid="tracker-more"
+  items={[
+    { id: 'add', label: 'Add time manually', icon: 'more_time', onClick: () => setAdding(true) },
+    { id: 'export', label: 'Export', icon: 'download', items: [
+      { id: 'csv', label: 'CSV', onClick: exportCsv },
+    ] },
+    { divider: true },
+    { id: 'delete', label: 'Delete', icon: 'delete', danger: true, disabled: !selected, onClick: remove },
+  ]}
+/>
+```
+
+- Items are the `AddonMenuItem`s a `menu` piece returns: `onClick`, `to` (an AYON URL), `href`
+  (a new tab), `items` (a submenu), `{ divider: true }`, `disabled`, `selected`, `danger`. A
+  failing `onClick` (also a rejected promise) is shown as a toast naming the addon.
+- The button: `icon` (`more_horiz` when not set), `label` (next to the icon), `tooltip` (the label,
+  or `More`, when not set; also the accessible name), `variant` (`text` by default, as AYON's
+  `Button`), `align` (the menu's edge on the button's: `right` by default), `disabled`,
+  `className`, `data-testid`.
+- Escape and a click outside close only the menu: the popover or dialog it is in stays open, and
+  Escape puts the focus back on the button. Keys as in AYON's menus: Tab moves through the items,
+  Enter picks one or opens its submenu, Escape closes the submenu first.
+- In tests the items are `listitem`s (`getByRole('listitem', { name: 'Delete' })`), not `menuitem`s.
+
+## Slot contexts: one shape
+
+The same thing has the same name and type in every slot that has it:
+
+- **`user`** (`AddonUser`), in every slot: the signed-in user, `name`, `fullName`, `email` and
+  the flags `isAdmin` (service users too), `isManager` (admins too), `isGuest`, `isService`,
+  `isDeveloper` (developer mode). `run` and `menu` pieces get it like components; `useUser()`
+  is the same user for code below them.
+- **`projectName`** (`string`), in slots about one project. Where there may be none it is
+  `string | null`: `header.item` (no project page open) and `table.shortcut` (the project list).
+  `project.page` also has `project` (`ProjectInfo`, `undefined` while it loads); elsewhere get
+  the project from AYON's api (`useGetProjectQuery({ projectName })`, cached).
+- **`entities`** (`EntityRef[]`: `id`, `entityType`, `projectName`, `name?`, `label?`), in
+  slots about entities: `detailsPanel.tab`, `detailsPanel.menuItem` (both also `entityType`, all of
+  one type), `entityMenuItem`, `table.shortcut` (the project tables' rows; empty in the panels'
+  tables) and `slicer.menuItem` (hierarchy rows; empty for other slice types). A table cell is one
+  entity: `tableColumn` has `entity`.
 
 ## Slots
 
@@ -54,6 +121,7 @@ A tab on the project page, at `/projects/<project>/<id>`. The tab shows from the
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'project.page'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `project` (required) | `ProjectInfo \| undefined` | the project; `undefined` while it loads |
 | `projectName` (required) | `string` |  |
 | `slicer` (required) | `SlicerSelection` | empty until the user selects something in a `<Slicer>` the page places |
@@ -76,6 +144,7 @@ A tab on the dashboard (studio level), at `/dashboard/<id>`. The tab shows from 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'studio.page'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `selectedProjects` (required) | `string[]` | projects selected in the page's `<ProjectList>`; saved per page |
 | `views` (required) | `PageViews \| undefined` | `undefined` when the page's description has no `viewType` |
 
@@ -100,6 +169,7 @@ A button in the main header, drawn by the host like its own buttons. What a clic
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'header.item'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `projectName` (required) | `string \| null` | the project whose page is open, else `null` |
 | `navigate` (required) | `(to: string) => void` | goes to an AYON URL, e.g. `navigate('/dashboard/comments')` |
 
@@ -119,10 +189,11 @@ A tab in the details panel. The tab button shows from the description, for `enti
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'detailsPanel.tab'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `scope` (required) | `string` | where the panel is open (`overview`, `dashboard`, `inbox`, ...); the panel opens in many places |
 | `projectName` (required) | `string` |  |
-| `entityType` (required) | `string` |  |
-| `entities` (required) | `EntityRef[]` |  |
+| `entityType` (required) | `string` | the type of every entity in `entities` |
+| `entities` (required) | `EntityRef[]` | the entities the slot is about, e.g. the ones the details panel shows |
 
 Pieces: `component`.
 
@@ -143,9 +214,10 @@ An item in the details panel's "more" menu. It shows from the description; `run`
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'detailsPanel.menuItem'` | the slot this is rendered in |
-| `entityType` (required) | `string` |  |
-| `selectedEntities` (required) | `EntityRef[]` | the entities the panel shows |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `projectName` (required) | `string` |  |
+| `entityType` (required) | `string` | the type of every entity in `entities` |
+| `entities` (required) | `EntityRef[]` | the entities the slot is about, e.g. the ones the details panel shows |
 
 Pieces: `run`.
 
@@ -165,6 +237,7 @@ An item in the project list's menus (dashboard, project menu, studio pages' Proj
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'projectList.menuItem'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `projectNames` (required) | `string[]` | the selected projects (project folders left out) |
 | `menu` (required) | `MenuKind` |  |
 
@@ -187,8 +260,10 @@ An item in the project page slicer's menus: the right-click menu, the panel's dr
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'slicer.menuItem'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `sliceType` (required) | `string` |  |
 | `selected` (required) | `SlicerRowRef[]` | the rows it acts on: the selected ones, or the right-clicked one |
+| `entities` (required) | `EntityRef[]` | `hierarchy`: the folders and tasks of `selected`; empty for the other slice types |
 | `menu` (required) | `MenuKind` |  |
 | `projectName` (required) | `string` |  |
 
@@ -212,6 +287,7 @@ An item in the right-click menu of the project tables' cells, for the selected e
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'entityMenuItem'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `page` (required) | `ProjectTablePage` |  |
 | `entities` (required) | `EntityRef[]` | the selected entities (not table rows: list items resolve to their entity) |
 | `projectName` (required) | `string` |  |
@@ -236,6 +312,7 @@ A button in the project tables' toolbar, before Customize (Overview, Products, L
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'projectTable.toolbarItem'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `page` (required) | `ProjectTablePage` |  |
 | `list` | `{ id: string; label: string; entityType: string; } \| undefined` | on Lists: the open list |
 | `projectName` (required) | `string` |  |
@@ -257,6 +334,7 @@ A section in the project tables' Customize panel (Overview, Products, Lists). Th
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'projectTable.customizeSection'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `page` (required) | `ProjectTablePage` |  |
 | `projectName` (required) | `string` |  |
 
@@ -264,7 +342,7 @@ Pieces: `component`.
 
 ### `tableColumn`: `tableColumn`
 
-A read-only column in the project tables (Overview, Products, Lists). It is in the column settings from the description; `cell` and `fetchValues` load with the table. The host draws the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable, and pasting into it changes nothing. Loads: with the page.
+A read-only column in the project tables (Overview, Products, Lists). It is in the column settings from the description; `cell` and `fetchValues` load with the table. The host draws the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable, and pasting into it changes nothing. When the values depend on data your mutations change, list its cache tags in `providesTags` and the column refreshes itself when they are invalidated: `tableColumn({ id, label, cell, fetchValues, providesTags: [{ type: 'myaddonLog', id: 'LIST' }] })`. Loads: with the page.
 
 | Description field | Type | |
 |---|---|---|
@@ -275,10 +353,12 @@ A read-only column in the project tables (Overview, Products, Lists). It is in t
 | `pages` | `ProjectTablePage[] \| undefined` | which tables offer it; all (Overview, Products, Lists) when not set |
 | `width` | `number \| undefined` | width in pixels. Addon columns start hidden: users show them in Customize |
 | `menu` | `string \| false \| undefined` | where the column sits in the "Add column" menu: a submenu named after the addon when not set, a submenu with this name (columns giving the same name share it, across addons too), or `false` for the menu's top level |
+| `providesTags` | `TableColumnTag[] \| undefined` | cache tags of AYON's api that the values depend on: when one is invalidated (by your mutations or AYON's), the values are fetched again as with `refreshTableColumn`. Needs `fetchValues`. Names as you register them (`enhanceEndpoints({ addTagTypes })`, prefixed with your addon name) or AYON's own. A plain name follows invalidations of the whole type only: to follow `{ type, id }`, such as a list tag, give that tag |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'tableColumn'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `page` (required) | `ProjectTablePage` |  |
 | `entity` (required) | `EntityRef` |  |
 | `value` (required) | `unknown` | what the column's `fetchValues` returned for this entity; `undefined` without `fetchValues` |
@@ -302,9 +382,11 @@ A keyboard shortcut on the cells of AYON's tables: the project tables (Overview,
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'table.shortcut'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `table` (required) | `ShortcutTable` | the table the key was pressed in |
 | `projectName` (required) | `string \| null` | the open project; `null` in the project list |
 | `rows` (required) | `TableRowRef[]` | the rows it acts on: the selected ones when the key was pressed in one of them, else its row |
+| `entities` (required) | `EntityRef[]` | the entities of `rows` in the project tables (list items resolve to their entity); empty in the panels' tables, whose rows are not all entities: read `rows` there |
 | `focused` (required) | `{ rowId: string; columnId?: string \| undefined; }` | where the key was pressed: the row's id, and the column's in the project tables |
 | `cells` (required) | `{ rowId: string; columnId: string; }[]` | project tables: the selected cells, by row (entity) and column id; empty elsewhere |
 
@@ -321,6 +403,7 @@ Code with no UI that runs while AYON is open, whatever the page: keeping a state
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
 | `slot` (required) | `'app.service'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
 | `projectName` (required) | `string \| null` | the project whose page is open, else `null` |
 
 Pieces: `component`.

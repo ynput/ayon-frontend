@@ -8,6 +8,7 @@ import type {
   ProjectNameScope,
   ProjectScope,
   SlicerScope,
+  UserScope,
   ViewsScope,
 } from './scopes'
 import { isReservedShortcut, parseShortcut } from './shortcuts'
@@ -139,7 +140,9 @@ export interface SlotMap {
    * settings from the description; `cell` and `fetchValues` load with the table. The host draws
    * the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the
    * right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable,
-   * and pasting into it changes nothing.
+   * and pasting into it changes nothing. When the values depend on data your mutations change, list
+   * its cache tags in `providesTags` and the column refreshes itself when they are invalidated:
+   * `tableColumn({ id, label, cell, fetchValues, providesTags: [{ type: 'myaddonLog', id: 'LIST' }] })`.
    */
   tableColumn: {
     version: 1
@@ -343,11 +346,7 @@ export interface DetailsPanelMenuItemMeta extends MenuItemMeta {
 }
 
 /** Context of a details panel menu item. */
-export interface DetailsPanelMenuItemContext extends ProjectNameScope {
-  entityType: string
-  /** the entities the panel shows */
-  selectedEntities: EntityRef[]
-}
+export interface DetailsPanelMenuItemContext extends ProjectNameScope, EntityScope {}
 
 /** Description of a `tableColumn` contribution. */
 export interface TableColumnMeta {
@@ -368,7 +367,22 @@ export interface TableColumnMeta {
    * `false` for the menu's top level
    */
   menu?: string | false
+  /**
+   * cache tags of AYON's api that the values depend on: when one is invalidated (by your
+   * mutations or AYON's), the values are fetched again as with `refreshTableColumn`. Needs
+   * `fetchValues`. Names as you register them (`enhanceEndpoints({ addTagTypes })`, prefixed with
+   * your addon name) or AYON's own. A plain name follows invalidations of the whole type only: to
+   * follow `{ type, id }`, such as a list tag, give that tag
+   */
+  providesTags?: TableColumnTag[]
 }
+
+/**
+ * A cache tag a `tableColumn` depends on (`providesTags`), as in RTK Query: a tag type, or a type
+ * and id. Invalidating `'x'` refreshes columns that list `'x'` or `{ type: 'x', id }`;
+ * invalidating `{ type: 'x', id: 'LIST' }` refreshes only columns that list that tag.
+ */
+export type TableColumnTag = string | { type: string; id?: string | number }
 
 /** Context of one cell of a `tableColumn`. */
 export interface TableCellContext extends ProjectNameScope {
@@ -391,7 +405,8 @@ export interface TableColumnFetchArgs extends ProjectNameScope {
  * Gets a column's values, by entity id; each cell gets its own as `value`. AYON calls it with
  * the rows that come on screen and that it has no value for yet, in batches once scrolling
  * pauses, and keeps what it returns: scrolling back costs nothing. A row whose entity changes
- * (here or by someone else) is asked for again; `refreshTableColumn(id)` asks again for all.
+ * (here or by someone else) is asked for again; for anything else the values depend on, list its
+ * cache tags in the column's `providesTags`, or call `refreshTableColumn(id)` to ask again for all.
  * When it throws, those cells show the error and are tried again when they next come on
  * screen. Fetch through AYON's store (`dispatch(api.endpoints.x.initiate(...))`) to share its
  * cache.
@@ -468,6 +483,11 @@ export interface TableShortcutContext {
   projectName: string | null
   /** the rows it acts on: the selected ones when the key was pressed in one of them, else its row */
   rows: TableRowRef[]
+  /**
+   * the entities of `rows` in the project tables (list items resolve to their entity); empty in
+   * the panels' tables, whose rows are not all entities: read `rows` there
+   */
+  entities: EntityRef[]
   /** where the key was pressed: the row's id, and the column's in the project tables */
   focused: { rowId: string; columnId?: string }
   /** project tables: the selected cells, by row (entity) and column id; empty elsewhere */
@@ -517,6 +537,8 @@ export interface SlicerMenuItemContext extends ProjectNameScope {
   sliceType: string
   /** the rows it acts on: the selected ones, or the right-clicked one */
   selected: SlicerRowRef[]
+  /** `hierarchy`: the folders and tasks of `selected`; empty for the other slice types */
+  entities: EntityRef[]
   menu: MenuKind
 }
 
@@ -575,9 +597,12 @@ export interface StudioPageContext extends ViewsScope {
 /** The name of a slot, e.g. `'project.page'`. */
 export type SlotName = keyof SlotMap & string
 
-/** What the code of a contribution to slot `S` gets: `{ slot: S, ...context }`. */
+/**
+ * What the code of a contribution to slot `S` gets: `{ slot: S, user, ...context }`. The host
+ * passes the slot's own context; `ContributionView` and `runContribution` add `slot` and `user`.
+ */
 export type SlotContext<S extends SlotName> = S extends SlotName
-  ? { slot: S } & SlotMap[S]['context']
+  ? { slot: S } & UserScope & SlotMap[S]['context']
   : never
 
 /** Props of the component a contribution to slot `S` renders. Same as `SlotContext<S>`. */
@@ -626,6 +651,23 @@ const checkShortcut = (item: Readonly<Record<string, unknown>>) => {
   if (isReservedShortcut(shortcut)) return `keys "${item.keys}" is one of AYON's own table keys`
 }
 
+// table columns: a menu name or false, and tags (RTK Query's shape) only with values to refresh
+const isTag = (tag: unknown) => {
+  if (typeof tag === 'string') return !!tag
+  const { type, id } = (tag ?? {}) as { type?: unknown; id?: unknown }
+  return typeof type === 'string' && !!type && ['undefined', 'string', 'number'].includes(typeof id)
+}
+const checkTableColumn = (item: Readonly<Record<string, unknown>>) => {
+  if (item.menu !== undefined && item.menu !== false && !(typeof item.menu === 'string' && item.menu.trim())) {
+    return 'menu must be a name or false'
+  }
+  if (item.providesTags === undefined) return
+  if (!Array.isArray(item.providesTags) || !item.providesTags.every(isTag)) {
+    return "providesTags must be a list of tag types or { type, id } tags, e.g. ['myaddonItem']"
+  }
+  if (!item.fetchValues) return 'providesTags needs fetchValues: the tags refresh its values'
+}
+
 /** The slots this host knows. A contribution to any other slot is skipped. */
 export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   'project.page': { version: 1, required: ['title'], pieces: ['component'], optional: pageFields },
@@ -652,10 +694,7 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     required: ['label'],
     pieces: ['cell'],
     optionalPieces: ['fetchValues'],
-    check: (item) =>
-      item.menu !== undefined && item.menu !== false && !(typeof item.menu === 'string' && item.menu.trim())
-        ? 'menu must be a name or false'
-        : undefined,
+    check: checkTableColumn,
   },
   entityMenuItem: { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
   'projectList.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },

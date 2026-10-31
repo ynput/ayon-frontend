@@ -44,6 +44,7 @@ export type {
   TableColumnFetch,
   TableColumnFetchArgs,
   TableColumnMeta,
+  TableColumnTag,
   ShortcutTable,
   TableRowRef,
   TableShortcutContext,
@@ -54,6 +55,7 @@ export type {
 } from './slots'
 export type {
   Access,
+  AddonUser,
   EntityRef,
   EntityScope,
   FolderInfo,
@@ -67,6 +69,7 @@ export type {
   ProjectScope,
   SlicerScope,
   SlicerSelection,
+  UserScope,
   ViewsScope,
 } from './scopes'
 export type {
@@ -84,6 +87,8 @@ export { ContributionView, ContributionErrorBoundary } from './ContributionView'
 export type { ContributionViewProps } from './ContributionView'
 export { prefetchPiece, runContribution } from './pieces'
 export { refreshTableColumn } from './tableColumns'
+export { entityUrl, navigateToEntity } from './entityLinks'
+export type { EntityLinkRef, EntityUrlOptions } from './entityLinks'
 
 // layout: the host's slicer and project list, placed by the addon
 export { ProjectList, ProjectPageLayout, Slicer, StudioPageLayout } from './layout'
@@ -94,9 +99,13 @@ export type {
   StudioPageLayoutProps,
 } from './layout'
 
+// AYON's menu under a button, for an addon's own "more" actions
+export { MoreMenu } from './MoreMenu'
+export type { MoreMenuProps } from './MoreMenu'
+
 // globals: the same in every slot
 export { dispatch, useUser } from './globals'
-export type { AddonDispatch, AddonUser } from './hostBridge'
+export type { AddonDispatch } from './hostBridge'
 // the host's router and toasts: an addon's own copies would have no router or container
 export { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 export { toast } from 'react-toastify'
