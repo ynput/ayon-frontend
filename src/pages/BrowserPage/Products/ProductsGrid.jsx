@@ -7,6 +7,8 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 import clsx from 'clsx'
 import Shortcuts from '@containers/Shortcuts'
 import { useProjectContext } from '@shared/context'
+import { FilmstripEntityCard } from '@shared/components'
+import { getEntityFilmstripUrl } from '@shared/util'
 
 const StyledGridLayout = styled(PerfectScrollbar)`
   padding: 4px 12px;
@@ -271,7 +273,7 @@ const ProductsGrid = ({
                     const status = statuses[product.versionStatus]
 
                     return (
-                      <EntityCard
+                      <FilmstripEntityCard
                         style={{
                           minWidth: 'unset',
                         }}
@@ -289,6 +291,14 @@ const ProductsGrid = ({
                         isActive={product.id in selection}
                         onContextMenu={(e) => handleContext(e, product.id)}
                         isPlayable={product.hasReviewables}
+                        filmstripUrl={
+                          product.hasReviewables &&
+                          getEntityFilmstripUrl({
+                            projectName: project.name,
+                            entityType: 'version',
+                            entityId: product.versionId,
+                          })
+                        }
                       />
                     )
                   })}
