@@ -18,6 +18,8 @@ export interface ProjectsListProps {
   onSelect: (ids: string[]) => void
   multiSelect?: boolean
   allowEmptySelection?: boolean
+  /** an "All projects" row at the top; it is selected when no project is */
+  allProjects?: boolean
   onNewProject?: () => void
   onNoProjectSelected?: (projectName: string) => void
   hidden?: Hidden
@@ -39,7 +41,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
   selection,
   onSelect,
   multiSelect,
-  allowEmptySelection,
+  allowEmptySelection: allowEmptySelectionProp,
+  allProjects,
   onNewProject,
   onNoProjectSelected,
   hidden,
@@ -51,6 +54,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
   canCreateProject: userCanCreateProject,
   shortcutsPaused,
 }) => {
+  const allowEmptySelection = allowEmptySelectionProp || allProjects
   // GET USER PREFERENCES (moved to hook)
   const { powerLicense } = usePowerpack()
   const {
@@ -250,7 +254,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
         onNewProject={onNewProject}
         toggleMenu={toggleMenu}
         onSelectAll={toggleSelectAll}
-        hiddenButtons={!multiSelect ? ['select-all'] : []}
+        hiddenButtons={!multiSelect || allProjects ? ['select-all'] : []}
+        allProjects={allProjects}
         onRenameFolder={onRenameFolder}
         onRenameProject={onRenameProject}
         renamingFolder={renamingFolder}

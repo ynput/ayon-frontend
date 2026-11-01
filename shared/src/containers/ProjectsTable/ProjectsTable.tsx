@@ -7,9 +7,20 @@ import {
 import { RowSelectionState, ExpandedState, RowPinningState } from '@tanstack/react-table'
 import { FC, Dispatch, SetStateAction, useMemo } from 'react'
 import ProjectsListTableHeader from './ProjectsListTableHeader'
-import { ProjectsSimpleTable } from './ProjectsSimpleTable'
+import { ALL_PROJECTS_ROW_ID, ProjectsSimpleTable } from './ProjectsSimpleTable'
 import { useSessionStorage } from '@shared/hooks'
 import { PinnedDivider } from './ProjectsTable.styled'
+
+const ALL_PROJECTS_ROWS: SimpleTableRow[] = [
+  {
+    id: ALL_PROJECTS_ROW_ID,
+    name: ALL_PROJECTS_ROW_ID,
+    label: 'All projects',
+    icon: 'stacks',
+    subRows: [],
+    data: { id: ALL_PROJECTS_ROW_ID },
+  },
+]
 
 type ButtonType = 'delete' | 'add' | 'filter' | 'search' | 'select-all'
 
@@ -49,6 +60,8 @@ export interface ProjectsTableProps {
   onRenameProject?: (projectName: string) => void
   containerClassName?: string
   enableClickToDeselect?: boolean
+  /** an "All projects" row in its own section at the top; it is selected when no project is */
+  allProjects?: boolean
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
   }
@@ -89,6 +102,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   onRenameProject,
   containerClassName,
   enableClickToDeselect,
+  allProjects,
   pt,
 }) => {
   // Track which table has active selection: 'pinned' | 'all'
@@ -194,6 +208,27 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
           onSelectAll={onSelectAll}
           hiddenButtons={hiddenButtons}
         />
+      )}
+      {allProjects && !search && (
+        <SimpleTableProvider
+          {...{
+            rowSelection: selection.length ? {} : { [ALL_PROJECTS_ROW_ID]: true },
+            onRowSelectionChange: () => onSelect?.([]),
+            rowPinning: { top: [] },
+            expanded: {},
+            setExpanded: () => {},
+          }}
+        >
+          <ProjectsSimpleTable
+            tableData={ALL_PROJECTS_ROWS}
+            isLoading={isLoading}
+            error={error}
+            readonly
+            fitContent
+            className="all-projects-row"
+          />
+          <PinnedDivider />
+        </SimpleTableProvider>
       )}
       {pinnedProjects.length > 0 && !search && (
         <SimpleTableProvider
