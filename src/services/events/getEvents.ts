@@ -214,7 +214,7 @@ const eventsApi = api.injectEndpoints({
               })
             })
           },
-          (message: RawEvent) => `${message.id}:${message.updatedAt}`,
+          (message: RawEvent) => message.id,
           500,
         )
 
