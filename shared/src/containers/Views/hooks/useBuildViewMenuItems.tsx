@@ -88,7 +88,7 @@ const useBuildViewMenuItems = ({
         console.warn(`No working ${viewAlias.toLowerCase()} found, creating a new one`)
         const workingView = generateWorkingView()
         await createView({
-          payload: workingView,
+          genericViewPostModel: workingView,
           viewType: viewType as string,
           projectName: projectName,
         }).unwrap()
