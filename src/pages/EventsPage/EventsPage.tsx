@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
+import { SplitterPanel } from 'primereact/splitter'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { EmptyPlaceholder } from '@shared/components/EmptyPlaceholder'
 import { useLocalStorage } from '@shared/hooks'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import { ViewsProvider } from '@shared/containers'
 import { useAppDispatch } from '@state/store'
 import { useEventsViewState, countActiveFilters } from './hooks/useEventsViewState'
@@ -160,79 +162,94 @@ const EventsPageContent = () => {
     <>
       <DocumentTitle title="Events • AYON" />
       <Styled.Page className={clsx({ narrow: isNarrow })}>
-        {filtersOpen && (
-          <Styled.FiltersColumn>
-            <EventsFilters
-              filters={filters}
-              onChange={setFilters}
-              onClear={clearFilters}
-              events={events}
-              entityLabel={entityLabel}
-            />
-          </Styled.FiltersColumn>
-        )}
         {isNarrow && filtersOpen && <Styled.Scrim onClick={() => setNarrowFiltersOpen(false)} />}
-
-        <Styled.MainColumn>
-          <Styled.Toolbar>
-            <Button
-              icon={filtersOpen ? 'left_panel_close' : 'filter_list'}
-              variant="text"
-              onClick={toggleFilters}
-              aria-expanded={filtersOpen}
-              aria-label={filtersOpen ? 'Hide filters' : 'Show filters'}
-              data-tooltip={filtersOpen ? 'Hide filters' : 'Show filters'}
+        <Styled.FiltersSplitter
+          layout="horizontal"
+          stateKey="events-splitter-filters"
+          stateStorage="local"
+        >
+          <SplitterPanel size={16} className="filters" style={{ minWidth: 200 }}>
+            {filtersOpen && (
+              <EventsFilters
+                filters={filters}
+                onChange={setFilters}
+                onClear={clearFilters}
+                events={events}
+                entityLabel={entityLabel}
+              />
+            )}
+          </SplitterPanel>
+          <SplitterPanel size={84} style={{ overflow: 'hidden' }}>
+            <DetailsPanelSplitter
+              layout="horizontal"
+              stateKey="events-splitter-details"
+              stateStorage="local"
+              style={{ width: '100%', height: '100%' }}
             >
-              {!filtersOpen && activeCount > 0 && <Styled.Badge>{activeCount}</Styled.Badge>}
-            </Button>
-            <EventsViews />
-            <EventsSearchFilter
-              filters={filters}
-              onChange={setFilters}
-              events={events}
-              entityLabel={entityLabel}
-            />
-            <Styled.Status role="status">
-              {(isStale || isFetchingNextPage) && (
-                <Icon icon="progress_activity" className="spin" />
-              )}
-              {!isLoading && (
-                <span>
-                  {events.length.toLocaleString()}
-                  {hasNextPage ? '+' : ''} events
-                </span>
-              )}
-            </Styled.Status>
-            <Styled.LayoutSwitch role="group" aria-label="Layout">
-              {LAYOUTS.map(({ id, label, icon }) => (
-                <Button
-                  key={id}
-                  icon={icon}
-                  label={label}
-                  variant="text"
-                  selected={layout === id}
-                  aria-pressed={layout === id}
-                  onClick={() => setLayout(id)}
-                />
-              ))}
-            </Styled.LayoutSwitch>
-          </Styled.Toolbar>
-          <Styled.Content className={clsx({ stale: isStale })}>{content}</Styled.Content>
-        </Styled.MainColumn>
-
-        {selectedId && (
-          <Styled.DetailsColumn>
-            <EventDetails
-              key={selectedId}
-              eventId={selectedId}
-              listEvent={selectedEvent}
-              olderId={selectedIndex >= 0 ? events[selectedIndex + 1]?.id : undefined}
-              newerId={selectedIndex > 0 ? events[selectedIndex - 1]?.id : undefined}
-              onSelect={setSelectedId}
-              onFilter={setFilters}
-            />
-          </Styled.DetailsColumn>
-        )}
+              <SplitterPanel size={70} style={{ overflow: 'hidden' }}>
+                <Styled.MainColumn>
+                  <Styled.Toolbar>
+                    <Button
+                      icon={filtersOpen ? 'left_panel_close' : 'filter_list'}
+                      variant="text"
+                      onClick={toggleFilters}
+                      aria-expanded={filtersOpen}
+                      aria-label={filtersOpen ? 'Hide filters' : 'Show filters'}
+                      data-tooltip={filtersOpen ? 'Hide filters' : 'Show filters'}
+                    >
+                      {!filtersOpen && activeCount > 0 && <Styled.Badge>{activeCount}</Styled.Badge>}
+                    </Button>
+                    <EventsViews />
+                    <EventsSearchFilter
+                      filters={filters}
+                      onChange={setFilters}
+                      events={events}
+                      entityLabel={entityLabel}
+                    />
+                    <Styled.Status role="status">
+                      {(isStale || isFetchingNextPage) && (
+                        <Icon icon="progress_activity" className="spin" />
+                      )}
+                      {!isLoading && (
+                        <span>
+                          {events.length.toLocaleString()}
+                          {hasNextPage ? '+' : ''} events
+                        </span>
+                      )}
+                    </Styled.Status>
+                    <Styled.LayoutSwitch role="group" aria-label="Layout">
+                      {LAYOUTS.map(({ id, label, icon }) => (
+                        <Button
+                          key={id}
+                          icon={icon}
+                          label={label}
+                          variant="text"
+                          selected={layout === id}
+                          aria-pressed={layout === id}
+                          onClick={() => setLayout(id)}
+                        />
+                      ))}
+                    </Styled.LayoutSwitch>
+                  </Styled.Toolbar>
+                  <Styled.Content className={clsx({ stale: isStale })}>{content}</Styled.Content>
+                </Styled.MainColumn>
+              </SplitterPanel>
+              <SplitterPanel size={30} className="details" style={{ minWidth: 300 }}>
+                {selectedId && (
+                  <EventDetails
+                    key={selectedId}
+                    eventId={selectedId}
+                    listEvent={selectedEvent}
+                    olderId={selectedIndex >= 0 ? events[selectedIndex + 1]?.id : undefined}
+                    newerId={selectedIndex > 0 ? events[selectedIndex - 1]?.id : undefined}
+                    onSelect={setSelectedId}
+                    onFilter={setFilters}
+                  />
+                )}
+              </SplitterPanel>
+            </DetailsPanelSplitter>
+          </SplitterPanel>
+        </Styled.FiltersSplitter>
       </Styled.Page>
     </>
   )

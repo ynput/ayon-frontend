@@ -1,5 +1,6 @@
 import styled, { keyframes } from 'styled-components'
 import { theme } from '@ynput/ayon-react-components'
+import { Splitter } from 'primereact/splitter'
 
 const spin = keyframes`
   to { transform: rotate(360deg); }
@@ -12,28 +13,52 @@ const progress = keyframes`
 
 export const Page = styled.main`
   position: relative;
-  display: flex;
-  gap: var(--base-gap-large);
   height: 100%;
   overflow: hidden;
 
   .spin {
     animation: ${spin} 1s linear infinite;
   }
+
+  /* narrow screens have no room for columns: the side panels become overlays, nothing to resize */
+  &.narrow {
+    .p-splitter > .p-splitter-gutter {
+      display: none;
+    }
+
+    .p-splitter-panel.filters:not(:empty) {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 264px;
+      z-index: 20;
+      box-shadow: 4px 0 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .p-splitter-panel.details:not(:empty) {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: min(400px, 100%);
+      z-index: 18;
+      box-shadow: -4px 0 16px rgba(0, 0, 0, 0.4);
+    }
+  }
 `
 
-export const FiltersColumn = styled.div`
-  width: 264px;
-  flex-shrink: 0;
-  min-height: 0;
+// hides the filters panel and its gutter when closed, like DetailsPanelSplitter does for details.
+// Direct children only: the details splitter is nested inside and has its own gutter.
+export const FiltersSplitter = styled(Splitter)`
+  width: 100%;
+  height: 100%;
 
-  .narrow & {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 20;
-    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.4);
+  &:has(> .p-splitter-panel.filters:empty) {
+    > .p-splitter-panel.filters,
+    > .p-splitter-gutter {
+      display: none;
+    }
   }
 `
 
@@ -45,8 +70,14 @@ export const Scrim = styled.div`
 `
 
 export const MainColumn = styled.div`
-  flex: 1;
+  height: 100%;
   min-width: 0;
+
+  /* keeps the filter bar's z-index from rising above the overlay panels */
+  .narrow & {
+    isolation: isolate;
+  }
+
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-large);
@@ -136,20 +167,4 @@ export const Loading = styled.div`
   color: var(--md-sys-color-on-surface-variant);
   border-radius: var(--border-radius-m);
   background-color: var(--md-sys-color-surface-container-low);
-`
-
-export const DetailsColumn = styled.div`
-  width: 400px;
-  flex-shrink: 0;
-  min-height: 0;
-
-  .narrow & {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: min(400px, 100%);
-    z-index: 18;
-    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.4);
-  }
 `
