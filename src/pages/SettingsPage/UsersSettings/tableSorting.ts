@@ -144,7 +144,7 @@ export const getUsersTableState = () =>
 // the users in the table's order: the column's sort function, or the DataTable's default sort
 const sortUsers = <T extends object>(users: T[], userPools: UserPoolModel[]): T[] => {
   const { sortField, sortOrder } = getUsersTableState()
-  if (!sortField || !sortOrder) return users
+  if (!users.length || !sortField || !sortOrder) return users
   const sortFunction = getUserSortFunctions(userPools)[sortField]
   if (sortFunction) return sortFunction({ data: [...users], field: sortField, order: sortOrder })
   return [...users].sort((a, b) =>
