@@ -16,6 +16,8 @@ export type ParsedCSV = {
 
 export type ImportData = ParsedCSV & {
   fileId: string
+  // the sheet of an Excel file the rows come from
+  sheetName?: string
 }
 
 const parseConfig: ParseAsyncConfig = {

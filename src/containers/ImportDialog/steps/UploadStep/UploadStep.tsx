@@ -6,8 +6,9 @@ import { ImportData, parseCSV } from "../../utils";
 import styled from "styled-components";
 import { useUploadFileMutation } from "@queries/dataImport";
 import Stats from "../Stats";
-import { HiddenFileInput } from "./UploadStep.styled";
+import { HiddenFileInput, SheetButton, SheetList, SheetPicker } from "./UploadStep.styled";
 import { ImportMode, templateForImport } from "../importMode";
+import { EXCEL_MIME_TYPE, excelSheetToCSV, ExcelSheet, isExcelFile, readExcelSheets } from "../../excel";
 
 type Props = StepProps<ImportData> & {
   importSchema: ImportSchema
@@ -16,7 +17,12 @@ type Props = StepProps<ImportData> & {
   onLoaded?: (data: ImportData) => void
 }
 
-const acceptedTypes = ["text/csv"]
+const acceptedTypes = [".csv", "text/csv", ".xlsx", EXCEL_MIME_TYPE]
+
+type Workbook = {
+  file: File
+  sheets: ExcelSheet[]
+}
 
 const FileUploadWrapper = styled.div`
   position: relative;
@@ -50,6 +56,8 @@ export default function UploadStep({
 }: Props) {
   const [data, setData] = useState<ImportData | null>(uploaded)
   const [error, setError] = useState<Error | null>(null)
+  // an Excel file with several sheets waits for the user to pick one
+  const [workbook, setWorkbook] = useState<Workbook | null>(null)
 
   useEffect(() => {
     if (data) onLoaded?.(data)
@@ -57,23 +65,50 @@ export default function UploadStep({
 
   const [uploadFile] = useUploadFileMutation()
 
-  const upload = useCallback((file: File | string) => {
-    parseCSV(file)
-      .then(async (csv) => {
-        const { data, error } = await uploadFile({
-          csv: typeof file === "string"
-            ? file
-            : await file.text(),
-        })
+  const uploadCSV = useCallback(async (file: File | string) => {
+    const csv = await parseCSV(file)
+    const { data, error } = await uploadFile({
+      csv: typeof file === "string"
+        ? file
+        : await file.text(),
+    })
 
-        if (error) throw new Error('Upload failed')
+    if (error) throw new Error('Upload failed')
+    return { ...csv, fileId: data.id }
+  }, [uploadFile])
+
+  const uploadSheet = useCallback((file: File, sheet: ExcelSheet) => {
+    setError(null)
+    uploadCSV(excelSheetToCSV(sheet))
+      .then((csv) => {
+        setWorkbook(null)
         setData({
           ...csv,
-          fileId: data.id,
+          fileName: file.name,
+          fileSize: file.size,
+          sheetName: sheet.name,
         })
       })
       .catch((error) => setError(error))
-  }, [])
+  }, [uploadCSV])
+
+  const upload = useCallback((file: File | string) => {
+    setError(null)
+    if (typeof file === "object" && isExcelFile(file)) {
+      readExcelSheets(file)
+        .then((sheets) => {
+          if (sheets.length === 0) throw new Error('The file has no sheet with data')
+          if (sheets.length === 1) return uploadSheet(file, sheets[0])
+          setWorkbook({ file, sheets })
+        })
+        .catch((error) => setError(error))
+      return
+    }
+
+    uploadCSV(file)
+      .then(setData)
+      .catch((error) => setError(error))
+  }, [uploadCSV, uploadSheet])
 
   const uploadFilesFromComponent = useCallback((files: FileUploadProps["files"]) => {
     if (files.length === 0) return
@@ -108,7 +143,39 @@ export default function UploadStep({
   return (
     <>
       {
-        !data && (
+        !data && workbook && (
+          <SheetPicker>
+            <Stats
+              heading={workbook.file.name}
+              subtitle={
+                error
+                  ? `Could not import this sheet: ${error.message}`
+                  : "Which sheet do you want to import?"
+              }
+              size={getFileSizeString(workbook.file.size)}
+              items={[]}
+              onClose={() => {
+                setWorkbook(null)
+                setError(null)
+              }}
+            />
+            <SheetList>
+              {
+                workbook.sheets.map((sheet) => (
+                  <SheetButton
+                    key={sheet.name}
+                    icon="table"
+                    label={`${sheet.name} (${sheet.rows.length - 1} row${sheet.rows.length === 2 ? "" : "s"})`}
+                    onClick={() => uploadSheet(workbook.file, sheet)}
+                  />
+                ))
+              }
+            </SheetList>
+          </SheetPicker>
+        )
+      }
+      {
+        !data && !workbook && (
           <FileUploadWrapper>
             <FileUpload
               files={[]}
@@ -147,7 +214,7 @@ export default function UploadStep({
                 />
                 <Button
                   icon="upload_file"
-                  label={`Choose .csv file with ${itemsLabelForImportContext[importContext]}`}
+                  label={`Choose a CSV or Excel file with ${itemsLabelForImportContext[importContext]}`}
                   onClick={() => hiddenFileInputRef.current?.click()}
                 />
               </label>
@@ -162,6 +229,7 @@ export default function UploadStep({
         data && (
           <Stats
             heading={data.fileName}
+            subtitle={data.sheetName && `Sheet: ${data.sheetName}`}
             size={getFileSizeString(data.fileSize)}
             items={[
               {
