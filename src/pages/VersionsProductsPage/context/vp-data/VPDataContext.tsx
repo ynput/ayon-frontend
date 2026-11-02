@@ -213,6 +213,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     latestPerFolder,
     groupBy,
     columns,
+    showGrid,
   } = useVPViewsContext()
   const { isLoadingViews: isLoadingViewSettings } = useViewsContext()
 
@@ -223,15 +224,16 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   )
 
   const { onLinkColumnsVisibleChange, isLinkColumnShown } = useLinkColumnsVisibility(linkTypes)
+  // the grid shows no link columns, but the on-screen flags outlive the unmounted table
   const showLinks = useMemo(
     () => ({
-      version: isLinkColumnShown('primary', 'version'),
-      product: isLinkColumnShown('primary', 'product'),
-      folder: isLinkColumnShown('folder', 'folder'),
-      task: isLinkColumnShown('task', 'task'),
-      parentProduct: isLinkColumnShown('product', 'product'),
+      version: !showGrid && isLinkColumnShown('primary', 'version'),
+      product: !showGrid && isLinkColumnShown('primary', 'product'),
+      folder: !showGrid && isLinkColumnShown('folder', 'folder'),
+      task: !showGrid && isLinkColumnShown('task', 'task'),
+      parentProduct: !showGrid && isLinkColumnShown('product', 'product'),
     }),
-    [isLinkColumnShown],
+    [isLinkColumnShown, showGrid],
   )
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
@@ -779,6 +781,20 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     entityIds: linkEntityIds.taskIds,
   })
 
+  // copy and paste read links from the editor entities, not from the display rows
+  const entitiesMapWithLinks = useMemo(() => {
+    if (!versionsLinks.links.size && !productsLinks.links.size) return entitiesMap
+    const map = new Map(entitiesMap)
+    for (const [id, entity] of entitiesMap) {
+      const links =
+        entity.entityType === 'version'
+          ? versionsLinks.links.get(entity.id)
+          : productsLinks.links.get(entity.id)
+      if (links) map.set(id, { ...entity, links })
+    }
+    return map
+  }, [entitiesMap, versionsLinks.links, productsLinks.links])
+
   const versionsTableLinks = useTableLinks(versionsLinks.links, 'version', anatomy)
   const productsTableLinks = useTableLinks(productsLinks.links, 'product', anatomy)
   const foldersTableLinks = useTableLinks(foldersLinks.links, 'folder', anatomy)
@@ -966,7 +982,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     childVersionsMap,
     allVersionsMap,
     productsMap,
-    entitiesMap,
+    entitiesMap: entitiesMapWithLinks,
     hasNextPage,
     fetchNextPage: handleFetchNextPage,
     // grouping

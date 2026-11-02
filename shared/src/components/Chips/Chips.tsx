@@ -204,7 +204,20 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, readOnly, className, p
         </Chip>
       ))}
       {hiddenCount > 0 && (
-        <MoreChip className={clsx('more-chip', pt?.chip?.className)}>+{hiddenCount}</MoreChip>
+        <MoreChip
+          className={clsx('more-chip', pt?.chip?.className)}
+          // read-only cells open no editor, so this is the only way to see the rest
+          data-tooltip={
+            readOnly
+              ? values
+                  .slice(visibleCount)
+                  .map((chip) => chip.label)
+                  .join(', ')
+              : undefined
+          }
+        >
+          +{hiddenCount}
+        </MoreChip>
       )}
       {offscreenChips.map((chip, index) => (
         <OffscreenChip key={chip.label + index} className="offscreen-chip">

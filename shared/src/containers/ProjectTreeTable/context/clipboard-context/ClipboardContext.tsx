@@ -12,6 +12,7 @@ import {
   getEntityDataById,
   getLinkEntityIdsByColumnId,
   parseCellId,
+  parseScopedColumnId,
 } from '../../utils/cellUtils'
 import { getFolderColumnValue } from '../../utils/folderColumn'
 import { isAddonColumnId } from '../../addonColumns/addonColumnsHelpers'
@@ -482,6 +483,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         if (colId === ROW_SELECTION_COLUMN_ID || !visibleColumnIds.includes(colId)) return
         // addon columns are read-only, and their ids are no field names (`split('_').pop()`)
         if (isAddonColumnId(colId)) return
+        // parent link columns are read-only and would map onto the row's own link field
+        const scoped = parseScopedColumnId(colId)
+        if (scoped.scope !== 'primary' && scoped.field.startsWith('link_')) return
         // nothing is pasted into read-only rows (subtasks and links don't go through updateEntities)
         if (isRowReadOnly(rowId)) return
 
