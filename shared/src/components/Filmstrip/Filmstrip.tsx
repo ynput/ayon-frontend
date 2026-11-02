@@ -174,6 +174,7 @@ export const Filmstrip: FC<FilmstripProps> = ({
     if (!isHovering || !enabled || !src) return
     const cached = peekFilmstrip(src)
     if (cached !== undefined) {
+      void loadFilmstrip(src)
       setData(cached)
       return
     }
