@@ -66,7 +66,7 @@ const queryFromState = (filters: EventFilters, layout: EventsLayout): Query => (
   from: filters.newerThan || undefined,
   to: filters.olderThan || undefined,
   nologs: filters.hideLogs || undefined,
-  layout: layout === DEFAULT_LAYOUT ? undefined : layout,
+  layout,
 })
 
 /**
