@@ -6,6 +6,7 @@ import { existsSync, realpathSync } from 'fs'
 import { federation } from '@module-federation/vite'
 import { dependencies } from './package.json'
 import { lodashEs } from './vite-plugins/lodashEs'
+import { keepProxyAliases } from './vite-plugins/federationProxyAliases'
 
 const CLAUDE_DIR = fileURLToPath(new URL('./.claude', import.meta.url))
 
@@ -115,6 +116,7 @@ export default ({ mode }) => {
           // at runtime instead, see src/remote/hostSharedModules.ts
         },
       }),
+      keepProxyAliases(),
       react(),
     ],
     optimizeDeps: {
