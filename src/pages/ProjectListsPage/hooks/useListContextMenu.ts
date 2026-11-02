@@ -221,7 +221,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
           disabled: selectedFolderIds.length > 1,
         },
         {
-          label: 'Create list from CSV',
+          label: 'Import list',
           icon: 'upload_file',
           command: () =>
             selectedFolder &&
