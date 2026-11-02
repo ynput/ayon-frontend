@@ -95,7 +95,7 @@ export const EventsTimeline: FC<EventsTimelineProps> = ({
   )
   const { msPerPx } = view
   const span = plotWidth * msPerPx
-  const end = view.follow ? (olderThan ?? now) + span * FOLLOW_MARGIN : view.end
+  const end = view.follow ? Math.min(olderThan ?? now, now) + span * FOLLOW_MARGIN : view.end
   const start = end - span
 
   // --- measure ---
