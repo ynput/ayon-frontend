@@ -46,7 +46,9 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
-export type GetAnatomySchemaApiResponse = /** status 200 Successful Response */ object
+export type GetAnatomySchemaApiResponse = /** status 200 Successful Response */ {
+  [key: string]: any
+}
 export type GetAnatomySchemaApiArg = void
 export type GetAnatomyPresetsApiResponse =
   /** status 200 Successful Response */ AnatomyPresetListModel
@@ -139,38 +141,16 @@ export type Templates = {
   staging?: StagingDirectory[]
   others?: CustomTemplate[]
 }
-export type ProjectAttribModel = {
-  priority?: 'urgent' | 'high' | 'normal' | 'low'
-  /** Frame rate */
-  fps?: number
-  /** Horizontal resolution */
-  resolutionWidth?: number
-  /** Vertical resolution */
-  resolutionHeight?: number
-  pixelAspect?: number
-  clipIn?: number
-  clipOut?: number
-  frameStart?: number
-  frameEnd?: number
-  handleStart?: number
-  handleEnd?: number
-  /** Date and time when the project or task or asset was started */
-  startDate?: string
-  /** Deadline date and time */
-  endDate?: string
-  /** Textual description of the entity */
-  description?: string
-}
 export type FolderType = {
   name: string
-  original_name?: string
+  original_name?: string | null
   shortName?: string
   color?: string
   icon?: string
 }
 export type TaskType = {
   name: string
-  original_name?: string
+  original_name?: string | null
   shortName?: string
   color?: string
   icon?: string
@@ -179,22 +159,22 @@ export type LinkType = {
   link_type: string
   input_type: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   output_type: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
-  color?: string
+  color?: string | null
   style?: 'solid' | 'dashed'
 }
 export type Status = {
   name: string
-  original_name?: string
+  original_name?: string | null
   shortName?: string
   state?: 'not_started' | 'in_progress' | 'done' | 'blocked'
   icon?: string
   color?: string
   /** Limit the status to specific entity types. */
-  scope?: string[]
+  scope?: string[] | null
 }
 export type Tag = {
   name: string
-  original_name?: string
+  original_name?: string | null
   color?: string
 }
 export type DefaultProductBaseType = {
@@ -219,7 +199,9 @@ export type Anatomy = {
   /** Path templates configuration */
   templates?: Templates
   /** Attributes configuration */
-  attributes?: ProjectAttribModel
+  attributes?: {
+    [key: string]: any
+  }
   /** Folder types configuration */
   folder_types?: FolderType[]
   /** Task types configuration */
@@ -236,6 +218,8 @@ export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
