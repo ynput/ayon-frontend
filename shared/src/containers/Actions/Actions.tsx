@@ -17,7 +17,7 @@ import { ActionConfigDialog } from './ActionConfigDialog'
 import { InteractiveActionDialog, InteractiveForm } from './InteractiveActionDialog'
 import { getRequestErrorString } from '@shared/util'
 import type { BundleMode } from '@shared/util/getBundleMode'
-import { useGlobalContext } from '@shared/context/GlobalContext'
+import { useGlobalContext } from '@shared/context'
 
 const placeholder = {
   identifier: 'placeholder',

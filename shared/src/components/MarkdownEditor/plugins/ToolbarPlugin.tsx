@@ -19,7 +19,7 @@ import { BLOCK_DIALOG_CLOSE_CLASS } from '@shared/components/LinksManager/CellEd
 import { DEFAULT_TOOLBAR, type ToolbarItem, type ToolbarLayout } from '../types'
 import * as Styled from '../MarkdownEditor.styled'
 import { $getBlockType, toggleBlockFormat, type BlockType } from './formatting'
-import { OPEN_LINK_EDITOR_COMMAND } from './LinkEditorPlugin'
+import { OPEN_LINK_EDITOR_COMMAND } from './LinkEditorPluginHelpers'
 
 interface ToolbarState {
   blockType: BlockType

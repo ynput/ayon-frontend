@@ -19,9 +19,7 @@ import {
   COMMAND_PRIORITY_LOW,
   KEY_DOWN_COMMAND,
   SELECTION_CHANGE_COMMAND,
-  createCommand,
   type BaseSelection,
-  type LexicalCommand,
   type NodeKey,
 } from 'lexical'
 import { Button, Icon } from '@ynput/ayon-react-components'
@@ -29,24 +27,11 @@ import { BLOCK_DIALOG_CLOSE_CLASS } from '@shared/components/LinksManager/CellEd
 import * as Styled from '../MarkdownEditor.styled'
 import { parseYouTubeUrl } from '../youtube/parseYouTubeUrl'
 import { $insertYouTubeVideo } from './YouTubePlugin'
-
-// open the link editor for the link under the caret, or to link the selection
-export const OPEN_LINK_EDITOR_COMMAND: LexicalCommand<void> = createCommand(
-  'OPEN_LINK_EDITOR_COMMAND',
-)
-
-// ask for a YouTube url and embed the video at the caret (slash menu)
-export const OPEN_VIDEO_PROMPT_COMMAND: LexicalCommand<void> = createCommand(
-  'OPEN_VIDEO_PROMPT_COMMAND',
-)
-
-// accept urls without a scheme, e.g. ynput.io
-export const normalizeUrl = (url: string) => {
-  const trimmed = url.trim()
-  if (!trimmed) return ''
-  if (/^(https?:|mailto:|\/|#)/i.test(trimmed)) return trimmed
-  return `https://${trimmed}`
-}
+import {
+  OPEN_LINK_EDITOR_COMMAND,
+  OPEN_VIDEO_PROMPT_COMMAND,
+  normalizeUrl,
+} from './LinkEditorPluginHelpers'
 
 type Rect = { top: number; bottom: number; left: number }
 

@@ -2,6 +2,7 @@ import {
   buildMetricTargets,
   mergeFieldStats,
   refreshActiveAndPurgeOthers,
+  refreshListsMembership,
   refreshOtherActiveQueries,
   shouldSkipColumnStats,
   toListItemsStatsTargets,
@@ -22,6 +23,7 @@ import {
 import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
+import { buildSortArgs } from '@shared/util'
 import { extractSearchFromFilters } from '../util/searchToQueryFilter'
 import { OnSyncDataCallback, usePowerpack, useProjectContext } from '@shared/context'
 import {
@@ -32,6 +34,8 @@ import {
 } from '@shared/containers'
 import { getColumnSortKey } from '@shared/containers/ProjectTreeTable/buildTreeTableColumns'
 import { useAppDispatch } from '@state/store'
+import { COMPARE_ENTITY_COLUMN_PREFIX } from '../listValues/columns'
+import { toEntityValueKeys } from '../listValues/entityValueFilter'
 
 // Extend EntityListItem to include links
 export type EntityListItemWithLinks = Omit<EntityListItem, 'subtasks'> & {
@@ -50,12 +54,20 @@ interface UseGetListItemsDataProps {
   showComments?: boolean
   isLoadingViews: boolean
   defaultColumnVisibility: Record<string, boolean>
+  // attributes the table shows from the entity, so they sort and filter by entity values
+  readsEntityValue?: (attrib: string) => boolean
 }
 
 export interface UseGetListItemsDataReturn {
   data: EntityListItemWithLinks[]
   isLoading: boolean
   isFetchingNextPage: boolean
+  hasNextPage: boolean
+  isUninitialized: boolean
+  // any fetch of the list items, also background refetches (isLoading only shows argument changes)
+  isFetching: boolean
+  queryFilter?: string
+  search?: string
   isError: boolean
   error?: unknown
 
@@ -66,6 +78,7 @@ export interface UseGetListItemsDataReturn {
   fieldStatsLoading: boolean
   fieldStatsError: boolean
   mainCountLabels: { primary: string }
+  queryArgs: { filter?: string; search?: string; sortBy?: string | string[]; desc?: boolean }
 }
 
 const useGetListItemsData = ({
@@ -79,6 +92,7 @@ const useGetListItemsData = ({
   showComments = false,
   isLoadingViews,
   defaultColumnVisibility,
+  readsEntityValue,
 }: UseGetListItemsDataProps): UseGetListItemsDataReturn => {
   const dispatch = useAppDispatch()
   const { projectName: contextProjectName } = useProjectContext()
@@ -97,11 +111,15 @@ const useGetListItemsData = ({
   const statsProjectName = contextProjectName || projectName
   const { search, filters: filtersWithoutSearch } = extractSearchFromFilters(filters)
   const queryFilterString = filtersWithoutSearch.conditions?.length
-    ? JSON.stringify(sanitizeQueryFilter(expandRelativeDates(filtersWithoutSearch)))
+    ? JSON.stringify(
+        toEntityValueKeys(
+          sanitizeQueryFilter(expandRelativeDates(filtersWithoutSearch)),
+          readsEntityValue,
+        ),
+      )
     : ''
 
   // Create sort params for infinite query
-  const singleSort = { ...sorting[0] }
   const parseSorting = (sorting?: string): string | undefined => {
     if (!sorting) return undefined
     const sortId = getColumnSortKey(sorting, true, entityType) ?? ''
@@ -112,13 +130,18 @@ const useGetListItemsData = ({
     }
 
     if (scopedTypeSortKeys[sorting]) return scopedTypeSortKeys[sorting]
+    // compare view column with the entities' values
+    if (sorting.startsWith(COMPARE_ENTITY_COLUMN_PREFIX)) {
+      return `entityAttrib.${sorting.slice(COMPARE_ENTITY_COLUMN_PREFIX.length)}`
+    }
 
     let parsedSortId = sortId
-    if (singleSort?.id === 'name' && entityType === 'version') {
+    if (sorting === 'name' && entityType === 'version') {
       parsedSortId = 'path'
     } else if (parsedSortId.startsWith('attrib') && parsedSortId.includes('_')) {
       // convert attrib sorting to query format
-      parsedSortId = parsedSortId.replace('_', '.')
+      const attrib = parsedSortId.slice(parsedSortId.indexOf('_') + 1)
+      parsedSortId = readsEntityValue?.(attrib) ? `entityAttrib.${attrib}` : `attrib.${attrib}`
     } else if (sorting === 'subType') {
       switch (entityType) {
         case 'task':
@@ -147,11 +170,15 @@ const useGetListItemsData = ({
     return parsedSortId
   }
 
+  const { sortBy, desc } = buildSortArgs(
+    sorting.map((sort) => ({ key: parseSorting(sort.id), desc: sort.desc })),
+  )
+
   const listItemsArgs = {
     projectName,
     listId: listId || '',
-    sortBy: parseSorting(singleSort?.id),
-    desc: singleSort?.desc,
+    sortBy,
+    desc,
     filter: queryFilterString || undefined,
     search,
     showComments,
@@ -164,6 +191,7 @@ const useGetListItemsData = ({
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
+    isUninitialized,
     isError,
     error,
     refetch: refetchListItems,
@@ -177,8 +205,8 @@ const useGetListItemsData = ({
     {
       projectName: projectName || '',
       listId: listId || '',
-      sortBy: parseSorting(singleSort?.id) || '',
-      desc: singleSort?.desc || false,
+      sortBy: sortBy?.toString() || '',
+      desc,
       filter: queryFilterString || '',
       search: search || '',
     },
@@ -262,8 +290,8 @@ const useGetListItemsData = ({
     id: i.id, // Use the actual list item ID from the backend
     entityId: i.entityId,
     entityType: RESTRICTED_ENTITY_TYPE,
-    allAttrib: '',
-    attrib: {},
+    listAttrib: {},
+    entityAttrib: {},
     ownAttrib: [],
     status: '',
     tags: [],
@@ -336,15 +364,17 @@ const useGetListItemsData = ({
       queriesToRefresh.push({ endpointName: 'GetListItemsColumnStats', args: statsArgs })
     }
 
-    await Promise.all(
-      queriesToRefresh.map(({ endpointName, args }) =>
+    await Promise.all([
+      ...queriesToRefresh.map(({ endpointName, args }) =>
         dispatch(
           refreshActiveAndPurgeOthers(endpointName, args, {
             refreshOtherActiveQueries: false,
           }),
         ).unwrap(),
       ),
-    )
+      // the Lists and Review sessions columns
+      syncListItems && dispatch(refreshListsMembership(projectName)),
+    ])
     await Promise.all(
       queriesToRefresh.map(({ endpointName, args }) =>
         dispatch(refreshOtherActiveQueries(endpointName, args)),
@@ -356,6 +386,12 @@ const useGetListItemsData = ({
     data: dataWithLinks,
     isLoading,
     isFetchingNextPage,
+    hasNextPage,
+    isUninitialized,
+    isFetching: isFetchingListItems,
+    // the filter and search the items are queried with
+    queryFilter: listItemsArgs.filter,
+    search: listItemsArgs.search,
     onSyncData,
     isError,
     error,
@@ -365,6 +401,13 @@ const useGetListItemsData = ({
     fieldStatsLoading,
     fieldStatsError,
     mainCountLabels: { primary: statsEntity ? `${statsEntity}s` : 'items' },
+    // the items query's filter, search and sorting, for exports
+    queryArgs: {
+      filter: listItemsArgs.filter,
+      search: listItemsArgs.search,
+      sortBy: listItemsArgs.sortBy,
+      desc: listItemsArgs.desc,
+    },
   }
 }
 

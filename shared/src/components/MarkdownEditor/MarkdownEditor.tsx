@@ -39,6 +39,7 @@ import CodeHighlightPlugin from './plugins/CodeHighlightPlugin'
 import YouTubePlugin from './plugins/YouTubePlugin'
 import SlashCommandPlugin from './plugins/SlashCommandPlugin'
 import LinkPastePlugin from './plugins/LinkPastePlugin'
+import ActivityLinkPlugin from './plugins/ActivityLinkPlugin'
 import MediaPlugin, { type UploadMedia } from './plugins/MediaPlugin'
 import ClipboardPlugin from './plugins/ClipboardPlugin'
 import MarkdownValuePlugin from './plugins/MarkdownValuePlugin'
@@ -272,6 +273,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         <LinkPlugin validateUrl={validateUrl} />
         <AutoLinkPlugin matchers={LINK_MATCHERS} />
         <LinkClickPlugin />
+        <ActivityLinkPlugin />
         {!readOnly && <LinkEditorPlugin />}
         {!readOnly && <CodeLanguagePlugin />}
         <CodeHighlightPlugin />

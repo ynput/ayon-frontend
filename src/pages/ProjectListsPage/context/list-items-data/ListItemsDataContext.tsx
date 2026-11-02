@@ -1,0 +1,559 @@
+import { ReactNode, useMemo, useCallback, useEffect } from 'react'
+import { toast } from 'react-toastify'
+import {
+  checkColumnVisibility,
+  ProjectDataContextProps,
+  useProjectDataContext,
+} from '@shared/containers/ProjectTreeTable'
+import useGetListItemsData, { EntityListItemWithLinks } from '../../hooks/useGetListItemsData'
+import { useListsContext } from '../lists/ListsContext'
+import {
+  FolderNodeMap,
+  MatchingFolder,
+  TableRow,
+  TaskNodeMap,
+} from '@shared/containers/ProjectTreeTable'
+import useDeleteListItems, { UseDeleteListItemsReturn } from '../../hooks/useDeleteListItems'
+import type {
+  ContextMenuItemConstructor,
+  ContextMenuItemConstructors,
+} from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
+import {
+  parseCellId,
+  type CellMark,
+  useAddonEntityMenuItems,
+} from '@shared/containers/ProjectTreeTable'
+import { useEntityListsContext } from '../entity-lists/EntityListsContextInstance'
+import useReorderListItem, { UseReorderListItemReturn } from '../../hooks/useReorderListItem'
+import useBuildListItemsTableData from '../../hooks/useBuildListItemsTableData'
+import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import {
+  ListsViewSettings,
+  useLinkColumnsVisibility,
+  useListsViewSettings,
+  useViewsContext,
+} from '@shared/containers'
+import { SortingState, VisibilityState } from '@tanstack/react-table'
+import { useProjectContext, OnSyncDataCallback } from '@shared/context'
+import type { FieldStats } from '@shared/api'
+import { useReviewCardsSettingsContext } from '../review-cards-settings/ReviewCardsSettingsContextInstance'
+import useViewListItemData from '../../hooks/useViewListItemData'
+import useReplaceListItem from '../../hooks/useReplaceListItem'
+import { ListItemsDataContext } from './ListItemsDataContextInstance'
+import { DEFAULT_COLUMN_VISIBILITY, DEFAULT_COLUMNS_BY_TYPE } from './ListItemsDataContextHelpers'
+import { useListValuesContext } from '../list-values'
+import { useListsDataContext } from '../lists-data'
+import useListValueActions from '../../hooks/useListValueActions'
+import {
+  useCompareListTooBig,
+  useListItemsForListValues,
+} from '../../hooks/useListItemsForListValues'
+import { getListItemValueSources, toListValuesItem } from '../../listValues/listItemValueSources'
+import type { CompareSettings, CompareView, ListRef } from '../../listValues/types'
+import { COMPARE_TOO_MANY_ITEMS } from '../../listValues/compareLimit'
+import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
+
+export type ListItemsMap = Map<string, EntityListItemWithLinks>
+export type TableEntity = EntityListItemWithLinks & { attrib: Record<string, unknown> }
+
+const NO_LIST_VALUES_SETTINGS: CompareSettings = {}
+
+// the module marks attributes; the table marks cells by column id
+const toCellMarks = (marks: Record<string, CellMark> = {}): Record<string, CellMark> =>
+  Object.fromEntries(Object.entries(marks).map(([name, mark]) => [`attrib_${name}`, mark]))
+
+export interface ListItemsDataContextValue {
+  // Project Info
+  users: ProjectDataContextProps['users']
+  selectedListId?: string
+  // Attributes
+  attribFields: ProjectDataContextProps['attribFields']
+  defaultColumnVisibility?: VisibilityState
+
+  // LIST ITEMS DATA
+  listItemsData: EntityListItemWithLinks[]
+  listItemsTableData: TableRow[]
+  listItemsMap: ListItemsMap
+  // the table's entity lookup (undo history, inherit, cell menus): the values the cells show,
+  // and the rows only in the compared list
+  tableEntitiesMap: Map<string, TableEntity>
+  // the powerpack ListValues module's compare view (empty without the powerpack)
+  compareView: CompareView<EntityListItemWithLinks>
+  listValuesSettings: CompareSettings
+  setListValuesSettings: (settings: CompareSettings) => void
+  // list value actions in an attribute column's header menu
+  getListValueColumnMenuItems: (attrib: string) => ColumnMenuItemType[]
+  fetchNextPage: () => void
+  isLoadingAll: boolean
+  isLoadingMore: boolean
+  hasNextPage: boolean
+  // the list items query has not run yet (no list, or waiting for views)
+  isUninitialized: boolean
+  // any fetch of the list items, also background refetches
+  isFetching: boolean
+  // the filter and search sent with the list items query
+  listItemsQuery: { filter?: string; search?: string }
+  isError?: boolean
+  error?: unknown
+  isInitialized: boolean
+  // the items query's filter, search and sorting, for exports
+  listItemsQueryArgs: {
+    filter?: string
+    search?: string
+    sortBy?: string | string[]
+    desc?: boolean
+  }
+  // filters
+  listItemsFilters: QueryFilter
+  setListItemsFilters: (filters: QueryFilter) => void
+  // folders data
+  foldersMap: FolderNodeMap
+  tasksMap: TaskNodeMap
+  // columns config
+  columns: ListsViewSettings['columns']
+  onUpdateColumns: ListsViewSettings['onUpdateColumns']
+  // context menu items
+  // actions
+  contextMenuItems: ContextMenuItemConstructors
+  // delete (remove) from list
+  deleteListItems: UseDeleteListItemsReturn['deleteListItems']
+  deleteListItemAction: UseDeleteListItemsReturn['deleteListItemAction']
+  // reorder list item
+  reorderListItem: UseReorderListItemReturn['reorderListItem']
+  // replace list items
+  replaceListItemsState: readonly [null | string[], (ids: null | string[]) => void]
+  // list item shown in the data dialog
+  viewListItemDataState: readonly [null | string, (id: null | string) => void]
+  // reset filters
+  resetFilters: () => void
+  refetch: () => void
+  onSyncData: OnSyncDataCallback
+  // links visibility
+  onLinkColumnsVisibleChange: (changes: Record<string, boolean>) => void
+  // column summaries footer (powerpack)
+  fieldStats: FieldStats[]
+  fieldStatsLoading: boolean
+  fieldStatsError: boolean
+  mainCountLabels: { primary: string }
+}
+
+interface ListItemsDataProviderProps {
+  children: ReactNode
+}
+
+const reviewSortKeys = new Map([
+  ['task', 'task_id'],
+  ['product', 'product_id'],
+  ['path', 'name'],
+  ['versionAuthor', 'author'],
+])
+
+// fetch all items and provide methods to update the items
+export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) => {
+  // Get project data from the new context
+  const { projectName, linkTypes } = useProjectContext()
+  const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
+  const { displayStyle } = useReviewCardsSettingsContext()
+
+  const { selectedList, isReview } = useListsContext()
+  const selectedListId = selectedList?.id
+  const listEntityType = selectedList?.entityType
+
+  const defaultColumnVisibility = useMemo(
+    () => (listEntityType ? DEFAULT_COLUMNS_BY_TYPE[listEntityType] : DEFAULT_COLUMN_VISIBILITY),
+    [listEntityType],
+  )
+
+  const { onLinkColumnsVisibleChange, isLinkColumnShown } = useLinkColumnsVisibility(linkTypes)
+
+  const { isLoadingViews } = useViewsContext()
+  const { module: listValues, rules: listValuesRules, readsEntityValue } = useListValuesContext()
+  const { listsMap } = useListsDataContext()
+  const {
+    filters: listItemsFilters,
+    onUpdateFilters: setListItemsFilters,
+    columns,
+    onUpdateColumns,
+    listValues: storedListValuesSettings,
+    onUpdateListValues: setListValuesSettings,
+  } = useListsViewSettings()
+  // stored with the view, shaped by the ListValues module
+  const listValuesSettings =
+    (storedListValuesSettings as CompareSettings | undefined) || NO_LIST_VALUES_SETTINGS
+
+  // non-review lists are always shown as a table, only review lists use the display style
+  const isTableView = !isReview || displayStyle === 'table'
+  const skipLinks = !isTableView || !listEntityType || !isLinkColumnShown('primary', listEntityType)
+
+  // comments are the heaviest field to resolve, so only fetch them when the column is shown
+  const showComments = useMemo(
+    () => checkColumnVisibility(columns.columnVisibility, 'comments', defaultColumnVisibility),
+    [columns, defaultColumnVisibility],
+  )
+
+  const updateSorting = (sorting: SortingState) => {
+    onUpdateColumns(
+      {
+        ...columns,
+        sorting,
+      },
+      // best-effort allColumnIds: collect from current columns states
+      [
+        ...(columns.columnOrder || []),
+        ...Object.keys(columns.columnVisibility || {}),
+        ...((columns.columnPinning?.left as string[]) || []),
+        ...((columns.columnPinning?.right as string[]) || []),
+      ],
+    )
+  }
+
+  const resetFilters = useCallback(() => {
+    setListItemsFilters({ conditions: [], operator: 'and' })
+  }, [setListItemsFilters])
+
+  // For review sessions, we use the sorting setting stored in the entity list's `data`.
+  // This allows us to use the sorting in the review session itself, too.
+  const reviewSorting: SortingState | null = useMemo(() => {
+    if (!isReview) return null
+
+    const sorting = selectedList?.data.sorting
+    if (!sorting) return null
+
+    return [
+      {
+        id: reviewSortKeys.get(sorting.property) ?? sorting.property,
+        desc: sorting.order,
+      },
+    ]
+  }, [isReview, selectedList?.data.sorting])
+
+  const {
+    data: listItemsData,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    isUninitialized,
+    isFetching,
+    queryFilter,
+    search: querySearch,
+    isError,
+    error,
+    fetchNextPage,
+    refetch,
+    onSyncData,
+    fieldStats,
+    fieldStatsLoading,
+    fieldStatsError,
+    mainCountLabels,
+    queryArgs: listItemsQueryArgs,
+  } = useGetListItemsData({
+    projectName,
+    entityType: selectedList?.entityType,
+    listId: selectedListId,
+    sorting: reviewSorting ?? columns.sorting ?? [],
+    filters: listItemsFilters,
+    skipLinks: skipLinks,
+    showComments,
+    isLoadingViews,
+    defaultColumnVisibility,
+    readsEntityValue,
+  })
+
+  // filter out attribFields by scope for the table columns
+  const scopedAttribFields = useMemo(
+    () =>
+      attribFields.filter((field) =>
+        [selectedList?.entityType].some((s: any) => field.scope?.includes(s)),
+      ),
+    [attribFields, selectedList?.entityType],
+  )
+
+  // convert to a Map for easier access
+  const listItemsMap: ListItemsMap = useMemo(() => {
+    return new Map(listItemsData.map((item) => [item.id, item]))
+  }, [listItemsData])
+
+  // the ListValues module's compare view, see listValues/AGENTS.md
+  const shownList = useMemo<ListRef | undefined>(
+    () =>
+      selectedList && {
+        id: selectedList.id,
+        label: selectedList.label,
+        entityType: selectedList.entityType,
+      },
+    [selectedList?.id, selectedList?.label, selectedList?.entityType],
+  )
+  const getList = useCallback(
+    (id: string) => {
+      const list = listsMap.get(id)
+      return list && { id: list.id, label: list.label, entityType: list.entityType }
+    },
+    [listsMap],
+  )
+  const attributeNames = useMemo(() => scopedAttribFields.map((a) => a.name), [scopedAttribFields])
+  const compareQuery = useMemo(
+    () => ({ filter: queryFilter, search: querySearch }),
+    [queryFilter, querySearch],
+  )
+  const compareView = listValues.useCompareView<EntityListItemWithLinks>({
+    shownList,
+    items: listItemsData,
+    allItemsLoaded: !hasNextPage,
+    toItem: toListValuesItem,
+    attributes: attributeNames,
+    query: compareQuery,
+    context: listValuesRules,
+    getList,
+    settings: listValuesSettings,
+    useListItems: useListItemsForListValues,
+  })
+
+  // a list too big to compare can still be picked from the sidebar menu or a saved view
+  const comparedListId = compareView.comparedList?.id
+  const isComparedListTooBig = useCompareListTooBig(comparedListId)
+  const { setCompareWith } = compareView
+  useEffect(() => {
+    if (!isComparedListTooBig) return
+    toast.warn(COMPARE_TOO_MANY_ITEMS)
+    setCompareWith(null)
+  }, [isComparedListTooBig, setCompareWith])
+
+  // what each row shows: list values or entity values, plus the compare view's marks
+  const getRowValues = useCallback(
+    (item: EntityListItemWithLinks) => {
+      const { attrib, ownAttrib, marks } = listValues.resolveValues(
+        getListItemValueSources(item),
+        listValuesRules,
+      )
+      const cellMarks = toCellMarks(marks)
+      for (const [id, mark] of Object.entries(toCellMarks(compareView.marks.get(item.id)))) {
+        cellMarks[id] = { ...cellMarks[id], ...mark }
+      }
+      return { attrib, ownAttrib, cellMarks }
+    },
+    [listValues, listValuesRules, compareView.marks],
+  )
+
+  // convert listItemsData into tableData
+  const shownListTableData = useBuildListItemsTableData({
+    listItemsData,
+    getRowValues,
+  })
+
+  // items only in the compared list: read-only rows after the list's own
+  const getCompareOnlyRowValues = useCallback(
+    (item: EntityListItemWithLinks) => ({
+      attrib: {},
+      ownAttrib: [],
+      cellMarks: toCellMarks(compareView.marks.get(item.id)),
+    }),
+    [compareView.marks],
+  )
+  const compareOnlyTableData = useBuildListItemsTableData({
+    listItemsData: compareView.compareOnlyItems,
+    getRowValues: getCompareOnlyRowValues,
+  })
+
+  const listItemsTableData = useMemo(
+    () =>
+      compareOnlyTableData.length
+        ? [
+            ...shownListTableData,
+            ...compareOnlyTableData.map((row) => ({ ...row, readOnly: true })),
+          ]
+        : shownListTableData,
+    [shownListTableData, compareOnlyTableData],
+  )
+
+  // the list items don't hold the values the cells show as one map (see listValues/AGENTS.md)
+  const tableEntitiesMap = useMemo(() => {
+    const items = new Map(listItemsMap)
+    for (const item of compareView.compareOnlyItems) items.set(item.id, item)
+    const map = new Map<string, TableEntity>()
+    for (const row of listItemsTableData) {
+      const item = items.get(row.id)
+      if (!item) continue
+      const { attrib = {}, ownAttrib = [] } = row.primary
+      map.set(row.id, { ...item, attrib, ownAttrib })
+    }
+    return map
+  }, [listItemsMap, compareView.compareOnlyItems, listItemsTableData])
+
+  // the table looks folders up here first, so they have the values their cells show too
+  const foldersMap = useMemo<FolderNodeMap>(
+    () =>
+      new Map(
+        [...tableEntitiesMap.values()]
+          .filter((item) => item.entityType === 'folder')
+          .map(
+            (item) =>
+              [
+                item.entityId,
+                {
+                  ...item,
+                  id: item.entityId,
+                  entityId: item.entityId,
+                  entityType: 'folder',
+                  path: item.parents?.join('/') || '',
+                  parents: item.parents || [],
+                  folderType: item.folderType || '',
+                } as MatchingFolder,
+              ] as const,
+          ),
+      ),
+    [tableEntitiesMap],
+  )
+  const tasksMap: TaskNodeMap = new Map()
+
+  // delete lists
+  const { deleteListItems, deleteListItemMenuItem, deleteListItemAction } = useDeleteListItems({
+    projectName: projectName,
+    listId: selectedListId,
+    listItemsMap,
+    accessLevel: selectedList?.accessLevel,
+  })
+
+  const { replaceItemContextMenu, state: replaceListItemsState } = useReplaceListItem({
+    entityType: listEntityType || '',
+  })
+
+  const { viewDataContextMenu, state: viewListItemDataState } = useViewListItemData()
+
+  const handleReorderFinished = () => {
+    // remove any sorting
+    updateSorting([])
+  }
+
+  // reorder lists item
+  const { reorderListItem } = useReorderListItem({
+    projectName: projectName,
+    listId: selectedListId,
+    listItems: listItemsData,
+    onReorderFinished: handleReorderFinished,
+  })
+
+  // lists data
+  const { menuItems: menuItemsAddToList, addToList } = useEntityListsContext()
+
+  const { listValueMenuItem, getColumnMenuItems: getListValueColumnMenuItems } =
+    useListValueActions({
+      projectName,
+      listId: selectedListId,
+      entityType: listEntityType,
+      listItemsMap,
+      canEditList: (selectedList?.accessLevel || 0) >= 20,
+    })
+
+  // menu items that act on list items skip the rows only in the compared list
+  const forListItems =
+    (build: ContextMenuItemConstructor): ContextMenuItemConstructor =>
+    (e, cell, selectedCells, ...rest) => {
+      const cells = selectedCells.filter((c) =>
+        listItemsMap.has(parseCellId(c.cellId)?.rowId || ''),
+      )
+      return cells.length ? build(e, cell, cells, ...rest) : undefined
+    }
+
+  // rows only in the compared list can be added to the shown one
+  const addToShownListMenuItem: ContextMenuItemConstructor = (_e, _cell, selectedCells) => {
+    if (!selectedListId || !selectedList || (selectedList.accessLevel || 0) < 20) return undefined
+    const compareOnlyIds = new Set(compareView.compareOnlyItems.map((item) => item.id))
+    const entities = [
+      ...new Map(
+        selectedCells
+          .filter((c) => compareOnlyIds.has(parseCellId(c.cellId)?.rowId || ''))
+          .map((c) => [c.entityId, { entityId: c.entityId, entityType: c.entityType }]),
+      ).values(),
+    ]
+    if (!entities.length) return undefined
+    return {
+      label: 'Add to this list',
+      icon: 'playlist_add',
+      command: async () => {
+        await addToList(selectedListId, selectedList.entityType, entities)
+        compareView.refetchCompareOnly()
+      },
+    }
+  }
+
+  // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
+  const addonEntityTopItems = useAddonEntityMenuItems('lists', 'top')
+  const addonEntityItems = useAddonEntityMenuItems('lists')
+
+  // inject in custom add to list context menu items
+  const contextMenuItems: ContextMenuItemConstructors = [
+    addonEntityTopItems,
+    'copy-paste',
+    'show-details',
+    'open-viewer',
+    'export',
+    // add context menu to add to lists but filter out own list
+    menuItemsAddToList((item) => item.id !== selectedListId),
+    addToShownListMenuItem,
+    forListItems(replaceItemContextMenu),
+    forListItems(viewDataContextMenu),
+    forListItems(listValueMenuItem),
+    addonEntityItems,
+    forListItems(deleteListItemMenuItem),
+  ]
+
+  return (
+    <ListItemsDataContext.Provider
+      value={{
+        selectedListId,
+        attribFields: scopedAttribFields,
+        users,
+        defaultColumnVisibility,
+        // list items
+        listItemsData,
+        listItemsTableData,
+        listItemsMap,
+        tableEntitiesMap,
+        compareView,
+        listValuesSettings,
+        setListValuesSettings,
+        getListValueColumnMenuItems,
+        isLoadingAll: isLoading || isLoadingData,
+        isLoadingMore: isFetchingNextPage,
+        hasNextPage,
+        isUninitialized,
+        isFetching,
+        listItemsQuery: { filter: queryFilter, search: querySearch },
+        isError,
+        error,
+        fetchNextPage,
+        listItemsQueryArgs,
+        // filters
+        listItemsFilters,
+        setListItemsFilters,
+        // folders data
+        foldersMap,
+        tasksMap,
+        isInitialized,
+        // columns config
+        columns,
+        onUpdateColumns,
+        // actions
+        contextMenuItems,
+        // delete (remove) from list
+        deleteListItems,
+        deleteListItemAction,
+        // reorder list item
+        reorderListItem,
+        // replace list items
+        replaceListItemsState,
+        viewListItemDataState,
+        resetFilters,
+        refetch,
+        onSyncData,
+        onLinkColumnsVisibleChange,
+        fieldStats,
+        fieldStatsLoading,
+        fieldStatsError,
+        mainCountLabels,
+      }}
+    >
+      {children}
+    </ListItemsDataContext.Provider>
+  )
+}

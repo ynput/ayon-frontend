@@ -1,7 +1,7 @@
-import { ProjectTreeTable } from '@shared/containers'
-import { FC } from 'react'
-import { useVersionsDataContext } from '../../context/VPDataContext'
-import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
+import { ProjectTreeTable, useAddonTableColumns } from '@shared/containers'
+import { FC, useMemo } from 'react'
+import { useVersionsDataContext } from '../../context/vp-data'
+import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
 import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
 import { AddColumnButton } from '@shared/components'
 import styled from 'styled-components'
@@ -9,7 +9,7 @@ import {
   VP_EXTRA_COLUMNS,
   VP_PARENT_COLUMNS,
   VP_PARENT_SCOPES,
-} from '../VPTableSettings/VPTableSettings'
+} from '../VPTableSettings/VPTableSettingsHelpers'
 
 const VP_EXCLUDED_COLUMNS = ['assignees']
 const VP_LINK_COLUMNS = ['link_*', ...VP_PARENT_SCOPES.map((scope) => `${scope}_link_*`)]
@@ -36,6 +36,13 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     onLinkColumnsVisibleChange,
   } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
+  // columns addons contribute (tableColumn slot)
+  const { columns: addonColumns, settingsColumns: addonSettingsColumns } =
+    useAddonTableColumns('products')
+  const addColumnItems = useMemo(
+    () => [...VP_EXTRA_COLUMNS, ...addonSettingsColumns],
+    [addonSettingsColumns],
+  )
   const {
     uploadVersionItem,
     deleteVersionItem,
@@ -43,11 +50,14 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     addToListItem,
     productDetailItem,
     versionDetailItem,
+    addonTopItems,
+    addonItems,
   } = contextMenuItems
 
   return (
     <TableWrapper>
       <ProjectTreeTable
+        addonPage="products"
         scope={'versions-and-products'}
         sliceId={''}
         // pagination
@@ -55,6 +65,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         onScrollBottomGroupBy={(groupValue: string) => fetchNextPage(groupValue)}
         readOnly={readOnly}
         excludedColumns={VP_EXCLUDED_COLUMNS}
+        extraColumns={addonColumns}
         isExpandable={showProducts}
         isLoading={isLoading}
         includeParents={VP_PARENT_SCOPES}
@@ -75,19 +86,22 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
           },
         }}
         contextMenuItems={[
+          addonTopItems,
           'copy-paste',
           'show-details',
           'open-viewer',
+          'export',
           uploadVersionItem,
           addToListItem,
           productDetailItem,
           versionDetailItem,
+          addonItems,
           deleteVersionItem,
           deleteProductItem,
         ]}
       />
       <AddColumnButton
-        extraColumns={VP_EXTRA_COLUMNS}
+        extraColumns={addColumnItems}
         parentColumns={VP_PARENT_COLUMNS}
         parentLinkScopes={VP_PARENT_SCOPES}
       />

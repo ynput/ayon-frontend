@@ -1,5 +1,5 @@
 import React from 'react'
-import { useLocalStorage } from '@shared/hooks'
+import { useAfterStartup, useLocalStorage } from '@shared/hooks'
 import * as Styled from './InstallerDownloadPrompt.styled'
 import useGetInstallerDownload from './useGetInstallerDownload'
 
@@ -9,7 +9,9 @@ const InstallerDownloadPrompt = () => {
     [],
   )
 
-  const { directDownload } = useGetInstallerDownload()
+  // a prompt, not worth slowing down the page load for
+  const isAfterStartup = useAfterStartup()
+  const { directDownload } = useGetInstallerDownload({ skip: !isAfterStartup })
 
   const downloadFromUrl = (url, filename) => {
     const link = document.createElement('a')

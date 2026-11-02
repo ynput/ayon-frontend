@@ -1,17 +1,17 @@
 import { FC, useCallback, useState } from 'react'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import {
-  ListsDataProvider,
-  useListsDataContext,
-} from '@pages/ProjectListsPage/context/ListsDataContext'
-import { ListsProvider } from '@pages/ProjectListsPage/context/ListsProvider'
-import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
+import { ListsDataProvider, useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
+import { ListsProvider, useListsContext } from '@pages/ProjectListsPage/context/lists'
 import { ProjectContextProvider, useOptionalProjectContext } from '@shared/context'
 import ListsTable from '../ListsTable/ListsTable'
 import type { ListEntityInput } from '../../hooks/useBuildListMenuItems'
-import { listEntityTypes, type ListEntityType } from '../NewListDialog/NewListDialog'
+import { type ListEntityType } from '../NewListDialog/NewListDialog'
+import { listEntityTypes } from '../NewListDialog/NewListDialogHelpers'
 import { ACCESS_LEVEL } from '../../util/listAccessControl'
+import { getNewListFolderId } from '../../util/listFolders'
+import { parseListFolderRowId } from '../../util/buildListsTableData'
+import type { NewListOptions } from '../../context/entity-lists/EntityListsContext'
 import type { EntityList } from '@shared/api'
 
 // why a list can't be added to (shown but disabled); undefined = addable
@@ -69,6 +69,7 @@ export interface AddToListDialogProps {
     entityType: ListEntityType,
     selectedEntities: ListEntityInput[],
     entityListType?: string,
+    options?: NewListOptions,
   ) => void
   onClose: () => void
 }
@@ -81,7 +82,7 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
   openCreateNewList,
   onClose,
 }) => {
-  const { selectedLists } = useListsContext()
+  const { selectedLists, selectedRows } = useListsContext()
   const { listsMap } = useListsDataContext()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -110,7 +111,18 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
   const canCreateList = listEntityTypes.includes(entityType as ListEntityType)
   const handleCreateList = () => {
     onClose()
-    openCreateNewList(entityType as ListEntityType, entities, isReview ? 'review-session' : undefined)
+    // the new list starts in the folder the user is looking at (they can change it in the dialog)
+    openCreateNewList(
+      entityType as ListEntityType,
+      entities,
+      isReview ? 'review-session' : undefined,
+      {
+        entityListFolderId: getNewListFolderId(
+          selectedRows.map(parseListFolderRowId).filter((id): id is string => !!id),
+          selectedLists,
+        ),
+      },
+    )
   }
 
   const count = selectedLists.length

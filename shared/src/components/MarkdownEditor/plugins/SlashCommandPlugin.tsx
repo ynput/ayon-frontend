@@ -14,9 +14,9 @@ import {
 import { Icon, type IconType } from '@ynput/ayon-react-components'
 import type { EditorCommand, MentionPlacement, MentionTrigger } from '../types'
 import { toggleBlockFormat } from './formatting'
-import { INSERT_MENTION_TRIGGER_COMMAND } from './MentionsPlugin'
-import { OPEN_VIDEO_PROMPT_COMMAND } from './LinkEditorPlugin'
-import { OPEN_MEDIA_PICKER_COMMAND } from './MediaPlugin'
+import { INSERT_MENTION_TRIGGER_COMMAND } from './MentionsPluginHelpers'
+import { OPEN_VIDEO_PROMPT_COMMAND } from './LinkEditorPluginHelpers'
+import { OPEN_MEDIA_PICKER_COMMAND } from './MediaPluginHelpers'
 import { $isSelectionInCode } from './selectionHelpers'
 import SuggestionMenu from './SuggestionMenu'
 

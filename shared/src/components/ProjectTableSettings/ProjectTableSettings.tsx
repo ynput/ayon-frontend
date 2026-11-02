@@ -1,11 +1,10 @@
 import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils/checkColumnVisibility'
-import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
-import { useProjectTableContext } from '@shared/containers/ProjectTreeTable/context/ProjectTableContext'
+import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable/context/column-settings'
+import { useProjectTableContext } from '@shared/containers/ProjectTreeTable/context/project-table'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC, useEffect, useState } from 'react'
 import styled from 'styled-components'
-import type { SettingHighlightedId } from '@shared/context/SettingsPanelContext'
-import { useSettingsPanel } from '@shared/context/SettingsPanelContext'
+import { useSettingsPanel, type SettingHighlightedId } from '@shared/context'
 import { SettingsPanel } from '@shared/components/SettingsPanel/SettingsPanel'
 import type { SettingConfig } from '@shared/components/SettingsPanel/SettingsPanel'
 import { ColumnsSettingsWithContext } from './ColumnsSettings'
@@ -16,6 +15,7 @@ import { useAddColumnsMenu } from './useAddColumnsMenu'
 import { useProjectTableColumnItems } from './useProjectTableColumnItems'
 import { normalizeColumnId } from '@shared/containers/ProjectTreeTable/utils/columnIds'
 import type { MenuItemType } from '../Menu'
+import type { AddColumnItem } from './addColumnsMenu'
 import type { EntityType, ParentColumnDefinition } from '@shared/containers'
 import type { ColumnIdAliases } from '@shared/containers/ProjectTreeTable/utils/columnIds'
 
@@ -50,7 +50,7 @@ export type OverviewSettingsChange = (setting: 'columns' | 'group-by', value: an
 
 export type ProjectTableSettingsProps = {
   settings?: SettingConfig[]
-  extraColumns?: { value: string; label: string; icon?: string }[]
+  extraColumns?: Pick<AddColumnItem, 'value' | 'label' | 'icon' | 'menu'>[]
   hiddenColumns?: string[]
   hiddenSettings?: ('columns' | 'row-height' | 'group-by' | 'sort-by')[]
   highlighted?: SettingHighlightedId

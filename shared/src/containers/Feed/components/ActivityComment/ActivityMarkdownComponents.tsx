@@ -2,6 +2,10 @@ import React from 'react'
 import { isArray } from 'lodash'
 import ActivityCheckbox from '../ActivityCheckbox/ActivityCheckbox'
 import ActivityReference from '../ActivityReference/ActivityReference'
+import { ACTIVITY_LINK_LABEL, parseActivityLink } from '@shared/components/MarkdownEditor'
+import SourceCommentReference from './SourceCommentReference'
+import RelativeLink from './RelativeLink'
+import { getActivityLink } from '../../helpers/getActivityLink'
 
 export const allowedRefTypes = [
   'user',
@@ -42,6 +46,7 @@ interface ATagProps {
 
 interface ATagOptions {
   entityId?: string
+  entityType?: string
   projectName?: string
   userName?: string
   userTeamNames?: string[]
@@ -61,12 +66,20 @@ interface ATagOptions {
   }) => void
   categoryPrimary?: string
   categorySecondary?: string
+  // a link to a comment was clicked, defaults to opening the link
+  onActivityLinkClick?: (link: { activityId: string; projectName: string; url: string }) => void
 }
+
+const getText = (children: React.ReactNode): string =>
+  React.Children.toArray(children)
+    .map((child) => (typeof child === 'string' || typeof child === 'number' ? String(child) : ''))
+    .join('')
 
 export const aTag = (
   { children, href }: ATagProps,
   {
     entityId,
+    entityType,
     userName,
     userTeamNames,
     projectName,
@@ -75,8 +88,56 @@ export const aTag = (
     onReferenceTooltip,
     categoryPrimary,
     categorySecondary,
+    onActivityLinkClick,
   }: ATagOptions,
 ): React.ReactNode => {
+  // a link to a comment is a chip like mentions
+  const activityLink = parseActivityLink(href)
+  if (activityLink) {
+    if (activityLink.isSource) {
+      // the source comment can be on another entity than the comment linking to it
+      const entity =
+        activityLink.entity ?? (entityId && entityType ? { id: entityId, type: entityType } : null)
+      if (!projectName || !entity) return null
+      const url = getActivityLink(projectName, activityLink.activityId, entity)
+      return (
+        <SourceCommentReference
+          projectName={projectName}
+          activityId={activityLink.activityId}
+          entityId={entity.id}
+          onClick={() =>
+            onActivityLinkClick
+              ? onActivityLinkClick({ activityId: activityLink.activityId, projectName, url })
+              : window.open(url, '_blank', 'noreferrer')
+          }
+          categoryPrimary={categoryPrimary}
+          categorySecondary={categorySecondary}
+        />
+      )
+    }
+    const text = getText(children).trim()
+    // a pasted url has itself as its label
+    const label = !text || /^https?:\/\//.test(text) ? ACTIVITY_LINK_LABEL : text
+    const link = activityLink
+    return (
+      <ActivityReference
+        type="activity"
+        id={`activity-${activityLink.activityId}`}
+        icon="chat"
+        onClick={() =>
+          onActivityLinkClick
+            ? onActivityLinkClick(link)
+            : window.open(href, '_blank', 'noreferrer')
+        }
+        categoryPrimary={categoryPrimary}
+        categorySecondary={categorySecondary}
+        data-tooltip="Go to comment"
+      >
+        {label}
+      </ActivityReference>
+    )
+  }
+
   const { url, type, id } = sanitizeURL(href)
 
   // link is broken in some way
@@ -88,7 +149,7 @@ export const aTag = (
   // if no reference type, return regular link with no href
   if (url || !type || !id) {
     if (type === 'relative' && url) {
-      return <Link to={url}>{children}</Link>
+      return <RelativeLink to={url}>{children}</RelativeLink>
     } else {
       return (
         <a href={url} target="_blank" rel="noreferrer">
@@ -156,7 +217,6 @@ export const inputTag = (
 
 import { BlockCode, InlineCode, QuoteLine } from './ActivityComment.styled'
 import { highlightCode } from '@shared/components/MarkdownEditor/code/prism'
-import { Link } from 'react-router-dom'
 // eslint-disable-next-line
 interface CodeTagProps {
   node: any

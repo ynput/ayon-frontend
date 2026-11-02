@@ -8,6 +8,7 @@ import { UserImage } from '@ynput/ayon-react-components'
 import { CategoryTag } from '../ActivityCategorySelect'
 import { useCategoryData } from '../../hooks/useCategoryData'
 import { getActivityUserName } from '../../helpers/getActivityUserName'
+import { getVerbForFeedback, getIconForFeedback } from './ActivityVersionReviewHelpers'
 
 interface ActivityVersionReviewProps {
   entityType?: string
@@ -25,35 +26,6 @@ interface ActivityVersionReviewProps {
 }
 
 export const ANONYMOUS_GUEST_NAME_PREFIX = "anonymous.guest"
-
-export const getVerbForFeedback = (feedback: VersionReviewFeedback) => {
-  switch (feedback) {
-    case VersionReviewFeedback.REQUEST_CHANGES:
-      return 'requested changes'
-    case VersionReviewFeedback.APPROVE:
-    default:
-      return 'approved this'
-  }
-}
-export const getVerbForFeedbackBody = (feedback: VersionReviewFeedback, entityType: string) => {
-  switch (feedback) {
-    case VersionReviewFeedback.REQUEST_CHANGES:
-      return 'Requested changes on ' + entityType
-    case VersionReviewFeedback.APPROVE:
-    default:
-      return 'Approved ' + entityType
-  }
-}
-
-export const getIconForFeedback = (feedback: VersionReviewFeedback) => {
-  switch (feedback) {
-    case VersionReviewFeedback.REQUEST_CHANGES:
-      return 'refresh'
-    case VersionReviewFeedback.APPROVE:
-    default:
-      return 'task_alt'
-  }
-}
 
 const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ isGuest, activity }) => {
   const { authorName, authorFullName, createdAt, activityData } = activity || {}

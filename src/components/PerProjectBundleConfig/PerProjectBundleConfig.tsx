@@ -5,12 +5,6 @@ import PerProjectBundleDialog from './PerProjectBundleDialog'
 
 export const FROZEN_BUNDLE_ICON = 'lock'
 
-export const projectBundleFromName = (name?: string) => {
-  if (!name) return null
-  const match = name.match(/^__project__(.+)__(\w+)$/)
-  if (!match) return null
-  return { bundleName: match[1], variant: match[2] }
-}
 interface PerProjectBundleConfigProps {
   projectName: string
   variant: string

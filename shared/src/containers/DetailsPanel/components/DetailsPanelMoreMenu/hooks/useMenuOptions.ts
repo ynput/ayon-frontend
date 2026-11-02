@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
+import { entityUrl } from '@ynput/ayon-addon'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
-import type { DeletableEntity } from '@shared/context/DeleteEntitiesContext'
+import type { DeletableEntity } from '@shared/context'
 import { pluralize } from '@shared/util'
 import type { DetailsPanelEntityListsContext, SelectedEntityRef, ListEntityRef } from '../types'
 
@@ -18,6 +19,11 @@ interface UseMenuOptionsParams {
   canOpenViewer: boolean
   canDelete: boolean
   entityListsContext: DetailsPanelEntityListsContext | undefined
+  // items addons contribute (detailsPanel.menuItem slot), shown before "View data"
+  /** first in the menu (addon items with position `top`) */
+  extraTopItems?: MenuItemType[]
+  /** after the menu's own actions, above View data and Delete */
+  extraItems?: MenuItemType[]
   onPip: () => void
   onOpenViewer: () => void
   onUploadThumbnail: () => void
@@ -32,21 +38,15 @@ export interface MenuOptionsResult {
   shareLink: string | null
 }
 
-// folder/task open in Overview; product/version/representation open in Products.
 const buildEntityShareLink = (
   entityType: string,
   entityId: string,
   projectName: string,
 ): string | null => {
-  const path =
-    entityType === 'folder' || entityType === 'task'
-      ? 'overview'
-      : entityType === 'product' || entityType === 'version' || entityType === 'representation'
-      ? 'products'
-      : null
-  if (!path) return null
+  const url = entityUrl({ entityType, id: entityId, projectName })
+  if (!url) return null
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  return `${origin}/projects/${projectName}/${path}?project=${projectName}&type=${entityType}&id=${entityId}`
+  return `${origin}${url}`
 }
 
 export const useMenuOptions = ({
@@ -61,6 +61,8 @@ export const useMenuOptions = ({
   canOpenViewer,
   canDelete,
   entityListsContext,
+  extraTopItems = [],
+  extraItems = [],
   onPip,
   onOpenViewer,
   onUploadThumbnail,
@@ -84,7 +86,7 @@ export const useMenuOptions = ({
   }, [selectedEntities, entityId, entityType])
 
   return useMemo<MenuOptionsResult>(() => {
-    const items: MenuItemType[] = []
+    const items: MenuItemType[] = [...extraTopItems]
 
     if (canOpenViewer) {
       items.push({
@@ -168,6 +170,8 @@ export const useMenuOptions = ({
       })
     }
 
+    items.push(...extraItems)
+
     items.push({
       id: 'view-data',
       label: 'View data',
@@ -201,6 +205,8 @@ export const useMenuOptions = ({
     canDelete,
     deleteEntities,
     entityListsContext,
+    extraTopItems,
+    extraItems,
     projectName,
     normalizedSelected,
     entityType,
