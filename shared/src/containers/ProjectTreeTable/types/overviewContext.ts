@@ -1,9 +1,9 @@
 import type { EntityGroup } from '@shared/api'
 import type { FieldStats } from '@shared/api'
-import type { OnSyncDataCallback } from '@shared/context/EntityUpdatesContext'
+import type { OnSyncDataCallback } from '@shared/context'
 import type { FolderNodeMap, TaskNodeMap, TasksByFolderMap } from './table'
 import type { LoadingTasks, SoftErrorAction } from './index'
-import type { ProjectDataContextProps } from '../context/ProjectDataContext'
+import type { ProjectDataContextProps } from '../context/project-data'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import type { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
 import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
@@ -58,9 +58,9 @@ export interface ProjectOverviewContextType {
   // Query Filters - separate filters for tasks and folders
   taskFilters: QueryFilterParams
   folderFilters: QueryFilterParams
-  // task stats args for slicer value counts — like the filters above but with the
-  // active slice's own filter excluded, so counts don't self-zero on selection
-  slicerCountsArgs: {
+  // per-panel task stats args for slicer value counts — like the filters above but
+  // with the panel's own filter excluded, so counts don't self-zero on selection
+  getSlicerCountsArgs: (sliceType: string) => {
     projectName: string
     filter?: string
     folderFilter?: string

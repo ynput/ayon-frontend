@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useColumnSettingsContext, useProjectTableContext } from '../context'
 import { useGetGroupedFields } from './useGetGroupedFields'
-import type { TableGroupBy } from '../context/ColumnSettingsContext'
+import type { TableGroupBy } from '../context/column-settings'
 
 const HIERARCHY_ID = 'hierarchy'
 const FOLDER_ID = 'folder'

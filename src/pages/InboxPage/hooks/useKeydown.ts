@@ -10,7 +10,7 @@ interface UseKeydownProps {
 
 type UseKeydownReturn = [(e: KeyboardEvent) => void, [boolean, Dispatch<SetStateAction<boolean>>]]
 
-const MESSAGE_ID_PREFIX = 'message-'
+export const MESSAGE_ID_PREFIX = 'message-'
 
 const useKeydown = ({
   messages,

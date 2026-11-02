@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useNavigate, useParams } from 'react-router-dom'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
@@ -7,23 +7,26 @@ import { useDispatch } from 'react-redux'
 import { onProjectSelected } from '@state/dashboard'
 import { useGetProjectsInfoQuery } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
-import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
-import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
 import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from './DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
-import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
-import { Splitter, SplitterPanel } from 'primereact/splitter'
+import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
+import { SplitterPanel } from 'primereact/splitter'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
-import styled from 'styled-components'
+import { ProjectsListSplitter } from './UserDashboardPage.styled'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
-import { UserDashboardProvider } from './context/UserDashboardContext'
+import { UserDashboardProvider } from './context/user-dashboard'
 import { useAppSelector } from '@/features/store'
 import type { ReactNode } from 'react'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import { useContributions } from '@ynput/ayon-addon'
+import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
+import { AddonStudioPage } from '@/remote/AddonPages'
+import { StudioPageSelectionProvider } from '@/remote/AddonLayout'
+import { ProjectList, StudioPageLayout } from '@ynput/ayon-addon'
 import { UserDashboardPageRemote } from './UserDashboardPageRemote'
 import LoadingPage from '@pages/LoadingPage'
 import { WithViews } from '@/hoc/WithViews'
@@ -52,18 +55,18 @@ type PageLink = NavLinkItem & {
   viewType?: ViewType
   showProjectList?: boolean
   isMultiSelect?: boolean
+  // page only makes sense with at least one project; shows the "No Projects" state otherwise
+  requiresProjects?: boolean
 }
 
-const StyledSplitter = styled(Splitter)`
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-  display: flex;
+// these pull in the settings editor (new project dialog), only load them when they are shown
+const NewProjectDialog = lazy(() => import('../ProjectManagerPage/NewProjectDialog'))
+const UserDashboardNoProjects = lazy(
+  () => import('./UserDashboardNoProjects/UserDashboardNoProjects'),
+)
 
-  .p-splitter-gutter {
-    z-index: 50;
-  }
-`
+// pages rendered by this repo, they don't need to wait for addon remote modules to load
+const BUILT_IN_MODULES = ['tasks', 'projects']
 
 const UserDashboardPage: React.FC = () => {
   const { module, addonName } = useParams<{ module?: string; addonName?: string }>()
@@ -87,6 +90,20 @@ const UserDashboardPage: React.FC = () => {
   const { getProductionAddon } = useGetProductionAddon()
   const hasPlanner = !!getProductionAddon('planner')
 
+  // pages addons contribute to the studio.page slot; built-in and legacy pages win on an id clash
+  const { contributions: studioPageContributions, isLoading: isLoadingContributions } =
+    useContributions('studio.page')
+  const addonStudioPages = useAddonPages(
+    studioPageContributions,
+    [
+      ...BUILT_IN_MODULES,
+      'planner',
+      ...(addonsData as DashboardAddon[]).map((a) => a.name),
+      ...remotePages.map((p) => p.module),
+    ],
+    remotePages.map((p) => p.viewType),
+  )
+
   const navigate = useNavigate()
   const [showNewProject, setShowNewProject] = useState<boolean>(false)
   const {
@@ -98,7 +115,19 @@ const UserDashboardPage: React.FC = () => {
   const dispatch = useDispatch()
   //   selected projects
   const selectedProjects = useAppSelector((state: any) => state.dashboard.selectedProjects)
-  const setSelectedProjects = (projects: string[]) => dispatch(onProjectSelected(projects))
+  const setSelectedProjects = useCallback(
+    (projects: string[]) => dispatch(onProjectSelected(projects)),
+    [dispatch],
+  )
+  // legacy studio pages with the `projects` key share the dashboard's selection
+  const legacyStudioSelection = useMemo(
+    () => ({
+      selection: selectedProjects,
+      onSelect: setSelectedProjects,
+      onNewProject: () => setShowNewProject(true),
+    }),
+    [selectedProjects, setSelectedProjects],
+  )
 
   // Filter out folder IDs from selection - only actual project names should be used for API queries
   const selectedProjectNames = useMemo(
@@ -142,6 +171,7 @@ const UserDashboardPage: React.FC = () => {
         // viewType: 'tasks',
         showProjectList: true,
         isMultiSelect: true,
+        requiresProjects: true,
       },
       {
         name: 'Projects',
@@ -150,6 +180,7 @@ const UserDashboardPage: React.FC = () => {
         viewType: 'projects-overview',
         component: <ProjectsPage onNewProject={() => setShowNewProject(true)} />,
         showProjectList: false,
+        requiresProjects: true,
       },
       // Show bookings splash when planner addon is not installed;
       // when installed the remote page from the planner addon handles /dashboard/bookings
@@ -182,23 +213,46 @@ const UserDashboardPage: React.FC = () => {
       // Add remote Studio pages
       ...remotePages.map((remote) => {
         const showProjectList = !!(remote as any).projects
+        const page = (
+          <UserDashboardPageRemote
+            Component={remote.component}
+            viewType={remote.viewType}
+            state={showProjectList ? { selectedProjects } : undefined}
+            key={remote.id}
+          />
+        )
         return {
           name: remote.name || remote.module,
           path: `/dashboard/${remote.module}`,
           module: remote.module,
-          component: (
-            <UserDashboardPageRemote
-              Component={remote.component}
-              viewType={remote.viewType}
-              state={showProjectList ? { selectedProjects } : undefined}
-              key={remote.id}
-            />
+          // the `projects` key renders through the layout components studio.page contributions use
+          component: showProjectList ? (
+            <StudioPageSelectionProvider value={legacyStudioSelection} key={remote.id}>
+              <StudioPageLayout sidebar={<ProjectList />}>{page}</StudioPageLayout>
+            </StudioPageSelectionProvider>
+          ) : (
+            page
           ),
           viewType: remote.viewType,
-          showProjectList,
+          showProjectList: false,
           isMultiSelect: false,
         }
       }),
+      ...addonStudioPages.map((page) => ({
+        name: page.title,
+        path: `/dashboard/${page.id}`,
+        module: page.id,
+        accessLevels: pageAccessLevels(page.access),
+        component: (
+          <AddonStudioPage
+            contribution={page}
+            onNewProject={() => setShowNewProject(true)}
+            key={page.key}
+          />
+        ),
+        viewType: page.viewType as ViewType | undefined,
+        showProjectList: false,
+      })),
       { node: 'spacer' },
       {
         node: (
@@ -213,6 +267,8 @@ const UserDashboardPage: React.FC = () => {
     [
       addonsData,
       remotePages,
+      addonStudioPages,
+      legacyStudioSelection,
       projectsInfoWithProjects,
       isLoadingInfo,
       selectedProjects,
@@ -242,9 +298,11 @@ const UserDashboardPage: React.FC = () => {
   const title = useTitle(addonName || module || '', pages, 'AYON', '')
 
   // Early returns after all hooks
-  if (isLoadingProjects || isLoadingRemotePages) return <LoadingPage />
-
-  if (!projects.length) return <UserDashboardNoProjects />
+  // the built in pages render while the projects load (the projects list shows its own loading
+  // state), so their data, e.g. the tasks of the selected projects, starts loading straight away
+  const isBuiltInPage = !addonName && (!module || BUILT_IN_MODULES.includes(module))
+  if (!isBuiltInPage && (isLoadingProjects || isLoadingRemotePages || isLoadingContributions))
+    return <LoadingPage />
 
   if (isGuest) {
     return <GuestUserPageLocked />
@@ -252,12 +310,27 @@ const UserDashboardPage: React.FC = () => {
 
   if (!activePage?.component) return null
 
+  // Keep the tab bar and non-project pages (e.g. addon studio pages used for first-run setup)
+  // reachable on a server with no projects; only project-based pages show the empty state.
+  const showNoProjects = !isLoadingProjects && !projects.length && !!activePage.requiresProjects
+
   const {
     component: moduleComponent,
     showProjectList = false,
     isMultiSelect = false,
     viewType,
-  } = activePage
+  } = showNoProjects
+    ? {
+        component: (
+          <Suspense fallback={<LoadingPage />}>
+            <UserDashboardNoProjects />
+          </Suspense>
+        ),
+        showProjectList: false,
+        isMultiSelect: false,
+        viewType: undefined,
+      }
+    : activePage
 
   return (
     <>
@@ -268,7 +341,7 @@ const UserDashboardPage: React.FC = () => {
           <WithViews viewType={viewType}>
             <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
               {showProjectList ? (
-                <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
+                <ProjectsListSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
                   <SplitterPanel size={15}>
                     <ProjectsList
                       multiSelect={isMultiSelect}
@@ -280,7 +353,7 @@ const UserDashboardPage: React.FC = () => {
                   <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
                     {moduleComponent}
                   </SplitterPanel>
-                </StyledSplitter>
+                </ProjectsListSplitter>
               ) : (
                 moduleComponent
               )}
@@ -288,13 +361,15 @@ const UserDashboardPage: React.FC = () => {
           </WithViews>
         </main>
         {showNewProject && (
-          <NewProjectDialog
-            onHide={(name?: string) => {
-              setShowNewProject(false)
-              if (name) navigate(`/manageProjects/anatomy?project=${name}`)
-            }}
-            redirect={module !== 'projects'}
-          />
+          <Suspense fallback={null}>
+            <NewProjectDialog
+              onHide={(name?: string) => {
+                setShowNewProject(false)
+                if (name) navigate(`/manageProjects/anatomy?project=${name}`)
+              }}
+              redirect={module !== 'projects'}
+            />
+          </Suspense>
         )}
       </UserDashboardProvider>
     </>

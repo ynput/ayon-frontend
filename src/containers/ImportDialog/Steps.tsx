@@ -1,19 +1,43 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react'
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import UploadStep from './steps/UploadStep/UploadStep'
 import { getFullMapping, ImportData } from './utils'
 import MapColumnsStep from './steps/MapColumnsStep/MapColumnsStep'
-import { ColumnMappings, ImportContext, ImportStep, ValueMappings } from './steps/common'
+import {
+  ColumnAction,
+  ColumnMappings,
+  ImportContext,
+  ImportStep,
+  ValueMappings,
+} from './steps/common'
 import ReviewValuesStep from './steps/ReviewValuesStep/ReviewValuesStep'
 import PreviewStep from './steps/PreviewStep/PreviewStep'
 import { useViewsContext } from '@shared/containers'
-import { ColumnMapping, ImportStatus } from '@shared/api/generated/dataImport'
+import {
+  ColumnMapping,
+  DuplicateItemStrategy,
+  ImportStatus,
+} from '@shared/api/generated/dataImport'
 import { toast } from 'react-toastify'
+import { getRequestErrorString } from '@shared/util'
+import { usePowerpack } from '@shared/context'
 import { useExportFieldsQuery, useImportDataMutation } from '../../services/dataImport'
 import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from './ImportDialog.styled'
 import Loading from './steps/Loading'
 import { EmptyPlaceholder } from '@shared/components'
 import { withHierarchySchema } from './steps/hierarchy'
 import SubmitStep from './steps/SubmitStep/SubmitStep'
+import ImportOptions from './steps/ImportOptions/ImportOptions'
+import {
+  ENTITY_LIST_ID,
+  getUnmappedRequiredTargetGroups,
+  hasImportModes,
+  ImportMode,
+  missingStrategyForImportMode,
+  NewListEntityType,
+  RowsEntityType,
+  schemaForListValues,
+  schemaForRowsEntityType,
+} from './steps/importMode'
 
 type Props = {
   importContext: ImportContext
@@ -53,10 +77,25 @@ export default function ImportSteps({
   onClose,
 }: Props) {
   const [importData] = useImportDataMutation()
+  // without the powerpack, list imports set the values on the listed entities
+  const { powerLicense } = usePowerpack()
+  const updateListedEntities = importContext === 'entity_list_item' && !powerLicense
 
+  const [importMode, setImportMode] = useState(ImportMode.CREATE_AND_UPDATE)
+  const [duplicateStrategy, setDuplicateStrategy] = useState<DuplicateItemStrategy>('skip')
+  const [rowsEntityType, setRowsEntityType] = useState<RowsEntityType>('column')
+  // without a list to import into, the import creates one
+  const creatingList = importContext === 'entity_list_item' && !folderId
+  const [newList, setNewList] = useState<{ label: string; entityType: NewListEntityType }>({
+    label: '',
+    entityType: 'folder',
+  })
   const [columnMappings, setColumnMappings] = useState<ColumnMappings | undefined>(undefined)
   const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
   const [previewStatus, setPreviewStatus] = useState<ImportStatus | null>(null)
+  // the response is the result, the import.data events only show progress
+  const [importResult, setImportResult] = useState<ImportStatus | null>(null)
+  const [requestError, setRequestError] = useState<unknown>(null)
   const [submitted, setSubmitted] = useState(false)
   const [success, setSuccess] = useState(false)
 
@@ -64,18 +103,30 @@ export default function ImportSteps({
     data: rawImportSchema,
     isLoading: importSchemaLoading,
     isError: importSchemaError,
-  } = useExportFieldsQuery({
-    projectName,
-    entityType: importContext,
-  })
+  } = useExportFieldsQuery(
+    {
+      projectName,
+      entityType: importContext,
+      folderId,
+      // a new list offers the values of the entity type it will hold
+      listEntityType: creatingList ? newList.entityType : undefined,
+    },
+    // statuses, list attributes and comment categories can change in settings meanwhile
+    { refetchOnMountOrArgChange: true },
+  )
 
   const importSchema = useMemo(() => {
+    if (importContext === 'entity_list_item') {
+      const listSchema = rawImportSchema?.filter(({ key }) => key !== ENTITY_LIST_ID)
+      return listSchema && schemaForListValues(listSchema, updateListedEntities)
+    }
     if (importContext !== 'hierarchy') {
       return rawImportSchema
     }
 
-    return withHierarchySchema(rawImportSchema)
-  }, [rawImportSchema])
+    const hierarchySchema = withHierarchySchema(rawImportSchema)
+    return hierarchySchema && schemaForRowsEntityType(hierarchySchema, rowsEntityType)
+  }, [rawImportSchema, importContext, rowsEntityType, updateListedEntities])
 
   const { setSelectedView, workingView } = useViewsContext()
 
@@ -96,25 +147,59 @@ export default function ImportSteps({
         preview,
         projectName,
         existingStrategy: 'update',
+        missingStrategy: missingStrategyForImportMode[importMode],
+        duplicateStrategy,
+        entityType:
+          importContext === 'hierarchy' && rowsEntityType !== 'column' ? rowsEntityType : undefined,
+        newListLabel: creatingList ? newList.label.trim() : undefined,
+        newListEntityType: creatingList ? newList.entityType : undefined,
+        updateListedEntities:
+          importContext === 'entity_list_item' ? updateListedEntities : undefined,
       })
     },
-    [data, folderId, projectName, importContext],
+    [
+      updateListedEntities,
+      data,
+      folderId,
+      projectName,
+      importContext,
+      importMode,
+      duplicateStrategy,
+      rowsEntityType,
+      creatingList,
+      newList,
+    ],
   )
+
+  // a new list is named after the file unless the user named it
+  const fileListLabel = useRef('')
+  const nameListAfterFile = ({ fileName }: ImportData) => {
+    if (!creatingList || (newList.label && newList.label !== fileListLabel.current)) return
+    const stem = fileName.replace(/\.[^.]+$/, '')
+    fileListLabel.current = stem === 'Pasted from clipboard' ? 'Imported list' : stem
+    setNewList({ ...newList, label: fileListLabel.current })
+  }
+
+  const optionsProblem = creatingList && !newList.label.trim() ? 'Name the new list.' : null
+
+  const changeImportMode = useCallback((mode: ImportMode) => {
+    setImportMode(mode)
+    setPreviewStatus(null)
+  }, [])
 
   const fetchPreview = useCallback(() => {
     if (!columnMappings || !valueMappings) return
 
-    requestImport(getFullMapping(columnMappings, valueMappings), true)
-      .then((result) => {
-        if (!result || result.error) {
-          throw new Error(JSON.stringify(result?.error))
-        }
-
-        setPreviewStatus(result.data)
-      })
-      .catch((err) => {
-        toast.error(`Error getting import preview`)
-      })
+    setRequestError(null)
+    requestImport(getFullMapping(columnMappings, valueMappings), true).then((result) => {
+      if (!result) return
+      if (result.error) {
+        setRequestError(result.error)
+        toast.error(`Error getting import preview: ${getRequestErrorString(result.error)}`)
+        return
+      }
+      setPreviewStatus(result.data)
+    })
   }, [requestImport, columnMappings, valueMappings])
 
   const onValuesReviewed = useCallback(() => {
@@ -127,34 +212,66 @@ export default function ImportSteps({
 
     setSubmitted(true)
     setStep(ImportStep.SUBMIT)
-    requestImport(getFullMapping(columnMappings, valueMappings), false)
-      .then(() => {
-        setSuccess(true)
-      })
-      .catch((err) => {
-        toast.error(`Error importing data`)
-      })
+    setImportResult(null)
+    setRequestError(null)
+    requestImport(getFullMapping(columnMappings, valueMappings), false).then((result) => {
+      if (!result) return
+      if (result.error) {
+        setRequestError(result.error)
+        toast.error(`Error importing data: ${getRequestErrorString(result.error)}`)
+        return
+      }
+      setImportResult(result.data)
+      setSuccess(true)
+    })
   }, [requestImport, columnMappings, valueMappings])
+
+  // the mode can change after the columns were mapped, so the mapping may no longer be enough
+  // the options can change after the columns were mapped, so the mapping may no longer fit:
+  // a required target may be missing or a target may no longer be offered
+  const mappingsValid = useMemo(() => {
+    if (!importSchema || !columnMappings) return false
+    const targets = new Set(importSchema.map(({ key }) => key))
+    const targetsOffered = Object.values(columnMappings).every(
+      ({ action, targetColumn }) =>
+        action !== ColumnAction.MAP || !targetColumn || targets.has(targetColumn),
+    )
+    return (
+      targetsOffered &&
+      !optionsProblem &&
+      getUnmappedRequiredTargetGroups(importContext, importMode, importSchema, columnMappings)
+        .length === 0
+    )
+  }, [importContext, importMode, importSchema, columnMappings, optionsProblem])
 
   const unlocked: Record<ImportStep, boolean> = useMemo(
     () => ({
       [ImportStep.UPLOAD]: !submitted && Boolean(importSchema),
       [ImportStep.MAP_COLUMNS]: !submitted && Boolean(importSchema && data),
-      [ImportStep.REVIEW_VALUES]: !submitted && Boolean(importSchema && data && columnMappings),
+      [ImportStep.REVIEW_VALUES]: !submitted && Boolean(importSchema && data && mappingsValid),
       [ImportStep.PREVIEW]:
         !submitted &&
-        Boolean(importSchema && data && columnMappings && valueMappings && previewStatus),
+        Boolean(importSchema && data && mappingsValid && valueMappings && previewStatus),
       [ImportStep.SUBMIT]: Boolean(
         importSchema && data && columnMappings && valueMappings && previewStatus && submitted,
       ),
     }),
-    [importSchema, data, columnMappings, valueMappings, previewStatus, submitted, success],
+    [
+      importSchema,
+      data,
+      columnMappings,
+      mappingsValid,
+      valueMappings,
+      previewStatus,
+      submitted,
+      success,
+    ],
   )
 
   const completed: Record<ImportStep, boolean> = useMemo(
     () => ({
       [ImportStep.UPLOAD]: Boolean(importSchema && data),
-      [ImportStep.MAP_COLUMNS]: Boolean(importSchema && data && columnMappings),
+      [ImportStep.MAP_COLUMNS]: Boolean(importSchema && data && mappingsValid),
       [ImportStep.REVIEW_VALUES]: Boolean(
         importSchema && data && columnMappings && valueMappings && previewStatus,
       ),
@@ -163,7 +280,16 @@ export default function ImportSteps({
       ),
       [ImportStep.SUBMIT]: success,
     }),
-    [importSchema, data, columnMappings, valueMappings, previewStatus, submitted, success],
+    [
+      importSchema,
+      data,
+      columnMappings,
+      mappingsValid,
+      valueMappings,
+      previewStatus,
+      submitted,
+      success,
+    ],
   )
 
   return (
@@ -193,17 +319,48 @@ export default function ImportSteps({
           </Breadcrumb>
         ))}
       </Breadcrumbs>
+      {importSchema &&
+        hasImportModes(importContext) &&
+        (step === ImportStep.UPLOAD || step === ImportStep.MAP_COLUMNS) && (
+          <ImportOptions
+            importContext={importContext}
+            importMode={importMode}
+            onImportModeChange={changeImportMode}
+            newList={creatingList ? newList : undefined}
+            listValuesOnEntities={updateListedEntities}
+            onNewListChange={(list) => {
+              setNewList(list)
+              setPreviewStatus(null)
+            }}
+            rowsEntityType={rowsEntityType}
+            onRowsEntityTypeChange={(entityType) => {
+              setRowsEntityType(entityType)
+              setPreviewStatus(null)
+            }}
+            duplicateStrategy={duplicateStrategy}
+            onDuplicateStrategyChange={(strategy) => {
+              setDuplicateStrategy(strategy)
+              setPreviewStatus(null)
+            }}
+          />
+        )}
       {!importSchema && importSchemaLoading && <Loading />}
       {!importSchema && !importSchemaLoading && <EmptyPlaceholder error={importSchemaError} />}
       {step === ImportStep.UPLOAD && importSchema && (
         <UploadStep
           importContext={importContext}
           importSchema={importSchema}
+          uploaded={data}
+          importMode={importMode}
+          onLoaded={nameListAfterFile}
           onBack={onClose}
           onNext={(d) => {
-            setData(d)
-            setColumnMappings(undefined)
-            setValueMappings(null)
+            // coming back to change the mode keeps the file and its mappings
+            if (d.fileId !== data?.fileId) {
+              setData(d)
+              setColumnMappings(undefined)
+              setValueMappings(null)
+            }
             setPreviewStatus(null)
             setStep(ImportStep.MAP_COLUMNS)
           }}
@@ -214,7 +371,10 @@ export default function ImportSteps({
           data={data}
           mappings={columnMappings}
           importContext={importContext}
+          importMode={importMode}
           importSchema={importSchema}
+          optionsProblem={optionsProblem}
+          onImportModeChange={changeImportMode}
           onBack={() => setStep(ImportStep.UPLOAD)}
           onNext={(mappings) => {
             setColumnMappings(mappings)
@@ -240,7 +400,9 @@ export default function ImportSteps({
         <PreviewStep
           data={data}
           previewStatus={previewStatus}
+          error={requestError}
           importContext={importContext}
+          importMode={importMode}
           onBack={() => setStep(ImportStep.REVIEW_VALUES)}
           onNext={onConfirmImport}
         />
@@ -253,7 +415,11 @@ export default function ImportSteps({
         step === ImportStep.SUBMIT && (
           <SubmitStep
             data={data}
+            result={importResult}
+            error={requestError}
             importContext={importContext}
+            importMode={importMode}
+            projectName={projectName}
             onBack={() => {}}
             onNext={onClose}
           />

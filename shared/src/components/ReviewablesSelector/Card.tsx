@@ -18,6 +18,7 @@ export type ReviewableCardProps = ReviewableCard & {
   onChange?: (fileId: string, modifier?: boolean) => void
   onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void
   onMouseOver: (event: MouseEvent<HTMLDivElement>, { label }: { label?: string }) => void
+  shortcut?: string
 }
 
 export default function Card({
@@ -31,6 +32,7 @@ export default function Card({
   tag,
   contextMenuItems,
   selectionVariant = 'primary',
+  shortcut,
 }: ReviewableCardProps) {
   const [contextMenuShow] = useCreateContextMenu()
 
@@ -40,6 +42,9 @@ export default function Card({
       id={'preview-' + fileId}
       onClick={(event) => onChange?.(fileId, event.metaKey || event.ctrlKey)}
       className={clsx('reviewable-card', { selected }, selectionVariant)}
+      data-tooltip={label}
+      data-shortcut={shortcut}
+      data-shortcut-position="before"
       onMouseOver={(e) => onMouseOver(e, { label })}
       onKeyDown={onKeyDown}
       onContextMenu={(event) => {

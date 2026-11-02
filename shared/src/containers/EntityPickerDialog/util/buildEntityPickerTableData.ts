@@ -25,6 +25,7 @@ export const buildEntityPickerTableData = (
       img: entity.thumbnail
         ? getEntityThumbnailUrl({ projectName, ...entity.thumbnail })
         : null,
+      badge: entity.taskName,
       subRows: [],
       data: {
         id: entity.id,

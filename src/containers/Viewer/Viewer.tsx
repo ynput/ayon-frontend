@@ -10,7 +10,7 @@ import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '
 import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import * as Styled from './Viewer.styled'
-import { ViewerProvider } from '@context/ViewerContext'
+import { ViewerProvider } from '@context'
 
 // shared
 import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
@@ -21,8 +21,12 @@ import {
   type ReviewablesSelectorHandle,
 } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
-import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
-import { useSessionStorage, useReviewablesKeyboardNavigation } from '@shared/hooks'
+import { ProjectContextProvider, useProjectContext } from '@shared/context'
+import {
+  useSessionStorage,
+  useReviewablesKeyboardNavigation,
+  useReviewablesLayout,
+} from '@shared/hooks'
 import clsx from 'clsx'
 
 interface ViewerProps {
@@ -342,7 +346,10 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
   const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
 
   // Lifted here so A/D/R/E/H keep working in theatre (VersionSelectorTool unmounts).
-  const projectStatuses = useAppSelector((state) => state.project.statuses) || {}
+  const projectStatuses = useMemo(
+    () => Object.fromEntries((project.statuses || []).map((status) => [status.name, status])),
+    [project.statuses],
+  )
   const versionSelectorRef = useRef<HTMLDivElement>(null)
   useReviewShortcuts({
     versions: versionsAndReviewables,
@@ -366,6 +373,15 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
       }),
   })
 
+  // put the annotation tools beside the reviewables when stacking would squash the reviewables
+  const rightToolBarRef = useRef<HTMLDivElement>(null)
+  const annotationToolsRef = useRef<HTMLDivElement>(null)
+  const rightToolBarLayout = useReviewablesLayout({
+    containerRef: rightToolBarRef,
+    toolsRef: annotationToolsRef,
+    reviewablesCount: playable.length,
+  })
+
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 
   return (
@@ -378,6 +394,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
                 ref={versionSelectorRef}
                 versions={versionsAndReviewables}
                 selected={versionIds[0]}
+                statuses={projectStatuses}
                 onChange={handleVersionChange}
               />
               {hasMultipleProducts && (
@@ -421,7 +438,6 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             reviewables={reviewables}
             selectedReviewable={selectedReviewable}
             versionIds={versionIds}
-            versionReviewableIds={versionReviewableIds}
             isFetchingReviewables={isFetchingReviewables}
             noVersions={noVersions}
             quickView={quickView}
@@ -429,7 +445,10 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
           />
         </Styled.FullScreenWrapper>
 
-        <Styled.RightToolBar className={clsx({ hidden: theater })}>
+        <Styled.RightToolBar
+          ref={rightToolBarRef}
+          className={clsx(rightToolBarLayout, { hidden: theater })}
+        >
           <ReviewablesSelector
             ref={reviewablesSelectorRef}
             reviewables={playable}
@@ -438,7 +457,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             projectName={projectName}
             onUpload={handleUploadAction(true)}
           />
-          <div id="annotation-tools" style={{ position: 'relative' }}></div>
+          <Styled.AnnotationTools id="annotation-tools" ref={annotationToolsRef} />
         </Styled.RightToolBar>
 
         <ViewerDetailsPanel

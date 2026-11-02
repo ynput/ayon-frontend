@@ -12,7 +12,6 @@ import {
 } from 'react'
 import clsx from 'clsx'
 import InboxDetailsPanel from '../InboxDetailsPanel'
-import { useDispatch } from 'react-redux'
 import Shortcuts from '@containers/Shortcuts'
 import { InView } from 'react-intersection-observer'
 import { toast } from 'react-toastify'
@@ -32,13 +31,14 @@ import EnableNotifications from '@components/EnableNotifications'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import ProjectsList from '@containers/ProjectsList/ProjectsList'
 import type { Hidden } from '@containers/ProjectsList/hooks/useProjectsListMenuItems'
-import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
+import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
 import InboxSearchFilter from '../components/InboxSearchFilter'
-import InboxDateDivider, { getDayKey } from '../components/InboxDateDivider'
+import InboxDateDivider from '../components/InboxDateDivider'
+import { getDayKey } from '../components/InboxDateDividerHelpers'
 // Hooks
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useGroupMessages from '../hooks/useGroupMessages'
-import useKeydown from '../hooks/useKeydown'
+import useKeydown, { MESSAGE_ID_PREFIX } from '../hooks/useKeydown'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useInboxRefresh from '../hooks/useInboxRefresh'
 import useInboxProject from '../hooks/useInboxProject'
@@ -51,7 +51,7 @@ import {
 import { useDetailsPanelContext, useGlobalContext } from '@shared/context'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
-import { useAppSelector } from '@state/store'
+import { useAppDispatch, useAppSelector } from '@state/store'
 // Types
 import type {
   InboxFilter,
@@ -95,7 +95,7 @@ interface InboxProps {
 }
 
 const Inbox = ({ filter }: InboxProps) => {
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const { setHighlightedActivities } = useDetailsPanelContext()
   const {
     projects: { all: projects },
@@ -337,6 +337,19 @@ const Inbox = ({ filter }: InboxProps) => {
     const idsToMarkAsRead = unReadMessages.map((m) => m.referenceId)
     if (idsToMarkAsRead.length > 0 && message) {
       handleUpdateMessages(idsToMarkAsRead, 'read', message.projectName, false, false)
+    }
+  }
+
+  const resolveVersionJump = (versionId: string) => {
+    const group = groupedMessages.find((g) => g.entityId === versionId)
+    if (!group) return
+    return () => {
+      handleMessageSelect(group.activityId)
+      const row = listRef.current?.querySelector(
+        `#${MESSAGE_ID_PREFIX}${group.activityId}`,
+      ) as HTMLElement | null
+      row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      row?.focus({ preventScroll: true })
     }
   }
 
@@ -793,6 +806,7 @@ const Inbox = ({ filter }: InboxProps) => {
                     selected={selected}
                     projectsInfo={projectsInfo}
                     onClose={() => setSelected([])}
+                    resolveVersionJump={resolveVersionJump}
                   />
                 </SplitterPanel>
               </DetailsPanelSplitter>

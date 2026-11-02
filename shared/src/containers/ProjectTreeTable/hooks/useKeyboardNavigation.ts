@@ -1,10 +1,10 @@
 import { useCallback, useEffect } from 'react'
-import { useSelectionCellsContext } from '../context/SelectionCellsContext'
-import { useCellEditing } from '../context/CellEditingContext' // keep for editingCellId/setEditingCellId
+import { useSelectionCellsContext } from '../context/selection-cells'
+import { useCellEditing } from '../context/cell-editing' // keep for editingCellId/setEditingCellId
 import { parseCellId, getCellId } from '../utils/cellUtils'
-import { useProjectTableContext } from '../context/ProjectTableContext'
-import { useProjectDataContext } from '../context/ProjectDataContext'
-import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
+import { useProjectTableContext } from '../context/project-table'
+import { useProjectDataContext } from '../context/project-data'
+import { useDetailsPanelEntityContext } from '../context/details-panel-entity'
 import { getEntityViewierIds } from '../utils'
 import { isEntityRestricted, READ_ONLY } from '../utils/restrictedEntity'
 
@@ -31,17 +31,24 @@ export default function useKeyboardNavigation() {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
-      if (!target?.closest('tbody td')) {
+      // the open player holds focus, so row nav keys no longer come from a cell
+      const isRowNavKey = e.key === 'ArrowUp' || e.key === 'ArrowDown'
+      const fromOpenPlayer = playerOpen && isRowNavKey && !!target?.closest('#viewer-dialog')
+      if (!fromOpenPlayer && !target?.closest('tbody td')) {
         return
       }
 
+      // the comment input only lets row nav keys through while it is empty; the caret stays in it
+      const fromEmptyComment = fromOpenPlayer && !!target.closest('.comment-container')
+
       // Skip if event target is an input element or contentEditable
       if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable ||
-        target.getAttribute('role') === 'textbox' ||
-        target.tagName === 'LI'
+        !fromEmptyComment &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.getAttribute('role') === 'textbox' ||
+          target.tagName === 'LI')
       ) {
         return
       }
@@ -89,7 +96,8 @@ export default function useKeyboardNavigation() {
             if (newRowId) {
               const newCellId = getCellId(newRowId, colId)
               selectCell(newCellId, e.shiftKey, e.shiftKey)
-              focusCellElement(newCellId)
+              if (fromEmptyComment) focusCell(newCellId)
+              else focusCellElement(newCellId)
 
               // if the player is open, update with new selected cell
               if (playerOpen) {
@@ -105,7 +113,8 @@ export default function useKeyboardNavigation() {
           if (newRowId) {
             const newCellId = getCellId(newRowId, colId)
             selectCell(newCellId, e.shiftKey, e.shiftKey)
-            focusCellElement(newCellId)
+            if (fromEmptyComment) focusCell(newCellId)
+            else focusCellElement(newCellId)
 
             // if the player is open, update with new selected cell
             if (playerOpen) {
@@ -156,7 +165,16 @@ export default function useKeyboardNavigation() {
           } else {
             // For all other columns, start editing the cell (if not read-only)
             if (!isReadOnly) {
-              setEditingCellId(focusedCellId)
+              const checkbox = colId.startsWith('attrib_')
+                ? document
+                    .getElementById(focusedCellId)
+                    ?.querySelector<HTMLInputElement>('input[type="checkbox"]')
+                : null
+              if (checkbox && !checkbox.disabled) {
+                checkbox.click()
+              } else {
+                setEditingCellId(focusedCellId)
+              }
             }
           }
           break
@@ -229,6 +247,7 @@ export default function useKeyboardNavigation() {
       focusedCellId,
       gridMap,
       selectCell,
+      focusCell,
       focusCellElement,
       clearSelection,
       setEditingCellId,

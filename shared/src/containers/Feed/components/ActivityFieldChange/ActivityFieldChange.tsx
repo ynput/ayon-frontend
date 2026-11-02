@@ -7,6 +7,7 @@ import { FieldValue } from './FieldValue'
 import { useGetAttributeListQuery } from '@shared/api'
 import type { AttributeModel, EnumItem } from '@shared/api'
 import { formatUTCDate } from '@shared/util/formatUTCDate'
+import { markdownToPlainText } from '@shared/components/MarkdownEditor/markdown/plainText'
 
 type FieldDisplayValue = {
   name: string
@@ -31,10 +32,23 @@ const formatSingleValue = (value: unknown, attribute?: AttributeModel): string =
   return String(value)
 }
 
-const formatValue = (value: unknown, attribute?: AttributeModel): FieldDisplayValue => {
+// markdown text attributes (the description, markdown widgets) can contain mentions and formatting
+const isMarkdownAttribute = (key?: string, attribute?: AttributeModel) =>
+  key === 'description' || attribute?.data.widget === 'markdown'
+
+const formatValue = (
+  value: unknown,
+  attribute?: AttributeModel,
+  key?: string,
+): FieldDisplayValue => {
   const isEmpty =
     value === null || value === undefined || value === '' || (Array.isArray(value) && !value.length)
   if (isEmpty) return { name: 'none' }
+
+  // show the text, not the markdown (mentions and links become their label)
+  if (typeof value === 'string' && isMarkdownAttribute(key, attribute)) {
+    return { name: markdownToPlainText(value) || 'none' }
+  }
 
   if (attribute?.data.type === 'boolean') return { name: value ? 'Checked' : 'Unchecked' }
 
@@ -93,7 +107,13 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
   const { data: attributes = [] } = useGetAttributeListQuery(undefined, { skip: !isAttrib })
   const attribute = useMemo(() => attributes.find((a) => a.name === key), [attributes, key])
 
-  const fieldTitle = isAttrib ? attribute?.data.title || key : isTags ? 'Tags' : isTypeChange ? 'Type' : undefined
+  const fieldTitle = isAttrib
+    ? attribute?.data.title || key
+    : isTags
+    ? 'Tags'
+    : isTypeChange
+    ? 'Type'
+    : undefined
 
   const statusDisplay = (status?: FieldDisplayValue): FieldDisplayValue => ({
     name: status?.name || '',
@@ -115,7 +135,7 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
   const getDisplay = (value: unknown, status?: FieldDisplayValue): FieldDisplayValue => {
     if (isStatus) return statusDisplay(status)
     if (isTags) return tagsDisplay(value)
-    return formatValue(value, attribute)
+    return formatValue(value, attribute, key)
   }
 
   const oldDisplay = getDisplay(oldValue, oldStatus)

@@ -97,7 +97,8 @@ type LoadingPageProps = {
 
 const LoadingPage = ({ message, children, ...props }: LoadingPageProps) => {
   return (
-    <StyledLoader {...props}>
+    // data-loading-page: the page load benchmarks (tests/performance) wait for this to go away
+    <StyledLoader data-loading-page {...props}>
       <svg
         width="100%"
         height="100%"

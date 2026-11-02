@@ -8,9 +8,8 @@
  * and dispatching breadcrumbs to the store.
  */
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useDispatch } from 'react-redux'
-import { toast } from 'react-toastify'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 
 import { useGetProjectAnatomyQuery } from '@shared/api'
@@ -18,23 +17,24 @@ import { isEqual } from 'lodash'
 
 import { setUri } from '@state/context'
 import SettingsEditor from '@containers/SettingsEditor'
-import { getValueByPath, setValueByPath, sameKeysStructure } from '@containers/AddonSettings/utils'
-import { cloneDeep } from 'lodash'
-import { usePaste } from '@context/PasteContext'
+import useSettingsPaste from '@containers/SettingsEditor/useSettingsPaste'
 
-const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChanged }) => {
+const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChanged, savedAt }) => {
   const [originalData, setOriginalData] = useState(null)
-  const { requestPaste } = usePaste()
+  const handledSaveRef = useRef(null)
   const { data: schema } = useGetAnatomySchemaQuery()
 
   const { data: anatomyPresetData, isLoading: presetLoading } = useGetAnatomyPresetQuery(
     { preset },
     { skip: !preset },
   )
-  const { data: projectAnatomyData, isLoading: prjLoading } = useGetProjectAnatomyQuery(
-    { projectName },
-    { skip: !projectName },
-  )
+  const {
+    data: projectAnatomyData,
+    isLoading: prjLoading,
+    isFetching: prjFetching,
+    startedTimeStamp: prjStartedAt,
+    fulfilledTimeStamp: prjFulfilledAt,
+  } = useGetProjectAnatomyQuery({ projectName }, { skip: !projectName })
   const dispatch = useDispatch()
   const isLoading = presetLoading || prjLoading
 
@@ -50,6 +50,20 @@ const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChange
     setOriginalData(projectAnatomyData)
   }, [projectAnatomyData])
 
+  // After a save, the refetched anatomy may be deep-equal to the previously
+  // cached one (e.g. the server re-created removed default link types).
+  // RTK Query then keeps the same data reference, the effect above doesn't
+  // fire and the form keeps showing the unsaved local state. So reset once
+  // explicitly, when the first fetch started after the save completes.
+  useEffect(() => {
+    if (!savedAt || handledSaveRef.current === savedAt) return
+    if (!projectAnatomyData || prjFetching || !prjFulfilledAt) return
+    if (prjStartedAt < savedAt) return
+    handledSaveRef.current = savedAt
+    setFormData(projectAnatomyData)
+    setOriginalData(projectAnatomyData)
+  }, [savedAt, projectAnatomyData, prjFetching, prjStartedAt, prjFulfilledAt])
+
   useEffect(() => {
     if (!setIsChanged) return
     if (!originalData || !formData) {
@@ -59,35 +73,7 @@ const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChange
     setIsChanged(!isEqual(originalData, formData))
   }, [formData, originalData, setIsChanged])
 
-  const onPasteValue = async (path) => {
-    const pastedContent = await requestPaste()
-    if (!pastedContent) {
-      toast.error('No content to paste')
-      return
-    }
-    let value
-    try {
-      value = JSON.parse(pastedContent)
-    } catch (e) {
-      toast.error('Invalid JSON')
-      return
-    }
-    const oldValue = path.length === 0 ? formData : getValueByPath(formData, path)
-    if (oldValue === undefined) {
-      toast.error('No data to paste')
-      return
-    }
-    if (!sameKeysStructure(oldValue, value)) {
-      toast.error('Incompatible data structure')
-      console.log('oldValue', oldValue)
-      console.log('value', value)
-      return
-    }
-
-    let newData = cloneDeep(formData)
-    newData = setValueByPath(newData, path, value)
-    setFormData(newData)
-  }
+  const onPasteValue = useSettingsPaste(formData, setFormData)
 
   const editor = useMemo(() => {
     if (isLoading) {

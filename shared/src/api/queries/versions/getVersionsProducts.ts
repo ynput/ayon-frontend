@@ -50,6 +50,7 @@ import {
   waitForRealtimeJitter,
 } from '@shared/util'
 import PubSub from '@shared/util/pubsub'
+import { getPrimarySortKey } from '@shared/util/sortingHelpers'
 import { subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
 import type { FieldStats } from '../columnStats'
 import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
@@ -218,9 +219,12 @@ export type GetGroupedVersionsListArgs = {
   productFilter?: string
   taskFilter?: string
   folderFilter?: string
+  representationFilter?: string
   folderIds?: string[]
+  versionIds?: string[]
+  productIds?: string[]
   desc?: boolean
-  sortBy?: string
+  sortBy?: string | string[]
   featuredOnly?: string[]
   featuredOnlyEntityType?: string
   latestPerFolder?: boolean
@@ -623,6 +627,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               productFilter: arg.productFilter,
               taskFilter: arg.taskFilter,
               folderFilter: arg.folderFilter,
+              representationFilter: arg.representationFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
               featuredOnly: arg.featuredOnly,
               featuredOnlyEntityType: arg.featuredOnlyEntityType,
@@ -682,7 +687,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                         updatedNode,
                         arg.latestPerFolder === true &&
                           createdVersionIds?.has(updatedNode.id) === true,
-                        (arg.sortBy || 'createdAt') as keyof VersionNode,
+                        (getPrimarySortKey(arg.sortBy) || 'createdAt') as keyof VersionNode,
                         arg.desc || false,
                       )
                     }
@@ -846,6 +851,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             versionFilter: arg.versionFilter,
             taskFilter: arg.taskFilter,
             folderFilter: arg.folderFilter,
+            representationFilter: arg.representationFilter,
             productIds: arg.productIds,
             latestPerFolder: arg.latestPerFolder,
           }),
@@ -893,7 +899,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                     draft.versions,
                     updatedNode,
                     arg.latestPerFolder === true && createdVersionIds?.has(updatedNode.id) === true,
-                    (arg.sortBy || 'createdAt') as keyof VersionNode,
+                    (getPrimarySortKey(arg.sortBy) || 'createdAt') as keyof VersionNode,
                     arg.desc || false,
                   )
                 }
@@ -1034,6 +1040,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               productFilter: arg.productFilter,
               versionFilter: arg.versionFilter,
               taskFilter: arg.taskFilter,
+              representationFilter: arg.representationFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
               first: productIds.length,
             }
@@ -1056,7 +1063,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                   productId,
                   productsById.get(productId),
                   'products',
-                  (arg.sortBy || 'createdAt') as keyof ProductNode,
+                  (getPrimarySortKey(arg.sortBy) || 'createdAt') as keyof ProductNode,
                   arg.desc || false,
                 )
               })
@@ -1096,6 +1103,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               productFilter: arg.productFilter,
               taskFilter: arg.taskFilter,
               folderFilter: arg.folderFilter,
+              representationFilter: arg.representationFilter,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
             }),
             checkVersionInCache: (entityId, parentId) => {
@@ -1197,7 +1205,10 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           productFilter,
           taskFilter,
           folderFilter,
+          representationFilter,
           folderIds,
+          versionIds,
+          productIds,
           desc,
           sortBy,
           featuredOnly,
@@ -1218,10 +1229,13 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               productFilter,
               taskFilter,
               folderFilter,
+              representationFilter,
               versionFilter,
               // specific group filter
               [groupFilterKey]: group.filter,
               folderIds: folderIds?.length ? folderIds : undefined,
+              versionIds: versionIds?.length ? versionIds : undefined,
+              productIds: productIds?.length ? productIds : undefined,
               sortBy: sortBy,
               featuredOnly,
               featuredOnlyEntityType,
@@ -1315,6 +1329,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             productFilter: arg.productFilter,
             taskFilter: arg.taskFilter,
             folderFilter: arg.folderFilter,
+            representationFilter: arg.representationFilter,
             folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
             sortBy: arg.sortBy,
             featuredOnly: arg.featuredOnly,

@@ -1,0 +1,56 @@
+# Links into or out of a set of entities in one request, with the entity on the
+# other end. Used where per-entity `links` (100 per entity) is not enough.
+
+query GetLinksIntoEntities(
+  $projectName: String!
+  $entityIds: [String!]!
+  $first: Int!
+  $after: String
+) {
+  project(name: $projectName) {
+    links(outputIds: $entityIds, first: $first, after: $after) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        id
+        linkType
+        inputId
+        inputType
+        outputId
+        outputType
+        node: inputNode {
+          ...OverviewEntityLinkNodeFragment
+        }
+      }
+    }
+  }
+}
+
+query GetLinksFromEntities(
+  $projectName: String!
+  $entityIds: [String!]!
+  $first: Int!
+  $after: String
+) {
+  project(name: $projectName) {
+    links(inputIds: $entityIds, first: $first, after: $after) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        id
+        linkType
+        inputId
+        inputType
+        outputId
+        outputType
+        node: outputNode {
+          ...OverviewEntityLinkNodeFragment
+        }
+      }
+    }
+  }
+}

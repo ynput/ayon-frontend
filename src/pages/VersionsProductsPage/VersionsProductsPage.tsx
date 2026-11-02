@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useCallback, useState } from 'react'
 import VersionsProductsPageProviders from './providers'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -6,19 +6,19 @@ import {
   Slicer,
   SLICER_PAGES_CONFIG,
   useSlicerSplitter,
-  type SlicerCountsSource,
+  type GetSlicerCountsSource,
 } from '@shared/containers/Slicer'
 import { useProjectContext, useSettingsPanel } from '@shared/context'
-import { useVersionsDataContext } from './context/VPDataContext'
+import { useVersionsDataContext } from './context/vp-data'
 import VPToolbar from './components/VPToolbar/VPToolbar'
 // TABLES
 import VPTable from './components/VPTable/VPTable'
 import VPGrid from './components/VPGrid/VPGrid'
 import VersionsListTable from './components/VersionsListTable/VersionsListTable'
 
-import { useVPViewsContext } from './context/VPViewsContext'
+import { useVPViewsContext } from './context/vp-views'
 import VPDetailsPanel from './components/VPDetailsPanel/VPDetailsPanel'
-import { useVersionsSelectionContext } from './context/VPSelectionContext'
+import { useVersionsSelectionContext } from './context/vp-selection'
 import { VPTableSettings } from './components/VPTableSettings/VPTableSettings'
 import { DetailsDialog } from '@shared/components'
 import { useVPContextMenu } from './hooks/useVPContextMenu'
@@ -36,11 +36,11 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
   const { showGrid } = useVPViewsContext()
   const { showVersionsTable } = useVersionsSelectionContext()
   const { projectName } = useProjectContext()
-  const { slicerCountsArgs } = useVersionsDataContext()
+  const { getSlicerCountsArgs } = useVersionsDataContext()
 
-  const slicerCountsSource = useMemo<SlicerCountsSource>(
-    () => ({ entity: 'version', args: slicerCountsArgs }),
-    [slicerCountsArgs],
+  const slicerCountsSource = useCallback<GetSlicerCountsSource>(
+    (sliceType) => ({ entity: 'version', args: getSlicerCountsArgs(sliceType) }),
+    [getSlicerCountsArgs],
   )
 
   // modal dialog state for product and version details
@@ -72,9 +72,9 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
           <Section wrap>
             <Slicer
               sliceFields={SLICER_PAGES_CONFIG.versions.fields}
-              pinnedSliceType="hierarchy"
               entityTypes={['version', 'task', 'folder']}
               countsSource={slicerCountsSource}
+              enableSplit
             />
           </Section>
         </SplitterPanel>

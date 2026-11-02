@@ -6,6 +6,7 @@ import { Icon, IconProps, Button } from '@ynput/ayon-react-components'
 interface InfoMessageAction {
   label: string
   icon: string
+  iconPosition?: 'left' | 'right'
   callback: () => void
 }
 
@@ -14,14 +15,15 @@ interface InfoMessageProps extends React.HTMLAttributes<HTMLDivElement> {
   message: string
   icon?: IconProps['icon']
   action?: InfoMessageAction
+  compact?: boolean
 }
 
 export const InfoMessage = forwardRef<HTMLDivElement, InfoMessageProps>(
-  ({ variant = 'info', message, icon, action, ...props }, ref) => {
+  ({ variant = 'info', message, icon, action, compact, ...props }, ref) => {
     return (
       <Styled.MessageCard
         {...props}
-        className={clsx('message', props.className, variant)}
+        className={clsx('message', props.className, variant, { compact })}
         ref={ref}
       >
         <div className="content">
@@ -31,13 +33,14 @@ export const InfoMessage = forwardRef<HTMLDivElement, InfoMessageProps>(
         {action && (
           <Button
             // @ts-expect-error
-            icon={action.icon}
+            icon={action.iconPosition === 'right' ? undefined : action.icon}
             onClick={(e) => {
               e.stopPropagation()
               action.callback()
             }}
           >
             {action.label}
+            {action.iconPosition === 'right' && <Icon icon={action.icon} />}
           </Button>
         )}
       </Styled.MessageCard>

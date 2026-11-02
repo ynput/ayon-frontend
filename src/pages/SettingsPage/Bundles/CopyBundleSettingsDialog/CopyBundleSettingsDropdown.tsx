@@ -1,9 +1,6 @@
 import { BundleModel } from '@shared/api'
-import {
-  BundleDropdownItem,
-  BundleOption,
-  DefaultValueTemplateStyled,
-} from '@containers/BundleDropdown'
+import { BundleDropdownItem, BundleOption } from '@containers/BundleDropdown'
+import { DefaultValueTemplateStyled } from '@containers/BundleDropdown.styled'
 import { Dropdown, DropdownProps } from '@ynput/ayon-react-components'
 import { FC, useEffect, useMemo } from 'react'
 import styled from 'styled-components'

@@ -3,8 +3,7 @@ import MenuItem from './MenuItem'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './Menu.styled'
 import { MENU_TOP_BOUND } from './Menu.styled'
-import type { PowerpackFeature } from '@shared/context/PowerpackContext'
-import { usePowerpack } from '@shared/context/PowerpackContext'
+import { usePowerpack, type PowerpackFeature } from '@shared/context'
 import type { MenuItemType } from './Menu'
 
 interface MenuListProps {
@@ -292,6 +291,7 @@ export const MenuList: React.FC<MenuListProps> = ({
               powerFeature,
               active,
               reserveActiveSlot,
+              endActions,
               ...props
             } = item
 
@@ -324,6 +324,7 @@ export const MenuList: React.FC<MenuListProps> = ({
                   powerFeature,
                   active,
                   reserveActiveSlot,
+                  endActions,
                 }}
                 isLink={link}
                 onClick={(e) =>

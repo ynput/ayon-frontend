@@ -1,6 +1,7 @@
 import type { QueryCondition, QueryFilter } from '@shared/api'
 import { filterActivityTypes } from '@shared/api'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
+import { searchQueryToFilter } from '@shared/util/searchTerms'
 
 // UI chip keys handled by getFilterActivityTypes → activityTypes arg.
 // Must not leak into the QueryFilter (not in backend whitelist).
@@ -50,7 +51,7 @@ const translateCondition = (c: QueryCondition): QueryCondition | QueryFilter | n
   }
 
   if (c.key === 'body' && c.operator === 'like' && typeof c.value === 'string') {
-    return { ...c, key: mappedKey, value: `%${c.value}%` }
+    return searchQueryToFilter(c.value, (term) => ({ ...c, key: mappedKey, value: `%${term}%` }))
   }
 
   // "Author" UI filter matches actor OR assignee, so picking a user surfaces

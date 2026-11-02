@@ -32,7 +32,8 @@ export const extractSearchFromFilters = (
   const strippedFilters = stripSearch(filters)
 
   return {
-    search: searchTerms.length ? searchTerms.join(' ') : undefined,
+    // the backend splits on commas: each chip is an AND group, chips are OR'd (like the overview)
+    search: searchTerms.length ? searchTerms.join(', ') : undefined,
     filters: strippedFilters,
   }
 }

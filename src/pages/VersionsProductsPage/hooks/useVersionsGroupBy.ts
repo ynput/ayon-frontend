@@ -12,8 +12,8 @@ import {
 } from '@shared/hooks'
 import { getGroupByDataType } from '@shared/util'
 import { useMemo } from 'react'
-import { useVPViewsContext } from '../context/VPViewsContext'
-import type { QueryArguments } from '../context/VPDataContext'
+import { useVPViewsContext } from '../context/vp-views'
+import type { QueryArguments } from '../context/vp-data'
 import {
   isGroupId,
   GROUP_BY_ID,
@@ -111,10 +111,13 @@ const useVersionsGroupBy = ({
     productFilter: versionArguments.productFilter,
     taskFilter: versionArguments.taskFilter,
     folderFilter,
+    representationFilter: versionArguments.representationFilter,
     versionFilter: versionArguments.versionFilter,
     sortBy: versionArguments.sortBy,
     desc: versionArguments.desc,
     folderIds: versionArguments.folderIds,
+    versionIds: versionArguments.versionIds,
+    productIds: versionArguments.productIds,
     featuredOnly: versionArguments.featuredOnly,
     featuredOnlyEntityType: versionArguments.featuredOnlyEntityType,
     latestPerFolder: versionArguments.latestPerFolder,

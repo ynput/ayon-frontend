@@ -191,7 +191,7 @@ const InboxSearchFilter = ({
       <SearchFilter
         ref={searchFilterRef}
         options={options}
-        filters={localFilters}
+        filters={isDisabled ? [] : localFilters}
         onChange={handleFilterChange}
         onFinish={handleFinish}
         enableGlobalSearch

@@ -25,11 +25,14 @@ const enhancedApi = dataImportApi.enhanceEndpoints({
             return [
               { type: "overviewTask", id: projectName },
               { type: 'project', id: projectName },
+              { type: 'folder', id: 'LIST' },
+              'hierarchy',
             ]
           case "user":
             return [{ type: "user", id: "LIST" }]
           case "entity_list_item":
-            return [{ type: "entityList", id: folderId }]
+            // an import without a list creates one
+            return [{ type: "entityList", id: folderId ?? "LIST" }]
           default:
             return []
         }

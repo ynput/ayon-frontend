@@ -134,7 +134,7 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
         })
       }
     }
-  }, [uriType, settings, selectedAddons, setSelectedAddons, onAddonFocus])
+  }, [uriType, settings, addons, selectedAddons, setSelectedAddons, onAddonFocus])
 
   const onSelectionChange = (e: any) => {
     // if e.value is an array [], just set the selection
@@ -183,7 +183,6 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
           scrollHeight="flex"
           selection={selectedAddons}
           onSelectionChange={onSelectionChange}
-          onContextMenuSelectionChange={onSelectionChange}
           onContextMenu={onContextMenu}
           className={clsx('addon-list-table', { loading: isLoading })}
           rowClassName={rowDataClassNameFormatter}
